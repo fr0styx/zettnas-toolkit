@@ -245,3 +245,17 @@ tr.docker-row-selected {
 /* Single sign-on button on the login screen (M6) */
 .login-sso-btn { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; margin-top: 10px; background: rgba(56,189,248,0.12); }
 .login-sso-error { margin: 10px 0 0; font-size: 12px; color: #fca5a5; }
+
+/* Docker cleanup progress */
+.dpm-bar { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.dpm-bar-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); transition: width 0.4s ease; }
+.dpm-progress-pct { font-size: 12px; color: var(--zn-text-strong); font-variant-numeric: tabular-nums; }
+.dpm-step-icon { width: 14px; text-align: center; color: var(--zn-text-muted); }
+.dpm-step.is-done .dpm-step-icon { color: var(--ok, #33d17a); }
+.dpm-step.is-error .dpm-step-icon { color: var(--crit, #f0553b); }
+.dpm-step.is-running .dpm-step-icon { color: var(--brand, #0ea5e9); display: inline-block; animation: dpm-spin 1.2s linear infinite; }
+@keyframes dpm-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .dpm-bar-fill { transition: none; }
+  .dpm-step.is-running .dpm-step-icon { animation: none; }
+}

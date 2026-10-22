@@ -820,6 +820,49 @@ class DockerPruneRequest(BaseModel):
     prune_build_cache: bool = True
 
 
+@router.post("/docker/system/prune/jobs", dependencies=[Depends(require_scope("containers:manage"))])
+async def post_system_prune_job(req: DockerPruneRequest | None = None):
+    """Starts the cleanup in the background; poll the job for progress. A running job is returned as is."""
+    from backend.services.docker_cleanup import start_prune_job
+
+    p = req or DockerPruneRequest()
+    job, started = start_prune_job(
+        prune_containers=p.prune_containers,
+        prune_images=p.prune_images or p.all_images,
+        all_images=p.all_images,
+        prune_volumes=p.prune_volumes,
+        prune_networks=p.prune_networks,
+        prune_build_cache=p.prune_build_cache,
+    )
+    return {"job": job, "started": started}
+
+
+@router.get("/docker/system/prune/jobs/current", dependencies=[Depends(require_scope("containers:manage"))])
+async def get_current_prune_job():
+    from backend.services.docker_cleanup import get_prune_job
+
+    return {"job": get_prune_job()}
+
+
+@router.get("/docker/system/prune/jobs/{job_id}", dependencies=[Depends(require_scope("containers:manage"))])
+async def get_prune_job_status(job_id: str):
+    from backend.services.docker_cleanup import get_prune_job
+
+    job = get_prune_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="No such cleanup job")
+    return {"job": job}
+
+
+@router.post("/docker/system/prune/jobs/{job_id}/cancel", dependencies=[Depends(require_scope("containers:manage"))])
+async def cancel_prune_job_route(job_id: str):
+    from backend.services.docker_cleanup import cancel_prune_job
+
+    if not cancel_prune_job(job_id):
+        raise HTTPException(status_code=409, detail="This cleanup is not running")
+    return {"stopping": True}
+
+
 @router.post("/docker/system/prune", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_system_prune(req: DockerPruneRequest | None = None):
     from backend.services.docker_cleanup import prune_docker_system

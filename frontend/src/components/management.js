@@ -2586,7 +2586,7 @@ export async function openDockerPruneModal() {
                 <input type="checkbox" id="dpm-opt-all-images" style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune ALL Unused Images</strong>
-                  <div style="font-size:11px; color:var(--muted);">Removes all images not currently referenced by at least one running container.</div>
+                  <div style="font-size:11px; color:var(--muted);">Removes images no container uses, running or stopped. Images of stopped containers (such as update rollbacks) are kept.</div>
                 </div>
               </label>
               <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
@@ -2603,6 +2603,17 @@ export async function openDockerPruneModal() {
                   <div style="font-size:11px; color:var(--muted);">Frees temporary Docker build cache layers and disconnected bridge networks.</div>
                 </div>
               </label>
+            </div>
+
+            <!-- Progress while the cleanup runs (it continues if this dialog is closed) -->
+            <div id="dpm-progress" class="zn-card zn-box" hidden>
+              <div class="zn-row zn-row--between">
+                <span id="dpm-progress-msg" class="zn-muted"></span>
+                <strong id="dpm-progress-pct" class="dpm-progress-pct">0%</strong>
+              </div>
+              <div class="dpm-bar" id="dpm-bar" role="progressbar" aria-label="Cleanup progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="dpm-bar-fill" id="dpm-bar-fill"></div></div>
+              <ul class="zn-list" id="dpm-steps"></ul>
+              <div class="zn-muted" id="dpm-freed"></div>
             </div>
           </div>
           <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
@@ -2665,55 +2676,172 @@ export async function openDockerPruneModal() {
   }
 
   const confirmBtn = document.getElementById('dpm-confirm-btn');
-  confirmBtn.disabled = false;
-  confirmBtn.textContent = '🧹 Run Prune & Reclaim Storage';
+  setPruneIdle();
 
   confirmBtn.onclick = async () => {
-    const pruneContainers = document.getElementById('dpm-opt-containers').checked;
-    const pruneImages = document.getElementById('dpm-opt-images').checked;
+    if (confirmBtn.dataset.mode === 'done') {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+      setPruneIdle();
+      return;
+    }
     const allImages = document.getElementById('dpm-opt-all-images').checked;
-    const pruneVolumes = document.getElementById('dpm-opt-volumes').checked;
     const pruneBuildCache = document.getElementById('dpm-opt-buildcache').checked;
-
     confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Pruning storage...';
-
     try {
-      const res = await api.post('/api/docker/system/prune', {
-        prune_containers: pruneContainers,
-        prune_images: pruneImages || allImages,
+      const res = await api.post('/api/docker/system/prune/jobs', {
+        prune_containers: document.getElementById('dpm-opt-containers').checked,
+        prune_images: document.getElementById('dpm-opt-images').checked || allImages,
         all_images: allImages,
-        prune_volumes: pruneVolumes,
+        prune_volumes: document.getElementById('dpm-opt-volumes').checked,
         prune_networks: pruneBuildCache,
         prune_build_cache: pruneBuildCache,
       });
-
-      const details = [];
-      if (res.images_deleted_count > 0) details.push(`${res.images_deleted_count} image${res.images_deleted_count > 1 ? 's' : ''}`);
-      if (res.containers_deleted_count > 0) details.push(`${res.containers_deleted_count} container${res.containers_deleted_count > 1 ? 's' : ''}`);
-      if (res.volumes_deleted_count > 0) details.push(`${res.volumes_deleted_count} volume${res.volumes_deleted_count > 1 ? 's' : ''}`);
-      if (res.build_caches_deleted_count > 0) details.push(`${res.build_caches_deleted_count} build cache layer${res.build_caches_deleted_count > 1 ? 's' : ''}`);
-
-      let msg = '';
-      if (res.space_reclaimed_bytes > 0) {
-        msg = `Prune completed! Reclaimed ${res.space_reclaimed_human}${details.length ? ' (' + details.join(', ') + ')' : ''}.`;
-      } else if (details.length > 0) {
-        msg = `Prune completed! Removed ${details.join(', ')} (no additional space freed).`;
-      } else {
-        msg = 'Prune completed: No unused resources were found to remove.';
-      }
-
-      showToast(msg, 'success');
-      modal.classList.remove('open');
-      modal.style.display = 'none';
-
-      await fetchAndRenderDockerContainers();
+      followPruneJob(res.job);
     } catch (err) {
       showToast(t('toast.prune_failed', 'Prune failed: {error}', { error: err.message }), 'error');
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = '🧹 Run Prune & Reclaim Storage';
+      setPruneIdle();
     }
   };
+
+  // A cleanup started earlier (maybe from another tab) is still running: show it.
+  try {
+    const cur = await api.get('/api/docker/system/prune/jobs/current');
+    if (cur && cur.job && cur.job.state === 'running') followPruneJob(cur.job);
+  } catch (err) {
+    console.warn('Could not check for a running cleanup:', err);
+  }
+}
+
+const PRUNE_STEP_LABELS = () => ({
+  containers: t('prune.step_containers', 'Stopped containers'),
+  images: t('prune.step_images', 'Unused images'),
+  volumes: t('prune.step_volumes', 'Unused volumes'),
+  networks: t('prune.step_networks', 'Unused networks'),
+  build_cache: t('prune.step_build_cache', 'Build cache'),
+});
+const PRUNE_STEP_ICONS = { pending: '○', running: '◐', done: '✓', skipped: '–', error: '!' };
+let _prunePollTimer = null;
+
+function setPruneIdle() {
+  const btn = document.getElementById('dpm-confirm-btn');
+  const cancel = document.getElementById('dpm-cancel-btn');
+  const opts = document.getElementById('dpm-opt-containers')?.closest('div[style*="flex-direction:column"]');
+  if (btn) {
+    btn.disabled = false;
+    btn.dataset.mode = 'start';
+    btn.textContent = '🧹 Run Prune & Reclaim Storage';
+  }
+  if (cancel) {
+    cancel.hidden = false;
+    cancel.textContent = t('common.cancel', 'Cancel');
+    cancel.onclick = (e) => {
+      e.preventDefault();
+      const m = document.getElementById('docker-prune-modal-overlay');
+      if (m) { m.classList.remove('open'); m.style.display = 'none'; }
+    };
+  }
+  if (opts) opts.inert = false;
+  const prog = document.getElementById('dpm-progress');
+  if (prog) prog.hidden = true;
+}
+
+export function renderPruneJob(job) {
+  const prog = document.getElementById('dpm-progress');
+  if (!prog || !job) return;
+  prog.hidden = false;
+  const labels = PRUNE_STEP_LABELS();
+  const pct = Math.max(0, Math.min(100, job.percent || 0));
+  const fill = document.getElementById('dpm-bar-fill');
+  if (fill) fill.style.width = `${pct}%`;
+  document.getElementById('dpm-bar')?.setAttribute('aria-valuenow', String(pct));
+  const pctEl = document.getElementById('dpm-progress-pct');
+  if (pctEl) pctEl.textContent = `${pct}%`;
+  const msgEl = document.getElementById('dpm-progress-msg');
+  if (msgEl) {
+    let msg = job.step ? `${labels[job.step] || job.step}…` : '';
+    if (job.step === 'images' && job.images_total) {
+      msg = t('prune.images_progress', 'Removing image {done} of {total}', { done: Math.min(job.images_done + 1, job.images_total), total: job.images_total });
+    }
+    if (job.state !== 'running') msg = '';
+    msgEl.textContent = msg;
+  }
+  const list = document.getElementById('dpm-steps');
+  if (list) {
+    list.replaceChildren(...(job.steps || []).map((s) => {
+      const li = document.createElement('li');
+      li.className = `dpm-step is-${s.state}`;
+      const icon = Object.assign(document.createElement('span'), { className: 'dpm-step-icon', textContent: PRUNE_STEP_ICONS[s.state] || '○' });
+      icon.setAttribute('aria-hidden', 'true');
+      const name = Object.assign(document.createElement('span'), { textContent: labels[s.key] || s.key });
+      let detail = s.detail || '';
+      if (s.key === 'images' && s.state === 'running' && job.images_total) detail = `${job.images_done} / ${job.images_total}`;
+      if (s.freed_bytes > 0) detail = `${detail}${detail ? ' · ' : ''}${formatSize(s.freed_bytes)}`;
+      const det = Object.assign(document.createElement('span'), { className: 'zn-push-end zn-muted', textContent: detail });
+      li.append(icon, name, det);
+      return li;
+    }));
+  }
+  const freed = document.getElementById('dpm-freed');
+  if (freed) freed.textContent = t('prune.freed', '{freed} freed so far', { freed: job.freed_human || '0 B' });
+}
+
+function followPruneJob(job) {
+  const btn = document.getElementById('dpm-confirm-btn');
+  const cancel = document.getElementById('dpm-cancel-btn');
+  const opts = document.getElementById('dpm-opt-containers')?.closest('div[style*="flex-direction:column"]');
+  if (opts) opts.inert = true;
+  if (cancel) {
+    cancel.hidden = false;
+    cancel.textContent = t('prune.stop', 'Stop');
+    cancel.onclick = async (e) => {
+      e.preventDefault();
+      cancel.disabled = true;
+      try { await api.post(`/api/docker/system/prune/jobs/${job.id}/cancel`, {}); } catch (err) { console.warn('Stop failed:', err); }
+      cancel.disabled = false;
+    };
+  }
+  const tick = (j) => {
+    renderPruneJob(j);
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = t('prune.running_pct', 'Cleaning up… {pct}%', { pct: j.percent || 0 });
+    }
+    if (j.state !== 'running') finishPruneJob(j);
+  };
+  tick(job);
+  if (_prunePollTimer) clearInterval(_prunePollTimer);
+  if (job.state !== 'running') return;
+  _prunePollTimer = setInterval(async () => {
+    try {
+      const res = await api.get(`/api/docker/system/prune/jobs/${job.id}`);
+      tick(res.job);
+    } catch (err) {
+      console.warn('Cleanup progress unavailable:', err);
+    }
+  }, 900);
+}
+
+async function finishPruneJob(job) {
+  if (_prunePollTimer) { clearInterval(_prunePollTimer); _prunePollTimer = null; }
+  renderPruneJob(job);
+  const freed = job.freed_human || '0 B';
+  if (job.state === 'cancelled') {
+    showToast(t('prune.stopped', 'Cleanup stopped: {freed} freed so far.', { freed }), 'info');
+  } else if (job.errors && job.errors.length) {
+    showToast(t('prune.done_errors', 'Cleanup finished with errors: {freed} freed. {errors}', { freed, errors: job.errors.join('; ') }), 'warning');
+  } else {
+    showToast(t('prune.done', 'Cleanup finished: {freed} freed.', { freed }), 'success');
+  }
+  const btn = document.getElementById('dpm-confirm-btn');
+  const cancel = document.getElementById('dpm-cancel-btn');
+  if (btn) {
+    btn.disabled = false;
+    btn.dataset.mode = 'done';
+    btn.textContent = t('prune.close', 'Done');
+  }
+  if (cancel) cancel.hidden = true;
+  try { await fetchAndRenderDockerContainers(); } catch (err) { console.warn('Container list refresh failed:', err); }
 }
 
 function formatRelativeTime(ts) {

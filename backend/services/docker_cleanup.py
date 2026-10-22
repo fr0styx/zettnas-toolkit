@@ -11,7 +11,10 @@ Supports:
 import json
 import re
 import socket
+import threading
+import time
 import urllib.parse
+import uuid
 from typing import Any
 
 from backend.config import logger
@@ -168,9 +171,14 @@ def get_docker_system_df(timeout: float = 15.0) -> dict[str, Any]:
     build_cache = df.get("BuildCache") or []
 
     # Calculate image statistics
-    total_images_size = sum(img.get("Size", 0) for img in images)
+    layers_size = int(df.get("LayersSize") or 0)
+    total_images_size = layers_size or sum(img.get("Size", 0) for img in images)
     unused_images = [img for img in images if img.get("Containers", 0) == 0]
-    unused_images_size = sum(img.get("Size", 0) for img in unused_images)
+    # Same figure as `docker system df`: layers shared with images still in use aren't freed.
+    used_size = sum(
+        max(0, img.get("Size", 0) - max(0, img.get("SharedSize", 0))) for img in images if img.get("Containers", 0) != 0
+    )
+    unused_images_size = max(0, total_images_size - used_size) if unused_images else 0
 
     # Calculate container statistics
     total_containers_size = sum(c.get("SizeRw", 0) for c in containers)
@@ -349,3 +357,225 @@ def prune_docker_system(
         "build_caches_deleted_count": build_caches_deleted,
         "message": summary_msg,
     }
+
+
+# ---------------------------------------------------------------------------
+# Cleanup as a background job with progress (the dialog's progress bar).
+# Docker's prune calls report nothing until they finish, so unused images are
+# removed one at a time here; the other steps are single calls.
+# ---------------------------------------------------------------------------
+
+_PRUNE_JOBS: dict[str, dict[str, Any]] = {}
+_PRUNE_LOCK = threading.Lock()
+_STEP_WEIGHTS = {"containers": 1.0, "images": 6.0, "volumes": 1.0, "networks": 0.5, "build_cache": 1.5}
+
+
+def _job_snapshot(job: dict[str, Any]) -> dict[str, Any]:
+    return {k: (list(map(dict, v)) if k == "steps" else v) for k, v in job.items() if not k.startswith("_")}
+
+
+def get_prune_job(job_id: str | None = None) -> dict[str, Any] | None:
+    """The job with this id, or the most recent one."""
+    with _PRUNE_LOCK:
+        if job_id:
+            job = _PRUNE_JOBS.get(job_id)
+        else:
+            job = max(_PRUNE_JOBS.values(), key=lambda j: j["started_at"], default=None)
+        return _job_snapshot(job) if job else None
+
+
+def cancel_prune_job(job_id: str) -> bool:
+    with _PRUNE_LOCK:
+        job = _PRUNE_JOBS.get(job_id)
+        if not job or job["state"] != "running":
+            return False
+        job["_cancel"] = True
+        job["message"] = "Stopping after the current item…"
+        return True
+
+
+def start_prune_job(
+    prune_containers: bool = True,
+    prune_images: bool = True,
+    all_images: bool = False,
+    prune_volumes: bool = False,
+    prune_networks: bool = True,
+    prune_build_cache: bool = True,
+) -> tuple[dict[str, Any], bool]:
+    """Starts a cleanup in the background. Returns (job, started); a running job is returned instead of a second one."""
+    with _PRUNE_LOCK:
+        running = next((j for j in _PRUNE_JOBS.values() if j["state"] == "running"), None)
+        if running:
+            return _job_snapshot(running), False
+        steps = []
+        if prune_containers:
+            steps.append({"key": "containers", "state": "pending", "detail": "", "freed_bytes": 0})
+        if prune_images or all_images:
+            steps.append({"key": "images", "state": "pending", "detail": "", "freed_bytes": 0})
+        if prune_volumes:
+            steps.append({"key": "volumes", "state": "pending", "detail": "", "freed_bytes": 0})
+        if prune_networks:
+            steps.append({"key": "networks", "state": "pending", "detail": "", "freed_bytes": 0})
+        if prune_build_cache:
+            steps.append({"key": "build_cache", "state": "pending", "detail": "", "freed_bytes": 0})
+        job = {
+            "id": uuid.uuid4().hex[:12],
+            "state": "running",
+            "started_at": time.time(),
+            "finished_at": None,
+            "percent": 0,
+            "step": None,
+            "message": "Starting…",
+            "steps": steps,
+            "images_done": 0,
+            "images_total": 0,
+            "freed_bytes": 0,
+            "freed_human": "0 B",
+            "counts": {"containers": 0, "images": 0, "volumes": 0, "networks": 0, "build_cache": 0},
+            "errors": [],
+            "_cancel": False,
+        }
+        for old in [k for k, j in _PRUNE_JOBS.items() if j["state"] != "running"]:
+            del _PRUNE_JOBS[old]  # keep only the newest finished job
+        _PRUNE_JOBS[job["id"]] = job
+    opts = {"all_images": all_images}
+    threading.Thread(target=_run_prune_job, args=(job, opts), name="docker-prune", daemon=True).start()
+    return _job_snapshot(job), True
+
+
+def _update(job: dict[str, Any], **kw: Any) -> None:
+    with _PRUNE_LOCK:
+        job.update(kw)
+        total = sum(_STEP_WEIGHTS[s["key"]] for s in job["steps"]) or 1.0
+        done = 0.0
+        for s in job["steps"]:
+            w = _STEP_WEIGHTS[s["key"]]
+            if s["state"] in ("done", "skipped", "error"):
+                done += w
+            elif s["state"] == "running" and s["key"] == "images" and job["images_total"]:
+                done += w * job["images_done"] / job["images_total"]
+        job["percent"] = 100 if job["state"] != "running" else min(99, int(done * 100 / total))
+        job["freed_human"] = _format_bytes(job["freed_bytes"])
+
+
+def _set_step(job: dict[str, Any], key: str, state: str, detail: str = "", freed: int = 0) -> None:
+    with _PRUNE_LOCK:
+        for s in job["steps"]:
+            if s["key"] == key:
+                s["state"] = state
+                if detail:
+                    s["detail"] = detail
+                s["freed_bytes"] += freed
+        job["freed_bytes"] += freed
+        if state == "running":
+            job["step"] = key
+    _update(job)
+
+
+def _layers_size() -> int | None:
+    try:
+        status, df = _docker_request("GET", "/system/df?type=image", timeout=120)
+        return int(df.get("LayersSize") or 0) if status == 200 else None
+    except Exception as e:
+        logger.debug(f"[Docker Prune] Could not read image disk usage: {e}")
+        return None
+
+
+def _remove_unused_images(job: dict[str, Any], all_images: bool) -> None:
+    filters = urllib.parse.quote(json.dumps({"dangling": ["false" if all_images else "true"]}))
+    st_i, images = _docker_request("GET", "/images/json" + ("" if all_images else f"?filters={filters}"), timeout=60)
+    st_c, containers = _docker_request("GET", "/containers/json?all=true", timeout=60)
+    if st_i != 200 or st_c != 200 or not isinstance(images, list) or not isinstance(containers, list):
+        raise RuntimeError("could not list images and containers")
+    # Same rule as `docker image prune`: an image used by any container, running or stopped, stays.
+    in_use = {c.get("ImageID") for c in containers} | {c.get("Image") for c in containers}
+    unused = [i for i in images if i.get("Id") not in in_use and not (set(i.get("RepoTags") or []) & in_use)]
+    unused.sort(key=lambda i: i.get("Created", 0), reverse=True)  # children before their parents
+    _update(job, images_total=len(unused), images_done=0)
+    before = _layers_size()
+    removed = 0
+    for n, img in enumerate(unused, start=1):
+        if job["_cancel"]:
+            break
+        tags = [t for t in (img.get("RepoTags") or []) if t and t != "<none>:<none>"]
+        label = tags[0] if tags else img.get("Id", "")[7:19]
+        _update(job, message=f"Removing image {n} of {len(unused)}: {label}")
+        refs = tags if len(tags) > 1 else [img["Id"]]
+        ok = False
+        for ref in refs:  # untagging each name of a multi-tag image removes it with the last one
+            status, res = _docker_request("DELETE", f"/images/{urllib.parse.quote(ref, safe='')}", timeout=300)
+            ok = status in (200, 404)
+            if status == 409:
+                logger.info(f"[Docker Prune] Kept image {label}: {res.get('message', 'in use')}")
+                break
+        removed += 1 if ok else 0
+        with _PRUNE_LOCK:
+            job["counts"]["images"] = removed
+        _update(job, images_done=n)
+    if not job["_cancel"]:
+        # Sweep what one-by-one removal left (layers released by the removals above)
+        status, res = _docker_request("POST", f"/images/prune?filters={filters}", timeout=900)
+        if status == 200:
+            with _PRUNE_LOCK:
+                job["counts"]["images"] += len([i for i in (res.get("ImagesDeleted") or []) if i.get("Deleted")])
+    after = _layers_size()
+    freed = max(0, before - after) if before is not None and after is not None else 0
+    _set_step(job, "images", "done", f"{removed} removed", freed)
+
+
+def _run_prune_job(job: dict[str, Any], opts: dict[str, Any]) -> None:
+    calls = {
+        "containers": ("/containers/prune", 300, "ContainersDeleted"),
+        "volumes": ("/volumes/prune", 900, "VolumesDeleted"),
+        "networks": ("/networks/prune", 120, "NetworksDeleted"),
+        "build_cache": ("/build/prune?all=true", 1800, "CachesDeleted"),
+    }
+    names = {
+        "containers": "stopped containers",
+        "volumes": "unused volumes",
+        "networks": "unused networks",
+        "build_cache": "build cache",
+    }
+    for step in [s["key"] for s in job["steps"]]:
+        if job["_cancel"]:
+            _set_step(job, step, "skipped")
+            continue
+        _set_step(job, step, "running")
+        try:
+            if step == "images":
+                _remove_unused_images(job, opts["all_images"])
+                continue
+            path, timeout, field = calls[step]
+            _update(job, message=f"Removing {names[step]}…")
+            status, res = _docker_request("POST", path, timeout=timeout)
+            if status != 200:
+                raise RuntimeError(res.get("message") or f"HTTP {status}")
+            count = len(res.get(field) or [])
+            with _PRUNE_LOCK:
+                job["counts"][step] = count
+            _set_step(job, step, "done", f"{count} removed", int(res.get("SpaceReclaimed") or 0))
+        except Exception as e:
+            logger.warning(f"[Docker Prune] {step} failed: {e}")
+            with _PRUNE_LOCK:
+                job["errors"].append(f"{step}: {e}")
+            _set_step(job, step, "error", str(e)[:200])
+
+    docker_stats._CACHED_CONTAINERS = []
+    docker_stats._LAST_DOCKER_POLL = 0.0
+    with docker_stats._INSPECT_LOCK:
+        docker_stats._CONTAINER_INSPECT_CACHE.clear()
+    c = job["counts"]
+    stopped = job["_cancel"]
+    summary = (
+        f"Prune {'stopped' if stopped else 'reclaimed'} {_format_bytes(job['freed_bytes'])}"
+        f"{' so far' if stopped else ''} (Containers: {c['containers']}, Images: {c['images']}, Volumes: {c['volumes']})."
+    )
+    logger.info(f"[Docker Prune] {summary}")
+    add_event("docker", summary, "info")
+    _update(
+        job,
+        state="cancelled" if stopped else ("done" if not job["errors"] else "done_with_errors"),
+        finished_at=time.time(),
+        step=None,
+        message=summary,
+    )

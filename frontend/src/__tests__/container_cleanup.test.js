@@ -99,12 +99,8 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     });
 
     const postSpy = vi.spyOn(api, 'post').mockResolvedValue({
-      success: true,
-      space_reclaimed_bytes: 1288490188,
-      space_reclaimed_human: '1.2 GB',
-      containers_deleted_count: 3,
-      images_deleted_count: 2,
-      volumes_deleted_count: 4,
+      started: true,
+      job: { id: 'j1', state: 'done', percent: 100, step: null, steps: [{ key: 'images', state: 'done', detail: '2 removed', freed_bytes: 1288490188 }], freed_human: '1.2 GB', errors: [], images_done: 2, images_total: 2 },
     });
 
     await openDockerPruneModal();
@@ -120,7 +116,7 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     const confirmBtn = document.getElementById('dpm-confirm-btn');
     await confirmBtn.onclick();
 
-    expect(postSpy).toHaveBeenCalledWith('/api/docker/system/prune', {
+    expect(postSpy).toHaveBeenCalledWith('/api/docker/system/prune/jobs', {
       prune_containers: true,
       prune_images: true,
       all_images: false,
@@ -129,6 +125,11 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
       prune_build_cache: true,
     });
 
+    // The finished cleanup stays on screen with its result until Done is pressed
+    expect(document.getElementById('dpm-progress').hidden).toBe(false);
+    expect(document.getElementById('dpm-bar-fill').style.width).toBe('100%');
+    expect(confirmBtn.textContent).toBe('Done');
+    await confirmBtn.onclick();
     expect(modal.classList.contains('open')).toBe(false);
     expect(modal.style.display).toBe('none');
   });
@@ -142,13 +143,8 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     });
 
     const postSpy = vi.spyOn(api, 'post').mockResolvedValue({
-      success: true,
-      space_reclaimed_bytes: 500000000,
-      space_reclaimed_human: '500 MB',
-      images_deleted_count: 3,
-      containers_deleted_count: 0,
-      volumes_deleted_count: 0,
-      build_caches_deleted_count: 0,
+      started: true,
+      job: { id: 'j1', state: 'done', percent: 100, step: null, steps: [{ key: 'images', state: 'done', detail: '2 removed', freed_bytes: 1288490188 }], freed_human: '1.2 GB', errors: [], images_done: 2, images_total: 2 },
     });
 
     await openDockerPruneModal();
@@ -166,7 +162,7 @@ describe('Container Deletion and Docker Prune Subsystem', () => {
     const confirmBtn = document.getElementById('dpm-confirm-btn');
     await confirmBtn.onclick();
 
-    expect(postSpy).toHaveBeenCalledWith('/api/docker/system/prune', {
+    expect(postSpy).toHaveBeenCalledWith('/api/docker/system/prune/jobs', {
       prune_containers: true,
       prune_images: true,
       all_images: true,
