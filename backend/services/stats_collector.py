@@ -1,5 +1,6 @@
 import concurrent.futures
 import json
+import logging
 import os
 import sqlite3
 import time
@@ -66,6 +67,8 @@ from backend.services.copy_engine import check_media_slot_transitions, read_medi
 from backend.services.notifications import NOTIFICATIONS_FILE, send_notification
 from backend.services.stats_delta import StatsDeltaEncoder
 from backend.state import Z_STATE, add_event
+
+logger = logging.getLogger("ZettNAS")
 
 _notify_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="zett_notify")
 
@@ -204,7 +207,7 @@ def stats_collector_daemon():
                 if hasattr(pal_adapter, "is_storage_busy"):
                     pal_busy = bool(pal_adapter.is_storage_busy())
             except Exception:
-                pass
+                logger.debug("backend.services.stats_collector.stats_collector_daemon: ignored error", exc_info=True)
             storage_busy = mover_active or parity_active or pal_busy
 
             curve_points = fan_cfg.get("curve_points")

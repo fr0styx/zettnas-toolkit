@@ -21,10 +21,14 @@ REPO_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
+import logging
+
 from backend import config
 from backend.passwords import verify_password
 from backend.services import login_lockout
 from backend.users_db import get_user_by_username
+
+logger = logging.getLogger("ZettNAS")
 
 
 def main():
@@ -103,7 +107,7 @@ def main():
                                 target_root = os.path.join(pool_path, "homes", username.lower())
                             break
         except Exception:
-            pass
+            logger.debug("backend.services.rclone_auth_proxy.main: ignored error", exc_info=True)
 
     # 2. Check user in SQLite users.db
     if not authenticated:

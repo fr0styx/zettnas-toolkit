@@ -268,18 +268,18 @@ async def lifespan(app: FastAPI):
 
             stop_scheduler()
         except Exception:
-            pass
+            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
         stop_backup_scheduler()
         try:
             get_webdav_engine().stop()
         except Exception:
-            pass
+            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
         try:
             from backend.services.sftp_engine import get_sftp_engine
 
             get_sftp_engine().stop()
         except Exception:
-            pass
+            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
         if not Z_STATE.fans_locked:
             _shutdown_fans("shutdown")
 
@@ -355,7 +355,11 @@ async def correlation_id_middleware(request: Request, call_next):
 app.include_router(webdav_proxy_router)
 
 # DMTF Redfish Scalable Platforms Management API
+import logging
+
 from backend.api.redfish import router as redfish_router
+
+logger = logging.getLogger("ZettNAS")
 
 app.include_router(redfish_router, prefix="/redfish/v1")
 app.include_router(redfish_router, prefix="/redfish")

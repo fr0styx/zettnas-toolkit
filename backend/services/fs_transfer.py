@@ -409,7 +409,9 @@ class TransferTaskManager:
                 if not loop.is_closed():
                     loop.call_soon_threadsafe(q.put_nowait, payload)
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.fs_transfer.TransferTaskManager._notify_update: ignored error", exc_info=True
+                )
 
     def get_task(self, task_id: str) -> dict[str, Any] | None:
         with self._lock:

@@ -279,7 +279,10 @@ class StoragePlatformAdapter(ABC):
                                         if dev.startswith(("/dev/mmcblk", "mmcblk")):
                                             return True
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
+                            exc_info=True,
+                        )
 
             # 2. Check if host rootfs is an OS overlay and path is on that same device
             is_root_overlay_or_emmc = False
@@ -304,7 +307,10 @@ class StoragePlatformAdapter(ABC):
                                     ):
                                         is_root_overlay_or_emmc = True
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
+                            exc_info=True,
+                        )
 
             if is_root_overlay_or_emmc:
                 try:
@@ -313,9 +319,15 @@ class StoragePlatformAdapter(ABC):
                         if u.total < 128 * 1024 * 1024 * 1024:
                             return True
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
+                        exc_info=True,
+                    )
         except Exception:
-            pass
+            logger.debug(
+                "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
+                exc_info=True,
+            )
         return False
 
     def _parse_mounts(self) -> list[dict[str, str]]:
@@ -448,7 +460,10 @@ class StoragePlatformAdapter(ABC):
                                 info["size_bytes"] = int(open(sz_p).read().strip()) * 512  # noqa: SIM115
                                 break
                             except Exception:
-                                pass
+                                logger.debug(
+                                    "backend.hardware.pal_storage.StoragePlatformAdapter._parse_mdstat: ignored error",
+                                    exc_info=True,
+                                )
         except Exception as e:
             logger.debug(f"[PAL] Error reading mdstat from {target}: {e}")
         return result
@@ -621,7 +636,10 @@ class StoragePlatformAdapter(ABC):
                         pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
                         return tot, usd, fre, pct, None
             except Exception:
-                pass
+                logger.debug(
+                    "backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage: ignored error",
+                    exc_info=True,
+                )
 
         # Tier 2: Superblock direct parsing on device candidates and holder/partitions
         dev_candidates = []
@@ -648,7 +666,10 @@ class StoragePlatformAdapter(ABC):
                                 if os.path.exists(cand) and cand not in dev_candidates:
                                     dev_candidates.append(cand)
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage: ignored error",
+                            exc_info=True,
+                        )
 
         for dev_node in dev_candidates:
             sb = self._parse_fs_superblock(dev_node)
@@ -695,7 +716,10 @@ class StoragePlatformAdapter(ABC):
                                 pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
                                 return tot, usd, fre, pct, fstype
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage: ignored error",
+                            exc_info=True,
+                        )
 
         # Tier 5: Fallback
         tot = fallback_total
@@ -789,7 +813,10 @@ class StoragePlatformAdapter(ABC):
                         try:
                             real_dev = os.path.basename(os.path.realpath(name_token))
                         except Exception:
-                            pass
+                            logger.debug(
+                                "backend.hardware.pal_storage.StoragePlatformAdapter._parse_zpool_members: ignored error",
+                                exc_info=True,
+                            )
 
                     clean_dev = (
                         re.sub(r"p?\d+$", "", real_dev)
@@ -1234,7 +1261,9 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             u = shutil.disk_usage(POOL_PATH or "/mnt/user")
             total, used, free = u.total, u.used, u.free
         except Exception:
-            pass
+            logger.debug(
+                "backend.hardware.pal_storage.UnraidStorageAdapter._fallback_pools: ignored error", exc_info=True
+            )
         pct = round(used / total * 100, 1) if total > 0 else 0.0
         return [
             StoragePool(
@@ -1654,7 +1683,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                             md_devices.add(f"/dev/{h}")
                             md_devices.add(f"/dev/mapper/{h}")
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_pools: ignored error",
+                            exc_info=True,
+                        )
 
             for m in mounts:
                 dev = m.get("device", "")
@@ -1826,7 +1858,9 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 u = shutil.disk_usage(self._pool_path if os.path.exists(self._pool_path) else "/")
                 total, used, free = u.total, u.used, u.free
             except Exception:
-                pass
+                logger.debug(
+                    "backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_pools: ignored error", exc_info=True
+                )
             pct = round(used / total * 100, 1) if total > 0 else 0.0
 
             members = list(hal_disks.values()) if hal_disks else self._discover_hal_disks()
@@ -2132,7 +2166,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     try:
                         os.rmdir(old_mnt)
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.pal_storage.GenericLinuxStorageAdapter.rename_pool: ignored error",
+                            exc_info=True,
+                        )
                 if not os.path.exists(old_mnt):
                     os.symlink(new_mnt, old_mnt)
                     logger.info(f"[PAL] Created compatibility symlink {old_mnt} -> {new_mnt}")
@@ -2493,7 +2530,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                                 item["retention_until"] = meta.get("retention_until")
                                 item["is_immutable"] = (meta.get("retention_until") or 0) > time.time()
                             except Exception:
-                                pass
+                                logger.debug(
+                                    "backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_snapshots: ignored error",
+                                    exc_info=True,
+                                )
                         snapshots.append(item)
             except Exception as e:
                 logger.debug(f"[PAL] Snapshot list error: {e}")
@@ -3305,7 +3345,10 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                                 "sync_action": "check",
                             }
                         except Exception:
-                            pass
+                            logger.debug(
+                                "backend.hardware.pal_storage.ZettOSStorageAdapter.trigger_scrub: ignored error",
+                                exc_info=True,
+                            )
                 return {
                     "platform": "zettos",
                     "pool_id": pool_id,
@@ -3332,7 +3375,10 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                                 "sync_action": "idle",
                             }
                         except Exception:
-                            pass
+                            logger.debug(
+                                "backend.hardware.pal_storage.ZettOSStorageAdapter.trigger_scrub: ignored error",
+                                exc_info=True,
+                            )
                 return {"platform": "zettos", "pool_id": pool_id, "action": action, "status": "idle"}
             else:
                 return {
@@ -3442,7 +3488,9 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                             md_devices.add(f"/dev/{h}")
                             md_devices.add(f"/dev/mapper/{h}")
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.pal_storage.ZettOSStorageAdapter.list_pools: ignored error", exc_info=True
+                        )
 
             # Check container mounts for matching block device or subvolume
             for m in mounts:
@@ -3996,7 +4044,9 @@ class StoragePlatformDetector:
                         if "/zettos" in m_content:
                             return PlatformType.ZETTOS
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
+                    )
 
         # Check kernel cmdline for ZettOS signatures
         for cmd_file in [
@@ -4010,7 +4060,9 @@ class StoragePlatformDetector:
                         if "zettos" in cmd_text or "zettlab" in cmd_text:
                             return PlatformType.ZETTOS
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
+                    )
 
         # 3. FygoOS Detection
         fygoos_candidates = [
@@ -4053,7 +4105,9 @@ class StoragePlatformDetector:
                     if "truenas" in ver_text:
                         return PlatformType.TRUENAS
             except Exception:
-                pass
+                logger.debug(
+                    "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
+                )
 
         # 6. /etc/os-release checks
         os_release_paths = ["/etc/os-release", "/host/etc/os-release"]
@@ -4075,7 +4129,9 @@ class StoragePlatformDetector:
                         if "proxmox" in text:
                             return PlatformType.PROXMOX
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
+                    )
 
         # 7. Other Appliance NAS (Synology, QNAP, Asustor, CasaOS) or Observer Mode env
         other_nas_candidates = [

@@ -196,7 +196,7 @@ def _apply_bl_power(bl_dir: str, power_on: bool):
             with open(bl_power_path, "w") as f:
                 f.write("0\n" if power_on else "4\n")
         except Exception:
-            pass
+            logger.debug("backend.hardware.screen._apply_bl_power: ignored error", exc_info=True)
 
 
 def set_screen_brightness(pct):
@@ -258,7 +258,7 @@ def save_screen_state(updates: dict):
 
         Z_STATE.ui_wake.set()
     except Exception:
-        pass
+        logger.debug("backend.hardware.screen.save_screen_state: ignored error", exc_info=True)
     return dict(state)
 
 
@@ -285,7 +285,7 @@ def is_auxiliary_lcd_present() -> bool:
         if is_zettlab_appliance():
             return True
     except Exception:
-        pass
+        logger.debug("backend.hardware.screen.is_auxiliary_lcd_present: ignored error", exc_info=True)
 
     for base in (
         os.path.join(HOST_SYS, "class/graphics/fb0") if HOST_SYS else None,
@@ -303,5 +303,5 @@ def is_auxiliary_lcd_present() -> bool:
                         w, h = max(parts), min(parts)
                         return w <= 800 and h <= 480
             except Exception:
-                pass
+                logger.debug("backend.hardware.screen.is_auxiliary_lcd_present: ignored error", exc_info=True)
     return False

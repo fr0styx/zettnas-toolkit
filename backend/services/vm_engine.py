@@ -110,7 +110,7 @@ class PersistentQmpClient:
             try:
                 self._writer.close()
             except Exception:
-                pass
+                logger.debug("backend.services.vm_engine.PersistentQmpClient._drop: ignored error", exc_info=True)
         self._reader = self._writer = None
         for fut in self._pending.values():
             if not fut.done():
@@ -150,7 +150,7 @@ class PersistentQmpClient:
             try:
                 await self._listener
             except (asyncio.CancelledError, Exception):
-                pass
+                logger.debug("backend.services.vm_engine.PersistentQmpClient.close: ignored error", exc_info=True)
             self._listener = None
         self._drop()
 
@@ -223,7 +223,10 @@ class QmpEngine:
                         await client.connect()
                         return
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.services.vm_engine.QmpEngine.watch.connect_when_ready: ignored error",
+                            exc_info=True,
+                        )
                 await asyncio.sleep(interval)
             logger.debug(f"[QMP-{vm_id}] monitor socket did not become ready for event watching")
 
@@ -237,7 +240,7 @@ class QmpEngine:
         try:
             asyncio.run_coroutine_threadsafe(client.close(), self._loop).result(3)
         except Exception:
-            pass
+            logger.debug("backend.services.vm_engine.QmpEngine.close: ignored error", exc_info=True)
 
     def is_connected(self, vm_id: str) -> bool:
         client = self._clients.get(vm_id)

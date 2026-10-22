@@ -610,7 +610,7 @@ def create_vm_backup(
             try:
                 os.remove(archive_filepath)
             except Exception:
-                pass
+                logger.debug("backend.services.app_backup.create_vm_backup: ignored error", exc_info=True)
         logger.error(f"[VM Backup] Failed to create backup for {vname}: {e}")
         raise
 

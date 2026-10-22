@@ -492,7 +492,9 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> dict[str, Any
             try:
                 conn.close()
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.compose_synthesizer.get_container_logs_chunk: ignored error", exc_info=True
+                )
 
 
 def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
@@ -574,7 +576,7 @@ def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
                 insp_data = json.loads(insp_res.read().decode("utf-8", errors="replace"))
                 exit_code = insp_data.get("ExitCode", 0)
         except Exception:
-            pass
+            logger.debug("backend.services.compose_synthesizer.execute_in_container: ignored error", exc_info=True)
 
         return {
             "success": True,
@@ -591,4 +593,4 @@ def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
             try:
                 conn.close()
             except Exception:
-                pass
+                logger.debug("backend.services.compose_synthesizer.execute_in_container: ignored error", exc_info=True)

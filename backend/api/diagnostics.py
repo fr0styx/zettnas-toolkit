@@ -52,7 +52,7 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
     try:
         ram_stats = read_mem()
     except Exception:
-        pass
+        logger.debug("backend.api.diagnostics._build_bundle_sync: ignored error", exc_info=True)
 
     try:
         pal_adapter = get_storage_platform()
@@ -334,7 +334,7 @@ def _build_summary_sync() -> dict[str, Any]:
     try:
         ram = read_mem()
     except Exception:
-        pass
+        logger.debug("backend.api.diagnostics._build_summary_sync: ignored error", exc_info=True)
 
     used_gb = ram.get("used_gb")
     total_gb = ram.get("total_gb")
@@ -395,7 +395,7 @@ def _build_summary_sync() -> dict[str, Any]:
         kt = collect_kernel_telemetry()
         has_cpu_throttle = kt.get("cpu_telemetry", {}).get("thermal_throttling_detected", False)
     except Exception:
-        pass
+        logger.debug("backend.api.diagnostics._build_summary_sync: ignored error", exc_info=True)
 
     # UPS telemetry
     ups_tel = {}
@@ -404,7 +404,7 @@ def _build_summary_sync() -> dict[str, Any]:
 
         ups_tel = get_ups_diagnostic_telemetry()
     except Exception:
-        pass
+        logger.debug("backend.api.diagnostics._build_summary_sync: ignored error", exc_info=True)
     ups_mode = ups_tel.get("mode", "disabled")
     ups_connected = ups_tel.get("connected", False)
     ups_permission_blocked = ups_tel.get("direct_usb_access", {}).get("permission_blocked", False)

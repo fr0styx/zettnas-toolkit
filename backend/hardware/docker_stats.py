@@ -277,7 +277,7 @@ def _fetch_container_inspect(cid_short: str, conn: UnixHTTPConnection | None = N
             try:
                 conn.close()
             except Exception:
-                pass
+                logger.debug("backend.hardware.docker_stats._fetch_container_inspect: ignored error", exc_info=True)
     return {}
 
 
@@ -360,7 +360,9 @@ def _docker_telemetry_worker():
                     try:
                         conn.close()
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.docker_stats._docker_telemetry_worker: ignored error", exc_info=True
+                        )
 
             if not running:
                 for _ in range(10):
@@ -383,7 +385,9 @@ def _docker_telemetry_worker():
                             with _TELEMETRY_LOCK:
                                 _CONTAINER_METRICS[short_id] = telemetry
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.docker_stats._docker_telemetry_worker: ignored error", exc_info=True
+                        )
             for _ in range(12):
                 if Z_STATE.shutting_down:
                     break
@@ -519,7 +523,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
             try:
                 conn.close()
             except Exception:
-                pass
+                logger.debug("backend.hardware.docker_stats.read_docker_containers: ignored error", exc_info=True)
 
 
 def container_action(container_id: str, action: str) -> dict[str, Any]:

@@ -32,7 +32,7 @@ def button_listener_daemon():
             logger.debug(f"[button_listener] Chassis {model} does not use MMIO button mapping.")
             return
     except Exception:
-        pass
+        logger.debug("backend.services.button_listener.button_listener_daemon: ignored error", exc_info=True)
 
     MMIO_BASE = 0xE0D20000
     COPY_OFFSET = 0x6C0

@@ -36,7 +36,9 @@ def locate_drive_multitier(dev_name: str, dev_path: str, duration_sec: int = 5) 
                     try:
                         subprocess.run(["ledctl", f"locate_off={dev_path}"], capture_output=True)
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.locate.locate_drive_multitier._turn_off_ses: ignored error", exc_info=True
+                        )
 
                 threading.Thread(target=_turn_off_ses, daemon=True, name=f"ses-off-{dev_name}").start()
                 return {"success": True, "tier": "ses", "method": "ledctl", "dev": dev_name, "duration": duration}
@@ -55,7 +57,9 @@ def locate_drive_multitier(dev_name: str, dev_path: str, duration_sec: int = 5) 
                 try:
                     send_led_packet(1, 255, 255, 255, speed=5)  # Return to static calm
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.locate.locate_drive_multitier._reset_argb: ignored error", exc_info=True
+                    )
 
             threading.Thread(target=_reset_argb, daemon=True, name=f"argb-reset-{dev_name}").start()
             return {"success": True, "tier": "argb", "method": "microcontroller", "dev": dev_name, "duration": duration}

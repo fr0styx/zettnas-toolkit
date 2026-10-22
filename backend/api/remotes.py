@@ -257,7 +257,7 @@ def _cleanup_old_oauth_sessions(force_all: bool = False):
                 try:
                     proc.kill()
                 except Exception:
-                    pass
+                    logger.debug("backend.api.remotes._cleanup_old_oauth_sessions: ignored error", exc_info=True)
             _ACTIVE_OAUTH_SESSIONS.pop(sid, None)
 
 
@@ -272,7 +272,7 @@ async def start_oauth_session(req: OAuthStartRequest):
             lambda: subprocess.run(["pkill", "-9", "-f", "rclone authorize"], capture_output=True, timeout=2)
         )
     except Exception:
-        pass
+        logger.debug("backend.api.remotes.start_oauth_session: ignored error", exc_info=True)
     await asyncio.sleep(0.15)
 
     rclone_bin = shutil.which("rclone") or "/usr/bin/rclone"
@@ -315,7 +315,7 @@ async def start_oauth_session(req: OAuthStartRequest):
                     local_url = m.group(0)
                     break
         except Exception:
-            pass
+            logger.debug("backend.api.remotes.start_oauth_session: ignored error", exc_info=True)
         await asyncio.sleep(0.1)
 
     if not local_url:
@@ -820,5 +820,5 @@ async def cancel_oauth_session(session_id: str):
             try:
                 proc.kill()
             except Exception:
-                pass
+                logger.debug("backend.api.remotes.cancel_oauth_session: ignored error", exc_info=True)
     return {"status": "ok"}

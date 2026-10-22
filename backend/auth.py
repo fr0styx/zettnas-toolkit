@@ -176,7 +176,7 @@ def query_credential_allowed(value: str) -> str:
         if value in _CONSOLE_TICKETS:
             return value
     except Exception:
-        pass
+        logger.debug("backend.auth.query_credential_allowed: ignored error", exc_info=True)
     return ""
 
 

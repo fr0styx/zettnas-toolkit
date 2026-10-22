@@ -313,14 +313,14 @@ def eject_media_slot(slot: str = "sd"):
     try:
         subprocess.run(["sync"], timeout=5.0)
     except Exception:
-        pass
+        logger.debug("backend.services.copy_engine.eject_media_slot: ignored error", exc_info=True)
 
     # Unmount if mounted under /mnt/disks or /media
     for mount_check in glob.glob(f"/mnt/disks/{slot}*") + glob.glob(f"/media/{slot}*"):
         try:
             subprocess.run(["umount", mount_check], timeout=3.0)
         except Exception:
-            pass
+            logger.debug("backend.services.copy_engine.eject_media_slot: ignored error", exc_info=True)
 
     _EJECTED_SLOTS.add(slot)
 

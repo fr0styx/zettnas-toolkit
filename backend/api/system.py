@@ -122,6 +122,8 @@ def health():
 
 
 # Backward-compatibility re-exports for extracted domain routers
+import logging
+
 from backend.api.catalog import router as catalog_router
 from backend.api.diagnostics import (
     _build_bundle_sync,
@@ -143,6 +145,8 @@ from backend.api.fs import (
     router as fs_router,
 )
 from backend.hardware.docker_stats import container_action, read_docker_containers
+
+logger = logging.getLogger("ZettNAS")
 
 
 @router.get("/disk_detail")
@@ -596,7 +600,7 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
                 details={"name": req.name, "scopes": meta.get("scopes")},
             )
         except Exception:
-            pass
+            logger.debug("backend.api.system.create_token: ignored error", exc_info=True)
         return {
             "token": raw_token,
             "name": req.name,
@@ -772,7 +776,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
                             if not created:
                                 created = img_labels.get("org.opencontainers.image.created", "")
                     except Exception:
-                        pass
+                        logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
 
                 # 2. Container labels fallback
                 if not commit:
@@ -781,7 +785,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
                     if not created:
                         created = labels.get("org.opencontainers.image.created", "")
         except Exception:
-            pass
+            logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
 
     if not commit:
         for p in ("/app/.git_commit", "data/.git_commit", ".git_commit"):
@@ -790,7 +794,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
                     with open(p) as f:
                         commit = f.read().strip()
                 except Exception:
-                    pass
+                    logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
 
     if not commit:
         try:
@@ -800,7 +804,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
             if res.returncode == 0 and res.stdout.strip():
                 commit = res.stdout.strip()
         except Exception:
-            pass
+            logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
 
     return {
         "commit": commit[:7] if commit else "",
@@ -1179,7 +1183,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
             if self_info and self_info.get("Name"):
                 target_container = self_info["Name"].lstrip("/")
         except Exception:
-            pass
+            logger.debug("backend.api.system.post_apply_system_update: ignored error", exc_info=True)
 
         spawned = await asyncio.to_thread(spawn_self_updater, target_img, target_container, 2.5)
         if spawned:
@@ -1272,7 +1276,7 @@ async def post_revert_system_update(
         if self_info and self_info.get("Name"):
             target_container = self_info["Name"].lstrip("/")
     except Exception:
-        pass
+        logger.debug("backend.api.system.post_revert_system_update: ignored error", exc_info=True)
 
     logger.warning(f"[System Update] Reverting to {match['version'] or match['image']} (snapshot {match['id']})")
     spawned = await asyncio.to_thread(spawn_self_updater, match["image"], target_container, 2.5, match["id"])

@@ -146,7 +146,10 @@ async def stream_container_terminal(
                 # reads; xterm.js in the browser decodes the stream as a whole.
                 await ws.send_bytes(data)
         except (asyncio.CancelledError, Exception):
-            pass
+            logger.debug(
+                "backend.services.docker_terminal.stream_container_terminal.forward_docker_to_ws: ignored error",
+                exc_info=True,
+            )
 
     async def forward_ws_to_docker():
         try:
@@ -171,7 +174,10 @@ async def stream_container_terminal(
                                 await writer.drain()
                                 continue
                         except Exception:
-                            pass
+                            logger.debug(
+                                "backend.services.docker_terminal.stream_container_terminal.forward_ws_to_docker: ignored error",
+                                exc_info=True,
+                            )
 
                     # Regular raw text / keystroke input
                     writer.write(raw_text.encode("utf-8"))
@@ -184,7 +190,10 @@ async def stream_container_terminal(
         except WebSocketDisconnect:
             pass
         except (asyncio.CancelledError, Exception):
-            pass
+            logger.debug(
+                "backend.services.docker_terminal.stream_container_terminal.forward_ws_to_docker: ignored error",
+                exc_info=True,
+            )
 
     t_docker = asyncio.create_task(forward_docker_to_ws())
     t_ws = asyncio.create_task(forward_ws_to_docker())
@@ -198,4 +207,4 @@ async def stream_container_terminal(
             writer.close()
             await writer.wait_closed()
         except Exception:
-            pass
+            logger.debug("backend.services.docker_terminal.stream_container_terminal: ignored error", exc_info=True)

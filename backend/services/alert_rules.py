@@ -57,7 +57,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
             if is_simulation_active():
                 return
         except Exception:
-            pass
+            logger.debug("backend.services.alert_rules.evaluate_system_alerts: ignored error", exc_info=True)
 
         status = ups_data.get("status", "").upper()
         charge = ups_data.get("battery_charge_pct")
@@ -118,7 +118,9 @@ def evaluate_system_alerts(unraid_data, ups_data):
                             details=f"Critical battery: {charge}%, runtime: {runtime}m",
                         )
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.services.alert_rules.evaluate_system_alerts: ignored error", exc_info=True
+                        )
 
                     # 1. Protect file copy operation by pausing it cleanly
                     if getattr(Z_STATE, "copy_active", False) and not getattr(Z_STATE, "copy_paused", False):
@@ -184,7 +186,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
                         action_taken="AC mains power restored. Failsafe disengaged.",
                     )
                 except Exception:
-                    pass
+                    logger.debug("backend.services.alert_rules.evaluate_system_alerts: ignored error", exc_info=True)
 
                 # Resume copy job if it was paused by the failsafe
                 if _copy_paused_by_failsafe:

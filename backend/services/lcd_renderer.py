@@ -203,7 +203,10 @@ def render_lcd_loop():
                                     try:
                                         fb_mem[:total_fb_bytes] = b"\x00" * total_fb_bytes
                                     except Exception:
-                                        pass
+                                        logger.debug(
+                                            "backend.services.lcd_renderer.render_lcd_loop: ignored error",
+                                            exc_info=True,
+                                        )
                                     screen_blanked = True
                                     prev_raw_b64 = None
                                 if Z_STATE.ui_wake.wait(1.0):
@@ -274,7 +277,9 @@ def render_lcd_loop():
                                 try:
                                     fb_mem.flush()
                                 except Exception:
-                                    pass
+                                    logger.debug(
+                                        "backend.services.lcd_renderer.render_lcd_loop: ignored error", exc_info=True
+                                    )
 
                             elapsed = time.time() - t0
                             sleep_time = max(0.01, frame_interval - elapsed)
@@ -285,7 +290,7 @@ def render_lcd_loop():
                         try:
                             fb_mem.close()
                         except Exception:
-                            pass
+                            logger.debug("backend.services.lcd_renderer.render_lcd_loop: ignored error", exc_info=True)
 
             if Z_STATE.shutting_down:
                 break

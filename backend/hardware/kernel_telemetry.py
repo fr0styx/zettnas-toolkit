@@ -119,7 +119,7 @@ def get_cpu_telemetry() -> dict[str, Any]:
                 with open(gf) as f:
                     cpu_info["governors"][cpu_id] = f.read().strip()
             except Exception:
-                pass
+                logger.debug("backend.hardware.kernel_telemetry.get_cpu_telemetry: ignored error", exc_info=True)
 
         # 3. Thermal throttling counters
         throttle_files = glob.glob(os.path.join(sys_cpu_dir, "cpu*/thermal_throttle/*"))
@@ -133,7 +133,7 @@ def get_cpu_telemetry() -> dict[str, Any]:
                     cpu_info["thermal_throttling"][cpu_id] = {}
                 cpu_info["thermal_throttling"][cpu_id][attr] = int(val) if val.isdigit() else val
             except Exception:
-                pass
+                logger.debug("backend.hardware.kernel_telemetry.get_cpu_telemetry: ignored error", exc_info=True)
 
     return cpu_info
 
@@ -157,7 +157,7 @@ def get_hardware_buses() -> dict[str, Any]:
                     with open(os.path.join(d_path, "class")) as f:
                         cls = f.read().strip()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.kernel_telemetry.get_hardware_buses: ignored error", exc_info=True)
                 pci_devs.append({"slot": d, "vendor": vendor, "device": device, "class": cls})
         except Exception as e:
             logger.debug(f"[DIAGNOSTICS] Failed reading PCI bus: {e}")
@@ -177,7 +177,7 @@ def get_hardware_buses() -> dict[str, Any]:
                         with open(os.path.join(d_path, "manufacturer")) as f:
                             mfr = f.read().strip()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.kernel_telemetry.get_hardware_buses: ignored error", exc_info=True)
                 if prod or mfr:
                     usb_devs.append({"bus_id": d, "product": prod, "manufacturer": mfr})
         except Exception as e:
@@ -198,7 +198,9 @@ def get_hardware_buses() -> dict[str, Any]:
                                 with open(attr_f) as f:
                                     entry[attr] = f.read().strip()
                             except Exception:
-                                pass
+                                logger.debug(
+                                    "backend.hardware.kernel_telemetry.get_hardware_buses: ignored error", exc_info=True
+                                )
                     power_supplies.append(entry)
         except Exception as e:
             logger.debug(f"[DIAGNOSTICS] Failed reading power_supply class: {e}")
@@ -219,7 +221,9 @@ def get_hardware_buses() -> dict[str, Any]:
                                     if k in ("HID_ID", "HID_NAME", "HID_UNIQ", "DRIVER"):
                                         entry[k] = v
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.kernel_telemetry.get_hardware_buses: ignored error", exc_info=True
+                        )
                 hidraw_devs.append(entry)
         except Exception as e:
             logger.debug(f"[DIAGNOSTICS] Failed reading hidraw class: {e}")
@@ -255,7 +259,7 @@ def get_hwmon_details() -> list[dict[str, Any]]:
                     with open(name_file) as f:
                         h_name = f.read().strip()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.kernel_telemetry.get_hwmon_details: ignored error", exc_info=True)
 
             sensors: dict[str, Any] = {"name": h_name, "path": hdir, "attributes": {}}
             for attr_file in glob.glob(os.path.join(hdir, "*_input")) + glob.glob(os.path.join(hdir, "pwm*")):
@@ -265,7 +269,7 @@ def get_hwmon_details() -> list[dict[str, Any]]:
                         val = f.read().strip()
                     sensors["attributes"][base_attr] = int(val) if val.isdigit() else val
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.kernel_telemetry.get_hwmon_details: ignored error", exc_info=True)
             hwmon_list.append(sensors)
     except Exception as e:
         logger.debug(f"[DIAGNOSTICS] Failed reading hwmon: {e}")
@@ -317,7 +321,9 @@ def get_media_slots_telemetry() -> dict[str, Any]:
                         with open(poll_f) as f:
                             polling_states[dev_name] = f.read().strip()
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.kernel_telemetry.get_media_slots_telemetry: ignored error", exc_info=True
+                        )
 
         return {
             "slots": slots,

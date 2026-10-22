@@ -1116,7 +1116,9 @@ def compute_neural_embedding_via_ollama(
                     if embs and isinstance(embs, list) and len(embs) > 0 and isinstance(embs[0], list):
                         raw_emb = embs[0]
         except Exception:
-            pass
+            logger.debug(
+                "backend.services.rag_engine.compute_neural_embedding_via_ollama: ignored error", exc_info=True
+            )
 
         # 2. Fall back to legacy /api/embeddings endpoint if /api/embed was unavailable
         if raw_emb is None:
@@ -1136,7 +1138,9 @@ def compute_neural_embedding_via_ollama(
                         if cand_emb and isinstance(cand_emb, list):
                             raw_emb = cand_emb
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.compute_neural_embedding_via_ollama: ignored error", exc_info=True
+                )
 
         if raw_emb:
             # L2 normalization
@@ -1461,7 +1465,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                                 val = ", ".join(str(x) for x in val)
                             meta_parts.append(f"{k.capitalize()}: {val}")
             except Exception:
-                pass
+                logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
             return "\n".join(meta_parts)
         except Exception:
             return f"Audio track: {os.path.basename(file_path)}"
@@ -1493,7 +1497,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                         else:
                             meta_parts.append(f"NFO Summary: {nfo_text[:1000]}")
                 except Exception:
-                    pass
+                    logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
             return "\n".join(meta_parts)
         except Exception:
             return f"Video: {os.path.basename(file_path)}"
@@ -1509,7 +1513,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
             if extracted.strip():
                 return extracted
         except Exception:
-            pass
+            logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
 
         try:
             with open(file_path, "rb") as f:
@@ -2606,7 +2610,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
                     with open(sidecar_path, encoding="utf-8", errors="replace") as sf:
                         ocr_text_parts.append(sf.read(4096).strip())
                 except Exception:
-                    pass
+                    logger.debug("backend.services.rag_engine.analyze_photo_asset: ignored error", exc_info=True)
 
     check_ext = file_path if isinstance(file_path, str) else file_name
     if check_ext.lower().endswith((".jpg", ".jpeg", ".tiff", ".tif", ".webp")):
@@ -2632,7 +2636,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
                 if ucomm and not ucomm.startswith("ASCII\x00"):
                     ocr_text_parts.append(ucomm)
         except Exception:
-            pass
+            logger.debug("backend.services.rag_engine.analyze_photo_asset: ignored error", exc_info=True)
 
     ocr_text = sanitize_string("\n".join(p for p in ocr_text_parts if p)).strip()
     if ocr_text:
@@ -2759,7 +2763,7 @@ def _parse_ini_sections(ini_path: str) -> dict[str, dict[str, str]]:
                     k, v = line.split("=", 1)
                     result[current_sec][k.strip()] = v.strip().strip('"')
     except Exception:
-        pass
+        logger.debug("backend.services.rag_engine._parse_ini_sections: ignored error", exc_info=True)
     return result
 
 
@@ -2802,7 +2806,7 @@ def resolve_path_backing_dev(path: str) -> str:
     try:
         path = os.path.realpath(path)
     except Exception:
-        pass
+        logger.debug("backend.services.rag_engine.resolve_path_backing_dev: ignored error", exc_info=True)
     norm = os.path.normpath(path).replace("\\", "/")
     if norm.startswith(("/app/data", "/mnt/cache", "/mnt/nvme", "/mnt/ssd", "/tmp")):
         return "nvme0n1"
@@ -2948,7 +2952,7 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
                     return True
                 _SMARTCTL_STANDBY_CACHE[dev_name] = (now, False)
             except Exception:
-                pass
+                logger.debug("backend.services.rag_engine.is_backing_disk_in_standby: ignored error", exc_info=True)
 
     return False
 
@@ -3058,7 +3062,7 @@ class RagSearchEngine:
                 finally:
                     conn_init.close()
             except Exception:
-                pass
+                logger.debug("backend.services.rag_engine.RagSearchEngine.__init__: ignored error", exc_info=True)
         self._start_spinup_watcher()
 
     def _get_conn(self, readonly: bool = False) -> sqlite3.Connection:
@@ -3077,7 +3081,7 @@ class RagSearchEngine:
                 load_sqlite_vec_extension(conn)
                 return conn
             except Exception:
-                pass
+                logger.debug("backend.services.rag_engine.RagSearchEngine._get_conn: ignored error", exc_info=True)
 
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         conn = sqlite3.connect(self.db_path, timeout=15.0, check_same_thread=False)
@@ -3129,7 +3133,9 @@ class RagSearchEngine:
                             "ALTER TABLE indexed_files ADD COLUMN embedding_model TEXT NOT NULL DEFAULT 'zett_lexical_384d';"
                         )
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.rag_engine.RagSearchEngine._ensure_schema: ignored error", exc_info=True
+                    )
 
                 conn.executescript(
                     """
@@ -3486,7 +3492,10 @@ class RagSearchEngine:
                     json.dump(initial_progress, pf)
                 os.replace(prog_path + ".tmp", prog_path)
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
+                    exc_info=True,
+                )
 
         if len(pending_chunks) == 0:
             final_data = {
@@ -3505,7 +3514,10 @@ class RagSearchEngine:
                     json.dump(final_data, pf)
                 os.replace(prog_path + ".tmp", prog_path)
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
+                    exc_info=True,
+                )
             return {"status": "ok", "total": total, "completed": total, "message": "All chunks already indexed"}
 
         for i in range(0, len(pending_chunks), batch_size):
@@ -3567,13 +3579,19 @@ class RagSearchEngine:
                     json.dump(progress_data, pf)
                 os.replace(prog_path + ".tmp", prog_path)
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
+                    exc_info=True,
+                )
 
             if progress_callback:
                 try:
                     progress_callback(progress_data)
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
+                        exc_info=True,
+                    )
 
             # Thermal watchdog check
             delay = cooperative_delay
@@ -3584,7 +3602,10 @@ class RagSearchEngine:
                 if cpu_temp >= 75.0:
                     delay = 0.20  # 200ms thermal pause
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
+                    exc_info=True,
+                )
 
             await asyncio.sleep(delay)
 
@@ -3613,7 +3634,9 @@ class RagSearchEngine:
                 json.dump(final_progress, pf)
             os.replace(prog_path + ".tmp", prog_path)
         except Exception:
-            pass
+            logger.debug(
+                "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error", exc_info=True
+            )
 
         res_complete = {
             "status": "ok",
@@ -3628,7 +3651,10 @@ class RagSearchEngine:
             try:
                 progress_callback(res_complete)
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
+                    exc_info=True,
+                )
         return res_complete
 
     def _default_watched_paths(self) -> list[str]:
@@ -3959,7 +3985,10 @@ class RagSearchEngine:
                                 existing_deferred_paths.add(wp)
                                 enqueued += 1
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.sync_watched_deferred_queue: ignored error",
+                    exc_info=True,
+                )
             finally:
                 conn_ro.close()
 
@@ -4313,7 +4342,10 @@ class RagSearchEngine:
                             }
                         )
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.rag_engine.RagSearchEngine.discover_available_folders: ignored error",
+                        exc_info=True,
+                    )
 
         # Also include any custom watched_paths that weren't in top-level shares
         for wp in cfg.get("watched_paths") or []:
@@ -4395,7 +4427,7 @@ class RagSearchEngine:
                 cfg["active_sync_session"] = None
                 atomic_write_json(RAG_CONFIG_PATH, cfg)
         except Exception:
-            pass
+            logger.debug("backend.services.rag_engine.RagSearchEngine.stop_sync: ignored error", exc_info=True)
         return self.get_sync_progress()
 
     def forget_folder(self, folder_path: str) -> dict[str, Any]:
@@ -4528,7 +4560,7 @@ class RagSearchEngine:
                     cfg["active_sync_session"] = None
                     atomic_write_json(RAG_CONFIG_PATH, cfg)
             except Exception:
-                pass
+                logger.debug("backend.services.rag_engine.RagSearchEngine.flush_index: ignored error", exc_info=True)
             return {
                 "status": "ok",
                 "message": "RAG index and vector database successfully flushed clean.",
@@ -4589,7 +4621,9 @@ class RagSearchEngine:
             }
             atomic_write_json(RAG_CONFIG_PATH, cfg)
         except Exception:
-            pass
+            logger.debug(
+                "backend.services.rag_engine.RagSearchEngine.start_background_sync: ignored error", exc_info=True
+            )
 
         if is_spinup:
             try:
@@ -4599,7 +4633,9 @@ class RagSearchEngine:
                     f"Disk spin-up detected on {dev_label}. Syncing {len(paths)} watched folder(s)...",
                 )
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.start_background_sync: ignored error", exc_info=True
+                )
 
         def _worker() -> None:
             try:
@@ -4626,7 +4662,10 @@ class RagSearchEngine:
                             cfg["active_sync_session"] = None
                             atomic_write_json(RAG_CONFIG_PATH, cfg)
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.rag_engine.RagSearchEngine.start_background_sync._worker: ignored error",
+                        exc_info=True,
+                    )
 
         t = threading.Thread(target=_worker, name="zettnas-rag-sync", daemon=True)
         self._sync_thread = t
@@ -4752,7 +4791,9 @@ class RagSearchEngine:
                         f"Indexed {total_indexed} files ({total_skipped} unchanged, {total_deferred} deferred) on {dev_label}.",
                     )
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.rag_engine.RagSearchEngine.index_paths: ignored error", exc_info=True
+                    )
             return {
                 "status": final_status,
                 "path": ", ".join(clean_paths),
@@ -5422,7 +5463,9 @@ class RagSearchEngine:
             try:
                 conn.close()
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.get_folder_manifest: ignored error", exc_info=True
+                )
 
     def list_folder_manifests(
         self, path_prefix: str | None = None, principal: Any = None, limit: int = 100, **kwargs: Any

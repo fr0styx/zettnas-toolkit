@@ -517,7 +517,7 @@ async def get_model_recommendations(
                 m["installed"] = tag == "builtin-npu" or is_installed(tag, inst["models"])
         recs["runtime_reachable"] = bool(inst.get("reachable"))
     except Exception:
-        pass
+        logger.debug("backend.api.media.get_model_recommendations: ignored error", exc_info=True)
     return {
         "status": "ok",
         "acceleration": status["acceleration"],
@@ -1272,7 +1272,7 @@ def get_ai_reindex_status() -> dict[str, Any]:
             _REINDEX_CACHE_TIME = now
             return data
         except Exception:
-            pass
+            logger.debug("backend.api.media.get_ai_reindex_status: ignored error", exc_info=True)
 
     # 2. Check in-memory task status
     if _REINDEX_STATUS.get("status") == "running":
@@ -1310,7 +1310,7 @@ def get_ai_reindex_status() -> dict[str, Any]:
                     return res
             conn.close()
     except Exception:
-        pass
+        logger.debug("backend.api.media.get_ai_reindex_status: ignored error", exc_info=True)
 
     _REINDEX_CACHE = dict(_REINDEX_STATUS)
     _REINDEX_CACHE_TIME = now

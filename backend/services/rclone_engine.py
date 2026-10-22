@@ -838,7 +838,9 @@ class RcloneEngine:
                                 lines = lf.readlines()
                                 err_msg = "".join(lines[-15:]).strip()
                         except Exception:
-                            pass
+                            logger.debug(
+                                "backend.services.rclone_engine.RcloneEngine.mount_remote: ignored error", exc_info=True
+                            )
                     raise RuntimeError(
                         f"Mount exited immediately: {err_msg if err_msg else 'code ' + str(proc.returncode)}"
                     )

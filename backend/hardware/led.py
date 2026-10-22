@@ -1,11 +1,14 @@
 import colorsys
 import glob
+import logging
 import os
 import subprocess
 import threading
 import time
 
 from backend.state import Z_STATE
+
+logger = logging.getLogger("ZettNAS")
 
 LED_PORT = os.environ.get("LED_PORT", "")
 
@@ -287,7 +290,7 @@ def _close_serial_connection():
         try:
             _serial_handle.close()
         except Exception:
-            pass
+            logger.debug("backend.hardware.led._close_serial_connection: ignored error", exc_info=True)
         _serial_handle = None
         _serial_port = None
 
@@ -338,7 +341,7 @@ def find_led_port():
                 if os.path.exists(real):
                     return real
             except Exception:
-                pass
+                logger.debug("backend.hardware.led.find_led_port: ignored error", exc_info=True)
             return b
 
     # Avoid capturing arbitrary serial devices (Zigbee dongles, 3D printers) on generic PCs

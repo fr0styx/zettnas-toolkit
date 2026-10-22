@@ -47,7 +47,7 @@ def _docker_api_get(endpoint: str, timeout: float = 2.5) -> Any | None:
             try:
                 conn.close()
             except Exception:
-                pass
+                logger.debug("backend.services.docker_diagnostics._docker_api_get: ignored error", exc_info=True)
 
 
 def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
@@ -86,7 +86,7 @@ def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
             try:
                 conn.close()
             except Exception:
-                pass
+                logger.debug("backend.services.docker_diagnostics._docker_api_get_logs: ignored error", exc_info=True)
 
 
 def collect_docker_diagnostics() -> dict[str, Any]:
@@ -187,7 +187,9 @@ def collect_docker_diagnostics() -> dict[str, Any]:
                     if StoragePlatformDetector.detect() != PlatformType.GENERIC_LINUX:
                         is_troubled = False
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.docker_diagnostics.collect_docker_diagnostics: ignored error", exc_info=True
+                    )
 
             if is_troubled:
                 troubled_names.append(name)
@@ -207,7 +209,9 @@ def collect_docker_diagnostics() -> dict[str, Any]:
                         finished_at = c_state.get("FinishedAt")
                         restart_count = c_inspect.get("RestartCount", 0)
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.docker_diagnostics.collect_docker_diagnostics: ignored error", exc_info=True
+                    )
 
                 troubled_containers.append(
                     {

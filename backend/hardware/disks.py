@@ -1,5 +1,6 @@
 import concurrent.futures
 import json
+import logging
 import os
 import re
 import subprocess
@@ -32,6 +33,8 @@ from backend.db import (
 from backend.fsutil import atomic_write_json
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
+
+logger = logging.getLogger("ZettNAS")
 
 TRENDS_FILE = os.path.join(DATA_DIR, "smart_trends.json")
 _smart_trends = None
@@ -592,7 +595,7 @@ def _parse_smart(data, is_nvme: bool):
             if isinstance(doc, dict):
                 return _parse_smart_json(doc, is_nvme)
         except Exception:
-            pass
+            logger.debug("backend.hardware.disks._parse_smart: ignored error", exc_info=True)
     return _parse_smart_text(data, is_nvme)
 
 
@@ -664,7 +667,7 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
         with open(os.path.join(HOST_SYS, "block", dev_name, "removable")) as f:
             is_removable = f.read().strip() == "1"
     except Exception:
-        pass
+        logger.debug("backend.hardware.disks.poll_disk_smart: ignored error", exc_info=True)
 
     if is_removable:
         Z_STATE.cached_smart_data[dev_name] = (None, "ok")
@@ -1087,7 +1090,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                     "raw": "Device is in low-power STANDBY mode. Platters are not spinning.\nIssue a wake command to inspect live SMART counters.",
                 }
         except Exception:
-            pass
+            logger.debug("backend.hardware.disks.fetch_disk_smart_detail: ignored error", exc_info=True)
 
     # For spinning HDDs, trigger hardware / kernel spinup if wake_if_standby was explicitly requested
     if not is_nvme and wake_if_standby:
@@ -1316,7 +1319,7 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
                 dev_path = _resolve_dev_path(dev_name)
                 is_sleeping = SmartEngine.is_device_sleeping(dev_path)
             except Exception:
-                pass
+                logger.debug("backend.hardware.disks.run_disk_smart_test: ignored error", exc_info=True)
 
         if is_sleeping:
             return {

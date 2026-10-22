@@ -889,7 +889,7 @@ def resolve_app_port_conflict(app_id: str) -> dict[str, Any]:
                 "running": bool(c_info.get("State", {}).get("Running", False)),
             }
     except Exception:
-        pass
+        logger.debug("backend.services.app_catalog.resolve_app_port_conflict: ignored error", exc_info=True)
 
     suggested_container_name = service_name
     if existing_container:
@@ -993,7 +993,7 @@ def generate_compose_for_app(
                                 "compose_yaml": raw_stack,
                             }
                 except Exception:
-                    pass
+                    logger.debug("backend.services.app_catalog.generate_compose_for_app: ignored error", exc_info=True)
 
     # Build volumes list with volume_overrides or default storage_slug
     volumes_list = []
@@ -1369,7 +1369,7 @@ def stream_deploy_catalog_app(
                             "done": False,
                         }
                 except Exception:
-                    pass
+                    logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
 
             yield {
                 "step": "pull",
@@ -1391,7 +1391,7 @@ def stream_deploy_catalog_app(
                 try:
                     pull_conn.close()
                 except Exception:
-                    pass
+                    logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
 
     # 4. Create container
     yield {
@@ -1501,7 +1501,7 @@ def stream_deploy_catalog_app(
     try:
         add_event("info", "AppCatalog", f"Deployed {app['name']} stack on port {port}")
     except Exception:
-        pass
+        logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
 
     webui_url = f"http://[HOST]:{port}{app.get('webui_path', '/')}"
 

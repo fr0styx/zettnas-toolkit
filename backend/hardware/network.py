@@ -171,7 +171,7 @@ def _get_dns_servers() -> list[str]:
                             if match and match.group(1) not in servers:
                                 servers.append(match.group(1))
             except Exception:
-                pass
+                logger.debug("backend.hardware.network._get_dns_servers: ignored error", exc_info=True)
         if servers:
             break
     return servers
@@ -317,7 +317,7 @@ class CanaryWatchdog:
                 try:
                     self._timer.cancel()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.network.CanaryWatchdog.arm: ignored error", exc_info=True)
                 self._timer = None
 
             canary_id = secrets.token_hex(8)
@@ -346,7 +346,7 @@ class CanaryWatchdog:
                 try:
                     self._timer.cancel()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.network.CanaryWatchdog.confirm: ignored error", exc_info=True)
                 self._timer = None
             self.is_active = False
             return True
@@ -361,7 +361,7 @@ class CanaryWatchdog:
                 try:
                     self._timer.cancel()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.network.CanaryWatchdog.revert: ignored error", exc_info=True)
                 self._timer = None
             orig = dict(self.original_config)
             self.is_active = False
@@ -390,7 +390,7 @@ class CanaryWatchdog:
                     "Canary rollback watchdog expired after 60s without confirmation! Host network automatically restored to prevent lockout.",
                 )
             except Exception:
-                pass
+                logger.debug("backend.hardware.network.CanaryWatchdog._on_timeout: ignored error", exc_info=True)
 
 
 _CANARY_WATCHDOG = CanaryWatchdog()
@@ -697,7 +697,7 @@ def apply_host_ip_config_canary(updates: dict[str, Any], timeout_sec: int = 60) 
             f"Testing new host network settings ({target_display}). Rollback watchdog active for {timeout_sec}s.",
         )
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.apply_host_ip_config_canary: ignored error", exc_info=True)
 
     target_ip = target_cfg.get("ip_address") or original_cfg.get("ip_address") or ""
     return {
@@ -738,7 +738,7 @@ def confirm_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
             f"Host network settings confirmed permanently: {target_cfg.get('mode', 'static').upper()} {target_cfg.get('ip_address', '')}",
         )
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.confirm_host_ip_config: ignored error", exc_info=True)
 
     return {
         "status": "confirmed",
@@ -768,7 +768,7 @@ def revert_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
             f"Host network configuration manually reverted to {orig.get('ip_address', 'original')}.",
         )
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.revert_host_ip_config: ignored error", exc_info=True)
 
     return {
         "status": "reverted",
@@ -799,7 +799,7 @@ def _get_unraid_descriptions() -> dict[str, str]:
                                 desc_map["br0"] = desc
                                 desc_map["bond0"] = desc
             except Exception:
-                pass
+                logger.debug("backend.hardware.network._get_unraid_descriptions: ignored error", exc_info=True)
             break
     return desc_map
 
@@ -813,7 +813,7 @@ def _query_ethtool(iface: str) -> str:
         if res.returncode == 0 or "Settings for" in res.stdout:
             return res.stdout
     except Exception:
-        pass
+        logger.debug("backend.hardware.network._query_ethtool: ignored error", exc_info=True)
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -826,7 +826,7 @@ def _query_ethtool(iface: str) -> str:
             if res.returncode == 0 or "Settings for" in res.stdout:
                 return res.stdout
         except Exception:
-            pass
+            logger.debug("backend.hardware.network._query_ethtool: ignored error", exc_info=True)
 
     return ""
 
@@ -844,7 +844,7 @@ def _apply_mtu(iface: str, mtu_val: int) -> bool:
         if res.returncode == 0:
             return True
     except Exception:
-        pass
+        logger.debug("backend.hardware.network._apply_mtu: ignored error", exc_info=True)
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -856,7 +856,7 @@ def _apply_mtu(iface: str, mtu_val: int) -> bool:
             if res.returncode == 0:
                 return True
         except Exception:
-            pass
+            logger.debug("backend.hardware.network._apply_mtu: ignored error", exc_info=True)
 
     for sys_base in [HOST_SYS, "/host/sys", "/sys"]:
         mtu_path = os.path.join(sys_base, "class/net", iface, "mtu")
@@ -866,7 +866,7 @@ def _apply_mtu(iface: str, mtu_val: int) -> bool:
                     f.write(str(mtu_val))
                 return True
             except Exception:
-                pass
+                logger.debug("backend.hardware.network._apply_mtu: ignored error", exc_info=True)
     return False
 
 
@@ -880,7 +880,7 @@ def _apply_wol(iface: str, enabled: bool) -> bool:
         if res.returncode == 0:
             return True
     except Exception:
-        pass
+        logger.debug("backend.hardware.network._apply_wol: ignored error", exc_info=True)
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -892,7 +892,7 @@ def _apply_wol(iface: str, enabled: bool) -> bool:
             if res.returncode == 0:
                 return True
         except Exception:
-            pass
+            logger.debug("backend.hardware.network._apply_wol: ignored error", exc_info=True)
     return False
 
 
@@ -911,7 +911,7 @@ def _apply_negotiation(iface: str, autoneg: bool, speed: int | None = None, dupl
         if res.returncode == 0:
             return True
     except Exception:
-        pass
+        logger.debug("backend.hardware.network._apply_negotiation: ignored error", exc_info=True)
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -923,7 +923,7 @@ def _apply_negotiation(iface: str, autoneg: bool, speed: int | None = None, dupl
             if res.returncode == 0:
                 return True
         except Exception:
-            pass
+            logger.debug("backend.hardware.network._apply_negotiation: ignored error", exc_info=True)
     return False
 
 
@@ -1357,7 +1357,7 @@ def create_vlan(parent: str, vlan_id: int, alias: str = "") -> dict[str, Any]:
             f"802.1Q VLAN sub-interface {vname} (Tag ID: {vid}) created on {parent}.",
         )
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.create_vlan: ignored error", exc_info=True)
 
     return {
         "status": "ok",
@@ -1421,7 +1421,7 @@ def delete_vlan(vlan_name: str) -> dict[str, Any]:
             f"802.1Q VLAN sub-interface {vlan_name} removed.",
         )
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.delete_vlan: ignored error", exc_info=True)
 
     return {
         "status": "ok",
@@ -1603,7 +1603,7 @@ def update_bond_config(bond_name: str, updates: dict[str, Any]) -> dict[str, Any
                 with open(miimon_path, "w") as f:
                     f.write(str(miimon))
             except Exception:
-                pass
+                logger.debug("backend.hardware.network.update_bond_config: ignored error", exc_info=True)
 
     mode_info = BONDING_MODES.get(mode_code, BONDING_MODES["1"])
     try:
@@ -1615,7 +1615,7 @@ def update_bond_config(bond_name: str, updates: dict[str, Any]) -> dict[str, Any
             f"Bond {bond_name} updated to {mode_info['title']} with slaves: {', '.join(slaves)} (miimon: {miimon}ms).",
         )
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.update_bond_config: ignored error", exc_info=True)
 
     return {
         "status": "ok",
@@ -1772,14 +1772,14 @@ def update_bridge_config(br_name: str, updates: dict[str, Any]) -> dict[str, Any
                 with open(stp_path, "w") as f:
                     f.write("1" if stp else "0")
             except Exception:
-                pass
+                logger.debug("backend.hardware.network.update_bridge_config: ignored error", exc_info=True)
         fd_path = os.path.join(sys_net_dir, br_name, "bridge/forward_delay")
         if os.path.isfile(fd_path):
             try:
                 with open(fd_path, "w") as f:
                     f.write(str(forward_delay * 100))
             except Exception:
-                pass
+                logger.debug("backend.hardware.network.update_bridge_config: ignored error", exc_info=True)
 
     try:
         from backend.state import add_event
@@ -1790,7 +1790,7 @@ def update_bridge_config(br_name: str, updates: dict[str, Any]) -> dict[str, Any
             f"Bridge {br_name} updated: STP {'Enabled' if stp else 'Disabled'}, Forward Delay {forward_delay}s, Members: {', '.join(members) or 'None'}.",
         )
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.update_bridge_config: ignored error", exc_info=True)
 
     return {
         "status": "ok",
@@ -2126,7 +2126,7 @@ def read_network_rates():
                 with open(bonding_slaves_path, encoding="utf-8") as bf:
                     bond_slaves.update(bf.read().split())
         except Exception:
-            pass
+            logger.debug("backend.hardware.network.read_network_rates: ignored error", exc_info=True)
 
     for iface_name, (cur_rx, cur_tx) in ifaces.items():
         if iface_name == "lo" or iface_name.startswith(("veth", "docker", "br-", "shim-", "tunl", "tailscale", "wg")):
@@ -2251,7 +2251,7 @@ def read_ip():
                             Z_STATE.discovered_host_ip = candidate_ip
                             return candidate_ip
         except Exception:
-            pass
+            logger.debug("backend.hardware.network.read_ip: ignored error", exc_info=True)
 
     return "?"
 
@@ -2288,7 +2288,7 @@ def _get_tailscale_container_info() -> dict[str, Any]:
                 "status": state.get("Status", "unknown"),
             }
     except Exception:
-        pass
+        logger.debug("backend.hardware.network._get_tailscale_container_info: ignored error", exc_info=True)
     return {"exists": False, "running": False, "id": "", "status": "not_found"}
 
 
@@ -2418,7 +2418,7 @@ def get_taildrop_inbox_files() -> list[dict[str, Any]]:
                         }
                     )
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.network.get_taildrop_inbox_files: ignored error", exc_info=True)
     except Exception as e:
         logger.debug(f"[Tailscale] Failed to read taildrop inbox: {e}")
     files.sort(key=lambda x: x["name"].lower())
@@ -2603,7 +2603,7 @@ def execute_tailscale_reauth() -> dict[str, Any]:
                 s_doc = json.loads(s_out.strip())
                 auth_url = s_doc.get("AuthURL", "")
             except Exception:
-                pass
+                logger.debug("backend.hardware.network.execute_tailscale_reauth: ignored error", exc_info=True)
     return {
         "status": "needs_login" if auth_url else ("ok" if code == 0 else "error"),
         "auth_url": auth_url,
@@ -2769,7 +2769,7 @@ def get_mesh_vpn_status() -> dict[str, Any]:
                     delta = (exp_dt - now_dt).days
                     key_days = max(0, delta)
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.network.get_mesh_vpn_status: ignored error", exc_info=True)
             ts_info["key_expiry_days"] = key_days
             ts_info["key_expired"] = (key_days == 0) if key_days is not None else False
 
@@ -2782,7 +2782,7 @@ def get_mesh_vpn_status() -> dict[str, Any]:
                     ts_info["ssh_enabled"] = bool(p_doc.get("RunSSH", False))
                     p_routes = p_doc.get("AdvertiseRoutes") or []
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.network.get_mesh_vpn_status: ignored error", exc_info=True)
 
             # Exit Node Gateway options
             has_exit_route = any(r in ("0.0.0.0/0", "::/0") for r in p_routes)
@@ -3043,7 +3043,7 @@ def deploy_tailscale_container(
                 try:
                     pull_conn.close()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.network.deploy_tailscale_container: ignored error", exc_info=True)
 
     # 3. Resolve persistent host storage directory
     if not state_dir:
@@ -3154,7 +3154,7 @@ def generate_wireguard_keypair() -> tuple[str, str]:
             if r2.returncode == 0:
                 return priv, r2.stdout.strip()
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.generate_wireguard_keypair: ignored error", exc_info=True)
 
     # Pure Python fallback using 32 cryptographically secure random bytes
     import base64
@@ -3207,7 +3207,7 @@ def get_ip_forwarding_status() -> bool:
                 with open(p) as f:
                     return f.read().strip() == "1"
             except Exception:
-                pass
+                logger.debug("backend.hardware.network.get_ip_forwarding_status: ignored error", exc_info=True)
     return False
 
 
@@ -3221,7 +3221,7 @@ def set_ip_forwarding(enable: bool) -> bool:
                     f.write(f"{val}\n")
                 return True
             except Exception:
-                pass
+                logger.debug("backend.hardware.network.set_ip_forwarding: ignored error", exc_info=True)
     try:
         subprocess.run(["sysctl", "-w", f"net.ipv4.ip_forward={val}"], capture_output=True, timeout=5)
         return True
@@ -3288,7 +3288,9 @@ def get_active_listening_ports() -> list[dict[str, Any]]:
                 raw_bytes = b"".join(bytes.fromhex(p)[::-1] for p in parts)
                 return socket.inet_ntop(socket.AF_INET6, raw_bytes)
         except Exception:
-            pass
+            logger.debug(
+                "backend.hardware.network.get_active_listening_ports._parse_hex_ip: ignored error", exc_info=True
+            )
         return "0.0.0.0"
 
     container_map = {}
@@ -3307,7 +3309,7 @@ def get_active_listening_ports() -> list[dict[str, Any]]:
                         "container_id": c.get("id", "")[:12],
                     }
     except Exception:
-        pass
+        logger.debug("backend.hardware.network.get_active_listening_ports: ignored error", exc_info=True)
 
     proc_bases = [HOST_PROC, "/proc"]
     results = []

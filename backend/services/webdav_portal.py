@@ -203,7 +203,11 @@ def render_webdav_login(error_msg: str | None = None) -> str:
 </html>"""
 
 
+import logging
+
 from backend.fsutil import resolve_within
+
+logger = logging.getLogger("ZettNAS")
 
 
 def render_webdav_portal(current_subpath: str, root_path: str, username: str) -> str:
@@ -238,7 +242,7 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
                     except (PermissionError, FileNotFoundError):
                         continue
         except Exception:
-            pass
+            logger.debug("backend.services.webdav_portal.render_webdav_portal: ignored error", exc_info=True)
 
     # Sort folders first, then alphabetically
     items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))

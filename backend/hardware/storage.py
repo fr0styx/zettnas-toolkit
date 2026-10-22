@@ -117,7 +117,7 @@ def _read_dmi_text(field: str) -> str:
                     if content and content.lower() != "default string":
                         return content
             except Exception:
-                pass
+                logger.debug("backend.hardware.storage._read_dmi_text: ignored error", exc_info=True)
     return ""
 
 
@@ -138,7 +138,7 @@ def _read_dt_text(field: str = "model") -> str:
                     if content and content.lower() != "default string":
                         return content
             except Exception:
-                pass
+                logger.debug("backend.hardware.storage._read_dt_text: ignored error", exc_info=True)
     return ""
 
 
@@ -194,7 +194,7 @@ def detect_chassis_model(force: bool = False, allow_fallback: bool = True):
                 ]
             )
         except Exception:
-            pass
+            logger.debug("backend.hardware.storage.detect_chassis_model: ignored error", exc_info=True)
 
     # 2. Comprehensive DMI & ARM64 Device Tree Hardware Identification
     prod = _read_dmi_text("product_name").lower()
@@ -242,7 +242,7 @@ def detect_chassis_model(force: bool = False, allow_fallback: bool = True):
                             Z_STATE.cached_chassis_model = "d8u"
                         return "d8u"
             except Exception:
-                pass
+                logger.debug("backend.hardware.storage.detect_chassis_model: ignored error", exc_info=True)
             if allow_fallback:
                 Z_STATE.cached_chassis_model = "d6u"
             return "d6u"
@@ -284,7 +284,7 @@ def detect_chassis_model(force: bool = False, allow_fallback: bool = True):
                     Z_STATE.cached_chassis_model = "d8u"
                     return "d8u"
         except Exception:
-            pass
+            logger.debug("backend.hardware.storage.detect_chassis_model: ignored error", exc_info=True)
         Z_STATE.cached_chassis_model = "d6u"
         return "d6u"
 
@@ -316,7 +316,7 @@ def detect_chassis_model(force: bool = False, allow_fallback: bool = True):
                     if os.path.exists(os.path.join(h_path, "pwm2")):
                         pwm2_found = True
             except Exception:
-                pass
+                logger.debug("backend.hardware.storage.detect_chassis_model: ignored error", exc_info=True)
         if pwm1_found and not pwm2_found:
             if allow_fallback:
                 Z_STATE.cached_chassis_model = "d4"

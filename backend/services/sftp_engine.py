@@ -148,7 +148,7 @@ Match Group sftpusers
                             candidates.append(gw_ip)
                         break
         except Exception:
-            pass
+            logger.debug("backend.services.sftp_engine.SFTPEngine._check_port: ignored error", exc_info=True)
 
         # Check primary host IP
         try:
@@ -165,7 +165,7 @@ Match Group sftpusers
                     if hip and hip not in candidates:
                         candidates.append(hip)
             except Exception:
-                pass
+                logger.debug("backend.services.sftp_engine.SFTPEngine._check_port: ignored error", exc_info=True)
 
         for ip in candidates:
             try:
@@ -400,7 +400,7 @@ Match Group sftpusers
                     sidecar_detected = True
                     sidecar_status = "running" if c_data.get("State", {}).get("Running") else "stopped"
             except Exception:
-                pass
+                logger.debug("backend.services.sftp_engine.SFTPEngine.get_status: ignored error", exc_info=True)
 
         subprocess_running = bool(hasattr(self, "_proc") and self._proc and self._proc.poll() is None)
         running = enabled and (port_open or sidecar_status == "running" or subprocess_running)
@@ -428,7 +428,7 @@ Match Group sftpusers
                     s.connect(("1.1.1.1", 80))
                     host_ip = s.getsockname()[0]
             except Exception:
-                pass
+                logger.debug("backend.services.sftp_engine.SFTPEngine.get_status: ignored error", exc_info=True)
 
         users = self.list_users()
         sample_user = users[0]["username"] if users else "username"
@@ -507,7 +507,7 @@ Match Group sftpusers
                 try:
                     self._proc.kill()
                 except Exception:
-                    pass
+                    logger.debug("backend.services.sftp_engine.SFTPEngine.stop: ignored error", exc_info=True)
             self._proc = None
 
         time.sleep(0.3)

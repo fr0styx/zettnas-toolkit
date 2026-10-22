@@ -18,6 +18,7 @@ share's Samba user lists (valid users / read list / write list), the share's
 upgrading changes nothing for existing shares; admins tighten it from here.
 """
 
+import logging
 import os
 import re
 import threading
@@ -26,6 +27,8 @@ from typing import Any, Optional
 
 from backend import config
 from backend.fsutil import atomic_write_json, read_json
+
+logger = logging.getLogger("ZettNAS")
 
 LEVELS = ("none", "read", "write")
 _CACHE_TTL = 30.0
@@ -91,7 +94,7 @@ def known_shares() -> list[dict[str, Any]]:
             if s.mountpoint:
                 shares[s.name] = {"name": s.name, "path": os.path.realpath(s.mountpoint), "samba": None}
     except Exception:
-        pass
+        logger.debug("backend.services.share_access.known_shares: ignored error", exc_info=True)
     try:
         from backend.services.samba_engine import get_samba_engine
 
@@ -107,7 +110,7 @@ def known_shares() -> list[dict[str, Any]]:
                 },
             }
     except Exception:
-        pass
+        logger.debug("backend.services.share_access.known_shares: ignored error", exc_info=True)
     result = list(shares.values())
     with _lock:
         _cache.update(ts=now, shares=result)

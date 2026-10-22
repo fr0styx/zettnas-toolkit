@@ -94,7 +94,7 @@ def _detect_host_nut_config(custom_dirs: list[str] | None = None) -> dict[str, A
                                 ups_name = cand
                                 break
             except Exception:
-                pass
+                logger.debug("backend.hardware.ups._detect_host_nut_config: ignored error", exc_info=True)
 
         upsmon_conf = os.path.join(nd, "upsmon.conf")
         if os.path.isfile(upsmon_conf):
@@ -125,7 +125,7 @@ def _detect_host_nut_config(custom_dirs: list[str] | None = None) -> dict[str, A
                                     password = parts[4]
                             break
             except Exception:
-                pass
+                logger.debug("backend.hardware.ups._detect_host_nut_config: ignored error", exc_info=True)
 
         if ups_name:
             return {
@@ -310,7 +310,7 @@ def _get_docker_gateway() -> str | None:
                     if len(parts) == 4 and parts[0] == 172 and 16 <= parts[1] <= 31:
                         return gw_ip
     except Exception:
-        pass
+        logger.debug("backend.hardware.ups._get_docker_gateway: ignored error", exc_info=True)
     return None
 
 
@@ -507,7 +507,7 @@ def _query_nut_socket(
             try:
                 s.sendall(b"LOGOUT\n")
             except Exception:
-                pass
+                logger.debug("backend.hardware.ups._query_nut_socket: ignored error", exc_info=True)
     except Exception as e:
         logger.debug(f"[UPS] NUT socket check at {host}:{port} returned: {e}")
     return out
@@ -654,7 +654,9 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
                                 with open(fp) as f:
                                     return f.read().strip()
                             except Exception:
-                                pass
+                                logger.debug(
+                                    "backend.hardware.ups._query_direct_usb._read_attr: ignored error", exc_info=True
+                                )
                         return None
 
                     cap = _read_attr("capacity")
@@ -1161,7 +1163,7 @@ def test_ups_connection(
                         "error": "Probing link-local or cloud metadata addresses is forbidden.",
                     }
         except Exception:
-            pass
+            logger.debug("backend.hardware.ups.test_ups_connection: ignored error", exc_info=True)
 
     try:
         clean_port = int(port or 3551)

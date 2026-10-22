@@ -479,20 +479,20 @@ def _safe_parse_tool_call_json(raw_args: Any) -> dict[str, Any]:
     try:
         return json.loads(s)
     except Exception:
-        pass
+        logger.debug("backend.services.ai_chat_agent._safe_parse_tool_call_json: ignored error", exc_info=True)
     # Strip trailing commas before } or ]
     s_fixed = re.sub(r",\s*([}\]])", r"\1", s)
     try:
         return json.loads(s_fixed)
     except Exception:
-        pass
+        logger.debug("backend.services.ai_chat_agent._safe_parse_tool_call_json: ignored error", exc_info=True)
     # Extract outermost JSON object if wrapped in explanatory prose
     match = re.search(r"(\{.*\})", s_fixed, flags=re.DOTALL)
     if match:
         try:
             return json.loads(match.group(1))
         except Exception:
-            pass
+            logger.debug("backend.services.ai_chat_agent._safe_parse_tool_call_json: ignored error", exc_info=True)
     return {}
 
 
@@ -832,7 +832,7 @@ def tool_get_system_telemetry() -> dict[str, Any]:
                         ram_avail_gb = round(kb / (1024**2), 1)
                         break
     except Exception:
-        pass
+        logger.debug("backend.services.ai_chat_agent.tool_get_system_telemetry: ignored error", exc_info=True)
     ram_used_gb = round(max(0.1, ram_total_gb - ram_avail_gb), 1)
     ram_pct = round((ram_used_gb / max(1.0, ram_total_gb)) * 100.0, 1)
 
@@ -3588,7 +3588,9 @@ def _try_local_llm_completion(
                                 )
                                 continue
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.ai_chat_agent._try_local_llm_completion: ignored error", exc_info=True
+                    )
 
                 ollama_req_body: dict[str, Any] = {
                     "model": model_to_use,
@@ -3628,7 +3630,9 @@ def _try_local_llm_completion(
                                 continue
                             model_to_use = matched
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.ai_chat_agent._try_local_llm_completion: ignored error", exc_info=True
+                    )
 
                 openai_req_body: dict[str, Any] = {
                     "model": model_to_use,
@@ -3724,7 +3728,9 @@ def _try_local_llm_completion(
                                     "has_npu": False,
                                 }
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.services.ai_chat_agent._try_local_llm_completion: ignored error", exc_info=True
+                        )
 
                     if content or raw_tool_calls:
                         _ACTIVE_ENDPOINT_CACHE[cache_key] = (runtime_kind, url, time.time() + 60.0)
@@ -6098,7 +6104,7 @@ async def stream_agentic_chat(
                     telemetry={"cancelled": True},
                 )
             except Exception:
-                pass
+                logger.debug("backend.services.ai_chat_agent.stream_agentic_chat: ignored error", exc_info=True)
         raise
     except Exception as ex:
         logger.error(f"[ZettAI] Streaming exception: {ex}")

@@ -40,7 +40,9 @@ def get_dmi_telemetry() -> dict[str, Any]:
                     with open(p, encoding="utf-8", errors="replace") as f:
                         return f.read().strip()
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.host_telemetry.get_dmi_telemetry._read_dmi: ignored error", exc_info=True
+                    )
         return ""
 
     vendor = _read_dmi("sys_vendor") or "Zettlab"
@@ -73,7 +75,7 @@ def get_cpu_telemetry() -> dict[str, Any]:
                                 _CPU_MODEL_CACHE = line.split(":", 1)[1].strip()
                                 break
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.host_telemetry.get_cpu_telemetry: ignored error", exc_info=True)
                 if _CPU_MODEL_CACHE:
                     break
         if not _CPU_MODEL_CACHE:
@@ -90,7 +92,7 @@ def get_cpu_telemetry() -> dict[str, Any]:
                 governor = f.read().strip()
                 break
         except Exception:
-            pass
+            logger.debug("backend.hardware.host_telemetry.get_cpu_telemetry: ignored error", exc_info=True)
 
     load_avg = [0.0, 0.0, 0.0]
     for lp in (os.path.join(HOST_PROC, "loadavg"), "/proc/loadavg"):
@@ -101,7 +103,7 @@ def get_cpu_telemetry() -> dict[str, Any]:
                     load_avg = [float(parts[0]), float(parts[1]), float(parts[2])]
                 break
             except Exception:
-                pass
+                logger.debug("backend.hardware.host_telemetry.get_cpu_telemetry: ignored error", exc_info=True)
 
     return {
         "model": _CPU_MODEL_CACHE,
@@ -130,7 +132,7 @@ def get_os_telemetry() -> dict[str, Any]:
                             elif line.startswith("NAME=") and not _OS_DISTRO_CACHE:
                                 _OS_DISTRO_CACHE = line.split("=", 1)[1].strip().strip('"').strip("'")
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.host_telemetry.get_os_telemetry: ignored error", exc_info=True)
                 if _OS_DISTRO_CACHE:
                     break
 
@@ -148,7 +150,7 @@ def get_os_telemetry() -> dict[str, Any]:
                     uptime_sec = float(f.read().split()[0])
                 break
             except Exception:
-                pass
+                logger.debug("backend.hardware.host_telemetry.get_os_telemetry: ignored error", exc_info=True)
 
     days = int(uptime_sec // 86400)
     hours = int((uptime_sec % 86400) // 3600)
@@ -202,7 +204,7 @@ def get_gpu_telemetry() -> dict[str, Any]:
                     driver = os.path.basename(os.readlink(driver_path))
                 break
             except Exception:
-                pass
+                logger.debug("backend.hardware.host_telemetry.get_gpu_telemetry: ignored error", exc_info=True)
 
     if vendor_id == "0x8086":
         vendor_name = "Intel"
@@ -284,7 +286,7 @@ def _sample_gpu_dynamic() -> dict[str, Any]:
                     if val > cur_freq:
                         cur_freq = val
             except Exception:
-                pass
+                logger.debug("backend.hardware.host_telemetry._sample_gpu_dynamic: ignored error", exc_info=True)
 
     max_freq_patterns = [
         os.path.join(HOST_SYS, "class/drm/card*/gt/gt*/rps_max_freq_mhz"),
@@ -303,7 +305,7 @@ def _sample_gpu_dynamic() -> dict[str, Any]:
                     if val > max_freq:
                         max_freq = val
             except Exception:
-                pass
+                logger.debug("backend.hardware.host_telemetry._sample_gpu_dynamic: ignored error", exc_info=True)
 
     rc6_patterns = [
         os.path.join(HOST_SYS, "class/drm/card*/gt/gt*/rc6_residency_ms"),
@@ -386,7 +388,7 @@ def _sample_npu_dynamic() -> dict[str, Any]:
                 with open(fp, encoding="utf-8", errors="replace") as f:
                     cur_freq = int(f.read().strip())
         except Exception:
-            pass
+            logger.debug("backend.hardware.host_telemetry._sample_npu_dynamic: ignored error", exc_info=True)
 
         try:
             fp = os.path.join(dev_dir, "npu_max_frequency_mhz")
@@ -394,7 +396,7 @@ def _sample_npu_dynamic() -> dict[str, Any]:
                 with open(fp, encoding="utf-8", errors="replace") as f:
                     max_freq = int(f.read().strip())
         except Exception:
-            pass
+            logger.debug("backend.hardware.host_telemetry._sample_npu_dynamic: ignored error", exc_info=True)
 
         try:
             fp = os.path.join(dev_dir, "power_state")
@@ -402,7 +404,7 @@ def _sample_npu_dynamic() -> dict[str, Any]:
                 with open(fp, encoding="utf-8", errors="replace") as f:
                     power_state = f.read().strip()
         except Exception:
-            pass
+            logger.debug("backend.hardware.host_telemetry._sample_npu_dynamic: ignored error", exc_info=True)
 
         try:
             fp = os.path.join(dev_dir, "npu_memory_utilization")
@@ -410,7 +412,7 @@ def _sample_npu_dynamic() -> dict[str, Any]:
                 with open(fp, encoding="utf-8", errors="replace") as f:
                     memory_bytes = int(f.read().strip())
         except Exception:
-            pass
+            logger.debug("backend.hardware.host_telemetry._sample_npu_dynamic: ignored error", exc_info=True)
 
         busy_us = None
         try:
@@ -419,7 +421,7 @@ def _sample_npu_dynamic() -> dict[str, Any]:
                 with open(fp, encoding="utf-8", errors="replace") as f:
                     busy_us = int(f.read().strip())
         except Exception:
-            pass
+            logger.debug("backend.hardware.host_telemetry._sample_npu_dynamic: ignored error", exc_info=True)
 
         util_pct = _NPU_LAST_SAMPLE["util_pct"]
         if busy_us is not None:
@@ -517,7 +519,7 @@ def get_npu_telemetry() -> dict[str, Any]:
                         sched_mode = f.read().strip()
                 break
             except Exception:
-                pass
+                logger.debug("backend.hardware.host_telemetry.get_npu_telemetry: ignored error", exc_info=True)
 
     if vendor_id == "0x8086" or driver == "intel_vpu":
         vendor_name = "Intel"

@@ -1,6 +1,9 @@
+import logging
 import os
 
 from backend.config import HOST_PROC
+
+logger = logging.getLogger("ZettNAS")
 
 
 def read_mem():
@@ -25,7 +28,7 @@ def read_mem():
                             arc_bytes = int(parts[2])
                             break
             except Exception:
-                pass
+                logger.debug("backend.hardware.memory.read_mem: ignored error", exc_info=True)
         arc_gb = arc_bytes / (1024 * 1024 * 1024)
         effective_avail = min(total, avail + arc_gb)
         used = max(0.0, total - effective_avail)

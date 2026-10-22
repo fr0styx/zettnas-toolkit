@@ -45,7 +45,7 @@ class ChassisEngine:
                     with open(dmi_path) as f:
                         return f.read().strip()
                 except Exception:
-                    pass
+                    logger.debug("backend.hardware.chassis.ChassisEngine._read_dmi_field: ignored error", exc_info=True)
         return ""
 
     @classmethod
@@ -57,7 +57,9 @@ class ChassisEngine:
 
                 prod = _read_dt_text("model")
             except Exception:
-                pass
+                logger.debug(
+                    "backend.hardware.chassis.ChassisEngine._read_dmi_product_name: ignored error", exc_info=True
+                )
         return prod
 
     @classmethod
@@ -83,7 +85,9 @@ class ChassisEngine:
 
             dt_text = f"{_read_dt_text('model')} {_read_dt_text('compatible')}".lower().strip()
         except Exception:
-            pass
+            logger.debug(
+                "backend.hardware.chassis.ChassisEngine.detect_hardware_features: ignored error", exc_info=True
+            )
 
         dmi_combined = f"{product} {board} {sku} {family} {vendor} {dt_text}"
 
@@ -120,7 +124,9 @@ class ChassisEngine:
                     if any(k in u_model for k in ("zettlab", "zettos", "wy110", "wy120", "wy140")):
                         is_zettlabs = True
             except Exception:
-                pass
+                logger.debug(
+                    "backend.hardware.chassis.ChassisEngine.detect_hardware_features: ignored error", exc_info=True
+                )
         is_ugreen = bool("ugreen" in vendor or any(k in dmi_combined for k in ("dxp", "ugos", "ugreen")))
         is_minisforum = bool("minisforum" in vendor or any(k in dmi_combined for k in ("ms-01", "ms-a1", "minisforum")))
         is_custom_appliance = bool(
@@ -155,7 +161,10 @@ class ChassisEngine:
                             if len(parts) == 2 and parts[0] > 0 and parts[1] > 0:
                                 display_w, display_h = max(parts), min(parts)
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.chassis.ChassisEngine.detect_hardware_features: ignored error",
+                            exc_info=True,
+                        )
                 if os.path.exists(s_path):
                     try:
                         with open(s_path, encoding="utf-8", errors="replace") as f:
@@ -163,7 +172,10 @@ class ChassisEngine:
                             if s_val > 0:
                                 stride = s_val
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.chassis.ChassisEngine.detect_hardware_features: ignored error",
+                            exc_info=True,
+                        )
 
         lcd_resolution = {
             "width": display_w,
@@ -203,7 +215,9 @@ class ChassisEngine:
                 ):
                     has_sd_slot = True
             except Exception:
-                pass
+                logger.debug(
+                    "backend.hardware.chassis.ChassisEngine.detect_hardware_features: ignored error", exc_info=True
+                )
 
         # Unified custom hardware flag
         has_custom_hardware = bool(has_lcd or has_mcu or has_copy_button or has_sd_slot or is_custom_appliance)
@@ -266,7 +280,7 @@ class ChassisEngine:
 
             dt_model = f"{_read_dt_text('model')} {_read_dt_text('compatible')}".lower().strip()
         except Exception:
-            pass
+            logger.debug("backend.hardware.chassis.ChassisEngine.get_chassis_status: ignored error", exc_info=True)
 
         # Check explicit product name first, then fallback to board/sku/dt
         if (
@@ -308,7 +322,9 @@ class ChassisEngine:
                         if any(k in u_model for k in ("d8u", "d8 ultra", "nas-8", "8-bay", "d8")):
                             is_d8u = True
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.chassis.ChassisEngine.get_chassis_status: ignored error", exc_info=True
+                    )
             if is_d8u:
                 chassis_model = "ZETTLAB D8U"
                 friendly_label = "Zettlab D8 Ultra (8-Bay)"
@@ -333,7 +349,9 @@ class ChassisEngine:
                         if any(k in u_model for k in ("d8u", "d8 ultra", "nas-8", "8-bay", "d8")):
                             is_d8u = True
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.chassis.ChassisEngine.get_chassis_status: ignored error", exc_info=True
+                    )
             if is_d8u:
                 chassis_model = "ZETTLAB D8U"
                 friendly_label = "Zettlab D8 Ultra (8-Bay)"
@@ -370,7 +388,7 @@ class ChassisEngine:
                     chassis_model = "ZETTLAB D6"
                     friendly_label = "Zettlab D6 Ultra (6-Bay)"
             except Exception:
-                pass
+                logger.debug("backend.hardware.chassis.ChassisEngine.get_chassis_status: ignored error", exc_info=True)
 
         # 2. Determine Profile & Total Bays
         hdd_count = len(hdds)
@@ -616,5 +634,7 @@ class ChassisEngine:
                         f.write(f"{val}\n")
                     return True
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.chassis.ChassisEngine.set_ugreen_bay_led: ignored error", exc_info=True
+                    )
         return False

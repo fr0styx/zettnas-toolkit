@@ -28,7 +28,7 @@ def close_notification_client() -> None:
         try:
             _http_client.close()
         except Exception:
-            pass
+            logger.debug("backend.services.notifications.close_notification_client: ignored error", exc_info=True)
         _http_client = None
 
 

@@ -42,7 +42,9 @@ class SmartTelemetryEngine:
             if "STANDBY" in out or "SLEEP" in out:
                 return True
         except Exception:
-            pass
+            logger.debug(
+                "backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping: ignored error", exc_info=True
+            )
 
         # 2. Secondary fallback: hdparm -C (ATA only)
         try:
@@ -51,7 +53,9 @@ class SmartTelemetryEngine:
             if r.returncode == 0 and ("standby" in r.stdout.lower() or "sleeping" in r.stdout.lower()):
                 return True
         except Exception:
-            pass
+            logger.debug(
+                "backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping: ignored error", exc_info=True
+            )
 
         return False
 
@@ -279,7 +283,10 @@ class SmartTelemetryEngine:
                         raw_text = r.stdout
                         break
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.hardware.smart_engine.SmartTelemetryEngine.query_smart_telemetry: ignored error",
+                            exc_info=True,
+                        )
             except Exception:
                 continue
 

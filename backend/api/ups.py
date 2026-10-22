@@ -6,6 +6,7 @@ connection testing, battery self-test execution, outage simulation, and event lo
 
 import asyncio
 import ipaddress
+import logging
 import socket
 from typing import Any, Optional
 
@@ -26,6 +27,8 @@ from backend.hardware.ups import (
 )
 from backend.services.ups_watchdog import trigger_outage_simulation
 
+logger = logging.getLogger("ZettNAS")
+
 router = APIRouter(tags=["UPS & Power Integrity"])
 
 
@@ -44,7 +47,7 @@ def _is_forbidden_ups_host(host_str: str) -> bool:
                 if ipaddress.ip_address(info[4][0]).is_link_local:
                     return True
         except Exception:
-            pass
+            logger.debug("backend.api.ups._is_forbidden_ups_host: ignored error", exc_info=True)
     return False
 
 

@@ -8,8 +8,11 @@ never blocks or breaks the request. Repeats of the same event by the same
 actor are collapsed for 10 minutes.
 """
 
+import logging
 import threading
 from typing import Any, Optional
+
+logger = logging.getLogger("ZettNAS")
 
 # event_type -> (title, level)
 ALERT_EVENTS: dict[str, tuple] = {
@@ -69,7 +72,7 @@ def maybe_alert(
                 dedup_key=f"sec:{event_type}:{actor_username or ''}:{actor_ip or ''}",
             )
         except Exception:
-            pass
+            logger.debug("backend.services.security_alerts.maybe_alert._send: ignored error", exc_info=True)
 
     threading.Thread(target=_send, name="security-alert", daemon=True).start()
     return True

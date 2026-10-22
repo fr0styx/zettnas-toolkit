@@ -36,7 +36,9 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
                 try:
                     await ws.close(code=1011, reason=f"Cannot connect to VM display socket: {e}")
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.console_proxy.stream_socket_to_websocket: ignored error", exc_info=True
+                    )
                 return
 
     async def forward_tcp_to_ws():
@@ -47,7 +49,10 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
                     break
                 await ws.send_bytes(data)
         except Exception:
-            pass
+            logger.debug(
+                "backend.services.console_proxy.stream_socket_to_websocket.forward_tcp_to_ws: ignored error",
+                exc_info=True,
+            )
 
     async def forward_ws_to_tcp():
         try:
@@ -64,7 +69,10 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
         except WebSocketDisconnect:
             pass
         except Exception:
-            pass
+            logger.debug(
+                "backend.services.console_proxy.stream_socket_to_websocket.forward_ws_to_tcp: ignored error",
+                exc_info=True,
+            )
 
     t1 = asyncio.create_task(forward_tcp_to_ws())
     t2 = asyncio.create_task(forward_ws_to_tcp())
@@ -77,7 +85,7 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
         try:
             await writer.wait_closed()
         except Exception:
-            pass
+            logger.debug("backend.services.console_proxy.stream_socket_to_websocket: ignored error", exc_info=True)
 
 
 async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeout_sec: float = 3.0):
@@ -100,7 +108,9 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                 await asyncio.sleep(0.5)
                 await ws.close(code=1011, reason=f"Serial socket '{socket_path}' not available.")
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.console_proxy.stream_unix_socket_to_websocket: ignored error", exc_info=True
+                )
             return
 
         try:
@@ -117,7 +127,9 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                 try:
                     await ws.close(code=1011, reason=f"Cannot connect to serial socket: {e}")
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.console_proxy.stream_unix_socket_to_websocket: ignored error", exc_info=True
+                    )
                 return
 
     async def forward_sock_to_ws():
@@ -130,7 +142,10 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                 # characters split across reads; the browser terminal decodes the stream.
                 await ws.send_bytes(data)
         except Exception:
-            pass
+            logger.debug(
+                "backend.services.console_proxy.stream_unix_socket_to_websocket.forward_sock_to_ws: ignored error",
+                exc_info=True,
+            )
 
     async def forward_ws_to_sock():
         try:
@@ -149,7 +164,10 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
         except WebSocketDisconnect:
             pass
         except Exception:
-            pass
+            logger.debug(
+                "backend.services.console_proxy.stream_unix_socket_to_websocket.forward_ws_to_sock: ignored error",
+                exc_info=True,
+            )
 
     t1 = asyncio.create_task(forward_sock_to_ws())
     t2 = asyncio.create_task(forward_ws_to_sock())
@@ -162,4 +180,4 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
         try:
             await writer.wait_closed()
         except Exception:
-            pass
+            logger.debug("backend.services.console_proxy.stream_unix_socket_to_websocket: ignored error", exc_info=True)

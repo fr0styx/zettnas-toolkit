@@ -181,7 +181,7 @@ def _run(job_id: str) -> None:
         try:
             detail = json.loads(e.read().decode("utf-8")).get("error", "")
         except Exception:
-            pass
+            logger.debug("backend.services.model_installer._run: ignored error", exc_info=True)
         _update(job_id, state="failed", status="Failed", error=detail or f"HTTP {e.code}", finished_at=time.time())
     except Exception as e:
         _update(job_id, state="failed", status="Failed", error=str(e), finished_at=time.time())

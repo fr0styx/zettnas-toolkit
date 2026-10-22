@@ -42,7 +42,7 @@ def read_total_ram_bytes() -> int:
                             if len(parts) >= 2 and parts[1].isdigit():
                                 return int(parts[1]) * 1024
             except Exception:
-                pass
+                logger.debug("backend.services.media_engine.read_total_ram_bytes: ignored error", exc_info=True)
     return 0
 
 
@@ -1327,7 +1327,9 @@ def search_huggingface_models(
                             exact_match_item = formatted_exact
                             results.append(formatted_exact)
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.services.media_engine.search_huggingface_models: ignored error", exc_info=True
+                    )
 
             api_fetch_limit = min(60, max(40, safe_limit * 3))
             params = {
@@ -1650,7 +1652,7 @@ def remove_llm_model(model_id: str) -> dict[str, Any]:
                 except urllib.error.HTTPError:
                     continue
         except Exception:
-            pass
+            logger.debug("backend.services.media_engine.remove_llm_model: ignored error", exc_info=True)
 
     # 4. Check active model fallback if current active was deleted
     current_active = str(rag_cfg.get("active_model", "")).strip().lower()

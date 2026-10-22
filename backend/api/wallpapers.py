@@ -81,7 +81,7 @@ def _clean_cache_for(safe: str):
             if os.path.isfile(cache_path):
                 os.remove(cache_path)
         except Exception:
-            pass
+            logger.debug("backend.api.wallpapers._clean_cache_for: ignored error", exc_info=True)
 
 
 def _get_thumbnail_wallpaper_path(safe: str, wp_path: str) -> tuple[str, str]:

@@ -66,7 +66,7 @@ def init_db():
                     try:
                         conn.execute(f"ALTER TABLE metrics ADD COLUMN {col_name} REAL DEFAULT 0.0")
                     except Exception:
-                        pass
+                        logger.debug("backend.db.init_db: ignored error", exc_info=True)
             conn.execute("DROP INDEX IF EXISTS idx_metrics_ts")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS copy_history (
@@ -101,7 +101,7 @@ def init_db():
             try:
                 conn.execute("ALTER TABLE smart_history ADD COLUMN power_on_hours INTEGER DEFAULT 0;")
             except Exception:
-                pass
+                logger.debug("backend.db.init_db: ignored error", exc_info=True)
             conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_dev_ts ON smart_history(dev, ts DESC)")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ups_events (
@@ -736,7 +736,7 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
                     f"failed with surface defect at LBA {lba_err}. Plan disk replacement immediately."
                 )
         except Exception:
-            pass
+            logger.debug("backend.db.query_smart_velocity._eval_velocity: ignored error", exc_info=True)
 
         # Compute Failure Probability Telemetry (Scrutiny-style degradation assessment)
         if status == "critical" or shedding:

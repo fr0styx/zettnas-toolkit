@@ -13,6 +13,7 @@ Scripts using API tokens follow the same two steps, which keeps one stray
 request (or an AI tool call) from wiping data on its own.
 """
 
+import logging
 import secrets
 import threading
 import time
@@ -21,6 +22,8 @@ from typing import Any, Optional
 from fastapi import Depends, Request
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal
+
+logger = logging.getLogger("ZettNAS")
 
 TOKEN_TTL_SECS = 120
 _MAX_PENDING = 1000
@@ -123,7 +126,7 @@ def require_confirmation(action: str):
                 details={"target": target, "path": request.url.path},
             )
         except Exception:
-            pass
+            logger.debug("backend.confirmations.require_confirmation._dep: ignored error", exc_info=True)
 
     return _dep
 

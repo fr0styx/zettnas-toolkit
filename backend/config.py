@@ -361,7 +361,7 @@ def get_server_hostname() -> str:
                         _cached_server_hostname_ts = now
                         return d_name
         except Exception:
-            pass
+            logger.debug("backend.config.get_server_hostname: ignored error", exc_info=True)
 
     # 5. Local socket hostname (if not a raw container ID)
     try:
@@ -371,7 +371,7 @@ def get_server_hostname() -> str:
             _cached_server_hostname_ts = now
             return raw_sock
     except Exception:
-        pass
+        logger.debug("backend.config.get_server_hostname: ignored error", exc_info=True)
 
     # 6. Fallback to env_name if set to "NAS", otherwise "ZettNAS"
     fallback = env_name if env_name and not _is_container_id(env_name) else "ZettNAS"

@@ -216,7 +216,7 @@ class NfsEngine:
             with open(audit_file, "w", encoding="utf-8") as f:
                 f.write(content)
         except Exception:
-            pass
+            logger.debug("backend.services.nfs_engine.NfsEngine.apply_exports: ignored error", exc_info=True)
 
         # 4. Invoke exportfs -ra or service reload
         try:
@@ -242,7 +242,7 @@ class NfsEngine:
             port_open = result == 0
             sock.close()
         except Exception:
-            pass
+            logger.debug("backend.services.nfs_engine.NfsEngine.get_status: ignored error", exc_info=True)
 
         kernel_supported = os.path.exists("/proc/fs/nfsd") or os.path.exists("/proc/net/rpc/nfsd")
 

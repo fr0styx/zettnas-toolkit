@@ -692,7 +692,7 @@ def _resolve_vm_ip_by_mac(mac: str) -> str | None:
                         if ip and ip != "0.0.0.0":
                             return ip
             except Exception:
-                pass
+                logger.debug("backend.api.vms._resolve_vm_ip_by_mac: ignored error", exc_info=True)
     return None
 
 
@@ -912,7 +912,7 @@ def _drain_stderr(proc: subprocess.Popen, log_path: str, err_log_path: str, vm_i
                 ef.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")
             _LAST_QEMU_ERRORS[vm_id] = err_msg
     except Exception:
-        pass
+        logger.debug("backend.api.vms._drain_stderr: ignored error", exc_info=True)
 
 
 def _reconcile_vm_states(vms: list[dict[str, Any]]) -> bool:
@@ -1200,7 +1200,7 @@ def collect_vm_diagnostics() -> dict[str, Any]:
                         if lines:
                             recent_errors[vm_id] = [line.strip() for line in lines[-50:]]
                 except Exception:
-                    pass
+                    logger.debug("backend.api.vms.collect_vm_diagnostics: ignored error", exc_info=True)
 
     return {
         "hypervisor_telemetry": telemetry,
@@ -1295,7 +1295,7 @@ async def upload_iso_file(
                 elif any(sig in sector for sig in [b"BEA01", b"NSR02", b"NSR03"]):
                     format_verified = "udf"
         except Exception:
-            pass
+            logger.debug("backend.api.vms.upload_iso_file: ignored error", exc_info=True)
 
     try:
         os.replace(tmp_path, out_path)
@@ -1649,7 +1649,7 @@ def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
             try:
                 proc.kill()
             except Exception:
-                pass
+                logger.debug("backend.api.vms._prepare_vtpm: ignored error", exc_info=True)
             return []
         time.sleep(0.05)
 
@@ -1916,7 +1916,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
                         [qemu_img, "create", "-f", "qcow2", sd_path, f"{sdisk.get('size_gb', 20)}G"], check=True
                     )
                 except Exception:
-                    pass
+                    logger.debug("backend.api.vms._start_qemu._build_cmd: ignored error", exc_info=True)
             safe_sd = _confined(sd_path, _vm_disk_roots(), "file")
             sbus = str(sdisk.get("bus", "virtio"))
             sfmt = str(sdisk.get("format") or ("raw" if str(sd_path).endswith((".raw", ".img")) else "qcow2"))
@@ -2039,7 +2039,7 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
                 with open(pid_file) as f:
                     pid = int(f.read().strip())
             except Exception:
-                pass
+                logger.debug("backend.api.vms._sync_cleanup_qemu_process: ignored error", exc_info=True)
 
     if proc and proc.poll() is None:
         if force:
@@ -2132,7 +2132,7 @@ def get_host_iommu_groups():
                             with open(cfile) as f:
                                 dev_class = f.read().strip().replace("0x", "")
                     except Exception:
-                        pass
+                        logger.debug("backend.api.vms.get_host_iommu_groups: ignored error", exc_info=True)
                     devs.append(
                         {
                             "slot": pci_slot,
@@ -2429,7 +2429,7 @@ def _validate_console_ticket(ticket: str | None, vm_id: str) -> bool:
             if principal.has_any_scope(*allowed_console_scopes):
                 return True
     except Exception:
-        pass
+        logger.debug("backend.api.vms._validate_console_ticket: ignored error", exc_info=True)
     try:
         from backend.api.auth import validate_and_consume_stream_ticket
         from backend.auth import AuthenticatedPrincipal
@@ -2440,7 +2440,7 @@ def _validate_console_ticket(ticket: str | None, vm_id: str) -> bool:
             if principal.has_any_scope(*allowed_console_scopes):
                 return True
     except Exception:
-        pass
+        logger.debug("backend.api.vms._validate_console_ticket: ignored error", exc_info=True)
     return False
 
 
@@ -2890,7 +2890,7 @@ def _get_vm_snapshots_metadata(vm_id: str) -> dict[str, Any]:
             with open(meta_path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
-            pass
+            logger.debug("backend.api.vms._get_vm_snapshots_metadata: ignored error", exc_info=True)
     return {}
 
 

@@ -113,7 +113,7 @@ class DiskDiscoveryHAL:
                 if "ahci" in part or "ata" in part:
                     return "ahci"
         except Exception:
-            pass
+            logger.debug("backend.hardware.hal.DiskDiscoveryHAL._probe_controller_driver: ignored error", exc_info=True)
         return "ahci"
 
     @classmethod

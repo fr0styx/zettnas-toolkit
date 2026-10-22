@@ -283,7 +283,9 @@ def get_btrfs_allocation_breakdown(mounts: list[dict[str, Any]]) -> list[dict[st
                     }
                 )
         except Exception:
-            pass
+            logger.debug(
+                "backend.hardware.storage_diagnostics.get_btrfs_allocation_breakdown: ignored error", exc_info=True
+            )
 
     return btrfs_reports
 
@@ -372,14 +374,14 @@ def get_recycle_bin_audit() -> dict[str, Any]:
                 trashinfo_files = glob.glob(os.path.join(info_dir, "*.trashinfo"))
                 total_items += len(trashinfo_files)
             except Exception:
-                pass
+                logger.debug("backend.hardware.storage_diagnostics.get_recycle_bin_audit: ignored error", exc_info=True)
         if os.path.isdir(files_dir):
             try:
                 for entry in os.scandir(files_dir):
                     if entry.is_file(follow_symlinks=False):
                         total_bytes += entry.stat().st_size
             except Exception:
-                pass
+                logger.debug("backend.hardware.storage_diagnostics.get_recycle_bin_audit: ignored error", exc_info=True)
 
     return {
         "total_items": total_items,
@@ -431,7 +433,9 @@ def collect_storage_diagnostics() -> dict[str, Any]:
                     snaps = adapter.list_snapshots(pid)
                     snapshots_list.extend([s.model_dump() if hasattr(s, "model_dump") else s for s in snaps])
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.hardware.storage_diagnostics.collect_storage_diagnostics: ignored error", exc_info=True
+                    )
 
         pal_info = {
             "capabilities": caps,
@@ -447,7 +451,7 @@ def collect_storage_diagnostics() -> dict[str, Any]:
     try:
         unraid_status = read_unraid_status()
     except Exception:
-        pass
+        logger.debug("backend.hardware.storage_diagnostics.collect_storage_diagnostics: ignored error", exc_info=True)
 
     # 7. Btrfs Chunk Allocations & ZFS Status
     btrfs_alloc = get_btrfs_allocation_breakdown(mounts)

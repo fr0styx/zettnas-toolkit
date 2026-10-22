@@ -225,7 +225,7 @@ def list_conversations(
             try:
                 meta = json.loads(r["meta_json"]) if r["meta_json"] else {}
             except Exception:
-                pass
+                logger.debug("backend.services.ai_conversations_db.list_conversations: ignored error", exc_info=True)
             results.append(
                 {
                     "id": r["id"],
@@ -263,7 +263,7 @@ def get_conversation(
         try:
             meta = json.loads(row["meta_json"]) if row["meta_json"] else {}
         except Exception:
-            pass
+            logger.debug("backend.services.ai_conversations_db.get_conversation: ignored error", exc_info=True)
         return {
             "id": row["id"],
             "user_id": row["user_id"],
@@ -317,7 +317,9 @@ def get_conversation_with_messages(
                 if m["photos_json"]:
                     photos = json.loads(m["photos_json"])
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.ai_conversations_db.get_conversation_with_messages: ignored error", exc_info=True
+                )
 
             messages.append(
                 {
@@ -403,7 +405,7 @@ def delete_conversation(
                 (conv_id, clean_uid),
             )
         except Exception:
-            pass
+            logger.debug("backend.services.ai_conversations_db.delete_conversation: ignored error", exc_info=True)
 
         cur = conn.execute(
             "DELETE FROM conversations WHERE id = ? AND user_id = ?",
@@ -432,7 +434,9 @@ def purge_conversations_older_than(days: int, db_path: str | None = None) -> int
             try:
                 conn.execute("DELETE FROM conversation_messages_fts WHERE conversation_id = ?", (cid,))
             except Exception:
-                pass
+                logger.debug(
+                    "backend.services.ai_conversations_db.purge_conversations_older_than: ignored error", exc_info=True
+                )
             conn.execute("DELETE FROM conversation_messages WHERE conversation_id = ?", (cid,))
             conn.execute("DELETE FROM conversations WHERE id = ?", (cid,))
         conn.commit()
@@ -452,7 +456,7 @@ def clear_all_conversations(
                 (clean_uid,),
             )
         except Exception:
-            pass
+            logger.debug("backend.services.ai_conversations_db.clear_all_conversations: ignored error", exc_info=True)
 
         cur = conn.execute(
             "DELETE FROM conversations WHERE user_id = ?",

@@ -144,7 +144,7 @@ def _register_failure(key: str, is_ip: bool = False) -> None:
         try:
             log_security_event("auth.lockout", "warning", details={"key": key, "failures": entry["count"]})
         except Exception:
-            pass
+            logger.debug("backend.api.auth._register_failure: ignored error", exc_info=True)
 
 
 def _clear_failures(key: str) -> None:

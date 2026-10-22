@@ -304,7 +304,9 @@ async def stream_docker_container_logs(
                     writer.close()
                     await writer.wait_closed()
                 except Exception:
-                    pass
+                    logger.debug(
+                        "backend.api.docker.stream_docker_container_logs.event_generator: ignored error", exc_info=True
+                    )
 
     return StreamingResponse(
         event_generator(),

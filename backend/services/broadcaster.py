@@ -52,7 +52,7 @@ class StatsBroadcaster:
                         pass
                 q.put_nowait(None)
             except Exception:
-                pass
+                logger.debug("backend.services.broadcaster.StatsBroadcaster.shutdown: ignored error", exc_info=True)
         self._subscribers.clear()
 
     async def unsubscribe(self, q: asyncio.Queue) -> None:

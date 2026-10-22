@@ -300,7 +300,10 @@ class ReplicationEngine:
                         if p3.stdin:
                             p3.stdin.close()
                     except Exception:
-                        pass
+                        logger.debug(
+                            "backend.services.replication_engine.ReplicationEngine._execute_replication._stream_pump: ignored error",
+                            exc_info=True,
+                        )
 
             pump_thread = threading.Thread(target=_stream_pump, daemon=True)
             pump_thread.start()

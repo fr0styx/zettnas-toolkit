@@ -34,7 +34,7 @@ try:
 
     pillow_heif.register_heif_opener()
 except Exception:
-    pass
+    logger.debug("backend.api.fs.<module>: ignored error", exc_info=True)
 
 
 class _AllowedBrowseRootsProxy:
@@ -406,7 +406,7 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
                         }
                     )
         except Exception:
-            pass
+            logger.debug("backend.api.fs._handle_browse_logic_unfiltered: ignored error", exc_info=True)
 
     return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 
@@ -1154,7 +1154,7 @@ async def fs_folder_size(
 
             is_standby = is_backing_disk_in_standby(target)
         except Exception:
-            pass
+            logger.debug("backend.api.fs.fs_folder_size: ignored error", exc_info=True)
         if is_standby:
             return {
                 "status": "standby",
@@ -1237,13 +1237,13 @@ def fs_get_permissions(
 
         owner_name = pwd.getpwuid(st.st_uid).pw_name
     except Exception:
-        pass
+        logger.debug("backend.api.fs.fs_get_permissions: ignored error", exc_info=True)
     try:
         import grp
 
         group_name = grp.getgrgid(st.st_gid).gr_name
     except Exception:
-        pass
+        logger.debug("backend.api.fs.fs_get_permissions: ignored error", exc_info=True)
 
     return {
         "status": "ok",
@@ -1387,7 +1387,7 @@ async def fs_upload(
             try:
                 os.remove(staging_file)
             except Exception:
-                pass
+                logger.debug("backend.api.fs.fs_upload: ignored error", exc_info=True)
         logger.error(f"[FS] Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file") from e
 
@@ -1553,7 +1553,7 @@ async def fs_upload_complete(
             try:
                 os.remove(temp_assembly)
             except Exception:
-                pass
+                logger.debug("backend.api.fs.fs_upload_complete: ignored error", exc_info=True)
         logger.error(f"[FS] Chunked assembly failed: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to assemble uploaded chunks: {e}") from e
 
@@ -1687,9 +1687,14 @@ async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_
                                                         dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
                                                         deleted_ts = int(dt.timestamp())
                                                     except Exception:
-                                                        pass
+                                                        logger.debug(
+                                                            "backend.api.fs.fs_trash_list._scan_trash: ignored error",
+                                                            exc_info=True,
+                                                        )
                                     except Exception:
-                                        pass
+                                        logger.debug(
+                                            "backend.api.fs.fs_trash_list._scan_trash: ignored error", exc_info=True
+                                        )
 
                             if not orig_path:
                                 parts = entry.name.split("_", 1)
@@ -1759,7 +1764,7 @@ async def fs_trash_restore(
                                     orig_path = line.split("=", 1)[1].strip()
                                     orig_name = os.path.basename(orig_path)
                     except Exception:
-                        pass
+                        logger.debug("backend.api.fs.fs_trash_restore._do_restore: ignored error", exc_info=True)
                 if not orig_path:
                     parts = item_id.split("_", 1)
                     orig_name = parts[1] if (len(parts) == 2 and parts[0].isdigit()) else item_id
@@ -1866,7 +1871,7 @@ def _extract_image_metadata(file_path: str) -> dict:
 
             pillow_heif.register_heif_opener()
         except Exception:
-            pass
+            logger.debug("backend.api.fs._extract_image_metadata: ignored error", exc_info=True)
         from PIL import ExifTags, Image
 
         with Image.open(file_path) as img:
@@ -1951,7 +1956,7 @@ def _extract_image_metadata(file_path: str) -> dict:
                 if exif_data:
                     meta["exif"] = exif_data
     except Exception:
-        pass
+        logger.debug("backend.api.fs._extract_image_metadata: ignored error", exc_info=True)
     return meta
 
 
@@ -2126,14 +2131,14 @@ async def fs_preview_image(
 
             pillow_heif.register_heif_opener()
         except Exception:
-            pass
+            logger.debug("backend.api.fs.fs_preview_image._transcode: ignored error", exc_info=True)
         from PIL import Image, ImageOps
 
         with Image.open(target) as img:
             try:
                 img = ImageOps.exif_transpose(img)
             except Exception:
-                pass
+                logger.debug("backend.api.fs.fs_preview_image._transcode: ignored error", exc_info=True)
             if img.mode not in ("RGB", "RGBA"):
                 img = img.convert("RGB")
 
