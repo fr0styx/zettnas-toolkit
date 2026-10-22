@@ -45,7 +45,8 @@ NOISE_RE = re.compile(
     r"|\x1b\[36;1m|\[36;1m"  # a step's script echoed before it runs
     r"|NODE_OPTIONS: --no-deprecation"
     r"|running outdated (binaries|hypervisor)"  # needrestart's all-clear
-    r"|To suppress version checks",
+    r"|To suppress version checks"
+    r"|::test_\w+.*\b(PASSED|FAILED|SKIPPED|ERROR|XFAIL|XPASS)\b",  # a test's name in pytest -v output
     re.IGNORECASE,
 )
 TIMESTAMP_RE = re.compile(r"^﻿?\d{4}-\d\d-\d\dT[\d:.]+Z\s?")

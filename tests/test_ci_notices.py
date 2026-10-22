@@ -24,6 +24,7 @@ def test_finds_version_and_deprecation_notices_and_skips_noise():
         "2026-10-22T18:31:00.5Z app.py:152: FastAPIDeprecationWarning: ORJSONResponse is deprecated",
         "2026-10-22T18:32:00.0Z ##[notice]The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026.",
         "2026-10-22T18:33:00.0Z all tests passed",
+        "2026-10-22T18:33:00.1Z tests/test_x.py::test_skips_deprecation_noise PASSED [ 26%]",
         '"Node.js 20 is deprecated"',
     ]
     assert cn.find_notices(log) == [
