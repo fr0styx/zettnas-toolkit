@@ -10647,6 +10647,21 @@ export function setAiWatchedFoldersDropdownOpen(forceOpen = null) {
   return nextOpen;
 }
 
+/** Deletes what the index learned from a folder and stops learning it (AI-20). The server asks to confirm. */
+export async function forgetAiFolder(folderPath) {
+  try {
+    const res = await api.post('/api/ai/index/forget', { path: folderPath });
+    _aiWatchedPaths = _aiWatchedPaths.filter((p) => p !== folderPath);
+    renderAiWatchedFoldersAndShares();
+    const n = res?.removed?.files ?? 0;
+    showToast(t('ai.forget_folder_done', `Forgot ${n} file(s) from ${folderPath}. It won't be learned again.`), 'success');
+    return res;
+  } catch (err) {
+    if (err?.error !== 'cancelled') showToast(`${t('ai.forget_folder_failed', 'Could not forget folder')}: ${err.message}`, 'error');
+    return null;
+  }
+}
+
 export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFolders = null) {
   if (Array.isArray(watchedPaths)) {
     _aiWatchedPaths = watchedPaths;
@@ -10693,6 +10708,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
           </span>
           <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="Sync this folder now (Standby Safe)" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:11px; padding:0 2px;">🔄</button>
           <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="Uncheck folder from RAG watched list" style="background:transparent; border:none; color:#f87171; cursor:pointer; font-size:11px; font-weight:800; padding:0 2px;">✕</button>
+          <button type="button" class="btn-ai-forget-folder" data-folder-path="${escapeHtml(fp)}" title="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" aria-label="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" style="background:transparent; border:none; color:#fca5a5; cursor:pointer; font-size:11px; padding:0 2px;">🗑</button>
         </div>
       `;
     }).join('');
@@ -10707,6 +10723,14 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
           if (pathIn) pathIn.value = fp;
           runAiPathIndex(fp, respectCb ? Boolean(respectCb.checked) : true);
         }
+      });
+    });
+
+    watchedContainer.querySelectorAll('.btn-ai-forget-folder').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const fp = btn.dataset.folderPath;
+        if (fp) forgetAiFolder(fp);
       });
     });
 
@@ -11536,6 +11560,22 @@ export async function fetchAndRenderAiStatus() {
     const autoSpinupCbEl = document.getElementById('ai-auto-learn-spinup');
     if (autoSpinupCbEl && (cfg.auto_learn_on_spinup !== undefined || res.standby_guard?.auto_learn_on_spinup !== undefined)) {
       autoSpinupCbEl.checked = Boolean(cfg.auto_learn_on_spinup ?? res.standby_guard?.auto_learn_on_spinup ?? true);
+    }
+
+    const retentionSel = document.getElementById('ai-conversation-retention-select');
+    if (retentionSel) {
+      retentionSel.value = String(cfg.conversation_retention_days ?? 0);
+      if (!retentionSel.dataset.bound) {
+        retentionSel.dataset.bound = '1';
+        retentionSel.addEventListener('change', async (e) => {
+          try {
+            await api.post('/api/ai/config', { conversation_retention_days: parseInt(e.target.value, 10) || 0 });
+            showToast(t('ai.retention_saved', 'Chat retention saved'), 'success');
+          } catch (err) {
+            showToast(`${t('ai.retention_failed', 'Could not save chat retention')}: ${err.message}`, 'error');
+          }
+        });
+      }
     }
 
     // Hydrate Embedding Model & MRL Dimension selectors

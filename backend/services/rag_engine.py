@@ -3692,9 +3692,15 @@ class RagSearchEngine:
             "search_history",
             "custom_hf_models",
             "removed_models",
+            "conversation_retention_days",
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]
+        if "conversation_retention_days" in cfg:
+            try:
+                cfg["conversation_retention_days"] = max(0, min(3650, int(cfg["conversation_retention_days"])))
+            except (TypeError, ValueError):
+                cfg["conversation_retention_days"] = 0
 
         if "respect_standby" in updates and "auto_learn_on_spinup" not in updates:
             cfg["auto_learn_on_spinup"] = bool(cfg["respect_standby"])
@@ -4366,6 +4372,70 @@ class RagSearchEngine:
         except Exception:
             pass
         return self.get_sync_progress()
+
+    def forget_folder(self, folder_path: str) -> Dict[str, Any]:
+        """Deletes everything the index learned from a folder and stops learning it again (AI-20).
+
+        Removes its files, chunks, vectors, photo data, folder summaries and queued work, then
+        adds the folder to excluded_paths. Reads nothing from the folder itself.
+        """
+        norm = os.path.normpath(str(folder_path or "").strip())
+        if not norm or norm in (".", "/"):
+            raise ValueError("Choose a folder to forget.")
+        prefix = norm.rstrip("/") + "/"
+        under = "(canonical_path = ? OR substr(canonical_path, 1, ?) = ?)"
+        args = (norm, len(prefix), prefix)
+        removed = {"files": 0, "vectors": 0, "manifests": 0, "queued": 0}
+        with self._write_lock:
+            self._ensure_schema()
+            conn = self._get_conn(readonly=False)
+            try:
+                file_ids = [r[0] for r in conn.execute(f"SELECT file_id FROM indexed_files WHERE {under}", args)]
+                if file_ids:
+                    marks = ",".join("?" for _ in file_ids)
+                    chunk_ids = [
+                        r[0]
+                        for r in conn.execute(
+                            f"SELECT chunk_id FROM document_chunks WHERE file_id IN ({marks})", file_ids
+                        )
+                    ]
+                    vec_tables = [
+                        r[0]
+                        for r in conn.execute(
+                            "SELECT name FROM sqlite_master WHERE name LIKE 'vec_chunks_%' AND sql LIKE '%vec0%'"
+                        )
+                    ]
+                    for table in vec_tables:
+                        if not re.fullmatch(r"vec_chunks_\d+", table):
+                            continue
+                        for i in range(0, len(chunk_ids), 500):
+                            part = chunk_ids[i : i + 500]
+                            try:
+                                cur = conn.execute(
+                                    f"DELETE FROM {table} WHERE chunk_id IN ({','.join('?' for _ in part)})", part
+                                )
+                                removed["vectors"] += max(0, cur.rowcount or 0)
+                            except sqlite3.Error as e:
+                                logger.debug(f"[RAG] Forget: vector cleanup in {table} skipped: {e}")
+                    # chunks and photo data go with their file (ON DELETE CASCADE)
+                    removed["files"] = conn.execute(f"DELETE FROM indexed_files WHERE {under}", args).rowcount
+                removed["manifests"] = conn.execute(
+                    "DELETE FROM folder_manifests WHERE folder_path = ? OR substr(folder_path, 1, ?) = ?", args
+                ).rowcount
+                removed["queued"] = conn.execute(
+                    "DELETE FROM rag_deferred_queue WHERE target_path = ? OR substr(target_path, 1, ?) = ?", args
+                ).rowcount
+                conn.commit()
+            finally:
+                conn.close()
+        cfg = self.get_config()
+        excluded = [p for p in (cfg.get("excluded_paths") or []) if p]
+        if norm not in {os.path.normpath(p) for p in excluded}:
+            excluded.append(norm)
+        watched = [p for p in (cfg.get("watched_paths") or []) if os.path.normpath(p) != norm]
+        self.update_config({"excluded_paths": excluded, "watched_paths": watched})
+        logger.info(f"[RAG] Forgot folder {sanitize_string(norm)}: {removed}")
+        return {"status": "ok", "folder": norm, "removed": removed}
 
     def flush_index(self) -> Dict[str, Any]:
         """

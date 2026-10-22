@@ -42,6 +42,7 @@ ACTIONS: Dict[str, str] = {
     "system.shutdown": "Shut down the server",
     "updates.apply": "Update ZettNAS and restart it",
     "updates.revert": "Revert ZettNAS to the previous version and its data",
+    "ai.index.forget": "Delete what the AI index learned from a folder",
 }
 
 _pending: Dict[str, Dict[str, Any]] = {}

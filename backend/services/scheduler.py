@@ -82,6 +82,27 @@ def save_smart_schedule(cfg: Dict[str, Any]) -> Dict[str, Any]:
     return current
 
 
+_LAST_AI_RETENTION = {"at": 0.0}
+
+
+def _run_ai_retention(now: float) -> None:
+    """Hourly: delete AI conversations older than the configured retention (AI-20)."""
+    if now - _LAST_AI_RETENTION["at"] < 3600:
+        return
+    _LAST_AI_RETENTION["at"] = now
+    try:
+        from backend.services.ai_conversations_db import purge_conversations_older_than
+        from backend.services.rag_engine import get_rag_engine
+
+        days = int(get_rag_engine().get_config().get("conversation_retention_days") or 0)
+        if days > 0:
+            n = purge_conversations_older_than(days)
+            if n:
+                logger.info(f"[Scheduler] Deleted {n} AI conversation(s) older than {days} days.")
+    except Exception as e:
+        logger.warning(f"[Scheduler] AI conversation retention failed: {e}")
+
+
 def _run_scheduled_tasks():
     logger.info("[Scheduler] System background scheduler started.")
     while not _SCHEDULER_STOP_EVENT.is_set():
@@ -90,6 +111,7 @@ def _run_scheduled_tasks():
 
         now = time.time()
         t = time.localtime(now)
+        _run_ai_retention(now)
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

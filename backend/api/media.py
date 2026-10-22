@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 from backend.api.system import check_user_path_access
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
 from backend.rate_limit import rate_limit
 from backend.config import ALLOWED_BROWSE_ROOTS, POOL_PATH
 from backend.fsutil import resolve_within
@@ -152,6 +153,7 @@ class RagConfigUpdateRequest(BaseModel):
     llm_endpoint: Optional[str] = None
     llm_model: Optional[str] = None
     idle_unload_minutes: Optional[int] = None
+    conversation_retention_days: Optional[int] = Field(default=None, ge=0, le=3650)
 
 
 class ModelSelectRequest(BaseModel):
@@ -352,6 +354,29 @@ async def flush_rag_index(
     res = await asyncio.to_thread(rag.flush_index)
     res["acceleration"] = get_media_engine().get_status()["acceleration"]
     return res
+
+
+class ForgetFolderRequest(BaseModel):
+    path: str = Field(..., min_length=1, max_length=4096)
+
+
+@router.post(
+    "/ai/index/forget",
+    dependencies=[
+        Depends(require_scope("system:config", "ai:manage")),
+        Depends(require_confirmation("ai.index.forget")),
+    ],
+)
+async def forget_rag_folder(
+    req: ForgetFolderRequest,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> Dict[str, Any]:
+    """Deletes what the index learned from a folder and stops learning it (AI-20)."""
+    path = _validate_media_path(req.path, principal, must_exist=False)
+    try:
+        return await asyncio.to_thread(get_rag_engine().forget_folder, path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get(

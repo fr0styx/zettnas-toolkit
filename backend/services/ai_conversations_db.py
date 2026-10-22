@@ -412,6 +412,33 @@ def delete_conversation(
         return cur.rowcount > 0
 
 
+def purge_conversations_older_than(days: int, db_path: Optional[str] = None) -> int:
+    """Deletes unpinned conversations not touched in `days` days, for every user (AI-20).
+
+    days <= 0 keeps everything. Returns the number of conversations deleted.
+    """
+    if not days or int(days) <= 0:
+        return 0
+    cutoff = time.time() - int(days) * 86400
+    init_conversations_db(db_path)
+    with get_conv_db_connection(db_path) as conn:
+        ids = [
+            r[0]
+            for r in conn.execute(
+                "SELECT id FROM conversations WHERE updated_at < ? AND COALESCE(is_pinned, 0) = 0", (cutoff,)
+            )
+        ]
+        for cid in ids:
+            try:
+                conn.execute("DELETE FROM conversation_messages_fts WHERE conversation_id = ?", (cid,))
+            except Exception:
+                pass
+            conn.execute("DELETE FROM conversation_messages WHERE conversation_id = ?", (cid,))
+            conn.execute("DELETE FROM conversations WHERE id = ?", (cid,))
+        conn.commit()
+    return len(ids)
+
+
 def clear_all_conversations(
     user_id: str,
     db_path: Optional[str] = None,
