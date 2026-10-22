@@ -139,16 +139,19 @@ def startup_system():
         except OSError as e:
             logger.warning(f"Failed to apply initial LED state: {e}")
 
-    threading.Thread(target=stats_collector_daemon, daemon=True, name="StatsCollector").start()
-    threading.Thread(target=smart_poller_daemon, daemon=True, name="SmartPoller").start()
+    # Supervised: a daemon that crashes is logged and restarted with back-off (ARC-02)
+    from backend.services.supervisor import supervise
+
+    supervise("StatsCollector", stats_collector_daemon)
+    supervise("SmartPoller", smart_poller_daemon)
     from backend.hardware.fans import is_zettlab_appliance
 
     if is_zettlab_appliance():
-        threading.Thread(target=button_listener_daemon, daemon=True, name="ButtonListener").start()
+        supervise("ButtonListener", button_listener_daemon)
     else:
         logger.debug("[Main] Non-appliance hardware detected; skipping ButtonListener daemon.")
-    threading.Thread(target=render_lcd_loop, daemon=True, name="LcdRenderer").start()
-    threading.Thread(target=fan_watchdog_daemon, daemon=True, name="FanWatchdog").start()
+    supervise("LcdRenderer", render_lcd_loop)
+    supervise("FanWatchdog", fan_watchdog_daemon)
 
     try:
         get_webdav_engine().start_if_enabled()

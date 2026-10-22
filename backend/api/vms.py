@@ -2481,7 +2481,7 @@ async def websocket_vm_console(websocket: WebSocket, vm_id: str):
     target = next((v for v in vms if v["id"] == vm_id), None)
     vnc_port = _get_qemu_vnc_port(vms, vm_id)
     if target and target.get("state") == "running" and not _is_qemu_process_alive(vm_id):
-        ok, err = _start_qemu(target, vnc_port)
+        ok, err = await asyncio.to_thread(_start_qemu, target, vnc_port)
         if not ok:
             await websocket.close(code=1011, reason=f"VM startup failed: {err}")
             return
@@ -2528,7 +2528,7 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
     target = next((v for v in vms if v["id"] == vm_id), None)
     if target and target.get("state") == "running" and not _is_qemu_process_alive(vm_id):
         vnc_port = _get_qemu_vnc_port(vms, vm_id)
-        ok, err = _start_qemu(target, vnc_port)
+        ok, err = await asyncio.to_thread(_start_qemu, target, vnc_port)
         if not ok:
             await websocket.close(code=1011, reason=f"VM startup failed: {err}")
             return

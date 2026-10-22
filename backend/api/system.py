@@ -70,6 +70,14 @@ router = APIRouter(tags=["System & Storage"])
 
 
 _PROCESS_STARTED = time.time()
+
+
+def _daemon_status() -> dict:
+    from backend.services.supervisor import daemon_status
+
+    return daemon_status()
+
+
 HEALTH_STARTUP_GRACE_SECS = 60.0
 
 
@@ -113,6 +121,7 @@ def health():
         "status": status,
         "version": __version__,
         "checks": checks,
+        "daemons": {k: {"state": v["state"], "restarts": v["restarts"]} for k, v in _daemon_status().items()},
         "collector_heartbeat_age": round(time.time() - hb, 1) if hb else None,
         "lcd_renderer_active": bool(Z_STATE.lcd_renderer_active),
         "fans_released": bool(Z_STATE.fans_released),
