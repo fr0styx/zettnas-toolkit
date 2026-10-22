@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import backend.services.ai_chat_agent as agent
-import backend.services.rag_engine as rag
+import backend.services.rag_embeddings as rag
 
 
 def test_detected_host_ip_uses_read_ip():

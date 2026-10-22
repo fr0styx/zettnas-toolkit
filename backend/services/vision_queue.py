@@ -243,7 +243,7 @@ class VisionQueue:
                 return "no-model"
             path = row["canonical_path"]
             if cfg.get("respect_standby", True):
-                from backend.services.rag_engine import is_backing_disk_in_standby, resolve_path_backing_dev
+                from backend.services.rag_standby import is_backing_disk_in_standby, resolve_path_backing_dev
 
                 if is_backing_disk_in_standby(resolve_path_backing_dev(path)):
                     return "standby"

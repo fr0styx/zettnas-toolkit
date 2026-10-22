@@ -201,7 +201,7 @@ def test_fs_folder_size_and_standby(client, auth_headers, tmp_path):
 
         # 2. Standby simulation
         with patch("backend.api.fs._FOLDER_SIZE_CACHE", {}):
-            with patch("backend.services.rag_engine.is_backing_disk_in_standby", return_value=True):
+            with patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=True):
                 res_standby = client.post(
                     "/api/fs/folder-size",
                     json={"path": str(folder), "force_wake": False},

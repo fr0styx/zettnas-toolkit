@@ -623,7 +623,7 @@ class TestSymlinkBackingDeviceResolution:
 
         mock_unraid_disks = {"disk1": {"device": "sdb", "type": "data"}}
 
-        with patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_unraid_disks, {})):
+        with patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_unraid_disks, {})):
             # Calling on the symlink file path
             resolved = resolve_path_backing_dev(str(symlink_file))
             # Must NOT claim nvme0n1! Must resolve to sdb
@@ -647,7 +647,7 @@ class TestSymlinkBackingDeviceResolution:
 
         mock_unraid_disks = {"disk2": {"device": "sdc", "type": "data"}}
 
-        with patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_unraid_disks, {})):
+        with patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_unraid_disks, {})):
             resolved = resolve_path_backing_dev(str(top_link))
             assert resolved == "sdc"
             assert resolved != "nvme0n1"
@@ -666,7 +666,7 @@ class TestSymlinkBackingDeviceResolution:
 
         mock_unraid_disks = {"disk3": {"device": "sdd", "type": "data"}}
 
-        with patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_unraid_disks, {})):
+        with patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_unraid_disks, {})):
             resolved = resolve_path_backing_dev(str(broken_link))
             assert resolved == "sdd"
             assert resolved != "nvme0n1"
@@ -709,7 +709,7 @@ class TestSymlinkBackingDeviceResolution:
             "media": {"useCache": "no"},
         }
 
-        with patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_disks, mock_shares)):
+        with patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_disks, mock_shares)):
             dev_cache = resolve_path_backing_dev(str(cache_link))
             assert dev_cache == "nvme0n1"
 
@@ -777,7 +777,7 @@ class TestZeroDiskSpindownSafety:
 
         # On generic Linux hosts (non-Unraid), _get_unraid_disks_and_shares returns {}
         with (
-            patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=({}, {})),
+            patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=({}, {})),
             patch("subprocess.run", side_effect=spy_subprocess_run),
             patch("os.path.exists", return_value=True),
         ):
@@ -818,7 +818,7 @@ class TestZeroDiskSpindownSafety:
             return original_open(file, *args, **kwargs)
 
         with (
-            patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_unraid, {})),
+            patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_unraid, {})),
             patch("builtins.open", side_effect=guarded_open),
         ):
             # 1. Execute rag.search
@@ -859,7 +859,7 @@ class TestZeroDiskSpindownSafety:
         Z_STATE.cached_smart_data["sdb"] = (35, "standby")
 
         with (
-            patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_unraid, {})),
+            patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_unraid, {})),
             patch("backend.services.ai_chat_agent.get_rag_engine", return_value=engine),
             patch("backend.services.rag_engine.get_rag_engine", return_value=engine),
         ):
@@ -874,7 +874,7 @@ class TestZeroDiskSpindownSafety:
         engine, db_path = test_rag_db
         mock_unraid = {"disk1": {"device": "sdb", "type": "data", "spundown": "1"}}
 
-        with patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_unraid, {})):
+        with patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_unraid, {})):
             for mode in ("all", "documents", "recipes", "photos", "folders"):
                 res = engine.search(query="manual", mode=mode)
                 assert isinstance(res, dict)
@@ -888,7 +888,7 @@ class TestZeroDiskSpindownSafety:
             "disk1": {"device": "sdb", "type": "data", "spundown": "1"},
             "disk2": {"device": "sdc", "type": "data", "spundown": "0"},
         }
-        with patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_disks, {})):
+        with patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_disks, {})):
             sleeping = get_sleeping_disks_list()
             running = get_running_disks_list()
             assert "sdb" in sleeping

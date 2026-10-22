@@ -163,6 +163,21 @@ raises is logged with its traceback and restarted after 1 s, 2 s, 4 s … up to 
 the method and path against an allow-list, and inspects container-create and exec
 bodies for host-level settings. See SECURITY.md for the policy.
 
+### 2.14 AI modules
+
+| Module | Holds |
+| ------ | ----- |
+| `rag_engine.py` | `RagSearchEngine`: index schema, indexing, search, learning sessions |
+| `rag_text.py` | Vocabulary, file-type lists, tokenisation (with CJK bigrams), query parsing |
+| `rag_embeddings.py` | Built-in lexical vectors, Ollama embeddings, sqlite-vec |
+| `rag_documents.py` | Text extraction and chunking |
+| `rag_grounding.py` | Context ordering, retrieval grading, grounding score |
+| `rag_standby.py` | Standby guard (which disks hold a path, are they asleep) |
+| `vision_queue.py` | Idle-time photo captions and OCR |
+| `ai_chat_agent.py` | Ask Zetty orchestration, LLM runtime, answer synthesis |
+| `chat_tools.py` | Tool registry: definition, handler and permission policy per tool |
+| `chat_web_tools.py` | Web search and weather tools |
+
 ## 3. Data Persistence & State Model
 
 1. **SQLite Database (`data/history.db`)**:

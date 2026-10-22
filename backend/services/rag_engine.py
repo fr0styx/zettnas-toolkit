@@ -39,2339 +39,98 @@ from backend.state import Z_STATE, add_event
 Image.MAX_IMAGE_PIXELS = 64_000_000
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+# Split into modules (AI-21); names stay importable from here.
+from backend.services import rag_standby  # noqa: E402
+from backend.services.rag_documents import (  # noqa: E402, F401
+    _chunk_python_ast,
+    _HTMLTextExtractor,
+    extract_document_text,
+    generate_contextual_hierarchical_chunks,
+    late_interaction_rerank,
+    parse_document_structure_and_chunks,
+)
+from backend.services.rag_embeddings import (  # noqa: E402, F401
+    _EMBED_BREAKER,
+    _EMBED_MODEL_SEEN,
+    CLASS_INDICATORS_RE,
+    CLI_COMMAND_INDICATORS,
+    CODE_EXTENSIONS_RE,
+    CODE_SYNTAX_INDICATORS,
+    EMBED_BATCH_SIZE,
+    QA_INDICATORS_RE,
+    TASK_PREFIX_CLASSIFICATION,
+    TASK_PREFIX_CODE,
+    TASK_PREFIX_QA,
+    TASK_PREFIX_SEARCH,
+    _detected_host_ip,
+    _embedding_model_candidates,
+    _pack_embedding,
+    _resolve_ollama_host,
+    classify_query_task_intent,
+    compute_384d_embedding,
+    compute_multimodal_query_embedding,
+    compute_neural_embedding_via_ollama,
+    compute_neural_embeddings_batch,
+    cosine_similarity_vec,
+    format_embeddinggemma_document,
+    load_sqlite_vec_extension,
+    truncate_and_normalize_mrl,
+    unpack_embedding,
+)
+from backend.services.rag_grounding import (  # noqa: E402, F401
+    CRAGGrade,
+    GroundingScoreResult,
+    apply_primacy_recency_inversion,
+    compute_grounding_confidence_score,
+    grade_rag_retrieval,
+)
+from backend.services.rag_standby import (  # noqa: E402, F401
+    _SMARTCTL_STANDBY_CACHE,
+    _UNRAID_INI_CACHE,
+    UNKNOWN_BACKING_DEV,
+    _disk_reports_standby,
+    _get_unraid_disks_and_shares,
+    _parse_ini_sections,
+    get_running_disks_list,
+    get_sleeping_disks_list,
+    is_backing_disk_in_standby,
+    resolve_path_backing_dev,
+)
+from backend.services.rag_text import (  # noqa: E402, F401
+    _CJK_CHARS,
+    _CJK_RUN_RE,
+    _FTS5_RESERVED,
+    _STOPWORDS,
+    _TOKEN_RE,
+    AUDIO_EXTENSIONS,
+    CANONICAL_COLORS,
+    CODE_EXTENSIONS,
+    COLOR_HEX_MAP,
+    COLOR_SYNONYMS,
+    COLOR_TARGET_BINS,
+    DOCUMENT_EXTENSIONS,
+    EMBEDDING_DIM,
+    EXCLUDED_DIRS,
+    EXCLUDED_EXTENSIONS,
+    EXCLUDED_FILENAMES,
+    IMAGE_EXTENSIONS,
+    MAX_INDEX_FILE_BYTES,
+    SCENE_ONTOLOGY,
+    VIDEO_EXTENSIONS,
+    _has_cjk,
+    _normalize_pdf_broken_words,
+    _token_matches_word,
+    bhattacharyya_similarity,
+    build_safe_fts5_query,
+    build_target_color_histogram,
+    classify_rgb_pixel,
+    parse_multimodal_query,
+    text_tokens,
+)
+
 RAG_DB_PATH = os.path.join(DATA_DIR, "rag_index.db")
 RAG_CONFIG_PATH = os.path.join(DATA_DIR, "rag_config.json")
 CURRENT_INDEX_VERSION = 3
-EMBEDDING_DIM = 384
-MAX_INDEX_FILE_BYTES = 50 * 1024 * 1024  # 50 MB max text/PDF file parse cap
-
-# Canonical 12-Color Perceptual Palette (Peer-Reviewed across UX, ML, and Storage)
-CANONICAL_COLORS: tuple[str, ...] = (
-    "red",
-    "orange",
-    "yellow",
-    "green",
-    "cyan",
-    "blue",
-    "purple",
-    "pink",
-    "white",
-    "silver",
-    "black",
-    "brown",
-)
-
-COLOR_HEX_MAP: dict[str, str] = {
-    "red": "#ef4444",
-    "orange": "#f97316",
-    "yellow": "#eab308",
-    "green": "#22c55e",
-    "cyan": "#06b6d4",
-    "blue": "#3b82f6",
-    "purple": "#a855f7",
-    "pink": "#ec4899",
-    "white": "#f8fafc",
-    "silver": "#94a3b8",
-    "black": "#1e293b",
-    "brown": "#b45309",
-}
-
-# Canonical HSV bin centers (Hue 0..7, Sat 0..3, Val 0..1) for 64-bin histogram queries
-COLOR_TARGET_BINS: dict[str, list[tuple[int, int, int]]] = {
-    "red": [(0, 2, 1), (0, 3, 1), (7, 2, 1), (7, 3, 1)],
-    "orange": [(0, 2, 1), (1, 2, 1), (1, 3, 1)],
-    "yellow": [(1, 2, 1), (1, 3, 1), (2, 2, 1)],
-    "green": [(2, 2, 1), (2, 3, 1), (3, 2, 1), (3, 3, 1)],
-    "cyan": [(3, 2, 1), (3, 3, 1), (4, 2, 1), (4, 3, 1)],
-    "blue": [(4, 2, 1), (4, 3, 1), (5, 2, 1), (5, 3, 1)],
-    "purple": [(5, 2, 1), (5, 3, 1), (6, 2, 1)],
-    "pink": [(6, 2, 1), (6, 3, 1), (7, 2, 1)],
-    "white": [(h, 0, 1) for h in range(8)],
-    "silver": [(h, 0, 1) for h in range(8)] + [(h, 0, 0) for h in range(8)],
-    "black": [(h, 0, 0) for h in range(8)] + [(h, 1, 0) for h in range(8)],
-    "brown": [(0, 2, 0), (1, 2, 0), (0, 1, 0), (1, 1, 0)],
-}
-
-COLOR_SYNONYMS: dict[str, str] = {
-    "red": "red",
-    "crimson": "red",
-    "scarlet": "red",
-    "ruby": "red",
-    "maroon": "red",
-    "burgundy": "red",
-    "orange": "orange",
-    "amber": "orange",
-    "coral": "orange",
-    "tangerine": "orange",
-    "yellow": "yellow",
-    "gold": "yellow",
-    "golden": "yellow",
-    "mustard": "yellow",
-    "lemon": "yellow",
-    "green": "green",
-    "emerald": "green",
-    "lime": "green",
-    "olive": "green",
-    "mint": "green",
-    "cyan": "cyan",
-    "aqua": "cyan",
-    "turquoise": "cyan",
-    "teal": "cyan",
-    "blue": "blue",
-    "navy": "blue",
-    "cobalt": "blue",
-    "azure": "blue",
-    "sapphire": "blue",
-    "purple": "purple",
-    "violet": "purple",
-    "lavender": "purple",
-    "plum": "purple",
-    "indigo": "purple",
-    "pink": "pink",
-    "magenta": "pink",
-    "rose": "pink",
-    "fuchsia": "pink",
-    "white": "white",
-    "ivory": "white",
-    "pearl": "white",
-    "snowy": "white",
-    "silver": "silver",
-    "gray": "silver",
-    "grey": "silver",
-    "metallic": "silver",
-    "chrome": "silver",
-    "slate": "silver",
-    "black": "black",
-    "dark": "black",
-    "charcoal": "black",
-    "obsidian": "black",
-    "ebony": "black",
-    "brown": "brown",
-    "tan": "brown",
-    "beige": "brown",
-    "bronze": "brown",
-    "coffee": "brown",
-    "chocolate": "brown",
-}
-
-# Canonical Scene & Concept Ontology (mapped to vector dims 256..319)
-SCENE_ONTOLOGY: dict[str, tuple[int, set[str]]] = {
-    "pool": (
-        0,
-        {"pool", "pools", "swimming", "swim", "poolside", "jacuzzi", "dive", "diving", "chlorine", "float"},
-    ),
-    "beach": (
-        1,
-        {
-            "beach",
-            "beaches",
-            "coast",
-            "coastal",
-            "seashore",
-            "shore",
-            "sand",
-            "sandy",
-            "ocean",
-            "sea",
-            "waves",
-            "surf",
-            "tropical",
-            "island",
-            "palm",
-        },
-    ),
-    "car": (
-        2,
-        {
-            "car",
-            "cars",
-            "vehicle",
-            "vehicles",
-            "automobile",
-            "sedan",
-            "suv",
-            "coupe",
-            "convertible",
-            "truck",
-            "hatchback",
-            "supercar",
-            "roadster",
-            "porsche",
-            "ferrari",
-            "tesla",
-            "bmw",
-            "audi",
-            "mercedes",
-            "mustang",
-            "corvette",
-            "honda",
-            "toyota",
-        },
-    ),
-    "recipe": (
-        3,
-        {
-            "recipe",
-            "recipes",
-            "ingredient",
-            "ingredients",
-            "cook",
-            "cooking",
-            "bake",
-            "baking",
-            "pasta",
-            "sauce",
-            "garlic",
-            "chicken",
-            "beef",
-            "soup",
-            "salad",
-            "cake",
-            "bread",
-            "oven",
-            "skillet",
-            "simmer",
-            "boil",
-            "tablespoon",
-            "teaspoon",
-            "tbsp",
-            "tsp",
-            "servings",
-            "prep",
-            "linguine",
-            "spaghetti",
-            "lasagna",
-            "pizza",
-        },
-    ),
-    "food": (
-        4,
-        {
-            "food",
-            "meal",
-            "dinner",
-            "lunch",
-            "breakfast",
-            "dish",
-            "cuisine",
-            "restaurant",
-            "dessert",
-            "fruit",
-            "vegetable",
-            "cheese",
-            "olive",
-            "lemon",
-            "herb",
-            "roast",
-            "grill",
-        },
-    ),
-    "document": (
-        5,
-        {
-            "document",
-            "documents",
-            "manual",
-            "guide",
-            "documentation",
-            "pdf",
-            "report",
-            "specification",
-            "architecture",
-            "notes",
-            "readme",
-            "wiki",
-            "handbook",
-        },
-    ),
-    "receipt": (
-        6,
-        {
-            "receipt",
-            "receipts",
-            "invoice",
-            "invoices",
-            "bill",
-            "statement",
-            "tax",
-            "payment",
-            "total",
-            "subtotal",
-            "warranty",
-            "order",
-        },
-    ),
-    "person": (
-        7,
-        {"person", "people", "portrait", "selfie", "family", "friends", "kid", "kids", "child", "wedding", "party"},
-    ),
-    "pet": (
-        8,
-        {"pet", "pets", "dog", "dogs", "puppy", "cat", "cats", "kitten", "animal", "bird", "horse"},
-    ),
-    "outdoor": (
-        9,
-        {
-            "outdoor",
-            "outdoors",
-            "nature",
-            "forest",
-            "tree",
-            "trees",
-            "woods",
-            "mountain",
-            "mountains",
-            "hiking",
-            "trail",
-            "lake",
-            "river",
-            "park",
-            "garden",
-            "landscape",
-            "sky",
-        },
-    ),
-    "sunset": (
-        10,
-        {"sunset", "sunrise", "dusk", "dawn", "twilight", "horizon", "evening"},
-    ),
-    "snow": (
-        11,
-        {"snow", "winter", "ice", "ski", "skiing", "glacier", "frost", "blizzard"},
-    ),
-    "indoor": (
-        12,
-        {"indoor", "indoors", "room", "kitchen", "bedroom", "office", "living", "desk", "home", "house"},
-    ),
-    "code": (
-        13,
-        {"code", "script", "function", "class", "python", "javascript", "docker", "compose", "yaml", "config", "api"},
-    ),
-    "network": (
-        14,
-        {
-            "network",
-            "vlan",
-            "wireguard",
-            "vpn",
-            "firewall",
-            "router",
-            "dns",
-            "subnet",
-            "ip",
-            "ethernet",
-            "samba",
-            "smb",
-        },
-    ),
-    "storage": (
-        15,
-        {"storage", "disk", "drive", "raid", "zfs", "btrfs", "unraid", "nvme", "ssd", "hdd", "smart", "backup", "pool"},
-    ),
-}
-
-EXCLUDED_DIRS: set[str] = {
-    ".git",
-    ".svn",
-    ".hg",
-    ".RecycleBin",
-    ".Trash",
-    "@Recycle",
-    "@eaDir",
-    ".AppleDouble",
-    "__pycache__",
-    "node_modules",
-    ".venv",
-    "venv",
-    ".Spotlight-V100",
-    ".fseventsd",
-}
-
-EXCLUDED_FILENAMES: set[str] = {
-    ".env",
-    ".ds_store",
-    "secret.key",
-    "security.json",
-    "sessions.json",
-    "api_tokens.json",
-    "users.db",
-    "users.db-wal",
-    "users.db-shm",
-    "rag_index.db",
-    "rag_index.db-wal",
-    "rag_index.db-shm",
-    "history.db",
-    "rclone.conf",
-    "smbpasswd",
-    "shadow",
-    "id_rsa",
-    "id_ed25519",
-}
-
-EXCLUDED_EXTENSIONS: set[str] = {
-    ".pem",
-    ".key",
-    ".pfx",
-    ".p12",
-    ".kdbx",
-    ".ovpn",
-    ".pyc",
-    ".so",
-    ".dylib",
-    ".dll",
-    ".exe",
-    ".bin",
-    ".iso",
-    ".img",
-    ".qcow2",
-    ".vmdk",
-}
-
-DOCUMENT_EXTENSIONS: set[str] = {
-    ".md",
-    ".txt",
-    ".rst",
-    ".pdf",
-    ".docx",
-    ".csv",
-    ".tsv",
-    ".json",
-    ".yaml",
-    ".yml",
-    ".toml",
-    ".ini",
-    ".conf",
-    ".html",
-    ".htm",
-    ".log",
-    ".nfo",
-    ".srt",
-    ".vtt",
-    ".sub",
-}
-
-CODE_EXTENSIONS: set[str] = {
-    ".py",
-    ".js",
-    ".ts",
-    ".jsx",
-    ".tsx",
-    ".sh",
-    ".go",
-    ".rs",
-    ".c",
-    ".cpp",
-    ".h",
-    ".css",
-    ".sql",
-}
-
-IMAGE_EXTENSIONS: set[str] = {
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".webp",
-    ".bmp",
-    ".gif",
-    ".tiff",
-    ".tif",
-    ".heic",
-}
-
-AUDIO_EXTENSIONS: set[str] = {
-    ".mp3",
-    ".wav",
-    ".flac",
-    ".m4a",
-    ".aac",
-    ".ogg",
-    ".opus",
-}
-
-VIDEO_EXTENSIONS: set[str] = {
-    ".mp4",
-    ".mkv",
-    ".avi",
-    ".mov",
-    ".wmv",
-    ".flv",
-    ".webm",
-    ".m4v",
-    ".ts",
-    ".m2ts",
-    ".mpg",
-    ".mpeg",
-}
-
-_FTS5_RESERVED = {"and", "or", "not", "near"}
-_STOPWORDS = {
-    "a",
-    "an",
-    "the",
-    "is",
-    "are",
-    "was",
-    "were",
-    "what",
-    "whats",
-    "where",
-    "wheres",
-    "when",
-    "whens",
-    "who",
-    "whos",
-    "how",
-    "hows",
-    "why",
-    "whys",
-    "in",
-    "on",
-    "at",
-    "to",
-    "for",
-    "of",
-    "with",
-    "by",
-    "from",
-    "about",
-    "me",
-    "my",
-    "find",
-    "show",
-    "search",
-    "get",
-    "tell",
-    "photos",
-    "photo",
-    "picture",
-    "pictures",
-    "image",
-    "images",
-    "file",
-    "files",
-    "color",
-    "coloured",
-    "colored",
-    "specific",
-    "some",
-    "any",
-    "can",
-    "you",
-    "please",
-}
-
-
-# Unicode tokenisation (AI-13). Chinese, Japanese and Korean have no spaces between words,
-# so a run of those characters becomes overlapping character pairs ("红烧肉" -> "红烧", "烧肉").
-# Latin, accented and Cyrillic words are kept whole, as before.
-_CJK_CHARS = "\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af"
-_CJK_RUN_RE = re.compile(rf"[{_CJK_CHARS}]")
-_TOKEN_RE = re.compile(rf"[{_CJK_CHARS}]+|[a-z0-9_\u00c0-\u024f\u0400-\u04ff]+")
-
-
-def text_tokens(lowered: str) -> list[str]:
-    """Words of already lower-cased text, with CJK runs split into character bigrams."""
-    out: list[str] = []
-    for tok in _TOKEN_RE.findall(lowered or ""):
-        if _CJK_RUN_RE.match(tok):
-            out.extend([tok[i : i + 2] for i in range(len(tok) - 1)] or [tok])
-        else:
-            out.append(tok)
-    return out
-
-
-def _has_cjk(text: str) -> bool:
-    return bool(_CJK_RUN_RE.search(text or ""))
-
-
-def build_safe_fts5_query(raw_query: str, remove_stopwords: bool = True) -> str:
-    """
-    Converts arbitrary user input into a 100% syntax-error-free SQLite FTS5 MATCH query.
-    Neutralizes quotes, hyphens, colons, parens, and FTS5 reserved keywords.
-    """
-    if not raw_query or not isinstance(raw_query, str):
-        return ""
-
-    cleaned = re.sub(r"(\w)['’]s\b", r"\1s", raw_query.lower())
-    raw_tokens = re.findall(r"[a-z0-9_\u00c0-\u024f\u0400-\u04ff\u4e00-\u9fff]+", cleaned)
-    if not raw_tokens:
-        return ""
-
-    filtered = [t for t in raw_tokens if t not in _FTS5_RESERVED and len(t) <= 64]
-    if remove_stopwords:
-        meaningful = [t for t in filtered if t not in _STOPWORDS and (len(t) >= 2 or t.isdigit() or ord(t[0]) > 127)]
-        if meaningful:
-            filtered = meaningful
-
-    if not filtered:
-        return ""
-
-    seen: set[str] = set()
-    unique_tokens: list[str] = []
-    for t in filtered:
-        if t not in seen:
-            seen.add(t)
-            unique_tokens.append(t)
-        if len(unique_tokens) >= 16:
-            break
-
-    fts_parts: list[str] = []
-    for tok in unique_tokens:
-        safe_tok = tok.replace('"', '""')
-        if len(safe_tok) >= 5 and safe_tok.isascii():
-            fts_parts.append(f'"{safe_tok}"*')
-        elif len(safe_tok) >= 3 and safe_tok.isascii() and not safe_tok.endswith("s"):
-            fts_parts.append(f'"{safe_tok}"')
-            fts_parts.append(f'"{safe_tok}s"')
-        else:
-            fts_parts.append(f'"{safe_tok}"')
-
-    return " OR ".join(fts_parts)
-
-
-def _token_matches_word(tok: str, text: str) -> bool:
-    """
-    Checks whole-word (or simple plural/singular) match so short tokens like 'car'
-    never false-match substrings inside 'cards', 'removeCards', or 'carlos'.
-    """
-    if not tok or not text:
-        return False
-    if _has_cjk(tok):
-        return tok in text  # no word boundaries inside a CJK run
-    if len(tok) <= 4 and tok.isascii():
-        base = tok[:-1] if (len(tok) == 4 and tok.endswith("s")) else tok
-        return bool(re.search(rf"\b{re.escape(base)}(?:s|es)?\b", text))
-    return bool(re.search(rf"\b{re.escape(tok)}", text))
-
-
-def _normalize_pdf_broken_words(text: str) -> str:
-    """
-    Repairs PDF kerning/line-break word splits (e.g. 'Health Car\\ne' -> 'Health Care',
-    'car\\nrot' -> 'carrot', 'La id\\nea' -> 'La idea', 'bus\\ncar' -> 'buscar'),
-    strips leading [breadcrumb] prefixes and binary PDF Mojibake tokens, and collapses whitespace.
-    """
-    if not text:
-        return ""
-    s = str(text).lstrip()
-    # Strip leading [breadcrumb > section] prefix added during chunking
-    if s.startswith("["):
-        end_bracket = s.find("]", 0, 220)
-        if end_bracket > 0:
-            s = s[end_bracket + 1 :].lstrip()
-    s = re.sub(r"^`?\]\s*", "", s)
-    # Remove octal escape artifacts (\222, \037, \341) and control characters
-    s = re.sub(r"\\[0-7]{3}", " ", s)
-    s = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]", "", s)
-    # Rejoin mid-word line-breaks across 2 passes (e.g. 'id\ne\na' -> 'idea', 'Car\ne' -> 'Care')
-    for _ in range(2):
-        s = re.sub(r"([A-Za-zÀ-ÿ])-?[ \t]*\n[ \t]*([a-zà-ÿ])", r"\1\2", s)
-    collapsed = re.sub(r"\s+", " ", s).strip()
-    # Filter out encrypted-font / binary PDF Mojibake tokens
-    clean_words: list[str] = []
-    for tok in collapsed.split(" "):
-        if re.search(r"[®¤µ×÷þÿ¶§ª«¬¯±²³´¸¹º»¼½¾]", tok):
-            continue
-        if re.search(r"[A-Za-z0-9][@#$%^&*_+=<>|\\~`]+[A-Za-z0-9#]*|[A-Z0-9]{2,}#", tok):
-            continue
-        if re.search(r"\d", tok) and re.search(r"[^\x00-\x7f]", tok):
-            continue
-        clean_words.append(tok)
-    return " ".join(clean_words).strip()
-
-
-def parse_multimodal_query(raw_query: str) -> dict[str, Any]:
-    """
-    Decomposes a natural language query into explainable color filters, scene/object tags,
-    modality hints, and semantic search tokens.
-    """
-    q = str(raw_query or "").strip()
-    cleaned = re.sub(r"(\w)['’]s\b", r"\1s", q.lower())
-    tokens = re.findall(r"[a-z0-9_\u00c0-\u024f\u0400-\u04ff\u4e00-\u9fff]+", cleaned)
-
-    auto_colors: list[str] = []
-    auto_scenes: list[str] = []
-    content_tokens: list[str] = []
-
-    for tok in tokens:
-        if tok in COLOR_SYNONYMS:
-            c = COLOR_SYNONYMS[tok]
-            if c not in auto_colors:
-                auto_colors.append(c)
-        for scene_slug, (_, syn_set) in SCENE_ONTOLOGY.items():
-            if tok in syn_set or (tok.endswith("s") and tok[:-1] in syn_set):
-                if scene_slug not in auto_scenes:
-                    auto_scenes.append(scene_slug)
-        if tok not in _STOPWORDS:
-            content_tokens.append(tok)
-
-    # Determine modality hint
-    photo_words = {"photo", "photos", "picture", "pictures", "image", "images", "img", "pic", "camera", "selfie"}
-    doc_words = {"recipe", "recipes", "doc", "docs", "document", "manual", "guide", "pdf", "note", "notes", "invoice"}
-    visual_scenes = {"pool", "beach", "car", "person", "pet", "sunset", "snow"}
-
-    modality_hint = "all"
-    if any(t in photo_words for t in tokens) or (
-        (auto_colors or any(s in visual_scenes for s in auto_scenes)) and not any(t in doc_words for t in tokens)
-    ):
-        modality_hint = "photos"
-    elif "recipe" in auto_scenes or any(t in {"recipe", "recipes", "ingredients", "cook"} for t in tokens):
-        modality_hint = "recipes"
-    elif any(t in doc_words for t in tokens):
-        modality_hint = "documents"
-
-    return {
-        "raw_query": q,
-        "tokens": content_tokens or tokens,
-        "auto_colors": auto_colors,
-        "auto_scenes": auto_scenes,
-        "semantic_query": " ".join(content_tokens or tokens),
-        "modality_hint": modality_hint,
-    }
-
-
-def compute_384d_embedding(
-    text: str,
-    scene_tags: list[str] | None = None,
-    object_colors: dict[str, float] | None = None,
-    frame_colors: dict[str, float] | None = None,
-    color_hist_64: list[float] | None = None,
-) -> tuple[bytes, list[float]]:
-    """
-    Projects text, scene ontology tags, and perceptual color features into a unified
-    384-dimensional L2-normalized cross-modal vector space:
-      - Dims 0..255   (256-d): Signed Murmur/SHA feature-hashed lexical + stem + char-trigram projection
-      - Dims 256..319 (64-d) : Semantic Concept & Scene Ontology latents
-      - Dims 320..383 (64-d) : Perceptual Color (12 bins x 2 zones) + Chromaticity signature
-    """
-    vec = [0.0] * EMBEDDING_DIM
-    lowered = (text or "").lower()
-    words = text_tokens(lowered)
-
-    # 1. Lexical & character n-gram hashing into dims 0..255
-    for w in words:
-        if w in _STOPWORDS and len(w) <= 3:
-            continue
-        # Normalize simple plural stems so "cars" <-> "car", "recipes" <-> "recipe", "pools" <-> "pool"
-        stems = {w}
-        if len(w) > 4 and w.endswith("es"):
-            stems.add(w[:-2])
-        if len(w) > 3 and w.endswith("s"):
-            stems.add(w[:-1])
-        if len(w) > 5 and w.endswith("ing"):
-            stems.add(w[:-3])
-
-        for term in stems:
-            digest = hashlib.md5(term.encode("utf-8")).digest()
-            idx1 = digest[0]  # 0..255
-            sign1 = 1.0 if (digest[1] & 1) == 0 else -1.0
-            idx2 = digest[2]
-            sign2 = 1.0 if (digest[3] & 1) == 0 else -1.0
-            weight = 1.35 if term == w else 0.95
-            vec[idx1] += sign1 * weight
-            vec[idx2] += sign2 * (weight * 0.6)
-
-        # Character trigrams for typo/substring resilience
-        if len(w) >= 4:
-            padded = f"^{w}$"
-            for i in range(len(padded) - 2):
-                tri = padded[i : i + 3]
-                td = hashlib.md5(tri.encode("utf-8")).digest()
-                t_idx = td[0]
-                t_sign = 1.0 if (td[1] & 1) == 0 else -1.0
-                vec[t_idx] += t_sign * 0.22
-
-    # 2. Semantic Concept & Scene Ontology Latents (Dims 256..319)
-    active_scenes: set[str] = set(scene_tags or [])
-    for w in words:
-        for scene_slug, (_, syn_set) in SCENE_ONTOLOGY.items():
-            if w in syn_set or (w.endswith("s") and w[:-1] in syn_set):
-                active_scenes.add(scene_slug)
-
-    for scene_slug in active_scenes:
-        if scene_slug in SCENE_ONTOLOGY:
-            slot, _ = SCENE_ONTOLOGY[scene_slug]
-            base_dim = 256 + (slot * 3) % 64
-            vec[base_dim] += 2.4
-            vec[256 + ((slot * 3 + 1) % 64)] += 1.6
-            vec[256 + ((slot * 3 + 2) % 64)] += 1.2
-
-    # 3. Perceptual Color & Spatial Chromaticity Signature (Dims 320..383)
-    # Extract colors mentioned in text as well as visual object_colors / frame_colors
-    merged_obj_colors: dict[str, float] = dict(object_colors or {})
-    merged_frm_colors: dict[str, float] = dict(frame_colors or {})
-    for w in words:
-        if w in COLOR_SYNONYMS:
-            cname = COLOR_SYNONYMS[w]
-            merged_obj_colors[cname] = max(merged_obj_colors.get(cname, 0.0), 0.85)
-            merged_frm_colors[cname] = max(merged_frm_colors.get(cname, 0.0), 0.65)
-
-    for idx_c, cname in enumerate(CANONICAL_COLORS):
-        obj_w = float(merged_obj_colors.get(cname, 0.0))
-        frm_w = float(merged_frm_colors.get(cname, 0.0))
-        if obj_w > 0 or frm_w > 0:
-            # Subject color slot (weighted 2.5x) + frame color slot
-            dim_obj = 320 + idx_c * 2
-            dim_frm = 320 + idx_c * 2 + 1
-            vec[dim_obj] += obj_w * 2.6 + frm_w * 0.8
-            vec[dim_frm] += frm_w * 1.8 + obj_w * 1.0
-
-    # Fold compact 64-bin HSV energy into dims 344..383 (40 dims)
-    if color_hist_64:
-        for i, val in enumerate(color_hist_64[:64]):
-            vec[344 + (i % 40)] += float(val) * 0.9
-
-    # L2 Normalize
-    norm = math.sqrt(sum(x * x for x in vec))
-    if norm > 1e-9:
-        vec = [x / norm for x in vec]
-    else:
-        vec[0] = 1.0
-
-    blob = struct.pack(f"<{EMBEDDING_DIM}f", *vec)
-    return blob, vec
-
-
-def unpack_embedding(blob: bytes | None) -> list[float] | None:
-    """Unpacks binary float32 buffer into float vector, supporting arbitrary vector dimensions."""
-    if not blob or len(blob) % 4 != 0:
-        return None
-    dim = len(blob) // 4
-    return list(struct.unpack(f"<{dim}f", blob))
-
-
-def load_sqlite_vec_extension(conn: sqlite3.Connection) -> bool:
-    """
-    Authorizes and loads sqlite-vec extension into the SQLite connection.
-    Must be called on both read-write and read-only connections.
-    """
-    if hasattr(conn, "enable_load_extension"):
-        try:
-            conn.enable_load_extension(True)
-        except Exception as e:
-            logger.debug("Failed enabling SQLite extension loading: %s", e)
-            return False
-
-    try:
-        import sqlite_vec
-
-        sqlite_vec.load(conn)
-        return True
-    except Exception as e:
-        logger.debug("sqlite_vec package load skipped/failed: %s", e)
-
-    candidate_paths = [
-        os.environ.get("SQLITE_VEC_PATH", ""),
-        "/app/lib/vec0.so",
-        "/usr/local/lib/vec0.so",
-        "/usr/lib/vec0.so",
-        "vec0",
-    ]
-    for path in candidate_paths:
-        if not path:
-            continue
-        try:
-            conn.load_extension(path)
-            return True
-        except Exception:
-            continue
-    return False
-
-
-TASK_PREFIX_CODE = "task: code search | query: "
-TASK_PREFIX_QA = "task: question answering | query: "
-TASK_PREFIX_CLASSIFICATION = "task: classification | query: "
-TASK_PREFIX_SEARCH = "task: search result | query: "
-
-CODE_SYNTAX_INDICATORS = {
-    "def ",
-    "class ",
-    "import ",
-    "function ",
-    "func ",
-    "return ",
-    "select ",
-    "from ",
-    "where ",
-    "const ",
-    "let ",
-    "var ",
-    "=>",
-    "async ",
-    "await ",
-    "public ",
-    "private ",
-    "interface ",
-    "struct ",
-    "impl ",
-    "fn ",
-}
-
-CLI_COMMAND_INDICATORS = {
-    "docker compose",
-    "docker run",
-    "systemctl ",
-    "smartctl ",
-    "btrfs subvol",
-    "btrfs scrub",
-    "zpool status",
-    "zfs create",
-    "mdadm --",
-    "chmod ",
-    "chown ",
-}
-
-CODE_EXTENSIONS_RE = re.compile(
-    r"\b\w+\.(py|js|ts|sh|json|ya?ml|rs|go|c|cpp|h|css|html)\b",
-    re.IGNORECASE,
-)
-
-QA_INDICATORS_RE = re.compile(
-    r"^(how\s+(to|do|can|does)|why\s+(is|does|do)|what\s+(is|are)|where\s+(is|can)|when\s+should|can\s+i|is\s+it\s+(safe|possible)|explain)\b",
-    re.IGNORECASE,
-)
-
-CLASS_INDICATORS_RE = re.compile(
-    r"\b(list\s+all|find\s+all|classify|categorize|audit|duplicates?|group\s+by)\b",
-    re.IGNORECASE,
-)
-
-
-def classify_query_task_intent(query: str, modality_hint: str = "all") -> tuple[str, str]:
-    """
-    Deterministic intent classifier for Google DeepMind asymmetric task prefixing.
-    Evaluates interrogative QA structures BEFORE code keywords to prevent
-    domain noun collisions (e.g. 'How do I fix a raid array?').
-    Returns (intent_type, task_prefix) where intent_type is 'code', 'qa', 'classification', or 'search'.
-    """
-    q_strip = (query or "").strip()
-    low = q_strip.lower()
-
-    if modality_hint == "code":
-        return "code", TASK_PREFIX_CODE
-
-    # Rule 1: Evaluate conversational / interrogative QA FIRST
-    if QA_INDICATORS_RE.search(low) or low.endswith("?"):
-        return "qa", TASK_PREFIX_QA
-
-    # Rule 2: Evaluate classification / listing requests
-    if CLASS_INDICATORS_RE.search(low):
-        return "classification", TASK_PREFIX_CLASSIFICATION
-
-    # Rule 3: Evaluate unambiguous code syntax, CLI commands, or source file extensions
-    if (
-        any(ind in low for ind in CODE_SYNTAX_INDICATORS)
-        or any(ind in low for ind in CLI_COMMAND_INDICATORS)
-        or bool(CODE_EXTENSIONS_RE.search(low))
-    ):
-        return "code", TASK_PREFIX_CODE
-
-    # Rule 4: Default to semantic search
-    return "search", TASK_PREFIX_SEARCH
-
-
-def format_embeddinggemma_document(title: str | None, text: str) -> str:
-    """
-    Google DeepMind EmbeddingGemma-2 canonical document/passage formatting:
-    f"title: {title.strip()} | text: {text.strip()}" if title is provided,
-    else f"title: none | text: {text.strip()}".
-    """
-    clean_title = (title or "").strip()
-    clean_text = (text or "").strip()
-    if clean_title:
-        return f"title: {clean_title} | text: {clean_text}"
-    return f"title: none | text: {clean_text}"
-
-
-def truncate_and_normalize_mrl(vec: list[float], target_dim: int | None) -> list[float]:
-    """
-    Slices leading dimensions of MRL vector and re-normalizes to unit L2 sphere.
-    Strictly guarantees that math.isclose(sum(x*x for x in sliced_vec), 1.0, rel_tol=1e-5)
-    for any non-zero input vector. Handles subnormal floats, large numbers near float64
-    overflow limit (via max-abs scaling), full dimension, and oversized target_dim.
-    """
-    if not vec or not target_dim or target_dim <= 0:
-        return vec
-    sliced = [float(x) for x in vec[:target_dim]]
-    if not sliced:
-        return []
-
-    if any(math.isnan(x) for x in sliced):
-        return sliced
-
-    max_abs = max(abs(x) for x in sliced)
-    if max_abs <= 0.0 or math.isinf(max_abs):
-        return sliced
-
-    # Scale by max_abs to prevent intermediate float overflow/underflow
-    scaled = [x / max_abs for x in sliced]
-    scaled_norm = math.sqrt(sum(s * s for s in scaled))
-    if scaled_norm <= 0.0:
-        return sliced
-
-    return [s / scaled_norm for s in scaled]
-
-
-_CACHED_OLLAMA_HOST: str | None = None
-
-
-def _detected_host_ip() -> str | None:
-    """Returns this machine's LAN IP (HOST_IP env or auto-detected), or None."""
-    try:
-        from backend.hardware.network import read_ip
-
-        ip = (read_ip() or "").strip()
-    except Exception:
-        return None
-    if not ip or ip.startswith("127.") or ip == "0.0.0.0":
-        return None
-    return ip
-
-
-def _resolve_ollama_host(explicit_host: str | None = None) -> str:
-    """Discovers reachable Ollama host inside Docker bridge network or bare metal."""
-    global _CACHED_OLLAMA_HOST
-    if explicit_host:
-        h = explicit_host
-        if not h.startswith("http://") and not h.startswith("https://"):
-            h = f"http://{h}"
-        return h.rstrip("/")
-    if _CACHED_OLLAMA_HOST:
-        return _CACHED_OLLAMA_HOST
-
-    env_h = os.environ.get("OLLAMA_HOST")
-    if env_h:
-        if not env_h.startswith("http://") and not env_h.startswith("https://"):
-            env_h = f"http://{env_h}"
-        _CACHED_OLLAMA_HOST = env_h.rstrip("/")
-        return _CACHED_OLLAMA_HOST
-
-    from backend.services.ai_endpoints import candidate_hosts
-
-    candidates = candidate_hosts(_detected_host_ip())  # never a LAN router (AI-05)
-
-    for cand in candidates:
-        try:
-            req = urllib.request.Request(f"http://{cand}:11434/api/tags", headers={"User-Agent": "ZettNAS/1.0"})
-            with urllib.request.urlopen(req, timeout=0.35) as resp:
-                if resp.status == 200:
-                    _CACHED_OLLAMA_HOST = f"http://{cand}:11434"
-                    return _CACHED_OLLAMA_HOST
-        except Exception:
-            continue
-    _CACHED_OLLAMA_HOST = "http://127.0.0.1:11434"
-    return _CACHED_OLLAMA_HOST
-
-
-def compute_neural_embedding_via_ollama(
-    text: str,
-    model: str = "embeddinggemma",
-    host: str | None = None,
-    timeout: float = 1.8,
-    target_dim: int | None = None,
-    is_query: bool = False,
-    task_prompt: str | None = None,
-) -> tuple[bytes, list[float]] | None:
-    """
-    Computes dense neural vector embeddings via Ollama or local inference endpoint.
-    Supports Google DeepMind's EmbeddingGemma 2, Nomic-Embed-Text, and standard embedders.
-    Features:
-      - Asymmetric retrieval task prefixing (e.g. 'task: search result | query: ...')
-      - Matryoshka Representation Learning (MRL) dimension truncation (768 -> 512, 256, 128)
-      - Dual API compatibility: tries modern Ollama /api/embed then falls back to /api/embeddings
-      - Extended 8K context token handling (up to 16,000 characters)
-      - Accelerated by host NPU/GPU drivers when available.
-    Returns (packed_f32_blob, normalized_float_vector) on success, or None on failure/timeout.
-    """
-    clean_text = (text or "").strip()
-    if not clean_text:
-        return None
-
-    target_host = _resolve_ollama_host(host)
-
-    # Asymmetric instruction prefix for EmbeddingGemma models (Google DeepMind spec)
-    is_eg = "embeddinggemma" in model.lower()
-    if is_eg:
-        if is_query:
-            if not clean_text.lower().startswith("task:"):
-                instruction = task_prompt or "task: search result | query: "
-                prompt_text = f"{instruction}{clean_text}"
-            else:
-                prompt_text = clean_text
-        else:
-            prompt_text = clean_text
-
-        # True 8K token context budgeting: 32K chars for Latin/code, 12K chars for CJK
-        cjk_chars = sum(1 for c in prompt_text if "\u4e00" <= c <= "\u9fff" or "\u3040" <= c <= "\u30ff")
-        is_cjk_dominant = (cjk_chars / max(1, len(prompt_text))) > 0.3
-        # EmbeddingGemma reads 2,048 tokens; more text is silently cut by the runtime (AI-11)
-        max_chars = 2500 if is_cjk_dominant else 6000
-        prompt_text = prompt_text[:max_chars]
-    else:
-        prompt_text = clean_text[:4000]
-
-    # Model resolution candidates
-    candidates = [model]
-    if is_eg:
-        for alias in (
-            "embeddinggemma",
-            "embeddinggemma:latest",
-            "google/embeddinggemma-2",
-            "hf.co/google/embeddinggemma-2",
-            "embeddinggemma:2",
-        ):
-            if alias not in candidates:
-                candidates.append(alias)
-
-    for target_model in candidates:
-        raw_emb = None
-        # 1. Try modern Ollama /api/embed endpoint first
-        try:
-            embed_url = f"{target_host}/api/embed"
-            payload_embed = json.dumps({"model": target_model, "input": prompt_text}).encode("utf-8")
-            req_embed = urllib.request.Request(
-                embed_url,
-                data=payload_embed,
-                headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
-                method="POST",
-            )
-            with urllib.request.urlopen(req_embed, timeout=timeout) as resp:
-                if resp.status == 200:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    embs = data.get("embeddings")
-                    if embs and isinstance(embs, list) and len(embs) > 0 and isinstance(embs[0], list):
-                        raw_emb = embs[0]
-        except Exception:
-            logger.debug(
-                "backend.services.rag_engine.compute_neural_embedding_via_ollama: ignored error", exc_info=True
-            )
-
-        # 2. Fall back to legacy /api/embeddings endpoint if /api/embed was unavailable
-        if raw_emb is None:
-            try:
-                emb_url = f"{target_host}/api/embeddings"
-                payload_legacy = json.dumps({"model": target_model, "prompt": prompt_text}).encode("utf-8")
-                req_legacy = urllib.request.Request(
-                    emb_url,
-                    data=payload_legacy,
-                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
-                    method="POST",
-                )
-                with urllib.request.urlopen(req_legacy, timeout=timeout) as resp:
-                    if resp.status == 200:
-                        data = json.loads(resp.read().decode("utf-8"))
-                        cand_emb = data.get("embedding")
-                        if cand_emb and isinstance(cand_emb, list):
-                            raw_emb = cand_emb
-            except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.compute_neural_embedding_via_ollama: ignored error", exc_info=True
-                )
-
-        if raw_emb:
-            # L2 normalization
-            norm = math.sqrt(sum(float(x) * float(x) for x in raw_emb))
-            if norm > 0.0:
-                norm_emb = [float(x) / norm for x in raw_emb]
-            else:
-                norm_emb = [float(x) for x in raw_emb]
-
-            # Matryoshka Representation Learning (MRL) dimension truncation
-            # EmbeddingGemma 2 supports dynamic truncation: 768 -> 512, 256, 128
-            if target_dim and 0 < target_dim < len(norm_emb):
-                norm_emb = truncate_and_normalize_mrl(norm_emb, target_dim)
-
-            dim = len(norm_emb)
-            blob = struct.pack(f"<{dim}f", *norm_emb)
-            return blob, norm_emb
-
-    return None
-
-
-_EMBED_BREAKER = {"until": 0.0}  # after a failure, skip the embedder for a while (AI-15)
-_EMBED_MODEL_SEEN: dict[str, str] = {}  # configured name -> name the runtime accepted
-EMBED_BATCH_SIZE = 32
-
-
-def _embedding_model_candidates(model: str) -> list[str]:
-    cands = [_EMBED_MODEL_SEEN.get(model) or model]
-    if "embeddinggemma" in model.lower():
-        for alias in (
-            "embeddinggemma",
-            "embeddinggemma:latest",
-            "google/embeddinggemma-2",
-            "hf.co/google/embeddinggemma-2",
-        ):
-            if alias not in cands:
-                cands.append(alias)
-    elif model not in cands:
-        cands.append(model)
-    return cands
-
-
-def _pack_embedding(raw: list[float], target_dim: int | None) -> bytes:
-    norm = math.sqrt(sum(float(x) * float(x) for x in raw))
-    vec = [float(x) / norm for x in raw] if norm > 0.0 else [float(x) for x in raw]
-    if target_dim and 0 < target_dim < len(vec):
-        vec = truncate_and_normalize_mrl(vec, target_dim)
-    return struct.pack(f"<{len(vec)}f", *vec)
-
-
-def compute_neural_embeddings_batch(
-    texts: list[str],
-    model: str,
-    target_dim: int | None = None,
-    host: str | None = None,
-    batch_size: int = EMBED_BATCH_SIZE,
-) -> list[bytes] | None:
-    """Embeds document texts with Ollama's /api/embed in batches (AI-15).
-
-    All or nothing: returns one packed vector per text, or None if any batch failed, so a
-    file is never stored with a mix of neural and lexical vectors. After a failure the
-    embedder is skipped for 60 seconds instead of timing out on every file.
-    """
-    if not texts:
-        return []
-    if time.time() < _EMBED_BREAKER["until"]:
-        return None
-    target_host = _resolve_ollama_host(host)
-    limit = 6000 if "embeddinggemma" in model.lower() else 4000
-    clean = [(t or " ").strip()[:limit] or " " for t in texts]
-    out: list[bytes] = []
-    for start in range(0, len(clean), max(1, batch_size)):
-        batch = clean[start : start + batch_size]
-        embs = None
-        for cand in _embedding_model_candidates(model):
-            try:
-                req = urllib.request.Request(
-                    f"{target_host}/api/embed",
-                    data=json.dumps({"model": cand, "input": batch}).encode("utf-8"),
-                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
-                    method="POST",
-                )
-                with urllib.request.urlopen(req, timeout=10.0 + 1.5 * len(batch)) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                got = data.get("embeddings")
-                if isinstance(got, list) and len(got) == len(batch) and all(isinstance(e, list) and e for e in got):
-                    embs = got
-                    _EMBED_MODEL_SEEN[model] = cand
-                    break
-            except urllib.error.HTTPError as e:
-                if e.code == 404:  # unknown model name: try the next alias
-                    continue
-                break
-            except Exception:
-                break
-        if embs is None:
-            _EMBED_BREAKER["until"] = time.time() + 60.0
-            logger.warning(
-                f"[RAG] Embedding model '{model}' unavailable at {target_host}; using lexical vectors for now. "
-                "Re-embed the index from AI settings once the model is back."
-            )
-            return None
-        out.extend(_pack_embedding(e, target_dim) for e in embs)
-    return out
-
-
-def compute_multimodal_query_embedding(
-    query: str,
-    model: str = "embeddinggemma",
-    req_scenes: list[str] | None = None,
-    req_colors: list[str] | None = None,
-    ollama_host: str | None = None,
-    target_dim: int | None = None,
-    task_prompt: str | None = None,
-) -> tuple[str, list[float]]:
-    """
-    Generates query vector embedding based on requested embedding_model.
-    If a neural model (e.g. 'google/embeddinggemma-2', 'embeddinggemma', 'nomic-embed-text') is requested, queries Ollama,
-    falling back to deterministic 384d lexical vector if Ollama is unreachable.
-    Returns (effective_model_name, vector_list).
-    """
-    if model and model != "zett_lexical_384d":
-        res = compute_neural_embedding_via_ollama(
-            text=query,
-            model=model,
-            host=ollama_host,
-            target_dim=target_dim,
-            is_query=True,
-            task_prompt=task_prompt,
-        )
-        if res is not None:
-            _, vec = res
-            return model, vec
-
-    req_scenes = req_scenes or []
-    req_colors = req_colors or []
-    _, vec = compute_384d_embedding(
-        text=query or " ".join(req_scenes + req_colors),
-        scene_tags=req_scenes,
-        object_colors={c: 1.0 for c in req_colors},
-        frame_colors={c: 0.8 for c in req_colors},
-        color_hist_64=build_target_color_histogram(req_colors) if req_colors else None,
-    )
-    return "zett_lexical_384d", vec
-
-
-def cosine_similarity_vec(v1: list[float], v2: list[float] | None) -> float:
-    """
-    Computes cosine similarity between two vectors with Matryoshka prefix truncation
-    and robust scale handling against float overflow/underflow and NaN poisoning.
-    """
-    if not v1 or not v2:
-        return 0.0
-
-    # Guard against NaN / Inf poisoning
-    if any(math.isnan(x) or math.isinf(x) for x in v1) or any(math.isnan(x) or math.isinf(x) for x in v2):
-        return 0.0
-
-    min_dim = min(len(v1), len(v2))
-    if min_dim <= 0:
-        return 0.0
-
-    sub_v1 = v1[:min_dim]
-    sub_v2 = v2[:min_dim]
-
-    max1 = max(abs(x) for x in sub_v1)
-    max2 = max(abs(x) for x in sub_v2)
-    if max1 <= 0.0 or max2 <= 0.0:
-        return 0.0
-
-    # Max-abs scaling prevents intermediate overflow (e.g. 1e160) and subnormal underflow
-    scaled_v1 = [x / max1 for x in sub_v1]
-    scaled_v2 = [x / max2 for x in sub_v2]
-
-    norm1 = math.sqrt(sum(x * x for x in scaled_v1))
-    norm2 = math.sqrt(sum(x * x for x in scaled_v2))
-    if norm1 <= 0.0 or norm2 <= 0.0:
-        return 0.0
-
-    dot = sum((a / norm1) * (b / norm2) for a, b in zip(scaled_v1, scaled_v2, strict=False))
-    if math.isnan(dot):
-        return 0.0
-
-    return max(0.0, min(1.0, dot))
-
-
-def classify_rgb_pixel(r: int, g: int, b: int) -> str:
-    """
-    Classifies an RGB pixel (0..255) into one of the 12 canonical perceptual colors
-    using combined HSV + CIE lightness/saturation thresholds.
-    """
-    rf, gf, bf = r / 255.0, g / 255.0, b / 255.0
-    h, s, v = colorsys.rgb_to_hsv(rf, gf, bf)
-    h_deg = h * 360.0
-
-    # Achromatic checks first
-    if v < 0.18:
-        return "black"
-    if v > 0.82 and s < 0.15:
-        return "white"
-    if s < 0.16:
-        return "silver"
-
-    # Brown / warm dark orange check
-    if 10.0 <= h_deg < 42.0 and v < 0.52 and s >= 0.20:
-        return "brown"
-
-    # Chromatic hue wheel
-    if h_deg >= 345.0 or h_deg < 14.0:
-        return "red"
-    if 14.0 <= h_deg < 38.0:
-        return "orange"
-    if 38.0 <= h_deg < 68.0:
-        return "yellow"
-    if 68.0 <= h_deg < 165.0:
-        return "green"
-    if 165.0 <= h_deg < 200.0:
-        return "cyan"
-    if 200.0 <= h_deg < 255.0:
-        return "blue"
-    if 255.0 <= h_deg < 295.0:
-        return "purple"
-    return "pink"
-
-
-def build_target_color_histogram(colors: list[str]) -> list[float]:
-    """Builds a 64-bin L1-normalized query HSV histogram for requested color filters."""
-    hist = [0.0] * 64
-    for c in colors:
-        cname = COLOR_SYNONYMS.get(c.lower(), c.lower())
-        bins = COLOR_TARGET_BINS.get(cname, [])
-        for bh, bs, bv in bins:
-            idx = bh * 8 + bs * 2 + bv
-            if 0 <= idx < 64:
-                hist[idx] += 1.0
-    total = sum(hist)
-    if total > 0:
-        hist = [x / total for x in hist]
-    return hist
-
-
-def bhattacharyya_similarity(h1: list[float], h2_blob: bytes | None) -> float:
-    if not h1 or not h2_blob or len(h2_blob) != 256:
-        return 0.0
-    h2 = struct.unpack("<64f", h2_blob)
-    score = 0.0
-    for a, b in zip(h1, h2, strict=False):
-        if a > 0.0 and b > 0.0:
-            score += math.sqrt(a * b)
-    return max(0.0, min(1.0, score))
-
-
-class _HTMLTextExtractor(html.parser.HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self._Parts: list[str] = []
-        self._skip = False
-
-    def handle_starttag(self, tag: str, attrs: Any) -> None:
-        if tag.lower() in ("script", "style", "noscript"):
-            self._skip = True
-        elif tag.lower() in ("p", "div", "br", "li", "h1", "h2", "h3", "h4", "tr"):
-            self._Parts.append("\n")
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag.lower() in ("script", "style", "noscript"):
-            self._skip = False
-
-    def handle_data(self, data: str) -> None:
-        if not self._skip and data:
-            self._Parts.append(data)
-
-    def get_text(self) -> str:
-        return "".join(self._Parts)
-
-
-def extract_document_text(file_path: str, file_ext: str) -> str:
-    """
-    Extracts plain text from supported document/code files (.md, .txt, .docx, .pdf, .html, .json, .csv, etc.)
-    with zero heavyweight external binary dependencies.
-    Video and audio files are parsed for title, metadata tags, and companion sidecars without size caps.
-    """
-    ext = file_ext.lower()
-    if ext not in VIDEO_EXTENSIONS and ext not in AUDIO_EXTENSIONS:
-        try:
-            size = os.path.getsize(file_path)
-            if size > MAX_INDEX_FILE_BYTES:
-                return ""
-        except Exception:
-            return ""
-
-    if ext == ".docx":
-        try:
-            with zipfile.ZipFile(file_path, "r") as zf:
-                if "word/document.xml" not in zf.namelist():
-                    return ""
-                xml_bytes = zf.read("word/document.xml")
-            root = ET.fromstring(xml_bytes)
-            paragraphs: list[str] = []
-            for p in root.iter():
-                if p.tag.endswith("}p"):
-                    runs = [t.text for t in p.iter() if t.tag.endswith("}t") and t.text]
-                    if runs:
-                        paragraphs.append("".join(runs))
-            return "\n\n".join(paragraphs)
-        except Exception as e:
-            logger.debug(f"[RAG] DOCX parse error on {sanitize_string(file_path)}: {e}")
-            return ""
-
-    if ext in AUDIO_EXTENSIONS:
-        try:
-            meta_parts = [f"Audio track: {os.path.basename(file_path)}", f"Format: {ext}"]
-            try:
-                import mutagen
-
-                audio_info = mutagen.File(file_path)
-                if audio_info:
-                    for k in ("title", "artist", "album", "genre", "date"):
-                        if k in audio_info:
-                            val = audio_info[k]
-                            if isinstance(val, (list, tuple)):
-                                val = ", ".join(str(x) for x in val)
-                            meta_parts.append(f"{k.capitalize()}: {val}")
-            except Exception:
-                logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
-            return "\n".join(meta_parts)
-        except Exception:
-            return f"Audio track: {os.path.basename(file_path)}"
-
-    if ext in VIDEO_EXTENSIONS:
-        try:
-            base = os.path.basename(file_path)
-            title = os.path.splitext(base)[0]
-            clean_title = re.sub(r"[._\-]+", " ", title).strip()
-            parent = os.path.basename(os.path.dirname(file_path))
-            meta_parts = [f"Video Title: {clean_title}", f"File Name: {base}", f"Folder: {parent}", f"Format: {ext}"]
-
-            dir_name = os.path.dirname(file_path)
-            nfo_path = os.path.join(dir_name, f"{title}.nfo")
-            if not os.path.exists(nfo_path):
-                for alt_nfo in ("movie.nfo", "tvshow.nfo"):
-                    p = os.path.join(dir_name, alt_nfo)
-                    if os.path.exists(p):
-                        nfo_path = p
-                        break
-            if os.path.exists(nfo_path):
-                try:
-                    with open(nfo_path, encoding="utf-8", errors="ignore") as nf:
-                        nfo_text = nf.read(8000)
-                        if "<plot>" in nfo_text:
-                            plot_m = re.search(r"<plot>(.*?)</plot>", nfo_text, re.DOTALL | re.IGNORECASE)
-                            if plot_m:
-                                meta_parts.append(f"Plot: {plot_m.group(1).strip()}")
-                        else:
-                            meta_parts.append(f"NFO Summary: {nfo_text[:1000]}")
-                except Exception:
-                    logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
-            return "\n".join(meta_parts)
-        except Exception:
-            return f"Video: {os.path.basename(file_path)}"
-
-    if ext == ".pdf":
-        # Try pypdf/fitz first if installed, otherwise use native zlib FlateDecode stream parser
-        try:
-            import pypdf  # type: ignore
-
-            reader = pypdf.PdfReader(file_path)
-            pages = [page.extract_text() or "" for page in reader.pages[:100]]
-            extracted = "\n\n".join(p for p in pages if p.strip())
-            if extracted.strip():
-                return extracted
-        except Exception:
-            logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
-
-        try:
-            with open(file_path, "rb") as f:
-                raw = f.read(min(MAX_INDEX_FILE_BYTES, 16 * 1024 * 1024))
-            text_fragments: list[str] = []
-            # Decompress FlateDecode streams and extract literal strings (...)
-            for m in re.finditer(rb"stream[\r\n]+(.*?)[\r\n]+endstream", raw, re.DOTALL):
-                stream_bytes = m.group(1)
-                for wbits in (zlib.MAX_WBITS, -zlib.MAX_WBITS):
-                    try:
-                        decompressed = zlib.decompress(stream_bytes, wbits)
-                        decoded = decompressed.decode("latin-1", errors="ignore")
-                        for s_match in re.finditer(r"\(([^()\\]{2,250}(?:\\.[^()\\]*)*)\)", decoded):
-                            frag = s_match.group(1)
-                            frag = frag.replace(r"\(", "(").replace(r"\)", ")").replace(r"\n", "\n")
-                            if any(c.isalpha() for c in frag):
-                                text_fragments.append(frag)
-                        break
-                    except Exception:
-                        continue
-            # Also scan uncompressed literal text strings in raw PDF
-            if not text_fragments:
-                decoded_raw = raw.decode("latin-1", errors="ignore")
-                for s_match in re.finditer(r"\(([^()\\]{3,250})\)\s*Tj", decoded_raw):
-                    frag = s_match.group(1)
-                    if any(c.isalpha() for c in frag):
-                        text_fragments.append(frag)
-            return "\n".join(text_fragments)
-        except Exception as e:
-            logger.debug(f"[RAG] PDF parse error on {sanitize_string(file_path)}: {e}")
-            return ""
-
-    # Text-based formats
-    try:
-        with open(file_path, encoding="utf-8", errors="replace") as f:
-            content = f.read(2 * 1024 * 1024)
-    except Exception:
-        return ""
-
-    if ext in (".html", ".htm"):
-        try:
-            parser = _HTMLTextExtractor()
-            parser.feed(content)
-            return parser.get_text()
-        except Exception:
-            return re.sub(r"<[^>]+>", " ", content)
-
-    return content
-
-
-def _chunk_python_ast(
-    file_name: str,
-    raw_text: str,
-    canonical_path: str | None = None,
-    parent_chunk_chars: int = 3500,
-    child_chunk_chars: int = 950,
-) -> tuple[str, str, dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]] | None:
-    """
-    Python AST-aware chunker using ast.parse:
-    - Binds decorators (@router.get, @synchronized) directly to function/method definitions.
-    - Captures class context: 'Class: ClassName > Method: method_name'.
-    - Extracts docstrings, type annotations, and parameter signatures into structural_context.
-    - Gracefully returns None on SyntaxError so caller can fall back to standard line chunker.
-    """
-    try:
-        tree = ast.parse(raw_text)
-    except Exception:
-        return None
-
-    lines = raw_text.splitlines()
-    if not lines:
-        return None
-
-    base_title = os.path.splitext(file_name)[0].replace("_", " ").replace("-", " ").strip().title()
-    parent_dir = os.path.dirname(canonical_path) if canonical_path else ""
-    folder_name = os.path.basename(parent_dir) if parent_dir else ""
-    folder_prefix = f"Folder: {folder_name} | " if folder_name else ""
-
-    doc_metadata: dict[str, Any] = {
-        "card_type": "code",
-        "title": base_title,
-        "language": "python",
-        "has_classes": any(isinstance(n, ast.ClassDef) for n in tree.body),
-    }
-
-    parent_chunks: list[dict[str, Any]] = []
-    child_chunks: list[dict[str, Any]] = []
-
-    def _get_decorators(node: Any) -> list[str]:
-        decs: list[str] = []
-        for d in getattr(node, "decorator_list", []):
-            try:
-                decs.append("@" + ast.unparse(d))
-            except Exception:
-                decs.append("@decorator")
-        return decs
-
-    def _get_returns(node: Any) -> str | None:
-        if getattr(node, "returns", None):
-            try:
-                return ast.unparse(node.returns)
-            except Exception:
-                return None
-        return None
-
-    current_parent_index = 0
-
-    for node in tree.body:
-        if isinstance(node, ast.ClassDef):
-            class_name = node.name
-            c_start = node.decorator_list[0].lineno if node.decorator_list else node.lineno
-            c_end = getattr(node, "end_lineno", len(lines)) or len(lines)
-            class_body = "\n".join(lines[c_start - 1 : c_end]).strip()
-            class_decs = _get_decorators(node)
-
-            p_id = f"parent_{current_parent_index}"
-            parent_chunks.append(
-                {
-                    "parent_index": current_parent_index,
-                    "parent_chunk_id": p_id,
-                    "chunk_level": "parent",
-                    "heading_context": f"Class: {class_name}",
-                    "chunk_text": class_body,
-                    "raw_chunk_text": class_body,
-                    "text": class_body,
-                    "line_start": c_start,
-                    "line_end": c_end,
-                    "token_count": max(1, len(class_body.split())),
-                }
-            )
-
-            methods = [n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
-            if methods:
-                for m in methods:
-                    m_start = m.decorator_list[0].lineno if m.decorator_list else m.lineno
-                    m_end = getattr(m, "end_lineno", c_end) or c_end
-                    m_body = "\n".join(lines[m_start - 1 : m_end]).strip()
-                    m_decs = _get_decorators(m)
-                    m_ret = _get_returns(m)
-                    heading_ctx = f"Class: {class_name} > Method: {m.name}"
-                    struct_ctx = f"decorators: {m_decs} | returns: {m_ret}"
-                    breadcrumb = f"[{folder_prefix}Doc: {base_title} > {heading_ctx}]"
-                    full_text = f"{breadcrumb}\n{struct_ctx}\n{m_body}"
-
-                    child_chunks.append(
-                        {
-                            "chunk_index": len(child_chunks),
-                            "parent_index": current_parent_index,
-                            "parent_chunk_id": p_id,
-                            "chunk_level": "child",
-                            "heading_context": heading_ctx,
-                            "structural_context": struct_ctx,
-                            "chunk_text": full_text,
-                            "raw_chunk_text": m_body,
-                            "raw_text": m_body,
-                            "text": full_text,
-                            "line_start": m_start,
-                            "line_end": m_end,
-                            "token_count": max(1, len(full_text.split())),
-                        }
-                    )
-            else:
-                breadcrumb = f"[{folder_prefix}Doc: {base_title} > Class: {class_name}]"
-                struct_ctx = f"decorators: {class_decs}"
-                full_text = f"{breadcrumb}\n{struct_ctx}\n{class_body}"
-                child_chunks.append(
-                    {
-                        "chunk_index": len(child_chunks),
-                        "parent_index": current_parent_index,
-                        "parent_chunk_id": p_id,
-                        "chunk_level": "child",
-                        "heading_context": f"Class: {class_name}",
-                        "structural_context": struct_ctx,
-                        "chunk_text": full_text,
-                        "raw_chunk_text": class_body,
-                        "raw_text": class_body,
-                        "text": full_text,
-                        "line_start": c_start,
-                        "line_end": c_end,
-                        "token_count": max(1, len(full_text.split())),
-                    }
-                )
-            current_parent_index += 1
-
-        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            fn_name = node.name
-            f_start = node.decorator_list[0].lineno if node.decorator_list else node.lineno
-            f_end = getattr(node, "end_lineno", len(lines)) or len(lines)
-            fn_body = "\n".join(lines[f_start - 1 : f_end]).strip()
-            fn_decs = _get_decorators(node)
-            fn_ret = _get_returns(node)
-            heading_ctx = f"{base_title} > Function: {fn_name}"
-            struct_ctx = f"decorators: {fn_decs} | returns: {fn_ret}"
-            breadcrumb = f"[{folder_prefix}Doc: {heading_ctx}]"
-            full_text = f"{breadcrumb}\n{struct_ctx}\n{fn_body}"
-
-            p_id = f"parent_{current_parent_index}"
-            parent_chunks.append(
-                {
-                    "parent_index": current_parent_index,
-                    "parent_chunk_id": p_id,
-                    "chunk_level": "parent",
-                    "heading_context": heading_ctx,
-                    "chunk_text": fn_body,
-                    "raw_chunk_text": fn_body,
-                    "text": fn_body,
-                    "line_start": f_start,
-                    "line_end": f_end,
-                    "token_count": max(1, len(fn_body.split())),
-                }
-            )
-
-            child_chunks.append(
-                {
-                    "chunk_index": len(child_chunks),
-                    "parent_index": current_parent_index,
-                    "parent_chunk_id": p_id,
-                    "chunk_level": "child",
-                    "heading_context": heading_ctx,
-                    "structural_context": struct_ctx,
-                    "chunk_text": full_text,
-                    "raw_chunk_text": fn_body,
-                    "raw_text": fn_body,
-                    "text": full_text,
-                    "line_start": f_start,
-                    "line_end": f_end,
-                    "token_count": max(1, len(full_text.split())),
-                }
-            )
-            current_parent_index += 1
-
-    if not child_chunks:
-        return None
-
-    return ("code", base_title, doc_metadata, child_chunks, parent_chunks)
-
-
-def late_interaction_rerank(
-    raw_query: str,
-    candidates: list[dict[str, Any]],
-    top_k: int = 10,
-) -> list[dict[str, Any]]:
-    """
-    Stage 2 lightweight late-interaction re-ranker (<2ms).
-    Evaluates candidate items using contiguous phrase match and token proximity:
-      - Contiguous phrase match: +0.08 body boost, +0.12 title boost
-      - Token proximity span (<20 words): +0.05
-      - Structural / header boost: +0.06
-    """
-    if not candidates or not raw_query:
-        return candidates[:top_k]
-
-    q_lower = raw_query.strip().lower()
-    q_words = [w for w in re.findall(r"[a-z0-9_\u4e00-\u9fff]+", q_lower) if w not in _STOPWORDS]
-
-    for item in candidates:
-        bonus = 0.0
-        title_lower = (item.get("title") or item.get("name") or "").lower()
-        chunk_text = (item.get("raw_chunk_text") or item.get("chunk_text") or "").lower()
-        header_text = (item.get("breadcrumb") or item.get("section_title") or item.get("heading_context") or "").lower()
-
-        # 1. Contiguous phrase match
-        if len(q_words) >= 2 and q_lower in chunk_text:
-            bonus += 0.08
-        if len(q_words) >= 2 and q_lower in title_lower:
-            bonus += 0.12
-
-        # 2. Token proximity span: query words within <20 words
-        if len(q_words) >= 2:
-            body_words = chunk_text.split()
-            word_indices = [idx for idx, w in enumerate(body_words) if any(qw in w for qw in q_words)]
-            if len(word_indices) >= len(q_words):
-                min_span = 9999
-                for i in range(len(word_indices) - len(q_words) + 1):
-                    span = word_indices[i + len(q_words) - 1] - word_indices[i]
-                    if span < min_span:
-                        min_span = span
-                if min_span < 20:
-                    bonus += 0.05
-
-        # 3. Structural header boost
-        if q_words and any(qw in header_text for qw in q_words):
-            bonus += 0.06
-
-        orig_score = float(item.get("score") or 0.0)
-        item["score"] = round(min(1.0, orig_score + bonus), 4)
-
-    candidates.sort(key=lambda x: x.get("score", 0.0), reverse=True)
-    return candidates[:top_k]
-
-
-def generate_contextual_hierarchical_chunks(
-    file_name: str = "",
-    file_ext: str = "",
-    raw_text: str = "",
-    canonical_path: str | None = None,
-    parent_chunk_chars: int = 3500,
-    child_chunk_chars: int = 950,
-    child_overlap_chars: int = 80,
-    file_path: str | None = None,
-    text: str | None = None,
-    **kwargs: Any,
-) -> tuple[str, str, dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
-    """
-    RAG v3 Hierarchical & Anthropic-Style Contextual Chunking:
-      1. Detects document type ('recipe', 'invoice', 'code', 'markdown', 'generic')
-      2. Extracts structured metadata (ingredients, prep_time, cook_time, servings, steps)
-      3. Splits into PARENT chunks (natural section boundaries, ~600-1200 tokens / 2500-4500 chars)
-      4. Splits each parent into CHILD chunks (high-precision search units, ~150-250 tokens / 600-900 chars)
-      5. Prepends situated deterministic breadcrumbs ([Folder: ...] [Doc: ... > Heading]) in 0ms
-    Returns (doc_type, doc_title, doc_metadata, child_chunks, parent_chunks).
-    """
-    if not canonical_path and file_path:
-        canonical_path = file_path
-    if not file_name and canonical_path:
-        file_name = os.path.basename(canonical_path)
-    if not file_ext and file_name:
-        file_ext = os.path.splitext(file_name)[1]
-    if not raw_text and text:
-        raw_text = text
-
-    clean_text = sanitize_string(raw_text or "").strip()
-    base_title = os.path.splitext(file_name)[0].replace("_", " ").replace("-", " ").strip().title()
-    if not clean_text:
-        return ("generic", base_title, {}, [], [])
-
-    # Python AST-aware code chunking (Batch 2 Item 2.1)
-    if file_ext.lower() in (".py", ".pyw"):
-        ast_result = _chunk_python_ast(
-            file_name=file_name,
-            raw_text=clean_text,
-            canonical_path=canonical_path,
-            parent_chunk_chars=parent_chunk_chars,
-            child_chunk_chars=child_chunk_chars,
-        )
-        if ast_result is not None:
-            return ast_result
-
-    lines = clean_text.splitlines()
-    doc_title = base_title
-    for line in lines[:15]:
-        s = line.strip()
-        if s.startswith("# "):
-            doc_title = s.lstrip("#").strip()
-            break
-        elif len(s) >= 4 and len(s) <= 90 and not s.startswith(("-", "*", "{", "[")):
-            doc_title = s
-            break
-
-    lower_text = clean_text.lower()
-    lower_name = file_name.lower()
-
-    # Recipe Detection Heuristics
-    has_ingredient_header = bool(re.search(r"(?m)^\s*(?:#+\s*)?ingredients\b", lower_text))
-    has_steps_header = bool(
-        re.search(r"(?m)^\s*(?:#+\s*)?(?:instructions|directions|steps|method|preparation)\b", lower_text)
-    )
-    culinary_units = len(
-        re.findall(
-            r"\b\d+(?:/\d+|\.\d+)?\s*(?:cup|cups|tbsp|tablespoon|tsp|teaspoon|oz|ounce|lb|pound|g|gram|kg|ml|clove|cloves|pinch|slice|slices|can|cans)\b",
-            lower_text,
-        )
-    )
-    is_recipe = (
-        has_ingredient_header
-        or (has_steps_header and culinary_units >= 2)
-        or ("recipe" in lower_name and culinary_units >= 1)
-        or (
-            culinary_units >= 3
-            and any(
-                w in lower_text
-                for w in (
-                    "bake",
-                    "simmer",
-                    "boil",
-                    "saute",
-                    "roast",
-                    "garlic",
-                    "pasta",
-                    "chicken",
-                    "flour",
-                    "olive oil",
-                )
-            )
-        )
-    )
-
-    # Invoice / Receipt Detection Heuristics
-    is_invoice = not is_recipe and (
-        any(w in lower_name for w in ("invoice", "receipt", "statement", "bill"))
-        or (
-            any(
-                w in lower_text
-                for w in ("invoice #", "invoice number", "subtotal", "amount due", "total paid", "receipt")
-            )
-            and bool(re.search(r"\$\s*\d+(?:\.\d{2})?", clean_text))
-        )
-    )
-
-    doc_type = "generic"
-    if is_recipe:
-        doc_type = "recipe"
-    elif is_invoice:
-        doc_type = "invoice"
-    elif file_ext.lower() in CODE_EXTENSIONS:
-        doc_type = "code"
-    elif file_ext.lower() == ".md":
-        doc_type = "markdown"
-
-    doc_metadata: dict[str, Any] = {"title": doc_title}
-
-    if is_recipe:
-        ingredients: list[str] = []
-        steps: list[str] = []
-        prep_time = ""
-        cook_time = ""
-        servings = ""
-
-        m_prep = re.search(r"prep(?:\s*time)?\s*[:\-]\s*([^\n|,;]{2,25})", clean_text, re.IGNORECASE)
-        if m_prep:
-            prep_time = m_prep.group(1).strip()
-        m_cook = re.search(r"cook(?:\s*time)?\s*[:\-]\s*([^\n|,;]{2,25})", clean_text, re.IGNORECASE)
-        if m_cook:
-            cook_time = m_cook.group(1).strip()
-        m_serv = re.search(r"(?:servings|serves|yield)\s*[:\-]\s*([^\n|,;]{1,20})", clean_text, re.IGNORECASE)
-        if m_serv:
-            servings = m_serv.group(1).strip()
-
-        section_mode = "none"
-        for line in lines:
-            stripped = line.strip()
-            if not stripped:
-                continue
-            low_line = stripped.lower().lstrip("#* ").rstrip(":")
-            if low_line in ("ingredients", "ingredient list", "what you need"):
-                section_mode = "ingredients"
-                continue
-            if low_line in ("instructions", "directions", "steps", "method", "preparation", "how to make"):
-                section_mode = "steps"
-                continue
-            if stripped.startswith("#"):
-                section_mode = "other"
-                continue
-
-            if section_mode == "ingredients" and (stripped.startswith(("-", "*", "•")) or re.match(r"^\d", stripped)):
-                item = re.sub(r"^[-*•]\s*", "", stripped).strip()
-                if item and len(ingredients) < 25:
-                    ingredients.append(item)
-            elif section_mode == "steps" and (re.match(r"^\d+[\.\)]\s*", stripped) or stripped.startswith(("-", "*"))):
-                step_txt = re.sub(r"^(?:\d+[\.\)]|[-*])\s*", "", stripped).strip()
-                if step_txt and len(steps) < 20:
-                    steps.append(step_txt)
-            elif section_mode == "steps" and len(stripped) > 20 and len(steps) < 15:
-                steps.append(stripped)
-
-        # Fallback extraction if recipe had no formal markdown headers
-        if not ingredients:
-            for line in lines:
-                stripped = line.strip()
-                if re.search(
-                    r"\b\d+(?:/\d+)?\s*(?:cup|cups|tbsp|tsp|oz|lb|g|kg|ml|clove|cloves|pinch|can)\b",
-                    stripped,
-                    re.IGNORECASE,
-                ):
-                    item = re.sub(r"^[-*•]\s*", "", stripped).strip()
-                    if item and len(item) < 120 and len(ingredients) < 20:
-                        ingredients.append(item)
-
-        if not steps:
-            for line in lines:
-                stripped = line.strip()
-                if re.match(r"^\d+[\.\)]\s+", stripped) or any(
-                    v in stripped.lower()
-                    for v in ("preheat", "simmer", "boil", "saute", "whisk", "roast", "bake", "toss")
-                ):
-                    step_txt = re.sub(r"^\d+[\.\)]\s*", "", stripped).strip()
-                    if step_txt and step_txt not in ingredients and len(steps) < 12:
-                        steps.append(step_txt)
-
-        doc_metadata.update(
-            {
-                "card_type": "recipe",
-                "title": doc_title,
-                "prep_time": prep_time or "15 mins",
-                "cook_time": cook_time or "25 mins",
-                "servings": servings or "4",
-                "ingredients": ingredients[:20],
-                "steps": steps[:12],
-            }
-        )
-    elif is_invoice:
-        amounts = re.findall(r"\$\s*\d+(?:,\d{3})*(?:\.\d{2})?", clean_text)
-        doc_metadata.update(
-            {
-                "card_type": "invoice",
-                "title": doc_title,
-                "total_amount": amounts[-1] if amounts else "N/A",
-                "amounts": amounts[:6],
-            }
-        )
-
-    # Situated Context Extraction
-    parent_dir = os.path.dirname(canonical_path) if canonical_path else ""
-    folder_name = os.path.basename(parent_dir) if parent_dir else ""
-    folder_prefix = f"Folder: {folder_name} | " if folder_name else ""
-
-    ingredient_summary = ""
-    if is_recipe and doc_metadata.get("ingredients"):
-        ingredient_summary = " | Ingredients: " + ", ".join(doc_metadata["ingredients"][:8])
-
-    # 1. Build Parent Chunks (natural section boundaries, ~2500-4500 chars)
-    parent_chunks: list[dict[str, Any]] = []
-    current_parent_heading = doc_title
-    current_parent_lines: list[str] = []
-    current_parent_len = 0
-    parent_start_line = 1
-
-    def _flush_parent(end_line: int) -> None:
-        nonlocal current_parent_lines, current_parent_len, parent_start_line
-        if not current_parent_lines:
-            return
-        p_body = "\n".join(current_parent_lines).strip()
-        if not p_body:
-            return
-        p_idx = len(parent_chunks)
-        parent_chunks.append(
-            {
-                "parent_index": p_idx,
-                "parent_chunk_id": f"parent_{p_idx}",
-                "chunk_level": "parent",
-                "heading_context": f"{doc_title} > {current_parent_heading}",
-                "chunk_text": p_body,
-                "raw_chunk_text": p_body,
-                "text": p_body,
-                "line_start": parent_start_line,
-                "line_end": max(parent_start_line, end_line),
-                "token_count": max(1, len(p_body.split())),
-                "lines": list(current_parent_lines),
-            }
-        )
-
-    for idx_line, line in enumerate(lines, start=1):
-        stripped = line.strip()
-        is_major_heading = stripped.startswith(("# ", "## ", "### ")) or (
-            file_ext.lower() in CODE_EXTENSIONS and stripped.startswith(("def ", "class "))
-        )
-        if is_major_heading and current_parent_len >= min(800, max(200, parent_chunk_chars // 2)):
-            _flush_parent(idx_line - 1)
-            current_parent_lines = []
-            current_parent_len = 0
-            parent_start_line = idx_line
-
-        if stripped.startswith("#"):
-            current_parent_heading = stripped.lstrip("#").strip() or current_parent_heading
-
-        current_parent_lines.append(line)
-        current_parent_len += len(line) + 1
-
-        if current_parent_len >= parent_chunk_chars:
-            _flush_parent(idx_line)
-            current_parent_lines = []
-            current_parent_len = 0
-            parent_start_line = idx_line + 1
-
-    if current_parent_lines:
-        _flush_parent(len(lines))
-
-    # 2. Build Child Chunks from Parent Chunks (high-precision search units)
-    child_chunks: list[dict[str, Any]] = []
-
-    for p in parent_chunks:
-        p_lines = p.get("lines", [])
-        if not p_lines:
-            continue
-        p_heading = p["heading_context"]
-        p_idx = p["parent_index"]
-        c_lines: list[str] = []
-        c_len = 0
-        c_start_line = p["line_start"]
-
-        def _flush_child(end_line_num: int) -> None:
-            nonlocal c_lines, c_len, c_start_line
-            if not c_lines:  # noqa: B023
-                return
-            body = "\n".join(c_lines).strip()  # noqa: B023
-            if not body:
-                return
-            breadcrumb = f"[{folder_prefix}Doc: {p_heading}{ingredient_summary}]"  # noqa: B023
-            full_child_text = f"{breadcrumb}\n{body}"
-            child_chunks.append(
-                {
-                    "chunk_index": len(child_chunks),
-                    "parent_index": p_idx,  # noqa: B023
-                    "parent_chunk_id": f"parent_{p_idx}",  # noqa: B023
-                    "chunk_level": "child",
-                    "heading_context": p_heading,  # noqa: B023
-                    "structural_context": breadcrumb,
-                    "chunk_text": full_child_text,
-                    "raw_chunk_text": body,
-                    "raw_text": body,
-                    "text": full_child_text,
-                    "line_start": c_start_line,  # noqa: B023
-                    "line_end": max(c_start_line, end_line_num),  # noqa: B023
-                    "token_count": max(1, len(full_child_text.split())),
-                }
-            )
-
-        for rel_idx, line in enumerate(p_lines):
-            curr_abs_line = p["line_start"] + rel_idx
-            stripped = line.strip()
-            is_subheading = stripped.startswith(("#", "def ", "class ", "function ", "export "))
-            if is_subheading and c_len >= min(400, max(100, child_chunk_chars // 2)):
-                _flush_child(curr_abs_line - 1)
-                overlap = c_lines[-3:] if len(c_lines) >= 3 else []
-                c_lines = list(overlap)
-                c_len = sum(len(x) + 1 for x in c_lines)
-                c_start_line = max(p["line_start"], curr_abs_line - len(overlap))
-
-            c_lines.append(line)
-            c_len += len(line) + 1
-
-            if c_len >= child_chunk_chars:
-                _flush_child(curr_abs_line)
-                overlap = c_lines[-3:] if len(c_lines) >= 3 else []
-                c_lines = list(overlap)
-                c_len = sum(len(x) + 1 for x in c_lines)
-                c_start_line = max(p["line_start"], curr_abs_line - len(overlap) + 1)
-
-        if c_lines:
-            _flush_child(p["line_end"])
-
-    # Clean temporary 'lines' list from parent_chunks to save memory
-    for p in parent_chunks:
-        p.pop("lines", None)
-
-    return (doc_type, doc_title, doc_metadata, child_chunks, parent_chunks)
-
-
-def parse_document_structure_and_chunks(
-    file_name: str,
-    file_ext: str,
-    raw_text: str,
-    canonical_path: str | None = None,
-) -> tuple[str, str, dict[str, Any], list[dict[str, Any]]]:
-    """
-    Backward-compatible wrapper for generate_contextual_hierarchical_chunks.
-    Returns 4-tuple (doc_type, doc_title, doc_metadata, child_chunks).
-    """
-    doc_type, doc_title, doc_metadata, child_chunks, parent_chunks = generate_contextual_hierarchical_chunks(
-        file_name, file_ext, raw_text, canonical_path
-    )
-    doc_metadata["parent_chunks"] = parent_chunks
-    return (doc_type, doc_title, doc_metadata, child_chunks)
-
-
-def apply_primacy_recency_inversion(chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """
-    Mitigates 'Lost in the Middle' attention degradation by rearranging ranked evidence
-    chunks [C1, C2, C3, C4, C5, ...] into a U-curve: [C1, C3, ..., C4, C2].
-    Highest-scoring chunks occupy peak attention zones (prompt top and bottom).
-    """
-    if len(chunks) <= 2:
-        return list(chunks)
-    head_items: list[dict[str, Any]] = []
-    tail_items: list[dict[str, Any]] = []
-    for idx, item in enumerate(chunks):
-        if idx % 2 == 0:
-            head_items.append(item)
-        else:
-            tail_items.append(item)
-    return head_items + list(reversed(tail_items))
-
-
-class CRAGGrade(dict):
-    """
-    CRAG evaluation result dictionary that can also be compared directly against grade strings
-    (e.g., res == 'high' or res['grade'] == 'high').
-    """
-
-    def __eq__(self, other: Any) -> bool:
-        if isinstance(other, str):
-            return self.get("grade") == other
-        return super().__eq__(other)
-
-    def __str__(self) -> str:
-        return str(self.get("grade") or "low")
-
-
-def grade_rag_retrieval(
-    query: str,
-    retrieved_items: list[dict[str, Any]] | None = None,
-    citations: list[dict[str, Any]] | None = None,
-) -> CRAGGrade:
-    """
-    Corrective RAG (CRAG) retrieval evaluator: assesses whether retrieved knowledge chunks
-    contain sufficient grounded evidence to answer the query.
-    Returns CRAGGrade with 'grade': 'high' (>=0.65), 'ambiguous' (0.30..0.64), or 'low' (<0.30).
-    """
-    items = retrieved_items if retrieved_items is not None else (citations or [])
-    if not items:
-        return CRAGGrade({"grade": "low", "confidence": 0.0, "reason": "No evidence chunks retrieved."})
-    top_score = max(float(it.get("score") or 0.0) for it in items)
-    avg_top3 = sum(float(it.get("score") or 0.0) for it in items[:3]) / max(1, min(3, len(items)))
-
-    q_norm = (query or "").lower()
-    q_words = [w for w in text_tokens(q_norm) if (len(w) >= 3 or _has_cjk(w)) and w not in _STOPWORDS]
-
-    has_lexical = False
-    if q_words:
-        combined_text = " ".join(
-            f"{it.get('name', '')} {it.get('excerpt', '')} {it.get('chunk_text', '')}" for it in items[:3]
-        ).lower()
-        has_lexical = any(w in combined_text for w in q_words)
-
-    if top_score >= 0.65 or (top_score >= 0.48 and has_lexical):
-        grade = "high"
-        confidence = min(1.0, round(top_score * 1.1, 2))
-    elif top_score >= 0.30 or has_lexical:
-        grade = "ambiguous"
-        confidence = round(max(0.40, top_score), 2)
-    else:
-        grade = "low"
-        confidence = round(top_score, 2)
-
-    return CRAGGrade(
-        {
-            "grade": grade,
-            "confidence": confidence,
-            "top_score": round(top_score, 3),
-            "avg_top3": round(avg_top3, 3),
-            "has_lexical_evidence": has_lexical,
-        }
-    )
-
-
-class GroundingScoreResult(dict):
-    """
-    Grounding score result dictionary that can also be compared directly as an integer/float
-    (e.g., res >= 75 or res['grounding_confidence_score'] >= 75).
-    """
-
-    def __ge__(self, other: Any) -> bool:
-        return self.get("grounding_confidence_score", 0) >= int(other)
-
-    def __gt__(self, other: Any) -> bool:
-        return self.get("grounding_confidence_score", 0) > int(other)
-
-    def __le__(self, other: Any) -> bool:
-        return self.get("grounding_confidence_score", 0) <= int(other)
-
-    def __lt__(self, other: Any) -> bool:
-        return self.get("grounding_confidence_score", 0) < int(other)
-
-    def __eq__(self, other: Any) -> bool:
-        if isinstance(other, (int, float)):
-            return self.get("grounding_confidence_score", 0) == int(other)
-        return super().__eq__(other)
-
-    def __int__(self) -> int:
-        return int(self.get("grounding_confidence_score", 0))
-
-    def __float__(self) -> float:
-        return float(self.get("grounding_confidence_score", 0))
-
-
-def compute_grounding_confidence_score(answer_text: str, evidence_texts: str | list[str]) -> GroundingScoreResult:
-    """
-    Fast Python NLI entailment check (<2ms) verifying that factual claims in the generated
-    response are grounded in the retrieved context evidence.
-    Returns GroundingScoreResult with grounding_confidence_score (0-100%).
-    """
-    if isinstance(evidence_texts, str):
-        evidence_list = [evidence_texts]
-    elif isinstance(evidence_texts, (list, tuple, set)):
-        evidence_list = list(evidence_texts)
-    else:
-        evidence_list = [str(evidence_texts)]
-
-    if not answer_text or not evidence_list:
-        return GroundingScoreResult(
-            {
-                "grounding_confidence_score": 0,
-                "grounded_sentences": 0,
-                "total_sentences": 0,
-                "unsupported_claims": [],
-            }
-        )
-
-    # Split answer into clean sentences
-    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", answer_text) if len(s.strip()) > 15]
-    if not sentences:
-        return GroundingScoreResult(
-            {
-                "grounding_confidence_score": 100,
-                "grounded_sentences": 0,
-                "total_sentences": 0,
-                "unsupported_claims": [],
-            }
-        )
-
-    evidence_joined = " ".join(evidence_list).lower()
-    evidence_tokens = set(re.findall(r"[a-z0-9_\u00c0-\u024f\u4e00-\u9fff]+", evidence_joined))
-
-    grounded_count = 0
-    unsupported: list[str] = []
-
-    for sent in sentences:
-        sent_words = [
-            w
-            for w in re.findall(r"[a-z0-9_\u00c0-\u024f\u4e00-\u9fff]+", sent.lower())
-            if len(w) >= 3 and w not in _STOPWORDS
-        ]
-        if not sent_words:
-            grounded_count += 1
-            continue
-
-        supported_words = sum(1 for w in sent_words if w in evidence_tokens)
-        overlap_ratio = supported_words / len(sent_words)
-
-        if overlap_ratio >= 0.30:
-            grounded_count += 1
-        else:
-            unsupported.append(sent[:120])
-
-    score_pct = int(round((grounded_count / len(sentences)) * 100))
-    return GroundingScoreResult(
-        {
-            "grounding_confidence_score": score_pct,
-            "grounded_sentences": grounded_count,
-            "total_sentences": len(sentences),
-            "unsupported_claims": unsupported[:5],
-        }
-    )
 
 
 def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any]:
@@ -2763,269 +522,6 @@ SYSTEM_SHARE_EXCLUSIONS: set[str] = {
     ".thumbnails",
 }
 
-_UNRAID_INI_CACHE: dict[str, Any] = {"ts": 0.0, "disks": {}, "shares": {}}
-_SMARTCTL_STANDBY_CACHE: dict[str, tuple[float, bool]] = {}
-
-
-def _parse_ini_sections(ini_path: str) -> dict[str, dict[str, str]]:
-    """Parses Unraid emhttp .ini files (disks.ini, shares.ini) from RAM tmpfs without disk I/O."""
-    result: dict[str, dict[str, str]] = {}
-    if not os.path.isfile(ini_path):
-        return result
-    try:
-        with open(ini_path, encoding="utf-8", errors="replace") as f:
-            current_sec: str | None = None
-            for raw_line in f:
-                line = raw_line.strip()
-                if not line:
-                    continue
-                if line.startswith("[") and line.endswith("]"):
-                    sec_name = line[1:-1].strip().strip('"').strip("'")
-                    current_sec = sec_name
-                    if current_sec not in result:
-                        result[current_sec] = {}
-                elif current_sec is not None and "=" in line:
-                    k, v = line.split("=", 1)
-                    result[current_sec][k.strip()] = v.strip().strip('"')
-    except Exception:
-        logger.debug("backend.services.rag_engine._parse_ini_sections: ignored error", exc_info=True)
-    return result
-
-
-def _get_unraid_disks_and_shares() -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
-    """Returns cached (disks_dict, shares_dict) from /var/local/emhttp/{disks,shares}.ini."""
-    now = time.time()
-    if (now - float(_UNRAID_INI_CACHE.get("ts", 0.0))) < 1.5:
-        return (_UNRAID_INI_CACHE["disks"], _UNRAID_INI_CACHE["shares"])
-
-    disks: dict[str, dict[str, str]] = {}
-    shares: dict[str, dict[str, str]] = {}
-    for d_path in ("/var/local/emhttp/disks.ini", "/host/var/local/emhttp/disks.ini"):
-        if os.path.isfile(d_path):
-            disks = _parse_ini_sections(d_path)
-            if disks:
-                break
-    for s_path in ("/var/local/emhttp/shares.ini", "/host/var/local/emhttp/shares.ini"):
-        if os.path.isfile(s_path):
-            shares = _parse_ini_sections(s_path)
-            if shares:
-                break
-
-    _UNRAID_INI_CACHE["ts"] = now
-    _UNRAID_INI_CACHE["disks"] = disks
-    _UNRAID_INI_CACHE["shares"] = shares
-    return (disks, shares)
-
-
-UNKNOWN_BACKING_DEV = "?unknown"  # a local disk we couldn't identify: treated as asleep (AI-08)
-
-
-def resolve_path_backing_dev(path: str) -> str:
-    """
-    Resolves a filesystem path to its backing physical block device name (e.g. 'sda', 'sdb', 'nvme0n1')
-    without touching the disk platter. Understands Unraid /mnt/user (shfs) share-to-pool mappings and
-    dereferences symlinks via os.path.realpath to prevent cache symlinks from bypassing standby guards.
-    """
-    if not path:
-        return ""
-    try:
-        path = os.path.realpath(path)
-    except Exception:
-        logger.debug("backend.services.rag_engine.resolve_path_backing_dev: ignored error", exc_info=True)
-    norm = os.path.normpath(path).replace("\\", "/")
-    if norm.startswith(("/app/data", "/mnt/cache", "/mnt/nvme", "/mnt/ssd", "/tmp")):
-        return "nvme0n1"
-
-    m = re.match(r"^/mnt/disk(\d+)(?:/|$)", norm)
-    if m:
-        disk_idx = int(m.group(1))
-        fallback_dev = f"sd{chr(ord('a') + disk_idx)}" if 1 <= disk_idx <= 24 else ""
-        # Respect explicit test/runtime Z_STATE entry if present
-        if fallback_dev and fallback_dev in Z_STATE.cached_smart_data:
-            return fallback_dev
-        unraid_disks, _ = _get_unraid_disks_and_shares()
-        d_info = unraid_disks.get(f"disk{disk_idx}")
-        if d_info and d_info.get("device"):
-            return d_info["device"]
-        return fallback_dev
-
-    m_share = re.match(r"^/mnt/(?:user|storage)(?:/([^/]+))?(?:/|$)", norm)
-    if m_share:
-        share_name = (m_share.group(1) or "").strip()
-        unraid_disks, unraid_shares = _get_unraid_disks_and_shares()
-        if share_name and share_name in unraid_shares:
-            s_info = unraid_shares[share_name]
-            use_cache = (s_info.get("useCache") or "").lower()
-            cache_pool = s_info.get("cachePool") or ""
-            if use_cache == "only":
-                if cache_pool and cache_pool in unraid_disks and unraid_disks[cache_pool].get("device"):
-                    return unraid_disks[cache_pool]["device"]
-                return "nvme0n1"
-
-        # Share uses HDD array (or is /mnt/user root): check if any array data disk is in standby
-        array_devs: list[str] = []
-        for _, d_info in unraid_disks.items():
-            dev = d_info.get("device") or ""
-            d_type = (d_info.get("type") or "").lower()
-            d_status = (d_info.get("status") or "").upper()
-            if dev and d_type == "data" and "NP" not in d_status:
-                array_devs.append(dev)
-                if (
-                    str(d_info.get("spundown", "")).lower() in ("1", "true", "yes")
-                    or "blink" in str(d_info.get("color") or "").lower()
-                ):
-                    return dev
-
-        for dev in array_devs:
-            cached = Z_STATE.cached_smart_data.get(dev)
-            if cached and len(cached) >= 2 and str(cached[1] or "").lower() in ("standby", "sleep", "spundown"):
-                return dev
-
-        if array_devs:
-            return array_devs[0]
-
-    # Any other storage (ZFS, Btrfs, mdadm, LVM, plain disks): find the real disks (AI-08).
-    # "sdb,sdc" means every one of them is checked; UNKNOWN_BACKING_DEV fails closed.
-    try:
-        from backend.hardware.blockdev import disks_for_path
-
-        disks = disks_for_path(norm)
-    except Exception:
-        disks = None
-    if disks is None:
-        return UNKNOWN_BACKING_DEV
-    return ",".join(disks)
-
-
-def _disk_reports_standby(dev_name: str) -> bool:
-    return is_backing_disk_in_standby(dev_name, check_smartctl=True)
-
-
-def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> bool:
-    """
-    Non-waking check for whether a physical drive or filesystem path is in STANDBY/SLEEP mode.
-    Strictly obeys AGENTS.md §1.2 (never wakes sleeping drives; uses -n standby if smartctl is invoked).
-    """
-    if not dev_name:
-        return False
-    if dev_name.startswith("/dev/"):
-        dev_name = dev_name[5:]
-    elif dev_name.startswith("/"):
-        dev_name = resolve_path_backing_dev(dev_name)
-    if dev_name == UNKNOWN_BACKING_DEV:
-        # Couldn't tell which disk holds it: assume it may be asleep unless told otherwise (AI-08)
-        return os.environ.get("ZETTNAS_STANDBY_UNKNOWN", "defer").strip().lower() != "allow"
-    if "," in dev_name:
-        return any(_disk_reports_standby(d) for d in dev_name.split(",") if d)
-    if not dev_name or dev_name.startswith(("nvme", "loop", "ram", "zram")):
-        return False
-
-    cached = Z_STATE.cached_smart_data.get(dev_name)
-
-    # 1. Check Unraid /var/local/emhttp/disks.ini if present (0ms, real-time kernel spin state, zero disk I/O)
-    unraid_disks, _ = _get_unraid_disks_and_shares()
-    for _, d_info in unraid_disks.items():
-        if d_info.get("device") == dev_name:
-            spundown_str = str(d_info.get("spundown", "")).lower()
-            color_str = str(d_info.get("color") or "").lower()
-            if spundown_str in ("1", "true", "yes") or "blink" in color_str:
-                return True
-            if spundown_str in ("0", "false", "no"):
-                if cached and len(cached) >= 2 and str(cached[1] or "").lower() in ("standby", "sleep", "spundown"):
-                    Z_STATE.cached_smart_data[dev_name] = (cached[0], "ok")
-                return False
-
-    # 2. Check in-memory Z_STATE.cached_smart_data (0ms)
-    if cached and len(cached) >= 2:
-        health = str(cached[1] or "").lower()
-        if health in ("standby", "sleep", "spundown"):
-            return True
-        if health in ("ok", "warn", "crit", "passed", "active"):
-            last_ts = Z_STATE.last_smart_scan.get(dev_name, 0.0)
-            if (time.time() - last_ts) < 60.0:
-                return False
-
-    # 3. Live smartctl -n standby probe (cached 10s per device). Always used for disks we know
-    #    nothing else about, e.g. on ZFS/Btrfs/mdadm systems (AI-08).
-    if not check_smartctl and cached is None and not any(d.get("device") == dev_name for d in unraid_disks.values()):
-        check_smartctl = True
-    if check_smartctl:
-        now = time.time()
-        sc_cached = _SMARTCTL_STANDBY_CACHE.get(dev_name)
-        if sc_cached and (now - sc_cached[0]) < 10.0:
-            return sc_cached[1]
-
-        dev_path = f"/host/dev/{dev_name}" if os.path.exists(f"/host/dev/{dev_name}") else f"/dev/{dev_name}"
-        if os.path.exists(dev_path):
-            try:
-                r = subprocess.run(
-                    ["smartctl", "-n", "standby", "-i", dev_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=4,
-                )
-                out_upper = ((r.stdout or "") + (r.stderr or "")).upper()
-                open_failed = "OPEN DEVICE" in out_upper or "NO SUCH DEVICE" in out_upper
-                is_low_power = (
-                    "STANDBY" in out_upper
-                    or "SLEEP" in out_upper
-                    or (not open_failed and (r.returncode == 2 or (r.returncode & 2) != 0))
-                )
-                if is_low_power:
-                    Z_STATE.cached_smart_data[dev_name] = (cached[0] if cached else None, "standby")
-                    _SMARTCTL_STANDBY_CACHE[dev_name] = (now, True)
-                    return True
-                _SMARTCTL_STANDBY_CACHE[dev_name] = (now, False)
-            except Exception:
-                logger.debug("backend.services.rag_engine.is_backing_disk_in_standby: ignored error", exc_info=True)
-
-    return False
-
-
-def get_sleeping_disks_list() -> list[str]:
-    """Returns list of device names currently known to be in standby/sleep state."""
-    sleeping: set[str] = set()
-    unraid_awake_devs: set[str] = set()
-    unraid_disks, _ = _get_unraid_disks_and_shares()
-    for _, d_info in unraid_disks.items():
-        dev = d_info.get("device") or ""
-        if not dev:
-            continue
-        spundown_str = str(d_info.get("spundown", "")).lower()
-        color_str = str(d_info.get("color") or "").lower()
-        if spundown_str in ("1", "true", "yes") or "blink" in color_str:
-            sleeping.add(dev)
-        elif spundown_str in ("0", "false", "no"):
-            unraid_awake_devs.add(dev)
-            cached = Z_STATE.cached_smart_data.get(dev)
-            if cached and len(cached) >= 2 and str(cached[1] or "").lower() in ("standby", "sleep", "spundown"):
-                Z_STATE.cached_smart_data[dev] = (cached[0], "ok")
-
-    for dev, val in list(Z_STATE.cached_smart_data.items()):
-        if dev in unraid_awake_devs:
-            continue
-        if val and len(val) >= 2 and str(val[1] or "").lower() in ("standby", "sleep", "spundown"):
-            sleeping.add(dev)
-    return sorted(sleeping)
-
-
-def get_running_disks_list() -> list[str]:
-    """Returns list of device names currently known to be spinning/active."""
-    sleeping = set(get_sleeping_disks_list())
-    running: set[str] = set()
-    for dev, val in list(Z_STATE.cached_smart_data.items()):
-        if dev and dev not in sleeping and val and len(val) >= 2:
-            if str(val[1] or "").lower() not in ("standby", "sleep", "spundown"):
-                running.add(dev)
-    unraid_disks, _ = _get_unraid_disks_and_shares()
-    for _, d_info in unraid_disks.items():
-        dev = d_info.get("device") or ""
-        status = (d_info.get("status") or "").upper()
-        spundown_str = str(d_info.get("spundown", "")).lower()
-        if dev and dev not in sleeping and "NP" not in status and spundown_str in ("0", "false", "no"):
-            running.add(dev)
-    return sorted(running)
-
 
 class RagSearchEngine:
     """
@@ -3045,7 +541,7 @@ class RagSearchEngine:
         self._stop_requested: bool = False
         self._sync_thread: threading.Thread | None = None
         self._watcher_thread: threading.Thread | None = None
-        self._known_sleeping_devs: set[str] = set(get_sleeping_disks_list())
+        self._known_sleeping_devs: set[str] = set(rag_standby.get_sleeping_disks_list())
         self._last_auto_learn_event: dict[str, Any] | None = None
         self._sync_progress: dict[str, Any] = {
             "state": "idle",
@@ -3689,7 +1185,7 @@ class RagSearchEngine:
 
     def _default_watched_paths(self) -> list[str]:
         """Determines sensible non-system default watched folders without waking sleeping drives."""
-        _, unraid_shares = _get_unraid_disks_and_shares()
+        _, unraid_shares = rag_standby._get_unraid_disks_and_shares()
         if unraid_shares:
             user_shares: list[str] = []
             for s_name in sorted(unraid_shares.keys()):
@@ -3853,10 +1349,10 @@ class RagSearchEngine:
                         if session_paths:
                             can_run = True
                             for sp in session_paths:
-                                dev = resolve_path_backing_dev(sp)
-                                if bool(active_session.get("respect_standby", True)) and is_backing_disk_in_standby(
-                                    dev or sp
-                                ):
+                                dev = rag_standby.resolve_path_backing_dev(sp)
+                                if bool(
+                                    active_session.get("respect_standby", True)
+                                ) and rag_standby.is_backing_disk_in_standby(dev or sp):
                                     can_run = False
                                     self.enqueue_deferred_path(sp, reason="disk_standby", priority=2)
                             if can_run:
@@ -3890,7 +1386,7 @@ class RagSearchEngine:
         norm_p = os.path.normpath(str(path or "").strip())
         if not norm_p:
             return {"queued": False}
-        dev = resolve_path_backing_dev(norm_p)
+        dev = rag_standby.resolve_path_backing_dev(norm_p)
         if dev:
             self._known_sleeping_devs.add(dev)
         with self._write_lock:
@@ -3952,8 +1448,8 @@ class RagSearchEngine:
         items: list[dict[str, Any]] = []
         for r in rows:
             tp = r["target_path"]
-            dev = r["backing_dev"] or resolve_path_backing_dev(tp)
-            standby = is_backing_disk_in_standby(dev or tp)
+            dev = r["backing_dev"] or rag_standby.resolve_path_backing_dev(tp)
+            standby = rag_standby.is_backing_disk_in_standby(dev or tp)
             items.append(
                 {
                     "path": tp,
@@ -4001,8 +1497,8 @@ class RagSearchEngine:
                 for wp in watched:
                     if any(wp == ex or wp.startswith(ex.rstrip("/") + "/") for ex in excluded):
                         continue
-                    dev = resolve_path_backing_dev(wp)
-                    if is_backing_disk_in_standby(dev or wp):
+                    dev = rag_standby.resolve_path_backing_dev(wp)
+                    if rag_standby.is_backing_disk_in_standby(dev or wp):
                         if dev:
                             self._known_sleeping_devs.add(dev)
                         if wp not in existing_deferred_paths:
@@ -4052,7 +1548,7 @@ class RagSearchEngine:
         """
         self._ensure_schema()
         cfg = self.get_config()
-        current_sleeping = set(get_sleeping_disks_list())
+        current_sleeping = set(rag_standby.get_sleeping_disks_list())
         woken_devs = self._known_sleeping_devs - current_sleeping
         self._known_sleeping_devs = set(current_sleeping)
 
@@ -4083,8 +1579,8 @@ class RagSearchEngine:
             if any(tp == ex or tp.startswith(ex.rstrip("/") + "/") for ex in excluded_set):
                 self.remove_deferred_path(tp)
                 continue
-            dev = item.get("backing_dev") or resolve_path_backing_dev(tp)
-            if not is_backing_disk_in_standby(dev or tp):
+            dev = item.get("backing_dev") or rag_standby.resolve_path_backing_dev(tp)
+            if not rag_standby.is_backing_disk_in_standby(dev or tp):
                 if tp not in ready_paths:
                     ready_paths.append(tp)
                 if dev:
@@ -4095,8 +1591,8 @@ class RagSearchEngine:
             norm_wp = os.path.normpath(wp)
             if any(norm_wp == ex or norm_wp.startswith(ex.rstrip("/") + "/") for ex in excluded_set):
                 continue
-            dev = resolve_path_backing_dev(norm_wp)
-            if dev and dev in woken_devs and not is_backing_disk_in_standby(dev):
+            dev = rag_standby.resolve_path_backing_dev(norm_wp)
+            if dev and dev in woken_devs and not rag_standby.is_backing_disk_in_standby(dev):
                 if norm_wp not in ready_paths:
                     ready_paths.append(norm_wp)
                 ready_devs.add(dev)
@@ -4266,8 +1762,8 @@ class RagSearchEngine:
             f_path = item.get("path") or ""
             if not f_path:
                 continue
-            dev = resolve_path_backing_dev(f_path)
-            if is_backing_disk_in_standby(dev):
+            dev = rag_standby.resolve_path_backing_dev(f_path)
+            if rag_standby.is_backing_disk_in_standby(dev):
                 continue
             retried += 1
             if os.path.isfile(f_path):
@@ -4318,7 +1814,7 @@ class RagSearchEngine:
         folders: list[dict[str, Any]] = []
         seen_paths: set[str] = set()
 
-        _, unraid_shares = _get_unraid_disks_and_shares()
+        _, unraid_shares = rag_standby._get_unraid_disks_and_shares()
         if unraid_shares:
             for s_name, s_info in sorted(unraid_shares.items()):
                 if s_name.startswith("."):
@@ -4326,8 +1822,8 @@ class RagSearchEngine:
                 full_path = f"/mnt/user/{s_name}"
                 norm_p = os.path.normpath(full_path)
                 seen_paths.add(norm_p)
-                dev = resolve_path_backing_dev(norm_p)
-                in_standby = is_backing_disk_in_standby(dev)
+                dev = rag_standby.resolve_path_backing_dev(norm_p)
+                in_standby = rag_standby.is_backing_disk_in_standby(dev)
                 use_cache = (s_info.get("useCache") or "").lower()
                 is_sys = s_name.lower() in SYSTEM_SHARE_EXCLUSIONS
                 folders.append(
@@ -4349,8 +1845,8 @@ class RagSearchEngine:
             for base_root in ("/mnt/user", "/mnt/storage"):
                 if not os.path.isdir(base_root):
                     continue
-                base_dev = resolve_path_backing_dev(base_root)
-                if is_backing_disk_in_standby(base_dev):
+                base_dev = rag_standby.resolve_path_backing_dev(base_root)
+                if rag_standby.is_backing_disk_in_standby(base_dev):
                     continue
                 try:
                     for entry in sorted(os.scandir(base_root), key=lambda e: e.name.lower()):
@@ -4360,8 +1856,8 @@ class RagSearchEngine:
                         if norm_p in seen_paths:
                             continue
                         seen_paths.add(norm_p)
-                        dev = resolve_path_backing_dev(norm_p)
-                        in_standby = is_backing_disk_in_standby(dev)
+                        dev = rag_standby.resolve_path_backing_dev(norm_p)
+                        in_standby = rag_standby.is_backing_disk_in_standby(dev)
                         is_sys = entry.name.lower() in SYSTEM_SHARE_EXCLUSIONS
                         folders.append(
                             {
@@ -4388,8 +1884,8 @@ class RagSearchEngine:
             norm_wp = os.path.normpath(wp)
             if norm_wp not in seen_paths:
                 seen_paths.add(norm_wp)
-                dev = resolve_path_backing_dev(norm_wp)
-                in_standby = is_backing_disk_in_standby(dev)
+                dev = rag_standby.resolve_path_backing_dev(norm_wp)
+                in_standby = rag_standby.is_backing_disk_in_standby(dev)
                 folders.append(
                     {
                         "name": os.path.basename(norm_wp) or norm_wp,
@@ -4420,8 +1916,8 @@ class RagSearchEngine:
         prog["can_resume"] = state == "paused" and self._is_indexing
         prog["can_stop"] = state in ("running", "paused") and self._is_indexing
         prog["last_message"] = prog.get("message", "")
-        prog["sleeping_disks"] = get_sleeping_disks_list()
-        prog["running_disks"] = get_running_disks_list()
+        prog["sleeping_disks"] = rag_standby.get_sleeping_disks_list()
+        prog["running_disks"] = rag_standby.get_running_disks_list()
         prog["deferred_queue"] = self.get_deferred_queue()
         prog["last_auto_learn_event"] = self._last_auto_learn_event
         return prog
@@ -4976,8 +2472,8 @@ class RagSearchEngine:
             )
 
         # Layer 1 Spindown Guard: Check backing device BEFORE calling os.path.exists / touching root_path
-        backing_dev = resolve_path_backing_dev(norm_root)
-        if respect_standby and not force_wake and is_backing_disk_in_standby(backing_dev):
+        backing_dev = rag_standby.resolve_path_backing_dev(norm_root)
+        if respect_standby and not force_wake and rag_standby.is_backing_disk_in_standby(backing_dev):
             with self._write_lock:
                 conn = self._get_conn(readonly=False)
                 try:
@@ -5102,8 +2598,8 @@ class RagSearchEngine:
                 self._sync_progress["current_path"] = current_dir
                 self._sync_progress["updated_at"] = time.time()
 
-                dir_dev = resolve_path_backing_dev(current_dir)
-                if respect_standby and not force_wake and is_backing_disk_in_standby(dir_dev):
+                dir_dev = rag_standby.resolve_path_backing_dev(current_dir)
+                if respect_standby and not force_wake and rag_standby.is_backing_disk_in_standby(dir_dev):
                     _record_deferred_subpath(current_dir, dir_dev)
                     return
 
@@ -5133,8 +2629,8 @@ class RagSearchEngine:
 
                     # Before touching a child share/directory, check if its backing disk is in standby
                     if is_top_union_root and respect_standby and not force_wake:
-                        child_dev = resolve_path_backing_dev(child_path)
-                        if is_backing_disk_in_standby(child_dev):
+                        child_dev = rag_standby.resolve_path_backing_dev(child_path)
+                        if rag_standby.is_backing_disk_in_standby(child_dev):
                             _record_deferred_subpath(child_path, child_dev)
                             continue
 
@@ -5166,7 +2662,7 @@ class RagSearchEngine:
                         respect_standby
                         and not force_wake
                         and ((indexed_new_or_updated + skipped_unchanged) % 20 == 0)
-                        and is_backing_disk_in_standby(dir_dev)
+                        and rag_standby.is_backing_disk_in_standby(dir_dev)
                     ):
                         _record_deferred_subpath(current_dir, dir_dev)
                         return
@@ -5560,8 +3056,8 @@ class RagSearchEngine:
         """
         self._ensure_schema()
         norm_path = os.path.normpath(folder_path)
-        backing_dev = resolve_path_backing_dev(norm_path)
-        is_standby = is_backing_disk_in_standby(backing_dev)
+        backing_dev = rag_standby.resolve_path_backing_dev(norm_path)
+        is_standby = rag_standby.is_backing_disk_in_standby(backing_dev)
         try:
             eff_max_tokens = max(100, int(max_tokens or 4000))
         except (ValueError, TypeError):
@@ -5882,7 +3378,7 @@ class RagSearchEngine:
         """Hashes, parses, embeds, and persists a single document, code file, or photo into rag_index.db."""
         now = time.time()
         parent_dir = os.path.dirname(canonical_path)
-        backing_dev = resolve_path_backing_dev(canonical_path)
+        backing_dev = rag_standby.resolve_path_backing_dev(canonical_path)
         vis_tier, owner_user, share_name, allowed_csv = classify_path_rbac(canonical_path)
 
         cfg = self.get_config()
@@ -5890,7 +3386,7 @@ class RagSearchEngine:
             bool(cfg.get("respect_standby", True)) if respect_standby is None else bool(respect_standby)
         )
         if effective_respect_standby and not force_wake:
-            if is_backing_disk_in_standby(backing_dev):
+            if rag_standby.is_backing_disk_in_standby(backing_dev):
                 logger.debug(
                     f"[RAG Standby Guard] Aborting _index_single_file for sleeping disk {backing_dev}: {canonical_path}"
                 )
@@ -5968,7 +3464,7 @@ class RagSearchEngine:
         if is_image:
             photo_data = None
             # Check backing disk standby status (AGENTS.md §1.2 Spindown Invariant)
-            if is_backing_disk_in_standby(backing_dev):
+            if rag_standby.is_backing_disk_in_standby(backing_dev):
                 cached_thumb = None
                 with self._write_lock:
                     conn = self._get_conn(readonly=True)
@@ -6801,7 +4297,7 @@ class RagSearchEngine:
                 "standby_guard": {
                     "served_from_nvme_cache": True,
                     "zero_disk_wakeups": True,
-                    "sleeping_disks": get_sleeping_disks_list(),
+                    "sleeping_disks": rag_standby.get_sleeping_disks_list(),
                     "deferred_queue_count": deferred_cnt,
                 },
                 "items": combined,
@@ -6954,8 +4450,8 @@ class RagSearchEngine:
             if (raw_query.strip() or req_colors or req_scenes) and final_score < 0.12:
                 continue
 
-            backing_dev = r["backing_dev"] or resolve_path_backing_dev(c_path)
-            disk_state = "standby" if is_backing_disk_in_standby(backing_dev) else "active"
+            backing_dev = r["backing_dev"] or rag_standby.resolve_path_backing_dev(c_path)
+            disk_state = "standby" if rag_standby.is_backing_disk_in_standby(backing_dev) else "active"
 
             doc_meta = json.loads(r["doc_metadata_json"] or "{}")
             structured_card = None
@@ -7198,8 +4694,8 @@ class RagSearchEngine:
             if fid in per_file_best and per_file_best[fid]["score"] >= score:
                 continue
 
-            backing_dev = r["backing_dev"] or resolve_path_backing_dev(c_path)
-            disk_state = "standby" if is_backing_disk_in_standby(backing_dev) else "active"
+            backing_dev = r["backing_dev"] or rag_standby.resolve_path_backing_dev(c_path)
+            disk_state = "standby" if rag_standby.is_backing_disk_in_standby(backing_dev) else "active"
             doc_meta = json.loads(r["doc_metadata_json"] or "{}")
 
             structured_card = None

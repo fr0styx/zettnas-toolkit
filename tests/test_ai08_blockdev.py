@@ -95,7 +95,7 @@ def test_network_and_unknown(tmp_path):
 def test_guard_fails_closed_and_checks_every_disk(monkeypatch):
     from backend.services import rag_engine
 
-    monkeypatch.setattr(rag_engine, "_get_unraid_disks_and_shares", lambda: ({}, {}))
+    monkeypatch.setattr("backend.services.rag_standby._get_unraid_disks_and_shares", lambda: ({}, {}))
     monkeypatch.setattr(
         blockdev, "disks_for_path", lambda p, *a, **k: {"/srv/a": ["sdc", "sdd"], "/weird/a": None, "/nas/a": []}[p]
     )
@@ -103,7 +103,7 @@ def test_guard_fails_closed_and_checks_every_disk(monkeypatch):
     assert rag_engine.resolve_path_backing_dev("/weird/a") == rag_engine.UNKNOWN_BACKING_DEV
     assert rag_engine.resolve_path_backing_dev("/nas/a") == ""
     asleep = {"sdd"}
-    monkeypatch.setattr(rag_engine, "_disk_reports_standby", lambda d: d in asleep)
+    monkeypatch.setattr("backend.services.rag_standby._disk_reports_standby", lambda d: d in asleep)
     assert rag_engine.is_backing_disk_in_standby("sdc,sdd") is True
     asleep.clear()
     assert rag_engine.is_backing_disk_in_standby("sdc,sdd") is False

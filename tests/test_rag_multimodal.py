@@ -436,7 +436,7 @@ def test_unraid_shfs_share_standby_detection_never_wakes_hdd(tmp_path):
         "vault": {"name": "vault", "useCache": "yes", "cachePool": "ark"},
     }
 
-    with patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_disks, mock_shares)):
+    with patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_disks, mock_shares)):
         # Cache-only share resolves to nvme2n1 (running)
         assert resolve_path_backing_dev("/mnt/user/apishare") == "nvme2n1"
         assert is_backing_disk_in_standby("/mnt/user/apishare") is False
@@ -605,13 +605,13 @@ def test_auto_learning_triggers_automatically_when_sleeping_disk_spins_up():
             disk_state = {"standby": True}
 
             with (
-                patch("backend.services.rag_engine.resolve_path_backing_dev", return_value="sda"),
+                patch("backend.services.rag_standby.resolve_path_backing_dev", return_value="sda"),
                 patch(
-                    "backend.services.rag_engine.is_backing_disk_in_standby",
+                    "backend.services.rag_standby.is_backing_disk_in_standby",
                     side_effect=lambda _p: disk_state["standby"],
                 ),
                 patch(
-                    "backend.services.rag_engine.get_sleeping_disks_list",
+                    "backend.services.rag_standby.get_sleeping_disks_list",
                     side_effect=lambda: ["sda"] if disk_state["standby"] else [],
                 ),
             ):

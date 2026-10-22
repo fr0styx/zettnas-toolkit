@@ -53,7 +53,7 @@ def evaluate(model: str = "zett_lexical_384d", dim: int | None = None) -> dict:
     try:
         with (
             patch.object(engine, "get_config", return_value=cfg),
-            patch("backend.services.rag_engine.is_backing_disk_in_standby", return_value=False),
+            patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=False),
         ):
             # Fixed order and timestamps, so results don't depend on the checkout
             for dirpath, dirs, files in os.walk(CORPUS):

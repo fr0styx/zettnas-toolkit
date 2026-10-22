@@ -912,7 +912,7 @@ def test_resolve_path_backing_dev_symlink_dereference(tmp_path):
     mock_disks = {"disk1": {"device": "sdb"}}
     with (
         patch("os.path.realpath", return_value=target_path),
-        patch("backend.services.rag_engine._get_unraid_disks_and_shares", return_value=(mock_disks, {})),
+        patch("backend.services.rag_standby._get_unraid_disks_and_shares", return_value=(mock_disks, {})),
     ):
         dev = resolve_path_backing_dev("/mnt/cache/symlinks/file.txt")
         assert dev == "sdb"
@@ -936,8 +936,8 @@ def test_rag_index_single_file_standby_guard(temp_benchmark_engine):
     # Patch is_backing_disk_in_standby to return True (disk in standby)
     with (
         patch.object(engine, "get_config", return_value={"respect_standby": True}),
-        patch("backend.services.rag_engine.is_backing_disk_in_standby", return_value=True) as mock_standby,
-        patch("backend.services.rag_engine.resolve_path_backing_dev", return_value="/dev/sdd"),
+        patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=True) as mock_standby,
+        patch("backend.services.rag_standby.resolve_path_backing_dev", return_value="/dev/sdd"),
         patch("builtins.open") as mock_open_sleep,
     ):
         # When respect_standby is True and force_wake is False, indexing should abort immediately
@@ -958,8 +958,8 @@ def test_rag_index_single_file_standby_guard(temp_benchmark_engine):
     # When force_wake is True, guard does NOT abort even if drive is sleeping
     with (
         patch.object(engine, "get_config", return_value={"respect_standby": True}),
-        patch("backend.services.rag_engine.is_backing_disk_in_standby", return_value=True),
-        patch("backend.services.rag_engine.resolve_path_backing_dev", return_value="/dev/sdd"),
+        patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=True),
+        patch("backend.services.rag_standby.resolve_path_backing_dev", return_value="/dev/sdd"),
         patch("builtins.open", side_effect=OSError("Physical drive access simulated")) as mock_open_wake,
     ):
         res = engine._index_single_file(

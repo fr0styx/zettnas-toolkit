@@ -1150,7 +1150,7 @@ async def fs_folder_size(
     if not req.force_wake:
         is_standby = False
         try:
-            from backend.services.rag_engine import is_backing_disk_in_standby
+            from backend.services.rag_standby import is_backing_disk_in_standby
 
             is_standby = is_backing_disk_in_standby(target)
         except Exception:
