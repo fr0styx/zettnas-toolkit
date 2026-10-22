@@ -212,10 +212,11 @@ def test_e2e_live_desktop_session_and_badge():
         assert badge is not None
         assert "NAS WORKBENCH" in badge.inner_text()
 
-        # Check drawer toggle button
-        btn = _wait("#drawer-toggle-btn")
+        # The hardware settings button is in the page, but only shown on supported
+        # appliance hardware, which a CI runner doesn't have.
+        btn = page.wait_for_selector("#drawer-toggle-btn", state="attached", timeout=5000)
         assert btn is not None
-        assert "HARDWARE SETTINGS" in btn.inner_text()
+        assert "HARDWARE SETTINGS" in (btn.text_content() or "").upper()
 
         # Check dock container exists
         dock = _wait("#os-dock-container")
