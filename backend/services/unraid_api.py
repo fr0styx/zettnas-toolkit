@@ -2,17 +2,24 @@
 Unraid companion mode (D5): read the array through the Unraid API (Unraid 7, GraphQL)
 and post ZettNAS alerts into Unraid's notification centre.
 
-Set UNRAID_API_URL (for example http://tower or http://10.0.0.5) and UNRAID_API_KEY.
-Create the key on the Unraid box with read access to the array, disks and shares and
-create access to notifications, for example:
-    unraid-api apikey --create --name zettnas --roles VIEWER --permissions NOTIFICATIONS:CREATE_ANY
+Set UNRAID_API_URL and UNRAID_API_KEY. With HTTPS on (Unraid's default), the URL is
+Unraid's own HTTPS address, for example https://10-0-0-5.<hash>.myunraid.net (shown under
+Settings > Management Access); plain http only answers on the Unraid box itself. Create the
+key under Settings > Management Access > API Keys with read access to the array, disks,
+shares and info and read and create access to notifications. (On unraid-api 4.37 the CLI's
+--permissions option fails with "Invalid data structure"; the web page and the GraphQL
+apiKey.create mutation work.) UNRAID_API_CA can name an extra CA file.
+
 Without them ZettNAS keeps reading Unraid's status files directly, as before. It never
 starts, stops or changes the array through the API.
 """
 
 import os
+import ssl
+from pathlib import Path
 from typing import Any
 
+import certifi
 import httpx
 
 from backend.config import logger
@@ -47,15 +54,35 @@ def configured() -> bool:
     return bool(os.environ.get("UNRAID_API_URL") and os.environ.get("UNRAID_API_KEY"))
 
 
+_EXTRA_CA = Path(__file__).resolve().parent.parent / "certs" / "isrg-root-yr-by-x1.pem"
+
+
+def _tls_verify() -> ssl.SSLContext | bool:
+    """Public CAs plus Let's Encrypt Root YR cross-signed by X1, which Unraid's *.myunraid.net
+    certificates chain to (backend/certs/README.md); UNRAID_API_CA adds another CA file."""
+    if os.environ.get("UNRAID_API_VERIFY_TLS", "1") == "0":
+        return False
+    ctx = ssl.create_default_context(cafile=certifi.where())
+    for extra in (str(_EXTRA_CA), os.environ.get("UNRAID_API_CA", "")):
+        if extra and os.path.isfile(extra):
+            ctx.load_verify_locations(cafile=extra)
+    return ctx
+
+
 def _post(query: str, variables: dict[str, Any] | None = None, transport=None) -> dict[str, Any]:
     base = os.environ.get("UNRAID_API_URL", "").rstrip("/")
     if not base.startswith(("http://", "https://")):
         raise UnraidApiError("UNRAID_API_URL must start with http:// or https://")
-    with httpx.Client(timeout=10, transport=transport, verify=os.environ.get("UNRAID_API_VERIFY_TLS", "1") != "0") as c:
+    with httpx.Client(timeout=10, transport=transport, verify=_tls_verify()) as c:
         r = c.post(
             f"{base}/graphql",
             json={"query": query, "variables": variables or {}},
             headers={"x-api-key": os.environ.get("UNRAID_API_KEY", ""), "Content-Type": "application/json"},
+        )
+    if r.is_redirect:
+        raise UnraidApiError(
+            f"Unraid redirects {base} to {r.headers.get('location', 'HTTPS')}: set UNRAID_API_URL to Unraid's "
+            "HTTPS address (Settings > Management Access), for example https://10-0-0-5.<hash>.myunraid.net"
         )
     if r.status_code == 401:
         raise UnraidApiError("Unraid refused the API key")

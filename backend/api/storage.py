@@ -679,7 +679,7 @@ def get_smart_failure_predictions() -> list[dict[str, Any]]:
     return predictions
 
 
-@router.get("/storage/unraid-api/status", dependencies=[Depends(require_scope("storage:read", "system:view"))])
+@router.get("/unraid-api/status", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 async def unraid_api_status() -> dict[str, Any]:
     """Array, disks, shares and parity check from the Unraid API (companion mode, D5)."""
     from backend.services import unraid_api

@@ -37,13 +37,16 @@ This document provides complete, step-by-step instructions for installing and ru
 
 ZettNAS reads Unraid's status files when it runs on the Unraid box itself. When it runs
 elsewhere (or to post alerts into Unraid's bell), point it at the Unraid API (Unraid 7):
-create a key on the Unraid box with
+create a key on the Unraid box under **Settings > Management Access > API Keys** with only
+these permissions: Array, Disk, Share and Info (read), and Notifications (read and create).
+On unraid-api 4.37 the command-line `--permissions` option fails with "Invalid data
+structure"; the web page (or the GraphQL `apiKey.create` mutation) works.
 
-```bash
-unraid-api apikey --create --name zettnas --roles VIEWER --permissions NOTIFICATIONS:CREATE_ANY
-```
-
-and set `UNRAID_API_URL` (for example `http://tower`) and `UNRAID_API_KEY`. ZettNAS then
+Then set `UNRAID_API_KEY` and `UNRAID_API_URL`. With HTTPS on (Unraid's default), Unraid
+only answers plain HTTP on the box itself, so use its HTTPS address from Settings >
+Management Access, for example `https://10-0-0-5.<hash>.myunraid.net`. ZettNAS verifies
+that certificate: it ships the Let's Encrypt link these certificates need
+(`backend/certs/README.md`), and `UNRAID_API_CA` can add another CA file. ZettNAS then
 reads the array, disks (including which are spun down), shares and parity-check progress,
 and posts its alerts to Unraid's notification centre. It never starts, stops or changes
 the array through the API.

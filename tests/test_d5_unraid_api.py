@@ -98,3 +98,31 @@ def test_errors_and_config(monkeypatch):
     with pytest.raises(unraid_api.UnraidApiError):
         unraid_api.status(transport=t)
     assert unraid_api.notify("x", "y", transport=t) is False
+
+
+def test_redirect_to_https_says_which_address_to_use(monkeypatch):
+    monkeypatch.setenv("UNRAID_API_URL", "http://10.0.0.5")
+    monkeypatch.setenv("UNRAID_API_KEY", "k")
+    t = httpx.MockTransport(lambda r: httpx.Response(302, headers={"location": "https://10.0.0.5:443/graphql"}))
+    with pytest.raises(unraid_api.UnraidApiError, match="HTTPS address"):
+        unraid_api.status(transport=t)
+
+
+def test_tls_trusts_unraid_myunraid_chain(monkeypatch):
+    import ssl
+
+    monkeypatch.delenv("UNRAID_API_VERIFY_TLS", raising=False)
+    ctx = unraid_api._tls_verify()
+    assert isinstance(ctx, ssl.SSLContext)
+    subjects = [dict(x[0] for x in c["subject"]).get("commonName") for c in ctx.get_ca_certs()]
+    assert "Root YR" in subjects and "ISRG Root X1" in subjects
+    monkeypatch.setenv("UNRAID_API_VERIFY_TLS", "0")
+    assert unraid_api._tls_verify() is False
+
+
+def test_status_route_path(client, auth_headers, monkeypatch):
+    monkeypatch.delenv("UNRAID_API_URL", raising=False)
+    monkeypatch.delenv("UNRAID_API_KEY", raising=False)
+    r = client.get("/api/storage/unraid-api/status", headers=auth_headers)
+    assert r.status_code == 404 and "not configured" in r.text  # the route exists; the API isn't set up
+    assert client.get("/api/storage/storage/unraid-api/status", headers=auth_headers).status_code == 404
