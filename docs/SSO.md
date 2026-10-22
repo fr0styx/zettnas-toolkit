@@ -50,3 +50,18 @@ The login screen then shows **Sign in with <label>**.
   nonce, and the code exchange uses PKCE.
 - The client secret is stored in `data/oidc.json` (readable by root only) and never sent
   back to the browser.
+
+## Immich
+
+The one-click Immich app installs the whole stack: the server, machine learning, Valkey
+and Postgres on a private network, with a generated database password (kept in
+`appdata/immich/.zettnas-secrets.json`). To sign in to Immich with the same provider:
+
+1. At the provider, create a second application for Immich with these redirect URIs:
+   `app.immich:///oauth-callback`, `http://<nas-address>:2283/auth/login` and
+   `http://<nas-address>:2283/user-settings` (use your HTTPS address if you have one).
+2. In Immich, open **Administration → Settings → Authentication → OAuth**, turn it on,
+   and enter the same issuer URL, the Immich client ID and secret, and scope
+   `openid email profile`. Turn on **Auto register** so family members get an Immich
+   account on first sign-in.
+3. Set the button text to match ZettNAS (for example "Sign in with Authentik").

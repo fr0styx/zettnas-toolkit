@@ -19,6 +19,10 @@
 
 - **Install ZettNAS as an app** from the browser menu on your phone. Sharing photos or files to ZettNAS from the share sheet saves them to your **Inbox** folder (never overwriting anything).
 
+#### Apps
+
+- **One-click Immich works**: it installs the server, machine learning, Valkey and Postgres together on a private network with a generated database password. Apps can now ship companion containers. See docs/SSO.md for Immich sign-in with your provider.
+
 #### Reliability
 
 - Background services (stats, SMART, fans, LCD, buttons) restart on their own after a crash, and `/api/health` shows their state.

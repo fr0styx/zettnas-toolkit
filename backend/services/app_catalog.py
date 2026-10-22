@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import secrets
 import time
 import urllib.request
 from collections.abc import Iterator
@@ -78,8 +79,35 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "image": "ghcr.io/immich-app/immich-server:release",
         "default_port": 2283,
         "webui_path": "/",
-        "env": {"NODE_ENV": "production", "DB_HOSTNAME": "immich-postgres"},
-        "volumes": {"upload": "/usr/src/app/upload"},
+        # Full stack (M3): server, machine learning, Valkey and Postgres on a private network
+        "env": {
+            "DB_HOSTNAME": "database",
+            "DB_USERNAME": "postgres",
+            "DB_PASSWORD": "{{secret:db_password}}",
+            "DB_DATABASE_NAME": "immich",
+            "REDIS_HOSTNAME": "redis",
+            "IMMICH_MACHINE_LEARNING_URL": "http://machine-learning:3003",
+        },
+        "volumes": {"library": "/data"},
+        "stack_services": {
+            "database": {
+                "image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0",
+                "env": {
+                    "POSTGRES_PASSWORD": "{{secret:db_password}}",
+                    "POSTGRES_USER": "postgres",
+                    "POSTGRES_DB": "immich",
+                    "POSTGRES_INITDB_ARGS": "--data-checksums",
+                },
+                "volumes": {"pgdata": "/var/lib/postgresql/data"},
+                "shm_size": 134217728,
+            },
+            "redis": {"image": "docker.io/valkey/valkey:8-bookworm"},
+            "machine-learning": {
+                "image": "ghcr.io/immich-app/immich-machine-learning:release",
+                "volumes": {"model-cache": "/cache"},
+            },
+        },
+        "sso_doc": "docs/SSO.md#immich",
     },
     {
         "id": "photoprism",
@@ -1135,6 +1163,126 @@ def generate_compose_for_app(
     }
 
 
+_SECRET_RE = re.compile(r"\{\{secret:([a-z0-9_]{1,32})\}\}")
+
+
+def _stack_secrets(app_dir: str) -> dict[str, str]:
+    """Generated passwords for a stack, kept so a redeploy reuses them (M3)."""
+    path = os.path.join(app_dir, ".zettnas-secrets.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _fill_secrets(value: str, secrets_map: dict[str, str]) -> str:
+    def sub(m: re.Match) -> str:
+        if m.group(1) not in secrets_map:
+            secrets_map[m.group(1)] = secrets.token_urlsafe(24)
+        return secrets_map[m.group(1)]
+
+    return _SECRET_RE.sub(sub, value)
+
+
+def _save_stack_secrets(app_dir: str, secrets_map: dict[str, str]) -> None:
+    if not secrets_map:
+        return
+    path = os.path.join(app_dir, ".zettnas-secrets.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(secrets_map, f)
+    os.chmod(path, 0o600)
+
+
+def _pull_image_blocking(image: str) -> tuple[bool, str]:
+    st, _ = _docker_request("GET", f"/images/{image}/json")
+    if st == 200:
+        return True, ""
+    repo, tag = image.rsplit(":", 1) if ":" in image.split("/")[-1] else (image, "latest")
+    conn = UnixHTTPConnection(docker_sock(), timeout=900.0)
+    try:
+        conn.request("POST", f"/images/create?fromImage={repo}&tag={tag}")
+        res = conn.getresponse()
+        body = res.read().decode("utf-8", errors="replace")
+        if res.status != 200:
+            return False, body[:300]
+        last = body.strip().splitlines()[-1] if body.strip() else "{}"
+        err = json.loads(last).get("error") if last.startswith("{") else None
+        return (False, str(err)[:300]) if err else (True, "")
+    except (OSError, ValueError) as e:
+        return False, str(e)
+    finally:
+        conn.close()
+
+
+def _deploy_companions(
+    app: dict[str, Any], service_name: str, app_dir: str, secrets_map: dict[str, str], replace_existing: bool
+) -> Iterator[dict[str, Any]]:
+    """Starts an app's companion containers (database, cache, …) on a private network (M3).
+
+    Yields progress events; the last one has "network" (or "error")."""
+    companions = app.get("stack_services") or {}
+    network = f"{service_name}_net"
+    st, _ = _docker_request("GET", f"/networks/{network}")
+    if st != 200:
+        st, resp = _docker_request("POST", "/networks/create", body={"Name": network, "Driver": "bridge"})
+        if st not in (200, 201):
+            yield {"error": f"Could not create the network {network}: {resp}"}
+            return
+    total = len(companions)
+    for i, (s_name, s_def) in enumerate(companions.items()):
+        clean = re.sub(r"[^a-zA-Z0-9_.-]+", "_", s_name)
+        cname = f"{service_name}_{clean}"
+        image = s_def.get("image", "")
+        yield {
+            "step": "pull",
+            "percent": 30 + int(25 * i / max(total, 1)),
+            "message": f"Preparing {s_name} ({image})...",
+            "done": False,
+        }
+        ok, err = _pull_image_blocking(image)
+        if not ok:
+            yield {"error": f"Failed to pull {image}: {err}"}
+            return
+        st_old, old = _docker_request("GET", f"/containers/{cname}/json")
+        if st_old == 200:
+            if not replace_existing:
+                if not old.get("State", {}).get("Running"):
+                    _docker_request("POST", f"/containers/{cname}/start")
+                continue
+            _docker_request("POST", f"/containers/{cname}/stop?t=10")
+            _docker_request("DELETE", f"/containers/{cname}?v=false")
+        binds = []
+        for vk, vt in (s_def.get("volumes") or {}).items():
+            host = os.path.join(app_dir, f"{clean}_{vk}")
+            os.makedirs(host, exist_ok=True)
+            binds.append(f"{host}:{vt}:rw")
+        host_cfg: dict[str, Any] = {"Binds": binds, "RestartPolicy": {"Name": "unless-stopped"}, "NetworkMode": network}
+        if s_def.get("shm_size"):
+            host_cfg["ShmSize"] = int(s_def["shm_size"])
+        body = {
+            "Image": image,
+            "Env": [f"{k}={_fill_secrets(str(v), secrets_map)}" for k, v in (s_def.get("env") or {}).items()],
+            "HostConfig": host_cfg,
+            "NetworkingConfig": {"EndpointsConfig": {network: {"Aliases": [s_name]}}},
+            "Labels": {"com.docker.compose.project": service_name, "com.docker.compose.service": s_name},
+        }
+        st, resp = _docker_request("POST", f"/containers/create?name={cname}", body=body)
+        if st != 201:
+            yield {"error": f"Could not create {cname}: {resp}"}
+            return
+        _docker_request("POST", f"/containers/{resp.get('Id')}/start")
+        yield {
+            "step": "create",
+            "percent": 30 + int(25 * (i + 1) / max(total, 1)),
+            "message": f"Started {s_name}.",
+            "done": False,
+        }
+    _save_stack_secrets(app_dir, secrets_map)
+    yield {"network": network}
+
+
 def stream_deploy_catalog_app(
     app_id: str,
     host_port: int | None = None,
@@ -1393,6 +1541,29 @@ def stream_deploy_catalog_app(
                 except Exception:
                     logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
 
+    # 3b. Companion containers (database, cache, …) on a private network (M3)
+    secrets_map = _stack_secrets(app_dir)
+    network_name = None
+    if app.get("stack_services"):
+        for ev in _deploy_companions(app, service_name, app_dir, secrets_map, replace_existing):
+            if "error" in ev:
+                yield {"step": "error", "percent": 0, "message": ev["error"], "error": ev["error"], "done": True}
+                return
+            if "network" in ev:
+                network_name = ev["network"]
+            else:
+                yield ev
+        try:
+            compose_file = os.path.join(app_dir, "docker-compose.yml")
+            if os.path.exists(compose_file):
+                with open(compose_file, encoding="utf-8") as f:
+                    filled = _fill_secrets(f.read(), secrets_map)
+                with open(compose_file, "w", encoding="utf-8") as f:
+                    f.write(filled)
+                os.chmod(compose_file, 0o600)
+        except OSError:
+            logger.debug("app_catalog: compose file not updated", exc_info=True)
+
     # 4. Create container
     yield {
         "step": "create",
@@ -1401,7 +1572,8 @@ def stream_deploy_catalog_app(
         "done": False,
     }
 
-    env_list = [f"{k}={v}" for k, v in app.get("env", {}).items()]
+    env_list = [f"{k}={_fill_secrets(str(v), secrets_map)}" for k, v in app.get("env", {}).items()]
+    _save_stack_secrets(app_dir, secrets_map)
 
     # Build ExposedPorts and PortBindings
     port_bindings = {}
@@ -1445,6 +1617,8 @@ def stream_deploy_catalog_app(
         },
     }
 
+    if network_name:
+        create_body["HostConfig"]["NetworkMode"] = network_name
     st, create_resp = _docker_request(
         "POST", f"/containers/create?name={service_name}", body=create_body, headers={"X-ZettNAS-Elevated": "1"}
     )
