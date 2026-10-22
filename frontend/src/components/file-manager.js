@@ -1357,6 +1357,10 @@ export class FileManagerWindow {
   }
 
   destroy() {
+    if (this._crumbObserver) {
+      this._crumbObserver.disconnect();
+      this._crumbObserver = null;
+    }
     if (this.abortController) {
       try { this.abortController.abort(); } catch (_) {}
       this.abortController = null;
@@ -1660,7 +1664,6 @@ export class FileManagerWindow {
     if (!this.breadcrumbs) return;
     this.breadcrumbs.innerHTML = '';
     const parts = this.currentPath.split('/').filter(Boolean);
-    let built = '/';
 
     const addSpan = (text, p, isLast) => {
       const span = document.createElement('span');
@@ -1672,6 +1675,8 @@ export class FileManagerWindow {
       span.style.color = isLast ? 'var(--accent-cyan, #0ea5e9)' : 'var(--fg)';
       span.style.fontWeight = isLast ? 'bold' : 'normal';
       span.style.fontFamily = 'monospace';
+      span.style.whiteSpace = 'nowrap';
+      span.style.flexShrink = '0';
 
       if (!isLast) {
         span.onmouseover = () => {
@@ -1747,77 +1752,73 @@ export class FileManagerWindow {
       this.breadcrumbs.appendChild(span);
     };
 
-    if (parts.length === 0) {
-      addSpan('/', '/', true);
-    } else if (parts.length <= 4) {
+    const addSep = () => {
+      const sep = document.createElement('span');
+      sep.textContent = '/';
+      sep.className = 'fm-crumb-sep';
+      sep.style.color = 'var(--muted)';
+      sep.style.fontFamily = 'monospace';
+      sep.style.margin = '0 2px';
+      this.breadcrumbs.appendChild(sep);
+    };
+
+    // Draws the path with `hidden` folders after the first one folded into a "..." pill
+    const draw = (hidden) => {
+      this.breadcrumbs.innerHTML = '';
+      if (parts.length === 0) {
+        addSpan('/', '/', true);
+        return;
+      }
       addSpan('/', '/', false);
       parts.forEach((part, i) => {
-        built += part + '/';
-        const isLast = (i === parts.length - 1);
-        addSpan(part, built, isLast);
-        if (!isLast) {
-          const sep = document.createElement('span');
-          sep.textContent = '/';
-          sep.style.color = 'var(--muted)';
-          sep.style.fontFamily = 'monospace';
-          sep.style.margin = '0 2px';
-          this.breadcrumbs.appendChild(sep);
+        const isLast = i === parts.length - 1;
+        if (i >= 1 && i <= hidden) {
+          if (i === 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '...';
+            ellipsis.className = 'fm-breadcrumb-ellipsis';
+            ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: 11px; margin: 0 2px;';
+            ellipsis.title = 'Show intermediate folders';
+            ellipsis.onclick = (e) => {
+              e.stopPropagation();
+              this.showBreadcrumbsDropdown(ellipsis, parts, 1, hidden + 1);
+            };
+            this.breadcrumbs.appendChild(ellipsis);
+            addSep();
+          }
+          return;
+        }
+        addSpan(part, '/' + parts.slice(0, i + 1).join('/') + '/', isLast);
+        if (!isLast) addSep();
+      });
+    };
+
+    // Show the whole path; fold middle folders only while it does not fit
+    const fit = () => {
+      draw(0);
+      const box = this.breadcrumbs;
+      if (!box.clientWidth) return; // not laid out yet: the resize observer fits it later
+      for (let hidden = 1; hidden <= parts.length - 2 && box.scrollWidth > box.clientWidth; hidden++) {
+        draw(hidden);
+      }
+    };
+    this._fitBreadcrumbs = fit;
+    fit();
+
+    if (!this._crumbObserver && typeof ResizeObserver !== 'undefined') {
+      let lastWidth = 0;
+      this._crumbObserver = new ResizeObserver(() => {
+        const w = this.breadcrumbs?.clientWidth || 0;
+        if (w !== lastWidth) {
+          lastWidth = w;
+          this._fitBreadcrumbs?.();
         }
       });
-    } else {
-      // Collapse middle parts if path is deep
-      addSpan('/', '/', false);
-      const sep0 = document.createElement('span');
-      sep0.textContent = '/';
-      sep0.style.color = 'var(--muted)';
-      sep0.style.margin = '0 2px';
-      this.breadcrumbs.appendChild(sep0);
-
-      // First segment
-      built += parts[0] + '/';
-      addSpan(parts[0], built, false);
-
-      const sep1 = document.createElement('span');
-      sep1.textContent = '/';
-      sep1.style.color = 'var(--muted)';
-      sep1.style.margin = '0 2px';
-      this.breadcrumbs.appendChild(sep1);
-
-      // Ellipsis dropdown pill for intermediate segments
-      const ellipsis = document.createElement('span');
-      ellipsis.textContent = '...';
-      ellipsis.className = 'fm-breadcrumb-ellipsis';
-      ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: 11px; margin: 0 2px;';
-      ellipsis.title = 'Show intermediate folders';
-      ellipsis.onclick = (e) => {
-        e.stopPropagation();
-        this.showBreadcrumbsDropdown(ellipsis, parts);
-      };
-      this.breadcrumbs.appendChild(ellipsis);
-
-      const sep2 = document.createElement('span');
-      sep2.textContent = '/';
-      sep2.style.color = 'var(--muted)';
-      sep2.style.margin = '0 2px';
-      this.breadcrumbs.appendChild(sep2);
-
-      // Last two segments
-      for (let i = parts.length - 2; i < parts.length; i++) {
-        const segPath = '/' + parts.slice(0, i + 1).join('/');
-        const isLast = (i === parts.length - 1);
-        addSpan(parts[i], segPath, isLast);
-        if (!isLast) {
-          const sepNext = document.createElement('span');
-          sepNext.textContent = '/';
-          sepNext.style.color = 'var(--muted)';
-          sepNext.style.margin = '0 2px';
-          this.breadcrumbs.appendChild(sepNext);
-        }
-      }
+      this._crumbObserver.observe(this.breadcrumbs);
     }
   }
 
-  showBreadcrumbsDropdown(anchorEl, parts) {
+  showBreadcrumbsDropdown(anchorEl, parts, from = 1, to = parts.length - 2) {
     let menu = document.getElementById('fm-breadcrumbs-dropdown');
     if (menu) { menu.remove(); return; }
     menu = document.createElement('div');
@@ -1825,7 +1826,7 @@ export class FileManagerWindow {
     menu.className = 'os-context-menu';
     menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(18,25,35,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: 11px; font-family: monospace; max-height: 200px; overflow-y: auto;';
 
-    for (let i = 1; i < parts.length - 2; i++) {
+    for (let i = from; i < to; i++) {
       const segPath = '/' + parts.slice(0, i + 1).join('/');
       const item = document.createElement('div');
       item.className = 'ctx-item';
