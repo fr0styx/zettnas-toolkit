@@ -136,6 +136,24 @@ def test_e2e_live_ui_and_lcd_geometry():
     not is_server_reachable(),
     reason="Live ZettNAS Toolkit test server not reachable at http://127.0.0.1:8082",
 )
+def _page_diagnostics(page):
+    """What the page looks like when the desktop didn't appear, for CI annotations."""
+    return page.evaluate(
+        """async () => {
+            const t0 = performance.now();
+            let me = null;
+            try { me = (await fetch('/api/auth/me')).status; } catch (e) { me = String(e); }
+            const meMs = Math.round(performance.now() - t0);
+            const vis = (id) => { const el = document.getElementById(id);
+                return el ? getComputedStyle(el).display + '/' + getComputedStyle(el).visibility : 'missing'; };
+            const slow = performance.getEntriesByType('resource')
+                .filter((r) => r.duration > 500).map((r) => r.name.replace(location.origin, '') + ' ' + Math.round(r.duration) + 'ms');
+            return { html: document.documentElement.className, hint: localStorage.getItem('zettnas_signed_in'),
+                     me, meMs, badge: vis('suite-brand-badge'), overlay: vis('login-overlay'), slow };
+        }"""
+    )
+
+
 def test_e2e_live_desktop_session_and_badge():
     token = get_live_server_auth_token()
     if not token:
@@ -175,7 +193,10 @@ def test_e2e_live_desktop_session_and_badge():
         page.reload(wait_until="domcontentloaded")
 
         # Check suite badge has NAS WORKBENCH
-        badge = page.wait_for_selector("#suite-brand-badge", timeout=5000)
+        try:
+            badge = page.wait_for_selector("#suite-brand-badge", timeout=5000)
+        except Exception:
+            pytest.fail("Desktop not shown after reload: " + json.dumps(_page_diagnostics(page)))
         assert badge is not None
         assert "NAS WORKBENCH" in badge.inner_text()
 
