@@ -11,6 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
+import os
+
 import backend.config as config
 from backend.auth import (
     AuthenticatedPrincipal,
@@ -27,7 +29,7 @@ from backend.auth import (
 from backend.confirmations import require_confirmation
 from backend.config import SECURITY_FILE, is_using_default_password, logger
 from backend.errors import error_response
-from backend.fsutil import atomic_write_json
+from backend.fsutil import atomic_write_json, read_json
 from backend.models.schemas import (
     LoginRequest,
     MfaChallengeRequest,
@@ -79,14 +81,38 @@ _failures_lock = threading.Lock()
 
 
 def _client_ip(request: Request) -> str:
-    from backend.auth import is_ip_in_trusted_proxies
+    from backend.auth import client_ip
 
-    client_host = request.client.host if request.client else "unknown"
-    if is_ip_in_trusted_proxies(client_host):
-        x_fwd = request.headers.get("x-forwarded-for")
-        if x_fwd:
-            return x_fwd.split(",")[0].strip()
-    return client_host
+    return client_ip(request)
+
+
+def _failures_file() -> str:
+    return os.path.join(config.DATA_DIR, "auth_failures.json")
+
+
+def _save_failures() -> None:
+    """Counters survive restarts (SEC-20); caller holds _failures_lock."""
+    try:
+        now = time.time()
+        live = {
+            k: v for k, v in _failures.items() if v.get("locked_until", 0) > now or now - v.get("last_seen", 0) < 3600
+        }
+        atomic_write_json(_failures_file(), live)
+        os.chmod(_failures_file(), 0o600)
+    except OSError as e:
+        logger.debug(f"[Auth] Could not persist login failure counters: {e}")
+
+
+def _load_failures() -> None:
+    try:
+        data = read_json(_failures_file(), {}) or {}
+        now = time.time()
+        with _failures_lock:
+            for k, v in data.items():
+                if isinstance(v, dict) and (v.get("locked_until", 0) > now or now - v.get("last_seen", 0) < 3600):
+                    _failures.setdefault(k, v)
+    except Exception as e:
+        logger.debug(f"[Auth] Could not load login failure counters: {e}")
 
 
 def _lockout_remaining(key: str) -> int:
@@ -114,11 +140,13 @@ def _register_failure(key: str, is_ip: bool = False) -> None:
         over = entry["count"] - threshold
         if over >= 0:
             entry["locked_until"] = now + min(_MAX_LOCKOUT_SECS, 2**over * 5)
+        _save_failures()
 
 
 def _clear_failures(key: str) -> None:
     with _failures_lock:
-        _failures.pop(key, None)
+        if _failures.pop(key, None) is not None:
+            _save_failures()
 
 
 def _rate_limited(remaining: int):
@@ -302,7 +330,7 @@ async def login(req: LoginRequest, request: Request):
     if remaining_ip > 0:
         return _rate_limited(remaining_ip)
 
-    remaining_user = _lockout_remaining(f"user:{target_username}")
+    remaining_user = _lockout_remaining(f"user:{target_username}@{ip}")
     if remaining_user > 0:
         return _rate_limited(remaining_user)
 
@@ -333,7 +361,7 @@ async def login(req: LoginRequest, request: Request):
 
     if not ok or not user:
         _register_failure(ip, is_ip=True)
-        _register_failure(f"user:{target_username}", is_ip=False)
+        _register_failure(f"user:{target_username}@{ip}", is_ip=False)
         log_security_event(
             "auth.login.failure",
             "failure",
@@ -358,7 +386,7 @@ async def login(req: LoginRequest, request: Request):
         return error_response(403, "Account is disabled or locked.", error="account_disabled")
 
     _clear_failures(ip)
-    _clear_failures(f"user:{target_username}")
+    _clear_failures(f"user:{target_username}@{ip}")
 
     # 4. Transparent zero-downtime hash upgrade to modern Argon2id
     if (user and needs_rehash(user.get("password_hash", ""))) or needs_rehash(config.STORED_PASSWORD_HASH):
@@ -391,7 +419,7 @@ async def login(req: LoginRequest, request: Request):
 
             if not mfa_ok:
                 _register_failure(ip)
-                _register_failure(f"user:{target_username}")
+                _register_failure(f"user:{target_username}@{ip}")
                 log_security_event(
                     "auth.mfa.failure",
                     "failure",
@@ -431,7 +459,7 @@ async def mfa_challenge(req: MfaChallengeRequest, request: Request):
         return error_response(401, "Invalid or expired MFA session. Please log in again.", error="invalid_mfa_token")
 
     target_username = token_data.get("u", "")
-    remaining_user = _lockout_remaining(f"user:{target_username}")
+    remaining_user = _lockout_remaining(f"user:{target_username}@{ip}")
     if remaining_user > 0:
         return _rate_limited(remaining_user)
 
@@ -451,7 +479,7 @@ async def mfa_challenge(req: MfaChallengeRequest, request: Request):
 
     if not mfa_ok:
         _register_failure(ip)
-        _register_failure(f"user:{target_username}")
+        _register_failure(f"user:{target_username}@{ip}")
         log_security_event(
             "auth.mfa.failure",
             "failure",
@@ -463,7 +491,7 @@ async def mfa_challenge(req: MfaChallengeRequest, request: Request):
         return error_response(401, "Invalid verification code or recovery code.", error="invalid_mfa_code")
 
     _clear_failures(ip)
-    _clear_failures(f"user:{target_username}")
+    _clear_failures(f"user:{target_username}@{ip}")
     return _build_session_response(user, token_data.get("rm", False), request, method=method)
 
 
@@ -707,16 +735,20 @@ def get_current_user_profile(request: Request):
 
 @router.get("/auth/users-list")
 def list_public_users():
-    """Returns non-sensitive public user cards for login chooser (username, display_name, avatar_url, role_id)."""
+    """User tiles for the login screen, only when the admin turned them on (SEC-19).
+
+    Off by default: anyone who can reach the login page could otherwise list every
+    account name. Even when on, roles and 2FA status are not disclosed.
+    """
+    if not getattr(config, "LOGIN_USER_CHOOSER", False):
+        return []
     try:
         users = list_users()
         return [
             {
                 "username": u["username"],
                 "display_name": u.get("display_name") or u["username"],
-                "role_id": u.get("role_id", "share_user"),
                 "avatar_url": u.get("avatar_url") or "",
-                "has_mfa": bool(u.get("mfa_enabled")),
             }
             for u in users
             if u.get("status") == "active"
@@ -1137,3 +1169,6 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
         logger.error(f"Failed to write security.json: {e}")
 
     return {"status": "ok", "is_default_password": is_using_default_password()}
+
+
+_load_failures()

@@ -227,6 +227,10 @@ _default_pw_cache = {"hash": None, "value": False}
 
 # Sessions that must change their password are limited to the password-change
 # endpoints (SEC-23). Only the test suite turns this off.
+# Show user tiles on the login screen (SEC-19). Off by default: it lists account names
+# to anyone who can open the login page.
+LOGIN_USER_CHOOSER = os.environ.get("LOGIN_USER_CHOOSER", "0").lower() in ("1", "true", "yes", "on")
+
 # Extra origins allowed to send cookie-authenticated writes (e.g. "https://nas.example.com"),
 # for reverse proxies that don't pass the original Host. Comma-separated.
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]

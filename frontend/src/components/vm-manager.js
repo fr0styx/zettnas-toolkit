@@ -5824,7 +5824,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             <span style="font-size: 10px; color: var(--muted); font-family: monospace;">${item.arch || item.architecture || 'x86_64'} • ${item.kernel || 'Linux'}</span>
             <div style="display: flex; gap: 6px;">
               ${inStorage ? `
-                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${item.filename}" style="padding: 5px 12px; font-size: 11px; font-weight: 700; background: rgba(14,165,233,0.18); color: #38bdf8; border-color: rgba(14,165,233,0.35);">
+                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="padding: 5px 12px; font-size: 11px; font-weight: 700; background: rgba(14,165,233,0.18); color: #38bdf8; border-color: rgba(14,165,233,0.35);">
                   ▶ Boot VM
                 </button>
                 <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border-color: #34d399;">

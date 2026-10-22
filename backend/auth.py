@@ -202,6 +202,23 @@ def extract_token(request: Request) -> str:
     )
 
 
+def client_ip(request: Request) -> str:
+    """Address of the real client (SEC-20).
+
+    X-Forwarded-For is only read when the connection comes from a trusted proxy, and
+    then from the right: the first address that is not itself a trusted proxy. The
+    leftmost entry is whatever the client wrote and can't be trusted.
+    """
+    peer = request.client.host if request.client else "unknown"
+    if not is_ip_in_trusted_proxies(peer):
+        return peer
+    hops = [h.strip() for h in (request.headers.get("x-forwarded-for") or "").split(",") if h.strip()]
+    for hop in reversed(hops):
+        if not is_ip_in_trusted_proxies(hop):
+            return hop
+    return hops[0] if hops else peer
+
+
 def request_is_https(request: Request) -> bool:
     """True for HTTPS, trusting X-Forwarded-Proto only from configured reverse proxies (SEC-17)."""
     if request.url.scheme == "https":
@@ -332,6 +349,8 @@ async def auth_middleware(request: Request, call_next):
     is_exempt = (
         path in _PUBLIC_API_PATHS
         or path.startswith("/api/wallpapers/download/")
+        # Public share links authenticate with their own token (+ password) (SEC-21)
+        or path.startswith(("/api/fs/shared/", "/api/shared/", "/api/v1/fs/shared/", "/api/v1/shared/"))
         or path.startswith("/api/v1/wallpapers/download/")
         or (path.startswith("/api/vms/") and (path.endswith("/console/ws") or path.endswith("/serial/ws")))
     )

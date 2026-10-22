@@ -76,11 +76,11 @@ def test_share_link_with_password_protection(client, auth_headers, share_sandbox
     assert res_no_pwd.status_code == 401
 
     # Access with wrong password should be rejected
-    res_wrong_pwd = client.get(f"/api/fs/shared/{token}?pwd=Wrong")
+    res_wrong_pwd = client.get(f"/api/fs/shared/{token}", headers={"X-Share-Password": "Wrong"})
     assert res_wrong_pwd.status_code == 401
 
     # Access with correct password in query param
-    res_query_pwd = client.get(f"/api/fs/shared/{token}?pwd=SecretPassword123!")
+    res_query_pwd = client.post(f"/api/fs/shared/{token}", json={"password": "SecretPassword123!"})
     assert res_query_pwd.status_code == 200
     assert res_query_pwd.text == "hello"
 

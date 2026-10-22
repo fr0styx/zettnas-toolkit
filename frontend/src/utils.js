@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 /**
  * Core UI Utilities
  */
@@ -89,48 +90,30 @@ export function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+// Toasts and confirm dialogs render a little formatting (bold, code, lists, links).
+// DOMPurify does the cleaning (FE-09); the regex filter it replaces could be bypassed.
+const MODAL_ALLOWED_TAGS = ['strong', 'b', 'em', 'i', 'code', 'br', 'p', 'span', 'small', 'div', 'a', 'ul', 'ol', 'li'];
+let _purifyHooked = false;
+
 export function sanitizeModalHtml(html) {
   if (html == null) return '';
-  let clean = String(html)
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-
-  clean = clean.replace(/on\w+\s*=\s*(?:["'][^"']*["']|[^\s>]+)/gi, '');
-
-  const allowedTags = new Set(['strong', 'b', 'em', 'i', 'code', 'br', 'p', 'span', 'small', 'div', 'a', 'ul', 'ol', 'li']);
-
-  clean = clean.replace(/<(\/?)([a-z0-9]+)([^>]*)>/gi, (match, slash, tag, attrs) => {
-    const lower = tag.toLowerCase();
-    if (!allowedTags.has(lower)) return '';
-    if (slash) return `</${lower}>`;
-
-    let safeAttrs = '';
-    const styleMatch = attrs.match(/style\s*=\s*(["'])(.*?)\1/i);
-    if (styleMatch) {
-      const val = styleMatch[2].replace(/expression|javascript|url/gi, '');
-      safeAttrs += ` style="${val.replace(/"/g, '&quot;')}"`;
-    }
-
-    const classMatch = attrs.match(/class\s*=\s*(["'])(.*?)\1/i);
-    if (classMatch) {
-      safeAttrs += ` class="${classMatch[2].replace(/[^a-zA-Z0-9_\-\s]/g, '')}"`;
-    }
-
-    if (lower === 'a') {
-      const hrefMatch = attrs.match(/href\s*=\s*(["'])(.*?)\1/i);
-      if (hrefMatch) {
-        const href = hrefMatch[2].trim();
-        if (/^(https?:\/\/|mailto:|\/|#)/i.test(href)) {
-          safeAttrs += ` href="${href.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer"`;
-        }
+  if (!_purifyHooked) {
+    _purifyHooked = true;
+    DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+      const style = node.getAttribute && node.getAttribute('style');
+      if (style && /url\s*\(|expression|javascript:/i.test(style)) node.removeAttribute('style');
+      if (node.tagName === 'A' && node.getAttribute('href')) {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
       }
-    }
-
-    return `<${lower}${safeAttrs}>`;
+    });
+  }
+  return DOMPurify.sanitize(String(html), {
+    ALLOWED_TAGS: MODAL_ALLOWED_TAGS,
+    ALLOWED_ATTR: ['style', 'class', 'href', 'target', 'rel', 'title'],
+    ALLOW_DATA_ATTR: false,
+    ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|\/|#)/i,
   });
-
-  return clean;
 }
 
 export async function copyTextToClipboard(text) {

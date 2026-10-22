@@ -2338,11 +2338,9 @@ _SHARE_PWD_LOCK = asyncio.Lock()
 
 
 def _get_client_ip(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    client = request.client
-    return client.host if client else "127.0.0.1"
+    from backend.auth import client_ip
+
+    return client_ip(request)
 
 
 async def _check_share_rate_limit(ip: str):
@@ -2475,19 +2473,53 @@ async def revoke_share_link(
     return {"status": "ok", "revoked": token}
 
 
+_SHARE_PASSWORD_PAGE = """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport"
+content="width=device-width,initial-scale=1"><title>Shared file</title><style>body{font-family:system-ui;background:#0b0f14;
+color:#e5e7eb;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}form{background:#111827;
+padding:24px;border-radius:12px;width:min(320px,90vw)}input,button{width:100%;box-sizing:border-box;padding:10px;margin-top:10px;
+border-radius:8px;border:1px solid #374151;background:#0b0f14;color:#fff}button{background:#0ea5e9;border:0;font-weight:700;
+color:#000;cursor:pointer}</style></head><body><form method="post"><div>This shared item is password protected.</div>
+<input type="password" name="password" autocomplete="current-password" placeholder="Password" required autofocus>
+<button type="submit">Open</button></form></body></html>"""
+
+
+@router.post("/fs/shared/{token}")
+@router.post("/shared/{token}")
+async def access_shared_file_with_password(token: str, request: Request, info: bool = False):
+    """Same as the GET route, with the password in a form or JSON body instead of the URL (SEC-21)."""
+    password = ""
+    ctype = request.headers.get("content-type", "")
+    try:
+        if "application/json" in ctype:
+            password = str((await request.json()).get("password") or "")
+        else:
+            # urlencoded form from the password page (no python-multipart dependency)
+            from urllib.parse import parse_qs
+
+            body = (await request.body())[:4096].decode("utf-8", errors="replace")
+            password = (parse_qs(body).get("password") or [""])[0]
+    except Exception:
+        password = ""
+    return await _serve_shared_item(token, request, info, password)
+
+
 @router.get("/fs/shared/{token}")
 @router.get("/shared/{token}")
 async def access_shared_file(
     token: str,
     request: Request,
     info: bool = False,
-    pwd: Optional[str] = None,
 ):
     """
-    Public access endpoint for shared files and folders.
-    Allows streaming the file or downloading a zip of a folder.
-    Supports password verification via 'X-Share-Password' header or 'pwd' query param.
+    Public access endpoint for shared files and folders (no session needed).
+    Allows streaming the file or downloading a zip of a folder. A password goes in
+    the X-Share-Password header or a POST body, never in the URL; browsers get a
+    small password form.
     """
+    return await _serve_shared_item(token, request, info, request.headers.get("X-Share-Password") or "")
+
+
+async def _serve_shared_item(token: str, request: Request, info: bool, provided_pwd: str):
     links = _load_share_links()
     if token not in links:
         raise HTTPException(status_code=404, detail="Share link not found or revoked")
@@ -2505,8 +2537,9 @@ async def access_shared_file(
 
     if item.get("has_password"):
         await _check_share_rate_limit(client_ip)
-        provided_pwd = request.headers.get("X-Share-Password") or pwd or ""
         if not provided_pwd:
+            if "text/html" in request.headers.get("accept", "") and not info:
+                return Response(content=_SHARE_PASSWORD_PAGE, media_type="text/html", status_code=401)
             raise HTTPException(
                 status_code=401,
                 detail="Password required to access this share",

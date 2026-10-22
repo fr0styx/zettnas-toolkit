@@ -142,11 +142,11 @@ def test_share_link_rate_limiting(client, auth_headers, fs_sandbox):
 
     # Trigger 5 failed password attempts
     for _ in range(5):
-        wrong_res = client.get(f"/api/fs/shared/{token}?pwd=WrongPassword")
+        wrong_res = client.get(f"/api/fs/shared/{token}", headers={"X-Share-Password": "WrongPassword"})
         assert wrong_res.status_code == 401
 
     # 6th attempt should return 429 Too Many Requests
-    blocked_res = client.get(f"/api/fs/shared/{token}?pwd=WrongPassword")
+    blocked_res = client.get(f"/api/fs/shared/{token}", headers={"X-Share-Password": "WrongPassword"})
     assert blocked_res.status_code == 429
     assert "Too many failed password attempts" in blocked_res.text
 

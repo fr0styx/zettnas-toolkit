@@ -1454,7 +1454,7 @@ export class FileManagerWindow {
     if (this.viewMode === 'icon') {
       const targetItem = this.fileList[idx];
       if (targetItem) {
-        const card = this.viewport.querySelector(`.fm-grid-card[data-path="${targetItem.path}"]`);
+        const card = this.viewport.querySelector(`.fm-grid-card[data-path="${CSS.escape(targetItem.path)}"]`);
         if (card && typeof card.scrollIntoView === 'function') {
           card.scrollIntoView({ block: 'nearest' });
           return;
