@@ -354,10 +354,11 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     const copyBtn = document.getElementById('btn-copy-wg-conf');
     expect(copyBtn.style.display).toBe('inline-block');
 
+    const qrWrap = document.getElementById('wg-qr-canvas-wrap');
+    // the QR library loads on first use (FE-02)
+    await vi.waitFor(() => expect(qrWrap.innerHTML).toContain('<svg'), { timeout: 3000 });
     const qrBox = document.getElementById('wg-qr-box');
     expect(qrBox.style.display).toBe('flex');
-    const qrWrap = document.getElementById('wg-qr-canvas-wrap');
-    expect(qrWrap.innerHTML).toContain('<svg');
   });
 
   it('renders and interacts with Tailscale extended capabilities (Key Expiry, Subnet Router, Exit Node, SSH, Serve, Funnel, Taildrop)', async () => {
