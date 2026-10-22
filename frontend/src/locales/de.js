@@ -2063,5 +2063,12 @@ export default {
   "setup.current_password": "Aktuelles Passwort",
   "fm.path_input_label": "Ordnerpfad",
   "vm.core_image": "Keine VM-Unterstützung im Core-Image",
-  "vm.core_image_hint": "Wechsle auf das volle Image (Tag latest statt latest-core), um virtuelle Maschinen zu nutzen."
+  "vm.core_image_hint": "Wechsle auf das volle Image (Tag latest statt latest-core), um virtuelle Maschinen zu nutzen.",
+  "ai.vision_label": "Fotos beschreiben und Text darin lesen",
+  "ai.vision_auto": "Wenn das NAS im Leerlauf ist",
+  "ai.vision_off": "Aus",
+  "ai.vision_saved": "Einstellung für Fotobeschreibungen gespeichert",
+  "toast.ai_vision_failed": "Einstellung für Fotobeschreibungen nicht gespeichert: {error}",
+  "ai.vision_no_model": "Installiere ein Bildmodell (z. B. gemma3 oder qwen2.5vl) unter KI → Modelle.",
+  "ai.vision_progress": "{done} von {total} Fotos beschrieben"
 };

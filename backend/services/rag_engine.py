@@ -3722,6 +3722,8 @@ class RagSearchEngine:
             "search_history": [],
             "custom_hf_models": [],
             "removed_models": [],
+            "vision_captions": "auto",  # AI-14: "auto" (when a vision model is installed) or "off"
+            "vision_model": "",
         }
         saved = read_json(RAG_CONFIG_PATH, {})
         if isinstance(saved, dict):
@@ -3774,9 +3776,13 @@ class RagSearchEngine:
             "custom_hf_models",
             "removed_models",
             "conversation_retention_days",
+            "vision_captions",
+            "vision_model",
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]
+        if str(cfg.get("vision_captions", "auto")).lower() not in ("auto", "off"):
+            cfg["vision_captions"] = "auto"
         if "conversation_retention_days" in cfg:
             try:
                 cfg["conversation_retention_days"] = max(0, min(3650, int(cfg["conversation_retention_days"])))

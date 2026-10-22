@@ -10,6 +10,8 @@ If something here is wrong, please open an issue.
   (Ollama or OpenVINO Model Server). ZettNAS only talks to AI runtimes on this machine or
   its Docker network, or to the address you set in **AI settings**; it never tries your
   router or other LAN hosts.
+- Photos sent for captions and text reading. They go to the vision model on this NAS,
+  at most 896 pixels on the long side, and nowhere else.
 - Hardware readings, logs and settings.
 
 ZettNAS has no analytics or telemetry and does not phone home.

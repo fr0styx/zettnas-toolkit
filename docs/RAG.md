@@ -8,6 +8,14 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
 - Only folders you add under **AI → Watched folders**. Folders in *Excluded* are never read.
 - Text-like files: Markdown, plain text, CSV, JSON, YAML, HTML, code, `.docx` and `.pdf`.
   Photos get colour and scene tags plus any text found in them.
+- **Photo captions.** When a vision model is installed in Ollama (for example
+  `gemma3:4b` or `qwen2.5vl:3b`), ZettNAS describes each photo in one sentence and copies
+  any readable text (receipts, signs, screenshots). Both go into photo search. It works
+  one photo at a time and only while the NAS is idle: load under half the CPU cores, CPU
+  under 75 °C, inside the learning schedule if you set one, and never on a sleeping disk.
+  Captions are stored by file content, so re-indexing or moving a photo keeps them.
+  Turn it off under **AI → Describe photos and read their text**; pin a model with
+  `vision_model` in the AI config.
 - Each file is split into sections of about 3,500 characters, and those into chunks of
   about 950 characters with 80 characters of overlap. Each chunk is stored with its file
   title in front (`title: … | text: …`).

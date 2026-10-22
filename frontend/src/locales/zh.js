@@ -2063,5 +2063,12 @@ export default {
   "setup.current_password": "当前密码",
   "fm.path_input_label": "文件夹路径",
   "vm.core_image": "核心镜像不支持虚拟机",
-  "vm.core_image_hint": "要运行虚拟机，请改用完整镜像（标签 latest 而不是 latest-core）。"
+  "vm.core_image_hint": "要运行虚拟机，请改用完整镜像（标签 latest 而不是 latest-core）。",
+  "ai.vision_label": "描述照片并识别其中文字",
+  "ai.vision_auto": "在 NAS 空闲时",
+  "ai.vision_off": "关闭",
+  "ai.vision_saved": "照片描述设置已保存",
+  "toast.ai_vision_failed": "无法保存照片描述设置：{error}",
+  "ai.vision_no_model": "请在 AI → 模型 中安装视觉模型（例如 gemma3 或 qwen2.5vl）。",
+  "ai.vision_progress": "已描述 {done}/{total} 张照片"
 };

@@ -11579,6 +11579,25 @@ export async function fetchAndRenderAiStatus() {
       }
     }
 
+    // Photo captions (AI-14)
+    const visionSel = document.getElementById('ai-vision-captions-select');
+    if (visionSel) {
+      visionSel.value = cfg.vision_captions === 'off' ? 'off' : 'auto';
+      if (!visionSel.dataset.bound) {
+        visionSel.dataset.bound = '1';
+        visionSel.addEventListener('change', async (e) => {
+          try {
+            await api.post('/api/ai/config', { vision_captions: e.target.value });
+            showToast(t('ai.vision_saved', 'Photo captioning setting saved'), 'success');
+            refreshVisionStatus();
+          } catch (err) {
+            showToast(t('toast.ai_vision_failed', 'Could not save the photo captioning setting: {error}', { error: err.message }), 'error');
+          }
+        });
+      }
+      refreshVisionStatus();
+    }
+
     // Hydrate Embedding Model & MRL Dimension selectors
     const embModelSelect = document.getElementById('ai-embedding-model-select');
     if (embModelSelect && (cfg.embedding_model || res.embedding_model)) {
@@ -13817,3 +13836,22 @@ export async function triggerInPlaceReindex() {
   }
 }
 
+
+
+/** Shows how many photos the vision model has described (AI-14). */
+export async function refreshVisionStatus() {
+  const el = document.getElementById('ai-vision-status');
+  if (!el) return;
+  try {
+    const st = await api.get('/api/ai/vision/status');
+    if (st.mode === 'off') {
+      el.textContent = '';
+    } else if (st.state === 'no-model') {
+      el.textContent = t('ai.vision_no_model', 'Install a vision model (for example gemma3 or qwen2.5vl) under AI → Models.');
+    } else {
+      el.textContent = t('ai.vision_progress', '{done} of {total} photos described', { done: st.captioned, total: st.photos });
+    }
+  } catch {
+    el.textContent = '';
+  }
+}

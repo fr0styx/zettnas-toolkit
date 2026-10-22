@@ -16,6 +16,7 @@
 - Background services (stats, SMART, fans, LCD, buttons) restart on their own after a crash, and `/api/health` shows their state.
 - Opening a VM console no longer stalls the rest of the UI while the VM starts.
 - Indexing respects sleeping disks on ZFS, Btrfs, mdadm and LVM, not only Unraid. Folders whose disks can't be identified are treated as asleep.
+- **Photo search understands what's in a picture.** With a vision model installed (for example Gemma 3 4B), ZettNAS describes each photo and reads the text in it while the NAS is idle, so you can search for "receipt" or "kids at the beach". Off switch under AI settings.
 - Ask Zetty finds Chinese, Japanese and Korean text (search quality for Chinese went from 3% to 85% in the test set).
 
 ## v1.9.3 (2026-10-22) - Stable

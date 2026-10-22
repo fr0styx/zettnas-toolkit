@@ -183,6 +183,10 @@ def startup_system():
         logger.debug("[Main] Non-appliance hardware detected; skipping ButtonListener daemon.")
     supervise("LcdRenderer", render_lcd_loop)
     supervise("FanWatchdog", fan_watchdog_daemon)
+    if os.environ.get("TESTING") != "1":
+        from backend.services.vision_queue import vision_daemon
+
+        supervise("VisionCaptioner", vision_daemon)  # AI-14, idle-only
 
     try:
         get_webdav_engine().start_if_enabled()

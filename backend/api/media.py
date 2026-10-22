@@ -154,6 +154,8 @@ class RagConfigUpdateRequest(BaseModel):
     llm_model: str | None = None
     idle_unload_minutes: int | None = None
     conversation_retention_days: int | None = Field(default=None, ge=0, le=3650)
+    vision_captions: str | None = Field(default=None, pattern="^(auto|off)$")
+    vision_model: str | None = Field(default=None, max_length=128)
 
 
 class ModelSelectRequest(BaseModel):
@@ -1227,6 +1229,14 @@ def update_rag_config(req: RagConfigUpdateRequest) -> dict[str, Any]:
                 raise HTTPException(status_code=400, detail="Cloud metadata endpoints are forbidden.") from None
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
     return get_rag_engine().update_config(updates)
+
+
+@router.get("/ai/vision/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
+def get_vision_status() -> dict[str, Any]:
+    """Photo captioning progress (AI-14)."""
+    from backend.services.vision_queue import get_vision_queue
+
+    return get_vision_queue().status()
 
 
 _REINDEX_TASK: asyncio.Task | None = None

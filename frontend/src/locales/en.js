@@ -2063,5 +2063,12 @@ export default {
   "setup.current_password": "Current password",
   "fm.path_input_label": "Folder path",
   "vm.core_image": "No VM support in the core image",
-  "vm.core_image_hint": "Switch to the full image (tag latest instead of latest-core) to run virtual machines."
+  "vm.core_image_hint": "Switch to the full image (tag latest instead of latest-core) to run virtual machines.",
+  "ai.vision_label": "Describe photos and read their text",
+  "ai.vision_auto": "When the NAS is idle",
+  "ai.vision_off": "Off",
+  "ai.vision_saved": "Photo captioning setting saved",
+  "toast.ai_vision_failed": "Could not save the photo captioning setting: {error}",
+  "ai.vision_no_model": "Install a vision model (for example gemma3 or qwen2.5vl) under AI → Models.",
+  "ai.vision_progress": "{done} of {total} photos described"
 };

@@ -2063,5 +2063,12 @@ export default {
   "setup.current_password": "Contraseña actual",
   "fm.path_input_label": "Ruta de la carpeta",
   "vm.core_image": "Sin máquinas virtuales en la imagen core",
-  "vm.core_image_hint": "Cambia a la imagen completa (etiqueta latest en vez de latest-core) para usar máquinas virtuales."
+  "vm.core_image_hint": "Cambia a la imagen completa (etiqueta latest en vez de latest-core) para usar máquinas virtuales.",
+  "ai.vision_label": "Describir fotos y leer su texto",
+  "ai.vision_auto": "Cuando el NAS esté inactivo",
+  "ai.vision_off": "Desactivado",
+  "ai.vision_saved": "Ajuste de descripción de fotos guardado",
+  "toast.ai_vision_failed": "No se pudo guardar el ajuste de descripción de fotos: {error}",
+  "ai.vision_no_model": "Instala un modelo de visión (por ejemplo gemma3 o qwen2.5vl) en IA → Modelos.",
+  "ai.vision_progress": "{done} de {total} fotos descritas"
 };
