@@ -3,6 +3,8 @@
 import io
 import json
 
+import pytest
+
 from backend.services import ai_chat_agent
 
 
@@ -76,3 +78,24 @@ def test_model_server_never_swaps_models(monkeypatch):
     assert not any(u.endswith("/chat/completions") for u, _ in sent)
     assert "not served" in ai_chat_agent._LAST_MODEL_PROBLEM["text"]
     ai_chat_agent._LAST_MODEL_PROBLEM["text"] = ""
+
+
+@pytest.mark.parametrize("vram,device", [(5_000_000_000, "GPU"), (0, "CPU")])
+def test_reported_model_and_device_match_the_runtime(monkeypatch, vram, device):
+    """Batch 3 exit check: the label shows the model Ollama ran and the device /api/ps reports."""
+
+    def handler(url, body):
+        if url.endswith("/api/tags"):
+            return {"models": [{"name": "llama3.2:3b"}]}
+        if url.endswith("/api/chat"):
+            return {"message": {"content": "Hi"}, "eval_count": 3, "eval_duration": 1_500_000_000}
+        if url.endswith("/api/ps"):
+            return {"models": [{"name": "llama3.2:3b", "size_vram": vram}]}
+        return None
+
+    _setup(monkeypatch, handler)
+    reply, label, toks, tok_sec, accel, _ = ai_chat_agent._try_local_llm_completion(
+        "llama3.2:3b", "", [{"role": "user", "content": "hi"}]
+    )
+    assert label == "Ollama (llama3.2:3b)"
+    assert accel["name"] == device and toks == 3 and tok_sec == 2.0

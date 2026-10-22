@@ -453,7 +453,13 @@ def test_weather_tool_and_country_disambiguation_santo_domingo():
     from backend.services.ai_chat_agent import run_agentic_chat, tool_get_weather
 
     # Test direct tool invocation with deterministic test weather
-    data = tool_get_weather("Santo Domingo")
+    from backend.services.ai_chat_agent import _WEB_ALLOWED
+
+    token = _WEB_ALLOWED.set(True)  # the weather tool only runs with web access on
+    try:
+        data = tool_get_weather("Santo Domingo")
+    finally:
+        _WEB_ALLOWED.reset(token)
     assert data["location"] == "Santo Domingo"
     assert data["is_ambiguous"] is True
     assert len(data["candidates"]) == 2

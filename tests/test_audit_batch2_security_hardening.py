@@ -34,7 +34,13 @@ def test_ssrf_safe_url_validation():
 
 def test_tool_browse_internet_ssrf_blocked(monkeypatch):
     # Probing local or metadata endpoint should be blocked without making HTTP requests
-    res = tool_browse_internet("Check http://169.254.169.254/latest/meta-data")
+    from backend.services.ai_chat_agent import _WEB_ALLOWED
+
+    token = _WEB_ALLOWED.set(True)  # web search on: the SSRF guard is what is under test
+    try:
+        res = tool_browse_internet("Check http://169.254.169.254/latest/meta-data")
+    finally:
+        _WEB_ALLOWED.reset(token)
     assert res["status"] in ("ok", "answered")
     # No direct_url source should be added from a blocked SSRF target
     sources = res.get("sources", [])

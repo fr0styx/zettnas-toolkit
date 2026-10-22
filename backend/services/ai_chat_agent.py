@@ -2094,6 +2094,12 @@ def _clean_complete_snippet(text: str, max_chars: int = 850) -> str:
             break
 
     if not valid_sentences:
+        # Chinese and Japanese have no spaces between words: cut at their sentence ends instead.
+        if sum(1 for ch in cleaned if "\u3040" <= ch <= "\u30ff" or "\u4e00" <= ch <= "\u9fff") >= 4:
+            part = cleaned[:max_chars]
+            ends = [part.rfind(p) for p in ("。", "！", "？")]
+            cut = max(ends)
+            return part[: cut + 1] if cut > 0 else part
         trimmed = cleaned[:max_chars].rsplit(" ", 1)[0].rstrip(" ,;:-")
         trimmed_low = trimmed.lower()
         if any(trimmed_low.endswith(d) for d in dangling) or any(
@@ -4988,6 +4994,20 @@ def run_agentic_chat(
     model_override: Optional[str] = None,
     principal: Any = None,
 ) -> Dict[str, Any]:
+    """Runs one chat turn in its own context, so its web permission can't leak to later calls."""
+    return contextvars.copy_context().run(
+        _run_agentic_chat_turn, message, history, allow_web_search, allow_nas_tools, model_override, principal
+    )
+
+
+def _run_agentic_chat_turn(
+    message: str,
+    history: Optional[List[Dict[str, Any]]] = None,
+    allow_web_search: bool = False,
+    allow_nas_tools: bool = True,
+    model_override: Optional[str] = None,
+    principal: Any = None,
+) -> Dict[str, Any]:
     """
     Executes a conversational turn with the ZettAI Local Chatbot & NAS Copilot:
       1. Detects required NAS Hardware Tools (telemetry, standby-safe disks, fan control,
@@ -5620,7 +5640,8 @@ def run_agentic_chat(
                 llm_messages.append(
                     {
                         "role": "tool",
-                        "content": json.dumps(t_res),
+                        # tool output is data, like retrieved text (AI-07)
+                        "content": _as_data(json.dumps(t_res, default=str)),
                         "name": t_name,
                     }
                 )
