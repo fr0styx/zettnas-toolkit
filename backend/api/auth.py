@@ -351,8 +351,22 @@ async def login(req: LoginRequest, request: Request):
 
     # 2. Verify password (against user's stored hash or fallback to config.STORED_PASSWORD_HASH for admin/legacy tests)
     ok = False
-    if user and user.get("password_hash"):
+    is_ldap_user = bool(user and user.get("idp_type") == "ldap")
+    if user and user.get("password_hash") and not is_ldap_user:
         ok = await run_in_threadpool(verify_password, req.password, user["password_hash"])
+
+    # Directory accounts (and new names) check against LDAP / Active Directory (M6)
+    if not ok and (not user or is_ldap_user):
+        from backend.services import ldap_auth
+
+        if ldap_auth.enabled():
+            try:
+                ldap_user = await run_in_threadpool(ldap_auth.login, target_username, req.password)
+            except ldap_auth.LdapError as e:
+                logger.warning(f"[LDAP] {e}")
+                ldap_user = None
+            if ldap_user:
+                ok, user = True, ldap_user
 
     if not ok and target_username in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin")):
         if await run_in_threadpool(verify_password, req.password, config.STORED_PASSWORD_HASH):
@@ -400,8 +414,11 @@ async def login(req: LoginRequest, request: Request):
     _clear_failures(ip)
     _clear_failures(f"user:{target_username}@{ip}")
 
-    # 4. Transparent zero-downtime hash upgrade to modern Argon2id
-    if (user and needs_rehash(user.get("password_hash", ""))) or needs_rehash(config.STORED_PASSWORD_HASH):
+    # 4. Transparent zero-downtime hash upgrade to modern Argon2id (never for directory accounts:
+    # their password must not be stored here)
+    if user.get("idp_type") != "ldap" and (
+        needs_rehash(user.get("password_hash", "")) or needs_rehash(config.STORED_PASSWORD_HASH)
+    ):
         try:
             new_hash = await run_in_threadpool(hash_password, req.password)
             if user:

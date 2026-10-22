@@ -2141,5 +2141,18 @@ export default {
   "video.unplayable_hint": "Son format ou codec ({ext}) n'est pas pris en charge ici. Téléchargez-la ou ouvrez-la dans VLC ou Infuse.",
   "video.subtitles": "Sous-titres",
   "fm.folders": "Dossiers",
-  "dock.notifications_unread": "Centre de notifications, {count} non lues"
+  "dock.notifications_unread": "Centre de notifications, {count} non lues",
+  "ldap.title": "🏢 LDAP / Active Directory",
+  "ldap.desc": "Connexion avec le nom et le mot de passe de l'annuaire. Les comptes locaux gardent leur mot de passe. Utilisez ldaps:// ou StartTLS.",
+  "ldap.enabled": "Autoriser la connexion par l'annuaire",
+  "ldap.server": "Serveur",
+  "ldap.base_dn": "DN de base",
+  "ldap.bind_dn": "DN du compte de service",
+  "ldap.bind_password": "Mot de passe du compte de service",
+  "ldap.user_filter": "Filtre utilisateur",
+  "ldap.admin_groups": "Groupes administrateurs (séparés par des virgules)",
+  "ldap.start_tls": "Utiliser StartTLS (serveurs ldap://)",
+  "ldap.test": "Tester la connexion",
+  "ldap.test_ok": "Connecté",
+  "ldap.saved": "Réglages de l'annuaire enregistrés"
 };

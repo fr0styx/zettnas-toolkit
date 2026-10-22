@@ -108,3 +108,88 @@ export async function renderSsoPanel() {
   });
   host.append(title, desc, form);
 }
+
+const LDAP_FIELDS = [
+  ['server_url', 'ldap.server', 'Server', 'ldaps://dc.home.lan'],
+  ['base_dn', 'ldap.base_dn', 'Base DN', 'dc=home,dc=lan'],
+  ['bind_dn', 'ldap.bind_dn', 'Service account DN', 'cn=zettnas,ou=service,dc=home,dc=lan'],
+  ['bind_password', 'ldap.bind_password', 'Service account password', ''],
+  ['user_filter', 'ldap.user_filter', 'User filter', '(sAMAccountName={username})'],
+  ['admin_groups', 'ldap.admin_groups', 'Admin groups (comma-separated)', 'NAS Admins'],
+];
+
+/** LDAP / Active Directory settings in Security (M6). */
+export async function renderLdapPanel() {
+  const host = document.getElementById('sec-ldap-card');
+  if (!host) return;
+  let cfg;
+  try {
+    cfg = await api.get('/api/auth/ldap/settings');
+  } catch (err) {
+    host.textContent = '';
+    return;
+  }
+  host.replaceChildren();
+  const title = Object.assign(document.createElement('div'), { className: 'guard-title', textContent: t('ldap.title', '🏢 LDAP / Active Directory') });
+  const desc = Object.assign(document.createElement('div'), {
+    className: 'guard-muted',
+    textContent: t('ldap.desc', 'People sign in with their directory name and password. Local accounts keep their own password. Use ldaps:// or StartTLS.'),
+  });
+  const form = document.createElement('form');
+  form.className = 'sso-form';
+  const toggle = (name, label, checked) => {
+    const l = document.createElement('label');
+    l.className = 'guard-toggle';
+    const cb = Object.assign(document.createElement('input'), { type: 'checkbox', name, checked: Boolean(checked) });
+    l.append(cb, Object.assign(document.createElement('span'), { textContent: label }));
+    form.append(l);
+    return cb;
+  };
+  const enabled = toggle('enabled', t('ldap.enabled', 'Allow directory sign-in'), cfg.enabled);
+  for (const [key, i18n, label, placeholder] of LDAP_FIELDS) {
+    const wrap = Object.assign(document.createElement('label'), { className: 'sso-field' });
+    const input = Object.assign(document.createElement('input'), {
+      name: key,
+      className: 'tz-select-input',
+      type: key === 'bind_password' ? 'password' : 'text',
+      autocomplete: 'off',
+      placeholder,
+      value: Array.isArray(cfg[key]) ? cfg[key].join(', ') : cfg[key] || '',
+    });
+    wrap.append(Object.assign(document.createElement('span'), { textContent: t(i18n, label) }), input);
+    form.append(wrap);
+  }
+  const startTls = toggle('start_tls', t('ldap.start_tls', 'Use StartTLS (for ldap:// servers)'), cfg.start_tls);
+  const row = Object.assign(document.createElement('div'), { className: 'bench-actions' });
+  const save = Object.assign(document.createElement('button'), { type: 'submit', className: 'btn-pill-toggle', textContent: t('sso.save', 'Save') });
+  const test = Object.assign(document.createElement('button'), { type: 'button', className: 'btn-pill-toggle', textContent: t('ldap.test', 'Test connection') });
+  const status = Object.assign(document.createElement('span'), { className: 'guard-muted' });
+  status.setAttribute('aria-live', 'polite');
+  row.append(save, test, status);
+  form.append(row);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const body = { enabled: enabled.checked, start_tls: startTls.checked };
+    for (const [key] of LDAP_FIELDS) {
+      const v = String(fd.get(key) || '').trim();
+      body[key] = key === 'admin_groups' ? v.split(',').map((x) => x.trim()).filter(Boolean) : v;
+    }
+    try {
+      await api.put('/api/auth/ldap/settings', body);
+      showToast(t('ldap.saved', 'Directory settings saved'), 'success');
+    } catch (err) {
+      showToast(t('sso.save_failed', 'Could not save: {error}', { error: err.message }), 'error');
+    }
+  });
+  test.addEventListener('click', async () => {
+    status.textContent = '…';
+    try {
+      const r = await api.post('/api/auth/ldap/test', {});
+      status.textContent = r.ok ? t('ldap.test_ok', 'Connected') : r.message;
+    } catch (err) {
+      status.textContent = err.message;
+    }
+  });
+  host.append(title, desc, form);
+}

@@ -2141,5 +2141,18 @@ export default {
   "video.unplayable_hint": "Su formato o códec ({ext}) no es compatible aquí. Descárgalo o ábrelo en VLC o Infuse.",
   "video.subtitles": "Subtítulos",
   "fm.folders": "Carpetas",
-  "dock.notifications_unread": "Centro de notificaciones, {count} sin leer"
+  "dock.notifications_unread": "Centro de notificaciones, {count} sin leer",
+  "ldap.title": "🏢 LDAP / Active Directory",
+  "ldap.desc": "Inicio de sesión con el nombre y la contraseña del directorio. Las cuentas locales conservan su contraseña. Usa ldaps:// o StartTLS.",
+  "ldap.enabled": "Permitir inicio de sesión con el directorio",
+  "ldap.server": "Servidor",
+  "ldap.base_dn": "DN base",
+  "ldap.bind_dn": "DN de la cuenta de servicio",
+  "ldap.bind_password": "Contraseña de la cuenta de servicio",
+  "ldap.user_filter": "Filtro de usuario",
+  "ldap.admin_groups": "Grupos de administradores (separados por comas)",
+  "ldap.start_tls": "Usar StartTLS (servidores ldap://)",
+  "ldap.test": "Probar conexión",
+  "ldap.test_ok": "Conectado",
+  "ldap.saved": "Ajustes del directorio guardados"
 };

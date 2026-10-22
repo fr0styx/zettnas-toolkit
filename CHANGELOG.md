@@ -13,6 +13,7 @@
 
 - **Ransomware guard.** Mass renames or deletes, files renamed to ransomware extensions, ransom notes or a changed guard file freeze writes, snapshot pools that support it, block the source address and send a critical alert. Optional guard files catch attacks over SMB and NFS. See SECURITY.md.
 - **Sign in with Authentik, Keycloak or another OpenID Connect provider.** Groups map to roles; a provider login never takes over a local account. See docs/SSO.md.
+- **Sign in with LDAP or Active Directory.** Directory groups map to roles; local accounts keep their own password. See docs/SSO.md.
 - **Repeated failed sign-ins block the address** for an hour (web and WebDAV). Trusted networks are set with `ZETTNAS_TRUSTED_IPS`; blocked addresses are listed under Security.
 
 #### Phone and tablet

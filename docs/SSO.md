@@ -51,6 +51,24 @@ The login screen then shows **Sign in with <label>**.
 - The client secret is stored in `data/oidc.json` (readable by root only) and never sent
   back to the browser.
 
+## LDAP and Active Directory
+
+Under **Security → LDAP / Active Directory**, enter the server (`ldaps://dc.home.lan`, or
+`ldap://` with **StartTLS**), the base DN, and a read-only service account that can look
+users up. People then sign in on the normal login screen with their directory name and
+password.
+
+- The default user filter matches `sAMAccountName`, `uid`, `userPrincipalName` or `mail`;
+  for OpenLDAP or FreeIPA you can narrow it, for example
+  `(&(objectClass=inetOrgPerson)(uid={username}))`.
+- Groups come from `memberOf`, or, where the directory doesn't provide it (OpenLDAP,
+  Synology), from groups that list the user as `member`, `uniqueMember` or `memberUid`.
+  Admin groups and `role_map` work as for OpenID Connect, by group name or full DN.
+- A local ZettNAS account with the same name keeps signing in with its local password.
+- ZettNAS never stores the directory password, and refuses empty passwords (which many
+  servers would treat as an anonymous login).
+- **Test connection** checks the service account.
+
 ## Immich
 
 The one-click Immich app installs the whole stack: the server, machine learning, Valkey

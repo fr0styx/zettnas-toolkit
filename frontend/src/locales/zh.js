@@ -2141,5 +2141,18 @@ export default {
   "video.unplayable_hint": "此处不支持其格式或编码（{ext}）。请下载，或用 VLC 或 Infuse 打开。",
   "video.subtitles": "字幕",
   "fm.folders": "文件夹",
-  "dock.notifications_unread": "通知中心，{count} 条未读"
+  "dock.notifications_unread": "通知中心，{count} 条未读",
+  "ldap.title": "🏢 LDAP / Active Directory",
+  "ldap.desc": "用目录中的用户名和密码登录。本地账户继续使用自己的密码。请使用 ldaps:// 或 StartTLS。",
+  "ldap.enabled": "允许目录登录",
+  "ldap.server": "服务器",
+  "ldap.base_dn": "Base DN",
+  "ldap.bind_dn": "服务账户 DN",
+  "ldap.bind_password": "服务账户密码",
+  "ldap.user_filter": "用户过滤器",
+  "ldap.admin_groups": "管理员组（用逗号分隔）",
+  "ldap.start_tls": "使用 StartTLS（用于 ldap:// 服务器）",
+  "ldap.test": "测试连接",
+  "ldap.test_ok": "已连接",
+  "ldap.saved": "目录设置已保存"
 };

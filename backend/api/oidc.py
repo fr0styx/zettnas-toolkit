@@ -92,3 +92,47 @@ def sso_save_settings(req: OidcSettings, request: Request) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(e)) from e
     cfg["redirect_uri"] = oidc.redirect_uri(cfg, _base(request))
     return cfg
+
+
+ldap_router = APIRouter(prefix="/auth/ldap", tags=["LDAP"])
+
+
+class LdapSettings(BaseModel):
+    enabled: bool | None = None
+    server_url: str | None = Field(default=None, max_length=512)
+    start_tls: bool | None = None
+    verify_tls: bool | None = None
+    bind_dn: str | None = Field(default=None, max_length=512)
+    bind_password: str | None = Field(default=None, max_length=512)
+    base_dn: str | None = Field(default=None, max_length=512)
+    user_filter: str | None = Field(default=None, max_length=512)
+    username_attr: str | None = Field(default=None, max_length=64)
+    admin_groups: list[str] | None = None
+    role_map: dict[str, str] | None = None
+    default_role: str | None = Field(default=None, max_length=64)
+    auto_create: bool | None = None
+    sync_roles: bool | None = None
+
+
+@ldap_router.get("/settings", dependencies=[Depends(require_scope("users:write", "system:config"))])
+def ldap_settings() -> dict[str, Any]:
+    from backend.services import ldap_auth
+
+    return ldap_auth.masked_config()
+
+
+@ldap_router.put("/settings", dependencies=[Depends(require_scope("users:write", "system:config"))])
+def ldap_save_settings(req: LdapSettings) -> dict[str, Any]:
+    from backend.services import ldap_auth
+
+    try:
+        return ldap_auth.save_config(req.model_dump())
+    except ldap_auth.LdapError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@ldap_router.post("/test", dependencies=[Depends(require_scope("users:write", "system:config"))])
+def ldap_test() -> dict[str, Any]:
+    from backend.services import ldap_auth
+
+    return ldap_auth.test_connection()

@@ -2141,5 +2141,18 @@ export default {
   "video.unplayable_hint": "Its format or codec ({ext}) isn't supported here. Download it, or open it in VLC or Infuse.",
   "video.subtitles": "Subtitles",
   "fm.folders": "Folders",
-  "dock.notifications_unread": "Notification Center, {count} unread"
+  "dock.notifications_unread": "Notification Center, {count} unread",
+  "ldap.title": "🏢 LDAP / Active Directory",
+  "ldap.desc": "People sign in with their directory name and password. Local accounts keep their own password. Use ldaps:// or StartTLS.",
+  "ldap.enabled": "Allow directory sign-in",
+  "ldap.server": "Server",
+  "ldap.base_dn": "Base DN",
+  "ldap.bind_dn": "Service account DN",
+  "ldap.bind_password": "Service account password",
+  "ldap.user_filter": "User filter",
+  "ldap.admin_groups": "Admin groups (comma-separated)",
+  "ldap.start_tls": "Use StartTLS (for ldap:// servers)",
+  "ldap.test": "Test connection",
+  "ldap.test_ok": "Connected",
+  "ldap.saved": "Directory settings saved"
 };
