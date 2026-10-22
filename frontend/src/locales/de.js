@@ -2111,5 +2111,11 @@ export default {
   "ts.serve_how": "Installiere auf dem Handy die Tailscale-App und melde dich im selben Tailnet an. Öffne dann diese Adresse, im WLAN oder mobil. Lege sie auf den Startbildschirm, um ZettNAS wie eine App zu nutzen.",
   "ts.serve_how_funnel": "Funnel ist an: Die Adresse funktioniert aus jedem Browser im Internet, also starke Passwörter und 2FA verwenden.",
   "ts.serve_qr_alt": "QR-Code für {url}",
-  "ts.serve_copy": "Adresse kopieren"
+  "ts.serve_copy": "Adresse kopieren",
+  "ai.mcp_confirm_title": "Ein Assistent möchte etwas ändern",
+  "ai.mcp_confirm_body": "Über einen KI-Client (MCP) angefragt: {summary}. Bestätige nur, wenn du das veranlasst hast.",
+  "ai.mcp_done": "Erledigt: {summary}",
+  "ai.mcp_failed": "Die Aktion wurde nicht ausgeführt.",
+  "ai.mcp_expired": "Die Anfrage ist abgelaufen oder gehört zu einem anderen Konto.",
+  "ai.confirm": "Bestätigen"
 };

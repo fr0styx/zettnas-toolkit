@@ -1145,6 +1145,16 @@ async def chat_with_zettai_agent_stream(
     )
 
 
+@router.get("/ai/actions/{action_id}")
+async def get_pending_ai_action(action_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.ai_actions import pending_summary
+
+    res = pending_summary(action_id, principal)
+    if not res:
+        raise HTTPException(status_code=404, detail="This action has expired or isn't yours.")
+    return res
+
+
 @router.post(
     "/ai/actions/{action_id}/confirm",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],

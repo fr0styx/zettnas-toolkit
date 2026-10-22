@@ -83,6 +83,16 @@ def confirm_action(action_id: str, principal: Any) -> dict[str, Any]:
     return result
 
 
+def pending_summary(action_id: str, principal: Any) -> dict[str, Any] | None:
+    """What a pending action would do, for its owner only (confirm links from MCP, D1)."""
+    owner = _principal_id(principal)
+    with _lock:
+        entry = _pending.get(action_id)
+    if not entry or not owner or entry["owner"] != owner or time.time() - entry["created_at"] > PROPOSAL_TTL_SECS:
+        return None
+    return {"action_id": action_id, "tool": entry["tool"], "summary": describe(entry["tool"], entry["args"])}
+
+
 def _reset_for_tests() -> None:
     with _lock:
         _pending.clear()

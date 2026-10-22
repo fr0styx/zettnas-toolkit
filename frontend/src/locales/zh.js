@@ -2111,5 +2111,11 @@ export default {
   "ts.serve_how": "在手机上安装 Tailscale 应用并登录同一个 tailnet，然后在 Wi-Fi 或移动网络下打开这个地址。添加到主屏幕后即可像应用一样使用 ZettNAS。",
   "ts.serve_how_funnel": "Funnel 已开启：任何互联网浏览器都能打开此地址，请使用强密码并启用双重验证。",
   "ts.serve_qr_alt": "{url} 的二维码",
-  "ts.serve_copy": "复制地址"
+  "ts.serve_copy": "复制地址",
+  "ai.mcp_confirm_title": "有助手想要进行更改",
+  "ai.mcp_confirm_body": "通过 AI 客户端（MCP）请求：{summary}。只有在你本人要求时才确认。",
+  "ai.mcp_done": "已完成：{summary}",
+  "ai.mcp_failed": "该操作未执行。",
+  "ai.mcp_expired": "该请求已过期或属于其他账户。",
+  "ai.confirm": "确认"
 };

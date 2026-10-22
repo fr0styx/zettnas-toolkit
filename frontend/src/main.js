@@ -228,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Installable app and share-sheet uploads (M1); not on the LCD or a VM console
   if (!state.isLcdDirect && !state.isVmConsoleDirect) {
     import('./pwa.js').then((m) => m.initPwa()).catch(() => {});
+    import('./confirm-link.js').then((m) => m.initConfirmLink()).catch(() => {}); // D1
   }
 
   // Optimized Direct Modes: Avoid booting desktop window manager & apps

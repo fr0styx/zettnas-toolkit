@@ -1939,7 +1939,7 @@ TOOL_REGISTRY = _build_tool_registry()
 
 
 def execute_nas_tool(
-    tool_name: str, args: dict[str, Any], principal: Any = None, confirmed: bool = False
+    tool_name: str, args: dict[str, Any], principal: Any = None, confirmed: bool = False, source: str = "chat"
 ) -> dict[str, Any]:
     """
     Runs a tool call through the registry: permission check, then a proposal for tools
@@ -1951,7 +1951,33 @@ def execute_nas_tool(
     clean_name = str(tool_name or "").strip()
     if not isinstance(args, dict):
         args = _safe_parse_tool_call_json(args)
-    return TOOL_REGISTRY.dispatch(clean_name, args, principal, confirmed, propose_action)
+    result = TOOL_REGISTRY.dispatch(clean_name, args, principal, confirmed, propose_action)
+    _audit_tool_call(clean_name, args, principal, confirmed, source, result)
+    return result
+
+
+def _audit_tool_call(
+    name: str, args: dict[str, Any], principal: Any, confirmed: bool, source: str, result: Any
+) -> None:
+    """Every tool the assistant (or an MCP client) uses lands in the security audit log (D1)."""
+    try:
+        from backend.users_db import log_security_event
+
+        status = str((result or {}).get("status") or "ok") if isinstance(result, dict) else "ok"
+        log_security_event(
+            "ai.tool." + ("confirmed" if confirmed else "call"),
+            "failure" if status in ("forbidden", "blocked", "error") else "success",
+            actor_id=getattr(principal, "user_id", None) or getattr(principal, "id", None),
+            actor_username=getattr(principal, "username", None),
+            details={
+                "tool": name,
+                "source": source,
+                "status": status,
+                "args": {k: str(v)[:120] for k, v in (args or {}).items()},
+            },
+        )
+    except Exception:
+        logger.debug("ai_chat_agent._audit_tool_call: audit log unavailable", exc_info=True)
 
 
 def _format_tool_trace_summary(tr: dict[str, Any], tool_name: str) -> str:
