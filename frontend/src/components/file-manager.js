@@ -3736,23 +3736,57 @@ export function openMediaOrganizerModal(initialPath = '') {
   modal.classList.add('open');
 }
 
-export function openShareLinkModal(path, fileName) {
+// Where the share pop-over opens: next to the button or menu item that was clicked
+let _lastPointer = null;
+if (typeof document !== 'undefined') {
+  document.addEventListener('pointerdown', (e) => {
+    _lastPointer = { x: e.clientX, y: e.clientY, el: e.target instanceof Element ? e.target : null, t: Date.now() };
+  }, true);
+}
+
+/** Places a pop-over below its anchor, right edges aligned, flipped above and kept on screen. */
+export function placePopover(pop, anchorRect, gap = 8, margin = 12) {
+  const w = pop.offsetWidth || 480;
+  const h = pop.offsetHeight || 360;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  let left = anchorRect.right - w;
+  let top = anchorRect.bottom + gap;
+  if (top + h > vh - margin && anchorRect.top - gap - h >= margin) top = anchorRect.top - gap - h;
+  left = Math.max(margin, Math.min(left, vw - w - margin));
+  top = Math.max(margin, Math.min(top, vh - h - margin));
+  pop.style.left = `${Math.round(left)}px`;
+  pop.style.top = `${Math.round(top)}px`;
+}
+
+function shareAnchorRect(anchorEl) {
+  const el = anchorEl || (_lastPointer && Date.now() - _lastPointer.t < 3000 ? _lastPointer.el?.closest('button, .fm-ctx-item, [data-act]') : null);
+  if (el && el.isConnected) return el.getBoundingClientRect();
+  if (_lastPointer && Date.now() - _lastPointer.t < 3000) {
+    return { left: _lastPointer.x, right: _lastPointer.x, top: _lastPointer.y, bottom: _lastPointer.y };
+  }
+  return { left: window.innerWidth / 2 + 240, right: window.innerWidth / 2 + 240, top: 80, bottom: 80 };
+}
+
+export function openShareLinkModal(path, fileName, anchorEl = null) {
+  const anchorRect = shareAnchorRect(anchorEl);
   let modal = document.getElementById('modal-fm-share-link');
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'modal-fm-share-link';
-    modal.className = 'modal-backdrop';
     document.body.appendChild(modal);
   }
+  // A transparent layer above every window: the pop-over sits on it, a click outside closes it
+  modal.className = 'fm-share-layer';
 
   const safeName = escapeHtml(fileName || path.split('/').pop());
 
   modal.innerHTML = `
-    <div class="modal-dialog glassmorphic-panel" style="width: 480px; max-width: 92vw; padding: 24px; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.12); background: rgba(18, 25, 36, 0.95); backdrop-filter: blur(20px);">
+    <div class="modal-dialog glassmorphic-panel fm-share-popover" role="dialog" aria-labelledby="fm-share-title" style="width: 480px; max-width: calc(100vw - 24px); padding: 24px; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.12); background: rgba(18, 25, 36, 0.95); backdrop-filter: blur(20px);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 20px;">🔗</span>
-          <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">Public Share Link</h3>
+          <h3 id="fm-share-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #fff;">Public Share Link</h3>
         </div>
         <button id="fm-share-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer;">✕</button>
       </div>
@@ -3805,7 +3839,11 @@ export function openShareLinkModal(path, fileName) {
     </div>
   `;
 
+  const onKey = (e) => {
+    if (e.key === 'Escape') closeModal();
+  };
   const closeModal = () => {
+    document.removeEventListener('keydown', onKey, true);
     modal.style.display = 'none';
     modal.classList.remove('open');
   };
@@ -3844,6 +3882,8 @@ export function openShareLinkModal(path, fileName) {
         const resSec = modal.querySelector('#fm-share-result-section');
         if (createSec) createSec.style.display = 'none';
         if (resSec) resSec.style.display = 'block';
+        const popEl = modal.querySelector('.fm-share-popover');
+        if (popEl) placePopover(popEl, anchorRect); // taller now: keep it on screen
 
         const urlInput = modal.querySelector('#fm-share-url-output');
         if (urlInput) urlInput.value = fullUrl;
@@ -3878,8 +3918,12 @@ export function openShareLinkModal(path, fileName) {
     };
   }
 
-  modal.style.display = 'flex';
+  modal.style.display = 'block';
   modal.classList.add('open');
+  const pop = modal.querySelector('.fm-share-popover');
+  if (pop) placePopover(pop, anchorRect);
+  document.addEventListener('keydown', onKey, true);
+  modal.querySelector('#fm-share-expires')?.focus();
 }
 
 if (typeof window !== 'undefined') {
