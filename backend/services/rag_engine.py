@@ -3364,6 +3364,20 @@ class RagSearchEngine:
             finally:
                 conn.close()
 
+    def _scanned_pdf_text(self, canonical_path: str, mtime_ns: int) -> str:
+        """Text the vision queue read from a scanned PDF's page images (D3), if any."""
+        try:
+            conn = self._get_conn(readonly=True)
+            try:
+                row = conn.execute(
+                    "SELECT text FROM pdf_ocr WHERE path = ? AND mtime_ns = ?", (canonical_path, int(mtime_ns))
+                ).fetchone()
+            finally:
+                conn.close()
+            return str(row[0]) if row and row[0] else ""
+        except sqlite3.Error:
+            return ""  # no OCR table yet
+
     def _index_single_file(
         self,
         canonical_path: str,
@@ -3727,6 +3741,8 @@ class RagSearchEngine:
 
         # Document or Code modality
         raw_text = extract_document_text(canonical_path, file_ext)
+        if file_ext.lower() == ".pdf" and len(raw_text.strip()) < 80:
+            raw_text = (raw_text + "\n" + self._scanned_pdf_text(canonical_path, mtime_ns)).strip()  # D3
         if not raw_text.strip():
             base_clean = re.sub(r"[._\-]+", " ", os.path.splitext(file_name)[0]).strip()
             parent_clean = os.path.basename(parent_dir)

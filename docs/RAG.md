@@ -14,6 +14,8 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
   one photo at a time and only while the NAS is idle: load under half the CPU cores, CPU
   under 75 °C, inside the learning schedule if you set one, and never on a sleeping disk.
   Captions are stored by file content, so re-indexing or moving a photo keeps them.
+  Scanned PDFs (pages that are only images) are read the same way, up to 8 pages
+  each, so their text becomes searchable.
   Turn it off under **AI → Describe photos and read their text**; pin a model with
   `vision_model` in the AI config.
 - Each file is split into sections of about 3,500 characters, and those into chunks of

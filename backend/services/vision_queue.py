@@ -55,6 +55,13 @@ CAPTION_MAX = 300
 TEXT_MAX = 2000
 _MODEL_CACHE: dict[str, tuple[float, str | None]] = {}
 
+OCR_PROMPT = (
+    "This is a page of a scanned document. Copy all of its text exactly, keeping line breaks. "
+    'Reply with JSON only: {"text": "<the text>"}'
+)
+MAX_PDF_PAGES = 8
+MAX_PAGE_BYTES = 12 * 1024 * 1024
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS photo_vision (
     content_key TEXT PRIMARY KEY,
@@ -65,6 +72,15 @@ CREATE TABLE IF NOT EXISTS photo_vision (
     error TEXT NOT NULL DEFAULT '',
     attempts INTEGER NOT NULL DEFAULT 0,
     updated_at REAL NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS pdf_ocr (
+    path TEXT NOT NULL,
+    mtime_ns INTEGER NOT NULL,
+    pages INTEGER NOT NULL DEFAULT 0,
+    text TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'done',
+    updated_at REAL NOT NULL DEFAULT 0,
+    PRIMARY KEY (path, mtime_ns)
 );
 """
 
@@ -131,6 +147,62 @@ def parse_reply(content: str) -> tuple[str, str]:
     return _clean(content, CAPTION_MAX), ""
 
 
+def extract_pdf_jpegs(path: str, max_pages: int = MAX_PDF_PAGES) -> list[bytes]:
+    """The JPEG page images of a scanned PDF (DCTDecode image streams), in file order."""
+    try:
+        with open(path, "rb") as f:
+            raw = f.read(64 * 1024 * 1024)
+    except OSError:
+        return []
+    out = []
+    for m in re.finditer(rb"<<(.{0,600}?)>>\s*stream\r?\n", raw, re.S):
+        head = m.group(1)
+        if b"/DCTDecode" not in head or b"/Image" not in head:
+            continue
+        start = m.end()
+        lm = re.search(rb"/Length\s+(\d+)\b(?!\s+\d+\s+R)", head)
+        if lm:
+            data = raw[start : start + int(lm.group(1))]
+        else:
+            end = raw.find(b"endstream", start)
+            data = raw[start:end].rstrip(b"\r\n") if end > 0 else b""
+        if data.startswith(b"\xff\xd8") and 20_000 < len(data) <= MAX_PAGE_BYTES:
+            out.append(data)
+        if len(out) >= max_pages:
+            break
+    return out
+
+
+def ocr_image_bytes(data: bytes, model: str, host: str, post: Callable = _http_json) -> str:
+    from PIL import Image
+
+    with Image.open(io.BytesIO(data)) as im:
+        im = im.convert("RGB")
+        im.thumbnail((1600, 1600))
+        buf = io.BytesIO()
+        im.save(buf, format="JPEG", quality=88)
+    body = {
+        "model": model,
+        "stream": False,
+        "format": "json",
+        "keep_alive": "2m",
+        "options": {"temperature": 0},
+        "messages": [{"role": "user", "content": OCR_PROMPT, "images": [base64.b64encode(buf.getvalue()).decode()]}],
+    }
+    content = (((post(f"{host}/api/chat", body, timeout=300) or {}).get("message") or {}).get("content")) or ""
+    m = re.search(r"\{.*\}", content, re.S)
+    if m:
+        try:
+            return _clean_text(json.loads(m.group(0)).get("text"))
+        except ValueError:
+            logger.debug("vision_queue.ocr_image_bytes: reply was not JSON", exc_info=True)
+    return _clean_text(content)
+
+
+def _clean_text(s: Any) -> str:
+    return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", " ", str(s or "")).strip()[:20000]
+
+
 def describe_image(path: str, model: str, host: str, post: Callable = _http_json) -> tuple[str, str]:
     body = {
         "model": model,
@@ -177,6 +249,7 @@ class VisionQueue:
         self.idle = idle
         self.host = host
         self.model_picker = model_picker
+        self.ocr = ocr_image_bytes
         self.last_state = "starting"
         self.last_error = ""
 
@@ -236,7 +309,7 @@ class VisionQueue:
                 (time.time() - 3600,),
             ).fetchone()
             if not row:
-                return "empty"
+                return self._process_scanned_pdf(conn, cfg)
             host = self._host()
             model = self.model_picker(cfg, host)
             if not model:
@@ -269,6 +342,55 @@ class VisionQueue:
             return status
         finally:
             conn.close()
+
+    def _process_scanned_pdf(self, conn, cfg: dict[str, Any]) -> str:
+        """Reads one scanned PDF (no text layer) through the vision model and re-indexes it (D3)."""
+        row = conn.execute(
+            """SELECT f.file_id, f.canonical_path, f.mtime_ns, f.size_bytes FROM indexed_files f
+               WHERE lower(f.canonical_path) LIKE '%.pdf'
+                 AND NOT EXISTS (SELECT 1 FROM pdf_ocr o WHERE o.path = f.canonical_path AND o.mtime_ns = f.mtime_ns)
+                 AND (SELECT COALESCE(SUM(LENGTH(c.chunk_text)), 0) FROM document_chunks c WHERE c.file_id = f.file_id) < 400
+               ORDER BY f.file_id DESC LIMIT 1"""
+        ).fetchone()
+        if not row:
+            return "empty"
+        path, mtime_ns = row["canonical_path"], int(row["mtime_ns"])
+        if cfg.get("respect_standby", True):
+            from backend.services.rag_standby import is_backing_disk_in_standby, resolve_path_backing_dev
+
+            if is_backing_disk_in_standby(resolve_path_backing_dev(path)):
+                return "standby"
+        pages = extract_pdf_jpegs(path)
+        text, status = "", "no-images"
+        if pages:
+            host = self._host()
+            model = self.model_picker(cfg, host)
+            if not model:
+                return "no-model"
+            try:
+                text = "\n\n".join(t for t in (self.ocr(p, model, host) for p in pages) if t)
+                status = "done"
+            except Exception as e:
+                status, self.last_error = "error", f"{type(e).__name__}: {e}"[:300]
+                logger.debug("vision_queue: PDF OCR failed for %s", path, exc_info=True)
+        conn.execute(
+            "INSERT OR REPLACE INTO pdf_ocr (path, mtime_ns, pages, text, status, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (path, mtime_ns, len(pages), text, status, time.time()),
+        )
+        conn.commit()
+        if text:
+            self.engine._index_single_file(
+                path,
+                os.path.basename(path),
+                ".pdf",
+                int(row["size_bytes"]),
+                mtime_ns,
+                None,
+                respect_standby=bool(cfg.get("respect_standby", True)),
+                force_wake=False,
+            )
+            return "done"
+        return "empty" if status == "no-images" else status
 
     def status(self) -> dict[str, Any]:
         conn = self._conn()
