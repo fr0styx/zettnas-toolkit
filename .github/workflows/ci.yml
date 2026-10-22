@@ -215,18 +215,25 @@ jobs:
         env:
           IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
         run: |
+          # Failures are reported as annotations (readable without log access).
+          fail() {
+            logs=$(docker logs zettnas-smoke 2>&1 | tail -40 | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
+            echo "::error title=Smoke test::$1%0A--- container log (last 40 lines) ---%0A$logs"
+            exit 1
+          }
           docker run -d --name zettnas-smoke -p 18082:8082 -e PORT=8082 -e ENABLE_FB=0 "$IMAGE"
           ok=0
           for i in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:18082/api/health >/dev/null; then ok=1; break; fi
             sleep 2
           done
-          if [ "$ok" != 1 ]; then docker logs zettnas-smoke | tail -80; exit 1; fi
-          curl -fsS -o /tmp/index.html http://127.0.0.1:18082/
-          grep -qi "<html" /tmp/index.html || { echo "index.html not served"; exit 1; }
+          [ "$ok" = 1 ] || fail "no healthy /api/health within 2 minutes"
+          curl -fsS -o /tmp/index.html http://127.0.0.1:18082/ || fail "GET / failed"
+          grep -qi "<html" /tmp/index.html || fail "index.html not served"
           code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:18082/api/users)
-          [ "$code" = 401 ] || { echo "/api/users without a session returned $code, expected 401"; exit 1; }
-          if docker logs zettnas-smoke 2>&1 | grep -E "Traceback|CRITICAL"; then echo "errors in startup log"; exit 1; fi
+          [ "$code" = 401 ] || fail "/api/users without a session returned $code, expected 401"
+          bad=$(docker logs zettnas-smoke 2>&1 | grep -E "Traceback|CRITICAL" | head -5 | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
+          [ -z "$bad" ] || fail "errors in startup log: $bad"
           docker rm -f zettnas-smoke
 
       # Release gate (OPS-06): no Critical vulnerability that already has a fix.
