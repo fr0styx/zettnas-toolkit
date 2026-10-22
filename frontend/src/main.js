@@ -36,7 +36,6 @@ import { initEvents } from './components/events.js';
 import { initSettings, openDrawer, closeDrawer } from './components/settings.js';
 import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-chart.js';
 import { initSetupWizard } from './components/setup-wizard.js';
-import { initManagement } from './components/management.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
@@ -195,8 +194,17 @@ export function startSSE() {
   };
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct')) {
+/** Runs fn once the page has settled: after ~3 s, when the browser is idle. */
+function idleLoad(fn) {
+  const run = () => fn();
+  if (typeof window.requestIdleCallback === 'function') {
+    setTimeout(() => window.requestIdleCallback(run, { timeout: 5000 }), 3000);
+  } else {
+    setTimeout(run, 4000);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {  if (window.location.search.includes('mode=lcd') || document.body.classList.contains('lcd-direct')) {
     state.isLcdDirect = true;
     document.body.classList.add('lcd-direct');
     try {
@@ -285,7 +293,25 @@ document.addEventListener('DOMContentLoaded', () => {
   initSettings();
   initMetricsChart();
   initSetupWizard();
-  initManagement();
+  // Mission Control's code (the largest module) loads on first use, or a few seconds
+  // after start when the browser is idle (FE-02)
+  const ensureManagement = lazyWindow({
+    id: 'management',
+    iconId: 'management-desktop-icon',
+    load: () => import('./components/management.js'),
+    init: 'initManagement',
+    globals: ['openManagementWindow', 'openManagementSection'],
+    openGlobal: 'openManagementWindow',
+  });
+  let managementReady = false;
+  ZettEventBus.on('window:open', (payload) => {
+    if (managementReady || !payload || (payload.id !== 'management' && payload.id !== 'management-window')) return;
+    ensureManagement().then(() => {
+      if (!managementReady && window.openManagementWindow) window.openManagementWindow(payload.section || payload.pane, payload.pane, payload.subtab);
+      managementReady = true;
+    });
+  });
+  idleLoad(() => ensureManagement().then(() => { managementReady = true; }, () => {}));
   initCommandPalette();
   initWidgets();
   initFileManager();

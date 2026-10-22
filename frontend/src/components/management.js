@@ -7091,6 +7091,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function initManagement() {
+  window.__updateManagementTelemetry = updateManagementTelemetry;
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) {
     return;
   }
