@@ -136,10 +136,13 @@ def test_e2e_live_ui_and_lcd_geometry():
     not is_server_reachable(),
     reason="Live ZettNAS Toolkit test server not reachable at http://127.0.0.1:8082",
 )
-def _page_diagnostics(page):
+def _page_diagnostics(page, sel=None):
     """What the page looks like when the desktop didn't appear, for CI annotations."""
     return page.evaluate(
         """async () => {
+            const SEL = """
+        + json.dumps(sel)
+        + """;
             const t0 = performance.now();
             let me = null;
             try { me = (await fetch('/api/auth/me')).status; } catch (e) { me = String(e); }
@@ -148,7 +151,13 @@ def _page_diagnostics(page):
                 return el ? getComputedStyle(el).display + '/' + getComputedStyle(el).visibility : 'missing'; };
             const slow = performance.getEntriesByType('resource')
                 .filter((r) => r.duration > 500).map((r) => r.name.replace(location.origin, '') + ' ' + Math.round(r.duration) + 'ms');
-            return { html: document.documentElement.className, hint: localStorage.getItem('zettnas_signed_in'),
+            const target = SEL ? document.querySelector(SEL) : null;
+            const chain = [];
+            for (let el = target; el && el !== document.body; el = el.parentElement) {
+                const cs = getComputedStyle(el);
+                if (cs.display === 'none' || cs.visibility === 'hidden' || el.hidden) chain.push((el.id || el.className || el.tagName) + ':' + cs.display + '/' + cs.visibility);
+            }
+            return { target: target ? 'present' : 'missing', hiddenBy: chain, hint: localStorage.getItem('zettnas_signed_in'),
                      me, meMs, badge: vis('suite-brand-badge'), overlay: vis('login-overlay'), slow };
         }"""
     )
@@ -193,20 +202,23 @@ def test_e2e_live_desktop_session_and_badge():
         page.reload(wait_until="domcontentloaded")
 
         # Check suite badge has NAS WORKBENCH
-        try:
-            badge = page.wait_for_selector("#suite-brand-badge", timeout=5000)
-        except Exception:
-            pytest.fail("Desktop not shown after reload: " + json.dumps(_page_diagnostics(page)))
+        def _wait(sel):
+            try:
+                return page.wait_for_selector(sel, timeout=5000)
+            except Exception:
+                pytest.fail(f"{sel} not shown after reload: " + json.dumps(_page_diagnostics(page, sel)))
+
+        badge = _wait("#suite-brand-badge")
         assert badge is not None
         assert "NAS WORKBENCH" in badge.inner_text()
 
         # Check drawer toggle button
-        btn = page.wait_for_selector("#drawer-toggle-btn", timeout=5000)
+        btn = _wait("#drawer-toggle-btn")
         assert btn is not None
         assert "HARDWARE SETTINGS" in btn.inner_text()
 
         # Check dock container exists
-        dock = page.wait_for_selector("#os-dock-container", timeout=5000)
+        dock = _wait("#os-dock-container")
         assert dock is not None
 
         browser.close()

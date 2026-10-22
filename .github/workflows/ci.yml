@@ -134,7 +134,7 @@ jobs:
           # Execute full Playwright E2E Integration Suite; skips count as failures here
           set -o pipefail
           if ! ZETTNAS_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py -v -rfE 2>&1 | tee /tmp/zn-e2e.log; then
-            annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR)|Error|assert' /tmp/zn-e2e.log | tail -n 25)"
+            annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR|E  )|Error|assert' /tmp/zn-e2e.log | tail -n 25)"
             exit 1
           fi
 
