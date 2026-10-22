@@ -1,9 +1,9 @@
 {
  "model": "zett_lexical_384d",
  "overall": {
-  "recall@1": 0.755,
+  "recall@1": 0.75,
   "recall@5": 0.845,
-  "mrr@10": 0.788,
+  "mrr@10": 0.785,
   "queries": 200
  },
  "by_language": {
@@ -22,13 +22,13 @@
   "es": {
    "recall@1": 0.75,
    "recall@5": 0.9,
-   "mrr@10": 0.789,
+   "mrr@10": 0.793,
    "queries": 40
   },
   "fr": {
-   "recall@1": 0.675,
+   "recall@1": 0.65,
    "recall@5": 0.85,
-   "mrr@10": 0.752,
+   "mrr@10": 0.732,
    "queries": 40
   },
   "zh": {

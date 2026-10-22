@@ -50,10 +50,10 @@ Built-in lexical vectors, today:
 |---|---|---|---|
 | English | 0.80 | 0.80 | 0.80 |
 | German | 0.70 | 0.82 | 0.75 |
-| French | 0.68 | 0.85 | 0.75 |
+| French | 0.65 | 0.85 | 0.73 |
 | Spanish | 0.75 | 0.90 | 0.79 |
 | Chinese | 0.85 | 0.85 | 0.85 |
-| **All** | **0.76** | **0.84** | **0.79** |
+| **All** | **0.75** | **0.84** | **0.79** |
 
 Chinese, Japanese and Korean text is split into overlapping character pairs, so words
 match without spaces between them (Chinese was 0.03 before this).

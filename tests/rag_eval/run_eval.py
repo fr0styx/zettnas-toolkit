@@ -18,6 +18,7 @@ from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORPUS = os.path.join(HERE, "corpus")
+FIXED_MTIME_NS = 1_700_000_000_000_000_000
 
 
 def load_queries() -> list[dict]:
@@ -54,7 +55,9 @@ def evaluate(model: str = "zett_lexical_384d", dim: int | None = None) -> dict:
             patch.object(engine, "get_config", return_value=cfg),
             patch("backend.services.rag_engine.is_backing_disk_in_standby", return_value=False),
         ):
-            for dirpath, _, files in os.walk(CORPUS):
+            # Fixed order and timestamps, so results don't depend on the checkout
+            for dirpath, dirs, files in os.walk(CORPUS):
+                dirs.sort()
                 for name in sorted(files):
                     path = os.path.join(dirpath, name)
                     st = os.stat(path)
@@ -63,7 +66,7 @@ def evaluate(model: str = "zett_lexical_384d", dim: int | None = None) -> dict:
                         name,
                         os.path.splitext(name)[1],
                         st.st_size,
-                        st.st_mtime_ns,
+                        FIXED_MTIME_NS,
                         None,
                         respect_standby=False,
                         force_wake=True,
