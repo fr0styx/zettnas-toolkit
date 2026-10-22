@@ -342,6 +342,24 @@ DEFAULT_SOURCES: list[dict[str, Any]] = [
     }
 ]
 
+# Community catalogs in Portainer template format, off until the user turns them on.
+# Their apps are labelled "community": not reviewed by ZettNAS, and still go through the
+# security review and the Docker proxy before they install.
+COMMUNITY_SOURCES: list[dict[str, Any]] = [
+    {
+        "id": "community_portainer",
+        "name": "Community templates (Portainer format)",
+        "url": "https://raw.githubusercontent.com/Lissy93/portainer-templates/main/templates.json",
+        "enabled": False,
+        "type": "portainer",
+        "description": "About 800 community-maintained apps in Portainer template format, not reviewed by ZettNAS.",
+        "item_count": 0,
+        "last_synced": 0,
+        "status": "not_synced",
+        "error": None,
+    }
+]
+
 
 def normalize_category(cats: Any) -> str:
     """Normalizes arbitrary template categories to ZettNAS standard categories."""
@@ -478,6 +496,16 @@ def get_catalog_sources() -> list[dict[str, Any]]:
         if not any(s.get("id") == "builtin" for s in sources):
             sources.insert(0, dict(DEFAULT_SOURCES[0]))
             save_catalog_sources(sources)
+    # Offer the community catalogs (off) unless the same URL is already configured
+    known_urls = {s.get("url") for s in sources}
+    added = [
+        dict(c)
+        for c in COMMUNITY_SOURCES
+        if c["url"] not in known_urls and not any(s.get("id") == c["id"] for s in sources)
+    ]
+    if added:
+        sources.extend(added)
+        save_catalog_sources(sources)
     return sources
 
 
@@ -575,6 +603,7 @@ def sync_catalog_source(source_id: str) -> dict[str, Any]:
                     "volumes": vol_dict,
                     "repository": repo,
                     "type": app_type,
+                    "trust": "community",
                 }
             )
 
