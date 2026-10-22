@@ -10,6 +10,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { formatBytes, executeTransferWithConflictCheck } from './file-manager.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { auth, api } from '../api.js';
+import { thumbKind, previewUrl } from './viewer-kit.js';
 import { showToast } from '../toast.js';
 
 import { formatDateTime } from '../format.js';
@@ -505,18 +506,18 @@ export class FmInspector {
     const item = this.fm.fileList.find((f) => f.path === selPath);
     if (!item) return;
 
-    const isImage = Boolean(item.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i));
-    const isVideo = Boolean(item.name.match(/\.(mp4|mkv|webm|mov|avi)$/i));
-    const thumbUrl = `/api/fs/download?path=${encodeURIComponent(item.path)}`;
+    const kind = thumbKind(item.name);
+    const isImage = kind === 'image' || kind === 'vector' || kind === 'video';
+    const isVideo = kind === 'video';
+    const thumbUrl = kind === 'vector' ? `/api/fs/download?path=${encodeURIComponent(item.path)}` : previewUrl(item.path, 480);
     const isGuarded = isGuardedSystemDir(item.path);
 
     let previewHtml;
     if (item.is_dir) {
       previewHtml = '<div style="font-size: 48px; margin-bottom: 8px;">📁</div>';
     } else if (isImage) {
-      previewHtml = `<img src="${thumbUrl}" style="max-width: 100%; max-height: 140px; border-radius: 6px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 8px;" alt="${escapeHtml(item.name)}" />`;
-    } else if (isVideo) {
-      previewHtml = '<div style="font-size: 48px; margin-bottom: 8px;">🎬</div>';
+      const fallback = isVideo ? '🎬' : '🖼️';
+      previewHtml = `<img src="${thumbUrl}" style="max-width: 100%; max-height: 140px; border-radius: 6px; object-fit: contain; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-bottom: 8px;" alt="${escapeHtml(item.name)}" data-img-fallback="hide-show-next:block" /><div style="display:none; font-size: 48px; margin-bottom: 8px;">${fallback}</div>`;
     } else {
       previewHtml = '<div style="font-size: 48px; margin-bottom: 8px;">📄</div>';
     }

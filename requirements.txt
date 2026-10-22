@@ -10,6 +10,8 @@ ldap3>=2.9.1
 orjson>=3.13.0
 Pillow==13.0.0
 pillow-heif>=1.8.1
+# Video thumbnails: the ffmpeg libraries (HEVC, H.264, VP9, AV1, ProRes), amd64 and arm64 wheels
+av>=19.0.1
 playwright==1.64.0
 PyYAML>=6.0.3
 sqlite-vec>=0.1.9; platform_system == "Linux" and implementation_name == "cpython" and 'musl' not in platform_release

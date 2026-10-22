@@ -462,6 +462,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
 | `UPDATE_CHANNEL` | `stable` | Release update channel (`stable` for tagged releases, `edge` for latest main branch commits) |
 | `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
+| `ZETTNAS_THUMB_CACHE_MB` | `1024` | Disk space for photo and video thumbnails (`data/cache/thumbs`); the least recently used are removed first |
 
 ---
 
@@ -469,6 +470,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 
 Ensure your container preserves the following host volume:
 - **`./data:/app/data`**: Houses the SQLite WAL user store (`users.db`), API tokens, fan curves (`fan_state.json`), wallpaper library, client preferences, and system event logs. Backing up this directory backs up your entire ZettNAS configuration.
+- `data/cache/` holds thumbnails only. It can be deleted at any time and is not part of pre-update snapshots.
 
 ---
 

@@ -42,6 +42,17 @@ export function displayImageUrl(path, maxDim) {
 export const originalImageUrl = (path) =>
   /\.(heic|heif)$/i.test(path) ? `/api/fs/preview/image?path=${encodeURIComponent(path)}` : `/api/fs/download?path=${encodeURIComponent(path)}`;
 
+/** Which files get a server thumbnail: 'image' (photos, HEIC), 'video' (a frame), 'vector' (shown as is), or null. */
+export function thumbKind(name) {
+  if (/\.(jpe?g|png|webp|bmp|tiff?|avif|heic|heif)$/i.test(name || '')) return 'image';
+  if (/\.(mp4|m4v|mov|mkv|webm|avi|3gp|mts|m2ts|wmv|mpe?g)$/i.test(name || '')) return 'video';
+  if (/\.(gif|svg|ico)$/i.test(name || '')) return 'vector';
+  return null;
+}
+
+/** Screen-sized preview (photo or video frame) for panels larger than a thumbnail. */
+export const previewUrl = (path, maxDim = 480) => `/api/fs/preview/image?path=${encodeURIComponent(path)}&max_dim=${maxDim}`;
+
 export const thumbUrl = (path) =>
   /\.(gif|svg|ico)$/i.test(path) ? `/api/fs/download?path=${encodeURIComponent(path)}` : `/api/fs/preview/image?path=${encodeURIComponent(path)}&thumb=1`;
 

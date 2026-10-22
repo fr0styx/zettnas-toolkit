@@ -13,6 +13,7 @@ import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '.
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
+import { thumbKind, thumbUrl } from './viewer-kit.js';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
 // Virtualized DOM constants
@@ -2074,11 +2075,13 @@ export class FileManagerWindow {
           iconContent = upSvg;
         } else if (file.is_dir) {
           iconContent = folderSvg;
-        } else if (isImage) {
-          const thumbUrl = `/api/fs/download?path=${encodeURIComponent(file.path)}`;
+        } else if (thumbKind(file.name)) {
+          // A small thumbnail from the server (photos, HEIC, a frame of a video), never the whole file
+          const isVideo = thumbKind(file.name) === 'video';
           iconContent = `
-            <img src="${thumbUrl}" class="fm-thumb-img" loading="lazy" alt="${escName}" data-img-fallback="hide-show-next:flex" />
+            <img src="${thumbUrl(file.path)}" class="fm-thumb-img" loading="lazy" decoding="async" alt="${escName}" data-img-fallback="hide-show-next:flex" />
             <div class="fm-fallback-img-icon" style="display:none;">${fileSvg}</div>
+            ${isVideo ? '<span class="fm-thumb-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>' : ''}
           `;
         } else {
           iconContent = fileSvg;
@@ -2163,9 +2166,9 @@ export class FileManagerWindow {
       const fileType = file.is_dir ? (isRemoteDir ? 'Cloud Drive' : (isDiskDir ? 'Disk Drive' : 'Folder')) : (file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'File');
       const mtimeStr = formatDateTime(file.mtime, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-      const isRowImage = !file.is_dir && /\.(jpe?g|png|webp|heic|heif|gif|bmp|tiff?|avif)$/i.test(file.name);
-      const leading = isRowImage
-        ? `<img class="fm-row-thumb" src="/api/fs/preview/image?path=${encodeURIComponent(file.path)}&thumb=1" alt="" loading="lazy" decoding="async" />`
+      const rowThumb = !file.is_dir && ['image', 'video'].includes(thumbKind(file.name));
+      const leading = rowThumb
+        ? `<img class="fm-row-thumb" src="${thumbUrl(file.path)}" alt="" loading="lazy" decoding="async" data-img-fallback="hide-show-next:inline-flex" /><span class="fm-row-thumb-fallback" style="display:none;">${icon}</span>`
         : icon;
       const subLine = file.name === '..' ? '' : (file.is_dir ? mtimeStr : `${formatBytes(file.size)} · ${mtimeStr}`);
       row.innerHTML = `

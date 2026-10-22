@@ -89,3 +89,12 @@
     .fm-checkbox { opacity: 0.8; }
   }
 }
+
+/* Video thumbnails in icon view get a small play badge */
+.fm-card-preview { position: relative; }
+.fm-thumb-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.55); color: #fff; pointer-events: none; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+.fm-thumb-play svg { margin-left: 2px; }

@@ -122,7 +122,7 @@ describe('File Manager Icon View & Grid Mode', () => {
     const imgEl = cards[2].querySelector('img.fm-thumb-img');
     expect(imgEl).not.toBeNull();
     expect(imgEl.getAttribute('loading')).toBe('lazy');
-    expect(imgEl.src).toContain('/api/fs/download?path=%2Fmnt%2Fuser%2Fvacation.jpg');
+    expect(imgEl.src).toContain('/api/fs/preview/image?path=%2Fmnt%2Fuser%2Fvacation.jpg&thumb=1');
     // Credentials never go in URLs (SEC-16); the session cookie authenticates thumbnails.
     expect(imgEl.src).not.toContain("token=");
 

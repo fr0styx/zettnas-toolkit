@@ -74,6 +74,7 @@ ALLOWED_BROWSE_ROOTS = _AllowedBrowseRootsProxy()
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.logging_config import sanitize_string
 from backend.models.schemas import MkdirRequest
+from backend.services import thumbs
 from backend.state import add_event
 
 router = APIRouter(tags=["File System & Shares"])
@@ -2173,8 +2174,8 @@ async def fs_preview_image(
     max_dim: int | None = None,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    """Renders and transcodes image formats (including Apple HEIC/HEIF) on-the-fly to WebP for universal browser display.
-    Supports caching headers and optional downscaling for fast filmstrip thumbnails.
+    """Thumbnails and screen-sized previews as WebP: photos (including Apple HEIC/HEIF) and
+    video frames, cached on disk (backend/services/thumbs.py). Other files are served as they are.
     """
     check_user_path_access(path, principal)
     target = _contained(path, must_exist=True)
@@ -2182,52 +2183,29 @@ async def fs_preview_image(
         raise HTTPException(status_code=400, detail="Cannot preview a directory")
 
     ext = os.path.splitext(target)[1].lower()
-
-    # If not HEIC/HEIF and not requesting downscaled thumb/max_dim, return standard file response
-    if ext not in {".heic", ".heif"} and not thumb and not max_dim:
+    is_heif = ext in {".heic", ".heif"}
+    if not thumb and not max_dim and not is_heif:
         return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
 
-    def _transcode() -> bytes:
-        try:
-            import pillow_heif
+    kind = thumbs.kind(target)
+    if kind is None:
+        if ext in {".svg", ".ico"}:
+            return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
+        raise HTTPException(status_code=415, detail="No preview for this file type")
 
-            pillow_heif.register_heif_opener()
-        except Exception:
-            logger.debug("backend.api.fs.fs_preview_image._transcode: ignored error", exc_info=True)
-        from PIL import Image, ImageOps
-
-        with Image.open(target) as img:
-            try:
-                img = ImageOps.exif_transpose(img)
-            except Exception:
-                logger.debug("backend.api.fs.fs_preview_image._transcode: ignored error", exc_info=True)
-            if img.mode not in ("RGB", "RGBA"):
-                img = img.convert("RGB")
-
-            limit = 256 if thumb else (min(max_dim, 3840) if max_dim else 2560)
-            w, h = img.size
-            if max(w, h) > limit:
-                img.thumbnail((limit, limit), Image.Resampling.LANCZOS)
-
-            buf = io.BytesIO()
-            img.save(buf, format="WEBP", quality=88, method=4)
-            return buf.getvalue()
-
-    try:
-        webp_bytes = await asyncio.to_thread(_transcode)
-        mtime = os.path.getmtime(target)
-        etag = f'"{hashlib.md5(f"{target}:{mtime}:{thumb}:{max_dim}".encode()).hexdigest()}"'
-        return Response(
-            content=webp_bytes,
-            media_type="image/webp",
-            headers={
-                "Cache-Control": "public, max-age=86400, stale-while-revalidate=3600",
-                "ETag": etag,
-            },
-        )
-    except Exception as e:
-        logger.error(f"[FS] Image preview transcode error for {target}: {e}")
-        return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
+    limit = thumbs.THUMB_SIZE if thumb else (min(max_dim, thumbs.MAX_SIZE) if max_dim else 2560)
+    data = await asyncio.to_thread(thumbs.get, target, limit)
+    if data is None:
+        if kind == "image" and not is_heif:
+            return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
+        raise HTTPException(status_code=415, detail="This file can't be previewed")
+    mtime = os.path.getmtime(target)
+    etag = f'"{hashlib.md5(f"{target}:{mtime}:{limit}".encode()).hexdigest()}"'
+    return Response(
+        content=data,
+        media_type="image/webp",
+        headers={"Cache-Control": "private, max-age=86400, stale-while-revalidate=3600", "ETag": etag},
+    )
 
 
 @router.get("/fs/stream")

@@ -880,7 +880,7 @@ function renderFilmstrip(container) {
       const isCur = idx === _currentIndex;
       return `
         <div class="quicklook-thumb-item ${isCur ? 'active' : ''}" data-idx="${idx}" title="${escapeHtml(item.name)}">
-          <img src="${thumbUrl(item.path)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" />
+          <img src="${thumbUrl(item.path)}" alt="${escapeHtml(item.name)}" loading="lazy" decoding="async" data-img-fallback="hide" />
         </div>
       `;
     })
