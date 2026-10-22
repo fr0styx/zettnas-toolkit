@@ -784,6 +784,25 @@ def tools_for_principal(principal: Any, web_allowed: bool) -> List[Dict[str, Any
     return out
 
 
+def _context_window_for(messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]] = None) -> int:
+    """num_ctx big enough for this prompt plus a reply, so Ollama doesn't silently cut it (AI-09).
+
+    ZETTNAS_AI_NUM_CTX overrides it. Otherwise ~3.5 characters per token, plus room for the
+    reply, rounded up to a power of two between 4096 and 16384.
+    """
+    override = os.environ.get("ZETTNAS_AI_NUM_CTX", "").strip()
+    if override.isdigit() and int(override) >= 1024:
+        return int(override)
+    chars = sum(len(str(m.get("content") or "")) for m in messages)
+    if tools:
+        chars += len(json.dumps(tools))
+    need = int(chars / 3.5) + 1536
+    ctx = 4096
+    while ctx < need and ctx < 16384:
+        ctx *= 2
+    return ctx
+
+
 def _is_safe_public_url(url_str: str) -> bool:
     try:
         from backend.services.ssrf_guard import validate_public_url
@@ -3421,7 +3440,7 @@ def _try_local_llm_completion(
                     "model": model_to_use,
                     "messages": messages,
                     "stream": False,
-                    "options": {"temperature": 0.2},
+                    "options": {"temperature": 0.2, "num_ctx": _context_window_for(messages, tools)},
                 }
                 if tools:
                     ollama_req_body["tools"] = tools
@@ -3439,8 +3458,21 @@ def _try_local_llm_completion(
                         m_ids = [m.get("id") for m in m_list if m.get("id")]
                         if m_ids:
                             clean_act = active_model.lower().strip()
-                            matched = next((m for m in m_ids if clean_act in m.lower() or m.lower() in clean_act), None)
-                            model_to_use = matched if matched else m_ids[0]
+                            matched = next(
+                                (
+                                    m
+                                    for m in m_ids
+                                    if m.lower() == clean_act or m.lower().rsplit("/", 1)[-1] == clean_act
+                                ),
+                                None,
+                            )
+                            if not matched:
+                                _LAST_MODEL_PROBLEM["text"] = (
+                                    f"`{active_model}` is not served by the model server at {models_url.rsplit('/v', 1)[0]}. "
+                                    f"Served: {', '.join(sorted(m_ids)[:8])}."
+                                )
+                                continue
+                            model_to_use = matched
                 except Exception:
                     pass
 
@@ -3476,10 +3508,7 @@ def _try_local_llm_completion(
                                     content = f"<think>\n{str(reasoning).strip()}\n</think>\n\n{str(content).strip()}"
                             else:
                                 content = f"<think>\n{str(reasoning).strip()}\n</think>"
-                        toks = int(
-                            data.get("usage", {}).get("completion_tokens")
-                            or max(12, len(str(content).split()) + len(str(reasoning).split()))
-                        )
+                        toks = int((data.get("usage") or {}).get("completion_tokens") or 0)
                         if is_ovms or ":8000" in url:
                             # Which device OVMS runs the model on is its own configuration; don't claim NPU.
                             ovms_accel = None
@@ -3502,10 +3531,10 @@ def _try_local_llm_completion(
                     msg_obj = data.get("message") or {}
                     content = msg_obj.get("content") or data.get("response") or ""
                     raw_tool_calls = msg_obj.get("tool_calls") or []
-                    toks = int(data.get("eval_count") or max(12, len(str(content).split())))
+                    toks = int(data.get("eval_count") or 0)
                     eval_duration_ns = data.get("eval_duration") or 0
                     measured_tok_sec = None
-                    if eval_duration_ns and eval_duration_ns > 0:
+                    if toks and eval_duration_ns and eval_duration_ns > 0:
                         measured_tok_sec = round(toks / (eval_duration_ns / 1e9), 1)
 
                     # Probe Ollama /api/ps to determine whether inference ran on GPU (VRAM > 0) or CPU
@@ -3520,8 +3549,8 @@ def _try_local_llm_completion(
                                 ollama_accel = {
                                     "active_tier": 2,
                                     "tier_number": 2,
-                                    "name": "Intel Arc Graphics (GPU)",
-                                    "device_label": "Intel Arc Graphics (GPU)",
+                                    "name": "GPU",
+                                    "device_label": "GPU (Ollama reports VRAM in use)",
                                     "has_gpu": True,
                                     "has_npu": False,
                                 }
@@ -3529,8 +3558,8 @@ def _try_local_llm_completion(
                                 ollama_accel = {
                                     "active_tier": 3,
                                     "tier_number": 3,
-                                    "name": "CPU Execution Provider",
-                                    "device_label": "CPU Execution Provider",
+                                    "name": "CPU",
+                                    "device_label": "CPU",
                                     "has_gpu": False,
                                     "has_npu": False,
                                 }
@@ -3540,19 +3569,9 @@ def _try_local_llm_completion(
                     if content or raw_tool_calls:
                         _ACTIVE_ENDPOINT_CACHE[cache_key] = (runtime_kind, url, time.time() + 60.0)
                         _ENDPOINT_REGISTRY.record_success(url)
-                        display_name = (
-                            active_model
-                            if (
-                                active_model.lower() in model_to_use.lower()
-                                or model_to_use.lower() in active_model.lower()
-                                or "underdog" in active_model.lower()
-                                or "hf.co" in active_model.lower()
-                            )
-                            else model_to_use
-                        )
                         return (
                             str(content).strip() if content else "",
-                            f"Ollama Local Neural Engine ({display_name})",
+                            f"Ollama ({model_to_use})",
                             toks,
                             measured_tok_sec,
                             ollama_accel,
