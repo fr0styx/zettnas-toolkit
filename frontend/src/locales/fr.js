@@ -339,6 +339,8 @@ export default {
   "updates.subtitle": "Vérifiez les versions stables ou activez les fonctionnalités des derniers commits.",
   "updates.channel_stable": "🌟 Stable",
   "updates.channel_edge": "⚡ Edge (Derniers commits)",
+  "updates.channel_beta": "🧪 Bêta",
+  "updates.channel_beta_label": "Bêta (test de 7 jours)",
   "updates.check_btn": "Vérifier les mises à jour",
   "updates.in_app_title": "Mise à niveau directe dans l'application",
   "updates.in_app_desc": "Télécharge la dernière image de conteneur et redémarre l'établi automatiquement.",

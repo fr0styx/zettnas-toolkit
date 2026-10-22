@@ -301,6 +301,8 @@ export default {
   "updates.subtitle": "Check for the latest stable releases, security patches, or opt in to bleeding-edge commit features.",
   "updates.channel_stable": "🌟 Stable",
   "updates.channel_edge": "⚡ Edge (Latest Commits)",
+  "updates.channel_beta": "🧪 Beta",
+  "updates.channel_beta_label": "Beta (7-day test)",
   "updates.check_btn": "Check for Updates",
   "updates.in_app_title": "Direct In-App Upgrade",
   "updates.in_app_desc": "Download the latest container image and restart the workbench automatically.",

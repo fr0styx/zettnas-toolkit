@@ -329,6 +329,8 @@ export default {
   "updates.subtitle": "检查最新的稳定发布版本、安全补丁，或抢先体验主分支提交功能。",
   "updates.channel_stable": "🌟 稳定版",
   "updates.channel_edge": "⚡ Edge（最新提交）",
+  "updates.channel_beta": "🧪 测试版",
+  "updates.channel_beta_label": "测试版（7 天测试）",
   "updates.check_btn": "检查更新",
   "updates.in_app_title": "应用内一键升级",
   "updates.in_app_desc": "下载最新容器镜像并自动重启工作台。",

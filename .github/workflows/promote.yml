@@ -1,0 +1,122 @@
+name: Promote release
+
+# OPS-07: a version tag publishes :beta (ci.yml). After a 7-day soak this moves :latest,
+# :stable and MAJOR.MINOR (and the -core variants) to that same signed image and marks the
+# GitHub release as the latest. Nothing is rebuilt: stable users get exactly what beta ran.
+#
+# Stop a promotion: set the repository variable HOLD_RELEASES (Settings > Secrets and
+#   variables > Actions > Variables) to the version, e.g. v1.9.3, or to "all".
+# Skip the wait (security fix): Actions > Promote release > Run workflow, with
+#   "skip_soak" ticked and the version filled in.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to promote, e.g. v1.9.3 (empty: the newest beta)"
+        required: false
+        default: ""
+      skip_soak:
+        description: "Promote now without waiting 7 days (security fixes)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+concurrency:
+  group: promote-release
+  cancel-in-progress: false
+
+env:
+  SOAK_DAYS: "7"
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pick the release
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WANT: ${{ inputs.version }}
+          SKIP: ${{ inputs.skip_soak }}
+          HOLD: ${{ vars.HOLD_RELEASES }}
+        run: |
+          set -euo pipefail
+          releases=$(gh api "repos/${{ github.repository }}/releases?per_page=30")
+          if [ -n "$WANT" ]; then
+            rel=$(echo "$releases" | jq -c --arg t "$WANT" 'map(select(.tag_name == $t)) | first // empty')
+          else
+            rel=$(echo "$releases" | jq -c 'map(select(.prerelease and (.draft | not) and (.tag_name | test("^v[0-9]")))) | first // empty')
+          fi
+          if [ -z "$rel" ]; then echo "No beta release to promote." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          tag=$(echo "$rel" | jq -r .tag_name); pre=$(echo "$rel" | jq -r .prerelease); created=$(echo "$rel" | jq -r .created_at)
+          if [ "$pre" != "true" ]; then echo "$tag is already promoted." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          for h in $(echo "${HOLD:-}" | tr ',' ' '); do
+            if [ "$h" = "all" ] || [ "$h" = "$tag" ]; then
+              echo "$tag is on hold (HOLD_RELEASES=$HOLD): not promoted." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+          done
+          age_days=$(( ( $(date +%s) - $(date -d "$created" +%s) ) / 86400 ))
+          if [ "$SKIP" != "true" ] && [ "$age_days" -lt "$SOAK_DAYS" ]; then
+            echo "$tag has soaked $age_days of $SOAK_DAYS days: promoted on $(date -d "$created + $SOAK_DAYS days" +%F)." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          version=${tag#v}
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"; echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "minor=$(echo "$version" | cut -d. -f1,2)" >> "$GITHUB_OUTPUT"
+          echo "id=$(echo "$rel" | jq -r .id)" >> "$GITHUB_OUTPUT"; echo "name=$(echo "$rel" | jq -r .name)" >> "$GITHUB_OUTPUT"
+          echo "go=true" >> "$GITHUB_OUTPUT"
+          echo "Promoting $tag (soaked $age_days days$( [ "$SKIP" = "true" ] && echo ", soak skipped by hand"))." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Log in to GHCR
+        if: steps.pick.outputs.go == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: steps.pick.outputs.go == 'true'
+        uses: docker/setup-buildx-action@v4
+
+      - name: Install cosign
+        if: steps.pick.outputs.go == 'true'
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Verify and retag the soaked images
+        if: steps.pick.outputs.go == 'true'
+        env:
+          VERSION: ${{ steps.pick.outputs.version }}
+          MINOR: ${{ steps.pick.outputs.minor }}
+        run: |
+          set -euo pipefail
+          for suffix in "" "-core"; do
+            src="$IMAGE:${VERSION}${suffix}"
+            digest=$(docker buildx imagetools inspect "$src" --format '{{json .Manifest}}' | jq -r .digest)
+            cosign verify "$IMAGE@$digest" \
+              --certificate-identity-regexp "https://github.com/${{ github.repository }}/" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
+            docker buildx imagetools create \
+              -t "$IMAGE:latest${suffix}" -t "$IMAGE:stable${suffix}" -t "$IMAGE:${MINOR}${suffix}" \
+              "$IMAGE@$digest"
+            echo "- $IMAGE:latest${suffix}, :stable${suffix}, :${MINOR}${suffix} -> $digest (signature verified)" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Mark the release as the latest
+        if: steps.pick.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RID: ${{ steps.pick.outputs.id }}
+          NAME: ${{ steps.pick.outputs.name }}
+        run: |
+          gh api -X PATCH "repos/${{ github.repository }}/releases/$RID" \
+            -F prerelease=false -f make_latest=true -f name="${NAME% (beta)}" > /dev/null
+          echo "Release marked as the latest; the app's Stable channel now offers it." >> "$GITHUB_STEP_SUMMARY"

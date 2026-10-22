@@ -753,8 +753,17 @@ def get_system_disks() -> dict[str, Any]:
 
 _last_update_check: dict[str, dict[str, Any]] = {
     "stable": {"ts": 0.0, "data": None},
+    "beta": {"ts": 0.0, "data": None},
     "edge": {"ts": 0.0, "data": None},
 }
+CHANNEL_IMAGE_TAG = {"stable": "latest", "beta": "beta", "edge": "edge"}
+
+
+def _channel(name: str | None) -> str:
+    """stable (promoted releases, :latest), beta (new releases during their 7-day soak, :beta)
+    or edge (every commit on main, :edge). Anything else is stable."""
+    n = str(name or "").lower()
+    return n if n in CHANNEL_IMAGE_TAG else "stable"
 
 
 @functools.lru_cache(maxsize=1)
@@ -959,7 +968,7 @@ async def check_system_updates(force: bool = False, channel: str = "stable"):
         return result
     from backend.config import variant_tag
 
-    tag = variant_tag("edge" if result.get("channel") == "edge" else "latest")
+    tag = variant_tag(CHANNEL_IMAGE_TAG[_channel(result.get("channel"))])
     try:
         remote = await _registry_digest(tag)
     except Exception as e:
@@ -985,10 +994,11 @@ async def check_system_updates(force: bool = False, channel: str = "stable"):
 
 
 async def _check_system_updates_by_version(force: bool = False, channel: str = "stable"):
-    """Check GitHub Releases (stable) or GitHub Commits on main (edge) with in-memory caching."""
+    """Check GitHub Releases (stable: the latest promoted release; beta: the newest release,
+    soaking or not) or the commits on main (edge), with in-memory caching."""
     import httpx
 
-    channel_key = "edge" if str(channel or "").lower() == "edge" else "stable"
+    channel_key = _channel(channel)
     now = time.time()
     cache_entry = _last_update_check.get(channel_key, {"ts": 0.0, "data": None})
     if not force and cache_entry.get("data") and (now - cache_entry.get("ts", 0) < 300):
@@ -1060,20 +1070,31 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
         }
         return fallback
 
-    # Stable channel
-    url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases/latest"
+    # Stable: GitHub's "latest release" skips pre-releases, so a release only shows up here
+    # once it has been promoted after its 7-day soak (OPS-07). Beta: the newest release.
+    if channel_key == "beta":
+        url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases?per_page=10"
+    else:
+        url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases/latest"
 
     try:
         async with httpx.AsyncClient(timeout=6.0) as client:
             resp = await client.get(url, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
+                if channel_key == "beta":
+                    data = (
+                        next((r for r in data if isinstance(r, dict) and not r.get("draft")), None)
+                        if isinstance(data, list)
+                        else None
+                    )
+            if resp.status_code == 200 and data:
                 tag = data.get("tag_name", "").strip()
                 clean_tag = tag.lstrip("v")
                 update_available = _is_newer_version(clean_tag, __version__)
 
                 result = {
-                    "channel": "stable",
+                    "channel": channel_key,
                     "current_version": __version__,
                     "current_commit": current_commit,
                     "latest_version": clean_tag or tag,
@@ -1087,10 +1108,11 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
                     "checked_at": now,
                     "error": None,
                 }
-                _last_update_check["stable"] = {"ts": now, "data": result}
+                _last_update_check[channel_key] = {"ts": now, "data": result}
                 return result
-            elif resp.status_code == 404:
-                # Fallback to tags endpoint if no releases are formally drafted
+            elif channel_key == "beta":
+                # No release published at all: the newest version tag. Never for stable,
+                # where it would skip the soak.
                 tags_resp = await client.get(
                     "https://api.github.com/repos/fr0styx/zettnas-toolkit/tags", headers=headers
                 )
@@ -1099,7 +1121,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
                     clean_tag = latest_tag.lstrip("v")
                     update_available = _is_newer_version(clean_tag, __version__)
                     result = {
-                        "channel": "stable",
+                        "channel": channel_key,
                         "current_version": __version__,
                         "current_commit": current_commit,
                         "latest_version": clean_tag or latest_tag,
@@ -1112,7 +1134,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
                         "checked_at": now,
                         "error": None,
                     }
-                    _last_update_check["stable"] = {"ts": now, "data": result}
+                    _last_update_check[channel_key] = {"ts": now, "data": result}
                     return result
 
             error_msg = f"GitHub API HTTP {resp.status_code}"
@@ -1120,7 +1142,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
         error_msg = str(e)
 
     fallback = {
-        "channel": "stable",
+        "channel": channel_key,
         "current_version": __version__,
         "current_commit": current_commit,
         "latest_version": __version__,
@@ -1155,7 +1177,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     from backend.services.container_mutator import pull_container_image
     from backend.services.self_updater import spawn_self_updater
 
-    channel = "edge" if req.channel.lower() == "edge" else "stable"
+    channel = _channel(req.channel)
     if req.target_image:
         # Only this project's images: an update must never install an arbitrary image
         # with full access to the Docker socket and host devices.
@@ -1165,7 +1187,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     else:
         from backend.config import variant_tag
 
-        target_img = f"ghcr.io/fr0styx/zettnas-toolkit:{variant_tag('edge' if channel == 'edge' else 'latest')}"
+        target_img = f"ghcr.io/fr0styx/zettnas-toolkit:{variant_tag(CHANNEL_IMAGE_TAG[channel])}"
 
     # Invalidate cached update check so immediate post-update checks reflect the new state
     _last_update_check[channel]["data"] = None

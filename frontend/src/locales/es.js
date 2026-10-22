@@ -329,6 +329,8 @@ export default {
   "updates.subtitle": "Busque las últimas versiones estables o active las funciones de los últimos commits.",
   "updates.channel_stable": "🌟 Estable",
   "updates.channel_edge": "⚡ Edge (Últimos commits)",
+  "updates.channel_beta": "🧪 Beta",
+  "updates.channel_beta_label": "Beta (prueba de 7 días)",
   "updates.check_btn": "Buscar actualizaciones",
   "updates.in_app_title": "Actualización directa en la aplicación",
   "updates.in_app_desc": "Descarga la última imagen de contenedor y reinicia el workbench automáticamente.",

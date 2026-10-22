@@ -263,10 +263,10 @@ jobs:
           tags: |
             type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=main,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-            type=raw,value=stable,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            # A version tag publishes :beta and the exact version; .github/workflows/promote.yml
+            # moves :latest, :stable and MAJOR.MINOR to it after a 7-day soak (OPS-07)
+            type=raw,value=beta,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
 
       # Push under the commit tag only; the public tags are added after the scan and signature.
@@ -368,10 +368,11 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
-          name: ${{ steps.extract_notes.outputs.title }}
+          name: ${{ steps.extract_notes.outputs.title }} (beta)
           body_path: RELEASE_NOTES.md
           generate_release_notes: true
           draft: false
-          prerelease: false
+          # Beta until the promote workflow publishes it as :latest after the 7-day soak (OPS-07)
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

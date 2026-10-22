@@ -8456,6 +8456,13 @@ export function initManagement() {
     });
   }
 
+  const btnChanBeta = document.getElementById('btn-channel-beta');
+  if (btnChanBeta) {
+    btnChanBeta.addEventListener('click', () => {
+      setUpdateChannel('beta');
+    });
+  }
+
   const applyUpdateBtn = document.getElementById('btn-apply-system-update');
   if (applyUpdateBtn) {
     applyUpdateBtn.addEventListener('click', applySystemUpdate);
@@ -8750,16 +8757,17 @@ export function initManagement() {
   if (typeof restoreHardwareTabsToManagement === "function") restoreHardwareTabsToManagement();
 }
 
+const UPDATE_CHANNELS = ['stable', 'beta', 'edge'];
 let _currentUpdateChannel = 'stable';
 try {
   const saved = localStorage.getItem('zettnas_update_channel');
-  if (saved === 'edge' || saved === 'stable') _currentUpdateChannel = saved;
+  if (UPDATE_CHANNELS.includes(saved)) _currentUpdateChannel = saved;
 } catch (e) {}
 
 let _lastUpdateData = null;
 
 export async function setUpdateChannel(channel) {
-  _currentUpdateChannel = channel === 'edge' ? 'edge' : 'stable';
+  _currentUpdateChannel = UPDATE_CHANNELS.includes(channel) ? channel : 'stable';
   try {
     localStorage.setItem('zettnas_update_channel', _currentUpdateChannel);
   } catch (e) {}
@@ -8768,24 +8776,19 @@ export async function setUpdateChannel(channel) {
 }
 
 function syncUpdateChannelUI() {
-  const btnStable = document.getElementById('btn-channel-stable');
-  const btnEdge = document.getElementById('btn-channel-edge');
-  if (btnStable && btnEdge) {
-    if (_currentUpdateChannel === 'edge') {
-      btnStable.classList.remove('active');
-      btnStable.style.background = 'transparent';
-      btnStable.style.color = 'var(--muted)';
-      btnEdge.classList.add('active');
-      btnEdge.style.background = 'rgba(14, 165, 233, 0.25)';
-      btnEdge.style.color = '#38bdf8';
-    } else {
-      btnEdge.classList.remove('active');
-      btnEdge.style.background = 'transparent';
-      btnEdge.style.color = 'var(--muted)';
-      btnStable.classList.add('active');
-      btnStable.style.background = 'rgba(37, 194, 160, 0.25)';
-      btnStable.style.color = '#25c2a0';
-    }
+  const looks = {
+    stable: ['rgba(37, 194, 160, 0.25)', '#25c2a0'],
+    beta: ['rgba(245, 183, 49, 0.22)', '#f5b731'],
+    edge: ['rgba(14, 165, 233, 0.25)', '#38bdf8'],
+  };
+  for (const ch of UPDATE_CHANNELS) {
+    const btn = document.getElementById(`btn-channel-${ch}`);
+    if (!btn) continue;
+    const on = ch === _currentUpdateChannel;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.style.background = on ? looks[ch][0] : 'transparent';
+    btn.style.color = on ? looks[ch][1] : 'var(--muted)';
   }
 }
 
@@ -8830,7 +8833,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
     const about = await api.get('/api/system/about');
     if (about) {
       const commitTag = about.commit ? ` (${about.commit})` : '';
-      const channelLabel = channel === 'edge' ? 'Edge (Rolling)' : (about.release_channel || 'Stable');
+      const channelLabel = channel === 'edge' ? 'Edge (Rolling)' : channel === 'beta' ? t('updates.channel_beta_label', 'Beta (7-day test)') : (about.release_channel || 'Stable');
       if (versionBadge) versionBadge.textContent = `${about.tag || 'v' + about.version}${commitTag} • ${channelLabel}`;
       if (chassisEl) chassisEl.textContent = about.chassis_model || 'Standard / DIY';
       if (hostEl) hostEl.textContent = `${about.hostname || 'NAS'} (${about.platform || 'Linux'})`;

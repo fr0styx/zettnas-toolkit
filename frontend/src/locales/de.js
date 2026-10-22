@@ -329,6 +329,8 @@ export default {
   "updates.subtitle": "Prüfen Sie auf offizielle Stable-Releases oder abonnieren Sie die neuesten Commit-Funktionen.",
   "updates.channel_stable": "🌟 Stabil",
   "updates.channel_edge": "⚡ Edge (Neueste Commits)",
+  "updates.channel_beta": "🧪 Beta",
+  "updates.channel_beta_label": "Beta (7 Tage Test)",
   "updates.check_btn": "Nach Updates suchen",
   "updates.in_app_title": "Direktes In-App-Upgrade",
   "updates.in_app_desc": "Lädt das neueste Container-Image herunter und startet die Workbench automatisch neu.",

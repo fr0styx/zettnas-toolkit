@@ -463,7 +463,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `VM_ISO_DIR` | `/mnt/user/isos` | Directory for uploaded and downloaded guest ISO images |
 | `TAILSCALE_STATE_DIR` | `/app/data/tailscale` | State and configuration directory for embedded Tailscale mesh node |
 | `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
-| `UPDATE_CHANNEL` | `stable` | Release update channel (`stable` for tagged releases, `edge` for latest main branch commits) |
+| `UPDATE_CHANNEL` | `stable` | Update channel: `stable` (releases after a 7-day beta, `:latest`), `beta` (new releases right away, `:beta`) or `edge` (every commit on main); see docs/RELEASING.md |
 | `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
 | `ZETTNAS_LCD_CAPTURE` | `screencast` | How the front LCD gets frames: `screencast` (Chromium sends one only when the screen changes) or `poll` (a screenshot every frame) |
 | `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos browsers can't play with Intel Quick Sync when `/dev/dri` is passed to the container (`--device /dev/dri`); `off` uses the CPU |

@@ -44,7 +44,8 @@ def test_config_env_vars_and_aliases(monkeypatch):
 
 
 def test_ci_workflow_tagging_rules():
-    """Ensures GitHub Actions CI publishes :latest only on release tags, and :edge on main."""
+    """CI publishes :edge on main and :beta on release tags; :latest only comes from the
+    promote workflow after the 7-day soak (OPS-07, tests/test_release_soak.py)."""
     import re
 
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -55,4 +56,5 @@ def test_ci_workflow_tagging_rules():
         content = f.read()
 
     assert "type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}" in content
-    assert "type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}" in content
+    assert "type=raw,value=beta,enable=${{ startsWith(github.ref, 'refs/tags/v') }}" in content
+    assert "type=raw,value=latest" not in content
