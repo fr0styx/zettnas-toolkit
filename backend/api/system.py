@@ -16,7 +16,7 @@ import time
 import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
@@ -70,20 +70,56 @@ from backend.state import Z_STATE, add_event
 router = APIRouter(tags=["System & Storage"])
 
 
+_PROCESS_STARTED = time.time()
+HEALTH_STARTUP_GRACE_SECS = 60.0
+
+
+def _health_checks() -> Dict[str, str]:
+    """ok / starting / failed for each part the app can't work without (OPS-21)."""
+    checks: Dict[str, str] = {}
+    hb = Z_STATE.collector_heartbeat
+    if hb and time.time() - hb <= config.COLLECTOR_WATCHDOG_SECS:
+        checks["collector"] = "ok"
+    elif not hb and time.time() - _PROCESS_STARTED < HEALTH_STARTUP_GRACE_SECS:
+        checks["collector"] = "starting"
+    else:
+        checks["collector"] = "failed"
+    try:
+        from backend.users_db import users_db_session
+
+        with users_db_session(None) as conn:
+            conn.execute("SELECT 1").fetchone()
+        checks["database"] = "ok"
+    except Exception:
+        checks["database"] = "failed"
+    checks["data_dir"] = "ok" if os.access(config.DATA_DIR, os.W_OK) else "failed"
+    return checks
+
+
 @router.get("/health")
 def health():
-    """Public liveness probe (no secrets): used by Docker HEALTHCHECK/monitoring."""
+    """Public health probe (no secrets) for Docker HEALTHCHECK, the updater and monitoring.
+
+    HTTP 503 when a required part has failed (OPS-21); 200 while starting or healthy.
+    """
+    checks = _health_checks()
     hb = Z_STATE.collector_heartbeat
-    hb_age = round(time.time() - hb, 1) if hb else None
-    collector_ok = hb_age is not None and hb_age <= config.COLLECTOR_WATCHDOG_SECS
-    return {
-        "status": "ok" if collector_ok else "degraded",
+    if "failed" in checks.values():
+        status = "degraded"
+    elif "starting" in checks.values():
+        status = "starting"
+    else:
+        status = "ok"
+    body = {
+        "status": status,
         "version": __version__,
-        "collector_heartbeat_age": hb_age,
+        "checks": checks,
+        "collector_heartbeat_age": round(time.time() - hb, 1) if hb else None,
         "lcd_renderer_active": bool(Z_STATE.lcd_renderer_active),
         "fans_released": bool(Z_STATE.fans_released),
         "critical_temp_active": bool(Z_STATE.critical_temp_active),
     }
+    return JSONResponse(body, status_code=503 if status == "degraded" else 200)
 
 
 # Backward-compatibility re-exports for extracted domain routers

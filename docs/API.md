@@ -61,7 +61,7 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | `/api/stats/stream` | `GET` | Yes | Server-Sent Events (SSE) stream broadcasting ~1 Hz real-time hardware telemetry ticks. |
 | `/api/events` | `GET` | Yes | Real-time SSE stream for hardware alerts, container updates, and copy jobs. |
 | `/api/history` | `GET` | Yes | Historical time-series metrics. Accepts `?range=1h\|6h\|24h\|7d\|30d` for telemetry charting. |
-| `/api/health` | `GET` | Public | Liveness probe returning component daemon heartbeats and system uptime. |
+| `/api/health` | `GET` | Public | Health probe: `checks` for the stats collector, user database and data folder; HTTP 503 when one has failed, 200 while starting or healthy. |
 
 ---
 
