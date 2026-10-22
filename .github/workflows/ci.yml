@@ -53,7 +53,14 @@ jobs:
 
       - name: Run Pytest Suite with Coverage
         # OPS-16: coverage may not drop below the floor (raise it as coverage grows)
-        run: pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=66 -v
+        # Failing tests are also posted as an annotation, readable without log access
+        run: |
+          set -o pipefail
+          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=66 -v -rfE 2>&1 | tee /tmp/zn-unit.log; then
+            body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/zn-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Unit tests::$body"
+            exit 1
+          fi
 
   frontend:
     name: Frontend Build & Test
