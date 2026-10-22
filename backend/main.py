@@ -377,20 +377,29 @@ def serve_index(request: Request):
     index_file = os.path.join(STATIC_DIR, "index.html")
     if not os.path.isfile(index_file):
         raise HTTPException(status_code=404, detail="index.html not found")
+    is_lcd = request.query_params.get("mode") == "lcd" or "mode=lcd" in str(request.query_params)
+    headers = {"Cache-Control": "no-cache, no-store, must-revalidate", "Vary": "Accept-Encoding"}
+    if not is_lcd:
+        # The page is the same for everyone: send the copy the build compressed (FE-01).
+        from backend.static_files import pick_precompressed
+
+        picked = pick_precompressed(index_file, request.headers.get("accept-encoding", ""))
+        if picked:
+            with open(picked[0], "rb") as f:
+                body = f.read()
+            return Response(content=body, media_type="text/html", headers={**headers, "Content-Encoding": picked[1]})
     with open(index_file, "r", encoding="utf-8") as f:
         html_str = f.read()
-    if request.query_params.get("mode") == "lcd" or "mode=lcd" in str(request.query_params):
+    if is_lcd:
         html_str = html_str.replace('class="studio-workbench', 'class="studio-workbench lcd-direct')
-    return Response(
-        content=html_str,
-        media_type="text/html",
-        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
-    )
+    return Response(content=html_str, media_type="text/html", headers=headers)
 
 
 # Mount static assets using native FastAPI StaticFiles for streaming, proper Range headers, and zero RAM caching
 if os.path.isdir(STATIC_DIR):
-    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+    from backend.static_files import CompressedStaticFiles
+
+    app.mount("/", CompressedStaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 
 class ZettServer(uvicorn.Server):

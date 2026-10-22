@@ -44,3 +44,5 @@ htmlcov/
 # Frontend build output (npm run build; the Docker image builds its own)
 static/assets/
 static/index.html
+static/**/*.br
+static/**/*.gz
