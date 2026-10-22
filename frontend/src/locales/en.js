@@ -2154,5 +2154,16 @@ export default {
   "ldap.start_tls": "Use StartTLS (for ldap:// servers)",
   "ldap.test": "Test connection",
   "ldap.test_ok": "Connected",
-  "ldap.saved": "Directory settings saved"
+  "ldap.saved": "Directory settings saved",
+  "push.title": "📱 Notifications on this device",
+  "push.desc": "Disk failures, ransomware alerts and other critical events appear on this phone or computer, even when ZettNAS is closed.",
+  "push.ios": "On iPhone and iPad, add ZettNAS to the home screen first (Share → Add to Home Screen), open it from there, then turn this on.",
+  "push.unsupported": "This browser cannot receive notifications.",
+  "push.turn_on": "Turn on for this device",
+  "push.turn_off": "Turn off on this device",
+  "push.on": "Notifications turned on",
+  "push.off": "Notifications turned off on this device",
+  "push.test": "Send a test",
+  "push.test_sent": "Test sent. It should appear in a few seconds.",
+  "push.denied": "Notifications are blocked for this site in the browser settings."
 };

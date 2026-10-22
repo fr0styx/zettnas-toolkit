@@ -7387,6 +7387,7 @@ export function initManagement() {
       fetchAndRenderSecurityPosture();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();
+      import('./push-card.js').then((m) => m.renderPushCard()).catch(() => {});
     } else if (paneId === 'mgmt-pane-users') {
       import('./users.js').then((m) => m.loadUsersPane(subTabId || 'users-pane-list'));
     } else if (paneId === 'mgmt-pane-about') {

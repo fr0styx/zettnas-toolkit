@@ -57,3 +57,35 @@ async function receiveShare(request) {
   }
   return Response.redirect(`/?shared=${saved}&failed=${failed}`, 303);
 }
+
+// Alerts from the NAS (M1): the server encrypts them for this browser
+self.addEventListener('push', (event) => {
+  let msg;
+  try {
+    msg = event.data ? event.data.json() : {};
+  } catch (e) {
+    msg = { title: 'ZettNAS', body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(
+    self.registration.showNotification(msg.title || 'ZettNAS', {
+      body: msg.body || '',
+      icon: '/img/icon-192.png',
+      badge: '/img/icon-192.png',
+      tag: msg.tag || undefined,
+      requireInteraction: msg.level === 'critical',
+      data: { url: msg.url || '/' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      const open = wins.find((w) => new URL(w.url).origin === self.location.origin);
+      if (open) return open.focus();
+      return self.clients.openWindow(url);
+    })
+  );
+});

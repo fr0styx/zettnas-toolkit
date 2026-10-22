@@ -426,7 +426,9 @@ cryptography==50.0.2 \
     --hash=sha256:f9f6143a8c75945eb960d9eb98905a441394abfa24afaae239d514ffb2586480 \
     --hash=sha256:fa8f5efb344d6908a1ce62f4a24e2e5780f825d6f53f5f50ec5ffacac72936cb \
     --hash=sha256:fdd28f912fccfec1846a94e2e1e8f9b0012f557f0c46fe4f3eb0d7a87afcf90b
-    # via -r requirements.txt
+    # via
+    #   -r requirements.txt
+    #   http-ece
 exifread==3.5.1 \
     --hash=sha256:9f998f80d3062741c976dfc4fd033424bc40932937994e4d2181eb70c4b6aedd \
     --hash=sha256:e5426ce2857423ad401e575ea9d159dc97449dc041fb6e61b35109caea72c311
@@ -522,6 +524,9 @@ h11==0.16.0 \
     # via
     #   httpcore
     #   uvicorn
+http-ece==1.2.1 \
+    --hash=sha256:8c6ab23116bbf6affda894acfd5f2ca0fb8facbcbb72121c11c75c33e7ce8cff
+    # via -r requirements.txt
 httpcore==1.0.9 \
     --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55 \
     --hash=sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8

@@ -363,7 +363,7 @@ def send_notification(
     level: str = "normal",
     event_type: str = "general",
     dedup_key: str = "",
-) -> dict[str, bool]:
+) -> dict[str, Any]:
     """
     Dispatch a notification to all configured channels with rate limiting and deduplication.
     Supports either positional args (title, message, level) or a single dictionary payload.
@@ -377,7 +377,16 @@ def send_notification(
         dedup_key = str(d.get("dedup_key", ""))
 
     cfg = load_notification_config()
-    if not cfg.get("enabled", False):
+    # Phones with the app installed get alerts even if no other channel is set up (M1)
+    push_on = False
+    if cfg.get("push_enabled", True):
+        try:
+            from backend.services import web_push
+
+            push_on = bool(web_push.subscriptions())
+        except Exception:
+            logger.debug("notifications: push unavailable", exc_info=True)
+    if not cfg.get("enabled", False) and not push_on:
         return {"dispatched": False, "reason": "disabled"}
 
     # Subsystem-specific event toggles
@@ -414,6 +423,18 @@ def send_notification(
         _alert_history[dedup_key] = {"last_sent": now, "last_level": level}
 
     results: dict[str, bool] = {}
+
+    if push_on:
+        try:
+            from backend.services import web_push
+
+            sent = web_push.notify(str(title), str(message), level=level)
+            results["push"] = any(200 <= s < 300 for s in sent.values())
+        except Exception:
+            logger.warning("[Notify] Push dispatch failed", exc_info=True)
+            results["push"] = False
+    if not cfg.get("enabled", False):
+        return {"dispatched": any(results.values()), "channels": results}
 
     # 1. Unraid native notification
     if cfg.get("unraid_notify", True):

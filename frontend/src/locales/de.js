@@ -2154,5 +2154,16 @@ export default {
   "ldap.start_tls": "StartTLS verwenden (für ldap://-Server)",
   "ldap.test": "Verbindung testen",
   "ldap.test_ok": "Verbunden",
-  "ldap.saved": "Verzeichnis-Einstellungen gespeichert"
+  "ldap.saved": "Verzeichnis-Einstellungen gespeichert",
+  "push.title": "📱 Benachrichtigungen auf diesem Gerät",
+  "push.desc": "Festplattenfehler, Ransomware-Warnungen und andere kritische Ereignisse erscheinen auf diesem Gerät, auch wenn ZettNAS geschlossen ist.",
+  "push.ios": "Auf iPhone und iPad zuerst ZettNAS zum Home-Bildschirm hinzufügen (Teilen → Zum Home-Bildschirm), von dort öffnen und dann einschalten.",
+  "push.unsupported": "Dieser Browser kann keine Benachrichtigungen empfangen.",
+  "push.turn_on": "Für dieses Gerät einschalten",
+  "push.turn_off": "Auf diesem Gerät ausschalten",
+  "push.on": "Benachrichtigungen eingeschaltet",
+  "push.off": "Benachrichtigungen auf diesem Gerät ausgeschaltet",
+  "push.test": "Test senden",
+  "push.test_sent": "Test gesendet. Er sollte in ein paar Sekunden erscheinen.",
+  "push.denied": "Benachrichtigungen sind für diese Seite in den Browser-Einstellungen blockiert."
 };

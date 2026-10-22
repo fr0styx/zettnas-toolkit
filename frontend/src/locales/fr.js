@@ -2154,5 +2154,16 @@ export default {
   "ldap.start_tls": "Utiliser StartTLS (serveurs ldap://)",
   "ldap.test": "Tester la connexion",
   "ldap.test_ok": "Connecté",
-  "ldap.saved": "Réglages de l'annuaire enregistrés"
+  "ldap.saved": "Réglages de l'annuaire enregistrés",
+  "push.title": "📱 Notifications sur cet appareil",
+  "push.desc": "Pannes de disque, alertes rançongiciel et autres événements critiques s'affichent sur cet appareil, même quand ZettNAS est fermé.",
+  "push.ios": "Sur iPhone et iPad, ajoutez d'abord ZettNAS à l'écran d'accueil (Partager → Sur l'écran d'accueil), ouvrez-le depuis là, puis activez ceci.",
+  "push.unsupported": "Ce navigateur ne peut pas recevoir de notifications.",
+  "push.turn_on": "Activer pour cet appareil",
+  "push.turn_off": "Désactiver sur cet appareil",
+  "push.on": "Notifications activées",
+  "push.off": "Notifications désactivées sur cet appareil",
+  "push.test": "Envoyer un test",
+  "push.test_sent": "Test envoyé. Il devrait apparaître dans quelques secondes.",
+  "push.denied": "Les notifications sont bloquées pour ce site dans les réglages du navigateur."
 };

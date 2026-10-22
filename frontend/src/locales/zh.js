@@ -2154,5 +2154,16 @@ export default {
   "ldap.start_tls": "使用 StartTLS（用于 ldap:// 服务器）",
   "ldap.test": "测试连接",
   "ldap.test_ok": "已连接",
-  "ldap.saved": "目录设置已保存"
+  "ldap.saved": "目录设置已保存",
+  "push.title": "📱 此设备上的通知",
+  "push.desc": "硬盘故障、勒索软件警报和其他重要事件会显示在这台手机或电脑上，即使 ZettNAS 已关闭。",
+  "push.ios": "在 iPhone 和 iPad 上，请先将 ZettNAS 添加到主屏幕（分享 → 添加到主屏幕），从主屏幕打开后再开启。",
+  "push.unsupported": "此浏览器无法接收通知。",
+  "push.turn_on": "为此设备开启",
+  "push.turn_off": "在此设备上关闭",
+  "push.on": "通知已开启",
+  "push.off": "已在此设备上关闭通知",
+  "push.test": "发送测试",
+  "push.test_sent": "测试已发送，几秒内应会出现。",
+  "push.denied": "浏览器设置中已阻止此网站的通知。"
 };

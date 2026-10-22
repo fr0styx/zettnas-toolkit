@@ -4,6 +4,7 @@ argon2-cffi>=25.1.0
 cryptography>=50.0.2
 exifread==3.5.1
 fastapi>=0.146.0
+http-ece>=1.2.1
 httpx>=0.28.1
 ldap3>=2.9.1
 orjson>=3.13.0

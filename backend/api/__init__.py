@@ -23,6 +23,7 @@ from backend.api.network import router as network_router
 from backend.api.notifications import router as notifications_router
 from backend.api.oidc import ldap_router
 from backend.api.oidc import router as oidc_router
+from backend.api.push import router as push_router
 from backend.api.remotes import router as remotes_router
 from backend.api.replication import router as replication_router
 from backend.api.samba import router as samba_router
@@ -42,6 +43,7 @@ api_router.include_router(auth_router)
 api_router.include_router(oidc_router)
 api_router.include_router(ldap_router)
 api_router.include_router(mcp_router)
+api_router.include_router(push_router)
 api_router.include_router(stats_router)
 api_router.include_router(fans_router)
 api_router.include_router(led_router)
