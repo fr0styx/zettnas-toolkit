@@ -212,7 +212,7 @@ export class FileManagerWindow {
                 <button id="fm-up-btn" class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                 </button>
-                <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>
+                <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations" aria-haspopup="menu" aria-expanded="false">📍</button>
               </div>
               <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
                 <input type="text" id="fm-path-input" class="fm-path-input" aria-label="${escapeHtml(t('fm.path_input_label', 'Folder path'))}" spellcheck="false" list="fm-path-list" style="width: 100%; color: transparent;" />
@@ -328,7 +328,7 @@ export class FileManagerWindow {
               <button class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
               </button>
-              <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>
+              <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations" aria-haspopup="menu" aria-expanded="false">📍</button>
             </div>
             <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
               <input type="text" class="fm-path-input" aria-label="${escapeHtml(t('fm.path_input_label', 'Folder path'))}" spellcheck="false" list="${this.id}-path-list" style="width: 100%; color: transparent;" />
@@ -421,7 +421,7 @@ export class FileManagerWindow {
       if (!this.windowEl.querySelector('.fm-locations-btn')) {
         const navGrp = this.windowEl.querySelector('.fm-nav-btn-group');
         if (navGrp) {
-          navGrp.insertAdjacentHTML('beforeend', '<button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations">📍</button>');
+          navGrp.insertAdjacentHTML('beforeend', '<button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations" aria-haspopup="menu" aria-expanded="false">📍</button>');
         }
       }
       if (!this.windowEl.querySelector('.fm-sidebar-toggle')) {
@@ -661,49 +661,33 @@ export class FileManagerWindow {
     this.fwdBtn?.addEventListener('click', () => this.goForward());
     this.upBtn?.addEventListener('click', () => this.goUp());
 
-    // Quick Locations Bottom Sheet
+    // Quick Locations: a dropdown under the button on desktop, a bottom sheet on phones
     this.locationsBtn?.addEventListener('click', (e) => {
       e.stopPropagation();
-      const items = [
-        { icon: '📁', label: 'User Shares (/mnt/user)', onClick: () => this.loadPath('/mnt/user') },
-        { icon: '⚙️', label: 'AppData (/mnt/user/appdata)', onClick: () => this.loadPath('/mnt/user/appdata') },
-        { icon: '💾', label: 'Boot Flash (/boot)', onClick: () => this.loadPath('/boot') },
-        { icon: '☁️', label: 'Cloud Remotes (/mnt/remotes)', onClick: () => this.loadPath('/mnt/remotes') },
+      const places = [
+        { icon: '📁', name: t('fm.loc_user_shares', 'User Shares'), path: '/mnt/user' },
+        { icon: '⚙️', name: t('fm.loc_appdata', 'AppData'), path: '/mnt/user/appdata' },
+        { icon: '💾', name: t('fm.loc_boot', 'Boot Flash'), path: '/boot' },
+        { icon: '☁️', name: t('fm.loc_remotes', 'Cloud Remotes'), path: '/mnt/remotes' },
       ];
-
-      // Add all mounted cloud remotes dynamically
-      if (this.sidebarTree && this.sidebarTree.remotes && this.sidebarTree.remotes.length > 0) {
-        this.sidebarTree.remotes.forEach((r) => {
-          if (r.available !== false && r.is_mounted !== false) {
-            items.push({
-              icon: '☁️',
-              label: `${r.name} (${r.path})`,
-              onClick: () => this.loadPath(r.path),
-            });
-          }
-        });
-      }
-
-      // Add all pools / external disks dynamically
-      if (this.sidebarTree && this.sidebarTree.pools && this.sidebarTree.pools.length > 0) {
-        this.sidebarTree.pools.forEach((p) => {
-          if (p.available !== false) {
-            items.push({
-              icon: p.type === 'disk' ? '💽' : '⚡',
-              label: `${p.name} (${p.path})`,
-              onClick: () => this.loadPath(p.path),
-            });
-          }
-        });
-      }
-
-      items.push({ icon: '🗑️', label: 'Recycle Bin (/mnt/user/.RecycleBin)', onClick: () => this.loadPath('/mnt/user/.RecycleBin') });
-
-      showBottomSheet({
-        title: 'Quick Locations',
-        subtitle: `Current: ${this.currentPath}`,
-        items,
+      (this.sidebarTree?.remotes || []).forEach((r) => {
+        if (r.available !== false && r.is_mounted !== false) places.push({ icon: '☁️', name: r.name, path: r.path });
       });
+      (this.sidebarTree?.pools || []).forEach((pool) => {
+        if (pool.available !== false) places.push({ icon: pool.type === 'disk' ? '💽' : '⚡', name: pool.name, path: pool.path });
+      });
+      places.push({ icon: '🗑️', name: t('dock.recycle_bin', 'Recycle Bin'), path: '/mnt/user/.RecycleBin' });
+
+      const isPhone = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+      if (isPhone) {
+        showBottomSheet({
+          title: t('fm.quick_locations', 'Quick Locations'),
+          subtitle: `Current: ${this.currentPath}`,
+          items: places.map((pl) => ({ icon: pl.icon, label: `${pl.name} (${pl.path})`, onClick: () => this.loadPath(pl.path) })),
+        });
+        return;
+      }
+      this.showLocationsMenu(this.locationsBtn, places);
     });
 
     // Hidden file upload input
@@ -1836,6 +1820,88 @@ export class FileManagerWindow {
       });
       this._crumbObserver.observe(this.breadcrumbs);
     }
+  }
+
+  /** Desktop Quick Locations: a keyboard-friendly menu anchored under the button. */
+  showLocationsMenu(anchorEl, places) {
+    const old = document.getElementById('fm-locations-menu');
+    if (old) {
+      old._close?.();
+      if (old._anchor === anchorEl) return; // a second click closes it
+    }
+    const menu = document.createElement('div');
+    menu.id = 'fm-locations-menu';
+    menu.className = 'fm-loc-menu';
+    menu.setAttribute('role', 'menu');
+    menu.setAttribute('aria-label', t('fm.quick_locations', 'Quick Locations'));
+    const here = (this.currentPath || '').replace(/\/+$/, '');
+    menu.innerHTML = places.map((pl, i) => {
+      const current = here === pl.path || here.startsWith(pl.path + '/');
+      return `<button type="button" class="fm-loc-item${current ? ' is-current' : ''}" role="menuitem" data-idx="${i}" title="${escapeHtml(pl.path)}">
+        <span class="fm-loc-icon" aria-hidden="true">${pl.icon}</span>
+        <span class="fm-loc-text"><span class="fm-loc-name">${escapeHtml(pl.name)}</span><span class="fm-loc-path">${escapeHtml(pl.path)}</span></span>
+        ${current ? '<span class="fm-loc-check" aria-hidden="true">✓</span>' : ''}
+      </button>`;
+    }).join('');
+    document.body.appendChild(menu);
+    menu._anchor = anchorEl;
+    anchorEl.setAttribute('aria-expanded', 'true');
+
+    const r = anchorEl.getBoundingClientRect();
+    const w = menu.offsetWidth;
+    const h = menu.offsetHeight;
+    menu.style.left = `${Math.max(8, Math.min(r.left, window.innerWidth - w - 8))}px`;
+    menu.style.top = `${r.bottom + 6 + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6}px`;
+
+    const items = Array.from(menu.querySelectorAll('.fm-loc-item'));
+    const close = (refocus = false) => {
+      document.removeEventListener('pointerdown', onOutside, true);
+      document.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('blur', onResize);
+      anchorEl.setAttribute('aria-expanded', 'false');
+      menu.remove();
+      if (refocus) anchorEl.focus();
+    };
+    const onOutside = (ev) => {
+      if (!menu.contains(ev.target) && ev.target !== anchorEl) close();
+    };
+    const onResize = () => close();
+    const onKey = (ev) => {
+      const i = items.indexOf(document.activeElement);
+      if (ev.key === 'Escape') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        close(true);
+      } else if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+        ev.preventDefault();
+        const step = ev.key === 'ArrowDown' ? 1 : -1;
+        items[(i + step + items.length) % items.length]?.focus();
+      } else if (ev.key === 'Home' || ev.key === 'End') {
+        ev.preventDefault();
+        (ev.key === 'Home' ? items[0] : items[items.length - 1])?.focus();
+      } else if ((ev.key === 'Enter' || ev.key === ' ') && i >= 0) {
+        // The explorer has its own Enter shortcut; the menu takes the key first
+        ev.preventDefault();
+        ev.stopPropagation();
+        items[i].click();
+      } else if (ev.key === 'Tab') {
+        close();
+      }
+    };
+    menu._close = () => close();
+    menu.addEventListener('click', (ev) => {
+      const item = ev.target instanceof Element ? ev.target.closest('.fm-loc-item') : null;
+      if (!item) return;
+      const pl = places[Number(item.dataset.idx)];
+      close();
+      if (pl) this.loadPath(pl.path);
+    });
+    document.addEventListener('pointerdown', onOutside, true);
+    document.addEventListener('keydown', onKey, true);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('blur', onResize);
+    (menu.querySelector('.is-current') || items[0])?.focus({ preventScroll: true });
   }
 
   showBreadcrumbsDropdown(anchorEl, parts, from = 1, to = parts.length - 2) {

@@ -2290,5 +2290,10 @@ export default {
   "fm.share_link": "分享链接",
   "fm.move_to": "移动到…",
   "fm.download": "下载",
-  "fm.delete": "删除"
+  "fm.delete": "删除",
+  "fm.quick_locations": "快速位置",
+  "fm.loc_user_shares": "用户共享",
+  "fm.loc_appdata": "AppData",
+  "fm.loc_boot": "启动闪存",
+  "fm.loc_remotes": "云端远程"
 };

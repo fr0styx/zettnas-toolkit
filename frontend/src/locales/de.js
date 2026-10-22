@@ -2290,5 +2290,10 @@ export default {
   "fm.share_link": "Link teilen",
   "fm.move_to": "Verschieben nach…",
   "fm.download": "Herunterladen",
-  "fm.delete": "Löschen"
+  "fm.delete": "Löschen",
+  "fm.quick_locations": "Schnellzugriff",
+  "fm.loc_user_shares": "Benutzerfreigaben",
+  "fm.loc_appdata": "AppData",
+  "fm.loc_boot": "Boot-Stick",
+  "fm.loc_remotes": "Cloud-Ziele"
 };
