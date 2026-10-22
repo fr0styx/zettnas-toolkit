@@ -10,6 +10,7 @@
     "dev": "node ./node_modules/vite/bin/vite.js",
     "budget": "node frontend/scripts/check-budget.mjs static",
     "lint:i18n": "node frontend/scripts/i18n-lint.mjs",
+    "lint:css": "node frontend/scripts/css-budget.mjs",
     "lint:js": "eslint frontend vite.config.mjs vitest.config.mjs eslint.config.mjs --max-warnings 71",
     "lint:py": "ruff check app.py backend tests",
     "format:py": "ruff format app.py backend tests",

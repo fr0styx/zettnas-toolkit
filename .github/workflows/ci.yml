@@ -90,6 +90,9 @@ jobs:
       - name: Translation lint (FE-13)
         run: npm run lint:i18n
 
+      - name: CSS budget (!important and button classes may only go down)
+        run: npm run lint:css
+
       - name: ESLint (OPS-24)
         run: npm run lint:js
 
