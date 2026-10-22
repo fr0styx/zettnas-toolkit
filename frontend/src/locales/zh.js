@@ -2087,5 +2087,9 @@ export default {
   "guard.none_blocked": "无。15 分钟内登录失败 20 次的地址会被封锁 1 小时。",
   "guard.until": "直到 {when}",
   "guard.unblock": "解除封锁",
-  "guard.unblock_ip": "解除封锁 {ip}"
+  "guard.unblock_ip": "解除封锁 {ip}",
+  "pwa.share_saved": "已将 {saved} 个保存到你的 Inbox 文件夹。",
+  "pwa.share_partial": "已保存 {saved} 个到 Inbox，{failed} 个失败。",
+  "pwa.share_login": "请先登录，然后再次分享这些文件。",
+  "pwa.share_error": "无法读取分享的文件。"
 };

@@ -2087,5 +2087,9 @@ export default {
   "guard.none_blocked": "Aucune. Une adresse avec 20 échecs de connexion en 15 minutes est bloquée une heure.",
   "guard.until": "jusqu'au {when}",
   "guard.unblock": "Débloquer",
-  "guard.unblock_ip": "Débloquer {ip}"
+  "guard.unblock_ip": "Débloquer {ip}",
+  "pwa.share_saved": "{saved} enregistré(s) dans votre dossier Inbox.",
+  "pwa.share_partial": "{saved} enregistré(s) dans Inbox, {failed} en échec.",
+  "pwa.share_login": "Connectez-vous, puis partagez à nouveau les fichiers.",
+  "pwa.share_error": "Impossible de lire les fichiers partagés."
 };

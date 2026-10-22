@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field
 
 import backend.config as config
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.config import logger
+from backend.config import POOL_PATH, logger
 from backend.confirmations import require_confirmation
 from backend.passwords import hash_password, verify_password
 from backend.rate_limit import rate_limit
@@ -1356,6 +1356,56 @@ def fs_download(path: str, principal: AuthenticatedPrincipal = Depends(get_curre
     return FileResponse(
         target, filename=os.path.basename(target), headers=_user_file_headers(mimetypes.guess_type(target)[0])
     )
+
+
+def _inbox_dir(principal: AuthenticatedPrincipal) -> str:
+    """The user's Inbox for files shared from a phone (M1): <home>/Inbox."""
+    from backend.users_db import get_user_by_username
+
+    rec = get_user_by_username(principal.username) or {}
+    home = rec.get("home_directory") or os.path.join(POOL_PATH or ALLOWED_BROWSE_ROOTS[0], "homes", principal.username)
+    inbox = os.path.join(home, "Inbox")
+    canonical = resolve_within(inbox, ALLOWED_BROWSE_ROOTS)
+    if canonical is None:
+        raise HTTPException(status_code=400, detail="Your home folder is outside the allowed folders")
+    return canonical
+
+
+@router.get("/fs/inbox", dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin"))])
+async def fs_inbox(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    return {"path": _inbox_dir(principal)}
+
+
+@router.post("/fs/inbox", dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin"))])
+async def fs_inbox_upload(
+    request: Request, filename: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """Saves one shared file into the Inbox under a name that doesn't overwrite anything (M1)."""
+    inbox = _inbox_dir(principal)
+    check_user_path_access(inbox, principal, write=True)
+    name = os.path.basename(str(filename or "").replace("\\", "/")).strip() or "shared-file"
+    if name in (".", "..") or name.startswith("."):
+        name = f"shared{name}"
+    await asyncio.to_thread(os.makedirs, inbox, exist_ok=True)
+    stem, ext = os.path.splitext(name)
+    target = os.path.join(inbox, name)
+    n = 1
+    while os.path.lexists(target):
+        n += 1
+        target = os.path.join(inbox, f"{stem} ({n}){ext}")
+    staging = os.path.join(inbox, f".zettnas_tmp_{secrets.token_hex(8)}")
+    try:
+        async with aiofiles.open(staging, "wb") as f_out:
+            async for chunk in request.stream():
+                if chunk:
+                    await f_out.write(chunk)
+        os.replace(staging, target)
+    finally:
+        if os.path.exists(staging):
+            os.remove(staging)
+    _observe("write", target, principal)
+    add_event("success", "File Explorer", f"Received {os.path.basename(target)} in Inbox")
+    return {"status": "ok", "path": target, "name": os.path.basename(target)}
 
 
 @router.post(

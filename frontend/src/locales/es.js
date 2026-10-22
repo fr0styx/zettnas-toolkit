@@ -2087,5 +2087,9 @@ export default {
   "guard.none_blocked": "Ninguna. Una dirección con 20 inicios de sesión fallidos en 15 minutos se bloquea una hora.",
   "guard.until": "hasta {when}",
   "guard.unblock": "Desbloquear",
-  "guard.unblock_ip": "Desbloquear {ip}"
+  "guard.unblock_ip": "Desbloquear {ip}",
+  "pwa.share_saved": "{saved} guardado(s) en tu carpeta Inbox.",
+  "pwa.share_partial": "{saved} guardado(s) en Inbox, {failed} fallaron.",
+  "pwa.share_login": "Inicia sesión y vuelve a compartir los archivos.",
+  "pwa.share_error": "No se pudieron leer los archivos compartidos."
 };

@@ -225,6 +225,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('vm-console-direct');
   }
 
+  // Installable app and share-sheet uploads (M1); not on the LCD or a VM console
+  if (!state.isLcdDirect && !state.isVmConsoleDirect) {
+    import('./pwa.js').then((m) => m.initPwa()).catch(() => {});
+  }
+
   // Optimized Direct Modes: Avoid booting desktop window manager & apps
   if (state.isVmConsoleDirect) {
     setWindowRestorationComplete(true);

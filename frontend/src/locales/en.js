@@ -2087,5 +2087,9 @@ export default {
   "guard.none_blocked": "None. Addresses with 20 failed sign-ins in 15 minutes are blocked for an hour.",
   "guard.until": "until {when}",
   "guard.unblock": "Unblock",
-  "guard.unblock_ip": "Unblock {ip}"
+  "guard.unblock_ip": "Unblock {ip}",
+  "pwa.share_saved": "{saved} saved to your Inbox folder.",
+  "pwa.share_partial": "{saved} saved to your Inbox, {failed} failed.",
+  "pwa.share_login": "Sign in, then share the files again.",
+  "pwa.share_error": "The shared files could not be read."
 };

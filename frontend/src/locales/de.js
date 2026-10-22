@@ -2087,5 +2087,9 @@ export default {
   "guard.none_blocked": "Keine. Adressen mit 20 fehlgeschlagenen Anmeldungen in 15 Minuten werden eine Stunde gesperrt.",
   "guard.until": "bis {when}",
   "guard.unblock": "Entsperren",
-  "guard.unblock_ip": "{ip} entsperren"
+  "guard.unblock_ip": "{ip} entsperren",
+  "pwa.share_saved": "{saved} in deinem Inbox-Ordner gespeichert.",
+  "pwa.share_partial": "{saved} im Inbox gespeichert, {failed} fehlgeschlagen.",
+  "pwa.share_login": "Melde dich an und teile die Dateien erneut.",
+  "pwa.share_error": "Die geteilten Dateien konnten nicht gelesen werden."
 };
