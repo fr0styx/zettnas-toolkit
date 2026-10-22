@@ -116,7 +116,7 @@ export function initEvents() {
           renderEventLog([]);
           showToast(t('toast.event_log_cleared', 'Event log cleared'), 'success');
         } catch (err) {
-          showToast('Failed to clear events: ' + err.message, 'error');
+          showToast(t('toast.failed_to_clear_events', 'Failed to clear events: {error}', { error: err.message }), 'error');
         }
       });
     });

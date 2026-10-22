@@ -604,7 +604,7 @@ export function initSettings() {
       });
       showToast(t('toast.button_configuration_saved', 'Button configuration saved'), 'success');
     } catch (err) {
-      showToast('Config Error: ' + err.message, 'error');
+      showToast(t('toast.config_error', 'Config error: {error}', { error: err.message }), 'error');
       loadButtonConfig();
     }
   }

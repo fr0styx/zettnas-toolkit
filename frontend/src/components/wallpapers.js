@@ -134,10 +134,10 @@ export async function renameWallpaper(oldName) {
           }
           await loadWallpapers();
         } else {
-          showToast('Rename failed: ' + (data.error || 'Unknown error'), 'error');
+          showToast(t('toast.rename_failed', 'Rename failed: {error}', { error: data.error || t('toast.unknown_error', 'Unknown error') }), 'error');
         }
       } catch (err) {
-        showToast('Rename request failed: ' + err.message, 'error');
+        showToast(t('toast.rename_request_failed', 'Rename request failed: {error}', { error: err.message }), 'error');
       }
     },
     null,
@@ -161,7 +161,7 @@ export async function deleteWallpaper(filename) {
         showToast(t('toast.wallpaper_deleted', 'Wallpaper deleted'), 'success');
         await loadWallpapers();
       } catch (err) {
-        showToast('Delete failed: ' + err.message, 'error');
+        showToast(t('toast.delete_failed', 'Delete failed: {error}', { error: err.message }), 'error');
       }
     },
     null,
@@ -389,11 +389,11 @@ export async function uploadAndApplyWallpaper(file) {
           showToast(t('toast.wallpaper_uploaded_applied', 'Wallpaper uploaded & applied: {filename}', { filename: data.filename || file.name }), 'success');
           resolve(data);
         } else {
-          showToast('Failed: ' + ((data && data.error) || 'Upload error'), 'error');
+          showToast(t('toast.upload_failed', 'Upload failed: {errDetail}', { errDetail: (data && data.error) || t('toast.unknown_error', 'Unknown error') }), 'error');
           reject(new Error((data && data.error) || 'Upload error'));
         }
       } catch (err) {
-        showToast('Upload failed: ' + err.message, 'error');
+        showToast(t('toast.upload_failed', 'Upload failed: {errDetail}', { errDetail: err.message }), 'error');
         reject(err);
       }
     };

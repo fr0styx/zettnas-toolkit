@@ -4,6 +4,7 @@ import { api } from './api.js';
 import { DockManager, bringToFront } from './components/dock.js';
 import { trapFocus } from './utils.js';
 
+import { t } from './i18n.js';
 window.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
   // Folder Browser Modal Logic
@@ -154,10 +155,10 @@ window.addEventListener('DOMContentLoaded', () => {
         loadBrowsePath("", true);
       } else {
         const err = await res.json().catch(() => ({}));
-        showToast("Failed to load folder: " + (err.detail || res.status), "error");
+        showToast(t("toast.failed_to_load_folder", "Failed to load folder: {error}", { error: err.detail || res.status }), "error");
       }
     } catch (e) {
-      if (typeof showToast === "function") showToast("Failed to load folder: " + e, "error");
+      if (typeof showToast === "function") showToast(t("toast.failed_to_load_folder", "Failed to load folder: {error}", { error: String(e) }), "error");
       else console.error(e);
     }
   }

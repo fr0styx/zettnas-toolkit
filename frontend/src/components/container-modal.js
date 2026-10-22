@@ -770,7 +770,7 @@ async function loadContainerDetails(cid) {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
           const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
           const sizeStr = res?.backup?.archive_size_formatted || '';
-          showToast(`App "${_activeCname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
+          showToast(t('toast.app_backed_up', 'App "{name}" backed up ({archive}).', { name: _activeCname, archive: sizeStr ? `${archiveName}, ${sizeStr}` : archiveName }), 'success');
         } catch (err) {
           showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {

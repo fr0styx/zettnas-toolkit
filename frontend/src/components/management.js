@@ -950,7 +950,7 @@ function _bindDockerEvents() {
         const count = res.updates_available_count || 0;
         updateDockerUpdatesToolbarUI(count);
         if (count > 0) {
-          showToast(`Update check complete: ${count} container update${count > 1 ? 's' : ''} available!`, 'warn');
+          showToast(t('toast.container_updates_available', 'Update check complete: {count} container update(s) available!', { count }), 'warn');
         } else {
           showToast(t('toast.all_containers_are_up_to_date', 'All containers are up to date!'), 'success');
         }
@@ -1443,7 +1443,7 @@ function bindDockerTableEvents(tbody) {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
           const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
           const sizeStr = res?.backup?.archive_size_formatted || '';
-          showToast(`App "${cname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
+          showToast(t('toast.app_backed_up', 'App "{name}" backed up ({archive}).', { name: cname, archive: sizeStr ? `${archiveName}, ${sizeStr}` : archiveName }), 'success');
         } catch (err) {
           showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {
@@ -3004,7 +3004,7 @@ async function refreshSourcesUI() {
         btn.disabled = true;
         try {
           await api.post(`/api/docker/catalog/sources/${sid}/toggle`, { enabled: !curEnabled });
-          showToast(`Source ${!curEnabled ? 'enabled' : 'disabled'}.`, 'info');
+          showToast(!curEnabled ? t('toast.source_enabled', 'Source enabled.') : t('toast.source_disabled', 'Source disabled.'), 'info');
           await refreshSourcesUI();
           fetchAndRenderAppCatalog();
         } catch (err) {
@@ -3022,7 +3022,7 @@ async function refreshSourcesUI() {
         btn.textContent = '⏳';
         try {
           const res = await api.post(`/api/docker/catalog/sources/${sid}/sync`);
-          showToast(`Source synced (${res.source ? res.source.item_count : 0} apps).`, 'success');
+          showToast(t('toast.source_synced', 'Source synced ({count} apps).', { count: res.source ? res.source.item_count : 0 }), 'success');
           await refreshSourcesUI();
           fetchAndRenderAppCatalog();
         } catch (err) {
@@ -5270,7 +5270,7 @@ export async function fetchAndRenderWireguard() {
           interface: 'wg0',
           out_interface: 'eth0',
         });
-        showToast(`WireGuard subnet routing ${res.enabled ? 'enabled' : 'disabled'}.`, 'info');
+        showToast(res.enabled ? t('toast.wg_routing_enabled', 'WireGuard subnet routing enabled.') : t('toast.wg_routing_disabled', 'WireGuard subnet routing disabled.'), 'info');
         fetchAndRenderWireguard();
       } catch (err) {
         showToast(t('toast.subnet_routing_toggle_failed', 'Subnet routing toggle failed: {error}', { error: err.message }), 'error');
@@ -7975,7 +7975,7 @@ export function initManagement() {
       }
       try {
         await api.post('/api/system/profile', { profile: p });
-        showToast(`System profile switched to ${p === 'auto' ? 'AUTO DYNAMIC' : p.toUpperCase()}.`, 'success');
+        showToast(t('toast.system_profile_switched', 'System profile switched to {profile}.', { profile: p === 'auto' ? t('toast.profile_auto', 'Automatic') : p.toUpperCase() }), 'success');
       } catch (err) {
         showToast(t('toast.failed_to_switch_profile', 'Failed to switch profile: {error}', { error: err.message }), 'error');
       }
@@ -10311,7 +10311,7 @@ export async function installAiModel(tag, btn = null, modelId = null, { pollMs =
     }
     return job;
   } catch (err) {
-    showToast(`${t('ai.install_failed', 'Could not install model')}: ${err.message}`, 'error');
+    showToast(t('toast.ai_install_failed', 'Could not install model: {error}', { error: err.message }), 'error');
     if (btn) { btn.disabled = false; label(`⬇️ ${t('ai.install_model', 'Install')}`); }
     return null;
   }
@@ -10432,12 +10432,12 @@ export async function pullHuggingFaceModel(repoId, activate = true) {
         if (statusEl) {
           statusEl.textContent = `⚠️ Pulled ${res.model?.hf_repo || cleanRepo} — ${res.warning_message}`;
         }
-        showToast(`⚠️ Pulled ${res.model?.name || cleanRepo}: ${res.warning_message}`, 'warn');
+        showToast(t('toast.hf_pulled_warning', '⚠️ Added {model}: {warning}', { model: res.model?.name || cleanRepo, warning: res.warning_message }), 'warn');
       } else {
         if (statusEl) {
           statusEl.textContent = `✅ Pulled ${res.model?.hf_repo || cleanRepo} from Hugging Face (Fits your hardware).`;
         }
-        showToast(`🤗 Pulled & activated ${res.model?.name || cleanRepo} from Hugging Face`, 'success');
+        showToast(t('toast.hf_pulled', '🤗 Added and selected {model} from Hugging Face', { model: res.model?.name || cleanRepo }), 'success');
       }
       await fetchAndRenderAiStatus();
     }
@@ -10511,7 +10511,7 @@ export async function relearnAiFailedFiles() {
   try {
     const res = await api.post('/api/media/learning/relearn-failed', {});
     if (res) {
-      showToast(`Relearned ${res.relearned ?? 0} file(s) (${res.still_failed ?? 0} remaining).`, 'success');
+      showToast(t('toast.relearned', 'Relearned {count} file(s) ({remaining} remaining).', { count: res.relearned ?? 0, remaining: res.still_failed ?? 0 }), 'success');
       await openAiLearningResults();
       await fetchAndRenderAiStatus();
     }
@@ -10690,7 +10690,7 @@ export async function forgetAiFolder(folderPath) {
     showToast(t('ai.forget_folder_done', "Forgot {count} file(s) from {folder}. It won't be learned again.", { count: n, folder: folderPath }), 'success');
     return res;
   } catch (err) {
-    if (err?.error !== 'cancelled') showToast(`${t('ai.forget_folder_failed', 'Could not forget folder')}: ${err.message}`, 'error');
+    if (err?.error !== 'cancelled') showToast(t('toast.ai_forget_failed', 'Could not forget folder: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -11104,7 +11104,7 @@ export function initAiKnowledgeEngine() {
     scopeModeSelect.dataset.bound = '1';
     scopeModeSelect.addEventListener('change', async () => {
       await updateAiServiceConfig({ scope_mode: scopeModeSelect.value });
-      showToast(`Learning scope updated to: ${scopeModeSelect.options[scopeModeSelect.selectedIndex]?.text || scopeModeSelect.value}`, 'info');
+      showToast(t('toast.learning_scope_updated', 'Learning scope: {scope}', { scope: scopeModeSelect.options[scopeModeSelect.selectedIndex]?.text || scopeModeSelect.value }), 'info');
     });
   }
 
@@ -11605,7 +11605,7 @@ export async function fetchAndRenderAiStatus() {
             await api.post('/api/ai/config', { conversation_retention_days: parseInt(e.target.value, 10) || 0 });
             showToast(t('ai.retention_saved', 'Chat retention saved'), 'success');
           } catch (err) {
-            showToast(`${t('ai.retention_failed', 'Could not save chat retention')}: ${err.message}`, 'error');
+            showToast(t('toast.ai_retention_failed', 'Could not save chat retention: {error}', { error: err.message }), 'error');
           }
         });
       }
@@ -11631,7 +11631,7 @@ export async function fetchAndRenderAiStatus() {
           await api.post('/api/ai/config', { embedding_model: val });
           showToast(t('ai.embedding_model_saved', 'Embedding model updated'), 'success');
         } catch (err) {
-          showToast('Failed to update embedding model: ' + err.message, 'error');
+          showToast(t('toast.failed_update_embedding_model', 'Failed to update embedding model: {error}', { error: err.message }), 'error');
         }
       });
     }
@@ -11644,7 +11644,7 @@ export async function fetchAndRenderAiStatus() {
           await api.post('/api/ai/config', { embedding_dim: val });
           showToast(t('ai.mrl_dim_saved', 'Vector size updated'), 'success');
         } catch (err) {
-          showToast('Failed to update MRL dimension: ' + err.message, 'error');
+          showToast(t('toast.failed_update_vector_size', 'Failed to update vector size: {error}', { error: err.message }), 'error');
         }
       });
     }
@@ -11672,7 +11672,7 @@ export async function fetchAndRenderAiStatus() {
             showToast(t('toast.ai_benchmark_completed_successfully', 'AI benchmark completed successfully'), 'success');
           }
         } catch (err) {
-          showToast('Benchmark failed: ' + err.message, 'error');
+          showToast(t('toast.benchmark_failed', 'Benchmark failed: {error}', { error: err.message }), 'error');
         } finally {
           btnBenchmark.disabled = false;
           btnBenchmark.innerHTML = origHtml;
@@ -13845,7 +13845,7 @@ export async function triggerInPlaceReindex() {
       _pollReindexProgress();
     }
   } catch (err) {
-    showToast('Failed to trigger re-index: ' + err.message, 'error');
+    showToast(t('toast.failed_trigger_reindex', 'Failed to start re-indexing: {error}', { error: err.message }), 'error');
   }
 }
 

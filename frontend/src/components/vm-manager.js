@@ -4264,7 +4264,7 @@ async function initRealVncClient(container, vmId, vmName) {
       });
 
       rfb.addEventListener('securityfailure', (e) => {
-        showToast(`VNC Security Error: ${e.detail?.reason || 'Authentication failed'}`, 'error');
+        showToast(t('toast.vnc_security_error', 'VNC security error: {reason}', { reason: e.detail?.reason || t('toast.authentication_failed', 'Authentication failed') }), 'error');
       });
 
       _activeRfb = rfb;

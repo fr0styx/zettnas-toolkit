@@ -1081,7 +1081,7 @@ export function bindSftpCardEvents(container, onRefresh) {
         const status = await api.get('/api/sftp/status').catch(() => ({ running: false }));
         const isRunning = Boolean(status.running);
         await api.post('/api/sftp/toggle', { enabled: !isRunning });
-        showToast(`SFTP service ${!isRunning ? 'started' : 'stopped'}.`, 'success');
+        showToast(!isRunning ? t('toast.sftp_started', 'SFTP service started.') : t('toast.sftp_stopped', 'SFTP service stopped.'), 'success');
         if (onRefresh) onRefresh();
       } catch (err) {
         showToast(t('toast.failed_to_toggle_sftp', 'Failed to toggle SFTP: {error}', { error: err.message }), 'error');
@@ -1386,7 +1386,7 @@ export async function openSftpUsersModal(onSuccess) {
           toggleBtn.disabled = true;
           try {
             await api.post('/api/sftp/toggle', { enabled: !isRunning });
-            showToast(`SFTP service ${!isRunning ? 'started' : 'stopped'}.`, 'success');
+            showToast(!isRunning ? t('toast.sftp_started', 'SFTP service started.') : t('toast.sftp_stopped', 'SFTP service stopped.'), 'success');
             await refreshSftpUI();
             if (onSuccess) onSuccess();
           } catch (err) {
@@ -1777,7 +1777,7 @@ export async function fetchAndRenderRemoteStorage(container) {
         showToast(isRunning ? 'WebDAV server stopped.' : 'WebDAV server started on port ' + webdavStatus.port, 'info');
         fetchAndRenderRemoteStorage(container);
       } catch (e) {
-        showToast('Failed to toggle WebDAV: ' + (e.message || 'Error'), 'error');
+        showToast(t('toast.failed_toggle_webdav', 'Failed to toggle WebDAV: {error}', { error: e.message || t('toast.unknown_error', 'Unknown error') }), 'error');
       }
     });
 
@@ -1789,7 +1789,7 @@ export async function fetchAndRenderRemoteStorage(container) {
         showToast(t('toast.webdav_server_restarted', 'WebDAV server restarted.'), 'info');
         fetchAndRenderRemoteStorage(container);
       } catch (e) {
-        showToast('Failed to restart WebDAV: ' + (e.message || 'Error'), 'error');
+        showToast(t('toast.failed_restart_webdav', 'Failed to restart WebDAV: {error}', { error: e.message || t('toast.unknown_error', 'Unknown error') }), 'error');
       }
     });
 
@@ -1967,7 +1967,7 @@ export function openWebdavConfigModal(currentConfig, onSuccess) {
         showToast(t('toast.webdav_configuration_saved_and_server_restarted', 'WebDAV configuration saved and server restarted!'), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
-        showToast('Error saving WebDAV config: ' + (err.message || 'Error'), 'error');
+        showToast(t('toast.error_saving_webdav', 'Error saving WebDAV config: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }), 'error');
       }
     };
   }
@@ -2840,7 +2840,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
       };
     }
   } catch (err) {
-    showToast('Failed to load storage providers: ' + (err.message || 'Error'), 'error');
+    showToast(t('toast.failed_load_storage_providers', 'Failed to load storage providers: {error}', { error: err.message || t('toast.unknown_error', 'Unknown error') }), 'error');
   }
 }
 

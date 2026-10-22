@@ -87,7 +87,7 @@ window.addEventListener('DOMContentLoaded', () => {
             showToast(t('toast.self_test_aborted_on_dev', 'Self-test aborted on /dev/{dev}', { dev: dev }), "ok");
             updateSmartTestProgressUI({ self_test_progress: { is_aborted: true, percent_completed: 100, in_progress: false } }, type);
           } else {
-            showToast(`Failed to abort: ${res?.error || 'Unknown error'}`, "error");
+            showToast(t('toast.failed_to_abort', 'Failed to abort: {result}', { result: res?.error || t('toast.unknown_error', 'Unknown error') }), "error");
           }
           return;
         }
@@ -108,7 +108,7 @@ window.addEventListener('DOMContentLoaded', () => {
           startSmartPolling(dev, type);
           if (smartRaw) smartRaw.textContent = `[S.M.A.R.T. Self-Test Action: ${type}]\n${res.output}\n\n` + smartRaw.textContent;
         } else {
-          showToast(`Failed: ${res?.error || 'Unknown error'}`, "error");
+          showToast(t('toast.failed', 'Failed: {error}', { error: res?.error || t('toast.unknown_error', 'Unknown error') }), "error");
           if (testStatus) testStatus.textContent = `Failed: ${res?.error || 'Error'}`;
         }
       } catch (err) {

@@ -1697,7 +1697,7 @@ export function setupWidgetSettingsEvents() {
     calHolidayToggle.addEventListener('change', (e) => {
       saveWidgetConfig({ calendarHolidays: e.target.checked });
       renderCalendar();
-      showToast(`Calendar holidays ${e.target.checked ? 'enabled' : 'disabled'}`, 'info');
+      showToast(e.target.checked ? t('toast.calendar_holidays_enabled', 'Calendar holidays enabled') : t('toast.calendar_holidays_disabled', 'Calendar holidays disabled'), 'info');
     });
   }
 
@@ -3001,7 +3001,7 @@ export async function exportCalendarIcs() {
     URL.revokeObjectURL(url);
     showToast(t('toast.calendar_exported_ics', 'Calendar exported (.ics)'), 'success');
   } catch (err) {
-    showToast('Failed to export calendar: ' + err.message, 'error');
+    showToast(t('toast.failed_export_calendar', 'Failed to export calendar: {error}', { error: err.message }), 'error');
   }
 }
 window.exportCalendarIcs = exportCalendarIcs;
@@ -3139,7 +3139,7 @@ export function setupCalendarModalEvents() {
           showToast(t('cal.note_added') || 'Note added successfully', 'success');
         }
       } catch (err) {
-        showToast('Failed to add note: ' + err.message, 'error');
+        showToast(t('toast.failed_add_note', 'Failed to add note: {error}', { error: err.message }), 'error');
       }
     });
   }
@@ -3165,7 +3165,7 @@ export function setupCalendarModalEvents() {
           renderCalendar();
           showToast(t('toast.note_deleted', 'Note deleted'), 'info');
         } catch (err) {
-          showToast('Failed to delete note: ' + err.message, 'error');
+          showToast(t('toast.failed_delete_note', 'Failed to delete note: {error}', { error: err.message }), 'error');
         }
         return;
       }
@@ -3181,7 +3181,7 @@ export function setupCalendarModalEvents() {
           card.classList.toggle('completed', checked);
         } catch (err) {
           e.target.checked = !checked;
-          showToast('Failed to update task: ' + err.message, 'error');
+          showToast(t('toast.failed_update_task', 'Failed to update task: {error}', { error: err.message }), 'error');
         }
       }
     });
@@ -3234,7 +3234,7 @@ export function setupCalendarModalEvents() {
           fetchCalendarEvents();
         }
       } catch (err) {
-        showToast('Failed to connect feed: ' + (err.body?.detail || err.message), 'error');
+        showToast(t('toast.failed_connect_feed', 'Failed to connect feed: {error}', { error: err.body?.detail || err.message }), 'error');
       } finally {
         submitFeedBtn.disabled = false;
         submitFeedBtn.textContent = 'Connect & Sync';
@@ -3257,7 +3257,7 @@ export function setupCalendarModalEvents() {
         fetchCalendarFeeds();
         fetchCalendarEvents();
       } catch (err) {
-        showToast('Failed to delete feed: ' + err.message, 'error');
+        showToast(t('toast.failed_delete_feed', 'Failed to delete feed: {error}', { error: err.message }), 'error');
       }
     });
   }
@@ -3275,7 +3275,7 @@ export function setupCalendarModalEvents() {
           fetchCalendarEvents();
         }
       } catch (err) {
-        showToast('Sync failed: ' + err.message, 'error');
+        showToast(t('toast.sync_failed', 'Sync failed: {error}', { error: err.message }), 'error');
       } finally {
         syncBtn.disabled = false;
         syncBtn.innerHTML = '🔄 Sync Feeds';

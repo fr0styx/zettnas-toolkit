@@ -301,7 +301,7 @@ export function initContainersManager() {
         const count = res.updates_available_count || 0;
         updateCwUpdatesUI(count);
         if (count > 0) {
-          showToast(`Update check complete: ${count} container update${count > 1 ? 's' : ''} available!`, 'warn');
+          showToast(t('toast.container_updates_available', 'Update check complete: {count} container update(s) available!', { count }), 'warn');
         } else {
           showToast(t('toast.all_containers_are_up_to_date', 'All containers are up to date!'), 'success');
         }
@@ -1230,7 +1230,7 @@ function bindCwTableEvents(tbody) {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
           const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
           const sizeStr = res?.backup?.archive_size_formatted || '';
-          showToast(`App "${cname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
+          showToast(t('toast.app_backed_up', 'App "{name}" backed up ({archive}).', { name: cname, archive: sizeStr ? `${archiveName}, ${sizeStr}` : archiveName }), 'success');
         } catch (err) {
           showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {
