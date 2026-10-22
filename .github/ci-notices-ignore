@@ -1,0 +1,5 @@
+# Notices the CI notices workflow (scripts/ci_notices.py) should not report.
+# One regular expression per line, matched case-insensitively against the notice text.
+
+# ldap3 is unmaintained (2.9.1) and calls a pyasn1 API that pyasn1 deprecated; nothing to update.
+ldap3/utils/asn1\.py:\d+: DeprecationWarning: (tagMap|typeMap) is deprecated

@@ -1,0 +1,45 @@
+name: CI update notices
+
+# Looks for "newer version available" and deprecation notices in CI runs, and for actions and
+# tools that have newer releases. Findings go to the job summary and to one issue,
+# "CI update notices", which is closed when there is nothing left. See scripts/ci_notices.py.
+on:
+  workflow_run:
+    workflows: ["CI & Release"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "30 6 * * 1" # Mondays: catches new releases between pushes
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "CI run to scan (default: the latest completed run on main)"
+        required: false
+
+permissions:
+  actions: read # run logs
+  checks: read # run annotations
+  contents: read
+  issues: write # the tracking issue
+
+concurrency:
+  group: ci-notices
+  cancel-in-progress: true
+
+jobs:
+  notices:
+    runs-on: ubuntu-latest
+    # Only runs of this repository's own main branch, never a fork's
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.head_repository.full_name == github.repository
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Check for update notices
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+        run: python3 scripts/ci_notices.py --run-id "$RUN_ID"
