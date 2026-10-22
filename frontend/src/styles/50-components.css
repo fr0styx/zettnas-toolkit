@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Shared components (FE-18)
+   Small building blocks for settings panels, driven by tokens so themes can
+   restyle them in one place. New panels use these instead of one-off classes;
+   buttons use the existing .btn-pill-toggle. Single-class selectors keep the
+   specificity low, so they never need an important flag.
+   ========================================================================== */
+:root {
+  --zn-space-1: 4px;
+  --zn-space-2: 8px;
+  --zn-space-3: 12px;
+  --zn-space-4: 14px;
+  --zn-radius: 8px;
+  --zn-radius-sm: 6px;
+  --zn-fs-sm: 11px;
+  --zn-fs: 11.5px;
+  --zn-fs-title: 12.5px;
+  --zn-text-strong: #fff;
+  --zn-text: #e2e8f0;
+  --zn-text-soft: #cbd5e1;
+  --zn-text-muted: #94a3b8;
+  --zn-line: rgba(255, 255, 255, 0.06);
+  --zn-line-strong: rgba(255, 255, 255, 0.12);
+  --zn-surface: rgba(15, 23, 42, 0.65);
+  --zn-surface-line: rgba(56, 189, 248, 0.25);
+  --zn-danger-bg: rgba(235, 87, 87, 0.18);
+  --zn-danger-line: rgba(235, 87, 87, 0.5);
+  --zn-danger-text: #fecaca;
+}
+body.theme-light {
+  --zn-text-strong: #0f172a;
+  --zn-text: #1e293b;
+  --zn-text-soft: #334155;
+  --zn-text-muted: #475569;
+  --zn-line: rgba(15, 23, 42, 0.1);
+  --zn-line-strong: rgba(15, 23, 42, 0.16);
+  --zn-surface: rgba(255, 255, 255, 0.7);
+  --zn-surface-line: rgba(2, 132, 199, 0.3);
+  --zn-danger-bg: rgba(220, 38, 38, 0.1);
+  --zn-danger-line: rgba(220, 38, 38, 0.45);
+  --zn-danger-text: #991b1b;
+}
+
+/* Card: a stack of rows. --divided sits under a line, --boxed is a framed tile. */
+.zn-card { display: flex; flex-direction: column; gap: var(--zn-space-2); }
+.zn-card--divided { border-top: 1px solid var(--zn-line); margin-top: var(--zn-space-4); padding-top: var(--zn-space-4); }
+.zn-card--boxed { background: var(--zn-surface); border: 1px solid var(--zn-surface-line); border-radius: var(--zn-radius); padding: 10px var(--zn-space-3); margin-bottom: 10px; }
+.zn-box { background: var(--zn-surface); border: 1px solid var(--zn-line-strong); border-radius: var(--zn-radius); padding: 9px var(--zn-space-3); }
+
+/* Text */
+.zn-title { font-weight: 700; font-size: var(--zn-fs-title); color: var(--zn-text-strong); }
+.zn-title--sub { margin-top: 6px; }
+.zn-muted { font-size: var(--zn-fs-sm); color: var(--zn-text-muted); line-height: 1.4; }
+
+/* Layout */
+.zn-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-2); }
+.zn-row--between { justify-content: space-between; flex-wrap: nowrap; }
+.zn-push-end { margin-left: auto; }
+
+/* Forms */
+.zn-form { display: flex; flex-direction: column; gap: var(--zn-space-2); }
+.zn-form > button { align-self: flex-start; }
+.zn-field { display: flex; flex-direction: column; gap: 3px; font-size: var(--zn-fs-sm); color: var(--zn-text-soft); }
+.zn-field input, .zn-field select { height: 28px; font-size: var(--zn-fs); border-radius: var(--zn-radius-sm); }
+.zn-toggle { display: flex; align-items: center; gap: var(--zn-space-2); font-size: var(--zn-fs); color: var(--zn-text-soft); cursor: pointer; }
+
+/* Status */
+.zn-alert { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px var(--zn-space-3); border-radius: var(--zn-radius); font-size: var(--zn-fs); line-height: 1.45; }
+.zn-alert--danger { background: var(--zn-danger-bg); border: 1px solid var(--zn-danger-line); color: var(--zn-danger-text); }
+
+/* Lists and tables */
+.zn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.zn-list > li { display: flex; align-items: center; gap: var(--zn-space-2); font-size: var(--zn-fs); color: var(--zn-text); }
+.zn-list > li > button:last-child { margin-left: auto; }
+.zn-table { width: 100%; border-collapse: collapse; font-size: var(--zn-fs); color: var(--zn-text); }
+.zn-table th { text-align: left; color: var(--zn-text-muted); font-weight: 600; padding: 3px 6px; border-bottom: 1px solid var(--zn-line-strong); }
+.zn-table td { padding: 3px 6px; border-bottom: 1px solid var(--zn-line); }

@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -420,8 +421,7 @@ describe('Docker Container Table Column Sorting Suite', () => {
     });
 
     it('verifies action buttons are grouped with vertical-align: middle and centered SVG to eliminate bottom padding drift', () => {
-      const cssPath = path.resolve(__dirname, '../../../frontend/src/style.css');
-      const cssContent = fs.readFileSync(cssPath, 'utf8');
+      const cssContent = readStyleCss();
 
       expect(cssContent).toContain('.docker-actions-btn-group');
       expect(cssContent).toMatch(/\.docker-actions-btn-group\s*\{[^}]*align-items:\s*center;/);

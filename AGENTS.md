@@ -91,7 +91,8 @@ zettnas-toolkit/
 │   │   ├── api.js                  # Fetch wrapper with token injection & error toasts
 │   │   ├── state.js                # Shared client-side reactive state & event subscriptions
 │   │   ├── i18n.js                 # Multilingual translation dictionary (EN, DE, ZH, FR, ES)
-│   │   ├── style.css               # Comprehensive CSS variables, glassmorphism, themes
+│   │   ├── style.css               # Imports styles/*.css in cascade order (keep the order)
+│   │   ├── styles/                 # CSS per area; 50-components.css holds the shared zn-* components
 │   │   └── components/             # Modular desktop components
 │   │       ├── dock.js             # macOS-style dock, window drag/snap, taskbar
 │   │       ├── management.js       # Mission Control (Containers, Storage, System, Alerts)

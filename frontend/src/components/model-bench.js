@@ -32,8 +32,8 @@ export async function renderModelBench() {
   host.hidden = false;
   const running = st.job && st.job.state === 'running';
   const head = document.createElement('div');
-  head.className = 'bench-head';
-  head.append(cell('span', t('bench.title', '⏱️ Benchmark installed models'), 'guard-title'));
+  head.className = 'zn-row zn-row--between';
+  head.append(cell('span', t('bench.title', '⏱️ Benchmark installed models'), 'zn-title'));
   const run = cell('button', running ? t('bench.running', 'Running {done} of {total}…', { done: st.job.done || 0, total: st.job.total || '?' }) : t('bench.run', 'Run benchmark'), 'btn-pill-toggle');
   run.type = 'button';
   run.disabled = running;
@@ -43,10 +43,10 @@ export async function renderModelBench() {
     renderModelBench();
   });
   head.append(run);
-  const parts = [head, cell('div', t('bench.desc', 'Measures how fast each chat model writes on this NAS and where it runs. "Balanced" is the largest model that still writes at reading speed.'), 'guard-muted')];
+  const parts = [head, cell('div', t('bench.desc', 'Measures how fast each chat model writes on this NAS and where it runs. "Balanced" is the largest model that still writes at reading speed.'), 'zn-muted')];
   if (st.results && st.results.length) {
     const table = document.createElement('table');
-    table.className = 'bench-table';
+    table.className = 'zn-table';
     const tr = document.createElement('tr');
     [t('bench.model', 'Model'), t('bench.speed', 'Tokens/s'), t('bench.first', 'First token'), t('bench.where', 'Runs on')].forEach((h) => tr.append(cell('th', h)));
     table.append(tr);
@@ -59,10 +59,10 @@ export async function renderModelBench() {
       table.append(row);
     }
     parts.push(table);
-    if (st.finished_at) parts.push(cell('div', t('bench.when', 'Measured {when}', { when: formatDateTime(st.finished_at * 1000) }), 'guard-muted'));
+    if (st.finished_at) parts.push(cell('div', t('bench.when', 'Measured {when}', { when: formatDateTime(st.finished_at * 1000) }), 'zn-muted'));
     const rec = st.recommended || {};
     const actions = document.createElement('div');
-    actions.className = 'bench-actions';
+    actions.className = 'zn-row';
     for (const tier of ['balanced', 'fast']) {
       if (!rec[tier]) continue;
       const b = cell('button', tier === 'balanced' ? t('bench.use_balanced', 'Use balanced: {model}', { model: rec[tier] }) : t('bench.use_fast', 'Use fastest: {model}', { model: rec[tier] }), 'btn-pill-toggle');

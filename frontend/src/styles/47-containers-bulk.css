@@ -1,0 +1,247 @@
+/* ==========================================================================
+   Docker Containers Multi-Select & Floating Bulk Action Bar
+   ========================================================================== */
+tr.docker-row-selected {
+  background: rgba(14, 165, 233, 0.09) !important;
+  box-shadow: inset 2px 0 0 var(--brand, #0ea5e9);
+}
+
+.docker-floating-bulk-bar {
+  position: sticky;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 18px rgba(14, 165, 233, 0.25);
+  z-index: 50;
+  margin: 12px auto 4px auto;
+  width: fit-content;
+  max-width: 95%;
+  animation: bulkBarSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bulkBarSlideUp {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.docker-floating-bulk-bar .bulk-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+  padding-right: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.docker-floating-bulk-bar .bulk-bar-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--brand, #0ea5e9);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.docker-floating-bulk-bar .bulk-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.docker-floating-bulk-bar .btn-bulk-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.docker-floating-bulk-bar .btn-bulk-action:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.docker-floating-bulk-bar .btn-bulk-delete:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.docker-floating-bulk-bar .btn-bulk-cancel {
+  padding: 4px 8px;
+  color: #94a3b8;
+}
+
+
+/* ==========================================================================
+   Apps & Containers: only the container list scrolls (desktop)
+   While the Containers list is showing, the Management content pane stops
+   scrolling; the tabs, title row, filter toolbar and table header stay put and
+   the table box scrolls on its own. Other sections and the App Store tab keep
+   normal page scrolling. Phones keep page scrolling (a fixed header would take
+   most of the screen).
+   ========================================================================== */
+@media (min-width: 769px) {
+  body:not(.mobile-mode) .mgmt-content-pane:has(
+      > #management-detail-container > #mgmt-sec-docker:not([style*="display: none"])
+        #mgmt-pane-docker:not([style*="display: none"])
+        #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column;
+    padding-bottom: 14px !important;
+  }
+
+  body:not(.mobile-mode) #management-detail-container:has(
+      > #mgmt-sec-docker:not([style*="display: none"])
+        #mgmt-pane-docker:not([style*="display: none"])
+        #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #mgmt-sec-docker:not([style*="display: none"]):has(
+      #mgmt-pane-docker:not([style*="display: none"]) #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #mgmt-sec-docker:has(#docker-view-containers-wrap:not([style*="display: none"]))
+    > .mgmt-sticky-subnav,
+  body:not(.mobile-mode) #mgmt-pane-docker:has(#docker-view-containers-wrap:not([style*="display: none"]))
+    > .mgmt-card-intro,
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-toolbar,
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-top-scroll,
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-sticky-scroll {
+    flex: 0 0 auto;
+  }
+
+  body:not(.mobile-mode) #mgmt-pane-docker:not([style*="display: none"]):has(
+      #docker-view-containers-wrap:not([style*="display: none"])
+    ) {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #mgmt-pane-docker:has(#docker-view-containers-wrap:not([style*="display: none"]))
+    > .mgmt-detail-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap:not([style*="display: none"]) {
+    display: flex !important; /* the app sets an inline display: block */
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container {
+    flex: 1 1 auto;
+    min-height: 120px;
+    overflow: auto !important;
+  }
+
+  /* Column headers stay visible while rows scroll beneath them. */
+  body:not(.mobile-mode) #docker-view-containers-wrap .docker-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #080c13;
+  }
+
+  /* One horizontal scrollbar: keep the synced bar under the table, hide the one
+     above it and the table box's own horizontal bar (the box still scrolls
+     sideways with a trackpad). scrollbar-color is reset because Chrome ignores
+     ::-webkit-scrollbar rules while an inherited scrollbar-color is set. */
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-top-scroll {
+    display: none !important;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container {
+    scrollbar-color: auto;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 0;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.28);
+    border-radius: 4px;
+  }
+
+  body:not(.mobile-mode) #docker-view-containers-wrap > .docker-table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.45);
+  }
+}
+
+/* replaces inline onmouseover handlers (FE-06) */
+[data-hover-bg]:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* "Can't reach ZettNAS" banner (FE-16) */
+.zn-offline-banner {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483000;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #7f1d1d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.zn-offline-banner[hidden] {
+  display: none;
+}
+
+
+/* Single sign-on button on the login screen (M6) */
+.login-sso-btn { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; margin-top: 10px; background: rgba(56,189,248,0.12); }
+.login-sso-error { margin: 10px 0 0; font-size: 12px; color: #fca5a5; }

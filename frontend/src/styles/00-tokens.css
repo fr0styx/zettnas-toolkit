@@ -1,0 +1,100 @@
+@layer reset, base, layout, components, themes;
+
+@import "../lcd-direct.css";
+@import "../vm-console-direct.css";
+
+:root{
+  --bg:#0a0e13; --card:#141b24; --card-hi:#1b2430;
+  --fg:#eaf1f8; --muted:#8493a5;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans CJK SC", "Noto Sans CJK JP", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --ok:#33d17a; --ok2:#25c2a0; --warn:#f5b731; --crit:#f0553b;
+  --desktop-ok2: var(--desktop-accent, var(--ok2));
+  --lcd-ok2: var(--lcd-accent, #25c2a0);
+  --track:#232e3c;
+  --stage-zoom: 1;
+  --chassis-scale: 1;
+  --chassis-opacity: 1;
+  --stage-gap: 24px;
+  --stage-offset-y: 0px;
+
+  /* Chromatic Base & Dynamic Contrast Tokens */
+  --brand-rgb: 0, 240, 255;
+  --brand: rgb(var(--brand-rgb));
+  --accent-contrast-fg: #0b1118;
+  accent-color: var(--brand);
+  --ui-scale: 1;
+
+  /* Focus & A11y Ring Tokens (WCAG 2.2 AA) */
+  --focus-ring: #00f0ff;
+  --focus-shadow: 0 0 0 3px rgba(0, 240, 255, 0.35);
+
+  /* Glassmorphism & Visual Effects Tokens */
+  --glass-blur: 24px;
+  --glass-opacity: 0.72;
+  --window-radius: 12px;
+  --window-glow-enabled: 0;
+  --accent-rgb: 0, 240, 255;
+  --accent-glow: rgba(0, 240, 255, 0.35);
+  --accent-hover: rgba(0, 240, 255, 0.15);
+  --wallpaper-dim: 0.15;
+  --wallpaper-blur: 0px;
+
+  /* Workspace Bounds & Dock Tokens */
+  --dock-position: bottom;
+  --dock-height: 52px;
+  --dock-icon-size: 48px;
+  --workspace-inset-bottom: calc(var(--dock-height) + 16px);
+  --workspace-inset-left: 0px;
+  --workspace-inset-top: 0px;
+
+  /* Z-Index Hierarchy Layering */
+  --z-desktop-icons: 10;
+  --z-window-base: 1000;
+  --z-dock: 6000;
+  --z-dock-tooltip: 6100;
+  --z-drawer-backdrop: 7000;
+  --z-drawer: 7100;
+  --z-palette-backdrop: 8000;
+  --z-palette: 8100;
+  --z-modal-backdrop: 9000;
+  --z-modal: 9100;
+  --z-toast: 10000;
+  --z-confirm-backdrop: 11000;
+  --z-confirm-modal: 11001;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+
+html {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body, body.studio-workbench:not(.lcd-direct) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", Arial, sans-serif;
+  color: var(--fg);
+  background: radial-gradient(circle at 50% 50%, #151d29 0%, #080c10 70%);
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  user-select: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+

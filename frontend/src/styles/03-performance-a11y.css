@@ -1,0 +1,398 @@
+/* =========================================================================
+   PERFORMANCE, ACCESSIBILITY & LOW-POWER HARDWARE COMPOSITING
+   ========================================================================= */
+@media (prefers-reduced-transparency: reduce) {
+  .os-window,
+  .management-window,
+  .smart-modal-window,
+  .drawer-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(17, 24, 34, 0.96) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-dock .dock-item {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Eco / Low-Power Mode for Entry-Level Homelab Silicon */
+[data-performance-mode="eco"] .os-window,
+[data-performance-mode="eco"] .management-window,
+[data-performance-mode="eco"] .smart-modal-window,
+[data-performance-mode="eco"] .drawer-card,
+[data-performance-mode="eco"] .desktop-widget,
+[data-performance-mode="eco"] .suite-navbar,
+[data-performance-mode="eco"] .os-dock {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(17, 24, 34, 0.95) !important;
+}
+
+/* Transient Dragging & Resizing De-blurring */
+.window-dragging,
+.window-resizing {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--card-solid, var(--card)) !important;
+}
+
+#screen,
+#mini-lcd-canvas,
+.mini-preview-inner {
+  color: var(--fg) !important;
+}
+
+#screen,
+.mini-preview-inner {
+  background: var(--bg) !important;
+}
+
+#screen.lcd-theme-amber,
+#mini-lcd-canvas.lcd-theme-amber,
+#console-window.lcd-theme-amber,
+body.lcd-direct.lcd-theme-amber {
+  --bg: #120d04;
+  --card: #1f1708;
+  --card-hi: #2b200b;
+  --fg: #fef3c7;
+  --muted: #a67c29;
+  --ok: #ffbe40;
+  --ok2: #e09b20;
+  --warn: #ff8c00;
+  --crit: #e63946;
+  --track: #2a1f0a;
+  --brand: #ffbe40;
+}
+
+#screen.lcd-theme-emerald,
+#mini-lcd-canvas.lcd-theme-emerald,
+#console-window.lcd-theme-emerald,
+body.lcd-direct.lcd-theme-emerald {
+  --bg: #04120a;
+  --card: #082012;
+  --card-hi: #0c2e1a;
+  --fg: #e6fced;
+  --muted: #38b56f;
+  --ok: #3bf58b;
+  --ok2: #24d673;
+  --warn: #eab308;
+  --crit: #ef4444;
+  --track: #0e331f;
+  --brand: #3bf58b;
+}
+
+#screen.lcd-theme-sapphire,
+#mini-lcd-canvas.lcd-theme-sapphire,
+#console-window.lcd-theme-sapphire,
+body.lcd-direct.lcd-theme-sapphire {
+  --bg: #070e17;
+  --card: #0c1929;
+  --card-hi: #132438;
+  --fg: #f0f7ff;
+  --muted: #6482a6;
+  --ok: #38bdf8;
+  --ok2: #0ea5e9;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #15263d;
+  --brand: #38bdf8;
+}
+
+#screen.lcd-theme-amethyst,
+#mini-lcd-canvas.lcd-theme-amethyst,
+#console-window.lcd-theme-amethyst,
+body.lcd-direct.lcd-theme-amethyst {
+  --bg: #0e0717;
+  --card: #180e28;
+  --card-hi: #24153b;
+  --fg: #fbf7ff;
+  --muted: #b399cf;
+  --ok: #c084fc;
+  --ok2: #a855f7;
+  --warn: #fb923c;
+  --crit: #f43f5e;
+  --track: #26163d;
+  --brand: #c084fc;
+}
+
+#screen.lcd-theme-crimson,
+#mini-lcd-canvas.lcd-theme-crimson,
+#console-window.lcd-theme-crimson,
+body.lcd-direct.lcd-theme-crimson {
+  --bg: #14070a;
+  --card: #220c12;
+  --card-hi: #30131b;
+  --fg: #fff1f2;
+  --muted: #c48995;
+  --ok: #fb7185;
+  --ok2: #f43f5e;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #36141e;
+  --brand: #f43f5e;
+}
+
+#screen.lcd-theme-light,
+#mini-lcd-canvas.lcd-theme-light,
+#console-window.lcd-theme-light,
+body.lcd-direct.lcd-theme-light {
+  --bg: #f8fafc;
+  --card: #cbd5e1;
+  --card-hi: #dce4ed;
+  --fg: #0a0f1d;
+  --muted: #475569;
+  --ok: #0284c7;
+  --ok2: #059669;
+  --warn: #d97706;
+  --crit: #dc2626;
+  --track: #94a3b8;
+  --brand: #0284c7;
+}
+
+#screen.lcd-theme-yak,
+#mini-lcd-canvas.lcd-theme-yak,
+#console-window.lcd-theme-yak,
+body.lcd-direct.lcd-theme-yak {
+  --bg: #09130d;
+  --card: #122116;
+  --card-hi: #192e20;
+  --fg: #eaf1f8;
+  --muted: #7b9483;
+  --ok: #e6a254;
+  --ok2: #d48a37;
+  --warn: #e07a38;
+  --crit: #e63946;
+  --track: #17291c;
+  --brand: #d48a37;
+}
+
+#screen .card,
+#mini-lcd-canvas .card,
+.mini-preview-inner .card {
+  background: var(--card);
+}
+
+/* White LCD Screen Theme: Darker Grayish Cards and Lower-Deck Disks */
+#screen.lcd-theme-light .card,
+#mini-lcd-canvas.lcd-theme-light .card,
+body.lcd-direct.lcd-theme-light #screen .card,
+#screen.lcd-theme-light .disk,
+#mini-lcd-canvas.lcd-theme-light .disk,
+body.lcd-direct.lcd-theme-light #screen .disk {
+  background: linear-gradient(160deg, #dce4ed, #cbd5e1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+}
+
+#screen.lcd-theme-light .donut::before,
+#mini-lcd-canvas.lcd-theme-light .donut::before,
+body.lcd-direct.lcd-theme-light #screen .donut::before,
+#screen.lcd-theme-light .arc::before,
+#mini-lcd-canvas.lcd-theme-light .arc::before,
+body.lcd-direct.lcd-theme-light #screen .arc::before {
+  background: #cbd5e1 !important;
+}
+
+/* White LCD Screen Theme: Deep Black Lettering, Values & Headers */
+#screen.lcd-theme-light,
+#mini-lcd-canvas.lcd-theme-light,
+#mini-lcd-canvas.lcd-theme-light .mini-preview-inner,
+body.lcd-direct.lcd-theme-light #screen {
+  background: #f8fafc !important;
+  color: #0a0f1d !important;
+}
+
+#screen.lcd-theme-light .nas-name,
+#screen.lcd-theme-light .clock,
+#screen.lcd-theme-light #ip,
+#screen.lcd-theme-light .h-right,
+#screen.lcd-theme-light .card-title,
+#screen.lcd-theme-light .card-title-txt,
+#screen.lcd-theme-light .storage-nums .val,
+#screen.lcd-theme-light .arc-val,
+#screen.lcd-theme-light .side .val,
+#screen.lcd-theme-light .fan .fv,
+#screen.lcd-theme-light .disk .dn,
+#screen.lcd-theme-light .disk .dt,
+#screen.lcd-theme-light .donut span,
+#mini-lcd-canvas.lcd-theme-light .nas-name,
+#mini-lcd-canvas.lcd-theme-light .clock,
+#mini-lcd-canvas.lcd-theme-light #ip,
+#mini-lcd-canvas.lcd-theme-light .h-right,
+#mini-lcd-canvas.lcd-theme-light .card-title,
+#mini-lcd-canvas.lcd-theme-light .card-title-txt,
+#mini-lcd-canvas.lcd-theme-light .storage-nums .val,
+#mini-lcd-canvas.lcd-theme-light .arc-val,
+#mini-lcd-canvas.lcd-theme-light .side .val,
+#mini-lcd-canvas.lcd-theme-light .fan .fv,
+#mini-lcd-canvas.lcd-theme-light .disk .dn,
+#mini-lcd-canvas.lcd-theme-light .disk .dt,
+#mini-lcd-canvas.lcd-theme-light .donut span,
+body.lcd-direct.lcd-theme-light #screen .nas-name,
+body.lcd-direct.lcd-theme-light #screen .clock,
+body.lcd-direct.lcd-theme-light #screen #ip,
+body.lcd-direct.lcd-theme-light #screen .h-right,
+body.lcd-direct.lcd-theme-light #screen .card-title,
+body.lcd-direct.lcd-theme-light #screen .card-title-txt,
+body.lcd-direct.lcd-theme-light #screen .storage-nums .val,
+body.lcd-direct.lcd-theme-light #screen .arc-val,
+body.lcd-direct.lcd-theme-light #screen .side .val,
+body.lcd-direct.lcd-theme-light #screen .fan .fv,
+body.lcd-direct.lcd-theme-light #screen .disk .dn,
+body.lcd-direct.lcd-theme-light #screen .disk .dt,
+body.lcd-direct.lcd-theme-light #screen .donut span {
+  color: #0a0f1d !important;
+}
+
+/* White LCD Screen Theme: Dark Slate Descriptive Labels */
+#screen.lcd-theme-light .storage-nums .lbl,
+#screen.lcd-theme-light .side .lbl,
+#screen.lcd-theme-light .fl,
+#screen.lcd-theme-light .uptime,
+#screen.lcd-theme-light .group-label,
+#screen.lcd-theme-light .net-row span,
+#screen.lcd-theme-light .arc-val .u,
+#mini-lcd-canvas.lcd-theme-light .storage-nums .lbl,
+#mini-lcd-canvas.lcd-theme-light .side .lbl,
+#mini-lcd-canvas.lcd-theme-light .fl,
+#mini-lcd-canvas.lcd-theme-light .uptime,
+#mini-lcd-canvas.lcd-theme-light .group-label,
+#mini-lcd-canvas.lcd-theme-light .net-row span,
+#mini-lcd-canvas.lcd-theme-light .arc-val .u,
+body.lcd-direct.lcd-theme-light #screen .storage-nums .lbl,
+body.lcd-direct.lcd-theme-light #screen .side .lbl,
+body.lcd-direct.lcd-theme-light #screen .fl,
+body.lcd-direct.lcd-theme-light #screen .uptime,
+body.lcd-direct.lcd-theme-light #screen .group-label,
+body.lcd-direct.lcd-theme-light #screen .net-row span,
+body.lcd-direct.lcd-theme-light #screen .arc-val .u {
+  color: #334155 !important;
+  font-weight: 700;
+}
+
+/* High-Contrast Physical Screen Text Clarity for Dark Themes */
+#screen.text-clarity-on:not(.lcd-theme-light),
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light),
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen,
+#screen:not(.text-clarity-off):not(.lcd-theme-light) {
+  --fg: #eaf1f8;
+}
+
+#screen.text-clarity-on:not(.lcd-theme-light) .nas-name,
+#screen.text-clarity-on:not(.lcd-theme-light) .clock,
+#screen.text-clarity-on:not(.lcd-theme-light) #ip,
+#screen.text-clarity-on:not(.lcd-theme-light) .card-title-txt,
+#screen.text-clarity-on:not(.lcd-theme-light) .dn,
+#screen.text-clarity-on:not(.lcd-theme-light) .dt,
+#screen.text-clarity-on:not(.lcd-theme-light) .fl,
+#screen.text-clarity-on:not(.lcd-theme-light) .fv,
+#screen.text-clarity-on:not(.lcd-theme-light) .c-val,
+#screen.text-clarity-on:not(.lcd-theme-light) .c-lbl,
+#screen.text-clarity-on:not(.lcd-theme-light) .storage-nums .val,
+#screen.text-clarity-on:not(.lcd-theme-light) .arc-val,
+#screen.text-clarity-on:not(.lcd-theme-light) .side .val,
+#screen.text-clarity-on:not(.lcd-theme-light) .donut span,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .nas-name,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .clock,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) #ip,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .card-title-txt,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .dn,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .dt,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .fl,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .fv,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .c-val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .c-lbl,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .storage-nums .val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .arc-val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .side .val,
+#mini-lcd-canvas.text-clarity-on:not(.lcd-theme-light) .donut span,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .nas-name,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .clock,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen #ip,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .card-title-txt,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .dn,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .dt,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .fl,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .fv,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .c-val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .c-lbl,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .storage-nums .val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .arc-val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .side .val,
+body.lcd-direct.text-clarity-on:not(.lcd-theme-light) #screen .donut span {
+  color: #eaf1f8 !important;
+}
+
+/* High-Contrast Text Clarity for White LCD Theme (Crisp Black) */
+#screen.lcd-theme-light.text-clarity-on,
+#mini-lcd-canvas.lcd-theme-light.text-clarity-on,
+#mini-lcd-canvas.lcd-theme-light.text-clarity-on .mini-preview-inner,
+body.lcd-direct.lcd-theme-light.text-clarity-on #screen {
+  --fg: #0a0f1d !important;
+  color: #0a0f1d !important;
+}
+
+/* Desktop Theme Active Badge indicator (in Mission Control) */
+.desktop-theme-active-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--brand, #00f0ff);
+  display: inline-block;
+  line-height: 1.2;
+}
+
+/* Simple LCD Screen Themer Styles for Slide Drawer */
+.lcd-theme-picker-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.lcd-theme-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  cursor: pointer;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.lcd-theme-chip:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.lcd-theme-chip.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--brand, #00f0ff);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+}
+
+.lcd-chip-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.lcd-chip-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+

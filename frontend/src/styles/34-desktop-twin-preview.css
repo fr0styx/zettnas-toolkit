@@ -1,0 +1,373 @@
+/* =========================================================================
+   DESKTOP TWIN LIVE PREVIEW COMPONENT
+   ========================================================================= */
+.desktop-twin-preview-wrapper {
+  contain: layout paint style;
+}
+
+.desktop-twin-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 220px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  background: radial-gradient(circle at 50% 50%, #151d29 0%, #080c10 70%);
+  contain: strict;
+}
+
+.dt-wallpaper {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(var(--preview-wp-blur, var(--wallpaper-blur, 0px)));
+  transform: scale(1.05);
+  transition: filter 0.15s ease, background-image 0.25s ease;
+}
+
+.dt-wallpaper-dimmer {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: var(--preview-wp-dim, var(--wallpaper-dim, 0.15));
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.dt-window {
+  position: absolute;
+  top: 14%;
+  left: 20%;
+  width: 60%;
+  height: 60%;
+  background: rgba(17, 24, 34, var(--preview-glass-opacity, var(--glass-opacity, 0.72)));
+  backdrop-filter: blur(calc(var(--preview-glass-blur, var(--glass-blur, 24px)) * 0.4)) saturate(140%);
+  -webkit-backdrop-filter: blur(calc(var(--preview-glass-blur, var(--glass-blur, 24px)) * 0.4)) saturate(140%);
+  border-radius: var(--preview-window-radius, var(--window-radius, 12px));
+  border: 1px solid rgba(var(--preview-accent-rgb, var(--accent-rgb, 0, 240, 255)), calc(0.55 * var(--preview-window-glow, var(--window-glow-enabled, 0))));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7),
+              0 0 calc(16px * var(--preview-window-glow, var(--window-glow-enabled, 0))) rgba(var(--preview-accent-rgb, var(--accent-rgb, 0, 240, 255)), 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: border-radius 0.15s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.dt-window-header {
+  height: 22px;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dt-window-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.dt-win-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.dt-dot-red { background: #ff5f56; }
+.dt-dot-yellow { background: #ffbd2e; }
+.dt-dot-green { background: #27c93f; }
+
+.dt-window-title {
+  font-size: 9.5px;
+  color: var(--muted, #8493a5);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dt-window-body {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dt-mock-chip {
+  width: 24px;
+  height: 12px;
+  border-radius: 4px;
+  background: rgba(var(--preview-accent-rgb, var(--accent-rgb, 0, 240, 255)), 0.3);
+  border: 1px solid rgba(var(--preview-accent-rgb, var(--accent-rgb, 0, 240, 255)), 0.5);
+  margin-bottom: 2px;
+}
+
+.dt-mock-line {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dt-dock-container {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.dt-dock-container.dt-dock-pos-bottom {
+  bottom: 8px;
+  left: 0;
+  right: 0;
+}
+.dt-dock-container.dt-dock-pos-left {
+  top: 0;
+  bottom: 0;
+  left: 8px;
+}
+.dt-dock-container.dt-dock-pos-top {
+  top: 8px;
+  left: 0;
+  right: 0;
+}
+
+.dt-dock {
+  background: rgba(20, 27, 36, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 4px 8px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dt-dock-pos-left .dt-dock {
+  flex-direction: column;
+  padding: 8px 4px;
+}
+
+.dt-dock-item {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt-dock-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dt-dock-item.active .dt-dock-icon {
+  background: rgba(var(--preview-accent-rgb, var(--accent-rgb, 0, 240, 255)), 0.4);
+  border-color: rgba(var(--preview-accent-rgb, var(--accent-rgb, 0, 240, 255)), 0.8);
+}
+
+.dt-dock-ind {
+  position: absolute;
+  bottom: -3px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--brand, #00f0ff);
+}
+
+.wallpaper-cat-pill {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted, #8493a5);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wallpaper-cat-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.wallpaper-cat-pill.active {
+  background: rgba(var(--accent-rgb, 0, 240, 255), 0.15);
+  border-color: rgba(var(--accent-rgb, 0, 240, 255), 0.4);
+  color: var(--brand, #00f0ff);
+}
+
+.wallpaper-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 14px;
+  min-height: 220px;
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 6px 2px;
+  border-radius: 8px;
+}
+
+.wallpaper-gallery-grid.dragover {
+  border: 2px dashed var(--ok2, #00f0ff);
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.04);
+}
+
+.wallpaper-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  padding: 7px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease,
+              box-shadow 0.2s ease,
+              background-color 0.2s ease;
+  user-select: none;
+  outline: none;
+}
+
+.wallpaper-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.5);
+}
+
+.wallpaper-card:focus-visible {
+  border-color: var(--ok2, #00f0ff);
+  box-shadow: 0 0 0 2px rgba(var(--ok2-rgb, 0, 240, 255), 0.4);
+}
+
+.wallpaper-card.active {
+  border-color: var(--ok2, #00f0ff);
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.08);
+  box-shadow: 0 0 20px -2px rgba(var(--ok2-rgb, 0, 240, 255), 0.35);
+}
+
+.wallpaper-card-thumb-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.wallpaper-card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+.wallpaper-card:hover .wallpaper-card-thumb {
+  transform: scale(1.05);
+}
+
+.wallpaper-gradient-preview {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 30%, #172436 0%, #0a0e17 80%, #05080e 100%);
+}
+
+.wallpaper-card-active-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--ok2, #00f0ff);
+  color: #040910;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: wpActivePop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wpActivePop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.wallpaper-card-actions {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.wallpaper-card:hover .wallpaper-card-actions {
+  opacity: 1;
+}
+
+.wallpaper-action-btn {
+  background: rgba(10, 15, 24, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
+  border-radius: 5px;
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.wallpaper-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.wallpaper-action-btn.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.wallpaper-card-footer {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wallpaper-card-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.wallpaper-card.active .wallpaper-card-title {
+  color: #fff;
+  font-weight: 700;
+}
+

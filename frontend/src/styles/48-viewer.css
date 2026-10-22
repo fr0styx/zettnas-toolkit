@@ -1,0 +1,68 @@
+/* ===== Viewer revamp: SVG toolbar, close always visible, touch, phone layout ===== */
+.quicklook-title-icon { display: inline-flex; color: #94a3b8; }
+.quicklook-toolbar {
+  min-width: 0;
+  flex-shrink: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.quicklook-toolbar::-webkit-scrollbar { display: none; }
+.quicklook-btn { min-width: 32px; min-height: 32px; }
+.quicklook-btn svg { display: block; }
+.quicklook-header > .quicklook-close-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  color: #e2e8f0;
+}
+.quicklook-close-btn svg { display: block; }
+.quicklook-viewport { touch-action: none; }
+.quicklook-nav-btn { display: inline-flex; align-items: center; justify-content: center; }
+.quicklook-nav-btn svg { display: block; }
+.quicklook-btn:focus-visible,
+.quicklook-close-btn:focus-visible,
+.quicklook-nav-btn:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+
+.quicklook-markdown {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 24px 32px;
+  color: #e2e8f0;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 860px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  align-self: stretch;
+}
+.quicklook-markdown h1, .quicklook-markdown h2, .quicklook-markdown h3 { color: #fff; margin: 1.2em 0 0.4em; line-height: 1.25; }
+.quicklook-markdown h1 { font-size: 1.7em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.25em; }
+.quicklook-markdown h2 { font-size: 1.35em; }
+.quicklook-markdown code { background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+.quicklook-markdown pre { background: rgba(0,0,0,0.35); padding: 12px; border-radius: 8px; overflow: auto; }
+.quicklook-markdown pre code { background: none; padding: 0; }
+.quicklook-markdown a { color: #38bdf8; }
+.quicklook-markdown blockquote { border-left: 3px solid rgba(56,189,248,0.5); margin: 0.6em 0; padding: 0.1em 0.9em; color: #cbd5e1; }
+
+.quicklook-unplayable {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  max-width: 420px; margin: auto; padding: 24px; text-align: center; color: #e2e8f0;
+}
+.quicklook-unplayable-title { font-size: 15px; font-weight: 700; }
+.quicklook-unplayable-text { font-size: 12.5px; color: #94a3b8; line-height: 1.5; }
+.quicklook-unplayable button { display: inline-flex; align-items: center; gap: 6px; }
+
+@media (max-width: 640px) {
+  .quicklook-header { padding: 6px 8px; gap: 6px; min-height: 44px; }
+  .quicklook-meta { display: none; }
+  .quicklook-title { font-size: 12.5px; }
+  .quicklook-zoom-pill, #ql-actual-size, #ql-flip-h, #ql-rotate-ccw { display: none; }
+  .quicklook-btn { min-width: 36px; min-height: 36px; padding: 4px; }
+  .quicklook-nav-btn { opacity: 0.85; }
+  .quicklook-markdown { padding: 16px; font-size: 13.5px; }
+}
+

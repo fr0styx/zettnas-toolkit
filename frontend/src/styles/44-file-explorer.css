@@ -1,0 +1,220 @@
+/* =========================================================================
+   SOTA File Explorer Revamp Styling (3-Pane, Marquee, Tree, Inspector, Cockpit)
+   ========================================================================= */
+
+.fm-3pane-layout {
+  display: flex !important;
+  flex-direction: row !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.fm-sidebar-tree {
+  width: 200px;
+  min-width: 150px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 16, 26, 0.95);
+  user-select: none;
+  overflow: hidden;
+  transition: width 0.2s ease;
+}
+
+.fm-tree-group {
+  margin-bottom: 8px;
+}
+
+.fm-tree-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted, #64748b);
+  padding: 8px 10px 4px;
+}
+
+.fm-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin: 1px 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fg, #e2e8f0);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.fm-tree-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fm-tree-item.active {
+  background: rgba(14, 165, 233, 0.18);
+  color: var(--accent, #38bdf8);
+  font-weight: 600;
+}
+
+.fm-tree-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.fm-tree-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fm-main-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background: #0b111a;
+}
+
+.fm-inspector-pane {
+  width: 260px;
+  min-width: 220px;
+  max-width: 320px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 16, 26, 0.95);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  user-select: text;
+  box-sizing: border-box;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.fm-inspector-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+.fm-inspector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 3px 0;
+  color: var(--fg, #cbd5e1);
+}
+
+.fm-inspector-row span:first-child {
+  color: var(--muted, #94a3b8);
+}
+
+/* Compact View Mode */
+.file-manager-window.fm-mode-compact .fm-row {
+  height: 28px !important;
+  font-size: 11px !important;
+}
+
+.file-manager-window.fm-mode-compact .fm-row svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.file-manager-window.fm-mode-compact .fm-col-actions {
+  display: none;
+}
+
+.file-manager-window.fm-mode-compact .fm-row:hover .fm-col-actions {
+  display: flex;
+}
+
+/* Marquee / Rubber-band Box */
+.fm-marquee-box {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100;
+  border: 1px solid var(--accent, #38bdf8);
+  background: rgba(56, 189, 248, 0.16);
+  border-radius: 3px;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+/* Glassmorphic Context Menu */
+.fm-context-menu {
+  width: 210px;
+  background: rgba(15, 23, 42, 0.96) !important;
+  backdrop-filter: blur(24px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75) !important;
+  padding: 5px !important;
+  user-select: none;
+  font-family: inherit;
+}
+
+.fm-ctx-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.fm-ctx-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--fg, #e2e8f0);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.fm-ctx-item:hover {
+  background: rgba(56, 189, 248, 0.2);
+  color: #fff;
+}
+
+.fm-ctx-item.text-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.fm-ctx-key {
+  font-size: 11px;
+  color: var(--muted, #64748b);
+  font-family: monospace;
+}
+
+.fm-ctx-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 6px;
+}
+
+/* Multi-Item Drag Ghost Badge */
+.fm-dnd-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  padding: 6px 12px;
+  background: rgba(14, 165, 233, 0.95);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+

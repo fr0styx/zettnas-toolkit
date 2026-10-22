@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { makeDraggable, DockManager } from '../components/dock.js';
 import fs from 'fs';
@@ -159,8 +160,7 @@ describe('Batch 3: Responsive Layout Overhaul & Touch Navigation (<1024px & Mobi
     let cssContent;
 
     beforeEach(() => {
-      const cssPath = path.resolve(__dirname, '../style.css');
-      cssContent = fs.readFileSync(cssPath, 'utf8');
+      cssContent = readStyleCss();
     });
 
     it('contains tablet media query (769px - 1024px) with collapsed 64px icon-only sidebar rail', () => {

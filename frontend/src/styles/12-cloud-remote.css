@@ -1,0 +1,748 @@
+/* =========================================================================
+   Cloud Remote Window - Solid, Premium Opaque Surface & High-Contrast Form
+   ========================================================================= */
+#modal-new-cloud-remote #cloud-remote-window,
+#cloud-remote-window.cloud-remote-window,
+.cloud-remote-window {
+  display: flex !important;
+  flex-direction: column !important;
+  background: #0f1622 !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(14, 165, 233, 0.2) !important;
+  width: 620px !important;
+  max-width: 95vw !important;
+  height: 720px !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
+  transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#modal-new-cloud-remote #cloud-remote-window.active-window,
+#cloud-remote-window.active-window {
+  border-color: rgba(14, 165, 233, 0.5) !important;
+  box-shadow: 0 30px 85px rgba(0, 0, 0, 0.95), 0 0 40px rgba(14, 165, 233, 0.3) !important;
+}
+
+#cloud-remote-window[data-maximized="true"] {
+  width: 95vw !important;
+  max-width: 1000px !important;
+  height: 85vh !important;
+  max-height: 85vh !important;
+  border-radius: 8px !important;
+}
+
+#cloud-remote-window .smart-modal-header,
+#cloud-remote-window #cloud-remote-window-header {
+  background: #141d2c !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 12px 18px !important;
+  height: 44px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+#cloud-remote-window #new-remote-form {
+  background: #0b1019 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#cloud-remote-window .cloud-remote-scroll-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+#cloud-remote-window .remote-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#cloud-remote-window .remote-form-section:not(:first-child) {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 14px;
+}
+
+#cloud-remote-window .remote-section-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+#cloud-remote-window .cloud-remote-footer {
+  flex-shrink: 0 !important;
+  background: #141d2c !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 12px 20px !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 10px !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Crisp, high-contrast inputs for Cloud Remote dialog */
+#cloud-remote-window .tz-select-input,
+#cloud-remote-window select,
+#cloud-remote-window input[type="text"],
+#cloud-remote-window input[type="password"],
+#cloud-remote-window textarea {
+  background: #141d2c !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  padding: 9px 12px !important;
+  font-size: 12.5px !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+#cloud-remote-window .tz-select-input:focus,
+#cloud-remote-window select:focus,
+#cloud-remote-window input:focus,
+#cloud-remote-window textarea:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.25) !important;
+  outline: none !important;
+}
+
+#cloud-remote-window select option {
+  background: #141d2c !important;
+  color: #fff !important;
+}
+
+.btn-cloud-cancel {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-cloud-cancel:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.btn-cloud-test {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.btn-cloud-test:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+.btn-cloud-test:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cloud-test.tested-green {
+  background: rgba(34, 197, 94, 0.22) !important;
+  border-color: #22c55e !important;
+  color: #4ade80 !important;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.35) !important;
+}
+.btn-cloud-test.tested-green:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.32) !important;
+  border-color: #4ade80 !important;
+  color: #fff !important;
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.5) !important;
+}
+
+#cloud-remote-window #new-remote-test-result {
+  flex-shrink: 0 !important;
+  margin: 0 20px 12px 20px !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  animation: fadeIn 0.2s ease !important;
+}
+
+#cloud-remote-window #new-remote-error-box {
+  flex-shrink: 0 !important;
+  margin: 0 20px 12px 20px !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  animation: fadeIn 0.2s ease !important;
+}
+
+.btn-cloud-submit {
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #0ea5e9;
+  border: 1px solid #38bdf8;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(14, 165, 233, 0.4);
+  transition: all 0.15s ease;
+}
+.btn-cloud-submit:hover:not(:disabled) {
+  background: #0284c7;
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+  transform: translateY(-1px);
+}
+.btn-cloud-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Theme variations for Cloud Remote dialog */
+body.theme-yak #modal-new-cloud-remote #cloud-remote-window,
+body.theme-yak .cloud-remote-window {
+  background: #191410 !important;
+}
+body.theme-yak #cloud-remote-window .smart-modal-header,
+body.theme-yak #cloud-remote-window #cloud-remote-window-header,
+body.theme-yak #cloud-remote-window .cloud-remote-footer {
+  background: #241d17 !important;
+}
+body.theme-yak #cloud-remote-window #new-remote-form {
+  background: #140f0c !important;
+}
+body.theme-yak #cloud-remote-window .tz-select-input,
+body.theme-yak #cloud-remote-window select,
+body.theme-yak #cloud-remote-window input[type="text"],
+body.theme-yak #cloud-remote-window input[type="password"],
+body.theme-yak #cloud-remote-window textarea,
+body.theme-yak #cloud-remote-window select option {
+  background: #241d17 !important;
+}
+
+body.theme-oled #modal-new-cloud-remote #cloud-remote-window,
+body.theme-oled .cloud-remote-window {
+  background: #000000 !important;
+}
+body.theme-oled #cloud-remote-window .smart-modal-header,
+body.theme-oled #cloud-remote-window #cloud-remote-window-header,
+body.theme-oled #cloud-remote-window .cloud-remote-footer {
+  background: #0a0a0a !important;
+}
+body.theme-oled #cloud-remote-window #new-remote-form {
+  background: #000000 !important;
+}
+body.theme-oled #cloud-remote-window .tz-select-input,
+body.theme-oled #cloud-remote-window select,
+body.theme-oled #cloud-remote-window input[type="text"],
+body.theme-oled #cloud-remote-window input[type="password"],
+body.theme-oled #cloud-remote-window textarea,
+body.theme-oled #cloud-remote-window select option {
+  background: #0d0d0d !important;
+}
+
+#console-modal-overlay #console-window,
+#console-window.chassis-front-panel {
+  resize: none;
+  overflow: hidden;
+  width: fit-content;
+  min-width: 500px;
+  min-height: 220px;
+  max-width: 98vw;
+  max-height: 94vh;
+}
+
+.fm-collision-dialog {
+  contain: layout style;
+  transform: translateZ(0);
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  width: 520px;
+  max-width: 92vw;
+  height: auto;
+  min-height: auto;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(56, 189, 248, 0.2);
+  overflow: hidden;
+  resize: none;
+}
+
+#modal-fm-collision .btn-pill-toggle {
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#modal-fm-collision .btn-pill-toggle:hover {
+  filter: brightness(1.18);
+  transform: translateY(-1px);
+}
+#modal-fm-collision .btn-pill-toggle:active {
+  transform: translateY(0);
+}
+
+.smart-modal-window {
+  contain: layout style;
+  transform: translateZ(0);
+  pointer-events: auto;
+  background: #0f1620; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px;
+  width: 620px; height: 600px; min-width: 480px; min-height: 360px; max-width: 95vw; max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.9); overflow: hidden;
+  resize: both;
+}
+
+/* Media Card Ingest Toast Dialog */
+#copy-toast {
+  position: fixed !important;
+  width: 360px !important;
+  min-width: 320px !important;
+  max-width: 90vw !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: 85vh !important;
+  resize: none !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  contain: layout style !important;
+}
+
+#copy-toast .smart-modal-header {
+  padding: 10px 14px !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  user-select: none !important;
+}
+
+#copy-toast .smart-modal-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+#copy-toast .smart-modal-body {
+  flex: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 12px 14px !important;
+  gap: 8px !important;
+  overflow: visible !important;
+}
+
+#copy-toast #copy-toast-max,
+#copy-toast .win-btn.max-btn {
+  display: none !important;
+}
+
+#copy-toast.toast-minimized .smart-modal-body {
+  display: none !important;
+}
+.smart-modal-header {
+  padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex;
+  justify-content: space-between; align-items: center; background: #131c27; flex-shrink: 0;
+}
+.smart-modal-title { font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+.smart-modal-body {
+  padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; font-size: 12px;
+  flex: 1; min-height: 0;
+}
+.smart-meta-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+.smart-meta-cell {
+  background: #151f2b; border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.smart-meta-cell .lbl { font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: 0.5px; }
+.smart-meta-cell .val { font-size: 12px; font-weight: 700; color: #e2e8f0; font-variant-numeric: tabular-nums; }
+.smart-raw-pre {
+  background: #080c11; border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;
+  padding: 12px; font-family: monospace; font-size: 11px; color: #94a3b8; overflow-x: auto; max-height: 220px;
+}
+
+/* SMART Modal Segmented Navigation */
+.smart-nav-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+.smart-tab-btn {
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.smart-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.smart-tab-btn.active {
+  color: #fff;
+  background: rgba(14, 165, 233, 0.18);
+  border-color: rgba(14, 165, 233, 0.4);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.2);
+}
+
+/* SMART Pane Container */
+.smart-panes-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.smart-pane {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+  flex-direction: column;
+  gap: 14px;
+}
+.smart-pane.active {
+  display: flex;
+}
+
+/* Usable Diagnostic Report Card */
+.smart-report-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+.smart-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.smart-report-badge-pill {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+.smart-report-badge-warn {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.smart-report-badge-crit {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.smart-report-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.smart-report-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.smart-report-metric .lbl {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  display: block;
+}
+.smart-report-metric .val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.smart-report-recommendation {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid #10b981;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Empty State Hero */
+.smart-empty-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  gap: 8px;
+}
+.smart-empty-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4));
+}
+.smart-empty-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+.smart-empty-desc {
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 360px;
+  line-height: 1.4;
+}
+
+/* SMART Self-Test Progress Card */
+.smart-progress-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  animation: fadeIn 0.25s ease-out;
+}
+.smart-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+.smart-progress-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.smart-progress-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand, #38bdf8);
+  box-shadow: 0 0 10px var(--brand, #38bdf8);
+  animation: smartPulse 1.5s infinite;
+}
+@keyframes smartPulse {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 14px var(--brand, #38bdf8); }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+.smart-progress-status-desc {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.smart-progress-meta-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+.smart-progress-pct-label {
+  font-weight: 800;
+  color: var(--brand, #38bdf8);
+}
+.smart-progress-eta {
+  color: var(--muted);
+  font-size: 11px;
+}
+.smart-progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.smart-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9, #22c55e);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  position: relative;
+}
+.smart-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  animation: smartShimmer 1.8s infinite;
+}
+@keyframes smartShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* SMART Self-Test History Card */
+.smart-test-history-card {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-height: 140px;
+}
+.smart-test-history-header {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.smart-test-history-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+}
+.smart-test-count-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.smart-btn-copy-report {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+.smart-btn-copy-report:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
+  color: #fff;
+}
+.smart-test-history-table-wrap {
+  min-height: 80px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.smart-test-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: left;
+}
+.smart-test-table th {
+  position: sticky;
+  top: 0;
+  background: #151f2b;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.smart-test-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+.smart-test-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.smart-test-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.smart-test-status-passed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.smart-test-status-failed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.smart-test-status-aborted {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.smart-test-status-running {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.smart-test-history-empty {
+  padding: 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+

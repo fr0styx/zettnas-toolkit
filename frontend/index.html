@@ -6241,9 +6241,9 @@
               </div>
 
               <!-- Ransomware guard and blocked addresses (M4, M5) -->
-              <div id="sec-guard-card" class="guard-card" aria-live="polite"></div>
-              <div id="sec-sso-card" class="guard-card"></div>
-              <div id="sec-ldap-card" class="guard-card"></div>
+              <div id="sec-guard-card" class="zn-card zn-card--divided" aria-live="polite"></div>
+              <div id="sec-sso-card" class="zn-card zn-card--divided"></div>
+              <div id="sec-ldap-card" class="zn-card zn-card--divided"></div>
 
               <!-- Scoped API Tokens -->
               <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 14px; padding-top: 14px;">
@@ -6412,7 +6412,7 @@
 
             <!-- Notifications & Alerts Pane -->
             <div id="mgmt-pane-notifications" class="mgmt-tab-pane" style="display: none;">
-              <div id="push-device-card" class="guard-card bench-card"></div>
+              <div id="push-device-card" class="zn-card zn-card--boxed"></div>
               <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
                   <div class="mgmt-card-intro-title">
@@ -7241,7 +7241,7 @@
                   </label>
 
                   <!-- 6. Optional reranker (AI-13) -->
-                  <form id="ai-rerank-form" class="sso-form" style="padding:9px 12px; border-radius:8px; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.12);">
+                  <form id="ai-rerank-form" class="zn-form zn-box">
                     <span style="font-size:11.5px; font-weight:600; color:#cbd5e1;" data-i18n="ai.rerank_label">Reranker (optional, OVMS / TEI / Infinity)</span>
                     <input id="ai-rerank-endpoint" class="tz-select-input" type="url" placeholder="http://zettnas-ovms:8000/v3/rerank" data-i18n-aria-label="ai.rerank_endpoint" aria-label="Reranker URL" />
                     <input id="ai-rerank-model" class="tz-select-input" type="text" placeholder="bge-reranker-v2-m3" data-i18n-aria-label="ai.rerank_model" aria-label="Reranker model" />
@@ -7445,7 +7445,7 @@
                 </div>
 
                 <!-- Model benchmark and tiers (D2) -->
-                <div id="ai-model-bench-card" class="bench-card" hidden></div>
+                <div id="ai-model-bench-card" class="zn-card zn-card--boxed" hidden></div>
 
                 <!-- Hugging Face Hub Live Search & Pull Bar + Hardware Compatibility Filter -->
                 <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(250,204,21,0.28); border-radius:8px; padding:10px 12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">

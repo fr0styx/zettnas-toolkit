@@ -31,8 +31,8 @@ describe('model benchmark card (D2)', () => {
     await renderModelBench();
     const card = document.getElementById('ai-model-bench-card');
     expect(card.hidden).toBe(false);
-    expect(card.querySelectorAll('.bench-table tr').length).toBe(3);
-    const use = [...card.querySelectorAll('.bench-actions button')].find((b) => b.textContent.includes('balanced'));
+    expect(card.querySelectorAll('.zn-table tr').length).toBe(3);
+    const use = [...card.querySelectorAll('.zn-row button')].find((b) => b.textContent.includes('balanced'));
     use.click();
     await vi.waitFor(() => expect(posts).toContainEqual(['/api/ai/models/benchmark/apply', { tier: 'balanced' }]));
   });

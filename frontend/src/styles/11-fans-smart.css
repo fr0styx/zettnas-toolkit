@@ -1,0 +1,463 @@
+/* =========================================================================
+   3-COLUMN ACTIVE FAN TACHOMETERS
+   ========================================================================= */
+.drawer-fans-unified-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 4px;
+}
+.drawer-fan-unified-col {
+  background: #0d141e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.drawer-fan-unified-col:hover {
+  border-color: rgba(37, 194, 160, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+.drawer-fan-unified-col.active-zone-filter {
+  background: rgba(37, 194, 160, 0.15);
+  border-color: var(--ok2);
+  box-shadow: 0 0 12px rgba(37, 194, 160, 0.35);
+}
+
+.df-tach-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.df-tach-box .fan-ic {
+  width: 20px;
+  height: 20px;
+  color: var(--ok2);
+}
+.df-tach-box .fan-ic.spin {
+  animation: spin var(--dur, 2s) linear infinite;
+}
+.df-tach-box .df-rpm {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.df-tach-box .df-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.df-zone-box {
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+.df-zone-box .zp-lbl {
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.df-zone-box .zp-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.df-zone-box .zp-pwm {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ok2);
+}
+
+/* =========================================================================
+   SVG THERMAL FAN CURVE WORKSTATION
+   ========================================================================= */
+.fan-curve-box {
+  background: #080c10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fan-curve-svg {
+  width: 100%;
+  height: 145px;
+  background: #040609;
+  border-radius: 8px;
+  border: 1px solid rgba(37, 194, 160, 0.25);
+  box-shadow: inset 0 0 14px rgba(0,0,0,0.85);
+  display: block;
+}
+.fan-curve-svg line,
+.fan-curve-svg path {
+  vector-effect: non-scaling-stroke;
+}
+.curve-handle {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: stroke 0.15s ease, filter 0.15s ease;
+}
+.curve-handle:hover {
+  filter: drop-shadow(0 0 6px var(--ok2, #25c2a0));
+}
+
+/* Mission Control Enhanced Stretching for Dynamic Fan Curve Thermal Map */
+.mgmt-hardware-tab-slot .fan-curve-box {
+  padding: 16px 20px;
+  background: rgba(8, 12, 16, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  gap: 12px;
+}
+
+.mgmt-hardware-tab-slot .fan-curve-svg {
+  height: 230px;
+  border-color: rgba(37, 194, 160, 0.35);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mgmt-hardware-tab-slot .curve-handle,
+.mgmt-hardware-tab-slot #curve-dot-z1,
+.mgmt-hardware-tab-slot #curve-dot-z2,
+.mgmt-hardware-tab-slot #curve-dot-cpu {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleX(0.68);
+}
+
+.mgmt-hardware-tab-slot .fan-curve-svg text {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleX(0.72);
+}
+
+.mgmt-hardware-tab-slot .curve-legend-row {
+  font-size: 11px;
+  padding: 4px 2px 0 2px;
+  gap: 10px;
+}
+
+.mgmt-hardware-tab-slot .legend-item {
+  font-size: 11px;
+  gap: 6px;
+  padding: 3px 6px;
+}
+
+.mgmt-hardware-tab-slot .legend-dot {
+  width: 9px;
+  height: 9px;
+}
+
+.mgmt-hardware-tab-slot #fan-curve-range-val {
+  font-size: 11px;
+  padding: 3px 10px;
+}
+
+.mgmt-hardware-tab-slot #curve-readout-text {
+  font-size: 11px !important;
+}
+
+.curve-legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.legend-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.btn-reset-curve-view {
+  background: #1a2533;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #a4b4c4;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: auto;
+}
+.btn-reset-curve-view:hover {
+  background: #253547;
+  color: #fff;
+}
+
+.thermal-inspector-box {
+  background: #0d141e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ti-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+.ti-row span {
+  color: var(--muted);
+  font-weight: 700;
+}
+.ti-row strong {
+  color: #e2e8f0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================================
+   DIAGNOSTIC S.M.A.R.T. MODAL
+   ========================================================================= */
+.smart-modal-backdrop {
+  position: fixed; inset: 0; 
+  opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: var(--z-modal-backdrop, 9000);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(#modal-new-cloud-remote):not(#modal-vm-snapshots):not(#modal-clock-timezone):not(#modal-calendar-notes):not(.open) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(#modal-new-cloud-remote):not(#modal-vm-snapshots):not(#modal-clock-timezone):not(#modal-calendar-notes):not(.open) * {
+  pointer-events: none !important;
+}
+.smart-modal-backdrop:not(#console-modal-overlay):not(#management-modal-overlay):not(#app-deploy-modal-overlay):not(#modal-new-cloud-remote):not(#modal-vm-snapshots):not(#modal-clock-timezone):not(#modal-calendar-notes).open {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+.smart-modal-backdrop#modal-clock-timezone.open,
+.smart-modal-backdrop#modal-calendar-notes.open,
+.smart-modal-backdrop#modal-clock-timezone[style*="display: flex"],
+.smart-modal-backdrop#modal-calendar-notes[style*="display: flex"] {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+.smart-modal-backdrop#modal-clock-timezone:not(.open):not([style*="display: flex"]),
+.smart-modal-backdrop#modal-calendar-notes:not(.open):not([style*="display: flex"]) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+.smart-modal-backdrop#modal-clock-timezone:not(.open):not([style*="display: flex"]) *,
+.smart-modal-backdrop#modal-calendar-notes:not(.open):not([style*="display: flex"]) * {
+  pointer-events: none !important;
+}
+
+/* In-Flow Mission Control Display for Calendar & Timezone Cards */
+.mgmt-tab-pane #modal-calendar-notes {
+  display: grid !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.mgmt-tab-pane #modal-clock-timezone {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+@media (max-width: 820px) {
+  .mgmt-tab-pane #modal-calendar-notes {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+#mgmt-sec-wallpaper:has(#mgmt-pane-calendar:not([style*="display: none"])) .desktop-twin-preview-wrapper,
+#mgmt-sec-wallpaper:has(#mgmt-pane-language:not([style*="display: none"])) .desktop-twin-preview-wrapper {
+  display: none !important;
+}
+
+#container-delete-modal-overlay,
+#docker-prune-modal-overlay,
+#stack-inspector-overlay,
+#stack-picker-overlay,
+#container-inspector-overlay,
+#modal-webdav-config,
+#modal-create-storage-pool,
+#modal-rename-storage-pool,
+#modal-create-network-share,
+#modal-btrfs-snapshots,
+#modal-add-user,
+#modal-edit-user,
+#modal-reset-password,
+#modal-setup-2fa,
+#network-port-config-overlay,
+#network-docker-create-overlay,
+#network-host-config-overlay,
+#network-canary-overlay,
+#network-bond-config-overlay,
+#network-bridge-config-overlay,
+#network-vlan-create-overlay,
+#modal-create-replication-pipeline,
+#modal-create-backup-job,
+#modal-create-snapshot {
+  z-index: 10030 !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+#container-delete-modal-overlay.open,
+#docker-prune-modal-overlay.open,
+#stack-inspector-overlay.open,
+#stack-picker-overlay.open,
+#container-inspector-overlay.open,
+#modal-webdav-config.open,
+#modal-create-storage-pool.open,
+#modal-rename-storage-pool.open,
+#modal-create-network-share.open,
+#modal-btrfs-snapshots.open,
+#modal-add-user.open,
+#modal-edit-user.open,
+#modal-reset-password.open,
+#modal-setup-2fa.open,
+#network-port-config-overlay.open,
+#network-docker-create-overlay.open,
+#network-host-config-overlay.open,
+#network-canary-overlay.open,
+#network-bond-config-overlay.open,
+#network-bridge-config-overlay.open,
+#network-vlan-create-overlay.open,
+#modal-create-replication-pipeline.open,
+#modal-create-backup-job.open,
+#modal-create-snapshot.open {
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+#container-delete-modal-overlay:not(.open),
+#docker-prune-modal-overlay:not(.open),
+#stack-inspector-overlay:not(.open),
+#stack-picker-overlay:not(.open),
+#container-inspector-overlay:not(.open),
+#modal-webdav-config:not(.open),
+#modal-create-storage-pool:not(.open),
+#modal-rename-storage-pool:not(.open),
+#modal-create-network-share:not(.open),
+#modal-btrfs-snapshots:not(.open),
+#modal-add-user:not(.open),
+#modal-edit-user:not(.open),
+#modal-reset-password:not(.open),
+#modal-setup-2fa:not(.open),
+#network-port-config-overlay:not(.open),
+#network-docker-create-overlay:not(.open),
+#network-host-config-overlay:not(.open),
+#network-canary-overlay:not(.open),
+#network-bond-config-overlay:not(.open),
+#network-bridge-config-overlay:not(.open),
+#network-vlan-create-overlay:not(.open),
+#modal-create-replication-pipeline:not(.open),
+#modal-create-backup-job:not(.open),
+#modal-create-snapshot:not(.open) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+#stack-inspector-overlay .stack-inspector-window,
+.stack-inspector-window {
+  background: #0d141e !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.9) !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+#stack-inspector-overlay .smart-modal-header {
+  background: #111a26 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#console-modal-overlay:not(.open),
+#management-modal-overlay:not(.open),
+#app-deploy-modal-overlay:not(.open),
+#modal-new-cloud-remote:not(.open) {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+#console-modal-overlay,
+#management-modal-overlay,
+#app-deploy-modal-overlay,
+#modal-new-cloud-remote {
+  z-index: var(--z-window-base, 1000);
+}
+
+#console-modal-overlay.open,
+#management-modal-overlay.open,
+#app-deploy-modal-overlay.open,
+#modal-new-cloud-remote.open {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  pointer-events: none !important;
+}
+
+#console-modal-overlay #console-window,
+#management-modal-overlay #management-window,
+#app-deploy-modal-overlay #app-deploy-modal-window,
+#modal-new-cloud-remote #cloud-remote-window {
+  pointer-events: auto !important;
+}
+

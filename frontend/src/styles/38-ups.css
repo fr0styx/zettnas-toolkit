@@ -1,0 +1,418 @@
+/* ==============================================================================
+   UPS & Power Integrity Subsystem Styles (2.5D Digital Twin, Drawer & Gauges)
+   ============================================================================== */
+
+.ups-power-flow-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: rgba(16, 25, 40, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.ups-flow-card {
+  flex: 1;
+  min-width: 140px;
+  padding: 16px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  text-align: center;
+  position: relative;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ups-flow-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.ups-card-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--muted, #8e8e93);
+}
+
+.ups-card-status-dot.active {
+  background: var(--ok2, #25c2a0);
+  box-shadow: 0 0 8px var(--ok2, #25c2a0);
+}
+
+.ups-card-status-dot.warning {
+  background: var(--warn, #f5a623);
+  box-shadow: 0 0 8px var(--warn, #f5a623);
+}
+
+.ups-card-status-dot.danger {
+  background: var(--err, #eb5757);
+  box-shadow: 0 0 8px var(--err, #eb5757);
+}
+
+.ups-card-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+.ups-card-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #8e8e93);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.ups-card-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text, #ffffff);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 4px;
+}
+
+.ups-card-sub {
+  font-size: 12px;
+  color: var(--ok2, #25c2a0);
+  font-weight: 500;
+}
+
+.ups-card-meta {
+  font-size: 11px;
+  color: var(--muted, #8e8e93);
+  margin-top: 4px;
+}
+
+.ups-flow-channel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ups-flow-svg {
+  width: 100%;
+  height: 20px;
+  overflow: visible;
+}
+
+.ups-pulse-track {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.ups-pulse-line {
+  stroke: var(--ok2, #25c2a0);
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+  stroke-dasharray: 8, 12;
+  animation: ups-electron-flow 1.4s linear infinite;
+}
+
+.ups-flow-rate {
+  font-size: 11px;
+  color: var(--muted, #8e8e93);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+@keyframes ups-electron-flow {
+  0% { stroke-dashoffset: 40; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Radial Battery Ring Gauge */
+.ups-battery-ring-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 8px;
+}
+
+.ups-radial-svg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.ups-radial-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 5;
+}
+
+.ups-radial-fill {
+  fill: none;
+  stroke: var(--ok2, #25c2a0);
+  stroke-width: 5;
+  stroke-dasharray: 175.9;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease;
+  stroke-linecap: round;
+}
+
+.ups-radial-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #ffffff);
+}
+
+/* Outage / Emergency State */
+.ups-power-flow-container.on-battery {
+  border-color: rgba(245, 166, 35, 0.4);
+  background: rgba(40, 28, 10, 0.45);
+}
+
+.ups-power-flow-container.on-battery #ups-card-grid {
+  opacity: 0.35;
+  filter: grayscale(80%);
+}
+
+.ups-power-flow-container.on-battery #ups-pulse-line-1 {
+  stroke: transparent;
+  animation: none;
+}
+
+.ups-power-flow-container.on-battery #ups-pulse-line-2 {
+  stroke: var(--warn, #f5a623);
+  animation-duration: 0.8s;
+}
+
+.ups-power-flow-container.critical-battery #ups-pulse-line-2 {
+  stroke: var(--err, #eb5757);
+  animation-duration: 0.5s;
+}
+
+.ups-emergency-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  margin: 12px 0 16px;
+  border-radius: 10px;
+  background: rgba(245, 166, 35, 0.15);
+  border: 1px solid var(--warn, #f5a623);
+  animation: ups-banner-pulse 2s ease infinite;
+}
+
+@keyframes ups-banner-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(245, 166, 35, 0.2); }
+  50% { box-shadow: 0 0 24px rgba(245, 166, 35, 0.45); }
+}
+
+.ups-eb-icon {
+  font-size: 26px;
+}
+
+.ups-eb-content {
+  flex: 1;
+}
+
+.ups-eb-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--warn, #f5a623);
+  margin-bottom: 2px;
+}
+
+.ups-eb-desc {
+  font-size: 12px;
+  color: var(--text, #ffffff);
+}
+
+.ups-countdown-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(245, 166, 35, 0.25);
+  border: 1px solid var(--warn, #f5a623);
+  color: var(--warn, #f5a623);
+  font-weight: 700;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mode Chooser Radio Cards in Drawer */
+.ups-mode-chooser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ups-mode-option input {
+  display: none;
+}
+
+.ups-mode-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ups-mode-box strong {
+  font-size: 12px;
+  color: var(--text, #ffffff);
+  margin-bottom: 2px;
+}
+
+.ups-mode-box small {
+  font-size: 11px;
+  color: var(--muted, #8e8e93);
+}
+
+.ups-mode-option input:checked + .ups-mode-box {
+  border-color: var(--ok2, #25c2a0);
+  background: rgba(37, 194, 160, 0.15);
+  box-shadow: 0 0 10px rgba(37, 194, 160, 0.3);
+}
+
+.ups-mode-box:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.slider-val-badge {
+  display: inline-block;
+  min-width: 60px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ok2, #25c2a0);
+  font-variant-numeric: tabular-nums;
+}
+
+.drawer-field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted, #8e8e93);
+  margin-bottom: 6px;
+}
+
+.input-modern {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--fg, #eaf1f8);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 12px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.input-modern:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.input-modern:focus {
+  border-color: var(--ok2, #25c2a0);
+  background: #0b131e;
+  box-shadow: 0 0 0 3px rgba(37, 194, 160, 0.22);
+}
+
+.input-modern::placeholder {
+  color: rgba(148, 163, 184, 0.45);
+  font-weight: 400;
+}
+
+.input-modern:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+body.theme-amber .input-modern:focus {
+  border-color: var(--accent-amber, #f59e0b);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
+}
+
+body.theme-emerald .input-modern:focus {
+  border-color: var(--accent-emerald, #10b981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+}
+
+body.theme-yak .input-modern:focus {
+  border-color: var(--accent-yak, #d48a37);
+  box-shadow: 0 0 0 3px rgba(212, 138, 55, 0.25);
+}
+
+.ups-save-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ok2, #25c2a0);
+  background: rgba(37, 194, 160, 0.12);
+  border: 1px solid rgba(37, 194, 160, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.3s ease;
+}
+
+.ups-cockpit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .ups-power-flow-container {
+    flex-direction: column;
+    padding: 14px;
+  }
+  .ups-flow-channel {
+    transform: rotate(90deg);
+    margin: 8px 0;
+  }
+  .ups-flow-card {
+    width: 100%;
+  }
+  .ups-cockpit-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

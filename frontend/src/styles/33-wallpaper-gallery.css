@@ -1,0 +1,56 @@
+/* =========================================================================
+   Visual Wallpaper Gallery Suite (Batch 1)
+   ========================================================================= */
+
+.wallpaper-gallery-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.wallpaper-gallery-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.wallpaper-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wallpaper-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  color: var(--muted, #94a3b8);
+}
+
+.wallpaper-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary-accent {
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.15) !important;
+  color: var(--ok2, #00f0ff) !important;
+  border-color: rgba(var(--ok2-rgb, 0, 240, 255), 0.35) !important;
+  font-weight: 600;
+}
+
+.btn-primary-accent:hover {
+  background: rgba(var(--ok2-rgb, 0, 240, 255), 0.25) !important;
+  border-color: var(--ok2, #00f0ff) !important;
+}
+

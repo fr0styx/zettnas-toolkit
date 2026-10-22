@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SYSTEM_SHORTCUTS, launchShortcut } from '../components/desktop-shortcuts.js';
 import { SUBPANE_MAP } from '../components/management.js';
@@ -77,8 +78,7 @@ describe('Storage Routing, File Manager Solid Styling, and Stack Inspector Eleva
 
   describe('Issue 2: File Explorer Window Solid Background', () => {
     it('verifies style.css applies solid opaque background to file manager window and viewport', () => {
-      const cssPath = path.resolve(__dirname, '../style.css');
-      const cssContent = fs.readFileSync(cssPath, 'utf8');
+      const cssContent = readStyleCss();
 
       expect(cssContent).toContain('#file-manager-window.file-manager-window');
       expect(cssContent).toContain('rgba(15, 23, 42, 0.98) !important');
@@ -91,8 +91,7 @@ describe('Storage Routing, File Manager Solid Styling, and Stack Inspector Eleva
 
   describe('Issue 3: Stack Inspector Window Z-Index & Elevation', () => {
     it('verifies style.css includes #stack-inspector-overlay and #stack-picker-overlay in z-index 10030 rule', () => {
-      const cssPath = path.resolve(__dirname, '../style.css');
-      const cssContent = fs.readFileSync(cssPath, 'utf8');
+      const cssContent = readStyleCss();
 
       expect(cssContent).toContain('#stack-inspector-overlay');
       expect(cssContent).toContain('#stack-picker-overlay');

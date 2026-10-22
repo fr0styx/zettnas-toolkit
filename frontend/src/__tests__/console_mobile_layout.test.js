@@ -1,11 +1,11 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { openConsoleWindow } from '../components/dock.js';
 
 describe('ZettNAS System Console Mobile Layout & Screen Adaptation Suite', () => {
-  const cssPath = path.resolve(__dirname, '../style.css');
-  const cssContent = fs.readFileSync(cssPath, 'utf8');
+  const cssContent = readStyleCss();
 
   beforeEach(() => {
     document.body.innerHTML = `

@@ -45,8 +45,8 @@ export async function renderPushCard() {
   const host = document.getElementById('push-device-card');
   if (!host) return;
   const support = pushSupport();
-  const title = Object.assign(document.createElement('div'), { className: 'guard-title', textContent: t('push.title', '📱 Notifications on this device') });
-  const desc = Object.assign(document.createElement('div'), { className: 'guard-muted' });
+  const title = Object.assign(document.createElement('div'), { className: 'zn-title', textContent: t('push.title', '📱 Notifications on this device') });
+  const desc = Object.assign(document.createElement('div'), { className: 'zn-muted' });
   host.replaceChildren(title, desc);
   if (!support.ok) {
     desc.textContent = support.reason === 'ios-install'
@@ -56,7 +56,7 @@ export async function renderPushCard() {
   }
   desc.textContent = t('push.desc', 'Disk failures, ransomware alerts and other critical events appear on this phone or computer, even when ZettNAS is closed.');
   const sub = await currentSubscription().catch(() => null);
-  const row = Object.assign(document.createElement('div'), { className: 'bench-actions' });
+  const row = Object.assign(document.createElement('div'), { className: 'zn-row' });
   const toggle = Object.assign(document.createElement('button'), {
     type: 'button',
     className: 'btn-pill-toggle',

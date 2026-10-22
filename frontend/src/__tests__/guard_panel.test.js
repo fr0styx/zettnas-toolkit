@@ -27,8 +27,8 @@ describe('ransomware guard panel (M4, M5)', () => {
     await renderGuardPanel();
     const card = document.getElementById('sec-guard-card');
     expect(card.querySelector('[role="alert"]').textContent).toContain('192.168.1.50');
-    expect(card.querySelector('.guard-blocks code').textContent).toBe('192.168.1.50');
-    card.querySelector('.guard-blocks button').click();
+    expect(card.querySelector('.zn-list code').textContent).toBe('192.168.1.50');
+    card.querySelector('.zn-list button').click();
     await vi.waitFor(() => expect(calls).toContainEqual(['delete', '/api/security/ip-blocks/192.168.1.50']));
   });
 

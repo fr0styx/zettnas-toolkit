@@ -1,0 +1,678 @@
+/* =========================================================================
+   MILESTONE 1.2: LCD MULTI-PAGE CAROUSEL & UNRAID TELEMETRY
+   ========================================================================= */
+.suite-pill.hidden,
+.suite-toolkit-btn.hidden,
+#drawer-toggle-btn.hidden {
+  display: none !important;
+}
+
+.lcd-page-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+.lcd-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 8px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.lcd-dot:hover {
+  background: rgba(37, 194, 160, 0.25);
+  border-color: var(--ok2);
+  color: #fff;
+}
+.lcd-dot.active {
+  background: var(--ok2);
+  border-color: var(--ok2);
+  color: #0b131a;
+  box-shadow: 0 0 8px rgba(37, 194, 160, 0.5);
+}
+
+body.theme-yak .lcd-dot.active {
+  background: #d48a37;
+  border-color: #d48a37;
+  color: #0b131a;
+  box-shadow: 0 0 8px rgba(212, 138, 55, 0.5);
+}
+
+.lcd-viewport {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lcd-page {
+  display: none;
+  width: 100%;
+  height: 100%;
+  animation: lcdFadeIn 0.25s ease forwards;
+}
+
+.lcd-page.active {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+@keyframes lcdFadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lcd-page-header-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1px 4px 3px 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 5px;
+}
+.lph-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text);
+}
+.lph-stat {
+  color: var(--ok2);
+  font-family: var(--font-mono, monospace);
+  font-size: 8.5px;
+  background: rgba(37, 194, 160, 0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* Page 1: Bay Matrix */
+.bay-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+  flex: 1;
+  align-content: stretch;
+}
+.bay-matrix-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 4px 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.bay-matrix-card.empty {
+  opacity: 0.45;
+  border-style: dashed;
+}
+.bay-matrix-card.warn {
+  border-color: rgba(245, 166, 35, 0.5);
+  background: rgba(245, 166, 35, 0.06);
+}
+.bay-matrix-card.crit {
+  border-color: rgba(240, 85, 59, 0.6);
+  background: rgba(240, 85, 59, 0.1);
+}
+.bmc-num {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.bmc-icon {
+  width: 20px;
+  height: 20px;
+  margin: 1px 0;
+  color: var(--text);
+}
+.bmc-dev {
+  font-size: 8.5px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 84px;
+}
+.bmc-pills {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.bmc-temp {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 3px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.bmc-health {
+  font-size: 7.5px;
+  font-weight: 800;
+  padding: 1px 3px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+.bmc-health.ok { background: rgba(37, 194, 160, 0.15); color: var(--ok2); }
+.bmc-health.warn { background: rgba(245, 166, 35, 0.15); color: var(--warn); }
+.bmc-health.crit { background: rgba(240, 85, 59, 0.2); color: var(--crit); }
+.bmc-health.standby { background: rgba(148, 163, 184, 0.15); color: var(--muted); }
+
+/* Page 2: Net & IO */
+.net-io-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  flex: 1;
+}
+.net-io-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.nio-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.nio-dir {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.nio-dir.rx { color: var(--ok2); }
+.nio-dir.tx { color: #60a5fa; }
+.nio-dir.io { color: #f59e0b; }
+.nio-rate {
+  font-size: 14px;
+  font-weight: 800;
+  font-family: var(--font-mono, monospace);
+  color: #fff;
+}
+.nio-bar-bg {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 4px 0;
+}
+.nio-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.nio-bar-fill.rx { background: var(--ok2); }
+.nio-bar-fill.tx { background: #60a5fa; }
+.nio-bar-fill.io { background: #f59e0b; }
+.nio-sub {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Page 3: Unraid & Copy */
+.unraid-copy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex: 1;
+}
+.uc-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.uc-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.uc-title {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+.uc-state-badge {
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(37, 194, 160, 0.15);
+  color: var(--ok2);
+}
+.uc-stat-line {
+  font-size: 8.5px;
+  color: var(--muted);
+  margin: 3px 0;
+}
+.uc-parity-section, .uc-copy-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.uc-parity-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: var(--text);
+}
+.uc-bar-bg {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.uc-bar-fill {
+  height: 100%;
+  background: var(--accent-cyan, #00f0ff);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.uc-bar-fill.copy {
+  background: var(--ok2);
+}
+
+/* Unraid Storage Badge on Storage Card */
+.unraid-storage-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--ok2);
+  margin-top: 2px;
+}
+.unraid-storage-badge.hidden, .unraid-parity-box.hidden {
+  display: none !important;
+}
+.unraid-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok2);
+  box-shadow: 0 0 6px var(--ok2);
+}
+.unraid-parity-box {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.unraid-parity-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.unraid-parity-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent-cyan, #00f0ff);
+  transition: width 0.3s ease;
+}
+.unraid-parity-txt {
+  font-size: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Management Unraid & Profiles */
+.profile-switcher-row {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0 16px 0;
+}
+.profile-btn {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text);
+}
+.profile-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+.profile-btn.active {
+  background: rgba(37, 194, 160, 0.15);
+  border-color: var(--ok2);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(37, 194, 160, 0.25);
+}
+.profile-btn-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.profile-btn-desc {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.unraid-details-grid,
+.generic-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.unraid-detail-item {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.udi-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.udi-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-mono, monospace);
+}
+
+/* GPU Transcode Engine Card */
+.gpu-transcode-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gpu-transcode-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.gpu-transcode-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.gpu-transcode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+.gpu-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.gpu-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #fff);
+  font-family: var(--font-sans);
+}
+.gpu-driver-badge,
+.gpu-node-badge {
+  font-size: 10px;
+  font-family: var(--font-mono, monospace);
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted, #94a3b8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.gpu-node-badge {
+  color: var(--accent-cyan, #00f0ff);
+  background: rgba(0, 240, 255, 0.08);
+  border-color: rgba(0, 240, 255, 0.2);
+}
+.gpu-accel-desc {
+  font-size: 11px;
+  color: var(--ok2, #25c2a0);
+  font-weight: 600;
+}
+.gpu-codecs-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.gpu-codec-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.gpu-codecs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gpu-codec-tag {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(37, 194, 160, 0.12);
+  color: var(--ok2, #25c2a0);
+  border: 1px solid rgba(37, 194, 160, 0.25);
+}
+
+.docker-table-container {
+  width: 100%;
+  overflow-x: auto;
+  max-height: none;
+}
+
+/* Docker Table Top and Sticky Bottom Horizontal Scrollbars */
+.docker-table-top-scroll,
+.docker-table-sticky-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 9px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand, #25c2a0) rgba(0, 0, 0, 0.25);
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.docker-table-top-scroll {
+  margin-bottom: 6px;
+}
+
+.docker-table-sticky-scroll {
+  position: sticky;
+  bottom: 0px;
+  z-index: 45;
+  margin-top: 4px;
+  box-shadow: 0 -3px 12px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.docker-table-top-scroll:hover,
+.docker-table-sticky-scroll:hover {
+  background: rgba(0, 0, 0, 0.55);
+  border-color: rgba(37, 194, 160, 0.35);
+}
+
+.docker-table-top-scroll::-webkit-scrollbar,
+.docker-table-sticky-scroll::-webkit-scrollbar {
+  height: 7px !important;
+  display: block !important;
+}
+
+.docker-table-top-scroll::-webkit-scrollbar-track,
+.docker-table-sticky-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border-radius: 4px !important;
+}
+
+.docker-table-top-scroll::-webkit-scrollbar-thumb,
+.docker-table-sticky-scroll::-webkit-scrollbar-thumb {
+  background: var(--brand, rgba(37, 194, 160, 0.75)) !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  cursor: grab;
+}
+
+.docker-table-top-scroll::-webkit-scrollbar-thumb:hover,
+.docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--brand, rgba(37, 194, 160, 1)) !important;
+  box-shadow: 0 0 10px var(--brand, rgba(37, 194, 160, 0.6)) !important;
+}
+
+.docker-table-top-scroll::-webkit-scrollbar-thumb:active,
+.docker-table-sticky-scroll::-webkit-scrollbar-thumb:active {
+  cursor: grabbing;
+}
+
+body.theme-yak .docker-table-top-scroll::-webkit-scrollbar-thumb,
+body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb {
+  background: rgba(212, 138, 55, 0.75) !important;
+}
+
+body.theme-yak .docker-table-top-scroll::-webkit-scrollbar-thumb:hover,
+body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 138, 55, 1) !important;
+}
+
+.docker-table-top-scroll-inner,
+.docker-table-sticky-scroll-inner {
+  height: 1px;
+}
+
+/* Ingest History Table */
+.copy-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-top: 10px;
+}
+.copy-history-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--muted);
+  font-weight: 700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 9.5px;
+  text-transform: uppercase;
+}
+.copy-history-table th.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+.copy-history-table th.sortable-th:hover {
+  color: var(--text, #e2e8f0);
+  background: rgba(255, 255, 255, 0.04);
+}
+.copy-history-table th.sortable-th:focus-visible {
+  outline: 1.5px solid var(--accent-cyan, #38bdf8);
+  outline-offset: -2px;
+}
+.docker-sort-indicator {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 9px;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  min-width: 8px;
+}
+.copy-history-table th.sortable-th:hover .docker-sort-indicator {
+  opacity: 0.75;
+}
+.copy-history-table th.sortable-th.active-sort {
+  color: var(--accent-cyan, #38bdf8);
+}
+.copy-history-table th.sortable-th.active-sort .docker-sort-indicator {
+  opacity: 1;
+  color: var(--accent-cyan, #38bdf8);
+}
+.copy-history-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+.copy-history-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+.checksum-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(37, 194, 160, 0.15);
+  color: var(--ok2);
+}
+

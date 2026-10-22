@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { state } from '../state.js';
 import { api } from '../api.js';
@@ -358,7 +359,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
   });
 
   it('enforces streamline CSS isolation in style.css and lcd-direct.css', () => {
-    const styleCss = fs.readFileSync(path.resolve(__dirname, '../style.css'), 'utf-8');
+    const styleCss = readStyleCss();
     const lcdDirectCss = fs.readFileSync(path.resolve(__dirname, '../lcd-direct.css'), 'utf-8');
 
     // In style.css, streamline layout hides classic header, cards, diskRow for screen and mini-preview

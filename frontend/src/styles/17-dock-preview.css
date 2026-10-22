@@ -1,0 +1,406 @@
+/* =========================================================================
+   DOCK HOVER PREVIEW CARD & THUMBNAIL (REVAMPED SOTA PREVIEW ENGINE)
+   ========================================================================= */
+.dock-hover-tooltip {
+  position: fixed;
+  z-index: var(--z-dock-tooltip, 6100);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              left 0.15s ease-out,
+              bottom 0.15s ease-out,
+              top 0.15s ease-out;
+  background: rgba(14, 21, 31, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 1px rgba(255, 255, 255, 0.25) inset;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 280px;
+  min-width: 280px;
+  max-width: 290px;
+  box-sizing: border-box;
+}
+
+.dock-hover-tooltip.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* Dynamic arrow pointing precisely to dock item */
+.dock-hover-tooltip::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-style: solid;
+}
+
+/* Bottom dock position (default) */
+.dock-hover-tooltip[data-dock-pos="bottom"]::after,
+.dock-hover-tooltip:not([data-dock-pos])::after {
+  top: 100%;
+  left: var(--arrow-x, 50%);
+  transform: translateX(-50%);
+  border-width: 7px 7px 0 7px;
+  border-color: rgba(14, 21, 31, 0.94) transparent transparent transparent;
+}
+
+/* Top dock position */
+.dock-hover-tooltip[data-dock-pos="top"]::after {
+  bottom: 100%;
+  left: var(--arrow-x, 50%);
+  transform: translateX(-50%);
+  border-width: 0 7px 7px 7px;
+  border-color: transparent transparent rgba(14, 21, 31, 0.94) transparent;
+}
+
+/* Left dock position */
+.dock-hover-tooltip[data-dock-pos="left"]::after {
+  right: 100%;
+  top: var(--arrow-y, 50%);
+  transform: translateY(-50%);
+  border-width: 7px 7px 7px 0;
+  border-color: transparent rgba(14, 21, 31, 0.94) transparent transparent;
+}
+
+.dock-tooltip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.dock-tooltip-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.3px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dock-tooltip-title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-tooltip-title svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--ok2, #25c2a0);
+}
+
+.dock-tooltip-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dock-tooltip-status {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1.5px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dock-tooltip-status.active {
+  background: rgba(51, 209, 122, 0.18);
+  color: var(--ok, #33d17a);
+  border: 1px solid rgba(51, 209, 122, 0.35);
+}
+
+.dock-tooltip-status.minimized {
+  background: rgba(120, 131, 143, 0.18);
+  color: var(--muted, #94a3b8);
+  border: 1px solid rgba(120, 131, 143, 0.3);
+}
+
+.dock-tooltip-status.alert {
+  background: rgba(235, 87, 87, 0.2);
+  color: var(--crit, #ff5c5c);
+  border: 1px solid rgba(235, 87, 87, 0.4);
+}
+
+.dock-tooltip-status.pinned {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent-cyan, #38bdf8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.dock-tooltip-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.dock-tooltip-close-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* =========================================================================
+   PREVIEW FRAME & INNER SCALING ENGINE
+   ========================================================================= */
+.dock-tooltip-preview {
+  width: 260px;
+  height: 156px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #090e15;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dock-preview-live-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #090e15;
+}
+
+.dock-preview-live-scaler {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dock-cloned-preview-win {
+  pointer-events: none !important;
+  user-select: none !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+  inset: auto !important;
+  margin: 0 !important;
+}
+
+.dock-preview-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 12, 18, 0.1) 0%, rgba(8, 12, 18, 0.65) 100%);
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 10px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.dock-tooltip-preview:hover .dock-preview-hover-overlay {
+  opacity: 1;
+}
+
+.dock-preview-action-chip {
+  background: rgba(14, 21, 31, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transform: translateY(4px);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dock-tooltip-preview:hover .dock-preview-action-chip {
+  transform: translateY(0);
+}
+
+/* Splash Card for Closed / Pinned Apps */
+.dock-preview-app-splash {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  background: radial-gradient(circle at 50% 30%, rgba(37, 194, 160, 0.12) 0%, rgba(9, 14, 21, 0.95) 75%);
+  gap: 8px;
+}
+
+.dock-splash-icon-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.dock-splash-icon-ring svg {
+  width: 22px;
+  height: 22px;
+  color: var(--ok2, #25c2a0);
+}
+
+.dock-splash-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.2px;
+}
+
+.dock-splash-desc {
+  font-size: 9.5px;
+  color: #94a3b8;
+  max-width: 220px;
+  line-height: 1.35;
+}
+
+/* Desktop Home Preview */
+.dock-preview-desktop-home {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+.dock-desktop-home-card {
+  background: rgba(14, 21, 31, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.dock-desktop-home-card strong {
+  font-size: 11px;
+  color: #fff;
+}
+
+.dock-desktop-home-card span {
+  font-size: 9px;
+  color: var(--ok2, #25c2a0);
+  font-weight: 600;
+}
+
+/* Notification Feed Preview */
+.dock-preview-notif-feed {
+  width: 100%;
+  height: 100%;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dock-notif-feed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dock-notif-feed-item-title {
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dock-notif-feed-item-msg {
+  font-size: 11px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Backward compatibility for summary / scaler fallback */
+.dock-preview-summary {
+  width: 100%;
+  height: 100%;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  box-sizing: border-box;
+}
+
+.mini-screen-scaler {
+  width: 640px;
+  height: 172px;
+  transform: scale(0.40625);
+  transform-origin: 0 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+

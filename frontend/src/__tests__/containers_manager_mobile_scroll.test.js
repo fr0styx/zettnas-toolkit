@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -5,8 +6,7 @@ import { initContainersManager } from '../components/containers-manager.js';
 import { initVmManager } from '../components/vm-manager.js';
 
 describe('Containers and VM Manager Mobile Touch Scrolling & Ergonomics', () => {
-  const cssPath = path.resolve(__dirname, '../style.css');
-  const cssContent = fs.readFileSync(cssPath, 'utf8');
+  const cssContent = readStyleCss();
 
   beforeEach(() => {
     document.body.innerHTML = '';

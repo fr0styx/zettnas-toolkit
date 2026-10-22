@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ZettEventBus } from '../event-bus.js';
 import { bringToFront } from '../components/dock.js';
@@ -110,8 +111,7 @@ describe('Batch 5: Frontend Desktop OS & UX Excellence', () => {
   });
 
   it('style.css provides >= 4.5:1 accessible contrast tokens for muted text', () => {
-    const cssPath = path.resolve(__dirname, '../style.css');
-    const css = fs.readFileSync(cssPath, 'utf-8');
+    const css = readStyleCss();
 
     // Amethyst theme muted token
     expect(css).toContain('--muted: #b399cf;');

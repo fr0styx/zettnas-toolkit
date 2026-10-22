@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { api } from '../api.js';
 import { state } from '../state.js';
@@ -41,8 +42,7 @@ describe('Yak Wallpaper Switch, Card Reordering, and Dynamic Hardware Settings S
     });
 
     it('verifies CSS rules in style.css for body.theme-yak #desktop-wallpaper', () => {
-      const cssPath = path.resolve(__dirname, '../style.css');
-      const css = fs.readFileSync(cssPath, 'utf8');
+      const css = readStyleCss();
 
       expect(css).toContain('body.theme-yak #desktop-wallpaper');
       expect(css).toContain('url("/img/yak.webp")');

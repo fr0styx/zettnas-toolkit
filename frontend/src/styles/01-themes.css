@@ -1,0 +1,146 @@
+/* =========================================================================
+   LIGHT THEME: HIGH-CONTRAST CLEAN MODERN DESKTOP (WCAG 2.2 AA)
+   ========================================================================= */
+body.theme-light {
+  --bg: #eef2f6;
+  --card: #ffffff;
+  --card-hi: #e2e8f0;
+  --fg: #0f172a;
+  --muted: #475569;
+  --ok: #16a34a;
+  --ok2: #0d9488;
+  --warn: #d97706;
+  --crit: #dc2626;
+  --track: #cbd5e1;
+  --focus-ring: #0284c7;
+  --focus-shadow: 0 0 0 3px rgba(2, 132, 199, 0.3);
+  background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   AMBER THEME: RETRO PHOSPHOR CRT TERMINAL
+   ========================================================================= */
+body.theme-amber {
+  --bg: #120d04;
+  --card: #1f1708;
+  --card-hi: #2b200b;
+  --fg: #fef3c7;
+  --muted: #a67c29;
+  --ok: #ffbe40;
+  --ok2: #e09b20;
+  --warn: #ff8c00;
+  --crit: #ff6b6b;
+  --track: #2a1f0a;
+  --brand: #ffbe40;
+  --focus-ring: #ffbe40;
+  --focus-shadow: 0 0 0 3px rgba(255, 190, 64, 0.35);
+  background: radial-gradient(circle at 50% 50%, #241a09 0%, #0d0903 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   EMERALD THEME: GREEN CYBERPUNK MATRIX TERMINAL
+   ========================================================================= */
+body.theme-emerald {
+  --bg: #04120a;
+  --card: #082012;
+  --card-hi: #0c2e1a;
+  --fg: #e6fced;
+  --muted: #34c776;
+  --ok: #3bf58b;
+  --ok2: #24d673;
+  --warn: #eab308;
+  --crit: #ef4444;
+  --track: #0e331f;
+  --brand: #3bf58b;
+  --focus-ring: #3bf58b;
+  --focus-shadow: 0 0 0 3px rgba(59, 245, 139, 0.35);
+  background: radial-gradient(circle at 50% 50%, #0b2917 0%, #030d07 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   SAPPHIRE THEME: NORDIC ICE BLUE GLOW
+   ========================================================================= */
+body.theme-sapphire {
+  --bg: #070e17;
+  --card: #0c1929;
+  --card-hi: #132438;
+  --fg: #f0f7ff;
+  --muted: #6482a6;
+  --ok: #38bdf8;
+  --ok2: #0ea5e9;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #15263d;
+  --brand: #38bdf8;
+  --focus-ring: #38bdf8;
+  --focus-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+  background: radial-gradient(circle at 50% 50%, #0e1e33 0%, #040810 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   AMETHYST THEME: SYNTHWAVE CYBER VIOLET
+   ========================================================================= */
+body.theme-amethyst {
+  --bg: #0e0717;
+  --card: #180e28;
+  --card-hi: #24153b;
+  --fg: #fbf7ff;
+  --muted: #b399cf;
+  --ok: #c084fc;
+  --ok2: #a855f7;
+  --warn: #fb923c;
+  --crit: #f43f5e;
+  --track: #26163d;
+  --brand: #c084fc;
+  --focus-ring: #c084fc;
+  --focus-shadow: 0 0 0 3px rgba(192, 132, 252, 0.35);
+  background: radial-gradient(circle at 50% 50%, #1e1133 0%, #080310 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   CRIMSON THEME: HIGH-ENERGY CORAL RED
+   ========================================================================= */
+body.theme-crimson {
+  --bg: #14070a;
+  --card: #220c12;
+  --card-hi: #30131b;
+  --fg: #fff1f2;
+  --muted: #c48995;
+  --ok: #fb7185;
+  --ok2: #f43f5e;
+  --warn: #f59e0b;
+  --crit: #ef4444;
+  --track: #36141e;
+  --brand: #f43f5e;
+  --focus-ring: #f43f5e;
+  --focus-shadow: 0 0 0 3px rgba(244, 63, 94, 0.35);
+  background: radial-gradient(circle at 50% 50%, #2e0e17 0%, #0d0305 70%);
+  color: var(--fg);
+}
+
+/* =========================================================================
+   OLED PURE BLACK THEME: HIGH-CONTRAST ZERO-EMISSION
+   ========================================================================= */
+body.theme-oled {
+  --bg: #000000;
+  --card: #080808;
+  --card-hi: #121212;
+  --fg: #ffffff;
+  --muted: #888888;
+  --ok: #00f0ff;
+  --ok2: #0ea5e9;
+  --warn: #ffb800;
+  --crit: #ff3333;
+  --track: #181818;
+  --brand: #00f0ff;
+  --focus-ring: #00f0ff;
+  --focus-shadow: 0 0 0 3px rgba(0, 240, 255, 0.4);
+  background: #000000;
+  color: var(--fg);
+}
+

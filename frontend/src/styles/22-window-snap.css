@@ -1,0 +1,135 @@
+/* =========================================================================
+   AERO SNAP WINDOW MANAGEMENT & SNAP GHOST (8-ZONE & SNAP ASSIST)
+   ========================================================================= */
+#window-snap-ghost {
+  position: fixed;
+  border-radius: 14px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 2px dashed var(--focus-ring, #00f0ff);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 240, 255, 0.18) inset;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  pointer-events: none;
+  z-index: 5500;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.snap-ghost-indicator {
+  background: rgba(10, 14, 19, 0.85);
+  border: 1px solid var(--focus-ring, rgba(0, 240, 255, 0.6));
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 8px 18px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* Snap Assist Flyout Menu */
+.snap-assist-flyout {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(18, 25, 36, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.25) inset;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  padding: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 220px;
+  user-select: none;
+  transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top center;
+}
+
+.snap-assist-flyout.visible {
+  display: flex;
+  animation: snapFlyoutIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes snapFlyoutIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.snap-layout-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted, #78838f);
+  padding-bottom: 2px;
+}
+
+.snap-templates-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.snap-card {
+  height: 52px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  display: flex;
+  padding: 4px;
+  gap: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.snap-card:hover {
+  border-color: var(--focus-ring, #00f0ff);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.snap-slot {
+  flex: 1;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.snap-slot:hover {
+  background: var(--focus-ring, #00f0ff);
+  transform: scale(1.02);
+}
+
+.snap-slot:focus-visible {
+  outline: 2px solid #ffffff !important;
+  outline-offset: 1px !important;
+}
+
+.snap-card-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+}
+
+#mobile-view-toggle-btn.active {
+  background: var(--accent);
+  color: #0b1f1a;
+  box-shadow: 0 0 10px rgba(37, 194, 160, 0.4);
+}
+

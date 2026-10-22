@@ -1,0 +1,40 @@
+/* =========================================================================
+   HARDWARE LCD DASHBOARD SCOPED THEMES
+   Guarantees that #screen, #mini-lcd-canvas, and body.lcd-direct have their own
+   isolated palette, completely independent of the desktop website theme.
+   ========================================================================= */
+
+#screen,
+#mini-lcd-canvas,
+.mini-preview-inner,
+#console-window,
+body.lcd-direct,
+#screen.lcd-theme-cyber,
+#mini-lcd-canvas.lcd-theme-cyber,
+#console-window.lcd-theme-cyber,
+body.lcd-direct.lcd-theme-cyber {
+  --bg: #0b1118;
+  --card: #131b24;
+  --card-hi: #1c2734;
+  --fg: #eaf1f8;
+  --muted: #94a3b8;
+  --ok: #00f0ff;
+  --ok2: #25c2a0;
+  --warn: #ffb830;
+  --crit: #ff4757;
+  --track: #1e293b;
+  --brand: #00f0ff;
+}
+
+#screen,
+#mini-lcd-canvas,
+#console-window,
+body.lcd-direct {
+  --ok2: var(--lcd-ok2, #25c2a0);
+  --brand: var(--lcd-brand, #00f0ff);
+  --brand-rgb: 0, 240, 255;
+  --accent-rgb: 0, 240, 255;
+  --accent-contrast-fg: #0b1118;
+  --ui-scale: 1;
+}
+

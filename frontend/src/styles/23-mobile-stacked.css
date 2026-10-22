@@ -1,0 +1,1569 @@
+/* =========================================================================
+   RESPONSIVE MOBILE STACKED MODE & TOUCH CONTROLS
+   ========================================================================= */
+@media (max-width: 768px) {
+  html, body {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    touch-action: none;
+  }
+
+  .studio-viewport-wrapper {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  .suite-navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    padding: 0 8px !important;
+    height: 48px !important;
+    z-index: 100 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .chassis-workbench-stage {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 48px !important;
+    width: 100% !important;
+    height: calc(100dvh - 48px) !important;
+    max-height: calc(100dvh - 48px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    padding: 12px 12px calc(72px + env(safe-area-inset-bottom, 0px)) 12px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .suite-telemetry-pills {
+    gap: 4px;
+  }
+  .suite-pill:not(#unraid-array-pill) {
+    display: none !important;
+  }
+
+  /* Desktop Icons - Mobile Springboard 4-Column App Launcher Grid */
+  .desktop-icons-container {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    z-index: 20 !important;
+    pointer-events: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .desktop-icons-container .chassis-hero-box,
+  .desktop-icons-container .chassis-desktop-icon,
+  .desktop-icons-container .management-desktop-icon {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    pointer-events: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    padding: 8px 4px !important;
+    margin: 0 !important;
+    transform: none !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+  }
+
+  .desktop-icons-container .chassis-hero-box:hover,
+  .desktop-icons-container .chassis-desktop-icon:hover,
+  .desktop-icons-container .management-desktop-icon:hover {
+    transform: none !important;
+  }
+
+  .desktop-icons-container .chassis-hero-box:active,
+  .desktop-icons-container .chassis-desktop-icon:active,
+  .desktop-icons-container .management-desktop-icon:active {
+    transform: scale(0.95) !important;
+  }
+
+  .desktop-icons-container .chassis-hero-img {
+    height: 36px !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+  }
+
+  .desktop-icons-container .console-hero-box {
+    width: 48px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .desktop-icons-container .console-hero-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .desktop-icons-container .desktop-icon-label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    width: 100% !important;
+    margin-top: 2px !important;
+  }
+
+  .desktop-icons-container .desktop-icon-label .icon-text {
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .desktop-icons-container .icon-dot-status {
+    width: 5px !important;
+    height: 5px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Desktop Widgets - Mobile 2-Column Glance Widget Grid */
+  #desktop-widgets-container {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    transform: none !important;
+    z-index: 20 !important;
+    flex-shrink: 0 !important;
+  }
+  #desktop-widgets-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  #desktop-widgets-container #widget-calendar {
+    grid-column: 1 / -1 !important;
+  }
+
+  #desktop-widgets-container .desktop-widget {
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #desktop-widgets-container .widget-header {
+    margin-bottom: 6px !important;
+  }
+
+  #desktop-widgets-container .widget-title {
+    font-size: 9.5px !important;
+    letter-spacing: 0.5px !important;
+    gap: 4px !important;
+  }
+
+  #desktop-widgets-container .widget-title svg.ic {
+    width: 11px !important;
+    height: 11px !important;
+  }
+
+  #desktop-widgets-container .widget-badge {
+    font-size: 8.5px !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+  }
+
+  #desktop-widgets-container span[id^="w-"] {
+    font-size: 11px !important;
+  }
+
+  #desktop-widgets-container #w-net-rx,
+  #desktop-widgets-container #w-net-tx {
+    font-size: 11px !important;
+  }
+
+  #desktop-widgets-container span[style*="font-size: 12px"] {
+    font-size: 10px !important;
+  }
+
+  #desktop-widgets-container span[style*="font-size: 10px"] {
+    font-size: 9px !important;
+  }
+
+  #desktop-widgets-container div[style*="height: 4px"] {
+    height: 3.5px !important;
+  }
+
+  #desktop-widgets-container div[style*="margin-top: 4px"] {
+    margin-top: 3px !important;
+  }
+
+  #desktop-widgets-container div[style*="gap: 6px"] {
+    gap: 4px !important;
+  }
+
+  #desktop-widgets-container #w-clock-time {
+    font-size: 20px !important;
+  }
+  #desktop-widgets-container #w-clock-sec {
+    font-size: 11px !important;
+  }
+  #desktop-widgets-container #w-weather-temp {
+    font-size: 16px !important;
+  }
+  #desktop-widgets-container #w-weather-icon {
+    font-size: 20px !important;
+  }
+  #desktop-widgets-container .cal-weekday {
+    font-size: 8.5px !important;
+    padding: 2px 0 !important;
+  }
+  #desktop-widgets-container .cal-day {
+    font-size: 10px !important;
+    padding: 3px 0 !important;
+  }
+  #desktop-widgets-container .cal-day.cal-holiday::after {
+    width: 3px !important;
+    height: 3px !important;
+    bottom: 1px !important;
+  }
+  #desktop-widgets-container .cal-glance-bar {
+    font-size: 9.5px !important;
+    min-height: 18px !important;
+    padding-top: 4px !important;
+    margin-top: 6px !important;
+  }
+
+  /* General Modals on Mobile */
+  .smart-modal-window:not(#copy-toast),
+  #folder-browser-modal .smart-modal-window,
+  #setup-wizard-modal .smart-modal-window,
+  .container-inspector-window,
+  #container-inspector-window,
+  .stack-inspector-window,
+  #stack-inspector-window,
+  .app-deploy-window,
+  #app-deploy-modal-window {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: calc(100dvh - 104px) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    resize: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  .smart-modal-header {
+    flex-shrink: 0 !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .smart-modal-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .smart-modal-body {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+
+  #copy-toast {
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 64px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 64px) !important;
+    top: auto !important;
+    transform: translateX(-50%) !important;
+    width: 92vw !important;
+    max-width: 380px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 45vh !important;
+    resize: none !important;
+    border-radius: 12px !important;
+  }
+
+  /* 1. File Explorer & VM Manager Window on Mobile */
+  .os-window,
+  .file-manager-window,
+  .vm-manager-window,
+  .containers-manager-window {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: calc(100dvh - 48px - 56px - env(safe-area-inset-bottom, 0px)) !important;
+    max-height: calc(100dvh - 104px) !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    resize: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  .os-window:not(.window-dragging),
+  .file-manager-window:not(.window-dragging),
+  .vm-manager-window:not(.window-dragging),
+  .containers-manager-window:not(.window-dragging) {
+    transform: none !important;
+  }
+
+  .os-window.window-minimized,
+  .file-manager-window.window-minimized,
+  .vm-manager-window.window-minimized,
+  .containers-manager-window.window-minimized,
+  .os-window[style*="display: none"],
+  .file-manager-window[style*="display: none"],
+  .vm-manager-window[style*="display: none"],
+  .containers-manager-window[style*="display: none"] {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateX(-50%) translateY(200px) scale(0.6) !important;
+  }
+
+  .os-window-header {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .os-window-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .os-window-controls {
+    gap: 10px !important;
+    align-items: center !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    padding-right: 2px !important;
+  }
+
+  .win-btn {
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    max-width: 14px !important;
+    max-height: 14px !important;
+    border-radius: 50% !important;
+    position: relative !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    touch-action: manipulation !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-size: 8px 8px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    flex-shrink: 0 !important;
+  }
+
+  .win-btn::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -15px !important;
+    bottom: -15px !important;
+    left: -15px !important;
+    right: -15px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    z-index: 2 !important;
+  }
+
+  .win-btn.close-btn {
+    background-color: #ff5f56 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M3 3 L7 7 M7 3 L3 7' stroke='%234c0000' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 8px 8px !important;
+  }
+
+  .win-btn.min-btn,
+  .win-btn.max-btn {
+    display: none !important;
+  }
+
+  .fm-toolbar {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .fm-tool-btn {
+    padding: 5px !important;
+  }
+
+  .fm-path-container {
+    min-width: 0 !important;
+  }
+
+  .fm-path-input {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+  }
+
+  .fm-path-breadcrumbs {
+    font-size: 11px !important;
+    right: 8px !important;
+    padding-left: 6px !important;
+  }
+
+  .fm-content {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
+  }
+
+  .fm-viewport {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 24px !important;
+  }
+
+  .fm-header-row {
+    padding: 0 8px !important;
+    gap: 4px !important;
+    height: 34px !important;
+    font-size: 11px !important;
+  }
+
+  .fm-row {
+    padding: 0 8px !important;
+    gap: 4px !important;
+    height: 42px !important;
+    font-size: 11.5px !important;
+  }
+
+  .fm-col-name {
+    flex: 1 !important;
+    min-width: 0 !important;
+    font-size: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .fm-col-name svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .fm-name-text {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .fm-col-type {
+    display: none !important;
+  }
+
+  .fm-col-size {
+    flex: 0 0 54px !important;
+    text-align: right !important;
+    font-size: 11px !important;
+  }
+
+  .fm-col-actions {
+    width: auto !important;
+    min-width: 58px !important;
+    gap: 2px !important;
+    justify-content: flex-end !important;
+  }
+
+  .fm-act-btn {
+    padding: 3px 2px !important;
+    font-size: 13px !important;
+  }
+
+  /* 2. ZettNAS System Console (LCD Preview) on Mobile */
+  #console-modal-overlay #console-window,
+  #console-window.chassis-front-panel {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: calc(100dvh - 104px - env(safe-area-inset-bottom, 0px)) !important;
+    transform: none !important;
+    margin: 0 !important;
+    padding: 38px 8px 18px 8px !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: none !important;
+  }
+
+  #console-window .chassis-screws {
+    display: none !important;
+  }
+
+  #console-window .chassis-panel-header {
+    position: absolute !important;
+    top: 6px !important;
+    left: 8px !important;
+    right: 8px !important;
+    height: 30px !important;
+    padding: 0 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    z-index: 10 !important;
+  }
+
+  #console-window .chassis-engraved-text {
+    font-size: 8.5px !important;
+    letter-spacing: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: calc(100% - 90px) !important;
+  }
+
+  #console-window .chassis-screen-spec {
+    display: none !important;
+  }
+
+  #console-window .btn-icon#console-popout {
+    font-size: 13px !important;
+    margin-right: 4px !important;
+  }
+
+  #console-window.lcd-theme-yak.chassis-front-panel::before {
+    font-size: 7px !important;
+    padding: 2px 8px !important;
+    letter-spacing: 0.5px !important;
+    max-width: 88vw !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #console-window #screen {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 8px 8px 10px 8px !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  #console-window #screen header {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 2px 2px 6px 2px !important;
+    gap: 6px 8px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  #console-window #screen .h-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  #console-window #screen .nas-name {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 140px !important;
+  }
+
+  #console-window #screen .pill {
+    font-size: 9.5px !important;
+    padding: 2px 6px !important;
+    white-space: nowrap !important;
+  }
+
+  #console-window #screen .clock {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-align: right !important;
+    flex-shrink: 0 !important;
+  }
+
+  #console-window #screen .h-right {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    margin-top: 2px !important;
+  }
+
+  #console-window #screen .lcd-page-dots {
+    display: flex !important;
+    gap: 5px !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  #console-window #screen .lcd-dot {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 10px !important;
+    line-height: 20px !important;
+    text-align: center !important;
+    border-radius: 4px !important;
+  }
+
+  #console-window #screen #ip {
+    font-size: 11px !important;
+    font-family: var(--font-mono, monospace) !important;
+  }
+
+  #console-window #lcd-viewport {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  #console-window .lcd-page {
+    height: auto !important;
+    min-height: auto !important;
+    width: 100% !important;
+  }
+
+  #console-window .lcd-page.active {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    height: auto !important;
+  }
+
+  #console-window .cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  #console-window .card {
+    min-width: 0 !important;
+    min-height: 68px !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+    flex: none !important;
+  }
+
+  #console-window .card.card-storage {
+    grid-column: 1 / -1 !important;
+    padding: 8px 10px !important;
+    min-height: auto !important;
+  }
+
+  #console-window .storage-body {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  #console-window .donut {
+    width: 44px !important;
+    height: 44px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #console-window .donut::before {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  #console-window .donut span {
+    font-size: 11.5px !important;
+  }
+
+  #console-window .storage-nums {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  #console-window .storage-nums .val {
+    font-size: 13px !important;
+  }
+
+  #console-window .storage-nums .lbl {
+    font-size: 8.5px !important;
+  }
+
+  #console-window .card-cpu .arc,
+  #console-window .card-mem .arc {
+    width: 42px !important;
+    height: 42px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #console-window .arc-val {
+    font-size: 13.5px !important;
+  }
+
+  #console-window .side .val {
+    font-size: 12.5px !important;
+  }
+
+  #console-window .side .lbl {
+    font-size: 8px !important;
+  }
+
+  #console-window .card-net .net-body {
+    gap: 4px !important;
+  }
+
+  #console-window .card-net .net-row strong {
+    font-size: 12px !important;
+  }
+
+  #console-window .card-net .net-row span {
+    font-size: 8.5px !important;
+  }
+
+  #console-window .card-fans .fan-row {
+    gap: 2px !important;
+    justify-content: space-around !important;
+  }
+
+  #console-window .card-fans .fan .fv {
+    font-size: 10px !important;
+  }
+
+  #console-window .card-fans .fan .fan-ic {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  #console-window .uptime {
+    margin-top: 4px !important;
+    font-size: 8px !important;
+  }
+
+  #console-window .disks {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    gap: 8px !important;
+    width: 100% !important;
+    flex: none !important;
+    margin-top: 4px !important;
+  }
+
+  #console-window .disk-group {
+    width: 100% !important;
+    flex: none !important;
+    gap: 4px !important;
+  }
+
+  #console-window .group-tiles {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  #console-window .group-div {
+    display: none !important;
+  }
+
+  #console-window .disk {
+    padding: 6px 8px !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+  }
+
+  #console-window .bay-matrix-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)) !important;
+    gap: 6px !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  #console-window .bay-matrix-card {
+    padding: 6px 4px !important;
+    min-height: 70px !important;
+  }
+
+  #console-window .net-io-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  #console-window .net-io-panel {
+    padding: 8px 10px !important;
+    min-height: 52px !important;
+  }
+
+  #console-window .unraid-copy-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  #console-window .uc-panel {
+    padding: 8px 10px !important;
+    min-height: 60px !important;
+  }
+
+  #console-window .chassis-led-fixture {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 10px 0 4px 0 !important;
+  }
+
+  #console-window .chassis-led-channel {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  #console-window .chassis-led-meta {
+    font-size: 8px !important;
+    padding: 0 2px !important;
+  }
+
+  #console-window .meta-tag span {
+    font-size: 7.5px !important;
+    letter-spacing: 0.8px !important;
+  }
+
+  /* 3. System Management Window on Mobile */
+  #management-modal-overlay #management-window,
+  #management-window,
+  .management-window {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 48px !important;
+    bottom: 56px !important;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    height: auto !important;
+    max-height: calc(100dvh - 104px) !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    resize: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+  }
+
+  #management-modal-overlay #management-window .chassis-screws {
+    display: none !important;
+  }
+
+  #management-modal-overlay .management-window-header {
+    padding: 0 12px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    flex-shrink: 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  #management-modal-overlay .mgmt-header-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #management-modal-overlay .mgmt-header-title,
+  #management-header-title-text {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    display: inline-block !important;
+  }
+
+  #management-modal-overlay .mgmt-header-right {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+    padding-right: 2px !important;
+  }
+
+  #management-modal-overlay .management-window-body {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    flex-shrink: 0 !important;
+    background: rgba(10, 16, 24, 0.98) !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 6px 8px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  #management-modal-overlay .mgmt-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 5px !important;
+    white-space: nowrap !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-item {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    gap: 5px !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-item.active::before {
+    display: none !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-text {
+    font-size: 11px !important;
+  }
+
+  #management-modal-overlay .mgmt-content-pane {
+    flex: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px 10px 24px 10px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+
+  #management-modal-overlay .management-hub-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  #management-modal-overlay .mgmt-app-card {
+    padding: 12px 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #management-modal-overlay .mgmt-app-title {
+    font-size: 13px !important;
+  }
+
+  #management-modal-overlay .mgmt-app-desc {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
+
+  #management-modal-overlay .mgmt-content-pane.has-subnav,
+  #management-modal-overlay .mgmt-content-pane:has(.mgmt-detail-card:not([style*="display: none"]) > .mgmt-sticky-subnav) {
+    padding-top: 0 !important;
+  }
+
+  #management-modal-overlay .mgmt-content-pane:not(.has-subnav) {
+    padding-top: 12px !important;
+  }
+
+  #management-modal-overlay .mgmt-sticky-subnav {
+    top: 0 !important;
+    margin: 0 -10px 10px -10px !important;
+    padding: 6px 10px !important;
+  }
+
+  #management-modal-overlay .mgmt-inner-tabs {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    scrollbar-width: none !important;
+    white-space: nowrap !important;
+    padding: 3px !important;
+    margin-bottom: 12px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  #management-modal-overlay .mgmt-inner-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  #management-modal-overlay .mgmt-inner-tab {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .os-dock-container {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 56px !important;
+    height: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: stretch !important;
+    z-index: 9999 !important;
+    background: transparent !important;
+    pointer-events: none !important;
+  }
+  .os-dock {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(10, 16, 26, 0.94) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    backdrop-filter: blur(24px) !important;
+    padding: 0 4px calc(env(safe-area-inset-bottom, 0px)) 4px !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    gap: 0 !important;
+    box-sizing: border-box !important;
+    pointer-events: auto !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5) !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+  }
+  .os-dock::-webkit-scrollbar {
+    display: none !important;
+  }
+  .dock-item {
+    flex: 1 1 0 !important;
+    max-width: 72px !important;
+    height: 48px !important;
+    width: auto !important;
+    min-width: 44px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    padding: 4px 2px !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+    transform: none !important;
+  }
+  .dock-item:active {
+    transform: scale(0.92) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+  }
+  .dock-item.active-window::before,
+  .dock-item.active::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 20% !important;
+    right: 20% !important;
+    height: 3px !important;
+    border-radius: 0 0 3px 3px !important;
+    background: var(--brand, #25c2a0) !important;
+    box-shadow: 0 0 8px var(--brand, #25c2a0) !important;
+  }
+  #dock-hover-tooltip {
+    display: none !important;
+  }
+
+  #top-toast-container {
+    top: auto !important;
+    bottom: 66px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 92vw !important;
+    max-width: 92vw !important;
+    z-index: var(--z-toast, 10000) !important;
+  }
+
+  #top-toast-container .top-toast-item,
+  #top-toast-container #top-notification-toast {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 9px 13px !important;
+    font-size: 12px !important;
+  }
+
+  /* Visible Custom Scrollbars for Mobile Windows & Panes */
+  #management-modal-overlay .mgmt-content-pane,
+  .fm-viewport,
+  #console-window.chassis-front-panel,
+  .smart-modal-window,
+  .smart-modal-body,
+  .slide-drawer {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(37, 194, 160, 0.6) rgba(0, 0, 0, 0.25) !important;
+  }
+
+  #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar,
+  .fm-viewport::-webkit-scrollbar,
+  #console-window.chassis-front-panel::-webkit-scrollbar,
+  .smart-modal-window::-webkit-scrollbar,
+  .smart-modal-body::-webkit-scrollbar,
+  .slide-drawer::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+  }
+
+  #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-track,
+  .fm-viewport::-webkit-scrollbar-track,
+  #console-window.chassis-front-panel::-webkit-scrollbar-track,
+  .smart-modal-window::-webkit-scrollbar-track,
+  .smart-modal-body::-webkit-scrollbar-track,
+  .slide-drawer::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.25) !important;
+    border-radius: 4px !important;
+  }
+
+  #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-thumb,
+  .fm-viewport::-webkit-scrollbar-thumb,
+  #console-window.chassis-front-panel::-webkit-scrollbar-thumb,
+  .smart-modal-window::-webkit-scrollbar-thumb,
+  .smart-modal-body::-webkit-scrollbar-thumb,
+  .slide-drawer::-webkit-scrollbar-thumb {
+    background: rgba(37, 194, 160, 0.6) !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-thumb:active,
+  .fm-viewport::-webkit-scrollbar-thumb:active,
+  #console-window.chassis-front-panel::-webkit-scrollbar-thumb:active,
+  .smart-modal-window::-webkit-scrollbar-thumb:active,
+  .smart-modal-body::-webkit-scrollbar-thumb:active,
+  .slide-drawer::-webkit-scrollbar-thumb:active {
+    background: rgba(37, 194, 160, 0.9) !important;
+  }
+
+  body.theme-yak #management-modal-overlay .mgmt-content-pane,
+  body.theme-yak .fm-viewport,
+  #console-window.lcd-theme-yak.chassis-front-panel,
+  body.theme-yak .smart-modal-window,
+  body.theme-yak .smart-modal-body,
+  body.theme-yak .slide-drawer {
+    scrollbar-color: rgba(212, 138, 55, 0.6) rgba(0, 0, 0, 0.25) !important;
+  }
+
+  body.theme-yak #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-thumb,
+  body.theme-yak .fm-viewport::-webkit-scrollbar-thumb,
+  #console-window.lcd-theme-yak.chassis-front-panel::-webkit-scrollbar-thumb,
+  body.theme-yak .smart-modal-window::-webkit-scrollbar-thumb,
+  body.theme-yak .smart-modal-body::-webkit-scrollbar-thumb,
+  body.theme-yak .slide-drawer::-webkit-scrollbar-thumb {
+    background: rgba(212, 138, 55, 0.6) !important;
+  }
+
+  /* Mobile Stacked Responsive Cards for Tables (Batch 3) */
+  .docker-table thead,
+  #mgmt-pane-docker table thead,
+  #mgmt-sec-disks table thead,
+  .copy-history-table.responsive-cards thead {
+    display: none !important;
+  }
+
+  .docker-table tbody,
+  #mgmt-pane-docker table tbody,
+  #mgmt-sec-disks table tbody,
+  .copy-history-table.responsive-cards tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .docker-table tbody tr,
+  #mgmt-pane-docker table tbody tr,
+  #mgmt-sec-disks table tbody tr,
+  .copy-history-table.responsive-cards tbody tr {
+    display: flex !important;
+    flex-direction: column !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+
+  .docker-table tbody td,
+  #mgmt-pane-docker table tbody td,
+  #mgmt-sec-disks table tbody td,
+  .copy-history-table.responsive-cards tbody td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    font-size: 11.5px !important;
+    min-height: 26px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .docker-table tbody td.docker-actions-cell,
+  #mgmt-pane-docker table tbody td.docker-actions-cell,
+  #mgmt-sec-disks table tbody td:last-child,
+  .copy-history-table.responsive-cards tbody td:last-child {
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+  }
+
+  .docker-table tbody td.docker-actions-cell .docker-actions-btn-group,
+  #mgmt-pane-docker table tbody td.docker-actions-cell .docker-actions-btn-group {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+  }
+
+  .docker-table tbody td.docker-hw-cell:not(:has(.docker-hw-badge)),
+  #mgmt-pane-docker table tbody td.docker-hw-cell:not(:has(.docker-hw-badge)) {
+    display: none !important;
+  }
+
+  .docker-actions-cell .btn-docker-inspect,
+  .docker-actions-cell .btn-docker-edit,
+  .docker-actions-cell .btn-docker-stack,
+  .docker-actions-cell .btn-docker-update-single,
+  .docker-actions-cell .btn-docker-backup,
+  .docker-actions-cell .btn-docker-delete {
+    display: none !important;
+  }
+
+  .btn-docker-more-sheet {
+    display: inline-flex !important;
+    min-height: 44px !important;
+    min-width: 44px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    touch-action: manipulation !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+  }
+  .btn-docker-more-sheet:active {
+    background: rgba(255, 255, 255, 0.2) !important;
+    transform: scale(0.95) !important;
+  }
+
+  .cw-docker-filter-pills,
+  .docker-filter-pills {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-snap-type: x mandatory !important;
+    scrollbar-width: none !important;
+    max-width: 100% !important;
+    padding-bottom: 4px !important;
+  }
+  .cw-docker-filter-pills::-webkit-scrollbar,
+  .docker-filter-pills::-webkit-scrollbar {
+    display: none !important;
+  }
+  .cw-docker-filter-pills .btn-pill-toggle,
+  .docker-filter-pills .btn-pill-toggle {
+    flex-shrink: 0 !important;
+    scroll-snap-align: start !important;
+    white-space: nowrap !important;
+  }
+
+  .cw-action-btns-wrap,
+  div:has(> #btn-cw-refresh),
+  div:has(> #btn-cw-check-updates),
+  div:has(> #btn-docker-stacks-menu) {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    max-width: 100% !important;
+    padding-bottom: 4px !important;
+  }
+  .cw-action-btns-wrap::-webkit-scrollbar,
+  div:has(> #btn-cw-refresh)::-webkit-scrollbar,
+  div:has(> #btn-cw-check-updates)::-webkit-scrollbar,
+  div:has(> #btn-docker-stacks-menu)::-webkit-scrollbar {
+    display: none !important;
+  }
+  .cw-action-btns-wrap > button,
+  div:has(> #btn-cw-refresh) > button,
+  div:has(> #btn-cw-check-updates) > button,
+  div:has(> #btn-docker-stacks-menu) > button,
+  div:has(> #btn-docker-stacks-menu) > div {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .docker-table tbody tr:has(td[colspan]),
+  #mgmt-pane-docker table tbody tr:has(td[colspan]),
+  #mgmt-sec-disks table tbody tr:has(td[colspan]) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .docker-table tbody tr td[colspan],
+  #mgmt-pane-docker table tbody tr td[colspan],
+  #mgmt-sec-disks table tbody tr td[colspan] {
+    justify-content: center !important;
+    border-bottom: none !important;
+    text-align: center !important;
+  }
+
+  /* Touch Hit Target Ergonomics (44px min hit targets for thumb tapability) */
+  .btn-container-act,
+  .btn-pill-toggle,
+  .btn-locate-topo,
+  .mgmt-inner-tab,
+  .btn-webui-badge {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    touch-action: manipulation !important;
+  }
+
+  /* Zero Horizontal Overflow on 375px+ screens */
+  #management-modal-overlay #management-window,
+  #management-modal-overlay .mgmt-content-pane,
+  #management-modal-overlay .mgmt-detail-card,
+  #management-modal-overlay .management-window-body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  #docker-search-input,
+  .tz-text-input {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+

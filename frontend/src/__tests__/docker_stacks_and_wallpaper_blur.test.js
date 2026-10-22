@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { api } from '../api.js';
 import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
@@ -58,8 +59,7 @@ describe('Docker Stacks & Wallpaper Blur & Dock Labels', () => {
     });
 
     it('verifies style.css contains light yellow highlight for edit pencil and rose/crimson for delete', () => {
-      const cssPath = path.resolve(__dirname, '../../../frontend/src/style.css');
-      const cssContent = fs.readFileSync(cssPath, 'utf8');
+      const cssContent = readStyleCss();
       // Edit button - light yellow
       expect(cssContent).toContain('.btn-docker-edit');
       expect(cssContent).toContain('#fde047');

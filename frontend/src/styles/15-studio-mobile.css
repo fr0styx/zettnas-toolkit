@@ -1,0 +1,88 @@
+/* =========================================================================
+   MOBILE RESPONSIVE VIEW (STUDIO ONLY)
+   ========================================================================= */
+@media (max-width: 720px) {
+  .suite-navbar { padding: 0 12px; }
+  .suite-telemetry-pills { gap: 8px; }
+  .suite-pill, .suite-badge { display: none !important; }
+  .suite-toolkit-btn .btn-txt { display: none; }
+  .suite-toolkit-btn { padding: 8px 10px; }
+  
+  .chassis-front-panel {
+  z-index: 50;
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+  
+  body.studio-workbench:not(.lcd-direct) #screen-container {
+    transform: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+  body.studio-workbench:not(.lcd-direct) #screen {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 172px;
+    gap: 12px;
+    padding: 12px !important;
+    border-radius: 12px;
+  }
+  body.studio-workbench:not(.lcd-direct) #screen .cards {
+    flex: none !important;
+    flex-wrap: wrap;
+    height: auto !important;
+    gap: 10px;
+  }
+  body.studio-workbench:not(.lcd-direct) #screen .card {
+    flex: 1 1 140px;
+    height: 75px;
+  }
+  body.studio-workbench:not(.lcd-direct) #screen .disks {
+    flex: none !important;
+    flex-wrap: wrap;
+    height: auto !important;
+    gap: 10px;
+  }
+  body.studio-workbench:not(.lcd-direct) #screen .disk-group {
+    flex: 1 1 100%;
+    margin-bottom: 4px;
+  }
+  body.studio-workbench:not(.lcd-direct) #screen .group-tiles {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  }
+  
+  .mini-lcd-canvas {
+    --mini-scale: 0.46;
+    height: 90px;
+  }
+
+}
+
+/* Minimize / Collapse Card Support */
+.btn-minimize {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+  transition: transform 0.2s ease, color 0.2s ease;
+  vertical-align: middle;
+}
+.btn-minimize:hover {
+  color: var(--fg);
+}
+.draggable-card.card-collapsed .btn-minimize {
+  transform: rotate(-90deg);
+}
+.draggable-card.card-collapsed > *:not(.card-headline) {
+  display: none;
+}
+.draggable-card {
+  transition: padding 0.2s ease;
+}
+
+
+
+

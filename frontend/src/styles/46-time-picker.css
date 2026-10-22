@@ -1,0 +1,287 @@
+/* =========================================================================
+   GLASSMORPHIC CUSTOM TIME PICKER & WHEEL POPOVER
+   ========================================================================= */
+
+.glass-time-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 96px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: var(--text, #f8fafc);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  user-select: none;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+
+.glass-time-trigger:hover {
+  border-color: var(--brand, #00f0ff);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 10px rgba(var(--brand-rgb, 0, 240, 255), 0.25);
+}
+
+.glass-time-trigger:focus-visible,
+.glass-time-trigger.active {
+  outline: none;
+  border-color: var(--brand, #00f0ff);
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb, 0, 240, 255), 0.35);
+}
+
+.glass-time-trigger .gt-icon {
+  font-size: 11px;
+  opacity: 0.75;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.glass-time-trigger:hover .gt-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.glass-time-popover {
+  position: fixed;
+  z-index: 99999;
+  width: 256px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(var(--brand-rgb, 0, 240, 255), 0.18);
+  padding: 12px;
+  color: #f8fafc;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: inherit;
+  box-sizing: border-box;
+  animation: glassTimePopIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes glassTimePopIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gtp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.gtp-preview {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.gtp-preview-time {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--brand, #00f0ff);
+  text-shadow: 0 0 12px rgba(var(--brand-rgb, 0, 240, 255), 0.4);
+  letter-spacing: 1px;
+}
+
+.gtp-preview-period {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.gtp-presets-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.gtp-preset-btn {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gtp-preset-btn:hover {
+  background: rgba(var(--brand-rgb, 0, 240, 255), 0.18);
+  border-color: var(--brand, #00f0ff);
+  color: #fff;
+}
+
+.gtp-columns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 54px;
+  gap: 6px;
+}
+
+.gtp-column {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gtp-col-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.gtp-scroll-list {
+  max-height: 140px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gtp-scroll-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.gtp-scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 4px;
+}
+
+.gtp-item-btn {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.gtp-item-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.gtp-item-btn.active {
+  background: var(--brand, #00f0ff);
+  color: var(--accent-contrast-fg, #0b1118);
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(var(--brand-rgb, 0, 240, 255), 0.45);
+}
+
+.gtp-period-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.gtp-period-btn {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gtp-period-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.gtp-period-btn.active {
+  background: var(--brand, #00f0ff);
+  border-color: var(--brand, #00f0ff);
+  color: var(--accent-contrast-fg, #0b1118);
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(var(--brand-rgb, 0, 240, 255), 0.45);
+}
+
+.gtp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 8px;
+}
+
+.gtp-now-btn {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.gtp-now-btn:hover {
+  color: var(--brand, #00f0ff);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.gtp-done-btn {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 6px;
+  background: var(--brand, #00f0ff);
+  color: var(--accent-contrast-fg, #0b1118);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.gtp-done-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 10px rgba(var(--brand-rgb, 0, 240, 255), 0.4);
+}
+

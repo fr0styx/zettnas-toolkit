@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, beforeEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -37,8 +38,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
   });
 
   it('verifies style.css defines sticky positioning, top offset, and backdrop filters for .mgmt-sticky-subnav', () => {
-    const cssPath = path.resolve(__dirname, '../style.css');
-    const cssContent = fs.readFileSync(cssPath, 'utf8');
+    const cssContent = readStyleCss();
 
     // .mgmt-sticky-subnav styling
     expect(cssContent).toMatch(/\.mgmt-sticky-subnav\s*\{[^}]*position:\s*sticky/);
@@ -141,8 +141,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
   });
 
   it('verifies #mgmt-sec-ai .mgmt-sticky-subnav preserves flex layout integrity and uses consistent SVG icons', () => {
-    const cssPath = path.resolve(__dirname, '../style.css');
-    const cssContent = fs.readFileSync(cssPath, 'utf8');
+    const cssContent = readStyleCss();
 
     // #mgmt-sec-ai .mgmt-sticky-subnav styling ensures flex-shrink: 0
     expect(cssContent).toMatch(/#mgmt-sec-ai\s+\.mgmt-sticky-subnav[^{]*\{[^}]*flex-shrink:\s*0\s*!important/);
@@ -160,8 +159,7 @@ describe('Mission Control Fixated Sticky Sub-Navigation Bar', () => {
   });
 
   it('verifies that style.css removes top padding on content pane when subnav is present and preserves 20px top padding when subnav is absent', () => {
-    const cssPath = path.resolve(__dirname, '../style.css');
-    const cssContent = fs.readFileSync(cssPath, 'utf8');
+    const cssContent = readStyleCss();
 
     // .mgmt-content-pane has padding-top: 0 when subnav is present
     expect(cssContent).toMatch(/\.mgmt-content-pane\.has-subnav[^{]*\{[^}]*padding-top:\s*0\s*!important/);

@@ -1,0 +1,525 @@
+/* =========================================================================
+   STREAMLINE MINIMALIST ("BIG IP") SCREEN DASHBOARD LAYOUT
+   ========================================================================= */
+.lcd-style-picker-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.lcd-style-chip {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--muted, #64748b);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.lcd-style-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.lcd-style-chip.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--brand, #00f0ff);
+  color: var(--brand, #00f0ff);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.streamline-container,
+#streamline-container {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px 4px 6px;
+  gap: 4px;
+  user-select: none;
+}
+
+/* Explicitly hide streamline layout elements in classic cards mode */
+#screen:not(.layout-streamline) .streamline-container,
+#screen:not(.layout-streamline) #streamline-container,
+#screen.layout-classic .streamline-container,
+#screen.layout-classic #streamline-container,
+.mini-preview-inner:not(.layout-streamline) .streamline-container,
+.mini-preview-inner:not(.layout-streamline) #streamline-container,
+.mini-preview-inner.layout-classic .streamline-container,
+.mini-preview-inner.layout-classic #streamline-container {
+  display: none !important;
+}
+
+/* In streamline mode: hide classic cards and disks (keep header visible, only hide header's small IP) */
+#screen.layout-streamline #dashboard-cards-container,
+#screen.layout-streamline .cards,
+#screen.layout-streamline #diskRow,
+#screen.layout-streamline .disks,
+body.lcd-direct #screen.layout-streamline #dashboard-cards-container,
+body.lcd-direct #screen.layout-streamline .cards,
+body.lcd-direct #screen.layout-streamline #diskRow,
+body.lcd-direct #screen.layout-streamline .disks,
+.mini-preview-inner.layout-streamline #dashboard-cards-container,
+.mini-preview-inner.layout-streamline .cards,
+.mini-preview-inner.layout-streamline #diskRow,
+.mini-preview-inner.layout-streamline .disks {
+  display: none !important;
+}
+
+/* In streamline mode: show streamline container */
+#screen.layout-streamline #streamline-container,
+#screen.layout-streamline .streamline-container,
+body.lcd-direct #screen.layout-streamline #streamline-container,
+body.lcd-direct #screen.layout-streamline .streamline-container,
+.mini-preview-inner.layout-streamline #streamline-container,
+.mini-preview-inner.layout-streamline .streamline-container {
+  display: flex !important;
+}
+
+/* In streamline mode: hide the small IP & globe icon in the top header so the Big IP is the exclusive hero */
+#screen.layout-streamline > header #ip,
+#screen.layout-streamline > header #header-globe-icon,
+#screen.layout-streamline > header .h-right > svg,
+#screen.layout-streamline header #ip,
+#screen.layout-streamline header .h-right > svg,
+body.lcd-direct #screen.layout-streamline header #ip,
+body.lcd-direct #screen.layout-streamline header .h-right > svg,
+body.lcd-direct.layout-streamline #screen header #ip,
+body.lcd-direct.layout-streamline #screen header .h-right > svg,
+.mini-preview-inner.layout-streamline header #ip,
+.mini-preview-inner.layout-streamline header .h-right > svg {
+  display: none !important;
+}
+
+/* Ensure the header itself is displayed nicely in streamline mode */
+#screen.layout-streamline > header,
+#screen.layout-streamline header,
+body.lcd-direct #screen.layout-streamline header,
+.mini-preview-inner.layout-streamline header {
+  display: flex !important;
+}
+
+/* Streamline Main Telemetry Deck (3 Glassmorphic Cards) */
+.sl-main-deck {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 82px;
+}
+
+.sl-card {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 8px;
+  background: linear-gradient(160deg, var(--card-hi, rgba(16, 24, 38, 0.9)), var(--card, rgba(8, 12, 20, 0.95)));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.sl-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 240, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+.sl-card:active {
+  transform: scale(0.99);
+}
+
+.sl-card .card-title {
+  font-size: 9px;
+  color: #8fa0b2;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Card 1: Storage */
+.sl-card-storage {
+  flex: 1 1 180px;
+}
+.sl-storage-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.sl-donut-wrap {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sl-donut-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.sl-donut-track {
+  fill: none;
+  stroke: var(--track, #1e293b);
+  stroke-width: 5.5;
+}
+.sl-donut-arc {
+  fill: none;
+  stroke: var(--brand, #00f0ff);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  stroke-dasharray: 163.36;
+  stroke-dashoffset: 163.36;
+  transition: stroke-dashoffset 0.6s ease;
+}
+#screen.lcd-theme-amethyst .sl-donut-arc,
+body.lcd-direct.lcd-theme-amethyst #screen .sl-donut-arc {
+  stroke: #c084fc;
+}
+#screen.lcd-theme-amber .sl-donut-arc,
+body.lcd-direct.lcd-theme-amber #screen .sl-donut-arc {
+  stroke: #ffbe40;
+}
+#screen.lcd-theme-emerald .sl-donut-arc,
+body.lcd-direct.lcd-theme-emerald #screen .sl-donut-arc {
+  stroke: #3bf58b;
+}
+#screen.lcd-theme-sapphire .sl-donut-arc,
+body.lcd-direct.lcd-theme-sapphire #screen .sl-donut-arc {
+  stroke: #38bdf8;
+}
+.sl-donut-pct {
+  position: absolute;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+}
+.sl-storage-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.sl-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+}
+.sl-meta-lbl {
+  font-size: 7.5px;
+  font-weight: 700;
+  color: #8fa0b2;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.sl-meta-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sl-meta-val-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Card 2: Compute */
+.sl-card-compute {
+  flex: 1 1 185px;
+}
+.sl-compute-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+.sl-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  padding: 1px 2px;
+  border-radius: 4px;
+}
+.sl-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.sl-bar-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #8fa0b2;
+  letter-spacing: 0.5px;
+}
+.sl-bar-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.sl-bar-val {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+.sl-bar-sub, .sl-bar-temp, .sl-bar-used {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+.sl-bar-track {
+  height: 6px;
+  background: var(--track, #1e293b);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.sl-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--ok2, #25c2a0), var(--brand, #00f0ff));
+  transition: width 0.5s ease;
+}
+#screen.lcd-theme-amethyst .sl-bar-fill,
+body.lcd-direct.lcd-theme-amethyst #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #8b5cf6, #c084fc);
+}
+#screen.lcd-theme-amber .sl-bar-fill,
+body.lcd-direct.lcd-theme-amber #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+}
+#screen.lcd-theme-emerald .sl-bar-fill,
+body.lcd-direct.lcd-theme-emerald #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #059669, #34d399);
+}
+#screen.lcd-theme-sapphire .sl-bar-fill,
+body.lcd-direct.lcd-theme-sapphire #screen .sl-bar-fill {
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+}
+
+/* Card 3: Hero Big IP */
+.sl-card-ip {
+  flex: 1.3 1 245px;
+}
+.sl-ip-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  text-align: center;
+}
+.sl-hero-ip {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
+}
+.sl-net-rates {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+.sl-net-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8fa0b2;
+  margin-right: 2px;
+}
+.sl-net-item strong {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+.sl-net-sep {
+  color: rgba(255, 255, 255, 0.15);
+}
+
+/* Lower Deck: Bay Slot Matrix (Mini-Cards) */
+.sl-bay-row {
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+  height: 44px;
+  flex-shrink: 0;
+  overflow-x: hidden;
+}
+.sl-bay-chip {
+  background: linear-gradient(160deg, var(--card-hi, rgba(16, 24, 38, 0.8)), var(--card, rgba(8, 12, 20, 0.95)));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 2px solid var(--role-accent, rgba(0, 240, 255, 0.5));
+  border-radius: 6px;
+  padding: 3px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  flex: 1 1 0;
+  min-width: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.sl-bay-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+.sl-bay-chip:active {
+  transform: scale(0.98);
+}
+.sl-bay-chip.chip-standby {
+  opacity: 0.65;
+  filter: saturate(0.6);
+}
+
+/* Role Accent Line & Colors */
+.sl-bay-chip.r-parity, .sl-bay-chip.chip-parity {
+  --role-accent: #f97316;
+  border-top-color: #f97316;
+}
+.sl-bay-chip.r-data {
+  --role-accent: #00f0ff;
+  border-top-color: #00f0ff;
+}
+.sl-bay-chip.r-cache {
+  --role-accent: #38bdf8;
+  border-top-color: #38bdf8;
+}
+.sl-bay-chip.r-os {
+  --role-accent: #a855f7;
+  border-top-color: #a855f7;
+}
+
+.sl-chip-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  gap: 4px;
+}
+.sl-chip-ident {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.sl-chip-ic {
+  width: 11px;
+  height: 11px;
+  color: var(--role-accent, var(--ok2));
+  flex-shrink: 0;
+}
+.sl-bay-chip .slot-lbl {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--fg, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+.sl-bay-chip .slot-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sl-bay-chip.h-ok .slot-dot {
+  background: var(--ok2, #10b981);
+  box-shadow: 0 0 5px var(--ok2, #10b981);
+}
+.sl-bay-chip.chip-standby .slot-dot {
+  background: #4a5568;
+}
+.sl-bay-chip.h-warn .slot-dot {
+  background: var(--warn, #ffb830);
+  box-shadow: 0 0 5px var(--warn, #ffb830);
+}
+.sl-bay-chip.h-crit .slot-dot {
+  background: var(--crit, #ff4757);
+  box-shadow: 0 0 7px var(--crit, #ff4757);
+  animation: pulse 1.2s infinite;
+}
+.sl-bay-chip.io-active {
+  border-color: rgba(0, 255, 255, 0.4) !important;
+}
+.sl-bay-chip.io-active .slot-dot {
+  background: #00ffff !important;
+  box-shadow: 0 0 6px #00ffff, 0 0 10px #00ffff !important;
+  animation: ioBlink 0.3s ease-in-out infinite alternate;
+}
+
+.sl-chip-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  gap: 2px;
+}
+.sl-chip-role {
+  font-size: 7.5px;
+  font-weight: 800;
+  color: var(--role-accent, #64748b);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+}
+.sl-chip-temp {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--fg, #e2e8f0);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1;
+}
+.sl-chip-temp.s-standby,
+.sl-chip-temp .standby-badge {
+  font-size: 7.5px;
+  padding: 1px 3px;
+  background: rgba(100, 116, 139, 0.25);
+  color: #94a3b8;
+  border-radius: 2px;
+  letter-spacing: 0.3px;
+}
+

@@ -1,0 +1,430 @@
+/* =========================================================================
+   SYSTEM MANAGEMENT DESKTOP WINDOW & HUB
+   ========================================================================= */
+#management-modal-overlay #management-window,
+.management-window {
+  contain: layout style;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 900px;
+  height: 640px;
+  min-width: 580px;
+  min-height: 400px;
+  max-width: 98vw;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(13, 20, 30, var(--glass-opacity, 0.72));
+  backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--window-radius, 14px);
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 37, 194, 160), calc(0.18 * var(--window-glow-enabled, 1)));
+  overflow: hidden;
+  resize: both;
+  z-index: var(--z-window-base, 1000);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, border-radius 0.2s ease;
+}
+
+.management-window .chassis-screws {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #556677 30%, #202b38 90%);
+  border: 1px solid #101620;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.3);
+  z-index: 5;
+  pointer-events: none;
+}
+.management-window .screw-tl { top: 8px; left: 8px; }
+.management-window .screw-tr { top: 8px; right: 8px; }
+.management-window .screw-bl { bottom: 8px; left: 8px; }
+.management-window .screw-br { bottom: 8px; right: 28px; }
+
+.management-window-header {
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(180deg, #16202c 0%, #111a24 100%);
+  cursor: move;
+  user-select: none;
+  min-height: 52px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.mgmt-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mgmt-header-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mgmt-title-ic {
+  width: 18px;
+  height: 18px;
+  color: var(--ok2, #25c2a0);
+}
+
+.mgmt-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.management-window-body {
+  padding: 0;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch;
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  background: #0d141e;
+}
+
+/* LEFT SIDEBAR */
+.mgmt-sidebar {
+  width: 215px;
+  min-width: 215px;
+  height: 100%;
+  background: rgba(10, 16, 24, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  overflow-y: auto;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.mgmt-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mgmt-sidebar-category {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #94a3b8;
+  padding: 10px 10px 4px 10px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.mgmt-sidebar-category:first-of-type {
+  margin-top: 2px;
+}
+
+.mgmt-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s ease;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.mgmt-sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+}
+
+.mgmt-sidebar-item.active {
+  background: rgba(37, 194, 160, 0.14);
+  border-color: rgba(37, 194, 160, 0.35);
+  color: #fff;
+  font-weight: 700;
+}
+
+.mgmt-sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--ok2, #25c2a0);
+  box-shadow: 0 0 8px var(--ok2, #25c2a0);
+}
+
+.mgmt-sidebar-svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.mgmt-sidebar-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mgmt-sidebar-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.mgmt-sidebar-badge.alert-badge {
+  background: rgba(240, 85, 59, 0.2);
+  color: var(--crit);
+  border: 1px solid rgba(240, 85, 59, 0.4);
+}
+
+/* RIGHT CONTENT PANE */
+.mgmt-content-pane {
+  flex: 1;
+  height: 100%;
+  padding: 20px;
+  overflow-y: auto;
+  min-width: 0;
+  background: #0d141e;
+  box-sizing: border-box;
+}
+
+.mgmt-content-pane.has-subnav {
+  padding-top: 0 !important;
+}
+
+.mgmt-content-pane:not(.has-subnav) {
+  padding-top: 20px !important;
+}
+
+/* Container Action Buttons */
+.btn-container-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  gap: 4px;
+  min-width: 31px;
+  height: 22px;
+  box-sizing: border-box;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  margin-left: 4px;
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 1;
+}
+
+.docker-actions-cell {
+  vertical-align: middle !important;
+}
+
+.docker-actions-btn-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  vertical-align: middle;
+}
+
+.docker-actions-cell .btn-container-act {
+  width: 31px;
+  height: 22px;
+  min-width: 31px;
+  padding: 0;
+  flex-shrink: 0;
+  vertical-align: middle !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.btn-docker-more-sheet {
+  display: none !important;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.btn-docker-more-sheet:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+.btn-docker-edit {
+  background: rgba(254, 240, 138, 0.12);
+  color: #fde047;
+  border-color: rgba(254, 240, 138, 0.35);
+}
+.btn-docker-edit:hover:not(:disabled) {
+  background: rgba(254, 240, 138, 0.28);
+  border-color: #fde047;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(253, 224, 71, 0.35);
+}
+.btn-docker-delete {
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  border-color: rgba(244, 63, 94, 0.35);
+}
+.btn-docker-delete:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.28);
+  border-color: #f43f5e;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+}
+.btn-docker-stack {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent-cyan, #38bdf8);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+.btn-docker-stack:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+.btn-docker-update-single {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+.btn-docker-update-single:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: #fbbf24;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+.btn-docker-backup {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+  border-color: rgba(249, 115, 22, 0.35);
+}
+.btn-docker-backup:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.3);
+  border-color: #f97316;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.45);
+}
+.ci-btn-backup-orange:hover:not(:disabled),
+#ci-btn-backup-action:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.28) !important;
+  border-color: #f97316 !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.45);
+}
+.btn-docker-update-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.3;
+  width: auto !important;
+  min-width: unset !important;
+}
+.btn-docker-update-badge:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.35);
+  border-color: #fbbf24;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
+  transform: translateY(-1px);
+}
+.btn-docker-update-badge:active:not(:disabled) {
+  transform: translateY(0);
+}
+.btn-docker-stop {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+  vertical-align: middle !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.btn-docker-stop svg,
+.btn-docker-start svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+  margin: 0 auto;
+  pointer-events: none;
+}
+.btn-docker-stop:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+.btn-docker-restart {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+  vertical-align: middle !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.btn-docker-restart:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #0284c7;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+.btn-docker-start {
+  background: rgba(37, 194, 160, 0.12);
+  color: var(--ok2, #25c2a0);
+  border-color: rgba(37, 194, 160, 0.3);
+  vertical-align: middle !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.btn-docker-start:hover:not(:disabled) {
+  background: rgba(37, 194, 160, 0.25);
+  border-color: var(--ok2, #25c2a0);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(37, 194, 160, 0.4);
+}
+.btn-container-act:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+

@@ -1,0 +1,194 @@
+/* =========================================================================
+   BATCH 2: GLASSMORPHISM, WALLPAPER READABILITY & SPECULAR BORDER GLOW
+   ========================================================================= */
+
+/* 1. Desktop Wallpaper Background Layer & Hardware GPU Blur */
+#desktop-wallpaper {
+  position: fixed;
+  top: -24px;
+  left: -24px;
+  right: -24px;
+  bottom: -24px;
+  z-index: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  filter: blur(var(--wallpaper-blur, 0px));
+  -webkit-filter: blur(var(--wallpaper-blur, 0px));
+  transform: translate3d(0, 0, 0);
+  will-change: filter;
+  transition: filter 0.15s ease, opacity 0.25s ease;
+}
+
+/* 2. Desktop Wallpaper Readability Dimmer & Backdrop Blur */
+#desktop-wallpaper-dimmer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: rgba(0, 0, 0, var(--wallpaper-dim, 0.15));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: background 0.2s ease;
+}
+
+html.has-wallpaper-blur #desktop-wallpaper-dimmer {
+  backdrop-filter: blur(var(--wallpaper-blur, 0px));
+  -webkit-backdrop-filter: blur(var(--wallpaper-blur, 0px));
+  transition: background 0.2s ease, backdrop-filter 0.2s ease, -webkit-backdrop-filter 0.2s ease;
+}
+
+/* 2. Specular Border Glow & Active Window Highlight */
+#management-modal-overlay #management-window.active-window,
+#management-modal-overlay #management-window:focus-within,
+#app-deploy-modal-overlay #app-deploy-modal-window.active-window,
+#app-deploy-modal-overlay #app-deploy-modal-window:focus-within,
+.os-window.active,
+.os-window.active-window,
+.os-window:focus-within,
+.active-window {
+  border-color: rgba(var(--accent-rgb, 0, 240, 255), calc(0.55 * var(--window-glow-enabled, 1))) !important;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 0, 240, 255), calc(0.3 * var(--window-glow-enabled, 1))) !important;
+}
+
+body.no-specular-glow #management-modal-overlay #management-window,
+body.no-specular-glow .os-window,
+body.no-specular-glow .active-window {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 3. Window Corner Radius Selector */
+.window-radius-btn.active {
+  background: var(--brand, #00f0ff) !important;
+  color: #0b1118 !important;
+  font-weight: 700 !important;
+  border-color: var(--brand, #00f0ff) !important;
+  box-shadow: 0 0 10px rgba(var(--accent-rgb, 0, 240, 255), 0.35);
+}
+
+/* 4. Sleek Modern Range Sliders */
+input[type="range"].tz-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  outline: none;
+  transition: background 0.2s;
+}
+
+input[type="range"].tz-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand, #00f0ff);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb, 0, 240, 255), 0.5);
+  cursor: pointer;
+  border: 2px solid #0d141e;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"].tz-range-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 0 12px var(--brand, #00f0ff);
+}
+
+input[type="range"].tz-range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand, #00f0ff);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb, 0, 240, 255), 0.5);
+  cursor: pointer;
+  border: 2px solid #0d141e;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ==========================================================================
+   Desktop Context Menu & Ergonomics (macOS / Win11 Fluent inspired)
+   ========================================================================== */
+.desktop-context-menu {
+  position: fixed;
+  z-index: 99998;
+  min-width: 220px;
+  background: rgba(18, 26, 36, 0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 240, 255, 0.08);
+  padding: 6px;
+  user-select: none;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  animation: contextMenuFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  color: #e2e8f0;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  outline: none;
+}
+
+.context-menu-item:hover,
+.context-menu-item:focus-visible {
+  background: rgba(37, 194, 160, 0.18);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(37, 194, 160, 0.35);
+}
+
+.context-menu-item.danger {
+  color: #fca5a5;
+}
+
+.context-menu-item.danger:hover,
+.context-menu-item.danger:focus-visible {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.4);
+}
+
+.context-menu-icon {
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+}
+
+.context-menu-label {
+  flex: 1;
+  letter-spacing: 0.2px;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 6px;
+}
+

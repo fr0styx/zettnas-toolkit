@@ -1,3 +1,4 @@
+import { readStyleCss } from './helpers/read-style-css.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ALL_TRANSLATIONS as TRANSLATIONS } from '../locales/all.js';
 import { DockManager, initDockSystem } from '../components/dock.js';
@@ -160,8 +161,7 @@ describe('Batch 5: Performance, WAI-ARIA, Keyboard Ergonomics & i18n Verificatio
   });
 
   it('6. Theme Contrast & CSS Compositing Rules: verify CSS tokens in style.css', () => {
-    const cssPath = path.resolve(__dirname, '../style.css');
-    const css = fs.readFileSync(cssPath, 'utf8');
+    const css = readStyleCss();
 
     // Root contrast & fonts
     expect(css).toContain('--muted:#8493a5;');
