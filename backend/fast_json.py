@@ -9,6 +9,8 @@ import json
 from collections.abc import Callable
 from typing import Any, Optional
 
+from starlette.responses import JSONResponse
+
 try:
     import orjson
 
@@ -67,3 +69,18 @@ def loads(data: Any) -> Any:
             data = data.encode("utf-8")
         return orjson.loads(data)
     return json.loads(data)
+
+
+class FastJSONResponse(JSONResponse):
+    """The app's default response class: JSON rendered with orjson.
+
+    Gives the same bytes as FastAPI's deprecated ORJSONResponse. Unlike
+    Starlette's JSONResponse, NaN and Infinity become null instead of raising
+    (a sensor reading parsed as float("nan") must not turn /api/stats into a
+    500), non-string dict keys become strings, and numpy values serialize.
+    """
+
+    def render(self, content: Any) -> bytes:
+        if not _HAS_ORJSON:
+            return super().render(content)
+        return orjson.dumps(content, option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SERIALIZE_NUMPY)

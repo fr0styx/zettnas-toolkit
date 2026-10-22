@@ -16,7 +16,6 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend import __version__
@@ -34,6 +33,7 @@ from backend.config import (
 )
 from backend.db import init_db
 from backend.errors import register_error_handlers
+from backend.fast_json import FastJSONResponse
 from backend.fsutil import read_json
 from backend.hardware.cpu import read_cpu_util
 from backend.hardware.fans import failsafe_release_fans
@@ -331,7 +331,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
-    default_response_class=ORJSONResponse,
+    default_response_class=FastJSONResponse,
 )
 
 # Consistent {error, detail, code} error responses
