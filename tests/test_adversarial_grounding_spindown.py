@@ -17,7 +17,7 @@ import re
 import sqlite3
 import subprocess
 import time
-from typing import Any, Dict, List
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -34,7 +34,6 @@ from backend.services.rag_engine import (
     resolve_path_backing_dev,
 )
 from backend.state import Z_STATE
-
 
 # ============================================================================
 # 1. Thought Token & Reasoning Extraction Stress Tests
@@ -806,7 +805,7 @@ class TestZeroDiskSpindownSafety:
         mock_unraid = {"disk1": {"device": "sdb", "type": "data", "spundown": "1"}}
         Z_STATE.cached_smart_data["sdb"] = (35, "standby")
 
-        opened_paths: List[str] = []
+        opened_paths: list[str] = []
         original_open = open
 
         def guarded_open(file, *args, **kwargs):

@@ -1,4 +1,5 @@
 import os
+
 from backend.hardware.chassis import ChassisEngine
 
 
@@ -74,6 +75,7 @@ def test_detect_chassis_model_d4_dmi(monkeypatch):
 def test_detect_chassis_model_filters_nvme_and_usb():
     """Verifies that 4 SATA drives + 2 NVMe drives + 1 USB boot drive (7 total) correctly classifies as D4 (4-bay), NOT D8U."""
     from unittest.mock import patch
+
     from backend.hardware.hal import PhysicalDiskRecord
     from backend.hardware.storage import detect_chassis_model
 
@@ -138,6 +140,7 @@ def test_detect_chassis_model_filters_nvme_and_usb():
 def test_get_chassis_status_d4_defaults_to_4_bays():
     """Verifies that on a Zettlab D4 appliance with 2 populated drives, total_bays defaults to 4."""
     from unittest.mock import patch
+
     from backend.hardware.hal import PhysicalDiskRecord
 
     fake_disks = [

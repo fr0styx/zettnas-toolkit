@@ -18,8 +18,8 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from backend.auth import AuthenticatedPrincipal
+from backend.main import app
 from backend.services.ai_chat_agent import (
     _extract_folder_and_intent,
     _synthesize_rag_grounded_answer,
@@ -101,7 +101,7 @@ def test_hierarchical_chunking_and_negative_parent_indexing(temp_rag_env):
     engine = temp_rag_env["engine"]
     f1_path = temp_rag_env["f1"]
 
-    with open(f1_path, "r", encoding="utf-8") as f:
+    with open(f1_path, encoding="utf-8") as f:
         text = f.read()
 
     doc_type, doc_title, doc_metadata, children, parents = generate_contextual_hierarchical_chunks(

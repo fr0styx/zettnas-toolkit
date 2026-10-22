@@ -12,16 +12,16 @@ import re
 import socket
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from backend.config import logger
 from backend.state import Z_STATE
 
-_CACHED_CONTAINERS: List[Dict[str, Any]] = []
+_CACHED_CONTAINERS: list[dict[str, Any]] = []
 _LAST_DOCKER_POLL = 0.0
 _DOCKER_CACHE_TTL = 3.0
-_CONTAINER_METRICS: Dict[str, Dict[str, Any]] = {}
-_CONTAINER_INSPECT_CACHE: Dict[str, Dict[str, Any]] = {}
+_CONTAINER_METRICS: dict[str, dict[str, Any]] = {}
+_CONTAINER_INSPECT_CACHE: dict[str, dict[str, Any]] = {}
 _TELEMETRY_THREAD_STARTED = False
 _TELEMETRY_LOCK = threading.Lock()
 _INSPECT_LOCK = threading.Lock()
@@ -70,8 +70,8 @@ def _parse_ports_and_webui(
     raw_ports: list,
     labels: dict,
     network_mode: str = "",
-    exposed_ports: Optional[dict] = None,
-) -> Tuple[List[Dict[str, Any]], Optional[int], Optional[str]]:
+    exposed_ports: dict | None = None,
+) -> tuple[list[dict[str, Any]], int | None, str | None]:
     """
     Parses container port bindings into a deduplicated, sorted list and resolves
     the primary Web UI port and URL template using universal heuristics.
@@ -116,8 +116,8 @@ def _parse_ports_and_webui(
     # Sort so public ports appear first, ordered by port number
     parsed.sort(key=lambda x: (x["public_port"] is None, x["public_port"] or 0))
 
-    webui_url: Optional[str] = None
-    primary_port: Optional[int] = None
+    webui_url: str | None = None
+    primary_port: int | None = None
 
     # Heuristic 1: Unraid WebUI label (if present, replace [IP] with [HOST])
     unraid_webui = labels.get("net.unraid.docker.webui")
@@ -162,7 +162,7 @@ def _parse_ports_and_webui(
     return parsed, primary_port, webui_url
 
 
-def _classify_stack(labels: dict) -> Tuple[Optional[str], Optional[str], str]:
+def _classify_stack(labels: dict) -> tuple[str | None, str | None, str]:
     """
     Classifies container orchestrator stack origin (Compose, Dockhand, Unraid, Standalone).
     """
@@ -180,7 +180,7 @@ def _classify_stack(labels: dict) -> Tuple[Optional[str], Optional[str], str]:
     return stack, service, managed_by
 
 
-def _extract_hardware_badges(mounts: list, devices: list, env: list, runtime: str = "") -> List[Dict[str, str]]:
+def _extract_hardware_badges(mounts: list, devices: list, env: list, runtime: str = "") -> list[dict[str, str]]:
     """
     Hardware Abstraction Layer (HAL) badge detector.
     OS-agnostic: discovers DRM/DRI GPUs, AMD ROCm, NVIDIA CUDA, Coral TPUs, and USB serial adapters.
@@ -227,7 +227,7 @@ def _extract_hardware_badges(mounts: list, devices: list, env: list, runtime: st
     return badges
 
 
-def _extract_appdata_path(mounts: list) -> Optional[str]:
+def _extract_appdata_path(mounts: list) -> str | None:
     """
     Extracts container application config/data path on the host for File Explorer deep-linking.
     """
@@ -239,7 +239,7 @@ def _extract_appdata_path(mounts: list) -> Optional[str]:
     return None
 
 
-def _fetch_container_inspect(cid_short: str, conn: Optional[UnixHTTPConnection] = None) -> Dict[str, Any]:
+def _fetch_container_inspect(cid_short: str, conn: UnixHTTPConnection | None = None) -> dict[str, Any]:
     """
     Fetches full container inspection JSON with thread-safe in-memory caching.
     """
@@ -281,7 +281,7 @@ def _fetch_container_inspect(cid_short: str, conn: Optional[UnixHTTPConnection] 
     return {}
 
 
-def _fetch_container_telemetry(cid: str) -> Dict[str, Any]:
+def _fetch_container_telemetry(cid: str) -> dict[str, Any]:
     sock_path = "/var/run/docker.sock"
     if not os.path.exists(sock_path):
         return {}
@@ -406,7 +406,7 @@ def start_docker_telemetry_collector():
                 _TELEMETRY_THREAD_STARTED = True
 
 
-def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
+def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
     now = time.time()
     if not force and _CACHED_CONTAINERS and (now - _LAST_DOCKER_POLL) < _DOCKER_CACHE_TTL:
@@ -522,7 +522,7 @@ def read_docker_containers(force: bool = False) -> List[Dict[str, Any]]:
                 pass
 
 
-def container_action(container_id: str, action: str) -> Dict[str, Any]:
+def container_action(container_id: str, action: str) -> dict[str, Any]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
     # Sanitize container_id or name: alphanumeric, underscore, hyphen, dot, 1-128 chars
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):

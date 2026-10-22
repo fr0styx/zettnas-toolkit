@@ -6,14 +6,15 @@ and network shares (Samba/NFS/WebDAV).
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend import config
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.errors import error_response
 from backend.confirmations import require_confirmation
+from backend.errors import error_response
 from backend.hardware.pal_storage import (
     PlatformCapabilityError,
     get_storage_platform,
@@ -33,7 +34,7 @@ class StoragePoolCreateRequest(BaseModel):
     name: str
     fs_type: str = "btrfs"
     profile: str = "raid1"
-    disks: List[str] = Field(default_factory=list)
+    disks: list[str] = Field(default_factory=list)
     mountpoint: str = ""
     # Formatting is irreversible (SEC-08): the user types the pool name and their password,
     # and must say so explicitly when the disks still hold data.
@@ -49,7 +50,7 @@ class StoragePoolExportRequest(BaseModel):
 class StoragePoolImportRequest(BaseModel):
     pool_id: str
     fs_type: str = "zfs"
-    target_mount: Optional[str] = None
+    target_mount: str | None = None
 
 
 class StorageShareCreateRequest(BaseModel):
@@ -60,8 +61,8 @@ class StorageShareCreateRequest(BaseModel):
     read_only: bool = False
     export_smb: bool = True
     export_nfs: bool = False
-    quota_gb: Optional[int] = Field(default=0, description="Storage quota in GB (0 = unlimited)")
-    user_permissions: Optional[Dict[str, str]] = Field(
+    quota_gb: int | None = Field(default=0, description="Storage quota in GB (0 = unlimited)")
+    user_permissions: dict[str, str] | None = Field(
         default_factory=dict, description="User permission matrix: {username: 'rw'|'ro'|'deny'}"
     )
     nfs_squash: str = Field(default="no_root_squash", description="'no_root_squash', 'root_squash', or 'all_squash'")
@@ -79,8 +80,8 @@ class StorageSnapshotCreateRequest(BaseModel):
     subvolume: str = "@shares"
     snapshot_name: str
     readonly: bool = True
-    worm_mode: Optional[str] = Field(default=None, description="Two-Tier WORM mode: 'governance' or 'compliance'")
-    retention_days: Optional[int] = Field(
+    worm_mode: str | None = Field(default=None, description="Two-Tier WORM mode: 'governance' or 'compliance'")
+    retention_days: int | None = Field(
         default=None, ge=1, le=3650, description="WORM retention period in days (1-3650)"
     )
 
@@ -98,7 +99,7 @@ class StorageSnapshotRestoreRequest(BaseModel):
 
 
 @router.get("/platform", dependencies=[Depends(require_scope("storage:read", "shares:read", "system:view"))])
-def get_storage_platform_info() -> Dict[str, Any]:
+def get_storage_platform_info() -> dict[str, Any]:
     """
     Returns platform classification (Unraid, TrueNAS, Generic Linux),
     capabilities (observer mode vs active provisioner), and storage busy state.
@@ -113,7 +114,7 @@ def get_storage_platform_info() -> Dict[str, Any]:
 
 
 @router.get("/pools", dependencies=[Depends(require_scope("storage:read", "system:view"))])
-def get_storage_pools() -> Dict[str, Any]:
+def get_storage_pools() -> dict[str, Any]:
     """
     Returns hierarchical storage pool and array topology, including parity protection,
     data disks, SSD cache tiers, capacity gauges, and health statuses.
@@ -129,7 +130,7 @@ def get_storage_pools() -> Dict[str, Any]:
 
 
 @router.get("/shares", dependencies=[Depends(require_scope("storage:read", "shares:read", "system:view"))])
-def get_storage_shares() -> Dict[str, Any]:
+def get_storage_shares() -> dict[str, Any]:
     """
     Returns network shares (Samba, NFS, WebDAV) with comment, security level,
     cache tiering settings, and live disk usage statistics.
@@ -144,7 +145,7 @@ def get_storage_shares() -> Dict[str, Any]:
 
 
 @router.get("/overview", dependencies=[Depends(require_scope("storage:read", "system:view"))])
-def get_storage_overview() -> Dict[str, Any]:
+def get_storage_overview() -> dict[str, Any]:
     """
     Returns unified storage overview: pools, shares, platform info, and physical disk inventories.
     """
@@ -194,7 +195,7 @@ def get_storage_overview() -> Dict[str, Any]:
 
 
 @router.get("/disks", dependencies=[Depends(require_scope("storage:read", "system:view"))])
-def get_storage_disks() -> Dict[str, Any]:
+def get_storage_disks() -> dict[str, Any]:
     """Returns detected physical disks discovered via DiskDiscoveryHAL."""
     from backend.hardware.hal import DiskDiscoveryHAL
 
@@ -217,7 +218,7 @@ def get_storage_disks() -> Dict[str, Any]:
 
 
 @router.post("/scrub", dependencies=[Depends(require_scope("storage:admin"))])
-def trigger_storage_scrub(req: StorageScrubRequest) -> Dict[str, Any]:
+def trigger_storage_scrub(req: StorageScrubRequest) -> dict[str, Any]:
     """
     Initiates or monitors non-destructive array parity check or filesystem scrub.
     """
@@ -232,7 +233,7 @@ def trigger_storage_scrub(req: StorageScrubRequest) -> Dict[str, Any]:
 
 
 @router.get("/schedule", dependencies=[Depends(require_scope("storage:read"))])
-def get_storage_schedule_config() -> Dict[str, Any]:
+def get_storage_schedule_config() -> dict[str, Any]:
     """Retrieves current automated SMART self-test and storage scrub schedule."""
     from backend.services.scheduler import get_smart_schedule
 
@@ -240,7 +241,7 @@ def get_storage_schedule_config() -> Dict[str, Any]:
 
 
 @router.put("/schedule", dependencies=[Depends(require_scope("storage:admin"))])
-def update_storage_schedule_config(req: Dict[str, Any]) -> Dict[str, Any]:
+def update_storage_schedule_config(req: dict[str, Any]) -> dict[str, Any]:
     """Updates automated SMART self-test and storage scrub schedule."""
     from backend.services.scheduler import save_smart_schedule
 
@@ -253,7 +254,7 @@ def update_storage_schedule_config(req: Dict[str, Any]) -> Dict[str, Any]:
 )
 def create_storage_pool(
     req: StoragePoolCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Creates a new storage pool. In Observer Mode (e.g. Unraid, TrueNAS),
     this operation is strictly rejected to protect host array parity.
@@ -312,16 +313,16 @@ def create_storage_pool(
             mountpoint=mountpoint,
         )
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 class ShareAccessUpdate(BaseModel):
     default_level: str = "write"
-    shares: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    shares: dict[str, dict[str, Any]] = Field(default_factory=dict)
 
 
 @router.get("/share-access", dependencies=[Depends(require_scope("shares:manage"))])
-def get_share_access() -> Dict[str, Any]:
+def get_share_access() -> dict[str, Any]:
     """Who can use which share in the file manager (SEC-10)."""
     from backend.services.share_access import known_shares, load_config
 
@@ -337,17 +338,17 @@ def get_share_access() -> Dict[str, Any]:
 
 
 @router.put("/share-access", dependencies=[Depends(require_scope("shares:manage"))])
-def put_share_access(req: ShareAccessUpdate) -> Dict[str, Any]:
+def put_share_access(req: ShareAccessUpdate) -> dict[str, Any]:
     from backend.services.share_access import save_config
 
     try:
         return save_config(req.model_dump())
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/shares", dependencies=[Depends(require_scope("shares:manage"))])
-def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
+def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
     """
     Creates a new network share. In Observer Mode (e.g. Unraid, TrueNAS),
     shares must be created via the host WebGUI or configuration files.
@@ -378,11 +379,11 @@ def create_storage_share(req: StorageShareCreateRequest) -> Dict[str, Any]:
             nfs_clients=req.nfs_clients,
         )
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 @router.post("/pools/{pool_id}/rename", dependencies=[Depends(require_scope("storage:admin"))])
-def rename_storage_pool(pool_id: str, req: StoragePoolRenameRequest) -> Dict[str, Any]:
+def rename_storage_pool(pool_id: str, req: StoragePoolRenameRequest) -> dict[str, Any]:
     """
     Renames an existing storage pool (OpenZFS or Btrfs) and creates an atomic
     backwards-compatibility symlink to preserve Docker container volume mounts.
@@ -399,18 +400,18 @@ def rename_storage_pool(pool_id: str, req: StoragePoolRenameRequest) -> Dict[str
     try:
         return adapter.rename_pool(pool_id=pool_id, new_name=req.new_name)
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete(
     "/pools/{pool_id}",
     dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.pool.delete"))],
 )
-def delete_storage_pool(pool_id: str) -> Dict[str, Any]:
+def delete_storage_pool(pool_id: str) -> dict[str, Any]:
     """
     Destroys/unmounts a storage pool. Forbidden in Observer Mode.
     """
@@ -424,14 +425,14 @@ def delete_storage_pool(pool_id: str) -> Dict[str, Any]:
     try:
         return adapter.destroy_pool(pool_id=pool_id)
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 @router.post(
     "/pools/{pool_id}/export",
     dependencies=[Depends(require_scope("storage:admin"))],
 )
-def export_storage_pool(pool_id: str, req: StoragePoolExportRequest = StoragePoolExportRequest()) -> Dict[str, Any]:
+def export_storage_pool(pool_id: str, req: StoragePoolExportRequest = StoragePoolExportRequest()) -> dict[str, Any]:  # noqa: B008
     """
     Gracefully flushes dirty write cache, terminates active handles,
     and exports/unmounts a storage pool for safe physical detachment.
@@ -446,19 +447,19 @@ def export_storage_pool(pool_id: str, req: StoragePoolExportRequest = StoragePoo
     try:
         return adapter.export_pool(pool_id=pool_id, force=req.force)
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
     except RuntimeError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[StorageAPI] Error exporting pool '{pool_id}': {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get(
     "/pools/discover",
     dependencies=[Depends(require_scope("storage:admin", "storage:read"))],
 )
-def discover_external_storage_pools() -> Dict[str, Any]:
+def discover_external_storage_pools() -> dict[str, Any]:
     """
     Discovers unimported or detachable external storage pools (e.g. USB/Thunderbolt DAS).
     """
@@ -475,7 +476,7 @@ def discover_external_storage_pools() -> Dict[str, Any]:
     "/pools/import",
     dependencies=[Depends(require_scope("storage:admin"))],
 )
-def import_storage_pool(req: StoragePoolImportRequest) -> Dict[str, Any]:
+def import_storage_pool(req: StoragePoolImportRequest) -> dict[str, Any]:
     """
     Imports an external storage pool into the platform.
     """
@@ -489,17 +490,17 @@ def import_storage_pool(req: StoragePoolImportRequest) -> Dict[str, Any]:
     try:
         return adapter.import_pool(pool_id=req.pool_id, fs_type=req.fs_type, target_mount=req.target_mount)
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[StorageAPI] Error importing pool '{req.pool_id}': {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete(
     "/shares/{name}",
     dependencies=[Depends(require_scope("shares:manage")), Depends(require_confirmation("share.delete"))],
 )
-def delete_storage_share(name: str) -> Dict[str, Any]:
+def delete_storage_share(name: str) -> dict[str, Any]:
     """
     Deletes a network share configuration. Forbidden in Observer Mode.
     """
@@ -513,11 +514,11 @@ def delete_storage_share(name: str) -> Dict[str, Any]:
     try:
         return adapter.delete_share(name=name)
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 @router.get("/pools/{pool_id}/snapshots", dependencies=[Depends(require_scope("storage:read", "storage:admin"))])
-def list_storage_snapshots(pool_id: str) -> List[Dict[str, Any]]:
+def list_storage_snapshots(pool_id: str) -> list[dict[str, Any]]:
     """
     Lists filesystem subvolume snapshots for a storage pool.
     """
@@ -526,7 +527,7 @@ def list_storage_snapshots(pool_id: str) -> List[Dict[str, Any]]:
 
 
 @router.post("/pools/{pool_id}/snapshots", dependencies=[Depends(require_scope("storage:admin"))])
-def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> Dict[str, Any]:
+def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> dict[str, Any]:
     """
     Creates an atomic Btrfs subvolume snapshot. Forbidden in Observer Mode.
     """
@@ -547,14 +548,14 @@ def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> 
             retention_days=req.retention_days,
         )
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 @router.delete(
     "/pools/{pool_id}/snapshots/{snapshot_name}",
     dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.snapshot.delete"))],
 )
-def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
+def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> dict[str, Any]:
     """
     Deletes a Btrfs subvolume snapshot. Forbidden in Observer Mode or if WORM locked.
     """
@@ -568,11 +569,11 @@ def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> Dict[str, Any]:
     try:
         return adapter.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 @router.post("/pools/{pool_id}/snapshots/break-glass-delete", dependencies=[Depends(require_scope("storage:admin"))])
-def break_glass_delete_snapshot(pool_id: str, req: StorageSnapshotBreakGlassDeleteRequest) -> Dict[str, Any]:
+def break_glass_delete_snapshot(pool_id: str, req: StorageSnapshotBreakGlassDeleteRequest) -> dict[str, Any]:
     """
     Overrides Governance-mode WORM lock to delete a snapshot with mandatory audit logging.
     Forbidden for Compliance-mode WORM locks before retention expiry.
@@ -592,14 +593,14 @@ def break_glass_delete_snapshot(pool_id: str, req: StorageSnapshotBreakGlassDele
             reason=req.reason,
         )
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 @router.post(
     "/pools/{pool_id}/snapshots/restore",
     dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.snapshot.restore"))],
 )
-def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -> Dict[str, Any]:
+def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -> dict[str, Any]:
     """
     Restores or rolls back a Btrfs subvolume snapshot. Forbidden in Observer Mode.
     """
@@ -618,22 +619,22 @@ def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -
             raise HTTPException(status_code=400, detail=res.get("message") or "Snapshot restore failed")
         return res
     except PlatformCapabilityError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
 
 
 class SmartScheduleUpdateRequest(BaseModel):
-    enabled: Optional[bool] = None
-    short_test_interval: Optional[str] = None
-    short_test_day: Optional[int] = None
-    short_test_hour: Optional[int] = None
-    extended_test_interval: Optional[str] = None
-    extended_test_day: Optional[int] = None
-    extended_test_hour: Optional[int] = None
-    skip_if_standby: Optional[bool] = None
+    enabled: bool | None = None
+    short_test_interval: str | None = None
+    short_test_day: int | None = None
+    short_test_hour: int | None = None
+    extended_test_interval: str | None = None
+    extended_test_day: int | None = None
+    extended_test_hour: int | None = None
+    skip_if_standby: bool | None = None
 
 
 @router.get("/smart/schedule", dependencies=[Depends(require_scope("storage:read", "system:view"))])
-def get_smart_test_schedule() -> Dict[str, Any]:
+def get_smart_test_schedule() -> dict[str, Any]:
     """
     Returns current SMART test schedule, intervals, and last execution timestamps.
     """
@@ -643,7 +644,7 @@ def get_smart_test_schedule() -> Dict[str, Any]:
 
 
 @router.post("/smart/schedule", dependencies=[Depends(require_scope("storage:admin"))])
-def update_smart_test_schedule(req: SmartScheduleUpdateRequest) -> Dict[str, Any]:
+def update_smart_test_schedule(req: SmartScheduleUpdateRequest) -> dict[str, Any]:
     """
     Configures automated Short and Extended SMART test schedules.
     Preserves skip_if_standby=True invariant to never spin up sleeping drives.
@@ -655,7 +656,7 @@ def update_smart_test_schedule(req: SmartScheduleUpdateRequest) -> Dict[str, Any
 
 
 @router.get("/smart/failure-predictions", dependencies=[Depends(require_scope("storage:read", "system:view"))])
-def get_smart_failure_predictions() -> List[Dict[str, Any]]:
+def get_smart_failure_predictions() -> list[dict[str, Any]]:
     """
     Scrutiny-style failure probability analytics and historical attribute velocity
     for all discovered storage drives.

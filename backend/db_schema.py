@@ -19,14 +19,13 @@ import logging
 import os
 import sqlite3
 import time
-from typing import Dict, List, Tuple
 
 from backend import config
 
 logger = logging.getLogger("ZettNAS")
 
 # name -> (schema version this code writes, can it be rebuilt from scratch?)
-SCHEMA_VERSIONS: Dict[str, Tuple[int, bool]] = {
+SCHEMA_VERSIONS: dict[str, tuple[int, bool]] = {
     "users.db": (1, False),
     "history.db": (1, False),
     "ai_conversations.db": (1, False),
@@ -54,10 +53,10 @@ def read_version(path: str) -> int:
         conn.close()
 
 
-def check_versions(data_dir: str = "") -> List[str]:
+def check_versions(data_dir: str = "") -> list[str]:
     """Raises NewerDatabaseError for a newer non-rebuildable database. Returns moved-aside paths."""
     base = data_dir or config.DATA_DIR
-    moved: List[str] = []
+    moved: list[str] = []
     for name, (known, rebuildable) in SCHEMA_VERSIONS.items():
         path = _path(name, base)
         if not os.path.exists(path):

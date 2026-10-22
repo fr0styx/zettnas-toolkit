@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
 
 from backend.hardware.network import (
@@ -10,7 +11,7 @@ from backend.hardware.network import (
     get_active_listening_ports,
 )
 from backend.services.samba_engine import SambaEngine, get_samba_engine
-from backend.users_db import init_users_db, create_user, update_user_password, delete_user
+from backend.users_db import create_user, delete_user, init_users_db, update_user_password
 
 
 def test_5gbe_speed_detection():
@@ -159,8 +160,8 @@ def test_users_db_samba_sync_hooks(tmp_path):
 
 def test_vm_disk_expansion_and_raw_format(tmp_path):
     """Verifies VM disk resize properly detects raw format and QMP device target."""
-    from backend.api.vms import resize_vm_disk, VmDiskResizeRequest, delete_vm
     import backend.api.vms as vms_mod
+    from backend.api.vms import VmDiskResizeRequest, delete_vm, resize_vm_disk
 
     vm_id = "test-vm-raw"
     vm_dir = tmp_path / "vms" / vm_id

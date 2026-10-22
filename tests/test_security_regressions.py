@@ -8,16 +8,17 @@ Validates:
 """
 
 import asyncio
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from backend.services.samba_engine import SambaEngine
 from backend.api.auth import _sanitize_user_dict
+from backend.auth import auth_middleware, require_scope
 from backend.fsutil import resolve_within
-from backend.auth import require_scope, auth_middleware
+from backend.services.samba_engine import SambaEngine
 
 
 def test_sec01_samba_username_injection_rejection():

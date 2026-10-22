@@ -20,7 +20,8 @@ snapshot (see ``StatsBroadcaster.subscribe``).
 """
 
 import time
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any, Optional
 
 from backend.fast_json import dumps as fast_dumps
 
@@ -28,12 +29,12 @@ DOCKER_TEL_FIELDS = ("cpu_pct", "mem_used", "mem_limit", "mem_pct", "net_rx", "n
 KEYFRAME_SECS = 300.0
 
 
-def _docker_structure(docker: List[Dict[str, Any]]) -> str:
+def _docker_structure(docker: list[dict[str, Any]]) -> str:
     return fast_dumps([{k: v for k, v in c.items() if k not in DOCKER_TEL_FIELDS} for c in docker])
 
 
-def _docker_telemetry(docker: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-    out: Dict[str, Dict[str, Any]] = {}
+def _docker_telemetry(docker: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
     for c in docker:
         cid = c.get("id")
         if cid:
@@ -50,16 +51,16 @@ class StatsDeltaEncoder:
         self.reset()
 
     def reset(self) -> None:
-        self._last: Dict[str, str] = {}
-        self._last_docker_structure: Optional[str] = None
-        self._last_docker_tel: Dict[str, Dict[str, Any]] = {}
-        self._last_keyframe: Optional[float] = None
+        self._last: dict[str, str] = {}
+        self._last_docker_structure: str | None = None
+        self._last_docker_tel: dict[str, dict[str, Any]] = {}
+        self._last_keyframe: float | None = None
 
-    def encode(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def encode(self, data: dict[str, Any]) -> dict[str, Any]:
         now = self._clock()
         keyframe = self._last_keyframe is None or (now - self._last_keyframe) >= self._keyframe_secs
 
-        out: Dict[str, Any] = {}
+        out: dict[str, Any] = {}
         for key, value in data.items():
             if key == "docker":
                 continue
@@ -76,7 +77,7 @@ class StatsDeltaEncoder:
                 out["docker"] = docker
                 self._last_docker_structure = structure
             else:
-                delta: Dict[str, Dict[str, Any]] = {}
+                delta: dict[str, dict[str, Any]] = {}
                 for cid, fields in tel.items():
                     prev = self._last_docker_tel.get(cid, {})
                     changed = {f: v for f, v in fields.items() if prev.get(f) != v}

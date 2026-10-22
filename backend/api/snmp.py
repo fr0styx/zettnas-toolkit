@@ -5,7 +5,7 @@ and downloadable enterprise MIB definitions.
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -22,7 +22,7 @@ SNMP_CONFIG_FILE = os.path.join(DATA_DIR, "snmp_config.json")
 ZETTLAB_ENTERPRISE_OID = "1.3.6.1.4.1.58925"
 
 
-def _load_snmp_config() -> Dict[str, Any]:
+def _load_snmp_config() -> dict[str, Any]:
     cfg = read_json(SNMP_CONFIG_FILE, default=None)
     if cfg is None:
         default_cfg = {
@@ -52,13 +52,13 @@ class SnmpConfigRequest(BaseModel):
     enabled: bool = True
     port: int = Field(161, ge=1, le=65535)
     version: str = Field("v2c", pattern="^(v2c|v3|both)$")
-    community: Optional[str] = Field(None, min_length=1, max_length=64)
-    v3_user: Optional[str] = Field("zettnas_admin", min_length=1, max_length=64)
-    v3_security_level: Optional[str] = Field("authPriv", pattern="^(noAuthNoPriv|authNoPriv|authPriv)$")
-    v3_auth_protocol: Optional[str] = Field("SHA-256", pattern="^(MD5|SHA|SHA-256)$")
-    v3_priv_protocol: Optional[str] = Field("AES-128", pattern="^(DES|AES|AES-128)$")
-    contact: Optional[str] = "admin@zettnas.local"
-    location: Optional[str] = "Homelab Rack"
+    community: str | None = Field(None, min_length=1, max_length=64)
+    v3_user: str | None = Field("zettnas_admin", min_length=1, max_length=64)
+    v3_security_level: str | None = Field("authPriv", pattern="^(noAuthNoPriv|authNoPriv|authPriv)$")
+    v3_auth_protocol: str | None = Field("SHA-256", pattern="^(MD5|SHA|SHA-256)$")
+    v3_priv_protocol: str | None = Field("AES-128", pattern="^(DES|AES|AES-128)$")
+    contact: str | None = "admin@zettnas.local"
+    location: str | None = "Homelab Rack"
 
 
 @router.get("/status", dependencies=[Depends(require_scope("system:view", "storage:read"))])

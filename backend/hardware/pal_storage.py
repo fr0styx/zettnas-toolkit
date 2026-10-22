@@ -4,8 +4,6 @@ Universal Storage Subsystem Interface for Appliance & Generic Linux Hosts.
 Provides hardware- and OS-agnostic disk, pool, and network share abstractions.
 """
 
-from abc import ABC, abstractmethod
-from enum import Enum
 import json
 import os
 import re
@@ -14,14 +12,17 @@ import sqlite3
 import struct
 import subprocess
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from abc import ABC, abstractmethod
+from enum import Enum, StrEnum
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, logger
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
 
 
-class PlatformType(str, Enum):
+class PlatformType(StrEnum):
     GENERIC_LINUX = "generic_linux"
     UNRAID = "unraid"
     TRUENAS = "truenas"
@@ -45,7 +46,7 @@ class PlatformCapabilities(BaseModel):
     can_trigger_scrub: bool = True
     can_export_pools: bool = True
     can_import_pools: bool = True
-    supported_filesystems: List[str] = Field(default_factory=list)
+    supported_filesystems: list[str] = Field(default_factory=list)
     description: str = ""
 
 
@@ -59,7 +60,7 @@ class PoolMember(BaseModel):
     status: str = "OK"  # "OK", "STANDBY", "DISABLED", "MISSING", "UNKNOWN"
     rotational: bool = True
     spundown: bool = False
-    temp_c: Optional[int] = None
+    temp_c: int | None = None
     num_reads: int = 0
     num_writes: int = 0
     num_errors: int = 0
@@ -70,17 +71,17 @@ class StoragePool(BaseModel):
     name: str  # e.g. "Main Array", "ark (Cache Pool)"
     pool_type: str  # "unraid_array", "btrfs_raid", "zfs_pool", "jbod", "single"
     fs_type: str = "xfs"  # "xfs", "btrfs", "zfs", "ext4", "unraid"
-    fs_profile: Optional[str] = None  # "raid1", "single", "parity1", etc.
+    fs_profile: str | None = None  # "raid1", "single", "parity1", etc.
     status: str = "HEALTHY"  # "HEALTHY", "DEGRADED", "STANDBY", "SYNCING"
-    mountpoint: Optional[str] = None
+    mountpoint: str | None = None
     total_bytes: int = 0
     used_bytes: int = 0
     free_bytes: int = 0
     used_pct: float = 0.0
-    members: List[PoolMember] = Field(default_factory=list)
+    members: list[PoolMember] = Field(default_factory=list)
     parity_protected: bool = False
     autotrim: bool = False
-    compression: Optional[str] = "off"
+    compression: str | None = "off"
 
 
 class NetworkShare(BaseModel):
@@ -91,7 +92,7 @@ class NetworkShare(BaseModel):
     export_nfs: bool = False
     export_webdav: bool = True
     cache_mode: str = "none"  # "only", "yes", "no", "prefer", "none"
-    cache_pool: Optional[str] = None
+    cache_pool: str | None = None
     mountpoint: str = ""
     used_bytes: int = 0
     free_bytes: int = 0
@@ -121,12 +122,12 @@ class StoragePlatformAdapter(ABC):
         ...
 
     @abstractmethod
-    def list_pools(self) -> List[StoragePool]:
+    def list_pools(self) -> list[StoragePool]:
         """Discovers and returns all storage pools and their member disks."""
         ...
 
     @abstractmethod
-    def list_shares(self) -> List[NetworkShare]:
+    def list_shares(self) -> list[NetworkShare]:
         """Discovers and returns all active network shares."""
         ...
 
@@ -136,7 +137,7 @@ class StoragePlatformAdapter(ABC):
         ...
 
     @abstractmethod
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         """Triggers or checks the status of a scrub/parity check."""
         ...
 
@@ -146,14 +147,14 @@ class StoragePlatformAdapter(ABC):
         name: str,
         fs_type: str,
         profile: str,
-        disks: List[str],
+        disks: list[str],
         mountpoint: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Creates a storage pool (Active Provisioner mode only)."""
         ...
 
     @abstractmethod
-    def destroy_pool(self, pool_id: str) -> Dict[str, Any]:
+    def destroy_pool(self, pool_id: str) -> dict[str, Any]:
         """Destroys a storage pool (Active Provisioner mode only)."""
         ...
 
@@ -168,23 +169,23 @@ class StoragePlatformAdapter(ABC):
         export_smb: bool = True,
         export_nfs: bool = False,
         quota_gb: int = 0,
-        user_permissions: Optional[Dict[str, str]] = None,
+        user_permissions: dict[str, str] | None = None,
         nfs_squash: str = "no_root_squash",
         nfs_anonuid: int = 1000,
         nfs_anongid: int = 1000,
         nfs_sync: bool = True,
         nfs_clients: str = "*",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Creates a network share (Active Provisioner mode only)."""
         ...
 
     @abstractmethod
-    def delete_share(self, name: str) -> Dict[str, Any]:
+    def delete_share(self, name: str) -> dict[str, Any]:
         """Deletes a network share (Active Provisioner mode only)."""
         ...
 
     @abstractmethod
-    def rename_pool(self, pool_id: str, new_name: str) -> Dict[str, Any]:
+    def rename_pool(self, pool_id: str, new_name: str) -> dict[str, Any]:
         """Renames a storage pool (Active Provisioner mode only)."""
         ...
 
@@ -195,14 +196,14 @@ class StoragePlatformAdapter(ABC):
         subvol_name: str,
         snapshot_name: str,
         readonly: bool = True,
-        worm_mode: Optional[str] = None,
-        retention_days: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        worm_mode: str | None = None,
+        retention_days: int | None = None,
+    ) -> dict[str, Any]:
         """Creates a subvolume snapshot."""
         ...
 
     @abstractmethod
-    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+    def list_snapshots(self, pool_id: str) -> list[dict[str, Any]]:
         """Lists subvolume snapshots for a pool."""
         ...
 
@@ -213,12 +214,12 @@ class StoragePlatformAdapter(ABC):
         snapshot_name: str,
         break_glass: bool = False,
         reason: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Deletes a subvolume snapshot."""
         ...
 
     @abstractmethod
-    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> Dict[str, Any]:
+    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> dict[str, Any]:
         """Restores or rolls back a subvolume snapshot."""
         ...
 
@@ -227,19 +228,19 @@ class StoragePlatformAdapter(ABC):
         """Returns the filesystem mountpoint path for the target storage pool."""
         ...
 
-    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+    def export_pool(self, pool_id: str, force: bool = False) -> dict[str, Any]:
         """Safely flushes and exports/unmounts an external or detachable storage pool."""
         raise PlatformCapabilityError(f"Pool export is not supported by {self.__class__.__name__}")
 
-    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: str | None = None) -> dict[str, Any]:
         """Imports an external storage pool (e.g. from USB/TB DAS enclosure)."""
         raise PlatformCapabilityError(f"Pool import is not supported by {self.__class__.__name__}")
 
-    def discover_external_pools(self) -> List[Dict[str, Any]]:
+    def discover_external_pools(self) -> list[dict[str, Any]]:
         """Scans for unmounted/detached external storage pools available for import."""
         return []
 
-    def _run_cmd(self, cmd: List[str]) -> Tuple[int, str, str]:
+    def _run_cmd(self, cmd: list[str]) -> tuple[int, str, str]:
         """Runs a system command with error capture."""
         try:
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
@@ -265,7 +266,7 @@ class StoragePlatformAdapter(ABC):
             ]:
                 if mf and os.path.isfile(mf):
                     try:
-                        with open(mf, "r", encoding="utf-8", errors="replace") as f:
+                        with open(mf, encoding="utf-8", errors="replace") as f:
                             for line in f:
                                 parts = line.strip().split()
                                 if len(parts) >= 4:
@@ -289,16 +290,18 @@ class StoragePlatformAdapter(ABC):
             ]:
                 if mf and os.path.isfile(mf):
                     try:
-                        with open(mf, "r", encoding="utf-8", errors="replace") as f:
+                        with open(mf, encoding="utf-8", errors="replace") as f:
                             for line in f:
                                 parts = line.strip().split()
                                 if len(parts) >= 4 and parts[1] == "/":
                                     dev, fstype, opts = parts[0], parts[2], parts[3]
-                                    if fstype == "overlay" and (
-                                        "lowerdir=/rom" in opts or "/zettlab" in opts or "upperdir=/zettlab" in opts
+                                    if (
+                                        fstype == "overlay"
+                                        and (
+                                            "lowerdir=/rom" in opts or "/zettlab" in opts or "upperdir=/zettlab" in opts
+                                        )
+                                        or dev.startswith(("/dev/mmcblk", "mmcblk"))
                                     ):
-                                        is_root_overlay_or_emmc = True
-                                    elif dev.startswith(("/dev/mmcblk", "mmcblk")):
                                         is_root_overlay_or_emmc = True
                     except Exception:
                         pass
@@ -315,9 +318,9 @@ class StoragePlatformAdapter(ABC):
             pass
         return False
 
-    def _parse_mounts(self) -> List[Dict[str, str]]:
+    def _parse_mounts(self) -> list[dict[str, str]]:
         """Parses /proc/mounts to find mounted filesystems, filtering out virtual and pseudo mounts."""
-        mounts: List[Dict[str, str]] = []
+        mounts: list[dict[str, str]] = []
         mount_files = [
             os.path.join(HOST_PROC, "1/mounts") if HOST_PROC else None,
             os.path.join(HOST_PROC, "mounts") if HOST_PROC else None,
@@ -356,7 +359,7 @@ class StoragePlatformAdapter(ABC):
             skip_prefixes = ("/proc", "/sys", "/dev", "/run", "/var/lib/docker", "/var/lib/containerd")
 
             try:
-                with open(target_file, "r", encoding="utf-8", errors="replace") as f:
+                with open(target_file, encoding="utf-8", errors="replace") as f:
                     for line in f:
                         parts = line.strip().split()
                         if len(parts) >= 3:
@@ -374,19 +377,19 @@ class StoragePlatformAdapter(ABC):
                 logger.debug(f"[PAL] Error reading mounts from {target_file}: {e}")
         return mounts
 
-    def _parse_mdstat(self) -> Dict[str, Dict[str, Any]]:
+    def _parse_mdstat(self) -> dict[str, dict[str, Any]]:
         """Parses /proc/mdstat for active Linux software RAID arrays and rebuild/resync status."""
-        result: Dict[str, Dict[str, Any]] = {}
+        result: dict[str, dict[str, Any]] = {}
         mdstat_files = [os.path.join(HOST_PROC, "mdstat"), "/proc/mdstat"]
         target = next((f for f in mdstat_files if os.path.isfile(f)), None)
         if not target:
             return result
 
         try:
-            with open(target, "r", encoding="utf-8", errors="replace") as f:
+            with open(target, encoding="utf-8", errors="replace") as f:
                 lines = f.readlines()
 
-            current_md: Optional[str] = None
+            current_md: str | None = None
             for line in lines:
                 line_str = line.strip()
                 if not line_str or line_str.startswith("Personalities") or line_str.startswith("unused"):
@@ -442,7 +445,7 @@ class StoragePlatformAdapter(ABC):
                         sz_p = os.path.join(base, "block", md_dev, "size")
                         if os.path.isfile(sz_p):
                             try:
-                                info["size_bytes"] = int(open(sz_p).read().strip()) * 512
+                                info["size_bytes"] = int(open(sz_p).read().strip()) * 512  # noqa: SIM115
                                 break
                             except Exception:
                                 pass
@@ -450,7 +453,7 @@ class StoragePlatformAdapter(ABC):
             logger.debug(f"[PAL] Error reading mdstat from {target}: {e}")
         return result
 
-    def _parse_fs_superblock(self, device_path: str) -> Optional[Dict[str, Any]]:
+    def _parse_fs_superblock(self, device_path: str) -> dict[str, Any] | None:
         """Directly parses filesystem superblocks from raw block device (Ext2/3/4, XFS, Btrfs)."""
         if not device_path or not os.path.exists(device_path):
             return None
@@ -520,9 +523,9 @@ class StoragePlatformAdapter(ABC):
             logger.debug(f"[PAL] Superblock parse on {device_path} failed: {e}")
         return None
 
-    def _read_casaos_storage_db(self) -> Dict[str, Dict[str, Any]]:
+    def _read_casaos_storage_db(self) -> dict[str, dict[str, Any]]:
         """Reads pool and raid storage records from CasaOS / ZettOS SQLite local-storage.db if available."""
-        result: Dict[str, Dict[str, Any]] = {}
+        result: dict[str, dict[str, Any]] = {}
         db_candidates = [
             "/var/lib/casaos/db/local-storage.db",
             "/host/var/lib/casaos/db/local-storage.db",
@@ -548,7 +551,7 @@ class StoragePlatformAdapter(ABC):
                     cols = [c[1] for c in cursor.fetchall()]
                     cursor.execute(f"SELECT * FROM {table};")
                     for row in cursor.fetchall():
-                        row_dict = dict(zip(cols, row))
+                        row_dict = dict(zip(cols, row, strict=False))
                         keys = [
                             row_dict.get("path"),
                             row_dict.get("name"),
@@ -565,7 +568,7 @@ class StoragePlatformAdapter(ABC):
             logger.debug(f"[PAL] Could not read CasaOS local-storage.db: {e}")
         return result
 
-    def _resolve_container_accessible_path(self, mount_path: str) -> Optional[str]:
+    def _resolve_container_accessible_path(self, mount_path: str) -> str | None:
         """Resolves a host mount path to an accessible container path, testing various prefix candidates."""
         if not mount_path:
             return None
@@ -590,10 +593,10 @@ class StoragePlatformAdapter(ABC):
 
     def _get_mount_or_device_usage(
         self,
-        mount_path: Optional[str],
-        dev_name: Optional[str] = None,
+        mount_path: str | None,
+        dev_name: str | None = None,
         fallback_total: int = 0,
-    ) -> Tuple[int, int, int, float, Optional[str]]:
+    ) -> tuple[int, int, int, float, str | None]:
         """
         Determines (total_bytes, used_bytes, free_bytes, used_pct, resolved_fstype).
         Uses a 5-tier discovery strategy:
@@ -701,9 +704,9 @@ class StoragePlatformAdapter(ABC):
         pct = 0.0
         return tot, usd, fre, pct, None
 
-    def _discover_hal_disks(self) -> List[PoolMember]:
+    def _discover_hal_disks(self) -> list[PoolMember]:
         """Discovers non-OS physical disks safely via Hardware Abstraction Layer."""
-        members: List[PoolMember] = []
+        members: list[PoolMember] = []
         try:
             from backend.hardware.hal import DiskDiscoveryHAL
 
@@ -728,9 +731,9 @@ class StoragePlatformAdapter(ABC):
             logger.debug(f"[PAL] HAL disk discovery fallback: {e}")
         return members
 
-    def _parse_zpool_members(self, zp_name: str) -> List[PoolMember]:
+    def _parse_zpool_members(self, zp_name: str) -> list[PoolMember]:
         """Parses zpool status -P to construct PoolMember objects with real hardware device paths."""
-        members: List[PoolMember] = []
+        members: list[PoolMember] = []
         code, zstat, _ = self._run_cmd(["zpool", "status", "-P", zp_name])
         if code != 0 or not zstat.strip():
             return members
@@ -836,14 +839,14 @@ class StoragePlatformAdapter(ABC):
         return members
 
 
-def _parse_ini_sections(filepath: str) -> Dict[str, Dict[str, str]]:
+def _parse_ini_sections(filepath: str) -> dict[str, dict[str, str]]:
     """Helper to parse multi-section INI files like Unraid disks.ini and shares.ini."""
-    sections: Dict[str, Dict[str, str]] = {}
-    current: Optional[str] = None
+    sections: dict[str, dict[str, str]] = {}
+    current: str | None = None
     if not os.path.isfile(filepath):
         return sections
     try:
-        with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+        with open(filepath, encoding="utf-8", errors="replace") as f:
             for raw_line in f:
                 line = raw_line.strip()
                 if not line or line.startswith("#") or line.startswith(";"):
@@ -895,7 +898,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         mover = status.get("mover", {}).get("active", False)
         return bool(resync or mover)
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         status = read_unraid_status(force=True)
         parity_check = status.get("parity_check", {})
         return {
@@ -909,7 +912,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             "message": "Unraid manages array parity checks via emhttp. Use Unraid Dashboard or API to start/stop.",
         }
 
-    def list_pools(self) -> List[StoragePool]:
+    def list_pools(self) -> list[StoragePool]:
         emhttp_dir = self._emhttp_dir or _find_emhttp_dir()
         if not emhttp_dir:
             return self._fallback_pools()
@@ -919,12 +922,12 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         if not disks_data:
             return self._fallback_pools()
 
-        pools: List[StoragePool] = []
-        array_members: List[PoolMember] = []
-        cache_pools: Dict[str, List[PoolMember]] = {}
-        cache_pool_meta: Dict[str, Dict[str, Any]] = {}
-        boot_members: List[PoolMember] = []
-        boot_meta: Dict[str, Any] = {}
+        pools: list[StoragePool] = []
+        array_members: list[PoolMember] = []
+        cache_pools: dict[str, list[PoolMember]] = {}
+        cache_pool_meta: dict[str, dict[str, Any]] = {}
+        boot_members: list[PoolMember] = []
+        boot_meta: dict[str, Any] = {}
 
         array_total_bytes = 0
         array_used_bytes = 0
@@ -1106,12 +1109,12 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
 
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
+    def list_shares(self) -> list[NetworkShare]:
         emhttp_dir = self._emhttp_dir or _find_emhttp_dir()
-        shares: List[NetworkShare] = []
-        shares_data: Dict[str, Dict[str, str]] = {}
-        sec_data: Dict[str, Dict[str, str]] = {}
-        sec_nfs_data: Dict[str, Dict[str, str]] = {}
+        shares: list[NetworkShare] = []
+        shares_data: dict[str, dict[str, str]] = {}
+        sec_data: dict[str, dict[str, str]] = {}
+        sec_nfs_data: dict[str, dict[str, str]] = {}
 
         if emhttp_dir:
             shares_data = _parse_ini_sections(os.path.join(emhttp_dir, "shares.ini"))
@@ -1132,8 +1135,8 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
                         share_name = fname[:-4]
                         cfg_path = os.path.join(cfg_dir, fname)
                         try:
-                            share_meta: Dict[str, str] = {}
-                            with open(cfg_path, "r", encoding="utf-8", errors="replace") as f:
+                            share_meta: dict[str, str] = {}
+                            with open(cfg_path, encoding="utf-8", errors="replace") as f:
                                 for line in f:
                                     line = line.strip()
                                     if "=" in line and not line.startswith("#"):
@@ -1224,7 +1227,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
 
         return shares
 
-    def _fallback_pools(self) -> List[StoragePool]:
+    def _fallback_pools(self) -> list[StoragePool]:
         """Provides disk usage fallback when emhttp state is inaccessible."""
         total, used, free = 0, 0, 0
         try:
@@ -1255,18 +1258,18 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         name: str,
         fs_type: str,
         profile: str,
-        disks: List[str],
+        disks: list[str],
         mountpoint: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Unraid OS authoritatively manages array disks and pools. "
             "Modifying pools from within container is prohibited to protect array parity."
         )
 
-    def destroy_pool(self, pool_id: str) -> Dict[str, Any]:
+    def destroy_pool(self, pool_id: str) -> dict[str, Any]:
         raise PlatformCapabilityError("Observer mode active: Destroying pools is prohibited on Unraid appliance hosts.")
 
-    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+    def export_pool(self, pool_id: str, force: bool = False) -> dict[str, Any]:
         if pool_id in ("unraid_array", "default_pool", "flash"):
             raise PlatformCapabilityError(
                 "Observer mode active: The primary Unraid array must be stopped via the Unraid WebGUI Main tab."
@@ -1287,7 +1290,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             }
         raise PlatformCapabilityError(f"Pool '{pool_id}' is part of Unraid array or cannot be detached.")
 
-    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: str | None = None) -> dict[str, Any]:
         if fs_type.lower() == "zfs":
             code, out, err = self._run_cmd(["zpool", "import", "-f", pool_id])
             if code != 0:
@@ -1295,7 +1298,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             return {"status": "imported", "pool_id": pool_id, "fs_type": "zfs"}
         raise PlatformCapabilityError("Non-ZFS external pools on Unraid must be mounted via Unassigned Devices.")
 
-    def discover_external_pools(self) -> List[Dict[str, Any]]:
+    def discover_external_pools(self) -> list[dict[str, Any]]:
         discovered = []
         code, out, _ = self._run_cmd(["zpool", "import"])
         if code == 0 and out.strip():
@@ -1329,7 +1332,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         export_smb: bool = True,
         export_nfs: bool = False,
         quota_gb: int = 0,
-        user_permissions: Optional[Dict[str, str]] = None,
+        user_permissions: dict[str, str] | None = None,
         nfs_squash: str = "no_root_squash",
         nfs_anonuid: int = 1000,
         nfs_anongid: int = 1000,
@@ -1337,18 +1340,18 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         nfs_clients: str = "*",
         *args: Any,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Network shares on Unraid must be provisioned via the Unraid WebGUI "
             "or /boot/config/shares to ensure proper Samba shfs driver integration."
         )
 
-    def delete_share(self, name: str) -> Dict[str, Any]:
+    def delete_share(self, name: str) -> dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Deleting network shares on Unraid must be performed via the Unraid WebGUI."
         )
 
-    def rename_pool(self, pool_id: str, new_name: str) -> Dict[str, Any]:
+    def rename_pool(self, pool_id: str, new_name: str) -> dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Storage pool and array identifiers on Unraid "
             "are authoritatively managed via Unraid Main / Array settings."
@@ -1360,14 +1363,14 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         subvol_name: str,
         snapshot_name: str,
         readonly: bool = True,
-        worm_mode: Optional[str] = None,
-        retention_days: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        worm_mode: str | None = None,
+        retention_days: int | None = None,
+    ) -> dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Filesystem snapshots on Unraid are authoritatively managed by Unraid."
         )
 
-    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+    def list_snapshots(self, pool_id: str) -> list[dict[str, Any]]:
         return []
 
     def delete_snapshot(
@@ -1376,12 +1379,12 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         snapshot_name: str,
         break_glass: bool = False,
         reason: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Filesystem snapshots on Unraid are authoritatively managed by Unraid."
         )
 
-    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> Dict[str, Any]:
+    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> dict[str, Any]:
         raise PlatformCapabilityError(
             "Observer mode active: Filesystem snapshots and rollbacks on Unraid are authoritatively managed by Unraid."
         )
@@ -1404,7 +1407,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     and managed Samba/WebDAV shares.
     """
 
-    def __init__(self, pool_path: Optional[str] = None):
+    def __init__(self, pool_path: str | None = None):
         self._pool_path = pool_path or POOL_PATH or "/mnt/storage"
 
     def get_platform_type(self) -> PlatformType:
@@ -1422,7 +1425,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             description="Active Provisioner Mode: Bare-metal Linux host detected. Full pool, subvolume snapshot, and share lifecycle management enabled.",
         )
 
-    def _run_cmd(self, cmd: List[str]) -> Tuple[int, str, str]:
+    def _run_cmd(self, cmd: list[str]) -> tuple[int, str, str]:
         """Runs a system command with error capture."""
         try:
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
@@ -1534,11 +1537,9 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         # Check OpenZFS scrub/resilver
         code, out, _ = self._run_cmd(["zpool", "status"])
         out_l = out.lower()
-        if code == 0 and ("scrub in progress" in out_l or "resilver in progress" in out_l):
-            return True
-        return False
+        return bool(code == 0 and ("scrub in progress" in out_l or "resilver in progress" in out_l))
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         """Triggers or checks status of Btrfs scrub (or ZFS if pool_id is prefixed with 'zfs:')."""
         self._busy_cache_ts = 0.0
         if pool_id and (pool_id.startswith("zfs:") or pool_id.startswith("zpool:")):
@@ -1601,8 +1602,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 "raw": out or err,
             }
 
-    def list_pools(self) -> List[StoragePool]:
-        pools: List[StoragePool] = []
+    def list_pools(self) -> list[StoragePool]:
+        pools: list[StoragePool] = []
         is_overlay = self._is_os_overlay_or_emmc(self._pool_path)
         hal_disks = {d.name: d for d in self._discover_hal_disks()}
         mounts = self._parse_mounts()
@@ -1623,7 +1624,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             status = "DEGRADED" if degraded else "HEALTHY"
             parity = level in ("raid1", "raid5", "raid6", "raid10")
 
-            members: List[PoolMember] = []
+            members: list[PoolMember] = []
             for m_token in info.get("members", []):
                 clean_disk = re.sub(r"p?\d+$", "", m_token)
                 if clean_disk in hal_disks:
@@ -1900,8 +1901,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
-        shares_map: Dict[str, NetworkShare] = {}
+    def list_shares(self) -> list[NetworkShare]:
+        shares_map: dict[str, NetworkShare] = {}
         # 1. Inspect Samba Engine shares
         try:
             from backend.services.samba_engine import get_samba_engine
@@ -2006,9 +2007,9 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         name: str,
         fs_type: str,
         profile: str,
-        disks: List[str],
+        disks: list[str],
         mountpoint: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Creates a multi-device Btrfs, OpenZFS, ext4, or XFS storage pool."""
         if not disks:
             raise ValueError("At least one disk must be specified to create a storage pool")
@@ -2099,7 +2100,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "created_at": time.time(),
         }
 
-    def rename_pool(self, pool_id: str, new_name: str) -> Dict[str, Any]:
+    def rename_pool(self, pool_id: str, new_name: str) -> dict[str, Any]:
         """Renames a storage pool (ZFS export/import, Btrfs label) and creates compatibility symlink."""
         if not new_name or not new_name.strip():
             raise ValueError("New pool name cannot be empty")
@@ -2171,7 +2172,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "compat_symlink": old_mnt if old_mnt != new_mnt else None,
         }
 
-    def destroy_pool(self, pool_id: str) -> Dict[str, Any]:
+    def destroy_pool(self, pool_id: str) -> dict[str, Any]:
         """Safely unmounts and removes a storage pool."""
         target_mount = os.path.join(self._pool_path, pool_id) if pool_id != "default_pool" else self._pool_path
         code, out, err = self._run_cmd(["umount", "-f", target_mount])
@@ -2182,7 +2183,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "unmount_code": code,
         }
 
-    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+    def export_pool(self, pool_id: str, force: bool = False) -> dict[str, Any]:
         """Safely flushes dirty write cache, checks active file handles, and exports or unmounts a storage pool."""
         code, _, _ = self._run_cmd(["zpool", "status", pool_id])
         is_zfs = code == 0
@@ -2232,7 +2233,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "message": f"Storage pool '{pool_id}' safely exported and flushed. Safe to disconnect cable.",
         }
 
-    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: str | None = None) -> dict[str, Any]:
         """Imports an external storage pool from an attached enclosure."""
         fs_lower = fs_type.lower()
         if fs_lower == "zfs":
@@ -2260,7 +2261,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 "message": f"Pool '{pool_id}' imported at {mnt}" if code == 0 else f"Failed to mount: {err}",
             }
 
-    def discover_external_pools(self) -> List[Dict[str, Any]]:
+    def discover_external_pools(self) -> list[dict[str, Any]]:
         """Scans for unmounted external storage pools available to import."""
         discovered = []
         code, out, _ = self._run_cmd(["zpool", "import"])
@@ -2296,13 +2297,13 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         export_smb: bool = True,
         export_nfs: bool = False,
         quota_gb: int = 0,
-        user_permissions: Optional[Dict[str, str]] = None,
+        user_permissions: dict[str, str] | None = None,
         nfs_squash: str = "no_root_squash",
         nfs_anonuid: int = 1000,
         nfs_anongid: int = 1000,
         nfs_sync: bool = True,
         nfs_clients: str = "*",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Provisions a network share and syncs with SambaEngine and NfsEngine."""
         full_path = path if path else os.path.join(self._pool_path, name)
         try:
@@ -2380,7 +2381,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "user_permissions": user_perms,
         }
 
-    def delete_share(self, name: str) -> Dict[str, Any]:
+    def delete_share(self, name: str) -> dict[str, Any]:
         """Deletes a network share from Samba and NFS configurations."""
         try:
             from backend.services.samba_engine import get_samba_engine
@@ -2406,9 +2407,9 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         subvol_name: str,
         snapshot_name: str,
         readonly: bool = True,
-        worm_mode: Optional[str] = None,
-        retention_days: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        worm_mode: str | None = None,
+        retention_days: int | None = None,
+    ) -> dict[str, Any]:
         """Creates an atomic Btrfs subvolume snapshot with optional Two-Tier WORM immutability."""
         src_path = os.path.join(self._pool_path, "@shares", subvol_name)
         if not os.path.exists(src_path):
@@ -2462,10 +2463,10 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "output": out or err,
         }
 
-    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+    def list_snapshots(self, pool_id: str) -> list[dict[str, Any]]:
         """Lists active Btrfs subvolume snapshots with WORM immutability metadata."""
         snaps_dir = os.path.join(self._pool_path, "@snapshots")
-        snapshots: List[Dict[str, Any]] = []
+        snapshots: list[dict[str, Any]] = []
         if os.path.isdir(snaps_dir):
             try:
                 for entry in sorted(os.listdir(snaps_dir)):
@@ -2486,7 +2487,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         meta_path = os.path.join(snaps_dir, f".{entry}.worm.json")
                         if os.path.isfile(meta_path):
                             try:
-                                with open(meta_path, "r", encoding="utf-8") as f:
+                                with open(meta_path, encoding="utf-8") as f:
                                     meta = json.load(f)
                                 item["worm_mode"] = meta.get("worm_mode")
                                 item["retention_until"] = meta.get("retention_until")
@@ -2504,7 +2505,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         snapshot_name: str,
         break_glass: bool = False,
         reason: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Deletes a Btrfs subvolume snapshot, strictly enforcing Two-Tier WORM immutability."""
         snaps_dir = os.path.join(self._pool_path, "@snapshots")
         target_path = os.path.join(snaps_dir, snapshot_name)
@@ -2512,7 +2513,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         if os.path.isfile(meta_path):
             try:
-                with open(meta_path, "r", encoding="utf-8") as f:
+                with open(meta_path, encoding="utf-8") as f:
                     meta = json.load(f)
                 mode = (meta.get("worm_mode") or "").lower()
                 retention_until = meta.get("retention_until") or 0
@@ -2558,7 +2559,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "code": code,
         }
 
-    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> Dict[str, Any]:
+    def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> dict[str, Any]:
         """Restores or rolls back a Btrfs subvolume snapshot into active subvolume path."""
         snap_path = os.path.join(self._pool_path, "@snapshots", snapshot_name)
         if not os.path.exists(snap_path):
@@ -2611,7 +2612,7 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
     Guarantees strict read-only auditing and raises PlatformCapabilityError on all mutating operations.
     """
 
-    def __init__(self, pool_path: Optional[str] = None):
+    def __init__(self, pool_path: str | None = None):
         self._pool_path = pool_path or POOL_PATH or "/mnt/storage"
 
     def create_pool(
@@ -2635,19 +2636,19 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
         name: str,
         *args: Any,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(
             f"Observer mode active: Network shares on {plat} must be configured via host OS management."
         )
 
-    def delete_share(self, name: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def delete_share(self, name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(
             f"Observer mode active: Deleting network shares on {plat} must be performed via host OS."
         )
 
-    def rename_pool(self, pool_id: str, new_name: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def rename_pool(self, pool_id: str, new_name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(
             f"Observer mode active: Storage pool identifiers on {plat} are managed authoritatively by host OS."
@@ -2658,13 +2659,13 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
         pool_id: str,
         *args: Any,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(
             f"Observer mode active: Filesystem snapshots on {plat} are managed authoritatively by host OS."
         )
 
-    def list_snapshots(self, pool_id: str) -> List[Dict[str, Any]]:
+    def list_snapshots(self, pool_id: str) -> list[dict[str, Any]]:
         return []
 
     def delete_snapshot(
@@ -2672,27 +2673,27 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
         pool_id: str,
         *args: Any,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(
             f"Observer mode active: Snapshot deletion on {plat} must be performed via host OS."
         )
 
-    def restore_snapshot(self, pool_id: str, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def restore_snapshot(self, pool_id: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(
             f"Observer mode active: Snapshot restoration on {plat} must be performed via host OS."
         )
 
-    def export_pool(self, pool_id: str, force: bool = False) -> Dict[str, Any]:
+    def export_pool(self, pool_id: str, force: bool = False) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(f"Observer mode active: Pool detachment on {plat} must be performed via host OS.")
 
-    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: Optional[str] = None) -> Dict[str, Any]:
+    def import_pool(self, pool_id: str, fs_type: str = "zfs", target_mount: str | None = None) -> dict[str, Any]:
         plat = self.get_platform_type().value
         raise PlatformCapabilityError(f"Observer mode active: Pool import on {plat} must be performed via host OS.")
 
-    def discover_external_pools(self) -> List[Dict[str, Any]]:
+    def discover_external_pools(self) -> list[dict[str, Any]]:
         return []
 
     def get_pool_path(self, pool_id: str) -> str:
@@ -2701,9 +2702,9 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
         cand = os.path.join(self._pool_path, pool_id)
         return cand if os.path.exists(cand) else self._pool_path
 
-    def _parse_smb_conf(self) -> List[NetworkShare]:
+    def _parse_smb_conf(self) -> list[NetworkShare]:
         """Parses Samba configuration files to identify host-exported network shares."""
-        shares: List[NetworkShare] = []
+        shares: list[NetworkShare] = []
         candidates = [
             "/etc/samba/smb.conf",
             "/host/etc/samba/smb.conf",
@@ -2753,9 +2754,9 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
             logger.debug(f"[PAL] Error reading smb.conf from {target_conf}: {e}")
         return shares
 
-    def _discover_shares_from_dirs(self, base_dirs: List[str]) -> List[NetworkShare]:
+    def _discover_shares_from_dirs(self, base_dirs: list[str]) -> list[NetworkShare]:
         """Discovers user shares by inspecting subdirectories of candidate storage roots."""
-        shares: List[NetworkShare] = []
+        shares: list[NetworkShare] = []
         seen_names = set()
         for b in base_dirs:
             if not os.path.isdir(b):
@@ -2850,7 +2851,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
         code, out, _ = self._run_cmd(["zpool", "status"])
         return code == 0 and ("scrub in progress" in out.lower() or "resilver in progress" in out.lower())
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         zp = pool_id if (pool_id and pool_id != "default_pool") else "boot-pool"
         if action == "start":
             code, out, err = self._run_cmd(["zpool", "scrub", zp])
@@ -2880,8 +2881,8 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
                 "raw": out or err,
             }
 
-    def list_pools(self) -> List[StoragePool]:
-        pools: List[StoragePool] = []
+    def list_pools(self) -> list[StoragePool]:
+        pools: list[StoragePool] = []
         code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
         if code == 0 and zout.strip():
             hal_disks = self._discover_hal_disks()
@@ -2941,7 +2942,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
             )
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
+    def list_shares(self) -> list[NetworkShare]:
         shares = self._parse_smb_conf()
         if not shares:
             shares = self._discover_shares_from_dirs(["/mnt", self._pool_path])
@@ -3005,7 +3006,7 @@ class ProxmoxStorageAdapter(ObserverStorageAdapter):
         code, out, _ = self._run_cmd(["zpool", "status"])
         return code == 0 and ("scrub in progress" in out.lower() or "resilver in progress" in out.lower())
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         zp = pool_id if (pool_id and pool_id != "default_pool") else "rpool"
         if action == "start":
             code, out, err = self._run_cmd(["zpool", "scrub", zp])
@@ -3035,8 +3036,8 @@ class ProxmoxStorageAdapter(ObserverStorageAdapter):
                 "raw": out or err,
             }
 
-    def list_pools(self) -> List[StoragePool]:
-        pools: List[StoragePool] = []
+    def list_pools(self) -> list[StoragePool]:
+        pools: list[StoragePool] = []
         code, zout, _ = self._run_cmd(["zpool", "list", "-Hp", "-o", "name,size,alloc,free,health"])
         if code == 0 and zout.strip():
             hal_disks = self._discover_hal_disks()
@@ -3096,7 +3097,7 @@ class ProxmoxStorageAdapter(ObserverStorageAdapter):
             )
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
+    def list_shares(self) -> list[NetworkShare]:
         shares = self._parse_smb_conf()
         if not shares:
             shares = self._discover_shares_from_dirs(["/mnt/pve", self._pool_path])
@@ -3130,7 +3131,7 @@ class FygoOSStorageAdapter(ObserverStorageAdapter):
     def is_storage_busy(self) -> bool:
         return False
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         return {
             "platform": "fygoos",
             "pool_id": pool_id,
@@ -3139,8 +3140,8 @@ class FygoOSStorageAdapter(ObserverStorageAdapter):
             "message": "FygoOS manages volume integrity authoritatively.",
         }
 
-    def list_pools(self) -> List[StoragePool]:
-        pools: List[StoragePool] = []
+    def list_pools(self) -> list[StoragePool]:
+        pools: list[StoragePool] = []
         mounts = self._parse_mounts()
         hal_disks = self._discover_hal_disks()
 
@@ -3207,7 +3208,7 @@ class FygoOSStorageAdapter(ObserverStorageAdapter):
 
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
+    def list_shares(self) -> list[NetworkShare]:
         shares = self._parse_smb_conf()
         if not shares:
             shares = self._discover_shares_from_dirs(["/media", "/mnt/storage", self._pool_path])
@@ -3249,12 +3250,9 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
         ):
             return True
         mdstats = self._parse_mdstat()
-        for md_info in mdstats.values():
-            if md_info.get("sync_action"):
-                return True
-        return False
+        return any(md_info.get("sync_action") for md_info in mdstats.values())
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         zp = pool_id if (pool_id and pool_id != "default_pool") else "tank"
         if pool_id and ("zfs" in pool_id.lower() or "tank" in pool_id.lower()):
             if action == "start":
@@ -3375,12 +3373,12 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                     "raw": out or err,
                 }
 
-    def list_pools(self) -> List[StoragePool]:
-        pools: List[StoragePool] = []
+    def list_pools(self) -> list[StoragePool]:
+        pools: list[StoragePool] = []
         for cfg_cand in ["/etc/zettos/storage.json", "/host/etc/zettos/storage.json", "/etc/zettos/pools.json"]:
             if os.path.isfile(cfg_cand):
                 try:
-                    with open(cfg_cand, "r", encoding="utf-8") as f:
+                    with open(cfg_cand, encoding="utf-8") as f:
                         cfg_data = json.load(f)
                         raw_list = cfg_data if isinstance(cfg_data, list) else cfg_data.get("pools", [])
                         for p_dict in raw_list:
@@ -3413,7 +3411,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
             parity = level in ("raid1", "raid5", "raid6", "raid10")
 
             # Map members to physical HAL disks
-            members: List[PoolMember] = []
+            members: list[PoolMember] = []
             for m_token in info.get("members", []):
                 clean_disk = re.sub(r"p?\d+$", "", m_token)
                 if clean_disk in hal_disks:
@@ -3640,12 +3638,12 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
 
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
-        shares: List[NetworkShare] = []
+    def list_shares(self) -> list[NetworkShare]:
+        shares: list[NetworkShare] = []
         for s_cand in ["/etc/zettos/shares.json", "/host/etc/zettos/shares.json"]:
             if os.path.isfile(s_cand):
                 try:
-                    with open(s_cand, "r", encoding="utf-8") as f:
+                    with open(s_cand, encoding="utf-8") as f:
                         data = json.load(f)
                         raw_list = data if isinstance(data, list) else data.get("shares", [])
                         for s in raw_list:
@@ -3700,17 +3698,14 @@ class UgosStorageAdapter(ObserverStorageAdapter):
 
     def is_storage_busy(self) -> bool:
         mdstats = self._parse_mdstat()
-        for md_info in mdstats.values():
-            if md_info.get("sync_action"):
-                return True
-        return False
+        return any(md_info.get("sync_action") for md_info in mdstats.values())
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         mdstats = self._parse_mdstat()
         busy = False
         action_name = "idle"
         pct = 0.0
-        for md_dev, info in mdstats.items():
+        for _md_dev, info in mdstats.items():
             if info.get("sync_action"):
                 busy = True
                 action_name = info["sync_action"]
@@ -3727,8 +3722,8 @@ class UgosStorageAdapter(ObserverStorageAdapter):
             "message": "UGOS manages RAID resync and scrub authoritatively via kernel md/btrfs.",
         }
 
-    def list_pools(self) -> List[StoragePool]:
-        pools: List[StoragePool] = []
+    def list_pools(self) -> list[StoragePool]:
+        pools: list[StoragePool] = []
         mdstats = self._parse_mdstat()
         mounts = self._parse_mounts()
         hal_disks = {d.name: d for d in self._discover_hal_disks()}
@@ -3765,11 +3760,11 @@ class UgosStorageAdapter(ObserverStorageAdapter):
                     fs_type = m.get("fstype", "btrfs")
                     break
 
-            members: List[PoolMember] = []
+            members: list[PoolMember] = []
             raid_profile = "raid5"
             status = "HEALTHY"
 
-            for md_dev, info in mdstats.items():
+            for _md_dev, info in mdstats.items():
                 if info.get("degraded"):
                     status = "DEGRADED"
                 raid_profile = info.get("level", raid_profile)
@@ -3814,7 +3809,7 @@ class UgosStorageAdapter(ObserverStorageAdapter):
 
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
+    def list_shares(self) -> list[NetworkShare]:
         shares = self._parse_smb_conf()
         if not shares:
             vol_dirs = [f"/volume{i}" for i in range(1, 10)] + [f"/host/volume{i}" for i in range(1, 10)]
@@ -3850,12 +3845,9 @@ class GenericObserverStorageAdapter(ObserverStorageAdapter):
 
     def is_storage_busy(self) -> bool:
         mdstats = self._parse_mdstat()
-        for md_info in mdstats.values():
-            if md_info.get("sync_action"):
-                return True
-        return False
+        return any(md_info.get("sync_action") for md_info in mdstats.values())
 
-    def trigger_scrub(self, pool_id: str, action: str = "start") -> Dict[str, Any]:
+    def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         return {
             "platform": "generic_observer",
             "pool_id": pool_id,
@@ -3864,8 +3856,8 @@ class GenericObserverStorageAdapter(ObserverStorageAdapter):
             "message": "Host OS authoritatively manages storage scrub and parity verification.",
         }
 
-    def list_pools(self) -> List[StoragePool]:
-        pools: List[StoragePool] = []
+    def list_pools(self) -> list[StoragePool]:
+        pools: list[StoragePool] = []
         mounts = self._parse_mounts()
         hal_disks = self._discover_hal_disks()
 
@@ -3929,7 +3921,7 @@ class GenericObserverStorageAdapter(ObserverStorageAdapter):
 
         return pools
 
-    def list_shares(self) -> List[NetworkShare]:
+    def list_shares(self) -> list[NetworkShare]:
         shares = self._parse_smb_conf()
         if not shares:
             shares = self._discover_shares_from_dirs([self._pool_path, "/mnt", "/media"])
@@ -3997,7 +3989,7 @@ class StoragePlatformDetector:
         ]:
             if m_file and os.path.isfile(m_file):
                 try:
-                    with open(m_file, "r", encoding="utf-8", errors="replace") as f:
+                    with open(m_file, encoding="utf-8", errors="replace") as f:
                         m_content = f.read()
                         if "upperdir=/zettlab" in m_content or ("/rom" in m_content and "/zettlab" in m_content):
                             return PlatformType.ZETTOS
@@ -4013,7 +4005,7 @@ class StoragePlatformDetector:
         ]:
             if cmd_file and os.path.isfile(cmd_file):
                 try:
-                    with open(cmd_file, "r", encoding="utf-8", errors="replace") as f:
+                    with open(cmd_file, encoding="utf-8", errors="replace") as f:
                         cmd_text = f.read().lower()
                         if "zettos" in cmd_text or "zettlab" in cmd_text:
                             return PlatformType.ZETTOS
@@ -4046,7 +4038,7 @@ class StoragePlatformDetector:
         proc_ver_path = os.path.join(HOST_PROC, "version")
         if os.path.isfile(proc_ver_path):
             try:
-                with open(proc_ver_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(proc_ver_path, encoding="utf-8", errors="replace") as f:
                     ver_text = f.read().lower()
                     if "unraid" in ver_text:
                         return PlatformType.UNRAID
@@ -4068,7 +4060,7 @@ class StoragePlatformDetector:
         for p in os_release_paths:
             if os.path.isfile(p):
                 try:
-                    with open(p, "r", encoding="utf-8", errors="replace") as f:
+                    with open(p, encoding="utf-8", errors="replace") as f:
                         text = f.read().lower()
                         if "unraid" in text:
                             return PlatformType.UNRAID
@@ -4107,7 +4099,7 @@ class StoragePlatformDetector:
         return PlatformType.GENERIC_LINUX
 
 
-_CACHED_ADAPTER: Optional[StoragePlatformAdapter] = None
+_CACHED_ADAPTER: StoragePlatformAdapter | None = None
 
 
 def get_storage_platform(force_refresh: bool = False) -> StoragePlatformAdapter:

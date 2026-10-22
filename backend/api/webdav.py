@@ -6,11 +6,12 @@ Provides WebDAV daemon controls, modern WebDAV Portal UI, and transparent HTTP p
 import asyncio
 import hashlib
 import hmac
-import time
 import logging
 import os
+import time
 import urllib.parse
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
@@ -38,7 +39,7 @@ def _request_is_https(request) -> bool:
     return request_is_https(request)
 
 
-def _sign_webdav_cookie(username: str, role_label: str, issued_at: Optional[int] = None) -> str:
+def _sign_webdav_cookie(username: str, role_label: str, issued_at: int | None = None) -> str:
     """Creates an HMAC-SHA256 signed, expiring session cookie: user:role:issued_at:sig."""
     secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
     iat = int(issued_at if issued_at is not None else time.time())
@@ -47,7 +48,7 @@ def _sign_webdav_cookie(username: str, role_label: str, issued_at: Optional[int]
     return f"{payload}:{sig}"
 
 
-def _verify_webdav_cookie(cookie_val: str) -> Optional[Tuple[str, str]]:
+def _verify_webdav_cookie(cookie_val: str) -> tuple[str, str] | None:
     """Verifies signature and age of a WebDAV session cookie.
     Rejects legacy (non-expiring), unsigned, expired or corrupt cookies without raising.
     """
@@ -71,13 +72,13 @@ def _verify_webdav_cookie(cookie_val: str) -> Optional[Tuple[str, str]]:
 
 
 class WebdavConfigRequest(BaseModel):
-    enabled: Optional[bool] = None
-    port: Optional[int] = Field(None, ge=1024, le=65535)
-    root_path: Optional[str] = None
-    read_only: Optional[bool] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
-    auth_enabled: Optional[bool] = None
+    enabled: bool | None = None
+    port: int | None = Field(None, ge=1024, le=65535)
+    root_path: str | None = None
+    read_only: bool | None = None
+    username: str | None = None
+    password: str | None = None
+    auth_enabled: bool | None = None
 
 
 class WebdavToggleRequest(BaseModel):
@@ -247,13 +248,10 @@ def _is_webdav_client(request: Request) -> bool:
         "mountainduck",
         "filezilla",
     )
-    if any(client in ua for client in dav_clients):
-        return True
-
-    return False
+    return bool(any(client in ua for client in dav_clients))
 
 
-def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def _get_webdav_portal_user(request: Request, cfg: dict[str, Any]) -> dict[str, Any] | None:
     if not cfg.get("auth_enabled", True):
         return {"username": cfg.get("username", "admin") or "admin", "is_admin": True, "role_id": "superadmin"}
 
@@ -374,11 +372,11 @@ async def _proxy_webdav(request: Request, path: str = ""):
         )
     except httpx.ConnectError:
         await client.aclose()
-        raise HTTPException(status_code=502, detail="Unable to connect to internal WebDAV daemon.")
+        raise HTTPException(status_code=502, detail="Unable to connect to internal WebDAV daemon.") from None
     except Exception as e:
         await client.aclose()
         logger.error(f"[WEBDAV PROXY] Error proxying {request.method} {path}: {e}")
-        raise HTTPException(status_code=500, detail=f"WebDAV proxy error: {e}")
+        raise HTTPException(status_code=500, detail=f"WebDAV proxy error: {e}") from e
 
 
 @proxy_router.api_route("/webdav", methods=WEBDAV_METHODS)

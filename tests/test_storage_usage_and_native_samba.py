@@ -11,6 +11,7 @@ import os
 import sqlite3
 import struct
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from backend.hardware.pal_storage import (
@@ -19,8 +20,8 @@ from backend.hardware.pal_storage import (
     StoragePlatformDetector,
     ZettOSStorageAdapter,
 )
-from backend.services.samba_engine import SambaEngine, SambaStatus, get_samba_engine
 from backend.services.docker_diagnostics import collect_docker_diagnostics
+from backend.services.samba_engine import SambaEngine, SambaStatus, get_samba_engine
 
 
 def test_ext4_superblock_parser_32bit(tmp_path):
@@ -175,17 +176,19 @@ def test_casaos_local_storage_db_reader(tmp_path, monkeypatch):
 
     adapter = ZettOSStorageAdapter(pool_path="/mnt/storage")
     orig_connect = sqlite3.connect
-    with patch(
-        "os.path.isfile",
-        side_effect=lambda p: str(p) == str(db_file) or str(p) == "/var/lib/casaos/db/local-storage.db",
-    ):
-        with patch(
+    with (
+        patch(
+            "os.path.isfile",
+            side_effect=lambda p: str(p) == str(db_file) or str(p) == "/var/lib/casaos/db/local-storage.db",
+        ),
+        patch(
             "backend.hardware.pal_storage.sqlite3.connect", side_effect=lambda *args, **kw: orig_connect(str(db_file))
-        ):
-            records = adapter._read_casaos_storage_db()
-            assert "md3" in records
-            assert records["md3"]["name"] == "Pool_2"
-            assert records["md3"]["used"] == 874288000000
+        ),
+    ):
+        records = adapter._read_casaos_storage_db()
+        assert "md3" in records
+        assert records["md3"]["name"] == "Pool_2"
+        assert records["md3"]["used"] == 874288000000
 
 
 def test_mdraid_used_space_resolution_in_zettos_adapter():

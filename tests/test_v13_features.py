@@ -1,5 +1,6 @@
-import unittest
 import time
+import unittest
+
 from backend.db import get_db_connection, init_db, log_metrics, query_history
 from backend.hardware.disks import run_disk_smart_test
 from backend.hardware.docker_stats import read_docker_containers
@@ -61,7 +62,7 @@ class TestV13Features(unittest.TestCase):
         inv2 = run_disk_smart_test("/dev/sda; rm -rf")
         self.assertFalse(inv2["success"])
 
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
 
         with patch("subprocess.run") as mock_run:
             mock_res = MagicMock()
@@ -110,8 +111,9 @@ class TestV13Features(unittest.TestCase):
 
     def test_system_profile_and_docker_endpoints(self):
         from starlette.testclient import TestClient
-        from app import app
+
         import backend.config as config
+        from app import app
         from backend.passwords import hash_password
 
         saved_hash = config.STORED_PASSWORD_HASH
@@ -151,7 +153,7 @@ class TestV13Features(unittest.TestCase):
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "src", "locales"
         )
         for lang in ("en", "de", "zh", "fr", "es"):
-            content = open(os.path.join(locales, f"{lang}.js"), encoding="utf-8").read()
+            content = open(os.path.join(locales, f"{lang}.js"), encoding="utf-8").read()  # noqa: SIM115
             for key in ("dock.management", "mgmt.telemetry_title", "settings.title"):
                 self.assertIn(f'"{key}":', content, f"{key} missing in {lang}")
 
@@ -162,17 +164,19 @@ class TestV13Features(unittest.TestCase):
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend", "src", "locales"
         )
         for lang in ("en", "de", "zh", "fr", "es"):
-            content = open(os.path.join(locales, f"{lang}.js"), encoding="utf-8").read()
+            content = open(os.path.join(locales, f"{lang}.js"), encoding="utf-8").read()  # noqa: SIM115
             for key in ("notif.title", "notif.filter_all", "notif.clear_all", "fm.bulk_delete", "fm.selected_count"):
                 self.assertIn(f'"{key}":', content, f"{key} missing in {lang}")
 
     def test_batch4_features_and_telemetry(self):
         import time
+
+        from fastapi.testclient import TestClient
+
         from backend.db import init_db, log_smart_metrics, query_smart_velocity
         from backend.hardware.disks import _parse_smart
         from backend.hardware.docker_stats import read_docker_containers
         from backend.main import app
-        from fastapi.testclient import TestClient
 
         # 1. Test Docker telemetry container output schema
         containers = read_docker_containers()

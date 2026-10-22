@@ -4,20 +4,21 @@ Provides REST endpoints to query and manage Samba (SMB/CIFS) service,
 shares, configuration, and macOS Time Machine integration.
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from backend.auth import require_scope
 from backend.confirmations import require_confirmation
-from backend.services.samba_engine import (
-    SambaShareConfig,
-    SambaStatus,
-    get_samba_engine,
-)
 from backend.hardware.pal_storage import (
     PlatformType,
     StoragePlatformDetector,
     get_storage_platform,
+)
+from backend.services.samba_engine import (
+    SambaShareConfig,
+    SambaStatus,
+    get_samba_engine,
 )
 
 router = APIRouter(prefix="/samba", tags=["Samba File Sharing"])
@@ -30,8 +31,8 @@ def get_samba_status() -> SambaStatus:
     return engine.get_status()
 
 
-@router.get("/shares", response_model=List[SambaShareConfig])
-def get_samba_shares() -> List[SambaShareConfig]:
+@router.get("/shares", response_model=list[SambaShareConfig])
+def get_samba_shares() -> list[SambaShareConfig]:
     """Returns all configured Samba shares."""
     engine = get_samba_engine()
     return engine.list_shares()
@@ -50,14 +51,14 @@ def create_or_update_samba_share(share: SambaShareConfig) -> SambaShareConfig:
         engine = get_samba_engine()
         return engine.add_or_update_share(share)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete(
     "/shares/{name}",
     dependencies=[Depends(require_scope("shares:manage")), Depends(require_confirmation("share.delete"))],
 )
-def delete_samba_share(name: str) -> Dict[str, Any]:
+def delete_samba_share(name: str) -> dict[str, Any]:
     """Deletes a configured Samba share."""
     pal = get_storage_platform()
     if pal.get_capabilities().is_observer_mode:
@@ -80,7 +81,7 @@ def get_samba_config() -> Response:
 
 
 @router.post("/reload", dependencies=[Depends(require_scope("shares:manage"))])
-def reload_samba_service() -> Dict[str, Any]:
+def reload_samba_service() -> dict[str, Any]:
     """Reloads Samba service configuration."""
     engine = get_samba_engine()
     success = engine.reload_service()

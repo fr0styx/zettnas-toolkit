@@ -5,6 +5,7 @@ adapters, PAL busy interlock, LED speed fix, 16bpp LCD mode, and UPS container p
 """
 
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from backend.hardware.hal import DiskDiscoveryHAL, PhysicalDiskRecord

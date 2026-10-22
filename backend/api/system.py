@@ -1,7 +1,5 @@
-import functools
-import aiofiles
 import asyncio
-from datetime import datetime, timezone
+import functools
 import io
 import json
 import os
@@ -14,18 +12,18 @@ import sys
 import threading
 import time
 import zipfile
+from datetime import datetime, timezone
+from typing import Any, Optional
 
+import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional
 
 import backend.config as config
 from backend import __version__
-from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.confirmations import require_confirmation
 from backend.api_tokens import load_tokens, revoke_token
-from backend.logging_config import sanitize_string
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import (
     ALLOWED_BROWSE_ROOTS,
     BUTTON_CFG_FILE,
@@ -35,21 +33,24 @@ from backend.config import (
     LED_STATE_FILE,
     logger,
 )
+from backend.confirmations import require_confirmation
 from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
 from backend.hardware.disks import fetch_disk_smart_detail, locate_disk, run_disk_smart_test
 from backend.hardware.docker_stats import container_action, read_docker_containers
-from backend.services.broadcaster import broadcaster
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
+from backend.hardware.memory import read_mem
+from backend.hardware.pal_storage import get_storage_platform
 from backend.hardware.screen import get_screen_state, save_screen_state
 from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name, get_current_layout
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.ups import read_ups_status
+from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
 from backend.models.schemas import (
-    DiskSmartTestRequest,
     ButtonConfigRequest,
     CopyConfirmRequest,
+    DiskSmartTestRequest,
     DockerActionRequest,
     EjectMediaRequest,
     LayoutRequest,
@@ -60,11 +61,9 @@ from backend.models.schemas import (
     StateRequest,
     SystemProfileRequest,
 )
+from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import _do_copy
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
-from backend.hardware.memory import read_mem
-from backend.hardware.pal_storage import get_storage_platform
-from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
 from backend.state import Z_STATE, add_event
 
 router = APIRouter(tags=["System & Storage"])
@@ -74,9 +73,9 @@ _PROCESS_STARTED = time.time()
 HEALTH_STARTUP_GRACE_SECS = 60.0
 
 
-def _health_checks() -> Dict[str, str]:
+def _health_checks() -> dict[str, str]:
     """ok / starting / failed for each part the app can't work without (OPS-21)."""
-    checks: Dict[str, str] = {}
+    checks: dict[str, str] = {}
     hb = Z_STATE.collector_heartbeat
     if hb and time.time() - hb <= config.COLLECTOR_WATCHDOG_SECS:
         checks["collector"] = "ok"
@@ -123,23 +122,27 @@ def health():
 
 
 # Backward-compatibility re-exports for extracted domain routers
-from backend.api.fs import (
-    router as fs_router,
-    _contained,
-    check_user_path_access,
-    _safe_fs_target,
-    _scan_remote_dir_isolated,
-    ALLOWED_BROWSE_ROOTS,
-    _do_mkdir,
-)
-from backend.hardware.docker_stats import container_action, read_docker_containers
-from backend.api.docker import router as docker_router
 from backend.api.catalog import router as catalog_router
 from backend.api.diagnostics import (
-    router as diagnostics_router,
     _build_bundle_sync,
     _build_summary_sync,
 )
+from backend.api.diagnostics import (
+    router as diagnostics_router,
+)
+from backend.api.docker import router as docker_router
+from backend.api.fs import (
+    ALLOWED_BROWSE_ROOTS,
+    _contained,
+    _do_mkdir,
+    _safe_fs_target,
+    _scan_remote_dir_isolated,
+    check_user_path_access,
+)
+from backend.api.fs import (
+    router as fs_router,
+)
+from backend.hardware.docker_stats import container_action, read_docker_containers
 
 
 @router.get("/disk_detail")
@@ -183,7 +186,7 @@ async def disk_smart_test(req: DiskSmartTestRequest):
 
 
 @router.get("/disk/smart_tests")
-async def get_disk_smart_tests(dev: Optional[str] = None, limit: int = 20):
+async def get_disk_smart_tests(dev: str | None = None, limit: int = 20):
     """Returns persistent historical self-test runs and latest diagnostic report."""
     if dev:
         if dev.startswith("/dev/"):
@@ -504,9 +507,9 @@ def set_system_profile(req: SystemProfileRequest):
 
 class TokenCreateRequest(BaseModel):
     name: str
-    scopes: Optional[List[str]] = None
-    role_id: Optional[str] = None
-    expires_in_days: Optional[int] = None
+    scopes: list[str] | None = None
+    role_id: str | None = None
+    expires_in_days: int | None = None
 
 
 @router.get("/tokens", dependencies=[Depends(require_scope("users:read", "system:config"))])
@@ -705,7 +708,7 @@ async def system_shutdown():
 
 
 @router.get("/system/disks", dependencies=[Depends(require_scope("storage:read", "system:view"))])
-def get_system_disks() -> Dict[str, Any]:
+def get_system_disks() -> dict[str, Any]:
     """Compatibility endpoint returning physical disks discovered via HAL."""
     from backend.hardware.hal import DiskDiscoveryHAL
 
@@ -727,24 +730,24 @@ def get_system_disks() -> Dict[str, Any]:
     }
 
 
-_last_update_check: Dict[str, Dict[str, Any]] = {
+_last_update_check: dict[str, dict[str, Any]] = {
     "stable": {"ts": 0.0, "data": None},
     "edge": {"ts": 0.0, "data": None},
 }
 
 
 @functools.lru_cache(maxsize=1)
-def _get_current_build_info_cached() -> Dict[str, Any]:
+def _get_current_build_info_cached() -> dict[str, Any]:
     return _get_current_build_info_impl()
 
 
-def _get_current_build_info() -> Dict[str, Any]:
+def _get_current_build_info() -> dict[str, Any]:
     if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
         return _get_current_build_info_impl()
     return _get_current_build_info_cached()
 
 
-def _get_current_build_info_impl() -> Dict[str, Any]:
+def _get_current_build_info_impl() -> dict[str, Any]:
     """Returns detected build commit, build date, and container revision."""
     commit = os.environ.get("BUILD_COMMIT", "")
     created = os.environ.get("BUILD_DATE", "")
@@ -784,7 +787,7 @@ def _get_current_build_info_impl() -> Dict[str, Any]:
         for p in ("/app/.git_commit", "data/.git_commit", ".git_commit"):
             if os.path.exists(p):
                 try:
-                    with open(p, "r") as f:
+                    with open(p) as f:
                         commit = f.read().strip()
                 except Exception:
                     pass
@@ -869,7 +872,7 @@ _MANIFEST_ACCEPT = ", ".join(
 )
 
 
-async def _registry_digest(tag: str) -> Optional[str]:
+async def _registry_digest(tag: str) -> str | None:
     """Digest GHCR currently serves for a tag of our image (anonymous pull token)."""
     import httpx
 
@@ -886,7 +889,7 @@ async def _registry_digest(tag: str) -> Optional[str]:
         return res.headers.get("docker-content-digest") if res.status_code == 200 else None
 
 
-def _running_repo_digests() -> List[str]:
+def _running_repo_digests() -> list[str]:
     """Registry digests of the image this container runs (empty for a locally built image)."""
     from backend.services.compose_synthesizer import fetch_container_raw_inspect
     from backend.services.container_mutator import _docker_request
@@ -911,7 +914,7 @@ def _is_official_image_ref(ref: str) -> bool:
     return bool(_IMAGE_REF_RE.match(str(ref or "").strip()))
 
 
-def _local_repo_digests(image_ref: str) -> List[str]:
+def _local_repo_digests(image_ref: str) -> list[str]:
     """Registry digests of a local image that belong to our repository."""
     from backend.services.container_mutator import _docker_request
 
@@ -1112,7 +1115,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
 
 class ApplySystemUpdateRequest(BaseModel):
     channel: str = "stable"
-    target_image: Optional[str] = None
+    target_image: str | None = None
 
 
 @router.post(
@@ -1152,7 +1155,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         await asyncio.to_thread(pull_container_image, target_img, 300.0)
     except Exception as exc:
         logger.error(f"[System Update] Image pull failed: {exc}")
-        raise HTTPException(status_code=500, detail=f"Failed to pull image: {exc}")
+        raise HTTPException(status_code=500, detail=f"Failed to pull image: {exc}") from exc
 
     # 1b. The pulled image must carry a digest from our registry repository.
     try:
@@ -1197,7 +1200,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     }
 
 
-def _previous_versions() -> List[Dict[str, Any]]:
+def _previous_versions() -> list[dict[str, Any]]:
     from backend.services.container_mutator import _docker_request
     from backend.services.data_snapshot import list_snapshots
 

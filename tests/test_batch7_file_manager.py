@@ -1,6 +1,7 @@
 import os
 import time
 from unittest.mock import patch
+
 import pytest
 
 
@@ -256,8 +257,8 @@ def test_fs_download_zip_streaming(client, auth_headers, tmp_path):
         res = client.get(f"/api/fs/download-zip?paths={file_a},{file_b}", headers=auth_headers)
         assert res.status_code == 200
         assert res.headers.get("content-type") == "application/zip"
-        import zipfile
         import io
+        import zipfile
 
         zf = zipfile.ZipFile(io.BytesIO(res.content))
         namelist = zf.namelist()

@@ -11,19 +11,20 @@ Verifies:
 """
 
 import time
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from backend.config import (
     FAN_KICKSTART_PWM,
     FAN_KICKSTART_SECS,
-    FAN_MIN_PWM,
     FAN_MAX_PWM,
+    FAN_MIN_PWM,
     FAN_SPINUP_GRACE_SECS,
-    FAN_ZERO_RPM_STOP_DELAY,
     FAN_ZERO_RPM_DEFAULT_NVME_CEILING,
-    FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
     FAN_ZERO_RPM_DEFAULT_START_TEMP,
+    FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
+    FAN_ZERO_RPM_STOP_DELAY,
 )
 from backend.hardware.fans import (
     apply_zone_pwm,

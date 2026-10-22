@@ -14,17 +14,16 @@ import os
 import re
 import threading
 import time
-from typing import Dict, List
 
 from backend import config
 
-_policy_cache: Dict[str, str] = {}
-_reports: Dict[str, float] = {}
+_policy_cache: dict[str, str] = {}
+_reports: dict[str, float] = {}
 _lock = threading.Lock()
 REPORT_PATH = "/api/csp-report"
 
 
-def _inline_script_hashes() -> List[str]:
+def _inline_script_hashes() -> list[str]:
     index = os.path.join(getattr(config, "STATIC_DIR", ""), "index.html")
     try:
         with open(index, encoding="utf-8") as f:

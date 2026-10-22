@@ -3,7 +3,7 @@ import shutil
 import urllib.parse
 import urllib.request
 
-TOKEN = open("/config/telegram_token").read().strip()
+TOKEN = open("/config/telegram_token").read().strip()  # noqa: SIM115
 CHAT = "123456789"
 uso = shutil.disk_usage("/mnt/user")
 porcentaje = uso.used / uso.total * 100

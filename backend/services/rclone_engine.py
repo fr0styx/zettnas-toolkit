@@ -17,7 +17,7 @@ import time
 import urllib.error
 import urllib.request
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import backend.config as config
 from backend.services.webdav_engine import ensure_fuse_device
@@ -46,9 +46,7 @@ def is_sensitive_key(k: str) -> bool:
     kl = k.lower()
     if kl in SENSITIVE_KEYS:
         return True
-    if any(kl.endswith(f"_{s}") or kl.startswith(f"{s}_") for s in ["pass", "password", "token", "secret"]):
-        return True
-    return False
+    return bool(any(kl.endswith(f"_{s}") or kl.startswith(f"{s}_") for s in ["pass", "password", "token", "secret"]))
 
 
 CURATED_PROVIDERS = [
@@ -325,8 +323,8 @@ class RcloneEngine:
         self.config_file = config.RCLONE_CONFIG_FILE
         self.cache_dir = config.RCLONE_CACHE_DIR
         self.remotes_dir = config.REMOTES_PATH
-        self._active_mounts: Dict[str, Dict[str, Any]] = {}
-        self._sync_jobs: Dict[str, Dict[str, Any]] = {}
+        self._active_mounts: dict[str, dict[str, Any]] = {}
+        self._sync_jobs: dict[str, dict[str, Any]] = {}
 
         self._ensure_directories()
 
@@ -344,11 +342,11 @@ class RcloneEngine:
             raise RuntimeError("rclone binary not found in system PATH.")
         return rclone_bin
 
-    def get_providers(self) -> List[Dict[str, Any]]:
+    def get_providers(self) -> list[dict[str, Any]]:
         """Returns list of curated and supported cloud providers."""
         return CURATED_PROVIDERS
 
-    def list_remotes(self) -> List[Dict[str, Any]]:
+    def list_remotes(self) -> list[dict[str, Any]]:
         """Dumps configured remotes from rclone.conf and scrubs secrets."""
         with self._lock:
             self._ensure_directories()
@@ -359,8 +357,7 @@ class RcloneEngine:
             try:
                 proc = subprocess.run(
                     [rclone_bin, "config", "dump", "--config", self.config_file],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    capture_output=True,
                     text=True,
                     timeout=5,
                 )
@@ -414,7 +411,7 @@ class RcloneEngine:
         # 1. Check in /proc/mounts
         try:
             if os.path.exists("/proc/mounts"):
-                with open("/proc/mounts", "r") as f:
+                with open("/proc/mounts") as f:
                     for line in f:
                         parts = line.split()
                         if len(parts) >= 2 and parts[1] == mount_path:
@@ -441,8 +438,7 @@ class RcloneEngine:
             # Check if already obscured
             check = subprocess.run(
                 [rclone_bin, "reveal", password],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
                 timeout=3,
             )
@@ -452,8 +448,7 @@ class RcloneEngine:
 
             proc = subprocess.run(
                 [rclone_bin, "obscure", password],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
                 timeout=3,
             )
@@ -463,7 +458,7 @@ class RcloneEngine:
             logger.warning(f"[RCLONE] Failed obscuring password: {e}")
         return password
 
-    def _resolve_onedrive_metadata(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def _resolve_onedrive_metadata(self, parameters: dict[str, Any]) -> dict[str, Any]:
         """Auto-queries Microsoft Graph API to resolve drive_id and drive_type if missing."""
         token_val = parameters.get("token")
         if not token_val:
@@ -536,7 +531,7 @@ class RcloneEngine:
 
         return parameters
 
-    def create_remote(self, name: str, remote_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def create_remote(self, name: str, remote_type: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Creates or updates a remote in rclone.conf via RawConfigParser."""
         if not VALID_REMOTE_NAME.fullmatch(name):
             raise ValueError(f"Invalid remote name: '{name}'. Must be 1-64 alphanumeric chars, dash, or underscore.")
@@ -588,10 +583,10 @@ class RcloneEngine:
         name: str,
         base_remote_path: str,
         password: str,
-        password2: Optional[str] = None,
+        password2: str | None = None,
         filename_encryption: str = "standard",
         directory_name_encryption: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Creates or updates an rclone crypt overlay remote wrapping a base remote or directory path.
         All data written to this remote is encrypted on the client side with AES-XTS before transmission.
@@ -606,7 +601,7 @@ class RcloneEngine:
             params["password2"] = password2
         return self.create_remote(name, "crypt", params)
 
-    def delete_remote(self, name: str) -> Dict[str, Any]:
+    def delete_remote(self, name: str) -> dict[str, Any]:
         """Unmounts and removes a remote from rclone.conf."""
         if self._check_is_mounted(name, os.path.join(self.remotes_dir, name)):
             try:
@@ -631,7 +626,7 @@ class RcloneEngine:
 
             return {"status": "ok", "deleted": name}
 
-    def test_remote(self, name: str) -> Dict[str, Any]:
+    def test_remote(self, name: str) -> dict[str, Any]:
         """Tests connectivity and credentials of an existing remote in rclone.conf."""
         with self._lock:
             self._ensure_directories()
@@ -653,7 +648,7 @@ class RcloneEngine:
                 "1",
             ]
             try:
-                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=12)
+                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=12)
                 if proc.returncode == 0:
                     items = [ln.strip() for ln in proc.stdout.splitlines() if ln.strip()]
                     return {
@@ -686,7 +681,7 @@ class RcloneEngine:
                     "error": str(e),
                 }
 
-    def test_remote_config(self, remote_type: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    def test_remote_config(self, remote_type: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Tests connectivity and credentials of candidate remote configuration before saving."""
         parameters = dict(parameters)
         if remote_type == "onedrive" and not parameters.get("drive_id") and parameters.get("token"):
@@ -733,7 +728,7 @@ class RcloneEngine:
                 "--retries",
                 "1",
             ]
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=12)
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=12)
             if proc.returncode == 0:
                 items = [ln.strip() for ln in proc.stdout.splitlines() if ln.strip()]
                 return {
@@ -780,7 +775,7 @@ class RcloneEngine:
         remote_path: str = "",
         vfs_cache: str = "writes",
         read_only: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Mounts remote storage into /mnt/remotes/{name} via FUSE."""
         with self._lock:
             ensure_fuse_device()
@@ -839,7 +834,7 @@ class RcloneEngine:
                     err_msg = ""
                     if os.path.exists(log_file):
                         try:
-                            with open(log_file, "r") as lf:
+                            with open(log_file) as lf:
                                 lines = lf.readlines()
                                 err_msg = "".join(lines[-15:]).strip()
                         except Exception:
@@ -865,7 +860,7 @@ class RcloneEngine:
                     pass
                 raise
 
-    def unmount_remote(self, name: str) -> Dict[str, Any]:
+    def unmount_remote(self, name: str) -> dict[str, Any]:
         """Unmounts /mnt/remotes/{name} and cleans up mount directory."""
         with self._lock:
             mount_path = os.path.join(self.remotes_dir, name)
@@ -875,13 +870,13 @@ class RcloneEngine:
             fuser = shutil.which("fusermount3") or shutil.which("fusermount")
             unmounted = False
             if fuser and os.path.exists(mount_path):
-                res = subprocess.run([fuser, "-u", mount_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                res = subprocess.run([fuser, "-u", mount_path], capture_output=True)
                 if res.returncode == 0:
                     unmounted = True
 
             # 2. Try generic umount
             if not unmounted and os.path.exists(mount_path):
-                res = subprocess.run(["umount", "-l", mount_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                res = subprocess.run(["umount", "-l", mount_path], capture_output=True)
                 if res.returncode == 0:
                     unmounted = True
 
@@ -907,7 +902,7 @@ class RcloneEngine:
             else:
                 raise RuntimeError(f"Could not unmount {mount_path}; resource may be busy.")
 
-    def list_remote_files(self, name: str, path: str = "") -> List[Dict[str, Any]]:
+    def list_remote_files(self, name: str, path: str = "") -> list[dict[str, Any]]:
         """Lists files and folders inside a remote using rclone lsf --json."""
         rclone_bin = self._get_rclone_bin()
         target = f"{name}:{path}" if path else f"{name}:"
@@ -921,7 +916,7 @@ class RcloneEngine:
             "--max-depth",
             "1",
         ]
-        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=15)
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
         if proc.returncode != 0:
             err = proc.stderr.strip()
             raise RuntimeError(f"Failed to list remote files: {err}")
@@ -940,13 +935,13 @@ class RcloneEngine:
         retries: int = 3,
         verbose: bool = False,
         notify: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Launches a background sync/copy/move operation between local and remote with real-time stats streaming."""
         if action not in ["sync", "copy", "move"]:
             raise ValueError(f"Invalid sync action: '{action}'. Choose from sync, copy, or move.")
 
         job_id = str(uuid.uuid4())[:8]
-        job: Dict[str, Any] = {
+        job: dict[str, Any] = {
             "id": job_id,
             "src": src,
             "dst": dst,
@@ -1111,17 +1106,17 @@ class RcloneEngine:
         t.start()
         return job
 
-    def get_sync_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+    def get_sync_job(self, job_id: str) -> dict[str, Any] | None:
         """Returns specific tracked synchronization job by ID."""
         return self._sync_jobs.get(job_id)
 
-    def get_sync_jobs(self) -> List[Dict[str, Any]]:
+    def get_sync_jobs(self) -> list[dict[str, Any]]:
         """Returns list of tracked synchronization jobs."""
         return list(self._sync_jobs.values())
 
 
 # Singleton instance
-_rclone_engine: Optional[RcloneEngine] = None
+_rclone_engine: RcloneEngine | None = None
 
 
 def get_rclone_engine() -> RcloneEngine:
@@ -1135,10 +1130,10 @@ def create_crypt_remote(
     name: str,
     base_remote_path: str,
     password: str,
-    password2: Optional[str] = None,
+    password2: str | None = None,
     filename_encryption: str = "standard",
     directory_name_encryption: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     return get_rclone_engine().create_crypt_remote(
         name,
         base_remote_path,

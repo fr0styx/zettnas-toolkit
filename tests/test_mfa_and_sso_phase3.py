@@ -2,28 +2,29 @@ import json
 import os
 import tempfile
 import time
+
 import pytest
 from fastapi.testclient import TestClient
 
 from backend import config
 from backend.main import app
 from backend.totp import (
-    generate_totp_secret,
-    generate_totp_code,
-    verify_totp_code,
+    generate_qr_svg,
     generate_recovery_codes,
+    generate_totp_code,
+    generate_totp_secret,
+    get_otpauth_uri,
     hash_recovery_code,
     verify_and_consume_recovery_code,
-    generate_qr_svg,
-    get_otpauth_uri,
+    verify_totp_code,
 )
 from backend.users_db import (
-    init_users_db,
     create_user,
+    disable_user_mfa,
+    enable_user_mfa,
     get_user_by_username,
     get_user_mfa,
-    enable_user_mfa,
-    disable_user_mfa,
+    init_users_db,
 )
 
 

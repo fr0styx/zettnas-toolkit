@@ -8,7 +8,8 @@ import struct
 import subprocess
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from datetime import UTC
+from typing import Any, Optional
 
 import httpx
 
@@ -17,7 +18,7 @@ from backend.fsutil import atomic_write_json, read_json
 from backend.state import Z_STATE
 
 
-def _find_sys_net_dir() -> Optional[str]:
+def _find_sys_net_dir() -> str | None:
     """Find the sysfs class/net directory on host or container."""
     candidates = [
         os.path.join(HOST_SYS, "class/net"),
@@ -30,7 +31,7 @@ def _find_sys_net_dir() -> Optional[str]:
     return None
 
 
-def _find_proc_net_path(filename: str) -> Optional[str]:
+def _find_proc_net_path(filename: str) -> str | None:
     """Find a /proc/net path on host (preferred) or container."""
     candidates = [
         os.path.join(HOST_PROC, "1/net", filename),
@@ -47,7 +48,7 @@ def _find_proc_net_path(filename: str) -> Optional[str]:
 def _read_file(path: str, default: str = "") -> str:
     """Safely read stripped contents of a single-line file."""
     try:
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             return f.read().strip()
     except Exception:
         return default
@@ -78,7 +79,7 @@ def _mask_to_cidr(mask_ip: str) -> int:
         return 24
 
 
-def _format_speed(speed_val: Optional[int], is_up: bool = True) -> str:
+def _format_speed(speed_val: int | None, is_up: bool = True) -> str:
     """Format speed in Mbps to human-readable network speed."""
     if not is_up or speed_val is None or speed_val <= 0:
         return "Disconnected" if not is_up else "Unknown"
@@ -97,15 +98,15 @@ def _format_speed(speed_val: Optional[int], is_up: bool = True) -> str:
     return f"{speed_val} Mbps"
 
 
-def _parse_routes() -> List[Dict[str, Any]]:
+def _parse_routes() -> list[dict[str, Any]]:
     """Parse host route table from /proc/net/route."""
     route_file = _find_proc_net_path("route")
-    routes: List[Dict[str, Any]] = []
+    routes: list[dict[str, Any]] = []
     if not route_file:
         return routes
 
     try:
-        with open(route_file, "r", encoding="utf-8", errors="replace") as f:
+        with open(route_file, encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
         for line in lines[1:]:
             parts = line.strip().split()
@@ -137,9 +138,9 @@ def _parse_routes() -> List[Dict[str, Any]]:
     return routes
 
 
-def _get_dns_servers() -> List[str]:
+def _get_dns_servers() -> list[str]:
     """Retrieve DNS nameservers from config or resolv.conf."""
-    servers: List[str] = []
+    servers: list[str] = []
     candidates = [
         "/boot/config/network.cfg",
         "/host/etc/resolv.conf",
@@ -148,7 +149,7 @@ def _get_dns_servers() -> List[str]:
     for c in candidates:
         if os.path.isfile(c):
             try:
-                with open(c, "r", encoding="utf-8", errors="replace") as f:
+                with open(c, encoding="utf-8", errors="replace") as f:
                     for line in f:
                         line = line.strip()
                         # Unraid network.cfg format
@@ -176,9 +177,9 @@ def _get_dns_servers() -> List[str]:
     return servers
 
 
-def _get_docker_topology() -> List[Dict[str, Any]]:
+def _get_docker_topology() -> list[dict[str, Any]]:
     """Query Docker daemon for active bridge networks and attached container IPs."""
-    docker_networks: List[Dict[str, Any]] = []
+    docker_networks: list[dict[str, Any]] = []
     docker_sock = "/var/run/docker.sock"
     if not os.path.exists(docker_sock):
         return docker_networks
@@ -196,7 +197,7 @@ def _get_docker_topology() -> List[Dict[str, Any]]:
             containers = cnt_res.json() if cnt_res.status_code == 200 else []
 
             # Map containers by network ID or network name
-            containers_by_net: Dict[str, List[Dict[str, Any]]] = {}
+            containers_by_net: dict[str, list[dict[str, Any]]] = {}
             for c in containers:
                 c_name = (c.get("Names") or [""])[0].lstrip("/")
                 ports = []
@@ -259,7 +260,7 @@ def _get_docker_topology() -> List[Dict[str, Any]]:
     return docker_networks
 
 
-def load_network_config() -> Dict[str, Any]:
+def load_network_config() -> dict[str, Any]:
     """Load persistent network configuration (aliases and port settings)."""
     cfg = read_json(NETWORK_CONFIG_FILE, None)
     if not isinstance(cfg, dict):
@@ -271,7 +272,7 @@ def load_network_config() -> Dict[str, Any]:
     return cfg
 
 
-def save_network_config(cfg: Dict[str, Any]) -> None:
+def save_network_config(cfg: dict[str, Any]) -> None:
     """Save persistent network configuration atomically."""
     atomic_write_json(NETWORK_CONFIG_FILE, cfg)
 
@@ -290,11 +291,11 @@ class CanaryWatchdog:
         self.started_at = 0.0
         self.deadline = 0.0
         self.target_ip = ""
-        self.target_config: Dict[str, Any] = {}
-        self.original_config: Dict[str, Any] = {}
-        self._timer: Optional[threading.Timer] = None
+        self.target_config: dict[str, Any] = {}
+        self.original_config: dict[str, Any] = {}
+        self._timer: threading.Timer | None = None
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         with self._lock:
             now = time.time()
             rem = max(0, int(self.deadline - now)) if self.is_active else 0
@@ -307,8 +308,8 @@ class CanaryWatchdog:
 
     def arm(
         self,
-        target_config: Dict[str, Any],
-        original_config: Dict[str, Any],
+        target_config: dict[str, Any],
+        original_config: dict[str, Any],
         timeout_sec: int = 60,
     ) -> str:
         with self._lock:
@@ -335,7 +336,7 @@ class CanaryWatchdog:
             self._timer.start()
             return canary_id
 
-    def confirm(self, canary_id: Optional[str] = None) -> bool:
+    def confirm(self, canary_id: str | None = None) -> bool:
         with self._lock:
             if not self.is_active:
                 return False
@@ -350,7 +351,7 @@ class CanaryWatchdog:
             self.is_active = False
             return True
 
-    def revert(self, canary_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def revert(self, canary_id: str | None = None) -> dict[str, Any] | None:
         with self._lock:
             if not self.is_active:
                 return None
@@ -399,14 +400,14 @@ def get_canary_watchdog() -> CanaryWatchdog:
     return _CANARY_WATCHDOG
 
 
-def _parse_unraid_network_cfg() -> Dict[str, str]:
+def _parse_unraid_network_cfg() -> dict[str, str]:
     """Parse key-values from Unraid /boot/config/network.cfg if present."""
-    cfg: Dict[str, str] = {}
+    cfg: dict[str, str] = {}
     candidates = ["/boot/config/network.cfg", "/host/boot/config/network.cfg"]
     for c in candidates:
         if os.path.isfile(c):
             try:
-                with open(c, "r", encoding="utf-8", errors="replace") as f:
+                with open(c, encoding="utf-8", errors="replace") as f:
                     for line in f:
                         line = line.strip()
                         if line and not line.startswith("#") and "=" in line:
@@ -418,14 +419,14 @@ def _parse_unraid_network_cfg() -> Dict[str, str]:
     return cfg
 
 
-def _write_unraid_network_cfg(updates: Dict[str, str]) -> bool:
+def _write_unraid_network_cfg(updates: dict[str, str]) -> bool:
     """Update Unraid /boot/config/network.cfg preserving order and unmanaged keys."""
     candidates = ["/boot/config/network.cfg", "/host/boot/config/network.cfg"]
     for c in candidates:
         if os.path.isfile(c):
             try:
                 lines = []
-                with open(c, "r", encoding="utf-8", errors="replace") as f:
+                with open(c, encoding="utf-8", errors="replace") as f:
                     lines = f.readlines()
                 updated_keys = set()
                 new_lines = []
@@ -451,7 +452,7 @@ def _write_unraid_network_cfg(updates: Dict[str, str]) -> bool:
     return False
 
 
-def _execute_revert(orig: Dict[str, Any]) -> None:
+def _execute_revert(orig: dict[str, Any]) -> None:
     """Restores original network settings on the host."""
     cfg = load_network_config()
     cfg.pop("host_ip_staged", None)
@@ -486,7 +487,7 @@ def _validate_ipv4(val: str, field_name: str) -> str:
     try:
         ip = ipaddress.IPv4Address(val)
     except ValueError:
-        raise ValueError(f"Invalid IPv4 address for {field_name}: {val}")
+        raise ValueError(f"Invalid IPv4 address for {field_name}: {val}") from None
     if ip.is_loopback:
         raise ValueError(f"{field_name} cannot be a loopback address (127.0.0.0/8)")
     if ip.is_multicast:
@@ -513,10 +514,10 @@ def _validate_netmask(val: str) -> str:
         net = ipaddress.IPv4Network(f"0.0.0.0/{val}")
         return str(net.netmask)
     except Exception:
-        raise ValueError(f"Invalid netmask: {val}")
+        raise ValueError(f"Invalid netmask: {val}") from None
 
 
-def get_host_ip_config() -> Dict[str, Any]:
+def get_host_ip_config() -> dict[str, Any]:
     """Retrieve current host IP, netmask, gateway, DNS, and canary watchdog status."""
     topo = get_network_topology()
     summary = topo.get("summary", {})
@@ -589,7 +590,7 @@ def get_host_ip_config() -> Dict[str, Any]:
     }
 
 
-def apply_host_ip_config_canary(updates: Dict[str, Any], timeout_sec: int = 60) -> Dict[str, Any]:
+def apply_host_ip_config_canary(updates: dict[str, Any], timeout_sec: int = 60) -> dict[str, Any]:
     """
     Arm 60-second Canary watchdog, snapshot existing network state,
     and stage / apply new Host IP and DNS configuration.
@@ -602,7 +603,7 @@ def apply_host_ip_config_canary(updates: Dict[str, Any], timeout_sec: int = 60) 
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", interface):
         raise ValueError("Invalid interface name")
 
-    target_cfg: Dict[str, Any] = {
+    target_cfg: dict[str, Any] = {
         "mode": mode,
         "interface": interface,
         "updated_at": time.time(),
@@ -710,7 +711,7 @@ def apply_host_ip_config_canary(updates: Dict[str, Any], timeout_sec: int = 60) 
     }
 
 
-def confirm_host_ip_config(canary_id: Optional[str] = None) -> Dict[str, Any]:
+def confirm_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
     """Confirms current canary test and commits host IP settings permanently."""
     watchdog = get_canary_watchdog()
     if not watchdog.is_active:
@@ -746,7 +747,7 @@ def confirm_host_ip_config(canary_id: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
-def revert_host_ip_config(canary_id: Optional[str] = None) -> Dict[str, Any]:
+def revert_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
     """Manually aborts canary test and immediately restores original network settings."""
     watchdog = get_canary_watchdog()
     if not watchdog.is_active:
@@ -776,14 +777,14 @@ def revert_host_ip_config(canary_id: Optional[str] = None) -> Dict[str, Any]:
     }
 
 
-def _get_unraid_descriptions() -> Dict[str, str]:
+def _get_unraid_descriptions() -> dict[str, str]:
     """Parse descriptions from /boot/config/network.cfg if on Unraid."""
-    desc_map: Dict[str, str] = {}
+    desc_map: dict[str, str] = {}
     candidates = ["/boot/config/network.cfg", "/host/boot/config/network.cfg"]
     for c in candidates:
         if os.path.isfile(c):
             try:
-                with open(c, "r", encoding="utf-8", errors="replace") as f:
+                with open(c, encoding="utf-8", errors="replace") as f:
                     lines = f.readlines()
                 for line in lines:
                     line = line.strip()
@@ -895,7 +896,7 @@ def _apply_wol(iface: str, enabled: bool) -> bool:
     return False
 
 
-def _apply_negotiation(iface: str, autoneg: bool, speed: Optional[int] = None, duplex: str = "full") -> bool:
+def _apply_negotiation(iface: str, autoneg: bool, speed: int | None = None, duplex: str = "full") -> bool:
     """Apply speed/duplex negotiation via ethtool."""
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface):
         return False
@@ -926,7 +927,7 @@ def _apply_negotiation(iface: str, autoneg: bool, speed: Optional[int] = None, d
     return False
 
 
-def get_port_config(iface_name: str) -> Dict[str, Any]:
+def get_port_config(iface_name: str) -> dict[str, Any]:
     """Retrieve full configuration, hardware capabilities, and alias for a port."""
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface_name):
         return {"status": "error", "message": "Invalid interface name"}
@@ -974,7 +975,7 @@ def get_port_config(iface_name: str) -> Dict[str, Any]:
     }
 
 
-def update_port_config(iface_name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+def update_port_config(iface_name: str, updates: dict[str, Any]) -> dict[str, Any]:
     """Update port configuration: friendly alias, MTU, WOL, speed/duplex."""
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", iface_name):
         return {"status": "error", "message": "Invalid interface name"}
@@ -1020,7 +1021,7 @@ def update_port_config(iface_name: str, updates: Dict[str, Any]) -> Dict[str, An
     return {"status": "ok", "message": f"Port configuration saved for {iface_name}", "config": port_meta}
 
 
-def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", gateway: str = "") -> Dict[str, Any]:
+def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", gateway: str = "") -> dict[str, Any]:
     """Create a new Docker network via Docker engine API."""
     docker_sock = "/var/run/docker.sock"
     if not os.path.exists(docker_sock):
@@ -1029,14 +1030,14 @@ def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", g
     if not name or not re.match(r"^[a-zA-Z0-9_\-\.]+$", name):
         return {"status": "error", "message": "Invalid network name"}
 
-    body: Dict[str, Any] = {
+    body: dict[str, Any] = {
         "Name": name,
         "Driver": driver or "bridge",
         "CheckDuplicate": True,
     }
 
     if subnet:
-        ipam_cfg: Dict[str, str] = {"Subnet": subnet}
+        ipam_cfg: dict[str, str] = {"Subnet": subnet}
         if gateway:
             ipam_cfg["Gateway"] = gateway
         body["IPAM"] = {"Config": [ipam_cfg]}
@@ -1059,7 +1060,7 @@ def create_docker_network(name: str, driver: str = "bridge", subnet: str = "", g
         return {"status": "error", "message": str(e)}
 
 
-def delete_docker_network(net_id_or_name: str) -> Dict[str, Any]:
+def delete_docker_network(net_id_or_name: str) -> dict[str, Any]:
     """Delete a custom Docker network via Docker engine API."""
     docker_sock = "/var/run/docker.sock"
     if not os.path.exists(docker_sock):
@@ -1085,7 +1086,7 @@ def delete_docker_network(net_id_or_name: str) -> Dict[str, Any]:
         return {"status": "error", "message": str(e)}
 
 
-BONDING_MODES: Dict[str, Dict[str, Any]] = {
+BONDING_MODES: dict[str, dict[str, Any]] = {
     "0": {
         "code": "0",
         "name": "balance-rr",
@@ -1119,9 +1120,9 @@ BONDING_MODES: Dict[str, Dict[str, Any]] = {
 }
 
 
-def _parse_proc_net_vlan() -> Dict[str, Dict[str, Any]]:
+def _parse_proc_net_vlan() -> dict[str, dict[str, Any]]:
     """Parse /proc/net/vlan/config for active 802.1Q VLAN devices."""
-    vlan_map: Dict[str, Dict[str, Any]] = {}
+    vlan_map: dict[str, dict[str, Any]] = {}
     vlan_file = _find_proc_net_path("vlan/config")
     if not vlan_file:
         for p in [
@@ -1135,7 +1136,7 @@ def _parse_proc_net_vlan() -> Dict[str, Dict[str, Any]]:
                 break
     if vlan_file and os.path.isfile(vlan_file):
         try:
-            with open(vlan_file, "r", encoding="utf-8", errors="replace") as f:
+            with open(vlan_file, encoding="utf-8", errors="replace") as f:
                 for line in f:
                     line = line.strip()
                     if "|" in line and "VLAN Dev name" not in line:
@@ -1151,7 +1152,7 @@ def _parse_proc_net_vlan() -> Dict[str, Dict[str, Any]]:
     return vlan_map
 
 
-def get_vlans() -> List[Dict[str, Any]]:
+def get_vlans() -> list[dict[str, Any]]:
     """Discover all active 802.1Q VLAN sub-interfaces and persist metadata."""
     sys_net_dir = _find_sys_net_dir()
     routes = _parse_routes()
@@ -1159,7 +1160,7 @@ def get_vlans() -> List[Dict[str, Any]]:
     saved_vlans = saved_cfg.get("vlans", {})
     proc_vlans = _parse_proc_net_vlan()
 
-    vlans: List[Dict[str, Any]] = []
+    vlans: list[dict[str, Any]] = []
     discovered_names = set()
 
     if sys_net_dir and os.path.isdir(sys_net_dir):
@@ -1284,7 +1285,7 @@ def get_vlans() -> List[Dict[str, Any]]:
     return sorted(vlans, key=lambda v: (v.get("parent", ""), v.get("vlan_id", 0)))
 
 
-def create_vlan(parent: str, vlan_id: int, alias: str = "") -> Dict[str, Any]:
+def create_vlan(parent: str, vlan_id: int, alias: str = "") -> dict[str, Any]:
     """Create an 802.1Q VLAN sub-interface (e.g. eth0.10) and persist metadata."""
     parent = (parent or "").strip()
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", parent):
@@ -1373,7 +1374,7 @@ def create_vlan(parent: str, vlan_id: int, alias: str = "") -> Dict[str, Any]:
     }
 
 
-def delete_vlan(vlan_name: str) -> Dict[str, Any]:
+def delete_vlan(vlan_name: str) -> dict[str, Any]:
     """Delete an 802.1Q VLAN sub-interface."""
     vlan_name = (vlan_name or "").strip()
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", vlan_name):
@@ -1429,7 +1430,7 @@ def delete_vlan(vlan_name: str) -> Dict[str, Any]:
     }
 
 
-def get_bond_config(bond_name: str) -> Dict[str, Any]:
+def get_bond_config(bond_name: str) -> dict[str, Any]:
     """Retrieve configuration, operational mode, slaves, and candidate NICs for a bond."""
     bond_name = (bond_name or "").strip()
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", bond_name):
@@ -1526,7 +1527,7 @@ def get_bond_config(bond_name: str) -> Dict[str, Any]:
     }
 
 
-def update_bond_config(bond_name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+def update_bond_config(bond_name: str, updates: dict[str, Any]) -> dict[str, Any]:
     """Update bonding mode, enslaved interfaces, and MII monitoring."""
     bond_name = (bond_name or "").strip()
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", bond_name):
@@ -1627,7 +1628,7 @@ def update_bond_config(bond_name: str, updates: Dict[str, Any]) -> Dict[str, Any
     }
 
 
-def get_bridge_config(br_name: str) -> Dict[str, Any]:
+def get_bridge_config(br_name: str) -> dict[str, Any]:
     """Retrieve configuration, STP state, forward delay, and members for a virtual bridge."""
     br_name = (br_name or "").strip()
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", br_name):
@@ -1716,7 +1717,7 @@ def get_bridge_config(br_name: str) -> Dict[str, Any]:
     }
 
 
-def update_bridge_config(br_name: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+def update_bridge_config(br_name: str, updates: dict[str, Any]) -> dict[str, Any]:
     """Update virtual bridge parameters: STP toggle, forward delay, and member interfaces."""
     br_name = (br_name or "").strip()
     if not re.match(r"^[a-zA-Z0-9_\-\.]+$", br_name):
@@ -1801,7 +1802,7 @@ def update_bridge_config(br_name: str, updates: Dict[str, Any]) -> Dict[str, Any
     }
 
 
-def get_network_topology() -> Dict[str, Any]:
+def get_network_topology() -> dict[str, Any]:
     """
     Expose complete host networking topology, physical NIC carrier states,
     link negotiation speeds (10GbE / 2.5GbE / 1GbE / 100M), duplex, MTU,
@@ -1820,9 +1821,9 @@ def get_network_topology() -> Dict[str, Any]:
             "routes": [],
         }
 
-    physical_interfaces: List[Dict[str, Any]] = []
-    bonds: List[Dict[str, Any]] = []
-    bridges: List[Dict[str, Any]] = []
+    physical_interfaces: list[dict[str, Any]] = []
+    bonds: list[dict[str, Any]] = []
+    bridges: list[dict[str, Any]] = []
     all_ifaces = os.listdir(sys_net_dir)
 
     routes = _parse_routes()
@@ -2087,7 +2088,7 @@ def read_network_rates():
     ifaces = {}
     if dev_path:
         try:
-            with open(dev_path, "r", encoding="utf-8", errors="replace") as f:
+            with open(dev_path, encoding="utf-8", errors="replace") as f:
                 for line in f:
                     if ":" in line:
                         iface, data = line.split(":", 1)
@@ -2122,7 +2123,7 @@ def read_network_rates():
         try:
             bonding_slaves_path = os.path.join(HOST_SYS, "class/net", b, "bonding/slaves")
             if os.path.exists(bonding_slaves_path):
-                with open(bonding_slaves_path, "r", encoding="utf-8") as bf:
+                with open(bonding_slaves_path, encoding="utf-8") as bf:
                     bond_slaves.update(bf.read().split())
         except Exception:
             pass
@@ -2155,12 +2156,7 @@ def read_network_rates():
             "is_bridge": iface_name.startswith("br"),
         }
 
-        if iface_name.startswith("bond"):
-            total_physical_rx_rate += rx_rate
-            total_physical_tx_rate += tx_rate
-            total_physical_rx_bytes += cur_rx
-            total_physical_tx_bytes += cur_tx
-        elif is_physical and iface_name not in bond_slaves:
+        if iface_name.startswith("bond") or is_physical and iface_name not in bond_slaves:
             total_physical_rx_rate += rx_rate
             total_physical_tx_rate += tx_rate
             total_physical_rx_bytes += cur_rx
@@ -2216,7 +2212,7 @@ def read_ip():
     for p in ["/boot/config/network.cfg", "/host/etc/network/interfaces"]:
         if os.path.exists(p):
             try:
-                with open(p, "r", encoding="utf-8", errors="replace") as f:
+                with open(p, encoding="utf-8", errors="replace") as f:
                     content = f.read()
                 ip_match = re.search(r'IPADDR(?:.*?)="?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"?', content)
                 if not ip_match:
@@ -2238,7 +2234,7 @@ def read_ip():
     fib_path = _find_proc_net_path("fib_trie")
     if fib_path:
         try:
-            with open(fib_path, "r", encoding="utf-8", errors="replace") as f:
+            with open(fib_path, encoding="utf-8", errors="replace") as f:
                 lines = f.readlines()
             for i, line in enumerate(lines):
                 if "/32 host LOCAL" in line and i > 0:
@@ -2260,7 +2256,7 @@ def read_ip():
     return "?"
 
 
-def _find_tailscale_bin() -> Optional[str]:
+def _find_tailscale_bin() -> str | None:
     """Finds tailscale CLI executable across standard PATH and NAS host plugin paths."""
     ts_bin = shutil.which("tailscale")
     if ts_bin:
@@ -2277,7 +2273,7 @@ def _find_tailscale_bin() -> Optional[str]:
     return None
 
 
-def _get_tailscale_container_info() -> Dict[str, Any]:
+def _get_tailscale_container_info() -> dict[str, Any]:
     """Checks if a Docker container named 'tailscale' exists and returns its state."""
     try:
         from backend.services.container_mutator import _docker_request
@@ -2296,7 +2292,7 @@ def _get_tailscale_container_info() -> Dict[str, Any]:
     return {"exists": False, "running": False, "id": "", "status": "not_found"}
 
 
-def _run_tailscale_cmd(args: List[str], timeout: float = 10.0) -> tuple[int, str]:
+def _run_tailscale_cmd(args: list[str], timeout: float = 10.0) -> tuple[int, str]:
     """
     Executes a Tailscale command using Docker exec if 'tailscale' container is running,
     or falls back to native host binary if present and daemon is accessible.
@@ -2343,7 +2339,7 @@ def _run_tailscale_cmd(args: List[str], timeout: float = 10.0) -> tuple[int, str
     return 127, "tailscale CLI or running container not found"
 
 
-def detect_local_subnets() -> List[str]:
+def detect_local_subnets() -> list[str]:
     """Detects local physical IPv4 network subnets (e.g. ['10.40.30.0/24'])."""
     subnets = []
     try:
@@ -2389,7 +2385,7 @@ def get_taildrop_dir() -> str:
     return fallback
 
 
-def get_taildrop_inbox_files() -> List[Dict[str, Any]]:
+def get_taildrop_inbox_files() -> list[dict[str, Any]]:
     """Lists files received via Taildrop."""
     from datetime import datetime, timezone
 
@@ -2411,7 +2407,7 @@ def get_taildrop_inbox_files() -> List[Dict[str, Any]]:
                         size_fmt = f"{size_b / (1024 * 1024):.1f} MB"
                     else:
                         size_fmt = f"{size_b / (1024 * 1024 * 1024):.2f} GB"
-                    mtime_iso = datetime.fromtimestamp(st.st_mtime, timezone.utc).strftime("%Y-%m-%d %H:%M")
+                    mtime_iso = datetime.fromtimestamp(st.st_mtime, UTC).strftime("%Y-%m-%d %H:%M")
                     files.append(
                         {
                             "name": entry.name,
@@ -2429,7 +2425,7 @@ def get_taildrop_inbox_files() -> List[Dict[str, Any]]:
     return files
 
 
-def execute_tailscale_taildrop_receive() -> Dict[str, Any]:
+def execute_tailscale_taildrop_receive() -> dict[str, Any]:
     """Ingests any pending files from Taildrop queue into the inbox."""
     target_dir = get_taildrop_dir()
     c_info = _get_tailscale_container_info()
@@ -2450,7 +2446,7 @@ def execute_tailscale_taildrop_receive() -> Dict[str, Any]:
     }
 
 
-def execute_tailscale_ping(peer: str) -> Dict[str, Any]:
+def execute_tailscale_ping(peer: str) -> dict[str, Any]:
     """Pings a Tailscale peer and parses round-trip latency and route path."""
     import re
 
@@ -2489,7 +2485,7 @@ def execute_tailscale_ping(peer: str) -> Dict[str, Any]:
     }
 
 
-def execute_tailscale_set_routes(routes: str, enabled: bool = True) -> Dict[str, Any]:
+def execute_tailscale_set_routes(routes: str, enabled: bool = True) -> dict[str, Any]:
     """Advertises or withdraws subnet routes to the Tailnet."""
     clean_routes = routes.strip() if enabled else ""
     if clean_routes:
@@ -2506,7 +2502,7 @@ def execute_tailscale_set_routes(routes: str, enabled: bool = True) -> Dict[str,
     }
 
 
-def execute_tailscale_set_exit_node(enabled: bool) -> Dict[str, Any]:
+def execute_tailscale_set_exit_node(enabled: bool) -> dict[str, Any]:
     """Advertises this node as a Tailscale Exit Node."""
     val = "true" if enabled else "false"
     cmd = ["set", f"--advertise-exit-node={val}"]
@@ -2519,7 +2515,7 @@ def execute_tailscale_set_exit_node(enabled: bool) -> Dict[str, Any]:
     }
 
 
-def execute_tailscale_set_ssh(enabled: bool) -> Dict[str, Any]:
+def execute_tailscale_set_ssh(enabled: bool) -> dict[str, Any]:
     """Enables or disables Tailscale SSH."""
     val = "true" if enabled else "false"
     cmd = ["set", f"--ssh={val}"]
@@ -2532,7 +2528,7 @@ def execute_tailscale_set_ssh(enabled: bool) -> Dict[str, Any]:
     }
 
 
-def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8082) -> Dict[str, Any]:
+def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8082) -> dict[str, Any]:
     """Configures Tailscale Serve and Funnel proxy for ZettNAS Web Desktop."""
     import re
 
@@ -2591,7 +2587,7 @@ def execute_tailscale_set_serve(serve: bool, funnel: bool = False, port: int = 8
     }
 
 
-def execute_tailscale_reauth() -> Dict[str, Any]:
+def execute_tailscale_reauth() -> dict[str, Any]:
     """Forces Tailscale node re-authentication, returning interactive login URL."""
     import re
 
@@ -2615,7 +2611,7 @@ def execute_tailscale_reauth() -> Dict[str, Any]:
     }
 
 
-def _get_wireguard_status() -> Dict[str, Any]:
+def _get_wireguard_status() -> dict[str, Any]:
     """Inspects host WireGuard network interfaces, peers, and telemetry."""
     wg_info = {
         "installed": False,
@@ -2688,7 +2684,7 @@ def _get_wireguard_status() -> Dict[str, Any]:
     return wg_info
 
 
-def get_mesh_vpn_status() -> Dict[str, Any]:
+def get_mesh_vpn_status() -> dict[str, Any]:
     """
     Zero-Trust Mesh Hub detector:
     Queries Tailscale daemon status (via CLI, Docker container, or local socket) and WireGuard kernel interfaces.
@@ -2769,7 +2765,7 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
                     from datetime import datetime, timezone
 
                     exp_dt = datetime.fromisoformat(key_exp.replace("Z", "+00:00"))
-                    now_dt = datetime.now(timezone.utc)
+                    now_dt = datetime.now(UTC)
                     delta = (exp_dt - now_dt).days
                     key_days = max(0, delta)
                 except Exception:
@@ -2852,14 +2848,7 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
             ts_info["taildrop_files"] = taildrop_files
         except Exception as e:
             logger.debug(f"[Network] Tailscale status json parse error: {e}")
-    elif c_info.get("running"):
-        ts_info["installed"] = True
-        out_lower = out.lower()
-        if "logged out" in out_lower or "needslogin" in out_lower:
-            ts_info["backend_state"] = "NeedsLogin"
-        else:
-            ts_info["backend_state"] = "Stopped"
-    elif ts_bin and "failed to connect to local tailscaled" not in out.lower():
+    elif c_info.get("running") or ts_bin and "failed to connect to local tailscaled" not in out.lower():
         ts_info["installed"] = True
         out_lower = out.lower()
         if "logged out" in out_lower or "needslogin" in out_lower:
@@ -2879,10 +2868,10 @@ def get_mesh_vpn_status() -> Dict[str, Any]:
 
 
 def execute_tailscale_up(
-    auth_key: Optional[str] = None,
-    hostname: Optional[str] = None,
+    auth_key: str | None = None,
+    hostname: str | None = None,
     accept_routes: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Connects host to the Zero-Trust Tailscale mesh network."""
     c_info = _get_tailscale_container_info()
     if c_info.get("exists") and not c_info.get("running"):
@@ -2951,7 +2940,7 @@ def execute_tailscale_up(
     return {"status": "error", "code": code, "output": out or "Tailscale connection failed"}
 
 
-def execute_tailscale_down() -> Dict[str, Any]:
+def execute_tailscale_down() -> dict[str, Any]:
     """Disconnects host from the Zero-Trust Tailscale mesh network."""
     c_info = _get_tailscale_container_info()
     if c_info.get("exists"):
@@ -2982,11 +2971,11 @@ def execute_tailscale_down() -> Dict[str, Any]:
 
 
 def deploy_tailscale_container(
-    auth_key: Optional[str] = None,
-    hostname: Optional[str] = None,
+    auth_key: str | None = None,
+    hostname: str | None = None,
     accept_routes: bool = True,
-    state_dir: Optional[str] = None,
-) -> Dict[str, Any]:
+    state_dir: str | None = None,
+) -> dict[str, Any]:
     """
     1-Click turnkey provisioning of the official Tailscale Docker container
     with host network mode, NET_ADMIN caps, and persistent state storage.
@@ -3183,7 +3172,7 @@ def generate_wireguard_client_config(
     dns: str = "1.1.1.1",
     allowed_ips: str = "0.0.0.0/0, ::/0",
     keepalive: int = 25,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Synthesizes a ready-to-import WireGuard client configuration file."""
     priv, pub = generate_wireguard_keypair()
     conf = (
@@ -3215,7 +3204,7 @@ def get_ip_forwarding_status() -> bool:
     for p in ["/proc/sys/net/ipv4/ip_forward", os.path.join(HOST_PROC, "sys/net/ipv4/ip_forward")]:
         if os.path.isfile(p):
             try:
-                with open(p, "r") as f:
+                with open(p) as f:
                     return f.read().strip() == "1"
             except Exception:
                 pass
@@ -3240,7 +3229,7 @@ def set_ip_forwarding(enable: bool) -> bool:
         return False
 
 
-def toggle_wireguard_subnet_nat(enable: bool, iface: str = "wg0", out_iface: str = "eth0") -> Dict[str, Any]:
+def toggle_wireguard_subnet_nat(enable: bool, iface: str = "wg0", out_iface: str = "eth0") -> dict[str, Any]:
     """Toggles IP forwarding and iptables MASQUERADE NAT for WireGuard subnet routing."""
     fwd_ok = set_ip_forwarding(enable)
     action = "-A" if enable else "-D"
@@ -3257,7 +3246,7 @@ def toggle_wireguard_subnet_nat(enable: bool, iface: str = "wg0", out_iface: str
         return {"enabled": enable, "ip_forwarding": fwd_ok, "nat_rule": False, "error": str(e)}
 
 
-def get_active_listening_ports() -> List[Dict[str, Any]]:
+def get_active_listening_ports() -> list[dict[str, Any]]:
     """
     Inspects active listening TCP and UDP ports on the host system.
     Correlates ports with well-known services and active Docker containers.
@@ -3338,7 +3327,7 @@ def get_active_listening_ports() -> List[Dict[str, Any]]:
             p_file = os.path.join(base, "net", filename)
             if os.path.exists(p_file):
                 try:
-                    with open(p_file, "r") as f:
+                    with open(p_file) as f:
                         lines = f.readlines()
                     for line in lines[1:]:
                         parts = line.strip().split()

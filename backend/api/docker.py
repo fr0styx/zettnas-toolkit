@@ -6,15 +6,15 @@ import re
 import socket
 import struct
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.confirmations import require_confirmation
 from backend.config import logger
+from backend.confirmations import require_confirmation
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.models.schemas import DockerActionRequest
 
@@ -60,7 +60,7 @@ async def post_docker_container_action(container_id: str, req: DockerActionReque
 
 class DockerBulkActionRequest(BaseModel):
     action: str = Field(..., pattern="^(start|stop|restart|pause|unpause|delete)$")
-    container_ids: List[str] = Field(..., min_length=1, max_length=100)
+    container_ids: list[str] = Field(..., min_length=1, max_length=100)
     force: bool = False
 
 
@@ -318,10 +318,10 @@ async def stream_docker_container_logs(
 
 
 class DockerResourceUpdateRequest(BaseModel):
-    memory_mb: Optional[int] = None
-    nano_cpus: Optional[float] = None
-    cpu_shares: Optional[int] = None
-    restart_policy: Optional[str] = None
+    memory_mb: int | None = None
+    nano_cpus: float | None = None
+    cpu_shares: int | None = None
+    restart_policy: str | None = None
 
 
 @router.post("/docker/containers/{container_id}/resources", dependencies=[Depends(require_scope("containers:manage"))])
@@ -341,21 +341,21 @@ async def post_docker_container_resources(container_id: str, req: DockerResource
         )
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[Docker] Resource update failed for {container_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class PortMappingItem(BaseModel):
     container_port: int
-    host_port: Optional[int] = None
+    host_port: int | None = None
     proto: str = "tcp"
     host_ip: str = "0.0.0.0"
 
 
 class DockerPortRecreateRequest(BaseModel):
-    ports: List[PortMappingItem]
+    ports: list[PortMappingItem]
     keep_backup: bool = False
 
 
@@ -375,20 +375,20 @@ async def post_docker_container_ports(container_id: str, req: DockerPortRecreate
         )
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[Docker] Port recreate failed for {container_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class DockerContainerRecreateRequest(BaseModel):
-    name: Optional[str] = None
-    image: Optional[str] = None
-    env: Optional[List[str]] = None
-    binds: Optional[List[str]] = None
-    port_bindings: Optional[List[PortMappingItem]] = None
-    network_mode: Optional[str] = None
-    restart_policy: Optional[str] = None
+    name: str | None = None
+    image: str | None = None
+    env: list[str] | None = None
+    binds: list[str] | None = None
+    port_bindings: list[PortMappingItem] | None = None
+    network_mode: str | None = None
+    restart_policy: str | None = None
     pull_image: bool = False
     keep_backup: bool = False
     grace_period_seconds: float = 3.0
@@ -421,10 +421,10 @@ async def post_docker_container_recreate(container_id: str, req: DockerContainer
         )
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[Docker] Container recreate failed for {container_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/docker/updates/status", dependencies=[Depends(require_scope("containers:read", "system:view"))])
@@ -454,10 +454,10 @@ async def post_docker_container_update_image(container_id: str):
         res = await asyncio.to_thread(update_single_container, container_id)
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[Docker] Update image failed for {container_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -472,13 +472,13 @@ async def post_docker_updates_apply_all():
         return res
     except Exception as e:
         logger.error(f"[Docker] Batch update all failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class DockerUpdatePolicyRequest(BaseModel):
-    name: Optional[str] = None
-    policy: Optional[str] = "notify"  # "notify", "auto", "off"
-    policies: Optional[Dict[str, str]] = None
+    name: str | None = None
+    policy: str | None = "notify"  # "notify", "auto", "off"
+    policies: dict[str, str] | None = None
 
 
 @router.get(
@@ -510,15 +510,15 @@ async def post_docker_update_policies(req: DockerUpdatePolicyRequest):
         else:
             raise HTTPException(status_code=400, detail="Must provide container 'name' or 'policies' dictionary.")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[Docker] Failed setting update policy: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class StackSaveRequest(BaseModel):
     compose_yaml: str
-    env_content: Optional[str] = None
+    env_content: str | None = None
 
 
 class StackActionRequest(BaseModel):
@@ -537,7 +537,7 @@ async def get_docker_network_topology():
         return await asyncio.to_thread(docker_network_topology.get_network_topology)
     except Exception as e:
         logger.warning(f"[Docker] Network topology unavailable: {e}")
-        raise HTTPException(status_code=503, detail="Docker network data is unavailable.")
+        raise HTTPException(status_code=503, detail="Docker network data is unavailable.") from e
 
 
 @router.get(
@@ -789,10 +789,10 @@ async def delete_docker_container(
         )
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[Docker Cleanup] Failed to delete container {container_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get(
@@ -806,7 +806,7 @@ async def get_system_df():
         return await asyncio.to_thread(get_docker_system_df)
     except Exception as e:
         logger.error(f"[Docker Cleanup] Failed to get system df: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 class DockerPruneRequest(BaseModel):
@@ -819,7 +819,7 @@ class DockerPruneRequest(BaseModel):
 
 
 @router.post("/docker/system/prune", dependencies=[Depends(require_scope("containers:manage"))])
-async def post_system_prune(req: Optional[DockerPruneRequest] = None):
+async def post_system_prune(req: DockerPruneRequest | None = None):
     from backend.services.docker_cleanup import prune_docker_system
 
     payload = req or DockerPruneRequest()
@@ -836,4 +836,4 @@ async def post_system_prune(req: Optional[DockerPruneRequest] = None):
         return res
     except Exception as e:
         logger.error(f"[Docker Cleanup] Prune failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

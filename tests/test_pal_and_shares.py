@@ -167,19 +167,19 @@ def test_unraid_storage_adapter_observer_mode_invariants():
     # Destructive operations must raise PlatformCapabilityError
     try:
         adapter.create_pool("test", "btrfs", "raid1", ["/dev/sdc"], "/mnt/test")
-        assert False, "Should have raised PlatformCapabilityError"
+        raise AssertionError("Should have raised PlatformCapabilityError")
     except PlatformCapabilityError:
         pass
 
     try:
         adapter.destroy_pool("unraid_array")
-        assert False, "Should have raised PlatformCapabilityError"
+        raise AssertionError("Should have raised PlatformCapabilityError")
     except PlatformCapabilityError:
         pass
 
     try:
         adapter.create_share("test", "/mnt/user/test")
-        assert False, "Should have raised PlatformCapabilityError"
+        raise AssertionError("Should have raised PlatformCapabilityError")
     except PlatformCapabilityError:
         pass
 

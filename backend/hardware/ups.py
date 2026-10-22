@@ -11,7 +11,7 @@ import re
 import socket
 import subprocess
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 try:
     import fcntl
@@ -22,11 +22,11 @@ from backend.config import DATA_DIR, POOL_PATH, UPS_CONFIG_FILE, logger
 from backend.db import log_ups_event
 from backend.fsutil import atomic_write_json, read_json
 
-_CACHED_UPS: Dict[str, Any] = {}
+_CACHED_UPS: dict[str, Any] = {}
 _LAST_UPS_POLL = 0.0
 _UPS_CACHE_TTL = 3.0
 
-DEFAULT_UPS_CONFIG: Dict[str, Any] = {
+DEFAULT_UPS_CONFIG: dict[str, Any] = {
     "enabled": True,
     "mode": "auto",  # 'auto', 'nut_client', 'apcupsd_client', 'usb_hid', 'snmp'
     "host": "127.0.0.1",
@@ -68,7 +68,7 @@ KNOWN_UPS_VENDORS = {
 }
 
 
-def _detect_host_nut_config(custom_dirs: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+def _detect_host_nut_config(custom_dirs: list[str] | None = None) -> dict[str, Any] | None:
     """Inspects host /etc/nut configuration files (ups.conf, upsmon.conf)
     and automatically extracts configured UPS names, hosts, and monitors.
     """
@@ -85,7 +85,7 @@ def _detect_host_nut_config(custom_dirs: Optional[List[str]] = None) -> Optional
         ups_conf = os.path.join(nd, "ups.conf")
         if os.path.isfile(ups_conf):
             try:
-                with open(ups_conf, "r", encoding="utf-8", errors="replace") as f:
+                with open(ups_conf, encoding="utf-8", errors="replace") as f:
                     for line in f:
                         line_str = line.strip()
                         if line_str.startswith("[") and line_str.endswith("]"):
@@ -99,7 +99,7 @@ def _detect_host_nut_config(custom_dirs: Optional[List[str]] = None) -> Optional
         upsmon_conf = os.path.join(nd, "upsmon.conf")
         if os.path.isfile(upsmon_conf):
             try:
-                with open(upsmon_conf, "r", encoding="utf-8", errors="replace") as f:
+                with open(upsmon_conf, encoding="utf-8", errors="replace") as f:
                     for line in f:
                         line_str = line.strip()
                         if line_str.startswith("MONITOR"):
@@ -140,7 +140,7 @@ def _detect_host_nut_config(custom_dirs: Optional[List[str]] = None) -> Optional
     return None
 
 
-def load_ups_config() -> Dict[str, Any]:
+def load_ups_config() -> dict[str, Any]:
     """Loads persistent UPS configuration across multi-tier storage:
     1. Primary JSON state (UPS_CONFIG_FILE)
     2. SQLite WAL database app_config table
@@ -227,7 +227,7 @@ def load_ups_config() -> Dict[str, Any]:
     return cfg
 
 
-def mask_ups_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+def mask_ups_config(cfg: dict[str, Any]) -> dict[str, Any]:
     """Masks secret passwords before returning over API."""
     out = dict(cfg)
     if out.get("password"):
@@ -235,7 +235,7 @@ def mask_ups_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
-def save_ups_config(new_cfg: Dict[str, Any]) -> Dict[str, Any]:
+def save_ups_config(new_cfg: dict[str, Any]) -> dict[str, Any]:
     """Saves persistent UPS configuration safely across primary, database, and secondary backup tiers."""
     global _CACHED_UPS, _LAST_UPS_POLL
     current = load_ups_config()
@@ -293,7 +293,7 @@ def save_ups_config(new_cfg: Dict[str, Any]) -> Dict[str, Any]:
     return mask_ups_config(merged)
 
 
-def _get_docker_gateway() -> Optional[str]:
+def _get_docker_gateway() -> str | None:
     """Detects Docker bridge gateway (which points to the host) if running in container.
 
     Strictly validates that the gateway belongs to a private Docker bridge subnet (172.16.0.0/12)
@@ -314,9 +314,9 @@ def _get_docker_gateway() -> Optional[str]:
     return None
 
 
-def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: float = 1.0) -> Dict[str, str]:
+def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: float = 1.0) -> dict[str, str]:
     """Queries apcupsd NIS server via 2-byte length prefixed NIS protocol."""
-    out: Dict[str, str] = {}
+    out: dict[str, str] = {}
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(timeout)
@@ -346,7 +346,7 @@ def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: fl
     return out
 
 
-def _query_apcaccess_cli() -> Dict[str, str]:
+def _query_apcaccess_cli() -> dict[str, str]:
     for bin_path in ("/sbin/apcaccess", "/usr/sbin/apcaccess", "apcaccess"):
         try:
             r = subprocess.run([bin_path, "status"], capture_output=True, text=True, timeout=2.5)
@@ -366,12 +366,12 @@ def _query_nut_socket(
     host: str = "127.0.0.1",
     port: int = 3493,
     timeout: float = 1.5,
-    ups_name: Optional[str] = None,
-    username: Optional[str] = None,
-    password: Optional[str] = None,
-) -> Dict[str, str]:
+    ups_name: str | None = None,
+    username: str | None = None,
+    password: str | None = None,
+) -> dict[str, str]:
     """Queries Network UPS Tools (NUT) server natively over TCP port 3493 (zero subprocesses)."""
-    out: Dict[str, str] = {}
+    out: dict[str, str] = {}
     target_ups = ups_name or ""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -392,10 +392,10 @@ def _query_nut_socket(
 
             # Authenticate if credentials provided
             if username:
-                s.sendall(f"USERNAME {username}\n".encode("utf-8"))
+                s.sendall(f"USERNAME {username}\n".encode())
                 read_line()
             if password:
-                s.sendall(f"PASSWORD {password}\n".encode("utf-8"))
+                s.sendall(f"PASSWORD {password}\n".encode())
                 read_line()
 
             # If no UPS name provided, auto-discover first UPS via LIST UPS
@@ -418,7 +418,7 @@ def _query_nut_socket(
             if not target_ups:
                 target_ups = "ups"
 
-            s.sendall(f"LIST VAR {target_ups}\n".encode("utf-8"))
+            s.sendall(f"LIST VAR {target_ups}\n".encode())
 
             first_line = read_line()
             if first_line and first_line.startswith("ERR UNKNOWN-UPS"):
@@ -440,7 +440,7 @@ def _query_nut_socket(
                         break
                 if discovered_name:
                     target_ups = discovered_name
-                    s.sendall(f"LIST VAR {target_ups}\n".encode("utf-8"))
+                    s.sendall(f"LIST VAR {target_ups}\n".encode())
                     first_line = read_line()
 
             line = first_line
@@ -513,7 +513,7 @@ def _query_nut_socket(
     return out
 
 
-def _query_nut_cli(ups_name: str = "ups") -> Dict[str, str]:
+def _query_nut_cli(ups_name: str = "ups") -> dict[str, str]:
     for bin_path in ("/usr/bin/upsc", "/bin/upsc", "upsc"):
         try:
             r = subprocess.run([bin_path, ups_name], capture_output=True, text=True, timeout=2.5)
@@ -572,7 +572,7 @@ def _query_nut_cli(ups_name: str = "ups") -> Dict[str, str]:
     return {}
 
 
-def _parse_hid_report_descriptor(desc_bytes: bytes) -> Dict[Tuple[int, int], Tuple[int, int, int]]:
+def _parse_hid_report_descriptor(desc_bytes: bytes) -> dict[tuple[int, int], tuple[int, int, int]]:
     """
     Parses binary USB HID report descriptor into a mapping of (usage_page, usage) -> (report_id, report_size, report_count).
     Supports all standard HID Power Device (0x84) and Battery System (0x85) items.
@@ -582,8 +582,8 @@ def _parse_hid_report_descriptor(desc_bytes: bytes) -> Dict[Tuple[int, int], Tup
     report_id = 0
     report_size = 8
     report_count = 1
-    usages: List[Tuple[int, int]] = []
-    mapping: Dict[Tuple[int, int], Tuple[int, int, int]] = {}
+    usages: list[tuple[int, int]] = []
+    mapping: dict[tuple[int, int], tuple[int, int, int]] = {}
 
     while pos < len(desc_bytes):
         b = desc_bytes[pos]
@@ -624,13 +624,13 @@ def _parse_hid_report_descriptor(desc_bytes: bytes) -> Dict[Tuple[int, int], Tup
     return mapping
 
 
-def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
+def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
     """
     Directly queries local USB HID Power Devices via sysfs and /dev/hidraw ioctl.
     Supports WalleCube (04d8:d005 / OpenUPS), APC, CyberPower, Eaton, and standard USB HID UPS units.
     Does not require external daemons (apcupsd/nut) or third-party pip libraries.
     """
-    out: Dict[str, Any] = {}
+    out: dict[str, Any] = {}
 
     # Layer 1: Check Linux sysfs power_supply class (e.g. /sys/class/power_supply/* or /host/sys/class/power_supply/*)
     psy_roots = [p for p in ["/sys/class/power_supply", "/host/sys/class/power_supply"] if os.path.isdir(p)]
@@ -643,15 +643,15 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
                 type_file = os.path.join(node_dir, "type")
                 psy_type = ""
                 if os.path.isfile(type_file):
-                    with open(type_file, "r") as f:
+                    with open(type_file) as f:
                         psy_type = f.read().strip().upper()
                 if psy_type in ("UPS", "BATTERY") or "ups" in node.lower() or "battery" in node.lower():
 
-                    def _read_attr(name: str) -> Optional[str]:
-                        fp = os.path.join(node_dir, name)
+                    def _read_attr(name: str) -> str | None:
+                        fp = os.path.join(node_dir, name)  # noqa: B023
                         if os.path.isfile(fp):
                             try:
-                                with open(fp, "r") as f:
+                                with open(fp) as f:
                                     return f.read().strip()
                             except Exception:
                                 pass
@@ -718,7 +718,7 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
                         continue
 
                     vid, pid, hid_name = "", "", ""
-                    with open(uevent_file, "r") as f:
+                    with open(uevent_file) as f:
                         for line in f:
                             if line.startswith("HID_ID="):
                                 parts = line.strip().split("=")[1].split(":")
@@ -778,19 +778,19 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
                             with open(desc_file, "rb") as df:
                                 desc_data = df.read()
                             mapping = _parse_hid_report_descriptor(desc_data)
-                            reports_cache: Dict[int, Optional[bytearray]] = {}
+                            reports_cache: dict[int, bytearray | None] = {}
 
-                            def _get_feature_report(rid: int) -> Optional[bytearray]:
-                                if rid not in reports_cache:
+                            def _get_feature_report(rid: int) -> bytearray | None:
+                                if rid not in reports_cache:  # noqa: B023
                                     buf = bytearray(64)
                                     buf[0] = rid
                                     try:
                                         # _IOC(3, ord('H'), 0x07, 64) = 0xc0404807
-                                        fcntl.ioctl(fd, 0xC0404807, buf)
-                                        reports_cache[rid] = buf
+                                        fcntl.ioctl(fd, 0xC0404807, buf)  # noqa: B023
+                                        reports_cache[rid] = buf  # noqa: B023
                                     except Exception:
-                                        reports_cache[rid] = None
-                                return reports_cache[rid]
+                                        reports_cache[rid] = None  # noqa: B023
+                                return reports_cache[rid]  # noqa: B023
 
                             # 1. RemainingCapacity (0x85, 0x66)
                             if (0x85, 0x66) in mapping:
@@ -894,16 +894,16 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
                 v_f = os.path.join(d_path, "idVendor")
                 p_f = os.path.join(d_path, "idProduct")
                 if os.path.isfile(v_f) and os.path.isfile(p_f):
-                    with open(v_f, "r") as f:
+                    with open(v_f) as f:
                         vid = f.read().strip().lower()
-                    with open(p_f, "r") as f:
+                    with open(p_f) as f:
                         pid = f.read().strip().lower()
                     prod, mfr = "", ""
                     if os.path.isfile(os.path.join(d_path, "product")):
-                        with open(os.path.join(d_path, "product"), "r") as f:
+                        with open(os.path.join(d_path, "product")) as f:
                             prod = f.read().strip()
                     if os.path.isfile(os.path.join(d_path, "manufacturer")):
-                        with open(os.path.join(d_path, "manufacturer"), "r") as f:
+                        with open(os.path.join(d_path, "manufacturer")) as f:
                             mfr = f.read().strip()
 
                     is_ups = (
@@ -935,22 +935,22 @@ def _query_direct_usb(target_device: Optional[str] = None) -> Dict[str, Any]:
     return out
 
 
-def discover_ups_sources() -> List[Dict[str, Any]]:
+def discover_ups_sources() -> list[dict[str, Any]]:
     """Auto-discovers locally connected USB HID UPS devices and active LAN power daemons."""
-    candidates: List[Dict[str, Any]] = []
+    candidates: list[dict[str, Any]] = []
 
     # 1. Probe USB HID devices in sysfs (both container and host mounts)
     usb_devices = glob.glob("/sys/bus/usb/devices/*") + glob.glob("/host/sys/bus/usb/devices/*")
-    seen_ids: Set[str] = set()
+    seen_ids: set[str] = set()
 
     for dev_path in usb_devices:
         try:
             vendor_file = os.path.join(dev_path, "idVendor")
             product_file = os.path.join(dev_path, "idProduct")
             if os.path.isfile(vendor_file) and os.path.isfile(product_file):
-                with open(vendor_file, "r") as f:
+                with open(vendor_file) as f:
                     vid = f.read().strip().lower()
-                with open(product_file, "r") as f:
+                with open(product_file) as f:
                     pid = f.read().strip().lower()
 
                 dev_key = f"{vid}:{pid}"
@@ -960,13 +960,13 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
                 mfr = ""
                 mfr_file = os.path.join(dev_path, "manufacturer")
                 if os.path.isfile(mfr_file):
-                    with open(mfr_file, "r") as f:
+                    with open(mfr_file) as f:
                         mfr = f.read().strip()
 
                 prod_name = ""
                 prod_file = os.path.join(dev_path, "product")
                 if os.path.isfile(prod_file):
-                    with open(prod_file, "r") as f:
+                    with open(prod_file) as f:
                         prod_name = f.read().strip()
 
                 is_ups_vendor = vid in KNOWN_UPS_VENDORS
@@ -1004,7 +1004,7 @@ def discover_ups_sources() -> List[Dict[str, Any]]:
             t_file = os.path.join(p_dir, "type")
             psy_type = ""
             if os.path.isfile(t_file):
-                with open(t_file, "r") as f:
+                with open(t_file) as f:
                     psy_type = f.read().strip().upper()
             if (psy_type in ("UPS", "BATTERY") or "ups" in bname.lower()) and not any(
                 c.get("is_usb") for c in candidates
@@ -1102,7 +1102,7 @@ def test_ups_connection(
     ups_name: str = "",
     username: str = "",
     password: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Tests connection to a UPS daemon or Direct USB without modifying persistent configuration."""
     clean_mode = (mode or "auto").lower()
 
@@ -1170,7 +1170,7 @@ def test_ups_connection(
     if clean_port <= 0:
         clean_port = 3493 if clean_mode in ("nut_client", "nut") else 3551
 
-    raw: Dict[str, str] = {}
+    raw: dict[str, str] = {}
 
     if clean_mode in ("nut_client", "nut") or clean_port == 3493:
         raw = _query_nut_socket(
@@ -1210,7 +1210,7 @@ def test_ups_connection(
     }
 
 
-def run_ups_self_test() -> Dict[str, Any]:
+def run_ups_self_test() -> dict[str, Any]:
     """Issues battery diagnostics self-test command to the configured UPS and logs event."""
     cfg = load_ups_config()
     host = cfg.get("host", "127.0.0.1")
@@ -1228,18 +1228,18 @@ def run_ups_self_test() -> Dict[str, Any]:
                 s.settimeout(2.5)
                 s.connect((host, port))
                 if cfg.get("username"):
-                    s.sendall(f"USERNAME {cfg['username']}\n".encode("utf-8"))
+                    s.sendall(f"USERNAME {cfg['username']}\n".encode())
                     s.recv(1024)
                 if cfg.get("password"):
-                    s.sendall(f"PASSWORD {cfg['password']}\n".encode("utf-8"))
+                    s.sendall(f"PASSWORD {cfg['password']}\n".encode())
                     s.recv(1024)
-                s.sendall(f"INSTCMD {ups_name} test.battery.start.quick\n".encode("utf-8"))
+                s.sendall(f"INSTCMD {ups_name} test.battery.start.quick\n".encode())
                 resp = s.recv(1024).decode("utf-8", errors="replace")
                 if "OK" in resp:
                     test_executed = True
                     result_msg = "NUT quick battery self-test accepted."
                 else:
-                    s.sendall(f"INSTCMD {ups_name} test.battery.start\n".encode("utf-8"))
+                    s.sendall(f"INSTCMD {ups_name} test.battery.start\n".encode())
                     resp2 = s.recv(1024).decode("utf-8", errors="replace")
                     if "OK" in resp2:
                         test_executed = True
@@ -1298,7 +1298,7 @@ def run_ups_self_test() -> Dict[str, Any]:
     }
 
 
-def read_ups_status(force: bool = False) -> Dict[str, Any]:
+def read_ups_status(force: bool = False) -> dict[str, Any]:
     """Reads enriched real-time UPS telemetry across configured protocols."""
     global _CACHED_UPS, _LAST_UPS_POLL
     now = time.time()
@@ -1337,7 +1337,7 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     ups_pass = cfg.get("password", "")
 
     protocol = None
-    raw: Dict[str, Any] = {}
+    raw: dict[str, Any] = {}
 
     # 0. If configured for Direct USB mode (usb_hid)
     if ups_mode in ("usb_hid", "usb"):
@@ -1565,7 +1565,7 @@ def read_ups_status(force: bool = False) -> Dict[str, Any]:
     return status_obj
 
 
-def get_ups_diagnostic_telemetry() -> Dict[str, Any]:
+def get_ups_diagnostic_telemetry() -> dict[str, Any]:
     """Audits local USB HID devices, cgroup permissions, report descriptors, and active daemon."""
     audit = {
         "active_status": read_ups_status(force=False),

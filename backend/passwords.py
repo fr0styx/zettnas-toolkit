@@ -55,9 +55,7 @@ def is_legacy_hash(stored: str) -> bool:
     """True if stored is a legacy SHA-256 or scrypt hash (i.e. not Argon2id)."""
     if not stored:
         return False
-    if stored.startswith("$argon2id$") or stored.startswith("$argon2i$"):
-        return False
-    return True
+    return not (stored.startswith("$argon2id$") or stored.startswith("$argon2i$"))
 
 
 def needs_rehash(stored: str) -> bool:

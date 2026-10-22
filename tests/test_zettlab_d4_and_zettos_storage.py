@@ -15,8 +15,8 @@ from backend.hardware.chassis import ChassisEngine
 from backend.hardware.hal import PhysicalDiskRecord
 from backend.hardware.pal_storage import (
     GenericLinuxStorageAdapter,
-    PoolMember,
     PlatformType,
+    PoolMember,
     StoragePlatformDetector,
     ZettOSStorageAdapter,
 )

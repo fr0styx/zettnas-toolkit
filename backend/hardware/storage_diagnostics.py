@@ -14,7 +14,7 @@ import os
 import shutil
 import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from backend.config import HOST_PROC, POOL_PATH, logger
 from backend.db import db_session, get_latest_smart_test_result, query_smart_velocity
@@ -24,7 +24,7 @@ from backend.hardware.unraid import read_unraid_status
 from backend.state import Z_STATE
 
 
-def get_mounts_audit() -> List[Dict[str, Any]]:
+def get_mounts_audit() -> list[dict[str, Any]]:
     """
     Parses /proc/mounts and audits filesystem health, read-only/read-write flags,
     and storage capacity.
@@ -60,7 +60,7 @@ def get_mounts_audit() -> List[Dict[str, Any]]:
     }
 
     try:
-        with open(mounts_file, "r") as f:
+        with open(mounts_file) as f:
             for line in f:
                 parts = line.strip().split()
                 if len(parts) < 4:
@@ -105,7 +105,7 @@ def get_mounts_audit() -> List[Dict[str, Any]]:
     return mounts
 
 
-def get_diskstats_telemetry() -> List[Dict[str, Any]]:
+def get_diskstats_telemetry() -> list[dict[str, Any]]:
     """
     Reads /proc/diskstats for raw sector and I/O wait telemetry.
     """
@@ -120,7 +120,7 @@ def get_diskstats_telemetry() -> List[Dict[str, Any]]:
         return stats
 
     try:
-        with open(diskstats_file, "r") as f:
+        with open(diskstats_file) as f:
             for line in f:
                 parts = line.strip().split()
                 if len(parts) >= 14:
@@ -150,7 +150,7 @@ def get_diskstats_telemetry() -> List[Dict[str, Any]]:
     return stats
 
 
-def get_mdstat_summary() -> Optional[Dict[str, Any]]:
+def get_mdstat_summary() -> dict[str, Any] | None:
     """
     Reads /proc/mdstat if Linux Software RAID is active.
     """
@@ -161,7 +161,7 @@ def get_mdstat_summary() -> Optional[Dict[str, Any]]:
         return None
 
     try:
-        with open(mdstat_file, "r") as f:
+        with open(mdstat_file) as f:
             content = f.read().strip()
         lines = content.splitlines()
         return {
@@ -172,12 +172,12 @@ def get_mdstat_summary() -> Optional[Dict[str, Any]]:
         return {"error": str(e)}
 
 
-def _collect_smart_diagnostics(discovered_disks: List[Dict[str, Any]]) -> Dict[str, Any]:
+def _collect_smart_diagnostics(discovered_disks: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Queries persistent SQLite SMART history, linear regression velocity, and
     latest self-test executive reports without waking sleeping drive platters.
     """
-    smart_map: Dict[str, Any] = {}
+    smart_map: dict[str, Any] = {}
     cached_smart = getattr(Z_STATE, "cached_smart_data", {}) or {}
     active_tests = getattr(Z_STATE, "active_smart_tests", {}) or {}
 
@@ -192,7 +192,7 @@ def _collect_smart_diagnostics(discovered_disks: List[Dict[str, Any]]) -> Dict[s
                 is_standby = cached_health == "standby"
 
                 # 1. Latest metrics from smart_history SQLite table
-                metrics: Dict[str, Any] = {}
+                metrics: dict[str, Any] = {}
                 poh = 0
                 try:
                     row = conn.execute(
@@ -205,7 +205,7 @@ def _collect_smart_diagnostics(discovered_disks: List[Dict[str, Any]]) -> Dict[s
                     logger.debug(f"[DIAGNOSTICS] smart_history query failed for {dev}: {e}")
 
                 # 2. Linear regression degradation velocity
-                velocity: Dict[str, Any] = {}
+                velocity: dict[str, Any] = {}
                 try:
                     velocity = query_smart_velocity(dev, conn=conn)
                 except Exception as e:
@@ -248,7 +248,7 @@ def _collect_smart_diagnostics(discovered_disks: List[Dict[str, Any]]) -> Dict[s
     return smart_map
 
 
-def get_btrfs_allocation_breakdown(mounts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def get_btrfs_allocation_breakdown(mounts: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Parses 'btrfs filesystem df' for all mounted Btrfs filesystems to audit
     Data, Metadata, System, and GlobalReserve chunk allocation profiles.
@@ -268,7 +268,7 @@ def get_btrfs_allocation_breakdown(mounts: List[Dict[str, Any]]) -> List[Dict[st
                 timeout=2.0,
             )
             if r.returncode == 0 and r.stdout:
-                parsed_chunks: Dict[str, Any] = {}
+                parsed_chunks: dict[str, Any] = {}
                 for line in r.stdout.splitlines():
                     parts = line.strip().split(":", 1)
                     if len(parts) == 2:
@@ -288,7 +288,7 @@ def get_btrfs_allocation_breakdown(mounts: List[Dict[str, Any]]) -> List[Dict[st
     return btrfs_reports
 
 
-def are_all_pool_disks_sleeping(disks: Optional[List[Dict[str, Any]]] = None) -> bool:
+def are_all_pool_disks_sleeping(disks: list[dict[str, Any]] | None = None) -> bool:
     if not disks:
         return False
     hdds = [d for d in disks if not d.get("is_nvme", False) and not d.get("dev", "").startswith("nvme")]
@@ -297,7 +297,7 @@ def are_all_pool_disks_sleeping(disks: Optional[List[Dict[str, Any]]] = None) ->
     return all(d.get("standby", False) for d in hdds)
 
 
-def get_zpool_status_summary(disks: Optional[List[Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
+def get_zpool_status_summary(disks: list[dict[str, Any]] | None = None) -> dict[str, Any] | None:
     """
     Queries non-blocking ZFS pool status with strict 2.0s timeout to prevent hangs
     on corrupted or unresponsive OpenZFS pools.
@@ -350,7 +350,7 @@ def get_zpool_status_summary(disks: Optional[List[Dict[str, Any]]] = None) -> Op
         return {"error": str(e)}
 
 
-def get_recycle_bin_audit() -> Dict[str, Any]:
+def get_recycle_bin_audit() -> dict[str, Any]:
     """
     Audits FreeDesktop .trashinfo items and reclaimed space across common storage roots.
     """
@@ -390,7 +390,7 @@ def get_recycle_bin_audit() -> Dict[str, Any]:
     }
 
 
-def collect_storage_diagnostics() -> Dict[str, Any]:
+def collect_storage_diagnostics() -> dict[str, Any]:
     """
     Aggregates complete storage diagnostics without waking sleeping drives.
     """
@@ -417,8 +417,8 @@ def collect_storage_diagnostics() -> Dict[str, Any]:
     smart_diagnostics = _collect_smart_diagnostics(discovered)
 
     # 5. Platform Abstraction Layer (PAL) telemetry & Snapshots
-    pal_info: Dict[str, Any] = {"platform": "unknown"}
-    snapshots_list: List[Dict[str, Any]] = []
+    pal_info: dict[str, Any] = {"platform": "unknown"}
+    snapshots_list: list[dict[str, Any]] = []
     try:
         adapter = get_storage_platform()
         caps = adapter.get_capabilities().model_dump()

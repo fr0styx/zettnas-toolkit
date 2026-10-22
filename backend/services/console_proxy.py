@@ -7,7 +7,9 @@ Supports RFB binary frames for graphical consoles and ANSI text for serial PTY c
 import asyncio
 import os
 from typing import Optional
+
 from fastapi import WebSocket, WebSocketDisconnect
+
 from backend.config import logger
 
 
@@ -24,7 +26,7 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
                 timeout=timeout_sec,
             )
             break
-        except (OSError, asyncio.TimeoutError) as e:
+        except (TimeoutError, OSError) as e:
             if attempt < 7:
                 await asyncio.sleep(0.5)
             else:
@@ -107,7 +109,7 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                 timeout=timeout_sec,
             )
             break
-        except (OSError, asyncio.TimeoutError) as e:
+        except (TimeoutError, OSError) as e:
             if attempt < 7:
                 await asyncio.sleep(0.5)
             else:

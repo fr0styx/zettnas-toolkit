@@ -4,7 +4,7 @@ import os
 import platform
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from backend.config import (
     FAN_DISK_HOLD_SECS,
@@ -178,10 +178,10 @@ class ZettlabMmioFanController:
     OFF_FAN3_RPM = 6  # 16-bit big-endian tachometer (CPU Fan)
     OFF_FAN3_PWM = 8  # 8-bit PWM (0 = firmware auto, 58..183 = manual)
 
-    def __init__(self, dev_mem_path: Optional[str] = None):
+    def __init__(self, dev_mem_path: str | None = None):
         self._dev_path = dev_mem_path
-        self._fd: Optional[int] = None
-        self._mm: Optional[mmap.mmap] = None
+        self._fd: int | None = None
+        self._mm: mmap.mmap | None = None
         self._lock = threading.Lock()
         self._failed_previously = False
         self._last_failed_time = 0.0
@@ -190,7 +190,7 @@ class ZettlabMmioFanController:
         self._base_page = self.PHYS_BASE_ADDR & ~(self.PAGE_SIZE - 1)
         self._page_offset = self.PHYS_BASE_ADDR - self._base_page
 
-    def _get_candidate_paths(self) -> List[str]:
+    def _get_candidate_paths(self) -> list[str]:
         if self._dev_path:
             return [self._dev_path]
         return [
@@ -271,7 +271,7 @@ class ZettlabMmioFanController:
             return False
         return self._ensure_mapped()
 
-    def read_fans(self) -> List[int]:
+    def read_fans(self) -> list[int]:
         if not self._ensure_mapped():
             return []
         with self._lock:
@@ -321,7 +321,7 @@ class ZettlabMmioFanController:
                 self._fd = None
             self._failed_previously = False
 
-    def read_raw_registers(self) -> Optional[Dict[str, Any]]:
+    def read_raw_registers(self) -> dict[str, Any] | None:
         """Reads raw 16-byte EC register aperture at 0xFE0B0456 and decodes registers safely."""
         try:
             if not self._ensure_mapped():
@@ -354,17 +354,17 @@ class ZettlabMmioFanController:
             return None
 
 
-_mmio_controller: Optional[ZettlabMmioFanController] = None
+_mmio_controller: ZettlabMmioFanController | None = None
 
 
-def get_mmio_fan_controller() -> Optional[ZettlabMmioFanController]:
+def get_mmio_fan_controller() -> ZettlabMmioFanController | None:
     global _mmio_controller
     if _mmio_controller is None:
         _mmio_controller = ZettlabMmioFanController()
     return _mmio_controller
 
 
-def get_detailed_fan_telemetry() -> Dict[str, Any]:
+def get_detailed_fan_telemetry() -> dict[str, Any]:
     """Generates an enriched snapshot of fan controllers, hold timers, and Zero RPM state."""
     from backend.config import FAN_DISK_HOLD_SECS, FAN_STATE_FILE
     from backend.fsutil import read_json
@@ -442,7 +442,7 @@ def read_fans():
         Z_STATE.fan_driver_mode = "hwmon"
         for f in sorted(glob.glob(os.path.join(hw, "fan*_input"))):
             try:
-                with open(f, "r") as fp:
+                with open(f) as fp:
                     rpm = int(fp.read().strip() or 0)
                 fans.append(rpm)
             except Exception:
@@ -457,7 +457,7 @@ def read_fans():
             for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
                 for f in sorted(glob.glob(os.path.join(h, "fan*_input"))):
                     try:
-                        with open(f, "r") as fp:
+                        with open(f) as fp:
                             rpm = int(fp.read().strip() or 0)
                         if rpm > 0:
                             fans.append(rpm)
@@ -820,8 +820,8 @@ def failsafe_release_fans(reason="shutdown", lock=False):
 
 _calibration_lock = threading.Lock()
 _calibration_stop_event = threading.Event()
-_calibration_thread: Optional[threading.Thread] = None
-_calibration_state: Dict[str, Any] = {
+_calibration_thread: threading.Thread | None = None
+_calibration_state: dict[str, Any] = {
     "running": False,
     "current_pwm": 0,
     "progress_pct": 0,
@@ -833,13 +833,13 @@ _calibration_state: Dict[str, Any] = {
 }
 
 
-def get_acoustic_sweep_status() -> Dict[str, Any]:
+def get_acoustic_sweep_status() -> dict[str, Any]:
     """Returns the current state and results of the acoustic fan sweep calibration."""
     with _calibration_lock:
         return dict(_calibration_state)
 
 
-def stop_acoustic_sweep() -> Dict[str, Any]:
+def stop_acoustic_sweep() -> dict[str, Any]:
     """Stops the ongoing acoustic fan calibration sweep and restores automatic fan control."""
     global _calibration_thread
     _calibration_stop_event.set()
@@ -854,7 +854,7 @@ def stop_acoustic_sweep() -> Dict[str, Any]:
     return {"success": True, "message": "Acoustic sweep stopped"}
 
 
-def _run_acoustic_sweep_worker(step_duration: float, pwm_step: int, pwms: Optional[List[int]] = None):
+def _run_acoustic_sweep_worker(step_duration: float, pwm_step: int, pwms: list[int] | None = None):
     global _calibration_state
     _calibration_stop_event.clear()
 
@@ -895,7 +895,7 @@ def _run_acoustic_sweep_worker(step_duration: float, pwm_step: int, pwms: Option
             # Wait for stabilization (sampled across step_duration)
             sample_interval = min(1.0, max(0.02, step_duration / 5.0))
             deadline = time.time() + step_duration
-            rpm_samples: List[List[int]] = []
+            rpm_samples: list[list[int]] = []
 
             while time.time() < deadline:
                 if _calibration_stop_event.is_set():
@@ -949,7 +949,7 @@ def _run_acoustic_sweep_worker(step_duration: float, pwm_step: int, pwms: Option
 
 def start_acoustic_sweep(
     step_duration: float = 5.0, pwm_step: int = 25, run_in_background: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Initiates an automated acoustic fan calibration sweep from FAN_MIN_PWM to FAN_MAX_PWM.
     """

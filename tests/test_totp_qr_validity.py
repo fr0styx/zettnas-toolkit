@@ -4,6 +4,7 @@ and Version 4-M QR Code SVG generation & Reed-Solomon interleaving.
 """
 
 import xml.etree.ElementTree as ET
+
 from backend.totp import (
     generate_qr_svg,
     generate_recovery_codes,

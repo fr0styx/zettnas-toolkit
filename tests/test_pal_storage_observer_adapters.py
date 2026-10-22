@@ -6,6 +6,7 @@ Ensures zero-risk non-intrusive telemetry, disarmed mutations, and platform dete
 
 import os
 from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
 
 from backend.hardware.pal_storage import (
@@ -19,7 +20,6 @@ from backend.hardware.pal_storage import (
     ZettOSStorageAdapter,
     get_storage_platform,
 )
-
 
 # ============================================================================
 # 1. Capability & Instantiation Verification
@@ -316,38 +316,38 @@ def test_ugos_is_storage_busy_and_scrub():
 
 def test_ugos_list_pools_with_mdadm():
     adapter = UgosStorageAdapter(pool_path="/volume1")
-    with patch.object(
-        adapter,
-        "_parse_mdstat",
-        return_value={
-            "md1": {
-                "device": "md1",
-                "state": "active",
-                "level": "raid5",
-                "members": ["sda3", "sdb3", "sdc3"],
-                "degraded": False,
-                "sync_action": None,
-                "progress_pct": 0.0,
-            }
-        },
-    ):
-        with patch.object(
+    with (
+        patch.object(
+            adapter,
+            "_parse_mdstat",
+            return_value={
+                "md1": {
+                    "device": "md1",
+                    "state": "active",
+                    "level": "raid5",
+                    "members": ["sda3", "sdb3", "sdc3"],
+                    "degraded": False,
+                    "sync_action": None,
+                    "progress_pct": 0.0,
+                }
+            },
+        ),
+        patch.object(
             adapter,
             "_parse_mounts",
             return_value=[{"device": "/dev/md1", "mountpoint": "/volume1", "fstype": "btrfs", "options": "rw"}],
-        ):
-            with patch("os.path.exists", return_value=True):
-                with patch(
-                    "shutil.disk_usage", return_value=MagicMock(total=10000000000, used=4000000000, free=6000000000)
-                ):
-                    pools = adapter.list_pools()
-                    assert len(pools) >= 1
-                    vol1 = next((p for p in pools if "volume1" in p.id), None)
-                    assert vol1 is not None
-                    assert vol1.fs_type == "btrfs"
-                    assert vol1.fs_profile == "raid5"
-                    assert vol1.parity_protected is True
-                    assert vol1.status == "HEALTHY"
+        ),
+        patch("os.path.exists", return_value=True),
+        patch("shutil.disk_usage", return_value=MagicMock(total=10000000000, used=4000000000, free=6000000000)),
+    ):
+        pools = adapter.list_pools()
+        assert len(pools) >= 1
+        vol1 = next((p for p in pools if "volume1" in p.id), None)
+        assert vol1 is not None
+        assert vol1.fs_type == "btrfs"
+        assert vol1.fs_profile == "raid5"
+        assert vol1.parity_protected is True
+        assert vol1.status == "HEALTHY"
 
 
 # ============================================================================

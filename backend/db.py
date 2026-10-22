@@ -1,10 +1,10 @@
 import json
 import os
 import sqlite3
-import time
 import threading
+import time
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from backend.config import DB_PATH, logger
 
@@ -408,7 +408,7 @@ def query_copy_history(limit: int = 50):
         return []
 
 
-def compute_linear_regression_slope(x_vals: List[float], y_vals: List[float]) -> Tuple[float, float]:
+def compute_linear_regression_slope(x_vals: list[float], y_vals: list[float]) -> tuple[float, float]:
     """
     Computes closed-form least-squares linear regression slope and R^2.
     Returns (slope, r_squared).
@@ -421,7 +421,7 @@ def compute_linear_regression_slope(x_vals: List[float], y_vals: List[float]) ->
     sum_x = sum(x_vals)
     sum_y = sum(y_vals)
     sum_xx = sum(x * x for x in x_vals)
-    sum_xy = sum(x * y for x, y in zip(x_vals, y_vals))
+    sum_xy = sum(x * y for x, y in zip(x_vals, y_vals, strict=False))
 
     denom = n * sum_xx - sum_x * sum_x
     if abs(denom) < 1e-9:
@@ -435,7 +435,7 @@ def compute_linear_regression_slope(x_vals: List[float], y_vals: List[float]) ->
     if ss_tot < 1e-9:
         return 0.0, 1.0 if abs(slope) < 1e-9 else 0.0
 
-    ss_res = sum((y - (intercept + slope * x)) ** 2 for x, y in zip(x_vals, y_vals))
+    ss_res = sum((y - (intercept + slope * x)) ** 2 for x, y in zip(x_vals, y_vals, strict=False))
     r_squared = max(0.0, min(1.0, 1.0 - (ss_res / ss_tot)))
 
     return round(slope, 5), round(r_squared, 4)
@@ -479,8 +479,8 @@ def log_smart_test_result(
     passed: bool,
     duration_sec: float = 0.0,
     power_on_hours: int = 0,
-    temp_start: Optional[float] = None,
-    temp_end: Optional[float] = None,
+    temp_start: float | None = None,
+    temp_end: float | None = None,
     lba_first_error: str = "-",
     model: str = "",
     serial: str = "",
@@ -488,7 +488,7 @@ def log_smart_test_result(
     summary: str = "",
     recommendation: str = "",
     report_markdown: str = "",
-    raw_details: Optional[dict] = None,
+    raw_details: dict | None = None,
 ) -> int:
     """Logs a completed, failed, or aborted S.M.A.R.T. self-test into the persistent SQLite WAL database."""
     ts = int(time.time())
@@ -527,7 +527,7 @@ def log_smart_test_result(
         return 0
 
 
-def get_latest_smart_test_result(dev: str, conn: Optional[sqlite3.Connection] = None) -> Optional[dict]:
+def get_latest_smart_test_result(dev: str, conn: sqlite3.Connection | None = None) -> dict | None:
     """Returns the most recent self-test record for a specific drive."""
 
     def _query(c: sqlite3.Connection):
@@ -553,7 +553,7 @@ def get_latest_smart_test_result(dev: str, conn: Optional[sqlite3.Connection] = 
         return None
 
 
-def get_smart_test_history(dev: Optional[str] = None, limit: int = 20) -> List[dict]:
+def get_smart_test_history(dev: str | None = None, limit: int = 20) -> list[dict]:
     """Returns historical self-test runs across all drives or filtered by dev node."""
     try:
         with db_session() as conn:

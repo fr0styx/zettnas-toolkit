@@ -144,7 +144,7 @@ def _get_or_create_secret_key() -> str:
         return env_key
     if os.path.exists(SECRET_KEY_FILE):
         try:
-            with open(SECRET_KEY_FILE, "r", encoding="utf-8") as f:
+            with open(SECRET_KEY_FILE, encoding="utf-8") as f:
                 k = f.read().strip()
                 if k:
                     return k
@@ -271,9 +271,7 @@ def _is_container_id(val: str | None) -> bool:
     if not val:
         return True
     s = val.strip()
-    if 12 <= len(s) <= 64 and all(c in "0123456789abcdefABCDEF" for c in s):
-        return True
-    return False
+    return bool(12 <= len(s) <= 64 and all(c in "0123456789abcdefABCDEF" for c in s))
 
 
 _cached_server_hostname: str | None = None
@@ -322,7 +320,7 @@ def get_server_hostname() -> str:
     for u_path in unraid_paths:
         try:
             if os.path.exists(u_path):
-                with open(u_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(u_path, encoding="utf-8", errors="ignore") as f:
                     for line in f:
                         line = line.strip()
                         if line.startswith("NAME="):
@@ -338,7 +336,7 @@ def get_server_hostname() -> str:
     for h_path in ("/host/etc/hostname", "/etc/hostname"):
         try:
             if os.path.exists(h_path):
-                with open(h_path, "r", encoding="utf-8") as f:
+                with open(h_path, encoding="utf-8") as f:
                     content = f.read().strip()
                     if content and not _is_container_id(content):
                         _cached_server_hostname = content

@@ -297,7 +297,7 @@ def is_auxiliary_lcd_present() -> bool:
         v_path = os.path.join(base, "virtual_size")
         if os.path.exists(v_path):
             try:
-                with open(v_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(v_path, encoding="utf-8", errors="replace") as f:
                     parts = [int(x.strip()) for x in f.read().split(",") if x.strip()]
                     if len(parts) == 2 and parts[0] > 0 and parts[1] > 0:
                         w, h = max(parts), min(parts)

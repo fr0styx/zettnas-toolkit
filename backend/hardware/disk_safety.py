@@ -10,7 +10,6 @@ user explicitly agreed to erase it, carries no partition table or filesystem.
 import os
 import stat
 import subprocess
-from typing import Dict, List
 
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, logger
 
@@ -34,7 +33,7 @@ def _sys_block(name: str) -> str:
     return ""
 
 
-def _partitions(name: str) -> List[str]:
+def _partitions(name: str) -> list[str]:
     sb = _sys_block(name)
     if not sb:
         return []
@@ -44,8 +43,8 @@ def _partitions(name: str) -> List[str]:
         return []
 
 
-def _holders(name: str) -> List[str]:
-    found: List[str] = []
+def _holders(name: str) -> list[str]:
+    found: list[str] = []
     sb = _sys_block(name)
     if not sb:
         return found
@@ -58,9 +57,9 @@ def _holders(name: str) -> List[str]:
     return found
 
 
-def _mounted_sources() -> Dict[str, str]:
+def _mounted_sources() -> dict[str, str]:
     """kernel device name -> mount point, from the host's and this container's mount tables."""
-    out: Dict[str, str] = {}
+    out: dict[str, str] = {}
     for table in (os.path.join(HOST_PROC, "1", "mounts"), "/proc/self/mounts"):
         try:
             with open(table, encoding="utf-8", errors="replace") as f:
@@ -96,9 +95,9 @@ def _signature(path: str) -> str:
     return ""
 
 
-def check_disks(disks: List[str], allow_erase: bool = False) -> List[Dict[str, str]]:
+def check_disks(disks: list[str], allow_erase: bool = False) -> list[dict[str, str]]:
     """Returns one problem per disk that must not be formatted (empty list = all clear)."""
-    problems: List[Dict[str, str]] = []
+    problems: list[dict[str, str]] = []
     mounts = _mounted_sources()
     for disk in disks:
         real = os.path.realpath(disk)

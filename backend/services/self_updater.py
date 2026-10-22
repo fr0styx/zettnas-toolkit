@@ -12,12 +12,12 @@ import os
 import socket
 import sys
 import time
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger("zettnas.self_updater")
 
 
-def _docker_request(method: str, path: str, body: Optional[dict] = None, timeout: float = 30.0) -> Tuple[int, Any]:
+def _docker_request(method: str, path: str, body: dict | None = None, timeout: float = 30.0) -> tuple[int, Any]:
     """Helper for synchronous Docker Unix socket communication."""
     from backend.services.container_mutator import _docker_request as raw_req
 
@@ -28,7 +28,7 @@ HELPER_DATA_DIR = "/zettnas-data"
 APP_DATA_DIR = "/app/data"
 
 
-def _data_mount_source(container_name: str) -> Optional[str]:
+def _data_mount_source(container_name: str) -> str | None:
     """Host path mounted at /app/data in the target container, if any."""
     st, data = _docker_request("GET", f"/containers/{container_name}/json")
     if st != 200 or not isinstance(data, dict):
@@ -43,7 +43,7 @@ def spawn_self_updater(
     target_image: str = "ghcr.io/fr0styx/zettnas-toolkit:latest",
     container_name: str = "zettnas-toolkit",
     delay_seconds: float = 2.5,
-    restore_snapshot_id: Optional[str] = None,
+    restore_snapshot_id: str | None = None,
 ) -> bool:
     """
     Spawns an ephemeral detached helper container from target_image that will
@@ -110,9 +110,9 @@ def spawn_self_updater(
 def _rollback_container(
     target: str,
     rollback_name: str,
-    failed_id: Optional[str] = None,
-    snapshot: Optional[str] = None,
-    data_dir: Optional[str] = None,
+    failed_id: str | None = None,
+    snapshot: str | None = None,
+    data_dir: str | None = None,
 ):
     """Removes a failed new container (if any), restores the data snapshot and the previous container."""
     if failed_id:
@@ -146,15 +146,15 @@ HEALTH_TIMEOUT_SECS = 300
 STABLE_RUN_SECS = 20
 
 
-def _image_config(image_ref: str) -> Dict[str, Any]:
+def _image_config(image_ref: str) -> dict[str, Any]:
     st, data = _docker_request("GET", f"/images/{image_ref}/json")
     if st == 200 and isinstance(data, dict):
         return dict(data.get("Config") or {})
     return {}
 
 
-def _endpoint_settings(net: Dict[str, Any], container_id: str) -> Dict[str, Any]:
-    ep: Dict[str, Any] = {}
+def _endpoint_settings(net: dict[str, Any], container_id: str) -> dict[str, Any]:
+    ep: dict[str, Any] = {}
     aliases = [a for a in (net.get("Aliases") or []) if a and not container_id.startswith(a)]
     if aliases:
         ep["Aliases"] = aliases
@@ -170,14 +170,14 @@ def _endpoint_settings(net: Dict[str, Any], container_id: str) -> Dict[str, Any]
 
 
 def build_recreate_plan(
-    inspect_data: Dict[str, Any], old_image_cfg: Dict[str, Any], image: str
-) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    inspect_data: dict[str, Any], old_image_cfg: dict[str, Any], image: str
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     """Returns (create body, extra networks to connect after create)."""
     config = dict(inspect_data.get("Config") or {})
     host_config = dict(inspect_data.get("HostConfig") or {})
     container_id = str(inspect_data.get("Id") or "")
 
-    body: Dict[str, Any] = {k: v for k, v in config.items() if k != "Image"}
+    body: dict[str, Any] = {k: v for k, v in config.items() if k != "Image"}
     # Docker's default hostname is the container id; a new container gets its own.
     if body.get("Hostname") and container_id.startswith(str(body["Hostname"])):
         body.pop("Hostname")
@@ -203,7 +203,7 @@ def build_recreate_plan(
 
     networks = dict((inspect_data.get("NetworkSettings") or {}).get("Networks") or {})
     mode = str(host_config.get("NetworkMode") or "")
-    extra: Dict[str, Dict[str, Any]] = {}
+    extra: dict[str, dict[str, Any]] = {}
     if networks and not mode.startswith("container:") and mode not in ("host", "none"):
         primary = mode if mode in networks else next(iter(networks))
         body["NetworkingConfig"] = {"EndpointsConfig": {primary: _endpoint_settings(networks[primary], container_id)}}
@@ -213,10 +213,10 @@ def build_recreate_plan(
     return body, extra
 
 
-def _wait_until_healthy(cid: str) -> Tuple[bool, str]:
+def _wait_until_healthy(cid: str) -> tuple[bool, str]:
     """Healthy if the image healthcheck passes, or (no healthcheck) it keeps running."""
     deadline = time.time() + HEALTH_TIMEOUT_SECS
-    running_since: Optional[float] = None
+    running_since: float | None = None
     while time.time() < deadline:
         st, data = _docker_request("GET", f"/containers/{cid}/json")
         state = (data.get("State") or {}) if st == 200 and isinstance(data, dict) else {}
@@ -242,8 +242,8 @@ def apply_update_from_helper(
     target: str,
     image: str,
     delay: float = 2.5,
-    data_dir: Optional[str] = None,
-    restore_from: Optional[str] = None,
+    data_dir: str | None = None,
+    restore_from: str | None = None,
 ):
     """
     Executed inside the ephemeral helper container (started from the new image)

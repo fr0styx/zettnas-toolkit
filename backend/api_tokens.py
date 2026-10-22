@@ -30,7 +30,7 @@ def load_tokens() -> dict:
             mtime = os.stat(TOKENS_FILE).st_mtime_ns
             if mtime == _tokens_file_mtime_ns and _TOKENS_CACHE:
                 return _TOKENS_CACHE
-            with open(TOKENS_FILE, "r") as f:
+            with open(TOKENS_FILE) as f:
                 raw_data = json.load(f)
 
             # Auto-migrate legacy format where raw token was the dictionary key

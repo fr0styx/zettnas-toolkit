@@ -10,7 +10,8 @@ import fcntl
 import json
 import os
 import time
-from typing import Any, Callable, Dict, Tuple
+from collections.abc import Callable
+from typing import Any
 
 FREE_ATTEMPTS = 5
 MAX_LOCK_SECS = 15 * 60
@@ -23,7 +24,7 @@ def _path() -> str:
     return os.path.join(getattr(config, "DATA_DIR", "/app/data"), "auth_lockout.json")
 
 
-def _with_store(fn: Callable[[Dict[str, Any]], Tuple[Any, bool]]) -> Any:
+def _with_store(fn: Callable[[dict[str, Any]], tuple[Any, bool]]) -> Any:
     path = _path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path + ".lock", "a+") as lock_file:

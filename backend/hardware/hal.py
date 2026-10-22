@@ -9,7 +9,8 @@ import os
 import re
 import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from backend.config import HOST_DEV, HOST_SYS, OS_NVME, logger
@@ -19,21 +20,21 @@ class PhysicalDiskRecord(BaseModel):
     dev_name: str  # Kernel name: sda, nvme0n1, sdaa
     canonical_id: str  # Stable by-id identifier or fallback
     dev_path: str  # /dev/sda or /host/dev/sda
-    by_id_path: Optional[str] = None  # /dev/disk/by-id/ata-WDC_...
+    by_id_path: str | None = None  # /dev/disk/by-id/ata-WDC_...
     serial: str = "Unknown"
     model: str = "Unknown"
     vendor: str = "Generic"
-    wwn: Optional[str] = None
+    wwn: str | None = None
     transport: str = "sata"  # sata, nvme, sas, usb, pci
     controller_driver: str = "generic"  # ahci, mpt3sas, uas, nvme
     is_rotational: bool = True
     size_bytes: int = 0
     size_formatted: str = "0 GB"
     role: str = "data"  # os, data, cache, removable
-    enclosure_slot: Optional[int] = None
+    enclosure_slot: int | None = None
     smart_protocol: str = "sat"  # sat, nvme, scsi, sntrealtek, sntjmicron, sat,auto
     removable: bool = False
-    mountpoints: List[str] = Field(default_factory=list)
+    mountpoints: list[str] = Field(default_factory=list)
 
 
 class DiskDiscoveryHAL:
@@ -44,7 +45,7 @@ class DiskDiscoveryHAL:
     """
 
     _CACHE_TTL = 10.0  # seconds
-    _cached_disks: Optional[List[PhysicalDiskRecord]] = None
+    _cached_disks: list[PhysicalDiskRecord] | None = None
     _last_scan_time: float = 0.0
 
     @classmethod
@@ -64,9 +65,9 @@ class DiskDiscoveryHAL:
         return f"{size_bytes / 1e6:.0f} MB"
 
     @classmethod
-    def _read_by_id_links(cls) -> Dict[str, str]:
+    def _read_by_id_links(cls) -> dict[str, str]:
         """Maps kernel device name (sda, nvme0n1) to canonical persistent /dev/disk/by-id/ path."""
-        by_id_map: Dict[str, str] = {}
+        by_id_map: dict[str, str] = {}
         by_id_dir = os.path.join(cls._resolve_dev_root(), "disk", "by-id")
         if not os.path.isdir(by_id_dir):
             return by_id_map
@@ -129,13 +130,13 @@ class DiskDiscoveryHAL:
         return "sat"
 
     @classmethod
-    def discover_physical_disks(cls, force: bool = False) -> List[PhysicalDiskRecord]:
+    def discover_physical_disks(cls, force: bool = False) -> list[PhysicalDiskRecord]:
         now = time.time()
         if not force and cls._cached_disks is not None and (now - cls._last_scan_time) < cls._CACHE_TTL:
             return cls._cached_disks
 
         by_id_map = cls._read_by_id_links()
-        records: List[PhysicalDiskRecord] = []
+        records: list[PhysicalDiskRecord] = []
 
         # 1. Execute lsblk -J for comprehensive, structured hardware inspection
         lsblk_cmd = [
@@ -145,7 +146,7 @@ class DiskDiscoveryHAL:
             "-o",
             "NAME,KNAME,PATH,TYPE,TRAN,SUBSYSTEMS,ROTA,SIZE,MODEL,SERIAL,WWN,VENDOR,REV,MOUNTPOINT,HOTPLUG",
         ]
-        lsblk_disks: List[Dict[str, Any]] = []
+        lsblk_disks: list[dict[str, Any]] = []
         try:
             res = subprocess.run(lsblk_cmd, capture_output=True, text=True, timeout=8)
             if res.returncode == 0 and res.stdout.strip():
@@ -173,7 +174,7 @@ class DiskDiscoveryHAL:
                         sz_bytes = 0
                         if os.path.exists(size_file):
                             try:
-                                sz_bytes = int(open(size_file).read().strip()) * 512
+                                sz_bytes = int(open(size_file).read().strip()) * 512  # noqa: SIM115
                             except Exception:
                                 sz_bytes = 0
                         if sz_bytes == 0:
@@ -183,7 +184,7 @@ class DiskDiscoveryHAL:
                         is_rot = True
                         if os.path.exists(rota_file):
                             try:
-                                is_rot = open(rota_file).read().strip() == "1"
+                                is_rot = open(rota_file).read().strip() == "1"  # noqa: SIM115
                             except Exception:
                                 is_rot = not name.startswith("nvme")
                         lsblk_disks.append(
@@ -230,7 +231,7 @@ class DiskDiscoveryHAL:
                 continue
 
             # Discover all mountpoints recursively
-            mountpoints: List[str] = []
+            mountpoints: list[str] = []
             if d.get("mountpoint"):
                 mountpoints.append(d["mountpoint"])
             for child in d.get("children", []):

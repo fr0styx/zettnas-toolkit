@@ -10,7 +10,7 @@ spec.loader.exec_module(ern)
 
 
 def test_entry_keeps_subsections_and_stops_at_next_version():
-    text = open(os.path.join(ROOT, "CHANGELOG.md"), encoding="utf-8").read()
+    text = open(os.path.join(ROOT, "CHANGELOG.md"), encoding="utf-8").read()  # noqa: SIM115
     from backend import __version__
 
     tag = f"v{__version__}"

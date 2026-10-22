@@ -9,12 +9,13 @@ Tests for Batch 2 Architecture & Performance Hardening:
 import io
 import os
 import zipfile
+
 import pytest
 from fastapi.testclient import TestClient
 
+from backend.hardware.fans import cleanup_stale_fan_trackers
 from backend.main import app
 from backend.services.backup_engine import generate_backup_zip_stream, restore_backup_archive
-from backend.hardware.fans import cleanup_stale_fan_trackers
 from backend.state import Z_STATE
 
 

@@ -1,6 +1,6 @@
 import threading
 import time
-from typing import Any, Dict
+from typing import Any
 
 from backend.config import SMART_SCHEDULE_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -11,7 +11,7 @@ from backend.state import Z_STATE, add_event
 _SCHEDULER_STOP_EVENT = threading.Event()
 _SCHEDULER_THREAD: threading.Thread | None = None
 
-DEFAULT_SMART_SCHEDULE: Dict[str, Any] = {
+DEFAULT_SMART_SCHEDULE: dict[str, Any] = {
     "enabled": True,
     "short_test_interval": "monthly",  # "disabled", "daily", "weekly", "monthly"
     "short_test_day": 1,  # Day of month (1-28) or day of week (0=Mon, 6=Sun)
@@ -29,7 +29,7 @@ DEFAULT_SMART_SCHEDULE: Dict[str, Any] = {
 }
 
 
-def get_smart_schedule() -> Dict[str, Any]:
+def get_smart_schedule() -> dict[str, Any]:
     """Retrieve the current SMART testing schedule with defaults fallback."""
     cfg = read_json(SMART_SCHEDULE_FILE, {})
     if not isinstance(cfg, dict):
@@ -39,7 +39,7 @@ def get_smart_schedule() -> Dict[str, Any]:
     return merged
 
 
-def save_smart_schedule(cfg: Dict[str, Any]) -> Dict[str, Any]:
+def save_smart_schedule(cfg: dict[str, Any]) -> dict[str, Any]:
     """Persist updated SMART test and storage scrub schedule configuration."""
     current = get_smart_schedule()
 
@@ -127,11 +127,16 @@ def _run_scheduled_tasks():
 
         should_run_short = False
         if short_interval != "disabled" and (now - last_short > 86400):
-            if short_interval == "daily" and t.tm_hour == short_hour:
-                should_run_short = True
-            elif short_interval == "weekly" and t.tm_wday == (short_day % 7) and t.tm_hour == short_hour:
-                should_run_short = True
-            elif short_interval == "monthly" and t.tm_mday == short_day and t.tm_hour == short_hour:
+            if (
+                short_interval == "daily"
+                and t.tm_hour == short_hour
+                or short_interval == "weekly"
+                and t.tm_wday == (short_day % 7)
+                and t.tm_hour == short_hour
+                or short_interval == "monthly"
+                and t.tm_mday == short_day
+                and t.tm_hour == short_hour
+            ):
                 should_run_short = True
 
         if should_run_short:

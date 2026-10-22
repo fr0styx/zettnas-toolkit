@@ -1,6 +1,8 @@
 import time
+
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
+
 from backend.state import Z_STATE
 
 router = APIRouter(tags=["Metrics"])
@@ -117,7 +119,7 @@ def prometheus_metrics():
         )
 
     out = []
-    for metric_name, metric_lines in lines_by_metric.items():
+    for _metric_name, metric_lines in lines_by_metric.items():
         out.extend(metric_lines)
 
     return "\n".join(out) + "\n"
@@ -127,6 +129,7 @@ def prometheus_metrics():
 async def metrics_network_topology():
     """Network topology metrics and switch status."""
     import asyncio
+
     from backend.hardware.network import get_network_topology
 
     return await asyncio.to_thread(get_network_topology)

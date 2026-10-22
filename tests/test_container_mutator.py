@@ -1,10 +1,11 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from backend.services.container_mutator import (
     check_port_available,
-    update_container_resources,
     recreate_container_ports,
+    update_container_resources,
 )
 
 

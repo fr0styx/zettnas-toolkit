@@ -19,6 +19,8 @@ from backend.hardware.ups import (
     read_ups_status,
     run_ups_self_test,
     save_ups_config,
+)
+from backend.hardware.ups import (
     test_ups_connection as exec_test_ups_connection,
 )
 

@@ -6,16 +6,17 @@ attachments come from each container's NetworkSettings in /containers/json and
 network details (driver, subnet, gateway) from /networks.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Any, Optional
 
-DockerRequest = Callable[..., Tuple[int, Any]]
+DockerRequest = Callable[..., tuple[int, Any]]
 
 
 def _short(value: Any) -> str:
     return str(value or "")[:12]
 
 
-def _empty_network(name: str, network_id: str = "") -> Dict[str, Any]:
+def _empty_network(name: str, network_id: str = "") -> dict[str, Any]:
     return {
         "id": _short(network_id),
         "name": name,
@@ -28,9 +29,9 @@ def _empty_network(name: str, network_id: str = "") -> Dict[str, Any]:
     }
 
 
-def summarize_topology(networks_raw: Any, containers_raw: Any) -> Dict[str, Any]:
+def summarize_topology(networks_raw: Any, containers_raw: Any) -> dict[str, Any]:
     """Turns raw Docker API lists into {networks: [...], containers: [...]}."""
-    networks: Dict[str, Dict[str, Any]] = {}
+    networks: dict[str, dict[str, Any]] = {}
     for n in networks_raw if isinstance(networks_raw, list) else []:
         if not isinstance(n, dict) or not n.get("Name"):
             continue
@@ -49,7 +50,7 @@ def summarize_topology(networks_raw: Any, containers_raw: Any) -> Dict[str, Any]
         networks[n["Name"]] = net
 
     raw = [c for c in (containers_raw if isinstance(containers_raw, list) else []) if isinstance(c, dict)]
-    names_by_id: Dict[str, str] = {}
+    names_by_id: dict[str, str] = {}
     for c in raw:
         full_id = str(c.get("Id") or "")
         names = c.get("Names") or []
@@ -57,7 +58,7 @@ def summarize_topology(networks_raw: Any, containers_raw: Any) -> Dict[str, Any]
         names_by_id[full_id] = name
         names_by_id[_short(full_id)] = name
 
-    containers: List[Dict[str, Any]] = []
+    containers: list[dict[str, Any]] = []
     for c in raw:
         full_id = str(c.get("Id") or "")
         mode = str((c.get("HostConfig") or {}).get("NetworkMode") or "")
@@ -71,7 +72,7 @@ def summarize_topology(networks_raw: Any, containers_raw: Any) -> Dict[str, Any]
                 {"network": net_name, "ip": info.get("IPAddress") or "", "mac": info.get("MacAddress") or ""}
             )
 
-        shares_with: Optional[str] = None
+        shares_with: str | None = None
         if mode.startswith("container:"):
             target = mode.split(":", 1)[1]
             shares_with = names_by_id.get(target) or names_by_id.get(_short(target)) or target
@@ -105,7 +106,7 @@ def summarize_topology(networks_raw: Any, containers_raw: Any) -> Dict[str, Any]
     return {"networks": net_list, "containers": containers}
 
 
-def get_network_topology(docker_request: Optional[DockerRequest] = None) -> Dict[str, Any]:
+def get_network_topology(docker_request: DockerRequest | None = None) -> dict[str, Any]:
     if docker_request is None:
         from backend.services.container_mutator import _docker_request as docker_request
     nets_status, nets = docker_request("GET", "/networks", timeout=5.0)

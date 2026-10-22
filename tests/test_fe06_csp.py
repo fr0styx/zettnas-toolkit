@@ -28,7 +28,7 @@ def test_no_inline_event_handlers_left():
             continue
         for f in files:
             if f.endswith((".js", ".html")):
-                text = open(os.path.join(dirpath, f), encoding="utf-8").read()
+                text = open(os.path.join(dirpath, f), encoding="utf-8").read()  # noqa: SIM115
                 found += [f"{f}: {m}" for m in re.findall(r"\son[a-z]+=\"", text)]
     assert found == [], found
 

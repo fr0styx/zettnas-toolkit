@@ -1,6 +1,5 @@
 # ZettNAS Toolkit - System Diagnostics & Support Bundle Router
 import asyncio
-from datetime import datetime, timezone
 import io
 import json
 import os
@@ -8,7 +7,8 @@ import platform
 import sys
 import time
 import zipfile
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timezone
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
@@ -17,14 +17,14 @@ from backend import __version__
 from backend.auth import require_scope
 from backend.config import EVENTS_FILE, FAN_STATE_FILE, LED_STATE_FILE, logger
 from backend.fsutil import read_json
+from backend.hardware.docker_stats import read_docker_containers
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
 from backend.hardware.memory import read_mem
+from backend.hardware.pal_storage import get_storage_platform
 from backend.hardware.screen import get_screen_state
 from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name
-from backend.hardware.pal_storage import get_storage_platform
 from backend.hardware.ups import read_ups_status
-from backend.hardware.docker_stats import read_docker_containers
 from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
 from backend.state import Z_STATE
@@ -34,14 +34,14 @@ router = APIRouter(tags=["System Diagnostics"])
 _DIAGNOSTICS_LOCK = asyncio.Lock()
 
 
-def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
+def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
     t0 = time.time()
 
     # 1. System summary
     uptime_sec = 0.0
     try:
         if os.path.exists("/proc/uptime"):
-            with open("/proc/uptime", "r") as f:
+            with open("/proc/uptime") as f:
                 uptime_sec = float(f.read().split()[0])
         else:
             uptime_sec = round(time.time() - Z_STATE.boot_time, 1)
@@ -62,7 +62,7 @@ def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
 
     system_summary = {
         "toolkit_version": __version__,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "platform": {
             "system": platform.system(),
             "release": platform.release(),
@@ -251,7 +251,7 @@ def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
     executive_summary = {
         "status": exec_status,
         "toolkit_version": __version__,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "chassis": get_chassis_friendly_name(detect_chassis_model()),
         "platform": f"{platform.system()} {platform.release()}",
         "uptime_hours": round(uptime_sec / 3600, 1),
@@ -319,11 +319,11 @@ def _build_bundle_sync(payload_dict: Optional[Dict[str, Any]] = None) -> bytes:
     return zip_bytes
 
 
-def _build_summary_sync() -> Dict[str, Any]:
+def _build_summary_sync() -> dict[str, Any]:
     uptime_sec = 0.0
     try:
         if os.path.exists("/proc/uptime"):
-            with open("/proc/uptime", "r") as f:
+            with open("/proc/uptime") as f:
                 uptime_sec = float(f.read().split()[0])
         else:
             uptime_sec = round(time.time() - Z_STATE.boot_time, 1)
@@ -480,7 +480,7 @@ def _build_summary_sync() -> Dict[str, Any]:
 
     return {
         "toolkit_version": __version__,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "platform": f"{platform.system()} {platform.release()}",
         "chassis": chassis,
         "uptime_hours": round(uptime_sec / 3600, 1),
@@ -531,7 +531,7 @@ async def get_diagnostics_bundle():
     async with _DIAGNOSTICS_LOCK:
         zip_bytes = await asyncio.to_thread(_build_bundle_sync, None)
 
-    timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp_str = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     filename = f"zettnas_diagnostics_{timestamp_str}.zip"
     return Response(
         content=zip_bytes,
@@ -576,7 +576,7 @@ async def post_diagnostics_bundle(request: Request):
     async with _DIAGNOSTICS_LOCK:
         zip_bytes = await asyncio.to_thread(_build_bundle_sync, payload_dict)
 
-    timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    timestamp_str = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     filename = f"zettnas_diagnostics_{timestamp_str}.zip"
     return Response(
         content=zip_bytes,

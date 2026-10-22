@@ -5,33 +5,33 @@ Aggregates all modular sub-routers into api_router.
 
 from fastapi import APIRouter
 
-from backend.api.auth import router as auth_router
-from backend.api.fans import router as fans_router
-from backend.api.led import router as led_router
-from backend.api.notifications import router as notifications_router
-from backend.api.stats import router as stats_router
-from backend.api.system import router as system_router
-from backend.api.docker import router as docker_router
-from backend.api.catalog import router as catalog_router
-from backend.api.fs import router as fs_router
-from backend.api.diagnostics import router as diagnostics_router
-from backend.api.wallpapers import router as wallpapers_router
-from backend.api.metrics import router as metrics_router
-from backend.api.backup import router as backup_router
-from backend.api.chassis import router as chassis_router
-from backend.api.storage import router as storage_router
-from backend.api.webdav import router as webdav_router
-from backend.api.remotes import router as remotes_router
-from backend.api.samba import router as samba_router
-from backend.api.ups import router as ups_router
-from backend.api.network import router as network_router
-from backend.api.replication import router as replication_router
-from backend.api.media import router as media_router
-from backend.api.sftp import router as sftp_router
-from backend.api.vms import router as vms_router
-from backend.api.snmp import router as snmp_router
 from backend.api.ai_conversations import router as ai_conversations_router
+from backend.api.auth import router as auth_router
+from backend.api.backup import router as backup_router
 from backend.api.calendar import router as calendar_router
+from backend.api.catalog import router as catalog_router
+from backend.api.chassis import router as chassis_router
+from backend.api.diagnostics import router as diagnostics_router
+from backend.api.docker import router as docker_router
+from backend.api.fans import router as fans_router
+from backend.api.fs import router as fs_router
+from backend.api.led import router as led_router
+from backend.api.media import router as media_router
+from backend.api.metrics import router as metrics_router
+from backend.api.network import router as network_router
+from backend.api.notifications import router as notifications_router
+from backend.api.remotes import router as remotes_router
+from backend.api.replication import router as replication_router
+from backend.api.samba import router as samba_router
+from backend.api.sftp import router as sftp_router
+from backend.api.snmp import router as snmp_router
+from backend.api.stats import router as stats_router
+from backend.api.storage import router as storage_router
+from backend.api.system import router as system_router
+from backend.api.ups import router as ups_router
+from backend.api.vms import router as vms_router
+from backend.api.wallpapers import router as wallpapers_router
+from backend.api.webdav import router as webdav_router
 
 api_router = APIRouter()
 api_router.include_router(auth_router)

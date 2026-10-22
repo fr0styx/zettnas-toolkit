@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
-
 from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException
 
 from backend.auth import require_scope
 from backend.config import (
@@ -175,7 +175,7 @@ def apply_fan_preset(preset_name: str):
     "/fans/calibrate/acoustic",
     dependencies=[Depends(require_scope("hardware:fans", "hardware:*", "system:config"))],
 )
-def start_acoustic_calibration(req: Optional[FanAcousticSweepRequest] = None):
+def start_acoustic_calibration(req: FanAcousticSweepRequest | None = None):
     """
     Initiates an automated acoustic fan calibration sweep from 58 to 183 PWM
     at 5-second intervals to map RPM stability and chassis harmonic resonance.

@@ -4,9 +4,11 @@ Tests RFB VNC streaming, serial PTY console, ticket authorization, and timeout h
 """
 
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi import WebSocketDisconnect
+
 from backend.services.console_proxy import (
     stream_socket_to_websocket,
     stream_unix_socket_to_websocket,
@@ -43,11 +45,11 @@ async def test_stream_unix_socket_missing_sends_banner():
 
 def test_websocket_routes_unauthorized_without_ticket(client):
     # Attempting to connect without a ticket or with invalid ticket should close with code 1008
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         with client.websocket_connect("/api/vms/vm-123/console/ws?ticket=invalid_ticket") as ws:
             pass
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         with client.websocket_connect("/api/vms/vm-123/serial/ws?ticket=invalid_ticket") as ws:
             pass
 

@@ -7,7 +7,8 @@ connection testing, battery self-test execution, outage simulation, and event lo
 import asyncio
 import ipaddress
 import socket
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
@@ -53,8 +54,8 @@ class UpsConfigRequest(BaseModel):
     host: str = "127.0.0.1"
     port: int = 3551
     ups_name: str = "ups"
-    username: Optional[str] = ""
-    password: Optional[str] = ""
+    username: str | None = ""
+    password: str | None = ""
     shutdown_policy: str = Field(default="runtime_left", description="'runtime_left', 'battery_pct', 'timer'")
     shutdown_timer_sec: int = 300
     battery_threshold_pct: int = 20
@@ -70,9 +71,9 @@ class UpsTestConnectionRequest(BaseModel):
     host: str = "127.0.0.1"
     port: int = 3551
     mode: str = "auto"
-    ups_name: Optional[str] = ""
-    username: Optional[str] = ""
-    password: Optional[str] = ""
+    ups_name: str | None = ""
+    username: str | None = ""
+    password: str | None = ""
 
 
 class UpsSimulateRequest(BaseModel):
@@ -99,7 +100,7 @@ async def post_ups_configuration(req: UpsConfigRequest):
         saved = await asyncio.to_thread(save_ups_config, req.model_dump())
         return saved
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save UPS configuration: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save UPS configuration: {e}") from e
 
 
 @router.post("/ups/discover", dependencies=[Depends(require_scope("system:config"))])

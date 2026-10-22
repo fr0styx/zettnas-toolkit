@@ -306,9 +306,10 @@ def test_apply_zone_pwm_cpu_fan_cannot_zero():
 
 def test_start_and_get_acoustic_sweep():
     from unittest.mock import patch
+
     from backend.hardware.fans import (
-        start_acoustic_sweep,
         get_acoustic_sweep_status,
+        start_acoustic_sweep,
         stop_acoustic_sweep,
     )
 
@@ -339,7 +340,7 @@ def test_start_and_get_acoustic_sweep():
 
 
 def test_stop_acoustic_sweep():
-    from backend.hardware.fans import stop_acoustic_sweep, get_acoustic_sweep_status
+    from backend.hardware.fans import get_acoustic_sweep_status, stop_acoustic_sweep
 
     res = stop_acoustic_sweep()
     assert res["success"] is True
@@ -349,9 +350,10 @@ def test_stop_acoustic_sweep():
 
 def test_start_acoustic_sweep_background():
     from unittest.mock import patch
+
     from backend.hardware.fans import (
-        start_acoustic_sweep,
         get_acoustic_sweep_status,
+        start_acoustic_sweep,
         stop_acoustic_sweep,
     )
 
@@ -381,6 +383,7 @@ def test_start_acoustic_sweep_background():
 
 def test_acoustic_sweep_custom_pwms_formatting():
     from unittest.mock import patch
+
     from backend.hardware.fans import start_acoustic_sweep, stop_acoustic_sweep
 
     with (
@@ -405,8 +408,10 @@ def test_acoustic_sweep_custom_pwms_formatting():
 
 
 def test_acoustic_sweep_api_endpoints():
-    from fastapi.testclient import TestClient
     from unittest.mock import patch
+
+    from fastapi.testclient import TestClient
+
     from backend.main import app
 
     client = TestClient(app)

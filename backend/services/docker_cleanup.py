@@ -12,7 +12,7 @@ import json
 import re
 import socket
 import urllib.parse
-from typing import Any, Dict, List
+from typing import Any
 
 from backend.config import logger
 from backend.hardware import docker_stats
@@ -41,9 +41,7 @@ def is_self_container(cid: str, name: str = "") -> bool:
     clean_name = (name or "").lstrip("/").lower()
     if clean_name in ("zettnas-toolkit", "zettnas", "zettnas_toolkit"):
         return True
-    if self_hostname and cid and (cid.startswith(self_hostname) or self_hostname.startswith(cid)):
-        return True
-    return False
+    return bool(self_hostname and cid and (cid.startswith(self_hostname) or self_hostname.startswith(cid)))
 
 
 def destroy_container(
@@ -53,7 +51,7 @@ def destroy_container(
     remove_image: bool = False,
     timeout: float = 20.0,
     archive_data: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Destroys/deletes a Docker container via official Docker API:
     DELETE /containers/{id}?v={remove_volumes}&force={force}
@@ -154,7 +152,7 @@ def destroy_container(
     }
 
 
-def get_docker_system_df(timeout: float = 15.0) -> Dict[str, Any]:
+def get_docker_system_df(timeout: float = 15.0) -> dict[str, Any]:
     """
     Returns Docker disk usage statistics from GET /system/df:
     Breakdown of images, containers, local volumes, build cache, and reclaimable space.
@@ -238,7 +236,7 @@ def prune_docker_system(
     prune_networks: bool = True,
     prune_build_cache: bool = True,
     timeout: float = 60.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Executes selective Docker system prune actions:
     1. POST /containers/prune (removes stopped containers)
@@ -250,10 +248,10 @@ def prune_docker_system(
     Returns aggregated results with reclaimed space metrics.
     """
     reclaimed_bytes = 0
-    containers_deleted: List[str] = []
-    images_deleted: List[str] = []
-    volumes_deleted: List[str] = []
-    networks_deleted: List[str] = []
+    containers_deleted: list[str] = []
+    images_deleted: list[str] = []
+    volumes_deleted: list[str] = []
+    networks_deleted: list[str] = []
     build_caches_deleted: int = 0
 
     # 1. Prune stopped containers

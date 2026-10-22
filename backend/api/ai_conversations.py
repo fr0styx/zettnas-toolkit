@@ -10,7 +10,8 @@ Provides multi-user conversation management:
 - DELETE /api/ai/conversations: clear all threads
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -30,28 +31,28 @@ router = APIRouter(tags=["AI Conversation History"])
 
 
 class ConversationCreateRequest(BaseModel):
-    title: Optional[str] = Field(default="New Conversation", max_length=120)
-    model: Optional[str] = Field(default="", max_length=256)
-    id: Optional[str] = Field(default=None, max_length=64)
-    meta: Optional[Dict[str, Any]] = None
+    title: str | None = Field(default="New Conversation", max_length=120)
+    model: str | None = Field(default="", max_length=256)
+    id: str | None = Field(default=None, max_length=64)
+    meta: dict[str, Any] | None = None
 
 
 class ConversationUpdateRequest(BaseModel):
-    title: Optional[str] = Field(default=None, max_length=120)
-    is_pinned: Optional[bool] = None
-    is_archived: Optional[bool] = None
-    model: Optional[str] = Field(default=None, max_length=256)
-    title_customized: Optional[bool] = None
+    title: str | None = Field(default=None, max_length=120)
+    is_pinned: bool | None = None
+    is_archived: bool | None = None
+    model: str | None = Field(default=None, max_length=256)
+    title_customized: bool | None = None
 
 
 class ConversationMessageAppendRequest(BaseModel):
     role: str = Field(..., max_length=32)
     content: str = Field(..., min_length=1, max_length=20000)
-    telemetry: Optional[Dict[str, Any]] = None
-    tools_called: Optional[List[Dict[str, Any]]] = None
-    web_sources: Optional[List[Dict[str, Any]]] = None
-    citations: Optional[List[Dict[str, Any]]] = None
-    photos: Optional[List[Dict[str, Any]]] = None
+    telemetry: dict[str, Any] | None = None
+    tools_called: list[dict[str, Any]] | None = None
+    web_sources: list[dict[str, Any]] | None = None
+    citations: list[dict[str, Any]] | None = None
+    photos: list[dict[str, Any]] | None = None
 
 
 def _get_principal_uid(principal: AuthenticatedPrincipal) -> str:
@@ -68,11 +69,11 @@ def _get_principal_uid(principal: AuthenticatedPrincipal) -> str:
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
 async def api_list_conversations(
-    search: Optional[str] = Query(default=None),
+    search: str | None = Query(default=None),
     include_archived: bool = Query(default=False),
     limit: int = Query(default=60, ge=1, le=200),
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Lists conversations for the authenticated user."""
     uid = _get_principal_uid(principal)
     convs = list_conversations(
@@ -95,7 +96,7 @@ async def api_list_conversations(
 async def api_create_conversation(
     req: ConversationCreateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Creates a new conversation thread."""
     uid = _get_principal_uid(principal)
     conv = create_conversation(
@@ -119,7 +120,7 @@ async def api_create_conversation(
 async def api_get_conversation(
     conv_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Retrieves full conversation with ordered message stream."""
     uid = _get_principal_uid(principal)
     conv = get_conversation_with_messages(conv_id, uid)
@@ -140,7 +141,7 @@ async def api_update_conversation(
     conv_id: str,
     req: ConversationUpdateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Updates editable metadata on a conversation thread (title, pin, archive)."""
     uid = _get_principal_uid(principal)
     conv = update_conversation(
@@ -168,7 +169,7 @@ async def api_update_conversation(
 async def api_delete_conversation(
     conv_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Deletes a conversation thread and its message stream permanently."""
     uid = _get_principal_uid(principal)
     ok = delete_conversation(conv_id, uid)
@@ -187,7 +188,7 @@ async def api_delete_conversation(
 )
 async def api_clear_all_conversations(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Deletes all conversations belonging to the authenticated user."""
     uid = _get_principal_uid(principal)
     cnt = clear_all_conversations(uid)
@@ -202,7 +203,7 @@ async def api_append_conversation_message(
     conv_id: str,
     req: ConversationMessageAppendRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Appends an explicit message turn to a conversation thread."""
     uid = _get_principal_uid(principal)
     # Verify conversation ownership

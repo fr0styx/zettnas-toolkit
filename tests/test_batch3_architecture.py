@@ -8,18 +8,18 @@ import os
 import tempfile
 import time
 import zipfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.main import app
-from backend.services.backup_engine import generate_backup_zip_stream, save_backup_job, execute_backup_job
-from backend.services.app_backup import restore_app_backup
-from backend.services.scheduler import start_scheduler, stop_scheduler
 from backend.hardware.cpu import read_cpu_util
 from backend.hardware.memory import read_mem
-from backend.users_db import validate_user_session, _SESSION_CACHE, _SESSION_CACHE_LOCK
+from backend.main import app
+from backend.services.app_backup import restore_app_backup
+from backend.services.backup_engine import execute_backup_job, generate_backup_zip_stream, save_backup_job
+from backend.services.scheduler import start_scheduler, stop_scheduler
+from backend.users_db import _SESSION_CACHE, _SESSION_CACHE_LOCK, validate_user_session
 
 
 def test_auth_session_cache_and_debounced_activity(client, auth_headers):
@@ -137,10 +137,10 @@ def test_scheduler_lifecycle_and_tick():
 
 
 def test_router_decomposition_imports():
-    from backend.api.docker import router as docker_router
     from backend.api.catalog import router as catalog_router
-    from backend.api.fs import router as fs_router
     from backend.api.diagnostics import router as diagnostics_router
+    from backend.api.docker import router as docker_router
+    from backend.api.fs import router as fs_router
     from backend.api.system import router as system_router
 
     assert docker_router is not None

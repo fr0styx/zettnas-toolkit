@@ -1,16 +1,17 @@
 import os
 import socket
 import struct
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from backend.services.container_mutator import check_port_available, recreate_container_ports
+import pytest
+
 from backend.services.compose_synthesizer import (
-    synthesize_compose_spec,
     get_container_logs_chunk,
     is_secret_key,
     mask_secret_value,
+    synthesize_compose_spec,
 )
+from backend.services.container_mutator import check_port_available, recreate_container_ports
 
 
 def test_check_port_available_range():
@@ -45,9 +46,8 @@ def test_check_port_available_detects_host_proc_tcp(tmp_path):
             return real_open(fake_tcp, *args, **kwargs)
         return real_open(path, *args, **kwargs)
 
-    with patch("os.path.exists", side_effect=fake_exists):
-        with patch("builtins.open", side_effect=fake_open_fn):
-            assert not check_port_available(8080)
+    with patch("os.path.exists", side_effect=fake_exists), patch("builtins.open", side_effect=fake_open_fn):
+        assert not check_port_available(8080)
 
 
 def test_recreate_container_ports_self_protection():
@@ -121,7 +121,7 @@ def test_ci_workflow_has_valid_action_tags():
     ci_path = next((p for p in candidates if os.path.exists(p)), None)
     if not ci_path:
         pytest.skip(".github/workflows/ci.yml not accessible in container image")
-    with open(ci_path, "r") as f:
+    with open(ci_path) as f:
         content = f.read()
     assert "actions/checkout@" in content
     assert "actions/setup-python@" in content

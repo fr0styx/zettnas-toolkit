@@ -12,18 +12,19 @@ import json
 import os
 import tarfile
 import tempfile
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from backend.services.app_backup import (
     create_app_backup,
-    list_app_backups,
-    restore_app_backup,
     delete_app_backup,
     get_app_backup_path,
-    is_safe_tar_member,
-    save_app_backup_record,
     get_app_backups_registry,
+    is_safe_tar_member,
+    list_app_backups,
+    restore_app_backup,
+    save_app_backup_record,
 )
 from backend.services.docker_cleanup import destroy_container
 

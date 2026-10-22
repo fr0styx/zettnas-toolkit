@@ -7,7 +7,7 @@ revalidated.
 """
 
 import os
-from typing import Optional, Tuple
+from typing import Optional
 
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles
@@ -30,7 +30,7 @@ def accepted_encodings(accept_encoding: str) -> set:
     return out
 
 
-def pick_precompressed(full_path: str, accept_encoding: str) -> Optional[Tuple[str, str]]:
+def pick_precompressed(full_path: str, accept_encoding: str) -> tuple[str, str] | None:
     """(compressed path, encoding) for the best precompressed copy the client accepts."""
     ok = accepted_encodings(accept_encoding)
     for enc, suffix in _ENCODINGS:

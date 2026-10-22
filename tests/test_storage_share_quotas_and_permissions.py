@@ -4,18 +4,19 @@ SMART self-test spindown guards, and Docker update policies.
 """
 
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from backend.api.storage import StorageShareCreateRequest
-from backend.hardware.pal_storage import GenericLinuxStorageAdapter
-from backend.services.samba_engine import SambaShareConfig, SambaEngine
 from backend.hardware.disks import run_disk_smart_test
+from backend.hardware.pal_storage import GenericLinuxStorageAdapter
 from backend.services.docker_updates import (
+    _check_container_image_update,
+    get_container_update_policies,
     get_container_update_policy,
     set_container_update_policy,
-    get_container_update_policies,
-    _check_container_image_update,
 )
+from backend.services.samba_engine import SambaEngine, SambaShareConfig
 
 
 def test_storage_share_create_request_model():

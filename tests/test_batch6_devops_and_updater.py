@@ -4,6 +4,7 @@ Tests for Batch 6: DevOps, Image Slimming, Env Var Reconciliation & Atomic Self-
 
 import os
 from unittest.mock import MagicMock, call, patch
+
 import pytest
 
 from backend import config
@@ -50,7 +51,7 @@ def test_ci_workflow_tagging_rules():
     ci_file = os.path.join(repo_root, ".github", "workflows", "ci.yml")
     assert os.path.exists(ci_file)
 
-    with open(ci_file, "r", encoding="utf-8") as f:
+    with open(ci_file, encoding="utf-8") as f:
         content = f.read()
 
     assert "type=raw,value=edge,enable=${{ github.ref == 'refs/heads/main' }}" in content

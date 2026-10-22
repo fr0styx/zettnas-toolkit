@@ -5,22 +5,21 @@ plus Hyper-Backup 3-2-1 automated pipelines (snapshots + Rclone offsite sync)
 and background scheduling.
 """
 
-import json
 import io
+import json
 import os
+import sqlite3
+import tempfile
 import threading
 import time
 import uuid
 import zipfile
-from typing import Any, BinaryIO, Dict, List, Optional
+from typing import Any, BinaryIO, Optional
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
 from backend.services.rclone_engine import get_rclone_engine
-
-import tempfile
-import sqlite3
 
 # -------------------------------------------------------------------------
 # Configuration backup ("app-config" export): users, settings, shares, stacks,
@@ -154,8 +153,8 @@ def generate_backup_zip_stream(passphrase: str = "") -> Any:
     except Exception:
         SCHEMA_VERSIONS = {}
 
-    spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
-    files: List[str] = []
+    spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # noqa: SIM115
+    files: list[str] = []
     with zipfile.ZipFile(spool, "w", zipfile.ZIP_DEFLATED) as z:
         for root, dirs, names in os.walk(DATA_DIR):
             dirs[:] = [d for d in dirs if d not in HEAVY_BACKUP_DIRS and not os.path.islink(os.path.join(root, d))]
@@ -194,7 +193,7 @@ def generate_backup_zip_stream(passphrase: str = "") -> Any:
         return spool
     data = spool.read()
     spool.close()
-    out = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+    out = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # noqa: SIM115
     out.write(encrypt_backup(data, passphrase))
     out.seek(0)
     return out
@@ -217,12 +216,12 @@ def _check_archive_schema(z: "zipfile.ZipFile", names: set) -> None:
                 found = int(conn.execute("PRAGMA user_version").fetchone()[0])
                 conn.close()
             except sqlite3.Error:
-                raise ValueError(f"{name} in the backup is not a valid database")
+                raise ValueError(f"{name} in the backup is not a valid database") from None
         if found > known:
             raise ValueError(f"The backup's {name} comes from a newer ZettNAS (schema v{found}); update first")
 
 
-def restore_backup_archive(archive_file: BinaryIO, passphrase: str = "", snapshot: bool = True) -> Dict[str, Any]:
+def restore_backup_archive(archive_file: BinaryIO, passphrase: str = "", snapshot: bool = True) -> dict[str, Any]:
     """Validates and restores a configuration backup into DATA_DIR.
 
     Rejects zip-slip paths, symlinks, oversized archives and databases from a
@@ -306,7 +305,7 @@ def restore_backup_archive(archive_file: BinaryIO, passphrase: str = "", snapsho
 # =========================================================================
 
 
-def get_backup_jobs() -> List[Dict[str, Any]]:
+def get_backup_jobs() -> list[dict[str, Any]]:
     """Retrieves all scheduled hyper-backup jobs."""
     raw = read_json(BACKUP_JOBS_FILE, default=[])
     if isinstance(raw, list):
@@ -314,13 +313,13 @@ def get_backup_jobs() -> List[Dict[str, Any]]:
     return []
 
 
-def save_backup_job(job_data: Dict[str, Any]) -> Dict[str, Any]:
+def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
     """Creates or updates a scheduled hyper-backup job."""
     jobs = get_backup_jobs()
     job_id = job_data.get("id") or str(uuid.uuid4())[:8]
     now = time.time()
 
-    normalized: Dict[str, Any] = {
+    normalized: dict[str, Any] = {
         "id": job_id,
         "name": job_data.get("name", "Untitled Backup Task").strip() or "Untitled Backup Task",
         "source_pool": job_data.get("source_pool", "default"),
@@ -365,7 +364,7 @@ def delete_backup_job(job_id: str) -> bool:
     return False
 
 
-def get_backup_history(limit: int = 50) -> List[Dict[str, Any]]:
+def get_backup_history(limit: int = 50) -> list[dict[str, Any]]:
     """Retrieves recent backup run history."""
     history = read_json(BACKUP_HISTORY_FILE, default=[])
     if not isinstance(history, list):
@@ -374,7 +373,7 @@ def get_backup_history(limit: int = 50) -> List[Dict[str, Any]]:
     return history[:limit]
 
 
-def record_backup_history(record: Dict[str, Any]) -> None:
+def record_backup_history(record: dict[str, Any]) -> None:
     """Appends an execution record to the history log."""
     history = read_json(BACKUP_HISTORY_FILE, default=[])
     if not isinstance(history, list):
@@ -384,12 +383,12 @@ def record_backup_history(record: Dict[str, Any]) -> None:
     atomic_write_json(BACKUP_HISTORY_FILE, history)
 
 
-def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) -> List[str]:
+def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) -> list[str]:
     """Enforces rotation policy by deleting oldest snapshots exceeding retention_count."""
     if retention_count <= 0 or not subvol_name:
         return []
     pal = get_storage_platform()
-    pruned: List[str] = []
+    pruned: list[str] = []
     try:
         snapshots = pal.list_snapshots(pool_id)
         # Match snapshots targeting this subvolume
@@ -411,7 +410,7 @@ def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) ->
     return pruned
 
 
-def execute_backup_job(job_id: str) -> Dict[str, Any]:
+def execute_backup_job(job_id: str) -> dict[str, Any]:
     """Executes a hyper-backup pipeline: atomic snapshot + Rclone offsite sync + retention pruning."""
     jobs = get_backup_jobs()
     job = next((j for j in jobs if j.get("id") == job_id), None)
@@ -430,7 +429,7 @@ def execute_backup_job(job_id: str) -> Dict[str, Any]:
     job["last_status"] = "running"
     save_backup_job(job)
 
-    history_record: Dict[str, Any] = {
+    history_record: dict[str, Any] = {
         "id": str(uuid.uuid4())[:8],
         "job_id": job_id,
         "job_name": job.get("name", "Unnamed Job"),
@@ -574,7 +573,7 @@ def execute_backup_job(job_id: str) -> Dict[str, Any]:
 # =========================================================================
 
 _SCHEDULER_RUNNING = False
-_SCHEDULER_THREAD: Optional[threading.Thread] = None
+_SCHEDULER_THREAD: threading.Thread | None = None
 
 SCHEDULE_INTERVALS = {
     "hourly": 3600,

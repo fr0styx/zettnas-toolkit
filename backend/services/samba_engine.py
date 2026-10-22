@@ -11,7 +11,8 @@ import os
 import re
 import socket
 import subprocess
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, POOL_PATH, logger
@@ -29,13 +30,13 @@ class SambaShareConfig(BaseModel):
     guest_ok: bool = False  # guests only when asked for (SEC-06)
     browseable: bool = True
     timemachine: bool = False
-    timemachine_quota_gb: Optional[int] = None
-    quota_gb: Optional[int] = None
+    timemachine_quota_gb: int | None = None
+    quota_gb: int | None = None
     force_user: str = "nobody"
     force_group: str = "users"
-    valid_users: Optional[str] = None
-    read_list: Optional[str] = None
-    write_list: Optional[str] = None
+    valid_users: str | None = None
+    read_list: str | None = None
+    write_list: str | None = None
 
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
@@ -57,7 +58,7 @@ _FORBIDDEN_PREFIXES = (
 )
 
 
-def _allowed_share_roots() -> List[str]:
+def _allowed_share_roots() -> list[str]:
     from backend import config
 
     roots = [getattr(config, "POOL_PATH", "") or ""]
@@ -152,7 +153,7 @@ class SambaEngine:
             os.chmod(private_dir, 0o700)
         except OSError:
             pass
-        self._shares: Dict[str, SambaShareConfig] = {}
+        self._shares: dict[str, SambaShareConfig] = {}
         self._load_shares()
         self.sync_sidecar_policy()
         self._ensure_default_conf()
@@ -177,7 +178,7 @@ class SambaEngine:
 
     def can_run_sidecar(self) -> tuple[bool, str]:
         """Pre-flight check to verify if zettnas-samba sidecar can bind port 445."""
-        from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
+        from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
 
         platform = StoragePlatformDetector.detect()
         if platform in (
@@ -207,7 +208,7 @@ class SambaEngine:
         """Loads configured shares from JSON storage."""
         if os.path.isfile(SAMBA_SHARES_FILE):
             try:
-                with open(SAMBA_SHARES_FILE, "r", encoding="utf-8") as f:
+                with open(SAMBA_SHARES_FILE, encoding="utf-8") as f:
                     data = json.load(f)
                     if isinstance(data, list):
                         for item in data:
@@ -243,11 +244,11 @@ class SambaEngine:
         except Exception as e:
             logger.error(f"[SambaEngine] Failed writing shares JSON: {e}")
 
-    def list_shares(self) -> List[SambaShareConfig]:
+    def list_shares(self) -> list[SambaShareConfig]:
         """Returns all configured Samba shares."""
         return list(self._shares.values())
 
-    def get_share(self, name: str) -> Optional[SambaShareConfig]:
+    def get_share(self, name: str) -> SambaShareConfig | None:
         """Returns share by name."""
         return self._shares.get(name)
 
@@ -337,7 +338,7 @@ class SambaEngine:
         """Returns the current content of smb.conf."""
         if os.path.isfile(SAMBA_CONF_FILE):
             try:
-                with open(SAMBA_CONF_FILE, "r", encoding="utf-8") as f:
+                with open(SAMBA_CONF_FILE, encoding="utf-8") as f:
                     return f.read()
             except Exception:
                 pass
@@ -366,7 +367,7 @@ class SambaEngine:
                 pass
         return False
 
-    def check_sidecar(self) -> Dict[str, Any]:
+    def check_sidecar(self) -> dict[str, Any]:
         """Inspects Docker for running zettnas-samba sidecar container if docker socket is accessible."""
         docker_sock = "/var/run/docker.sock"
         if not os.path.exists(docker_sock):
@@ -422,7 +423,7 @@ class SambaEngine:
 
         return False
 
-    def sync_samba_user(self, username: str, password: Optional[str] = None, delete: bool = False) -> bool:
+    def sync_samba_user(self, username: str, password: str | None = None, delete: bool = False) -> bool:
         """
         Synchronizes a user into the Samba passdb database.
         When delete=True, removes the user from passdb.
@@ -531,7 +532,7 @@ class SambaEngine:
         sidecar_detected = sidecar_info.get("detected", False)
         is_sidecar_running = sidecar_detected and sidecar_info.get("state") == "running"
 
-        from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
+        from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
 
         platform = StoragePlatformDetector.detect()
         is_turnkey = platform in (
@@ -572,7 +573,7 @@ class SambaEngine:
         )
 
 
-_SAMBA_ENGINE_INSTANCE: Optional[SambaEngine] = None
+_SAMBA_ENGINE_INSTANCE: SambaEngine | None = None
 
 
 def get_samba_engine() -> SambaEngine:

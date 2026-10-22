@@ -15,7 +15,8 @@ import time
 import urllib.parse
 import urllib.request
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -31,12 +32,12 @@ router = APIRouter(tags=["Remote Storage"])
 class RemoteCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=64)
     type: str = Field(..., min_length=1, max_length=32)
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
 
 
 class RemoteTestRequest(BaseModel):
     type: str = Field(..., min_length=1, max_length=32)
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
 
 
 class RemoteMountRequest(BaseModel):
@@ -70,7 +71,7 @@ async def get_storage_providers():
     return engine.get_providers()
 
 
-def _resolve_masked_oauth_parameters(type_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
+def _resolve_masked_oauth_parameters(type_name: str, params: dict[str, Any]) -> dict[str, Any]:
     params = dict(params or {})
     tok = params.get("token")
     if isinstance(tok, str) and tok.startswith("********"):
@@ -119,9 +120,9 @@ async def create_cloud_remote(req: RemoteCreateRequest):
         _broadcast_remotes_change(req.name, "create")
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/remotes/test", dependencies=[Depends(require_scope("storage:admin", "storage:write"))])
@@ -132,7 +133,7 @@ async def test_candidate_remote(req: RemoteTestRequest):
     try:
         return await asyncio.to_thread(engine.test_remote_config, req.type, parameters)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/remotes/{name}/test", dependencies=[Depends(require_scope("storage:admin", "storage:write"))])
@@ -142,7 +143,7 @@ async def test_existing_remote(name: str):
     try:
         return await asyncio.to_thread(engine.test_remote, name)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete("/remotes/{name}", dependencies=[Depends(require_scope("storage:admin"))])
@@ -154,11 +155,11 @@ async def delete_cloud_remote(name: str):
         _broadcast_remotes_change(name, "delete")
         return res
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/remotes/{name}/mount", dependencies=[Depends(require_scope("storage:admin", "storage:write"))])
-async def mount_cloud_remote(name: str, req: Optional[RemoteMountRequest] = None):
+async def mount_cloud_remote(name: str, req: RemoteMountRequest | None = None):
     """Mounts remote cloud storage into /mnt/remotes/{name} via FUSE."""
     engine = get_rclone_engine()
     r_path = req.remote_path if req else ""
@@ -169,7 +170,7 @@ async def mount_cloud_remote(name: str, req: Optional[RemoteMountRequest] = None
         _broadcast_remotes_change(name, "mount")
         return res
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/remotes/{name}/unmount", dependencies=[Depends(require_scope("storage:admin", "storage:write"))])
@@ -181,7 +182,7 @@ async def unmount_cloud_remote(name: str):
         _broadcast_remotes_change(name, "unmount")
         return res
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/remotes/{name}/files", dependencies=[Depends(require_scope("storage:read", "storage:admin"))])
@@ -191,7 +192,7 @@ async def list_remote_files(name: str, path: str = ""):
     try:
         return await asyncio.to_thread(engine.list_remote_files, name, path)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/remotes/sync", dependencies=[Depends(require_scope("backup:write", "storage:write", "storage:admin"))])
@@ -210,9 +211,9 @@ async def start_remote_sync(req: RemoteSyncRequest):
             notify=req.notify,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/remotes/sync/jobs", dependencies=[Depends(require_scope("storage:read", "storage:admin"))])
@@ -234,8 +235,8 @@ async def get_sync_job_status(job_id: str):
 
 class OAuthStartRequest(BaseModel):
     provider_type: str = Field(..., pattern="^[a-zA-Z0-9_\\-]+$")
-    client_id: Optional[str] = None
-    client_secret: Optional[str] = None
+    client_id: str | None = None
+    client_secret: str | None = None
 
 
 class OAuthExchangeRequest(BaseModel):
@@ -243,7 +244,7 @@ class OAuthExchangeRequest(BaseModel):
     redirect_url: str
 
 
-_ACTIVE_OAUTH_SESSIONS: Dict[str, Dict[str, Any]] = {}
+_ACTIVE_OAUTH_SESSIONS: dict[str, dict[str, Any]] = {}
 
 
 def _cleanup_old_oauth_sessions(force_all: bool = False):
@@ -289,7 +290,7 @@ async def start_oauth_session(req: OAuthStartRequest):
             text=True,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start rclone authorize: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to start rclone authorize: {e}") from e
 
     auth_url = ""
     local_url = ""
@@ -403,7 +404,7 @@ def _resolve_onedrive_drive_details(token_json_str: str) -> tuple[str, str]:
     return "", "personal"
 
 
-async def _execute_code_exchange(session_id: str, redirect_url: str) -> Dict[str, Any]:
+async def _execute_code_exchange(session_id: str, redirect_url: str) -> dict[str, Any]:
     """Helper that forwards redirect code to rclone loopback listener and waits for token resolution."""
     session = _ACTIVE_OAUTH_SESSIONS.get(session_id)
     if not session:

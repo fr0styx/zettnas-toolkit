@@ -14,13 +14,14 @@ import threading
 import time
 import uuid
 import zipfile
-from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from collections.abc import Callable
+from enum import Enum, StrEnum
+from typing import Any, Optional
 
 from backend.config import logger
 
 
-class CollisionPolicy(str, Enum):
+class CollisionPolicy(StrEnum):
     MERGE = "merge"
     OVERWRITE = "overwrite"
     SKIP = "skip"
@@ -49,7 +50,7 @@ def _generate_unique_target(dst_path: str) -> str:
         counter += 1
 
 
-def check_transfer_conflicts(sources: List[str], destination_dir: str) -> Dict[str, Any]:
+def check_transfer_conflicts(sources: list[str], destination_dir: str) -> dict[str, Any]:
     """Pre-flight check: inspect whether any source items conflict with existing items in destination_dir."""
     conflicts = []
 
@@ -142,8 +143,8 @@ def merge_directory_tree(
     dst_dir: str,
     action: str = "copy",
     policy: CollisionPolicy = CollisionPolicy.MERGE,
-    stats: Optional[Dict[str, int]] = None,
-) -> Dict[str, int]:
+    stats: dict[str, int] | None = None,
+) -> dict[str, int]:
     """
     Recursively merges src_dir into dst_dir:
     - If policy == MERGE: creates subdirectories and transfers non-conflicting child items.
@@ -227,11 +228,11 @@ def merge_directory_tree(
 
 
 def execute_transfer(
-    sources: List[str],
+    sources: list[str],
     destination_dir: str,
     action: str = "copy",
     policy: str = "merge",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Main transfer entry point.
     Processes a list of source paths (files or directories) into destination_dir.
@@ -289,7 +290,7 @@ def execute_transfer(
     }
 
 
-class TransferTaskStatus(str, Enum):
+class TransferTaskStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     PAUSED = "paused"
@@ -303,7 +304,7 @@ class SpeedTracker:
 
     def __init__(self, window_seconds: float = 3.0):
         self.window_seconds = window_seconds
-        self.samples: collections.deque[Tuple[float, int]] = collections.deque()
+        self.samples: collections.deque[tuple[float, int]] = collections.deque()
 
     def update(self, current_bytes: int) -> float:
         now = time.time()
@@ -326,7 +327,7 @@ class TransferTask:
         self,
         task_id: str,
         action: str,
-        sources: List[str],
+        sources: list[str],
         destination: str,
         collision_policy: str = "merge",
     ):
@@ -343,19 +344,19 @@ class TransferTask:
         self.processed_files = 0
         self.current_file = ""
         self.speed_bps = 0.0
-        self.eta_seconds: Optional[float] = None
+        self.eta_seconds: float | None = None
         self.percent = 0.0
-        self.error: Optional[str] = None
+        self.error: str | None = None
         self.created_at = time.time()
-        self.started_at: Optional[float] = None
-        self.completed_at: Optional[float] = None
+        self.started_at: float | None = None
+        self.completed_at: float | None = None
 
         self._pause_event = threading.Event()
         self._pause_event.set()  # set = running, clear = paused
         self._cancel_event = threading.Event()  # set = cancelled
         self._last_notify_ts = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "owner": self.owner,
@@ -386,10 +387,10 @@ class TransferTaskManager:
     """
 
     def __init__(self):
-        self._tasks: Dict[str, TransferTask] = {}
+        self._tasks: dict[str, TransferTask] = {}
         self._history: collections.deque[TransferTask] = collections.deque(maxlen=100)
         self._lock = threading.Lock()
-        self._listeners: Set[Tuple[asyncio.Queue, asyncio.AbstractEventLoop]] = set()
+        self._listeners: set[tuple[asyncio.Queue, asyncio.AbstractEventLoop]] = set()
 
     def register_listener(self, queue: asyncio.Queue, loop: asyncio.AbstractEventLoop) -> None:
         with self._lock:
@@ -410,7 +411,7 @@ class TransferTaskManager:
             except Exception:
                 pass
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task(self, task_id: str) -> dict[str, Any] | None:
         with self._lock:
             task = self._tasks.get(task_id)
             if task:
@@ -420,12 +421,12 @@ class TransferTaskManager:
                     return t.to_dict()
         return None
 
-    def owner_of(self, task_id: str) -> Optional[str]:
+    def owner_of(self, task_id: str) -> str | None:
         with self._lock:
             task = self._tasks.get(task_id) or next((t for t in self._history if t.id == task_id), None)
         return None if task is None else (task.owner or "")
 
-    def list_tasks(self, owner: Optional[str] = None) -> List[Dict[str, Any]]:
+    def list_tasks(self, owner: str | None = None) -> list[dict[str, Any]]:
         """All tasks, or only those started by `owner` when given."""
         with self._lock:
             active = [t.to_dict() for t in self._tasks.values() if owner is None or t.owner == owner]
@@ -481,7 +482,7 @@ class TransferTaskManager:
 
     def submit_transfer(
         self,
-        sources: List[str],
+        sources: list[str],
         destination_dir: str,
         action: str = "copy",
         collision_policy: str = "merge",
@@ -511,7 +512,7 @@ class TransferTaskManager:
 
     def submit_archive_create(
         self,
-        sources: List[str],
+        sources: list[str],
         destination_dir: str,
         archive_name: str,
         fmt: str = "zip",
@@ -578,7 +579,7 @@ class TransferTaskManager:
         self._notify_update(task)
 
         # 1. Pre-scan sources for total bytes and file count
-        file_list: List[Tuple[str, str, int, bool]] = []  # (src_full, rel_path, size, is_dir)
+        file_list: list[tuple[str, str, int, bool]] = []  # (src_full, rel_path, size, is_dir)
         try:
             for src in task.sources:
                 if not os.path.lexists(src):
@@ -724,7 +725,7 @@ class TransferTaskManager:
         self._notify_update(task)
 
         # Collect files
-        file_list: List[Tuple[str, str, int]] = []
+        file_list: list[tuple[str, str, int]] = []
         for src in task.sources:
             if not os.path.lexists(src):
                 continue

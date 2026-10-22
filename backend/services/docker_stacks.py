@@ -13,7 +13,7 @@ import shlex
 import subprocess
 import tarfile
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 
 import yaml
 
@@ -32,7 +32,7 @@ from backend.services.compose_synthesizer import (
 DOCKER_SOCK = "/var/run/docker.sock"
 
 
-def _docker_request(method: str, path: str, body: Optional[bytes] = None, timeout: float = 6.0) -> Tuple[int, bytes]:
+def _docker_request(method: str, path: str, body: bytes | None = None, timeout: float = 6.0) -> tuple[int, bytes]:
     """Helper to query Docker Unix socket."""
     if not os.path.exists(DOCKER_SOCK):
         return 503, b'{"error": "Docker socket unavailable"}'
@@ -54,7 +54,7 @@ def _docker_request(method: str, path: str, body: Optional[bytes] = None, timeou
             conn.close()
 
 
-def _read_file_from_container(cid: str, container_path: str) -> Optional[str]:
+def _read_file_from_container(cid: str, container_path: str) -> str | None:
     """Reads a file from inside a container via the Docker socket archive API."""
     try:
         status, tar_bytes = _docker_request("GET", f"/containers/{cid}/archive?path={container_path}", timeout=6.0)
@@ -101,7 +101,7 @@ def _write_file_to_container(cid: str, dir_path: str, filename: str, content: st
         return False
 
 
-def _extract_depends_on_from_labels(labels: Dict[str, str]) -> List[str]:
+def _extract_depends_on_from_labels(labels: dict[str, str]) -> list[str]:
     """
     Extracts service dependency names from Docker Compose labels
     such as com.docker.compose.depends_on.
@@ -117,7 +117,7 @@ def _extract_depends_on_from_labels(labels: Dict[str, str]) -> List[str]:
                 return [str(k) for k in parsed.keys()]
         except Exception:
             pass
-    deps: List[str] = []
+    deps: list[str] = []
     for item in raw.split(","):
         part = item.strip().split(":")[0].strip()
         if part and part not in deps:
@@ -126,14 +126,14 @@ def _extract_depends_on_from_labels(labels: Dict[str, str]) -> List[str]:
 
 
 def build_stack_dependency_dag(
-    containers: List[Dict[str, Any]], compose_yaml: Optional[str] = None
-) -> Dict[str, Set[str]]:
+    containers: list[dict[str, Any]], compose_yaml: str | None = None
+) -> dict[str, set[str]]:
     """
     Builds a directed acyclic graph (DAG) mapping each service to its upstream dependencies.
     Dependencies are extracted from compose.yaml if available, or container labels.
     """
-    deps_map: Dict[str, Set[str]] = {}
-    service_names: Set[str] = set()
+    deps_map: dict[str, set[str]] = {}
+    service_names: set[str] = set()
 
     for c in containers:
         svc = c.get("service") or c.get("name")
@@ -167,7 +167,7 @@ def build_stack_dependency_dag(
             logger.debug(f"[DockerStacks] Could not parse compose_yaml for DAG: {e}")
 
     # Restrict dependencies to services actually part of this stack
-    clean_dag: Dict[str, Set[str]] = {}
+    clean_dag: dict[str, set[str]] = {}
     for svc in service_names:
         clean_dag[svc] = {d for d in deps_map.get(svc, set()) if d in service_names and d != svc}
 
@@ -175,8 +175,8 @@ def build_stack_dependency_dag(
 
 
 def topological_sort_stack_containers(
-    containers: List[Dict[str, Any]], compose_yaml: Optional[str] = None, reverse: bool = False
-) -> List[Dict[str, Any]]:
+    containers: list[dict[str, Any]], compose_yaml: str | None = None, reverse: bool = False
+) -> list[dict[str, Any]]:
     """
     Performs topological sort on containers based on service dependencies.
     If reverse=False: upstream dependencies come first (start/restart order).
@@ -190,8 +190,8 @@ def topological_sort_stack_containers(
 
     # In-degree calculation for Kahn's algorithm
     # u in dag[v] means v depends on u (u -> v). u is upstream, v is downstream.
-    in_degree: Dict[str, int] = {svc: 0 for svc in dag}
-    dependents: Dict[str, List[str]] = {svc: [] for svc in dag}
+    in_degree: dict[str, int] = {svc: 0 for svc in dag}
+    dependents: dict[str, list[str]] = {svc: [] for svc in dag}
 
     for v, upstreams in dag.items():
         in_degree[v] = len(upstreams)
@@ -200,7 +200,7 @@ def topological_sort_stack_containers(
 
     # Queue contains services with 0 in-degree (no upstream dependencies)
     queue = [svc for svc, deg in in_degree.items() if deg == 0]
-    ordered_services: List[str] = []
+    ordered_services: list[str] = []
 
     while queue:
         curr = queue.pop(0)
@@ -216,12 +216,12 @@ def topological_sort_stack_containers(
             ordered_services.append(svc)
 
     # Group containers by service
-    svc_to_containers: Dict[str, List[Dict[str, Any]]] = {}
+    svc_to_containers: dict[str, list[dict[str, Any]]] = {}
     for c in containers:
         svc = c.get("service") or c.get("name")
         svc_to_containers.setdefault(svc, []).append(c)
 
-    ordered_containers: List[Dict[str, Any]] = []
+    ordered_containers: list[dict[str, Any]] = []
     for svc in ordered_services:
         if svc in svc_to_containers:
             ordered_containers.extend(svc_to_containers[svc])
@@ -237,7 +237,7 @@ def topological_sort_stack_containers(
     return ordered_containers
 
 
-def list_all_stacks() -> List[Dict[str, Any]]:
+def list_all_stacks() -> list[dict[str, Any]]:
     """
     Discovers and groups all containers by their Compose / Orchestrator stack.
     """
@@ -250,7 +250,7 @@ def list_all_stacks() -> List[Dict[str, Any]]:
     except Exception:
         return []
 
-    stacks_map: Dict[str, Dict[str, Any]] = {}
+    stacks_map: dict[str, dict[str, Any]] = {}
 
     for c in containers:
         labels = c.get("Labels", {})
@@ -331,7 +331,7 @@ def list_all_stacks() -> List[Dict[str, Any]]:
     return results
 
 
-def get_stack_details(stack_name: str) -> Dict[str, Any]:
+def get_stack_details(stack_name: str) -> dict[str, Any]:
     """
     Returns full details for a stack:
     - Containers list with inspect data
@@ -356,7 +356,7 @@ def get_stack_details(stack_name: str) -> Dict[str, Any]:
     # 1. Attempt reading from host filesystem (e.g. /mnt/user/... or local path)
     if config_file and os.path.isfile(config_file):
         try:
-            with open(config_file, "r", encoding="utf-8") as f:
+            with open(config_file, encoding="utf-8") as f:
                 compose_yaml = f.read()
             has_real_file = True
             resolved_location_type = "host_fs"
@@ -368,7 +368,7 @@ def get_stack_details(stack_name: str) -> Dict[str, Any]:
             cand_path = os.path.join(working_dir, candidate)
             if os.path.isfile(cand_path):
                 try:
-                    with open(cand_path, "r", encoding="utf-8") as f:
+                    with open(cand_path, encoding="utf-8") as f:
                         compose_yaml = f.read()
                     config_file = cand_path
                     has_real_file = True
@@ -382,7 +382,7 @@ def get_stack_details(stack_name: str) -> Dict[str, Any]:
         cand_env = env_file if (env_file and os.path.isfile(env_file)) else os.path.join(working_dir, ".env")
         if os.path.isfile(cand_env):
             try:
-                with open(cand_env, "r", encoding="utf-8") as f:
+                with open(cand_env, encoding="utf-8") as f:
                     env_content = f.read()
             except Exception:
                 pass
@@ -451,8 +451,8 @@ def get_stack_details(stack_name: str) -> Dict[str, Any]:
 
 
 def _restore_masked_stack_secrets(
-    new_compose: str, new_env: Optional[str], old_compose: str, old_env: str
-) -> Tuple[str, Optional[str]]:
+    new_compose: str, new_env: str | None, old_compose: str, old_env: str
+) -> tuple[str, str | None]:
     """Restores unmasked secret values if the caller round-trips masked placeholders."""
     restored_env = new_env
     if new_env is not None and old_env:
@@ -494,7 +494,7 @@ def _restore_masked_stack_secrets(
     return restored_compose, restored_env
 
 
-def save_stack_config(stack_name: str, compose_yaml: str, env_content: Optional[str] = None) -> Dict[str, Any]:
+def save_stack_config(stack_name: str, compose_yaml: str, env_content: str | None = None) -> dict[str, Any]:
     """
     Validates and saves updated compose.yaml and .env for a stack.
     """
@@ -522,7 +522,7 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: Optional[
             # Backup
             bak_path = f"{config_file}.bak.{int(time.time())}"
             if os.path.exists(config_file):
-                with open(config_file, "r", encoding="utf-8") as orig:
+                with open(config_file, encoding="utf-8") as orig:
                     with open(bak_path, "w", encoding="utf-8") as bak:
                         bak.write(orig.read())
 
@@ -565,7 +565,7 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: Optional[
         return {"success": False, "error": f"Failed creating stack directory: {e}"}
 
 
-def deploy_stack(stack_name: str, compose_yaml: str, env_content: Optional[str] = None) -> Dict[str, Any]:
+def deploy_stack(stack_name: str, compose_yaml: str, env_content: str | None = None) -> dict[str, Any]:
     """
     Saves a Compose stack configuration and redeploys it.
     Used by App Backup restore and stack deployments.
@@ -581,7 +581,7 @@ def deploy_stack(stack_name: str, compose_yaml: str, env_content: Optional[str] 
     }
 
 
-def execute_dependency_ordered_rolling_update(stack_name: str, wait_timeout: float = 30.0) -> Dict[str, Any]:
+def execute_dependency_ordered_rolling_update(stack_name: str, wait_timeout: float = 30.0) -> dict[str, Any]:
     """
     Performs a dependency-ordered rolling update of containers in a stack.
     Services are restarted sequentially according to their topological DAG order,
@@ -646,7 +646,7 @@ def execute_dependency_ordered_rolling_update(stack_name: str, wait_timeout: flo
     }
 
 
-def execute_stack_action(stack_name: str, action: str) -> Dict[str, Any]:
+def execute_stack_action(stack_name: str, action: str) -> dict[str, Any]:
     """
     Executes an action across an entire stack:
     - restart: Restarts all containers in the stack in DAG dependency order

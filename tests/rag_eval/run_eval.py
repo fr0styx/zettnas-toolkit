@@ -13,19 +13,19 @@ import argparse
 import json
 import os
 import tempfile
-from typing import Dict, List, Optional
+from typing import Optional
 from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORPUS = os.path.join(HERE, "corpus")
 
 
-def load_queries() -> List[Dict]:
+def load_queries() -> list[dict]:
     with open(os.path.join(HERE, "queries.json"), encoding="utf-8") as f:
         return json.load(f)
 
 
-def _metrics(ranked: List[str], relevant: List[str]) -> Dict[str, float]:
+def _metrics(ranked: list[str], relevant: list[str]) -> dict[str, float]:
     rr = 0.0
     for i, p in enumerate(ranked[:10], start=1):
         if p in relevant:
@@ -38,7 +38,7 @@ def _metrics(ranked: List[str], relevant: List[str]) -> Dict[str, float]:
     }
 
 
-def evaluate(model: str = "zett_lexical_384d", dim: Optional[int] = None) -> Dict:
+def evaluate(model: str = "zett_lexical_384d", dim: int | None = None) -> dict:
     from backend.services.rag_engine import RagSearchEngine
 
     tmp = tempfile.mkdtemp(prefix="zettnas-rag-eval-")

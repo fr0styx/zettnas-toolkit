@@ -10,13 +10,13 @@ chat, which calls confirm_action().
 import secrets
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 MUTATING_TOOLS = frozenset({"control_docker_container", "set_fan_profile", "trigger_ai_sync"})
 PROPOSAL_TTL_SECS = 10 * 60
 _MAX_PENDING = 500
 
-_pending: Dict[str, Dict[str, Any]] = {}
+_pending: dict[str, dict[str, Any]] = {}
 _lock = threading.Lock()
 
 
@@ -24,7 +24,7 @@ def _principal_id(principal: Any) -> str:
     return str(getattr(principal, "user_id", "") or getattr(principal, "username", "") or "").strip().lower()
 
 
-def describe(tool: str, args: Dict[str, Any]) -> str:
+def describe(tool: str, args: dict[str, Any]) -> str:
     if tool == "control_docker_container":
         name = str(args.get("container") or args.get("container_name") or args.get("name") or "").strip()
         act = str(args.get("action") or "restart").strip().lower()
@@ -37,7 +37,7 @@ def describe(tool: str, args: Dict[str, Any]) -> str:
     return tool
 
 
-def propose_action(tool: str, args: Optional[Dict[str, Any]], principal: Any) -> Dict[str, Any]:
+def propose_action(tool: str, args: dict[str, Any] | None, principal: Any) -> dict[str, Any]:
     args = dict(args or {})
     summary = describe(tool, args)
     owner = _principal_id(principal)
@@ -64,7 +64,7 @@ def propose_action(tool: str, args: Optional[Dict[str, Any]], principal: Any) ->
     }
 
 
-def confirm_action(action_id: str, principal: Any) -> Dict[str, Any]:
+def confirm_action(action_id: str, principal: Any) -> dict[str, Any]:
     """Runs a proposed action once, for the user it was proposed to, within the TTL."""
     owner = _principal_id(principal)
     with _lock:

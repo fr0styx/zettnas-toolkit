@@ -6,7 +6,7 @@ Adheres strictly to AGENTS.md §1.4 Cryptographic Security and Homelab Architect
 
 import ipaddress
 import socket
-from typing import List, Tuple, Union
+from typing import Union
 from urllib.parse import urlparse
 
 # Cloud metadata addresses to strictly reject across all contexts
@@ -17,12 +17,12 @@ CLOUD_METADATA_IPS = {
 }
 
 
-def _resolve_host_ips(hostname: str) -> List[Union[ipaddress.IPv4Address, ipaddress.IPv6Address]]:
+def _resolve_host_ips(hostname: str) -> list[ipaddress.IPv4Address | ipaddress.IPv6Address]:
     """Resolves a hostname to a list of IP address objects."""
     ips = []
     try:
         addrinfo = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
-        for family, _, _, _, sockaddr in addrinfo:
+        for _family, _, _, _, sockaddr in addrinfo:
             ip_str = sockaddr[0]
             try:
                 ips.append(ipaddress.ip_address(ip_str))
@@ -33,18 +33,16 @@ def _resolve_host_ips(hostname: str) -> List[Union[ipaddress.IPv4Address, ipaddr
     return ips
 
 
-def is_loopback_or_metadata(ip: Union[ipaddress.IPv4Address, ipaddress.IPv6Address]) -> bool:
+def is_loopback_or_metadata(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     """Checks if an IP is loopback, unspecified, or cloud metadata."""
     if str(ip) in CLOUD_METADATA_IPS:
         return True
     if ip.is_loopback or ip.is_unspecified:
         return True
-    if ip.is_link_local:
-        return True
-    return False
+    return bool(ip.is_link_local)
 
 
-def validate_public_url(url: str) -> Tuple[bool, str]:
+def validate_public_url(url: str) -> tuple[bool, str]:
     """
     Validates outbound URLs for untrusted/public callers (e.g. AI Chat web browsing).
     Strictly blocks loopback, cloud metadata, link-local, and RFC-1918 private IPs.
@@ -84,7 +82,7 @@ def validate_public_url(url: str) -> Tuple[bool, str]:
     return True, ""
 
 
-def validate_notification_url(url: str) -> Tuple[bool, str]:
+def validate_notification_url(url: str) -> tuple[bool, str]:
     """
     Validates outbound URLs for Admin notifications (Apprise, webhooks, ntfy).
     Allows RFC-1918 private subnets for local homelab notifications (e.g. 192.168.x.x, Home Assistant).

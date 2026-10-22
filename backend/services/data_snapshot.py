@@ -16,7 +16,7 @@ import os
 import shutil
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger("zettnas.data_snapshot")
 
@@ -48,7 +48,7 @@ def snapshot_root(data_dir: str) -> str:
 
 
 def take_snapshot(
-    data_dir: str, label: str = "", extra: Optional[Dict[str, Any]] = None, protect: Optional[str] = None
+    data_dir: str, label: str = "", extra: dict[str, Any] | None = None, protect: str | None = None
 ) -> str:
     root = snapshot_root(data_dir)
     safe_label = "".join(c if c.isalnum() or c in ".-_" else "_" for c in label)[:40]
@@ -56,7 +56,7 @@ def take_snapshot(
     os.makedirs(dest, mode=0o700, exist_ok=True)
     os.chmod(root, 0o700)
 
-    files: List[str] = []
+    files: list[str] = []
     for name in sorted(os.listdir(data_dir)):
         src = os.path.join(data_dir, name)
         if os.path.islink(src) or not os.path.isfile(src) or not _wanted_file(name):
@@ -81,14 +81,14 @@ def take_snapshot(
     return dest
 
 
-def _prune(root: str, protect: Optional[str] = None) -> None:
+def _prune(root: str, protect: str | None = None) -> None:
     keep_name = os.path.basename(os.path.normpath(protect)) if protect else None
     snaps = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)) and d != keep_name)
     for old in snaps[:-KEEP]:
         shutil.rmtree(os.path.join(root, old), ignore_errors=True)
 
 
-def list_snapshots(data_dir: str) -> List[Dict[str, Any]]:
+def list_snapshots(data_dir: str) -> list[dict[str, Any]]:
     root = snapshot_root(data_dir)
     if not os.path.isdir(root):
         return []
@@ -104,7 +104,7 @@ def list_snapshots(data_dir: str) -> List[Dict[str, Any]]:
     return out
 
 
-def restore_snapshot(snapshot_dir: str, data_dir: str) -> List[str]:
+def restore_snapshot(snapshot_dir: str, data_dir: str) -> list[str]:
     """Copies a snapshot back over data_dir. Run only while ZettNAS is stopped."""
     with open(os.path.join(snapshot_dir, MANIFEST), encoding="utf-8") as f:
         files = json.load(f).get("files") or []

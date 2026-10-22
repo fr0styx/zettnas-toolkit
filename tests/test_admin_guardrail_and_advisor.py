@@ -1,16 +1,17 @@
 import os
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.main import app
 from backend.users_db import (
     create_user,
+    delete_user,
     disable_admin_user,
     get_user_by_username,
     init_users_db,
     update_user_profile,
-    delete_user,
 )
 
 

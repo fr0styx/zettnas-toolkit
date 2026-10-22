@@ -43,7 +43,7 @@ def _evaluate_smart_trends(dev_name, metrics):
     if _smart_trends is None:
         if os.path.exists(TRENDS_FILE):
             try:
-                with open(TRENDS_FILE, "r") as f:
+                with open(TRENDS_FILE) as f:
                     _smart_trends = json.load(f)
             except Exception:
                 _smart_trends = {}
@@ -365,16 +365,26 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
     crit_temp = NVME_CRITICAL_TEMP if is_nvme else 60
     warn_temp = NVME_WARN_TEMP if is_nvme else 50
     health = "ok"
-    if passed is False or pending > 0 or offline > 0 or nvme_media_err > 0:
-        health = "crit"
-    elif nvme_spare is not None and nvme_spare_thresh is not None and nvme_spare <= nvme_spare_thresh:
-        health = "crit"
-    elif temp is not None and temp >= crit_temp:
+    if (
+        passed is False
+        or pending > 0
+        or offline > 0
+        or nvme_media_err > 0
+        or nvme_spare is not None
+        and nvme_spare_thresh is not None
+        and nvme_spare <= nvme_spare_thresh
+        or temp is not None
+        and temp >= crit_temp
+    ):
         health = "crit"
     elif health != "crit":
-        if realloc > 0 or crc > 0 or (nvme_used is not None and nvme_used >= 80):
-            health = "warn"
-        elif temp is not None and temp >= warn_temp:
+        if (
+            realloc > 0
+            or crc > 0
+            or (nvme_used is not None and nvme_used >= 80)
+            or temp is not None
+            and temp >= warn_temp
+        ):
             health = "warn"
 
     metrics = {
@@ -534,16 +544,26 @@ def _parse_smart_text(text: str, is_nvme: bool):
     crit_temp = NVME_CRITICAL_TEMP if is_nvme else 60
     warn_temp = NVME_WARN_TEMP if is_nvme else 50
     health = "ok"
-    if passed is False or pending > 0 or offline > 0 or nvme_media_err > 0:
-        health = "crit"
-    elif nvme_spare is not None and nvme_spare_thresh is not None and nvme_spare <= nvme_spare_thresh:
-        health = "crit"
-    elif temp is not None and temp >= crit_temp:
+    if (
+        passed is False
+        or pending > 0
+        or offline > 0
+        or nvme_media_err > 0
+        or nvme_spare is not None
+        and nvme_spare_thresh is not None
+        and nvme_spare <= nvme_spare_thresh
+        or temp is not None
+        and temp >= crit_temp
+    ):
         health = "crit"
     elif health != "crit":
-        if realloc > 0 or crc > 0 or (nvme_used is not None and nvme_used >= 80):
-            health = "warn"
-        elif temp is not None and temp >= warn_temp:
+        if (
+            realloc > 0
+            or crc > 0
+            or (nvme_used is not None and nvme_used >= 80)
+            or temp is not None
+            and temp >= warn_temp
+        ):
             health = "warn"
     metrics = {
         "realloc": realloc,
@@ -1422,11 +1442,11 @@ def generate_smart_test_report_markdown(
     serial: str = "Unknown",
     duration_sec: float = 0.0,
     power_on_hours: int = 0,
-    temp_start: Optional[float] = None,
-    temp_end: Optional[float] = None,
+    temp_start: float | None = None,
+    temp_end: float | None = None,
     lba_first_error: str = "-",
     is_nvme: bool = False,
-    metrics: Optional[dict] = None,
+    metrics: dict | None = None,
     recommendation: str = "",
 ) -> str:
     """Compiles an executive diagnostic report in clean GitHub-flavored markdown."""

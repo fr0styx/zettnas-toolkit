@@ -15,7 +15,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from PIL import Image, ImageDraw
 
 from backend.auth import AuthenticatedPrincipal
@@ -899,7 +898,7 @@ def test_conversational_nlg_kim_jong_un_education_no_truncation():
       2. NEVER produces chopped/truncated fragments like 'studied at the Int [1]'.
       3. Produces a fluent conversational answer with complete grammatical sentences.
     """
-    from backend.services.ai_chat_agent import run_agentic_chat, _clean_complete_snippet
+    from backend.services.ai_chat_agent import _clean_complete_snippet, run_agentic_chat
 
     # Test snippet cleaner directly
     truncated = "The second of three children of Kim Jong Il and Ko Yong Hui, Kim studied at the Int"
@@ -945,8 +944,9 @@ def test_huggingface_selected_model_telemetry_and_fast_speed():
       3. Index.html has the 'Try' bar removed and the 'How your selected LLM is leveraged' card
          located within the AI Configuration page.
     """
-    from backend.services.ai_chat_agent import build_llm_execution_telemetry
     import pathlib
+
+    from backend.services.ai_chat_agent import build_llm_execution_telemetry
 
     # Test telemetry with web scrape latency (e.g. 25 seconds of web scraping)
     # With measured LLM speed (e.g. 25.4 tok/s measured from eval_duration)

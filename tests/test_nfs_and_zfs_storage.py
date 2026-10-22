@@ -6,18 +6,19 @@ and Storage Pool Renaming with Atomic Compatibility Symlinks.
 import os
 import shutil
 import tempfile
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from backend.hardware.pal_storage import (
     GenericLinuxStorageAdapter,
-    UnraidStorageAdapter,
     PlatformCapabilityError,
     PlatformType,
+    UnraidStorageAdapter,
     get_storage_platform,
 )
+from backend.main import app
 from backend.services.nfs_engine import (
     NfsEngine,
     NfsExportRule,
@@ -127,7 +128,7 @@ def test_nfs_engine_lifecycle(tmp_path):
 
     # Export file should be written
     assert os.path.isfile(exports_d_file)
-    with open(exports_d_file, "r") as f:
+    with open(exports_d_file) as f:
         content = f.read()
     assert '"/mnt/storage/appdata"' in content
     assert "no_root_squash" in content

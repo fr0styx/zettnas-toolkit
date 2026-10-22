@@ -6,7 +6,8 @@ Computes a real-time security score (0-100), letter grade (A-F), and actionable 
 """
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from fastapi import Request
 
 import backend.config as config
@@ -14,20 +15,20 @@ from backend.config import is_using_default_password, logger
 from backend.users_db import users_db_session
 
 
-def evaluate_security_posture(request: Optional[Request] = None) -> Dict[str, Any]:
+def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
     """
     Evaluates the current security posture of the ZettNAS Toolkit instance.
     Returns:
         score: int (0-100)
         grade: str ('A', 'B', 'C', 'D', 'F')
         status: str ('secure', 'good', 'warning', 'critical')
-        checks: List[Dict] with pass/fail status and weights
-        issues: List[Dict] of actionable security findings
+        checks: list[dict] with pass/fail status and weights
+        issues: list[dict] of actionable security findings
         evaluated_at: float (unix timestamp)
     """
     now = time.time()
-    checks: List[Dict[str, Any]] = []
-    issues: List[Dict[str, Any]] = []
+    checks: list[dict[str, Any]] = []
+    issues: list[dict[str, Any]] = []
 
     # 1. Default Password Check (Weight: 35)
     def_pwd_active = is_using_default_password()
@@ -125,7 +126,7 @@ def evaluate_security_posture(request: Optional[Request] = None) -> Dict[str, An
 
     # 4. SMB Anonymous / Guest Access Check (Weight: 20)
     has_guest_shares = False
-    guest_share_names: List[str] = []
+    guest_share_names: list[str] = []
     try:
         from backend.services.samba_engine import get_samba_engine
 
@@ -275,7 +276,7 @@ _AI_IMAGE_HINTS = (
 )
 
 
-def exposed_ai_runtimes() -> List[str]:
+def exposed_ai_runtimes() -> list[str]:
     """Containers that look like AI runtimes and publish a port on all interfaces."""
     try:
         from backend.services.container_mutator import _docker_request
@@ -285,7 +286,7 @@ def exposed_ai_runtimes() -> List[str]:
         return []
     if st != 200 or not isinstance(containers, list):
         return []
-    out: List[str] = []
+    out: list[str] = []
     for c in containers:
         name = ((c.get("Names") or ["?"])[0] or "?").lstrip("/")
         image = str(c.get("Image") or "").lower()

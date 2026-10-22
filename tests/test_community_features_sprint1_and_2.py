@@ -13,6 +13,7 @@ import shutil
 import tempfile
 import time
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from backend.services.app_catalog import (

@@ -11,15 +11,17 @@ Validates:
 """
 
 import time
-import pytest
 from unittest.mock import MagicMock, patch
-from backend.hardware.fans import is_zettlab_appliance, calc_curve_pwm, FAN_MAX_PWM, FAN_FAILSAFE_PWM, Z_STATE
-from backend.hardware.storage import detect_chassis_model
-from backend.services.ups_watchdog import check_ups_power_watchdog, trigger_outage_simulation, is_simulation_active
-from backend.hardware.disks import fetch_disk_smart_detail, check_active_smart_tests
-from backend.hardware.storage_diagnostics import are_all_pool_disks_sleeping
-from backend.hardware.pal_storage import UnraidStorageAdapter, PlatformCapabilityError
+
+import pytest
+
 from backend.hardware.cpu import read_cpu_temp
+from backend.hardware.disks import check_active_smart_tests, fetch_disk_smart_detail
+from backend.hardware.fans import FAN_FAILSAFE_PWM, FAN_MAX_PWM, Z_STATE, calc_curve_pwm, is_zettlab_appliance
+from backend.hardware.pal_storage import PlatformCapabilityError, UnraidStorageAdapter
+from backend.hardware.storage import detect_chassis_model
+from backend.hardware.storage_diagnostics import are_all_pool_disks_sleeping
+from backend.services.ups_watchdog import check_ups_power_watchdog, is_simulation_active, trigger_outage_simulation
 
 
 def test_is_zettlab_appliance_rejects_ddr4_generic_pcs(monkeypatch):

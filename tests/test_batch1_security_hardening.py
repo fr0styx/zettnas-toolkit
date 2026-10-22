@@ -4,10 +4,12 @@ import os
 import tempfile
 import time
 import zipfile
+
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
+from backend.api.auth import _clear_failures, _failures, _lockout_remaining, _register_failure
 from backend.api.system import _safe_fs_target, list_tokens
 from backend.api_tokens import (
     TOKENS_FILE,
@@ -23,7 +25,6 @@ from backend.services.backup_engine import (
     generate_backup_zip_stream,
     restore_backup_archive,
 )
-from backend.api.auth import _clear_failures, _failures, _lockout_remaining, _register_failure
 
 client = TestClient(app)
 
@@ -38,7 +39,7 @@ def test_api_token_hashing_and_uuid_id():
     assert validate_api_token("zat_fake_token_123") is False
 
     # Verify api_tokens.json does NOT contain raw_token in plaintext
-    with open(TOKENS_FILE, "r") as f:
+    with open(TOKENS_FILE) as f:
         stored_content = f.read()
     assert raw_token not in stored_content, "Raw token must NEVER be stored in plaintext"
 

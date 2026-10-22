@@ -7,18 +7,19 @@ and Samba Engine with macOS Time Machine (vfs_fruit) support.
 import os
 import shutil
 import tempfile
+
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from backend.hardware.pal_storage import (
     GenericLinuxStorageAdapter,
-    UnraidStorageAdapter,
     PlatformCapabilities,
     PlatformCapabilityError,
     PlatformType,
+    UnraidStorageAdapter,
     get_storage_platform,
 )
+from backend.main import app
 from backend.services.samba_engine import (
     SambaEngine,
     SambaShareConfig,

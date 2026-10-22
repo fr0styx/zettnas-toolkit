@@ -18,13 +18,13 @@ import secrets
 import struct
 import threading
 import time
-from typing import List, Optional, Set, Tuple
 import urllib.parse
+from typing import Optional
 
 from backend.config import logger
 
 # Anti-replay cache: (user_id_or_secret, timestep) -> expiration_timestamp
-_REPLAY_CACHE: dict[Tuple[str, int], float] = {}
+_REPLAY_CACHE: dict[tuple[str, int], float] = {}
 _REPLAY_LOCK = threading.RLock()
 
 
@@ -45,7 +45,7 @@ def _clean_base32(secret: str) -> bytes:
 
 def generate_totp_code(
     secret: str,
-    for_time: Optional[float] = None,
+    for_time: float | None = None,
     digits: int = 6,
     interval: int = 30,
 ) -> str:
@@ -66,7 +66,7 @@ def verify_totp_code(
     digits: int = 6,
     interval: int = 30,
     window: int = 1,
-    user_id: Optional[str] = None,
+    user_id: str | None = None,
 ) -> bool:
     """
     Verify candidate TOTP code with clock-drift window (+/- 1 timestep) and anti-replay protection.
@@ -109,7 +109,7 @@ def verify_totp_code(
     return False
 
 
-def generate_recovery_codes(count: int = 8) -> List[str]:
+def generate_recovery_codes(count: int = 8) -> list[str]:
     """Generate human-readable, high-entropy emergency recovery codes in 'xxxx-xxxx' format."""
     alphabet = "23456789abcdefghjkmnpqrstuvwxyz"  # Base32 crockford (no ambiguous chars 0, 1, i, l, o)
     codes = []
@@ -128,13 +128,13 @@ def normalize_recovery_code(code: str) -> str:
 def hash_recovery_code(code: str) -> str:
     """Hash a normalized recovery code using SHA-256 with domain separation."""
     normalized = normalize_recovery_code(code)
-    return hashlib.sha256(f"zettnas:recovery:{normalized}".encode("utf-8")).hexdigest()
+    return hashlib.sha256(f"zettnas:recovery:{normalized}".encode()).hexdigest()
 
 
 def verify_and_consume_recovery_code(
-    stored_hashes: List[str],
+    stored_hashes: list[str],
     candidate_code: str,
-) -> Tuple[bool, List[str]]:
+) -> tuple[bool, list[str]]:
     """
     Verify candidate against a list of stored recovery code hashes.
     If valid, returns (True, updated_hashes) with the consumed code removed.

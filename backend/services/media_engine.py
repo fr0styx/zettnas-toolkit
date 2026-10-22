@@ -16,7 +16,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from backend.config import DATA_DIR, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -35,7 +35,7 @@ def read_total_ram_bytes() -> int:
     for p in [os.path.join(HOST_PROC, "meminfo"), "/proc/meminfo"]:
         if os.path.isfile(p):
             try:
-                with open(p, "r", encoding="utf-8", errors="replace") as f:
+                with open(p, encoding="utf-8", errors="replace") as f:
                     for line in f:
                         if line.startswith("MemTotal:"):
                             parts = line.split()
@@ -46,7 +46,7 @@ def read_total_ram_bytes() -> int:
     return 0
 
 
-def detect_hardware_accelerator() -> Dict[str, Any]:
+def detect_hardware_accelerator() -> dict[str, Any]:
     """
     Probes hardware compute accelerators in strict priority order:
       Tier 1 (NPU): Intel AI Boost NPU, Rockchip RKNPU, AMD Ryzen AI XDNA, Hailo-8, Coral EdgeTPU
@@ -211,7 +211,7 @@ def detect_hardware_accelerator() -> Dict[str, Any]:
     }
 
 
-def _parse_hf_date(raw_date_str: str) -> Tuple[str, float, str]:
+def _parse_hf_date(raw_date_str: str) -> tuple[str, float, str]:
     """
     Parses an ISO or date string from Hugging Face Hub (e.g. '2026-10-08T09:12:10.000Z' or '2024-09-19')
     into (display_str, timestamp, iso_str).
@@ -224,7 +224,7 @@ def _parse_hf_date(raw_date_str: str) -> Tuple[str, float, str]:
         if "T" in clean_iso:
             dt = datetime.datetime.fromisoformat(clean_iso)
         else:
-            dt = datetime.datetime.strptime(raw[:10], "%Y-%m-%d").replace(tzinfo=datetime.timezone.utc)
+            dt = datetime.datetime.strptime(raw[:10], "%Y-%m-%d").replace(tzinfo=datetime.UTC)
         ts = dt.timestamp()
         disp = dt.strftime("%b %d, %Y")
         return (disp, ts, raw)
@@ -237,7 +237,7 @@ def _parse_hf_date(raw_date_str: str) -> Tuple[str, float, str]:
         return (raw[:10] if len(raw) >= 10 else "Recent", 0.0, raw)
 
 
-def is_model_2026_or_newer(m: Dict[str, Any]) -> bool:
+def is_model_2026_or_newer(m: dict[str, Any]) -> bool:
     """
     Returns True if the model was released in 2026 or later, filtering out older
     legacy models from 2024, 2025, or earlier.
@@ -263,11 +263,11 @@ def is_model_2026_or_newer(m: Dict[str, Any]) -> bool:
 
 def _estimate_hf_model_specs(
     repo_id: str,
-    tags: Optional[List[str]] = None,
-    safetensors_total: Optional[int] = None,
-    gguf_total: Optional[int] = None,
-    pipeline_tag: Optional[str] = None,
-) -> Dict[str, Any]:
+    tags: list[str] | None = None,
+    safetensors_total: int | None = None,
+    gguf_total: int | None = None,
+    pipeline_tag: str | None = None,
+) -> dict[str, Any]:
     """
     Infers parameter count, quantization format, estimated RAM/VRAM footprint,
     and accelerator requirements from Hugging Face Hub model metadata.
@@ -277,7 +277,7 @@ def _estimate_hf_model_specs(
     name_part = repo_id.split("/")[-1] if "/" in repo_id else repo_id
 
     # 1. Detect parameter count (in Billions)
-    params_b: Optional[float] = None
+    params_b: float | None = None
     raw_params = safetensors_total or gguf_total
     if isinstance(raw_params, (int, float)) and raw_params > 10_000_000:
         params_b = round(float(raw_params) / 1e9, 1)
@@ -395,11 +395,11 @@ def _estimate_hf_model_specs(
 
 
 def evaluate_model_hardware_fit(
-    model: Dict[str, Any],
-    accel: Dict[str, Any],
+    model: dict[str, Any],
+    accel: dict[str, Any],
     eff_ram: float,
     primary_rec: str = "qwen2.5:3b",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Evaluates whether a model fits the user's detected NPU, GPU, and RAM headroom.
     Marks any model that exceeds safe NAS memory or onboard NPU/iGPU limits with
@@ -426,8 +426,8 @@ def evaluate_model_hardware_fit(
     npu_igpu_ceiling_gb = 12.0
 
     fits_hardware = True
-    warning_severity: Optional[str] = None
-    warning_message: Optional[str] = None
+    warning_severity: str | None = None
+    warning_message: str | None = None
 
     if est_ram_gb > eff_ram or min_ram_gb > eff_ram:
         fits_hardware = False
@@ -495,15 +495,15 @@ def evaluate_model_hardware_fit(
 
 
 def build_llm_recommendations(
-    accel: Dict[str, Any],
+    accel: dict[str, Any],
     ram_gb: float,
     active_model: str = "qwen2.5:3b",
-    custom_models: Optional[List[Dict[str, Any]]] = None,
+    custom_models: list[dict[str, Any]] | None = None,
     include_incompatible: bool = False,
     sort_by: str = "date",
-    min_release_year: Optional[int] = None,
-    removed_models: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    min_release_year: int | None = None,
+    removed_models: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Generates industry-standard Hugging Face LLM & Multi-Modal model recommendations dynamically
     tailored to the NAS's detected onboard NPU, GPU, and system memory headroom, flagging any
@@ -556,7 +556,7 @@ def build_llm_recommendations(
         )
         primary_rec = "qwen2.5:3b" if eff_ram >= 8.0 else "builtin-npu"
 
-    catalog: List[Dict[str, Any]] = [
+    catalog: list[dict[str, Any]] = [
         # --- Tier 1: NPU / Low-Power Edge Models (0.4B - 4B) ---
         {
             "id": "builtin-npu",
@@ -1180,11 +1180,11 @@ def is_embedding_only_model(model: Any) -> bool:
 
 
 def _format_hf_api_item(
-    item: Dict[str, Any],
-    accel: Dict[str, Any],
+    item: dict[str, Any],
+    accel: dict[str, Any],
     eff_ram: float,
     active_norm: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Converts a raw Hugging Face Hub `/api/models` item into a ZettAI hardware-evaluated model dict."""
     repo_id = str(item.get("id") or item.get("modelId") or "").strip()
     tags = item.get("tags") if isinstance(item.get("tags"), list) else []
@@ -1287,8 +1287,8 @@ def search_huggingface_models(
     query: str = "",
     limit: int = 12,
     sort_by: str = "date",
-    min_release_year: Optional[int] = None,
-) -> Dict[str, Any]:
+    min_release_year: int | None = None,
+) -> dict[str, Any]:
     """
     Searches the live https://huggingface.co/api/models database of release models
     (with offline fallback to the expanded ZettAI Hugging Face catalog) and flags
@@ -1306,9 +1306,9 @@ def search_huggingface_models(
     clean_q = _normalize_hf_repo_input(query)
     safe_limit = max(1, min(int(limit or 16), 50))
 
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
     source_mode = "huggingface_live"
-    exact_match_item: Optional[Dict[str, Any]] = None
+    exact_match_item: dict[str, Any] | None = None
 
     if os.environ.get("TESTING") != "1" and os.environ.get("ZETTNAS_TEST_MODE") != "1":
         try:
@@ -1432,7 +1432,7 @@ def search_huggingface_models(
     exact_target = clean_q.lower()
     if exact_target and results:
 
-        def match_priority(m: Dict[str, Any]) -> tuple:
+        def match_priority(m: dict[str, Any]) -> tuple:
             repo = str(m.get("hf_repo", "")).lower()
             mid = str(m.get("id", "")).lower()
             name = str(m.get("name", "")).lower()
@@ -1478,7 +1478,7 @@ def search_huggingface_models(
     }
 
 
-def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any]:
+def pull_huggingface_model(repo_id: str, activate: bool = True) -> dict[str, Any]:
     """
     Pulls/registers a release model from https://huggingface.co into the user's
     ZettAI model catalog, evaluates whether it fits the user's hardware, and
@@ -1495,7 +1495,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any
     rag_cfg = rag.get_config()
     active_norm = str(rag_cfg.get("active_model") or "qwen2.5:3b").lower()
 
-    fetched_item: Optional[Dict[str, Any]] = None
+    fetched_item: dict[str, Any] | None = None
     if os.environ.get("TESTING") != "1" and os.environ.get("ZETTNAS_TEST_MODE") != "1" and "/" in clean_repo:
         try:
             exact_url = f"https://huggingface.co/api/models/{urllib.parse.quote(clean_repo, safe='/')}"
@@ -1544,7 +1544,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any
         )
     ]
 
-    updates: Dict[str, Any] = {
+    updates: dict[str, Any] = {
         "custom_hf_models": custom_list[:25],
         "removed_models": clean_removed,
     }
@@ -1584,7 +1584,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> Dict[str, Any
     }
 
 
-def remove_llm_model(model_id: str) -> Dict[str, Any]:
+def remove_llm_model(model_id: str) -> dict[str, Any]:
     """
     Removes/deletes a model from the ZettAI catalog:
     1. Removes it from custom_hf_models (if user-pulled).
@@ -1673,7 +1673,7 @@ def remove_llm_model(model_id: str) -> Dict[str, Any]:
         else:
             fallback_active = "builtin-npu"
 
-    updates: Dict[str, Any] = {
+    updates: dict[str, Any] = {
         "custom_hf_models": updated_custom,
         "removed_models": sorted(list(new_removed)),
     }
@@ -1707,7 +1707,7 @@ class MediaEngine:
         self._lock = threading.Lock()
         self._is_scanning = False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         ram_bytes = read_total_ram_bytes()
         ram_gb = round(ram_bytes / (1024**3), 1)
         is_gated = ram_bytes < MIN_RAM_REQUIRED_BYTES
@@ -1798,7 +1798,7 @@ class MediaEngine:
             },
         }
 
-    def trigger_scan(self, media_path: str = "/mnt/storage/media") -> Dict[str, Any]:
+    def trigger_scan(self, media_path: str = "/mnt/storage/media") -> dict[str, Any]:
         status = self.get_status()
         if status["is_gated"]:
             raise PermissionError(status["gate_reason"])
@@ -1859,7 +1859,7 @@ class MediaEngine:
                 self._is_scanning = False
 
 
-_MEDIA_ENGINE: Optional[MediaEngine] = None
+_MEDIA_ENGINE: MediaEngine | None = None
 
 
 def get_media_engine() -> MediaEngine:

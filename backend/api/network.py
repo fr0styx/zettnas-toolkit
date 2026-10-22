@@ -5,7 +5,8 @@ friendly interface aliases, and Docker network management.
 """
 
 import asyncio
-from typing import List, Optional
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
@@ -34,39 +35,37 @@ router = APIRouter(tags=["Network & Switching"])
 
 class HostIpConfigApplyRequest(BaseModel):
     mode: str = Field(default="static", description="Protocol mode: 'dhcp' or 'static'")
-    interface: Optional[str] = Field(default="br0", description="Target network interface (e.g. br0, eth0)")
-    ip_address: Optional[str] = Field(default=None, description="Static IPv4 address (e.g. 10.40.30.249)")
-    netmask: Optional[str] = Field(default="255.255.255.0", description="Subnet mask or CIDR prefix")
-    gateway: Optional[str] = Field(default=None, description="Default gateway IPv4 address")
-    dns1: Optional[str] = Field(default=None, description="Primary upstream DNS server")
-    dns2: Optional[str] = Field(default=None, description="Secondary upstream DNS server")
-    timeout_sec: Optional[int] = Field(
-        default=60, ge=10, le=300, description="Canary rollback safety timeout in seconds"
-    )
+    interface: str | None = Field(default="br0", description="Target network interface (e.g. br0, eth0)")
+    ip_address: str | None = Field(default=None, description="Static IPv4 address (e.g. 10.40.30.249)")
+    netmask: str | None = Field(default="255.255.255.0", description="Subnet mask or CIDR prefix")
+    gateway: str | None = Field(default=None, description="Default gateway IPv4 address")
+    dns1: str | None = Field(default=None, description="Primary upstream DNS server")
+    dns2: str | None = Field(default=None, description="Secondary upstream DNS server")
+    timeout_sec: int | None = Field(default=60, ge=10, le=300, description="Canary rollback safety timeout in seconds")
 
 
 class HostIpConfirmRequest(BaseModel):
-    canary_id: Optional[str] = Field(default=None, description="Canary test token ID to seal")
+    canary_id: str | None = Field(default=None, description="Canary test token ID to seal")
 
 
 class HostIpRevertRequest(BaseModel):
-    canary_id: Optional[str] = Field(default=None, description="Canary test token ID to cancel and rollback")
+    canary_id: str | None = Field(default=None, description="Canary test token ID to cancel and rollback")
 
 
 class PortConfigUpdateRequest(BaseModel):
-    alias: Optional[str] = Field(default=None, description="User-friendly port description/name")
-    mtu: Optional[int] = Field(default=None, ge=68, le=9216, description="Interface MTU (68-9216)")
-    wol_enabled: Optional[bool] = Field(default=None, description="Wake-on-LAN magic packet enable")
-    autoneg: Optional[bool] = Field(default=True, description="Enable automatic link speed negotiation")
-    speed: Optional[int] = Field(default=None, description="Forced link speed in Mbps (e.g. 10000, 2500, 1000, 100)")
-    duplex: Optional[str] = Field(default="full", description="Duplex mode: 'full' or 'half'")
+    alias: str | None = Field(default=None, description="User-friendly port description/name")
+    mtu: int | None = Field(default=None, ge=68, le=9216, description="Interface MTU (68-9216)")
+    wol_enabled: bool | None = Field(default=None, description="Wake-on-LAN magic packet enable")
+    autoneg: bool | None = Field(default=True, description="Enable automatic link speed negotiation")
+    speed: int | None = Field(default=None, description="Forced link speed in Mbps (e.g. 10000, 2500, 1000, 100)")
+    duplex: str | None = Field(default="full", description="Duplex mode: 'full' or 'half'")
 
 
 class DockerNetworkCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=64, description="Network name")
     driver: str = Field(default="bridge", description="Network driver: 'bridge', 'macvlan', 'ipvlan'")
-    subnet: Optional[str] = Field(default="", description="Subnet CIDR (e.g. 172.28.0.0/16)")
-    gateway: Optional[str] = Field(default="", description="Gateway IP address (e.g. 172.28.0.1)")
+    subnet: str | None = Field(default="", description="Subnet CIDR (e.g. 172.28.0.0/16)")
+    gateway: str | None = Field(default="", description="Gateway IP address (e.g. 172.28.0.1)")
 
 
 class BondConfigUpdateRequest(BaseModel):
@@ -74,28 +73,28 @@ class BondConfigUpdateRequest(BaseModel):
         default="1",
         description="Bonding mode: '0' (balance-rr), '1' (active-backup), '2' (balance-xor), '4' (802.3ad), '6' (balance-alb)",
     )
-    slaves: List[str] = Field(
+    slaves: list[str] = Field(
         ...,
         min_length=1,
-        description="List of slave member interfaces to enslave (e.g. ['eth0', 'eth1'])",
+        description="list of slave member interfaces to enslave (e.g. ['eth0', 'eth1'])",
     )
-    miimon: Optional[int] = Field(
+    miimon: int | None = Field(
         default=100, ge=10, le=1000, description="MII link monitoring interval in milliseconds (10-1000)"
     )
 
 
 class BridgeConfigUpdateRequest(BaseModel):
     stp: bool = Field(default=False, description="Enable Spanning Tree Protocol (STP) to prevent network loops")
-    forward_delay: Optional[int] = Field(default=0, ge=0, le=30, description="Bridge forward delay in seconds (0-30)")
-    members: List[str] = Field(
-        default_factory=list, description="List of member interfaces attached to the bridge (e.g. ['bond0'])"
+    forward_delay: int | None = Field(default=0, ge=0, le=30, description="Bridge forward delay in seconds (0-30)")
+    members: list[str] = Field(
+        default_factory=list, description="list of member interfaces attached to the bridge (e.g. ['bond0'])"
     )
 
 
 class VlanCreateRequest(BaseModel):
     parent: str = Field(..., description="Parent network interface name (e.g. eth0, br0, bond0)")
     vlan_id: int = Field(..., ge=1, le=4094, description="802.1Q VLAN Tag ID (1-4094)")
-    alias: Optional[str] = Field(default="", description="Friendly role/purpose alias for this VLAN")
+    alias: str | None = Field(default="", description="Friendly role/purpose alias for this VLAN")
 
 
 @router.get("/network/topology", dependencies=[Depends(require_scope("system:view", "system:config"))])
@@ -165,13 +164,13 @@ async def apply_host_ip_config_endpoint(req: HostIpConfigApplyRequest):
         res = await asyncio.to_thread(apply_host_ip_config_canary, updates, timeout_sec=timeout_sec)
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to apply host network configuration: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to apply host network configuration: {e}") from e
 
 
 @router.post("/network/host/confirm", dependencies=[Depends(require_scope("system:config"))])
-async def confirm_host_ip_config_endpoint(req: Optional[HostIpConfirmRequest] = None):
+async def confirm_host_ip_config_endpoint(req: HostIpConfirmRequest | None = None):
     """Confirm and seal host network configuration, cancelling the 60s rollback watchdog."""
     canary_id = req.canary_id if req else None
     res = await asyncio.to_thread(confirm_host_ip_config, canary_id)
@@ -181,7 +180,7 @@ async def confirm_host_ip_config_endpoint(req: Optional[HostIpConfirmRequest] = 
 
 
 @router.post("/network/host/revert", dependencies=[Depends(require_scope("system:config"))])
-async def revert_host_ip_config_endpoint(req: Optional[HostIpRevertRequest] = None):
+async def revert_host_ip_config_endpoint(req: HostIpRevertRequest | None = None):
     """Manually abort Canary test and immediately restore previous host network configuration."""
     canary_id = req.canary_id if req else None
     res = await asyncio.to_thread(revert_host_ip_config, canary_id)
@@ -230,7 +229,7 @@ async def update_bridge_config_endpoint(br_name: str, req: BridgeConfigUpdateReq
 
 @router.get("/network/vlans", dependencies=[Depends(require_scope("system:view", "system:config"))])
 async def get_vlans_endpoint():
-    """List all active and configured 802.1Q VLAN sub-interfaces."""
+    """list all active and configured 802.1Q VLAN sub-interfaces."""
     return {"status": "ok", "vlans": await asyncio.to_thread(get_vlans)}
 
 
@@ -256,20 +255,16 @@ async def delete_vlan_endpoint(vlan_iface: str):
 
 
 class TailscaleUpRequest(BaseModel):
-    auth_key: Optional[str] = Field(
-        default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key"
-    )
-    hostname: Optional[str] = Field(default=None, description="Custom node hostname on tailnet")
+    auth_key: str | None = Field(default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key")
+    hostname: str | None = Field(default=None, description="Custom node hostname on tailnet")
     accept_routes: bool = Field(default=True, description="Accept subnet routes from other nodes")
 
 
 class TailscaleDeployRequest(BaseModel):
-    auth_key: Optional[str] = Field(
-        default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key"
-    )
-    hostname: Optional[str] = Field(default=None, description="Custom node hostname on tailnet")
+    auth_key: str | None = Field(default=None, description="Pre-authenticated Tailscale ephemeral or reusable auth key")
+    hostname: str | None = Field(default=None, description="Custom node hostname on tailnet")
     accept_routes: bool = Field(default=True, description="Accept subnet routes from other nodes")
-    state_dir: Optional[str] = Field(default=None, description="Custom persistent state directory on host")
+    state_dir: str | None = Field(default=None, description="Custom persistent state directory on host")
 
 
 @router.get("/network/mesh-vpn", dependencies=[Depends(require_scope("system:view"))])
@@ -417,8 +412,8 @@ async def post_tailscale_reauth():
 class WireguardClientConfigRequest(BaseModel):
     client_name: str = Field(default="mobile-client", max_length=64)
     client_ip: str = Field(default="10.13.13.2/32")
-    server_endpoint: Optional[str] = Field(default="")
-    server_pubkey: Optional[str] = Field(default="")
+    server_endpoint: str | None = Field(default="")
+    server_pubkey: str | None = Field(default="")
     dns: str = Field(default="1.1.1.1")
     allowed_ips: str = Field(default="0.0.0.0/0, ::/0")
     keepalive: int = Field(default=25, ge=0, le=3600)

@@ -1,10 +1,11 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from backend.services.notifications import (
+    DEFAULT_NOTIFICATION_CONFIG,
+    MASK_PLACEHOLDER,
     build_apprise_urls,
     mask_notification_config,
     unmask_notification_config,
-    DEFAULT_NOTIFICATION_CONFIG,
-    MASK_PLACEHOLDER,
 )
 
 

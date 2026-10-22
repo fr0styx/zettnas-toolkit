@@ -6,8 +6,10 @@ Unit and Integration Tests for Strategic Roadmap Tier 1 and Tier 4:
 
 import os
 from unittest.mock import MagicMock, patch
+
 import pytest
 
+from backend.hardware.chassis import ChassisEngine
 from backend.hardware.network import (
     generate_wireguard_client_config,
     generate_wireguard_keypair,
@@ -15,7 +17,6 @@ from backend.hardware.network import (
     set_ip_forwarding,
     toggle_wireguard_subnet_nat,
 )
-from backend.hardware.chassis import ChassisEngine
 from backend.services.media_engine import MediaEngine, detect_hardware_accelerator, read_total_ram_bytes
 from backend.services.replication_engine import ReplicationEngine, ReplicationJob
 

@@ -9,7 +9,7 @@ import json
 import os
 import socket
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from backend.config import logger
 from backend.logging_config import sanitize_dict, sanitize_string
@@ -26,7 +26,7 @@ class UnixHTTPConnection(http.client.HTTPConnection):
         self.sock.connect(self.socket_path)
 
 
-def _docker_api_get(endpoint: str, timeout: float = 2.5) -> Optional[Any]:
+def _docker_api_get(endpoint: str, timeout: float = 2.5) -> Any | None:
     sock_path = "/var/run/docker.sock"
     if not os.path.exists(sock_path):
         return None
@@ -89,12 +89,12 @@ def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
                 pass
 
 
-def collect_docker_diagnostics() -> Dict[str, Any]:
+def collect_docker_diagnostics() -> dict[str, Any]:
     """
     Collects complete Docker daemon and container fleet diagnostics.
     """
     t0 = time.time()
-    result: Dict[str, Any] = {
+    result: dict[str, Any] = {
         "daemon_connected": False,
         "daemon_info": {},
         "system_df": {},
@@ -152,9 +152,9 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
         }
 
     # 3. Containers Inspection & Port Conflict Detection
-    host_port_map: Dict[str, List[str]] = {}
-    troubled_containers: List[Dict[str, Any]] = []
-    troubled_names: List[str] = []
+    host_port_map: dict[str, list[str]] = {}
+    troubled_containers: list[dict[str, Any]] = []
+    troubled_names: list[str] = []
 
     containers_list = _docker_api_get("/containers/json?all=1")
     if isinstance(containers_list, list):
@@ -182,7 +182,7 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
             is_troubled = status in ("restarting", "dead") or is_oom
             if is_troubled and name == "zettnas-samba":
                 try:
-                    from backend.hardware.pal_storage import StoragePlatformDetector, PlatformType
+                    from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
 
                     if StoragePlatformDetector.detect() != PlatformType.GENERIC_LINUX:
                         is_troubled = False
@@ -260,7 +260,7 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
             }
 
     # 5. Stacks Summary (Synthesized & File-backed Compose Stacks)
-    stacks_summary: List[Dict[str, Any]] = []
+    stacks_summary: list[dict[str, Any]] = []
     try:
         from backend.services.docker_stacks import list_all_stacks
 
@@ -282,7 +282,7 @@ def collect_docker_diagnostics() -> Dict[str, Any]:
     result["stacks_summary"] = stacks_summary
 
     # 6. App Backups Summary
-    backups_summary: Dict[str, Any] = {
+    backups_summary: dict[str, Any] = {
         "total_backups": 0,
         "total_size_bytes": 0,
         "backups": [],

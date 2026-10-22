@@ -15,13 +15,13 @@ import time
 import urllib.error
 import urllib.request
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger("ZettNAS")
 
 _NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-/:@]{0,199}$")
-_JOBS: Dict[str, Dict[str, Any]] = {}
-_CANCEL: Dict[str, threading.Event] = {}
+_JOBS: dict[str, dict[str, Any]] = {}
+_CANCEL: dict[str, threading.Event] = {}
 _LOCK = threading.Lock()
 
 
@@ -35,7 +35,7 @@ def valid_model_name(name: str) -> bool:
     return bool(_NAME_RE.match(str(name or ""))) and ".." not in str(name)
 
 
-def _tags(host: str, timeout: float = 3.0) -> List[Dict[str, Any]]:
+def _tags(host: str, timeout: float = 3.0) -> list[dict[str, Any]]:
     req = urllib.request.Request(f"{host}/api/tags", headers={"User-Agent": "ZettNAS-Toolkit"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return list(json.loads(resp.read().decode("utf-8")).get("models") or [])
@@ -46,14 +46,14 @@ def _same(a: str, b: str) -> bool:
     return a == b or a == f"{b}:latest" or b == f"{a}:latest"
 
 
-def installed_models() -> Dict[str, Any]:
+def installed_models() -> dict[str, Any]:
     """What Ollama has installed, plus names that are copies of another installed model."""
     host = _host()
     try:
         models = _tags(host)
     except Exception as e:
         return {"reachable": False, "host": host, "models": [], "aliases": [], "error": str(e)}
-    by_digest: Dict[str, List[str]] = {}
+    by_digest: dict[str, list[str]] = {}
     for m in models:
         if m.get("digest"):
             by_digest.setdefault(m["digest"], []).append(m.get("name", ""))
@@ -79,13 +79,13 @@ def installed_models() -> Dict[str, Any]:
     }
 
 
-def is_installed(name: str, models: Optional[List[Dict[str, Any]]] = None) -> bool:
+def is_installed(name: str, models: list[dict[str, Any]] | None = None) -> bool:
     if models is None:
         models = installed_models().get("models") or []
     return any(_same(str(m.get("name") or ""), name) for m in models)
 
 
-def get_job(job_id: str) -> Optional[Dict[str, Any]]:
+def get_job(job_id: str) -> dict[str, Any] | None:
     with _LOCK:
         job = _JOBS.get(job_id)
         return dict(job) if job else None
@@ -99,7 +99,7 @@ def cancel_job(job_id: str) -> bool:
     return True
 
 
-def start_install(name: str, requested_by: str = "") -> Dict[str, Any]:
+def start_install(name: str, requested_by: str = "") -> dict[str, Any]:
     name = str(name or "").strip()
     if not valid_model_name(name):
         raise ValueError("That isn't a valid model name.")
@@ -138,7 +138,7 @@ def _run(job_id: str) -> None:
     name = job.get("model", "")
     cancel = _CANCEL[job_id]
     host = _host()
-    layers: Dict[str, Dict[str, int]] = {}
+    layers: dict[str, dict[str, int]] = {}
     try:
         req = urllib.request.Request(
             f"{host}/api/pull",

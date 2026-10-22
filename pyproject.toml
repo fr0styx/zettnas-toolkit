@@ -42,8 +42,22 @@ target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "W", "F"]
-ignore = ["E501", "E402", "F401", "F841", "F811"]
+# OPS-24: bugbear, pyupgrade, simplify and import order on top of the pyflakes/pycodestyle base
+select = ["E", "W", "F", "B", "UP", "SIM", "I"]
+ignore = [
+    "E501", "E402", "F401", "F841", "F811",
+    # style-only simplify rules this codebase doesn't follow
+    "SIM102", "SIM105", "SIM108", "SIM117",
+    # unsafe here: sqlite3.Row has keys() but no get(), and "in row" checks values, not columns
+    "SIM118", "SIM401",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares parameters with these calls as defaults
+extend-immutable-calls = [
+    "fastapi.Depends", "fastapi.Query", "fastapi.Body", "fastapi.File", "fastapi.Form",
+    "fastapi.Header", "fastapi.Path", "fastapi.Cookie", "fastapi.Security",
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["backend", "app"]

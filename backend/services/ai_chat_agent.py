@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import ast
 import asyncio
+import contextvars
 import hashlib
 import html
 import ipaddress
-import contextvars
 import json
 import math
 import operator as op
@@ -32,11 +32,11 @@ import threading
 import time
 import urllib.parse
 import urllib.request
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from collections.abc import AsyncGenerator
+from typing import Any, Optional
 
 import httpx
 from pydantic import BaseModel, Field
-
 
 from backend.config import FAN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -66,7 +66,7 @@ UNCLOSED_REASONING_TAG_RE = re.compile(
 )
 
 
-def extract_and_strip_reasoning(text: str) -> Tuple[str, str]:
+def extract_and_strip_reasoning(text: str) -> tuple[str, str]:
     """
     Extracts internal reasoning/thought content from model outputs and strips both closed
     (<think>...</think>) and unclosed (<think>...<EOF>) reasoning blocks to prevent raw
@@ -77,7 +77,7 @@ def extract_and_strip_reasoning(text: str) -> Tuple[str, str]:
     """
     if not text:
         return "", ""
-    think_parts: List[str] = []
+    think_parts: list[str] = []
     for m in REASONING_TAG_RE.finditer(text):
         t = m.group(1).strip()
         if t:
@@ -94,7 +94,7 @@ def extract_and_strip_reasoning(text: str) -> Tuple[str, str]:
     return "\n\n".join(think_parts).strip(), cleaned.strip()
 
 
-AVAILABLE_NAS_TOOLS: List[Dict[str, Any]] = [
+AVAILABLE_NAS_TOOLS: list[dict[str, Any]] = [
     {
         "name": "get_system_telemetry",
         "label": "📊 System & NPU/GPU Telemetry",
@@ -121,7 +121,7 @@ AVAILABLE_NAS_TOOLS: List[Dict[str, Any]] = [
     },
     {
         "name": "list_docker_containers",
-        "label": "🐳 List Docker Containers",
+        "label": "🐳 list Docker Containers",
         "description": "Lists running and stopped Docker containers on the NAS with their status, image, and exposed ports.",
         "mutating": False,
     },
@@ -195,7 +195,7 @@ class GetFanThermalStatusArgs(BaseModel):
 
 class SetFanProfileArgs(BaseModel):
     profile: str = Field(description="Target acoustic fan profile: auto, quiet, balanced, performance, or full")
-    zero_rpm_enabled: Optional[bool] = Field(
+    zero_rpm_enabled: bool | None = Field(
         default=None, description="Whether Zero-RPM standby mode is allowed for HDD fans"
     )
 
@@ -211,10 +211,10 @@ class ControlDockerContainerArgs(BaseModel):
 
 class SearchNasKnowledgeArgs(BaseModel):
     query: str = Field(description="Search terms or natural language question")
-    folder_path: Optional[str] = Field(
+    folder_path: str | None = Field(
         default=None, description="Optional folder path to restrict search or aggregate all context"
     )
-    mode: Optional[str] = Field(
+    mode: str | None = Field(
         default="targeted", description="targeted (relevant chunks) or comprehensive (full folder aggregation)"
     )
 
@@ -242,7 +242,7 @@ class GetNetworkStatusArgs(BaseModel):
     pass
 
 
-OPENAI_TOOL_DEFINITIONS: List[Dict[str, Any]] = [
+OPENAI_TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
@@ -463,7 +463,7 @@ OPENAI_TOOL_DEFINITIONS: List[Dict[str, Any]] = [
 ]
 
 
-def _safe_parse_tool_call_json(raw_args: Any) -> Dict[str, Any]:
+def _safe_parse_tool_call_json(raw_args: Any) -> dict[str, Any]:
     """
     Robust multi-stage JSON parser with fuzzy repair for Small Language Models (SLMs).
     Strips markdown code blocks, removes trailing commas, fixes single quotes,
@@ -501,9 +501,9 @@ class DiscourseEntityStack:
 
     def __init__(self, max_size: int = 5):
         self.max_size = max_size
-        self._items: List[Dict[str, Any]] = []
+        self._items: list[dict[str, Any]] = []
 
-    def push(self, entity_type: str, name: str, details: Optional[Dict[str, Any]] = None):
+    def push(self, entity_type: str, name: str, details: dict[str, Any] | None = None):
         self._items = [i for i in self._items if not (i["type"] == entity_type and i["name"] == name)]
         self._items.insert(
             0,
@@ -517,13 +517,13 @@ class DiscourseEntityStack:
         if len(self._items) > self.max_size:
             self._items = self._items[: self.max_size]
 
-    def get_most_recent(self, entity_type: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    def get_most_recent(self, entity_type: str | None = None) -> dict[str, Any] | None:
         for i in self._items:
             if entity_type is None or i["type"] == entity_type:
                 return i
         return None
 
-    def all_items(self) -> List[Dict[str, Any]]:
+    def all_items(self) -> list[dict[str, Any]]:
         return list(self._items)
 
 
@@ -547,9 +547,9 @@ class ContextualQueryRewriter:
     def resolve_followup(
         cls,
         current_msg: str,
-        history: Optional[List[Dict[str, Any]]],
-        stack: Optional[DiscourseEntityStack] = None,
-    ) -> Tuple[str, Optional[str], Optional[Dict[str, Any]]]:
+        history: list[dict[str, Any]] | None,
+        stack: DiscourseEntityStack | None = None,
+    ) -> tuple[str, str | None, dict[str, Any] | None]:
         """
         Returns (rewritten_query, inferred_tool, inferred_args).
         If the utterance is an affirmation or pronoun reference, resolves to the target tool and arguments.
@@ -634,7 +634,7 @@ class EdgeTokenBudgeter:
     """
 
     @staticmethod
-    def get_budget(ram_bytes: int, model_name: str) -> Dict[str, int]:
+    def get_budget(ram_bytes: int, model_name: str) -> dict[str, int]:
         ram_gb = round(ram_bytes / (1024**3), 1)
         m_low = str(model_name or "").lower()
 
@@ -668,11 +668,11 @@ class EdgeTokenBudgeter:
 
     @staticmethod
     def compact_history(
-        history: Optional[List[Dict[str, Any]]], max_turns: int = 10, char_limit: int = 800
-    ) -> List[Dict[str, str]]:
+        history: list[dict[str, Any]] | None, max_turns: int = 10, char_limit: int = 800
+    ) -> list[dict[str, str]]:
         if not history:
             return []
-        cleaned: List[Dict[str, str]] = []
+        cleaned: list[dict[str, str]] = []
         for h in history[-max_turns:]:
             if isinstance(h, dict) and h.get("role") in ("user", "assistant") and h.get("content"):
                 cleaned.append(
@@ -691,7 +691,7 @@ class EndpointRegistry:
     """
 
     def __init__(self):
-        self._endpoints: Dict[str, Dict[str, Any]] = {}
+        self._endpoints: dict[str, dict[str, Any]] = {}
         self._lock = threading.Lock()
 
     def is_tripped(self, ep_url: str) -> bool:
@@ -726,7 +726,7 @@ class EndpointRegistry:
 _ENDPOINT_REGISTRY = EndpointRegistry()
 
 
-def _has_write_permission(principal: Any, required_scopes: Tuple[str, ...]) -> bool:
+def _has_write_permission(principal: Any, required_scopes: tuple[str, ...]) -> bool:
     """No principal means no write access; scopes use the same wildcard rules as the API."""
     if principal is None:
         return False
@@ -741,7 +741,7 @@ def _has_write_permission(principal: Any, required_scopes: Tuple[str, ...]) -> b
 
 # Scopes a user needs before the AI may use a tool for them: the same ones the matching REST
 # endpoint asks for (AI-04). None means any signed-in user. Write tools also check inside the tool.
-TOOL_REQUIRED_SCOPES: Dict[str, Optional[Tuple[str, ...]]] = {
+TOOL_REQUIRED_SCOPES: dict[str, tuple[str, ...] | None] = {
     "get_system_telemetry": None,
     "get_fan_and_thermal_status": None,
     "calculate": None,
@@ -772,7 +772,7 @@ def tool_allowed(tool_name: str, principal: Any) -> bool:
     return _has_write_permission(principal, needed)
 
 
-def tools_for_principal(principal: Any, web_allowed: bool) -> List[Dict[str, Any]]:
+def tools_for_principal(principal: Any, web_allowed: bool) -> list[dict[str, Any]]:
     """The tool definitions offered to the model: only what this user may run (AI-04)."""
     out = []
     for t in OPENAI_TOOL_DEFINITIONS:
@@ -784,7 +784,7 @@ def tools_for_principal(principal: Any, web_allowed: bool) -> List[Dict[str, Any
     return out
 
 
-def _context_window_for(messages: List[Dict[str, Any]], tools: Optional[List[Dict[str, Any]]] = None) -> int:
+def _context_window_for(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None) -> int:
     """num_ctx big enough for this prompt plus a reply, so Ollama doesn't silently cut it (AI-09).
 
     ZETTNAS_AI_NUM_CTX overrides it. Otherwise ~3.5 characters per token, plus room for the
@@ -818,14 +818,14 @@ def _is_safe_public_url(url_str: str) -> bool:
 # ============================================================================
 
 
-def tool_get_system_telemetry() -> Dict[str, Any]:
+def tool_get_system_telemetry() -> dict[str, Any]:
     """Reads live host CPU, RAM, temperature, uptime, and NPU/GPU accelerator status."""
     ram_total_b = read_total_ram_bytes()
     ram_total_gb = round(ram_total_b / (1024**3), 1)
     ram_avail_gb = round(ram_total_gb * 0.62, 1)
     try:
         if os.path.exists("/proc/meminfo"):
-            with open("/proc/meminfo", "r", encoding="utf-8") as f:
+            with open("/proc/meminfo", encoding="utf-8") as f:
                 for line in f:
                     if line.startswith("MemAvailable:"):
                         kb = int(line.split()[1])
@@ -870,7 +870,7 @@ def tool_get_system_telemetry() -> Dict[str, Any]:
     }
 
 
-def tool_get_disks_and_standby_status() -> Dict[str, Any]:
+def tool_get_disks_and_standby_status() -> dict[str, Any]:
     """
     Returns physical disk power states and cached temperatures without waking sleeping drives
     (strictly obeys AGENTS.md §1.2 Standby Safety Invariant).
@@ -919,7 +919,7 @@ def tool_get_disks_and_standby_status() -> Dict[str, Any]:
     }
 
 
-def tool_get_fan_and_thermal_status() -> Dict[str, Any]:
+def tool_get_fan_and_thermal_status() -> dict[str, Any]:
     """Reads current fan acoustic profile, thermal limits, and PWM tracker state."""
     defaults = {
         "profile": "auto",
@@ -953,9 +953,9 @@ def tool_get_fan_and_thermal_status() -> Dict[str, Any]:
 
 def tool_set_fan_profile(
     profile: str,
-    zero_rpm_enabled: Optional[bool] = None,
+    zero_rpm_enabled: bool | None = None,
     principal: Any = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Updates the NAS fan profile safely while preserving CPU fan (pwm3) protection."""
     if not _has_write_permission(principal, ("hardware:fans", "system:config", "storage:admin")):
         return {
@@ -1006,7 +1006,7 @@ def tool_set_fan_profile(
     }
 
 
-def tool_list_docker_containers(limit: int = 40) -> Dict[str, Any]:
+def tool_list_docker_containers(limit: int = 40) -> dict[str, Any]:
     """Lists Docker containers on the NAS with state, image, uptime, and identifies longest-running container."""
     if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
         return {
@@ -1047,7 +1047,7 @@ def tool_list_docker_containers(limit: int = 40) -> Dict[str, Any]:
             ],
         }
 
-    containers: List[Dict[str, Any]] = []
+    containers: list[dict[str, Any]] = []
     try:
         from backend.hardware.docker_stats import read_docker_containers
 
@@ -1098,7 +1098,7 @@ def tool_list_docker_containers(limit: int = 40) -> Dict[str, Any]:
 
     running = [c for c in containers if c.get("state") == "running"]
 
-    def _created_sort_key(item: Dict[str, Any]) -> float:
+    def _created_sort_key(item: dict[str, Any]) -> float:
         cval = item.get("created", 0)
         try:
             val = float(cval)
@@ -1134,7 +1134,7 @@ def tool_control_docker_container(
     container_name: str,
     action: str = "restart",
     principal: Any = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Starts, stops, or restarts a specific Docker container with safety checks."""
     if not _has_write_permission(
         principal,
@@ -1276,12 +1276,12 @@ _CHAT_STOPWORDS = {
 }
 
 
-def _extract_folder_and_intent(query: str) -> Tuple[Optional[str], str, str]:
+def _extract_folder_and_intent(query: str) -> tuple[str | None, str, str]:
     """
     Extracts a target folder path, remaining clean query, and retrieval mode (comprehensive vs targeted).
     """
     clean = str(query or "").strip()
-    folder_path: Optional[str] = None
+    folder_path: str | None = None
     mode = "targeted"
 
     path_match = re.search(
@@ -1339,9 +1339,9 @@ def tool_search_nas_knowledge(
     query: str,
     principal: Any = None,
     strict_relevance: bool = False,
-    folder_path: Optional[str] = None,
-    mode: Optional[str] = None,
-) -> Dict[str, Any]:
+    folder_path: str | None = None,
+    mode: str | None = None,
+) -> dict[str, Any]:
     """
     Queries the local NVMe RAG index for matching documents, recipes, and photos,
     or aggregates context across whatever folder (0 disk wakeups).
@@ -1375,8 +1375,8 @@ def tool_search_nas_knowledge(
     context_text = ""
     grounding_score = 95
     crag_grade = "high"
-    raw_citations: List[Dict[str, Any]] = []
-    raw_photos: List[Dict[str, Any]] = []
+    raw_citations: list[dict[str, Any]] = []
+    raw_photos: list[dict[str, Any]] = []
     answer_summary = ""
     structured_card = None
 
@@ -1509,7 +1509,7 @@ def tool_search_nas_knowledge(
     }
 
 
-def tool_trigger_ai_sync(action: str = "start", principal: Any = None) -> Dict[str, Any]:
+def tool_trigger_ai_sync(action: str = "start", principal: Any = None) -> dict[str, Any]:
     """Starts, pauses, or resumes standby-safe AI indexing across watched NAS folders."""
     if not _has_write_permission(
         principal,
@@ -1615,7 +1615,7 @@ def _eval_ast_math(node: ast.AST) -> float:
         raise ValueError(f"Unsupported syntax: {type(node).__name__}")
 
 
-def tool_calculate(expression: str) -> Dict[str, Any]:
+def tool_calculate(expression: str) -> dict[str, Any]:
     """
     Safely evaluates a mathematical expression, arithmetic operation, percentage,
     or NAS capacity/transfer calculation using AST parsing (no eval/exec).
@@ -1694,7 +1694,7 @@ def tool_calculate(expression: str) -> Dict[str, Any]:
         }
 
 
-def tool_get_storage_status() -> Dict[str, Any]:
+def tool_get_storage_status() -> dict[str, Any]:
     """Reads live NAS storage pools, filesystem types, capacity, and pool health without waking sleeping HDDs."""
     try:
         from backend.hardware.pal_storage import get_storage_platform
@@ -1742,7 +1742,7 @@ def tool_get_storage_status() -> Dict[str, Any]:
         }
 
 
-def tool_get_network_status() -> Dict[str, Any]:
+def tool_get_network_status() -> dict[str, Any]:
     """Reads host network interfaces, active IP addresses, link negotiation speeds, gateway, and DNS servers."""
     try:
         from backend.hardware.network import get_network_topology, read_ip
@@ -1785,7 +1785,7 @@ def tool_get_network_status() -> Dict[str, Any]:
         }
 
 
-def resolve_model_runtime_accelerator(active_model: str, host_accel: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def resolve_model_runtime_accelerator(active_model: str, host_accel: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Resolves the actual hardware compute tier and device for a given AI model.
     Differentiates between:
@@ -1880,11 +1880,10 @@ def _is_math_or_calculation_query(text: str) -> bool:
         return True
     if re.match(r"^(?:sqrt|cbrt|abs|round|floor|ceil|log|log2|log10)\s*\([\d\s.,+\-*/]+\)$", stripped):
         return True
-    if any(k in clean for k in ("calculate", "solve", "math", "arithmetic", "convert")) and (
-        re.search(r"\d+\s*[+\-*/x÷]\s*\d+", clean) or re.search(r"\d+\s*(?:tb|gb)\s*(?:to\s*tib|in\s*tib)", clean)
-    ):
-        return True
-    return False
+    return bool(
+        any(k in clean for k in ("calculate", "solve", "math", "arithmetic", "convert"))
+        and (re.search(r"\d+\s*[+\-*/x÷]\s*\d+", clean) or re.search(r"\d+\s*(?:tb|gb)\s*(?:to\s*tib|in\s*tib)", clean))
+    )
 
 
 # ============================================================================
@@ -1959,7 +1958,7 @@ _ABBREVIATIONS = (
 _PROTECTED_DOT = "\u2024"  # One-dot leader to temporarily mask abbreviation dots
 
 
-def _split_sentences_safe(text: str) -> List[str]:
+def _split_sentences_safe(text: str) -> list[str]:
     """
     Splits text into complete grammatical sentences while protecting abbreviations and initials.
     Replaces periods inside known abbreviations (e.g. 'Int.', 'Dr.', 'U.S.') with a temporary marker,
@@ -1986,7 +1985,7 @@ def _split_sentences_safe(text: str) -> List[str]:
     raw_sents = re.split(r"(?<=[.!?])\s+", masked)
 
     # 5. Restore masked dots and clean up
-    sents: List[str] = []
+    sents: list[str] = []
     for s in raw_sents:
         restored = s.replace(_PROTECTED_DOT, ".").strip()
         if restored:
@@ -2029,7 +2028,7 @@ def _clean_complete_snippet(text: str, max_chars: int = 850) -> str:
             is_structured = True
 
     if is_structured:
-        accumulated_lines: List[str] = []
+        accumulated_lines: list[str] = []
         acc_len = 0
         for ln in lines:
             if not ln.strip() and accumulated_lines and not accumulated_lines[-1].strip():
@@ -2045,7 +2044,7 @@ def _clean_complete_snippet(text: str, max_chars: int = 850) -> str:
 
     cleaned = re.sub(r"\s+", " ", raw_str).strip()
     sentences = _split_sentences_safe(cleaned)
-    valid_sentences: List[str] = []
+    valid_sentences: list[str] = []
     accumulated_len = 0
     dangling = (
         " the",
@@ -2117,11 +2116,11 @@ def _extract_clean_first_sentences(text: str, count: int = 2) -> str:
     return " ".join(sents[:count]).strip()
 
 
-def _extract_wikipedia_infobox_facts(wikitext: str) -> Dict[str, str]:
+def _extract_wikipedia_infobox_facts(wikitext: str) -> dict[str, str]:
     """Extracts structured facts (incumbent, capital, CEO, founder, etc.) from Wikipedia section-0 wikitext."""
     if not wikitext:
         return {}
-    facts: Dict[str, str] = {}
+    facts: dict[str, str] = {}
     keys_of_interest = (
         "incumbent",
         "incumbentsince",
@@ -2162,7 +2161,7 @@ def _extract_wikipedia_infobox_facts(wikitext: str) -> Dict[str, str]:
     return facts
 
 
-def _normalize_web_query_and_topic(raw_query: str) -> Tuple[str, str]:
+def _normalize_web_query_and_topic(raw_query: str) -> tuple[str, str]:
     """
     Returns `(search_topic, web_query)` where:
       - `search_topic` is the clean entity/subject for Wikipedia lookup (e.g. 'president of the United States')
@@ -2217,7 +2216,7 @@ _WEB_ALLOWED: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_web_al
 _WEB_BLOCKED_MSG = "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather."
 
 
-def tool_browse_internet(query: str, max_results: int = 5) -> Dict[str, Any]:
+def tool_browse_internet(query: str, max_results: int = 5) -> dict[str, Any]:
     if not _WEB_ALLOWED.get():
         return {"tool": "browse_internet", "status": "blocked", "error": _WEB_BLOCKED_MSG, "sources": []}
     """
@@ -2247,9 +2246,9 @@ def tool_browse_internet(query: str, max_results: int = 5) -> Dict[str, Any]:
         }
 
     search_topic, web_query = _normalize_web_query_and_topic(clean_q)
-    sources: List[Dict[str, Any]] = []
+    sources: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
-    extracted_facts: Dict[str, str] = {}
+    extracted_facts: dict[str, str] = {}
     direct_answer = ""
 
     wiki_headers = {"User-Agent": "ZettNAS-Toolkit-ZettAI/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"}
@@ -2474,7 +2473,7 @@ def tool_browse_internet(query: str, max_results: int = 5) -> Dict[str, Any]:
     }
 
 
-AMBIGUOUS_LOCATIONS: Dict[str, List[Dict[str, str]]] = {
+AMBIGUOUS_LOCATIONS: dict[str, list[dict[str, str]]] = {
     "santo domingo": [
         {
             "name": "Santo Domingo",
@@ -2619,7 +2618,7 @@ AMBIGUOUS_LOCATIONS: Dict[str, List[Dict[str, str]]] = {
     ],
 }
 
-WEATHER_CONDITION_ICONS: Dict[str, str] = {
+WEATHER_CONDITION_ICONS: dict[str, str] = {
     "sunny": "☀️",
     "clear": "☀️",
     "partly cloudy": "⛅",
@@ -2641,7 +2640,7 @@ WEATHER_CONDITION_ICONS: Dict[str, str] = {
     "blizzard": "🌨️",
 }
 
-COUNTRY_FLAG_MAP: Dict[str, str] = {
+COUNTRY_FLAG_MAP: dict[str, str] = {
     "dominican republic": "🇩🇴",
     "chile": "🇨🇱",
     "united states": "🇺🇸",
@@ -2699,7 +2698,7 @@ def _get_country_flag(country_name: str, code: str = "") -> str:
     return "🌍"
 
 
-def _extract_weather_location(message: str) -> Optional[str]:
+def _extract_weather_location(message: str) -> str | None:
     """
     Extracts the location name from queries in English, Spanish, German, and French.
     """
@@ -2730,7 +2729,7 @@ def _extract_weather_location(message: str) -> Optional[str]:
     return None
 
 
-def _resolve_country_confirmation(user_msg: str, prev_asst_msg: str) -> Optional[str]:
+def _resolve_country_confirmation(user_msg: str, prev_asst_msg: str) -> str | None:
     """
     If the previous assistant message asked for country disambiguation (e.g. Dominican Republic vs Chile),
     checks if current user utterance confirms one of the candidate countries and returns the resolved query.
@@ -2796,7 +2795,7 @@ def _resolve_country_confirmation(user_msg: str, prev_asst_msg: str) -> Optional
     return None
 
 
-def _fetch_wttr_in(query: str, timeout: float = 4.0) -> Optional[Dict[str, Any]]:
+def _fetch_wttr_in(query: str, timeout: float = 4.0) -> dict[str, Any] | None:
     """Fetches real-time JSON weather data from wttr.in with zero disk spin-ups."""
     try:
         encoded = urllib.parse.quote_plus(query.strip())
@@ -2814,7 +2813,7 @@ def _fetch_wttr_in(query: str, timeout: float = 4.0) -> Optional[Dict[str, Any]]
     return None
 
 
-def _parse_single_wttr_response(data: Dict[str, Any], query_fallback: str) -> Dict[str, Any]:
+def _parse_single_wttr_response(data: dict[str, Any], query_fallback: str) -> dict[str, Any]:
     """Extracts structured meteorological metrics from wttr.in j1 JSON payload."""
     area_obj = (data.get("nearest_area") or [{}])[0]
     area_name = (area_obj.get("areaName") or [{}])[0].get("value") or query_fallback
@@ -2832,7 +2831,7 @@ def _parse_single_wttr_response(data: Dict[str, Any], query_fallback: str) -> Di
     wind_dir = str(curr.get("winddir16Point") or "").strip()
     uv_index = int(curr.get("uvIndex") or 0)
 
-    forecast_days: List[Dict[str, Any]] = []
+    forecast_days: list[dict[str, Any]] = []
     weather_list = data.get("weather") or []
     day_labels = ["Today", "Tomorrow", "Next Day"]
     for idx_w, w in enumerate(weather_list[:3]):
@@ -2877,9 +2876,9 @@ def _parse_single_wttr_response(data: Dict[str, Any], query_fallback: str) -> Di
     }
 
 
-def _external_services(tool_results: List[Dict[str, Any]]) -> List[str]:
+def _external_services(tool_results: list[dict[str, Any]]) -> list[str]:
     """Services outside the NAS this turn actually contacted, for the "data left this device" note."""
-    out: List[str] = []
+    out: list[str] = []
     for tr in tool_results:
         if tr.get("status") == "blocked":
             continue
@@ -2894,7 +2893,7 @@ def _external_services(tool_results: List[Dict[str, Any]]) -> List[str]:
     return out[:8]
 
 
-def tool_get_weather(location: str) -> Dict[str, Any]:
+def tool_get_weather(location: str) -> dict[str, Any]:
     if not _WEB_ALLOWED.get():
         return {"tool": "get_weather", "status": "blocked", "error": _WEB_BLOCKED_MSG, "location": location}
     """
@@ -3067,7 +3066,7 @@ def tool_get_weather(location: str) -> Dict[str, Any]:
             for c in candidates_cfg
         )
         if not has_explicit_country:
-            candidate_results: List[Dict[str, Any]] = []
+            candidate_results: list[dict[str, Any]] = []
             for cand in candidates_cfg[:2]:
                 data = _fetch_wttr_in(cand["query"])
                 if data:
@@ -3128,7 +3127,7 @@ def tool_get_weather(location: str) -> Dict[str, Any]:
     }
 
 
-def _synthesize_weather_grounded_answer(clean_msg: str, tr: Dict[str, Any]) -> str:
+def _synthesize_weather_grounded_answer(clean_msg: str, tr: dict[str, Any]) -> str:
     """Produces clean, formatted markdown with meteorological metrics and country confirmation."""
     if tr.get("is_ambiguous"):
         cands = tr.get("candidates") or []
@@ -3178,8 +3177,8 @@ def _synthesize_weather_grounded_answer(clean_msg: str, tr: Dict[str, Any]) -> s
 
 
 def execute_nas_tool(
-    tool_name: str, args: Dict[str, Any], principal: Any = None, confirmed: bool = False
-) -> Dict[str, Any]:
+    tool_name: str, args: dict[str, Any], principal: Any = None, confirmed: bool = False
+) -> dict[str, Any]:
     """
     Safely dispatches a tool call with parameter validation, scope checks,
     and hardware safety invariants (standby preservation, CPU fan protection,
@@ -3264,7 +3263,7 @@ def execute_nas_tool(
         }
 
 
-def _format_tool_trace_summary(tr: Dict[str, Any], tool_name: str) -> str:
+def _format_tool_trace_summary(tr: dict[str, Any], tool_name: str) -> str:
     """Produces a concise 1-line telemetry summary for a completed tool call."""
     tname = str(tr.get("tool") or tool_name)
     if tname == "get_system_telemetry":
@@ -3305,15 +3304,15 @@ def _format_tool_trace_summary(tr: Dict[str, Any], tool_name: str) -> str:
 # ============================================================================
 
 
-def _get_docker_host_ips() -> List[str]:
+def _get_docker_host_ips() -> list[str]:
     """Hosts that may run this NAS's AI runtime; never a LAN router (AI-05, see ai_endpoints)."""
     from backend.services.ai_endpoints import candidate_hosts
 
     return candidate_hosts(_detected_host_ip())
 
 
-_ACTIVE_ENDPOINT_CACHE: Dict[str, Tuple[str, str, float]] = {}  # cache_key -> (runtime_kind, url, expires)
-_LAST_MODEL_PROBLEM: Dict[str, str] = {"text": ""}  # why the selected model couldn't answer
+_ACTIVE_ENDPOINT_CACHE: dict[str, tuple[str, str, float]] = {}  # cache_key -> (runtime_kind, url, expires)
+_LAST_MODEL_PROBLEM: dict[str, str] = {"text": ""}  # why the selected model couldn't answer
 
 # Live streaming (AI-12): when a sink is set, LLM replies are streamed and each piece is passed to
 # sink(kind, text) with kind "token", "think" or "reset" (drop what was streamed: the model chose
@@ -3380,16 +3379,16 @@ class _ThinkSplitter:
         self.buf = ""
 
 
-def _read_llm_stream(resp: Any, runtime_kind: str) -> Dict[str, Any]:
+def _read_llm_stream(resp: Any, runtime_kind: str) -> dict[str, Any]:
     """Reads a streamed Ollama (NDJSON) or OpenAI-compatible (SSE) reply, passing pieces to the
     token sink as they arrive, and returns it in the same shape as a non-streamed reply."""
     sink = _TOKEN_SINK.get() or (lambda kind, text: None)
     splitter = _ThinkSplitter(sink)
-    content: List[str] = []
-    thinking: List[str] = []
-    ollama_calls: List[Any] = []
-    oa_calls: Dict[int, Dict[str, Any]] = {}
-    final: Dict[str, Any] = {}
+    content: list[str] = []
+    thinking: list[str] = []
+    ollama_calls: list[Any] = []
+    oa_calls: dict[int, dict[str, Any]] = {}
+    final: dict[str, Any] = {}
     is_openai = runtime_kind == "openai_compatible"
     for raw in resp:
         if _cancelled():
@@ -3467,15 +3466,15 @@ def _read_llm_stream(resp: Any, runtime_kind: str) -> Dict[str, Any]:
 def _try_local_llm_completion(
     active_model: str,
     llm_endpoint: str,
-    messages: List[Dict[str, str]],
-    tools: Optional[List[Dict[str, Any]]] = None,
-) -> Tuple[
-    Optional[str],
-    Optional[str],
+    messages: list[dict[str, str]],
+    tools: list[dict[str, Any]] | None = None,
+) -> tuple[
+    str | None,
+    str | None,
     int,
-    Optional[float],
-    Optional[Dict[str, Any]],
-    Optional[List[Dict[str, Any]]],
+    float | None,
+    dict[str, Any] | None,
+    list[dict[str, Any]] | None,
 ]:
     """
     Attempts to call a live local LLM runtime (Ollama `/api/chat` or OpenAI `/v1/chat/completions`)
@@ -3488,7 +3487,7 @@ def _try_local_llm_completion(
     if active_model in ("OpenVINO/clip-vit-base-patch16-int8-ov",) or is_embedding_only_model(active_model):
         return (None, None, 0, None, None, None)
 
-    candidate_endpoints: List[Tuple[str, str]] = []
+    candidate_endpoints: list[tuple[str, str]] = []
     if llm_endpoint and llm_endpoint.strip():
         ep = llm_endpoint.strip().rstrip("/")
         if ep.endswith("/v1") or "/v1/" in ep:
@@ -3520,7 +3519,7 @@ def _try_local_llm_completion(
 
     # Deduplicate candidate endpoints preserving order
     seen_eps = set()
-    deduped_eps: List[Tuple[str, str]] = []
+    deduped_eps: list[tuple[str, str]] = []
     for ep in candidate_endpoints:
         if ep[1] not in seen_eps:
             seen_eps.add(ep[1])
@@ -3591,7 +3590,7 @@ def _try_local_llm_completion(
                 except Exception:
                     pass
 
-                ollama_req_body: Dict[str, Any] = {
+                ollama_req_body: dict[str, Any] = {
                     "model": model_to_use,
                     "messages": messages,
                     "stream": streaming,
@@ -3631,7 +3630,7 @@ def _try_local_llm_completion(
                 except Exception:
                     pass
 
-                openai_req_body: Dict[str, Any] = {
+                openai_req_body: dict[str, Any] = {
                     "model": model_to_use,
                     "messages": messages,
                     "temperature": 0.2,
@@ -3699,7 +3698,7 @@ def _try_local_llm_completion(
                         measured_tok_sec = round(toks / (eval_duration_ns / 1e9), 1)
 
                     # Probe Ollama /api/ps to determine whether inference ran on GPU (VRAM > 0) or CPU
-                    ollama_accel: Optional[Dict[str, Any]] = None
+                    ollama_accel: dict[str, Any] | None = None
                     try:
                         ps_url = url.replace("/api/chat", "/api/ps")
                         p_req = urllib.request.Request(ps_url, headers={"User-Agent": "ZettNAS-Toolkit/2.0"})
@@ -3745,7 +3744,7 @@ def _try_local_llm_completion(
     return (None, None, 0, None, None, None)
 
 
-def _estimate_model_tok_per_sec(active_model: str, model_info: Optional[Dict[str, Any]], tier_num: int) -> float:
+def _estimate_model_tok_per_sec(active_model: str, model_info: dict[str, Any] | None, tier_num: int) -> float:
     """Computes a realistic hardware token generation speed for the active model and NPU/GPU tier."""
     m_low = str(active_model or "").lower()
     spd_field = (model_info.get("estimated_speed") or model_info.get("est_speed")) if model_info else None
@@ -3771,16 +3770,16 @@ def _estimate_model_tok_per_sec(active_model: str, model_info: Optional[Dict[str
 
 
 def build_llm_execution_telemetry(
-    active_model: Optional[str] = None,
-    accel: Optional[Dict[str, Any]] = None,
+    active_model: str | None = None,
+    accel: dict[str, Any] | None = None,
     elapsed_ms: float = 15.0,
     answer_text: str = "",
-    runtime_name: Optional[str] = None,
+    runtime_name: str | None = None,
     eval_tokens: int = 0,
-    measured_tok_sec: Optional[float] = None,
-    tools_called: Optional[List[str]] = None,
+    measured_tok_sec: float | None = None,
+    tools_called: list[str] | None = None,
     web_sources_count: int = 0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Builds transparent LLM & Hardware Execution Telemetry for both RAG and Chat responses."""
     if not active_model:
         try:
@@ -3963,16 +3962,15 @@ def _is_self_identity_question(msg_lower: str) -> bool:
         return True
 
     # Regex: "who ... (created|trained|made|built|programmed|authored) ... (you|your|model|llm|bot|assistant|underdog|saluki)"
-    if re.search(
-        r"\bwho\b.*\b(created|trained|made|built|programmed|authored|owns|fathered)\b.*\b(you|your|model|llm|bot|assistant|underdog|saluki)\b",
-        joined,
-    ):
-        return True
+    return bool(
+        re.search(
+            r"\bwho\b.*\b(created|trained|made|built|programmed|authored|owns|fathered)\b.*\b(you|your|model|llm|bot|assistant|underdog|saluki)\b",
+            joined,
+        )
+    )
 
-    return False
 
-
-def _get_model_creator_attribution(active_model: str, model_info: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def _get_model_creator_attribution(active_model: str, model_info: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Returns verified creator and developer attribution for the active LLM model family.
     """
@@ -4041,10 +4039,10 @@ def _get_model_creator_attribution(active_model: str, model_info: Optional[Dict[
 def _synthesize_self_identity_answer(
     clean_msg: str,
     active_model: str,
-    model_info: Optional[Dict[str, Any]],
-    accel: Dict[str, Any],
+    model_info: dict[str, Any] | None,
+    accel: dict[str, Any],
     ram_gb: float,
-    telemetry: Optional[Dict[str, Any]] = None,
+    telemetry: dict[str, Any] | None = None,
 ) -> str:
     """Who ZettAI is, in facts this NAS can back up: no invented dates, numbers or guarantees (AI-02, AI-16)."""
     try:
@@ -4089,7 +4087,7 @@ def _synthesize_self_identity_answer(
 
 def _synthesize_web_grounded_answer(
     clean_msg: str,
-    web_tool_result: Dict[str, Any],
+    web_tool_result: dict[str, Any],
     active_model: str,
 ) -> str:
     """
@@ -4109,7 +4107,7 @@ def _synthesize_web_grounded_answer(
     is_reasoning_model = any(k in active_model.lower() for k in ("deepseek-r1", "qwq", "-r1"))
     article_title = str(facts.get("article_title") or search_topic).strip()
 
-    answer_paragraphs: List[str] = []
+    answer_paragraphs: list[str] = []
 
     # 1. Intent: Education & Schooling ("Where did X study?", "Where went to school", "education", "alma mater")
     is_education = any(
@@ -4151,7 +4149,7 @@ def _synthesize_web_grounded_answer(
             )
         else:
             # Generic education extractor across sources
-            edu_sentences: List[Tuple[str, int]] = []
+            edu_sentences: list[tuple[str, int]] = []
             edu_keywords = (
                 "school",
                 "university",
@@ -4246,7 +4244,7 @@ def _synthesize_web_grounded_answer(
     # 6. General Conversational Synthesis
     else:
         q_words = [w for w in re.findall(r"[a-z0-9]+", msg_low) if w not in _CHAT_STOPWORDS and len(w) >= 3]
-        best_sentences: List[Tuple[str, int, int]] = []
+        best_sentences: list[tuple[str, int, int]] = []
         for idx_s, s in enumerate(srcs[:3], start=1):
             snip = s.get("snippet") or ""
             clean_sents = _split_sentences_safe(snip)
@@ -4282,7 +4280,7 @@ def _synthesize_web_grounded_answer(
 
 def _synthesize_rag_grounded_answer(
     clean_msg: str,
-    rag_tool_result: Dict[str, Any],
+    rag_tool_result: dict[str, Any],
     active_model: str,
 ) -> str:
     """
@@ -4302,7 +4300,7 @@ def _synthesize_rag_grounded_answer(
     if not citations and not photos and not ans_summary and not manifest:
         return ""
 
-    sections: List[str] = []
+    sections: list[str] = []
 
     # 2. Context Banner
     if folder_path:
@@ -4369,7 +4367,7 @@ def _synthesize_rag_grounded_answer(
     return "\n\n".join(sections)
 
 
-def _generate_local_code_response(clean_msg: str, active_model: str) -> Optional[str]:
+def _generate_local_code_response(clean_msg: str, active_model: str) -> str | None:
     """Generates complete, production-grade scripts, Docker Compose, or SQL configurations."""
     msg_low = clean_msg.lower()
     is_coding = any(
@@ -4443,8 +4441,8 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> Optional
             "import re\n"
             "import subprocess\n"
             "import sys\n"
-            "from typing import Any, Dict, List, Optional\n\n\n"
-            "def check_disk_temperature(device_path: str) -> Dict[str, Any]:\n"
+            "from typing import Any, dict, list, Optional\n\n\n"
+            "def check_disk_temperature(device_path: str) -> dict[str, Any]:\n"
             '    """\n'
             "    Checks the temperature and power mode of a block device.\n"
             "    Uses `smartctl -n standby` to ensure sleeping drives never spin up.\n"
@@ -4746,7 +4744,7 @@ def _pct(v: Any) -> str:
     return "unknown" if v is None else f"{v}%"
 
 
-def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
+def _build_structured_llm_context(tool_results: list[dict[str, Any]]) -> str:
     """
     Builds a compact, human-readable Markdown context block from tool results.
     Strips raw JSON syntax and formats web sources and system telemetry concisely,
@@ -4755,7 +4753,7 @@ def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
     if not tool_results:
         return ""
 
-    blocks: List[str] = []
+    blocks: list[str] = []
     for tr in tool_results:
         tname = tr.get("tool", "")
         if tname == "browse_internet":
@@ -4845,7 +4843,7 @@ def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
             score = tr.get("grounding_confidence_score", 95)
             grade = tr.get("crag_grade", "high")
 
-            rag_lines: List[str] = []
+            rag_lines: list[str] = []
             if not citations and not ctx_text and not photos:
                 rag_lines.append("## Local NAS Knowledge Base Search (0 Results Found):")
                 rag_lines.append(
@@ -4864,7 +4862,7 @@ def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
                 if manifest and manifest.get("outline"):
                     rag_lines.append(f"Folder Structure:\n{_as_data(manifest.get('outline'))}")
 
-                doc_lines: List[str] = [f'<retrieved_documents count="{len(citations)}">']
+                doc_lines: list[str] = [f'<retrieved_documents count="{len(citations)}">']
                 if citations:
                     for idx, c in enumerate(citations[:8], start=1):
                         doc_title = (c.get("doc_title") or c.get("name") or "Document").strip()
@@ -4907,7 +4905,7 @@ def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
                 rag_lines.append("\n".join(doc_lines))
 
                 if photos:
-                    photo_lines: List[str] = [f'<retrieved_photos count="{len(photos)}">']
+                    photo_lines: list[str] = [f'<retrieved_photos count="{len(photos)}">']
                     for p_idx, p in enumerate(photos[:6], start=1):
                         p_name = p.get("name") or p.get("file_name") or f"photo_{p_idx}"
                         p_path = p.get("path") or p.get("canonical_path") or ""
@@ -4988,12 +4986,12 @@ def _build_structured_llm_context(tool_results: List[Dict[str, Any]]) -> str:
 
 def run_agentic_chat(
     message: str,
-    history: Optional[List[Dict[str, Any]]] = None,
+    history: list[dict[str, Any]] | None = None,
     allow_web_search: bool = False,
     allow_nas_tools: bool = True,
-    model_override: Optional[str] = None,
+    model_override: str | None = None,
     principal: Any = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Runs one chat turn in its own context, so its web permission can't leak to later calls."""
     return contextvars.copy_context().run(
         _run_agentic_chat_turn, message, history, allow_web_search, allow_nas_tools, model_override, principal
@@ -5002,12 +5000,12 @@ def run_agentic_chat(
 
 def _run_agentic_chat_turn(
     message: str,
-    history: Optional[List[Dict[str, Any]]] = None,
+    history: list[dict[str, Any]] | None = None,
     allow_web_search: bool = False,
     allow_nas_tools: bool = True,
-    model_override: Optional[str] = None,
+    model_override: str | None = None,
     principal: Any = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Executes a conversational turn with the ZettAI Local Chatbot & NAS Copilot:
       1. Detects required NAS Hardware Tools (telemetry, standby-safe disks, fan control,
@@ -5053,11 +5051,11 @@ def _run_agentic_chat_turn(
                     break
         combined_prev = (last_assistant_msg + " " + last_user_msg).lower()
 
-    tool_results: List[Dict[str, Any]] = []
-    tools_called: List[str] = []
-    web_sources: List[Dict[str, Any]] = []
-    citations: List[Dict[str, Any]] = []
-    photos: List[Dict[str, Any]] = []
+    tool_results: list[dict[str, Any]] = []
+    tools_called: list[str] = []
+    web_sources: list[dict[str, Any]] = []
+    citations: list[dict[str, Any]] = []
+    photos: list[dict[str, Any]] = []
 
     # --- Step 1: Intelligent Tool Routing & Execution ---
     if allow_nas_tools:
@@ -5534,7 +5532,7 @@ def _run_agentic_chat_turn(
 
     if tool_results:
         system_prompt = f"{system_prompt}\n\n{UNTRUSTED_DATA_RULE}"
-    llm_messages: List[Dict[str, str]] = [{"role": "system", "content": system_prompt}]
+    llm_messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
     for h in (history or [])[-6:]:
         if isinstance(h, dict) and h.get("role") in ("user", "assistant") and h.get("content"):
             llm_messages.append({"role": str(h["role"]), "content": str(h["content"])[:800]})
@@ -5674,7 +5672,7 @@ def _run_agentic_chat_turn(
                 telemetry=telemetry_data,
             )
         else:
-            sections: List[str] = []
+            sections: list[str] = []
 
             for idx, tr in enumerate(tool_results):
                 tname = tr.get("tool") or (tools_called[idx] if idx < len(tools_called) else "")
@@ -5837,7 +5835,7 @@ def _run_agentic_chat_turn(
                         llm_reply = think_prefix + autonomous_reply
 
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
-    tools_called_trace: List[Dict[str, Any]] = []
+    tools_called_trace: list[dict[str, Any]] = []
     for idx, tr in enumerate(tool_results):
         tname = str(tr.get("tool") or (tools_called[idx] if idx < len(tools_called) else "tool"))
         if tname == "get_system_telemetry":
@@ -5926,12 +5924,12 @@ def _run_agentic_chat_turn(
 
 async def stream_agentic_chat(
     message: str,
-    history: Optional[List[Dict[str, Any]]] = None,
+    history: list[dict[str, Any]] | None = None,
     allow_web_search: bool = False,
     allow_nas_tools: bool = True,
-    model_override: Optional[str] = None,
+    model_override: str | None = None,
     principal: Any = None,
-    conversation_id: Optional[str] = None,
+    conversation_id: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Streams conversational tokens, tool events, and execution telemetry via Server-Sent Events (SSE).

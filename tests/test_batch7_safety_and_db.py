@@ -40,13 +40,12 @@ def test_db_session_rolls_back_on_error():
     """Verify that unhandled exceptions inside db_session trigger a rollback before closing."""
     init_db()
     ts = int(time.time()) + 88888
-    with pytest.raises(RuntimeError, match="Simulated DB Error"):
-        with db_session() as conn:
-            conn.execute(
-                "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
-                (ts, 99.0, 10.0, 20.0, "[]", "[]"),
-            )
-            raise RuntimeError("Simulated DB Error")
+    with pytest.raises(RuntimeError, match="Simulated DB Error"), db_session() as conn:
+        conn.execute(
+            "INSERT INTO metrics (ts, cpu_temp, cpu_util, mem_pct, disks_json, fans_json) VALUES (?, ?, ?, ?, ?, ?)",
+            (ts, 99.0, 10.0, 20.0, "[]", "[]"),
+        )
+        raise RuntimeError("Simulated DB Error")
 
     # Verify that connection is closed
     with pytest.raises(sqlite3.ProgrammingError):

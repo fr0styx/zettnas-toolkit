@@ -6,7 +6,8 @@ and seamless fallback to Python's standard `json` library.
 """
 
 import json
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any, Optional
 
 try:
     import orjson
@@ -42,7 +43,7 @@ def _sanitize_dict_keys(obj: Any) -> Any:
     return obj
 
 
-def dumps_bytes(obj: Any, default: Optional[Callable[[Any], Any]] = None) -> bytes:
+def dumps_bytes(obj: Any, default: Callable[[Any], Any] | None = None) -> bytes:
     """Serializes a Python object to JSON bytes."""
     handler = default or _serialize_default
     if _HAS_ORJSON:
@@ -54,7 +55,7 @@ def dumps_bytes(obj: Any, default: Optional[Callable[[Any], Any]] = None) -> byt
     return json.dumps(obj, default=handler, separators=(",", ":")).encode("utf-8")
 
 
-def dumps(obj: Any, default: Optional[Callable[[Any], Any]] = None) -> str:
+def dumps(obj: Any, default: Callable[[Any], Any] | None = None) -> str:
     """Serializes a Python object to a JSON string."""
     return dumps_bytes(obj, default=default).decode("utf-8")
 

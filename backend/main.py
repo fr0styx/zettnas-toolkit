@@ -21,8 +21,8 @@ from fastapi.staticfiles import StaticFiles
 
 from backend import __version__
 from backend.api import api_router
+from backend.api.webdav import proxy_router as webdav_proxy_router
 from backend.auth import auth_middleware, purge_legacy_session_files
-from backend.logging_config import correlation_id_ctx, setup_structured_logging
 from backend.config import (
     COLLECTOR_WATCHDOG_SECS,
     DATA_DIR,
@@ -40,14 +40,14 @@ from backend.hardware.fans import failsafe_release_fans
 from backend.hardware.led import apply_led_state
 from backend.hardware.network import read_ip
 from backend.hardware.storage import detect_chassis_model
+from backend.logging_config import correlation_id_ctx, setup_structured_logging
+from backend.services.backup_engine import start_backup_scheduler, stop_backup_scheduler
 from backend.services.broadcaster import broadcaster
-from backend.api.webdav import proxy_router as webdav_proxy_router
-from backend.services.webdav_engine import get_webdav_engine
-from backend.services.notifications import close_notification_client
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
+from backend.services.notifications import close_notification_client
 from backend.services.stats_collector import smart_poller_daemon, stats_collector_daemon
-from backend.services.backup_engine import start_backup_scheduler, stop_backup_scheduler
+from backend.services.webdav_engine import get_webdav_engine
 from backend.state import Z_STATE, _load_events, add_event
 
 
@@ -181,7 +181,7 @@ def startup_system():
             import time
 
             time.sleep(3.0)  # Brief pause to allow storage and bridge initialization
-            from backend.api.vms import _load_vms, _start_qemu, _is_qemu_process_alive, _get_qemu_vnc_port, _save_vms
+            from backend.api.vms import _get_qemu_vnc_port, _is_qemu_process_alive, _load_vms, _save_vms, _start_qemu
 
             vms = _load_vms()
             started_any = False
@@ -388,7 +388,7 @@ def serve_index(request: Request):
             with open(picked[0], "rb") as f:
                 body = f.read()
             return Response(content=body, media_type="text/html", headers={**headers, "Content-Encoding": picked[1]})
-    with open(index_file, "r", encoding="utf-8") as f:
+    with open(index_file, encoding="utf-8") as f:
         html_str = f.read()
     if is_lcd:
         html_str = html_str.replace('class="studio-workbench', 'class="studio-workbench lcd-direct')

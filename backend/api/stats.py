@@ -95,4 +95,4 @@ def get_history(range: str = "24h"):
         return JSONResponse(data)
     except Exception as e:
         logger.error(f"[HISTORY] Query failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to load history")
+        raise HTTPException(status_code=500, detail="Failed to load history") from e

@@ -2,7 +2,7 @@
 import asyncio
 import json
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -24,17 +24,17 @@ class AppSourceToggleRequest(BaseModel):
 
 
 class AppSideloadRequest(BaseModel):
-    url: Optional[str] = None
-    manifest_content: Optional[str] = None
+    url: str | None = None
+    manifest_content: str | None = None
 
 
 class AppComposeRequest(BaseModel):
-    host_port: Optional[int] = None
+    host_port: int | None = None
     storage_root: str = "/mnt/user/appdata"
-    container_name: Optional[str] = None
-    env_overrides: Optional[Dict[str, str]] = None
-    volume_overrides: Optional[Dict[str, str]] = None
-    stack_services: Optional[Dict[str, Any]] = None
+    container_name: str | None = None
+    env_overrides: dict[str, str] | None = None
+    volume_overrides: dict[str, str] | None = None
+    stack_services: dict[str, Any] | None = None
 
 
 class ContainerExecRequest(BaseModel):
@@ -63,10 +63,10 @@ async def post_docker_catalog_sources(req: AppSourceCreateRequest):
         res = await asyncio.to_thread(add_catalog_source, req.name, req.url)
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[AppCatalog] Failed to add source: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete("/docker/catalog/sources/{source_id}", dependencies=[Depends(require_scope("containers:manage"))])
@@ -82,10 +82,10 @@ async def delete_docker_catalog_source(source_id: str):
             raise HTTPException(status_code=404, detail="Source not found")
         return {"status": "ok", "deleted": True}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[AppCatalog] Failed to delete source: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/docker/catalog/sources/{source_id}/sync", dependencies=[Depends(require_scope("containers:manage"))])
@@ -99,10 +99,10 @@ async def post_docker_catalog_source_sync(source_id: str):
         updated = await asyncio.to_thread(sync_catalog_source, source_id)
         return {"status": "ok", "source": updated}
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[AppCatalog] Failed to sync source: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/docker/catalog/sources/{source_id}/toggle", dependencies=[Depends(require_scope("containers:manage"))])
@@ -116,10 +116,10 @@ async def post_docker_catalog_source_toggle(source_id: str, req: AppSourceToggle
         updated = await asyncio.to_thread(toggle_catalog_source, source_id, req.enabled)
         return {"status": "ok", "source": updated}
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[AppCatalog] Failed to toggle source: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/docker/catalog/sideload", dependencies=[Depends(require_scope("containers:manage"))])
@@ -131,10 +131,10 @@ async def post_docker_catalog_sideload(req: AppSideloadRequest):
         res = await asyncio.to_thread(sideload_app_manifest, req.url, req.manifest_content)
         return res
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[AppCatalog] Failed to sideload manifest: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/docker/catalog/{app_id}/resolve")
@@ -150,7 +150,7 @@ async def get_docker_catalog_resolve(app_id: str):
 
 
 @router.post("/docker/catalog/{app_id}/compose", dependencies=[Depends(require_scope("containers:manage"))])
-async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeRequest] = None):
+async def post_docker_catalog_compose(app_id: str, req: AppComposeRequest | None = None):
     if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
         raise HTTPException(status_code=400, detail="Invalid application ID")
     from backend.services.app_catalog import generate_compose_for_app
@@ -177,9 +177,9 @@ async def post_docker_catalog_compose(app_id: str, req: Optional[AppComposeReque
 
 
 class AppDeployRequest(BaseModel):
-    host_port: Optional[int] = None
+    host_port: int | None = None
     storage_root: str = "/mnt/user/appdata"
-    container_name: Optional[str] = None
+    container_name: str | None = None
     replace_existing: bool = False
 
 
@@ -197,11 +197,12 @@ async def get_check_container_name(name: str):
 
 
 @router.post("/docker/catalog/{app_id}/deploy", dependencies=[Depends(require_scope("containers:manage"))])
-async def post_docker_catalog_deploy(app_id: str, req: Optional[AppDeployRequest] = None):
+async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None = None):
     if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
         raise HTTPException(status_code=400, detail="Invalid application ID")
 
     from fastapi.responses import StreamingResponse
+
     from backend.services.app_catalog import stream_deploy_catalog_app
 
     host_port = req.host_port if req else None

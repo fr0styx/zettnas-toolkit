@@ -30,7 +30,7 @@ def test_destroy_container_self_protection():
     ):
         try:
             destroy_container("self999")
-            assert False, "Should have raised ValueError on self-deletion"
+            raise AssertionError("Should have raised ValueError on self-deletion")
         except ValueError as exc:
             assert "Cannot destroy the zettnas-toolkit container itself" in str(exc)
 

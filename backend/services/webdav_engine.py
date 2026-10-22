@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import backend.config as config
 from backend.fsutil import atomic_write_json, read_json
@@ -39,12 +39,12 @@ class WebdavEngine:
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._proc: Optional[subprocess.Popen] = None
-        self._started_at: Optional[float] = None
-        self._last_error: Optional[str] = None
+        self._proc: subprocess.Popen | None = None
+        self._started_at: float | None = None
+        self._last_error: str | None = None
         self.ensure_config_defaults()
 
-    def get_default_config(self) -> Dict[str, Any]:
+    def get_default_config(self) -> dict[str, Any]:
         root = config.POOL_PATH if os.path.exists(config.POOL_PATH) else "/mnt/user"
         return {
             "enabled": False,  # opt-in: exposes every share over the network (SEC-02)
@@ -66,7 +66,7 @@ class WebdavEngine:
             except OSError as e:
                 logger.warning(f"Failed to initialize webdav config: {e}")
 
-    def load_config(self) -> Dict[str, Any]:
+    def load_config(self) -> dict[str, Any]:
         defaults = self.get_default_config()
         stored = read_json(config.WEBDAV_CONFIG_FILE, {})
         if not isinstance(stored, dict):
@@ -79,7 +79,7 @@ class WebdavEngine:
             merged["port"] = config.WEBDAV_PORT
         return merged
 
-    def save_config(self, new_cfg: Dict[str, Any]) -> Dict[str, Any]:
+    def save_config(self, new_cfg: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
             current = self.load_config()
             for k in ["enabled", "port", "root_path", "read_only", "username", "password", "auth_enabled"]:
@@ -102,7 +102,7 @@ class WebdavEngine:
                 self._started_at = None
         return False
 
-    def start(self) -> Dict[str, Any]:
+    def start(self) -> dict[str, Any]:
         """Starts the rclone serve webdav background process."""
         with self._lock:
             if self.is_running():
@@ -198,7 +198,7 @@ class WebdavEngine:
 
             return self.get_status()
 
-    def stop(self) -> Dict[str, Any]:
+    def stop(self) -> dict[str, Any]:
         """Stops the rclone serve webdav background process."""
         with self._lock:
             if self._proc is not None:
@@ -215,7 +215,7 @@ class WebdavEngine:
                 self._started_at = None
             return self.get_status()
 
-    def restart(self) -> Dict[str, Any]:
+    def restart(self) -> dict[str, Any]:
         self.stop()
         return self.start()
 
@@ -224,7 +224,7 @@ class WebdavEngine:
         if cfg.get("enabled", False):
             self.start()
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         cfg = self.load_config()
         running = self.is_running()
         port = int(cfg.get("port", config.WEBDAV_PORT))
@@ -259,7 +259,7 @@ class WebdavEngine:
 
 
 # Global singleton instance
-_webdav_engine: Optional[WebdavEngine] = None
+_webdav_engine: WebdavEngine | None = None
 
 
 def get_webdav_engine() -> WebdavEngine:

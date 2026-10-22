@@ -14,6 +14,7 @@ import math
 import os
 import random
 import sys
+
 import pytest
 
 # Ensure /app is in sys.path when executed directly as a script
@@ -24,8 +25,8 @@ if _repo_root not in sys.path:
     sys.path.insert(0, _repo_root)
 
 from backend.services.rag_engine import (
-    truncate_and_normalize_mrl,
     cosine_similarity_vec,
+    truncate_and_normalize_mrl,
 )
 
 

@@ -70,7 +70,7 @@ def test_docker_compose_no_wildcard_cgroups():
     compose_path = next((p for p in candidates if os.path.exists(p)), None)
     if not compose_path:
         pytest.skip("docker-compose.yml not accessible in container image")
-    with open(compose_path, "r") as f:
+    with open(compose_path) as f:
         data = yaml.safe_load(f)
 
     cgroups = data["services"]["zettnas-toolkit"].get("device_cgroup_rules", [])

@@ -11,11 +11,10 @@ they protect against floods, not against a determined attacker across restarts.
 import threading
 import time
 from collections import deque
-from typing import Deque, Dict
 
 from fastapi import HTTPException, Request
 
-_hits: Dict[str, Deque[float]] = {}
+_hits: dict[str, deque[float]] = {}
 _lock = threading.Lock()
 _MAX_KEYS = 20000
 

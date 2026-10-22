@@ -9,13 +9,15 @@ import asyncio
 import json
 import os
 from typing import Optional
+
 from fastapi import WebSocket, WebSocketDisconnect
+
 from backend.config import logger
 
 DOCKER_SOCK_PATH = "/var/run/docker.sock"
 
 
-async def _docker_create_exec(container_id: str, shell: str = "/bin/sh") -> Optional[str]:
+async def _docker_create_exec(container_id: str, shell: str = "/bin/sh") -> str | None:
     """Creates an interactive exec instance in the target container."""
     try:
         reader, writer = await asyncio.open_unix_connection(DOCKER_SOCK_PATH)
@@ -34,7 +36,7 @@ async def _docker_create_exec(container_id: str, shell: str = "/bin/sh") -> Opti
             f"Host: docker\r\n"
             f"Content-Type: application/json\r\n"
             f"Content-Length: {len(body)}\r\n\r\n"
-        ).encode("utf-8") + body
+        ).encode() + body
 
         writer.write(req)
         await writer.drain()
@@ -57,7 +59,7 @@ async def _docker_resize_exec(exec_id: str, cols: int, rows: int) -> None:
     """Resizes the active exec PTY window."""
     try:
         reader, writer = await asyncio.open_unix_connection(DOCKER_SOCK_PATH)
-        req = (f"POST /exec/{exec_id}/resize?h={rows}&w={cols} HTTP/1.1\r\nHost: docker\r\n\r\n").encode("utf-8")
+        req = (f"POST /exec/{exec_id}/resize?h={rows}&w={cols} HTTP/1.1\r\nHost: docker\r\n\r\n").encode()
         writer.write(req)
         await writer.drain()
         await reader.read(1024)
@@ -105,7 +107,7 @@ async def stream_container_terminal(
             f"Connection: Upgrade\r\n"
             f"Upgrade: tcp\r\n"
             f"Content-Length: {len(start_body)}\r\n\r\n"
-        ).encode("utf-8") + start_body
+        ).encode() + start_body
 
         writer.write(start_req)
         await writer.drain()

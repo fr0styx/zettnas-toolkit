@@ -6,7 +6,8 @@ with persistent user bay slot mapping and Motherboard NVMe twin layout.
 
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, HOST_DEV, HOST_SYS, logger
@@ -20,13 +21,13 @@ CHASSIS_MAP_FILE = os.path.join(DATA_DIR, "bay_mapping.json")
 class BaySlotMapping(BaseModel):
     slot_index: int = Field(..., ge=1, le=48, description="Physical chassis slot number (1-based)")
     canonical_id: str = Field(..., description="Canonical persistent drive ID or serial")
-    custom_label: Optional[str] = Field(default=None, max_length=64)
+    custom_label: str | None = Field(default=None, max_length=64)
 
 
 class ChassisBayMapRequest(BaseModel):
     profile: str = Field(default="auto", pattern=r"^(auto|compact_dual|tower_desktop|rackmount_backplane|custom)$")
-    total_bays: Optional[int] = Field(default=None, ge=1, le=48)
-    mappings: List[BaySlotMapping] = Field(default_factory=list)
+    total_bays: int | None = Field(default=None, ge=1, le=48)
+    mappings: list[BaySlotMapping] = Field(default_factory=list)
 
 
 class ChassisEngine:
@@ -41,7 +42,7 @@ class ChassisEngine:
             dmi_path = os.path.join(base, "class/dmi/id", field)
             if os.path.exists(dmi_path):
                 try:
-                    with open(dmi_path, "r") as f:
+                    with open(dmi_path) as f:
                         return f.read().strip()
                 except Exception:
                     pass
@@ -64,7 +65,7 @@ class ChassisEngine:
         return cls._read_dmi_field("sys_vendor")
 
     @classmethod
-    def detect_hardware_features(cls) -> Dict[str, Any]:
+    def detect_hardware_features(cls) -> dict[str, Any]:
         """
         Detects whether running platform has custom hardware peripherals:
         Physical LCD Screen, Front Panel COPY Button, SD/TF Card slot, MCU ARGB Lightbar.
@@ -149,7 +150,7 @@ class ChassisEngine:
                 s_path = os.path.join(base, "stride")
                 if os.path.exists(v_path):
                     try:
-                        with open(v_path, "r", encoding="utf-8", errors="replace") as f:
+                        with open(v_path, encoding="utf-8", errors="replace") as f:
                             parts = [int(x.strip()) for x in f.read().split(",") if x.strip()]
                             if len(parts) == 2 and parts[0] > 0 and parts[1] > 0:
                                 display_w, display_h = max(parts), min(parts)
@@ -157,7 +158,7 @@ class ChassisEngine:
                         pass
                 if os.path.exists(s_path):
                     try:
-                        with open(s_path, "r", encoding="utf-8", errors="replace") as f:
+                        with open(s_path, encoding="utf-8", errors="replace") as f:
                             s_val = int(f.read().strip())
                             if s_val > 0:
                                 stride = s_val
@@ -221,21 +222,21 @@ class ChassisEngine:
         }
 
     @classmethod
-    def load_bay_mapping_config(cls) -> Dict[str, Any]:
+    def load_bay_mapping_config(cls) -> dict[str, Any]:
         if os.path.exists(CHASSIS_MAP_FILE):
             try:
-                with open(CHASSIS_MAP_FILE, "r") as f:
+                with open(CHASSIS_MAP_FILE) as f:
                     return json.load(f)
             except Exception as e:
                 logger.debug(f"[ChassisEngine] Failed reading {CHASSIS_MAP_FILE}: {e}")
         return {"profile": "auto", "total_bays": None, "mappings": []}
 
     @classmethod
-    def get_chassis_status(cls) -> Dict[str, Any]:
+    def get_chassis_status(cls) -> dict[str, Any]:
         """
         Synthesizes active physical disks, user slot mappings, and hardware chassis status.
         """
-        records: List[PhysicalDiskRecord] = DiskDiscoveryHAL.discover_physical_disks()
+        records: list[PhysicalDiskRecord] = DiskDiscoveryHAL.discover_physical_disks()
         hdds = [
             r
             for r in records
@@ -249,7 +250,7 @@ class ChassisEngine:
         cfg = cls.load_bay_mapping_config()
         configured_profile = cfg.get("profile", "auto")
         configured_total_bays = cfg.get("total_bays")
-        user_mappings: List[Dict[str, Any]] = cfg.get("mappings", [])
+        user_mappings: list[dict[str, Any]] = cfg.get("mappings", [])
 
         # 1. Determine Friendly Chassis Model Label & Hardware Brand
         dmi_prod = cls._read_dmi_product_name().lower()
@@ -426,14 +427,14 @@ class ChassisEngine:
                 friendly_label = chassis_model
 
         # 3. Build Drive Lookup Tables
-        disk_by_canonical: Dict[str, PhysicalDiskRecord] = {r.canonical_id: r for r in hdds}
-        disk_by_dev: Dict[str, PhysicalDiskRecord] = {r.dev_name: r for r in hdds}
-        disk_by_serial: Dict[str, PhysicalDiskRecord] = {
+        disk_by_canonical: dict[str, PhysicalDiskRecord] = {r.canonical_id: r for r in hdds}
+        disk_by_dev: dict[str, PhysicalDiskRecord] = {r.dev_name: r for r in hdds}
+        disk_by_serial: dict[str, PhysicalDiskRecord] = {
             r.serial: r for r in hdds if r.serial and r.serial != "Unknown"
         }
 
         # 4. Map Disks to Bays
-        slot_map: Dict[int, Dict[str, Any]] = {}
+        slot_map: dict[int, dict[str, Any]] = {}
         assigned_canonical: set = set()
 
         # Apply user mappings first
@@ -454,7 +455,7 @@ class ChassisEngine:
         unassigned_hdds = [d for d in hdds if d.canonical_id not in assigned_canonical]
         next_unassigned_idx = 0
 
-        bays: List[Dict[str, Any]] = []
+        bays: list[dict[str, Any]] = []
         for slot in range(1, total_bays + 1):
             if slot in slot_map:
                 entry = slot_map[slot]
@@ -505,7 +506,7 @@ class ChassisEngine:
                 )
 
         # 5. Motherboard M.2 NVMe Slots
-        nvme_slots: List[Dict[str, Any]] = []
+        nvme_slots: list[dict[str, Any]] = []
         for idx, nv in enumerate(nvmes, start=1):
             cached_temp, cached_health = Z_STATE.cached_smart_data.get(nv.dev_name, (None, "ok"))
             nvme_slots.append(
@@ -551,7 +552,7 @@ class ChassisEngine:
         }
 
     @classmethod
-    def save_bay_mapping(cls, req: ChassisBayMapRequest) -> Dict[str, Any]:
+    def save_bay_mapping(cls, req: ChassisBayMapRequest) -> dict[str, Any]:
         """
         Persists user custom chassis profile and bay slot ordering.
         """
@@ -568,7 +569,7 @@ class ChassisEngine:
         }
 
     @classmethod
-    def get_appliance_bridge_status(cls) -> Dict[str, Any]:
+    def get_appliance_bridge_status(cls) -> dict[str, Any]:
         """Discovers active hardware bridges for specialized NAS platforms."""
         features = cls.detect_hardware_features()
         vendor = features.get("sys_vendor", "").lower()

@@ -16,7 +16,7 @@ import re
 import sqlite3
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from backend.config import DATA_DIR, logger
 
@@ -29,7 +29,7 @@ def get_db_path() -> str:
 
 
 @contextlib.contextmanager
-def get_conv_db_connection(db_path: Optional[str] = None):
+def get_conv_db_connection(db_path: str | None = None):
     """Context manager returning a configured SQLite WAL connection with foreign keys enabled."""
     path = db_path or get_db_path()
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
@@ -49,7 +49,7 @@ def get_conv_db_connection(db_path: Optional[str] = None):
         conn.close()
 
 
-def init_conversations_db(db_path: Optional[str] = None) -> None:
+def init_conversations_db(db_path: str | None = None) -> None:
     """Initializes the conversation history tables, indices, and FTS5 search index."""
     with get_conv_db_connection(db_path) as conn:
         conn.execute("""
@@ -120,10 +120,10 @@ def create_conversation(
     user_id: str,
     title: str = "New Conversation",
     model: str = "",
-    conv_id: Optional[str] = None,
-    meta: Optional[Dict[str, Any]] = None,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    conv_id: str | None = None,
+    meta: dict[str, Any] | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Creates a new conversation thread scoped to the given user_id."""
     clean_uid = str(user_id or "admin").strip().lower()
     cid = conv_id or f"conv_{uuid.uuid4().hex[:12]}"
@@ -158,11 +158,11 @@ def create_conversation(
 
 def list_conversations(
     user_id: str,
-    search: Optional[str] = None,
+    search: str | None = None,
     include_archived: bool = False,
     limit: int = 60,
-    db_path: Optional[str] = None,
-) -> List[Dict[str, Any]]:
+    db_path: str | None = None,
+) -> list[dict[str, Any]]:
     """Lists conversations for user_id with optional search and chronological ordering."""
     clean_uid = str(user_id or "admin").strip().lower()
     clean_search = str(search or "").strip()
@@ -247,8 +247,8 @@ def list_conversations(
 def get_conversation(
     conv_id: str,
     user_id: str,
-    db_path: Optional[str] = None,
-) -> Optional[Dict[str, Any]]:
+    db_path: str | None = None,
+) -> dict[str, Any] | None:
     """Retrieves conversation metadata without messages."""
     clean_uid = str(user_id or "admin").strip().lower()
     with get_conv_db_connection(db_path) as conn:
@@ -281,8 +281,8 @@ def get_conversation(
 def get_conversation_with_messages(
     conv_id: str,
     user_id: str,
-    db_path: Optional[str] = None,
-) -> Optional[Dict[str, Any]]:
+    db_path: str | None = None,
+) -> dict[str, Any] | None:
     """Retrieves conversation metadata along with its full ordered message stream."""
     conv = get_conversation(conv_id, user_id, db_path)
     if not conv:
@@ -341,17 +341,17 @@ def get_conversation_with_messages(
 def update_conversation(
     conv_id: str,
     user_id: str,
-    title: Optional[str] = None,
-    is_pinned: Optional[bool] = None,
-    is_archived: Optional[bool] = None,
-    model: Optional[str] = None,
-    title_customized: Optional[bool] = None,
-    db_path: Optional[str] = None,
-) -> Optional[Dict[str, Any]]:
+    title: str | None = None,
+    is_pinned: bool | None = None,
+    is_archived: bool | None = None,
+    model: str | None = None,
+    title_customized: bool | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any] | None:
     """Updates editable attributes of a conversation thread."""
     clean_uid = str(user_id or "admin").strip().lower()
     updates = []
-    params: List[Any] = []
+    params: list[Any] = []
 
     if title is not None:
         clean_title = str(title).strip()[:120]
@@ -392,7 +392,7 @@ def update_conversation(
 def delete_conversation(
     conv_id: str,
     user_id: str,
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
 ) -> bool:
     """Deletes a conversation and all its messages permanently."""
     clean_uid = str(user_id or "admin").strip().lower()
@@ -412,7 +412,7 @@ def delete_conversation(
         return cur.rowcount > 0
 
 
-def purge_conversations_older_than(days: int, db_path: Optional[str] = None) -> int:
+def purge_conversations_older_than(days: int, db_path: str | None = None) -> int:
     """Deletes unpinned conversations not touched in `days` days, for every user (AI-20).
 
     days <= 0 keeps everything. Returns the number of conversations deleted.
@@ -441,7 +441,7 @@ def purge_conversations_older_than(days: int, db_path: Optional[str] = None) -> 
 
 def clear_all_conversations(
     user_id: str,
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
 ) -> int:
     """Deletes all conversations belonging to the user."""
     clean_uid = str(user_id or "admin").strip().lower()
@@ -466,14 +466,14 @@ def append_message(
     user_id: str,
     role: str,
     content: str,
-    telemetry: Optional[Dict[str, Any]] = None,
-    tools_called: Optional[List[Dict[str, Any]]] = None,
-    web_sources: Optional[List[Dict[str, Any]]] = None,
-    citations: Optional[List[Dict[str, Any]]] = None,
-    photos: Optional[List[Dict[str, Any]]] = None,
-    msg_id: Optional[str] = None,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    telemetry: dict[str, Any] | None = None,
+    tools_called: list[dict[str, Any]] | None = None,
+    web_sources: list[dict[str, Any]] | None = None,
+    citations: list[dict[str, Any]] | None = None,
+    photos: list[dict[str, Any]] | None = None,
+    msg_id: str | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Appends a user, assistant, or system message to an active conversation thread."""
     clean_uid = str(user_id or "admin").strip().lower()
     clean_role = str(role or "user").strip().lower()
@@ -603,8 +603,8 @@ def update_auto_title_if_not_customized(
     conv_id: str,
     user_id: str,
     prompt: str,
-    db_path: Optional[str] = None,
-) -> Optional[str]:
+    db_path: str | None = None,
+) -> str | None:
     """
     Updates conversation title based on user prompt IF title has not been customized by the user.
     Enforces Title Customization Guard (title_customized = 1).
@@ -632,9 +632,9 @@ def update_auto_title_if_not_customized(
 
 
 def get_dynamic_token_budget(
-    model_name: Optional[str] = None,
-    context_window: Optional[int] = None,
-    system_ram_bytes: Optional[int] = None,
+    model_name: str | None = None,
+    context_window: int | None = None,
+    system_ram_bytes: int | None = None,
     target_ratio: float = 0.25,
     min_budget: int = 800,
     max_budget: int = 8192,
@@ -683,12 +683,12 @@ def get_dynamic_token_budget(
 def get_token_budgeted_history(
     conv_id: str,
     user_id: str,
-    max_tokens: Optional[int] = None,
-    model_name: Optional[str] = None,
-    context_window: Optional[int] = None,
-    system_ram_bytes: Optional[int] = None,
-    db_path: Optional[str] = None,
-) -> List[Dict[str, str]]:
+    max_tokens: int | None = None,
+    model_name: str | None = None,
+    context_window: int | None = None,
+    system_ram_bytes: int | None = None,
+    db_path: str | None = None,
+) -> list[dict[str, str]]:
     """
     Extracts sliding-window conversation history for LLM context, stripped of heavy tool JSON dumps.
     Preserves turn N-1 in full detail for conversational pronoun resolution,
@@ -717,7 +717,7 @@ def get_token_budgeted_history(
     if not rows:
         return []
 
-    raw_turns: List[Dict[str, str]] = []
+    raw_turns: list[dict[str, str]] = []
     for r in rows:
         role = r["role"]
         content = r["content"] or ""
@@ -730,14 +730,11 @@ def get_token_budgeted_history(
 
     budget_chars = effective_max_tokens * 4
     accumulated_chars = 0
-    selected_turns: List[Dict[str, str]] = []
+    selected_turns: list[dict[str, str]] = []
 
     for idx, turn in enumerate(reversed(raw_turns)):
         turn_len = len(turn["content"])
-        if idx < 2:
-            selected_turns.append(turn)
-            accumulated_chars += turn_len
-        elif (accumulated_chars + turn_len) <= budget_chars:
+        if idx < 2 or (accumulated_chars + turn_len) <= budget_chars:
             selected_turns.append(turn)
             accumulated_chars += turn_len
         else:

@@ -9,7 +9,8 @@ import os
 import re
 import shutil
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from backend.config import POOL_PATH, logger
@@ -66,7 +67,7 @@ def clean_title(title: str) -> str:
     return cleaned.strip(" -_")
 
 
-def parse_media_filename(filename: str) -> Dict[str, Any]:
+def parse_media_filename(filename: str) -> dict[str, Any]:
     """
     Extracts semantic metadata (Type, Title, Year, Season, Episode, Resolution, Codec)
     from arbitrary file names using deterministic heuristics.
@@ -206,7 +207,7 @@ def parse_media_filename(filename: str) -> Dict[str, Any]:
     }
 
 
-def _get_allowed_media_roots() -> List[str]:
+def _get_allowed_media_roots() -> list[str]:
     from backend.config import ALLOWED_BROWSE_ROOTS
 
     roots = list(ALLOWED_BROWSE_ROOTS)
@@ -219,9 +220,9 @@ def _get_allowed_media_roots() -> List[str]:
 
 def preview_organize(
     source_dir: str,
-    target_dir: Optional[str] = None,
+    target_dir: str | None = None,
     media_type: str = "auto",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Scans source_dir for media files and calculates dry-run proposed destination paths.
     Safe and non-destructive: zero files are moved or altered.
@@ -241,7 +242,7 @@ def preview_organize(
     if not resolved_dest_root:
         raise ValueError(f"Target directory outside permitted storage roots: {dest_root}")
 
-    items: List[Dict[str, Any]] = []
+    items: list[dict[str, Any]] = []
 
     for root, _, files in os.walk(source_dir):
         for f in sorted(files):
@@ -293,10 +294,10 @@ def preview_organize(
 
 
 def apply_organize(
-    items: List[Dict[str, Any]],
+    items: list[dict[str, Any]],
     action: str = "move",
     hardlink: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Executes physical reorganization (atomic move, copy, or hardlink).
     Preserves torrent seeding when hardlink=True.

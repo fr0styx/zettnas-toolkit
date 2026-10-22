@@ -4,9 +4,10 @@ Unit and integration tests for Dynamic Chassis Engine and Multi-Tier Drive Locat
 
 import json
 from unittest.mock import MagicMock, patch
-from backend.hardware.chassis import ChassisEngine, ChassisBayMapRequest, BaySlotMapping
-from backend.hardware.locate import locate_drive_multitier
+
+from backend.hardware.chassis import BaySlotMapping, ChassisBayMapRequest, ChassisEngine
 from backend.hardware.hal import PhysicalDiskRecord
+from backend.hardware.locate import locate_drive_multitier
 
 
 def test_locate_drive_tier3_strobe_fallback():

@@ -5,17 +5,18 @@ Unit and Integration Tests for Batch 3 Community Features:
 """
 
 import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from backend.hardware.pal_storage import (
     GenericLinuxStorageAdapter,
-    UnraidStorageAdapter,
     PlatformCapabilityError,
     PlatformType,
+    UnraidStorageAdapter,
 )
+from backend.main import app
 
 
 @pytest.fixture(autouse=True)

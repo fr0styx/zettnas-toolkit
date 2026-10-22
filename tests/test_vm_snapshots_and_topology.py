@@ -1,16 +1,17 @@
 import os
 import shutil
 import tempfile
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from backend.api.vms import (
     VmCreateRequest,
-    VmUpdateRequest,
     VmSnapshotCreateRequest,
+    VmUpdateRequest,
 )
+from backend.main import app
 
 
 @pytest.fixture

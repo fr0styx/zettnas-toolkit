@@ -9,23 +9,22 @@ import os
 import re
 import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, logger
 
 
-def get_categorized_dmesg(max_lines: int = 300) -> Dict[str, Any]:
+def get_categorized_dmesg(max_lines: int = 300) -> dict[str, Any]:
     """
     Executes dmesg with a strict timeout and extracts hardware-critical alerts:
     thermal throttling, PCIe AER, I/O errors, memory faults, and crash logs.
     """
     cmd = ["dmesg", "-T", "--level=emerg,alert,crit,err,warn"]
-    lines: List[str] = []
+    lines: list[str] = []
     try:
         res = subprocess.run(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
             timeout=2.0,
             check=False,
@@ -36,8 +35,7 @@ def get_categorized_dmesg(max_lines: int = 300) -> Dict[str, Any]:
             # Fallback to plain dmesg if -T or --level is not supported on busybox
             fallback = subprocess.run(
                 ["dmesg"],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
                 timeout=2.0,
                 check=False,
@@ -57,7 +55,7 @@ def get_categorized_dmesg(max_lines: int = 300) -> Dict[str, Any]:
         re.compile(r"(btrfs: error|corrupt|checksum error|failed to read)", re.IGNORECASE),
     ]
 
-    alerts: List[Dict[str, str]] = []
+    alerts: list[dict[str, str]] = []
     for line in lines:
         for pat in error_patterns:
             if pat.search(line):
@@ -78,12 +76,12 @@ def get_categorized_dmesg(max_lines: int = 300) -> Dict[str, Any]:
     }
 
 
-def get_cpu_telemetry() -> Dict[str, Any]:
+def get_cpu_telemetry() -> dict[str, Any]:
     """
     Inspects /proc/cpuinfo and /sys/devices/system/cpu for governors, microcode,
     and thermal throttling counters.
     """
-    cpu_info: Dict[str, Any] = {
+    cpu_info: dict[str, Any] = {
         "model_name": "Unknown",
         "microcode": "Unknown",
         "governors": {},
@@ -97,7 +95,7 @@ def get_cpu_telemetry() -> Dict[str, Any]:
     )
     if os.path.exists(cpuinfo_path):
         try:
-            with open(cpuinfo_path, "r") as f:
+            with open(cpuinfo_path) as f:
                 for line in f:
                     if "model name" in line and cpu_info["model_name"] == "Unknown":
                         cpu_info["model_name"] = line.split(":", 1)[1].strip()
@@ -118,7 +116,7 @@ def get_cpu_telemetry() -> Dict[str, Any]:
         for gf in gov_files:
             try:
                 cpu_id = gf.split("/")[-3]
-                with open(gf, "r") as f:
+                with open(gf) as f:
                     cpu_info["governors"][cpu_id] = f.read().strip()
             except Exception:
                 pass
@@ -129,7 +127,7 @@ def get_cpu_telemetry() -> Dict[str, Any]:
             try:
                 parts = tf.split("/")
                 cpu_id, attr = parts[-3], parts[-1]
-                with open(tf, "r") as f:
+                with open(tf) as f:
                     val = f.read().strip()
                 if cpu_id not in cpu_info["thermal_throttling"]:
                     cpu_info["thermal_throttling"][cpu_id] = {}
@@ -140,7 +138,7 @@ def get_cpu_telemetry() -> Dict[str, Any]:
     return cpu_info
 
 
-def get_hardware_buses() -> Dict[str, Any]:
+def get_hardware_buses() -> dict[str, Any]:
     """
     Summarizes PCI and USB bus topologies.
     """
@@ -152,11 +150,11 @@ def get_hardware_buses() -> Dict[str, Any]:
                 d_path = os.path.join(pci_dir, d)
                 vendor, device, cls = "", "", ""
                 try:
-                    with open(os.path.join(d_path, "vendor"), "r") as f:
+                    with open(os.path.join(d_path, "vendor")) as f:
                         vendor = f.read().strip()
-                    with open(os.path.join(d_path, "device"), "r") as f:
+                    with open(os.path.join(d_path, "device")) as f:
                         device = f.read().strip()
-                    with open(os.path.join(d_path, "class"), "r") as f:
+                    with open(os.path.join(d_path, "class")) as f:
                         cls = f.read().strip()
                 except Exception:
                     pass
@@ -173,10 +171,10 @@ def get_hardware_buses() -> Dict[str, Any]:
                 prod, mfr = "", ""
                 try:
                     if os.path.exists(os.path.join(d_path, "product")):
-                        with open(os.path.join(d_path, "product"), "r") as f:
+                        with open(os.path.join(d_path, "product")) as f:
                             prod = f.read().strip()
                     if os.path.exists(os.path.join(d_path, "manufacturer")):
-                        with open(os.path.join(d_path, "manufacturer"), "r") as f:
+                        with open(os.path.join(d_path, "manufacturer")) as f:
                             mfr = f.read().strip()
                 except Exception:
                     pass
@@ -197,7 +195,7 @@ def get_hardware_buses() -> Dict[str, Any]:
                         attr_f = os.path.join(p_path, attr)
                         if os.path.isfile(attr_f):
                             try:
-                                with open(attr_f, "r") as f:
+                                with open(attr_f) as f:
                                     entry[attr] = f.read().strip()
                             except Exception:
                                 pass
@@ -214,7 +212,7 @@ def get_hardware_buses() -> Dict[str, Any]:
                 entry = {"node": h}
                 if os.path.isfile(uevent_f):
                     try:
-                        with open(uevent_f, "r") as f:
+                        with open(uevent_f) as f:
                             for line in f:
                                 if "=" in line:
                                     k, v = line.strip().split("=", 1)
@@ -238,7 +236,7 @@ def get_hardware_buses() -> Dict[str, Any]:
     }
 
 
-def get_hwmon_details() -> List[Dict[str, Any]]:
+def get_hwmon_details() -> list[dict[str, Any]]:
     """
     Directly queries all sysfs hwmon nodes for fan RPMs, PWM values, and temperatures.
     """
@@ -254,16 +252,16 @@ def get_hwmon_details() -> List[Dict[str, Any]]:
             name_file = os.path.join(hdir, "name")
             if os.path.exists(name_file):
                 try:
-                    with open(name_file, "r") as f:
+                    with open(name_file) as f:
                         h_name = f.read().strip()
                 except Exception:
                     pass
 
-            sensors: Dict[str, Any] = {"name": h_name, "path": hdir, "attributes": {}}
+            sensors: dict[str, Any] = {"name": h_name, "path": hdir, "attributes": {}}
             for attr_file in glob.glob(os.path.join(hdir, "*_input")) + glob.glob(os.path.join(hdir, "pwm*")):
                 base_attr = os.path.basename(attr_file)
                 try:
-                    with open(attr_file, "r") as f:
+                    with open(attr_file) as f:
                         val = f.read().strip()
                     sensors["attributes"][base_attr] = int(val) if val.isdigit() else val
                 except Exception:
@@ -275,12 +273,12 @@ def get_hwmon_details() -> List[Dict[str, Any]]:
     return hwmon_list
 
 
-def get_peripheral_status() -> Dict[str, Any]:
+def get_peripheral_status() -> dict[str, Any]:
     """
     Checks physical appliance peripheral availability and read/write access permissions.
     """
 
-    def _check_dev(path_candidates: List[str]) -> Dict[str, Any]:
+    def _check_dev(path_candidates: list[str]) -> dict[str, Any]:
         for p in path_candidates:
             if os.path.exists(p):
                 accessible = os.access(p, os.R_OK | os.W_OK)
@@ -297,7 +295,7 @@ def get_peripheral_status() -> Dict[str, Any]:
     }
 
 
-def get_media_slots_telemetry() -> Dict[str, Any]:
+def get_media_slots_telemetry() -> dict[str, Any]:
     """Captures front SD/TF multi-LUN card slot insertion and SCSI polling states."""
     try:
         from backend.config import BUTTON_CFG_FILE
@@ -316,7 +314,7 @@ def get_media_slots_telemetry() -> Dict[str, Any]:
                 poll_f = os.path.join(HOST_SYS, f"block/{dev_name}/events_poll_msecs")
                 if os.path.exists(poll_f):
                     try:
-                        with open(poll_f, "r") as f:
+                        with open(poll_f) as f:
                             polling_states[dev_name] = f.read().strip()
                     except Exception:
                         pass
@@ -333,7 +331,7 @@ def get_media_slots_telemetry() -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-def collect_kernel_telemetry() -> Dict[str, Any]:
+def collect_kernel_telemetry() -> dict[str, Any]:
     """
     Main aggregator for kernel, CPU, buses, and hardware sensors.
     """

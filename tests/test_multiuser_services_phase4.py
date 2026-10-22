@@ -4,18 +4,19 @@ import subprocess
 import sys
 import tempfile
 import time
+
 import pytest
 from fastapi.testclient import TestClient
 
 import backend.config as config
-from backend.main import app
-from backend.users_db import init_users_db, create_user, get_user_by_username
+from backend.api.auth import create_stream_ticket, validate_and_consume_stream_ticket
 from backend.auth import (
     create_session,
-    validate_session,
     get_current_session,
+    validate_session,
 )
-from backend.api.auth import create_stream_ticket, validate_and_consume_stream_ticket
+from backend.main import app
+from backend.users_db import create_user, get_user_by_username, init_users_db
 
 
 @pytest.fixture(autouse=True)

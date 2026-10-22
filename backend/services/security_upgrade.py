@@ -95,8 +95,8 @@ def run_once() -> bool:
         result["webdav"] = f"error: {e}"
 
     logger.warning(
-        "[SecurityUpgrade] v1.9.2 one-time hardening: revoked %(sessions)s sessions and %(api_tokens)s API "
-        "tokens, %(admins_flagged)s admin account(s) must set a new password, WebDAV %(webdav)s." % result
+        "[SecurityUpgrade] v1.9.2 one-time hardening: revoked {sessions} sessions and {api_tokens} API "
+        "tokens, {admins_flagged} admin account(s) must set a new password, WebDAV {webdav}.".format(**result)
     )
     try:
         from backend.state import add_event

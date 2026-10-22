@@ -10,14 +10,14 @@ import os
 import re
 import struct
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from backend.config import logger
 from backend.hardware.docker_stats import (
     UnixHTTPConnection,
+    _classify_stack,
     _extract_hardware_badges,
     _parse_ports_and_webui,
-    _classify_stack,
 )
 
 SECRET_KEY_PATTERNS = ["PASS", "SECRET", "TOKEN", "KEY", "AUTH", "CREDENTIAL", "PRIVATE"]
@@ -38,7 +38,7 @@ def mask_secret_value(val: str) -> str:
     return "••••••••"
 
 
-def fetch_container_raw_inspect(cid_or_name: str) -> Dict[str, Any]:
+def fetch_container_raw_inspect(cid_or_name: str) -> dict[str, Any]:
     """Fetches full inspect JSON from local Docker socket."""
     sock_path = "/var/run/docker.sock"
     if not os.path.exists(sock_path):
@@ -58,7 +58,7 @@ def fetch_container_raw_inspect(cid_or_name: str) -> Dict[str, Any]:
         return {}
 
 
-def synthesize_compose_spec(inspect_data: Dict[str, Any], mask_secrets: bool = False) -> Tuple[str, Dict[str, Any]]:
+def synthesize_compose_spec(inspect_data: dict[str, Any], mask_secrets: bool = False) -> tuple[str, dict[str, Any]]:
     """
     Reconstructs standard OCI Compose Spec v3.8+ dictionary from container inspect data.
     """
@@ -151,7 +151,7 @@ def synthesize_compose_spec(inspect_data: Dict[str, Any], mask_secrets: bool = F
             network_setting = "host"
 
     # Assemble service spec
-    spec: Dict[str, Any] = {
+    spec: dict[str, Any] = {
         "image": image,
         "container_name": raw_name,
         "restart": restart,
@@ -178,7 +178,7 @@ def synthesize_compose_spec(inspect_data: Dict[str, Any], mask_secrets: bool = F
     return service_name, spec
 
 
-def format_compose_yaml(service_name: str, spec: Dict[str, Any]) -> str:
+def format_compose_yaml(service_name: str, spec: dict[str, Any]) -> str:
     """
     Renders clean, indented YAML string adhering to Compose Spec v3.8.
     """
@@ -214,7 +214,7 @@ def format_compose_yaml(service_name: str, spec: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def get_container_compose_data(cid_or_name: str, allow_unmasked: bool = False) -> Dict[str, Any]:
+def get_container_compose_data(cid_or_name: str, allow_unmasked: bool = False) -> dict[str, Any]:
     """
     Returns Compose definition for a container, including both unmasked and masked YAML.
     """
@@ -232,7 +232,7 @@ def get_container_compose_data(cid_or_name: str, allow_unmasked: bool = False) -
 
     if compose_path and os.path.exists(compose_path) and os.path.isfile(compose_path):
         try:
-            with open(compose_path, "r", encoding="utf-8") as f:
+            with open(compose_path, encoding="utf-8") as f:
                 disk_content = f.read()
             source = "disk"
         except Exception:
@@ -259,7 +259,7 @@ def get_container_compose_data(cid_or_name: str, allow_unmasked: bool = False) -
     }
 
 
-def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -> Dict[str, Any]:
+def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -> dict[str, Any]:
     """
     Returns rich, structured inspector data for all tabs in the Container Inspector Modal.
     """
@@ -402,7 +402,7 @@ def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -
     }
 
 
-def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> Dict[str, Any]:
+def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> dict[str, Any]:
     """
     Reads multiplexed Docker stdout/stderr logs from the Unix socket,
     decoding the 8-byte framing into clean timestamps and messages.
@@ -495,7 +495,7 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> Dict[str, Any
                 pass
 
 
-def execute_in_container(cid_or_name: str, cmd: Any) -> Dict[str, Any]:
+def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
     """
     Executes a command inside the target container via Docker Engine socket.
     Returns exit code and stdout/stderr output.

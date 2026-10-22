@@ -2,21 +2,22 @@ import io
 import json
 import logging
 import zipfile
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 
-from backend.main import app
+from backend.auth import AuthenticatedPrincipal
 from backend.logging_config import (
+    LOG_RING_BUFFER,
     JSONLogFormatter,
     RingBufferHandler,
     correlation_id_ctx,
     get_recent_logs,
     sanitize_dict,
     sanitize_string,
-    LOG_RING_BUFFER,
 )
-from backend.auth import AuthenticatedPrincipal
+from backend.main import app
 
 
 def test_json_formatter_structured_output():

@@ -259,6 +259,7 @@ def test_discover_disks_skips_zero_size(monkeypatch, tmp_path):
 
 def test_poll_disk_smart_exit_code_2_standby(monkeypatch):
     import subprocess
+
     import backend.hardware.disks as disks_mod
     from backend.state import Z_STATE
 
@@ -278,6 +279,7 @@ def test_poll_disk_smart_exit_code_2_standby(monkeypatch):
 
 def test_fetch_disk_smart_detail_standby_preservation(monkeypatch):
     import subprocess
+
     import backend.hardware.disks as disks_mod
     from backend.state import Z_STATE
 

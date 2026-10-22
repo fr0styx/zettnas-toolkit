@@ -1,7 +1,5 @@
 # ZettNAS Toolkit - File System & Storage Browsing API Router
-import aiofiles
 import asyncio
-from datetime import datetime, timezone
 import hashlib
 import io
 import json
@@ -16,18 +14,20 @@ import sys
 import tempfile
 import time
 import zipfile
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import UTC, datetime, timezone
+from typing import Any, Optional
 
+import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.rate_limit import rate_limit
-from backend.confirmations import require_confirmation
 import backend.config as config
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
+from backend.confirmations import require_confirmation
 from backend.passwords import hash_password, verify_password
+from backend.rate_limit import rate_limit
 
 try:
     import pillow_heif
@@ -71,15 +71,15 @@ class _AllowedBrowseRootsProxy:
 
 
 ALLOWED_BROWSE_ROOTS = _AllowedBrowseRootsProxy()
-from backend.logging_config import sanitize_string
-from backend.state import add_event
 from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
+from backend.logging_config import sanitize_string
 from backend.models.schemas import MkdirRequest
+from backend.state import add_event
 
 router = APIRouter(tags=["File System & Shares"])
 
 
-def _is_files_admin(principal: Optional[AuthenticatedPrincipal]) -> bool:
+def _is_files_admin(principal: AuthenticatedPrincipal | None) -> bool:
     return bool(
         principal
         and (
@@ -91,7 +91,7 @@ def _is_files_admin(principal: Optional[AuthenticatedPrincipal]) -> bool:
     )
 
 
-def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrincipal], write: bool = False) -> None:
+def check_user_path_access(req_path: str, principal: AuthenticatedPrincipal | None, write: bool = False) -> None:
     """Non-admins only reach their home and shares granted to them (SEC-10); write needs write access."""
     if not principal:
         raise HTTPException(status_code=401, detail="Authentication required.")
@@ -136,7 +136,7 @@ def check_user_path_access(req_path: str, principal: Optional[AuthenticatedPrinc
         raise HTTPException(status_code=403, detail="You have read-only access to this folder.")
 
 
-def user_can_access_path(req_path: str, principal: Optional[AuthenticatedPrincipal]) -> bool:
+def user_can_access_path(req_path: str, principal: AuthenticatedPrincipal | None) -> bool:
     try:
         check_user_path_access(req_path, principal)
         return True
@@ -163,7 +163,7 @@ def _contained(path, must_exist=True):
     return real
 
 
-def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> List[Dict[str, Any]]:
+def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> list[dict[str, Any]]:
     """Scans a remote FUSE directory in an isolated subprocess with a 2.5s SIGKILL timeout.
     Prevents stalled Rclone/WebDAV mounts from hanging the Python asyncio threadpool or workers.
     """
@@ -214,10 +214,10 @@ def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> List[Dict[str, Any]
                 "path": real,
                 "message": "Remote storage mount timed out after 2.5s. Storage endpoint may be unreachable.",
             },
-        )
+        ) from None
 
 
-def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[AuthenticatedPrincipal] = None):
+def _handle_browse_logic(path: str, dirs_only: bool, principal: AuthenticatedPrincipal | None = None):
     result = _handle_browse_logic_unfiltered(path, dirs_only, principal)
     if principal is None or _is_files_admin(principal) or not isinstance(result, dict):
         return result
@@ -230,7 +230,7 @@ def _handle_browse_logic(path: str, dirs_only: bool, principal: Optional[Authent
     return result
 
 
-def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Optional[AuthenticatedPrincipal] = None):
+def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: AuthenticatedPrincipal | None = None):
     real = _contained(path or ALLOWED_BROWSE_ROOTS[0])
     if not os.path.isdir(real):
         raise HTTPException(status_code=400, detail="Not a directory.")
@@ -293,10 +293,10 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Optio
             scanned_entries = os.listdir(real)
             use_scandir = False
         except PermissionError:
-            raise HTTPException(status_code=403, detail="Permission denied.")
+            raise HTTPException(status_code=403, detail="Permission denied.") from None
         except OSError as e:
             logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
-            raise HTTPException(status_code=500, detail="Unable to read directory.")
+            raise HTTPException(status_code=500, detail="Unable to read directory.") from e
 
     if is_homes_dir and not is_admin and principal and principal.username:
         user_home_name = principal.username.lower()
@@ -329,7 +329,7 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Optio
                 mtime = st.st_mtime
                 mode = f"{stat.S_IMODE(st.st_mode):04o}" if hasattr(stat, "S_IMODE") else "0644"
             except (OSError, PermissionError):
-                is_dir = True if real == "/mnt/remotes" else False
+                is_dir = real == "/mnt/remotes"
                 is_symlink = False
                 sz = 0
                 mtime = 0.0
@@ -411,7 +411,7 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Optio
     return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 
 
-def _user_file_headers(media_type: Optional[str]) -> Dict[str, str]:
+def _user_file_headers(media_type: str | None) -> dict[str, str]:
     """Headers for serving a user's file from the app's own origin (SEC-05).
 
     A CSP sandbox stops an uploaded HTML or SVG file from running script with the
@@ -595,7 +595,7 @@ def _do_mkdir(path: str):
         os.makedirs(target, exist_ok=True)
     except OSError as e:
         logger.warning(f"[MKDIR] Failed to create {target}: {e}")
-        raise HTTPException(status_code=500, detail="Unable to create folder.")
+        raise HTTPException(status_code=500, detail="Unable to create folder.") from e
     return {"status": "ok", "path": target}
 
 
@@ -694,7 +694,7 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"[FS] Rename failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to rename item")
+        raise HTTPException(status_code=500, detail="Failed to rename item") from e
 
 
 @router.post(
@@ -740,7 +740,7 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         def _move_to_recycle():
             os.makedirs(files_dir, exist_ok=True)
             os.makedirs(info_dir, exist_ok=True)
-            iso_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+            iso_now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
             try:
                 with open(info_path, "w", encoding="utf-8") as f_info:
                     f_info.write(f"[Trash Info]\nPath={target_unresolved}\nDeletionDate={iso_now}\n")
@@ -754,7 +754,7 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         return {"status": "ok", "message": "Item moved to Recycle Bin"}
     except Exception as e:
         logger.error(f"[FS] Delete/Recycle failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process delete request")
+        raise HTTPException(status_code=500, detail="Failed to process delete request") from e
 
 
 @router.post(
@@ -847,13 +847,13 @@ class FolderSizeRequest(BaseModel):
 
 class PermissionsUpdateRequest(BaseModel):
     path: str
-    mode_octal: Optional[str] = None
-    owner: Optional[str] = None
-    group: Optional[str] = None
+    mode_octal: str | None = None
+    owner: str | None = None
+    group: str | None = None
     recursive: bool = False
 
 
-_FOLDER_SIZE_CACHE: Dict[str, Tuple[float, float, int, int, int]] = {}
+_FOLDER_SIZE_CACHE: dict[str, tuple[float, float, int, int, int]] = {}
 
 
 @router.post(
@@ -980,12 +980,12 @@ async def fs_archive_extract(
     return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
 
 
-def _task_owner_filter(principal: Optional[AuthenticatedPrincipal]) -> Optional[str]:
+def _task_owner_filter(principal: AuthenticatedPrincipal | None) -> str | None:
     """None (see every task) for admins, else the caller's username (SEC-11)."""
     return None if _is_files_admin(principal) else (principal.username or "").lower() if principal else ""
 
 
-def _assert_task_owner(task_id: str, principal: Optional[AuthenticatedPrincipal]) -> None:
+def _assert_task_owner(task_id: str, principal: AuthenticatedPrincipal | None) -> None:
     from backend.services.fs_transfer import transfer_manager
 
     owner = _task_owner_filter(principal)
@@ -1030,7 +1030,7 @@ async def fs_transfers_stream(
                     evt_type = payload.get("event", "update")
                     data_str = json.dumps(payload)
                     yield f"event: {evt_type}\ndata: {data_str}\n\n"
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield ": ping\n\n"
         except asyncio.CancelledError:
             pass
@@ -1295,7 +1295,7 @@ async def fs_update_permissions(
         try:
             mode_int = int(req.mode_octal, 8)
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid octal mode string")
+            raise HTTPException(status_code=400, detail="Invalid octal mode string") from None
 
     uid = -1
     gid = -1
@@ -1305,14 +1305,14 @@ async def fs_update_permissions(
 
             uid = pwd.getpwnam(req.owner).pw_uid if not req.owner.isdigit() else int(req.owner)
         except Exception:
-            raise HTTPException(status_code=400, detail=f"User {req.owner} not found")
+            raise HTTPException(status_code=400, detail=f"User {req.owner} not found") from None
     if req.group:
         try:
             import grp
 
             gid = grp.getgrnam(req.group).gr_gid if not req.group.isdigit() else int(req.group)
         except Exception:
-            raise HTTPException(status_code=400, detail=f"Group {req.group} not found")
+            raise HTTPException(status_code=400, detail=f"Group {req.group} not found") from None
 
     def _apply_permissions():
         paths_to_update = [target]
@@ -1389,7 +1389,7 @@ async def fs_upload(
             except Exception:
                 pass
         logger.error(f"[FS] Upload failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to upload file")
+        raise HTTPException(status_code=500, detail="Failed to upload file") from e
 
 
 class UploadInitRequest(BaseModel):
@@ -1401,10 +1401,10 @@ class UploadInitRequest(BaseModel):
 
 class UploadCompleteRequest(BaseModel):
     upload_id: str
-    expected_sha256: Optional[str] = None
+    expected_sha256: str | None = None
 
 
-_CHUNKED_UPLOADS: Dict[str, Dict[str, Any]] = {}
+_CHUNKED_UPLOADS: dict[str, dict[str, Any]] = {}
 _CHUNKED_UPLOADS_LOCK = asyncio.Lock()
 
 
@@ -1555,18 +1555,18 @@ async def fs_upload_complete(
             except Exception:
                 pass
         logger.error(f"[FS] Chunked assembly failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to assemble uploaded chunks: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to assemble uploaded chunks: {e}") from e
 
 
 class TrashRestoreRequest(BaseModel):
     item_id: str
-    target_path: Optional[str] = None
+    target_path: str | None = None
 
 
 @router.get("/fs/search", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
 async def fs_search(
     q: str,
-    path: Optional[str] = None,
+    path: str | None = None,
     limit: int = 50,
     offset: int = 0,
     recursive: bool = True,
@@ -1676,7 +1676,7 @@ async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_
                                 tinfo = os.path.join(info_dir, f"{entry.name}.trashinfo")
                                 if os.path.exists(tinfo):
                                     try:
-                                        with open(tinfo, "r", encoding="utf-8") as f_meta:
+                                        with open(tinfo, encoding="utf-8") as f_meta:
                                             for line in f_meta:
                                                 if line.startswith("Path="):
                                                     orig_path = line.split("=", 1)[1].strip()
@@ -1753,7 +1753,7 @@ async def fs_trash_restore(
                 orig_name = item_id
                 if os.path.exists(info_file):
                     try:
-                        with open(info_file, "r", encoding="utf-8") as f_meta:
+                        with open(info_file, encoding="utf-8") as f_meta:
                             for line in f_meta:
                                 if line.startswith("Path="):
                                     orig_path = line.split("=", 1)[1].strip()
@@ -1800,10 +1800,10 @@ async def fs_trash_restore(
     except HTTPException:
         raise
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Item not found in Recycle Bin")
+        raise HTTPException(status_code=404, detail="Item not found in Recycle Bin") from None
     except Exception as e:
         logger.error(f"[FS] Restore failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to restore item")
+        raise HTTPException(status_code=500, detail="Failed to restore item") from e
 
 
 @router.delete(
@@ -2044,7 +2044,7 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
         ".dockerfile",
     }
 
-    def _make_hex_dump(raw_bytes: bytes) -> List[str]:
+    def _make_hex_dump(raw_bytes: bytes) -> list[str]:
         lines = []
         for i in range(0, len(raw_bytes), 16):
             chunk = raw_bytes[i : i + 16]
@@ -2093,7 +2093,7 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
         }
     except Exception as e:
         logger.error(f"[PREVIEW] Hex dump error for {target}: {e}")
-        raise HTTPException(status_code=500, detail="Unable to generate preview")
+        raise HTTPException(status_code=500, detail="Unable to generate preview") from e
 
 
 @router.get(
@@ -2102,8 +2102,8 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
 )
 async def fs_preview_image(
     path: str,
-    thumb: Optional[int] = None,
-    max_dim: Optional[int] = None,
+    thumb: int | None = None,
+    max_dim: int | None = None,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Renders and transcodes image formats (including Apple HEIC/HEIF) on-the-fly to WebP for universal browser display.
@@ -2207,7 +2207,7 @@ async def fs_stream(
         start = int(range_parts[0]) if range_parts[0] else 0
         end = int(range_parts[1]) if len(range_parts) > 1 and range_parts[1] else file_size - 1
     except ValueError:
-        raise HTTPException(status_code=416, detail="Invalid range request")
+        raise HTTPException(status_code=416, detail="Invalid range request") from None
 
     start = max(0, start)
     end = min(file_size - 1, end)
@@ -2262,7 +2262,7 @@ def fs_download_zip(
             raise HTTPException(status_code=403, detail="Path outside allowed folders")
 
     def _zip_generator():
-        spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+        spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # noqa: SIM115
         try:
             with zipfile.ZipFile(spool, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
                 for p in path_list:
@@ -2314,14 +2314,14 @@ SHARE_LINKS_FILE = os.path.join(config.DATA_DIR, "shared_links.json")
 _SHARE_LOCK = asyncio.Lock()
 
 
-def _load_share_links() -> Dict[str, Any]:
+def _load_share_links() -> dict[str, Any]:
     try:
         return read_json(SHARE_LINKS_FILE, {})
     except Exception:
         return {}
 
 
-def _save_share_links(links: Dict[str, Any]) -> None:
+def _save_share_links(links: dict[str, Any]) -> None:
     try:
         atomic_write_json(SHARE_LINKS_FILE, links)
     except Exception as e:
@@ -2330,14 +2330,14 @@ def _save_share_links(links: Dict[str, Any]) -> None:
 
 class CreateShareLinkRequest(BaseModel):
     path: str
-    expires_hours: Optional[int] = None
-    max_downloads: Optional[int] = None
-    password: Optional[str] = None
-    label: Optional[str] = None
+    expires_hours: int | None = None
+    max_downloads: int | None = None
+    password: str | None = None
+    label: str | None = None
 
 
 # Sliding-window rate limiter for shared link password attempts: IP -> list of timestamps
-_SHARE_PWD_ATTEMPTS: Dict[str, List[float]] = {}
+_SHARE_PWD_ATTEMPTS: dict[str, list[float]] = {}
 _SHARE_PWD_LOCK = asyncio.Lock()
 
 
@@ -2573,7 +2573,7 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
     try:
         real_target = _contained(target_path, must_exist=True)
     except HTTPException:
-        raise HTTPException(status_code=404, detail="Underlying shared file or folder is no longer available")
+        raise HTTPException(status_code=404, detail="Underlying shared file or folder is no longer available") from None
 
     if resolve_within(real_target, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Target path is outside allowed system roots")
@@ -2625,7 +2625,7 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
                     )
 
         def _dir_zip_generator():
-            spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)
+            spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # noqa: SIM115
             try:
                 with zipfile.ZipFile(spool, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
                     for root_dir, _, files in os.walk(real_target):

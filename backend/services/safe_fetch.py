@@ -20,10 +20,10 @@ import http.client
 import ipaddress
 import socket
 import ssl
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Union
 from urllib.parse import urljoin, urlsplit
 
-IP = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]
+IP = Union[ipaddress.IPv4Address, ipaddress.IPv6Address]  # noqa: UP007
 _METADATA = {
     ipaddress.ip_address("169.254.169.254"),
     ipaddress.ip_address("100.100.100.200"),
@@ -49,7 +49,7 @@ def _ip_allowed(ip: IP, context: str) -> bool:
     return ip.is_global
 
 
-def resolve_checked(host: str, port: int, context: str = "public") -> Tuple[str, int]:
+def resolve_checked(host: str, port: int, context: str = "public") -> tuple[str, int]:
     """First address of `host` that passes the checks; raises if any address fails."""
     try:
         infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
@@ -89,7 +89,7 @@ def safe_open(
     url: str,
     context: str = "public",
     method: str = "GET",
-    headers: Optional[Dict[str, str]] = None,
+    headers: dict[str, str] | None = None,
     timeout: float = 15.0,
 ) -> http.client.HTTPResponse:
     """Opens `url` after checking every hop. Caller reads and closes the response."""
@@ -126,10 +126,10 @@ def safe_open(
 def safe_fetch(
     url: str,
     context: str = "public",
-    headers: Optional[Dict[str, str]] = None,
+    headers: dict[str, str] | None = None,
     timeout: float = 15.0,
     max_bytes: int = 5 * 1024 * 1024,
-) -> Tuple[int, Dict[str, str], bytes]:
+) -> tuple[int, dict[str, str], bytes]:
     """GET with the checks above; returns (status, headers, body up to max_bytes)."""
     resp = safe_open(url, context=context, headers=headers, timeout=timeout)
     try:

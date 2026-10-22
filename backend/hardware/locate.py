@@ -9,13 +9,13 @@ import os
 import subprocess
 import threading
 import time
-from typing import Any, Dict
+from typing import Any
 
 from backend.config import logger
 from backend.hardware.led import find_led_port, send_led_packet
 
 
-def locate_drive_multitier(dev_name: str, dev_path: str, duration_sec: int = 5) -> Dict[str, Any]:
+def locate_drive_multitier(dev_name: str, dev_path: str, duration_sec: int = 5) -> dict[str, Any]:
     """
     Triggers physical drive identification across 3 hardware tiers:
     - Tier 1: Hardware backplane SES fault LED via ledctl (ledmon).

@@ -1,11 +1,12 @@
 import os
 import sqlite3
-import pytest
 from unittest.mock import MagicMock, patch
 
-from backend.state import Z_STATE, add_event
-from backend.db import get_db_connection, query_smart_velocity, query_all_smart_velocities, init_db
+import pytest
+
+from backend.db import get_db_connection, init_db, query_all_smart_velocities, query_smart_velocity
 from backend.services.broadcaster import broadcaster
+from backend.state import Z_STATE, add_event
 
 
 def test_sse_subscriber_limit_returns_429(client, auth_headers):

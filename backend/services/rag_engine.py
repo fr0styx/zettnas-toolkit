@@ -26,7 +26,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 import zlib
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 from PIL import Image, ImageFile
 
@@ -46,7 +46,7 @@ EMBEDDING_DIM = 384
 MAX_INDEX_FILE_BYTES = 50 * 1024 * 1024  # 50 MB max text/PDF file parse cap
 
 # Canonical 12-Color Perceptual Palette (Peer-Reviewed across UX, ML, and Storage)
-CANONICAL_COLORS: Tuple[str, ...] = (
+CANONICAL_COLORS: tuple[str, ...] = (
     "red",
     "orange",
     "yellow",
@@ -61,7 +61,7 @@ CANONICAL_COLORS: Tuple[str, ...] = (
     "brown",
 )
 
-COLOR_HEX_MAP: Dict[str, str] = {
+COLOR_HEX_MAP: dict[str, str] = {
     "red": "#ef4444",
     "orange": "#f97316",
     "yellow": "#eab308",
@@ -77,7 +77,7 @@ COLOR_HEX_MAP: Dict[str, str] = {
 }
 
 # Canonical HSV bin centers (Hue 0..7, Sat 0..3, Val 0..1) for 64-bin histogram queries
-COLOR_TARGET_BINS: Dict[str, List[Tuple[int, int, int]]] = {
+COLOR_TARGET_BINS: dict[str, list[tuple[int, int, int]]] = {
     "red": [(0, 2, 1), (0, 3, 1), (7, 2, 1), (7, 3, 1)],
     "orange": [(0, 2, 1), (1, 2, 1), (1, 3, 1)],
     "yellow": [(1, 2, 1), (1, 3, 1), (2, 2, 1)],
@@ -92,7 +92,7 @@ COLOR_TARGET_BINS: Dict[str, List[Tuple[int, int, int]]] = {
     "brown": [(0, 2, 0), (1, 2, 0), (0, 1, 0), (1, 1, 0)],
 }
 
-COLOR_SYNONYMS: Dict[str, str] = {
+COLOR_SYNONYMS: dict[str, str] = {
     "red": "red",
     "crimson": "red",
     "scarlet": "red",
@@ -155,7 +155,7 @@ COLOR_SYNONYMS: Dict[str, str] = {
 }
 
 # Canonical Scene & Concept Ontology (mapped to vector dims 256..319)
-SCENE_ONTOLOGY: Dict[str, Tuple[int, Set[str]]] = {
+SCENE_ONTOLOGY: dict[str, tuple[int, set[str]]] = {
     "pool": (
         0,
         {"pool", "pools", "swimming", "swim", "poolside", "jacuzzi", "dive", "diving", "chlorine", "float"},
@@ -370,7 +370,7 @@ SCENE_ONTOLOGY: Dict[str, Tuple[int, Set[str]]] = {
     ),
 }
 
-EXCLUDED_DIRS: Set[str] = {
+EXCLUDED_DIRS: set[str] = {
     ".git",
     ".svn",
     ".hg",
@@ -387,7 +387,7 @@ EXCLUDED_DIRS: Set[str] = {
     ".fseventsd",
 }
 
-EXCLUDED_FILENAMES: Set[str] = {
+EXCLUDED_FILENAMES: set[str] = {
     ".env",
     ".ds_store",
     "secret.key",
@@ -408,7 +408,7 @@ EXCLUDED_FILENAMES: Set[str] = {
     "id_ed25519",
 }
 
-EXCLUDED_EXTENSIONS: Set[str] = {
+EXCLUDED_EXTENSIONS: set[str] = {
     ".pem",
     ".key",
     ".pfx",
@@ -427,7 +427,7 @@ EXCLUDED_EXTENSIONS: Set[str] = {
     ".vmdk",
 }
 
-DOCUMENT_EXTENSIONS: Set[str] = {
+DOCUMENT_EXTENSIONS: set[str] = {
     ".md",
     ".txt",
     ".rst",
@@ -450,7 +450,7 @@ DOCUMENT_EXTENSIONS: Set[str] = {
     ".sub",
 }
 
-CODE_EXTENSIONS: Set[str] = {
+CODE_EXTENSIONS: set[str] = {
     ".py",
     ".js",
     ".ts",
@@ -466,7 +466,7 @@ CODE_EXTENSIONS: Set[str] = {
     ".sql",
 }
 
-IMAGE_EXTENSIONS: Set[str] = {
+IMAGE_EXTENSIONS: set[str] = {
     ".jpg",
     ".jpeg",
     ".png",
@@ -478,7 +478,7 @@ IMAGE_EXTENSIONS: Set[str] = {
     ".heic",
 }
 
-AUDIO_EXTENSIONS: Set[str] = {
+AUDIO_EXTENSIONS: set[str] = {
     ".mp3",
     ".wav",
     ".flac",
@@ -488,7 +488,7 @@ AUDIO_EXTENSIONS: Set[str] = {
     ".opus",
 }
 
-VIDEO_EXTENSIONS: Set[str] = {
+VIDEO_EXTENSIONS: set[str] = {
     ".mp4",
     ".mkv",
     ".avi",
@@ -583,8 +583,8 @@ def build_safe_fts5_query(raw_query: str, remove_stopwords: bool = True) -> str:
     if not filtered:
         return ""
 
-    seen: Set[str] = set()
-    unique_tokens: List[str] = []
+    seen: set[str] = set()
+    unique_tokens: list[str] = []
     for t in filtered:
         if t not in seen:
             seen.add(t)
@@ -592,7 +592,7 @@ def build_safe_fts5_query(raw_query: str, remove_stopwords: bool = True) -> str:
         if len(unique_tokens) >= 16:
             break
 
-    fts_parts: List[str] = []
+    fts_parts: list[str] = []
     for tok in unique_tokens:
         safe_tok = tok.replace('"', '""')
         if len(safe_tok) >= 5 and safe_tok.isascii():
@@ -642,7 +642,7 @@ def _normalize_pdf_broken_words(text: str) -> str:
         s = re.sub(r"([A-Za-zÀ-ÿ])-?[ \t]*\n[ \t]*([a-zà-ÿ])", r"\1\2", s)
     collapsed = re.sub(r"\s+", " ", s).strip()
     # Filter out encrypted-font / binary PDF Mojibake tokens
-    clean_words: List[str] = []
+    clean_words: list[str] = []
     for tok in collapsed.split(" "):
         if re.search(r"[®¤µ×÷þÿ¶§ª«¬¯±²³´¸¹º»¼½¾]", tok):
             continue
@@ -654,7 +654,7 @@ def _normalize_pdf_broken_words(text: str) -> str:
     return " ".join(clean_words).strip()
 
 
-def parse_multimodal_query(raw_query: str) -> Dict[str, Any]:
+def parse_multimodal_query(raw_query: str) -> dict[str, Any]:
     """
     Decomposes a natural language query into explainable color filters, scene/object tags,
     modality hints, and semantic search tokens.
@@ -663,9 +663,9 @@ def parse_multimodal_query(raw_query: str) -> Dict[str, Any]:
     cleaned = re.sub(r"(\w)['’]s\b", r"\1s", q.lower())
     tokens = re.findall(r"[a-z0-9_\u00c0-\u024f\u0400-\u04ff\u4e00-\u9fff]+", cleaned)
 
-    auto_colors: List[str] = []
-    auto_scenes: List[str] = []
-    content_tokens: List[str] = []
+    auto_colors: list[str] = []
+    auto_scenes: list[str] = []
+    content_tokens: list[str] = []
 
     for tok in tokens:
         if tok in COLOR_SYNONYMS:
@@ -706,11 +706,11 @@ def parse_multimodal_query(raw_query: str) -> Dict[str, Any]:
 
 def compute_384d_embedding(
     text: str,
-    scene_tags: Optional[List[str]] = None,
-    object_colors: Optional[Dict[str, float]] = None,
-    frame_colors: Optional[Dict[str, float]] = None,
-    color_hist_64: Optional[List[float]] = None,
-) -> Tuple[bytes, List[float]]:
+    scene_tags: list[str] | None = None,
+    object_colors: dict[str, float] | None = None,
+    frame_colors: dict[str, float] | None = None,
+    color_hist_64: list[float] | None = None,
+) -> tuple[bytes, list[float]]:
     """
     Projects text, scene ontology tags, and perceptual color features into a unified
     384-dimensional L2-normalized cross-modal vector space:
@@ -756,7 +756,7 @@ def compute_384d_embedding(
                 vec[t_idx] += t_sign * 0.22
 
     # 2. Semantic Concept & Scene Ontology Latents (Dims 256..319)
-    active_scenes: Set[str] = set(scene_tags or [])
+    active_scenes: set[str] = set(scene_tags or [])
     for w in words:
         for scene_slug, (_, syn_set) in SCENE_ONTOLOGY.items():
             if w in syn_set or (w.endswith("s") and w[:-1] in syn_set):
@@ -772,8 +772,8 @@ def compute_384d_embedding(
 
     # 3. Perceptual Color & Spatial Chromaticity Signature (Dims 320..383)
     # Extract colors mentioned in text as well as visual object_colors / frame_colors
-    merged_obj_colors: Dict[str, float] = dict(object_colors or {})
-    merged_frm_colors: Dict[str, float] = dict(frame_colors or {})
+    merged_obj_colors: dict[str, float] = dict(object_colors or {})
+    merged_frm_colors: dict[str, float] = dict(frame_colors or {})
     for w in words:
         if w in COLOR_SYNONYMS:
             cname = COLOR_SYNONYMS[w]
@@ -806,7 +806,7 @@ def compute_384d_embedding(
     return blob, vec
 
 
-def unpack_embedding(blob: Optional[bytes]) -> Optional[List[float]]:
+def unpack_embedding(blob: bytes | None) -> list[float] | None:
     """Unpacks binary float32 buffer into float vector, supporting arbitrary vector dimensions."""
     if not blob or len(blob) % 4 != 0:
         return None
@@ -911,7 +911,7 @@ CLASS_INDICATORS_RE = re.compile(
 )
 
 
-def classify_query_task_intent(query: str, modality_hint: str = "all") -> Tuple[str, str]:
+def classify_query_task_intent(query: str, modality_hint: str = "all") -> tuple[str, str]:
     """
     Deterministic intent classifier for Google DeepMind asymmetric task prefixing.
     Evaluates interrogative QA structures BEFORE code keywords to prevent
@@ -944,7 +944,7 @@ def classify_query_task_intent(query: str, modality_hint: str = "all") -> Tuple[
     return "search", TASK_PREFIX_SEARCH
 
 
-def format_embeddinggemma_document(title: Optional[str], text: str) -> str:
+def format_embeddinggemma_document(title: str | None, text: str) -> str:
     """
     Google DeepMind EmbeddingGemma-2 canonical document/passage formatting:
     f"title: {title.strip()} | text: {text.strip()}" if title is provided,
@@ -957,7 +957,7 @@ def format_embeddinggemma_document(title: Optional[str], text: str) -> str:
     return f"title: none | text: {clean_text}"
 
 
-def truncate_and_normalize_mrl(vec: List[float], target_dim: Optional[int]) -> List[float]:
+def truncate_and_normalize_mrl(vec: list[float], target_dim: int | None) -> list[float]:
     """
     Slices leading dimensions of MRL vector and re-normalizes to unit L2 sphere.
     Strictly guarantees that math.isclose(sum(x*x for x in sliced_vec), 1.0, rel_tol=1e-5)
@@ -986,10 +986,10 @@ def truncate_and_normalize_mrl(vec: List[float], target_dim: Optional[int]) -> L
     return [s / scaled_norm for s in scaled]
 
 
-_CACHED_OLLAMA_HOST: Optional[str] = None
+_CACHED_OLLAMA_HOST: str | None = None
 
 
-def _detected_host_ip() -> Optional[str]:
+def _detected_host_ip() -> str | None:
     """Returns this machine's LAN IP (HOST_IP env or auto-detected), or None."""
     try:
         from backend.hardware.network import read_ip
@@ -1002,7 +1002,7 @@ def _detected_host_ip() -> Optional[str]:
     return ip
 
 
-def _resolve_ollama_host(explicit_host: Optional[str] = None) -> str:
+def _resolve_ollama_host(explicit_host: str | None = None) -> str:
     """Discovers reachable Ollama host inside Docker bridge network or bare metal."""
     global _CACHED_OLLAMA_HOST
     if explicit_host:
@@ -1040,12 +1040,12 @@ def _resolve_ollama_host(explicit_host: Optional[str] = None) -> str:
 def compute_neural_embedding_via_ollama(
     text: str,
     model: str = "embeddinggemma",
-    host: Optional[str] = None,
+    host: str | None = None,
     timeout: float = 1.8,
-    target_dim: Optional[int] = None,
+    target_dim: int | None = None,
     is_query: bool = False,
-    task_prompt: Optional[str] = None,
-) -> Optional[Tuple[bytes, List[float]]]:
+    task_prompt: str | None = None,
+) -> tuple[bytes, list[float]] | None:
     """
     Computes dense neural vector embeddings via Ollama or local inference endpoint.
     Supports Google DeepMind's EmbeddingGemma 2, Nomic-Embed-Text, and standard embedders.
@@ -1159,11 +1159,11 @@ def compute_neural_embedding_via_ollama(
 
 
 _EMBED_BREAKER = {"until": 0.0}  # after a failure, skip the embedder for a while (AI-15)
-_EMBED_MODEL_SEEN: Dict[str, str] = {}  # configured name -> name the runtime accepted
+_EMBED_MODEL_SEEN: dict[str, str] = {}  # configured name -> name the runtime accepted
 EMBED_BATCH_SIZE = 32
 
 
-def _embedding_model_candidates(model: str) -> List[str]:
+def _embedding_model_candidates(model: str) -> list[str]:
     cands = [_EMBED_MODEL_SEEN.get(model) or model]
     if "embeddinggemma" in model.lower():
         for alias in (
@@ -1179,7 +1179,7 @@ def _embedding_model_candidates(model: str) -> List[str]:
     return cands
 
 
-def _pack_embedding(raw: List[float], target_dim: Optional[int]) -> bytes:
+def _pack_embedding(raw: list[float], target_dim: int | None) -> bytes:
     norm = math.sqrt(sum(float(x) * float(x) for x in raw))
     vec = [float(x) / norm for x in raw] if norm > 0.0 else [float(x) for x in raw]
     if target_dim and 0 < target_dim < len(vec):
@@ -1188,12 +1188,12 @@ def _pack_embedding(raw: List[float], target_dim: Optional[int]) -> bytes:
 
 
 def compute_neural_embeddings_batch(
-    texts: List[str],
+    texts: list[str],
     model: str,
-    target_dim: Optional[int] = None,
-    host: Optional[str] = None,
+    target_dim: int | None = None,
+    host: str | None = None,
     batch_size: int = EMBED_BATCH_SIZE,
-) -> Optional[List[bytes]]:
+) -> list[bytes] | None:
     """Embeds document texts with Ollama's /api/embed in batches (AI-15).
 
     All or nothing: returns one packed vector per text, or None if any batch failed, so a
@@ -1207,7 +1207,7 @@ def compute_neural_embeddings_batch(
     target_host = _resolve_ollama_host(host)
     limit = 6000 if "embeddinggemma" in model.lower() else 4000
     clean = [(t or " ").strip()[:limit] or " " for t in texts]
-    out: List[bytes] = []
+    out: list[bytes] = []
     for start in range(0, len(clean), max(1, batch_size)):
         batch = clean[start : start + batch_size]
         embs = None
@@ -1246,12 +1246,12 @@ def compute_neural_embeddings_batch(
 def compute_multimodal_query_embedding(
     query: str,
     model: str = "embeddinggemma",
-    req_scenes: Optional[List[str]] = None,
-    req_colors: Optional[List[str]] = None,
-    ollama_host: Optional[str] = None,
-    target_dim: Optional[int] = None,
-    task_prompt: Optional[str] = None,
-) -> Tuple[str, List[float]]:
+    req_scenes: list[str] | None = None,
+    req_colors: list[str] | None = None,
+    ollama_host: str | None = None,
+    target_dim: int | None = None,
+    task_prompt: str | None = None,
+) -> tuple[str, list[float]]:
     """
     Generates query vector embedding based on requested embedding_model.
     If a neural model (e.g. 'google/embeddinggemma-2', 'embeddinggemma', 'nomic-embed-text') is requested, queries Ollama,
@@ -1283,7 +1283,7 @@ def compute_multimodal_query_embedding(
     return "zett_lexical_384d", vec
 
 
-def cosine_similarity_vec(v1: List[float], v2: Optional[List[float]]) -> float:
+def cosine_similarity_vec(v1: list[float], v2: list[float] | None) -> float:
     """
     Computes cosine similarity between two vectors with Matryoshka prefix truncation
     and robust scale handling against float overflow/underflow and NaN poisoning.
@@ -1316,7 +1316,7 @@ def cosine_similarity_vec(v1: List[float], v2: Optional[List[float]]) -> float:
     if norm1 <= 0.0 or norm2 <= 0.0:
         return 0.0
 
-    dot = sum((a / norm1) * (b / norm2) for a, b in zip(scaled_v1, scaled_v2))
+    dot = sum((a / norm1) * (b / norm2) for a, b in zip(scaled_v1, scaled_v2, strict=False))
     if math.isnan(dot):
         return 0.0
 
@@ -1362,7 +1362,7 @@ def classify_rgb_pixel(r: int, g: int, b: int) -> str:
     return "pink"
 
 
-def build_target_color_histogram(colors: List[str]) -> List[float]:
+def build_target_color_histogram(colors: list[str]) -> list[float]:
     """Builds a 64-bin L1-normalized query HSV histogram for requested color filters."""
     hist = [0.0] * 64
     for c in colors:
@@ -1378,12 +1378,12 @@ def build_target_color_histogram(colors: List[str]) -> List[float]:
     return hist
 
 
-def bhattacharyya_similarity(h1: List[float], h2_blob: Optional[bytes]) -> float:
+def bhattacharyya_similarity(h1: list[float], h2_blob: bytes | None) -> float:
     if not h1 or not h2_blob or len(h2_blob) != 256:
         return 0.0
     h2 = struct.unpack("<64f", h2_blob)
     score = 0.0
-    for a, b in zip(h1, h2):
+    for a, b in zip(h1, h2, strict=False):
         if a > 0.0 and b > 0.0:
             score += math.sqrt(a * b)
     return max(0.0, min(1.0, score))
@@ -1392,7 +1392,7 @@ def bhattacharyya_similarity(h1: List[float], h2_blob: Optional[bytes]) -> float
 class _HTMLTextExtractor(html.parser.HTMLParser):
     def __init__(self):
         super().__init__()
-        self._Parts: List[str] = []
+        self._Parts: list[str] = []
         self._skip = False
 
     def handle_starttag(self, tag: str, attrs: Any) -> None:
@@ -1435,7 +1435,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                     return ""
                 xml_bytes = zf.read("word/document.xml")
             root = ET.fromstring(xml_bytes)
-            paragraphs: List[str] = []
+            paragraphs: list[str] = []
             for p in root.iter():
                 if p.tag.endswith("}p"):
                     runs = [t.text for t in p.iter() if t.tag.endswith("}t") and t.text]
@@ -1484,7 +1484,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                         break
             if os.path.exists(nfo_path):
                 try:
-                    with open(nfo_path, "r", encoding="utf-8", errors="ignore") as nf:
+                    with open(nfo_path, encoding="utf-8", errors="ignore") as nf:
                         nfo_text = nf.read(8000)
                         if "<plot>" in nfo_text:
                             plot_m = re.search(r"<plot>(.*?)</plot>", nfo_text, re.DOTALL | re.IGNORECASE)
@@ -1514,7 +1514,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
         try:
             with open(file_path, "rb") as f:
                 raw = f.read(min(MAX_INDEX_FILE_BYTES, 16 * 1024 * 1024))
-            text_fragments: List[str] = []
+            text_fragments: list[str] = []
             # Decompress FlateDecode streams and extract literal strings (...)
             for m in re.finditer(rb"stream[\r\n]+(.*?)[\r\n]+endstream", raw, re.DOTALL):
                 stream_bytes = m.group(1)
@@ -1544,7 +1544,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
 
     # Text-based formats
     try:
-        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        with open(file_path, encoding="utf-8", errors="replace") as f:
             content = f.read(2 * 1024 * 1024)
     except Exception:
         return ""
@@ -1563,10 +1563,10 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
 def _chunk_python_ast(
     file_name: str,
     raw_text: str,
-    canonical_path: Optional[str] = None,
+    canonical_path: str | None = None,
     parent_chunk_chars: int = 3500,
     child_chunk_chars: int = 950,
-) -> Optional[Tuple[str, str, Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]]:
+) -> tuple[str, str, dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]] | None:
     """
     Python AST-aware chunker using ast.parse:
     - Binds decorators (@router.get, @synchronized) directly to function/method definitions.
@@ -1588,18 +1588,18 @@ def _chunk_python_ast(
     folder_name = os.path.basename(parent_dir) if parent_dir else ""
     folder_prefix = f"Folder: {folder_name} | " if folder_name else ""
 
-    doc_metadata: Dict[str, Any] = {
+    doc_metadata: dict[str, Any] = {
         "card_type": "code",
         "title": base_title,
         "language": "python",
         "has_classes": any(isinstance(n, ast.ClassDef) for n in tree.body),
     }
 
-    parent_chunks: List[Dict[str, Any]] = []
-    child_chunks: List[Dict[str, Any]] = []
+    parent_chunks: list[dict[str, Any]] = []
+    child_chunks: list[dict[str, Any]] = []
 
-    def _get_decorators(node: Any) -> List[str]:
-        decs: List[str] = []
+    def _get_decorators(node: Any) -> list[str]:
+        decs: list[str] = []
         for d in getattr(node, "decorator_list", []):
             try:
                 decs.append("@" + ast.unparse(d))
@@ -1607,7 +1607,7 @@ def _chunk_python_ast(
                 decs.append("@decorator")
         return decs
 
-    def _get_returns(node: Any) -> Optional[str]:
+    def _get_returns(node: Any) -> str | None:
         if getattr(node, "returns", None):
             try:
                 return ast.unparse(node.returns)
@@ -1749,9 +1749,9 @@ def _chunk_python_ast(
 
 def late_interaction_rerank(
     raw_query: str,
-    candidates: List[Dict[str, Any]],
+    candidates: list[dict[str, Any]],
     top_k: int = 10,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Stage 2 lightweight late-interaction re-ranker (<2ms).
     Evaluates candidate items using contiguous phrase match and token proximity:
@@ -1805,14 +1805,14 @@ def generate_contextual_hierarchical_chunks(
     file_name: str = "",
     file_ext: str = "",
     raw_text: str = "",
-    canonical_path: Optional[str] = None,
+    canonical_path: str | None = None,
     parent_chunk_chars: int = 3500,
     child_chunk_chars: int = 950,
     child_overlap_chars: int = 80,
-    file_path: Optional[str] = None,
-    text: Optional[str] = None,
+    file_path: str | None = None,
+    text: str | None = None,
     **kwargs: Any,
-) -> Tuple[str, str, Dict[str, Any], List[Dict[str, Any]], List[Dict[str, Any]]]:
+) -> tuple[str, str, dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
     """
     RAG v3 Hierarchical & Anthropic-Style Contextual Chunking:
       1. Detects document type ('recipe', 'invoice', 'code', 'markdown', 'generic')
@@ -1919,11 +1919,11 @@ def generate_contextual_hierarchical_chunks(
     elif file_ext.lower() == ".md":
         doc_type = "markdown"
 
-    doc_metadata: Dict[str, Any] = {"title": doc_title}
+    doc_metadata: dict[str, Any] = {"title": doc_title}
 
     if is_recipe:
-        ingredients: List[str] = []
-        steps: List[str] = []
+        ingredients: list[str] = []
+        steps: list[str] = []
         prep_time = ""
         cook_time = ""
         servings = ""
@@ -2021,9 +2021,9 @@ def generate_contextual_hierarchical_chunks(
         ingredient_summary = " | Ingredients: " + ", ".join(doc_metadata["ingredients"][:8])
 
     # 1. Build Parent Chunks (natural section boundaries, ~2500-4500 chars)
-    parent_chunks: List[Dict[str, Any]] = []
+    parent_chunks: list[dict[str, Any]] = []
     current_parent_heading = doc_title
-    current_parent_lines: List[str] = []
+    current_parent_lines: list[str] = []
     current_parent_len = 0
     parent_start_line = 1
 
@@ -2078,7 +2078,7 @@ def generate_contextual_hierarchical_chunks(
         _flush_parent(len(lines))
 
     # 2. Build Child Chunks from Parent Chunks (high-precision search units)
-    child_chunks: List[Dict[str, Any]] = []
+    child_chunks: list[dict[str, Any]] = []
 
     for p in parent_chunks:
         p_lines = p.get("lines", [])
@@ -2086,33 +2086,33 @@ def generate_contextual_hierarchical_chunks(
             continue
         p_heading = p["heading_context"]
         p_idx = p["parent_index"]
-        c_lines: List[str] = []
+        c_lines: list[str] = []
         c_len = 0
         c_start_line = p["line_start"]
 
         def _flush_child(end_line_num: int) -> None:
             nonlocal c_lines, c_len, c_start_line
-            if not c_lines:
+            if not c_lines:  # noqa: B023
                 return
-            body = "\n".join(c_lines).strip()
+            body = "\n".join(c_lines).strip()  # noqa: B023
             if not body:
                 return
-            breadcrumb = f"[{folder_prefix}Doc: {p_heading}{ingredient_summary}]"
+            breadcrumb = f"[{folder_prefix}Doc: {p_heading}{ingredient_summary}]"  # noqa: B023
             full_child_text = f"{breadcrumb}\n{body}"
             child_chunks.append(
                 {
                     "chunk_index": len(child_chunks),
-                    "parent_index": p_idx,
-                    "parent_chunk_id": f"parent_{p_idx}",
+                    "parent_index": p_idx,  # noqa: B023
+                    "parent_chunk_id": f"parent_{p_idx}",  # noqa: B023
                     "chunk_level": "child",
-                    "heading_context": p_heading,
+                    "heading_context": p_heading,  # noqa: B023
                     "structural_context": breadcrumb,
                     "chunk_text": full_child_text,
                     "raw_chunk_text": body,
                     "raw_text": body,
                     "text": full_child_text,
-                    "line_start": c_start_line,
-                    "line_end": max(c_start_line, end_line_num),
+                    "line_start": c_start_line,  # noqa: B023
+                    "line_end": max(c_start_line, end_line_num),  # noqa: B023
                     "token_count": max(1, len(full_child_text.split())),
                 }
             )
@@ -2152,8 +2152,8 @@ def parse_document_structure_and_chunks(
     file_name: str,
     file_ext: str,
     raw_text: str,
-    canonical_path: Optional[str] = None,
-) -> Tuple[str, str, Dict[str, Any], List[Dict[str, Any]]]:
+    canonical_path: str | None = None,
+) -> tuple[str, str, dict[str, Any], list[dict[str, Any]]]:
     """
     Backward-compatible wrapper for generate_contextual_hierarchical_chunks.
     Returns 4-tuple (doc_type, doc_title, doc_metadata, child_chunks).
@@ -2165,7 +2165,7 @@ def parse_document_structure_and_chunks(
     return (doc_type, doc_title, doc_metadata, child_chunks)
 
 
-def apply_primacy_recency_inversion(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def apply_primacy_recency_inversion(chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     Mitigates 'Lost in the Middle' attention degradation by rearranging ranked evidence
     chunks [C1, C2, C3, C4, C5, ...] into a U-curve: [C1, C3, ..., C4, C2].
@@ -2173,8 +2173,8 @@ def apply_primacy_recency_inversion(chunks: List[Dict[str, Any]]) -> List[Dict[s
     """
     if len(chunks) <= 2:
         return list(chunks)
-    head_items: List[Dict[str, Any]] = []
-    tail_items: List[Dict[str, Any]] = []
+    head_items: list[dict[str, Any]] = []
+    tail_items: list[dict[str, Any]] = []
     for idx, item in enumerate(chunks):
         if idx % 2 == 0:
             head_items.append(item)
@@ -2200,8 +2200,8 @@ class CRAGGrade(dict):
 
 def grade_rag_retrieval(
     query: str,
-    retrieved_items: Optional[List[Dict[str, Any]]] = None,
-    citations: Optional[List[Dict[str, Any]]] = None,
+    retrieved_items: list[dict[str, Any]] | None = None,
+    citations: list[dict[str, Any]] | None = None,
 ) -> CRAGGrade:
     """
     Corrective RAG (CRAG) retrieval evaluator: assesses whether retrieved knowledge chunks
@@ -2275,7 +2275,7 @@ class GroundingScoreResult(dict):
         return float(self.get("grounding_confidence_score", 0))
 
 
-def compute_grounding_confidence_score(answer_text: str, evidence_texts: Union[str, List[str]]) -> GroundingScoreResult:
+def compute_grounding_confidence_score(answer_text: str, evidence_texts: str | list[str]) -> GroundingScoreResult:
     """
     Fast Python NLI entailment check (<2ms) verifying that factual claims in the generated
     response are grounded in the retrieved context evidence.
@@ -2314,7 +2314,7 @@ def compute_grounding_confidence_score(answer_text: str, evidence_texts: Union[s
     evidence_tokens = set(re.findall(r"[a-z0-9_\u00c0-\u024f\u4e00-\u9fff]+", evidence_joined))
 
     grounded_count = 0
-    unsupported: List[str] = []
+    unsupported: list[str] = []
 
     for sent in sentences:
         sent_words = [
@@ -2345,7 +2345,7 @@ def compute_grounding_confidence_score(answer_text: str, evidence_texts: Union[s
     )
 
 
-def analyze_photo_asset(file_path: Union[str, bytes], file_name: str) -> Dict[str, Any]:
+def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any]:
     """
     Single-pass Pillow + EXIF visual analyzer:
       1. Decodes image safely and generates a 224px max-edge WebP micro-thumbnail (thumb_webp BLOB)
@@ -2392,11 +2392,11 @@ def analyze_photo_asset(file_path: Union[str, bytes], file_name: str) -> Dict[st
         work_img = rgb_img.resize((grid_size, grid_size), Image.Resampling.BILINEAR)
         pixels = list(getattr(work_img, "get_flattened_data", work_img.getdata)())
 
-    frame_counts: Dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
-    center_counts: Dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
-    border_counts: Dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
-    top_counts: Dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
-    bottom_counts: Dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
+    frame_counts: dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
+    center_counts: dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
+    border_counts: dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
+    top_counts: dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
+    bottom_counts: dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
 
     frame_hist = [0.0] * 64
     center_hist = [0.0] * 64
@@ -2491,7 +2491,7 @@ def analyze_photo_asset(file_path: Union[str, bytes], file_name: str) -> Dict[st
     ]
 
     # 4. Spatial Scene & Object Classification (Works even on generic IMG_0042.JPG!)
-    scene_tags: List[str] = []
+    scene_tags: list[str] = []
 
     def _add_tag(t: str) -> None:
         if t not in scene_tags:
@@ -2573,10 +2573,10 @@ def analyze_photo_asset(file_path: Union[str, bytes], file_name: str) -> Dict[st
     # 6. EXIF & Embedded OCR / Caption Extraction
     camera_make = ""
     camera_model = ""
-    taken_at: Optional[float] = None
-    gps_lat: Optional[float] = None
-    gps_lon: Optional[float] = None
-    ocr_text_parts: List[str] = []
+    taken_at: float | None = None
+    gps_lat: float | None = None
+    gps_lon: float | None = None
+    ocr_text_parts: list[str] = []
 
     # Check PNG/WebP info text chunks (e.g. Title, Description, Comment, OCR, Recipe)
     for k, v in info_dict.items():
@@ -2603,7 +2603,7 @@ def analyze_photo_asset(file_path: Union[str, bytes], file_name: str) -> Dict[st
             sidecar_path = file_path + sidecar_ext
             if os.path.isfile(sidecar_path):
                 try:
-                    with open(sidecar_path, "r", encoding="utf-8", errors="replace") as sf:
+                    with open(sidecar_path, encoding="utf-8", errors="replace") as sf:
                         ocr_text_parts.append(sf.read(4096).strip())
                 except Exception:
                     pass
@@ -2690,7 +2690,7 @@ def analyze_photo_asset(file_path: Union[str, bytes], file_name: str) -> Dict[st
     }
 
 
-def classify_path_rbac(canonical_path: str) -> Tuple[str, str, str, str]:
+def classify_path_rbac(canonical_path: str) -> tuple[str, str, str, str]:
     """
     Classifies a file's canonical path into RBAC visibility tiers:
       Returns (visibility_tier, owner_username, share_name, allowed_users_csv)
@@ -2722,7 +2722,7 @@ def classify_path_rbac(canonical_path: str) -> Tuple[str, str, str, str]:
     return ("public_share", "", share_name, "*")
 
 
-SYSTEM_SHARE_EXCLUSIONS: Set[str] = {
+SYSTEM_SHARE_EXCLUSIONS: set[str] = {
     "appdata",
     "system",
     "domains",
@@ -2734,18 +2734,18 @@ SYSTEM_SHARE_EXCLUSIONS: Set[str] = {
     ".thumbnails",
 }
 
-_UNRAID_INI_CACHE: Dict[str, Any] = {"ts": 0.0, "disks": {}, "shares": {}}
-_SMARTCTL_STANDBY_CACHE: Dict[str, Tuple[float, bool]] = {}
+_UNRAID_INI_CACHE: dict[str, Any] = {"ts": 0.0, "disks": {}, "shares": {}}
+_SMARTCTL_STANDBY_CACHE: dict[str, tuple[float, bool]] = {}
 
 
-def _parse_ini_sections(ini_path: str) -> Dict[str, Dict[str, str]]:
+def _parse_ini_sections(ini_path: str) -> dict[str, dict[str, str]]:
     """Parses Unraid emhttp .ini files (disks.ini, shares.ini) from RAM tmpfs without disk I/O."""
-    result: Dict[str, Dict[str, str]] = {}
+    result: dict[str, dict[str, str]] = {}
     if not os.path.isfile(ini_path):
         return result
     try:
-        with open(ini_path, "r", encoding="utf-8", errors="replace") as f:
-            current_sec: Optional[str] = None
+        with open(ini_path, encoding="utf-8", errors="replace") as f:
+            current_sec: str | None = None
             for raw_line in f:
                 line = raw_line.strip()
                 if not line:
@@ -2763,14 +2763,14 @@ def _parse_ini_sections(ini_path: str) -> Dict[str, Dict[str, str]]:
     return result
 
 
-def _get_unraid_disks_and_shares() -> Tuple[Dict[str, Dict[str, str]], Dict[str, Dict[str, str]]]:
+def _get_unraid_disks_and_shares() -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
     """Returns cached (disks_dict, shares_dict) from /var/local/emhttp/{disks,shares}.ini."""
     now = time.time()
     if (now - float(_UNRAID_INI_CACHE.get("ts", 0.0))) < 1.5:
         return (_UNRAID_INI_CACHE["disks"], _UNRAID_INI_CACHE["shares"])
 
-    disks: Dict[str, Dict[str, str]] = {}
-    shares: Dict[str, Dict[str, str]] = {}
+    disks: dict[str, dict[str, str]] = {}
+    shares: dict[str, dict[str, str]] = {}
     for d_path in ("/var/local/emhttp/disks.ini", "/host/var/local/emhttp/disks.ini"):
         if os.path.isfile(d_path):
             disks = _parse_ini_sections(d_path)
@@ -2831,7 +2831,7 @@ def resolve_path_backing_dev(path: str) -> str:
                 return "nvme0n1"
 
         # Share uses HDD array (or is /mnt/user root): check if any array data disk is in standby
-        array_devs: List[str] = []
+        array_devs: list[str] = []
         for _, d_info in unraid_disks.items():
             dev = d_info.get("device") or ""
             d_type = (d_info.get("type") or "").lower()
@@ -2928,10 +2928,10 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
     return False
 
 
-def get_sleeping_disks_list() -> List[str]:
+def get_sleeping_disks_list() -> list[str]:
     """Returns list of device names currently known to be in standby/sleep state."""
-    sleeping: Set[str] = set()
-    unraid_awake_devs: Set[str] = set()
+    sleeping: set[str] = set()
+    unraid_awake_devs: set[str] = set()
     unraid_disks, _ = _get_unraid_disks_and_shares()
     for _, d_info in unraid_disks.items():
         dev = d_info.get("device") or ""
@@ -2955,10 +2955,10 @@ def get_sleeping_disks_list() -> List[str]:
     return sorted(sleeping)
 
 
-def get_running_disks_list() -> List[str]:
+def get_running_disks_list() -> list[str]:
     """Returns list of device names currently known to be spinning/active."""
     sleeping = set(get_sleeping_disks_list())
-    running: Set[str] = set()
+    running: set[str] = set()
     for dev, val in list(Z_STATE.cached_smart_data.items()):
         if dev and dev not in sleeping and val and len(val) >= 2:
             if str(val[1] or "").lower() not in ("standby", "sleep", "spundown"):
@@ -2980,7 +2980,7 @@ class RagSearchEngine:
     and automatic opportunistic learning when a sleeping disk spins up.
     """
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         self.db_path = db_path or RAG_DB_PATH
         self._write_lock = threading.RLock()
         self._scan_lock = threading.Lock()
@@ -2989,11 +2989,11 @@ class RagSearchEngine:
         self._pause_event = threading.Event()
         self._pause_event.set()
         self._stop_requested: bool = False
-        self._sync_thread: Optional[threading.Thread] = None
-        self._watcher_thread: Optional[threading.Thread] = None
-        self._known_sleeping_devs: Set[str] = set(get_sleeping_disks_list())
-        self._last_auto_learn_event: Optional[Dict[str, Any]] = None
-        self._sync_progress: Dict[str, Any] = {
+        self._sync_thread: threading.Thread | None = None
+        self._watcher_thread: threading.Thread | None = None
+        self._known_sleeping_devs: set[str] = set(get_sleeping_disks_list())
+        self._last_auto_learn_event: dict[str, Any] | None = None
+        self._sync_progress: dict[str, Any] = {
             "state": "idle",
             "current_path": "",
             "target_paths": [],
@@ -3008,7 +3008,7 @@ class RagSearchEngine:
             "updated_at": None,
             "message": "",
         }
-        self._last_sync_ts: Optional[float] = None
+        self._last_sync_ts: float | None = None
         self._schema_initialized = False
         self._has_sqlite_vec: bool = False
         self._vec_table_active: bool = False
@@ -3367,7 +3367,7 @@ class RagSearchEngine:
         embedding_blob: bytes,
         file_id: int,
         visibility_tier: str = "public_share",
-        dim: Optional[int] = None,
+        dim: int | None = None,
     ) -> None:
         """
         Synchronizes a chunk's vector into the decoupled vec_chunks_{dim} virtual table.
@@ -3391,8 +3391,8 @@ class RagSearchEngine:
         target_model: str,
         target_dim: int,
         batch_size: int = 10,
-        progress_callback: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+        progress_callback: Any | None = None,
+    ) -> dict[str, Any]:
         """
         Performs in-place re-embedding over existing document_chunks on SSD (/app/data/rag_index.db).
         Strict AGENTS.md §1.2 Invariant: 100% zero disk platters wakeups on sleeping drives.
@@ -3607,11 +3607,11 @@ class RagSearchEngine:
                 pass
         return res_complete
 
-    def _default_watched_paths(self) -> List[str]:
+    def _default_watched_paths(self) -> list[str]:
         """Determines sensible non-system default watched folders without waking sleeping drives."""
         _, unraid_shares = _get_unraid_disks_and_shares()
         if unraid_shares:
-            user_shares: List[str] = []
+            user_shares: list[str] = []
             for s_name in sorted(unraid_shares.keys()):
                 if s_name.lower() not in SYSTEM_SHARE_EXCLUSIONS and not s_name.startswith("."):
                     user_shares.append(f"/mnt/user/{s_name}")
@@ -3619,8 +3619,8 @@ class RagSearchEngine:
                 return user_shares
         return ["/mnt/user"]
 
-    def get_config(self) -> Dict[str, Any]:
-        default_cfg: Dict[str, Any] = {
+    def get_config(self) -> dict[str, Any]:
+        default_cfg: dict[str, Any] = {
             "enabled": True,
             "scope_mode": "include",  # "all" (Learn All Files), "exclude" (Exclude Folders), "include" (Specified Watched Folders)
             "respect_standby": True,
@@ -3648,7 +3648,7 @@ class RagSearchEngine:
             default_cfg.update(saved)
         # Clean up empty or duplicate watched_paths
         raw_paths = default_cfg.get("watched_paths") or []
-        cleaned_paths: List[str] = []
+        cleaned_paths: list[str] = []
         for p in raw_paths:
             cp = os.path.normpath(str(p or "").strip())
             if cp and cp not in cleaned_paths:
@@ -3656,7 +3656,7 @@ class RagSearchEngine:
         default_cfg["watched_paths"] = cleaned_paths or self._default_watched_paths()
 
         raw_excl = default_cfg.get("excluded_paths") or []
-        cleaned_excl: List[str] = []
+        cleaned_excl: list[str] = []
         for p in raw_excl:
             cp = os.path.normpath(str(p or "").strip())
             if cp and cp not in cleaned_excl:
@@ -3669,7 +3669,7 @@ class RagSearchEngine:
             default_cfg["embedding_model"] = "embeddinggemma"
         return default_cfg
 
-    def update_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    def update_config(self, updates: dict[str, Any]) -> dict[str, Any]:
         cfg = self.get_config()
         for k in (
             "enabled",
@@ -3719,7 +3719,7 @@ class RagSearchEngine:
 
         for list_key in ("watched_paths", "excluded_paths"):
             if isinstance(cfg.get(list_key), list):
-                dedup: List[str] = []
+                dedup: list[str] = []
                 for p in cfg[list_key]:
                     cp = os.path.normpath(str(p or "").strip())
                     if cp and cp not in dedup:
@@ -3798,7 +3798,7 @@ class RagSearchEngine:
         self._watcher_thread = t
         t.start()
 
-    def enqueue_deferred_path(self, path: str, reason: str = "disk_standby", priority: int = 1) -> Dict[str, Any]:
+    def enqueue_deferred_path(self, path: str, reason: str = "disk_standby", priority: int = 1) -> dict[str, Any]:
         """Queues a folder path in rag_deferred_queue without touching the disk platter."""
         self._ensure_schema()
         norm_p = os.path.normpath(str(path or "").strip())
@@ -3846,7 +3846,7 @@ class RagSearchEngine:
             finally:
                 conn.close()
 
-    def get_deferred_queue(self) -> List[Dict[str, Any]]:
+    def get_deferred_queue(self) -> list[dict[str, Any]]:
         """Returns all paths currently waiting in rag_deferred_queue along with live standby status."""
         self._ensure_schema()
         conn = self._get_conn(readonly=True)
@@ -3863,7 +3863,7 @@ class RagSearchEngine:
         finally:
             conn.close()
 
-        items: List[Dict[str, Any]] = []
+        items: list[dict[str, Any]] = []
         for r in rows:
             tp = r["target_path"]
             dev = r["backing_dev"] or resolve_path_backing_dev(tp)
@@ -3881,7 +3881,7 @@ class RagSearchEngine:
             )
         return items
 
-    def sync_watched_deferred_queue(self) -> Dict[str, Any]:
+    def sync_watched_deferred_queue(self) -> dict[str, Any]:
         """
         Reconciles `rag_deferred_queue` against the active `watched_paths` and `excluded_paths`:
           1. Prunes stale deferred entries that are no longer inside any watched folder (or were excluded).
@@ -3955,7 +3955,7 @@ class RagSearchEngine:
 
         return {"pruned": pruned, "enqueued": enqueued}
 
-    def check_and_trigger_spinup_auto_learn(self, background: bool = True) -> Dict[str, Any]:
+    def check_and_trigger_spinup_auto_learn(self, background: bool = True) -> dict[str, Any]:
         """
         Detects when a sleeping/standby disk has spun up (transitioned to active/running)
         or when paths in `rag_deferred_queue` now reside on a running disk, and automatically
@@ -3984,8 +3984,8 @@ class RagSearchEngine:
             return {"triggered": False, "reason": "already_indexing", "woken_disks": sorted(woken_devs)}
 
         excluded_set = {os.path.normpath(p) for p in (cfg.get("excluded_paths") or []) if p}
-        ready_paths: List[str] = []
-        ready_devs: Set[str] = set(woken_devs)
+        ready_paths: list[str] = []
+        ready_devs: set[str] = set(woken_devs)
 
         # 1. Check all queued paths in rag_deferred_queue whose backing disk is now running
         deferred_items = self.get_deferred_queue()
@@ -4064,7 +4064,7 @@ class RagSearchEngine:
                 "sync": sync_res,
             }
 
-    def is_within_learning_schedule(self) -> Tuple[bool, str]:
+    def is_within_learning_schedule(self) -> tuple[bool, str]:
         """Checks whether current local time is within the configured ZettAI learning window."""
         cfg = self.get_config()
         if not cfg.get("schedule_enabled"):
@@ -4086,7 +4086,7 @@ class RagSearchEngine:
         except Exception:
             return (True, "")
 
-    def get_learning_results(self, principal: Any = None) -> Dict[str, Any]:
+    def get_learning_results(self, principal: Any = None) -> dict[str, Any]:
         """
         Returns ZettAI 6-state status (Initializing | Learning | Idle | Paused | Disabled | Error),
         succeeded/failed file counts, and failed file paths for the Learning Results dialog.
@@ -4167,7 +4167,7 @@ class RagSearchEngine:
             "failed_files": failed_files,
         }
 
-    def relearn_failed_files(self) -> Dict[str, Any]:
+    def relearn_failed_files(self) -> dict[str, Any]:
         """Retries indexing any files that previously failed parsing (without waking sleeping drives)."""
         res_info = self.get_learning_results()
         failed_list = res_info.get("failed_files") or []
@@ -4204,11 +4204,11 @@ class RagSearchEngine:
         updated["recovered"] = recovered
         return updated
 
-    def toggle_favorite(self, path: str) -> Dict[str, Any]:
+    def toggle_favorite(self, path: str) -> dict[str, Any]:
         """Adds or removes a file path from ZettAI favorites."""
         norm_p = os.path.normpath(str(path or "").strip())
         cfg = self.get_config()
-        favs: List[str] = list(cfg.get("favorites") or [])
+        favs: list[str] = list(cfg.get("favorites") or [])
         if norm_p in favs:
             favs.remove(norm_p)
             is_fav = False
@@ -4218,7 +4218,7 @@ class RagSearchEngine:
         self.update_config({"favorites": favs})
         return {"status": "ok", "path": norm_p, "is_favorite": is_fav, "favorites": favs}
 
-    def discover_available_folders(self) -> List[Dict[str, Any]]:
+    def discover_available_folders(self) -> list[dict[str, Any]]:
         """
         Discovers available NAS shares and folders under /mnt/user (or /mnt/storage) without waking
         sleeping HDDs. Uses /var/local/emhttp/shares.ini when on Unraid.
@@ -4226,8 +4226,8 @@ class RagSearchEngine:
         cfg = self.get_config()
         watched_set = {os.path.normpath(p) for p in (cfg.get("watched_paths") or [])}
         excluded_set = {os.path.normpath(p) for p in (cfg.get("excluded_paths") or [])}
-        folders: List[Dict[str, Any]] = []
-        seen_paths: Set[str] = set()
+        folders: list[dict[str, Any]] = []
+        seen_paths: set[str] = set()
 
         _, unraid_shares = _get_unraid_disks_and_shares()
         if unraid_shares:
@@ -4315,7 +4315,7 @@ class RagSearchEngine:
 
         return folders
 
-    def get_sync_progress(self) -> Dict[str, Any]:
+    def get_sync_progress(self) -> dict[str, Any]:
         """Returns live sync state, progress counters, and pause/resume/stop capabilities."""
         state = self._sync_state
         is_active = self._is_indexing or state in ("running", "paused", "stopping")
@@ -4334,7 +4334,7 @@ class RagSearchEngine:
         prog["last_auto_learn_event"] = self._last_auto_learn_event
         return prog
 
-    def pause_sync(self) -> Dict[str, Any]:
+    def pause_sync(self) -> dict[str, Any]:
         """Pauses an active indexing job at the current file boundary."""
         self._pause_event.clear()
         self._sync_state = "paused"
@@ -4343,7 +4343,7 @@ class RagSearchEngine:
         self._sync_progress["message"] = "Sync paused by user."
         return self.get_sync_progress()
 
-    def resume_sync(self) -> Dict[str, Any]:
+    def resume_sync(self) -> dict[str, Any]:
         """Resumes a paused indexing job (re-verifying disk standby before touching files)."""
         self._pause_event.set()
         self._sync_state = "running" if self._is_indexing else "idle"
@@ -4352,7 +4352,7 @@ class RagSearchEngine:
         self._sync_progress["message"] = "Sync resumed."
         return self.get_sync_progress()
 
-    def stop_sync(self) -> Dict[str, Any]:
+    def stop_sync(self) -> dict[str, Any]:
         """Stops an active or paused indexing job immediately and cleanly."""
         self._stop_requested = True
         self._pause_event.set()
@@ -4374,7 +4374,7 @@ class RagSearchEngine:
             pass
         return self.get_sync_progress()
 
-    def forget_folder(self, folder_path: str) -> Dict[str, Any]:
+    def forget_folder(self, folder_path: str) -> dict[str, Any]:
         """Deletes everything the index learned from a folder and stops learning it again (AI-20).
 
         Removes its files, chunks, vectors, photo data, folder summaries and queued work, then
@@ -4438,7 +4438,7 @@ class RagSearchEngine:
         logger.info(f"[RAG] Forgot folder {sanitize_string(norm)}: {removed}")
         return {"status": "ok", "folder": norm, "removed": removed}
 
-    def flush_index(self) -> Dict[str, Any]:
+    def flush_index(self) -> dict[str, Any]:
         """
         Stops active syncs and wipes all indexed files, document chunks, photo assets,
         folder manifests, and deferred items from rag_index.db, reclaims NVMe storage with VACUUM,
@@ -4514,13 +4514,13 @@ class RagSearchEngine:
 
     def start_background_sync(
         self,
-        paths: List[str],
+        paths: list[str],
         respect_standby: bool = True,
         force_wake: bool = False,
         max_files: int = 100000,
         recursive: bool = True,
-        auto_spinup_devs: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        auto_spinup_devs: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Starts indexing one or more folders asynchronously in a background daemon thread."""
         if self._is_indexing and self._sync_state in ("running", "paused"):
             return {"status": "already_running", **self.get_sync_progress()}
@@ -4611,14 +4611,14 @@ class RagSearchEngine:
 
     def index_paths(
         self,
-        paths: List[str],
+        paths: list[str],
         respect_standby: bool = True,
         force_wake: bool = False,
         max_files: int = 100000,
         recursive: bool = True,
         _from_bg_worker: bool = False,
-        auto_spinup_devs: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        auto_spinup_devs: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Indexes multiple folders sequentially while respecting pause/resume/stop and disk standby."""
         clean_paths = [os.path.normpath(p.strip()) for p in (paths or []) if p and str(p).strip()]
         if not clean_paths:
@@ -4656,7 +4656,7 @@ class RagSearchEngine:
         total_skipped = 0
         total_deferred = 0
         total_errors = 0
-        per_path_results: List[Dict[str, Any]] = []
+        per_path_results: list[dict[str, Any]] = []
         was_stopped = False
 
         self._is_indexing = True
@@ -4745,7 +4745,7 @@ class RagSearchEngine:
         finally:
             self._is_indexing = False
 
-    def get_index_stats(self) -> Dict[str, Any]:
+    def get_index_stats(self) -> dict[str, Any]:
         self._ensure_schema()
         cfg = self.get_config()
         conn = self._get_conn(readonly=True)
@@ -4832,7 +4832,7 @@ class RagSearchEngine:
         max_files: int = 100000,
         recursive: bool = True,
         _reset_control_flags: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Incrementally indexes documents, recipes, code, and photos under `root_path`.
         Strictly obeys SpindownGuard: if a backing disk is in STANDBY and respect_standby=True
@@ -4926,7 +4926,7 @@ class RagSearchEngine:
         skipped_unchanged = 0
         deferred_standby = 0
         errors_count = 0
-        seen_file_ids: Set[int] = set()
+        seen_file_ids: set[int] = set()
         any_subpath_deferred = False
         stopped_early = False
 
@@ -4944,7 +4944,7 @@ class RagSearchEngine:
                     """,
                     (norm_root, prefix_slash, prefix_upper),
                 ).fetchall()
-                existing_map: Dict[str, sqlite3.Row] = {r["canonical_path"]: r for r in rows}
+                existing_map: dict[str, sqlite3.Row] = {r["canonical_path"]: r for r in rows}
             finally:
                 conn_ro.close()
 
@@ -5206,7 +5206,7 @@ class RagSearchEngine:
             if _reset_control_flags:
                 self._is_indexing = False
 
-    def refresh_folder_manifest(self, folder_path: str) -> Optional[Dict[str, Any]]:
+    def refresh_folder_manifest(self, folder_path: str) -> dict[str, Any] | None:
         """
         Calculates and persists a deterministic structural manifest rollup for folder_path
         into the `folder_manifests` table and `rag_manifests_fts` virtual table.
@@ -5235,8 +5235,8 @@ class RagSearchEngine:
 
             total_files = len(rows)
             total_size = sum(int(r["size_bytes"] or 0) for r in rows)
-            file_types: Dict[str, int] = {}
-            doc_titles: List[str] = []
+            file_types: dict[str, int] = {}
+            doc_titles: list[str] = []
             backing_dev = rows[0]["backing_dev"] or ""
             vis_tier = rows[0]["visibility_tier"] or "public_share"
             owner_user = rows[0]["owner_username"] or ""
@@ -5340,7 +5340,7 @@ class RagSearchEngine:
         finally:
             conn.close()
 
-    def get_folder_manifest(self, folder_path: str, principal: Any = None) -> Optional[Dict[str, Any]]:
+    def get_folder_manifest(self, folder_path: str, principal: Any = None) -> dict[str, Any] | None:
         """Retrieves folder manifest rollup with RBAC enforcement, or auto-generates from indexed_files."""
         self._ensure_schema()
         norm_path = os.path.normpath(folder_path)
@@ -5401,8 +5401,8 @@ class RagSearchEngine:
                 pass
 
     def list_folder_manifests(
-        self, path_prefix: Optional[str] = None, principal: Any = None, limit: int = 100, **kwargs: Any
-    ) -> List[Dict[str, Any]]:
+        self, path_prefix: str | None = None, principal: Any = None, limit: int = 100, **kwargs: Any
+    ) -> list[dict[str, Any]]:
         """Lists all known folder manifests with zero disk wakeups."""
         self._ensure_schema()
         conn = self._get_conn(readonly=True)
@@ -5446,8 +5446,8 @@ class RagSearchEngine:
         max_tokens: int = 4000,
         principal: Any = None,
         diversity_lambda: float = 0.60,
-        mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        mode: str | None = None,
+    ) -> dict[str, Any]:
         """
         RAG v3 Folder Context Engine:
           - Spindown-Safe: 100% Zero Array Disk I/O against /app/data/rag_index.db
@@ -5554,7 +5554,7 @@ class RagSearchEngine:
                 }
 
             parent_ids = {int(r["parent_chunk_id"]) for r in rows if r["parent_chunk_id"] is not None}
-            parent_chunk_map: Dict[int, sqlite3.Row] = {}
+            parent_chunk_map: dict[int, sqlite3.Row] = {}
             if parent_ids:
                 p_placeholders = ",".join("?" for _ in parent_ids)
                 p_rows = conn.execute(
@@ -5592,12 +5592,12 @@ class RagSearchEngine:
                 )
 
             selected_items = []
-            used_parent_ids: Set[int] = set()
-            used_file_counts: Dict[int, int] = {}
+            used_parent_ids: set[int] = set()
+            used_file_counts: dict[int, int] = {}
             current_tokens = 0
 
             if is_mode_b:
-                selected_embs: List[List[float]] = []
+                selected_embs: list[list[float]] = []
                 pool_left = list(candidate_pool)
 
                 while pool_left and current_tokens < eff_max_tokens:
@@ -5734,10 +5734,10 @@ class RagSearchEngine:
         file_ext: str,
         size_bytes: int,
         mtime_ns: int,
-        cached_row: Optional[sqlite3.Row],
-        respect_standby: Optional[bool] = None,
+        cached_row: sqlite3.Row | None,
+        respect_standby: bool | None = None,
         force_wake: bool = False,
-    ) -> Optional[int]:
+    ) -> int | None:
         """Hashes, parses, embeds, and persists a single document, code file, or photo into rag_index.db."""
         now = time.time()
         parent_dir = os.path.dirname(canonical_path)
@@ -5766,7 +5766,7 @@ class RagSearchEngine:
                     if size_bytes > 131072:
                         f.seek(max(0, size_bytes - 65536))
                         h.update(f.read(65536))
-                    h.update(f"{size_bytes}_{mtime_ns}".encode("utf-8"))
+                    h.update(f"{size_bytes}_{mtime_ns}".encode())
                 else:
                     while True:
                         block = f.read(65536)
@@ -5873,15 +5873,15 @@ class RagSearchEngine:
             ocr_text = photo_data.get("ocr_text", "")
             doc_type = "photo"
             doc_title = os.path.splitext(file_name)[0]
-            doc_meta: Dict[str, Any] = {
+            doc_meta: dict[str, Any] = {
                 "width": photo_data["width"],
                 "height": photo_data["height"],
                 "dominant_hex": photo_data["dominant_hex"],
                 "scene_tags": photo_data["scene_tags"],
                 "object_colors": photo_data["object_colors"],
             }
-            ocr_chunks: List[Dict[str, Any]] = []
-            ocr_parent_chunks: List[Dict[str, Any]] = []
+            ocr_chunks: list[dict[str, Any]] = []
+            ocr_parent_chunks: list[dict[str, Any]] = []
             if ocr_text:
                 parsed_type, parsed_title, parsed_meta, ocr_chunks, ocr_parent_chunks = (
                     generate_contextual_hierarchical_chunks(file_name, ".txt", ocr_text, canonical_path)
@@ -6005,7 +6005,7 @@ class RagSearchEngine:
                     )
 
                     conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
-                    ocr_parent_id_map: Dict[int, int] = {}
+                    ocr_parent_id_map: dict[int, int] = {}
                     for p in ocr_parent_chunks:
                         p_body = f"{p['heading_context']} {p['chunk_text']}".strip()
                         p_full_text = format_embeddinggemma_document(file_name, p_body)
@@ -6130,11 +6130,11 @@ class RagSearchEngine:
             all_blobs = neural_blobs
         else:
             all_blobs = [compute_384d_embedding(text=t, scene_tags=lexical_tags)[0] for t in child_texts + parent_texts]
-        prepared_child_chunks: List[Tuple[Dict[str, Any], bytes]] = list(
-            zip(child_chunks, all_blobs[: len(child_texts)])
+        prepared_child_chunks: list[tuple[dict[str, Any], bytes]] = list(
+            zip(child_chunks, all_blobs[: len(child_texts)], strict=False)
         )
-        prepared_parent_chunks: List[Tuple[Dict[str, Any], bytes]] = list(
-            zip(parent_chunks, all_blobs[len(child_texts) :])
+        prepared_parent_chunks: list[tuple[dict[str, Any], bytes]] = list(
+            zip(parent_chunks, all_blobs[len(child_texts) :], strict=False)
         )
 
         with self._write_lock:
@@ -6202,7 +6202,7 @@ class RagSearchEngine:
                 file_id = int(row_id["file_id"]) if row_id else int(cur.lastrowid or 0)
 
                 conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
-                parent_id_map: Dict[int, int] = {}
+                parent_id_map: dict[int, int] = {}
                 for p, p_emb in prepared_parent_chunks:
                     p_dim = len(p_emb) // 4
                     cur_p = conn.execute(
@@ -6294,7 +6294,7 @@ class RagSearchEngine:
         owner_user: str,
         share_name: str,
         allowed_csv: str,
-    ) -> Optional[int]:
+    ) -> int | None:
         """Records a poison-pill tombstone so corrupt files are skipped on future incremental scans."""
         now = time.time()
         with self._write_lock:
@@ -6343,7 +6343,7 @@ class RagSearchEngine:
                 conn.close()
 
     @staticmethod
-    def _build_rbac_clause(principal: Any, table_alias: str = "f") -> Tuple[str, List[Any]]:
+    def _build_rbac_clause(principal: Any, table_alias: str = "f") -> tuple[str, list[Any]]:
         """Builds parameterized SQLite WHERE predicate for multi-user RBAC path isolation."""
         if principal is None:
             return ("1=1", [])
@@ -6365,7 +6365,7 @@ class RagSearchEngine:
         return (sql, [username, username])
 
     @staticmethod
-    def _build_subtree_clause(path_prefix: Optional[str], table_alias: str = "f") -> Tuple[str, List[Any]]:
+    def _build_subtree_clause(path_prefix: str | None, table_alias: str = "f") -> tuple[str, list[Any]]:
         """Exact B-tree directory boundary predicate immune to prefix sibling traversal (/homes/alice vs /homes/alice_bob)."""
         if not path_prefix or not str(path_prefix).strip():
             return ("1=1", [])
@@ -6399,15 +6399,15 @@ class RagSearchEngine:
         self,
         query: str = "",
         mode: str = "all",
-        colors: Optional[List[str]] = None,
-        scenes: Optional[List[str]] = None,
-        path_prefix: Optional[str] = None,
+        colors: list[str] | None = None,
+        scenes: list[str] | None = None,
+        path_prefix: str | None = None,
         limit: int = 24,
         principal: Any = None,
         match_tab: str = "semantic",
         sort_by: str = "relevance",
-        embedding_model: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        embedding_model: str | None = None,
+    ) -> dict[str, Any]:
         """
         100% Zero-Disk-Touch Cross-Modal Search over `/app/data/rag_index.db` (mode=ro).
         Never calls os.stat(), os.path.exists(), or open() on array paths!
@@ -6421,13 +6421,13 @@ class RagSearchEngine:
         fav_set = {os.path.normpath(p) for p in (cfg.get("favorites") or [])}
 
         # Merge explicit filter chips with auto-extracted query intent
-        req_colors: List[str] = []
+        req_colors: list[str] = []
         for c in (colors or []) + intent["auto_colors"]:
             cn = COLOR_SYNONYMS.get(str(c).lower().strip(), str(c).lower().strip())
             if cn in CANONICAL_COLORS and cn not in req_colors:
                 req_colors.append(cn)
 
-        req_scenes: List[str] = []
+        req_scenes: list[str] = []
         for s in (scenes or []) + intent["auto_scenes"]:
             sn = str(s).lower().strip()
             if sn and sn not in req_scenes:
@@ -6467,8 +6467,8 @@ class RagSearchEngine:
 
         conn = self._get_conn(readonly=True)
         try:
-            photo_items: List[Dict[str, Any]] = []
-            doc_items: List[Dict[str, Any]] = []
+            photo_items: list[dict[str, Any]] = []
+            doc_items: list[dict[str, Any]] = []
 
             # 1. Visual / Photo Search Branch (always run when query/filters exist so category_groups counts are complete)
             if (
@@ -6571,7 +6571,7 @@ class RagSearchEngine:
             cat_audio = [it for it in all_candidates if it.get("category_type") == "audio"]
             cat_docs = [it for it in all_candidates if it.get("category_type") == "documents"]
 
-            folder_map: Dict[str, Dict[str, Any]] = {}
+            folder_map: dict[str, dict[str, Any]] = {}
             for it in all_candidates:
                 pdir = it.get("parent_dir") or ""
                 if not pdir:
@@ -6676,16 +6676,16 @@ class RagSearchEngine:
         conn: sqlite3.Connection,
         raw_query: str,
         fts_query: str,
-        query_vec: List[float],
-        req_colors: List[str],
-        req_scenes: List[str],
-        target_hist: List[float],
-        path_prefix: Optional[str],
+        query_vec: list[float],
+        req_colors: list[str],
+        req_scenes: list[str],
+        target_hist: list[float],
+        path_prefix: str | None,
         limit: int,
         principal: Any,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         # FTS5 BM25 lexical lookup on rag_photos_fts
-        bm25_map: Dict[int, float] = {}
+        bm25_map: dict[int, float] = {}
         if fts_query:
             try:
                 fts_rows = conn.execute(
@@ -6732,7 +6732,7 @@ class RagSearchEngine:
                 color_hist_64=target_hist if req_colors else None,
             )
 
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         q_lower = (raw_query or "").lower()
 
         for r in rows:
@@ -6741,10 +6741,10 @@ class RagSearchEngine:
                 continue
 
             fid = int(r["file_id"])
-            obj_colors: Dict[str, float] = json.loads(r["object_colors_json"] or "{}")
-            frm_colors: Dict[str, float] = json.loads(r["frame_colors_json"] or "{}")
-            scene_tags: List[str] = json.loads(r["scene_tags_json"] or "[]")
-            palette_swatches: List[str] = json.loads(r["palette_json"] or "[]")
+            obj_colors: dict[str, float] = json.loads(r["object_colors_json"] or "{}")
+            frm_colors: dict[str, float] = json.loads(r["frame_colors_json"] or "{}")
+            scene_tags: list[str] = json.loads(r["scene_tags_json"] or "[]")
+            palette_swatches: list[str] = json.loads(r["palette_json"] or "[]")
 
             emb_vec = unpack_embedding(r["vision_embedding_f32"])
             s_vec = cosine_similarity_vec(photo_query_vec, emb_vec)
@@ -6866,19 +6866,19 @@ class RagSearchEngine:
         conn: sqlite3.Connection,
         raw_query: str,
         fts_query: str,
-        query_vec: List[float],
-        req_scenes: List[str],
+        query_vec: list[float],
+        req_scenes: list[str],
         only_recipes: bool,
-        path_prefix: Optional[str],
+        path_prefix: str | None,
         limit: int,
         principal: Any,
         modality_hint: str = "all",
         only_docs: bool = False,
         query_embedding_model: str = "zett_lexical_384d",
         intent_type: str = "search",
-    ) -> List[Dict[str, Any]]:
-        bm25_map: Dict[int, float] = {}
-        bm25_rank: Dict[int, int] = {}
+    ) -> list[dict[str, Any]]:
+        bm25_map: dict[int, float] = {}
+        bm25_rank: dict[int, int] = {}
         if fts_query:
             try:
                 fts_rows = conn.execute(
@@ -6919,7 +6919,7 @@ class RagSearchEngine:
             except Exception as e:
                 logger.debug("sqlite-vec candidate lookup skipped: %s", e)
 
-        fts_rows: List[sqlite3.Row] = []
+        fts_rows: list[sqlite3.Row] = []
         if fts_chunk_ids:
             placeholders = ",".join("?" * len(fts_chunk_ids))
             fts_rows = conn.execute(
@@ -6968,7 +6968,7 @@ class RagSearchEngine:
                 rows.append(r)
 
         # Score all candidate chunks
-        scored_chunks: List[Tuple[float, sqlite3.Row, float]] = []
+        scored_chunks: list[tuple[float, sqlite3.Row, float]] = []
         for r in rows:
             emb = unpack_embedding(r["embedding_f32"])
             file_emb_model = r["embedding_model"] if "embedding_model" in r.keys() else "zett_lexical_384d"
@@ -6987,10 +6987,10 @@ class RagSearchEngine:
 
         # Sort by vector score to assign vector ranks for RRF
         scored_chunks.sort(key=lambda tup: tup[0], reverse=True)
-        vec_rank: Dict[int, int] = {int(tup[1]["chunk_id"]): idx for idx, tup in enumerate(scored_chunks, start=1)}
+        vec_rank: dict[int, int] = {int(tup[1]["chunk_id"]): idx for idx, tup in enumerate(scored_chunks, start=1)}
 
         q_tokens = [t for t in re.findall(r"[a-z0-9]+", (raw_query or "").lower()) if t not in _STOPWORDS]
-        per_file_best: Dict[int, Dict[str, Any]] = {}
+        per_file_best: dict[int, dict[str, Any]] = {}
 
         for s_vec, r, s_bm25 in scored_chunks:
             c_path = r["canonical_path"]
@@ -7116,10 +7116,10 @@ class RagSearchEngine:
         self,
         query: str,
         scope: str = "all",
-        path_prefix: Optional[str] = None,
+        path_prefix: str | None = None,
         top_k: int = 5,
         principal: Any = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         RAG v3 Grounded Conversational RAG & Structured Synthesis:
           - Resolves clean parent chunks for high-fidelity generation without fragmenting paragraphs
@@ -7146,7 +7146,7 @@ class RagSearchEngine:
 
         # Pre-load parent chunks for clean unfragmented generation context
         p_ids = {int(hit["parent_chunk_id"]) for hit in doc_hits[:top_k] if hit.get("parent_chunk_id") is not None}
-        p_map: Dict[int, sqlite3.Row] = {}
+        p_map: dict[int, sqlite3.Row] = {}
         if p_ids:
             conn_p = self._get_conn(readonly=True)
             try:
@@ -7159,7 +7159,7 @@ class RagSearchEngine:
             finally:
                 conn_p.close()
 
-        raw_citations: List[Dict[str, Any]] = []
+        raw_citations: list[dict[str, Any]] = []
         for idx, hit in enumerate(doc_hits[:top_k], start=1):
             breadcrumb = hit.get("breadcrumb") or hit.get("title") or hit["name"]
             p_id = hit.get("parent_chunk_id")
@@ -7251,7 +7251,7 @@ class RagSearchEngine:
                 f"**Preparation Highlight:** {step_preview}"
             )
         elif citations:
-            parts: List[str] = []
+            parts: list[str] = []
             for c in citations[:3]:
                 clean_excerpt = re.sub(r"^\[.*?\]\s*", "", c["excerpt"] or "")
                 clean_excerpt = re.sub(r"\s+", " ", clean_excerpt).strip()
@@ -7302,7 +7302,7 @@ class RagSearchEngine:
             "standby_guard": search_res["standby_guard"],
         }
 
-    def get_thumbnail(self, file_id: int, principal: Any = None) -> Tuple[bytes, str]:
+    def get_thumbnail(self, file_id: int, principal: Any = None) -> tuple[bytes, str]:
         """
         Fetches the cached WebP micro-thumbnail BLOB from `photo_assets` in `/app/data/rag_index.db`
         with 100% zero array disk I/O. Returns an SVG placeholder if no BLOB is present.
@@ -7343,7 +7343,7 @@ class RagSearchEngine:
         return (svg.encode("utf-8"), "image/svg+xml")
 
 
-_RAG_ENGINE: Optional[RagSearchEngine] = None
+_RAG_ENGINE: RagSearchEngine | None = None
 _RAG_ENGINE_LOCK = threading.Lock()
 
 

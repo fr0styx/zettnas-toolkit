@@ -3,7 +3,8 @@ import os
 import re
 import time
 import urllib.request
-from typing import Any, Dict, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import Any, Optional
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -11,7 +12,7 @@ from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
 from backend.state import add_event
 
-CURATED_APP_CATALOG: List[Dict[str, Any]] = [
+CURATED_APP_CATALOG: list[dict[str, Any]] = [
     # Media & Streaming
     {
         "id": "jellyfin",
@@ -298,7 +299,7 @@ CURATED_APP_CATALOG: List[Dict[str, Any]] = [
 CATALOG_SOURCES_FILE = os.path.join(DATA_DIR, "catalog_sources.json")
 CATALOG_CACHE_DIR = os.path.join(DATA_DIR, "catalog_cache")
 
-DEFAULT_SOURCES: List[Dict[str, Any]] = [
+DEFAULT_SOURCES: list[dict[str, Any]] = [
     {
         "id": "builtin",
         "name": "ZettNAS Curated Suite",
@@ -438,7 +439,7 @@ def parse_portainer_env(raw_env: Any) -> dict[str, str]:
     return env_dict
 
 
-def get_catalog_sources() -> List[Dict[str, Any]]:
+def get_catalog_sources() -> list[dict[str, Any]]:
     """Loads configured app sources list, initializing defaults if needed."""
     sources = read_json(CATALOG_SOURCES_FILE, None)
     if not sources or not isinstance(sources, list):
@@ -452,12 +453,12 @@ def get_catalog_sources() -> List[Dict[str, Any]]:
     return sources
 
 
-def save_catalog_sources(sources: List[Dict[str, Any]]) -> None:
+def save_catalog_sources(sources: list[dict[str, Any]]) -> None:
     """Atomically saves configured sources list."""
     atomic_write_json(CATALOG_SOURCES_FILE, sources)
 
 
-def sync_catalog_source(source_id: str) -> Dict[str, Any]:
+def sync_catalog_source(source_id: str) -> dict[str, Any]:
     """Fetches templates from remote source URL and updates local cache."""
     sources = get_catalog_sources()
     src = next((s for s in sources if s["id"] == source_id), None)
@@ -569,7 +570,7 @@ def sync_catalog_source(source_id: str) -> Dict[str, Any]:
         return src
 
 
-def add_catalog_source(name: str, url: str) -> Dict[str, Any]:
+def add_catalog_source(name: str, url: str) -> dict[str, Any]:
     """Adds a new template source and immediately syncs its templates."""
     name = (name or "").strip()
     url = (url or "").strip()
@@ -632,7 +633,7 @@ def delete_catalog_source(source_id: str) -> bool:
     return True
 
 
-def toggle_catalog_source(source_id: str, enabled: bool) -> Dict[str, Any]:
+def toggle_catalog_source(source_id: str, enabled: bool) -> dict[str, Any]:
     """Enables or disables an app source."""
     sources = get_catalog_sources()
     src = next((s for s in sources if s["id"] == source_id), None)
@@ -646,21 +647,21 @@ def toggle_catalog_source(source_id: str, enabled: bool) -> Dict[str, Any]:
 SIDELOADED_APPS_FILE = os.path.join(DATA_DIR, "sideloaded_apps.json")
 
 
-def get_sideloaded_apps() -> List[Dict[str, Any]]:
+def get_sideloaded_apps() -> list[dict[str, Any]]:
     """Retrieves locally sideloaded application packages."""
     items = read_json(SIDELOADED_APPS_FILE, [])
     return items if isinstance(items, list) else []
 
 
-def save_sideloaded_apps(items: List[Dict[str, Any]]) -> None:
+def save_sideloaded_apps(items: list[dict[str, Any]]) -> None:
     """Persists sideloaded application packages."""
     atomic_write_json(SIDELOADED_APPS_FILE, items)
 
 
 def sideload_app_manifest(
-    url: Optional[str] = None,
-    manifest_content: Optional[str] = None,
-) -> Dict[str, Any]:
+    url: str | None = None,
+    manifest_content: str | None = None,
+) -> dict[str, Any]:
     """Sideloads an application from a direct URL (zett-app.json / docker-compose.yml)
 
     or raw JSON/YAML content. Performs security assessment for privileged flags and socket mounts.
@@ -698,7 +699,7 @@ def sideload_app_manifest(
 
             parsed_yaml = yaml.safe_load(raw_text)
         except Exception as e:
-            raise ValueError(f"Failed to parse manifest as JSON or YAML: {e}")
+            raise ValueError(f"Failed to parse manifest as JSON or YAML: {e}") from e
 
     manifest_data = parsed_json if parsed_json is not None else parsed_yaml
     if not isinstance(manifest_data, dict):
@@ -713,9 +714,9 @@ def sideload_app_manifest(
     description = ""
     image = ""
     default_port = 8080
-    ports: List[int] = []
-    volumes: Dict[str, str] = {}
-    env: Dict[str, str] = {}
+    ports: list[int] = []
+    volumes: dict[str, str] = {}
+    env: dict[str, str] = {}
     logo = ""
 
     if is_compose:
@@ -822,10 +823,10 @@ def sideload_app_manifest(
     }
 
 
-def get_all_catalog_apps() -> List[Dict[str, Any]]:
+def get_all_catalog_apps() -> list[dict[str, Any]]:
     """Returns all available homelab applications across all enabled sources."""
     sources = get_catalog_sources()
-    apps: List[Dict[str, Any]] = []
+    apps: list[dict[str, Any]] = []
 
     # 1. Built-in Apps
     builtin_src = next((s for s in sources if s["id"] == "builtin"), None)
@@ -855,7 +856,7 @@ def get_all_catalog_apps() -> List[Dict[str, Any]]:
     return apps
 
 
-def get_catalog_app(app_id: str) -> Optional[Dict[str, Any]]:
+def get_catalog_app(app_id: str) -> dict[str, Any] | None:
     """Finds an application template by ID across all sources."""
     for app in get_all_catalog_apps():
         if app["id"] == app_id:
@@ -863,7 +864,7 @@ def get_catalog_app(app_id: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
+def resolve_app_port_conflict(app_id: str) -> dict[str, Any]:
     """
     Pre-flight Port Conflict Resolver:
     Checks if the default host port is available.
@@ -944,13 +945,13 @@ def resolve_app_port_conflict(app_id: str) -> Dict[str, Any]:
 
 def generate_compose_for_app(
     app_id: str,
-    host_port: Optional[int] = None,
+    host_port: int | None = None,
     storage_root: str = "/mnt/user/appdata",
-    container_name: Optional[str] = None,
-    env_overrides: Optional[Dict[str, str]] = None,
-    volume_overrides: Optional[Dict[str, str]] = None,
-    stack_services: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    container_name: str | None = None,
+    env_overrides: dict[str, str] | None = None,
+    volume_overrides: dict[str, str] | None = None,
+    stack_services: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Generates a valid Docker Compose definition for 1-click deployment.
     Supports both standalone container templates, multi-container stacks,
@@ -1036,7 +1037,7 @@ def generate_compose_for_app(
     if stack_services:
         extra_services.update(stack_services)
 
-    main_service_def: Dict[str, Any] = {
+    main_service_def: dict[str, Any] = {
         "container_name": service_name,
         "image": image_name,
         "restart": "unless-stopped",
@@ -1136,11 +1137,11 @@ def generate_compose_for_app(
 
 def stream_deploy_catalog_app(
     app_id: str,
-    host_port: Optional[int] = None,
+    host_port: int | None = None,
     storage_root: str = "/mnt/user/appdata",
-    container_name: Optional[str] = None,
+    container_name: str | None = None,
     replace_existing: bool = False,
-) -> Iterator[Dict[str, Any]]:
+) -> Iterator[dict[str, Any]]:
     """
     Deploys a curated application stack from the catalog, streaming real-time progress
     events (pre-flight checks, storage creation, image pulling, container creation, and startup).

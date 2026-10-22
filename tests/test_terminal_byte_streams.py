@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from backend.services.console_proxy import stream_unix_socket_to_websocket
 
-SPLIT = "é→✓".encode("utf-8")  # multi-byte characters
+SPLIT = "é→✓".encode()  # multi-byte characters
 
 
 def test_serial_proxy_sends_bytes_unchanged_across_split_reads():

@@ -22,14 +22,14 @@ import os
 import re
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from backend import config
 from backend.fsutil import atomic_write_json, read_json
 
 LEVELS = ("none", "read", "write")
 _CACHE_TTL = 30.0
-_cache: Dict[str, Any] = {"ts": 0.0, "shares": []}
+_cache: dict[str, Any] = {"ts": 0.0, "shares": []}
 _lock = threading.Lock()
 
 
@@ -37,7 +37,7 @@ def _file() -> str:
     return os.path.join(config.DATA_DIR, "share_access.json")
 
 
-def load_config() -> Dict[str, Any]:
+def load_config() -> dict[str, Any]:
     data = read_json(_file(), {}) or {}
     level = data.get("default_level", "write")
     return {
@@ -46,8 +46,8 @@ def load_config() -> Dict[str, Any]:
     }
 
 
-def save_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
-    clean: Dict[str, Any] = {"default_level": cfg.get("default_level", "write"), "shares": {}}
+def save_config(cfg: dict[str, Any]) -> dict[str, Any]:
+    clean: dict[str, Any] = {"default_level": cfg.get("default_level", "write"), "shares": {}}
     if clean["default_level"] not in LEVELS:
         raise ValueError("default_level must be none, read or write")
     for name, entry in (cfg.get("shares") or {}).items():
@@ -73,17 +73,17 @@ def invalidate() -> None:
         _cache["ts"] = 0.0
 
 
-def _split_users(value: Optional[str]) -> set:
+def _split_users(value: str | None) -> set:
     return {u.lower() for u in re.split(r"[,\s]+", value or "") if u and not u.startswith(("@", "+", "&"))}
 
 
-def known_shares() -> List[Dict[str, Any]]:
+def known_shares() -> list[dict[str, Any]]:
     """[{name, path, samba: {valid, read, write, read_only, guest}}] for every share the platform reports."""
     now = time.time()
     with _lock:
         if now - _cache["ts"] < _CACHE_TTL:
             return list(_cache["shares"])
-    shares: Dict[str, Dict[str, Any]] = {}
+    shares: dict[str, dict[str, Any]] = {}
     try:
         from backend.hardware.pal_storage import get_storage_platform
 
@@ -114,7 +114,7 @@ def known_shares() -> List[Dict[str, Any]]:
     return result
 
 
-def _samba_level(samba: Optional[Dict[str, Any]], username: str) -> Optional[str]:
+def _samba_level(samba: dict[str, Any] | None, username: str) -> str | None:
     if not samba or not (samba["valid"] or samba["read"] or samba["write"]):
         return None
     if username in samba["write"]:
@@ -126,7 +126,7 @@ def _samba_level(samba: Optional[Dict[str, Any]], username: str) -> Optional[str
     return "read" if samba["read_only"] else "write"
 
 
-def _home_for(username: str) -> Optional[str]:
+def _home_for(username: str) -> str | None:
     try:
         from backend.users_db import get_user_by_username
 
@@ -138,13 +138,13 @@ def _home_for(username: str) -> Optional[str]:
     return os.path.realpath(home)
 
 
-def grants_for(username: str) -> List[Tuple[str, str]]:
+def grants_for(username: str) -> list[tuple[str, str]]:
     """[(path, level)] the user may use, most specific first."""
     username = (username or "").lower()
     if not username:
         return []
     cfg = load_config()
-    grants: List[Tuple[str, str]] = []
+    grants: list[tuple[str, str]] = []
     home = _home_for(username)
     if home:
         grants.append((home, "write"))

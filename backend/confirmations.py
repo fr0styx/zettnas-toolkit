@@ -16,7 +16,7 @@ request (or an AI tool call) from wiping data on its own.
 import secrets
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from fastapi import Depends, Request
 
@@ -26,7 +26,7 @@ TOKEN_TTL_SECS = 120
 _MAX_PENDING = 1000
 
 # action -> what the user is asked (target is filled in from path parameters)
-ACTIONS: Dict[str, str] = {
+ACTIONS: dict[str, str] = {
     "fs.trash.empty": "Permanently delete everything in the trash",
     "storage.pool.create": "Create a storage pool, erasing the selected disks",
     "storage.pool.delete": "Delete storage pool {target}",
@@ -45,7 +45,7 @@ ACTIONS: Dict[str, str] = {
     "ai.index.forget": "Delete what the AI index learned from a folder",
 }
 
-_pending: Dict[str, Dict[str, Any]] = {}
+_pending: dict[str, dict[str, Any]] = {}
 _lock = threading.Lock()
 
 
@@ -82,7 +82,7 @@ def issue(principal: Any, action: str, target: str = "") -> str:
     return token
 
 
-def consume(token: Optional[str], principal: Any, action: str, target: str = "") -> bool:
+def consume(token: str | None, principal: Any, action: str, target: str = "") -> bool:
     if not token:
         return False
     with _lock:

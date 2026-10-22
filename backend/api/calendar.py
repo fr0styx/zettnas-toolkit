@@ -11,7 +11,7 @@ import re
 import time
 import urllib.request
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
@@ -35,43 +35,43 @@ _calendar_lock = asyncio.Lock()
 # Pydantic Models
 # -------------------------------------------------------------------------
 class CalendarNoteModel(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     date: str = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$", description="Date in YYYY-MM-DD format")
-    time: Optional[str] = Field(default="", description="Optional time in HH:MM format")
+    time: str | None = Field(default="", description="Optional time in HH:MM format")
     title: str = Field(..., min_length=1, max_length=256)
-    description: Optional[str] = Field(default="", max_length=2048)
+    description: str | None = Field(default="", max_length=2048)
     type: str = Field(default="note", description="note | reminder | task | event")
-    category: Optional[str] = Field(default="Personal", max_length=64)
+    category: str | None = Field(default="Personal", max_length=64)
     completed: bool = False
-    created_at: Optional[float] = None
-    updated_at: Optional[float] = None
+    created_at: float | None = None
+    updated_at: float | None = None
 
 
 class CalendarNotePatchModel(BaseModel):
-    title: Optional[str] = Field(default=None, max_length=256)
-    description: Optional[str] = Field(default=None, max_length=2048)
-    time: Optional[str] = None
-    type: Optional[str] = None
-    category: Optional[str] = None
-    completed: Optional[bool] = None
+    title: str | None = Field(default=None, max_length=256)
+    description: str | None = Field(default=None, max_length=2048)
+    time: str | None = None
+    type: str | None = None
+    category: str | None = None
+    completed: bool | None = None
 
 
 class CalendarFeedModel(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     name: str = Field(..., min_length=1, max_length=128)
     url: str = Field(..., min_length=5, max_length=1024, description="iCal / WebCal feed URL (e.g. Google Calendar)")
     color: str = Field(default="#00f0ff", max_length=32)
     enabled: bool = True
-    provider: Optional[str] = Field(default="google", description="google | apple | outlook | nextcloud | generic")
-    last_synced: Optional[float] = None
+    provider: str | None = Field(default="google", description="google | apple | outlook | nextcloud | generic")
+    last_synced: float | None = None
     event_count: int = 0
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # -------------------------------------------------------------------------
 # Helper Functions: Storage & Parsing
 # -------------------------------------------------------------------------
-def _load_calendar_store() -> Dict[str, Any]:
+def _load_calendar_store() -> dict[str, Any]:
     default_store = {
         "notes": [],
         "feeds": [],
@@ -80,12 +80,12 @@ def _load_calendar_store() -> Dict[str, Any]:
     return read_json(CALENDAR_DATA_FILE, default=default_store)
 
 
-def _save_calendar_store(store: Dict[str, Any]) -> None:
+def _save_calendar_store(store: dict[str, Any]) -> None:
     os.makedirs(DATA_DIR, exist_ok=True)
     atomic_write_json(CALENDAR_DATA_FILE, store)
 
 
-def _parse_ical_datetime(dt_str: str) -> Dict[str, str]:
+def _parse_ical_datetime(dt_str: str) -> dict[str, str]:
     """
     Parses iCal DTSTART/DTEND string (e.g. 20261019, 20261019T143000Z, TZID=...:20261019T103000).
     Returns {'date': 'YYYY-MM-DD', 'time': 'HH:MM' or ''}.
@@ -107,7 +107,7 @@ def _parse_ical_datetime(dt_str: str) -> Dict[str, str]:
     return {"date": date_str, "time": time_str}
 
 
-def _parse_ics_content(ics_text: str, feed_id: str, feed_name: str, feed_color: str) -> List[Dict[str, Any]]:
+def _parse_ics_content(ics_text: str, feed_id: str, feed_name: str, feed_color: str) -> list[dict[str, Any]]:
     """
     Parses standard RFC 5545 iCalendar content into event dictionaries.
     """
@@ -117,7 +117,7 @@ def _parse_ics_content(ics_text: str, feed_id: str, feed_name: str, feed_color: 
     lines = unfolded.splitlines()
 
     in_event = False
-    curr_event: Dict[str, Any] = {}
+    curr_event: dict[str, Any] = {}
 
     for raw_line in lines:
         line = raw_line.strip()
@@ -174,7 +174,7 @@ def _parse_ics_content(ics_text: str, feed_id: str, feed_name: str, feed_color: 
     return events
 
 
-async def _sync_single_feed(feed: Dict[str, Any]) -> List[Dict[str, Any]]:
+async def _sync_single_feed(feed: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Fetches and parses a single calendar feed securely.
     """
@@ -234,8 +234,8 @@ async def _sync_single_feed(feed: Dict[str, Any]) -> List[Dict[str, Any]]:
 # -------------------------------------------------------------------------
 @router.get("/events")
 async def get_calendar_events(
-    start_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
-    end_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    start_date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    end_date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
 ):
     """
     Returns user notes/reminders combined with synced external calendar events.

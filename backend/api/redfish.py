@@ -4,10 +4,12 @@ Provides high-performance, DMTF-compliant RESTful telemetry (< 2ms response time
 served directly from in-memory system state without blocking disk or subprocess I/O.
 """
 
-from typing import Any, Dict
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, Response
-from backend.state import Z_STATE
+
 from backend import __version__
+from backend.state import Z_STATE
 
 router = APIRouter(tags=["Redfish"])
 
@@ -17,7 +19,7 @@ REDFISH_HEADERS = {
 }
 
 
-def _get_stats() -> Dict[str, Any]:
+def _get_stats() -> dict[str, Any]:
     return getattr(Z_STATE, "cached_stats", {}) or {}
 
 

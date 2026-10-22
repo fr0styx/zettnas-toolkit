@@ -12,7 +12,7 @@ import os
 import socket
 import time
 import urllib.parse
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from backend.config import logger
 from backend.hardware.docker_stats import UnixHTTPConnection
@@ -22,10 +22,10 @@ from backend.services.compose_synthesizer import fetch_container_raw_inspect
 def _docker_request(
     method: str,
     path: str,
-    body: Optional[dict] = None,
+    body: dict | None = None,
     timeout: float = 15.0,
-    headers: Optional[Dict[str, str]] = None,
-) -> Tuple[int, Any]:
+    headers: dict[str, str] | None = None,
+) -> tuple[int, Any]:
     """Helper for making synchronous HTTP requests over the Docker Unix socket."""
     sock_path = "/var/run/docker.sock"
     if not os.path.exists(sock_path):
@@ -70,7 +70,7 @@ def _docker_request(
             pass
 
 
-def check_port_available_detailed(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> Tuple[bool, Optional[str]]:
+def check_port_available_detailed(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> tuple[bool, str | None]:
     """
     Checks if a local port is available to bind without conflicts.
     1. Inspects active Docker containers via Docker Unix socket.
@@ -161,16 +161,16 @@ def check_port_available(port: int, proto: str = "tcp", host: str = "0.0.0.0") -
 
 def update_container_resources(
     cid: str,
-    memory_mb: Optional[int] = None,
-    nano_cpus: Optional[float] = None,
-    cpu_shares: Optional[int] = None,
-    restart_policy: Optional[str] = None,
-) -> Dict[str, Any]:
+    memory_mb: int | None = None,
+    nano_cpus: float | None = None,
+    cpu_shares: int | None = None,
+    restart_policy: str | None = None,
+) -> dict[str, Any]:
     """
     Applies zero-downtime resource changes (Memory, CPU quota, Restart Policy)
     via official Docker Engine API: POST /containers/{id}/update.
     """
-    payload: Dict[str, Any] = {}
+    payload: dict[str, Any] = {}
     if memory_mb is not None:
         if memory_mb < 0:
             raise ValueError("memory_mb must be >= 0 (0 for unlimited)")
@@ -247,7 +247,7 @@ def pull_container_image(image: str, timeout: float = 180.0) -> bool:
         return True
     except Exception as exc:
         logger.error(f"[Docker Pull] Exception pulling '{image}': {exc}")
-        raise RuntimeError(f"Failed to pull image '{image}': {exc}")
+        raise RuntimeError(f"Failed to pull image '{image}': {exc}") from exc
     finally:
         try:
             conn.close()
@@ -257,18 +257,18 @@ def pull_container_image(image: str, timeout: float = 180.0) -> bool:
 
 def recreate_container(
     cid: str,
-    name: Optional[str] = None,
-    image: Optional[str] = None,
-    env: Optional[List[str]] = None,
-    binds: Optional[List[str]] = None,
-    port_bindings: Optional[List[Dict[str, Any]]] = None,
-    network_mode: Optional[str] = None,
-    restart_policy: Optional[str] = None,
+    name: str | None = None,
+    image: str | None = None,
+    env: list[str] | None = None,
+    binds: list[str] | None = None,
+    port_bindings: list[dict[str, Any]] | None = None,
+    network_mode: str | None = None,
+    restart_policy: str | None = None,
     pull_image: bool = False,
     keep_backup: bool = False,
     timeout: float = 45.0,
     grace_period_seconds: float = 0.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Safely reconfigures and mutates a container using the Atomic Clone-and-Recreate pattern.
     Supports updating container name, image tag, environment variables, mounts / binds,
@@ -303,8 +303,8 @@ def recreate_container(
         pull_container_image(target_image, timeout=120.0)
 
     # Step 3: Handle Port Bindings and Exposed Ports
-    cloned_port_bindings: Dict[str, Any] = dict(host_config.get("PortBindings") or {})
-    cloned_exposed_ports: Dict[str, Any] = dict(config.get("ExposedPorts") or {})
+    cloned_port_bindings: dict[str, Any] = dict(host_config.get("PortBindings") or {})
+    cloned_exposed_ports: dict[str, Any] = dict(config.get("ExposedPorts") or {})
 
     if port_bindings is not None:
         cloned_port_bindings = {}
@@ -374,7 +374,7 @@ def recreate_container(
             target_env.append(item)
     else:
         target_env = orig_env_list
-    create_body: Dict[str, Any] = {
+    create_body: dict[str, Any] = {
         "Image": target_image,
         "Env": target_env,
         "Cmd": config.get("Cmd"),
@@ -535,16 +535,18 @@ def recreate_container(
         except Exception as e:
             logger.error(f"[Rollback] Failed to restart original container: {e}")
 
-        raise RuntimeError(f"Container mutation aborted. Automatic rollback restored original state. Reason: {exc}")
+        raise RuntimeError(
+            f"Container mutation aborted. Automatic rollback restored original state. Reason: {exc}"
+        ) from exc
 
 
 def recreate_container_ports(
     cid: str,
-    new_port_bindings: List[Dict[str, Any]],
+    new_port_bindings: list[dict[str, Any]],
     keep_backup: bool = False,
     timeout: float = 30.0,
     grace_period_seconds: float = 0.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Backwards-compatible convenience wrapper around recreate_container.
     """

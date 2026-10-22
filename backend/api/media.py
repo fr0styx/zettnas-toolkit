@@ -9,8 +9,8 @@ import asyncio
 import ipaddress
 import logging
 import os
-from typing import Any, Dict, List, Optional
 import urllib.parse
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 
 from backend.api.system import check_user_path_access
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
-from backend.confirmations import require_confirmation
-from backend.rate_limit import rate_limit
 from backend.config import ALLOWED_BROWSE_ROOTS, POOL_PATH
+from backend.confirmations import require_confirmation
 from backend.fsutil import resolve_within
+from backend.rate_limit import rate_limit
 from backend.services.ai_chat_agent import (
     AVAILABLE_NAS_TOOLS,
     build_llm_execution_telemetry,
@@ -30,7 +30,6 @@ from backend.services.ai_chat_agent import (
     run_agentic_chat,
     stream_agentic_chat,
 )
-from backend.state import Z_STATE
 from backend.services.media_engine import (
     get_media_engine,
     is_embedding_only_model,
@@ -44,11 +43,12 @@ from backend.services.rag_engine import (
     get_sleeping_disks_list,
     is_backing_disk_in_standby,
 )
+from backend.state import Z_STATE
 
 router = APIRouter(tags=["Smart Media & AI RAG Engine"])
 
 
-def _validate_media_path(path: str, principal: Optional[AuthenticatedPrincipal], must_exist: bool = True) -> str:
+def _validate_media_path(path: str, principal: AuthenticatedPrincipal | None, must_exist: bool = True) -> str:
     path = str(path or "").strip()
     if not path or "\x00" in path:
         raise HTTPException(status_code=400, detail="Invalid path")
@@ -86,13 +86,13 @@ def _validate_media_path(path: str, principal: Optional[AuthenticatedPrincipal],
 
 
 class MediaScanRequest(BaseModel):
-    media_path: Optional[str] = Field(default="/mnt/storage/media", max_length=512)
+    media_path: str | None = Field(default="/mnt/storage/media", max_length=512)
 
 
 class RagIndexSyncRequest(BaseModel):
-    path: Optional[str] = Field(default=None, max_length=512)
-    media_path: Optional[str] = Field(default=None, max_length=512)
-    paths: Optional[List[str]] = None
+    path: str | None = Field(default=None, max_length=512)
+    media_path: str | None = Field(default=None, max_length=512)
+    paths: list[str] | None = None
     recursive: bool = True
     respect_standby: bool = True
     force_wake: bool = False
@@ -107,63 +107,63 @@ class RagSyncControlRequest(BaseModel):
 class RagWatchedFoldersRequest(BaseModel):
     action: str = Field(default="set", pattern="^(add|remove|set)$")
     target: str = Field(default="watched", pattern="^(watched|excluded)$")
-    path: Optional[str] = Field(default=None, max_length=512)
-    paths: Optional[List[str]] = None
+    path: str | None = Field(default=None, max_length=512)
+    paths: list[str] | None = None
 
 
 class MultimodalSearchRequest(BaseModel):
     query: str = Field(default="", max_length=500)
-    q: Optional[str] = Field(default=None, max_length=500)
+    q: str | None = Field(default=None, max_length=500)
     mode: str = Field(default="all", max_length=32)
-    modality: Optional[str] = Field(default=None, max_length=32)
-    file_type: Optional[str] = Field(default=None, max_length=32)
+    modality: str | None = Field(default=None, max_length=32)
+    file_type: str | None = Field(default=None, max_length=32)
     match_tab: str = Field(default="semantic", max_length=32)
     sort_by: str = Field(default="relevance", max_length=32)
-    colors: Optional[List[str]] = None
-    color: Optional[str] = Field(default=None, max_length=64)
-    scenes: Optional[List[str]] = None
-    scene: Optional[str] = Field(default=None, max_length=64)
-    path_prefix: Optional[str] = Field(default=None, max_length=512)
+    colors: list[str] | None = None
+    color: str | None = Field(default=None, max_length=64)
+    scenes: list[str] | None = None
+    scene: str | None = Field(default=None, max_length=64)
+    path_prefix: str | None = Field(default=None, max_length=512)
     limit: int = Field(default=24, ge=1, le=100)
 
 
 class RagAskRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000)
     scope: str = Field(default="all", max_length=32)
-    path_prefix: Optional[str] = Field(default=None, max_length=512)
+    path_prefix: str | None = Field(default=None, max_length=512)
     top_k: int = Field(default=5, ge=1, le=12)
-    limit: Optional[int] = Field(default=None, ge=1, le=20)
+    limit: int | None = Field(default=None, ge=1, le=20)
 
 
 class RagConfigUpdateRequest(BaseModel):
-    enabled: Optional[bool] = None
-    scope_mode: Optional[str] = None
-    respect_standby: Optional[bool] = None
-    auto_learn_on_spinup: Optional[bool] = None
-    compute_preference: Optional[str] = None
-    watched_paths: Optional[List[str]] = None
-    excluded_paths: Optional[List[str]] = None
-    schedule_enabled: Optional[bool] = None
-    schedule_start: Optional[str] = None
-    schedule_end: Optional[str] = None
-    active_model: Optional[str] = None
-    embedding_model: Optional[str] = None
-    embedding_dim: Optional[int] = None
-    embedding_provider: Optional[str] = None
-    llm_endpoint: Optional[str] = None
-    llm_model: Optional[str] = None
-    idle_unload_minutes: Optional[int] = None
-    conversation_retention_days: Optional[int] = Field(default=None, ge=0, le=3650)
+    enabled: bool | None = None
+    scope_mode: str | None = None
+    respect_standby: bool | None = None
+    auto_learn_on_spinup: bool | None = None
+    compute_preference: str | None = None
+    watched_paths: list[str] | None = None
+    excluded_paths: list[str] | None = None
+    schedule_enabled: bool | None = None
+    schedule_start: str | None = None
+    schedule_end: str | None = None
+    active_model: str | None = None
+    embedding_model: str | None = None
+    embedding_dim: int | None = None
+    embedding_provider: str | None = None
+    llm_endpoint: str | None = None
+    llm_model: str | None = None
+    idle_unload_minutes: int | None = None
+    conversation_retention_days: int | None = Field(default=None, ge=0, le=3650)
 
 
 class ModelSelectRequest(BaseModel):
-    model: Optional[str] = Field(default=None, max_length=256)
-    model_id: Optional[str] = Field(default=None, max_length=256)
+    model: str | None = Field(default=None, max_length=256)
+    model_id: str | None = Field(default=None, max_length=256)
 
 
 class ModelRemoveRequest(BaseModel):
-    model: Optional[str] = Field(default=None, max_length=256)
-    model_id: Optional[str] = Field(default=None, max_length=256)
+    model: str | None = Field(default=None, max_length=256)
+    model_id: str | None = Field(default=None, max_length=256)
 
 
 class HuggingFacePullRequest(BaseModel):
@@ -173,11 +173,11 @@ class HuggingFacePullRequest(BaseModel):
 
 class AiChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
-    history: Optional[List[Dict[str, Any]]] = None
+    history: list[dict[str, Any]] | None = None
     allow_web_search: bool = False  # web search and weather leave the NAS (AI-06)
     allow_nas_tools: bool = True
-    model: Optional[str] = Field(default=None, max_length=256)
-    conversation_id: Optional[str] = Field(default=None, max_length=64)
+    model: str | None = Field(default=None, max_length=256)
+    conversation_id: str | None = Field(default=None, max_length=64)
 
 
 class FavoriteToggleRequest(BaseModel):
@@ -186,26 +186,26 @@ class FavoriteToggleRequest(BaseModel):
 
 class MediaOrganizePreviewRequest(BaseModel):
     source_dir: str = Field(..., min_length=1)
-    target_dir: Optional[str] = None
+    target_dir: str | None = None
     media_type: str = "auto"  # "auto", "tv", "movie"
 
 
 class MediaOrganizeApplyRequest(BaseModel):
-    items: List[Dict[str, Any]] = Field(..., min_length=1)
+    items: list[dict[str, Any]] = Field(..., min_length=1)
     action: str = Field("move", pattern="^(move|copy)$")
     hardlink: bool = False
 
 
 class FolderAuditRequest(BaseModel):
     folder_path: str = Field(..., min_length=1, max_length=1024)
-    query: Optional[str] = Field(default=None, max_length=1000)
+    query: str | None = Field(default=None, max_length=1000)
     mode: str = Field("comprehensive", pattern="^(comprehensive|targeted)$")
     max_tokens: int = Field(default=4000, ge=500, le=16000)
 
 
 @router.get("/media/status", dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))])
 @router.get("/ai/status", dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))])
-def get_media_status() -> Dict[str, Any]:
+def get_media_status() -> dict[str, Any]:
     engine = get_media_engine()
     status = engine.get_status()
     status["config"] = get_rag_engine().get_config()
@@ -216,7 +216,7 @@ def get_media_status() -> Dict[str, Any]:
 @router.post("/media/scan", dependencies=[Depends(require_scope("system:config"))])
 def trigger_media_scan(
     req: MediaScanRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     engine = get_media_engine()
     raw_target = req.media_path or "/mnt/storage/media"
     if raw_target == "/mnt/storage/media" and not os.path.exists(raw_target) and os.path.exists(POOL_PATH):
@@ -225,9 +225,9 @@ def trigger_media_scan(
     try:
         return engine.trigger_scan(media_path=validated_path)
     except PermissionError as e:
-        raise HTTPException(status_code=403, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -244,7 +244,7 @@ def trigger_media_scan(
 )
 async def sync_rag_index(
     req: RagIndexSyncRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Runs incremental, spindown-safe multi-modal indexing on the requested directory or watched folders.
     Respects `smartctl -n standby` / `Z_STATE.cached_smart_data` / Unraid `disks.ini` by default so sleeping HDDs are never woken.
@@ -254,7 +254,7 @@ async def sync_rag_index(
         raise HTTPException(status_code=403, detail="Forcing wake on sleeping disks requires storage:admin scope.")
 
     rag = get_rag_engine()
-    raw_targets: List[str] = []
+    raw_targets: list[str] = []
     if req.paths and len(req.paths) > 0:
         raw_targets = [str(p).strip() for p in req.paths if str(p).strip()]
     elif req.path or req.media_path:
@@ -265,7 +265,7 @@ async def sync_rag_index(
         if not raw_targets:
             raw_targets = [POOL_PATH or "/mnt/user"]
 
-    validated_paths: List[str] = []
+    validated_paths: list[str] = []
     for raw_t in raw_targets:
         t = raw_t
         if t == "/mnt/storage/media" and not os.path.exists(t) and os.path.exists(POOL_PATH):
@@ -319,7 +319,7 @@ async def sync_rag_index(
     "/ai/index/control",
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
-def control_rag_index(req: RagSyncControlRequest) -> Dict[str, Any]:
+def control_rag_index(req: RagSyncControlRequest) -> dict[str, Any]:
     """Pause, resume, stop, query, or flush the active RAG & Visual Search indexing sync job."""
     rag = get_rag_engine()
     act = req.action.strip().lower()
@@ -348,7 +348,7 @@ def control_rag_index(req: RagSyncControlRequest) -> Dict[str, Any]:
 )
 async def flush_rag_index(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Flushes all indexed files, vector embeddings, chunks, and manifests from rag_index.db to start fresh."""
     rag = get_rag_engine()
     res = await asyncio.to_thread(rag.flush_index)
@@ -370,13 +370,13 @@ class ForgetFolderRequest(BaseModel):
 async def forget_rag_folder(
     req: ForgetFolderRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Deletes what the index learned from a folder and stops learning it (AI-20)."""
     path = _validate_media_path(req.path, principal, must_exist=False)
     try:
         return await asyncio.to_thread(get_rag_engine().forget_folder, path)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get(
@@ -387,7 +387,7 @@ async def forget_rag_folder(
     "/ai/folders",
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
-def get_watched_folders() -> Dict[str, Any]:
+def get_watched_folders() -> dict[str, Any]:
     """Returns configured watched/excluded RAG folders and discovered NAS shares with live disk standby state."""
     rag = get_rag_engine()
     cfg = rag.get_config()
@@ -413,14 +413,14 @@ def get_watched_folders() -> Dict[str, Any]:
 def update_watched_folders(
     req: RagWatchedFoldersRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Adds, removes, or sets watched or excluded folders/shares for ZettAI RAG."""
     rag = get_rag_engine()
     cfg = rag.get_config()
     list_key = "excluded_paths" if req.target == "excluded" else "watched_paths"
-    current: List[str] = [os.path.normpath(str(p)) for p in (cfg.get(list_key) or []) if str(p).strip()]
+    current: list[str] = [os.path.normpath(str(p)) for p in (cfg.get(list_key) or []) if str(p).strip()]
     act = req.action.strip().lower()
-    added_vp: Optional[str] = None
+    added_vp: str | None = None
 
     if act == "add":
         if not req.path or not str(req.path).strip():
@@ -439,7 +439,7 @@ def update_watched_folders(
             current = [POOL_PATH or "/mnt/user"]
     elif act == "set":
         raw_list = req.paths if req.paths is not None else ([req.path] if req.path else [])
-        validated_list: List[str] = []
+        validated_list: list[str] = []
         for p in raw_list:
             if not str(p).strip():
                 continue
@@ -489,8 +489,8 @@ def update_watched_folders(
 )
 async def get_model_recommendations(
     sort_by: str = Query(default="date", max_length=32),
-    min_year: Optional[int] = Query(default=None),
-) -> Dict[str, Any]:
+    min_year: int | None = Query(default=None),
+) -> dict[str, Any]:
     """Returns hardware-aware LLM & Multi-Modal model recommendations based on onboard NPU, GPU, and RAM."""
     status = get_media_engine().get_status()
     accel = status["acceleration"]
@@ -533,7 +533,7 @@ async def get_model_recommendations(
     "/ai/models/select",
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
-def select_recommended_model(req: ModelSelectRequest) -> Dict[str, Any]:
+def select_recommended_model(req: ModelSelectRequest) -> dict[str, Any]:
     """Selects and applies an LLM / multi-modal model for ZettAI, returning any hardware fit warnings."""
     rag = get_rag_engine()
     model_tag = str(req.model or req.model_id or "").strip()
@@ -595,8 +595,8 @@ def search_hf_release_models(
     q: str = Query(default="", max_length=200),
     limit: int = Query(default=12, ge=1, le=30),
     sort_by: str = Query(default="date", max_length=32),
-    min_year: Optional[int] = Query(default=None),
-) -> Dict[str, Any]:
+    min_year: int | None = Query(default=None),
+) -> dict[str, Any]:
     """Searches https://huggingface.co release models and evaluates hardware fit against NAS NPU/GPU/RAM."""
     return search_huggingface_models(query=q, limit=limit, sort_by=sort_by, min_release_year=min_year)
 
@@ -609,7 +609,7 @@ def search_hf_release_models(
     "/ai/models/huggingface/pull",
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
-def pull_hf_release_model(req: HuggingFacePullRequest) -> Dict[str, Any]:
+def pull_hf_release_model(req: HuggingFacePullRequest) -> dict[str, Any]:
     """Pulls/registers a release model from https://huggingface.co and flags hardware fit warnings."""
     try:
         return pull_huggingface_model(repo_id=req.repo_id, activate=req.activate)
@@ -622,7 +622,7 @@ class ModelInstallRequest(BaseModel):
 
 
 @router.get("/ai/models/installed", dependencies=[Depends(require_scope("system:read", "ai:manage", "system:config"))])
-async def list_installed_models() -> Dict[str, Any]:
+async def list_installed_models() -> dict[str, Any]:
     """Models the Ollama runtime has installed, and copies of one model under another name (AI-16)."""
     from backend.services.model_installer import installed_models
 
@@ -632,18 +632,18 @@ async def list_installed_models() -> Dict[str, Any]:
 @router.post("/ai/models/install", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
 async def install_model(
     req: ModelInstallRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Downloads a model into Ollama in the background; poll the job for progress (AI-03)."""
     from backend.services.model_installer import start_install
 
     try:
         return start_install(req.model, requested_by=principal.username or "")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/ai/models/install/{job_id}", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
-def get_install_job(job_id: str) -> Dict[str, Any]:
+def get_install_job(job_id: str) -> dict[str, Any]:
     from backend.services.model_installer import get_job
 
     job = get_job(job_id)
@@ -653,7 +653,7 @@ def get_install_job(job_id: str) -> Dict[str, Any]:
 
 
 @router.post("/ai/models/install/{job_id}/cancel", dependencies=[Depends(require_scope("system:config", "ai:manage"))])
-def cancel_install_job(job_id: str) -> Dict[str, Any]:
+def cancel_install_job(job_id: str) -> dict[str, Any]:
     from backend.services.model_installer import cancel_job
 
     return {"cancelled": cancel_job(job_id)}
@@ -667,7 +667,7 @@ def cancel_install_job(job_id: str) -> Dict[str, Any]:
     "/ai/models/remove",
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
-def remove_model_post_endpoint(req: ModelRemoveRequest) -> Dict[str, Any]:
+def remove_model_post_endpoint(req: ModelRemoveRequest) -> dict[str, Any]:
     """Removes a model from the ZettAI catalog and local storage."""
     from backend.services.media_engine import remove_llm_model
 
@@ -689,10 +689,10 @@ def remove_model_post_endpoint(req: ModelRemoveRequest) -> Dict[str, Any]:
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
 def remove_model_delete_explicit_endpoint(
-    model: Optional[str] = Query(default=None),
-    model_id: Optional[str] = Query(default=None),
-    req: Optional[ModelRemoveRequest] = None,
-) -> Dict[str, Any]:
+    model: str | None = Query(default=None),
+    model_id: str | None = Query(default=None),
+    req: ModelRemoveRequest | None = None,
+) -> dict[str, Any]:
     """Removes a model from the ZettAI catalog and local storage via DELETE /remove."""
     from backend.services.media_engine import remove_llm_model
 
@@ -713,7 +713,7 @@ def remove_model_delete_explicit_endpoint(
     "/ai/models/{model_id:path}",
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
-def delete_model_endpoint(model_id: str) -> Dict[str, Any]:
+def delete_model_endpoint(model_id: str) -> dict[str, Any]:
     """Removes a model from the ZettAI catalog and local storage."""
     from backend.services.media_engine import remove_llm_model
 
@@ -736,7 +736,7 @@ def delete_model_endpoint(model_id: str) -> Dict[str, Any]:
 )
 def get_zettai_learning_results(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Returns ZettAI 6-state learning status, succeeded/failed counts, and failed file list."""
     return {"status": "ok", **get_rag_engine().get_learning_results(principal=principal)}
 
@@ -749,7 +749,7 @@ def get_zettai_learning_results(
     "/ai/learning/relearn-failed",
     dependencies=[Depends(require_scope("system:config", "ai:manage"))],
 )
-async def relearn_failed_items() -> Dict[str, Any]:
+async def relearn_failed_items() -> dict[str, Any]:
     """Retries indexing failed files without waking sleeping drives."""
     rag = get_rag_engine()
     res = await asyncio.to_thread(rag.relearn_failed_files)
@@ -767,7 +767,7 @@ async def relearn_failed_items() -> Dict[str, Any]:
 def toggle_favorite_item(
     req: FavoriteToggleRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Adds or removes a file path from ZettAI favorites."""
     vp = _validate_media_path(req.path, principal, must_exist=False)
     return get_rag_engine().toggle_favorite(vp)
@@ -783,19 +783,19 @@ def toggle_favorite_item(
 )
 async def search_multimodal_get(
     q: str = Query(default="", max_length=500),
-    query: Optional[str] = Query(default=None, max_length=500),
+    query: str | None = Query(default=None, max_length=500),
     mode: str = Query(default="all", max_length=32),
-    modality: Optional[str] = Query(default=None, max_length=32),
+    modality: str | None = Query(default=None, max_length=32),
     match_tab: str = Query(default="semantic", max_length=32),
     sort_by: str = Query(default="relevance", max_length=32),
-    colors: Optional[str] = Query(default=None, max_length=256),
-    color: Optional[str] = Query(default=None, max_length=64),
-    scenes: Optional[str] = Query(default=None, max_length=256),
-    scene: Optional[str] = Query(default=None, max_length=64),
-    path_prefix: Optional[str] = Query(default=None, max_length=512),
+    colors: str | None = Query(default=None, max_length=256),
+    color: str | None = Query(default=None, max_length=64),
+    scenes: str | None = Query(default=None, max_length=256),
+    scene: str | None = Query(default=None, max_length=64),
+    path_prefix: str | None = Query(default=None, max_length=512),
     limit: int = Query(default=24, ge=1, le=100),
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Zero-Disk-Touch Cross-Modal Visual & Document Search (GET)."""
     effective_q = query if query is not None else q
     effective_mode = modality if modality else mode
@@ -834,7 +834,7 @@ async def search_multimodal_get(
 async def search_multimodal_post(
     req: MultimodalSearchRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Zero-Disk-Touch Cross-Modal Visual & Document Search (POST)."""
     effective_q = req.q if req.q is not None else req.query
     if req.file_type and req.file_type.strip():
@@ -875,7 +875,7 @@ async def search_multimodal_post(
 async def ask_knowledge_base(
     req: RagAskRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Grounded Conversational RAG & Structured Recipe/Document Synthesis."""
     validated_prefix = None
     if req.path_prefix and req.path_prefix.strip():
@@ -936,7 +936,7 @@ async def ask_knowledge_base(
 async def get_folder_manifest_endpoint(
     folder_path: str = Query(..., min_length=1),
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Retrieves the recursive structure outline and topic inventory for a folder from NVMe SQLite WAL."""
     validated_path = _validate_media_path(folder_path, principal, must_exist=False)
     rag = get_rag_engine()
@@ -957,7 +957,7 @@ async def get_folder_manifest_endpoint(
 async def list_folder_manifests_endpoint(
     limit: int = Query(50, ge=1, le=500),
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Lists all indexed folder manifests and tree summaries across watched storage shares."""
     rag = get_rag_engine()
     manifests = await asyncio.to_thread(rag.list_folder_manifests, limit=limit)
@@ -978,7 +978,7 @@ async def list_folder_manifests_endpoint(
 async def audit_folder_endpoint(
     req: FolderAuditRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Executes hierarchical folder context aggregation (Mode A: targeted fact retrieval;
     Mode B: comprehensive folder audit with MMR diversification) with 0 disk wakeups.
@@ -1004,7 +1004,7 @@ async def audit_folder_endpoint(
     "/ai/chat/tools",
     dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
 )
-def get_ai_chat_tools() -> Dict[str, Any]:
+def get_ai_chat_tools() -> dict[str, Any]:
     """Returns the list of NAS hardware & web browsing tools available to the ZettAI Chatbot."""
     rag_cfg = get_rag_engine().get_config()
     return {
@@ -1031,7 +1031,7 @@ def get_ai_chat_tools() -> Dict[str, Any]:
 async def chat_with_zettai_agent(
     req: AiChatRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Conversational ZettAI Local Chatbot & NAS Hardware Copilot with live internet browsing
     and hardware/Docker/storage tool execution.
@@ -1150,7 +1150,7 @@ async def chat_with_zettai_agent_stream(
 async def confirm_ai_action(
     action_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Runs an action ZettAI proposed, after the user clicked Confirm (AI-01)."""
     from backend.services.ai_actions import confirm_action
 
@@ -1182,9 +1182,9 @@ def get_cached_thumbnail(
             headers={"Cache-Control": "private, max-age=86400"},
         )
     except KeyError:
-        raise HTTPException(status_code=404, detail="Thumbnail not found")
+        raise HTTPException(status_code=404, detail="Thumbnail not found") from None
     except PermissionError:
-        raise HTTPException(status_code=403, detail="Access denied to this file")
+        raise HTTPException(status_code=403, detail="Access denied to this file") from None
 
 
 @router.get(
@@ -1195,7 +1195,7 @@ def get_cached_thumbnail(
     "/ai/config",
     dependencies=[Depends(require_scope("system:read", "storage:read"))],
 )
-def get_rag_config() -> Dict[str, Any]:
+def get_rag_config() -> dict[str, Any]:
     return get_rag_engine().get_config()
 
 
@@ -1211,7 +1211,7 @@ def get_rag_config() -> Dict[str, Any]:
     "/ai/config",
     dependencies=[Depends(require_scope("system:config", "storage:admin"))],
 )
-def update_rag_config(req: RagConfigUpdateRequest) -> Dict[str, Any]:
+def update_rag_config(req: RagConfigUpdateRequest) -> dict[str, Any]:
     if req.llm_endpoint is not None and req.llm_endpoint.strip():
         parsed = urllib.parse.urlparse(req.llm_endpoint.strip())
         if parsed.scheme not in ("http", "https") or not parsed.hostname:
@@ -1224,13 +1224,13 @@ def update_rag_config(req: RagConfigUpdateRequest) -> Dict[str, Any]:
                 )
         except ValueError:
             if parsed.hostname.lower() in ("metadata.google.internal",):
-                raise HTTPException(status_code=400, detail="Cloud metadata endpoints are forbidden.")
+                raise HTTPException(status_code=400, detail="Cloud metadata endpoints are forbidden.") from None
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
     return get_rag_engine().update_config(updates)
 
 
-_REINDEX_TASK: Optional[asyncio.Task] = None
-_REINDEX_STATUS: Dict[str, Any] = {
+_REINDEX_TASK: asyncio.Task | None = None
+_REINDEX_STATUS: dict[str, Any] = {
     "status": "idle",
     "completed": 0,
     "total": 0,
@@ -1240,13 +1240,13 @@ _REINDEX_STATUS: Dict[str, Any] = {
 }
 
 
-_REINDEX_CACHE: Dict[str, Any] = {"status": "idle"}
+_REINDEX_CACHE: dict[str, Any] = {"status": "idle"}
 _REINDEX_CACHE_TIME: float = 0.0
 
 
 @router.get("/ai/reindex/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
 @router.get("/media/ai/reindex/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
-def get_ai_reindex_status() -> Dict[str, Any]:
+def get_ai_reindex_status() -> dict[str, Any]:
     global _REINDEX_CACHE, _REINDEX_CACHE_TIME
     import json
     import time
@@ -1259,7 +1259,7 @@ def get_ai_reindex_status() -> Dict[str, Any]:
     progress_file = "/app/data/reindex_progress.json"
     if os.path.exists(progress_file):
         try:
-            with open(progress_file, "r") as f:
+            with open(progress_file) as f:
                 data = json.load(f)
             if data.get("status") == "running":
                 mtime = os.path.getmtime(progress_file)
@@ -1325,13 +1325,14 @@ def get_ai_reindex_status() -> Dict[str, Any]:
     "/ai/benchmark",
     dependencies=[Depends(require_scope("system:config", "storage:admin"))],
 )
-async def run_ai_benchmark() -> Dict[str, Any]:
+async def run_ai_benchmark() -> dict[str, Any]:
     """
     Executes a zero-disk synthetic embedding benchmark over 3 in-memory reference strings.
     Measures latency per chunk, throughput, tokens/sec, and detects active accelerator.
     Strictly zero-disk-touch on sleeping hard drives (AGENTS.md §1.2).
     """
     import time
+
     from backend.services.media_engine import detect_hardware_accelerator
     from backend.services.rag_engine import compute_neural_embedding_via_ollama
 
@@ -1394,8 +1395,8 @@ async def run_ai_benchmark() -> Dict[str, Any]:
     dependencies=[Depends(require_scope("system:config", "storage:admin"))],
 )
 async def trigger_ai_reindex(
-    req: Optional[RagConfigUpdateRequest] = None,
-) -> Dict[str, Any]:
+    req: RagConfigUpdateRequest | None = None,
+) -> dict[str, Any]:
     """Triggers background in-place re-embedding without waking sleeping hard drives."""
     global _REINDEX_TASK, _REINDEX_STATUS
     if _REINDEX_TASK and not _REINDEX_TASK.done():
@@ -1421,7 +1422,7 @@ async def trigger_ai_reindex(
         "percentage": 0.0,
     }
 
-    def _on_progress(data: Dict[str, Any]):
+    def _on_progress(data: dict[str, Any]):
         global _REINDEX_STATUS
         _REINDEX_STATUS.update(data)
 
@@ -1451,7 +1452,7 @@ async def trigger_ai_reindex(
 )
 async def preview_media_organization(
     req: MediaOrganizePreviewRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Analyzes source media files and calculates dry-run proposed Plex/Jellyfin renames."""
     src = _validate_media_path(req.source_dir, principal, must_exist=True)
     dst = _validate_media_path(req.target_dir, principal, must_exist=False) if req.target_dir else None
@@ -1463,9 +1464,9 @@ async def preview_media_organization(
             req.media_type,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -1474,7 +1475,7 @@ async def preview_media_organization(
 )
 async def apply_media_organization(
     req: MediaOrganizeApplyRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Applies media renames and folder restructuring (move, copy, or hardlink)."""
     validated_items = []
     for it in req.items:
@@ -1495,4 +1496,4 @@ async def apply_media_organization(
             req.hardlink,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

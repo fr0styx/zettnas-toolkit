@@ -10,25 +10,26 @@ Validates:
 7. Rclone and notification secrets masking (Backblaze B2 'key' and webhook URLs).
 """
 
-import os
 import json
+import os
 import tempfile
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from backend import config
-from backend.api.webdav import _sign_webdav_cookie, _verify_webdav_cookie, _get_webdav_portal_user
+from backend.api.webdav import _get_webdav_portal_user, _sign_webdav_cookie, _verify_webdav_cookie
 from backend.services.compose_synthesizer import get_container_compose_data, get_container_full_details
-from backend.services.notifications import mask_notification_config, unmask_notification_config, MASK_PLACEHOLDER
+from backend.services.notifications import MASK_PLACEHOLDER, mask_notification_config, unmask_notification_config
 from backend.services.rclone_engine import is_sensitive_key
-from backend.totp import get_otpauth_uri, generate_qr_svg, generate_totp_secret
+from backend.totp import generate_qr_svg, generate_totp_secret, get_otpauth_uri
 from backend.users_db import (
-    create_user,
-    create_user_session,
-    validate_user_session,
-    revoke_session_by_hash,
     _SESSION_CACHE,
     _SESSION_CACHE_LOCK,
+    create_user,
+    create_user_session,
+    revoke_session_by_hash,
+    validate_user_session,
 )
 
 

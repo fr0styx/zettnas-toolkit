@@ -9,7 +9,7 @@ import os
 import re
 import subprocess
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from backend.config import HDD_CRITICAL_TEMP, HDD_WARN_TEMP, NVME_CRITICAL_TEMP, NVME_WARN_TEMP, logger
 from backend.db import log_smart_metrics
@@ -23,7 +23,7 @@ class SmartTelemetryEngine:
     """
 
     @classmethod
-    def is_device_sleeping(cls, dev_path: str, protocol: Optional[str] = None) -> bool:
+    def is_device_sleeping(cls, dev_path: str, protocol: str | None = None) -> bool:
         """
         Non-invasive power mode query. Returns True if drive is in STANDBY or SLEEP mode.
         Executes smartctl -n standby or hdparm -C without triggering spindle spinup.
@@ -56,7 +56,7 @@ class SmartTelemetryEngine:
         return False
 
     @classmethod
-    def decode_smart_json(cls, doc: Dict[str, Any], is_nvme: bool, protocol: str = "sat") -> Tuple:
+    def decode_smart_json(cls, doc: dict[str, Any], is_nvme: bool, protocol: str = "sat") -> tuple:
         """Decodes SMART telemetry from smartctl JSON output across SATA, NVMe, and SCSI."""
         model = doc.get("model_name") or doc.get("device", {}).get("model_name") or "Unknown"
         serial = doc.get("serial_number") or "Unknown"
@@ -65,7 +65,7 @@ class SmartTelemetryEngine:
         passed = bool(doc.get("smart_status", {}).get("passed", True))
         temp = doc.get("temperature", {}).get("current")
 
-        metrics: Dict[str, Any] = {
+        metrics: dict[str, Any] = {
             "realloc": 0,
             "pending": 0,
             "offline": 0,
@@ -179,23 +179,29 @@ class SmartTelemetryEngine:
         warn_temp = NVME_WARN_TEMP if (is_nvme or protocol == "nvme") else HDD_WARN_TEMP
         health = "ok"
 
-        if not passed or metrics["pending"] > 0 or metrics["offline"] > 0 or metrics["nvme_media_err"] > 0:
-            health = "crit"
-        elif (
-            metrics["nvme_spare"] is not None
-            and metrics["nvme_spare_thresh"] is not None
-            and metrics["nvme_spare"] <= metrics["nvme_spare_thresh"]
+        if (
+            not passed
+            or metrics["pending"] > 0
+            or metrics["offline"] > 0
+            or metrics["nvme_media_err"] > 0
+            or (
+                metrics["nvme_spare"] is not None
+                and metrics["nvme_spare_thresh"] is not None
+                and metrics["nvme_spare"] <= metrics["nvme_spare_thresh"]
+            )
+            or temp is not None
+            and temp >= crit_temp
         ):
             health = "crit"
-        elif temp is not None and temp >= crit_temp:
-            health = "crit"
         elif (
-            metrics["realloc"] > 0
-            or metrics["crc"] > 0
-            or (metrics["nvme_used"] is not None and metrics["nvme_used"] >= 80)
+            (
+                metrics["realloc"] > 0
+                or metrics["crc"] > 0
+                or (metrics["nvme_used"] is not None and metrics["nvme_used"] >= 80)
+            )
+            or temp is not None
+            and temp >= warn_temp
         ):
-            health = "warn"
-        elif temp is not None and temp >= warn_temp:
             health = "warn"
 
         return temp, health, metrics, model, serial, hours
@@ -207,7 +213,7 @@ class SmartTelemetryEngine:
         dev_path: str,
         protocol: str = "sat",
         allow_wake: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Queries SMART telemetry using multi-protocol auto-negotiation.
         Guarantees the Spindown Safety Invariant unless allow_wake is explicitly True.
@@ -235,7 +241,7 @@ class SmartTelemetryEngine:
         if protocol in ("sat,auto", "usb"):
             probe_protocols = ["sat,auto", "sntrealtek", "sntjmicron", "sat"]
 
-        stdout_doc: Optional[Dict[str, Any]] = None
+        stdout_doc: dict[str, Any] | None = None
         raw_text: str = ""
 
         for proto in probe_protocols:

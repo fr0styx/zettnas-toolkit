@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import math
 import re
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Optional
 from unittest.mock import patch
 
 import pytest
@@ -37,7 +37,7 @@ class IRMetrics:
     """Exact Information Retrieval evaluation metric calculator."""
 
     @staticmethod
-    def precision_at_k(retrieved: List[str], relevant: Set[str], k: int) -> float:
+    def precision_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:
         if k <= 0 or not retrieved:
             return 0.0
         top_k = retrieved[:k]
@@ -45,7 +45,7 @@ class IRMetrics:
         return hits / float(k)
 
     @staticmethod
-    def recall_at_k(retrieved: List[str], relevant: Set[str], k: int) -> float:
+    def recall_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:
         if not relevant or k <= 0 or not retrieved:
             return 0.0
         top_k = retrieved[:k]
@@ -53,7 +53,7 @@ class IRMetrics:
         return hits / float(len(relevant))
 
     @staticmethod
-    def reciprocal_rank(retrieved: List[str], relevant: Set[str]) -> float:
+    def reciprocal_rank(retrieved: list[str], relevant: set[str]) -> float:
         if not relevant or not retrieved:
             return 0.0
         for rank_idx, doc in enumerate(retrieved, start=1):
@@ -64,10 +64,10 @@ class IRMetrics:
     @classmethod
     def evaluate_query_set(
         cls,
-        results: Dict[str, List[str]],
-        ground_truth: Dict[str, Set[str]],
-        k_values: Tuple[int, ...] = (1, 3, 5),
-    ) -> Dict[str, float]:
+        results: dict[str, list[str]],
+        ground_truth: dict[str, set[str]],
+        k_values: tuple[int, ...] = (1, 3, 5),
+    ) -> dict[str, float]:
         if not ground_truth:
             return {}
         num_queries = len(ground_truth)
@@ -119,10 +119,10 @@ class DeterministicEmbeddingGemmaSimulator:
         cls,
         text: str,
         is_query: bool = False,
-        task_prompt: Optional[str] = None,
-        target_dim: Optional[int] = None,
+        task_prompt: str | None = None,
+        target_dim: int | None = None,
         normalize_mrl: bool = True,
-    ) -> List[float]:
+    ) -> list[float]:
         vec = [0.0] * 768
         low = text.lower()
 
@@ -192,7 +192,7 @@ class DeterministicEmbeddingGemmaSimulator:
 # 3. Representative Benchmark Corpus (16 Documents)
 # ---------------------------------------------------------------------------
 
-BENCHMARK_CORPUS: List[Dict[str, Any]] = [
+BENCHMARK_CORPUS: list[dict[str, Any]] = [
     {
         "doc_id": "doc_01",
         "file_name": "nas_btrfs_raid1.md",
@@ -392,10 +392,10 @@ BENCHMARK_CORPUS: List[Dict[str, Any]] = [
 ]
 
 # ---------------------------------------------------------------------------
-# 4. Ground-Truth Query Set (16 Multi-Intent Queries)
+# 4. Ground-Truth Query set (16 Multi-Intent Queries)
 # ---------------------------------------------------------------------------
 
-BENCHMARK_QUERIES: List[Dict[str, Any]] = [
+BENCHMARK_QUERIES: list[dict[str, Any]] = [
     # QA Intent
     {
         "query_id": "Q01",
@@ -639,7 +639,7 @@ def test_rag_simulated_title_conditioning_delta(temp_benchmark_engine):
         )
         scored = []
         for did, dvec in base_doc_vecs.items():
-            sim = sum(a * b for a, b in zip(q_vec, dvec))
+            sim = sum(a * b for a, b in zip(q_vec, dvec, strict=False))
             scored.append((did, sim))
         scored.sort(key=lambda x: x[1], reverse=True)
         base_results[qid] = [x[0] for x in scored]
@@ -659,7 +659,7 @@ def test_rag_simulated_title_conditioning_delta(temp_benchmark_engine):
         )
         scored = []
         for did, dvec in opt_doc_vecs.items():
-            sim = sum(a * b for a, b in zip(q_vec, dvec))
+            sim = sum(a * b for a, b in zip(q_vec, dvec, strict=False))
             # Token overlap boost
             q_tokens = set(re.findall(r"[a-z0-9]+", q["query_text"].lower()))
             target_doc = next(d for d in BENCHMARK_CORPUS if d["doc_id"] == did)
@@ -714,7 +714,7 @@ def test_rag_benchmark_mrl_scaling_and_normalization_retention():
                 target_dim=768,
                 normalize_mrl=True,
             )
-            scored.append((did, sum(a * b for a, b in zip(q_vec, d_vec))))
+            scored.append((did, sum(a * b for a, b in zip(q_vec, d_vec, strict=False))))
         scored.sort(key=lambda x: x[1], reverse=True)
         opt_768_results[q["query_id"]] = [x[0] for x in scored]
 
@@ -740,7 +740,7 @@ def test_rag_benchmark_mrl_scaling_and_normalization_retention():
                 target_dim=256,
                 normalize_mrl=True,
             )
-            scored.append((did, sum(a * b for a, b in zip(q_vec, d_vec))))
+            scored.append((did, sum(a * b for a, b in zip(q_vec, d_vec, strict=False))))
         scored.sort(key=lambda x: x[1], reverse=True)
         opt_256_results[q["query_id"]] = [x[0] for x in scored]
 
@@ -904,6 +904,7 @@ def test_resolve_path_backing_dev_symlink_dereference(tmp_path):
     pointing to spinning array disks.
     """
     from unittest.mock import patch
+
     from backend.services.rag_engine import resolve_path_backing_dev
 
     target_path = "/mnt/disk1/data/file.txt"
@@ -959,7 +960,7 @@ def test_rag_index_single_file_standby_guard(temp_benchmark_engine):
         patch.object(engine, "get_config", return_value={"respect_standby": True}),
         patch("backend.services.rag_engine.is_backing_disk_in_standby", return_value=True),
         patch("backend.services.rag_engine.resolve_path_backing_dev", return_value="/dev/sdd"),
-        patch("builtins.open", side_effect=IOError("Physical drive access simulated")) as mock_open_wake,
+        patch("builtins.open", side_effect=OSError("Physical drive access simulated")) as mock_open_wake,
     ):
         res = engine._index_single_file(
             canonical_path="/mnt/user/documents/archive.pdf",

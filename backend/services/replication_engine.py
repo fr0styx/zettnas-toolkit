@@ -4,15 +4,15 @@ Automated local and remote disaster recovery streaming for OpenZFS and Btrfs poo
 Supports bandwidth throttling, in-flight encryption over SSH/WireGuard, and retention management.
 """
 
-from dataclasses import asdict, dataclass, field
 import os
 import re
 import shutil
 import subprocess
 import threading
 import time
-from typing import Any, Dict, List, Optional
 import uuid
+from dataclasses import asdict, dataclass, field
+from typing import Any, Optional
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -28,19 +28,19 @@ class ReplicationJob:
     source_pool: str = ""
     source_dataset: str = ""
     target_type: str = "local"  # "local", "remote_ssh", "remote_wireguard"
-    target_host: Optional[str] = None
+    target_host: str | None = None
     target_port: int = 22
     target_user: str = "root"
     target_pool: str = ""
     target_dataset: str = ""
-    bandwidth_limit_kbps: Optional[int] = None  # e.g. 10000 = 10 MB/s
+    bandwidth_limit_kbps: int | None = None  # e.g. 10000 = 10 MB/s
     incremental: bool = True
     retention_count: int = 14  # Keep last N snapshots on target
     schedule: str = "daily"  # "manual", "hourly", "daily", "weekly"
     created_at: float = field(default_factory=time.time)
-    last_run: Optional[float] = None
+    last_run: float | None = None
     last_status: str = "idle"  # "idle", "running", "success", "error"
-    last_error: Optional[str] = None
+    last_error: str | None = None
     bytes_transferred: int = 0
 
 
@@ -49,23 +49,23 @@ class ReplicationEngine:
 
     def __init__(self):
         self._lock = threading.RLock()
-        self._running_jobs: Dict[str, threading.Thread] = {}
+        self._running_jobs: dict[str, threading.Thread] = {}
 
-    def list_jobs(self) -> List[Dict[str, Any]]:
+    def list_jobs(self) -> list[dict[str, Any]]:
         with self._lock:
             data = read_json(REPLICATION_JOBS_FILE, [])
             if not isinstance(data, list):
                 return []
             return data
 
-    def get_job(self, job_id: str) -> Optional[Dict[str, Any]]:
+    def get_job(self, job_id: str) -> dict[str, Any] | None:
         jobs = self.list_jobs()
         for j in jobs:
             if j.get("id") == job_id:
                 return j
         return None
 
-    def create_job(self, job_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_job(self, job_data: dict[str, Any]) -> dict[str, Any]:
         with self._lock:
             jobs = self.list_jobs()
             job = ReplicationJob(
@@ -107,7 +107,7 @@ class ReplicationEngine:
         self,
         job_id: str,
         status: str,
-        error: Optional[str] = None,
+        error: str | None = None,
         bytes_transferred: int = 0,
     ) -> None:
         with self._lock:
@@ -129,7 +129,7 @@ class ReplicationEngine:
         self,
         job_id: str,
         status: str,
-        error: Optional[str],
+        error: str | None,
         bytes_transferred: int,
     ) -> None:
         try:
@@ -152,13 +152,13 @@ class ReplicationEngine:
         except Exception as e:
             logger.debug(f"[Replication] Failed recording history: {e}")
 
-    def get_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_history(self, limit: int = 50) -> list[dict[str, Any]]:
         hist = read_json(REPLICATION_HISTORY_FILE, [])
         if not isinstance(hist, list):
             return []
         return hist[-limit:]
 
-    def run_job_async(self, job_id: str) -> Dict[str, Any]:
+    def run_job_async(self, job_id: str) -> dict[str, Any]:
         """Dispatches replication pipeline in a background thread."""
         job = self.get_job(job_id)
         if not job:
@@ -179,7 +179,7 @@ class ReplicationEngine:
 
         return {"status": "started", "job_id": job_id}
 
-    def _execute_replication(self, job: Dict[str, Any]) -> None:
+    def _execute_replication(self, job: dict[str, Any]) -> None:
         job_id = job.get("id", "")
         self.update_job_status(job_id, "running")
         logger.info(f"[Replication] Starting execution for job {job_id} ('{job.get('name')}')")
@@ -220,8 +220,8 @@ class ReplicationEngine:
                 remote_ssh_prefix = []
 
             # 2. Build pipeline commands
-            send_cmd: List[str] = []
-            recv_cmd: List[str] = []
+            send_cmd: list[str] = []
+            recv_cmd: list[str] = []
 
             snap_tag = f"repl_{int(time.time())}"
             if is_zfs:
@@ -356,7 +356,7 @@ class ReplicationEngine:
                 logger.debug(f"[Replication] Failure notification error: {notify_err}")
 
 
-_REPLICATION_ENGINE: Optional[ReplicationEngine] = None
+_REPLICATION_ENGINE: ReplicationEngine | None = None
 
 
 def get_replication_engine() -> ReplicationEngine:

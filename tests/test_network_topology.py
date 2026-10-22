@@ -1,9 +1,9 @@
 import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from backend.hardware.network import (
     _format_speed,
     _hex_to_ip,
@@ -28,6 +28,7 @@ from backend.hardware.network import (
     update_bridge_config,
     update_port_config,
 )
+from backend.main import app
 
 
 def test_format_speed():

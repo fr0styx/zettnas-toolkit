@@ -14,7 +14,7 @@ import os
 import tarfile
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from backend.config import DATA_DIR, POOL_PATH, logger
 from backend.fsutil import atomic_write_json, read_json
@@ -89,7 +89,7 @@ def get_app_backup_dir(app_name: str) -> str:
     return app_dir
 
 
-def get_app_backups_registry() -> List[Dict[str, Any]]:
+def get_app_backups_registry() -> list[dict[str, Any]]:
     """Retrieves all registered application backups."""
     data = read_json(APP_BACKUPS_REGISTRY_FILE, default=[])
     if isinstance(data, list):
@@ -97,7 +97,7 @@ def get_app_backups_registry() -> List[Dict[str, Any]]:
     return []
 
 
-def save_app_backup_record(record: Dict[str, Any]) -> None:
+def save_app_backup_record(record: dict[str, Any]) -> None:
     """Adds or updates an application backup record in the persistent ledger."""
     registry = get_app_backups_registry()
     idx = next((i for i, r in enumerate(registry) if r.get("id") == record.get("id")), None)
@@ -175,8 +175,8 @@ def is_safe_tar_member(member: tarfile.TarInfo, target_dir: str) -> bool:
 def create_app_backup(
     container_id_or_name: str,
     reason: str = "on-demand",
-    custom_name: Optional[str] = None,
-) -> Dict[str, Any]:
+    custom_name: str | None = None,
+) -> dict[str, Any]:
     """
     Creates a full backup archive of an installed container application:
     1. Inspects container to extract ports, env vars, mounts, and image.
@@ -209,8 +209,8 @@ def create_app_backup(
 
     # 2. Identify bind mounts to back up
     mounts = inspect_data.get("Mounts", [])
-    appdata_mounts: List[Dict[str, Any]] = []
-    skipped_mounts: List[Dict[str, Any]] = []
+    appdata_mounts: list[dict[str, Any]] = []
+    skipped_mounts: list[dict[str, Any]] = []
 
     for m in mounts:
         m_type = m.get("Type", "")
@@ -241,7 +241,7 @@ def create_app_backup(
     archive_filename = f"{cname}_{reason}_{ts}.tar.gz"
     archive_filepath = os.path.join(backup_dir, archive_filename)
 
-    manifest: Dict[str, Any] = {
+    manifest: dict[str, Any] = {
         "backup_id": backup_id,
         "app_name": cname,
         "container_name": raw_name,
@@ -303,7 +303,7 @@ def create_app_backup(
         size_bytes = os.path.getsize(archive_filepath)
         size_human = _format_bytes(size_bytes)
 
-        record: Dict[str, Any] = {
+        record: dict[str, Any] = {
             "id": backup_id,
             "app_name": cname,
             "container_name": raw_name,
@@ -333,13 +333,13 @@ def create_app_backup(
                 logger.error(f"[App Backup] Failed to unpause container '{cname}': {e}")
 
 
-def list_app_backups(app_name: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_app_backups(app_name: str | None = None) -> list[dict[str, Any]]:
     """
     Returns a sorted list of application backups.
     Validates file presence on disk and prunes missing files.
     """
     records = get_app_backups_registry()
-    valid_records: List[Dict[str, Any]] = []
+    valid_records: list[dict[str, Any]] = []
 
     for r in records:
         fpath = r.get("filepath", "")
@@ -360,7 +360,7 @@ def list_app_backups(app_name: Optional[str] = None) -> List[Dict[str, Any]]:
     return valid_records
 
 
-def get_app_backup_path(backup_id: str) -> Optional[str]:
+def get_app_backup_path(backup_id: str) -> str | None:
     """Resolves the absolute filepath for a given backup ID."""
     records = get_app_backups_registry()
     for r in records:
@@ -393,8 +393,8 @@ def delete_app_backup(backup_id: str) -> bool:
 def restore_app_backup(
     backup_id: str,
     recreate_container: bool = True,
-    target_mount_overrides: Optional[Dict[str, str]] = None,
-) -> Dict[str, Any]:
+    target_mount_overrides: dict[str, str] | None = None,
+) -> dict[str, Any]:
     """
     Restores application data and configuration from a .tar.gz archive.
     1. Validates archive integrity and Tar-Slip safety.
@@ -522,8 +522,8 @@ def get_vm_backup_dir(vm_name: str) -> str:
 def create_vm_backup(
     vm_id: str,
     reason: str = "on-demand",
-    custom_name: Optional[str] = None,
-) -> Dict[str, Any]:
+    custom_name: str | None = None,
+) -> dict[str, Any]:
     """
     Creates a full backup archive of a Virtual Machine:
     1. Loads VM config from vms.json.
@@ -547,7 +547,7 @@ def create_vm_backup(
     archive_filename = f"{vname}_{reason}_{ts}.tar.gz"
     archive_filepath = os.path.join(backup_dir, archive_filename)
 
-    manifest: Dict[str, Any] = {
+    manifest: dict[str, Any] = {
         "backup_id": backup_id,
         "type": "vm",
         "app_name": vname,
@@ -588,7 +588,7 @@ def create_vm_backup(
                         tar.add(full_path, arcname=arcname, recursive=False)
 
         size_bytes = os.path.getsize(archive_filepath)
-        record: Dict[str, Any] = {
+        record: dict[str, Any] = {
             "id": backup_id,
             "type": "vm",
             "app_name": vname,
@@ -615,7 +615,7 @@ def create_vm_backup(
         raise
 
 
-def list_vm_backups(vm_id_or_name: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_vm_backups(vm_id_or_name: str | None = None) -> list[dict[str, Any]]:
     """Lists saved VM archives, optionally filtered by VM ID or name."""
     registry = get_app_backups_registry()
     vm_records = [r for r in registry if r.get("type") == "vm"]
@@ -631,7 +631,7 @@ def list_vm_backups(vm_id_or_name: Optional[str] = None) -> List[Dict[str, Any]]
     return vm_records
 
 
-def restore_vm_backup(backup_id: str) -> Dict[str, Any]:
+def restore_vm_backup(backup_id: str) -> dict[str, Any]:
     """
     Restores a VM configuration and disk files from a backup archive.
     """

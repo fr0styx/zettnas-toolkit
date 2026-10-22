@@ -3,8 +3,9 @@ ZettNAS Toolkit - Chassis Visualizer & Layout API Routes
 """
 
 from fastapi import APIRouter, Depends
+
 from backend.auth import require_scope
-from backend.hardware.chassis import ChassisEngine, ChassisBayMapRequest
+from backend.hardware.chassis import ChassisBayMapRequest, ChassisEngine
 
 router = APIRouter(prefix="/chassis", tags=["Chassis Visualizer & Layout"])
 

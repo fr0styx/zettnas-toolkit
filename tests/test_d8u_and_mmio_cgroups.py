@@ -3,6 +3,7 @@ Unit & Integration tests for Zettlab D8 Ultra hardware detection and MMIO cgroup
 """
 
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 from backend.hardware.chassis import ChassisEngine

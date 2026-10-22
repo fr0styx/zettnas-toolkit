@@ -20,13 +20,13 @@ import ipaddress
 import os
 import socket
 import struct
-from typing import List, Optional
+from typing import Optional
 
 CONTAINER_NAMES = ("zettnas-ollama", "ollama", "zettnas-ovms", "ovms")
 _DOCKER_BRIDGES = ipaddress.ip_network("172.16.0.0/12")
 
 
-def _default_gateway() -> Optional[str]:
+def _default_gateway() -> str | None:
     try:
         with open("/proc/net/route") as f:
             for line in f:
@@ -46,17 +46,17 @@ def _resolves(name: str) -> bool:
         return False
 
 
-def explicit_host() -> Optional[str]:
+def explicit_host() -> str | None:
     env = (os.environ.get("OLLAMA_HOST") or os.environ.get("LLM_HOST") or "").strip()
     if not env:
         return None
     return env.replace("http://", "").replace("https://", "").split("/")[0].split(":")[0] or None
 
 
-def candidate_hosts(host_ip: Optional[str] = None) -> List[str]:
-    hosts: List[str] = []
+def candidate_hosts(host_ip: str | None = None) -> list[str]:
+    hosts: list[str] = []
 
-    def add(h: Optional[str]) -> None:
+    def add(h: str | None) -> None:
         if h and h not in hosts:
             hosts.append(h)
 

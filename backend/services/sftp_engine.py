@@ -12,7 +12,8 @@ import re
 import socket
 import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, POOL_PATH, logger
@@ -27,9 +28,9 @@ SFTP_CONF_FILE = os.path.join(SFTP_DIR, "sshd_config")
 class SFTPUser(BaseModel):
     username: str = Field(..., min_length=2, max_length=32)
     display_name: str = ""
-    password: Optional[str] = None
-    pubkey: Optional[str] = None
-    shares: List[str] = Field(default_factory=list)
+    password: str | None = None
+    pubkey: str | None = None
+    shares: list[str] = Field(default_factory=list)
     read_only: bool = False
     enabled: bool = True
 
@@ -77,23 +78,23 @@ class SFTPEngine:
             atomic_write_json(SFTP_CONFIG_FILE, self.DEFAULT_CONFIG)
         if not os.path.exists(SFTP_USERS_FILE):
             atomic_write_json(SFTP_USERS_FILE, [])
-        self._proc: Optional[subprocess.Popen] = None
+        self._proc: subprocess.Popen | None = None
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         cfg = dict(self.DEFAULT_CONFIG)
         saved = read_json(SFTP_CONFIG_FILE, {})
         if isinstance(saved, dict):
             cfg.update(saved)
         return cfg
 
-    def save_config(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    def save_config(self, updates: dict[str, Any]) -> dict[str, Any]:
         cfg = self.get_config()
         cfg.update(updates)
         atomic_write_json(SFTP_CONFIG_FILE, cfg)
         self._generate_sshd_config(cfg)
         return cfg
 
-    def _generate_sshd_config(self, cfg: Dict[str, Any]) -> str:
+    def _generate_sshd_config(self, cfg: dict[str, Any]) -> str:
         """Generates hardened OpenSSH sshd_config with strict chroot and no shell access."""
         port = cfg.get("port", 2222)
         pw_auth = "yes" if cfg.get("allow_password_auth", True) else "no"
@@ -176,7 +177,7 @@ Match Group sftpusers
                 continue
         return False
 
-    def list_users(self, mask_passwords: bool = True) -> List[Dict[str, Any]]:
+    def list_users(self, mask_passwords: bool = True) -> list[dict[str, Any]]:
         raw = read_json(SFTP_USERS_FILE, [])
         if not isinstance(raw, list):
             return []
@@ -190,7 +191,7 @@ Match Group sftpusers
             masked.append(item)
         return masked
 
-    def add_user(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
+    def add_user(self, user_data: dict[str, Any]) -> dict[str, Any]:
         username = re.sub(r"[^a-zA-Z0-9_-]+", "", user_data.get("username", "").strip().lower())
         if len(username) < 2:
             raise ValueError("Username must be at least 2 alphanumeric characters.")
@@ -517,7 +518,7 @@ Match Group sftpusers
         return self.start()
 
 
-_SFTP_ENGINE: Optional[SFTPEngine] = None
+_SFTP_ENGINE: SFTPEngine | None = None
 
 
 def get_sftp_engine() -> SFTPEngine:

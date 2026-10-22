@@ -6,15 +6,15 @@ individual container updates, and batch 'Update All' functionality with automate
 """
 
 import base64
-from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
 import socket
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Optional
 
 from backend.config import DATA_DIR, logger
 from backend.services.container_mutator import _docker_request, pull_container_image, recreate_container
@@ -24,12 +24,12 @@ DOCKER_POLICIES_FILE = os.path.join(DATA_DIR, "docker_update_policies.json")
 _policies_lock = threading.Lock()
 
 
-def get_container_update_policies() -> Dict[str, str]:
+def get_container_update_policies() -> dict[str, str]:
     """Returns the map of container name/id to policy ('notify', 'auto', 'off')."""
     with _policies_lock:
         try:
             if os.path.exists(DOCKER_POLICIES_FILE):
-                with open(DOCKER_POLICIES_FILE, "r", encoding="utf-8") as f:
+                with open(DOCKER_POLICIES_FILE, encoding="utf-8") as f:
                     return json.load(f)
         except Exception as e:
             logger.warning(f"[Docker Updates] Error reading update policies: {e}")
@@ -42,7 +42,7 @@ def get_container_update_policy(name_or_id: str) -> str:
     return policies.get(name_or_id, policies.get("default", "notify"))
 
 
-def set_container_update_policy(name_or_id: str, policy: str) -> Dict[str, str]:
+def set_container_update_policy(name_or_id: str, policy: str) -> dict[str, str]:
     """Sets the update policy for a container ('notify', 'auto', 'off')."""
     clean_policy = (policy or "notify").lower().strip()
     if clean_policy not in ("notify", "auto", "off"):
@@ -51,7 +51,7 @@ def set_container_update_policy(name_or_id: str, policy: str) -> Dict[str, str]:
         policies = {}
         try:
             if os.path.exists(DOCKER_POLICIES_FILE):
-                with open(DOCKER_POLICIES_FILE, "r", encoding="utf-8") as f:
+                with open(DOCKER_POLICIES_FILE, encoding="utf-8") as f:
                     policies = json.load(f)
         except Exception:
             policies = {}
@@ -66,7 +66,7 @@ def set_container_update_policy(name_or_id: str, policy: str) -> Dict[str, str]:
 
 
 # In-memory cache for update status
-_update_cache: Dict[str, Any] = {
+_update_cache: dict[str, Any] = {
     "checked_at": 0,
     "total_containers": 0,
     "updates_available_count": 0,
@@ -76,7 +76,7 @@ _update_lock = threading.Lock()
 CACHE_TTL_SECS = 300  # 5 minutes
 
 
-def load_docker_host_credentials() -> Dict[str, Any]:
+def load_docker_host_credentials() -> dict[str, Any]:
     """
     Parses Docker host configuration credentials from standard paths:
     1. DOCKER_CONFIG_JSON environment variable
@@ -97,7 +97,7 @@ def load_docker_host_credentials() -> Dict[str, Any]:
     for p in candidates:
         if p and os.path.isfile(p):
             try:
-                with open(p, "r", encoding="utf-8") as f:
+                with open(p, encoding="utf-8") as f:
                     data = json.load(f)
                     if isinstance(data, dict):
                         auths = data.get("auths", {})
@@ -108,7 +108,7 @@ def load_docker_host_credentials() -> Dict[str, Any]:
     return {}
 
 
-def extract_registry_from_image(img: str) -> Tuple[str, str, str]:
+def extract_registry_from_image(img: str) -> tuple[str, str, str]:
     """
     Parses an image string into (registry, repository, tag).
     Examples:
@@ -138,7 +138,7 @@ def extract_registry_from_image(img: str) -> Tuple[str, str, str]:
     return registry, repo, tag
 
 
-def get_registry_auth_for_image(img: str) -> Optional[Dict[str, Any]]:
+def get_registry_auth_for_image(img: str) -> dict[str, Any] | None:
     """
     Finds matching authentication configuration from Docker host credentials for the specified image.
     """
@@ -170,7 +170,7 @@ def get_registry_auth_for_image(img: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def get_registry_auth_header(img: str) -> Dict[str, str]:
+def get_registry_auth_header(img: str) -> dict[str, str]:
     """
     Generates the X-Registry-Auth base64 JSON header required by Docker Engine API
     for private repository queries.
@@ -187,7 +187,7 @@ def get_registry_auth_header(img: str) -> Dict[str, str]:
         return {}
 
 
-def query_remote_registry_v2_manifest(img: str, timeout: float = 10.0) -> Optional[str]:
+def query_remote_registry_v2_manifest(img: str, timeout: float = 10.0) -> str | None:
     """
     Queries the remote OCI / Registry v2 manifest directly over HTTPS with Bearer or Basic authentication.
     Returns the image digest (e.g. 'sha256:...'), or None if unreadable.
@@ -207,7 +207,7 @@ def query_remote_registry_v2_manifest(img: str, timeout: float = 10.0) -> Option
         if "auth" in auth:
             req.add_header("Authorization", f"Basic {auth['auth']}")
         elif "username" in auth and "password" in auth:
-            token = base64.b64encode(f"{auth['username']}:{auth['password']}".encode("utf-8")).decode("ascii")
+            token = base64.b64encode(f"{auth['username']}:{auth['password']}".encode()).decode("ascii")
             req.add_header("Authorization", f"Basic {token}")
 
     try:
@@ -222,7 +222,7 @@ def query_remote_registry_v2_manifest(img: str, timeout: float = 10.0) -> Option
         return None
 
 
-def _check_container_image_update(c: dict) -> Dict[str, Any]:
+def _check_container_image_update(c: dict) -> dict[str, Any]:
     """
     Checks if a newer image exists on the remote registry for a single container.
     Queries GET /distribution/{image}/json over the Docker socket with authenticated
@@ -234,7 +234,7 @@ def _check_container_image_update(c: dict) -> Dict[str, Any]:
     img = c.get("Image", "")
 
     policy = get_container_update_policy(name)
-    res: Dict[str, Any] = {
+    res: dict[str, Any] = {
         "id": cid,
         "name": name,
         "image": img,
@@ -308,13 +308,13 @@ def _check_container_image_update(c: dict) -> Dict[str, Any]:
     return res
 
 
-def get_cached_update_status() -> Dict[str, Any]:
+def get_cached_update_status() -> dict[str, Any]:
     """Returns the current cached update status without making remote calls."""
     with _update_lock:
         return dict(_update_cache)
 
 
-def check_all_container_updates(force: bool = False) -> Dict[str, Any]:
+def check_all_container_updates(force: bool = False) -> dict[str, Any]:
     """
     Checks all containers concurrently for remote image updates.
     Caches the results to prevent repeated registry hits.
@@ -335,7 +335,7 @@ def check_all_container_updates(force: bool = False) -> Dict[str, Any]:
         with ThreadPoolExecutor(max_workers=8) as executor:
             results = list(executor.map(_check_container_image_update, containers))
 
-        container_map: Dict[str, Any] = {}
+        container_map: dict[str, Any] = {}
         updates_count = 0
         for r in results:
             if r.get("has_update") and r.get("update_policy") == "auto":
@@ -368,7 +368,7 @@ def check_all_container_updates(force: bool = False) -> Dict[str, Any]:
         return dict(_update_cache)
 
 
-def update_single_container(cid: str) -> Dict[str, Any]:
+def update_single_container(cid: str) -> dict[str, Any]:
     """
     Pulls the latest image for a container and recreates it with automated rollback.
     """
@@ -406,7 +406,7 @@ def update_single_container(cid: str) -> Dict[str, Any]:
     return res
 
 
-def update_all_containers() -> Dict[str, Any]:
+def update_all_containers() -> dict[str, Any]:
     """
     Applies updates to all containers that have an update available.
     Skips the toolkit container itself to prevent host disconnection.
@@ -425,7 +425,7 @@ def update_all_containers() -> Dict[str, Any]:
     failed = []
     skipped = []
 
-    for name, cinfo in unique_candidates.items():
+    for name, _cinfo in unique_candidates.items():
         if name in ("zettnas-toolkit", "zettnas"):
             skipped.append({"name": name, "reason": "Self-recreation protected"})
             continue

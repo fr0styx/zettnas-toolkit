@@ -8,24 +8,24 @@ import glob
 import os
 import platform
 import time
-from typing import Any, Dict
+from typing import Any
 
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, get_server_hostname, logger
 
 HOST_ETC = os.environ.get("HOST_ETC", "/host/etc")
 
-_DMI_CACHE: Dict[str, Any] = {}
+_DMI_CACHE: dict[str, Any] = {}
 _DMI_CACHE_TS = 0.0
 
 _CPU_MODEL_CACHE = ""
 
 _OS_DISTRO_CACHE = ""
 
-_GPU_CACHE: Dict[str, Any] = {}
+_GPU_CACHE: dict[str, Any] = {}
 _GPU_CACHE_TS = 0.0
 
 
-def get_dmi_telemetry() -> Dict[str, Any]:
+def get_dmi_telemetry() -> dict[str, Any]:
     """Reads motherboard model, vendor, and BIOS firmware from sysfs DMI."""
     global _DMI_CACHE, _DMI_CACHE_TS
     now = time.time()
@@ -37,7 +37,7 @@ def get_dmi_telemetry() -> Dict[str, Any]:
             p = os.path.join(b, name)
             if os.path.exists(p):
                 try:
-                    with open(p, "r", encoding="utf-8", errors="replace") as f:
+                    with open(p, encoding="utf-8", errors="replace") as f:
                         return f.read().strip()
                 except Exception:
                     pass
@@ -60,14 +60,14 @@ def get_dmi_telemetry() -> Dict[str, Any]:
     return _DMI_CACHE
 
 
-def get_cpu_telemetry() -> Dict[str, Any]:
+def get_cpu_telemetry() -> dict[str, Any]:
     """Inspects CPU architecture, core count, scaling governor, and load averages."""
     global _CPU_MODEL_CACHE
     if not _CPU_MODEL_CACHE:
         for p in (os.path.join(HOST_PROC, "cpuinfo"), "/proc/cpuinfo"):
             if os.path.exists(p):
                 try:
-                    with open(p, "r", encoding="utf-8", errors="replace") as f:
+                    with open(p, encoding="utf-8", errors="replace") as f:
                         for line in f:
                             if "model name" in line:
                                 _CPU_MODEL_CACHE = line.split(":", 1)[1].strip()
@@ -86,7 +86,7 @@ def get_cpu_telemetry() -> Dict[str, Any]:
         "/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor"
     ):
         try:
-            with open(gp, "r", encoding="utf-8", errors="replace") as f:
+            with open(gp, encoding="utf-8", errors="replace") as f:
                 governor = f.read().strip()
                 break
         except Exception:
@@ -96,7 +96,7 @@ def get_cpu_telemetry() -> Dict[str, Any]:
     for lp in (os.path.join(HOST_PROC, "loadavg"), "/proc/loadavg"):
         if os.path.exists(lp):
             try:
-                with open(lp, "r", encoding="utf-8", errors="replace") as f:
+                with open(lp, encoding="utf-8", errors="replace") as f:
                     parts = f.read().split()
                     load_avg = [float(parts[0]), float(parts[1]), float(parts[2])]
                 break
@@ -111,7 +111,7 @@ def get_cpu_telemetry() -> Dict[str, Any]:
     }
 
 
-def get_os_telemetry() -> Dict[str, Any]:
+def get_os_telemetry() -> dict[str, Any]:
     """Resolves host OS distribution, kernel version, formatted uptime, and hostname."""
     global _OS_DISTRO_CACHE
     if not _OS_DISTRO_CACHE:
@@ -122,7 +122,7 @@ def get_os_telemetry() -> Dict[str, Any]:
         ):
             if os.path.exists(op):
                 try:
-                    with open(op, "r", encoding="utf-8", errors="replace") as f:
+                    with open(op, encoding="utf-8", errors="replace") as f:
                         for line in f:
                             if line.startswith("PRETTY_NAME="):
                                 _OS_DISTRO_CACHE = line.split("=", 1)[1].strip().strip('"').strip("'")
@@ -144,7 +144,7 @@ def get_os_telemetry() -> Dict[str, Any]:
     for up in (os.path.join(HOST_PROC, "uptime"), "/proc/uptime"):
         if os.path.exists(up):
             try:
-                with open(up, "r", encoding="utf-8", errors="replace") as f:
+                with open(up, encoding="utf-8", errors="replace") as f:
                     uptime_sec = float(f.read().split()[0])
                 break
             except Exception:
@@ -164,7 +164,7 @@ def get_os_telemetry() -> Dict[str, Any]:
     }
 
 
-def get_gpu_telemetry() -> Dict[str, Any]:
+def get_gpu_telemetry() -> dict[str, Any]:
     """
     Detects hardware video transcode capabilities (Intel QuickSync, AMD VA-API, NVIDIA NVENC).
     Surfaces render node device paths and supported hardware video codecs.
@@ -193,9 +193,9 @@ def get_gpu_telemetry() -> Dict[str, Any]:
         v_path = os.path.join(c, "device/vendor")
         if os.path.exists(v_path):
             try:
-                with open(v_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(v_path, encoding="utf-8", errors="replace") as f:
                     vendor_id = f.read().strip().lower()
-                with open(os.path.join(c, "device/device"), "r", encoding="utf-8", errors="replace") as f:
+                with open(os.path.join(c, "device/device"), encoding="utf-8", errors="replace") as f:
                     device_id = f.read().strip().lower()
                 driver_path = os.path.join(c, "device/driver")
                 if os.path.islink(driver_path):
@@ -253,14 +253,14 @@ def get_gpu_telemetry() -> Dict[str, Any]:
     return res
 
 
-_NPU_CACHE: Dict[str, Any] = {}
+_NPU_CACHE: dict[str, Any] = {}
 _NPU_CACHE_TS = 0.0
 
-_GPU_LAST_SAMPLE: Dict[str, Any] = {"ts": 0.0, "rc6_ms": 0, "rc6_by_path": {}, "util_pct": 0.0}
-_NPU_LAST_SAMPLE: Dict[str, Any] = {"ts": 0.0, "busy_us": 0, "util_pct": 0.0}
+_GPU_LAST_SAMPLE: dict[str, Any] = {"ts": 0.0, "rc6_ms": 0, "rc6_by_path": {}, "util_pct": 0.0}
+_NPU_LAST_SAMPLE: dict[str, Any] = {"ts": 0.0, "busy_us": 0, "util_pct": 0.0}
 
 
-def _sample_gpu_dynamic() -> Dict[str, Any]:
+def _sample_gpu_dynamic() -> dict[str, Any]:
     """Computes real-time GPU engine utilization % and active frequency from DRM sysfs."""
     global _GPU_LAST_SAMPLE
     now = time.time()
@@ -279,7 +279,7 @@ def _sample_gpu_dynamic() -> Dict[str, Any]:
         matches = glob.glob(pattern)
         for m in matches:
             try:
-                with open(m, "r", encoding="utf-8", errors="replace") as f:
+                with open(m, encoding="utf-8", errors="replace") as f:
                     val = int(f.read().strip())
                     if val > cur_freq:
                         cur_freq = val
@@ -298,7 +298,7 @@ def _sample_gpu_dynamic() -> Dict[str, Any]:
         matches = glob.glob(pattern)
         for m in matches:
             try:
-                with open(m, "r", encoding="utf-8", errors="replace") as f:
+                with open(m, encoding="utf-8", errors="replace") as f:
                     val = int(f.read().strip())
                     if val > max_freq:
                         max_freq = val
@@ -328,7 +328,7 @@ def _sample_gpu_dynamic() -> Dict[str, Any]:
 
     for rf in rc6_files:
         try:
-            with open(rf, "r", encoding="utf-8", errors="replace") as f:
+            with open(rf, encoding="utf-8", errors="replace") as f:
                 rc6_val = int(f.read().strip())
         except Exception:
             continue
@@ -365,7 +365,7 @@ def _sample_gpu_dynamic() -> Dict[str, Any]:
     }
 
 
-def _sample_npu_dynamic() -> Dict[str, Any]:
+def _sample_npu_dynamic() -> dict[str, Any]:
     """Computes real-time NPU active compute % and frequency from Intel VPU / accel sysfs."""
     global _NPU_LAST_SAMPLE
     now = time.time()
@@ -383,7 +383,7 @@ def _sample_npu_dynamic() -> Dict[str, Any]:
         try:
             fp = os.path.join(dev_dir, "npu_current_frequency_mhz")
             if os.path.exists(fp):
-                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                with open(fp, encoding="utf-8", errors="replace") as f:
                     cur_freq = int(f.read().strip())
         except Exception:
             pass
@@ -391,7 +391,7 @@ def _sample_npu_dynamic() -> Dict[str, Any]:
         try:
             fp = os.path.join(dev_dir, "npu_max_frequency_mhz")
             if os.path.exists(fp):
-                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                with open(fp, encoding="utf-8", errors="replace") as f:
                     max_freq = int(f.read().strip())
         except Exception:
             pass
@@ -399,7 +399,7 @@ def _sample_npu_dynamic() -> Dict[str, Any]:
         try:
             fp = os.path.join(dev_dir, "power_state")
             if os.path.exists(fp):
-                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                with open(fp, encoding="utf-8", errors="replace") as f:
                     power_state = f.read().strip()
         except Exception:
             pass
@@ -407,7 +407,7 @@ def _sample_npu_dynamic() -> Dict[str, Any]:
         try:
             fp = os.path.join(dev_dir, "npu_memory_utilization")
             if os.path.exists(fp):
-                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                with open(fp, encoding="utf-8", errors="replace") as f:
                     memory_bytes = int(f.read().strip())
         except Exception:
             pass
@@ -416,7 +416,7 @@ def _sample_npu_dynamic() -> Dict[str, Any]:
         try:
             fp = os.path.join(dev_dir, "npu_busy_time_us")
             if os.path.exists(fp):
-                with open(fp, "r", encoding="utf-8", errors="replace") as f:
+                with open(fp, encoding="utf-8", errors="replace") as f:
                     busy_us = int(f.read().strip())
         except Exception:
             pass
@@ -457,7 +457,7 @@ def _sample_npu_dynamic() -> Dict[str, Any]:
     }
 
 
-def get_npu_telemetry() -> Dict[str, Any]:
+def get_npu_telemetry() -> dict[str, Any]:
     """
     Detects dedicated Neural Processing Unit (NPU) AI acceleration hardware (Intel AI Boost, AMD Ryzen AI).
     Surfaces driver status, clock rates, hardware scheduler, and supported inference frameworks.
@@ -491,11 +491,11 @@ def get_npu_telemetry() -> Dict[str, Any]:
             try:
                 v_path = os.path.join(dev_dir, "vendor")
                 if os.path.exists(v_path):
-                    with open(v_path, "r", encoding="utf-8", errors="replace") as f:
+                    with open(v_path, encoding="utf-8", errors="replace") as f:
                         vendor_id = f.read().strip().lower()
                 d_path = os.path.join(dev_dir, "device")
                 if os.path.exists(d_path):
-                    with open(d_path, "r", encoding="utf-8", errors="replace") as f:
+                    with open(d_path, encoding="utf-8", errors="replace") as f:
                         device_id = f.read().strip().lower()
                 dr_path = os.path.join(dev_dir, "driver")
                 if os.path.islink(dr_path):
@@ -503,17 +503,17 @@ def get_npu_telemetry() -> Dict[str, Any]:
 
                 freq_max_path = os.path.join(dev_dir, "npu_max_frequency_mhz")
                 if os.path.exists(freq_max_path):
-                    with open(freq_max_path, "r", encoding="utf-8", errors="replace") as f:
+                    with open(freq_max_path, encoding="utf-8", errors="replace") as f:
                         max_freq = int(f.read().strip())
 
                 freq_cur_path = os.path.join(dev_dir, "npu_current_frequency_mhz")
                 if os.path.exists(freq_cur_path):
-                    with open(freq_cur_path, "r", encoding="utf-8", errors="replace") as f:
+                    with open(freq_cur_path, encoding="utf-8", errors="replace") as f:
                         cur_freq = int(f.read().strip())
 
                 sched_path = os.path.join(dev_dir, "sched_mode")
                 if os.path.exists(sched_path):
-                    with open(sched_path, "r", encoding="utf-8", errors="replace") as f:
+                    with open(sched_path, encoding="utf-8", errors="replace") as f:
                         sched_mode = f.read().strip()
                 break
             except Exception:

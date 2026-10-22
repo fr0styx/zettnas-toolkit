@@ -9,8 +9,8 @@ Unit and integration tests for Batch 2 Security Hardening:
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.main import app
 from backend.auth import AuthenticatedPrincipal
+from backend.main import app
 from backend.services.ai_chat_agent import _is_safe_public_url, tool_browse_internet, tool_trigger_ai_sync
 from backend.services.rag_engine import get_rag_engine
 

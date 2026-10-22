@@ -316,7 +316,7 @@ def _get_serial_connection(port: str):
         if serial is not None:
             _serial_handle = serial.Serial(port, 115200, timeout=1.0)
         else:
-            _serial_handle = open(port, "wb", buffering=0)
+            _serial_handle = open(port, "wb", buffering=0)  # noqa: SIM115
         _serial_port = port
         return _serial_handle
     except Exception:

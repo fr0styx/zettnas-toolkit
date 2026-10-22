@@ -5,9 +5,10 @@ and Multi-Protocol SMART Telemetry Engine (Sprint 1).
 
 import json
 from unittest.mock import MagicMock, patch
+
+from backend.hardware.disks import VALID_DEV_PATTERN, _discover_disks, _resolve_dev_path
 from backend.hardware.hal import DiskDiscoveryHAL, PhysicalDiskRecord
 from backend.hardware.smart_engine import SmartTelemetryEngine
-from backend.hardware.disks import _discover_disks, _resolve_dev_path, VALID_DEV_PATTERN
 
 
 def test_valid_dev_pattern_supports_multiletter_and_canonical_ids():
@@ -208,6 +209,7 @@ def test_disks_discover_disks_integration_backward_compatibility():
 
 def test_predictive_smart_velocity_and_linear_regression(tmp_path):
     import time
+
     from backend.db import compute_linear_regression_slope, init_db, log_smart_metrics, query_smart_velocity
 
     # 1. Closed-form linear regression unit assertions

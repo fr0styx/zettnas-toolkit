@@ -170,7 +170,7 @@ def test_ups_save_config_persists_to_all_tiers():
 
             # Tier 1: Primary JSON file
             assert os.path.exists(primary_file)
-            with open(primary_file, "r") as f:
+            with open(primary_file) as f:
                 p_data = json.load(f)
             assert p_data["host"] == "192.168.10.100"
 
@@ -181,13 +181,13 @@ def test_ups_save_config_persists_to_all_tiers():
 
             # Tier 3: Local backup file
             assert os.path.exists(backup_file)
-            with open(backup_file, "r") as f:
+            with open(backup_file) as f:
                 b_data = json.load(f)
             assert b_data["host"] == "192.168.10.100"
 
             # Tier 4: Pool mirror
             assert os.path.exists(pool_mirror)
-            with open(pool_mirror, "r") as f:
+            with open(pool_mirror) as f:
                 m_data = json.load(f)
             assert m_data["host"] == "192.168.10.100"
 
@@ -218,7 +218,7 @@ def test_ups_load_config_recovers_from_sqlite_app_config():
 
             # Auto-sync back to primary file verified
             assert os.path.exists(primary_file)
-            with open(primary_file, "r") as f:
+            with open(primary_file) as f:
                 synced = json.load(f)
             assert synced["host"] == "192.168.50.20"
 

@@ -11,7 +11,8 @@ import os
 import shutil
 import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, logger
@@ -41,7 +42,7 @@ class NfsExportRule(BaseModel):
     insecure: bool = Field(
         default=True, description="Permit NFS clients connecting on unprivileged ports > 1024 (macOS / K8s)"
     )
-    fsid: Optional[int] = Field(default=None, description="Optional unique numeric filesystem identifier for NFSv4")
+    fsid: int | None = Field(default=None, description="Optional unique numeric filesystem identifier for NFSv4")
     comment: str = Field(default="", description="Human-readable description")
     created_at: float = Field(default_factory=time.time)
 
@@ -60,17 +61,17 @@ class NfsEngine:
     and granular UID/GID security configurations for containerized and clustered workloads.
     """
 
-    def __init__(self, exports_d_path: Optional[str] = None):
+    def __init__(self, exports_d_path: str | None = None):
         os.makedirs(NFS_DIR, exist_ok=True)
         self._exports_d_file = exports_d_path or ZETTNAS_EXPORTS_D_FILE
-        self._exports: Dict[str, NfsExportRule] = {}
+        self._exports: dict[str, NfsExportRule] = {}
         self._load_exports()
 
     def _load_exports(self) -> None:
         """Loads configured exports from JSON persistent storage."""
         if os.path.isfile(NFS_EXPORTS_FILE):
             try:
-                with open(NFS_EXPORTS_FILE, "r", encoding="utf-8") as f:
+                with open(NFS_EXPORTS_FILE, encoding="utf-8") as f:
                     data = json.load(f)
                     if isinstance(data, list):
                         for item in data:
@@ -92,11 +93,11 @@ class NfsEngine:
         except Exception as e:
             logger.error(f"[NFS] Failed writing {NFS_EXPORTS_FILE}: {e}")
 
-    def list_exports(self) -> List[NfsExportRule]:
+    def list_exports(self) -> list[NfsExportRule]:
         """Returns all configured NFS export rules."""
         return list(self._exports.values())
 
-    def get_export(self, name: str) -> Optional[NfsExportRule]:
+    def get_export(self, name: str) -> NfsExportRule | None:
         """Retrieves a single export rule by name."""
         return self._exports.get(name)
 
@@ -254,7 +255,7 @@ class NfsEngine:
         )
 
 
-_NFS_ENGINE_INSTANCE: Optional[NfsEngine] = None
+_NFS_ENGINE_INSTANCE: NfsEngine | None = None
 
 
 def get_nfs_engine() -> NfsEngine:

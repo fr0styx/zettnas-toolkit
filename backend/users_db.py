@@ -7,7 +7,6 @@ Includes transparent zero-downtime migration from legacy security.json, sessions
 and api_tokens.json files.
 """
 
-from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -16,8 +15,9 @@ import shutil
 import sqlite3
 import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
 import uuid
+from contextlib import contextmanager
+from typing import Any, Optional
 
 from backend import config
 from backend.config import DATA_DIR, logger
@@ -27,15 +27,15 @@ USERS_DB_PATH = getattr(config, "USERS_DB_PATH", os.path.join(DATA_DIR, "users.d
 _db_lock = threading.RLock()
 
 # In-memory session cache: token_hash -> session_dict
-_SESSION_CACHE: Dict[str, Dict[str, Any]] = {}
+_SESSION_CACHE: dict[str, dict[str, Any]] = {}
 _SESSION_CACHE_LOCK = threading.RLock()
 
 # In-memory API token cache: token_hash -> token_dict
-_TOKEN_CACHE: Dict[str, Dict[str, Any]] = {}
+_TOKEN_CACHE: dict[str, dict[str, Any]] = {}
 _TOKEN_CACHE_LOCK = threading.RLock()
 
 
-def get_users_db_connection(db_path: Optional[str] = None) -> sqlite3.Connection:
+def get_users_db_connection(db_path: str | None = None) -> sqlite3.Connection:
     target_path = db_path or getattr(config, "USERS_DB_PATH", USERS_DB_PATH)
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
     conn = sqlite3.connect(target_path, timeout=15.0, check_same_thread=False)
@@ -47,7 +47,7 @@ def get_users_db_connection(db_path: Optional[str] = None) -> sqlite3.Connection
 
 
 @contextmanager
-def users_db_session(db_path: Optional[str] = None, readonly: bool = False):
+def users_db_session(db_path: str | None = None, readonly: bool = False):
     if readonly:
         conn = get_users_db_connection(db_path)
         try:
@@ -117,7 +117,7 @@ DEFAULT_ROLES = [
 ]
 
 
-def init_users_db(db_path: Optional[str] = None) -> None:
+def init_users_db(db_path: str | None = None) -> None:
     """Initialize SQLite tables for users, roles, sessions, API tokens, and audit logs."""
     target_path = db_path or USERS_DB_PATH
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
@@ -238,7 +238,7 @@ def init_users_db(db_path: Optional[str] = None) -> None:
     migrate_legacy_data(target_path)
 
 
-def migrate_legacy_data(db_path: Optional[str] = None) -> None:
+def migrate_legacy_data(db_path: str | None = None) -> None:
     """Seamlessly migrates existing security.json, sessions.json, and api_tokens.json."""
     target_path = db_path or USERS_DB_PATH
     now = time.time()
@@ -259,7 +259,7 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
             sec_file = getattr(config, "SECURITY_FILE", os.path.join(DATA_DIR, "security.json"))
             if os.path.exists(sec_file):
                 try:
-                    with open(sec_file, "r") as f:
+                    with open(sec_file) as f:
                         data = json.load(f)
                         password_hash = data.get("password_hash") or password_hash
                         admin_username = data.get("username") or admin_username
@@ -299,7 +299,7 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
             tok_file = os.path.join(DATA_DIR, "api_tokens.json")
             if os.path.exists(tok_file):
                 try:
-                    with open(tok_file, "r") as f:
+                    with open(tok_file) as f:
                         raw_tokens = json.load(f)
                     migrated_tok = 0
                     for tid, tdata in raw_tokens.items():
@@ -356,7 +356,7 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
 # ==============================================================================
 
 
-def get_user_by_id(user_id: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def get_user_by_id(user_id: str, db_path: str | None = None) -> dict[str, Any] | None:
     with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             """
@@ -375,7 +375,7 @@ def get_user_by_id(user_id: str, db_path: Optional[str] = None) -> Optional[Dict
         return res
 
 
-def get_user_by_username(username: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def get_user_by_username(username: str, db_path: str | None = None) -> dict[str, Any] | None:
     if not username:
         return None
     with users_db_session(db_path, readonly=True) as conn:
@@ -396,7 +396,7 @@ def get_user_by_username(username: str, db_path: Optional[str] = None) -> Option
         return res
 
 
-def list_users(db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_users(db_path: str | None = None) -> list[dict[str, Any]]:
     with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute("""
             SELECT u.id, u.username, u.display_name, u.email, u.role_id, r.name AS role_name,
@@ -423,9 +423,9 @@ def create_user(
     storage_quota_bytes: int = 0,
     idp_type: str = "local",
     idp_sub: str = "",
-    db_path: Optional[str] = None,
-    home_directory: Optional[str] = None,
-) -> Dict[str, Any]:
+    db_path: str | None = None,
+    home_directory: str | None = None,
+) -> dict[str, Any]:
     username_clean = username.strip().lower()
     if len(username_clean) < 2 or len(username_clean) > 32:
         raise ValueError("Username must be between 2 and 32 characters.")
@@ -480,7 +480,7 @@ def create_user(
 
 
 def update_user_password(
-    user_id: str, new_password: str, db_path: Optional[str] = None, keep_token: Optional[str] = None
+    user_id: str, new_password: str, db_path: str | None = None, keep_token: str | None = None
 ) -> bool:
     """Sets a new password and ends the user's sessions (except `keep_token`, the caller's own)."""
     new_hash = hash_password(new_password)
@@ -525,13 +525,13 @@ def assert_remaining_superadmin_guard(
 
 def update_user_profile(
     user_id: str,
-    display_name: Optional[str] = None,
-    email: Optional[str] = None,
-    role_id: Optional[str] = None,
-    status: Optional[str] = None,
-    storage_quota_bytes: Optional[int] = None,
-    preferences: Optional[Dict[str, Any]] = None,
-    db_path: Optional[str] = None,
+    display_name: str | None = None,
+    email: str | None = None,
+    role_id: str | None = None,
+    status: str | None = None,
+    storage_quota_bytes: int | None = None,
+    preferences: dict[str, Any] | None = None,
+    db_path: str | None = None,
 ) -> bool:
     now = time.time()
     with users_db_session(db_path) as conn:
@@ -541,7 +541,7 @@ def update_user_profile(
             assert_remaining_superadmin_guard(conn, user_id, action="demote")
 
         updates = ["updated_at = ?"]
-        params: List[Any] = [now]
+        params: list[Any] = [now]
 
         if display_name is not None:
             updates.append("display_name = ?")
@@ -571,7 +571,7 @@ def update_user_profile(
         return res.rowcount > 0
 
 
-def delete_user(user_id: str, db_path: Optional[str] = None) -> bool:
+def delete_user(user_id: str, db_path: str | None = None) -> bool:
     """Deletes a user. Prevents deleting the last superadmin."""
     target_user = get_user_by_id(user_id, db_path=db_path)
     with users_db_session(db_path) as conn:
@@ -593,7 +593,7 @@ def delete_user(user_id: str, db_path: Optional[str] = None) -> bool:
         return True
 
 
-def disable_admin_user(admin_identifier: str = "admin", db_path: Optional[str] = None) -> Dict[str, Any]:
+def disable_admin_user(admin_identifier: str = "admin", db_path: str | None = None) -> dict[str, Any]:
     """
     Safely disables the default admin account:
     1. Verifies another active SuperAdmin exists (fails fast if invariant violated).
@@ -632,7 +632,7 @@ def disable_admin_user(admin_identifier: str = "admin", db_path: Optional[str] =
     return {"status": "ok", "user_id": admin_id, "username": admin["username"], "disabled": True}
 
 
-def record_successful_login(user_id: str, ip: str, db_path: Optional[str] = None) -> None:
+def record_successful_login(user_id: str, ip: str, db_path: str | None = None) -> None:
     now = time.time()
     with users_db_session(db_path) as conn:
         conn.execute(
@@ -654,7 +654,7 @@ def create_user_session(
     ip: str = "",
     user_agent: str = "",
     is_remembered: bool = False,
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
 ) -> str:
     raw_token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
@@ -707,7 +707,7 @@ def create_user_session(
     return raw_token
 
 
-def _update_session_activity_sync(token_hash: str, now: float, db_path: Optional[str] = None) -> None:
+def _update_session_activity_sync(token_hash: str, now: float, db_path: str | None = None) -> None:
     try:
         with users_db_session(db_path) as conn:
             conn.execute("UPDATE sessions SET last_active_at = ? WHERE session_id_hash = ?", (now, token_hash))
@@ -715,7 +715,7 @@ def _update_session_activity_sync(token_hash: str, now: float, db_path: Optional
         logger.debug(f"Failed to update session last_active_at: {e}")
 
 
-def validate_user_session(raw_token: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[str, Any] | None:
     if not raw_token:
         return None
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
@@ -781,7 +781,7 @@ def validate_user_session(raw_token: str, db_path: Optional[str] = None) -> Opti
         return session_data
 
 
-def revoke_user_session(raw_token: str, db_path: Optional[str] = None) -> None:
+def revoke_user_session(raw_token: str, db_path: str | None = None) -> None:
     if not raw_token:
         return
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
@@ -791,7 +791,7 @@ def revoke_user_session(raw_token: str, db_path: Optional[str] = None) -> None:
         conn.execute("DELETE FROM sessions WHERE session_id_hash = ?", (token_hash,))
 
 
-def revoke_session_by_hash(session_id_hash_prefix: str, user_id: str, db_path: Optional[str] = None) -> bool:
+def revoke_session_by_hash(session_id_hash_prefix: str, user_id: str, db_path: str | None = None) -> bool:
     """Revokes a session by hash prefix and immediately purges it from in-memory cache."""
     with users_db_session(db_path) as conn:
         res = conn.execute(
@@ -808,9 +808,7 @@ def revoke_session_by_hash(session_id_hash_prefix: str, user_id: str, db_path: O
     return deleted
 
 
-def revoke_all_sessions_for_user(
-    user_id: str, except_token: Optional[str] = None, db_path: Optional[str] = None
-) -> None:
+def revoke_all_sessions_for_user(user_id: str, except_token: str | None = None, db_path: str | None = None) -> None:
     except_hash = hashlib.sha256(except_token.encode("utf-8")).hexdigest() if except_token else ""
     with users_db_session(db_path) as conn:
         if except_hash:
@@ -821,7 +819,7 @@ def revoke_all_sessions_for_user(
         _SESSION_CACHE.clear()
 
 
-def list_user_sessions(user_id: str, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_user_sessions(user_id: str, db_path: str | None = None) -> list[dict[str, Any]]:
     with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
             """
@@ -843,10 +841,10 @@ def list_user_sessions(user_id: str, db_path: Optional[str] = None) -> List[Dict
 def create_scoped_api_token(
     user_id: str,
     name: str,
-    scopes: Optional[List[str]] = None,
-    expires_in_days: Optional[int] = None,
-    db_path: Optional[str] = None,
-) -> Tuple[str, Dict[str, Any]]:
+    scopes: list[str] | None = None,
+    expires_in_days: int | None = None,
+    db_path: str | None = None,
+) -> tuple[str, dict[str, Any]]:
     raw_token = "zat_" + secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
     masked = raw_token[:8] + "..." + raw_token[-4:]
@@ -878,7 +876,7 @@ def create_scoped_api_token(
     return raw_token, token_meta
 
 
-def validate_scoped_api_token(raw_token: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dict[str, Any] | None:
     if not raw_token or not raw_token.startswith("zat_"):
         return None
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
@@ -927,7 +925,7 @@ def validate_scoped_api_token(raw_token: str, db_path: Optional[str] = None) -> 
         return token_data
 
 
-def list_user_api_tokens(user_id: str, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_user_api_tokens(user_id: str, db_path: str | None = None) -> list[dict[str, Any]]:
     with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
             """
@@ -947,7 +945,7 @@ def list_user_api_tokens(user_id: str, db_path: Optional[str] = None) -> List[Di
         return res
 
 
-def revoke_api_token(token_id: str, user_id: Optional[str] = None, db_path: Optional[str] = None) -> bool:
+def revoke_api_token(token_id: str, user_id: str | None = None, db_path: str | None = None) -> bool:
     with users_db_session(db_path) as conn:
         if token_id.startswith("zat_"):
             token_hash = hashlib.sha256(token_id.encode("utf-8")).hexdigest()
@@ -976,12 +974,12 @@ revoke_scoped_api_token = revoke_api_token
 def log_security_event(
     event_type: str,
     status: str,
-    actor_id: Optional[str] = None,
-    actor_username: Optional[str] = None,
-    actor_ip: Optional[str] = None,
-    actor_user_agent: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
-    db_path: Optional[str] = None,
+    actor_id: str | None = None,
+    actor_username: str | None = None,
+    actor_ip: str | None = None,
+    actor_user_agent: str | None = None,
+    details: dict[str, Any] | None = None,
+    db_path: str | None = None,
 ) -> None:
     now = time.time()
     try:
@@ -1013,7 +1011,7 @@ def log_security_event(
         logger.error(f"Failed to record security audit event: {e}")
 
 
-def query_security_audit_logs(limit: int = 100, offset: int = 0, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def query_security_audit_logs(limit: int = 100, offset: int = 0, db_path: str | None = None) -> list[dict[str, Any]]:
     with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
             """
@@ -1036,7 +1034,7 @@ def query_security_audit_logs(limit: int = 100, offset: int = 0, db_path: Option
 # ==============================================================================
 
 
-def get_user_mfa(user_id: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def get_user_mfa(user_id: str, db_path: str | None = None) -> dict[str, Any] | None:
     with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             "SELECT id, username, mfa_enabled, mfa_secret, mfa_recovery_codes_json FROM users WHERE id = ?",
@@ -1070,8 +1068,8 @@ def _seal_secret(secret: str) -> str:
 def enable_user_mfa(
     user_id: str,
     secret: str,
-    recovery_code_hashes: List[str],
-    db_path: Optional[str] = None,
+    recovery_code_hashes: list[str],
+    db_path: str | None = None,
 ) -> bool:
     with users_db_session(db_path) as conn:
         res = conn.execute(
@@ -1085,7 +1083,7 @@ def enable_user_mfa(
         return res.rowcount > 0
 
 
-def disable_user_mfa(user_id: str, db_path: Optional[str] = None) -> bool:
+def disable_user_mfa(user_id: str, db_path: str | None = None) -> bool:
     with users_db_session(db_path) as conn:
         res = conn.execute(
             """
@@ -1101,7 +1099,7 @@ def disable_user_mfa(user_id: str, db_path: Optional[str] = None) -> bool:
 def consume_user_recovery_code(
     user_id: str,
     candidate_code: str,
-    db_path: Optional[str] = None,
+    db_path: str | None = None,
 ) -> bool:
     from backend.totp import verify_and_consume_recovery_code
 

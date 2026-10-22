@@ -5,13 +5,13 @@ thread-safe in-memory log buffer, and credential redaction for diagnostic bundle
 """
 
 import collections
-from contextvars import ContextVar
-from datetime import datetime, timezone
 import json
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional
+from contextvars import ContextVar
+from datetime import UTC, datetime, timezone
+from typing import Any, Optional
 
 # Context variable holding the correlation ID for the active request
 correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="")
@@ -127,8 +127,8 @@ class JSONLogFormatter(logging.Formatter):
     """Formats log records as single-line structured JSON with correlation IDs."""
 
     def format(self, record: logging.LogRecord) -> str:
-        log_data: Dict[str, Any] = {
-            "timestamp": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(),
+        log_data: dict[str, Any] = {
+            "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": sanitize_string(record.getMessage()),
@@ -187,7 +187,7 @@ def setup_structured_logging():
     _LOGGING_CONFIGURED = True
 
 
-def get_recent_logs(max_lines: int = 500) -> List[str]:
+def get_recent_logs(max_lines: int = 500) -> list[str]:
     """Returns the most recent log records from the in-memory ring buffer."""
     lines = list(LOG_RING_BUFFER)
     return lines[-max_lines:] if len(lines) > max_lines else lines

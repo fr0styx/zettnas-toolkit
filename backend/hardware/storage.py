@@ -112,7 +112,7 @@ def _read_dmi_text(field: str) -> str:
         p = os.path.join(base, "class/dmi/id", field)
         if os.path.exists(p):
             try:
-                with open(p, "r", encoding="utf-8", errors="replace") as f:
+                with open(p, encoding="utf-8", errors="replace") as f:
                     content = f.read().strip()
                     if content and content.lower() != "default string":
                         return content
@@ -133,7 +133,7 @@ def _read_dt_text(field: str = "model") -> str:
     for p in candidates:
         if p and os.path.exists(p):
             try:
-                with open(p, "r", encoding="utf-8", errors="replace") as f:
+                with open(p, encoding="utf-8", errors="replace") as f:
                     content = f.read().replace("\x00", " ").strip()
                     if content and content.lower() != "default string":
                         return content

@@ -3,6 +3,7 @@ tests/test_ai_conversations.py — Test suite for ZettAI multi-turn conversation
 """
 
 import os
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -450,10 +451,8 @@ def test_math_query_bypasses_web_and_disk_tools():
 
 def test_weather_tool_and_country_disambiguation_santo_domingo():
     """Verifies that asking about weather in Santo Domingo calls get_weather, flags ambiguity, and prompts for country confirmation."""
-    from backend.services.ai_chat_agent import run_agentic_chat, tool_get_weather
-
     # Test direct tool invocation with deterministic test weather
-    from backend.services.ai_chat_agent import _WEB_ALLOWED
+    from backend.services.ai_chat_agent import _WEB_ALLOWED, run_agentic_chat, tool_get_weather
 
     token = _WEB_ALLOWED.set(True)  # the weather tool only runs with web access on
     try:
@@ -508,6 +507,7 @@ def test_weather_country_confirmation_followup():
 def test_empty_think_recovery_synthesizes_grounded_answer():
     """Verifies that if an LLM spends all tokens inside <think>...</think> and leaves outside text blank, a grounded reply is generated."""
     from unittest.mock import patch
+
     from backend.services.ai_chat_agent import run_agentic_chat
 
     mock_llm_return = (
@@ -537,6 +537,7 @@ def test_empty_think_recovery_synthesizes_grounded_answer():
 def test_unclosed_think_recovery_synthesizes_grounded_answer():
     """Verifies that if an LLM is truncated mid-generation with an unclosed <think> tag, a grounded reply is generated."""
     from unittest.mock import patch
+
     from backend.services.ai_chat_agent import extract_and_strip_reasoning, run_agentic_chat
 
     mock_llm_return = (

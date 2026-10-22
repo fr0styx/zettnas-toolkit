@@ -8,12 +8,12 @@ import os
 import secrets
 import time
 import urllib.request
+
 import pytest
 from playwright.sync_api import sync_playwright
 
 import backend.config as config
 from backend.config import STATIC_DIR
-
 
 E2E_REQUIRED = os.environ.get("ZETTNAS_E2E_REQUIRED") == "1"
 
@@ -83,7 +83,7 @@ def get_live_server_auth_token(base_url="http://127.0.0.1:8082"):
         if os.path.exists(s_file):
             tok = secrets.token_urlsafe(32)
             try:
-                with open(s_file, "r") as f:
+                with open(s_file) as f:
                     sessions = json.load(f)
             except Exception:
                 sessions = {}
@@ -244,7 +244,7 @@ def test_e2e_html_structure_and_assets():
     if not os.path.isfile(index_path):
         _skip_or_fail("static/index.html is missing: run npm run build first")
 
-    with open(index_path, "r", encoding="utf-8") as f:
+    with open(index_path, encoding="utf-8") as f:
         html = f.read()
 
     # Verify critical components in index.html
@@ -261,7 +261,7 @@ def test_e2e_batch3_dom_elements():
     index_path = os.path.join(STATIC_DIR, "index.html")
     if not os.path.isfile(index_path):
         _skip_or_fail("static/index.html is missing: run npm run build first")
-    with open(index_path, "r", encoding="utf-8") as f:
+    with open(index_path, encoding="utf-8") as f:
         html = f.read()
 
     assert 'id="notif-center-panel"' in html
@@ -277,7 +277,7 @@ def test_e2e_batch4_dom_elements():
     index_path = os.path.join(STATIC_DIR, "index.html")
     if not os.path.isfile(index_path):
         _skip_or_fail("static/index.html is missing: run npm run build first")
-    with open(index_path, "r", encoding="utf-8") as f:
+    with open(index_path, encoding="utf-8") as f:
         html = f.read()
 
     assert 'id="fan-presets-bar"' in html
@@ -292,7 +292,7 @@ def test_e2e_batch5_dom_elements():
     index_path = os.path.join(STATIC_DIR, "index.html")
     if not os.path.isfile(index_path):
         _skip_or_fail("static/index.html is missing: run npm run build first")
-    with open(index_path, "r", encoding="utf-8") as f:
+    with open(index_path, encoding="utf-8") as f:
         html = f.read()
 
     assert 'id="mgmt-ups-status"' in html

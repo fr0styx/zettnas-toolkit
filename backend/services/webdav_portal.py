@@ -7,7 +7,7 @@ import html
 import os
 import time
 import urllib.parse
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 def format_size(bytes_val: int) -> str:
@@ -49,7 +49,7 @@ def get_file_icon(name: str, is_dir: bool) -> str:
     return "📄"
 
 
-def render_webdav_login(error_msg: Optional[str] = None) -> str:
+def render_webdav_login(error_msg: str | None = None) -> str:
     err_html = (
         f"""
     <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
@@ -218,7 +218,7 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
     else:
         abs_dir = resolved
 
-    items: List[Dict[str, Any]] = []
+    items: list[dict[str, Any]] = []
 
     if os.path.isdir(abs_dir):
         try:

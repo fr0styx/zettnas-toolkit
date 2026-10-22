@@ -57,7 +57,7 @@ def main():
     sftp_users_file = os.path.join(getattr(config, "DATA_DIR", "/app/data"), "sftp", "users.json")
     if os.path.exists(sftp_users_file):
         try:
-            with open(sftp_users_file, "r", encoding="utf-8") as f:
+            with open(sftp_users_file, encoding="utf-8") as f:
                 sftp_users = json.load(f)
             if isinstance(sftp_users, list):
                 for u in sftp_users:

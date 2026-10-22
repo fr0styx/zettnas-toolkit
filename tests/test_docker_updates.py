@@ -1,11 +1,12 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from backend.services.docker_updates import (
     _check_container_image_update,
     check_all_container_updates,
-    update_single_container,
     update_all_containers,
+    update_single_container,
 )
 
 
@@ -115,6 +116,7 @@ def test_extract_registry_from_image():
 def test_get_registry_auth_for_image_and_header(mock_load_creds):
     import base64
     import json
+
     from backend.services.docker_updates import get_registry_auth_for_image, get_registry_auth_header
 
     mock_load_creds.return_value = {

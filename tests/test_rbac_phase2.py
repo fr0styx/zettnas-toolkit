@@ -23,8 +23,9 @@ Verifies:
 """
 
 from unittest.mock import patch
-from fastapi.testclient import TestClient
+
 import pytest
+from fastapi.testclient import TestClient
 
 
 def _create_user_with_role(

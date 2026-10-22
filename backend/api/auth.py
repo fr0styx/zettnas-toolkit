@@ -2,16 +2,15 @@ import base64
 import hashlib
 import hmac
 import json
+import os
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
-
-import os
 
 import backend.config as config
 from backend.auth import (
@@ -26,8 +25,8 @@ from backend.auth import (
     revoke_session,
     validate_session,
 )
-from backend.confirmations import require_confirmation
 from backend.config import SECURITY_FILE, is_using_default_password, logger
+from backend.confirmations import require_confirmation
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json, read_json
 from backend.models.schemas import (
@@ -76,7 +75,7 @@ router = APIRouter(tags=["Authentication & Security"])
 _FREE_ATTEMPTS_USER = 5
 _FREE_ATTEMPTS_IP = 30
 _MAX_LOCKOUT_SECS = 15 * 60
-_failures: Dict[str, Dict[str, Any]] = {}  # key -> {"count": int, "locked_until": float, "last_seen": float}
+_failures: dict[str, dict[str, Any]] = {}  # key -> {"count": int, "locked_until": float, "last_seen": float}
 _failures_lock = threading.Lock()
 
 
@@ -174,7 +173,7 @@ def _persist_security() -> None:
     )
 
 
-def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
+def _get_authenticated_user(request: Request) -> dict[str, Any] | None:
     sess = getattr(request.state, "session", None)
     if sess and sess.get("user_id"):
         if sess.get("is_system"):
@@ -225,7 +224,7 @@ def create_mfa_token(user_id: str, username: str, remember_me: bool) -> str:
     return f"mfa_{b64}.{sig}"
 
 
-def verify_mfa_token(token: str) -> Optional[dict]:
+def verify_mfa_token(token: str) -> dict | None:
     if not token or not token.startswith("mfa_") or "." not in token:
         return None
     try:
@@ -251,7 +250,7 @@ def verify_mfa_token(token: str) -> Optional[dict]:
 
 
 def _build_session_response(
-    user: Dict[str, Any], remember_me: bool, request: Request, method: str = "password"
+    user: dict[str, Any], remember_me: bool, request: Request, method: str = "password"
 ) -> JSONResponse:
     ip = _client_ip(request)
     ua = request.headers.get("user-agent", "")
@@ -620,11 +619,11 @@ def logout(request: Request):
 
 
 # Stream Tickets (Single-Use, Short-Lived SSE/WebSocket tickets to prevent token leakage in query strings)
-_STREAM_TICKETS: Dict[str, Dict[str, Any]] = {}
+_STREAM_TICKETS: dict[str, dict[str, Any]] = {}
 _STREAM_TICKETS_LOCK = threading.RLock()
 
 
-def create_stream_ticket(user_id: str, username: str, scopes: List[str], role_id: str) -> str:
+def create_stream_ticket(user_id: str, username: str, scopes: list[str], role_id: str) -> str:
     import secrets
 
     ticket = f"zst_{secrets.token_urlsafe(32)}"
@@ -644,7 +643,7 @@ def create_stream_ticket(user_id: str, username: str, scopes: List[str], role_id
     return ticket
 
 
-def validate_and_consume_stream_ticket(ticket: str) -> Optional[Dict[str, Any]]:
+def validate_and_consume_stream_ticket(ticket: str) -> dict[str, Any] | None:
     if not ticket or not ticket.startswith("zst_"):
         return None
     now = time.time()
@@ -786,7 +785,7 @@ def get_users_list(request: Request):
 async def create_new_user(
     data: UserCreateRequest,
     request: Request,
-    principal: AuthenticatedPrincipal = Depends(require_scope("users:write")),
+    principal: AuthenticatedPrincipal = Depends(require_scope("users:write")),  # noqa: B008
 ):
     existing = get_user_by_username(data.username)
     if existing:
@@ -814,7 +813,7 @@ async def create_new_user(
         return error_response(400, str(e), error="invalid_request")
 
 
-def _sanitize_user_dict(u: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def _sanitize_user_dict(u: dict[str, Any] | None) -> dict[str, Any] | None:
     if not u:
         return None
     res = dict(u)
@@ -956,7 +955,7 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
 def delete_user_endpoint(
     user_id: str,
     request: Request,
-    principal: AuthenticatedPrincipal = Depends(require_scope("users:delete")),
+    principal: AuthenticatedPrincipal = Depends(require_scope("users:delete")),  # noqa: B008
 ):
     if principal.user_id == user_id:
         return error_response(400, "Cannot delete your own active account.")
@@ -1002,7 +1001,7 @@ def disable_default_admin_endpoint(
             "result": res,
         }
     except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        raise HTTPException(status_code=409, detail=str(e)) from e
 
 
 @router.get("/security/advisor", dependencies=[Depends(require_scope("system:view", "users:read"))])

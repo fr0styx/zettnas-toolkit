@@ -1,16 +1,17 @@
 import json
 import time
 from unittest.mock import MagicMock, patch
+
 import pytest
 
+from backend.hardware.network import (
+    execute_tailscale_down,
+    execute_tailscale_up,
+    get_mesh_vpn_status,
+)
 from backend.hardware.pal_storage import (
     GenericLinuxStorageAdapter,
     PlatformCapabilityError,
-)
-from backend.hardware.network import (
-    get_mesh_vpn_status,
-    execute_tailscale_up,
-    execute_tailscale_down,
 )
 
 

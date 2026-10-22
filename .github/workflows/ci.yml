@@ -46,7 +46,8 @@ jobs:
         run: ruff format --check app.py backend tests
 
       - name: Run Pytest Suite with Coverage
-        run: pytest --cov=backend --cov=app --cov-report=xml -v
+        # OPS-16: coverage may not drop below the floor (raise it as coverage grows)
+        run: pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=66 -v
 
   frontend:
     name: Frontend Build & Test

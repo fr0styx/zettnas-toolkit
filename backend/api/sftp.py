@@ -5,7 +5,8 @@ Exposes status, toggles, configuration, and user permissions for inbound SFTP fi
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
@@ -24,9 +25,9 @@ class SFTPToggleRequest(BaseModel):
 class SFTPUserCreateRequest(BaseModel):
     username: str = Field(..., min_length=2, max_length=32)
     display_name: str = ""
-    password: Optional[str] = None
-    pubkey: Optional[str] = None
-    shares: List[str] = Field(default_factory=list)
+    password: str | None = None
+    pubkey: str | None = None
+    shares: list[str] = Field(default_factory=list)
     read_only: bool = False
 
 
@@ -95,10 +96,10 @@ async def create_sftp_user(req: SFTPUserCreateRequest):
             item["password"] = "********"
         return {"status": "ok", "user": item}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"[SFTP] Failed to add user: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete(

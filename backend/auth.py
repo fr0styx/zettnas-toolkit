@@ -5,7 +5,7 @@ import os
 import secrets
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from urllib.parse import parse_qs, urlparse
 
 from fastapi import Depends, HTTPException, Request
@@ -69,7 +69,7 @@ def is_internal_token(token: str) -> bool:
     return bool(token) and hmac.compare_digest(token, config.LCD_INTERNAL_TOKEN)
 
 
-def get_current_session(token: str) -> Optional[Dict[str, Any]]:
+def get_current_session(token: str) -> dict[str, Any] | None:
     """Retrieve full authenticated session metadata (user_id, username, role_id, scopes)."""
     if not token:
         return None
@@ -134,9 +134,7 @@ def validate_session(token: str) -> bool:
         from backend.api.vms import _CONSOLE_TICKETS
 
         entry = _CONSOLE_TICKETS.get(token)
-        if entry and entry.get("expires_at", 0) > time.time():
-            return True
-        return False
+        return bool(entry and entry.get("expires_at", 0) > time.time())
 
     # 1. Scoped API token (users DB only)
     if token.startswith("zat_"):
@@ -149,7 +147,7 @@ def validate_session(token: str) -> bool:
 def invalidate_all_sessions():
     purge_legacy_session_files()
     try:
-        from backend.users_db import USERS_DB_PATH, _SESSION_CACHE, _SESSION_CACHE_LOCK, users_db_session
+        from backend.users_db import _SESSION_CACHE, _SESSION_CACHE_LOCK, USERS_DB_PATH, users_db_session
 
         with _SESSION_CACHE_LOCK:
             _SESSION_CACHE.clear()
@@ -267,7 +265,7 @@ _PUBLIC_API_PATHS = {
 _DOCS_PATHS = {"/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
 
 
-def is_ip_in_trusted_proxies(client_ip: str, trusted_list: Optional[List[str]] = None) -> bool:
+def is_ip_in_trusted_proxies(client_ip: str, trusted_list: list[str] | None = None) -> bool:
     """Check if client IP matches configured trusted proxies or CIDR subnets."""
     if not client_ip or client_ip == "unknown":
         return False
@@ -308,7 +306,7 @@ _PASSWORD_CHANGE_ALLOWED = {
 }
 
 
-def password_change_pending(sess: Dict[str, Any]) -> bool:
+def password_change_pending(sess: dict[str, Any]) -> bool:
     if not sess or sess.get("is_system") or sess.get("is_proxy_sso"):
         return False
     if sess.get("must_change_password"):
@@ -316,7 +314,7 @@ def password_change_pending(sess: Dict[str, Any]) -> bool:
     return sess.get("role_id") == "superadmin" and config.is_using_default_password()
 
 
-def _allowed_while_password_change_pending(method: str, path: str, sess: Dict[str, Any]) -> bool:
+def _allowed_while_password_change_pending(method: str, path: str, sess: dict[str, Any]) -> bool:
     norm = path.replace("/api/v1/", "/api/").rstrip("/") or "/"
     if (method, norm) in _PASSWORD_CHANGE_ALLOWED or method == "OPTIONS":
         return True
@@ -445,7 +443,7 @@ async def auth_middleware(request: Request, call_next):
 # ==============================================================================
 
 
-def has_scope(user_scopes: List[str], required_scope: str) -> bool:
+def has_scope(user_scopes: list[str], required_scope: str) -> bool:
     """Evaluates whether granted user_scopes satisfy the required_scope.
 
     Supports:
@@ -484,16 +482,16 @@ def has_scope(user_scopes: List[str], required_scope: str) -> bool:
 class AuthenticatedPrincipal:
     """Represents an active, authenticated user or service token principal with scopes."""
 
-    def __init__(self, data: Optional[Dict[str, Any]] = None, **kwargs):
+    def __init__(self, data: dict[str, Any] | None = None, **kwargs):
         payload = dict(data) if isinstance(data, dict) else {}
         payload.update(kwargs)
         self.user_id: str = payload.get("user_id", "")
         self.username: str = payload.get("username", "")
         self.role_id: str = payload.get("role_id", "share_user")
-        self.scopes: List[str] = payload.get("scopes", [])
+        self.scopes: list[str] = payload.get("scopes", [])
         self.is_api_token: bool = payload.get("is_api_token", False)
         self.is_system: bool = payload.get("is_system", False)
-        self.raw_data: Dict[str, Any] = payload
+        self.raw_data: dict[str, Any] = payload
 
     def has_scope(self, scope: str) -> bool:
         return has_scope(self.scopes, scope)
@@ -553,9 +551,7 @@ def validate_websocket_origin(websocket: Any, is_cookie_auth: bool = False) -> b
     """
     origin = websocket.headers.get("origin")
     if not origin:
-        if is_cookie_auth:
-            return False
-        return True
+        return not is_cookie_auth
 
     from urllib.parse import urlparse
 
@@ -584,7 +580,4 @@ def validate_websocket_origin(websocket: Any, is_cookie_auth: bool = False) -> b
         return True
 
     trusted_proxies = getattr(config, "TRUSTED_PROXIES", [])
-    if origin_host in trusted_proxies:
-        return True
-
-    return False
+    return origin_host in trusted_proxies

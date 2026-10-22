@@ -19,22 +19,23 @@ import asyncio
 import json
 import os
 import threading
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any, Optional
 
 from backend.config import logger
 
-EventCallback = Callable[[str, str, Dict[str, Any]], None]
+EventCallback = Callable[[str, str, dict[str, Any]], None]
 
 
 class PersistentQmpClient:
-    def __init__(self, vm_id: str, sock_path: str, on_event: Optional[EventCallback] = None):
+    def __init__(self, vm_id: str, sock_path: str, on_event: EventCallback | None = None):
         self.vm_id = vm_id
         self.sock_path = sock_path
         self.on_event = on_event
-        self._reader: Optional[asyncio.StreamReader] = None
-        self._writer: Optional[asyncio.StreamWriter] = None
-        self._listener: Optional[asyncio.Task] = None
-        self._pending: Dict[int, asyncio.Future] = {}
+        self._reader: asyncio.StreamReader | None = None
+        self._writer: asyncio.StreamWriter | None = None
+        self._listener: asyncio.Task | None = None
+        self._pending: dict[int, asyncio.Future] = {}
         self._seq = 0
         self._connect_lock = asyncio.Lock()
 
@@ -42,7 +43,7 @@ class PersistentQmpClient:
     def connected(self) -> bool:
         return self._writer is not None and not self._writer.is_closing()
 
-    async def _read_json(self) -> Dict[str, Any]:
+    async def _read_json(self) -> dict[str, Any]:
         line = await self._reader.readline()
         if not line:
             raise ConnectionError("QMP connection closed")
@@ -74,14 +75,14 @@ class PersistentQmpClient:
                 raise
             self._listener = asyncio.ensure_future(self._listen())
 
-    def _dispatch_event(self, msg: Dict[str, Any]) -> None:
+    def _dispatch_event(self, msg: dict[str, Any]) -> None:
         if not self.on_event:
             return
         loop = asyncio.get_running_loop()
         # Callbacks may touch disk (event log); keep them off the engine loop.
         loop.run_in_executor(None, self._safe_event, msg.get("event", ""), msg.get("data") or {})
 
-    def _safe_event(self, event: str, data: Dict[str, Any]) -> None:
+    def _safe_event(self, event: str, data: dict[str, Any]) -> None:
         try:
             self.on_event(self.vm_id, event, data)
         except Exception as e:
@@ -117,16 +118,16 @@ class PersistentQmpClient:
         self._pending.clear()
 
     async def execute(
-        self, command: str, arguments: Optional[Dict[str, Any]] = None, timeout: float = 2.5
-    ) -> Dict[str, Any]:
+        self, command: str, arguments: dict[str, Any] | None = None, timeout: float = 2.5
+    ) -> dict[str, Any]:
         """Runs a QMP command. Returns QEMU's reply ({"return": ...} or {"error": ...})."""
         try:
             await self.connect(timeout)
-        except (OSError, ConnectionError, ValueError, asyncio.TimeoutError) as e:
+        except (TimeoutError, OSError, ConnectionError, ValueError) as e:
             return {"error": f"QMP connect failed: {e or e.__class__.__name__}"}
         self._seq += 1
         seq = self._seq
-        payload: Dict[str, Any] = {"execute": command, "id": seq}
+        payload: dict[str, Any] = {"execute": command, "id": seq}
         if arguments:
             payload["arguments"] = arguments
         fut = asyncio.get_running_loop().create_future()
@@ -135,7 +136,7 @@ class PersistentQmpClient:
             self._writer.write(json.dumps(payload).encode("utf-8") + b"\n")
             await self._writer.drain()
             return await asyncio.wait_for(fut, timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return {"error": f"QMP command '{command}' timed out after {timeout:g}s"}
         except (OSError, ConnectionError, AttributeError) as e:
             self._drop()
@@ -157,12 +158,12 @@ class PersistentQmpClient:
 class QmpEngine:
     """One PersistentQmpClient per VM, driven from a private asyncio loop thread."""
 
-    def __init__(self, sock_path_fn: Callable[[str], str], on_event: Optional[EventCallback] = None):
+    def __init__(self, sock_path_fn: Callable[[str], str], on_event: EventCallback | None = None):
         self._sock_path_fn = sock_path_fn
         self.on_event = on_event
-        self._clients: Dict[str, PersistentQmpClient] = {}
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._thread: Optional[threading.Thread] = None
+        self._clients: dict[str, PersistentQmpClient] = {}
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._thread: threading.Thread | None = None
         self._lock = threading.Lock()
 
     def _ensure_loop(self) -> asyncio.AbstractEventLoop:
@@ -199,8 +200,8 @@ class QmpEngine:
         return asyncio.run_coroutine_threadsafe(runner(), loop).result(timeout)
 
     def execute(
-        self, vm_id: str, command: str, arguments: Optional[Dict[str, Any]] = None, timeout: float = 2.5
-    ) -> Dict[str, Any]:
+        self, vm_id: str, command: str, arguments: dict[str, Any] | None = None, timeout: float = 2.5
+    ) -> dict[str, Any]:
         """Blocking QMP call (use from threads, e.g. via asyncio.to_thread)."""
         path = self._sock_path_fn(vm_id)
         if not os.path.exists(path):

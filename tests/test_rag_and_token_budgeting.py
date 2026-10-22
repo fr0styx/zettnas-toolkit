@@ -8,6 +8,7 @@ import json
 import sqlite3
 import struct
 import unittest.mock as mock
+
 import pytest
 
 from backend.services.ai_conversations_db import (
@@ -32,7 +33,6 @@ from backend.services.rag_engine import (
     load_sqlite_vec_extension,
     unpack_embedding,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -698,6 +698,7 @@ def test_sql_intent_classification_case_insensitive():
 def test_vision_pipeline_uses_thumb_webp_when_disk_standby(tmp_path):
     """Verifies vision analysis uses SSD thumbnail when backing disk is in standby."""
     from PIL import Image
+
     from backend.services.rag_engine import analyze_photo_asset
 
     # Create dummy WebP thumbnail in memory

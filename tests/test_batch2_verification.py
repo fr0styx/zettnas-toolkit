@@ -8,7 +8,9 @@ Verification test suite for Batch 2:
 """
 
 from unittest.mock import patch
+
 from fastapi.testclient import TestClient
+
 from backend.main import app
 
 
@@ -84,8 +86,8 @@ def test_system_power_action_dispatch(monkeypatch):
 
 
 def test_prometheus_metrics_with_live_stats(monkeypatch):
-    from backend.state import Z_STATE
     from backend.api.metrics import prometheus_metrics
+    from backend.state import Z_STATE
 
     # Set up cached stats matching stats_collector schema
     Z_STATE.cached_stats = {

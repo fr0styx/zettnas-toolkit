@@ -7,16 +7,16 @@ logs power events in SQLite, and provides homelab outage drills.
 import os
 import threading
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from backend.config import logger
 from backend.db import log_ups_event
 from backend.hardware.ups import load_ups_config, read_ups_status
 from backend.state import Z_STATE, add_event
 
-_outage_start_ts: Optional[float] = None
-_outage_start_charge: Optional[float] = None
-_outage_start_volts: Optional[float] = None
+_outage_start_ts: float | None = None
+_outage_start_charge: float | None = None
+_outage_start_volts: float | None = None
 _failsafe_engaged = False
 _simulation_active = False
 _simulation_end_ts = 0.0
@@ -29,7 +29,7 @@ def is_simulation_active() -> bool:
     return _simulation_active
 
 
-def trigger_outage_simulation(duration_sec: int = 15) -> Dict[str, Any]:
+def trigger_outage_simulation(duration_sec: int = 15) -> dict[str, Any]:
     """Triggers a simulated power outage to test desktop warning overlays and alerts."""
     global _simulation_active, _simulation_end_ts
     _simulation_active = True
@@ -111,12 +111,12 @@ def send_ups_cut_power():
                 s.settimeout(2.0)
                 s.connect((host, port))
                 if cfg.get("username"):
-                    s.sendall(f"USERNAME {cfg['username']}\n".encode("utf-8"))
+                    s.sendall(f"USERNAME {cfg['username']}\n".encode())
                     s.recv(1024)
                 if cfg.get("password"):
-                    s.sendall(f"PASSWORD {cfg['password']}\n".encode("utf-8"))
+                    s.sendall(f"PASSWORD {cfg['password']}\n".encode())
                     s.recv(1024)
-                s.sendall(f"INSTCMD {ups_name} load.off.delay 60\n".encode("utf-8"))
+                s.sendall(f"INSTCMD {ups_name} load.off.delay 60\n".encode())
                 s.recv(1024)
                 logger.info("[UPS FAILSAFE] Issued 'load.off.delay 60' to NUT.")
         except Exception as e:
@@ -141,7 +141,7 @@ def signal_host_powerdown():
     return False
 
 
-def execute_atomic_failsafe_shutdown(charge: Optional[float], runtime: Optional[float], reason: str):
+def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None, reason: str):
     """Executes the complete 4-phase atomic failsafe shutdown sequence."""
     global _failsafe_engaged
     if _failsafe_engaged:
@@ -193,7 +193,7 @@ def execute_atomic_failsafe_shutdown(charge: Optional[float], runtime: Optional[
     signal_host_powerdown()
 
 
-def check_ups_power_watchdog(ups_data: Dict[str, Any], now: float):
+def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
     """Called every stats collection tick to evaluate UPS state, log events, and enforce policies."""
     global _outage_start_ts, _outage_start_charge, _outage_start_volts, _failsafe_engaged
 

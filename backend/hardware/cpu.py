@@ -44,7 +44,7 @@ def _find_hwmon():
 def read_cpu_temp():
     if Z_STATE.cached_cpu_temp_path and os.path.exists(Z_STATE.cached_cpu_temp_path):
         try:
-            val = int(open(Z_STATE.cached_cpu_temp_path).read().strip() or 0) / 1000
+            val = int(open(Z_STATE.cached_cpu_temp_path).read().strip() or 0) / 1000  # noqa: SIM115
             if val > 0:
                 return round(val)
         except Exception:
@@ -53,10 +53,10 @@ def read_cpu_temp():
     # 1. Hardware Monitor Drivers (coretemp, k10temp, zenpower, cpu_thermal)
     for h in sorted(glob.glob(os.path.join(HOST_SYS, "class/hwmon/hwmon*"))):
         try:
-            name = open(os.path.join(h, "name")).read().strip()
+            name = open(os.path.join(h, "name")).read().strip()  # noqa: SIM115
             if name in ("coretemp", "k10temp", "zenpower", "cpu_thermal"):
                 for t in sorted(glob.glob(os.path.join(h, "temp*_input"))):
-                    val = int(open(t).read().strip() or 0) / 1000
+                    val = int(open(t).read().strip() or 0) / 1000  # noqa: SIM115
                     if val > 0:
                         Z_STATE.cached_cpu_temp_path = t
                         return round(val)
@@ -72,9 +72,9 @@ def read_cpu_temp():
                 temp_file = os.path.join(tz, "temp")
                 type_file = os.path.join(tz, "type")
                 if os.path.exists(temp_file):
-                    tz_type = open(type_file).read().strip().lower() if os.path.exists(type_file) else ""
+                    tz_type = open(type_file).read().strip().lower() if os.path.exists(type_file) else ""  # noqa: SIM115
                     if not tz_type or any(k in tz_type for k in ("acpi", "cpu", "x86_pkg", "soc", "package")):
-                        val = int(open(temp_file).read().strip() or 0)
+                        val = int(open(temp_file).read().strip() or 0)  # noqa: SIM115
                         if val > 1000:
                             val /= 1000
                         if val > 0:

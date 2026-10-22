@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 def test_get_app_catalog(client, auth_headers):

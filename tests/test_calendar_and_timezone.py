@@ -4,6 +4,7 @@ Verifies CRUD operations, SSRF protection, iCal parsing, and .ics export.
 """
 
 from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
 

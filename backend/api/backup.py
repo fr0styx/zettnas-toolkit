@@ -1,18 +1,18 @@
 import asyncio
-import aiofiles
 import os
 import tempfile
 import time
 import zipfile
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Any, Optional
 
+import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
-from backend.confirmations import require_confirmation
 from backend.config import CLIENT_PREFS_FILE, logger
+from backend.confirmations import require_confirmation
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
 from backend.services.backup_engine import (
@@ -36,31 +36,31 @@ router = APIRouter(tags=["Backup"])
 
 
 class BackupJobModel(BaseModel):
-    id: Optional[str] = None
+    id: str | None = None
     name: str = Field(..., description="Human-readable job name")
     source_pool: str = Field("default", description="Storage pool ID")
     source_subvolume: str = Field(..., description="Subvolume or share name to backup")
     destination_type: str = Field("remote", description="'remote' or 'local_snapshot'")
-    remote_name: Optional[str] = Field("", description="Configured Rclone remote name")
-    remote_path: Optional[str] = Field("", description="Remote bucket or directory path")
+    remote_name: str | None = Field("", description="Configured Rclone remote name")
+    remote_path: str | None = Field("", description="Remote bucket or directory path")
     schedule: str = Field("daily", description="'hourly', 'daily', 'weekly', or 'manual'")
     retention_count: int = Field(7, description="Number of historical snapshots to retain")
     enabled: bool = Field(True, description="Whether scheduled execution is active")
     encrypted: bool = Field(False, description="Enable client-side rclone crypt encryption")
-    encryption_password: Optional[str] = Field(None, description="Password for client-side encryption")
+    encryption_password: str | None = Field(None, description="Password for client-side encryption")
 
 
 class SnapshotCreateModel(BaseModel):
     pool_id: str = "default"
     subvol_name: str
-    snapshot_name: Optional[str] = None
+    snapshot_name: str | None = None
     readonly: bool = True
 
 
 class SnapshotRestoreModel(BaseModel):
     pool_id: str = "default"
     snapshot_name: str
-    target_subvol: Optional[str] = ""
+    target_subvol: str | None = ""
 
 
 # -------------------------------------------------------------------------
@@ -84,7 +84,7 @@ async def save_client_preferences(request: Request):
     try:
         data = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
+        raise HTTPException(status_code=400, detail="Invalid JSON body") from None
     if not isinstance(data, dict):
         raise HTTPException(status_code=400, detail="Preferences must be a JSON dictionary")
 
@@ -167,12 +167,12 @@ async def restore_backup(request: Request):
             "client_preferences": client_prefs,
         }
     except zipfile.BadZipFile:
-        raise HTTPException(status_code=400, detail="Invalid zip archive")
+        raise HTTPException(status_code=400, detail="Invalid zip archive") from None
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
     except Exception as e:
         logger.error(f"[BACKUP] Restore failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
     finally:
         if tmp_path:
             try:
@@ -222,10 +222,10 @@ async def trigger_backup_job(job_id: str):
         result = await asyncio.to_thread(execute_backup_job, job_id)
         return {"status": "ok", "result": result}
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise HTTPException(status_code=404, detail=str(ve)) from ve
     except Exception as e:
         logger.error(f"[HYPER-BACKUP] Manual execution failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/backup/history", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
@@ -251,7 +251,7 @@ def list_pool_snapshots(pool_id: str = "default"):
         return {"status": "ok", "pool_id": pool_id, "snapshots": snaps}
     except Exception as e:
         logger.error(f"[SNAPSHOTS] Failed to list snapshots for pool {pool_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -271,10 +271,10 @@ def create_pool_snapshot(req: SnapshotCreateModel):
         )
         return {"status": "ok", "result": res}
     except PlatformCapabilityError as pce:
-        raise HTTPException(status_code=400, detail=str(pce))
+        raise HTTPException(status_code=400, detail=str(pce)) from pce
     except Exception as e:
         logger.error(f"[SNAPSHOTS] Failed to create snapshot {snap_name}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post(
@@ -294,12 +294,12 @@ def restore_pool_snapshot(req: SnapshotRestoreModel):
             raise HTTPException(status_code=400, detail=res.get("message") or "Snapshot restore failed")
         return {"status": "ok", "result": res}
     except PlatformCapabilityError as pce:
-        raise HTTPException(status_code=400, detail=str(pce))
+        raise HTTPException(status_code=400, detail=str(pce)) from pce
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"[SNAPSHOTS] Failed to restore snapshot {req.snapshot_name}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete(
@@ -316,10 +316,10 @@ def delete_pool_snapshot(pool_id: str, snapshot_name: str):
         res = pal.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
         return {"status": "ok", "result": res}
     except PlatformCapabilityError as pce:
-        raise HTTPException(status_code=400, detail=str(pce))
+        raise HTTPException(status_code=400, detail=str(pce)) from pce
     except Exception as e:
         logger.error(f"[SNAPSHOTS] Failed to delete snapshot {snapshot_name}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # -------------------------------------------------------------------------
@@ -329,12 +329,12 @@ def delete_pool_snapshot(pool_id: str, snapshot_name: str):
 
 class AppBackupRequest(BaseModel):
     reason: str = Field("on-demand", description="'on-demand', 'uninstall', or 'scheduled'")
-    custom_name: Optional[str] = Field(None, description="Optional custom name for the backup archive")
+    custom_name: str | None = Field(None, description="Optional custom name for the backup archive")
 
 
 class AppRestoreRequest(BaseModel):
     recreate_container: bool = Field(True, description="Whether to recreate the container after restoring appdata")
-    target_mount_overrides: Optional[Dict[str, str]] = Field(
+    target_mount_overrides: dict[str, str] | None = Field(
         None, description="Optional mapping of source -> new destination path"
     )
 
@@ -343,7 +343,7 @@ class AppRestoreRequest(BaseModel):
     "/docker/containers/{container_id}/backup",
     dependencies=[Depends(require_scope("containers:manage", "backup:write", "backup:manage"))],
 )
-async def backup_container_app(container_id: str, req: Optional[AppBackupRequest] = None):
+async def backup_container_app(container_id: str, req: AppBackupRequest | None = None):
     """Takes an on-demand backup of an installed container app's data and synthesized compose config."""
     from backend.services.app_backup import create_app_backup
 
@@ -353,17 +353,17 @@ async def backup_container_app(container_id: str, req: Optional[AppBackupRequest
         record = await asyncio.to_thread(create_app_backup, container_id, reason=reason, custom_name=custom_name)
         return {"status": "ok", "backup": record}
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise HTTPException(status_code=404, detail=str(ve)) from ve
     except Exception as e:
         logger.error(f"[App Backup] Failed to backup container {container_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get(
     "/backup/apps",
     dependencies=[Depends(require_scope("backup:read", "backup:manage", "containers:read"))],
 )
-async def list_app_backups_endpoint(app_name: Optional[str] = None):
+async def list_app_backups_endpoint(app_name: str | None = None):
     """Lists saved app data & configuration archives, optionally filtered by app name."""
     from backend.services.app_backup import list_app_backups
 
@@ -372,7 +372,7 @@ async def list_app_backups_endpoint(app_name: Optional[str] = None):
         return {"status": "ok", "backups": backups}
     except Exception as e:
         logger.error(f"[App Backup] Failed to list app backups: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get(
@@ -404,7 +404,7 @@ async def download_app_backup(backup_id: str):
     "/backup/apps/{backup_id}/restore",
     dependencies=[Depends(require_scope("containers:manage", "backup:write", "backup:manage"))],
 )
-async def restore_app_backup_endpoint(backup_id: str, req: Optional[AppRestoreRequest] = None):
+async def restore_app_backup_endpoint(backup_id: str, req: AppRestoreRequest | None = None):
     """Restores application configuration and appdata from a backup archive."""
     from backend.services.app_backup import restore_app_backup
 
@@ -419,10 +419,10 @@ async def restore_app_backup_endpoint(backup_id: str, req: Optional[AppRestoreRe
         )
         return {"status": "ok", "result": res}
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise HTTPException(status_code=404, detail=str(ve)) from ve
     except Exception as e:
         logger.error(f"[App Backup] Failed to restore backup {backup_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.delete(
@@ -445,4 +445,4 @@ async def delete_app_backup_endpoint(backup_id: str):
         raise
     except Exception as e:
         logger.error(f"[App Backup] Failed to delete backup {backup_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
