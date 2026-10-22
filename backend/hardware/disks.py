@@ -824,6 +824,14 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
             health = prev_h
 
         is_standby = health == "standby"
+        # Predicted failure (D6): a healthy-looking disk that is degrading shows as warn/crit
+        risk = (getattr(Z_STATE, "disk_risk", {}) or {}).get(dev_name) or {}
+        risk_level = str(risk.get("risk") or "low")
+        if not is_standby and health in ("ok", "unknown"):
+            if risk_level == "critical":
+                health = "crit"
+            elif risk_level == "high":
+                health = "warn"
         prev_count = Z_STATE.prev_disk_io.get(dev_name, 0)
         curr_count = curr_io.get(dev_name, 0)
         io_active = (curr_count > prev_count) if prev_count > 0 else False
@@ -838,6 +846,8 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
                 "temp": temp,
                 "role": role,
                 "health": health,
+                "risk": risk_level,
+                "risk_advice": risk.get("advice", ""),
                 "standby": is_standby,
                 "active": io_active,
                 "is_nvme": is_nvme,

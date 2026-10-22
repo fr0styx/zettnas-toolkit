@@ -53,6 +53,7 @@ class ZettState:
         }
         self.cached_smart_data = {}
         self.cached_smart_time = {}
+        self.disk_risk = {}  # dev -> predicted failure risk (D6)
         self.last_smart_scan = {}
         self.copy_active = False
         self.copy_status = "idle"

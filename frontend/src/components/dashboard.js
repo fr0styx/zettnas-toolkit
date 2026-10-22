@@ -183,7 +183,9 @@ export function diskTile(d) {
   el.dataset.dev = d.dev || d.name;
   el.title = isStandby
     ? `${d.name}${isParity ? ' [PARITY]' : ''} is in standby (spun-down)`
-    : `Click to inspect S.M.A.R.T. health for ${d.name}${isParity ? ' [PARITY]' : ''}`;
+    : (d.risk === 'high' || d.risk === 'critical')
+      ? `${d.name}: likely to fail soon. ${d.risk_advice || 'Back up its data and plan a replacement.'}`
+      : `Click to inspect S.M.A.R.T. health for ${d.name}${isParity ? ' [PARITY]' : ''}`;
 
   const tempHtml = isStandby
     ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span></div>`

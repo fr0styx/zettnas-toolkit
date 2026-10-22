@@ -888,6 +888,12 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
             risk = str(v.get("failure_risk", "")).lower()
             pred = v.get("predictive_velocity", {})
             is_accel = bool(pred.get("is_accelerating", False))
+            # Shown on the desktop and the front LCD (D6)
+            Z_STATE.disk_risk[dev] = {
+                "risk": risk or "low",
+                "probability": v.get("failure_probability"),
+                "advice": str(v.get("recommendation") or "")[:200],
+            }
 
             if shedding or realloc_7d > 0 or risk == "critical" or is_accel:
                 last_alert_time = _SMART_VELOCITY_LAST_ALERT.get(dev, 0)
