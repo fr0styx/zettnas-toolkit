@@ -152,20 +152,27 @@ def test_e2e_live_desktop_session_and_badge():
         except Exception as e:
             _skip_or_fail(f"Playwright chromium browser not available on test runner: {e}")
 
-        context = browser.new_context(
-            viewport={"width": 1440, "height": 900},
-            storage_state={
-                "cookies": [],
-                "origins": [
-                    {
-                        "origin": "http://127.0.0.1:8082",
-                        "localStorage": [{"name": "zettnas_token", "value": token}],
-                    }
-                ],
-            },
-        )
+        # Sign in through the real login form: the session must arrive as an HttpOnly
+        # cookie and never be readable from page scripts (FE-05).
+        context = browser.new_context(viewport={"width": 1440, "height": 900})
         page = context.new_page()
         page.goto("http://127.0.0.1:8082/", wait_until="domcontentloaded", timeout=12000)
+        if page.is_visible("#login-toggle-manual"):
+            page.click("#login-toggle-manual")
+        if page.is_visible("#login-username"):
+            page.fill("#login-username", "admin")
+        page.fill("#login-password", os.environ.get("WEB_PASSWORD", "admin"))
+        page.click("#login-btn")
+        page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
+
+        cookies = {c["name"]: c for c in context.cookies()}
+        assert "zettnas_session" in cookies and cookies["zettnas_session"]["httpOnly"]
+        assert page.evaluate("() => localStorage.getItem('zettnas_token')") is None
+        assert page.evaluate("() => document.cookie").find("zettnas_session") == -1
+        # An authenticated API call made by the page itself succeeds with just the cookie
+        assert page.evaluate("async () => (await fetch('/api/auth/me')).status") == 200
+        # and a reload keeps the session
+        page.reload(wait_until="domcontentloaded")
 
         # Check suite badge has NAS WORKBENCH
         badge = page.wait_for_selector("#suite-brand-badge", timeout=5000)

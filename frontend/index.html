@@ -15,12 +15,10 @@
     try {
       var params = new URLSearchParams(window.location.search);
       var lcdToken = params.get('lcd_token');
-      if (lcdToken) {
-        try { localStorage.setItem('zettnas_token', lcdToken); } catch (e) {}
-      }
-      var token = localStorage.getItem('zettnas_token');
+      // The session itself is an HttpOnly cookie; this only picks the first screen.
+      var signedIn = localStorage.getItem('zettnas_signed_in') === '1' || !!localStorage.getItem('zettnas_token');
       var isLcd = window.location.search.indexOf('mode=lcd') !== -1 || !!lcdToken;
-      if (token || isLcd) {
+      if (signedIn || isLcd) {
         document.documentElement.classList.add('has-auth-session');
       } else {
         document.documentElement.classList.add('auth-required');
