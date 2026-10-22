@@ -2,7 +2,7 @@
 # Stage 1: Build modern offline-first frontend assets
 # =========================================================================
 # Base images are pinned by digest (OPS-19); Dependabot proposes updates.
-FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:6a1c190e17215d844926b0677f4bf87273ff7d5e54db06d3b5b5863ab0b09a3d AS frontend-builder
+FROM --platform=$BUILDPLATFORM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS frontend-builder
 
 WORKDIR /build
 
