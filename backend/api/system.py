@@ -73,6 +73,12 @@ router = APIRouter(tags=["System & Storage"])
 _PROCESS_STARTED = time.time()
 
 
+def _image_variant() -> str:
+    from backend.config import IMAGE_VARIANT
+
+    return IMAGE_VARIANT
+
+
 def _daemon_status() -> dict:
     from backend.services.supervisor import daemon_status
 
@@ -121,6 +127,7 @@ def health():
     body = {
         "status": status,
         "version": __version__,
+        "image_variant": _image_variant(),
         "checks": checks,
         "daemons": {k: {"state": v["state"], "restarts": v["restarts"]} for k, v in _daemon_status().items()},
         "collector_heartbeat_age": round(time.time() - hb, 1) if hb else None,
@@ -950,7 +957,9 @@ async def check_system_updates(force: bool = False, channel: str = "stable"):
     result = await _check_system_updates_by_version(force=force, channel=channel)
     if result.get("digest_checked"):
         return result
-    tag = "edge" if result.get("channel") == "edge" else "latest"
+    from backend.config import variant_tag
+
+    tag = variant_tag("edge" if result.get("channel") == "edge" else "latest")
     try:
         remote = await _registry_digest(tag)
     except Exception as e:
@@ -1153,10 +1162,10 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         if not _is_official_image_ref(req.target_image):
             raise HTTPException(status_code=400, detail=f"Updates can only install {_IMAGE_REPO} images.")
         target_img = req.target_image
-    elif channel == "edge":
-        target_img = "ghcr.io/fr0styx/zettnas-toolkit:edge"
     else:
-        target_img = "ghcr.io/fr0styx/zettnas-toolkit:latest"
+        from backend.config import variant_tag
+
+        target_img = f"ghcr.io/fr0styx/zettnas-toolkit:{variant_tag('edge' if channel == 'edge' else 'latest')}"
 
     # Invalidate cached update check so immediate post-update checks reflect the new state
     _last_update_check[channel]["data"] = None

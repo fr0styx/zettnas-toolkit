@@ -28,6 +28,7 @@ LABEL net.unraid.docker.webui="http://[IP]:[PORT:8082]/"
 LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
 LABEL net.unraid.docker.shell="bash"
 
+# Core: disks, SMART, UPS, USB and cloud remotes (OPS-11)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
     nvme-cli \
@@ -37,36 +38,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     usbutils \
     rclone \
     fuse3 \
-    qemu-system-x86 \
-    qemu-system-arm \
-    qemu-utils \
-    ovmf \
-    swtpm \
-    qemu-system-modules-spice \
-    qemu-system-modules-opengl \
-    libslirp0 \
-    chromium \
-    chromium-sandbox \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
-    libgl1-mesa-dri \
-    mesa-va-drivers \
-    fonts-liberation \
-    fonts-noto-cjk \
-    fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*
 
 # Multi-arch Playwright support (linux/amd64 and linux/arm64)
@@ -79,6 +50,47 @@ COPY requirements.txt requirements.lock requirements-dev.txt ./
 ARG DEV_BUILD=0
 RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock \
     && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
+
+# VARIANT=full (default) adds virtual machines (QEMU, OVMF, swtpm) and the front
+# LCD renderer (headless Chromium and fonts). VARIANT=core leaves them out: a
+# smaller image for servers without the LCD that don't run VMs. Published as
+# the -core tags (latest-core, edge-core, …).
+ARG VARIANT=full
+ENV ZETTNAS_IMAGE_VARIANT=${VARIANT}
+RUN if [ "$VARIANT" = "full" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends \
+        qemu-system-x86 \
+        qemu-system-arm \
+        qemu-utils \
+        ovmf \
+        swtpm \
+        qemu-system-modules-spice \
+        qemu-system-modules-opengl \
+        libslirp0 \
+        chromium \
+        chromium-sandbox \
+        libnss3 \
+        libnspr4 \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libcups2 \
+        libdrm2 \
+        libxkbcommon0 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxrandr2 \
+        libgbm1 \
+        libpango-1.0-0 \
+        libcairo2 \
+        libasound2 \
+        libgl1-mesa-dri \
+        mesa-va-drivers \
+        fonts-liberation \
+        fonts-noto-cjk \
+        fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*; \
+    elif [ "$VARIANT" != "core" ]; then echo "VARIANT must be full or core" >&2; exit 1; fi
 
 # Build metadata arguments injected by CI
 ARG BUILD_COMMIT=""

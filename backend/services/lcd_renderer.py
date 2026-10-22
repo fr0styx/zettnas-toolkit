@@ -97,6 +97,13 @@ def render_lcd_loop():
         logger.info("[LCD] No auxiliary front-panel LCD detected or ENABLE_FB=0. Running web-only.")
         return
 
+    chromium = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "/usr/bin/chromium")
+    if not os.path.exists(chromium):
+        logger.info(
+            "[LCD] The core image has no LCD renderer (no Chromium). Use the full image to drive the front LCD."
+        )
+        return
+
     fb_path = find_fb_device(writable_only=True)
     if not fb_path:
         logger.info(

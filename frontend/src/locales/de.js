@@ -2061,5 +2061,7 @@ export default {
   "docker.bulk_stop_confirm": "Die {count} ausgewählten Container stoppen?",
   "docker.bulk_stop_ok": "Stoppen",
   "setup.current_password": "Aktuelles Passwort",
-  "fm.path_input_label": "Ordnerpfad"
+  "fm.path_input_label": "Ordnerpfad",
+  "vm.core_image": "Keine VM-Unterstützung im Core-Image",
+  "vm.core_image_hint": "Wechsle auf das volle Image (Tag latest statt latest-core), um virtuelle Maschinen zu nutzen."
 };

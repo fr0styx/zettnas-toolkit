@@ -258,7 +258,16 @@ function renderTelemetry(tel) {
 
   // KVM Badge
   const kvmBadge = document.getElementById('vm-kvm-badge');
-  if (kvmBadge && tel.kvm) {
+  // The core image has no QEMU (OPS-11): say so instead of failing on start
+  if (kvmBadge && tel.kvm && tel.kvm.qemu_available === false) {
+    kvmBadge.textContent = `⚠️ ${t('vm.core_image', 'No VM support in the core image')}`;
+    kvmBadge.title = t('vm.core_image_hint', 'Switch to the full image (tag latest instead of latest-core) to run virtual machines.');
+    kvmBadge.style.cursor = 'default';
+    kvmBadge.onclick = null;
+    kvmBadge.style.background = 'rgba(245,158,11,0.15)';
+    kvmBadge.style.color = '#fbbf24';
+    kvmBadge.style.borderColor = 'rgba(245,158,11,0.3)';
+  } else if (kvmBadge && tel.kvm) {
     kvmBadge.innerHTML = `<span>⚡</span> <span>${escapeHtml(tel.kvm.badge || 'KVM Active')}</span> <span style="font-size: 11px; opacity: 0.8; margin-left: 2px;" title="View KVM Diagnostics & Fix">ℹ️</span>`;
     kvmBadge.style.cursor = 'pointer';
     kvmBadge.onclick = () => openKvmDiagnosticsModal(tel.kvm);

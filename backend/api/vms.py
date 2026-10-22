@@ -449,7 +449,16 @@ def get_kvm_status() -> dict[str, Any]:
         "remediation": remediation,
         "kvm_api_version": kvm_api_version,
         "vtpm_available": _swtpm_binary() is not None,
+        # The core image has no QEMU (OPS-11)
+        "qemu_available": bool(shutil.which("qemu-system-x86_64") or os.path.exists("/usr/bin/qemu-system-x86_64")),
+        "image_variant": _image_variant(),
     }
+
+
+def _image_variant() -> str:
+    from backend.config import IMAGE_VARIANT
+
+    return IMAGE_VARIANT
 
 
 def _get_target_iso_dir() -> str:
@@ -1694,7 +1703,11 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
 
     qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
     if not os.path.exists(qemu_bin) and not shutil.which(qemu_bin):
-        err_msg = "qemu-system-x86_64 binary not found on host. Ensure qemu-system-x86 is installed."
+        err_msg = (
+            "This is the core ZettNAS image, which has no virtual machine support. Switch to the full image (:latest)."
+            if _image_variant() == "core"
+            else "qemu-system-x86_64 binary not found on host. Ensure qemu-system-x86 is installed."
+        )
         logger.error(f"[VM-{vm_id}] {err_msg}")
         with open(err_log_path, "w", encoding="utf-8") as f:
             f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")

@@ -33,6 +33,17 @@ This document provides complete, step-by-step instructions for installing and ru
 - **Virtualization (Optional for VMs)**: Intel VT-x or AMD-V hardware virtualization enabled in host BIOS/UEFI with `/dev/kvm` accessible.
 - **Port Availability**: Port `8082` (Web Desktop & REST API) and optionally Port `8084` (WebDAV Server).
 
+### Image variants
+
+| Tag | Size | Includes |
+| --- | ---- | -------- |
+| `latest`, `edge` | about 1.7 GB | Everything: virtual machines (QEMU, UEFI, vTPM) and the front-panel LCD renderer |
+| `latest-core`, `edge-core` | about 500 MB | Everything except virtual machines and the LCD renderer |
+
+Use the core tags on servers without the ZettLab front LCD that don't run VMs. The
+in-app updater keeps you on the variant you installed. To switch, change the tag in
+your compose file or Unraid template and recreate the container.
+
 ---
 
 ## Default Credentials & Initial Access

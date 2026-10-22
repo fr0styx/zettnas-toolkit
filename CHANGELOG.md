@@ -7,6 +7,10 @@
 - **Docker access goes through an allow-list proxy.** ZettNAS forwards only the Docker API calls it uses. Containers with host-level access are created only from flows you confirm (app install after review, recreate, update) and are logged to `data/docker-proxy-audit.log`. `ZETTNAS_DOCKER_PROXY=off` turns the proxy off.
 - SECURITY.md lists which permissions are root-equivalent on the host.
 
+#### Smaller image
+
+- **New `latest-core` and `edge-core` images** (about 500 MB instead of 1.7 GB) leave out virtual machines and the front-LCD renderer. The updater stays on the variant you run. See docs/INSTALLATION.md.
+
 #### Reliability
 
 - Background services (stats, SMART, fans, LCD, buttons) restart on their own after a crash, and `/api/health` shows their state.

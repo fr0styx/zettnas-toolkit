@@ -2061,5 +2061,7 @@ export default {
   "docker.bulk_stop_confirm": "Arrêter les {count} conteneurs sélectionnés ?",
   "docker.bulk_stop_ok": "Arrêter",
   "setup.current_password": "Mot de passe actuel",
-  "fm.path_input_label": "Chemin du dossier"
+  "fm.path_input_label": "Chemin du dossier",
+  "vm.core_image": "Pas de VM dans l'image core",
+  "vm.core_image_hint": "Passez à l'image complète (tag latest au lieu de latest-core) pour lancer des machines virtuelles."
 };

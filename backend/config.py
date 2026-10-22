@@ -121,6 +121,14 @@ from backend.passwords import hash_password, verify_password  # noqa: E402
 
 RAW_DOCKER_SOCK = "/var/run/docker.sock"
 
+# "full" ships VMs and the LCD renderer; "core" leaves them out (OPS-11)
+IMAGE_VARIANT = "core" if os.environ.get("ZETTNAS_IMAGE_VARIANT", "full").lower() == "core" else "full"
+
+
+def variant_tag(tag: str) -> str:
+    """The image tag for this variant: latest -> latest-core on the core image."""
+    return f"{tag}-core" if IMAGE_VARIANT == "core" and not tag.endswith("-core") else tag
+
 
 def docker_sock() -> str:
     """The Docker API socket: the allow-list proxy when it runs (SEC-09), else the raw socket."""

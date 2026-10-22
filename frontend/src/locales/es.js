@@ -2061,5 +2061,7 @@ export default {
   "docker.bulk_stop_confirm": "¿Detener los {count} contenedores seleccionados?",
   "docker.bulk_stop_ok": "Detener",
   "setup.current_password": "Contraseña actual",
-  "fm.path_input_label": "Ruta de la carpeta"
+  "fm.path_input_label": "Ruta de la carpeta",
+  "vm.core_image": "Sin máquinas virtuales en la imagen core",
+  "vm.core_image_hint": "Cambia a la imagen completa (etiqueta latest en vez de latest-core) para usar máquinas virtuales."
 };

@@ -2061,5 +2061,7 @@ export default {
   "docker.bulk_stop_confirm": "停止所选的 {count} 个容器？",
   "docker.bulk_stop_ok": "停止",
   "setup.current_password": "当前密码",
-  "fm.path_input_label": "文件夹路径"
+  "fm.path_input_label": "文件夹路径",
+  "vm.core_image": "核心镜像不支持虚拟机",
+  "vm.core_image_hint": "要运行虚拟机，请改用完整镜像（标签 latest 而不是 latest-core）。"
 };
