@@ -384,7 +384,7 @@ For developers, homelab maintainers, and air-gapped homelabs building custom ima
 
 2. **Build the Container Image**:
    The multi-stage `Dockerfile` handles everything automatically:
-   - **Stage 1 (`frontend-builder`)**: Uses `node:24-alpine` to compile and bundle the glassmorphic web desktop via Vite into minified offline assets.
+   - **Stage 1 (`frontend-builder`)**: Uses `node:26.12.1-alpine` (the version in `.nvmrc`) to compile and bundle the glassmorphic web desktop via Vite into minified offline assets.
    - **Stage 2 (`runtime`)**: Prepares `python:3.12-slim` with Linux system utilities (`smartmontools`, `nvme-cli`, `ovmf`, `qemu-system-x86`, `rclone`, `fuse3`), installs pip requirements, and overlays the built desktop assets.
 
    ```bash

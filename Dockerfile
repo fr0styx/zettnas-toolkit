@@ -2,7 +2,8 @@
 # Stage 1: Build modern offline-first frontend assets
 # =========================================================================
 # Base images are pinned by digest (OPS-19); Dependabot proposes updates.
-FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:6a1c190e17215d844926b0677f4bf87273ff7d5e54db06d3b5b5863ab0b09a3d AS frontend-builder
+# Node.js 26.12.1: the October 2026 security release (Brotli decoder CVE-2026-111497). Keep in step with .nvmrc.
+FROM --platform=$BUILDPLATFORM node:26.12.1-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797 AS frontend-builder
 
 WORKDIR /build
 
@@ -50,6 +51,10 @@ COPY requirements.txt requirements.lock requirements-dev.txt ./
 ARG DEV_BUILD=0
 RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock \
     && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
+
+# Playwright (LCD renderer) ships its own Node.js, which lags behind security releases.
+# Replace it with the patched official build so no vulnerable copy stays in the image.
+COPY --from=node:26.12.1-trixie-slim@sha256:36793bcbb160a6a16cede1e62b93f84e26b78a972a8a4c0b879c1c12f22761ec /usr/local/bin/node /usr/local/lib/python3.12/site-packages/playwright/driver/node
 
 # VARIANT=full (default) adds virtual machines (QEMU, OVMF, swtpm) and the front
 # LCD renderer (headless Chromium and fonts). VARIANT=core leaves them out: a

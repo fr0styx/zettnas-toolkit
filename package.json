@@ -47,5 +47,8 @@
     "dompurify": "3.4.17",
     "hammerjs": "^2.0.8",
     "qrcode": "^1.5.4"
+  },
+  "engines": {
+    "node": ">=26.12.1"
   }
 }
