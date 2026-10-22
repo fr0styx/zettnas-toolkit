@@ -436,11 +436,17 @@ def send_notification(
     if not cfg.get("enabled", False):
         return {"dispatched": any(results.values()), "channels": results}
 
-    # 1. Unraid native notification
+    # 1. Unraid native notification: the local notify script, or the Unraid API when
+    #    ZettNAS runs elsewhere (companion mode, D5)
     if cfg.get("unraid_notify", True):
         unraid_script = _find_unraid_notify()
         if unraid_script:
             results["unraid"] = _dispatch_unraid(unraid_script, title, message, level)
+        else:
+            from backend.services import unraid_api
+
+            if unraid_api.configured():
+                results["unraid"] = unraid_api.notify(title, message, level)
 
     # 2. Native ntfy & Webhook dispatch if configured
     if cfg.get("ntfy_enabled", False):

@@ -4,6 +4,7 @@ Platform Abstraction Layer (PAL) endpoints for storage pools, array topology,
 and network shares (Samba/NFS/WebDAV).
 """
 
+import asyncio
 import logging
 import os
 from typing import Any, Optional
@@ -676,3 +677,16 @@ def get_smart_failure_predictions() -> list[dict[str, Any]]:
             v_data["status"] = d.get("status", "OK")
             predictions.append(v_data)
     return predictions
+
+
+@router.get("/storage/unraid-api/status", dependencies=[Depends(require_scope("storage:read", "system:view"))])
+async def unraid_api_status() -> dict[str, Any]:
+    """Array, disks, shares and parity check from the Unraid API (companion mode, D5)."""
+    from backend.services import unraid_api
+
+    if not unraid_api.configured():
+        raise HTTPException(status_code=404, detail="Unraid API not configured (UNRAID_API_URL, UNRAID_API_KEY)")
+    try:
+        return await asyncio.to_thread(unraid_api.status)
+    except unraid_api.UnraidApiError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e

@@ -33,6 +33,21 @@ This document provides complete, step-by-step instructions for installing and ru
 - **Virtualization (Optional for VMs)**: Intel VT-x or AMD-V hardware virtualization enabled in host BIOS/UEFI with `/dev/kvm` accessible.
 - **Port Availability**: Port `8082` (Web Desktop & REST API) and optionally Port `8084` (WebDAV Server).
 
+### Unraid companion mode
+
+ZettNAS reads Unraid's status files when it runs on the Unraid box itself. When it runs
+elsewhere (or to post alerts into Unraid's bell), point it at the Unraid API (Unraid 7):
+create a key on the Unraid box with
+
+```bash
+unraid-api apikey --create --name zettnas --roles VIEWER --permissions NOTIFICATIONS:CREATE_ANY
+```
+
+and set `UNRAID_API_URL` (for example `http://tower`) and `UNRAID_API_KEY`. ZettNAS then
+reads the array, disks (including which are spun down), shares and parity-check progress,
+and posts its alerts to Unraid's notification centre. It never starts, stops or changes
+the array through the API.
+
 ### TrueNAS companion mode
 
 On TrueNAS SCALE, set `TRUENAS_URL` (for example `https://truenas.local`) and
