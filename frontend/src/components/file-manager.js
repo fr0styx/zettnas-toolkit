@@ -265,12 +265,12 @@ export class FileManagerWindow {
               </div>
             </div>
             <div class="fm-content" style="position: relative; display: flex; flex-direction: column;">
-              ${selectionBarHtml(true)}
               <div class="fm-3pane-layout" style="display: flex; flex: 1; min-height: 0; width: 100%; position: relative; overflow: hidden;">
                 <div class="fm-sidebar-tree">
                   <div class="fm-tree-scroll"></div>
                 </div>
                 <div class="fm-main-pane" style="display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; overflow: hidden;">
+                  ${selectionBarHtml(true)}
                   <div class="fm-header-row">
                     <div class="fm-col fm-col-check"><input type="checkbox" id="fm-select-all-checkbox" class="fm-checkbox fm-select-all-checkbox" title="Select All" /></div>
                     <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>
@@ -381,12 +381,12 @@ export class FileManagerWindow {
             </div>
           </div>
           <div class="fm-content" style="position: relative; display: flex; flex-direction: column;">
-              ${selectionBarHtml(false)}
             <div class="fm-3pane-layout" style="display: flex; flex: 1; min-height: 0; width: 100%; position: relative; overflow: hidden;">
               <div class="fm-sidebar-tree">
                 <div class="fm-tree-scroll"></div>
               </div>
               <div class="fm-main-pane" style="display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; overflow: hidden;">
+                  ${selectionBarHtml(false)}
                 <div class="fm-header-row">
                   <div class="fm-col fm-col-check"><input type="checkbox" class="fm-checkbox fm-select-all-checkbox" title="Select All" /></div>
                   <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>

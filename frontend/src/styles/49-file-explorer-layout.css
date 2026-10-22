@@ -166,8 +166,8 @@
 }
 .fm-task-btn:hover { background: rgba(255, 255, 255, 0.1); }
 
-/* Selection actions: a pill floating at the bottom of the file area (Drive/Dropbox-style) */
-.fm-content { container-type: inline-size; }
+/* Selection actions: a pill floating at the bottom of the file list (Drive/Dropbox-style) */
+.fm-main-pane { container-type: inline-size; }
 .fm-selection-bar {
   position: absolute; left: 50%; bottom: 14px; z-index: 30;
   transform: translateX(-50%);
