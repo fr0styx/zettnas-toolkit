@@ -510,8 +510,10 @@ def stats_collector_daemon():
                         stalled_fans.append(i)
 
             is_failing_fan = bool(stalled_fans)
-            is_crit = has_crit or (cpu_temp >= cpu_crit_threshold) or is_failing_fan
-            is_warn = (len(bad) > 0) or (cpu_temp >= cpu_warn_threshold)
+            # No CPU temperature sensor (VMs, some boards): judge on the other signals only.
+            temp_known = cpu_temp is not None
+            is_crit = has_crit or (temp_known and cpu_temp >= cpu_crit_threshold) or is_failing_fan
+            is_warn = (len(bad) > 0) or (temp_known and cpu_temp >= cpu_warn_threshold)
 
             if is_failing_fan:
                 stalled_names = [f"pwm{idx + 1}" for idx in stalled_fans]
@@ -529,7 +531,7 @@ def stats_collector_daemon():
                     dedup_key="fan_stall",
                 )
 
-            if cpu_temp >= cpu_crit_threshold:
+            if temp_known and cpu_temp >= cpu_crit_threshold:
                 add_event(
                     "error",
                     "CPU Thermal Critical",
@@ -543,7 +545,7 @@ def stats_collector_daemon():
                     event_type="temp",
                     dedup_key="cpu_temp_crit",
                 )
-            elif cpu_temp >= cpu_warn_threshold:
+            elif temp_known and cpu_temp >= cpu_warn_threshold:
                 add_event(
                     "warning",
                     "CPU Thermal Warning",
