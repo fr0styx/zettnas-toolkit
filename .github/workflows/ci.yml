@@ -46,7 +46,7 @@ jobs:
         run: python scripts/pyright_ratchet.py
 
       - name: Run Ruff Format Check
-        run: ruff format --check app.py backend tests
+        run: ruff format --check app.py backend tests scripts
 
       - name: Run Pytest Suite with Coverage
         # OPS-16: coverage may not drop below the floor (raise it as coverage grows)
