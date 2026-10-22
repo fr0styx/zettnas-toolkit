@@ -73,6 +73,9 @@ jobs:
       - name: First-load size budget (FE-01)
         run: npm run budget
 
+      - name: Translation lint (FE-13)
+        run: npm run lint:i18n
+
   e2e-integration:
     name: Headless Playwright E2E Integration
     needs: [lint-and-test, frontend]

@@ -10303,7 +10303,7 @@ export async function installAiModel(tag, btn = null, modelId = null, { pollMs =
       job = await api.get(`/api/ai/models/install/${encodeURIComponent(job.id)}`);
     }
     if (job?.state === 'done') {
-      showToast(t('ai.install_done', `${tag} installed.`), 'success');
+      showToast(t('ai.install_done', '{model} installed.', { model: tag }), 'success');
       if (btn) {
         btn.disabled = false;
         btn.classList.remove('btn-ai-install-model');
@@ -10363,7 +10363,7 @@ export async function selectAiRecommendedModel(modelId) {
       if (res.hardware_warning && res.warning_message) {
         showToast(`⚠️ ${res.warning_message}`, 'warn');
       } else {
-        showToast(t('ai.model_selected_toast', `Active ZettAI model switched to ${cleanId}`), 'success');
+        showToast(t('ai.model_selected_toast', 'Active ZettAI model switched to {model}', { model: cleanId }), 'success');
       }
       await fetchAndRenderAiStatus();
     }
@@ -10691,7 +10691,7 @@ export async function forgetAiFolder(folderPath) {
     _aiWatchedPaths = _aiWatchedPaths.filter((p) => p !== folderPath);
     renderAiWatchedFoldersAndShares();
     const n = res?.removed?.files ?? 0;
-    showToast(t('ai.forget_folder_done', `Forgot ${n} file(s) from ${folderPath}. It won't be learned again.`), 'success');
+    showToast(t('ai.forget_folder_done', "Forgot {count} file(s) from {folder}. It won't be learned again.", { count: n, folder: folderPath }), 'success');
     return res;
   } catch (err) {
     if (err?.error !== 'cancelled') showToast(`${t('ai.forget_folder_failed', 'Could not forget folder')}: ${err.message}`, 'error');
@@ -11633,7 +11633,7 @@ export async function fetchAndRenderAiStatus() {
         const val = e.target.value;
         try {
           await api.post('/api/ai/config', { embedding_model: val });
-          showToast(t('ai.config_saved') || 'Embedding model updated', 'success');
+          showToast(t('ai.embedding_model_saved', 'Embedding model updated'), 'success');
         } catch (err) {
           showToast('Failed to update embedding model: ' + err.message, 'error');
         }
@@ -11646,7 +11646,7 @@ export async function fetchAndRenderAiStatus() {
         const val = parseInt(e.target.value, 10);
         try {
           await api.post('/api/ai/config', { embedding_dim: val });
-          showToast(t('ai.config_saved') || 'MRL dimension updated', 'success');
+          showToast(t('ai.mrl_dim_saved', 'Vector size updated'), 'success');
         } catch (err) {
           showToast('Failed to update MRL dimension: ' + err.message, 'error');
         }

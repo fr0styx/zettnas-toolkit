@@ -2888,7 +2888,7 @@ export class FileManagerWindow {
         archive_type: type,
         destination_dir: this.currentPath,
       });
-      showToast(t('fm.archive_created', `Archive created: ${res.archive_name || 'archive'}`), 'success');
+      showToast(t('fm.archive_created', 'Archive created: {name}', { name: res.archive_name || 'archive' }), 'success');
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
     } catch (err) {
@@ -2905,7 +2905,7 @@ export class FileManagerWindow {
         destination_dir: targetDir,
       });
       const count = res.extracted_count != null ? res.extracted_count : 1;
-      showToast(t('fm.archive_extracted', `Extracted ${count} item(s) successfully`).replace('{count}', count), 'success');
+      showToast(t('fm.archive_extracted', 'Extracted {count} item(s)', { count }), 'success');
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
     } catch (err) {

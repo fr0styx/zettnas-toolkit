@@ -3246,7 +3246,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
               <div style="display:flex; align-items:center; gap: 8px;">
                 <svg class="ic" style="width:14px; height:14px; color:var(--brand, #00f0ff);"><use href="#i-screen"/></svg>
-                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #fff;" data-i18n="mgmt.preview_title">LIVE DESKTOP WORKSPACE TWIN</span>
+                <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #fff;" data-i18n="mgmt.preview_title">LIVE DESKTOP PREVIEW</span>
               </div>
               <div style="display:flex; align-items:center; gap: 6px;">
                 <span id="dt-theme-badge" class="desktop-twin-badge" style="font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 12px; background: rgba(0,240,255,0.15); color: var(--brand, #00f0ff); border: 1px solid rgba(0,240,255,0.3);">CYBER TEAL</span>
@@ -7095,8 +7095,8 @@
               <!-- Zone A: Grounded AI Overview & Structured Recipe/Document Synthesis (Auto-shown for text Q&A) -->
               <div id="ai-rag-results-area" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
                 <div id="ai-rag-empty-state" style="display:none; padding:18px 16px; text-align:center; background:rgba(15,23,42,0.3); border:1px dashed rgba(255,255,255,0.12); border-radius:10px; color:var(--muted,#94a3b8); font-size:12px;">
-                  <span data-i18n="ai.onboarding_title" style="font-weight:700; color:#fff;">Multi-Modal Local RAG &amp; Visual Discovery</span> —
-                  <span data-i18n="ai.onboarding_desc">Ask questions or browse photos and documents below—100% offline on NPU/GPU without waking sleeping hard drives.</span>
+                  <span data-i18n="ai.onboarding_title" style="font-weight:700; color:#fff;">Search your files and photos</span> —
+                  <span data-i18n="ai.onboarding_desc">Ask a question or browse indexed photos and documents. Search reads only the index on this NAS, so sleeping drives stay asleep.</span>
                 </div>
                 <div id="ai-rag-answer-card" style="display:none; background:rgba(15,23,42,0.55); border:1px solid rgba(14,165,233,0.35); border-radius:10px; padding:14px;"></div>
                 <div id="ai-rag-structured-card" style="display:none;"></div>
@@ -7140,7 +7140,7 @@
                   </span>
                   <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:10px; font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.32); flex-shrink:0;" title="100% of RAG &amp; Photo queries read from NVMe SQLite WAL without spinning up sleeping HDDs">
                     <span style="font-size:11px;">🛡️💤</span>
-                    <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active (0 Wakeups)</span>
+                    <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active</span>
                   </span>
                   <span id="ai-index-status-pill" style="font-size:10.5px; color:var(--muted,#94a3b8); flex-shrink:0; padding:0 2px;">
                     Indexed: <strong id="ai-stat-total-files" style="color:#fff;">0</strong> Files (<strong id="ai-stat-total-videos" style="color:#fff;">0</strong> Videos • <strong id="ai-stat-total-photos" style="color:#fff;">0</strong> Photos • <strong id="ai-stat-total-docs" style="color:#fff;">0</strong> Docs<span id="ai-stat-recipes-segment" style="display:none;"> • <strong id="ai-stat-total-recipes" style="color:#fff;">0</strong> Recipes</span>)
@@ -7228,10 +7228,8 @@
               <div style="background:rgba(15,23,42,0.45); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:2px;" data-i18n="ai.index_folder_title">📁 Watched Folders, Discovered NAS Shares &amp; Sync Transport</div>
-                    <p style="font-size:11.5px; color:var(--muted,#94a3b8); margin:0;" data-i18n="ai.index_folder_desc">
-                      Specify which NAS shares ZettAI learns from. Sleeping drives are automatically deferred and learned as soon as they spin up.
-                    </p>
+                    <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:2px;" data-i18n="ai.index_folder_title">📁 Watched Folders, NAS Shares &amp; Sync</div>
+                    <p style="font-size:11.5px; color:var(--muted,#94a3b8); margin:0;" data-i18n="ai.index_folder_desc">Choose which NAS shares ZettAI learns from. Files on sleeping drives are learned when the drive spins up.</p>
                   </div>
                   <!-- Sync Transport Controls + Learning Results Button -->
                   <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
