@@ -3,6 +3,35 @@
  * Handles session tokens, HTTP requests, 401 handling, and response parsing.
  */
 import { ZettEventBus } from './event-bus.js';
+import { reportOffline, reportOnline } from './connection.js';
+
+// Defaults (FE-16): reads give up after 15 s, writes after 5 minutes; uploads and streams
+// have no limit. Pass { timeout: ms } (0 = none) to change it for one call.
+export const READ_TIMEOUT_MS = 15000;
+export const WRITE_TIMEOUT_MS = 300000; // image pulls and pool creation can take minutes
+const REAUTH_WAIT_MS = 10 * 60 * 1000;
+let _sessionUser = () => null;
+
+/** Lets api.js know who is signed in, so a retried write never runs as someone else. */
+export function setSessionUserProvider(fn) {
+  _sessionUser = typeof fn === 'function' ? fn : () => null;
+}
+
+function waitForSignIn(ms) {
+  return new Promise((resolve) => {
+    let done = false;
+    const off = ZettEventBus.on ? ZettEventBus.on('auth:login', () => finish(true)) : null;
+    const timer = setTimeout(() => finish(false), ms);
+    function finish(ok) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (typeof off === 'function') off();
+      else if (ZettEventBus.off) ZettEventBus.off('auth:login', finish);
+      resolve(ok);
+    }
+  });
+}
 
 // The web UI's session lives only in the HttpOnly cookie the server sets at login, so
 // page scripts (and any injected script) never see it (FE-05). localStorage keeps just a
@@ -107,7 +136,11 @@ async function request(endpoint, options = {}) {
   const config = { ...options };
   delete config.confirmed;
   delete config._confirmRetry;
+  delete config._reauthRetry;
+  delete config.timeout;
   config.headers = { ...options.headers };
+  const method = String(options.method || 'GET').toUpperCase();
+  const userAtSend = _sessionUser();
 
   const sentInEpoch = _authEpoch;
   const token = auth.getToken();
@@ -124,8 +157,39 @@ async function request(endpoint, options = {}) {
     config.body = JSON.stringify(config.body);
   }
 
+  const isStream = String(config.headers.Accept || config.headers.accept || '').includes('text/event-stream');
+  const timeoutMs =
+    options.timeout !== undefined ? options.timeout : isBinary || isStream ? 0 : method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS;
+  let timer = null;
+  let timedOut = false;
+  if (timeoutMs > 0 && typeof AbortController !== 'undefined') {
+    const ctrl = new AbortController();
+    const outer = config.signal;
+    if (outer) {
+      if (outer.aborted) ctrl.abort();
+      else outer.addEventListener('abort', () => ctrl.abort(), { once: true });
+    }
+    timer = setTimeout(() => {
+      timedOut = true;
+      ctrl.abort();
+    }, timeoutMs);
+    config.signal = ctrl.signal;
+  }
+
   try {
-    const res = await window.fetch(url, config);
+    let res;
+    try {
+      res = await window.fetch(url, config);
+    } catch (netErr) {
+      if (timedOut) {
+        throw new ApiError(`The server did not answer within ${Math.round(timeoutMs / 1000)} s.`, { status: 0, error: 'timeout' });
+      }
+      if (netErr && netErr.name !== 'AbortError') reportOffline();
+      throw netErr;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+    reportOnline();
 
     if (res.status === 401 && sentInEpoch !== _authEpoch) {
       // Sent before the latest sign-in: the new session is fine.
@@ -148,6 +212,14 @@ async function request(endpoint, options = {}) {
         }
         const dock = document.getElementById('os-dock-container');
         if (dock) dock.style.display = 'none';
+        // A change the user made isn't lost: after they sign in again (as the same
+        // person) it is sent once more. Reads just fail; the UI reloads them.
+        if (method !== 'GET' && method !== 'HEAD' && !options._reauthRetry && (await waitForSignIn(REAUTH_WAIT_MS))) {
+          const who = _sessionUser();
+          if (!userAtSend || !who || who === userAtSend) {
+            return request(endpoint, { ...options, _reauthRetry: true });
+          }
+        }
       }
       throw new ApiError('Unauthorized', { status: 401, error: 'unauthorized' });
     }

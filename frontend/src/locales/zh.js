@@ -2052,5 +2052,6 @@ export default {
   "toast.failed_update_embedding_model": "更新嵌入模型失败：{error}",
   "toast.failed_update_vector_size": "更新向量维度失败：{error}",
   "toast.benchmark_failed": "基准测试失败：{error}",
-  "toast.failed_trigger_reindex": "无法开始重建索引：{error}"
+  "toast.failed_trigger_reindex": "无法开始重建索引：{error}",
+  "net.offline_banner": "无法连接 ZettNAS，正在重新连接…"
 };

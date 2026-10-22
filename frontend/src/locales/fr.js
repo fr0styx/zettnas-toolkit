@@ -2052,5 +2052,6 @@ export default {
   "toast.failed_update_embedding_model": "Impossible de changer le modèle d'embedding : {error}",
   "toast.failed_update_vector_size": "Impossible de changer la taille des vecteurs : {error}",
   "toast.benchmark_failed": "Échec du benchmark : {error}",
-  "toast.failed_trigger_reindex": "Impossible de lancer la réindexation : {error}"
+  "toast.failed_trigger_reindex": "Impossible de lancer la réindexation : {error}",
+  "net.offline_banner": "ZettNAS est injoignable. Reconnexion…"
 };

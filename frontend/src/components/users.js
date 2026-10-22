@@ -3,7 +3,7 @@
  * Handles User inventory, Role assignment, Session revocation, and TOTP 2FA setup.
  */
 
-import { auth, apiFetch } from '../api.js';
+import { auth, apiFetch, setSessionUserProvider } from '../api.js';
 import { escapeHtml, trapFocus } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
@@ -18,6 +18,8 @@ export function setCurrentUser(user) {
   _currentUser = user;
   updateUserInterfaceElements();
 }
+
+setSessionUserProvider(() => _currentUser?.username || null);
 
 export function getCurrentUser() {
   return _currentUser;

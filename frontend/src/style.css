@@ -20010,3 +20010,22 @@ tr.docker-row-selected {
 [data-hover-bg]:hover {
   background: rgba(255, 255, 255, 0.05) !important;
 }
+
+/* "Can't reach ZettNAS" banner (FE-16) */
+.zn-offline-banner {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483000;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #7f1d1d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.zn-offline-banner[hidden] {
+  display: none;
+}
