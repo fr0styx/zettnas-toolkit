@@ -3,7 +3,7 @@ import { escapeHtml, copyText } from '../utils.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
-import { formatBytes } from '../format.js';
+import { formatBytes, formatDateTime } from '../format.js';
 import { canPlayHere, codecName, compatStreamUrl, formatDuration, mediaInfoUrl } from './media-support.js';
 import {
   ICONS,
@@ -919,74 +919,151 @@ function renderFilmstrip(container) {
   }
 }
 
+// Labels for the maker-settings rows the server sends in English
+const MAKER_LABEL_KEYS = {
+  'Film simulation': 'preview.mk_film_simulation',
+  'Dynamic range': 'preview.mk_dynamic_range',
+  Highlights: 'preview.mk_highlights',
+  Shadows: 'preview.mk_shadows',
+  Color: 'preview.mk_color',
+  Sharpness: 'preview.mk_sharpness',
+  Clarity: 'preview.mk_clarity',
+  'Color Chrome effect': 'preview.mk_color_chrome',
+  'Color Chrome FX Blue': 'preview.mk_color_chrome_blue',
+  'Grain effect': 'preview.mk_grain',
+  'White balance': 'preview.white_balance',
+  'Shutter type': 'preview.mk_shutter_type',
+  'Focus mode': 'preview.mk_focus_mode',
+  'Frame count': 'preview.mk_frame_count',
+};
+
+/** The wall-clock time the photo was taken, plus its UTC offset when the camera stored one. */
+function takenText(exif) {
+  if (exif.taken_at) {
+    const local = exif.taken_at.slice(0, 19); // keep the camera's clock, not the viewer's zone
+    const when = formatDateTime(local, { dateStyle: 'medium', timeStyle: 'medium' }, '');
+    if (when) return exif.utc_offset ? `${when} (UTC${exif.utc_offset.replace('-', '−')})` : when;
+  }
+  return exif.date_taken || '';
+}
+
+function inspectorRow(label, value, extra = '') {
+  if (value === undefined || value === null || value === '') return '';
+  return `<div class="quicklook-prop-row"><span class="quicklook-prop-label">${escapeHtml(label)}</span><span class="quicklook-prop-val">${escapeHtml(String(value))}${extra}</span></div>`;
+}
+
+function inspectorSection(title, body) {
+  if (!body || !body.trim()) return '';
+  return `<section class="quicklook-section"><div class="quicklook-section-title">${escapeHtml(title)}</div>${body}</section>`;
+}
+
+function exifTile(label, value, sub = '') {
+  if (!value) return '';
+  return `<div class="quicklook-exif-tile"><span class="quicklook-exif-label">${escapeHtml(label)}</span><span class="quicklook-exif-val">${escapeHtml(value)}</span>${sub ? `<span class="quicklook-exif-sub">${escapeHtml(sub)}</span>` : ''}</div>`;
+}
+
 function updateInspectorContent(meta) {
   const contentEl = _activePreviewModal?.querySelector('#quicklook-inspector-content');
   if (!contentEl) return;
-
   const exif = meta.exif || {};
-  const hasExif = Object.keys(exif).length > 0;
 
-  let exposureTilesHtml = '';
-  if (exif.shutter_speed || exif.aperture || exif.iso || exif.focal_length) {
-    exposureTilesHtml = `
-      <div>
-        <div style="font-size:11px; font-weight:700; color:var(--accent-cyan, #0ea5e9); margin-bottom:6px;">${escapeHtml(t('preview.exposure', 'EXPOSURE'))}</div>
-        <div class="quicklook-exif-grid">
-          ${exif.shutter_speed ? `<div class="quicklook-exif-tile"><span class="quicklook-exif-label">Shutter</span><span class="quicklook-exif-val">${escapeHtml(exif.shutter_speed)}</span></div>` : ''}
-          ${exif.aperture ? `<div class="quicklook-exif-tile"><span class="quicklook-exif-label">Aperture</span><span class="quicklook-exif-val">${escapeHtml(exif.aperture)}</span></div>` : ''}
-          ${exif.iso ? `<div class="quicklook-exif-tile"><span class="quicklook-exif-label">ISO</span><span class="quicklook-exif-val">${escapeHtml(exif.iso)}</span></div>` : ''}
-          ${exif.focal_length ? `<div class="quicklook-exif-tile"><span class="quicklook-exif-label">Focal Length</span><span class="quicklook-exif-val">${escapeHtml(exif.focal_length)}</span></div>` : ''}
-        </div>
-      </div>
-    `;
-  }
+  // Camera & lens
+  const camera = (exif.camera || exif.lens)
+    ? `<div class="quicklook-camera-card">
+        <div class="quicklook-section-title">📷 ${escapeHtml(t('preview.camera', 'Camera & Lens'))}</div>
+        ${exif.camera ? `<div class="quicklook-camera-name">${escapeHtml(exif.camera)}</div>` : ''}
+        ${exif.lens ? `<div class="quicklook-camera-lens">${escapeHtml(exif.lens)}</div>` : ''}
+        ${exif.lens_spec && exif.lens_spec !== exif.lens ? `<div class="quicklook-camera-spec">${escapeHtml(exif.lens_spec)}</div>` : ''}
+      </div>`
+    : '';
 
-  let cameraCardHtml = '';
-  if (exif.camera || exif.lens) {
-    cameraCardHtml = `
-      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px;">
-        <div style="font-size:11px; font-weight:700; color:var(--accent-cyan, #0ea5e9); margin-bottom:6px;">📷 ${escapeHtml(t('preview.camera', 'CAMERA & GEAR'))}</div>
-        ${exif.camera ? `<div style="font-weight:700; color:#fff; font-size:13px;">${escapeHtml(exif.camera)}</div>` : ''}
-        ${exif.lens ? `<div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">${escapeHtml(exif.lens)}</div>` : ''}
-      </div>
-    `;
+  const makerHasWb = (exif.maker_settings?.rows || []).some((r) => r.label === 'White balance');
+
+  // Exposure: the four numbers that define the shot, then how the camera got there
+  const tiles = [
+    exifTile(t('preview.shutter', 'Shutter'), exif.shutter_speed),
+    exifTile(t('preview.aperture', 'Aperture'), exif.aperture),
+    exifTile(t('preview.iso', 'ISO'), exif.iso ? exif.iso.replace(/^ISO\s*/, '') : ''),
+    exifTile(t('preview.focal', 'Focal length'), exif.focal_length,
+      exif.focal_length_35mm ? t('preview.equiv', '{value} full-frame', { value: exif.focal_length_35mm }) : ''),
+  ].join('');
+  const exposure = inspectorSection(
+    t('preview.exposure', 'Exposure'),
+    (tiles ? `<div class="quicklook-exif-grid">${tiles}</div>` : '') +
+      inspectorRow(t('preview.exposure_comp', 'Exposure comp.'), exif.exposure_bias) +
+      inspectorRow(t('preview.mode', 'Mode'), exif.exposure_program) +
+      inspectorRow(t('preview.metering', 'Metering'), exif.metering_mode) +
+      inspectorRow(t('preview.flash', 'Flash'), exif.flash) +
+      // Maker settings carry the white balance with its fine-tune; don't show it twice
+      (makerHasWb ? '' : inspectorRow(t('preview.white_balance', 'White balance'), exif.white_balance)) +
+      inspectorRow(t('preview.scene', 'Scene'), exif.scene_type) +
+      inspectorRow(t('preview.subject_distance', 'Subject distance'), exif.subject_distance),
+  );
+
+  // In-camera settings (Fujifilm film simulation and friends)
+  const maker = exif.maker_settings && Array.isArray(exif.maker_settings.rows)
+    ? inspectorSection(
+      exif.maker_settings.title === 'Fujifilm settings' ? t('preview.maker_fujifilm', 'Fujifilm settings') : exif.maker_settings.title,
+      exif.maker_settings.rows.map((r) => inspectorRow(MAKER_LABEL_KEYS[r.label] ? t(MAKER_LABEL_KEYS[r.label], r.label) : r.label, r.value)).join(''),
+    )
+    : '';
+
+  // When and where
+  const gps = exif.gps;
+  let place = '';
+  if (gps && Number.isFinite(gps.lat) && Number.isFinite(gps.lon)) {
+    const coords = `${gps.lat.toFixed(5)}, ${gps.lon.toFixed(5)}`;
+    const mapUrl = `https://www.openstreetmap.org/?mlat=${gps.lat}&mlon=${gps.lon}#map=16/${gps.lat}/${gps.lon}`;
+    place = inspectorRow(t('preview.coordinates', 'Coordinates'), coords) +
+      inspectorRow(t('preview.altitude', 'Altitude'), gps.altitude_m != null ? `${gps.altitude_m} m` : '') +
+      inspectorRow(t('preview.direction', 'Facing'), gps.direction != null ? `${gps.direction}°` : '') +
+      `<a class="quicklook-map-link" href="${escapeHtml(mapUrl)}" target="_blank" rel="noopener noreferrer">🗺️ ${escapeHtml(t('preview.open_map', 'Open in OpenStreetMap'))}</a>`;
   }
+  const when = inspectorSection(
+    t('preview.capture', 'Capture'),
+    inspectorRow(t('preview.taken', 'Taken'), takenText(exif)) + place,
+  );
+
+  // The file itself
+  const format = [
+    (meta.ext || '').toUpperCase().replace('.', ''),
+    meta.bit_depth ? `${meta.bit_depth}-bit` : '',
+    meta.color_mode || '',
+  ].filter(Boolean).join(' · ');
+  const stars = exif.rating ? '★'.repeat(exif.rating) + '☆'.repeat(5 - exif.rating) : '';
+  const file = inspectorSection(
+    t('preview.specs', 'File Specifications'),
+    inspectorRow(t('preview.dimensions', 'Dimensions'), meta.dimensions || '—') +
+      inspectorRow(t('preview.resolution', 'Resolution'), meta.megapixels) +
+      inspectorRow(t('preview.file_size', 'File size'), formatSize(meta.size || 0)) +
+      inspectorRow(t('preview.format', 'Format'), format) +
+      inspectorRow(t('preview.color_space', 'Color space'), meta.color_profile || exif.color_space) +
+      inspectorRow(t('preview.orientation', 'Orientation'), exif.orientation) +
+      inspectorRow(t('preview.rating', 'Rating'), stars),
+  );
+
+  // Who and what made it
+  const author = inspectorSection(
+    t('preview.author', 'Author & Device'),
+    inspectorRow(t('preview.artist', 'Artist'), exif.artist) +
+      inspectorRow(t('preview.copyright', 'Copyright'), exif.copyright) +
+      inspectorRow(t('preview.software', 'Software'), exif.software) +
+      inspectorRow(t('preview.body_serial', 'Camera serial'), exif.body_serial) +
+      inspectorRow(t('preview.lens_serial', 'Lens serial'), exif.lens_serial),
+  );
 
   contentEl.innerHTML = `
-    ${cameraCardHtml}
-    ${exposureTilesHtml}
-    <div>
-      <div style="font-size:11px; font-weight:700; color:var(--accent-cyan, #0ea5e9); margin-bottom:6px;">${escapeHtml(t('preview.specs', 'FILE SPECIFICATIONS'))}</div>
-      <div class="quicklook-prop-row">
-        <span class="quicklook-prop-label">Dimensions</span>
-        <span class="quicklook-prop-val">${escapeHtml(meta.dimensions || '—')}</span>
-      </div>
-      ${meta.megapixels ? `
-      <div class="quicklook-prop-row">
-        <span class="quicklook-prop-label">Resolution</span>
-        <span class="quicklook-prop-val">${escapeHtml(meta.megapixels)}</span>
-      </div>` : ''}
-      <div class="quicklook-prop-row">
-        <span class="quicklook-prop-label">File Size</span>
-        <span class="quicklook-prop-val">${formatSize(meta.size || 0)}</span>
-      </div>
-      <div class="quicklook-prop-row">
-        <span class="quicklook-prop-label">Format</span>
-        <span class="quicklook-prop-val">${(meta.ext || '').toUpperCase().replace('.', '')} ${meta.color_mode ? `(${meta.color_mode})` : ''}</span>
-      </div>
-      ${exif.date_taken ? `
-      <div class="quicklook-prop-row">
-        <span class="quicklook-prop-label">Date Taken</span>
-        <span class="quicklook-prop-val">${escapeHtml(exif.date_taken)}</span>
-      </div>` : ''}
-      <div class="quicklook-prop-row" style="flex-direction:column; align-items:flex-start; gap:4px; margin-top:6px;">
-        <span class="quicklook-prop-label">Location</span>
-        <div style="font-size:11px; color:#94a3b8; font-family:monospace; word-break:break-all; background:rgba(0,0,0,0.3); padding:4px 6px; border-radius:4px; width:100%;">${escapeHtml(meta.path || '')}</div>
-      </div>
-      <div style="margin-top:10px;">
-        <button type="button" class="btn-pill-toggle" id="ql-copy-path-btn" style="width:100%; padding:6px; font-size:11px; text-align:center;">📋 ${escapeHtml(t('preview.copy_path', 'Copy File Path'))}</button>
-      </div>
-    </div>
+    ${camera}
+    ${exposure}
+    ${maker}
+    ${when}
+    ${file}
+    ${author}
+    <section class="quicklook-section">
+      <div class="quicklook-section-title">${escapeHtml(t('preview.file_path', 'File path'))}</div>
+      <div class="quicklook-path-box">${escapeHtml(meta.path || '')}</div>
+      <button type="button" class="btn-pill-toggle quicklook-copy-path" id="ql-copy-path-btn">📋 ${escapeHtml(t('preview.copy_path', 'Copy Path'))}</button>
+    </section>
   `;
 
   contentEl.querySelector('#ql-copy-path-btn')?.addEventListener('click', async () => {

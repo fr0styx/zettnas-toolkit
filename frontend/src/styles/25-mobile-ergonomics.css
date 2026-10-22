@@ -1646,10 +1646,35 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   font-weight: 700;
   color: #f1f5f9;
 }
+.quicklook-section { display: flex; flex-direction: column; }
+.quicklook-section-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--accent-cyan, #0ea5e9); margin-bottom: 6px;
+}
+.quicklook-section .quicklook-exif-grid { margin-bottom: 6px; }
+.quicklook-camera-card {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px; padding: 12px;
+}
+.quicklook-camera-name { font-weight: 700; color: #fff; font-size: 13px; }
+.quicklook-camera-lens { font-size: 11.5px; color: #cbd5e1; margin-top: 2px; }
+.quicklook-camera-spec { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.quicklook-exif-sub { font-size: 10.5px; color: #94a3b8; }
+.quicklook-map-link {
+  align-self: flex-start; margin-top: 8px; font-size: 11.5px; font-weight: 600;
+  color: var(--accent-cyan, #0ea5e9); text-decoration: none;
+}
+.quicklook-map-link:hover { text-decoration: underline; }
+.quicklook-path-box {
+  font-size: 11px; color: #94a3b8; font-family: monospace; word-break: break-all;
+  background: rgba(0, 0, 0, 0.3); padding: 6px 8px; border-radius: 4px;
+}
+.quicklook-copy-path { width: 100%; margin-top: 8px; padding: 6px; font-size: 11px; text-align: center; }
 .quicklook-prop-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -1662,7 +1687,8 @@ body.mobile-mode #vm-grid .glassmorphic-card {
   font-weight: 600;
   font-size: 11.5px;
   text-align: right;
-  word-break: break-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 .quicklook-filmstrip {
   position: absolute;

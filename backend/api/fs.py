@@ -1940,101 +1940,10 @@ async def fs_trash_empty(principal: AuthenticatedPrincipal = Depends(get_current
 
 
 def _extract_image_metadata(file_path: str) -> dict:
-    """Extracts resolution, megapixels, and EXIF camera parameters safely without loading large image buffers."""
-    meta = {}
-    try:
-        try:
-            import pillow_heif
+    """Size, color and EXIF details for the viewer's info panel (backend/services/photo_meta.py)."""
+    from backend.services.photo_meta import extract_image_metadata
 
-            pillow_heif.register_heif_opener()
-        except Exception:
-            logger.debug("backend.api.fs._extract_image_metadata: ignored error", exc_info=True)
-        from PIL import ExifTags, Image
-
-        with Image.open(file_path) as img:
-            w, h = img.size
-            meta["width"] = w
-            meta["height"] = h
-            meta["dimensions"] = f"{w} × {h}"
-            mp = round((w * h) / 1_000_000, 1)
-            if mp > 0:
-                meta["megapixels"] = f"{mp} MP"
-            meta["color_mode"] = img.mode
-
-            exif = None
-            if hasattr(img, "getexif"):
-                try:
-                    exif = img.getexif()
-                except Exception:
-                    exif = None
-            if not exif:
-                raw_exif = getattr(img, "_getexif", None)
-                if callable(raw_exif):
-                    try:
-                        exif = raw_exif()
-                    except Exception:
-                        exif = None
-            if exif:
-                tag_map = {ExifTags.TAGS.get(k, k): v for k, v in exif.items()}
-                exif_data = {}
-
-                make = str(tag_map.get("Make") or "").strip()
-                model = str(tag_map.get("Model") or "").strip()
-                if make or model:
-                    if make and model.lower().startswith(make.lower()):
-                        camera = model
-                    else:
-                        camera = f"{make} {model}".strip()
-                    exif_data["camera"] = camera
-
-                lens = str(tag_map.get("LensModel") or tag_map.get("Lens") or "").strip()
-                if lens:
-                    exif_data["lens"] = lens
-
-                date_taken = str(tag_map.get("DateTimeOriginal") or tag_map.get("DateTime") or "").strip()
-                if date_taken:
-                    exif_data["date_taken"] = date_taken
-
-                exp = tag_map.get("ExposureTime")
-                if exp is not None:
-                    try:
-                        if isinstance(exp, tuple) and len(exp) == 2 and exp[1] != 0:
-                            num, den = exp
-                            exif_data["shutter_speed"] = f"{num}/{den}s" if num < den else f"{round(num / den, 1)}s"
-                        elif hasattr(exp, "numerator") and hasattr(exp, "denominator") and exp.denominator != 0:
-                            num, den = exp.numerator, exp.denominator
-                            exif_data["shutter_speed"] = f"{num}/{den}s" if num < den else f"{round(num / den, 1)}s"
-                        else:
-                            val = float(exp)
-                            exif_data["shutter_speed"] = f"1/{round(1 / val)}s" if 0 < val < 1 else f"{round(val, 1)}s"
-                    except Exception:
-                        exif_data["shutter_speed"] = str(exp)
-
-                fnum = tag_map.get("FNumber")
-                if fnum is not None:
-                    try:
-                        fval = float(fnum.numerator / fnum.denominator) if hasattr(fnum, "numerator") else float(fnum)
-                        exif_data["aperture"] = f"f/{fval:.1f}"
-                    except Exception:
-                        exif_data["aperture"] = f"f/{fnum}"
-
-                iso = tag_map.get("ISOSpeedRatings") or tag_map.get("PhotographicSensitivity")
-                if iso is not None:
-                    exif_data["iso"] = f"ISO {iso}"
-
-                flen = tag_map.get("FocalLength")
-                if flen is not None:
-                    try:
-                        fl_val = float(flen.numerator / flen.denominator) if hasattr(flen, "numerator") else float(flen)
-                        exif_data["focal_length"] = f"{round(fl_val)}mm"
-                    except Exception:
-                        exif_data["focal_length"] = f"{flen}mm"
-
-                if exif_data:
-                    meta["exif"] = exif_data
-    except Exception:
-        logger.debug("backend.api.fs._extract_image_metadata: ignored error", exc_info=True)
-    return meta
+    return extract_image_metadata(file_path)
 
 
 @router.get("/fs/preview", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])

@@ -186,7 +186,7 @@ describe('Revamped Image Previewer & Multi-Image Gallery Suite', () => {
     expect(content.innerHTML).toContain('XF23mmF1.4 R LM WR');
     expect(content.innerHTML).toContain('1/250s');
     expect(content.innerHTML).toContain('f/2.8');
-    expect(content.innerHTML).toContain('ISO 400');
+    expect(content.innerHTML).toContain('<span class="quicklook-exif-label">ISO</span><span class="quicklook-exif-val">400</span>');
     expect(content.innerHTML).toContain('6240 × 4160');
     expect(content.innerHTML).toContain('26.0 MP');
 
