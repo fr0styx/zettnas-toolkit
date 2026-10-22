@@ -73,7 +73,7 @@ export function getLanguage() {
 }
 
 export function t(key, fallback = '', params = null) {
-  let str = null;
+  let str;
   const dict = TRANSLATIONS[_currentLang] || TRANSLATIONS.en;
   if (dict && dict[key] != null) {
     str = dict[key];

@@ -39,7 +39,7 @@ export async function renderGuardPanel() {
   const host = document.getElementById('sec-guard-card');
   if (!host) return;
   let st;
-  let blocks = [];
+  let blocks;
   try {
     [st, blocks] = await Promise.all([api.get('/api/security/ransomware'), api.get('/api/security/ip-blocks')]);
   } catch (err) {

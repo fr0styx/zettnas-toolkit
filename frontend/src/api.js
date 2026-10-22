@@ -224,7 +224,7 @@ async function request(endpoint, options = {}) {
   }
 
   if (res.status === 428 && !options._confirmRetry) {
-    let info = null;
+    let info;
     try {
       info = await res.clone().json();
     } catch (e) {

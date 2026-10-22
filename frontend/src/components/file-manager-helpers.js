@@ -510,7 +510,7 @@ export class FmInspector {
     const thumbUrl = `/api/fs/download?path=${encodeURIComponent(item.path)}`;
     const isGuarded = isGuardedSystemDir(item.path);
 
-    let previewHtml = '';
+    let previewHtml;
     if (item.is_dir) {
       previewHtml = '<div style="font-size: 48px; margin-bottom: 8px;">📁</div>';
     } else if (isImage) {

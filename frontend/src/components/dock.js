@@ -2778,7 +2778,7 @@ export const DockManager = {
     notifItem.type = 'button';
     notifItem.className = 'dock-item dock-notif-btn';
     notifItem.setAttribute('aria-label', t('dock.notifications', 'Notification Center'));
-    notifItem.innerHTML = `<svg><use href="#i-bell"/></svg><span class="dock-badge" id="dock-notif-badge" style="display:none; position:absolute; top:-2px; right:-2px; background:var(--crit); color:#fff; font-size:11px; font-weight:800; padding:1px 4px; border-radius:8px; border:1px solid #000; box-shadow:0 1px 2px rgba(0,0,0,0.5); pointer-events:none;">0</span>`;
+    notifItem.innerHTML = `<svg><use href="#i-bell"/></svg><span class="dock-badge" id="dock-notif-badge" aria-hidden="true" style="display:none; position:absolute; top:-2px; right:-2px; background:var(--crit); color:#fff; font-size:11px; font-weight:800; padding:1px 4px; border-radius:8px; border:1px solid #000; box-shadow:0 1px 2px rgba(0,0,0,0.5); pointer-events:none;">0</span>`;
     notifItem.addEventListener('mouseenter', () => showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
     notifItem.addEventListener('focus', () => showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
     notifItem.addEventListener('mouseleave', hideDockTooltip);
@@ -4297,6 +4297,16 @@ function updateNotificationBadge() {
     badge.style.display = 'block';
   } else {
     badge.style.display = 'none';
+  }
+  // The badge is visual only; the count is part of the button's name for screen readers
+  const btn = badge.closest('.dock-notif-btn');
+  if (btn) {
+    btn.setAttribute(
+      'aria-label',
+      unreadCount > 0
+        ? t('dock.notifications_unread', 'Notification Center, {count} unread', { count: unreadCount })
+        : t('dock.notifications', 'Notification Center')
+    );
   }
 }
 

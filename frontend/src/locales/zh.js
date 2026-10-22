@@ -2140,5 +2140,6 @@ export default {
   "video.unplayable": "此视频无法在浏览器中播放",
   "video.unplayable_hint": "此处不支持其格式或编码（{ext}）。请下载，或用 VLC 或 Infuse 打开。",
   "video.subtitles": "字幕",
-  "fm.folders": "文件夹"
+  "fm.folders": "文件夹",
+  "dock.notifications_unread": "通知中心，{count} 条未读"
 };

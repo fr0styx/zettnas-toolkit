@@ -65,7 +65,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   const checkedAttr = isChecked ? 'checked' : '';
 
   // Column 2: Stack & Type
-  let stackHtml = '';
+  let stackHtml;
   if (c.stack) {
     stackHtml = `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}" style="cursor:pointer;">📁 ${escapeHtml(c.stack)}</span>`;
   } else {

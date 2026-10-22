@@ -2140,5 +2140,6 @@ export default {
   "video.unplayable": "This video can't play in the browser",
   "video.unplayable_hint": "Its format or codec ({ext}) isn't supported here. Download it, or open it in VLC or Infuse.",
   "video.subtitles": "Subtitles",
-  "fm.folders": "Folders"
+  "fm.folders": "Folders",
+  "dock.notifications_unread": "Notification Center, {count} unread"
 };

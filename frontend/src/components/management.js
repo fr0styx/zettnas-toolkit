@@ -1900,7 +1900,7 @@ export async function openAppDeployModal(appId) {
   let suggestedContainerName = appId;
   let defaultPort = 8080;
   let suggestedPort = 8080;
-  let existingContainerInfo = null;
+  let existingContainerInfo;
 
   const deployConfirmBtn = document.getElementById('adm-deploy-confirm-btn');
   const banner = document.getElementById('adm-conflict-banner');
@@ -3456,7 +3456,7 @@ export function updateUpsPolicySummary() {
   const timerVal = document.getElementById('ups-slider-timer')?.value || 300;
   const dockerChecked = document.getElementById('ups-chk-docker')?.checked;
 
-  let policyDesc = '';
+  let policyDesc;
   if (policy === 'runtime_left') {
     policyDesc = `Estimated Runtime < ${rtVal} min`;
   } else if (policy === 'battery_pct') {
@@ -9511,7 +9511,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
 
       const schedBadge = `<span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 11px; padding: 2px 6px; border-radius: 4px; text-transform: capitalize;">${escapeHtml(job.schedule || 'daily')}</span>`;
       
-      let statusHtml = '';
+      let statusHtml;
       if (job.last_status === 'running') {
         statusHtml = `<span style="display:inline-flex; align-items:center; gap:4px; color: #38bdf8; font-size: 11px;"><span class="spinner-inline" style="width:10px; height:10px;"></span> Running...</span>`;
       } else if (job.last_status === 'success') {
@@ -12431,7 +12431,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
     b.innerHTML = '<span>⏳</span> <span>Indexing...</span>';
   });
 
-  let targets = [];
+  let targets;
   if (Array.isArray(targetPath) && targetPath.length > 0) {
     targets = targetPath.filter(Boolean);
   } else if (typeof targetPath === 'string' && targetPath.trim()) {

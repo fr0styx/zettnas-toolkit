@@ -889,7 +889,7 @@ function renderPortsTab(details) {
     : '';
 
   const portsList = details.ports || [];
-  let tableHtml = '';
+  let tableHtml;
   if (portsList.length === 0) {
     tableHtml = `<div style="text-align:center; padding:20px; color:var(--muted);">${isHostNet ? 'No exposed ports declared in image metadata. Container listens directly on host interfaces.' : 'No published port mappings configured for this container.'}</div>`;
   } else {

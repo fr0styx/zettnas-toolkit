@@ -610,7 +610,7 @@ export async function openStackPickerModal(stacksInput = null) {
       const isAllRunning = s.running_count === s.total_count && s.total_count > 0;
       const isNoneRunning = s.running_count === 0;
 
-      let statusPill = '';
+      let statusPill;
       if (isAllRunning) {
         statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${s.running_count}/${s.total_count} Running</span>`;
       } else if (isNoneRunning) {

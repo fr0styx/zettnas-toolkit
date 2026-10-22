@@ -2985,7 +2985,7 @@ export class FileManagerWindow {
       if (a.is_dir && !b.is_dir) return -1;
       if (!a.is_dir && b.is_dir) return 1;
 
-      let res = 0;
+      let res;
       if (col === 'size') {
         res = (a.size || 0) - (b.size || 0);
       } else if (col === 'type') {

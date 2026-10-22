@@ -2140,5 +2140,6 @@ export default {
   "video.unplayable": "Cette vidéo ne peut pas être lue dans le navigateur",
   "video.unplayable_hint": "Son format ou codec ({ext}) n'est pas pris en charge ici. Téléchargez-la ou ouvrez-la dans VLC ou Infuse.",
   "video.subtitles": "Sous-titres",
-  "fm.folders": "Dossiers"
+  "fm.folders": "Dossiers",
+  "dock.notifications_unread": "Centre de notifications, {count} non lues"
 };

@@ -40,7 +40,7 @@ export function formatTime24(hours12, minutes, period) {
   if (isNaN(h) || h < 1 || h > 12) h = 12;
   const m = Math.min(59, Math.max(0, parseInt(minutes, 10) || 0));
 
-  let h24 = h;
+  let h24;
   if (period === 'AM') {
     h24 = h === 12 ? 0 : h;
   } else {

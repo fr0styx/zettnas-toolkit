@@ -391,7 +391,7 @@ export function parseNaturalLanguageAction(rawQuery) {
   if (fanMatch) {
     const mode = fanMatch[1].toLowerCase();
     const pct = fanMatch[2] ? parseInt(fanMatch[2], 10) : null;
-    let label = mode;
+    let label;
     let runFn;
     if (pct !== null) {
       label = `${pct}% PWM`;

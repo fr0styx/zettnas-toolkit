@@ -257,8 +257,8 @@ export function renderSelfTestLog(log) {
   };
 
   tbody.innerHTML = log.map((item) => {
-    let pillClass = "smart-test-status-passed";
-    let icon = "✓";
+    let pillClass;
+    let icon;
     const statusText = item.status || "Unknown";
     const low = statusText.toLowerCase();
 
@@ -1063,9 +1063,9 @@ export function openEventDetailModal(ev) {
   }
 
   const searchStr = `${ev.title || ""} ${ev.message || ""}`.toLowerCase();
-  let subsystem = "SYSTEM";
-  let actionLabel = null;
-  let actionFn = null;
+  let subsystem;
+  let actionLabel;
+  let actionFn;
 
   // 1. SD Card / TF Card / Media Slots / Ingest / Copy Button
   if (/sd card|tf card|microsd|\bsd\b|\bslot\b|media slot|media ingest|auto-ingest|ingest|card reader|card eject|card insert|copy button|\bcopy\b/.test(searchStr)) {
@@ -1260,7 +1260,7 @@ export function openEventDetailModal(ev) {
   const ts = ev.ts || Math.floor(Date.now() / 1000);
   const now = Math.floor(Date.now() / 1000);
   const diff = Math.max(0, now - ts);
-  let relText = `${diff}s ago`;
+  let relText;
   if (diff < 10) relText = t("time.just_now", "Just now");
   else if (diff < 3600) relText = `${Math.floor(diff / 60)}m ago`;
   else if (diff < 86400) relText = `${Math.floor(diff / 3600)}h ago`;

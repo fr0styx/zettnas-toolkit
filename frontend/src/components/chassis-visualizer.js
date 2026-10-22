@@ -109,9 +109,9 @@ export function renderChassisTwin(container, disks = [], options = {}) {
 
   let profile = 'tower_desktop';
   let totalBays = 4;
-  let chassisModel = options.model || 'STORAGE ENCLOSURE';
+  let chassisModel;
   let bays = [];
-  let nvmes = [];
+  let nvmes;
   let availableDrives = [];
 
   if (isBayConfig) {
@@ -154,7 +154,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
   }
 
   // Determine grid CSS layout
-  let gridClass = 'dual-cols';
+  let gridClass;
   if (profile === 'compact_dual') {
     gridClass = 'mode-compact-dual dual-cols';
   } else if (profile === 'tower_desktop') {

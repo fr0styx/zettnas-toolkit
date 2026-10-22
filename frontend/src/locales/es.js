@@ -2140,5 +2140,6 @@ export default {
   "video.unplayable": "Este vídeo no se puede reproducir en el navegador",
   "video.unplayable_hint": "Su formato o códec ({ext}) no es compatible aquí. Descárgalo o ábrelo en VLC o Infuse.",
   "video.subtitles": "Subtítulos",
-  "fm.folders": "Carpetas"
+  "fm.folders": "Carpetas",
+  "dock.notifications_unread": "Centro de notificaciones, {count} sin leer"
 };

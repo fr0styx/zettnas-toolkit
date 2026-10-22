@@ -243,7 +243,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   const isUpdate = options.isUpdate || (title && (title.toLowerCase().includes('update') || title.toLowerCase().includes('upgrade')));
 
   const safeTitle = escapeHtml(title || "Confirm Action");
-  let safeMsg = "";
+  let safeMsg;
   if (options.allowHtml === false) {
     safeMsg = escapeHtml(msg || "");
   } else if (options.allowHtml || (msg && /<[a-z0-9]+/i.test(msg))) {
