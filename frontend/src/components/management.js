@@ -1189,9 +1189,7 @@ export function renderDockerContainersTable() {
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
-    const topScroll = document.getElementById('docker-table-top-scroll');
     const stickyScroll = document.getElementById('docker-table-sticky-scroll');
-    if (topScroll) topScroll.style.display = 'none';
     if (stickyScroll) stickyScroll.style.display = 'none';
     updateDockerBulkBar();
     return;
@@ -1215,10 +1213,10 @@ export function renderDockerContainersTable() {
   updateDockerBulkBar();
 
   const tableWrap = document.querySelector('.docker-table-container');
-  const topScroll = document.getElementById('docker-table-top-scroll');
   const stickyScroll = document.getElementById('docker-table-sticky-scroll');
   if (tableWrap) {
-    initSynchronizedTableScrollbars(tableWrap, topScroll, stickyScroll);
+    // One horizontal scrollbar, kept at the bottom edge of the window
+    initSynchronizedTableScrollbars(tableWrap, null, stickyScroll);
   }
 }
 

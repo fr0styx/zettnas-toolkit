@@ -144,10 +144,6 @@ export function initContainersManager() {
 
         <!-- Table Body -->
         <div class="containers-content-body" data-scrollable="true" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 16px;">
-          <!-- Top Horizontal Scrollbar (Synchronized with table) -->
-          <div class="docker-table-top-scroll" id="cw-docker-table-top-scroll" style="display:none;" aria-label="Horizontal scrollbar (top)" title="Scroll table horizontally">
-            <div class="docker-table-top-scroll-inner" id="cw-docker-table-top-scroll-inner"></div>
-          </div>
           <div class="cw-docker-table-wrap" style="overflow-x: auto; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;">
             <table class="copy-history-table docker-table responsive-cards">
               <thead>
@@ -830,9 +826,7 @@ export function renderContainersWindowTable(containersList = null) {
 
   if (totalCount === 0) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</td></tr>`;
-    const cwTopScroll = document.getElementById('cw-docker-table-top-scroll');
     const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
-    if (cwTopScroll) cwTopScroll.style.display = 'none';
     if (cwStickyScroll) cwStickyScroll.style.display = 'none';
     return;
   }
@@ -908,9 +902,7 @@ export function renderContainersWindowTable(containersList = null) {
   if (filtered.length === 0) {
     _cwFilteredList = [];
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:24px;">${t('mgmt.docker_no_matching', 'No containers match your search or filter.')}</td></tr>`;
-    const cwTopScroll = document.getElementById('cw-docker-table-top-scroll');
     const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
-    if (cwTopScroll) cwTopScroll.style.display = 'none';
     if (cwStickyScroll) cwStickyScroll.style.display = 'none';
     return;
   }
@@ -931,10 +923,10 @@ export function renderContainersWindowTable(containersList = null) {
   updateCwBulkBar();
 
   const cwWrap = document.querySelector('.cw-docker-table-wrap');
-  const cwTopScroll = document.getElementById('cw-docker-table-top-scroll');
   const cwStickyScroll = document.getElementById('cw-docker-table-sticky-scroll');
   if (cwWrap) {
-    initSynchronizedTableScrollbars(cwWrap, cwTopScroll, cwStickyScroll);
+    // One horizontal scrollbar, kept at the bottom edge of the window
+    initSynchronizedTableScrollbars(cwWrap, null, cwStickyScroll);
   }
 }
 
