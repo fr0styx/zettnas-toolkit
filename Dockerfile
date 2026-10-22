@@ -52,6 +52,15 @@ ARG DEV_BUILD=0
 RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock \
     && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
 
+# Intel Quick Sync for converting videos browsers can't play (iPhone HEVC): the VA-API
+# driver and the oneVPL GPU runtime. Used only when /dev/dri is passed to the container.
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" = "amd64" ]; then \
+      sed -i "s/^Components: main$/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources \
+      && apt-get update && apt-get install -y --no-install-recommends intel-media-va-driver-non-free libmfx-gen1.2 libvpl2 \
+      && rm -rf /var/lib/apt/lists/*; \
+    fi
+
 # Playwright (LCD renderer) ships its own Node.js, which lags behind security releases.
 # Replace it with the patched official build so no vulnerable copy stays in the image.
 COPY --from=node:26.12.1-trixie-slim@sha256:36793bcbb160a6a16cede1e62b93f84e26b78a972a8a4c0b879c1c12f22761ec /usr/local/bin/node /usr/local/lib/python3.12/site-packages/playwright/driver/node

@@ -102,3 +102,27 @@ def test_endpoints(client, auth_headers, tmp_path):
         with patch.object(video_compat, "stream", side_effect=video_compat.Busy("busy")):
             r = client.get("/api/fs/stream/compat", params={"path": str(root / "a.mov")}, headers=auth_headers)
             assert r.status_code == 503
+
+
+def test_encoder_is_software_without_a_gpu_or_when_switched_off(monkeypatch):
+    video_compat._encoder_choice.clear()
+    monkeypatch.setattr(video_compat.os.path, "exists", lambda p: False)
+    assert video_compat.pick_encoder() == "libx264"
+    video_compat._encoder_choice.clear()
+    monkeypatch.setattr(video_compat.os.path, "exists", lambda p: True)
+    monkeypatch.setenv("ZETTNAS_VIDEO_HWENC", "off")
+    assert video_compat.pick_encoder() == "libx264"
+    video_compat._encoder_choice.clear()
+
+
+def test_encoder_falls_back_when_quick_sync_fails_to_open(monkeypatch):
+    video_compat._encoder_choice.clear()
+    monkeypatch.setattr(video_compat.os.path, "exists", lambda p: True)
+    monkeypatch.delenv("ZETTNAS_VIDEO_HWENC", raising=False)
+
+    def broken(*a, **k):
+        raise av.error.ValueError(22, "no QSV runtime")
+
+    monkeypatch.setattr(av.CodecContext, "create", broken)
+    assert video_compat.pick_encoder() == "libx264"
+    video_compat._encoder_choice.clear()

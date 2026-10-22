@@ -463,6 +463,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `UPDATE_CHANNEL` | `stable` | Release update channel (`stable` for tagged releases, `edge` for latest main branch commits) |
 | `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
 | `ZETTNAS_LCD_CAPTURE` | `screencast` | How the front LCD gets frames: `screencast` (Chromium sends one only when the screen changes) or `poll` (a screenshot every frame) |
+| `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos browsers can't play with Intel Quick Sync when `/dev/dri` is passed to the container (`--device /dev/dri`); `off` uses the CPU |
 | `ZETTNAS_THUMB_CACHE_MB` | `1024` | Disk space for photo and video thumbnails (`data/cache/thumbs`); the least recently used are removed first |
 
 ---
