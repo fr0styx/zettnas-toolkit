@@ -1126,7 +1126,7 @@ export class FileManagerWindow {
         this.loadPath(this.currentPath);
         ZettEventBus.emit('fm:refresh');
         if (failed > 0) {
-          showToast(`Deleted ${success} items, failed to delete ${failed} items`, 'warning');
+          showToast(t('toast.deleted_items_failed_to_delete_items', 'Deleted {success} items, failed to delete {failed} items', { success: success, failed: failed }), 'warning');
         } else {
           showToast(t('fm.bulk_delete_success', `Successfully deleted ${success} items`).replace('{count}', success), 'success');
         }
@@ -1410,7 +1410,7 @@ export class FileManagerWindow {
     const cleanQ = q.replace(/^(\?|ai:\s*)/i, '').trim() || q;
     try {
       if (useAi) {
-        showToast(`✨ ZettAI searching "${cleanQ}" (Zero Disk Wake)...`, 'info');
+        showToast(t('toast.zettai_searching', '✨ ZettAI searching "{cleanQ}"...', { cleanQ: cleanQ }), 'info');
         const aiRes = await api.post('/api/media/search', {
           query: cleanQ,
           path_prefix: this.currentPath && this.currentPath !== '/' ? this.currentPath : null,
@@ -1444,7 +1444,7 @@ export class FileManagerWindow {
       }
     } catch (err) {
       if (err.name !== 'AbortError') {
-        showToast(`Search error: ${err.message}`, 'error');
+        showToast(t('toast.search_error', 'Search error: {error}', { error: err.message }), 'error');
       }
     }
   }
@@ -2147,12 +2147,12 @@ export class FileManagerWindow {
         }
         successCount++;
       } catch (err) {
-        showToast(`Failed to upload ${file.name}: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_upload', 'Failed to upload {name}: {error}', { name: file.name, error: err.message }), 'error');
       }
     }
 
     if (successCount > 0) {
-      showToast(`Successfully uploaded ${successCount} file(s)`, 'success');
+      showToast(t('toast.successfully_uploaded_file_s', 'Successfully uploaded {successCount} file(s)', { successCount: successCount }), 'success');
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
     }
@@ -2235,7 +2235,7 @@ export class FileManagerWindow {
           label: 'Copy Item',
           onClick: () => {
             _clipboard = { items: [path], action: 'copy', sourceInstanceId: this.id };
-            showToast(`Copied '${oldName}' to clipboard`, 'info');
+            showToast(t('toast.copied_to_clipboard_2', 'Copied \'{oldName}\' to clipboard', { oldName: oldName }), 'info');
           },
         },
         {
@@ -2244,7 +2244,7 @@ export class FileManagerWindow {
           onClick: () => {
             _clipboard = { items: [path], action: 'move', sourceInstanceId: this.id };
             this.renderViewport();
-            showToast(`Cut '${oldName}' — open destination and tap + to Paste`, 'info');
+            showToast(t('toast.cut_open_destination_and_tap_to', 'Cut \'{oldName}\' — open destination and tap + to Paste', { oldName: oldName }), 'info');
           },
         },
         {
@@ -2788,7 +2788,7 @@ export class FileManagerWindow {
       try {
         await api.post('/api/fs/copy', { source: p, destination: newPath });
       } catch (err) {
-        showToast(`Duplicate failed: ${err.message}`, 'error');
+        showToast(t('toast.duplicate_failed', 'Duplicate failed: {error}', { error: err.message }), 'error');
       }
     }
 
@@ -2892,7 +2892,7 @@ export class FileManagerWindow {
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
     } catch (err) {
-      showToast(`Archive creation failed: ${err.message}`, 'error');
+      showToast(t('toast.archive_creation_failed', 'Archive creation failed: {error}', { error: err.message }), 'error');
     }
   }
 
@@ -2909,7 +2909,7 @@ export class FileManagerWindow {
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
     } catch (err) {
-      showToast(`Extraction failed: ${err.message}`, 'error');
+      showToast(t('toast.extraction_failed', 'Extraction failed: {error}', { error: err.message }), 'error');
     }
   }
 
@@ -2932,7 +2932,7 @@ export class FileManagerWindow {
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
       if (failed > 0) {
-        showToast(`Deleted ${success} items, failed ${failed}`, 'warning');
+        showToast(t('toast.deleted_items_failed', 'Deleted {success} items, failed {failed}', { success: success, failed: failed }), 'warning');
       } else {
         showToast(t('fm.bulk_delete_success', `Successfully deleted ${success} items`).replace('{count}', success), 'success');
       }
@@ -3031,7 +3031,7 @@ export class FileManagerWindow {
     }
 
     if (success > 0) {
-      showToast(`Uploaded ${success} file(s) successfully`, 'success');
+      showToast(t('toast.uploaded_file_s_successfully', 'Uploaded {success} file(s) successfully', { success: success }), 'success');
       this.loadPath(this.currentPath);
       ZettEventBus.emit('fm:refresh');
     }
@@ -3373,7 +3373,7 @@ export async function executeTransferWithConflictCheck(sources, destinationDir, 
       });
       const count = res.transferred != null ? res.transferred : validSources.length;
       if (res.errors && res.errors.length > 0) {
-        showToast(`Transferred ${count} item(s) with ${res.errors.length} error(s): ${res.errors[0].error}`, 'warning');
+        showToast(t('toast.transferred_item_s_with_error_s', 'Transferred {count} item(s) with {count2} error(s): {error}', { count: count, count2: res.errors.length, error: res.errors[0].error }), 'warning');
       } else {
         showToast(t('fm.transfer_success', `Successfully transferred ${count} item(s)`).replace('{count}', count), 'success');
       }
@@ -3391,7 +3391,7 @@ export async function executeTransferWithConflictCheck(sources, destinationDir, 
       },
     });
   } catch (err) {
-    showToast(`Transfer failed: ${err.message}`, 'error');
+    showToast(t('toast.transfer_failed', 'Transfer failed: {error}', { error: err.message }), 'error');
   }
 }
 
@@ -3478,13 +3478,13 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
       });
       const count = res.transferred != null ? res.transferred : sources.length;
       if (res.errors && res.errors.length > 0) {
-        showToast(`Transferred ${count} item(s) with ${res.errors.length} error(s): ${res.errors[0].error}`, 'warning');
+        showToast(t('toast.transferred_item_s_with_error_s', 'Transferred {count} item(s) with {count2} error(s): {error}', { count: count, count2: res.errors.length, error: res.errors[0].error }), 'warning');
       } else {
         showToast(t('fm.transfer_success', `Successfully transferred ${count} item(s)`).replace('{count}', count), 'success');
       }
       if (typeof onResolved === 'function') onResolved({ destinationDir, sources, action, policy });
     } catch (err) {
-      showToast(`Transfer failed: ${err.message}`, 'error');
+      showToast(t('toast.transfer_failed', 'Transfer failed: {error}', { error: err.message }), 'error');
     }
   };
 
@@ -3553,7 +3553,7 @@ export function openMediaOrganizerModal(initialPath = '') {
       const source_dir = (srcInput?.value || '').trim();
       const target_dir = (dstInput?.value || '').trim();
       if (!source_dir || !target_dir) {
-        showToast('Please specify both source and destination folders.', 'warning');
+        showToast(t('toast.please_specify_both_source_and_destination', 'Please specify both source and destination folders.'), 'warning');
         return;
       }
 
@@ -3621,7 +3621,7 @@ export function openMediaOrganizerModal(initialPath = '') {
           btnApply.style.cursor = 'pointer';
         }
       } catch (err) {
-        showToast(`Preview failed: ${err.message}`, 'error');
+        showToast(t('toast.preview_failed', 'Preview failed: {error}', { error: err.message }), 'error');
         if (previewWrap) {
           previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, #ef4444); font-size:12px;">Failed: ${escapeHtml(err.message)}</div>`;
         }
@@ -3656,7 +3656,7 @@ export function openMediaOrganizerModal(initialPath = '') {
           openFileManager(srcInput?.value || initialPath);
         }
       } catch (err) {
-        showToast(`Failed to execute reorganization: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_execute_reorganization', 'Failed to execute reorganization: {error}', { error: err.message }), 'error');
       } finally {
         btnApply.disabled = false;
         btnApply.innerHTML = t('media.apply_btn', 'Execute Reorganization');
@@ -3782,13 +3782,13 @@ export function openShareLinkModal(path, fileName) {
 
         // Auto-copy
         copyTextToClipboard(fullUrl);
-        showToast('Share link generated and copied to clipboard!', 'success');
+        showToast(t('toast.share_link_generated_and_copied_to', 'Share link generated and copied to clipboard!'), 'success');
 
         const copyBtn = modal.querySelector('#fm-share-copy-btn');
         if (copyBtn) {
           copyBtn.onclick = () => {
             copyTextToClipboard(fullUrl);
-            showToast('Link copied to clipboard!', 'success');
+            showToast(t('toast.link_copied_to_clipboard', 'Link copied to clipboard!'), 'success');
           };
         }
 
@@ -3803,7 +3803,7 @@ export function openShareLinkModal(path, fileName) {
         const doneBtn = modal.querySelector('#fm-share-done');
         if (doneBtn) doneBtn.onclick = closeModal;
       } catch (err) {
-        showToast(`Failed to create share link: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_create_share_link', 'Failed to create share link: {error}', { error: err.message }), 'error');
         submitBtn.disabled = false;
         submitBtn.textContent = '✨ Generate Share Link';
       }

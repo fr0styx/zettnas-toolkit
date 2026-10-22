@@ -8,6 +8,7 @@ import { api } from '../api.js';
 import { showToast, showPromptToast, showConfirmToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
 
+import { t } from '../i18n.js';
 let _wallpapersInitialized = false;
 let _loadPromise = null;
 let _currentFiles = [];
@@ -94,17 +95,17 @@ export async function selectWallpaper(filename) {
     setWallpaper(`/api/wallpapers/download/${encodeURIComponent(filename)}`, filename);
     try {
       await api.post('/api/wallpapers/select', { filename });
-      showToast(`Active wallpaper: ${filename}`, 'success');
+      showToast(t('toast.active_wallpaper', 'Active wallpaper: {filename}', { filename: filename }), 'success');
     } catch (err) {
-      showToast('Failed to save wallpaper setting', 'error');
+      showToast(t('toast.failed_to_save_wallpaper_setting', 'Failed to save wallpaper setting'), 'error');
     }
   } else {
     setWallpaper(null);
     try {
       await api.post('/api/wallpapers/select', { filename: null });
-      showToast('Theme gradient restored', 'info');
+      showToast(t('toast.theme_gradient_restored', 'Theme gradient restored'), 'info');
     } catch (err) {
-      showToast('Failed to save wallpaper setting', 'error');
+      showToast(t('toast.failed_to_save_wallpaper_setting', 'Failed to save wallpaper setting'), 'error');
     }
   }
 }
@@ -125,7 +126,7 @@ export async function renameWallpaper(oldName) {
           new_name: newName
         });
         if (data.success) {
-          showToast(`Wallpaper renamed to ${data.new_name}`, 'success');
+          showToast(t('toast.wallpaper_renamed_to', 'Wallpaper renamed to {new_name}', { new_name: data.new_name }), 'success');
           if (localStorage.getItem('zettnas_active_wallpaper') === oldName) {
             try {
               localStorage.setItem('zettnas_active_wallpaper', data.new_name);
@@ -157,7 +158,7 @@ export async function deleteWallpaper(filename) {
             localStorage.removeItem('zettnas_active_wallpaper');
           } catch (e) {}
         }
-        showToast('Wallpaper deleted', 'success');
+        showToast(t('toast.wallpaper_deleted', 'Wallpaper deleted'), 'success');
         await loadWallpapers();
       } catch (err) {
         showToast('Delete failed: ' + err.message, 'error');
@@ -358,12 +359,12 @@ export async function uploadAndApplyWallpaper(file) {
   if (!file) return false;
   const MAX_BYTES = 15 * 1024 * 1024; // 15MB limit
   if (file.size && file.size > MAX_BYTES) {
-    showToast('File size exceeds 15MB limit. Please choose a smaller image.', 'error');
+    showToast(t('toast.file_size_exceeds_15mb_limit_please', 'File size exceeds 15MB limit. Please choose a smaller image.'), 'error');
     return false;
   }
   const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/svg+xml'];
   if (file.type && !validTypes.includes(file.type)) {
-    showToast('Unsupported file format. Please upload JPG, PNG, WEBP, or AVIF.', 'error');
+    showToast(t('toast.unsupported_file_format_please_upload_jpg', 'Unsupported file format. Please upload JPG, PNG, WEBP, or AVIF.'), 'error');
     return false;
   }
   return new Promise((resolve, reject) => {
@@ -385,7 +386,7 @@ export async function uploadAndApplyWallpaper(file) {
           if (data.filename) {
             await selectWallpaper(data.filename);
           }
-          showToast(`Wallpaper uploaded & applied: ${data.filename || file.name}`, 'success');
+          showToast(t('toast.wallpaper_uploaded_applied', 'Wallpaper uploaded & applied: {filename}', { filename: data.filename || file.name }), 'success');
           resolve(data);
         } else {
           showToast('Failed: ' + ((data && data.error) || 'Upload error'), 'error');
@@ -576,7 +577,7 @@ export function initWallpaperReadabilityControls() {
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       applyWallpaperReadability(15, 0, true);
-      showToast('Wallpaper readability reset to defaults', 'info');
+      showToast(t('toast.wallpaper_readability_reset_to_defaults', 'Wallpaper readability reset to defaults'), 'info');
     });
   }
 }
@@ -757,7 +758,7 @@ export function initGlassControls() {
       try {
         localStorage.removeItem('zettnas_eco_mode');
       } catch (e) {}
-      showToast('Glass and visual effects reset to defaults', 'info');
+      showToast(t('toast.glass_and_visual_effects_reset_to', 'Glass and visual effects reset to defaults'), 'info');
     });
   }
 }

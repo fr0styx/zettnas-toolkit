@@ -11,6 +11,7 @@ import { DockManager, bringToFront } from './dock.js';
 import { openContainerModal } from './container-modal.js';
 import { lintCompose, composeRiskSummary } from '../compose-lint.js';
 
+import { t } from '../i18n.js';
 let _activeStackName = null;
 let _activeStackDetails = null;
 let _fromCopilot = false; // compose text came from an AI answer (AI-22)
@@ -203,12 +204,12 @@ export function initStackModal() {
   // Copy buttons
   document.getElementById('stack-compose-copy-btn')?.addEventListener('click', () => {
     const val = document.getElementById('stack-compose-editor')?.value || '';
-    navigator.clipboard.writeText(val).then(() => showToast('Compose YAML copied to clipboard', 'info'));
+    navigator.clipboard.writeText(val).then(() => showToast(t('toast.compose_yaml_copied_to_clipboard', 'Compose YAML copied to clipboard'), 'info'));
   });
 
   document.getElementById('stack-env-copy-btn')?.addEventListener('click', () => {
     const val = document.getElementById('stack-env-editor')?.value || '';
-    navigator.clipboard.writeText(val).then(() => showToast('.env copied to clipboard', 'info'));
+    navigator.clipboard.writeText(val).then(() => showToast(t('toast.env_copied_to_clipboard', '.env copied to clipboard'), 'info'));
   });
 
   document.getElementById('stack-compose-reset-btn')?.addEventListener('click', () => {
@@ -306,7 +307,7 @@ export async function openStackModal(stackName, initialYaml = null) {
     renderStackDetails(data);
   } catch (err) {
     document.getElementById('stack-modal-msg').textContent = `Failed loading stack: ${err.message}`;
-    showToast(`Failed loading stack: ${err.message}`, 'error');
+    showToast(t('toast.failed_loading_stack', 'Failed loading stack: {error}', { error: err.message }), 'error');
   }
 }
 
@@ -323,7 +324,7 @@ export function deployComposeStackSnippet(yamlCode) {
     }
   }
   openStackModal(deducedName, yamlCode);
-  showToast('Copilot Compose stack loaded. Ready to deploy!', 'success');
+  showToast(t('toast.copilot_compose_stack_loaded_ready_to', 'Copilot Compose stack loaded. Ready to deploy!'), 'success');
 }
 
 if (typeof window !== 'undefined') {
@@ -465,7 +466,7 @@ async function saveStack(redeployAfterSave = false) {
     });
 
     if (res.success) {
-      showToast('Stack configuration saved successfully!', 'success');
+      showToast(t('toast.stack_configuration_saved_successfully', 'Stack configuration saved successfully!'), 'success');
       if (msgEl) msgEl.textContent = 'Configuration saved';
 
       if (redeployAfterSave) {
@@ -477,7 +478,7 @@ async function saveStack(redeployAfterSave = false) {
     }
   } catch (err) {
     if (msgEl) msgEl.textContent = `Error: ${err.message}`;
-    showToast(`Save failed: ${err.message}`, 'error');
+    showToast(t('toast.save_failed', 'Save failed: {error}', { error: err.message }), 'error');
   }
 }
 
@@ -486,7 +487,7 @@ async function triggerStackAction(action) {
 
   const msgEl = document.getElementById('stack-modal-msg');
   if (action === 'redeploy' || action === 'stop') {
-    showToast(`Executing stack ${action}...`, 'info');
+    showToast(t('toast.executing_stack', 'Executing stack {action}...', { action: action }), 'info');
   }
 
   if (msgEl) msgEl.textContent = `Executing ${action}...`;
@@ -494,7 +495,7 @@ async function triggerStackAction(action) {
   try {
     const res = await api.post(`/api/docker/stacks/${encodeURIComponent(_activeStackName)}/action`, { action });
     if (res.success) {
-      showToast(`Stack action '${action}' completed!`, 'success');
+      showToast(t('toast.stack_action_completed', 'Stack action \'{action}\' completed!', { action: action }), 'success');
       if (msgEl) msgEl.textContent = `Action '${action}' successful`;
       // Refresh stack details
       await openStackModal(_activeStackName);
@@ -504,7 +505,7 @@ async function triggerStackAction(action) {
     }
   } catch (err) {
     if (msgEl) msgEl.textContent = `Action error: ${err.message}`;
-    showToast(`Stack action failed: ${err.message}`, 'error');
+    showToast(t('toast.stack_action_failed', 'Stack action failed: {error}', { error: err.message }), 'error');
   }
 }
 

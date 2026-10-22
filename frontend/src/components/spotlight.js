@@ -9,6 +9,7 @@ import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { openContainerInspector } from './container-modal.js';
 
+import { t } from '../i18n.js';
 // Destructive actions always ask first (FE-07).
 function confirmThen(title, msg, action) {
   return new Promise((resolve, reject) => {
@@ -27,9 +28,9 @@ function emptyTrash() {
   return confirmThen('Empty Trash', 'Permanently delete everything in the trash? This cannot be undone.', async () => {
     try {
       await api.delete('/api/fs/trash/empty', { confirmed: true });
-      showToast('Trash emptied. Storage reclaimed.', 'success');
+      showToast(t('toast.trash_emptied_storage_reclaimed', 'Trash emptied. Storage reclaimed.'), 'success');
     } catch (e) {
-      showToast(`Failed to empty trash: ${e.message}`, 'error');
+      showToast(t('toast.failed_to_empty_trash', 'Failed to empty trash: {message}', { message: e.message }), 'error');
     }
   });
 }
@@ -210,9 +211,9 @@ function _buildDefaultSpotlightItems() {
       run: async () => {
         try {
           await api.post('/api/fans/profile', { profile: 'quiet' });
-          showToast('Fan profile switched to Quiet (Acoustic)', 'success');
+          showToast(t('toast.fan_profile_switched_to_quiet_acoustic', 'Fan profile switched to Quiet (Acoustic)'), 'success');
         } catch (e) {
-          showToast(`Failed to switch fan profile: ${e.message}`, 'error');
+          showToast(t('toast.failed_to_switch_fan_profile', 'Failed to switch fan profile: {message}', { message: e.message }), 'error');
         }
       },
     },
@@ -226,9 +227,9 @@ function _buildDefaultSpotlightItems() {
       run: async () => {
         try {
           await api.post('/api/fans/profile', { profile: 'performance' });
-          showToast('Fan profile switched to Performance (Max Airflow)', 'success');
+          showToast(t('toast.fan_profile_switched_to_performance_max', 'Fan profile switched to Performance (Max Airflow)'), 'success');
         } catch (e) {
-          showToast(`Failed to switch fan profile: ${e.message}`, 'error');
+          showToast(t('toast.failed_to_switch_fan_profile', 'Failed to switch fan profile: {message}', { message: e.message }), 'error');
         }
       },
     },
@@ -240,7 +241,7 @@ function _buildDefaultSpotlightItems() {
       category: 'action',
       keywords: ['standby', 'spindown', 'sleep', 'power', '>spindown'],
       run: async () => {
-        showToast('Spindown signal dispatched to idle disks.', 'info');
+        showToast(t('toast.spindown_signal_dispatched_to_idle_disks', 'Spindown signal dispatched to idle disks.'), 'info');
       },
     },
     {
@@ -253,7 +254,7 @@ function _buildDefaultSpotlightItems() {
       run: () => {
         document.body.className = 'theme-oled';
         localStorage.setItem('zettnas_desktop_theme', 'oled');
-        showToast('Switched to OLED Pure Black theme', 'info');
+        showToast(t('toast.switched_to_oled_pure_black_theme', 'Switched to OLED Pure Black theme'), 'info');
       },
     },
     {
@@ -266,7 +267,7 @@ function _buildDefaultSpotlightItems() {
       run: () => {
         document.body.className = 'theme-cyber';
         localStorage.setItem('zettnas_desktop_theme', 'cyber');
-        showToast('Switched to Cyber Teal theme', 'info');
+        showToast(t('toast.switched_to_cyber_teal_theme', 'Switched to Cyber Teal theme'), 'info');
       },
     },
     {
@@ -279,7 +280,7 @@ function _buildDefaultSpotlightItems() {
       run: () => {
         document.body.className = 'theme-amber';
         localStorage.setItem('zettnas_desktop_theme', 'amber');
-        showToast('Switched to Amber Gold theme', 'info');
+        showToast(t('toast.switched_to_amber_gold_theme', 'Switched to Amber Gold theme'), 'info');
       },
     },
     {
@@ -375,10 +376,10 @@ export function parseNaturalLanguageAction(rawQuery) {
             name: `snap_${Date.now()}`
           });
           const snapName = res?.snapshot_name || res?.name || `snap_${Date.now()}`;
-          showToast(`Snapshot '${snapName}' created for pool '${targetPool}'`, 'success', 3500);
+          showToast(t('toast.snapshot_created_for_pool', 'Snapshot \'{snapName}\' created for pool \'{targetPool}\'', { snapName: snapName, targetPool: targetPool }), 'success', 3500);
         } catch (e) {
           const errMsg = e?.detail || e?.message || 'Observer Mode restricts direct snapshots on Unraid';
-          showToast(`Snapshot failed for '${targetPool}': ${errMsg}`, 'error', 4500);
+          showToast(t('toast.snapshot_failed_for', 'Snapshot failed for \'{targetPool}\': {errMsg}', { targetPool: targetPool, errMsg: errMsg }), 'error', 4500);
         }
       }
     };
@@ -397,9 +398,9 @@ export function parseNaturalLanguageAction(rawQuery) {
         try {
           const pwmVal = Math.round((pct / 100) * 255);
           await api.post('/api/fans/manual', { pwm: pwmVal });
-          showToast(`Fan speed set to ${pct}% (${pwmVal} PWM)`, 'success');
+          showToast(t('toast.fan_speed_set_to_pwm', 'Fan speed set to {pct}% ({pwmVal} PWM)', { pct: pct, pwmVal: pwmVal }), 'success');
         } catch (e) {
-          showToast(`Failed to set fan speed: ${e.message}`, 'error');
+          showToast(t('toast.failed_to_set_fan_speed', 'Failed to set fan speed: {message}', { message: e.message }), 'error');
         }
       };
     } else {
@@ -408,9 +409,9 @@ export function parseNaturalLanguageAction(rawQuery) {
       runFn = async () => {
         try {
           await api.post('/api/fans/profile', { profile: prof });
-          showToast(`Fan profile switched to ${prof.toUpperCase()}`, 'success');
+          showToast(t('toast.fan_profile_switched_to', 'Fan profile switched to {prof}', { prof: prof.toUpperCase() }), 'success');
         } catch (e) {
-          showToast(`Failed to switch fan profile: ${e.message}`, 'error');
+          showToast(t('toast.failed_to_switch_fan_profile', 'Failed to switch fan profile: {message}', { message: e.message }), 'error');
         }
       };
     }
@@ -439,9 +440,9 @@ export function parseNaturalLanguageAction(rawQuery) {
       run: async () => {
         try {
           await api.post('/api/chassis/locate', { device: dev, duration_seconds: 15 });
-          showToast(`Locate LED strobing on drive ${dev} for 15s`, 'info');
+          showToast(t('toast.locate_led_strobing_on_drive_for', 'Locate LED strobing on drive {dev} for 15s', { dev: dev }), 'info');
         } catch (e) {
-          showToast(`Failed to locate drive ${dev}: ${e.message}`, 'error');
+          showToast(t('toast.failed_to_locate_drive', 'Failed to locate drive {dev}: {message}', { dev: dev, message: e.message }), 'error');
         }
       }
     };
@@ -476,9 +477,9 @@ export function parseNaturalLanguageAction(rawQuery) {
           const ok = await confirmThen('Stop Container', `Stop container '${cId}'?`, async () => {
             await api.post(`/api/docker/containers/${encodeURIComponent(cId)}/stop`);
           });
-          if (ok) showToast(`Container '${cId}' stopped`, 'warning');
+          if (ok) showToast(t('toast.container_stopped', 'Container \'{cId}\' stopped', { cId: cId }), 'warning');
         } catch (e) {
-          showToast(`Failed to stop container '${cId}': ${e.message}`, 'error');
+          showToast(t('toast.failed_to_stop_container', 'Failed to stop container \'{cId}\': {message}', { cId: cId, message: e.message }), 'error');
         }
       }
     };

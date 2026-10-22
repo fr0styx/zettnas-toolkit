@@ -1399,7 +1399,7 @@ function initWeatherCityAutocomplete() {
     });
     fetchWeather(true);
     const locationDesc = [item.name, item.admin1, item.country_code || item.country].filter(Boolean).join(', ');
-    showToast(`Weather location set to ${locationDesc}`, 'success');
+    showToast(t('toast.weather_location_set_to', 'Weather location set to {locationDesc}', { locationDesc: locationDesc }), 'success');
   }
 
   function renderDropdown(items) {
@@ -1477,7 +1477,7 @@ function initWeatherCityAutocomplete() {
         closeDropdown();
         saveWidgetConfig({ weatherCity: '', weatherLat: null, weatherLon: null, weatherCountry: '' });
         fetchWeather(true);
-        showToast('Weather location reset to Auto-detect', 'success');
+        showToast(t('toast.weather_location_reset_to_auto_detect', 'Weather location reset to Auto-detect'), 'success');
       });
       if (spinner) spinner.style.display = 'none';
       return;
@@ -1512,8 +1512,8 @@ function initWeatherCityAutocomplete() {
         const q = cityInput.value.trim();
         saveWidgetConfig({ weatherCity: q, weatherLat: null, weatherLon: null });
         fetchWeather(true);
-        if (q) showToast(`Weather location set to ${q}`, 'success');
-        else showToast('Weather location set to Auto-detect', 'success');
+        if (q) showToast(t('toast.weather_location_set_to_2', 'Weather location set to {q}', { q: q }), 'success');
+        else showToast(t('toast.weather_location_set_to_auto_detect', 'Weather location set to Auto-detect'), 'success');
       }
       return;
     }
@@ -1687,7 +1687,7 @@ export function setupWidgetSettingsEvents() {
       saveWidgetConfig({ calendarCountry: e.target.value });
       renderCalendar();
       const cName = e.target.value === 'auto' ? 'Auto-detect' : (COUNTRY_NAMES[e.target.value] || e.target.value);
-      showToast(`Calendar holidays set to ${cName}`, 'success');
+      showToast(t('toast.calendar_holidays_set_to', 'Calendar holidays set to {cName}', { cName: cName }), 'success');
     });
   }
 
@@ -1850,7 +1850,7 @@ export function setupWidgetSettingsEvents() {
       applyWidgetConfig();
       syncWidgetSettingsUI();
       fetchWeather(true);
-      showToast('Widgets reset to defaults', 'info');
+      showToast(t('toast.widgets_reset_to_defaults', 'Widgets reset to defaults'), 'info');
     });
   }
 }
@@ -2604,9 +2604,9 @@ export function setupTimezoneModalEvents() {
         _tempSelectedTz = val;
         updateTzModalPreview();
         renderTimezoneList();
-        showToast(`Selected custom timezone: ${val}`, 'info');
+        showToast(t('toast.selected_custom_timezone', 'Selected custom timezone: {val}', { val: val }), 'info');
       } catch (err) {
-        showToast(`Invalid IANA timezone: "${val}". Example: America/Toronto`, 'error');
+        showToast(t('toast.invalid_iana_timezone_example_america_toronto', 'Invalid IANA timezone: "{val}". Example: America/Toronto', { val: val }), 'error');
       }
     });
   }
@@ -2998,7 +2998,7 @@ export async function exportCalendarIcs() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Calendar exported (.ics)', 'success');
+    showToast(t('toast.calendar_exported_ics', 'Calendar exported (.ics)'), 'success');
   } catch (err) {
     showToast('Failed to export calendar: ' + err.message, 'error');
   }
@@ -3108,7 +3108,7 @@ export function setupCalendarModalEvents() {
 
       const title = titleInput?.value?.trim();
       if (!title) {
-        showToast('Please enter a title for the note/reminder', 'warning');
+        showToast(t('toast.please_enter_a_title_for_the', 'Please enter a title for the note/reminder'), 'warning');
         if (titleInput) titleInput.focus();
         return;
       }
@@ -3162,7 +3162,7 @@ export function setupCalendarModalEvents() {
           renderModalCalendarGrid();
           renderDayAgenda(_modalCalSelectedDateKey);
           renderCalendar();
-          showToast('Note deleted', 'info');
+          showToast(t('toast.note_deleted', 'Note deleted'), 'info');
         } catch (err) {
           showToast('Failed to delete note: ' + err.message, 'error');
         }
@@ -3209,7 +3209,7 @@ export function setupCalendarModalEvents() {
       const name = nameInput?.value?.trim();
       const url = urlInput?.value?.trim();
       if (!name || !url) {
-        showToast('Please enter feed name and valid iCal (.ics) URL', 'warning');
+        showToast(t('toast.please_enter_feed_name_and_valid', 'Please enter feed name and valid iCal (.ics) URL'), 'warning');
         return;
       }
 
@@ -3225,7 +3225,7 @@ export function setupCalendarModalEvents() {
         });
 
         if (res && res.status === 'ok') {
-          showToast(`Connected ${name} (${res.event_count || 0} events synced)`, 'success');
+          showToast(t('toast.connected_events_synced', 'Connected {name} ({event_count} events synced)', { name: name, event_count: res.event_count || 0 }), 'success');
           if (nameInput) nameInput.value = '';
           if (urlInput) urlInput.value = '';
           if (addFeedForm) addFeedForm.style.display = 'none';
@@ -3252,7 +3252,7 @@ export function setupCalendarModalEvents() {
 
       try {
         await api.delete(`/api/calendar/feeds/${feedId}`);
-        showToast('Calendar feed removed', 'info');
+        showToast(t('toast.calendar_feed_removed', 'Calendar feed removed'), 'info');
         fetchCalendarFeeds();
         fetchCalendarEvents();
       } catch (err) {
@@ -3269,7 +3269,7 @@ export function setupCalendarModalEvents() {
         syncBtn.textContent = 'Syncing...';
         const res = await api.post('/api/calendar/sync');
         if (res && res.status === 'ok') {
-          showToast(`Synced ${res.synced_feeds} feed(s) with ${res.total_events} event(s)`, 'success');
+          showToast(t('toast.synced_feed_s_with_event_s', 'Synced {synced_feeds} feed(s) with {total_events} event(s)', { synced_feeds: res.synced_feeds, total_events: res.total_events }), 'success');
           fetchCalendarFeeds();
           fetchCalendarEvents();
         }

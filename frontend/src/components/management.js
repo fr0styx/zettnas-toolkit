@@ -701,7 +701,7 @@ export function updateDockerBulkBar() {
 export async function executeBulkContainerAction(action) {
   const selectedIds = getSelectedContainerIds();
   if (selectedIds.length === 0) {
-    showToast('No containers selected.', 'info');
+    showToast(t('toast.no_containers_selected', 'No containers selected.'), 'info');
     return;
   }
 
@@ -743,7 +743,7 @@ export async function executeBulkContainerAction(action) {
 
 async function _runBulkActionApi(action, selectedIds) {
   try {
-    showToast(`Executing bulk ${action} on ${selectedIds.length} containers...`, 'info');
+    showToast(t('toast.executing_bulk_on_containers', 'Executing bulk {action} on {count} containers...', { action: action, count: selectedIds.length }), 'info');
     const res = await api.post('/api/docker/containers/bulk-action', {
       action,
       container_ids: selectedIds,
@@ -751,12 +751,12 @@ async function _runBulkActionApi(action, selectedIds) {
     });
     const successful = res.successful || 0;
     const total = res.total || selectedIds.length;
-    showToast(`Bulk ${action}: ${successful} of ${total} succeeded.`, successful === total ? 'success' : 'warn');
+    showToast(t('toast.bulk_of_succeeded', 'Bulk {action}: {successful} of {total} succeeded.', { action: action, successful: successful, total: total }), successful === total ? 'success' : 'warn');
     clearSelectedContainers();
     await fetchAndRenderDockerContainers();
     updateDockerBulkBar();
   } catch (err) {
-    showToast(`Bulk ${action} failed: ${err.message}`, 'error');
+    showToast(t('toast.bulk_failed', 'Bulk {action} failed: {error}', { action: action, error: err.message }), 'error');
   }
 }
 
@@ -951,11 +951,11 @@ function _bindDockerEvents() {
         if (count > 0) {
           showToast(`Update check complete: ${count} container update${count > 1 ? 's' : ''} available!`, 'warn');
         } else {
-          showToast('All containers are up to date!', 'success');
+          showToast(t('toast.all_containers_are_up_to_date', 'All containers are up to date!'), 'success');
         }
         await fetchAndRenderDockerContainers(false);
       } catch (err) {
-        showToast(`Update check failed: ${err.message}`, 'error');
+        showToast(t('toast.update_check_failed', 'Update check failed: {error}', { error: err.message }), 'error');
       } finally {
         btnCheckUpdates.disabled = false;
         btnCheckUpdates.innerHTML = originalHtml;
@@ -974,15 +974,15 @@ function _bindDockerEvents() {
         async () => {
           btnUpdateAll.disabled = true;
           btnUpdateAll.innerHTML = '<span>⏳</span> <span>Updating all...</span>';
-          showToast(`Starting batch update for ${count} containers...`, 'info');
+          showToast(t('toast.starting_batch_update_for_containers', 'Starting batch update for {count} containers...', { count: count }), 'info');
           try {
             const res = await api.post('/api/docker/updates/apply-all');
             const updatedCount = res.total_updated || (res.updated || []).length;
-            showToast(`Batch update complete: ${updatedCount} updated, ${(res.failed || []).length} failed.`, updatedCount > 0 ? 'success' : 'warn');
+            showToast(t('toast.batch_update_complete_updated_failed', 'Batch update complete: {updatedCount} updated, {failed} failed.', { updatedCount: updatedCount, failed: (res.failed || []).length }), updatedCount > 0 ? 'success' : 'warn');
             await refreshDockerUpdatesStatus();
             await fetchAndRenderDockerContainers();
           } catch (err) {
-            showToast(`Batch update failed: ${err.message}`, 'error');
+            showToast(t('toast.batch_update_failed', 'Batch update failed: {error}', { error: err.message }), 'error');
           } finally {
             btnUpdateAll.disabled = false;
             updateDockerUpdatesToolbarUI();
@@ -1006,12 +1006,12 @@ function _bindDockerEvents() {
       try {
         const stacks = await api.get('/api/docker/stacks');
         if (!stacks || !stacks.length) {
-          showToast('No active Compose stacks found.', 'info');
+          showToast(t('toast.no_active_compose_stacks_found', 'No active Compose stacks found.'), 'info');
           return;
         }
         openStackPickerModal(stacks);
       } catch (err) {
-        showToast(`Failed loading stacks: ${err.message}`, 'error');
+        showToast(t('toast.failed_loading_stacks', 'Failed loading stacks: {error}', { error: err.message }), 'error');
       }
     });
   }
@@ -1410,14 +1410,14 @@ function bindDockerTableEvents(tbody) {
             actBtn.disabled = true;
             const originalContent = actBtn.innerHTML;
             actBtn.innerHTML = '⏳';
-            showToast(`Updating "${cname}" to latest image...`, 'info');
+            showToast(t('toast.updating_to_latest_image', 'Updating "{cname}" to latest image...', { cname: cname }), 'info');
             try {
               await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/update-image`);
-              showToast(`Container "${cname}" updated and restarted successfully!`, 'success');
+              showToast(t('toast.container_updated_and_restarted_successfully', 'Container "{cname}" updated and restarted successfully!', { cname: cname }), 'success');
               await refreshDockerUpdatesStatus();
               await fetchAndRenderDockerContainers();
             } catch (err) {
-              showToast(`Update failed: ${err.message}`, 'error');
+              showToast(t('toast.update_failed', 'Update failed: {error}', { error: err.message }), 'error');
               actBtn.disabled = false;
               actBtn.innerHTML = originalContent;
             }
@@ -1437,14 +1437,14 @@ function bindDockerTableEvents(tbody) {
         actBtn.disabled = true;
         const originalContent = actBtn.innerHTML;
         actBtn.innerHTML = '⏳';
-        showToast(`Creating backup for ${cname}...`, 'info');
+        showToast(t('toast.creating_backup_for_2', 'Creating backup for {cname}...', { cname: cname }), 'info');
         try {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
           const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
           const sizeStr = res?.backup?.archive_size_formatted || '';
           showToast(`App "${cname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
         } catch (err) {
-          showToast(`Backup failed: ${err.message}`, 'error');
+          showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {
           actBtn.disabled = false;
           actBtn.innerHTML = originalContent;
@@ -1461,14 +1461,14 @@ function bindDockerTableEvents(tbody) {
 
       actBtn.disabled = true;
       actBtn.style.opacity = '0.5';
-      showToast(`${act.toUpperCase()} request sent for ${cname}...`, 'info');
+      showToast(t('toast.request_sent_for', '{act} request sent for {cname}...', { act: act.toUpperCase(), cname: cname }), 'info');
 
       try {
         await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/action`, { action: act });
-        showToast(`Container "${cname}" successfully ${act}ed.`, 'success');
+        showToast(t('toast.container_successfully_ed', 'Container "{cname}" successfully {act}ed.', { cname: cname, act: act }), 'success');
         await fetchAndRenderDockerContainers();
       } catch (err) {
-        showToast(`Failed to ${act} container: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_container', 'Failed to {act} container: {error}', { act: act, error: err.message }), 'error');
         actBtn.disabled = false;
         actBtn.style.opacity = '1';
       }
@@ -1851,7 +1851,7 @@ export async function openAppDeployModal(appId) {
           modal.classList.add('window-minimized');
           modal.style.display = 'none';
         }
-        showToast(`Deploying ${modal._activeAppId || 'app'} in background. Click Dock icon to restore.`, 'info');
+        showToast(t('toast.deploying_in_background_click_dock_icon', 'Deploying {activeAppId} in background. Click Dock icon to restore.', { activeAppId: modal._activeAppId || 'app' }), 'info');
       } else {
         if (modal._close) modal._close();
       }
@@ -1867,7 +1867,7 @@ export async function openAppDeployModal(appId) {
         if (modal._isDeploying) {
           if (DockManager) DockManager.minimize('app-deploy');
           else modal.classList.add('window-minimized');
-          showToast(`Deploying in background. Reopen from Dock anytime.`, 'info');
+          showToast(t('toast.deploying_in_background_reopen_from_dock', `Deploying in background. Reopen from Dock anytime.`), 'info');
         } else if (modal._close) {
           modal._close();
         }
@@ -2273,9 +2273,9 @@ export async function openAppDeployModal(appId) {
   document.getElementById('adm-copy-btn').onclick = () => {
     copyTextToClipboard(composePre.textContent).then((ok) => {
       if (ok) {
-        showToast('Docker Compose YAML copied to clipboard!', 'success');
+        showToast(t('toast.docker_compose_yaml_copied_to_clipboard', 'Docker Compose YAML copied to clipboard!'), 'success');
       } else {
-        showToast('Failed to copy to clipboard', 'warn');
+        showToast(t('toast.failed_to_copy_to_clipboard', 'Failed to copy to clipboard'), 'warn');
       }
     });
   };
@@ -2288,7 +2288,7 @@ export async function openAppDeployModal(appId) {
     a.download = `${appId}-compose.yml`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast(`Downloaded ${appId}-compose.yml`, 'info');
+    showToast(t('toast.downloaded_compose_yml_2', 'Downloaded {appId}-compose.yml', { appId: appId }), 'info');
   };
 
   // Deployment execution with live progress bar and streaming console
@@ -2373,7 +2373,7 @@ export async function openAppDeployModal(appId) {
         fetchAndRenderDockerContainers();
       } catch (e) {}
 
-      showToast(`${appId} stack deployed and running!`, 'success');
+      showToast(t('toast.stack_deployed_and_running', '{appId} stack deployed and running!', { appId: appId }), 'success');
     } else if (data.step === 'error') {
       modal._isDeploying = false;
       if (progressSpinner) {
@@ -2403,7 +2403,7 @@ export async function openAppDeployModal(appId) {
         showDockToast(`❌ ${appId.toUpperCase()} deployment failed! Click to view logs.`, 'app-deploy');
       }
 
-      showToast(`Deployment failed: ${data.message}`, 'error');
+      showToast(t('toast.deployment_failed', 'Deployment failed: {message}', { message: data.message }), 'error');
     }
   }
 
@@ -2421,7 +2421,7 @@ export async function openAppDeployModal(appId) {
           banner.style.border = '1px solid var(--warn, #f5a623)';
           if (nameInput) nameInput.style.borderColor = 'var(--warn, #f5a623)';
           banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Container Name In Use:</span> A container named <strong>${cName}</strong> already exists. Please choose a unique name or select 'Stop &amp; Replace Existing'.`;
-          showToast(`Container '${cName}' already exists. Please rename or select Replace.`, 'warn');
+          showToast(t('toast.container_already_exists_please_rename_or', 'Container \'{cName}\' already exists. Please rename or select Replace.', { cName: cName }), 'warn');
           return;
         }
       } catch (err) {}
@@ -2435,7 +2435,7 @@ export async function openAppDeployModal(appId) {
           portInput.style.borderColor = 'var(--warn, #f5a623)';
           const inUse = check.in_use_by ? ` (in use by ${check.in_use_by})` : '';
           banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${p} is already busy${inUse}. Please choose an available port before deploying.`;
-          showToast(`Port ${p} is already in use${inUse}. Please change the port.`, 'warn');
+          showToast(t('toast.port_is_already_in_use_please', 'Port {p} is already in use{inUse}. Please change the port.', { p: p, inUse: inUse }), 'warn');
           return;
         }
       } catch (err) {}
@@ -2741,7 +2741,7 @@ export async function openDockerPruneModal() {
 
       await fetchAndRenderDockerContainers();
     } catch (err) {
-      showToast(`Prune failed: ${err.message}`, 'error');
+      showToast(t('toast.prune_failed', 'Prune failed: {error}', { error: err.message }), 'error');
       confirmBtn.disabled = false;
       confirmBtn.textContent = '🧹 Run Prune & Reclaim Storage';
     }
@@ -2854,11 +2854,11 @@ export async function openAppSourcesModal() {
             name: 'Lissy93 Templates',
             url: 'https://raw.githubusercontent.com/Lissy93/portainer-templates/main/templates.json',
           });
-          showToast('Lissy93 Portainer templates added (790+ apps)!', 'success');
+          showToast(t('toast.lissy93_portainer_templates_added_790_apps', 'Lissy93 Portainer templates added (790+ apps)!'), 'success');
           await refreshSourcesUI();
           fetchAndRenderAppCatalog();
         } catch (err) {
-          showToast(`Failed to add Lissy93 templates: ${err.message}`, 'error');
+          showToast(t('toast.failed_to_add_lissy93_templates', 'Failed to add Lissy93 templates: {error}', { error: err.message }), 'error');
           btnLissy.disabled = false;
           btnLissy.textContent = '+ Add Lissy93 (790+ Apps)';
         }
@@ -2894,7 +2894,7 @@ export async function openAppSourcesModal() {
           statusEl.style.background = 'rgba(37,194,160,0.15)';
           statusEl.style.color = 'var(--accent)';
           statusEl.textContent = '✓ Source added and synced successfully!';
-          showToast(`Added template source "${name}"!`, 'success');
+          showToast(t('toast.added_template_source', 'Added template source "{name}"!', { name: name }), 'success');
           setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
           await refreshSourcesUI();
           fetchAndRenderAppCatalog();
@@ -2902,7 +2902,7 @@ export async function openAppSourcesModal() {
           statusEl.style.background = 'rgba(239,68,68,0.15)';
           statusEl.style.color = '#fca5a5';
           statusEl.textContent = `Error: ${err.message}`;
-          showToast(`Failed to add source: ${err.message}`, 'error');
+          showToast(t('toast.failed_to_add_source', 'Failed to add source: {error}', { error: err.message }), 'error');
         } finally {
           btnCustom.disabled = false;
           btnCustom.textContent = '+ Add & Sync';
@@ -3007,7 +3007,7 @@ async function refreshSourcesUI() {
           await refreshSourcesUI();
           fetchAndRenderAppCatalog();
         } catch (err) {
-          showToast(`Failed to toggle source: ${err.message}`, 'error');
+          showToast(t('toast.failed_to_toggle_source', 'Failed to toggle source: {error}', { error: err.message }), 'error');
           btn.disabled = false;
         }
       };
@@ -3025,7 +3025,7 @@ async function refreshSourcesUI() {
           await refreshSourcesUI();
           fetchAndRenderAppCatalog();
         } catch (err) {
-          showToast(`Failed to sync source: ${err.message}`, 'error');
+          showToast(t('toast.failed_to_sync_source', 'Failed to sync source: {error}', { error: err.message }), 'error');
           btn.disabled = false;
           btn.textContent = '🔄';
         }
@@ -3043,11 +3043,11 @@ async function refreshSourcesUI() {
             btn.disabled = true;
             try {
               await api.delete(`/api/docker/catalog/sources/${sid}`);
-              showToast('Source deleted successfully.', 'info');
+              showToast(t('toast.source_deleted_successfully', 'Source deleted successfully.'), 'info');
               await refreshSourcesUI();
               fetchAndRenderAppCatalog();
             } catch (err) {
-              showToast(`Failed to delete source: ${err.message}`, 'error');
+              showToast(t('toast.failed_to_delete_source', 'Failed to delete source: {error}', { error: err.message }), 'error');
               btn.disabled = false;
             }
           }
@@ -3118,7 +3118,7 @@ export function openSideloadAppModal() {
       const url = activeTab === 'url' ? (urlInput?.value || '').trim() : '';
       const manifest = activeTab === 'paste' ? (contentInput?.value || '').trim() : '';
       if (!url && !manifest) {
-        showToast('Please provide a URL or paste manifest YAML/JSON.', 'warning');
+        showToast(t('toast.please_provide_a_url_or_paste', 'Please provide a URL or paste manifest YAML/JSON.'), 'warning');
         return;
       }
       btnInspect.disabled = true;
@@ -3136,7 +3136,7 @@ export function openSideloadAppModal() {
           }
         }
       } catch (err) {
-        showToast(`Failed to inspect manifest: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_inspect_manifest', 'Failed to inspect manifest: {error}', { error: err.message }), 'error');
         if (resultBox) {
           resultBox.style.display = 'block';
           resultBox.innerHTML = `<div style="color:var(--alert, #ef4444); font-size:12px;">Inspection Failed: ${escapeHtml(err.message)}</div>`;
@@ -3688,7 +3688,7 @@ export function initUpsDrawerControls() {
       btnRefresh.textContent = 'Refreshing...';
       await fetchAndRenderUpsTelemetry();
       await loadUpsConfigToDrawer();
-      showToast('UPS telemetry & parameters updated', 'info');
+      showToast(t('toast.ups_telemetry_parameters_updated', 'UPS telemetry & parameters updated'), 'info');
     } catch (err) {
       console.debug('Failed to refresh UPS telemetry:', err);
     } finally {
@@ -3913,11 +3913,11 @@ export function initUpsDrawerControls() {
           updateUpsConnCardState(targetMode);
           triggerImmediateSave();
           const displayTitle = cand.title || cand.label || (isUsb ? 'Direct USB HID' : (isApc ? 'APCUPSD' : (isNut ? 'NUT' : 'USB HID')));
-          showToast(`Applied ${displayTitle} parameters!`, 'info');
+          showToast(t('toast.applied_parameters', 'Applied {displayTitle} parameters!', { displayTitle: displayTitle }), 'info');
         });
       });
     } catch (err) {
-      showToast(`Auto-discovery failed: ${err.message}`, 'error');
+      showToast(t('toast.auto_discovery_failed', 'Auto-discovery failed: {error}', { error: err.message }), 'error');
     } finally {
       btnDiscover.disabled = false;
       btnDiscover.textContent = 'Scan Hardware';
@@ -3949,16 +3949,16 @@ export function initUpsDrawerControls() {
       });
 
       if (res && (res.connected || res.success)) {
-        showToast(`Connection successful! (${res.model || res.status || 'ONLINE'})`, 'success');
+        showToast(t('toast.connection_successful', 'Connection successful! ({model})', { model: res.model || res.status || 'ONLINE' }), 'success');
         btnTest.textContent = '✓ Connected';
         setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
       } else {
-        showToast(`Connection failed: ${res.error || 'UPS daemon unreachable'}`, 'error');
+        showToast(t('toast.connection_failed', 'Connection failed: {error}', { error: res.error || 'UPS daemon unreachable' }), 'error');
         btnTest.textContent = '✗ Failed';
         setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
       }
     } catch (err) {
-      showToast(`Connection test error: ${err.message}`, 'error');
+      showToast(t('toast.connection_test_error', 'Connection test error: {error}', { error: err.message }), 'error');
       btnTest.textContent = '✗ Error';
       setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
     } finally {
@@ -3981,12 +3981,12 @@ export function initUpsDrawerControls() {
       'This commands the UPS inverter to perform a 10-second internal battery discharge test under active load.',
       async () => {
         try {
-          showToast('Initiating battery self-test...', 'info');
+          showToast(t('toast.initiating_battery_self_test', 'Initiating battery self-test...'), 'info');
           const res = await api.post('/api/ups/self-test');
           showToast(res.message || 'Battery self-test command sent successfully!', 'success');
           fetchAndRenderUpsTelemetry();
         } catch (err) {
-          showToast(`Self-test failed: ${err.message}`, 'error');
+          showToast(t('toast.self_test_failed', 'Self-test failed: {error}', { error: err.message }), 'error');
         }
       },
       null,
@@ -4002,11 +4002,11 @@ export function initUpsDrawerControls() {
       'This simulates a 15-second utility power failure drill to verify digital twin electron animations, emergency countdown banner, and event ledger logging. <strong>Host will NOT shut down.</strong>',
       async () => {
         try {
-          showToast('Outage drill started (15s)...', 'warn');
+          showToast(t('toast.outage_drill_started_15s', 'Outage drill started (15s)...'), 'warn');
           await api.post('/api/ups/simulate', { duration_sec: 15 });
           fetchAndRenderUpsTelemetry();
         } catch (err) {
-          showToast(`Simulation failed: ${err.message}`, 'error');
+          showToast(t('toast.simulation_failed', 'Simulation failed: {error}', { error: err.message }), 'error');
         }
       },
       null,
@@ -4104,10 +4104,10 @@ export async function fetchAndRenderReplication() {
             btn.disabled = true;
             btn.textContent = '⏳ Running...';
             await api.post(`/api/storage/replication/jobs/${encodeURIComponent(id)}/run`);
-            showToast(`Replication pipeline '${id}' dispatched.`, 'success');
+            showToast(t('toast.replication_pipeline_dispatched', 'Replication pipeline \'{id}\' dispatched.', { id: id }), 'success');
             setTimeout(fetchAndRenderReplication, 1000);
           } catch (e) {
-            showToast(`Replication failed: ${e.message}`, 'error');
+            showToast(t('toast.replication_failed', 'Replication failed: {message}', { message: e.message }), 'error');
           } finally {
             btn.disabled = false;
             btn.textContent = '▶ Run';
@@ -4124,10 +4124,10 @@ export async function fetchAndRenderReplication() {
             async () => {
               try {
                 await api.delete(`/api/storage/replication/jobs/${encodeURIComponent(id)}`);
-                showToast(`Pipeline '${id}' deleted.`, 'success');
+                showToast(t('toast.pipeline_deleted', 'Pipeline \'{id}\' deleted.', { id: id }), 'success');
                 fetchAndRenderReplication();
               } catch (e) {
-                showToast(`Delete failed: ${e.message}`, 'error');
+                showToast(t('toast.delete_failed_2', 'Delete failed: {message}', { message: e.message }), 'error');
               }
             }
           );
@@ -4548,7 +4548,7 @@ export async function fetchAndRenderWireguard() {
               tsCopyAuthUrlBtn.onclick = () => {
                 if (navigator.clipboard?.writeText) {
                   navigator.clipboard.writeText(ts.auth_url);
-                  showToast('Authorization link copied to clipboard.', 'success');
+                  showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success');
                 }
               };
             }
@@ -4600,7 +4600,7 @@ export async function fetchAndRenderWireguard() {
         btn.disabled = true;
         btn.textContent = '⏳ Deploying Container...';
       }
-      showToast('Deploying official Tailscale container to Docker...', 'info');
+      showToast(t('toast.deploying_official_tailscale_container_to_docker', 'Deploying official Tailscale container to Docker...'), 'info');
 
       const res = await api.post('/api/network/mesh-vpn/tailscale/deploy', {
         auth_key: authKey || null,
@@ -4625,19 +4625,19 @@ export async function fetchAndRenderWireguard() {
           tsCopyAuthUrlBtn.onclick = () => {
             if (navigator.clipboard?.writeText) {
               navigator.clipboard.writeText(res.auth_url);
-              showToast('Authorization link copied to clipboard.', 'success');
+              showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success');
             }
           };
         }
-        showToast('Tailscale deployed! Opening authorization window...', 'info');
+        showToast(t('toast.tailscale_deployed_opening_authorization_window', 'Tailscale deployed! Opening authorization window...'), 'info');
         startTailscaleAuthPolling();
       } else {
-        showToast('Tailscale container deployed and connected!', 'success');
+        showToast(t('toast.tailscale_container_deployed_and_connected', 'Tailscale container deployed and connected!'), 'success');
         if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
         fetchAndRenderWireguard();
       }
     } catch (err) {
-      showToast(`Tailscale deployment failed: ${err.message}`, 'error');
+      showToast(t('toast.tailscale_deployment_failed', 'Tailscale deployment failed: {error}', { error: err.message }), 'error');
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -4659,7 +4659,7 @@ export async function fetchAndRenderWireguard() {
           clearInterval(window._tsAuthPollInterval);
           window._tsAuthPollInterval = null;
           if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
-          showToast('Tailscale node successfully authorized and connected!', 'success');
+          showToast(t('toast.tailscale_node_successfully_authorized_and_connected', 'Tailscale node successfully authorized and connected!'), 'success');
           fetchAndRenderWireguard();
         } else if (mesh && mesh.tailscale && mesh.tailscale.auth_url && tsAuthLink && tsAuthLink.href !== mesh.tailscale.auth_url) {
           tsAuthLink.href = mesh.tailscale.auth_url;
@@ -4721,19 +4721,19 @@ export async function fetchAndRenderWireguard() {
             tsCopyAuthUrlBtn.onclick = () => {
               if (navigator.clipboard?.writeText) {
                 navigator.clipboard.writeText(res.auth_url);
-                showToast('Authorization link copied to clipboard.', 'success');
+                showToast(t('toast.authorization_link_copied_to_clipboard', 'Authorization link copied to clipboard.'), 'success');
               }
             };
           }
-          showToast('Tailscale login opened! Complete authorization in your browser.', 'info');
+          showToast(t('toast.tailscale_login_opened_complete_authorization_in', 'Tailscale login opened! Complete authorization in your browser.'), 'info');
           startTailscaleAuthPolling();
         } else {
-          showToast('Connected host to Tailscale mesh network.', 'success');
+          showToast(t('toast.connected_host_to_tailscale_mesh_network', 'Connected host to Tailscale mesh network.'), 'success');
           if (tsAuthKeyInput) tsAuthKeyInput.value = '';
           fetchAndRenderWireguard();
         }
       } catch (err) {
-        showToast(`Tailscale connection failed: ${err.message || 'Daemon error'}`, 'error');
+        showToast(t('toast.tailscale_connection_failed', 'Tailscale connection failed: {error}', { error: err.message || 'Daemon error' }), 'error');
       } finally {
         tsUpBtn.disabled = false;
         if (tsUpBtn.dataset.mode === 'login') {
@@ -4754,10 +4754,10 @@ export async function fetchAndRenderWireguard() {
       try {
         tsDownBtn.disabled = true;
         await api.post('/api/network/mesh-vpn/tailscale/down');
-        showToast('Disconnected from Tailscale mesh network.', 'info');
+        showToast(t('toast.disconnected_from_tailscale_mesh_network', 'Disconnected from Tailscale mesh network.'), 'info');
         fetchAndRenderWireguard();
       } catch (err) {
-        showToast(`Tailscale disconnection failed: ${err.message || 'Daemon error'}`, 'error');
+        showToast(t('toast.tailscale_disconnection_failed', 'Tailscale disconnection failed: {error}', { error: err.message || 'Daemon error' }), 'error');
       } finally {
         tsDownBtn.disabled = false;
       }
@@ -4773,7 +4773,7 @@ export async function fetchAndRenderWireguard() {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(ip);
         }
-        showToast(`Copied Tailscale IP: ${ip}`, 'success');
+        showToast(t('toast.copied_tailscale_ip', 'Copied Tailscale IP: {ip}', { ip: ip }), 'success');
       }
     });
   }
@@ -4791,14 +4791,14 @@ export async function fetchAndRenderWireguard() {
           try {
             window.open(res.auth_url, '_blank', 'noopener,noreferrer');
           } catch (_) {}
-          showToast('Re-authentication initiated. Complete in your browser.', 'info');
+          showToast(t('toast.re_authentication_initiated_complete_in_your', 'Re-authentication initiated. Complete in your browser.'), 'info');
           startTailscaleAuthPolling();
         } else {
-          showToast('Tailscale node re-authenticated successfully.', 'success');
+          showToast(t('toast.tailscale_node_re_authenticated_successfully', 'Tailscale node re-authenticated successfully.'), 'success');
           fetchAndRenderWireguard();
         }
       } catch (err) {
-        showToast(`Re-authentication failed: ${err.message}`, 'error');
+        showToast(t('toast.re_authentication_failed', 'Re-authentication failed: {error}', { error: err.message }), 'error');
       } finally {
         btnTsReauth.disabled = false;
         btnTsReauth.textContent = '⚡ Re-auth';
@@ -4826,7 +4826,7 @@ export async function fetchAndRenderWireguard() {
       );
       fetchAndRenderWireguard();
     } catch (e) {
-      showToast(`Failed to update subnet routes: ${e.message}`, 'error');
+      showToast(t('toast.failed_to_update_subnet_routes', 'Failed to update subnet routes: {message}', { message: e.message }), 'error');
     } finally {
       if (btnTsSaveRoutes) {
         btnTsSaveRoutes.disabled = false;
@@ -4857,7 +4857,7 @@ export async function fetchAndRenderWireguard() {
         );
         fetchAndRenderWireguard();
       } catch (e) {
-        showToast(`Failed to set exit node: ${e.message}`, 'error');
+        showToast(t('toast.failed_to_set_exit_node', 'Failed to set exit node: {message}', { message: e.message }), 'error');
       }
     });
   }
@@ -4873,7 +4873,7 @@ export async function fetchAndRenderWireguard() {
         showToast(enabled ? 'Tailscale SSH enabled.' : 'Tailscale SSH disabled.', 'success');
         fetchAndRenderWireguard();
       } catch (e) {
-        showToast(`Failed to toggle SSH: ${e.message}`, 'error');
+        showToast(t('toast.failed_to_toggle_ssh', 'Failed to toggle SSH: {message}', { message: e.message }), 'error');
       }
     });
   }
@@ -4912,11 +4912,11 @@ export async function fetchAndRenderWireguard() {
       } else if (res && res.status === 'error') {
         if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
         if (tsFunnelToggle) tsFunnelToggle.checked = Boolean(res.funnel_enabled);
-        showToast(`Tailscale configuration error: ${res.error || 'Operation failed'}`, 'error');
+        showToast(t('toast.tailscale_configuration_error', 'Tailscale configuration error: {error}', { error: res.error || 'Operation failed' }), 'error');
       } else {
         if (serve && !res.serve_enabled) {
           if (tsServeToggle) tsServeToggle.checked = false;
-          showToast('Tailscale Serve could not be activated. Check tailscaled daemon status.', 'warn');
+          showToast(t('toast.tailscale_serve_could_not_be_activated', 'Tailscale Serve could not be activated. Check tailscaled daemon status.'), 'warn');
         } else {
           showToast(
             serve
@@ -4928,7 +4928,7 @@ export async function fetchAndRenderWireguard() {
       }
       fetchAndRenderWireguard();
     } catch (e) {
-      showToast(`Failed to configure Tailscale Serve: ${e.message}`, 'error');
+      showToast(t('toast.failed_to_configure_tailscale_serve', 'Failed to configure Tailscale Serve: {message}', { message: e.message }), 'error');
       fetchAndRenderWireguard();
     }
   }
@@ -4965,7 +4965,7 @@ export async function fetchAndRenderWireguard() {
       if (url && url !== '#') {
         if (navigator.clipboard?.writeText) {
           navigator.clipboard.writeText(url);
-          showToast('Tailscale HTTPS URL copied to clipboard.', 'success');
+          showToast(t('toast.tailscale_https_url_copied_to_clipboard', 'Tailscale HTTPS URL copied to clipboard.'), 'success');
         }
       }
     });
@@ -4981,12 +4981,12 @@ export async function fetchAndRenderWireguard() {
         btnTsTaildropFetch.textContent = '⏳ ...';
         const res = await api.post('/api/network/mesh-vpn/tailscale/taildrop/receive');
         showToast(
-          `Taildrop check completed. ${res.count || 0} file(s) available in inbox.`,
+          t('toast.taildrop_check_completed_file_s_available', 'Taildrop check completed. {count} file(s) available in inbox.', { count: res.count || 0 }),
           'success'
         );
         fetchAndRenderWireguard();
       } catch (e) {
-        showToast(`Failed to fetch Taildrop files: ${e.message}`, 'error');
+        showToast(t('toast.failed_to_fetch_taildrop_files', 'Failed to fetch Taildrop files: {message}', { message: e.message }), 'error');
       } finally {
         btnTsTaildropFetch.disabled = false;
         btnTsTaildropFetch.textContent = '📥 Fetch';
@@ -5057,13 +5057,13 @@ export async function fetchAndRenderWireguard() {
             resSpan.textContent = `⚡ ${res.latency}`;
             resSpan.style.color = res.is_direct ? 'var(--ok2, #3bf58b)' : '#f59e0b';
           }
-          showToast(`Pinged ${ip}: ${res.latency} (${res.route || 'direct'})`, 'success');
+          showToast(t('toast.pinged', 'Pinged {ip}: {latency} ({route})', { ip: ip, latency: res.latency, route: res.route || 'direct' }), 'success');
         } else {
           if (resSpan) {
             resSpan.textContent = '❌ Failed';
             resSpan.style.color = '#f87171';
           }
-          showToast(`Ping ${ip} failed or timed out.`, 'warning');
+          showToast(t('toast.ping_failed_or_timed_out', 'Ping {ip} failed or timed out.', { ip: ip }), 'warning');
         }
       } catch (err) {
         if (resSpan) {
@@ -5125,7 +5125,7 @@ export async function fetchAndRenderWireguard() {
     refreshBtn._bound = true;
     refreshBtn.addEventListener('click', () => {
       fetchAndRenderWireguard();
-      showToast('Mesh VPN telemetry refreshed.', 'info');
+      showToast(t('toast.mesh_vpn_telemetry_refreshed', 'Mesh VPN telemetry refreshed.'), 'info');
     });
   }
 
@@ -5155,7 +5155,7 @@ export async function fetchAndRenderWireguard() {
           copyBtn.style.display = 'inline-block';
           copyBtn.onclick = async () => {
             await copyTextToClipboard(confText);
-            showToast('WireGuard client config copied to clipboard.', 'success');
+            showToast(t('toast.wireguard_client_config_copied_to_clipboard', 'WireGuard client config copied to clipboard.'), 'success');
           };
         }
 
@@ -5169,7 +5169,7 @@ export async function fetchAndRenderWireguard() {
             a.download = `${cfg.client_name || 'zettnas-client'}.conf`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast('Downloaded WireGuard .conf profile.', 'info');
+            showToast(t('toast.downloaded_wireguard_conf_profile', 'Downloaded WireGuard .conf profile.'), 'info');
           };
         }
 
@@ -5224,7 +5224,7 @@ export async function fetchAndRenderWireguard() {
               if (modalQrCopyBtn) {
                 modalQrCopyBtn.onclick = async () => {
                   await copyTextToClipboard(confText);
-                  showToast('Copied WireGuard config to clipboard.', 'success');
+                  showToast(t('toast.copied_wireguard_config_to_clipboard', 'Copied WireGuard config to clipboard.'), 'success');
                 };
               }
               if (modalQrDlBtn) {
@@ -5236,7 +5236,7 @@ export async function fetchAndRenderWireguard() {
                   a.download = `${cfg.client_name || 'zettnas-client'}.conf`;
                   a.click();
                   URL.revokeObjectURL(url);
-                  showToast('Exported WireGuard .conf profile.', 'info');
+                  showToast(t('toast.exported_wireguard_conf_profile', 'Exported WireGuard .conf profile.'), 'info');
                 };
               }
             };
@@ -5247,9 +5247,9 @@ export async function fetchAndRenderWireguard() {
           }
         }
 
-        showToast('WireGuard Curve25519 client profile generated.', 'success');
+        showToast(t('toast.wireguard_curve25519_client_profile_generated', 'WireGuard Curve25519 client profile generated.'), 'success');
       } catch (err) {
-        showToast(`Failed to generate WireGuard config: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_generate_wireguard_config', 'Failed to generate WireGuard config: {error}', { error: err.message }), 'error');
       } finally {
         genBtn.disabled = false;
         genBtn.textContent = '🔑 Generate Client .conf';
@@ -5272,7 +5272,7 @@ export async function fetchAndRenderWireguard() {
         showToast(`WireGuard subnet routing ${res.enabled ? 'enabled' : 'disabled'}.`, 'info');
         fetchAndRenderWireguard();
       } catch (err) {
-        showToast(`Subnet routing toggle failed: ${err.message}`, 'error');
+        showToast(t('toast.subnet_routing_toggle_failed', 'Subnet routing toggle failed: {error}', { error: err.message }), 'error');
       } finally {
         natBtn.disabled = false;
       }
@@ -5738,9 +5738,9 @@ export async function openNetworkPortModal(ifaceName) {
         const mac = nic.mac || roMac?.textContent;
         if (mac && mac !== '--') {
           navigator.clipboard.writeText(mac);
-          showToast(`MAC address ${mac} copied to clipboard!`, 'info');
+          showToast(t('toast.mac_address_copied_to_clipboard', 'MAC address {mac} copied to clipboard!', { mac: mac }), 'info');
         } else {
-          showToast('No MAC address available to copy', 'warn');
+          showToast(t('toast.no_mac_address_available_to_copy', 'No MAC address available to copy'), 'warn');
         }
       };
     }
@@ -5748,7 +5748,7 @@ export async function openNetworkPortModal(ifaceName) {
     if (roPci) roPci.textContent = nic.pci_slot || '--';
     if (roLink) roLink.textContent = nic.is_up ? `${nic.speed_human || 'Connected'} (${nic.duplex || 'full'})` : 'Down / Disconnected';
   } catch (err) {
-    showToast(`Failed to load port config: ${err.message || err}`, 'error');
+    showToast(t('toast.failed_to_load_port_config', 'Failed to load port config: {error}', { error: err.message || err }), 'error');
   }
 }
 
@@ -5777,7 +5777,7 @@ export async function saveNetworkPortConfig() {
   const speed = autoneg ? null : parseInt(speedVal, 10);
 
   if (isNaN(mtu) || mtu < 68 || mtu > 9216) {
-    showToast('MTU must be an integer between 68 and 9216', 'error');
+    showToast(t('toast.mtu_must_be_an_integer_between', 'MTU must be an integer between 68 and 9216'), 'error');
     return;
   }
 
@@ -5847,7 +5847,7 @@ export async function submitDockerNetworkCreate() {
   const gateway = gwInput ? gwInput.value.trim() : '';
 
   if (!name) {
-    showToast('Please enter a network name', 'error');
+    showToast(t('toast.please_enter_a_network_name', 'Please enter a network name'), 'error');
     return;
   }
 
@@ -5922,7 +5922,7 @@ export async function openHostIpConfigModal() {
     overlay.classList.add('open');
     overlay.style.display = 'flex';
   } catch (err) {
-    showToast(`Failed to load host network config: ${err.message || err}`, 'error');
+    showToast(t('toast.failed_to_load_host_network_config', 'Failed to load host network config: {error}', { error: err.message || err }), 'error');
   }
 }
 
@@ -5954,7 +5954,7 @@ export async function applyHostIpConfig() {
   const dns2 = dns2Input ? dns2Input.value.trim() : '';
 
   if (mode === 'static' && !ip) {
-    showToast('Please enter an IPv4 address', 'error');
+    showToast(t('toast.please_enter_an_ipv4_address', 'Please enter an IPv4 address'), 'error');
     return;
   }
 
@@ -6146,7 +6146,7 @@ export async function openBondConfigModal(bondName) {
     overlay.classList.add('open');
     overlay.style.display = 'flex';
   } catch (err) {
-    showToast(`Failed to load bond configuration: ${err.message || err}`, 'error');
+    showToast(t('toast.failed_to_load_bond_configuration', 'Failed to load bond configuration: {error}', { error: err.message || err }), 'error');
   }
 }
 
@@ -6174,7 +6174,7 @@ export async function saveBondConfig() {
   });
 
   if (slaves.length === 0) {
-    showToast('Please select at least one physical interface for the bond', 'error');
+    showToast(t('toast.please_select_at_least_one_physical', 'Please select at least one physical interface for the bond'), 'error');
     return;
   }
 
@@ -6250,7 +6250,7 @@ export async function openBridgeConfigModal(brName) {
     overlay.classList.add('open');
     overlay.style.display = 'flex';
   } catch (err) {
-    showToast(`Failed to load bridge configuration: ${err.message || err}`, 'error');
+    showToast(t('toast.failed_to_load_bridge_configuration', 'Failed to load bridge configuration: {error}', { error: err.message || err }), 'error');
   }
 }
 
@@ -6328,7 +6328,7 @@ export async function openCreateVlanModal() {
         .join('');
     }
   } catch (err) {
-    showToast(`Failed to open VLAN creator: ${err.message || err}`, 'error');
+    showToast(t('toast.failed_to_open_vlan_creator', 'Failed to open VLAN creator: {error}', { error: err.message || err }), 'error');
   }
 }
 
@@ -6351,11 +6351,11 @@ export async function submitCreateVlan() {
   const alias = aliasInput ? aliasInput.value.trim() : '';
 
   if (!parent) {
-    showToast('Please select a parent trunk interface', 'error');
+    showToast(t('toast.please_select_a_parent_trunk_interface', 'Please select a parent trunk interface'), 'error');
     return;
   }
   if (isNaN(vid) || vid < 1 || vid > 4094) {
-    showToast('VLAN ID must be an integer between 1 and 4094', 'error');
+    showToast(t('toast.vlan_id_must_be_an_integer', 'VLAN ID must be an integer between 1 and 4094'), 'error');
     return;
   }
 
@@ -6837,7 +6837,7 @@ function bindDiskTableEvents(tbody) {
           'Drive in Standby Mode',
           `Disk /dev/${dev} is currently sleeping. Querying S.M.A.R.T. diagnostics will wake the drive, spinning up platters. Do you wish to wake it?`,
           () => {
-            showToast(`Waking disk /dev/${dev}...`, 'info');
+            showToast(t('toast.waking_disk_dev_2', 'Waking disk /dev/{dev}...', { dev: dev }), 'info');
             ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
           }
         );
@@ -7543,10 +7543,10 @@ export function initManagement() {
                 btn.disabled = true;
                 btn.textContent = '...';
                 await api.post(`/api/vms/${id}/action`, { action: 'start' });
-                showToast('VM started successfully', 'success');
+                showToast(t('toast.vm_started_successfully', 'VM started successfully'), 'success');
                 fetchAndRenderMgmtVms();
               } catch (err) {
-                showToast(`Failed to start VM: ${err.message}`, 'error');
+                showToast(t('toast.failed_to_start_vm', 'Failed to start VM: {error}', { error: err.message }), 'error');
                 btn.disabled = false;
                 btn.textContent = '▶ Start';
               }
@@ -7560,10 +7560,10 @@ export function initManagement() {
                 btn.disabled = true;
                 btn.textContent = '...';
                 await api.post(`/api/vms/${id}/action`, { action: 'stop' });
-                showToast('VM stop signal sent', 'info');
+                showToast(t('toast.vm_stop_signal_sent', 'VM stop signal sent'), 'info');
                 fetchAndRenderMgmtVms();
               } catch (err) {
-                showToast(`Failed to stop VM: ${err.message}`, 'error');
+                showToast(t('toast.failed_to_stop_vm', 'Failed to stop VM: {error}', { error: err.message }), 'error');
                 btn.disabled = false;
                 btn.textContent = '⏹ Stop';
               }
@@ -7981,7 +7981,7 @@ export function initManagement() {
         await api.post('/api/system/profile', { profile: p });
         showToast(`System profile switched to ${p === 'auto' ? 'AUTO DYNAMIC' : p.toUpperCase()}.`, 'success');
       } catch (err) {
-        showToast(`Failed to switch profile: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_switch_profile', 'Failed to switch profile: {error}', { error: err.message }), 'error');
       }
     });
 
@@ -8006,7 +8006,7 @@ export function initManagement() {
   if (refreshHistoryBtn) {
     refreshHistoryBtn.addEventListener('click', () => {
       fetchAndRenderCopyHistory();
-      showToast('Ingest history refreshed.', 'info');
+      showToast(t('toast.ingest_history_refreshed', 'Ingest history refreshed.'), 'info');
     });
   }
 
@@ -8015,7 +8015,7 @@ export function initManagement() {
   if (refreshNetBtn) {
     refreshNetBtn.addEventListener('click', () => {
       fetchAndRenderNetworkTopology();
-      showToast('Network topology refreshed.', 'info');
+      showToast(t('toast.network_topology_refreshed', 'Network topology refreshed.'), 'info');
     });
   }
   initNetworkControls();
@@ -8025,7 +8025,7 @@ export function initManagement() {
   if (refreshDockerBtn) {
     refreshDockerBtn.addEventListener('click', () => {
       fetchAndRenderDockerContainers();
-      showToast('Docker containers refreshed.', 'info');
+      showToast(t('toast.docker_containers_refreshed', 'Docker containers refreshed.'), 'info');
     });
   }
 
@@ -8034,7 +8034,7 @@ export function initManagement() {
   if (refreshUpsBtn) {
     refreshUpsBtn.addEventListener('click', () => {
       fetchAndRenderUpsTelemetry();
-      showToast('UPS telemetry refreshed.', 'info');
+      showToast(t('toast.ups_telemetry_refreshed', 'UPS telemetry refreshed.'), 'info');
     });
   }
   initUpsDrawerControls();
@@ -8044,7 +8044,7 @@ export function initManagement() {
   if (refreshVmBtn) {
     refreshVmBtn.addEventListener('click', () => {
       fetchAndRenderMgmtVms();
-      showToast('VM fleet refreshed.', 'info');
+      showToast(t('toast.vm_fleet_refreshed', 'VM fleet refreshed.'), 'info');
     });
   }
 
@@ -8140,7 +8140,7 @@ export function initManagement() {
     refreshChassisBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-chassis-twin-mount');
       if (mount) fetchAndRenderChassisTwin(mount);
-      showToast('Chassis digital twin refreshed.', 'info');
+      showToast(t('toast.chassis_digital_twin_refreshed', 'Chassis digital twin refreshed.'), 'info');
     });
   }
 
@@ -8150,7 +8150,7 @@ export function initManagement() {
     refreshTopoBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-storage-topo-mount');
       if (mount) fetchAndRenderStorageTopology(mount);
-      showToast('Storage topology refreshed.', 'info');
+      showToast(t('toast.storage_topology_refreshed', 'Storage topology refreshed.'), 'info');
     });
   }
 
@@ -8177,7 +8177,7 @@ export function initManagement() {
     refreshSharesBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-storage-shares-mount');
       if (mount) fetchAndRenderNetworkShares(mount);
-      showToast('Network shares refreshed.', 'info');
+      showToast(t('toast.network_shares_refreshed', 'Network shares refreshed.'), 'info');
     });
   }
 
@@ -8207,7 +8207,7 @@ export function initManagement() {
     refreshRemotesBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-storage-remotes-mount');
       if (mount) fetchAndRenderRemoteStorage(mount);
-      showToast('Remote storage refreshed.', 'info');
+      showToast(t('toast.remote_storage_refreshed', 'Remote storage refreshed.'), 'info');
     });
   }
 
@@ -8228,7 +8228,7 @@ export function initManagement() {
   if (refreshDisksInvBtn) {
     refreshDisksInvBtn.addEventListener('click', () => {
       fetchAndRenderDisksInventory();
-      showToast('Disks inventory refreshed.', 'info');
+      showToast(t('toast.disks_inventory_refreshed', 'Disks inventory refreshed.'), 'info');
     });
   }
 
@@ -8237,7 +8237,7 @@ export function initManagement() {
   if (refreshReplBtn) {
     refreshReplBtn.addEventListener('click', () => {
       fetchAndRenderReplication();
-      showToast('Replication pipelines refreshed.', 'info');
+      showToast(t('toast.replication_pipelines_refreshed', 'Replication pipelines refreshed.'), 'info');
     });
   }
 
@@ -8314,11 +8314,11 @@ export function initManagement() {
             payload.target_user = document.getElementById('repl-target-user')?.value.trim() || 'root';
           }
           await api.post('/api/storage/replication/jobs', payload);
-          showToast(`Replication pipeline '${payload.name}' created.`, 'success');
+          showToast(t('toast.replication_pipeline_created', 'Replication pipeline \'{name}\' created.', { name: payload.name }), 'success');
           closeReplModal();
           fetchAndRenderReplication();
         } catch (err) {
-          showToast(`Failed to create pipeline: ${err.message}`, 'error');
+          showToast(t('toast.failed_to_create_pipeline', 'Failed to create pipeline: {error}', { error: err.message }), 'error');
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
@@ -8334,7 +8334,7 @@ export function initManagement() {
   if (refreshWgBtn) {
     refreshWgBtn.addEventListener('click', () => {
       fetchAndRenderWireguard();
-      showToast('WireGuard mesh status refreshed.', 'info');
+      showToast(t('toast.wireguard_mesh_status_refreshed', 'WireGuard mesh status refreshed.'), 'info');
     });
   }
 
@@ -8548,12 +8548,12 @@ export function initManagement() {
 
       try {
         await api.post('/api/backup/schedule', payload);
-        showToast('Hyper-backup pipeline saved successfully!', 'success');
+        showToast(t('toast.hyper_backup_pipeline_saved_successfully', 'Hyper-backup pipeline saved successfully!'), 'success');
         closeBackupModal();
         formBackupJob.reset();
         fetchAndRenderBackupJobs();
       } catch (err) {
-        showToast(`Failed to save backup job: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_save_backup_job', 'Failed to save backup job: {error}', { error: err.message }), 'error');
       }
     });
   }
@@ -8603,12 +8603,12 @@ export function initManagement() {
 
       try {
         await api.post('/api/backup/snapshots', payload);
-        showToast('Filesystem snapshot created successfully!', 'success');
+        showToast(t('toast.filesystem_snapshot_created_successfully', 'Filesystem snapshot created successfully!'), 'success');
         closeSnapshotModal();
         formSnapshot.reset();
         fetchAndRenderSystemSnapshots();
       } catch (err) {
-        showToast(`Failed to create snapshot: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_create_snapshot', 'Failed to create snapshot: {error}', { error: err.message }), 'error');
       }
     });
   }
@@ -8623,7 +8623,7 @@ export function initManagement() {
     btnRefreshAppBackups.addEventListener('click', () => {
       const filterApp = document.getElementById('app-backups-filter-app')?.value || '';
       fetchAndRenderAppBackups(null, filterApp);
-      showToast('Application backups refreshed.', 'info');
+      showToast(t('toast.application_backups_refreshed', 'Application backups refreshed.'), 'info');
     });
   }
 
@@ -8846,7 +8846,7 @@ export async function refreshPreviousVersions() {
 export async function revertSystemUpdate() {
   const prev = _previousVersion || (await refreshPreviousVersions());
   if (!prev) {
-    showToast('No previous version is available on this host.', 'error');
+    showToast(t('toast.no_previous_version_is_available_on', 'No previous version is available on this host.'), 'error');
     return;
   }
   const name = prev.version ? `v${prev.version}` : 'the previous version';
@@ -8883,7 +8883,7 @@ export async function revertSystemUpdate() {
           }
         }, 1500);
       } catch (err) {
-        showToast(`Revert failed: ${err.message}`, 'error');
+        showToast(t('toast.revert_failed', 'Revert failed: {error}', { error: err.message }), 'error');
       }
     },
     null,
@@ -8957,7 +8957,7 @@ export async function applySystemUpdate() {
           }
         }, 1500);
       } catch (err) {
-        showToast(`Update failed: ${err.message}`, 'error');
+        showToast(t('toast.update_failed', 'Update failed: {error}', { error: err.message }), 'error');
         if (progressOverlay) progressOverlay.style.display = 'none';
         if (applyBtn) applyBtn.disabled = false;
       }
@@ -9147,7 +9147,7 @@ export async function previewDiagnosticsSummary() {
     const data = await api.get('/api/system/diagnostics-summary');
     openDiagnosticsPreviewModal(data);
   } catch (err) {
-    showToast(`Failed to load diagnostics preview: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_load_diagnostics_preview', 'Failed to load diagnostics preview: {error}', { error: err.message }), 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -9183,7 +9183,7 @@ export async function copySupportMarkdown() {
       throw new Error('Clipboard copy failed');
     }
   } catch (err) {
-    showToast(`Failed to copy support markdown: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_copy_support_markdown', 'Failed to copy support markdown: {error}', { error: err.message }), 'error');
   } finally {
     if (targetBtn) {
       targetBtn.disabled = false;
@@ -9309,12 +9309,12 @@ export async function testAllNotificationChannels() {
     const channels = res?.tested_channels || {};
     const successList = Object.keys(channels).filter(k => channels[k]);
     if (successList.length > 0) {
-      showToast(`✓ Test alerts delivered to: ${successList.join(', ')}`, 'success');
+      showToast(t('toast.test_alerts_delivered_to', '✓ Test alerts delivered to: {successList}', { successList: successList.join(', ') }), 'success');
     } else {
-      showToast('No active channels succeeded. Check configuration and credentials.', 'warning');
+      showToast(t('toast.no_active_channels_succeeded_check_configuration', 'No active channels succeeded. Check configuration and credentials.'), 'warning');
     }
   } catch (err) {
-    showToast(`Test failed: ${err.message}`, 'error');
+    showToast(t('toast.test_failed', 'Test failed: {error}', { error: err.message }), 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -9336,12 +9336,12 @@ export async function testSingleChannel(channel) {
       config: _notificationConfig || {}
     });
     if (res?.success) {
-      showToast(`✓ ${channel.toUpperCase()}: Delivered in ${res.latency_ms}ms`, 'success');
+      showToast(t('toast.delivered_in_ms', '✓ {channel}: Delivered in {latency_ms}ms', { channel: channel.toUpperCase(), latency_ms: res.latency_ms }), 'success');
     } else {
-      showToast(`⚠️ ${channel.toUpperCase()}: ${res.message || 'Delivery failed'}`, 'error');
+      showToast(t('toast.message', '⚠️ {channel}: {message}', { channel: channel.toUpperCase(), message: res.message || 'Delivery failed' }), 'error');
     }
   } catch (err) {
-    showToast(`Test failed for ${channel}: ${err.message}`, 'error');
+    showToast(t('toast.test_failed_for', 'Test failed for {channel}: {error}', { channel: channel, error: err.message }), 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -9611,12 +9611,12 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         try {
           btn.disabled = true;
           btn.innerHTML = `<span class="spinner-inline" style="width:8px; height:8px;"></span>`;
-          showToast(`Triggering backup pipeline ${jobId}...`, 'info');
+          showToast(t('toast.triggering_backup_pipeline', 'Triggering backup pipeline {jobId}...', { jobId: jobId }), 'info');
           await api.post(`/api/backup/schedule/${jobId}/run`);
-          showToast(`Backup pipeline completed successfully!`, 'success');
+          showToast(t('toast.backup_pipeline_completed_successfully', `Backup pipeline completed successfully!`), 'success');
           fetchAndRenderBackupJobs(mount);
         } catch (err) {
-          showToast(`Backup run failed: ${err.message}`, 'error');
+          showToast(t('toast.backup_run_failed', 'Backup run failed: {error}', { error: err.message }), 'error');
         } finally {
           btn.disabled = false;
           btn.innerHTML = origText;
@@ -9630,10 +9630,10 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         showConfirmToast(`Delete scheduled backup task "${jobId}"?`, async () => {
           try {
             await api.delete(`/api/backup/schedule/${jobId}`);
-            showToast('Backup task removed.', 'success');
+            showToast(t('toast.backup_task_removed', 'Backup task removed.'), 'success');
             fetchAndRenderBackupJobs(mount);
           } catch (err) {
-            showToast(`Failed to delete job: ${err.message}`, 'error');
+            showToast(t('toast.failed_to_delete_job', 'Failed to delete job: {error}', { error: err.message }), 'error');
           }
         });
       });
@@ -9715,15 +9715,15 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
         const poolId = btn.dataset.poolId || 'default';
         showConfirmToast(`Roll back to snapshot "${snapName}"? Existing subvolume will be archived safely.`, async () => {
           try {
-            showToast(`Restoring snapshot ${snapName}...`, 'info');
+            showToast(t('toast.restoring_snapshot', 'Restoring snapshot {snapName}...', { snapName: snapName }), 'info');
             await api.post('/api/backup/restore-snapshot', {
               pool_id: poolId,
               snapshot_name: snapName,
             });
-            showToast(`Snapshot "${snapName}" successfully restored!`, 'success');
+            showToast(t('toast.snapshot_successfully_restored', 'Snapshot "{snapName}" successfully restored!', { snapName: snapName }), 'success');
             fetchAndRenderSystemSnapshots(mount);
           } catch (err) {
-            showToast(`Restore failed: ${err.message}`, 'error');
+            showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');
           }
         });
       });
@@ -9736,10 +9736,10 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
         showConfirmToast(`Delete snapshot "${snapName}"?`, async () => {
           try {
             await api.delete(`/api/backup/snapshots/${encodeURIComponent(poolId)}/${encodeURIComponent(snapName)}`, { confirmed: true });
-            showToast(`Snapshot "${snapName}" deleted.`, 'success');
+            showToast(t('toast.snapshot_deleted', 'Snapshot "{snapName}" deleted.', { snapName: snapName }), 'success');
             fetchAndRenderSystemSnapshots(mount);
           } catch (err) {
-            showToast(`Failed to delete snapshot: ${err.message}`, 'error');
+            showToast(t('toast.failed_to_delete_snapshot', 'Failed to delete snapshot: {error}', { error: err.message }), 'error');
           }
         });
       });
@@ -9862,10 +9862,10 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
         const filename = btn.dataset.file;
         try {
           btn.disabled = true;
-          showToast(`Downloading backup "${filename}"...`, 'info');
+          showToast(t('toast.downloading_backup', 'Downloading backup "{filename}"...', { filename: filename }), 'info');
           await api.downloadBlob(`/api/backup/apps/${encodeURIComponent(backupId)}/download`, filename);
         } catch (err) {
-          showToast(`Download failed: ${err.message}`, 'error');
+          showToast(t('toast.download_failed', 'Download failed: {error}', { error: err.message }), 'error');
         } finally {
           btn.disabled = false;
         }
@@ -9882,12 +9882,12 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
           `This will extract configurations and mount files back into the original host directories. Existing paths will be preserved in a <code>.pre_restore</code> backup.`,
           async () => {
             try {
-              showToast(`Restoring ${appName}...`, 'info');
+              showToast(t('toast.restoring', 'Restoring {appName}...', { appName: appName }), 'info');
               const res = await api.post(`/api/backup/apps/${encodeURIComponent(backupId)}/restore`);
-              showToast(`App "${appName}" successfully restored (${res.extracted_count || 'all'} paths restored)!`, 'success');
+              showToast(t('toast.app_successfully_restored_paths_restored', 'App "{appName}" successfully restored ({extracted_count} paths restored)!', { appName: appName, extracted_count: res.extracted_count || 'all' }), 'success');
               fetchAndRenderAppBackups(mount, document.getElementById('app-backups-filter-app')?.value || '');
             } catch (err) {
-              showToast(`Restore failed: ${err.message}`, 'error');
+              showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');
             }
           },
           null,
@@ -9907,10 +9907,10 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
           async () => {
             try {
               await api.delete(`/api/backup/apps/${encodeURIComponent(backupId)}`, { confirmed: true });
-              showToast(`Backup "${filename}" deleted.`, 'success');
+              showToast(t('toast.backup_deleted', 'Backup "{filename}" deleted.', { filename: filename }), 'success');
               fetchAndRenderAppBackups(mount, document.getElementById('app-backups-filter-app')?.value || '');
             } catch (err) {
-              showToast(`Delete failed: ${err.message}`, 'error');
+              showToast(t('toast.delete_failed', 'Delete failed: {error}', { error: err.message }), 'error');
             }
           },
           null,
@@ -10345,7 +10345,7 @@ export async function removeAiModel(modelId) {
     }
     return res;
   } catch (err) {
-    showToast(`Failed to remove model: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_remove_model', 'Failed to remove model: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10361,7 +10361,7 @@ export async function selectAiRecommendedModel(modelId) {
         renderAiLlmRecommendations(recs, res.active_model || cleanId);
       }
       if (res.hardware_warning && res.warning_message) {
-        showToast(`⚠️ ${res.warning_message}`, 'warn');
+        showToast(t('toast.message_2', '⚠️ {warning_message}', { warning_message: res.warning_message }), 'warn');
       } else {
         showToast(t('ai.model_selected_toast', 'Active ZettAI model switched to {model}', { model: cleanId }), 'success');
       }
@@ -10369,7 +10369,7 @@ export async function selectAiRecommendedModel(modelId) {
     }
     return res;
   } catch (err) {
-    showToast(`Failed to select model: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_select_model', 'Failed to select model: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10407,7 +10407,7 @@ export async function searchHuggingFaceModels(query = '') {
     if (statusEl) {
       statusEl.textContent = `⚠️ Hugging Face Hub search error: ${err.message}`;
     }
-    showToast(`Hugging Face search failed: ${err.message}`, 'error');
+    showToast(t('toast.hugging_face_search_failed', 'Hugging Face search failed: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10415,7 +10415,7 @@ export async function searchHuggingFaceModels(query = '') {
 export async function pullHuggingFaceModel(repoId, activate = true) {
   const cleanRepo = String(repoId || '').trim();
   if (!cleanRepo) {
-    showToast('Enter a Hugging Face model repo or URL (e.g. Qwen/Qwen2.5-7B-Instruct-GGUF)', 'warn');
+    showToast(t('toast.enter_a_hugging_face_model_repo', 'Enter a Hugging Face model repo or URL (e.g. Qwen/Qwen2.5-7B-Instruct-GGUF)'), 'warn');
     return null;
   }
   const statusEl = document.getElementById('ai-hf-search-status');
@@ -10450,7 +10450,7 @@ export async function pullHuggingFaceModel(repoId, activate = true) {
     if (statusEl) {
       statusEl.textContent = `⚠️ Failed to pull from Hugging Face: ${err.message}`;
     }
-    showToast(`Failed to pull model from Hugging Face: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_pull_model_from_hugging', 'Failed to pull model from Hugging Face: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10461,7 +10461,7 @@ export async function updateAiServiceConfig(partialConfig = {}) {
     await fetchAndRenderAiStatus();
     return res;
   } catch (err) {
-    showToast(`Failed to update ZettAI configuration: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_update_zettai_configuration', 'Failed to update ZettAI configuration: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10521,7 +10521,7 @@ export async function relearnAiFailedFiles() {
     }
     return res;
   } catch (err) {
-    showToast(`Relearn failed: ${err.message}`, 'error');
+    showToast(t('toast.relearn_failed', 'Relearn failed: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10848,7 +10848,7 @@ export async function controlAiSync(action) {
     }
     return res;
   } catch (err) {
-    showToast(`Sync control (${cleanAction}) failed: ${err.message}`, 'error');
+    showToast(t('toast.sync_control_failed', 'Sync control ({cleanAction}) failed: {error}', { cleanAction: cleanAction, error: err.message }), 'error');
     return null;
   }
 }
@@ -10863,7 +10863,7 @@ export async function flushAiIndex() {
     async () => {
       const feedbackEl = document.getElementById('ai-index-run-feedback');
       if (feedbackEl) feedbackEl.textContent = '⏳ Flushing RAG index database...';
-      showToast('Flushing RAG index database...', 'info');
+      showToast(t('toast.flushing_rag_index_database', 'Flushing RAG index database...'), 'info');
       try {
         const res = await api.post('/api/ai/index/flush');
         await fetchAndRenderAiStatus();
@@ -10875,7 +10875,7 @@ export async function flushAiIndex() {
         return res;
       } catch (err) {
         if (feedbackEl) feedbackEl.textContent = `✕ Flush failed: ${err.message}`;
-        showToast(`Failed to flush RAG index: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_flush_rag_index', 'Failed to flush RAG index: {error}', { error: err.message }), 'error');
         return null;
       }
     },
@@ -10903,11 +10903,11 @@ export async function addAiWatchedFolder(folderPath) {
       }
       const pathIn = document.getElementById('ai-index-target-path') || document.getElementById('ai-index-path-input');
       if (pathIn) pathIn.value = fp;
-      showToast(`Added watched folder: ${fp}`, 'success');
+      showToast(t('toast.added_watched_folder', 'Added watched folder: {fp}', { fp: fp }), 'success');
     }
     return res;
   } catch (err) {
-    showToast(`Failed to add folder: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_add_folder', 'Failed to add folder: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10922,11 +10922,11 @@ export async function removeAiWatchedFolder(folderPath) {
       if (res.sync_progress) {
         updateAiSyncProgressUi(res.sync_progress);
       }
-      showToast(`Removed watched folder: ${fp}`, 'info');
+      showToast(t('toast.removed_watched_folder', 'Removed watched folder: {fp}', { fp: fp }), 'info');
     }
     return res;
   } catch (err) {
-    showToast(`Failed to remove folder: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_remove_folder', 'Failed to remove folder: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -10968,7 +10968,7 @@ export async function syncAiWatchedFolders(respectStandby = true, background = t
     return res;
   } catch (err) {
     if (feedbackEl) feedbackEl.textContent = `⚠️ Sync failed: ${err.message}`;
-    showToast(`Sync failed: ${err.message}`, 'error');
+    showToast(t('toast.sync_failed', 'Sync failed: {error}', { error: err.message }), 'error');
     return null;
   }
 }
@@ -11673,7 +11673,7 @@ export async function fetchAndRenderAiStatus() {
             if (tokEl) tokEl.textContent = `${bRes.tokens_per_sec} tok/s`;
             const accelEl = document.getElementById('bm-accel');
             if (accelEl) accelEl.textContent = bRes.accelerator || 'CPU';
-            showToast('AI benchmark completed successfully', 'success');
+            showToast(t('toast.ai_benchmark_completed_successfully', 'AI benchmark completed successfully'), 'success');
           }
         } catch (err) {
           showToast('Benchmark failed: ' + err.message, 'error');
@@ -12216,7 +12216,7 @@ export function renderAiPreviewInspector(item) {
       } else {
         ZettEventBus.emit('window:open', { id: 'files', path: parentDir });
       }
-      showToast(`Opened folder location: ${parentDir}`, 'info');
+      showToast(t('toast.opened_folder_location', 'Opened folder location: {parentDir}', { parentDir: parentDir }), 'info');
     });
   }
 
@@ -12243,7 +12243,7 @@ export function renderAiPreviewInspector(item) {
           showToast(item.is_favorite ? `Added "${fName}" to ZettAI Favorites ⭐` : `Removed "${fName}" from Favorites`, 'success');
         }
       } catch (err) {
-        showToast(`Failed to toggle favorite: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_toggle_favorite', 'Failed to toggle favorite: {error}', { error: err.message }), 'error');
       }
     });
   }
@@ -12256,9 +12256,9 @@ export function renderAiPreviewInspector(item) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(shareUrl);
         }
-        showToast(`Copied share link for ${fName} to clipboard!`, 'success');
+        showToast(t('toast.copied_share_link_for_to_clipboard', 'Copied share link for {fName} to clipboard!', { fName: fName }), 'success');
       } catch (_) {
-        showToast(`Share path: ${fPath}`, 'info');
+        showToast(t('toast.share_path', 'Share path: {fPath}', { fPath: fPath }), 'info');
       }
     });
   }
@@ -12484,7 +12484,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
     if (feedbackEl) {
       feedbackEl.textContent = `⚠️ Indexing failed: ${err.message}`;
     }
-    showToast(`Indexing failed: ${err.message}`, 'error');
+    showToast(t('toast.indexing_failed', 'Indexing failed: {error}', { error: err.message }), 'error');
     return null;
   } finally {
     runBtns.forEach((b) => {
@@ -12519,7 +12519,7 @@ function _bindAiConfirmHandler() {
       showToast(ok ? `${out.summary || 'Action'} done` : `${out?.summary || 'Action'} failed: ${out?.error || ''}`, ok ? 'success' : 'error');
     } catch (err) {
       if (status) status.textContent = `Not run: ${err.message}`;
-      showToast(`Action failed: ${err.message}`, 'error');
+      showToast(t('toast.action_failed_2', 'Action failed: {error}', { error: err.message }), 'error');
     }
   });
 }
@@ -12816,7 +12816,7 @@ export async function fetchAndRenderAiConversations(searchQuery = '') {
           await api.patch(`/api/ai/conversations/${cid}`, { is_pinned: !isPinned });
           await fetchAndRenderAiConversations(searchQuery);
         } catch (err) {
-          showToast(`Pin failed: ${err.message}`, 'error');
+          showToast(t('toast.pin_failed', 'Pin failed: {error}', { error: err.message }), 'error');
         }
       });
     });
@@ -12922,7 +12922,7 @@ export async function createNewAiConversation() {
       if (inputEl) inputEl.focus();
     }
   } catch (err) {
-    showToast(`Could not start new chat: ${err.message}`, 'error');
+    showToast(t('toast.could_not_start_new_chat', 'Could not start new chat: {error}', { error: err.message }), 'error');
   }
 }
 
@@ -12946,7 +12946,7 @@ export async function renameAiConversation(convId, customTitle = null) {
       await fetchAndRenderAiConversations();
       showToast(t('ai.chat_renamed', 'Conversation renamed.'), 'success');
     } catch (err) {
-      showToast(`Rename failed: ${err.message}`, 'error');
+      showToast(t('toast.rename_failed', 'Rename failed: {error}', { error: err.message }), 'error');
     }
   };
 
@@ -12998,7 +12998,7 @@ export async function deleteAiConversation(convId) {
           await createNewAiConversation();
         }
       } catch (err) {
-        showToast(`Delete failed: ${err.message}`, 'error');
+        showToast(t('toast.delete_failed', 'Delete failed: {error}', { error: err.message }), 'error');
       }
     }
   );
@@ -13020,7 +13020,7 @@ export async function clearAllAiConversations() {
         showToast(t('ai.all_cleared', 'All conversations cleared.'), 'success');
         await createNewAiConversation();
       } catch (err) {
-        showToast(`Clear all failed: ${err.message}`, 'error');
+        showToast(t('toast.clear_all_failed', 'Clear all failed: {error}', { error: err.message }), 'error');
       }
     }
   );
@@ -13070,9 +13070,9 @@ export async function exportActiveAiThread(format = 'markdown') {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showToast(`Exported conversation as ${ext.toUpperCase()}`, 'success');
+    showToast(t('toast.exported_conversation_as', 'Exported conversation as {ext}', { ext: ext.toUpperCase() }), 'success');
   } catch (err) {
-    showToast(`Export failed: ${err.message}`, 'error');
+    showToast(t('toast.export_failed', 'Export failed: {error}', { error: err.message }), 'error');
   }
 }
 

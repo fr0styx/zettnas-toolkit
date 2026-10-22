@@ -6,6 +6,7 @@
 import { showToast } from '../toast.js';
 import { state } from '../state.js';
 
+import { t } from '../i18n.js';
 function isLcdMode() {
   return !!(state?.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')));
 }
@@ -421,7 +422,7 @@ export function initScreensaverSettingsControls() {
         c.classList.toggle('active', isMatrix);
         c.setAttribute('aria-checked', isMatrix ? 'true' : 'false');
       });
-      showToast('Screensaver settings restored to defaults', 'success');
+      showToast(t('toast.screensaver_settings_restored_to_defaults', 'Screensaver settings restored to defaults'), 'success');
     });
   }
 }

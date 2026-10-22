@@ -222,7 +222,7 @@ export function renderDisks(disks) {
           'Drive in Standby Mode',
           `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
           () => {
-            showToast(`Waking disk ${diskName}...`, 'info');
+            showToast(t('toast.waking_disk', 'Waking disk {diskName}...', { diskName: diskName }), 'info');
             ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
           }
         );
@@ -853,7 +853,7 @@ export function updateStreamlineBayChips(disks) {
           'Drive in Standby Mode',
           `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
           () => {
-            showToast(`Waking disk ${diskName}...`, 'info');
+            showToast(t('toast.waking_disk', 'Waking disk {diskName}...', { diskName: diskName }), 'info');
             ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
           }
         );
@@ -1726,7 +1726,7 @@ export function handlePendingIngest(pendingIngest) {
         await api.post('/api/copy/start', { source: pendingIngest.slot, dest: destPath });
         showToast(t('media.ingest_started', `Importing media from ${slotName}...`), 'info');
       } catch (err) {
-        showToast(`Failed to start ingest: ${err.message || err}`, 'error');
+        showToast(t('toast.failed_to_start_ingest', 'Failed to start ingest: {error}', { error: err.message || err }), 'error');
       }
     },
     async () => {
@@ -1751,7 +1751,7 @@ export function handlePendingIngest(pendingIngest) {
           await api.post('/api/copy/eject', { slot: pendingIngest.slot });
           showToast(t('media.ejected', 'Card safely unmounted and ejected. You can now remove it.'), 'info');
         } catch (err) {
-          showToast(`Eject failed: ${err.message || err}`, 'error');
+          showToast(t('toast.eject_failed', 'Eject failed: {error}', { error: err.message || err }), 'error');
         }
       }
     }
@@ -1953,10 +1953,10 @@ export function updateMediaSlots(mediaSlots) {
 
   // Surface toast on card insertion (0 -> >0 transition) ONLY if not in ejected state
   if (_prevClientMediaSlots.sd !== null && _prevClientMediaSlots.sd === 0 && sdSize > 0 && !sdEjected) {
-    showToast(`📷 SD Card Detected (${(sdSize / 1e9).toFixed(1)} GB): Ready for import`, 'info');
+    showToast(t('toast.sd_card_detected_gb_ready_for', '📷 SD Card Detected ({value} GB): Ready for import', { value: (sdSize / 1e9).toFixed(1) }), 'info');
   }
   if (_prevClientMediaSlots.tf !== null && _prevClientMediaSlots.tf === 0 && tfSize > 0 && !tfEjected) {
-    showToast(`📷 TF (MicroSD) Detected (${(tfSize / 1e9).toFixed(1)} GB): Ready for import`, 'info');
+    showToast(t('toast.tf_microsd_detected_gb_ready_for', '📷 TF (MicroSD) Detected ({value} GB): Ready for import', { value: (tfSize / 1e9).toFixed(1) }), 'info');
   }
   _prevClientMediaSlots.sd = sdSize;
   _prevClientMediaSlots.tf = tfSize;

@@ -9,6 +9,7 @@ import { showToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 
+import { t } from '../i18n.js';
 export const SHORTCUTS_STORAGE_KEY = 'zettnas_custom_desktop_shortcuts_v1';
 export const POSITIONS_STORAGE_KEY = 'zettnas_desktop_icon_positions_v3';
 
@@ -302,14 +303,14 @@ export function launchShortcut(shortcut) {
 export function addDesktopShortcut(shortcutDef) {
   const current = getCustomShortcuts();
   if (current.some((s) => s.id === shortcutDef.id)) {
-    showToast(`Shortcut "${shortcutDef.name}" is already on your desktop.`, 'info');
+    showToast(t('toast.shortcut_is_already_on_your_desktop', 'Shortcut "{name}" is already on your desktop.', { name: shortcutDef.name }), 'info');
     return false;
   }
 
   // Prevent duplicate if element with this ID already exists in DOM as a built-in desktop icon
   const existingEl = document.getElementById(shortcutDef.id);
   if (existingEl && existingEl.style.display !== 'none' && !existingEl.classList.contains('hidden') && !existingEl.classList.contains('custom-desktop-shortcut')) {
-    showToast(`"${shortcutDef.name}" is already on your desktop.`, 'info');
+    showToast(t('toast.is_already_on_your_desktop', '"{name}" is already on your desktop.', { name: shortcutDef.name }), 'info');
     return false;
   }
 
@@ -342,7 +343,7 @@ export function addDesktopShortcut(shortcutDef) {
     }
   }
 
-  showToast(`Added "${shortcutDef.name}" to desktop!`, 'success');
+  showToast(t('toast.added_to_desktop', 'Added "{name}" to desktop!', { name: shortcutDef.name }), 'success');
   return true;
 }
 
@@ -373,7 +374,7 @@ export function removeDesktopShortcut(shortcutId) {
   }
 
   const name = toRemove ? toRemove.name : 'Shortcut';
-  showToast(`Removed "${name}" from desktop.`, 'info');
+  showToast(t('toast.removed_from_desktop', 'Removed "{name}" from desktop.', { name: name }), 'info');
 
   // Update modal toggles if open
   updateAddModalButtons();
@@ -516,7 +517,7 @@ export function openAddDesktopShortcutModal() {
       const url = urlInput ? urlInput.value.trim() : '';
 
       if (!name || !url) {
-        showToast('Please provide both a shortcut name and URL.', 'warn');
+        showToast(t('toast.please_provide_both_a_shortcut_name', 'Please provide both a shortcut name and URL.'), 'warn');
         return;
       }
 

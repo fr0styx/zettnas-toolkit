@@ -6,6 +6,7 @@
 import { uploadAndApplyWallpaper } from './wallpapers.js';
 import { showToast } from '../toast.js';
 
+import { t } from '../i18n.js';
 let _dragDropInitialized = false;
 let _dragCounter = 0;
 
@@ -67,18 +68,18 @@ export function initDesktopDragAndDrop() {
     }
 
     if (!imageFile) {
-      showToast('Please drop an image file (.jpg, .png, .webp)', 'warn');
+      showToast(t('toast.please_drop_an_image_file_jpg', 'Please drop an image file (.jpg, .png, .webp)'), 'warn');
       return;
     }
 
     // Limit size to 16MB
     const MAX_BYTES = 16 * 1024 * 1024;
     if (imageFile.size > MAX_BYTES) {
-      showToast('Image file exceeds 16MB limit', 'error');
+      showToast(t('toast.image_file_exceeds_16mb_limit', 'Image file exceeds 16MB limit'), 'error');
       return;
     }
 
-    showToast(`Uploading wallpaper: ${imageFile.name}...`, 'info');
+    showToast(t('toast.uploading_wallpaper', 'Uploading wallpaper: {name}...', { name: imageFile.name }), 'info');
     try {
       await uploadAndApplyWallpaper(imageFile);
     } catch (err) {

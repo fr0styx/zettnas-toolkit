@@ -507,12 +507,12 @@ async function submitMfaChallenge() {
       }
       ZettEventBus.emit('auth:login');
     } else {
-      showToast(`2FA Verification Failed: ${data.detail || 'Invalid code'}`, 'error');
+      showToast(t('toast.2fa_verification_failed', '2FA Verification Failed: {detail}', { detail: data.detail || 'Invalid code' }), 'error');
       codeInput.value = '';
       codeInput.focus();
     }
   } catch (err) {
-    showToast(`Verification error: ${err.message}`, 'error');
+    showToast(t('toast.verification_error', 'Verification error: {error}', { error: err.message }), 'error');
   } finally {
     if (btnSubmit) {
       btnSubmit.disabled = false;

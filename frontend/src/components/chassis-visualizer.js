@@ -60,7 +60,7 @@ export async function triggerLocateDisk(devName, targetElement = null) {
 
   // 3. Screen reader a11y announcement & user toast
   announceA11y(`Locating drive ${devName}. Physical bay indicator flashing.`);
-  showToast(`⚡ Locating drive /dev/${devName}: Pulsing physical activity LED and backplane indicator for 5s to identify bay.`, 'info');
+  showToast(t('toast.locating_drive_dev_pulsing_physical_activity', '⚡ Locating drive /dev/{devName}: Pulsing physical activity LED and backplane indicator for 5s to identify bay.', { devName: devName }), 'info');
 
   // 4. Issue backend hardware strobe request
   try {
@@ -313,7 +313,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
           'Drive in Standby Mode',
           `Drive /dev/${dev} in this bay is currently sleeping. Querying S.M.A.R.T. will spin up the disk. Are you sure you want to wake it?`,
           () => {
-            showToast(`Waking disk /dev/${dev}...`, 'info');
+            showToast(t('toast.waking_disk_dev_2', 'Waking disk /dev/{dev}...', { dev: dev }), 'info');
             ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
           }
         );
@@ -492,7 +492,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         custom_label: idx === 0 ? 'Parity / Primary' : `Disk ${idx}`
       }));
       renderRows(totalBays, autoMappings);
-      showToast('Assigned detected drives sequentially.', 'info');
+      showToast(t('toast.assigned_detected_drives_sequentially', 'Assigned detected drives sequentially.'), 'info');
     });
   }
 
@@ -532,14 +532,14 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         body: payload
       });
       if (res.ok) {
-        showToast('Chassis bay mapping updated successfully.', 'success');
+        showToast(t('toast.chassis_bay_mapping_updated_successfully', 'Chassis bay mapping updated successfully.'), 'success');
         closeModal();
         if (typeof onSaved === 'function') onSaved(payload);
       } else {
-        showToast('Failed to save chassis bay mapping.', 'error');
+        showToast(t('toast.failed_to_save_chassis_bay_mapping', 'Failed to save chassis bay mapping.'), 'error');
       }
     } catch (err) {
-      showToast(`Error saving bay mapping: ${err.message}`, 'error');
+      showToast(t('toast.error_saving_bay_mapping', 'Error saving bay mapping: {error}', { error: err.message }), 'error');
     }
   });
 
@@ -815,7 +815,7 @@ function bindTopologyTreeEvents(tree, container) {
         async () => {
           try {
             await api.delete(`/api/storage/pools/${pid}`, { confirmed: true });
-            showToast(`Pool '${pid}' destroyed.`, 'info');
+            showToast(t('toast.pool_destroyed', 'Pool \'{pid}\' destroyed.', { pid: pid }), 'info');
             fetchAndRenderStorageTopology(container);
           } catch (err) {
             showToast(err.message || 'Failed to destroy pool', 'error');
@@ -881,7 +881,7 @@ function bindTopologyTreeEvents(tree, container) {
         importBtn.disabled = true;
         importBtn.textContent = '⏳ Importing...';
         await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
-        showToast(`Successfully imported storage pool '${pid}'!`, 'success');
+        showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
         fetchAndRenderStorageTopology(container);
       } catch (err) {
         showToast(err.message || `Failed to import pool '${pid}'`, 'error');
@@ -966,7 +966,7 @@ export async function fetchAndRenderStorageTopology(container) {
               importBtn.disabled = true;
               importBtn.textContent = '⏳ Importing...';
               await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
-              showToast(`Successfully imported storage pool '${pid}'!`, 'success');
+              showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
               fetchAndRenderStorageTopology(container);
             } catch (err) {
               showToast(err.message || `Failed to import pool '${pid}'`, 'error');
@@ -1090,7 +1090,7 @@ export function bindSftpCardEvents(container, onRefresh) {
         showToast(`SFTP service ${!isRunning ? 'started' : 'stopped'}.`, 'success');
         if (onRefresh) onRefresh();
       } catch (err) {
-        showToast(`Failed to toggle SFTP: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_toggle_sftp', 'Failed to toggle SFTP: {error}', { error: err.message }), 'error');
         toggleBtn.disabled = false;
       }
     };
@@ -1108,9 +1108,9 @@ export function bindSftpCardEvents(container, onRefresh) {
       if (text) {
         const ok = await copyTextToClipboard(text);
         if (ok) {
-          showToast('Copied to clipboard!', 'info');
+          showToast(t('toast.copied_to_clipboard_3', 'Copied to clipboard!'), 'info');
         } else {
-          showToast('Failed to copy to clipboard', 'warn');
+          showToast(t('toast.failed_to_copy_to_clipboard', 'Failed to copy to clipboard'), 'warn');
         }
       }
     };
@@ -1326,7 +1326,7 @@ function bindSharesGridEvents(grid, container) {
         async () => {
           try {
             await api.delete(`/api/storage/shares/${sName}`, { confirmed: true });
-            showToast(`Share '${sName}' removed.`, 'info');
+            showToast(t('toast.share_removed', 'Share \'{sName}\' removed.', { sName: sName }), 'info');
             fetchAndRenderNetworkShares(container);
           } catch (err) {
             showToast(err.message || 'Failed to delete share', 'error');
@@ -1396,7 +1396,7 @@ export async function openSftpUsersModal(onSuccess) {
             await refreshSftpUI();
             if (onSuccess) onSuccess();
           } catch (err) {
-            showToast(`Failed to toggle SFTP: ${err.message}`, 'error');
+            showToast(t('toast.failed_to_toggle_sftp', 'Failed to toggle SFTP: {error}', { error: err.message }), 'error');
           } finally {
             toggleBtn.disabled = false;
           }
@@ -1414,7 +1414,7 @@ export async function openSftpUsersModal(onSuccess) {
       if (copyBtn) {
         copyBtn.onclick = () => {
           copyTextToClipboard(`sftp -P ${port} ${sampleUser}@${hostIp}`);
-          showToast('SFTP command copied to clipboard.', 'info');
+          showToast(t('toast.sftp_command_copied_to_clipboard', 'SFTP command copied to clipboard.'), 'info');
         };
       }
 
@@ -1449,11 +1449,11 @@ export async function openSftpUsersModal(onSuccess) {
                   btn.disabled = true;
                   try {
                     await api.delete(`/api/sftp/users/${username}`);
-                    showToast(`User '${username}' deleted.`, 'info');
+                    showToast(t('toast.user_deleted', 'User \'{username}\' deleted.', { username: username }), 'info');
                     await refreshSftpUI();
                     if (onSuccess) onSuccess();
                   } catch (err) {
-                    showToast(`Failed to delete user: ${err.message}`, 'error');
+                    showToast(t('toast.failed_to_delete_user', 'Failed to delete user: {error}', { error: err.message }), 'error');
                     btn.disabled = false;
                   }
                 },
@@ -1482,13 +1482,13 @@ export async function openSftpUsersModal(onSuccess) {
 
       try {
         await api.post('/api/sftp/users', { username, password, read_only });
-        showToast(`SFTP user '${username}' created.`, 'success');
+        showToast(t('toast.sftp_user_created', 'SFTP user \'{username}\' created.', { username: username }), 'success');
         uInput.value = '';
         pInput.value = '';
         await refreshSftpUI();
         if (onSuccess) onSuccess();
       } catch (err) {
-        showToast(`Failed to create SFTP user: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_create_sftp_user', 'Failed to create SFTP user: {error}', { error: err.message }), 'error');
       }
     };
   }
@@ -1792,7 +1792,7 @@ export async function fetchAndRenderRemoteStorage(container) {
       playChirp(700, 0.08, 'sine');
       try {
         await api.post('/api/webdav/restart');
-        showToast('WebDAV server restarted.', 'info');
+        showToast(t('toast.webdav_server_restarted', 'WebDAV server restarted.'), 'info');
         fetchAndRenderRemoteStorage(container);
       } catch (e) {
         showToast('Failed to restart WebDAV: ' + (e.message || 'Error'), 'error');
@@ -1813,9 +1813,9 @@ export async function fetchAndRenderRemoteStorage(container) {
           const ok = await copyTextToClipboard(text);
           playChirp(880, 0.08, 'triangle');
           if (ok) {
-            showToast('Copied to clipboard!', 'info');
+            showToast(t('toast.copied_to_clipboard_3', 'Copied to clipboard!'), 'info');
           } else {
-            showToast('Failed to copy to clipboard', 'warn');
+            showToast(t('toast.failed_to_copy_to_clipboard', 'Failed to copy to clipboard'), 'warn');
           }
         }
       });
@@ -1837,7 +1837,7 @@ export async function fetchAndRenderRemoteStorage(container) {
         playChirp(720, 0.08, 'triangle');
         ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
         ZettEventBus.emit('fm:refresh');
-        showToast(`Opened ${path} in File Explorer`, 'info');
+        showToast(t('toast.opened_in_file_explorer', 'Opened {path} in File Explorer', { path: path }), 'info');
       });
     });
 
@@ -1850,12 +1850,12 @@ export async function fetchAndRenderRemoteStorage(container) {
         try {
           await api.post(`/api/remotes/${name}/mount`, {});
           playChirp(800, 0.1, 'sine');
-          showToast(`Remote '${name}' mounted to /mnt/remotes/${name}`, 'info');
+          showToast(t('toast.remote_mounted_to_mnt_remotes', 'Remote \'{name}\' mounted to /mnt/remotes/{name}', { name: name }), 'info');
           fetchAndRenderRemoteStorage(container);
           ZettEventBus.emit('fm:refresh');
           ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'mount' });
         } catch (e) {
-          showToast(`Mount failed: ${e.message || 'Error'}`, 'error');
+          showToast(t('toast.mount_failed', 'Mount failed: {message}', { message: e.message || 'Error' }), 'error');
           fetchAndRenderRemoteStorage(container);
         }
       });
@@ -1870,12 +1870,12 @@ export async function fetchAndRenderRemoteStorage(container) {
         try {
           await api.post(`/api/remotes/${name}/unmount`);
           playChirp(500, 0.1, 'sine');
-          showToast(`Remote '${name}' unmounted.`, 'info');
+          showToast(t('toast.remote_unmounted', 'Remote \'{name}\' unmounted.', { name: name }), 'info');
           fetchAndRenderRemoteStorage(container);
           ZettEventBus.emit('fm:refresh');
           ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'unmount' });
         } catch (e) {
-          showToast(`Unmount failed: ${e.message || 'Error'}`, 'error');
+          showToast(t('toast.unmount_failed', 'Unmount failed: {message}', { message: e.message || 'Error' }), 'error');
           fetchAndRenderRemoteStorage(container);
         }
       });
@@ -1970,7 +1970,7 @@ export function openWebdavConfigModal(currentConfig, onSuccess) {
         await api.post('/api/webdav/config', payload);
         close();
         playChirp(880, 0.1, 'sine');
-        showToast('WebDAV configuration saved and server restarted!', 'info');
+        showToast(t('toast.webdav_configuration_saved_and_server_restarted', 'WebDAV configuration saved and server restarted!'), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
         showToast('Error saving WebDAV config: ' + (err.message || 'Error'), 'error');
@@ -2357,7 +2357,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               if (qrBox) qrBox.style.display = 'none';
               if (step2Box) step2Box.style.display = 'none';
               playChirp(880, 0.12, 'sine');
-              showToast('Cloud credentials verified & token auto-populated!', 'info');
+              showToast(t('toast.cloud_credentials_verified_token_auto_populated', 'Cloud credentials verified & token auto-populated!'), 'info');
             };
 
             const renderQrCode = async (session) => {
@@ -2557,7 +2557,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     const text = await navigator.clipboard.readText();
                     if (text && text.trim()) {
                       urlInput.value = text.trim();
-                      showToast('Pasted URL from clipboard', 'info');
+                      showToast(t('toast.pasted_url_from_clipboard', 'Pasted URL from clipboard'), 'info');
                       if (exchangeBtn) {
                         exchangeBtn.focus();
                       }
@@ -2588,7 +2588,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   if (clip && (clip.includes('localhost:53682') || clip.includes('127.0.0.1:53682') || clip.includes('code='))) {
                     if (urlInput && !urlInput.value.trim()) {
                       urlInput.value = clip.trim();
-                      showToast('Detected OAuth redirect URL from clipboard!', 'info');
+                      showToast(t('toast.detected_oauth_redirect_url_from_clipboard', 'Detected OAuth redirect URL from clipboard!'), 'info');
                       if (statusEl) {
                         statusEl.style.display = 'block';
                         statusEl.style.background = 'rgba(34, 197, 94, 0.15)';
@@ -2612,11 +2612,11 @@ export async function openNewCloudRemoteModal(onSuccess) {
               exchangeBtn.onclick = async () => {
                 const rawUrl = urlInput.value.trim();
                 if (!rawUrl) {
-                  showToast('Please paste the redirect URL first', 'warning');
+                  showToast(t('toast.please_paste_the_redirect_url_first', 'Please paste the redirect URL first'), 'warning');
                   return;
                 }
                 if (!_currentOAuthSession?.session_id) {
-                  showToast('No active authorization session. Please click 1-Click Authorize first.', 'warning');
+                  showToast(t('toast.no_active_authorization_session_please_click', 'No active authorization session. Please click 1-Click Authorize first.'), 'warning');
                   return;
                 }
                 exchangeBtn.disabled = true;
@@ -2669,7 +2669,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 const ok = await copyTextToClipboard(cmd);
                 if (ok) {
                   btn.textContent = '✅ Copied!';
-                  showToast(`Copied command: ${cmd}`, 'info');
+                  showToast(t('toast.copied_command', 'Copied command: {cmd}', { cmd: cmd }), 'info');
                   setTimeout(() => {
                     btn.textContent = `📋 Copy: ${cmd}`;
                   }, 2000);
@@ -2828,7 +2828,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
           close();
           playChirp(880, 0.12, 'sine');
-          showToast(`Cloud remote '${name}' connected successfully!`, 'info');
+          showToast(t('toast.cloud_remote_connected_successfully', 'Cloud remote \'{name}\' connected successfully!', { name: name }), 'info');
           ZettEventBus.emit('fm:refresh');
           ZettEventBus.emit('storage:mount_changed', { name, path: `/mnt/remotes/${name}`, action: 'create' });
           if (onSuccess) onSuccess();
@@ -3015,7 +3015,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
 
         close();
         playChirp(880, 0.12, 'sine');
-        showToast(`Storage pool '${name}' provisioned successfully!`, 'info');
+        showToast(t('toast.storage_pool_provisioned_successfully', 'Storage pool \'{name}\' provisioned successfully!', { name: name }), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
         if (errorBox) {
@@ -3193,7 +3193,7 @@ export function openCreateNetworkShareModal(onSuccess) {
 
         close();
         playChirp(880, 0.12, 'sine');
-        showToast(`Share '${name}' created successfully!`, 'info');
+        showToast(t('toast.share_created_successfully', 'Share \'{name}\' created successfully!', { name: name }), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
         if (errorBox) {
@@ -3319,7 +3319,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
               await api.post(`/api/storage/pools/${pId}/snapshots/restore`, {
                 snapshot_name: sName,
               }, { confirmed: true });
-              showToast(`Snapshot '${sName}' reverted successfully!`, 'success');
+              showToast(t('toast.snapshot_reverted_successfully', 'Snapshot \'{sName}\' reverted successfully!', { sName: sName }), 'success');
               onReload();
             } catch (err) {
               showToast(err.message || 'Failed to revert snapshot', 'error');
@@ -3340,7 +3340,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
         async () => {
           try {
             await api.delete(`/api/storage/pools/${pId}/snapshots/${sName}`, { confirmed: true });
-            showToast(`Snapshot '${sName}' deleted.`, 'info');
+            showToast(t('toast.snapshot_deleted_2', 'Snapshot \'{sName}\' deleted.', { sName: sName }), 'info');
             onReload();
           } catch (err) {
             showToast(err.message || 'Failed to delete snapshot', 'error');
@@ -3363,7 +3363,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
           snapshot_name: snapName,
           readonly: true,
         });
-        showToast(`Snapshot '${snapName}' taken!`, 'info');
+        showToast(t('toast.snapshot_taken', 'Snapshot \'{snapName}\' taken!', { snapName: snapName }), 'info');
         snapNameInput.value = '';
         loadSnapshots();
       } catch (err) {
@@ -3437,7 +3437,7 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
 
         close();
         playChirp(880, 0.12, 'sine');
-        showToast(`Storage pool '${currentName}' renamed to '${newName}' successfully!`, 'info');
+        showToast(t('toast.storage_pool_renamed_to_successfully', 'Storage pool \'{currentName}\' renamed to \'{newName}\' successfully!', { currentName: currentName, newName: newName }), 'info');
         if (onSuccess) onSuccess();
       } catch (err) {
         if (errorBox) {

@@ -688,7 +688,7 @@ export class FmInspector {
       if (applyBtn) {
         applyBtn.addEventListener('click', async () => {
           if (isGuarded) {
-            showToast('Modifying permissions on system roots is forbidden', 'error');
+            showToast(t('toast.modifying_permissions_on_system_roots_is', 'Modifying permissions on system roots is forbidden'), 'error');
             return;
           }
           applyBtn.disabled = true;
@@ -707,14 +707,14 @@ export class FmInspector {
               recursive: isRecursive,
             });
             item.mode = modeVal;
-            showToast('Permissions updated successfully!', 'success');
+            showToast(t('toast.permissions_updated_successfully', 'Permissions updated successfully!'), 'success');
             applyBtn.textContent = 'Applied ✓';
             setTimeout(() => {
               applyBtn.disabled = false;
               applyBtn.textContent = 'Apply Permissions';
             }, 1400);
           } catch (err) {
-            showToast(`Failed updating permissions: ${err.message}`, 'error');
+            showToast(t('toast.failed_updating_permissions', 'Failed updating permissions: {error}', { error: err.message }), 'error');
             applyBtn.disabled = false;
             applyBtn.textContent = 'Apply Permissions';
           }

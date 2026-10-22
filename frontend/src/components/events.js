@@ -6,6 +6,7 @@ import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
 
+import { t } from '../i18n.js';
 let _lastEventHash = '';
 let _expandedEvents = new Set();
 let _currentFilter = 'all';
@@ -112,7 +113,7 @@ export function initEvents() {
           await api.delete('/api/events/clear');
           _lastEventHash = '';
           renderEventLog([]);
-          showToast('Event log cleared', 'success');
+          showToast(t('toast.event_log_cleared', 'Event log cleared'), 'success');
         } catch (err) {
           showToast('Failed to clear events: ' + err.message, 'error');
         }

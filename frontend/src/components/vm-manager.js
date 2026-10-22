@@ -241,7 +241,7 @@ export async function loadVmDashboard() {
     renderTelemetry(tel);
     renderVmGrid(vmList);
   } catch (err) {
-    showToast(`Failed to load VM data: ${err.message}`, 'error');
+    showToast(t('toast.failed_to_load_vm_data', 'Failed to load VM data: {error}', { error: err.message }), 'error');
   }
 }
 
@@ -780,14 +780,14 @@ function bindVmGridHandlers(grid) {
 
       try {
         await api.post(`/api/vms/${vmId}/action`, { action });
-        showToast(`VM action '${action}' completed`, 'success');
+        showToast(t('toast.vm_action_completed', 'VM action \'{action}\' completed', { action: action }), 'success');
         loadVmDashboard();
       } catch (err) {
         const errorDetail = err.detail || err.message || 'Unknown hypervisor error';
         if (action === 'start' || action === 'restart') {
           openQemuErrorModal(name, errorDetail, vmId);
         } else {
-          showToast(`Action failed: ${errorDetail}`, 'error');
+          showToast(t('toast.action_failed', 'Action failed: {errorDetail}', { errorDetail: errorDetail }), 'error');
         }
       }
     };
@@ -815,9 +815,9 @@ function bindVmGridHandlers(grid) {
       const uri = btn.dataset.uri;
       const ok = await copyToClipboard(uri);
       if (ok) {
-        showToast(`Copied VNC URI '${uri}'`, 'info');
+        showToast(t('toast.copied_vnc_uri', 'Copied VNC URI \'{uri}\'', { uri: uri }), 'info');
       } else {
-        showToast(`Failed to copy VNC URI`, 'error');
+        showToast(t('toast.failed_to_copy_vnc_uri', `Failed to copy VNC URI`), 'error');
       }
     };
   });
@@ -828,9 +828,9 @@ function bindVmGridHandlers(grid) {
       const cmd = btn.dataset.cmd;
       const ok = await copyToClipboard(cmd);
       if (ok) {
-        showToast(`Copied '${cmd}' to clipboard`, 'info');
+        showToast(t('toast.copied_to_clipboard', 'Copied \'{cmd}\' to clipboard', { cmd: cmd }), 'info');
       } else {
-        showToast(`Failed to copy SSH command`, 'error');
+        showToast(t('toast.failed_to_copy_ssh_command', `Failed to copy SSH command`), 'error');
       }
     };
   });
@@ -845,10 +845,10 @@ function bindVmGridHandlers(grid) {
         async () => {
           try {
             await api.delete(`/api/vms/${vmId}`, { confirmed: true });
-            showToast(`VM '${vmName}' deleted`, 'success');
+            showToast(t('toast.vm_deleted', 'VM \'{vmName}\' deleted', { vmName: vmName }), 'success');
             loadVmDashboard();
           } catch (err) {
-            showToast(`Delete failed: ${err.message}`, 'error');
+            showToast(t('toast.delete_failed', 'Delete failed: {error}', { error: err.message }), 'error');
           }
         }
       );
@@ -861,9 +861,9 @@ function bindVmGridHandlers(grid) {
       const ip = btn.dataset.ip;
       const ok = await copyToClipboard(ip);
       if (ok) {
-        showToast(`Copied ${ip} to clipboard`, 'info');
+        showToast(t('toast.copied_to_clipboard_4', 'Copied {ip} to clipboard', { ip: ip }), 'info');
       } else {
-        showToast(`Failed to copy ${ip}`, 'error');
+        showToast(t('toast.failed_to_copy_2', 'Failed to copy {ip}', { ip: ip }), 'error');
       }
     };
   });
@@ -888,7 +888,7 @@ function bindVmGridHandlers(grid) {
       const cmd = `ssh root@${ip}`;
       const ok = await copyToClipboard(cmd);
       if (ok) {
-        showToast(`Copied '${cmd}' to clipboard`, 'info');
+        showToast(t('toast.copied_to_clipboard', 'Copied \'{cmd}\' to clipboard', { cmd: cmd }), 'info');
       }
       document.querySelectorAll('.vm-join-popover').forEach((p) => (p.style.display = 'none'));
     };
@@ -900,7 +900,7 @@ function bindVmGridHandlers(grid) {
       const ip = btn.dataset.ip;
       const ok = await copyToClipboard(ip);
       if (ok) {
-        showToast(`Copied ${ip} to clipboard`, 'info');
+        showToast(t('toast.copied_to_clipboard_4', 'Copied {ip} to clipboard', { ip: ip }), 'info');
       }
       document.querySelectorAll('.vm-join-popover').forEach((p) => (p.style.display = 'none'));
     };
@@ -959,7 +959,7 @@ function bindVmGridHandlers(grid) {
       const uri = `vnc://${window.location.hostname || '127.0.0.1'}:${port}`;
       const ok = await copyToClipboard(uri);
       if (ok) {
-        showToast(`Copied VNC URI '${uri}' for native client`, 'info');
+        showToast(t('toast.copied_vnc_uri_for_native_client', 'Copied VNC URI \'{uri}\' for native client', { uri: uri }), 'info');
       }
       document.querySelectorAll('.vm-join-popover').forEach((p) => (p.style.display = 'none'));
     };
@@ -972,7 +972,7 @@ function bindVmGridHandlers(grid) {
       const uri = `${ip}:3389`;
       const ok = await copyToClipboard(uri);
       if (ok) {
-        showToast(`Copied RDP Address '${uri}'`, 'info');
+        showToast(t('toast.copied_rdp_address_2', 'Copied RDP Address \'{uri}\'', { uri: uri }), 'info');
       }
       document.querySelectorAll('.vm-join-popover').forEach((p) => (p.style.display = 'none'));
     };
@@ -1779,7 +1779,7 @@ export function openVmEditModal(vmId, vmObj = null) {
     btnAddUsb.onclick = () => {
       const val = usbSelect.value;
       if (!val) {
-        showToast('Select a host USB device to attach', 'warning');
+        showToast(t('toast.select_a_host_usb_device_to', 'Select a host USB device to attach'), 'warning');
         return;
       }
       try {
@@ -1787,9 +1787,9 @@ export function openVmEditModal(vmId, vmObj = null) {
         if (!currentUsbDevices.some((d) => d.vendor_id === item.vendor_id && d.product_id === item.product_id)) {
           currentUsbDevices.push(item);
           renderUsbList();
-          showToast(`Attached USB device: ${item.description || item.vendor_id}`, 'info');
+          showToast(t('toast.attached_usb_device', 'Attached USB device: {description}', { description: item.description || item.vendor_id }), 'info');
         } else {
-          showToast('Device is already attached to this VM', 'warning');
+          showToast(t('toast.device_is_already_attached_to_this', 'Device is already attached to this VM'), 'warning');
         }
       } catch (e) {
         // ignore
@@ -1832,7 +1832,7 @@ export function openVmEditModal(vmId, vmObj = null) {
       const pid = modal.querySelector('#vm-edit-custom-pid')?.value?.trim().toLowerCase().replace('0x', '');
       const desc = modal.querySelector('#vm-edit-custom-desc')?.value?.trim() || `USB Device (${vid}:${pid})`;
       if (!vid || !pid || !/^[0-9a-fA-F]{1,4}$/.test(vid) || !/^[0-9a-fA-F]{1,4}$/.test(pid)) {
-        showToast('Please enter valid 4-character hex VID and PID (e.g. 10c4, ea60)', 'warning');
+        showToast(t('toast.please_enter_valid_4_character_hex', 'Please enter valid 4-character hex VID and PID (e.g. 10c4, ea60)'), 'warning');
         return;
       }
       if (!currentUsbDevices.some((d) => d.vendor_id === vid && d.product_id === pid)) {
@@ -1841,9 +1841,9 @@ export function openVmEditModal(vmId, vmObj = null) {
         modal.querySelector('#vm-edit-custom-vid').value = '';
         modal.querySelector('#vm-edit-custom-pid').value = '';
         modal.querySelector('#vm-edit-custom-desc').value = '';
-        showToast(`Added custom USB device [${vid}:${pid}]`, 'info');
+        showToast(t('toast.added_custom_usb_device', 'Added custom USB device [{vid}:{pid}]', { vid: vid, pid: pid }), 'info');
       } else {
-        showToast('Device is already attached to this VM', 'warning');
+        showToast(t('toast.device_is_already_attached_to_this', 'Device is already attached to this VM'), 'warning');
       }
     };
   }
@@ -1880,7 +1880,7 @@ export function openVmEditModal(vmId, vmObj = null) {
       });
 
       if (!newName) {
-        showToast('VM Name is required', 'error');
+        showToast(t('toast.vm_name_is_required', 'VM Name is required'), 'error');
         return;
       }
 
@@ -1921,12 +1921,12 @@ export function openVmEditModal(vmId, vmObj = null) {
         }
 
         Object.assign(targetVm, payload);
-        showToast(`VM '${newName}' configuration updated`, 'success');
+        showToast(t('toast.vm_configuration_updated', 'VM \'{newName}\' configuration updated', { newName: newName }), 'success');
         close();
         loadVmDashboard();
         window.dispatchEvent(new CustomEvent('vm-updated', { detail: { id: vmId } }));
       } catch (err) {
-        showToast(`Failed to update VM: ${err.message || 'Error'}`, 'error');
+        showToast(t('toast.failed_to_update_vm', 'Failed to update VM: {error}', { error: err.message || 'Error' }), 'error');
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -1956,11 +1956,11 @@ export function openVmEditModal(vmId, vmObj = null) {
         if (!vmList.some((v) => v.id === direct.id)) vmList.push(direct);
         renderModal(direct);
       } else {
-        showToast(`Virtual machine '${vmId}' not found`, 'error');
+        showToast(t('toast.virtual_machine_not_found', 'Virtual machine \'{vmId}\' not found', { vmId: vmId }), 'error');
       }
     })
     .catch((err) => {
-      showToast(`Virtual machine '${vmId}' not found: ${err.message || 'Error'}`, 'error');
+      showToast(t('toast.virtual_machine_not_found_2', 'Virtual machine \'{vmId}\' not found: {error}', { vmId: vmId, error: err.message || 'Error' }), 'error');
     });
 }
 
@@ -2159,22 +2159,22 @@ export function openVmConnectModal(vmId, vmObj = null) {
   // Copy buttons
   modal.querySelector('.btn-connect-copy-vnc')?.addEventListener('click', async () => {
     const ok = await copyToClipboard(vncUri);
-    if (ok) showToast(`Copied VNC URI '${vncUri}'`, 'info');
-    else showToast('Failed to copy VNC URI', 'error');
+    if (ok) showToast(t('toast.copied_vnc_uri_2', 'Copied VNC URI \'{vncUri}\'', { vncUri: vncUri }), 'info');
+    else showToast(t('toast.failed_to_copy_vnc_uri', 'Failed to copy VNC URI'), 'error');
   });
 
   modal.querySelector('.btn-connect-copy-ssh')?.addEventListener('click', async () => {
     if (!sshCmd) return;
     const ok = await copyToClipboard(sshCmd);
-    if (ok) showToast(`Copied '${sshCmd}'`, 'info');
-    else showToast('Failed to copy SSH command', 'error');
+    if (ok) showToast(t('toast.copied_2', 'Copied \'{sshCmd}\'', { sshCmd: sshCmd }), 'info');
+    else showToast(t('toast.failed_to_copy_ssh_command', 'Failed to copy SSH command'), 'error');
   });
 
   modal.querySelector('.btn-connect-copy-rdp')?.addEventListener('click', async () => {
     if (!rdpUri) return;
     const ok = await copyToClipboard(rdpUri);
-    if (ok) showToast(`Copied RDP Address '${rdpUri}'`, 'info');
-    else showToast('Failed to copy RDP Address', 'error');
+    if (ok) showToast(t('toast.copied_rdp_address', 'Copied RDP Address \'{rdpUri}\'', { rdpUri: rdpUri }), 'info');
+    else showToast(t('toast.failed_to_copy_rdp_address', 'Failed to copy RDP Address'), 'error');
   });
 
   modal.querySelector('.btn-connect-dl-rdp')?.addEventListener('click', () => {
@@ -2188,14 +2188,14 @@ export function openVmConnectModal(vmId, vmObj = null) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
-    showToast(`Downloaded RDP file for ${name}`, 'success');
+    showToast(t('toast.downloaded_rdp_file_for', 'Downloaded RDP file for {name}', { name: name }), 'success');
   });
 
   modal.querySelectorAll('.btn-copy-mount-cmd').forEach((btn) => {
     btn.onclick = async () => {
       const cmd = btn.dataset.cmd;
       const ok = await copyToClipboard(cmd);
-      if (ok) showToast('Copied mount command to clipboard', 'info');
+      if (ok) showToast(t('toast.copied_mount_command_to_clipboard', 'Copied mount command to clipboard'), 'info');
     };
   });
   };
@@ -2212,11 +2212,11 @@ export function openVmConnectModal(vmId, vmObj = null) {
         if (!vmList.some((v) => v.id === direct.id)) vmList.push(direct);
         renderConnectModal(direct);
       } else {
-        showToast(`Virtual machine '${vmId}' not found`, 'error');
+        showToast(t('toast.virtual_machine_not_found', 'Virtual machine \'{vmId}\' not found', { vmId: vmId }), 'error');
       }
     })
     .catch((err) => {
-      showToast(`Virtual machine '${vmId}' not found: ${err.message || 'Error'}`, 'error');
+      showToast(t('toast.virtual_machine_not_found_2', 'Virtual machine \'{vmId}\' not found: {error}', { vmId: vmId, error: err.message || 'Error' }), 'error');
     });
 }
 
@@ -2340,7 +2340,7 @@ export function openKvmDiagnosticsModal(kvm = null) {
       const ok = await copyToClipboard('--device /dev/kvm');
       if (ok) {
         copyParam.textContent = '✓ Copied';
-        showToast("Copied '--device /dev/kvm' to clipboard", 'success');
+        showToast(t('toast.copied_device_dev_kvm_to_clipboard', "Copied '--device /dev/kvm' to clipboard"), 'success');
         setTimeout(() => {
           copyParam.textContent = 'Copy';
         }, 2000);
@@ -2950,7 +2950,7 @@ export function openVmCreateModal() {
     btnAddUsb.onclick = () => {
       const val = usbSelect.value;
       if (!val) {
-        showToast('Select a host USB device to attach', 'warning');
+        showToast(t('toast.select_a_host_usb_device_to', 'Select a host USB device to attach'), 'warning');
         return;
       }
       try {
@@ -2958,9 +2958,9 @@ export function openVmCreateModal() {
         if (!createUsbDevices.some((d) => d.vendor_id === item.vendor_id && d.product_id === item.product_id)) {
           createUsbDevices.push(item);
           renderUsbList();
-          showToast(`Attached USB device: ${item.description || item.vendor_id}`, 'info');
+          showToast(t('toast.attached_usb_device', 'Attached USB device: {description}', { description: item.description || item.vendor_id }), 'info');
         } else {
-          showToast('Device is already attached to this VM', 'warning');
+          showToast(t('toast.device_is_already_attached_to_this', 'Device is already attached to this VM'), 'warning');
         }
       } catch (e) {
         // ignore
@@ -3003,7 +3003,7 @@ export function openVmCreateModal() {
       const pid = modal.querySelector('#vm-create-custom-pid')?.value?.trim().toLowerCase().replace('0x', '');
       const desc = modal.querySelector('#vm-create-custom-desc')?.value?.trim() || `USB Device (${vid}:${pid})`;
       if (!vid || !pid || !/^[0-9a-fA-F]{1,4}$/.test(vid) || !/^[0-9a-fA-F]{1,4}$/.test(pid)) {
-        showToast('Please enter valid 4-character hex VID and PID (e.g. 10c4, ea60)', 'warning');
+        showToast(t('toast.please_enter_valid_4_character_hex', 'Please enter valid 4-character hex VID and PID (e.g. 10c4, ea60)'), 'warning');
         return;
       }
       if (!createUsbDevices.some((d) => d.vendor_id === vid && d.product_id === pid)) {
@@ -3012,9 +3012,9 @@ export function openVmCreateModal() {
         modal.querySelector('#vm-create-custom-vid').value = '';
         modal.querySelector('#vm-create-custom-pid').value = '';
         modal.querySelector('#vm-create-custom-desc').value = '';
-        showToast(`Added custom USB device [${vid}:${pid}]`, 'info');
+        showToast(t('toast.added_custom_usb_device', 'Added custom USB device [{vid}:{pid}]', { vid: vid, pid: pid }), 'info');
       } else {
-        showToast('Device is already attached to this VM', 'warning');
+        showToast(t('toast.device_is_already_attached_to_this', 'Device is already attached to this VM'), 'warning');
       }
     };
   }
@@ -3025,7 +3025,7 @@ export function openVmCreateModal() {
     btnSubmit.onclick = async () => {
       const name = modal.querySelector('#vm-create-name')?.value?.trim();
       if (!name) {
-        showToast('Please enter a valid VM name.', 'warning');
+        showToast(t('toast.please_enter_a_valid_vm_name', 'Please enter a valid VM name.'), 'warning');
         return;
       }
 
@@ -3077,11 +3077,11 @@ export function openVmCreateModal() {
           secondary_disks,
         });
 
-        showToast(`Virtual machine '${name}' created successfully!`, 'success');
+        showToast(t('toast.virtual_machine_created_successfully', 'Virtual machine \'{name}\' created successfully!', { name: name }), 'success');
         closeModal();
         loadVmDashboard();
       } catch (err) {
-        showToast(`Failed to create VM: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_create_vm', 'Failed to create VM: {error}', { error: err.message }), 'error');
       } finally {
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Create Virtual Machine';
@@ -3233,13 +3233,13 @@ function initGuiDesktopSimulation(canvas, vmName) {
     else if (y >= btnY && y <= btnY + 36 && x >= 350 && x <= 530) {
       const uri = `vnc://${window.location.hostname || '127.0.0.1'}:${vncPort}`;
       const ok = await copyToClipboard(uri);
-      if (ok) showToast(`Copied VNC URI '${uri}'`, 'info');
+      if (ok) showToast(t('toast.copied_vnc_uri', 'Copied VNC URI \'{uri}\'', { uri: uri }), 'info');
     }
     // Button 3: Copy SSH (x: 550 to 720)
     else if (y >= btnY && y <= btnY + 36 && x >= 550 && x <= 720) {
       const cmd = `ssh root@${vmIp}`;
       const ok = await copyToClipboard(cmd);
-      if (ok) showToast(`Copied '${cmd}'`, 'info');
+      if (ok) showToast(t('toast.copied', 'Copied \'{cmd}\'', { cmd: cmd }), 'info');
     }
   };
 
@@ -3891,16 +3891,16 @@ export async function pasteTextToGuestConsole(text) {
           await new Promise((r) => setTimeout(r, 15));
         }
       }
-      showToast(`Pasted ${text.length} characters into guest VM`, 'success');
+      showToast(t('toast.pasted_characters_into_guest_vm', 'Pasted {count} characters into guest VM', { count: text.length }), 'success');
     } else {
-      showToast(`Pasted ${text.length} characters into guest input stream`, 'success');
+      showToast(t('toast.pasted_characters_into_guest_input_stream', 'Pasted {count} characters into guest input stream', { count: text.length }), 'success');
     }
   } else {
     if (_activeSerialWs && _activeSerialWs.readyState === WebSocket.OPEN) {
       _activeSerialWs.send(text.replace(/\r?\n/g, '\r'));
-      showToast(`Sent ${text.length} characters to serial terminal`, 'success');
+      showToast(t('toast.sent_characters_to_serial_terminal', 'Sent {count} characters to serial terminal', { count: text.length }), 'success');
     } else {
-      showToast(`Sent ${text.length} characters to terminal`, 'success');
+      showToast(t('toast.sent_characters_to_terminal', 'Sent {count} characters to terminal', { count: text.length }), 'success');
     }
   }
 }
@@ -4226,7 +4226,7 @@ async function initRealVncClient(container, vmId, vmName) {
         if (resStat && rfb._fbWidth) {
           resStat.textContent = `${rfb._fbWidth} × ${rfb._fbHeight}`;
         }
-        showToast(`Connected to ${vmName} display`, 'success');
+        showToast(t('toast.connected_to_display', 'Connected to {vmName} display', { vmName: vmName }), 'success');
 
         const realCanvas = vncScreen.querySelector('canvas');
         if (realCanvas) {
@@ -4255,7 +4255,7 @@ async function initRealVncClient(container, vmId, vmName) {
           statusPill.style.color = '#f87171';
         }
         if (e && e.detail && !e.detail.clean) {
-          showToast(`Console disconnected: ${e.detail.reason || 'Connection closed'}`, 'warning');
+          showToast(t('toast.console_disconnected', 'Console disconnected: {reason}', { reason: e.detail.reason || 'Connection closed' }), 'warning');
         }
         const consoleWin = document.getElementById('vm-console-window');
         if (consoleWin && !consoleWin._userClosing) {
@@ -4663,11 +4663,11 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             title: 'Send Special Key',
             subtitle: consoleWin._vmName || vmName,
             items: [
-              { icon: '⇥', label: 'Tab', onClick: () => { _sendKeyToRfb(0xff09, 'Tab'); showToast("Sent key 'Tab' to guest VM", 'info'); } },
-              { icon: '⎋', label: 'Escape', onClick: () => { _sendKeyToRfb(0xff1b, 'Escape'); showToast("Sent key 'Escape' to guest VM", 'info'); } },
-              { icon: '🛑', label: 'Ctrl + C', onClick: () => { _sendCtrlCToRfb(); showToast("Sent key 'Ctrl+C' to guest VM", 'info'); } },
-              { icon: '🪟', label: 'Super / Windows Key', onClick: () => { _sendKeyToRfb(0xffeb, 'MetaLeft'); showToast("Sent key 'Super' to guest VM", 'info'); } },
-              { icon: '⚙️', label: 'F12 (Boot Menu)', onClick: () => { _sendKeyToRfb(0xffcb, 'F12'); showToast("Sent key 'F12' to guest VM", 'info'); } },
+              { icon: '⇥', label: 'Tab', onClick: () => { _sendKeyToRfb(0xff09, 'Tab'); showToast(t('toast.sent_key_tab_to_guest_vm', "Sent key 'Tab' to guest VM"), 'info'); } },
+              { icon: '⎋', label: 'Escape', onClick: () => { _sendKeyToRfb(0xff1b, 'Escape'); showToast(t('toast.sent_key_escape_to_guest_vm', "Sent key 'Escape' to guest VM"), 'info'); } },
+              { icon: '🛑', label: 'Ctrl + C', onClick: () => { _sendCtrlCToRfb(); showToast(t('toast.sent_key_ctrl_c_to_guest', "Sent key 'Ctrl+C' to guest VM"), 'info'); } },
+              { icon: '🪟', label: 'Super / Windows Key', onClick: () => { _sendKeyToRfb(0xffeb, 'MetaLeft'); showToast(t('toast.sent_key_super_to_guest_vm', "Sent key 'Super' to guest VM"), 'info'); } },
+              { icon: '⚙️', label: 'F12 (Boot Menu)', onClick: () => { _sendKeyToRfb(0xffcb, 'F12'); showToast(t('toast.sent_key_f12_to_guest_vm', "Sent key 'F12' to guest VM"), 'info'); } },
               { icon: '⚡', label: 'Ctrl + Alt + Del', destructive: true, onClick: () => { consoleWin.querySelector('#btn-vnc-cad')?.click(); } },
             ],
           });
@@ -4685,7 +4685,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           else if (key === 'Super') _sendKeyToRfb(0xffeb, 'MetaLeft');
           else if (key === 'F12') _sendKeyToRfb(0xffcb, 'F12');
           menuKeys.style.display = 'none';
-          showToast(`Sent key '${key}' to guest VM`, 'info');
+          showToast(t('toast.sent_key_to_guest_vm', 'Sent key \'{key}\' to guest VM', { key: key }), 'info');
         };
       });
       document.addEventListener('click', () => {
@@ -4700,7 +4700,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         if (_activeRfb && typeof _activeRfb.sendCtrlAltDel === 'function') {
           _activeRfb.sendCtrlAltDel();
         }
-        showToast(`Sent Ctrl+Alt+Del signal to ${consoleWin._vmName || vmName}`, 'info');
+        showToast(t('toast.sent_ctrl_alt_del_signal_to', 'Sent Ctrl+Alt+Del signal to {vmName}', { vmName: consoleWin._vmName || vmName }), 'info');
       };
     }
 
@@ -4735,7 +4735,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
     const btnRec = consoleWin.querySelector('#btn-vnc-reconnect');
     if (btnRec) {
       btnRec.onclick = () => {
-        showToast('Reconnecting console stream...', 'info');
+        showToast(t('toast.reconnecting_console_stream', 'Reconnecting console stream...'), 'info');
         const mode = consoleWin._activeMode || 'gui';
         if (mode === 'gui') {
           const vncWrap = consoleWin.querySelector('#vm-vnc-container');
@@ -5590,7 +5590,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       await loadVmDashboard();
       renderLocalIsoList();
       renderCatalogCards();
-      showToast('ISO list refreshed.', 'info');
+      showToast(t('toast.iso_list_refreshed', 'ISO list refreshed.'), 'info');
     });
   }
 
@@ -5630,7 +5630,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       if (xhr.status >= 200 && xhr.status < 300) {
         if (progBar) progBar.style.width = '100%';
         if (progRate) progRate.textContent = 'Upload Complete';
-        showToast(`ISO '${file.name}' uploaded successfully to /mnt/user/isos`, 'success');
+        showToast(t('toast.iso_uploaded_successfully_to_mnt_user', 'ISO \'{name}\' uploaded successfully to /mnt/user/isos', { name: file.name }), 'success');
         await loadVmDashboard();
         renderLocalIsoList();
         renderCatalogCards();
@@ -5641,13 +5641,13 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           const errObj = JSON.parse(xhr.responseText);
           if (errObj && errObj.detail) errDetail = errObj.detail;
         } catch (_) {}
-        showToast(`Upload failed: ${errDetail}`, 'error');
+        showToast(t('toast.upload_failed', 'Upload failed: {errDetail}', { errDetail: errDetail }), 'error');
         if (progRate) progRate.textContent = `Error: ${errDetail}`;
       }
     };
 
     xhr.onerror = () => {
-      showToast('Network error while uploading ISO', 'error');
+      showToast(t('toast.network_error_while_uploading_iso', 'Network error while uploading ISO'), 'error');
       if (progRate) progRate.textContent = 'Network Error';
     };
 
@@ -5703,13 +5703,13 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             async () => {
               try {
                 await api.delete(`/api/vms/isos?path=${encodeURIComponent(path)}`);
-                showToast(`ISO '${name}' deleted successfully.`, 'info');
+                showToast(t('toast.iso_deleted_successfully', 'ISO \'{name}\' deleted successfully.', { name: name }), 'info');
                 await loadVmDashboard();
                 renderLocalIsoList();
                 renderCatalogCards();
                 document.getElementById('fm-refresh-btn')?.click();
               } catch (err) {
-                showToast(`Failed to delete ISO: ${err.message}`, 'error');
+                showToast(t('toast.failed_to_delete_iso', 'Failed to delete ISO: {error}', { error: err.message }), 'error');
               }
             }
           );
@@ -5762,7 +5762,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             btn.style.borderColor = '#34d399';
             btn.style.color = '#34d399';
           }
-          showToast(`Downloaded '${task.name || catalogId}' to /mnt/user/isos`, 'success');
+          showToast(t('toast.downloaded_to_mnt_user_isos', 'Downloaded \'{name}\' to /mnt/user/isos', { name: task.name || catalogId }), 'success');
           await loadVmDashboard();
           renderCatalogCards();
           renderLocalIsoList();
@@ -5779,7 +5779,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             btn.textContent = '⬇ Retry';
             btn.style.opacity = '1';
           }
-          showToast(`Download failed: ${task.error || 'Error'}`, 'error');
+          showToast(t('toast.download_failed', 'Download failed: {error}', { error: task.error || 'Error' }), 'error');
         }
       } catch (_) {}
     }, 800);
@@ -5859,7 +5859,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         try {
           const res = await api.post(`/api/vms/catalog/${id}/download`);
           if (res && res.status === 'already_present') {
-            showToast(`ISO already exists in /mnt/user/isos`, 'info');
+            showToast(t('toast.iso_already_exists_in_mnt_user', `ISO already exists in /mnt/user/isos`), 'info');
             await loadVmDashboard();
             renderCatalogCards();
             renderLocalIsoList();
@@ -5867,7 +5867,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           }
           trackDownload(id, res.task_id);
         } catch (err) {
-          showToast(`Failed to initiate download: ${err.message}`, 'error');
+          showToast(t('toast.failed_to_initiate_download', 'Failed to initiate download: {error}', { error: err.message }), 'error');
           if (targetStat) {
             targetStat.textContent = `Error: ${err.message}`;
             targetStat.style.color = '#ef4444';
@@ -6205,11 +6205,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             async () => {
               try {
                 await api.post(`/api/vms/${vmId}/snapshots/${encodeURIComponent(snapName)}/revert`);
-                showToast(`Rolled back VM '${targetVm.name}' to snapshot '${snapName}'.`, 'success');
+                showToast(t('toast.rolled_back_vm_to_snapshot', 'Rolled back VM \'{name}\' to snapshot \'{snapName}\'.', { name: targetVm.name, snapName: snapName }), 'success');
                 loadSnapshotsList();
                 loadVmDashboard();
               } catch (err) {
-                showToast(`Revert failed: ${err.message || err.detail}`, 'error');
+                showToast(t('toast.revert_failed', 'Revert failed: {error}', { error: err.message || err.detail }), 'error');
               }
             }
           );
@@ -6224,10 +6224,10 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             async () => {
               try {
                 await api.delete(`/api/vms/${vmId}/snapshots/${encodeURIComponent(snapName)}`, { confirmed: true });
-                showToast(`Deleted snapshot '${snapName}'.`, 'success');
+                showToast(t('toast.deleted_snapshot', 'Deleted snapshot \'{snapName}\'.', { snapName: snapName }), 'success');
                 loadSnapshotsList();
               } catch (err) {
-                showToast(`Delete failed: ${err.message || err.detail}`, 'error');
+                showToast(t('toast.delete_failed', 'Delete failed: {error}', { error: err.message || err.detail }), 'error');
               }
             }
           );
@@ -6300,11 +6300,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             async () => {
               try {
                 await api.post(`/api/vms/backups/${encodeURIComponent(bId)}/restore`);
-                showToast(`Restored VM '${targetVm.name}' from backup '${bId}'.`, 'success');
+                showToast(t('toast.restored_vm_from_backup', 'Restored VM \'{name}\' from backup \'{bId}\'.', { name: targetVm.name, bId: bId }), 'success');
                 loadBackupsList();
                 loadVmDashboard();
               } catch (err) {
-                showToast(`Restore failed: ${err.message || err.detail}`, 'error');
+                showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message || err.detail }), 'error');
               }
             }
           );
@@ -6319,10 +6319,10 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
             async () => {
               try {
                 await api.delete(`/api/vms/backups/${encodeURIComponent(bId)}`, { confirmed: true });
-                showToast(`Deleted backup '${bId}'.`, 'success');
+                showToast(t('toast.deleted_backup', 'Deleted backup \'{bId}\'.', { bId: bId }), 'success');
                 loadBackupsList();
               } catch (err) {
-                showToast(`Delete failed: ${err.message || err.detail}`, 'error');
+                showToast(t('toast.delete_failed', 'Delete failed: {error}', { error: err.message || err.detail }), 'error');
               }
             }
           );
@@ -6341,10 +6341,10 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       btnCreateBackup.textContent = 'Archiving...';
       try {
         await api.post(`/api/vms/${vmId}/backup`, { reason: 'on-demand' });
-        showToast(`Hyper-backup created for VM '${targetVm.name}'.`, 'success');
+        showToast(t('toast.hyper_backup_created_for_vm', 'Hyper-backup created for VM \'{name}\'.', { name: targetVm.name }), 'success');
         loadBackupsList();
       } catch (err) {
-        showToast(`Failed creating hyper-backup: ${err.message || err.detail}`, 'error');
+        showToast(t('toast.failed_creating_hyper_backup', 'Failed creating hyper-backup: {error}', { error: err.message || err.detail }), 'error');
       } finally {
         btnCreateBackup.disabled = false;
         btnCreateBackup.textContent = '+ Create Hyper-Backup';
@@ -6358,19 +6358,19 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       const name = (nameInput?.value || '').trim();
       const description = (descInput?.value || '').trim();
       if (!name) {
-        showToast('Please specify a snapshot name', 'warning');
+        showToast(t('toast.please_specify_a_snapshot_name', 'Please specify a snapshot name'), 'warning');
         return;
       }
       btnSubmit.disabled = true;
       btnSubmit.textContent = 'Saving...';
       try {
         await api.post(`/api/vms/${vmId}/snapshots`, { name, description });
-        showToast(`Snapshot '${name}' created successfully.`, 'success');
+        showToast(t('toast.snapshot_created_successfully', 'Snapshot \'{name}\' created successfully.', { name: name }), 'success');
         if (createForm) createForm.style.display = 'none';
         if (descInput) descInput.value = '';
         loadSnapshotsList();
       } catch (err) {
-        showToast(`Failed to create snapshot: ${err.message || err.detail}`, 'error');
+        showToast(t('toast.failed_to_create_snapshot', 'Failed to create snapshot: {error}', { error: err.message || err.detail }), 'error');
       } finally {
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Save Snapshot';

@@ -39,7 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
       smartRefreshBtn.addEventListener("click", () => {
         if (activeModalType && activeModalType.startsWith("disk_")) {
           const dev = activeModalType.replace("disk_", "");
-          showToast(`Refreshing disk /dev/${dev}...`, "info");
+          showToast(t('toast.refreshing_disk_dev', 'Refreshing disk /dev/{dev}...', { dev: dev }), "info");
           openSmartModal(dev, true);
         } else if (activeModalType) {
           openMetricModal(activeModalType);
@@ -83,7 +83,7 @@ window.addEventListener('DOMContentLoaded', () => {
           stopSmartPolling();
           const res = await api.post("/api/disk/smart_test", { dev, test_type: type });
           if (res && res.success) {
-            showToast(`Self-test aborted on /dev/${dev}`, "ok");
+            showToast(t('toast.self_test_aborted_on_dev', 'Self-test aborted on /dev/{dev}', { dev: dev }), "ok");
             updateSmartTestProgressUI({ self_test_progress: { is_aborted: true, percent_completed: 100, in_progress: false } }, type);
           } else {
             showToast(`Failed to abort: ${res?.error || 'Unknown error'}`, "error");
@@ -93,7 +93,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const res = await api.post("/api/disk/smart_test", { dev, test_type: type });
         if (res && res.success) {
-          showToast(`${type.toUpperCase()} self-test started on /dev/${dev}`, "ok");
+          showToast(t('toast.self_test_started_on_dev', '{type} self-test started on /dev/{dev}', { type: type.toUpperCase(), dev: dev }), "ok");
           const initData = {
             self_test_progress: {
               in_progress: true,
@@ -111,7 +111,7 @@ window.addEventListener('DOMContentLoaded', () => {
           if (testStatus) testStatus.textContent = `Failed: ${res?.error || 'Error'}`;
         }
       } catch (err) {
-        showToast(`Test error: ${err.message}`, "error");
+        showToast(t('toast.test_error', 'Test error: {error}', { error: err.message }), "error");
         if (testStatus) testStatus.textContent = "Error";
       }
     }
@@ -154,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
           }
           showToast(t("modal.smart_raw_copied", "Raw SMART attributes copied to clipboard"), "ok");
         } catch {
-          showToast("Failed to copy raw attributes", "error");
+          showToast(t('toast.failed_to_copy_raw_attributes', "Failed to copy raw attributes"), "error");
         }
       });
     }
@@ -203,7 +203,7 @@ window.addEventListener('DOMContentLoaded', () => {
           if (copyIcon) copyIcon.textContent = "✓";
           eventDetailCopyBtn.style.borderColor = "var(--ok2, #10b981)";
           eventDetailCopyBtn.style.color = "var(--ok2, #10b981)";
-          showToast("Event details copied to clipboard", "info");
+          showToast(t('toast.event_details_copied_to_clipboard', "Event details copied to clipboard"), "info");
           setTimeout(() => {
             if (copyText) copyText.textContent = t("event_detail.copy", "Copy Details");
             if (copyIcon) copyIcon.textContent = "📋";
@@ -591,7 +591,7 @@ export function generateSmartReportMarkdown(data) {
 
 export async function copySmartReport() {
   if (!_currentSmartData) {
-    showToast("No SMART data to export", "warn");
+    showToast(t('toast.no_smart_data_to_export', "No SMART data to export"), "warn");
     return;
   }
   const reportText = generateSmartReportMarkdown(_currentSmartData);
@@ -627,7 +627,7 @@ export async function copySmartReport() {
     }, 2000);
   } catch (err) {
     console.warn("Failed to copy SMART report:", err);
-    showToast("Failed to copy report", "error");
+    showToast(t('toast.failed_to_copy_report', "Failed to copy report"), "error");
   }
 }
 
@@ -646,7 +646,7 @@ async function openSmartModal(devName, forceWake = false) {
         'Drive in Standby Mode',
         `Disk ${diskLabel} is currently sleeping. Querying S.M.A.R.T. diagnostics will wake the drive, spinning up platters and consuming power. Do you wish to proceed and wake it?`,
         () => {
-          showToast(`Waking disk /dev/${devName}...`, 'info');
+          showToast(t('toast.waking_disk_dev', 'Waking disk /dev/{devName}...', { devName: devName }), 'info');
           openSmartModal(devName, true);
         }
       );
@@ -710,7 +710,7 @@ async function openSmartModal(devName, forceWake = false) {
           if (wakeBtn && !wakeBtn.dataset.bound) {
             wakeBtn.dataset.bound = "1";
             wakeBtn.addEventListener("click", () => {
-              showToast(`Waking disk /dev/${devName}...`, "info");
+              showToast(t('toast.waking_disk_dev', 'Waking disk /dev/{devName}...', { devName: devName }), "info");
               openSmartModal(devName, true);
             });
           }

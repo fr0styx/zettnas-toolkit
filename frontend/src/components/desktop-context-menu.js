@@ -343,7 +343,7 @@ export function executeContextAction(action) {
           }
         }
       } catch (err) {
-        showToast('Fullscreen toggle not supported in this view', 'info');
+        showToast(t('toast.fullscreen_toggle_not_supported_in_this', 'Fullscreen toggle not supported in this view'), 'info');
       }
       break;
 

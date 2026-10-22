@@ -954,7 +954,7 @@ export function initAcousticCalibration() {
       }
       startPolling();
     } catch (e) {
-      showToast(`Failed to start acoustic sweep: ${e.message || e}`, 'error');
+      showToast(t('toast.failed_to_start_acoustic_sweep', 'Failed to start acoustic sweep: {message}', { message: e.message || e }), 'error');
       renderAcousticResults({ running: false, completed_at: null, results: [] });
     } finally {
       btnStart.disabled = false;
@@ -973,7 +973,7 @@ export function initAcousticCalibration() {
       renderAcousticResults(res || { running: false, completed_at: null });
       showToast(t('settings.sweep_stopped') || 'Acoustic calibration sweep stopped', 'warn');
     } catch (e) {
-      showToast(`Failed to stop acoustic sweep: ${e.message || e}`, 'error');
+      showToast(t('toast.failed_to_stop_acoustic_sweep', 'Failed to stop acoustic sweep: {message}', { message: e.message || e }), 'error');
     } finally {
       btnStop.disabled = false;
     }

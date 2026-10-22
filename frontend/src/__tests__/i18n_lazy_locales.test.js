@@ -19,3 +19,13 @@ describe("per-language files (FE-03)", () => {
     expect(getLanguage()).toBe("en");
   });
 });
+
+describe("toasts are translated (FE-13)", () => {
+  it("shows a converted toast in German with its value filled in", async () => {
+    await setLanguage("de");
+    expect(t("toast.trash_emptied_storage_reclaimed", "Trash emptied. Storage reclaimed.")).toBe("Papierkorb geleert, Speicher freigegeben.");
+    expect(t("toast.failed_to_empty_trash", "Failed to empty trash: {message}", { message: "Zugriff verweigert" }))
+      .toBe("Papierkorb konnte nicht geleert werden: Zugriff verweigert");
+    await setLanguage("en");
+  });
+});

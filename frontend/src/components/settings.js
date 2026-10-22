@@ -527,7 +527,7 @@ export function initSettings() {
         await api.post('/api/lcd/page', { cycle_seconds: secs });
         showToast(secs > 0 ? `Auto-cycling LCD every ${secs}s` : 'Auto-cycling disabled (manual control)', 'info');
       } catch (err) {
-        showToast('Failed to update LCD cycle rate', 'error');
+        showToast(t('toast.failed_to_update_lcd_cycle_rate', 'Failed to update LCD cycle rate'), 'error');
       }
     });
   }
@@ -602,7 +602,7 @@ export function initSettings() {
         require_confirmation: btnCopyRequireConfirm ? btnCopyRequireConfirm.checked : true,
         on_collision: btnCopyCollision ? btnCopyCollision.value : 'skip'
       });
-      showToast('Button configuration saved', 'success');
+      showToast(t('toast.button_configuration_saved', 'Button configuration saved'), 'success');
     } catch (err) {
       showToast('Config Error: ' + err.message, 'error');
       loadButtonConfig();
@@ -649,7 +649,7 @@ export function initSettings() {
         ZettEventBus.emit('media:slots_rescanned');
         showToast(t('media.scan_complete', 'Media slots rescanned.'), 'info');
       } catch (err) {
-        showToast(`Scan failed: ${err.message || err}`, 'error');
+        showToast(t('toast.scan_failed', 'Scan failed: {error}', { error: err.message || err }), 'error');
       } finally {
         setTimeout(() => { if (btnMediaRescan) btnMediaRescan.textContent = '🔄 Scan'; }, 1000);
       }
@@ -672,7 +672,7 @@ export function initSettings() {
         });
         showToast(t('media.copy_started', 'Starting ingest from media slot...'), 'success');
       } catch (err) {
-        showToast(`Copy failed: ${err.message || err}`, 'error');
+        showToast(t('toast.copy_failed', 'Copy failed: {error}', { error: err.message || err }), 'error');
       } finally {
         setTimeout(() => {
           if (btnMediaCopyNow) {
@@ -693,7 +693,7 @@ export function initSettings() {
         ZettEventBus.emit('media:slot_ejected', srcSlot);
         showToast(t('media.ejected', 'Card safely unmounted and ejected. You can now remove it.'), 'info');
       } catch (err) {
-        showToast(`Eject failed: ${err.message || err}`, 'error');
+        showToast(t('toast.eject_failed', 'Eject failed: {error}', { error: err.message || err }), 'error');
       }
     });
   }
@@ -1791,7 +1791,7 @@ function askBackupPassphrase(title, msg, allowEmpty) {
       const v = (value || '').trim();
       if (!v && !allowEmpty) return resolve(null);
       if (v && v.length < 8) {
-        showToast('Use a passphrase of at least 8 characters.', 'error');
+        showToast(t('toast.use_a_passphrase_of_at_least', 'Use a passphrase of at least 8 characters.'), 'error');
         return resolve(null);
       }
       resolve(v);
@@ -1881,7 +1881,7 @@ export function initSystemTab() {
       const file = e.target.files[0];
       if (!file) return;
       if (!file.name.endsWith('.zip') && !file.name.endsWith('.zettbak')) {
-        showToast('Please choose a ZettNAS backup (.zip or .zettbak).', 'error');
+        showToast(t('toast.please_choose_a_zettnas_backup_zip', 'Please choose a ZettNAS backup (.zip or .zettbak).'), 'error');
         uploadInput.value = '';
         return;
       }

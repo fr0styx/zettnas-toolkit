@@ -847,7 +847,7 @@ function updateInspectorContent(meta) {
       await navigator.clipboard.writeText(meta.path || '');
       showToast(t('common.copied', 'Copied path to clipboard!'), 'success');
     } catch (_) {
-      showToast('Failed to copy', 'error');
+      showToast(t('toast.failed_to_copy', 'Failed to copy'), 'error');
     }
   });
 }
@@ -876,7 +876,7 @@ async function triggerCopy() {
       await navigator.clipboard.writeText(_currentMeta.content || '');
       showToast(t('common.copied', 'Text copied to clipboard!'), 'success');
     } catch (_) {
-      showToast('Failed to copy text', 'error');
+      showToast(t('toast.failed_to_copy_text', 'Failed to copy text'), 'error');
     }
     return;
   }

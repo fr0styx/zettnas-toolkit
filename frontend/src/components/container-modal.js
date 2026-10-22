@@ -239,7 +239,7 @@ export function initContainerModal() {
       const codeEl = document.getElementById('ci-compose-code');
       if (codeEl && codeEl.textContent) {
         navigator.clipboard.writeText(codeEl.textContent).then(() => {
-          showToast('Docker Compose YAML copied to clipboard!', 'success');
+          showToast(t('toast.docker_compose_yaml_copied_to_clipboard', 'Docker Compose YAML copied to clipboard!'), 'success');
         });
       }
     });
@@ -257,7 +257,7 @@ export function initContainerModal() {
       a.download = `${_activeCname || 'docker'}-compose.yml`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast(`Downloaded ${_activeCname}-compose.yml`, 'info');
+      showToast(t('toast.downloaded_compose_yml', 'Downloaded {activeCname}-compose.yml', { activeCname: _activeCname }), 'info');
     });
   }
 
@@ -281,7 +281,7 @@ export function initContainerModal() {
     logCopyBtn.addEventListener('click', () => {
       const text = _activeLogLines.map((l) => (l.ts ? `${l.ts} ` : '') + l.msg).join('\n');
       navigator.clipboard.writeText(text).then(() => {
-        showToast('Container logs copied to clipboard.', 'success');
+        showToast(t('toast.container_logs_copied_to_clipboard', 'Container logs copied to clipboard.'), 'success');
       });
     });
   }
@@ -764,14 +764,14 @@ async function loadContainerDetails(cid) {
       backupActionBtn.addEventListener('click', async () => {
         backupActionBtn.disabled = true;
         backupActionBtn.textContent = '⏳ Backing up...';
-        showToast(`Creating backup for ${_activeCname}...`, 'info');
+        showToast(t('toast.creating_backup_for', 'Creating backup for {activeCname}...', { activeCname: _activeCname }), 'info');
         try {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
           const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
           const sizeStr = res?.backup?.archive_size_formatted || '';
           showToast(`App "${_activeCname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
         } catch (err) {
-          showToast(`Backup failed: ${err.message}`, 'error');
+          showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {
           backupActionBtn.disabled = false;
           backupActionBtn.textContent = '💾 Backup App Now';
@@ -798,10 +798,10 @@ async function loadContainerDetails(cid) {
             nano_cpus: isNaN(cpuVal) ? 0 : cpuVal,
             restart_policy: restartVal,
           });
-          showToast('Resource limits updated with zero downtime!', 'success');
+          showToast(t('toast.resource_limits_updated_with_zero_downtime', 'Resource limits updated with zero downtime!'), 'success');
           await loadContainerDetails(cid);
         } catch (err) {
-          showToast(`Resource update failed: ${err.message}`, 'error');
+          showToast(t('toast.resource_update_failed', 'Resource update failed: {error}', { error: err.message }), 'error');
         } finally {
           applyResBtn.disabled = false;
           applyResBtn.textContent = '💾 Apply Tuning';
@@ -823,13 +823,13 @@ async function loadContainerDetails(cid) {
     if (restartActionBtn) {
       restartActionBtn.addEventListener('click', async () => {
         restartActionBtn.disabled = true;
-        showToast(`Restarting ${_activeCname}...`, 'info');
+        showToast(t('toast.restarting', 'Restarting {activeCname}...', { activeCname: _activeCname }), 'info');
         try {
           await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/action`, { action: 'restart' });
-          showToast(`Container "${_activeCname}" restarted.`, 'success');
+          showToast(t('toast.container_restarted', 'Container "{activeCname}" restarted.', { activeCname: _activeCname }), 'success');
           await loadContainerDetails(cid);
         } catch (err) {
-          showToast(`Restart failed: ${err.message}`, 'error');
+          showToast(t('toast.restart_failed', 'Restart failed: {error}', { error: err.message }), 'error');
         } finally {
           restartActionBtn.disabled = false;
         }
@@ -1025,7 +1025,7 @@ function renderPortsTab(details) {
 
           applyPortsBtn.disabled = true;
           applyPortsBtn.textContent = 'Recreating container...';
-          showToast(`Recreating container "${cname}" with new ports...`, 'info');
+          showToast(t('toast.recreating_container_with_new_ports', 'Recreating container "{cname}" with new ports...', { cname: cname }), 'info');
 
           try {
             const targetId = details.cid || details.overview?.id;
@@ -1036,7 +1036,7 @@ function renderPortsTab(details) {
             showToast(res.message || 'Container recreated successfully!', 'success');
             await loadContainerDetails(targetId);
           } catch (err) {
-            showToast(`Port reconfiguration failed: ${err.message}`, 'error');
+            showToast(t('toast.port_reconfiguration_failed', 'Port reconfiguration failed: {error}', { error: err.message }), 'error');
           } finally {
             applyPortsBtn.disabled = false;
             applyPortsBtn.textContent = '🚀 Recreate Container with New Ports';
@@ -1107,7 +1107,7 @@ function renderMountsTab(details) {
       const path = btn.dataset.path;
       if (!path) return;
       ZettEventBus.emit('window:open', { id: 'file-manager-window', path: path });
-      showToast(`Navigated File Explorer to ${path}`, 'info');
+      showToast(t('toast.navigated_file_explorer_to', 'Navigated File Explorer to {path}', { path: path }), 'info');
     });
   });
 }
@@ -1191,7 +1191,7 @@ function renderEnvTab(details) {
       const val = entry ? entry.raw : '';
       if (!val) return;
       navigator.clipboard.writeText(val).then(() => {
-        showToast('Value copied to clipboard.', 'success');
+        showToast(t('toast.value_copied_to_clipboard', 'Value copied to clipboard.'), 'success');
       });
     });
   });
@@ -1235,7 +1235,7 @@ async function renderComposeCode() {
       const data = await api.get(`/api/docker/containers/${encodeURIComponent(_activeCid)}/compose?unmask=true`);
       _activeComposeData = data;
     } catch (e) {
-      showToast('Cannot unmask: insufficient permissions.', 'error');
+      showToast(t('toast.cannot_unmask_insufficient_permissions', 'Cannot unmask: insufficient permissions.'), 'error');
     }
   }
   codeEl.textContent = mask ? _activeComposeData.masked_yaml : (_activeComposeData.compose_yaml || _activeComposeData.masked_yaml);
@@ -1453,9 +1453,9 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
       const url = `/api/docker/containers/${encodeURIComponent(cid)}?force=${force}&remove_volumes=${removeVolumes}&remove_image=${removeImage}&archive_data=${archiveData}`;
       const res = await api.delete(url, { confirmed: true });
       if (res?.archived && res?.archive) {
-        showToast(`Container "${cname}" destroyed. App data & config safely archived!`, 'success');
+        showToast(t('toast.container_destroyed_app_data_config_safely', 'Container "{cname}" destroyed. App data & config safely archived!', { cname: cname }), 'success');
       } else {
-        showToast(`Container "${cname}" permanently destroyed.`, 'success');
+        showToast(t('toast.container_permanently_destroyed', 'Container "{cname}" permanently destroyed.', { cname: cname }), 'success');
       }
       modal.classList.remove('open');
       modal.style.display = 'none';
@@ -1464,7 +1464,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
         onDeleted();
       }
     } catch (err) {
-      showToast(`Failed to destroy container: ${err.message}`, 'error');
+      showToast(t('toast.failed_to_destroy_container', 'Failed to destroy container: {error}', { error: err.message }), 'error');
       confirmBtn.disabled = false;
       confirmBtn.textContent = '💥 Destroy Container';
     }
@@ -1714,7 +1714,7 @@ async function renderContainerEditTab(cid) {
     const keep_backup = document.getElementById('cie-cb-backup').checked;
 
     if (!name || !image) {
-      showToast('Container name and image cannot be empty.', 'warn');
+      showToast(t('toast.container_name_and_image_cannot_be', 'Container name and image cannot be empty.'), 'warn');
       return;
     }
 
@@ -1782,7 +1782,7 @@ async function renderContainerEditTab(cid) {
           statusMsg.style.background = 'rgba(37,194,160,0.15)';
           statusMsg.style.color = 'var(--ok2, #25c2a0)';
           statusMsg.textContent = `✓ ${res.message || 'Container recreated successfully!'}`;
-          showToast(`Container "${res.target_name || name}" successfully recreated!`, 'success');
+          showToast(t('toast.container_successfully_recreated', 'Container "{target_name}" successfully recreated!', { target_name: res.target_name || name }), 'success');
 
           // Refresh details
           _activeCid = res.new_id || name;
@@ -1803,7 +1803,7 @@ async function renderContainerEditTab(cid) {
           statusMsg.style.background = 'rgba(239,68,68,0.15)';
           statusMsg.style.color = '#fca5a5';
           statusMsg.textContent = `Error: ${err.message}`;
-          showToast(`Recreation failed: ${err.message}`, 'error');
+          showToast(t('toast.recreation_failed', 'Recreation failed: {error}', { error: err.message }), 'error');
         } finally {
           saveBtn.disabled = false;
           saveBtn.textContent = '💾 Save & Recreate Container';

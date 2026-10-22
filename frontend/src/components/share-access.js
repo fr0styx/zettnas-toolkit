@@ -6,6 +6,7 @@ import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { showToast } from '../toast.js';
 
+import { t } from '../i18n.js';
 const LEVELS = ['none', 'read', 'write'];
 
 function levelSelect(attrs, value, withInherit) {
@@ -59,7 +60,7 @@ export async function openShareAccessModal() {
   try {
     [data, users] = await Promise.all([api.get('/api/storage/share-access'), api.get('/api/users')]);
   } catch (err) {
-    showToast(`Could not load share access: ${err.message}`, 'error');
+    showToast(t('toast.could_not_load_share_access', 'Could not load share access: {error}', { error: err.message }), 'error');
     return;
   }
   const list = Array.isArray(users) ? users : users?.users || [];
@@ -86,10 +87,10 @@ export async function openShareAccessModal() {
   backdrop.querySelector('#share-access-save').onclick = async () => {
     try {
       await api.put('/api/storage/share-access', collectShareAccess(backdrop));
-      showToast('Share access saved.', 'success');
+      showToast(t('toast.share_access_saved', 'Share access saved.'), 'success');
       close();
     } catch (err) {
-      showToast(`Could not save: ${err.message}`, 'error');
+      showToast(t('toast.could_not_save', 'Could not save: {error}', { error: err.message }), 'error');
     }
   };
 }

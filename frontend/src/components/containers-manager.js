@@ -303,11 +303,11 @@ export function initContainersManager() {
         if (count > 0) {
           showToast(`Update check complete: ${count} container update${count > 1 ? 's' : ''} available!`, 'warn');
         } else {
-          showToast('All containers are up to date!', 'success');
+          showToast(t('toast.all_containers_are_up_to_date', 'All containers are up to date!'), 'success');
         }
         await loadContainersData();
       } catch (err) {
-        showToast(`Update check failed: ${err.message}`, 'error');
+        showToast(t('toast.update_check_failed', 'Update check failed: {error}', { error: err.message }), 'error');
       } finally {
         btnCheckUpdates.disabled = false;
         btnCheckUpdates.innerHTML = orig;
@@ -323,13 +323,13 @@ export function initContainersManager() {
         'Are you sure you want to pull latest images and update all containers with available updates?',
         async () => {
           btnUpdateAll.disabled = true;
-          showToast('Batch container update initiated...', 'info');
+          showToast(t('toast.batch_container_update_initiated', 'Batch container update initiated...'), 'info');
           try {
             await api.post('/api/docker/updates/apply-all');
-            showToast('All container updates dispatched.', 'success');
+            showToast(t('toast.all_container_updates_dispatched', 'All container updates dispatched.'), 'success');
             await loadContainersData();
           } catch (err) {
-            showToast(`Batch update failed: ${err.message}`, 'error');
+            showToast(t('toast.batch_update_failed', 'Batch update failed: {error}', { error: err.message }), 'error');
           } finally {
             btnUpdateAll.disabled = false;
           }
@@ -350,11 +350,11 @@ export function initContainersManager() {
         const res = await api.get('/api/docker/stacks');
         const stacks = Array.isArray(res) ? res : (res?.stacks || []);
         if (!stacks.length) {
-          showToast('No active Compose stacks found.', 'info');
+          showToast(t('toast.no_active_compose_stacks_found', 'No active Compose stacks found.'), 'info');
         }
         openStackPickerModal(stacks);
       } catch (e) {
-        showToast(`Failed to load Compose stacks: ${e.message}`, 'error');
+        showToast(t('toast.failed_to_load_compose_stacks', 'Failed to load Compose stacks: {message}', { message: e.message }), 'error');
         openStackPickerModal([]);
       }
     };
@@ -640,7 +640,7 @@ export async function loadContainersData(isBackground = false) {
     renderContainersWindowTable(_cwContainersList);
   } catch (err) {
     if (!isBackground || _cwContainersList.length === 0) {
-      showToast(`Failed to load containers: ${err.message}`, 'error');
+      showToast(t('toast.failed_to_load_containers', 'Failed to load containers: {error}', { error: err.message }), 'error');
       const tbody = document.getElementById('cw-docker-containers-tbody');
       if (tbody && _cwContainersList.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--crit, #ef4444); padding:24px;">Failed to load containers: ${escapeHtml(err.message)}</td></tr>`;
@@ -1199,13 +1199,13 @@ function bindCwTableEvents(tbody) {
             actBtn.disabled = true;
             const originalContent = actBtn.innerHTML;
             actBtn.innerHTML = '⏳';
-            showToast(`Updating "${cname}" to latest image...`, 'info');
+            showToast(t('toast.updating_to_latest_image', 'Updating "{cname}" to latest image...', { cname: cname }), 'info');
             try {
               await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/update-image`);
-              showToast(`Container "${cname}" updated and restarted successfully!`, 'success');
+              showToast(t('toast.container_updated_and_restarted_successfully', 'Container "{cname}" updated and restarted successfully!', { cname: cname }), 'success');
               await loadContainersData();
             } catch (err) {
-              showToast(`Update failed: ${err.message}`, 'error');
+              showToast(t('toast.update_failed', 'Update failed: {error}', { error: err.message }), 'error');
               actBtn.disabled = false;
               actBtn.innerHTML = originalContent;
             }
@@ -1225,14 +1225,14 @@ function bindCwTableEvents(tbody) {
         actBtn.disabled = true;
         const originalContent = actBtn.innerHTML;
         actBtn.innerHTML = '⏳';
-        showToast(`Creating backup for ${cname}...`, 'info');
+        showToast(t('toast.creating_backup_for_2', 'Creating backup for {cname}...', { cname: cname }), 'info');
         try {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
           const archiveName = res?.backup?.archive_file || 'archive.tar.gz';
           const sizeStr = res?.backup?.archive_size_formatted || '';
           showToast(`App "${cname}" backed up successfully (${archiveName}${sizeStr ? ' - ' + sizeStr : ''})!`, 'success');
         } catch (err) {
-          showToast(`Backup failed: ${err.message}`, 'error');
+          showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {
           actBtn.disabled = false;
           actBtn.innerHTML = originalContent;
@@ -1249,14 +1249,14 @@ function bindCwTableEvents(tbody) {
 
       actBtn.disabled = true;
       actBtn.style.opacity = '0.5';
-      showToast(`${act.toUpperCase()} request sent for ${cname}...`, 'info');
+      showToast(t('toast.request_sent_for', '{act} request sent for {cname}...', { act: act.toUpperCase(), cname: cname }), 'info');
 
       try {
         await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/action`, { action: act });
-        showToast(`Container "${cname}" successfully ${act}ed.`, 'success');
+        showToast(t('toast.container_successfully_ed', 'Container "{cname}" successfully {act}ed.', { cname: cname, act: act }), 'success');
         await loadContainersData();
       } catch (err) {
-        showToast(`Failed to ${act} container: ${err.message}`, 'error');
+        showToast(t('toast.failed_to_container', 'Failed to {act} container: {error}', { act: act, error: err.message }), 'error');
         actBtn.disabled = false;
         actBtn.style.opacity = '1';
       }
@@ -1307,7 +1307,7 @@ export function updateCwBulkBar() {
 export async function executeBulkContainerAction(action) {
   const selectedIds = getSelectedContainerIds();
   if (selectedIds.length === 0) {
-    showToast('No containers selected.', 'info');
+    showToast(t('toast.no_containers_selected', 'No containers selected.'), 'info');
     return;
   }
 
@@ -1349,7 +1349,7 @@ export async function executeBulkContainerAction(action) {
 
 async function _runBulkActionApi(action, selectedIds) {
   try {
-    showToast(`Executing bulk ${action} on ${selectedIds.length} containers...`, 'info');
+    showToast(t('toast.executing_bulk_on_containers', 'Executing bulk {action} on {count} containers...', { action: action, count: selectedIds.length }), 'info');
     const res = await api.post('/api/docker/containers/bulk-action', {
       action,
       container_ids: selectedIds,
@@ -1357,11 +1357,11 @@ async function _runBulkActionApi(action, selectedIds) {
     });
     const successful = res.successful || 0;
     const total = res.total || selectedIds.length;
-    showToast(`Bulk ${action}: ${successful} of ${total} succeeded.`, successful === total ? 'success' : 'warn');
+    showToast(t('toast.bulk_of_succeeded', 'Bulk {action}: {successful} of {total} succeeded.', { action: action, successful: successful, total: total }), successful === total ? 'success' : 'warn');
     clearSelectedContainers();
     await loadContainersData();
     updateCwBulkBar();
   } catch (err) {
-    showToast(`Bulk ${action} failed: ${err.message}`, 'error');
+    showToast(t('toast.bulk_failed', 'Bulk {action} failed: {error}', { action: action, error: err.message }), 'error');
   }
 }
