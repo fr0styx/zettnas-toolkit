@@ -87,3 +87,22 @@ body.theme-light {
 /* The title bar drags the window */
 .dialog-chrome-header { cursor: move; user-select: none; }
 .dialog-chrome-header :is(button, input, select, a) { cursor: pointer; }
+
+/* App catalog "Deploy / Stack": a tinted button, readable on every card (white on cyan was not) */
+button.catalog-deploy {
+  padding: 4px 12px; border-radius: 6px; cursor: pointer;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.01em;
+  color: #bae6fd; background: rgba(14, 165, 233, 0.16); border: 1px solid rgba(56, 189, 248, 0.45);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+button.catalog-deploy:hover,
+button.catalog-deploy:focus-visible {
+  color: #fff; background: #0369a1; border-color: #0ea5e9;
+}
+button.catalog-deploy:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+body.theme-light button.catalog-deploy {
+  color: #075985; background: rgba(14, 165, 233, 0.12); border-color: rgba(3, 105, 161, 0.45);
+}
+body.theme-light button.catalog-deploy:hover,
+body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: #0369a1; }
+

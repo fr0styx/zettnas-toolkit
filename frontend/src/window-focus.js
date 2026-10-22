@@ -44,15 +44,25 @@ export function focusWindow(win) {
   }
 }
 
-export function returnFocus(win) {
+export function returnFocus(win, dock = null) {
   if (!win) return;
   const active = document.activeElement;
   if (active && active !== document.body && !win.contains(active)) return; // focus already moved on
   const opener = _openers.get(win);
   _openers.delete(win);
+  if (opener && opener.isConnected && visible(opener)) {
+    opener.focus({ preventScroll: true });
+    return;
+  }
+  // Like a desktop: the window now on top gets focus; the dock only when none is left
+  const nextId = dock ? topWindowId(dock) : null;
+  const next = nextId ? winOf(dock.windows[nextId]) : null;
+  if (next && next !== win) {
+    focusWindow(next);
+    return;
+  }
   const fallback = document.querySelector('#os-dock-container button, #os-dock-container [tabindex="0"]');
-  const to = opener && opener.isConnected && visible(opener) ? opener : fallback;
-  if (to) to.focus({ preventScroll: true });
+  if (fallback) fallback.focus({ preventScroll: true, focusVisible: false });
 }
 
 function topWindowId(dock) {
@@ -89,8 +99,8 @@ export function installWindowFocus(dock) {
   wrap('register', (d, id, before, rest) => {
     if (!rest[3]) later(() => focusWindow(winOf(d.windows?.[id])));
   });
-  wrap('minimize', (d, id, before) => returnFocus(before));
-  wrap('unregister', (d, id, before) => returnFocus(before));
+  wrap('minimize', (d, id, before) => returnFocus(before, d));
+  wrap('unregister', (d, id, before) => returnFocus(before, d));
 
   // Remember which window was on top when Esc went down; if another handler closes
   // something for this key press, we don't also close the window underneath.

@@ -1005,6 +1005,15 @@ function getOrCreateSnapGhost() {
   return ghost;
 }
 
+/** True when focus came from the keyboard; previews then open on focus, never when the app moves focus. */
+function keyboardFocused(el) {
+  try {
+    return el.matches(':focus-visible');
+  } catch (_) {
+    return true; // a browser without :focus-visible: keep the old behaviour
+  }
+}
+
 export function makeDraggable(dragEl, handleEl, customId) {
   if (!dragEl) return;
   handleEl = handleEl || dragEl;
@@ -2640,7 +2649,7 @@ export const DockManager = {
     dashItem.setAttribute('aria-label', t('dock.home', 'Dashboard Home'));
     dashItem.innerHTML = `<svg><use href="#i-globe"/></svg>`;
     dashItem.addEventListener('mouseenter', () => showDockTooltip(dashItem, 'home', t('dock.home', 'Dashboard Home'), '#i-globe', false));
-    dashItem.addEventListener('focus', () => showDockTooltip(dashItem, 'home', t('dock.home', 'Dashboard Home'), '#i-globe', false));
+    dashItem.addEventListener('focus', () => keyboardFocused(dashItem) && showDockTooltip(dashItem, 'home', t('dock.home', 'Dashboard Home'), '#i-globe', false));
     dashItem.addEventListener('mouseleave', hideDockTooltip);
     dashItem.addEventListener('blur', hideDockTooltip);
     dashItem.addEventListener('click', () => {
@@ -2662,7 +2671,7 @@ export const DockManager = {
     spotItem.setAttribute('aria-label', 'Spotlight Command Palette (Cmd+K)');
     spotItem.innerHTML = `<span style="font-size:15px; line-height:1;">🔍</span>`;
     spotItem.addEventListener('mouseenter', () => showDockTooltip(spotItem, 'spotlight', 'Command Palette (Cmd+K)', '', false));
-    spotItem.addEventListener('focus', () => showDockTooltip(spotItem, 'spotlight', 'Command Palette (Cmd+K)', '', false));
+    spotItem.addEventListener('focus', () => keyboardFocused(spotItem) && showDockTooltip(spotItem, 'spotlight', 'Command Palette (Cmd+K)', '', false));
     spotItem.addEventListener('mouseleave', hideDockTooltip);
     spotItem.addEventListener('blur', hideDockTooltip);
     spotItem.addEventListener('click', () => {
@@ -2728,7 +2737,7 @@ export const DockManager = {
 
         item.addEventListener('mousedown', (e) => e.stopPropagation());
         item.addEventListener('mouseenter', () => showDockTooltip(item, 'fm', win.title, win.icon, !isRunning || fmWindows.every((w) => w.minimized), !isRunning));
-        item.addEventListener('focus', () => showDockTooltip(item, 'fm', win.title, win.icon, !isRunning || fmWindows.every((w) => w.minimized), !isRunning));
+        item.addEventListener('focus', () => keyboardFocused(item) && showDockTooltip(item, 'fm', win.title, win.icon, !isRunning || fmWindows.every((w) => w.minimized), !isRunning));
         item.addEventListener('mouseleave', hideDockTooltip);
         item.addEventListener('blur', hideDockTooltip);
 
@@ -2780,7 +2789,7 @@ export const DockManager = {
 
       item.addEventListener('mousedown', (e) => e.stopPropagation());
       item.addEventListener('mouseenter', () => showDockTooltip(item, id, win.title, win.icon, win.minimized, !isRunning));
-      item.addEventListener('focus', () => showDockTooltip(item, id, win.title, win.icon, win.minimized, !isRunning));
+      item.addEventListener('focus', () => keyboardFocused(item) && showDockTooltip(item, id, win.title, win.icon, win.minimized, !isRunning));
       item.addEventListener('mouseleave', hideDockTooltip);
       item.addEventListener('blur', hideDockTooltip);
       item.addEventListener('click', () => {
@@ -2810,7 +2819,7 @@ export const DockManager = {
     notifItem.setAttribute('aria-label', t('dock.notifications', 'Notification Center'));
     notifItem.innerHTML = `<svg><use href="#i-bell"/></svg><span class="dock-badge" id="dock-notif-badge" aria-hidden="true" style="display:none; position:absolute; top:-2px; right:-2px; background:var(--crit); color:#fff; font-size:11px; font-weight:800; padding:1px 4px; border-radius:8px; border:1px solid #000; box-shadow:0 1px 2px rgba(0,0,0,0.5); pointer-events:none;">0</span>`;
     notifItem.addEventListener('mouseenter', () => showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
-    notifItem.addEventListener('focus', () => showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
+    notifItem.addEventListener('focus', () => keyboardFocused(notifItem) && showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
     notifItem.addEventListener('mouseleave', hideDockTooltip);
     notifItem.addEventListener('blur', hideDockTooltip);
     notifItem.addEventListener('click', () => {
@@ -3440,7 +3449,7 @@ export function initSnapAssistFlyout() {
       btn._snapAssistBound = true;
       btn.addEventListener('mouseenter', () => showFlyout(btn));
       btn.addEventListener('mouseleave', scheduleHide);
-      btn.addEventListener('focus', () => showFlyout(btn));
+      btn.addEventListener('focus', () => keyboardFocused(btn) && showFlyout(btn));
       btn.addEventListener('blur', scheduleHide);
     });
   };
