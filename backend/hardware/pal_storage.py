@@ -2036,6 +2036,13 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 logger.debug(f"[PAL] Error listing generic shares: {e}")
         return list(shares_map.values())
 
+    def _must(self, cmd: list[str], what: str) -> str:
+        """Runs a step of pool creation; a failure stops it with the tool's own message."""
+        code, out, err = self._run_cmd(cmd)
+        if code != 0:
+            raise RuntimeError(f"{what} failed ({code}): {(err or out or 'no output')[:300]}")
+        return out
+
     def create_pool(
         self,
         name: str,
@@ -2096,33 +2103,27 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 target_mount,
                 name,
             ] + vdev_args
-            code, out, err = self._run_cmd(cmd)
-            if code != 0 and code != 127:
-                logger.warning(f"[PAL] zpool create returned {code}: {err}")
+            self._must(cmd, "zpool create")
 
         elif fs_lower == "btrfs":
             cmd = ["mkfs.btrfs", "-f", "-L", name, "-m", profile_lower, "-d", profile_lower] + resolved_disks
-            code, out, err = self._run_cmd(cmd)
-            if code != 0 and code != 127:
-                logger.warning(f"[PAL] mkfs.btrfs returned {code}: {err}")
+            self._must(cmd, "mkfs.btrfs")
 
             # Mount with modern zstd compression and fast noatime
             mount_cmd = ["mount", "-o", "compress=zstd:1,noatime,space_cache=v2", resolved_disks[0], target_mount]
-            self._run_cmd(mount_cmd)
+            self._must(mount_cmd, "mount")
 
             # Create default subvolumes for shares and snapshots
             self._run_cmd(["btrfs", "subvolume", "create", os.path.join(target_mount, "@shares")])
             self._run_cmd(["btrfs", "subvolume", "create", os.path.join(target_mount, "@snapshots")])
 
         elif fs_lower == "ext4":
-            cmd = ["mkfs.ext4", "-F", "-L", name, resolved_disks[0]]
-            self._run_cmd(cmd)
-            self._run_cmd(["mount", resolved_disks[0], target_mount])
+            self._must(["mkfs.ext4", "-F", "-L", name, resolved_disks[0]], "mkfs.ext4")
+            self._must(["mount", resolved_disks[0], target_mount], "mount")
 
         elif fs_lower == "xfs":
-            cmd = ["mkfs.xfs", "-f", "-L", name, resolved_disks[0]]
-            self._run_cmd(cmd)
-            self._run_cmd(["mount", resolved_disks[0], target_mount])
+            self._must(["mkfs.xfs", "-f", "-L", name, resolved_disks[0]], "mkfs.xfs")
+            self._must(["mount", resolved_disks[0], target_mount], "mount")
 
         return {
             "status": "provisioned",

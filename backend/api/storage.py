@@ -315,6 +315,9 @@ def create_storage_pool(
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
+    except RuntimeError as e:
+        logger.error(f"[Storage] Pool '{req.name}' was not created: {e}")
+        raise HTTPException(status_code=500, detail=f"The pool was not created: {e}") from e
 
 
 class ShareAccessUpdate(BaseModel):

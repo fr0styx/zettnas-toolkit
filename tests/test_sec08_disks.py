@@ -23,6 +23,7 @@ def host(tmp_path, monkeypatch):
     monkeypatch.setattr(disk_safety, "HOST_PROC", str(proc_dir))
     monkeypatch.setattr(disk_safety, "_is_block", lambda p: p.startswith("/dev/zz"))
     monkeypatch.setattr(disk_safety, "_signature", lambda p: "")
+    monkeypatch.setattr(disk_safety, "_zfs_members", lambda: {})
     return tmp_path
 
 
@@ -76,3 +77,52 @@ def test_pool_api_requires_typed_name_password_and_safe_disks(client, auth_heade
     res = client.post("/api/storage/pools", json=body, headers=auth_headers)
     assert res.status_code == 200, res.text
     assert created and created[0]["disks"] == ["/dev/zza"]
+
+
+def test_disk_in_an_imported_zfs_pool_is_never_erased(host, monkeypatch):
+    monkeypatch.setattr(disk_safety, "_zfs_members", lambda: {"zza1": "tank"})
+    (host / "sys" / "block" / "zza" / "zza1" / "holders").mkdir(parents=True)
+    for erase in (False, True):
+        r = disk_safety.check_disks(["/dev/zza"], allow_erase=erase)
+        assert r and "ZFS pool tank" in r[0]["reason"] and "erasable" not in r[0]
+
+
+def test_zpool_listing_is_parsed(monkeypatch):
+    out = "tank\t3.62T\t1T\t-\n\tmirror-0\t3.62T\n\t/dev/sdb1\t-\t-\n\t/dev/disk/by-id/ata-X-part1\t-\t-\n"
+    monkeypatch.setattr(
+        disk_safety.subprocess, "run", lambda *a, **k: SimpleNamespace(stdout=out, returncode=0, stderr="")
+    )
+    monkeypatch.setattr(disk_safety.os.path, "realpath", lambda p: "/dev/sdc1" if "by-id" in p else p)
+    members = disk_safety._zfs_members()
+    assert members["sdb1"] == "tank" and members["sdc1"] == "tank"
+
+
+def test_unreadable_disk_counts_as_not_empty(host, monkeypatch):
+    monkeypatch.setattr(disk_safety, "_signature", lambda p: None)
+    r = disk_safety.check_disks(["/dev/zza"])
+    assert r and "could not check" in r[0]["reason"] and r[0]["erasable"] == "true"
+
+
+def test_blkid_errors_are_not_read_as_blank(monkeypatch):
+    def run(cmd, **kw):
+        return SimpleNamespace(stdout="", stderr="permission denied", returncode=4)
+
+    monkeypatch.setattr(disk_safety.subprocess, "run", run)
+    assert disk_safety._signature("/dev/zza") is None
+    monkeypatch.setattr(
+        disk_safety.subprocess, "run", lambda cmd, **kw: SimpleNamespace(stdout="", stderr="", returncode=2)
+    )
+    assert disk_safety._signature("/dev/zza") == ""
+
+
+def test_failed_format_is_an_error_not_provisioned(monkeypatch, tmp_path):
+    from backend.hardware.pal_storage import GenericLinuxStorageAdapter
+
+    adapter = GenericLinuxStorageAdapter.__new__(GenericLinuxStorageAdapter)
+    adapter._pool_path = str(tmp_path)
+    monkeypatch.setattr(adapter, "_resolve_disk_path", lambda d: d, raising=False)
+    monkeypatch.setattr(adapter, "_run_cmd", lambda cmd: (1, "", "Device /dev/zza is busy"), raising=False)
+    with pytest.raises(RuntimeError, match="mkfs.xfs failed.*busy"):
+        adapter.create_pool(
+            name="p1", fs_type="xfs", profile="single", disks=["/dev/zza"], mountpoint=str(tmp_path / "p1")
+        )
