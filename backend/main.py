@@ -6,6 +6,7 @@ Modular Backend Architecture
 import asyncio
 import atexit
 import glob
+import json
 import os
 import re
 import secrets
@@ -304,6 +305,13 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    # Report-only CSP for the UI pages (FE-06); user files keep their own sandbox policy (SEC-05)
+    if "content-security-policy" not in response.headers and response.headers.get("content-type", "").startswith(
+        "text/html"
+    ):
+        from backend.csp import policy
+
+        response.headers["Content-Security-Policy-Report-Only"] = policy()
     from backend.auth import request_is_https
 
     if request_is_https(request):
@@ -313,6 +321,21 @@ async def security_headers_middleware(request: Request, call_next):
 
 # Authentication middleware
 app.middleware("http")(auth_middleware)
+
+
+@app.post("/api/csp-report", include_in_schema=False)
+async def csp_report(request: Request):
+    """Browsers post CSP violation reports here (report-only mode, FE-06)."""
+    from backend.csp import record_report
+
+    body = await request.body()
+    if len(body) > 16384:
+        return Response(status_code=413)
+    try:
+        record_report(json.loads(body or b"{}"))
+    except ValueError:
+        pass
+    return Response(status_code=204)
 
 
 # Request correlation ID tracking middleware (outermost in processing chain)

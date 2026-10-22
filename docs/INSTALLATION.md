@@ -412,7 +412,6 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `WEB_PASSWORD` | `admin` | Initial admin master password (overridden by `users.db` once set) |
 | `LOGIN_USER_CHOOSER` | `0` | Show user tiles on the login screen. Off by default because it lists account names to anyone who can open the login page |
 | `CSRF_TRUSTED_ORIGINS` | *(empty)* | Extra origins (comma-separated, e.g. `https://nas.example.com`) allowed to make changes with the session cookie, for reverse proxies that rewrite the `Host` header |
-| `TRUSTED_PROXIES` | `127.0.0.1,::1` | Reverse-proxy addresses/CIDRs whose `X-Forwarded-For` / `X-Forwarded-Proto` / `X-Forwarded-Host` headers are believed |
 | `DATA_DIR` | `/app/data` | Path to persistent database, sessions, tokens, and configuration |
 | `STORAGE_POOL_PATH` | `/mnt/storage` | Root path mapped to host storage pool or Unraid user shares |
 | `HOST_PROC` | `/host/proc` | Path to host procfs for real-time CPU, RAM, and network socket telemetry |

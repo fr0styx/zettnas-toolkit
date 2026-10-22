@@ -12,6 +12,10 @@ When proxying ZettNAS Toolkit, two items are strictly required:
    The live telemetry stream (`/api/stats/stream`) pushes data every 2 seconds over a persistent HTTP connection. If your reverse proxy buffers responses, the dashboard will stall or appear disconnected.
 2. **Forward Client Headers**:
    `X-Forwarded-For` and `X-Forwarded-Proto` are required for IP-based rate limiting on login attempts and secure cookie handling.
+3. **Tell ZettNAS which proxy to believe**:
+   ZettNAS only trusts `X-Forwarded-*` headers from addresses in `TRUSTED_PROXIES` (default `127.0.0.1,::1`). Set it to your proxy's address or subnet, e.g. `TRUSTED_PROXIES=172.18.0.0/16`, or login lockout and the Secure cookie flag will use the proxy's address instead of the client's.
+4. **Keep the Host header** (or set `CSRF_TRUSTED_ORIGINS`):
+   Changes made in the browser are only accepted when their `Origin` matches the host ZettNAS sees. Proxies that rewrite `Host` must send `X-Forwarded-Host`, or list the public URL in `CSRF_TRUSTED_ORIGINS=https://nas.example.com`.
 
 ---
 
@@ -78,6 +82,41 @@ zettnas.yourdomain.com {
     }
 }
 ```
+
+### 3b. HTTPS on your LAN with a Caddy sidecar (no domain needed)
+
+Without a proxy, ZettNAS is plain HTTP and passwords cross your network unencrypted. This Compose sidecar gives you `https://<nas-ip>:8443` with a certificate from Caddy's own local CA (`tls internal`); browsers show a warning until you trust that CA once (copy `caddy-data/caddy/pki/authorities/local/root.crt` to your devices).
+
+```yaml
+services:
+  zettnas-https:
+    image: caddy:2
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy-data:/data
+```
+
+`Caddyfile`:
+
+```caddy
+{
+    auto_https disable_redirects
+}
+
+:8443 {
+    tls internal
+    request_body {
+        max_size 10GB
+    }
+    reverse_proxy 127.0.0.1:8082 {
+        flush_interval -1
+    }
+}
+```
+
+With `network_mode: host` Caddy connects from `127.0.0.1`, which is already in the default `TRUSTED_PROXIES`. Then stop publishing port 8082 to your LAN (or firewall it) so all access goes through HTTPS.
 
 ---
 

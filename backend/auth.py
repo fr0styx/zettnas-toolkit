@@ -258,6 +258,7 @@ _PUBLIC_API_PATHS = {
     "/api/v1/auth/users-list",
     "/api/health",
     "/api/v1/health",
+    "/api/csp-report",
     "/api/remotes/oauth/mobile-page",
     "/api/remotes/oauth/mobile-exchange",
     "/redfish/v1",
