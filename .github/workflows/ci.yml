@@ -108,8 +108,12 @@ jobs:
           WEB_PASSWORD: "admin"
           DATA_DIR: "${{ github.workspace }}/data"
         run: |
+          annotate() {
+            body=$( (echo "$2"; echo '--- server log ---'; tail -n 30 /tmp/zn-server.log) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=$1::$body"
+          }
           # Start background server
-          python3 -m backend.main &
+          python3 -m backend.main > /tmp/zn-server.log 2>&1 &
           SERVER_PID=$!
 
           # Poll health endpoint until server is ready
@@ -125,10 +129,14 @@ jobs:
                   time.sleep(0.5)
           else:
               raise SystemExit('Timed out waiting for the test server.')
-          "
+          " || { annotate 'E2E server' 'Test server did not become healthy'; exit 1; }
 
           # Execute full Playwright E2E Integration Suite; skips count as failures here
-          ZETTNAS_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py -v
+          set -o pipefail
+          if ! ZETTNAS_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py -v -rfE 2>&1 | tee /tmp/zn-e2e.log; then
+            annotate 'E2E tests' "$(grep -E '^(FAILED|ERROR)|Error|assert' /tmp/zn-e2e.log | tail -n 25)"
+            exit 1
+          fi
 
           # Shutdown background server cleanly
           kill $SERVER_PID || true
