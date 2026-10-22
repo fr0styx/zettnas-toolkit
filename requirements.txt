@@ -6,7 +6,7 @@ exifread==3.5.1
 fastapi>=0.142.0
 httpx>=0.28.1
 orjson>=3.13.0
-Pillow==12.3.0
+Pillow==13.0.0
 pillow-heif>=1.8.1
 playwright==1.63.0
 PyYAML>=6.0.3

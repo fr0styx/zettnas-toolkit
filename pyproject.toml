@@ -8,7 +8,7 @@ dependencies = [
     "fastapi==0.143.0",
     "apprise>=2.0.1",
     "orjson>=3.13.0",
-    "Pillow>=12.3.0",
+    "Pillow>=13.0.0",
     "playwright>=1.63.0",
     "PyYAML>=6.0.3",
     "argon2-cffi>=25.1.0",
