@@ -44,7 +44,8 @@ See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what ZettNAS defends agains
 ## Encryption at rest for AI data
 
 Set `ZETTNAS_DATA_KEY` (16 or more characters, for example from `openssl rand -base64 32`)
-in the container settings to encrypt the AI search index (`rag_index.db`, which holds the
+in the container settings, or point `ZETTNAS_DATA_KEY_FILE` at a file holding it (a Docker
+secret, for example), to encrypt the AI search index (`rag_index.db`, which holds the
 text of indexed files) and the AI chat history (`ai_conversations.db`) with SQLCipher
 (AES-256, per-page HMAC).
 
@@ -52,6 +53,9 @@ text of indexed files) and the AI chat history (`ai_conversations.db`) with SQLC
   drive, and with compose use `.env` or a secret store. Then a copy of the data folder
   (config backups, pre-update snapshots, the appdata share, a replicated or stolen cache
   drive) cannot be read without it.
+- Under systemd, a credential named `zettnas-data-key` is read as well, so on a dedicated
+  machine the key can be sealed to its TPM with `systemd-creds` and
+  `LoadCredentialEncrypted=zettnas-data-key:...`; it then unlocks itself at boot.
 - Keep a copy in a password manager. Without it the chat history is lost and the index
   must be rebuilt from your files.
 - The first start with a key converts the existing files: the chat history at startup,

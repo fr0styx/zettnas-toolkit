@@ -44,6 +44,8 @@ else:
 logger = logging.getLogger("ZettNAS")
 
 KEY_ENV = "ZETTNAS_DATA_KEY"
+KEY_FILE_ENV = "ZETTNAS_DATA_KEY_FILE"  # a file holding the key, e.g. a Docker secret
+CREDENTIAL_NAME = "zettnas-data-key"  # systemd: LoadCredentialEncrypted=zettnas-data-key:...
 ENCRYPTED_NAMES = ("rag_index.db", "ai_conversations.db")
 SQLITE_HEADER = b"SQLite format 3\x00"
 MIN_KEY_CHARS = 16
@@ -59,8 +61,34 @@ class DataKeyError(RuntimeError):
     """An encrypted AI database cannot be opened (key missing, too short or wrong)."""
 
 
+def _key_text() -> str:
+    """The key from ZETTNAS_DATA_KEY, else the file ZETTNAS_DATA_KEY_FILE names, else the systemd
+    credential `zettnas-data-key` ($CREDENTIALS_DIRECTORY, e.g. sealed to the TPM with systemd-creds)."""
+    value = os.environ.get(KEY_ENV, "")
+    if value:
+        return value
+    path = os.environ.get(KEY_FILE_ENV, "")
+    if not path and os.environ.get("CREDENTIALS_DIRECTORY"):
+        candidate = os.path.join(os.environ["CREDENTIALS_DIRECTORY"], CREDENTIAL_NAME)
+        path = candidate if os.path.exists(candidate) else ""
+    if not path:
+        return ""
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError as e:
+        raise DataKeyError(f"Could not read the data key from {path}: {e}") from None
+
+
 def enabled() -> bool:
-    return bool(os.environ.get(KEY_ENV, ""))
+    return bool(
+        os.environ.get(KEY_ENV)
+        or os.environ.get(KEY_FILE_ENV)
+        or (
+            os.environ.get("CREDENTIALS_DIRECTORY")
+            and os.path.exists(os.path.join(os.environ["CREDENTIALS_DIRECTORY"], CREDENTIAL_NAME))
+        )
+    )
 
 
 @functools.lru_cache(maxsize=4)
@@ -74,7 +102,7 @@ def _raw_key(text: str) -> str:
 def _key_sql() -> str:
     if not HAVE_SQLCIPHER:
         raise DataKeyError(f"{KEY_ENV} is set, but this build has no SQLCipher support")
-    return "\"x'" + _raw_key(os.environ.get(KEY_ENV, "")) + "'\""
+    return "\"x'" + _raw_key(_key_text()) + "'\""
 
 
 def is_plaintext(path: str) -> bool:

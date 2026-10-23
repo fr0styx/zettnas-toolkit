@@ -160,3 +160,33 @@ def test_updater_snapshot_without_the_key_copies_encrypted_files_as_they_are(tmp
     monkeypatch.setenv(db_crypto.KEY_ENV, KEY)
     with conv.get_conv_db_connection(str(path)) as c:
         assert c.execute("SELECT title FROM conversations").fetchone()[0] == "Secret plans for Tuesday"
+
+
+@pytest.mark.parametrize("source", ["file", "credential"])
+def test_key_from_a_file_or_a_systemd_credential(tmp_path, monkeypatch, source):
+    path = tmp_path / "ai_conversations.db"
+    conv = _plain_conversations(path)
+    keydir = tmp_path / "creds"
+    keydir.mkdir()
+    if source == "file":
+        (keydir / "key.txt").write_text(KEY + "\n")
+        monkeypatch.setenv(db_crypto.KEY_FILE_ENV, str(keydir / "key.txt"))
+    else:
+        (keydir / db_crypto.CREDENTIAL_NAME).write_text(KEY)
+        monkeypatch.setenv("CREDENTIALS_DIRECTORY", str(keydir))
+    assert db_crypto.enabled()
+    assert db_crypto.prepare(str(path)) == "converted"
+    with conv.get_conv_db_connection(str(path)) as c:
+        assert c.execute("SELECT count(*) FROM conversations").fetchone()[0] == 1
+    # the same key given directly opens it too
+    monkeypatch.delenv(db_crypto.KEY_FILE_ENV, raising=False)
+    monkeypatch.delenv("CREDENTIALS_DIRECTORY", raising=False)
+    monkeypatch.setenv(db_crypto.KEY_ENV, KEY)
+    assert db_crypto.prepare(str(path)) == "encrypted"
+
+
+def test_unreadable_key_file_is_an_error(tmp_path, monkeypatch):
+    monkeypatch.setenv(db_crypto.KEY_FILE_ENV, str(tmp_path / "missing"))
+    with pytest.raises(db_crypto.DataKeyError, match="Could not read"):
+        db_crypto.prepare(str(tmp_path / "ai_conversations.db.x"))  # new file: no key needed
+        db_crypto._key_sql()
