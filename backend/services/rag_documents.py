@@ -21,6 +21,8 @@ from backend.services.rag_text import (
     CODE_EXTENSIONS,
     MAX_INDEX_FILE_BYTES,
     VIDEO_EXTENSIONS,
+    binary_ratio,
+    looks_like_binary,
 )
 
 
@@ -160,7 +162,8 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                         for s_match in re.finditer(r"\(([^()\\]{2,250}(?:\\.[^()\\]*)*)\)", decoded):
                             frag = s_match.group(1)
                             frag = frag.replace(r"\(", "(").replace(r"\)", ")").replace(r"\n", "\n")
-                            if any(c.isalpha() for c in frag):
+                            # fonts and images hold "(...)" too: keep only what reads as text
+                            if any(c.isalpha() for c in frag) and binary_ratio(frag) <= 0.02:
                                 text_fragments.append(frag)
                         break
                     except Exception:
@@ -170,9 +173,10 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                 decoded_raw = raw.decode("latin-1", errors="ignore")
                 for s_match in re.finditer(r"\(([^()\\]{3,250})\)\s*Tj", decoded_raw):
                     frag = s_match.group(1)
-                    if any(c.isalpha() for c in frag):
+                    if any(c.isalpha() for c in frag) and binary_ratio(frag) <= 0.02:
                         text_fragments.append(frag)
-            return "\n".join(text_fragments)
+            text = "\n".join(text_fragments)
+            return "" if looks_like_binary(text) else text
         except Exception as e:
             logger.debug(f"[RAG] PDF parse error on {sanitize_string(file_path)}: {e}")
             return ""
@@ -182,6 +186,9 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
         with open(file_path, encoding="utf-8", errors="replace") as f:
             content = f.read(2 * 1024 * 1024)
     except Exception:
+        return ""
+
+    if looks_like_binary(content):  # e.g. a VobSub .sub, which is images, not text
         return ""
 
     if ext in (".html", ".htm"):

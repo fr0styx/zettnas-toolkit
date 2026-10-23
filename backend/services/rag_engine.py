@@ -125,6 +125,7 @@ from backend.services.rag_text import (  # noqa: E402, F401
     build_safe_fts5_query,
     build_target_color_histogram,
     classify_rgb_pixel,
+    looks_like_binary,
     parse_multimodal_query,
     text_tokens,
 )
@@ -3778,6 +3779,8 @@ class RagSearchEngine:
 
         # Document or Code modality
         raw_text = extract_document_text(canonical_path, file_ext)
+        if looks_like_binary(raw_text):  # never index or embed binary data as text
+            raw_text = ""
         if file_ext.lower() == ".pdf" and len(raw_text.strip()) < 80:
             raw_text = (raw_text + "\n" + self._scanned_pdf_text(canonical_path, mtime_ns)).strip()  # D3
         if not raw_text.strip():

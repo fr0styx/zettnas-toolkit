@@ -537,6 +537,28 @@ _CJK_RUN_RE = re.compile(rf"[{_CJK_CHARS}]")
 _TOKEN_RE = re.compile(rf"[{_CJK_CHARS}]+|[a-z0-9_\u00c0-\u024f\u0400-\u04ff]+")
 
 
+def binary_ratio(text: str, sample: int = 20000) -> float:
+    """Share of characters that never occur in real text: control characters (other than tab and
+    line breaks), C1 controls, U+FFFD and private-use or unassigned code points. Binary data read
+    as Latin-1 scores about 0.25; real text in any language scores near 0."""
+    t = text[:sample]
+    if not t:
+        return 0.0
+    bad = 0
+    for ch in t:
+        o = ord(ch)
+        if o < 32:
+            bad += ch not in "\t\n\r"
+        elif 0x7F <= o <= 0x9F or o == 0xFFFD or 0xE000 <= o <= 0xF8FF or o >= 0xF0000:
+            bad += 1
+    return bad / len(t)
+
+
+def looks_like_binary(text: str, threshold: float = 0.05) -> bool:
+    """True for text that is really binary data (compressed PDF streams, VobSub .sub files, ...)."""
+    return binary_ratio(text) > threshold
+
+
 def text_tokens(lowered: str) -> list[str]:
     """Words of already lower-cased text, with CJK runs split into character bigrams."""
     out: list[str] = []
