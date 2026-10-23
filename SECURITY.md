@@ -41,6 +41,29 @@ See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what ZettNAS defends agains
 - Mount the Docker socket only into ZettNAS, and never `chmod 666` it. ZettNAS reaches it through its allow-list proxy (see below).
 - Keep the appdata folder private: it holds the session-signing key and password hashes.
 
+## Encryption at rest for AI data
+
+Set `ZETTNAS_DATA_KEY` (16 or more characters, for example from `openssl rand -base64 32`)
+in the container settings to encrypt the AI search index (`rag_index.db`, which holds the
+text of indexed files) and the AI chat history (`ai_conversations.db`) with SQLCipher
+(AES-256, per-page HMAC).
+
+- Keep the key outside the data folder: the Unraid template variable lives on the flash
+  drive, and with compose use `.env` or a secret store. Then a copy of the data folder
+  (config backups, pre-update snapshots, the appdata share, a replicated or stolen cache
+  drive) cannot be read without it.
+- Keep a copy in a password manager. Without it the chat history is lost and the index
+  must be rebuilt from your files.
+- The first start with a key converts the existing files: the chat history at startup,
+  the index in the background (AI search waits; about a minute per GB). The plain-text
+  pages are not wiped from the disk, so on an SSD set the key before indexing much, or
+  rebuild the index afterwards.
+- If the key is removed or changed, the encrypted files stay closed and the AI features
+  that need them say so; nothing is deleted. Config backups keep the chat history
+  encrypted, so restoring one needs the same key.
+- Other settings files are protected by file permissions (mode 600) and the TOTP seeds by
+  their own AES-256-GCM sealing.
+
 ## Ransomware guard and blocked addresses
 
 **Ransomware guard** (Security → Ransomware guard, on by default). It watches changes

@@ -17,6 +17,7 @@ dependencies = [
     "sse-starlette==3.5.0",
     "uvicorn==0.54.0",
     "websockets>=17.3",
+    "sqlcipher3==0.6.4",
 ]
 
 [project.optional-dependencies]

@@ -99,6 +99,17 @@ def startup_system():
         logger.critical(f"[Main] {e}")
         raise SystemExit(3) from e
 
+    # Encryption at rest for the AI chat history (AI-20); the index follows in the background
+    from backend import db_crypto
+    from backend.services.ai_conversations_db import get_db_path as _conv_db_path
+
+    _data_key_problem = ""
+    try:
+        db_crypto.prepare(_conv_db_path())
+    except Exception as e:
+        _data_key_problem = str(e)
+        logger.critical(f"[Encryption] {e}")
+
     init_db()
     _load_security()
     purge_legacy_session_files()
@@ -110,6 +121,11 @@ def startup_system():
     except Exception as e:
         logger.error(f"[Main] Security upgrade step failed: {e}")
     stamp_versions()
+    from backend.services.rag_engine import RAG_DB_PATH as _rag_db_path
+
+    db_crypto.prepare_in_background(_rag_db_path)
+    if _data_key_problem:
+        add_event("error", "AI data locked", _data_key_problem)
     try:
         from backend.secret_box import migrate_plaintext_mfa_secrets
 

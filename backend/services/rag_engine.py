@@ -16,7 +16,6 @@ import math
 import os
 import re
 import socket
-import sqlite3
 import struct
 import subprocess
 import threading
@@ -30,7 +29,9 @@ from typing import Any, Optional, Union
 
 from PIL import Image, ImageFile
 
+from backend import db_crypto
 from backend.config import ALLOWED_BROWSE_ROOTS, DATA_DIR, HOST_DEV, HOST_PROC, HOST_SYS, logger
+from backend.db_crypto import sqlite3  # SQLCipher module: the index can be encrypted at rest (AI-20)
 from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.logging_config import sanitize_string
 from backend.state import Z_STATE, add_event
@@ -590,14 +591,10 @@ class RagSearchEngine:
         self._start_spinup_watcher()
 
     def _get_conn(self, readonly: bool = False) -> sqlite3.Connection:
+        db_crypto.wait_ready(self.db_path)  # raises while the index is being encrypted
         if readonly and os.path.exists(self.db_path):
             try:
-                conn = sqlite3.connect(
-                    f"file:{self.db_path}?mode=ro",
-                    uri=True,
-                    timeout=15.0,
-                    check_same_thread=False,
-                )
+                conn = db_crypto.connect(self.db_path, readonly=True, timeout=15.0, check_same_thread=False)
                 conn.row_factory = sqlite3.Row
                 conn.execute("PRAGMA query_only=ON;")
                 conn.execute("PRAGMA busy_timeout=15000;")
@@ -608,7 +605,7 @@ class RagSearchEngine:
                 logger.debug("backend.services.rag_engine.RagSearchEngine._get_conn: ignored error", exc_info=True)
 
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        conn = sqlite3.connect(self.db_path, timeout=15.0, check_same_thread=False)
+        conn = db_crypto.connect(self.db_path, timeout=15.0, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL;")
         conn.execute("PRAGMA synchronous=NORMAL;")

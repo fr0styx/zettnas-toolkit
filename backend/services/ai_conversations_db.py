@@ -13,12 +13,13 @@ import contextlib
 import json
 import os
 import re
-import sqlite3
 import time
 import uuid
 from typing import Any, Optional
 
+from backend import db_crypto
 from backend.config import DATA_DIR, logger
+from backend.db_crypto import sqlite3  # SQLCipher module: encrypted at rest when a key is set (AI-20)
 
 AI_CONVERSATIONS_DB_PATH = os.environ.get("AI_CONVERSATIONS_DB_PATH", os.path.join(DATA_DIR, "ai_conversations.db"))
 
@@ -33,7 +34,7 @@ def get_conv_db_connection(db_path: str | None = None):
     """Context manager returning a configured SQLite WAL connection with foreign keys enabled."""
     path = db_path or get_db_path()
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    conn = sqlite3.connect(path, timeout=15.0, check_same_thread=False)
+    conn = db_crypto.connect(path, timeout=15.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode=WAL;")

@@ -93,7 +93,18 @@ def _wanted(rel_path: str, size: int) -> bool:
 
 
 def _snapshot_db_bytes(path: str, clear_tables: tuple = ()) -> bytes:
-    """Consistent copy of a SQLite database, with some tables emptied in the copy."""
+    """Consistent copy of a SQLite database, with some tables emptied in the copy.
+
+    An encrypted AI database (AI-20) is copied encrypted, so the backup needs the same
+    ZETTNAS_DATA_KEY to restore and never holds its contents in plain text."""
+    from backend import db_crypto
+
+    if db_crypto.applies_to(path) and db_crypto.is_encrypted(path):
+        with tempfile.TemporaryDirectory() as td:
+            out = os.path.join(td, os.path.basename(path))
+            db_crypto.copy(path, out)
+            with open(out, "rb") as f:
+                return f.read()
     mem = sqlite3.connect(":memory:")
     try:
         with sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=10.0) as src:
@@ -211,12 +222,23 @@ def _check_archive_schema(z: "zipfile.ZipFile", names: set) -> None:
         with tempfile.NamedTemporaryFile(suffix=".db") as tmp:
             tmp.write(z.read(name))
             tmp.flush()
+            from backend import db_crypto
+
             try:
-                conn = sqlite3.connect(f"file:{tmp.name}?mode=ro", uri=True)
+                if db_crypto.applies_to(name) and db_crypto.is_encrypted(tmp.name):
+                    if not db_crypto.enabled():
+                        raise ValueError(
+                            f"The backup's {name} is encrypted; set the ZETTNAS_DATA_KEY it was made with first"
+                        )
+                    conn = db_crypto.connect_encrypted(tmp.name)
+                else:
+                    conn = sqlite3.connect(f"file:{tmp.name}?mode=ro", uri=True)
                 found = int(conn.execute("PRAGMA user_version").fetchone()[0])
                 conn.close()
-            except sqlite3.Error:
-                raise ValueError(f"{name} in the backup is not a valid database") from None
+            except db_crypto.errors() + (db_crypto.DataKeyError,):
+                raise ValueError(
+                    f"{name} in the backup is not a valid database, or was encrypted with another key"
+                ) from None
         if found > known:
             raise ValueError(f"The backup's {name} comes from a newer ZettNAS (schema v{found}); update first")
 

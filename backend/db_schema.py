@@ -17,10 +17,10 @@ to that database's init code.
 
 import logging
 import os
-import sqlite3
 import time
 
-from backend import config
+from backend import config, db_crypto
+from backend.db_crypto import DataKeyError, sqlite3
 
 logger = logging.getLogger("ZettNAS")
 
@@ -46,7 +46,7 @@ def _path(name: str, data_dir: str) -> str:
 
 
 def read_version(path: str) -> int:
-    conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=15.0)
+    conn = db_crypto.connect(path, readonly=True, timeout=15.0)
     try:
         return int(conn.execute("PRAGMA user_version").fetchone()[0])
     finally:
@@ -63,7 +63,7 @@ def check_versions(data_dir: str = "") -> list[str]:
             continue
         try:
             found = read_version(path)
-        except sqlite3.Error as e:
+        except (sqlite3.Error, DataKeyError) as e:
             logger.warning(f"[DB Schema] Could not read the schema version of {name}: {e}")
             continue
         if found <= known:
@@ -93,12 +93,12 @@ def stamp_versions(data_dir: str = "") -> None:
         if not os.path.exists(path):
             continue
         try:
-            conn = sqlite3.connect(path, timeout=15.0)
+            conn = db_crypto.connect(path, timeout=15.0)
             try:
                 if int(conn.execute("PRAGMA user_version").fetchone()[0]) < known:
                     conn.execute(f"PRAGMA user_version = {int(known)}")
                     conn.commit()
             finally:
                 conn.close()
-        except sqlite3.Error as e:
+        except (sqlite3.Error, DataKeyError) as e:
             logger.warning(f"[DB Schema] Could not stamp {name}: {e}")

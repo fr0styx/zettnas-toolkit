@@ -34,14 +34,10 @@ def _wanted_file(name: str) -> bool:
 
 
 def _copy_db(src: str, dst: str) -> None:
-    """Consistent copy of a SQLite file (includes anything still in its WAL)."""
-    s = sqlite3.connect(f"file:{src}?mode=ro", uri=True, timeout=30.0)
-    d = sqlite3.connect(dst)
-    try:
-        s.backup(d)
-    finally:
-        d.close()
-        s.close()
+    """Consistent copy of a SQLite file (includes anything still in its WAL); encrypted files stay encrypted."""
+    from backend import db_crypto
+
+    db_crypto.copy(src, dst)
 
 
 def snapshot_root(data_dir: str) -> str:

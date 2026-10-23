@@ -31,6 +31,9 @@ services:
       - PORT=8082
       - WEBDAV_PORT=${WEBDAV_PORT:-8084}
       - WEB_PASSWORD=${WEB_PASSWORD:-admin}
+      # Optional: encrypt the AI search index and chat history at rest (16+ characters).
+      # Keep it in .env or your secret store, not in the data folder, and in a password manager.
+      - ZETTNAS_DATA_KEY=${ZETTNAS_DATA_KEY:-}
       - NAS_NAME=${NAS_NAME:-}
       - POOL_PATH=/mnt/user
       - OS_NVME=${OS_NVME:-nvme1n1}
