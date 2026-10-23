@@ -5,6 +5,7 @@ Split out of rag_engine.py (AI-21), which re-exports these names.
 """
 
 import colorsys
+import functools
 import math
 import re
 import struct
@@ -637,6 +638,14 @@ def build_safe_fts5_query(raw_query: str, remove_stopwords: bool = True) -> str:
     return " OR ".join(fts_parts)
 
 
+@functools.lru_cache(maxsize=1024)
+def _word_pattern(tok: str) -> re.Pattern[str]:
+    if len(tok) <= 4 and tok.isascii():
+        base = tok[:-1] if (len(tok) == 4 and tok.endswith("s")) else tok
+        return re.compile(rf"\b{re.escape(base)}(?:s|es)?\b")
+    return re.compile(rf"\b{re.escape(tok)}")
+
+
 def _token_matches_word(tok: str, text: str) -> bool:
     """
     Checks whole-word (or simple plural/singular) match so short tokens like 'car'
@@ -646,12 +655,10 @@ def _token_matches_word(tok: str, text: str) -> bool:
         return False
     if _has_cjk(tok):
         return tok in text  # no word boundaries inside a CJK run
-    if len(tok) <= 4 and tok.isascii():
-        base = tok[:-1] if (len(tok) == 4 and tok.endswith("s")) else tok
-        return bool(re.search(rf"\b{re.escape(base)}(?:s|es)?\b", text))
-    return bool(re.search(rf"\b{re.escape(tok)}", text))
+    return bool(_word_pattern(tok).search(text))
 
 
+@functools.lru_cache(maxsize=8192)  # search cleans the same newest chunks on every query
 def _normalize_pdf_broken_words(text: str) -> str:
     """
     Repairs PDF kerning/line-break word splits (e.g. 'Health Car\\ne' -> 'Health Care',
@@ -666,25 +673,36 @@ def _normalize_pdf_broken_words(text: str) -> str:
         end_bracket = s.find("]", 0, 220)
         if end_bracket > 0:
             s = s[end_bracket + 1 :].lstrip()
-    s = re.sub(r"^`?\]\s*", "", s)
+    s = _PDF_LEAD_BRACKET_RE.sub("", s)
     # Remove octal escape artifacts (\222, \037, \341) and control characters
-    s = re.sub(r"\\[0-7]{3}", " ", s)
-    s = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]", "", s)
+    s = _PDF_OCTAL_RE.sub(" ", s)
+    s = _PDF_CTRL_RE.sub("", s)
     # Rejoin mid-word line-breaks across 2 passes (e.g. 'id\ne\na' -> 'idea', 'Car\ne' -> 'Care')
-    for _ in range(2):
-        s = re.sub(r"([A-Za-zÀ-ÿ])-?[ \t]*\n[ \t]*([a-zà-ÿ])", r"\1\2", s)
-    collapsed = re.sub(r"\s+", " ", s).strip()
+    if "\n" in s:
+        for _ in range(2):
+            s = _PDF_LINEBREAK_RE.sub(r"\1\2", s)
+    collapsed = _WS_RUN_RE.sub(" ", s).strip()
     # Filter out encrypted-font / binary PDF Mojibake tokens
     clean_words: list[str] = []
     for tok in collapsed.split(" "):
-        if re.search(r"[®¤µ×÷þÿ¶§ª«¬¯±²³´¸¹º»¼½¾]", tok):
+        # The Mojibake characters are all non-ASCII, and so is a digit-plus-non-ASCII token.
+        if not tok.isascii() and (_PDF_MOJIBAKE_RE.search(tok) or _DIGIT_RE.search(tok)):
             continue
-        if re.search(r"[A-Za-z0-9][@#$%^&*_+=<>|\\~`]+[A-Za-z0-9#]*|[A-Z0-9]{2,}#", tok):
-            continue
-        if re.search(r"\d", tok) and re.search(r"[^\x00-\x7f]", tok):
+        if not _PDF_SYMBOL_CHARS.isdisjoint(tok) and _PDF_SYMBOL_TOKEN_RE.search(tok):
             continue
         clean_words.append(tok)
     return " ".join(clean_words).strip()
+
+
+_PDF_LEAD_BRACKET_RE = re.compile(r"^`?\]\s*")
+_PDF_OCTAL_RE = re.compile(r"\\[0-7]{3}")
+_PDF_CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]")
+_PDF_LINEBREAK_RE = re.compile(r"([A-Za-zÀ-ÿ])-?[ \t]*\n[ \t]*([a-zà-ÿ])")
+_WS_RUN_RE = re.compile(r"\s+")
+_PDF_MOJIBAKE_RE = re.compile(r"[®¤µ×÷þÿ¶§ª«¬¯±²³´¸¹º»¼½¾]")
+_PDF_SYMBOL_TOKEN_RE = re.compile(r"[A-Za-z0-9][@#$%^&*_+=<>|\\~`]+[A-Za-z0-9#]*|[A-Z0-9]{2,}#")
+_PDF_SYMBOL_CHARS = frozenset("@#$%^&*_+=<>|\\~`")
+_DIGIT_RE = re.compile(r"\d")
 
 
 def parse_multimodal_query(raw_query: str) -> dict[str, Any]:

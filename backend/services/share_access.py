@@ -168,6 +168,23 @@ def _inside(path: str, root: str) -> bool:
     return path == root or path.startswith(root.rstrip("/") + "/")
 
 
+def file_level(username: str, path: str, grants: list[tuple[str, str]]) -> str:
+    """level_for() for a file path that is already canonical, with the user's grants given.
+
+    Touches no disk: used for paths stored in the AI index (resolved when indexed), where
+    resolving them again would wake sleeping drives. Files are never "list".
+    """
+    parts = [x for x in path.split("/") if x]
+    user = (username or "").lower()
+    for i, part in enumerate(parts[:-1]):
+        if part == "homes" and parts[i + 1].lower() == user:
+            return "write"
+    for root, level in grants:
+        if _inside(path, root):
+            return level
+    return "none"
+
+
 def level_for(username: str, real_path: str) -> str:
     """ "write", "read", "list" (a folder above a granted share) or "none"."""
     real = os.path.realpath(real_path)

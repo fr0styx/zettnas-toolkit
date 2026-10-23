@@ -723,6 +723,8 @@ class RagSearchEngine:
                     );
 
                     CREATE INDEX IF NOT EXISTS idx_chunks_file_id ON document_chunks(file_id);
+                    -- Lets search pick its newest chunks without reading every chunk row
+                    CREATE INDEX IF NOT EXISTS idx_chunks_file_level ON document_chunks(file_id, chunk_level);
                     CREATE INDEX IF NOT EXISTS idx_chunks_parent ON document_chunks(file_id, parent_chunk_id);
                     CREATE INDEX IF NOT EXISTS idx_chunks_level ON document_chunks(chunk_level);
                     CREATE INDEX IF NOT EXISTS idx_chunks_rbac ON document_chunks(visibility_tier, owner_username, share_name);
@@ -2975,23 +2977,12 @@ class RagSearchEngine:
             conn.close()
 
     def _readable_paths(self, canonical_paths: Any, principal: Any) -> set[str]:
-        """The paths a principal may read. Checked once per folder: files share their folder's level."""
+        """The index paths a principal may read (no disk access)."""
         paths = list(canonical_paths)
         if principal is None:
             return set(paths)
-        by_dir: dict[str, bool] = {}
-        out: set[str] = set()
-        for p in paths:
-            d = os.path.dirname(p)
-            if d not in by_dir:
-                by_dir[d] = self._check_post_rbac(d, principal)
-            if by_dir[d] and self._check_post_rbac_cheap(p):
-                out.add(p)
-        return out
-
-    @staticmethod
-    def _check_post_rbac_cheap(canonical_path: str) -> bool:
-        return "/.RecycleBin/" not in canonical_path and not canonical_path.endswith("/.RecycleBin")
+        readable = self._post_rbac_checker(principal)
+        return {p for p in paths if readable(p)}
 
     def _limit_manifest(self, manifest: dict[str, Any] | None, norm_path: str, principal: Any) -> dict[str, Any] | None:
         """A folder manifest with only what the principal may read.
@@ -4166,6 +4157,32 @@ class RagSearchEngine:
         )
 
     @staticmethod
+    def _post_rbac_checker(principal: Any) -> Any:
+        """_check_post_rbac for many index paths in one request: no disk access, grants loaded once."""
+        checker = None
+        if principal is not None:
+            try:
+                from backend.api.fs import indexed_path_checker
+
+                checker = indexed_path_checker(principal)
+            except Exception:  # an unusable principal reads nothing, as with _check_post_rbac
+                logger.debug("backend.services.rag_engine._post_rbac_checker: refused", exc_info=True)
+                checker = lambda _path: False  # noqa: E731
+
+        def ok(canonical_path: str) -> bool:
+            if "/.RecycleBin/" in canonical_path or canonical_path.endswith("/.RecycleBin"):
+                return False
+            if checker is None:
+                return True
+            try:
+                return checker(canonical_path)
+            except Exception:
+                logger.debug("backend.services.rag_engine._post_rbac_checker: refused", exc_info=True)
+                return False
+
+        return ok
+
+    @staticmethod
     def _check_post_rbac(canonical_path: str, principal: Any) -> bool:
         """Defense-in-depth post-retrieval path verification."""
         if "/.RecycleBin/" in canonical_path or canonical_path.endswith("/.RecycleBin"):
@@ -4525,10 +4542,11 @@ class RagSearchEngine:
 
         results: list[dict[str, Any]] = []
         q_lower = (raw_query or "").lower()
+        readable = self._post_rbac_checker(principal)
 
         for r in rows:
             c_path = r["canonical_path"]
-            if not self._check_post_rbac(c_path, principal):
+            if not readable(c_path):
                 continue
 
             fid = int(r["file_id"])
@@ -4733,24 +4751,44 @@ class RagSearchEngine:
         seen_chunk_ids = {int(r["chunk_id"]) for r in fts_rows}
         remaining_slots = max(500, 3000 - len(seen_chunk_ids))
 
-        recent_rows = conn.execute(
-            f"""
-            SELECT
-                c.chunk_id, c.file_id, c.chunk_index, c.parent_chunk_id, c.chunk_level, c.source_modality,
-                c.heading_context, c.structural_context, c.chunk_text, c.raw_chunk_text,
-                c.line_start, c.line_end, c.embedding_f32,
-                f.canonical_path, f.file_name, f.file_ext, f.modality, f.doc_type,
-                f.doc_title, f.doc_metadata_json, f.backing_dev, f.mtime_ns, f.size_bytes, f.embedding_model,
-                p.dominant_hex, (p.thumb_webp IS NOT NULL) AS has_thumb
-            FROM document_chunks c
-            JOIN indexed_files f ON f.file_id = c.file_id
-            LEFT JOIN photo_assets p ON p.file_id = c.file_id
-            WHERE f.parse_status = 'ok' AND c.chunk_level != 'parent' {recipe_sql} AND {rbac_sql} AND {sub_sql}
-            ORDER BY f.mtime_ns DESC, c.chunk_id DESC
-            LIMIT {remaining_slots}
-            """,
-            rbac_params + sub_params,
-        ).fetchall()
+        # The newest chunks: sort only ids (served by idx_chunks_file_level, without reading the
+        # chunk rows), then load just those rows, in the same order.
+        recent_ids = [
+            int(r[0])
+            for r in conn.execute(
+                f"""
+                SELECT c.chunk_id
+                FROM document_chunks c
+                JOIN indexed_files f ON f.file_id = c.file_id
+                WHERE f.parse_status = 'ok' AND c.chunk_level != 'parent' {recipe_sql} AND {rbac_sql} AND {sub_sql}
+                ORDER BY f.mtime_ns DESC, c.chunk_id DESC
+                LIMIT {remaining_slots}
+                """,
+                rbac_params + sub_params,
+            ).fetchall()
+        ]
+        wanted = [cid for cid in recent_ids if cid not in seen_chunk_ids]
+        by_id: dict[int, sqlite3.Row] = {}
+        for i in range(0, len(wanted), 900):
+            part = wanted[i : i + 900]
+            for row in conn.execute(
+                f"""
+                SELECT
+                    c.chunk_id, c.file_id, c.chunk_index, c.parent_chunk_id, c.chunk_level, c.source_modality,
+                    c.heading_context, c.structural_context, c.chunk_text, c.raw_chunk_text,
+                    c.line_start, c.line_end, c.embedding_f32,
+                    f.canonical_path, f.file_name, f.file_ext, f.modality, f.doc_type,
+                    f.doc_title, f.doc_metadata_json, f.backing_dev, f.mtime_ns, f.size_bytes, f.embedding_model,
+                    p.dominant_hex, (p.thumb_webp IS NOT NULL) AS has_thumb
+                FROM document_chunks c
+                JOIN indexed_files f ON f.file_id = c.file_id
+                LEFT JOIN photo_assets p ON p.file_id = c.file_id
+                WHERE c.chunk_id IN ({",".join("?" * len(part))})
+                """,
+                part,
+            ).fetchall():
+                by_id[int(row["chunk_id"])] = row
+        recent_rows = [by_id[cid] for cid in wanted if cid in by_id]
 
         rows = list(fts_rows)
         for r in recent_rows:
@@ -4782,10 +4820,11 @@ class RagSearchEngine:
 
         q_tokens = [t for t in text_tokens((raw_query or "").lower()) if t not in _STOPWORDS]
         per_file_best: dict[int, dict[str, Any]] = {}
+        readable = self._post_rbac_checker(principal)  # one check per file, no disk access
 
         for s_vec, r, s_bm25 in scored_chunks:
             c_path = r["canonical_path"]
-            if not self._check_post_rbac(c_path, principal):
+            if not readable(c_path):
                 continue
 
             cid = int(r["chunk_id"])

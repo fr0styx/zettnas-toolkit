@@ -602,13 +602,40 @@ def compute_multimodal_query_embedding(
     return "zett_lexical_384d", vec
 
 
+_sumprod = getattr(math, "sumprod", None)  # Python 3.12+: dot product in C, extended precision
+_TINY_NORM_SQ = 1e-280  # below this the squares may have underflowed; use the scaled path
+
+
 def cosine_similarity_vec(v1: list[float], v2: list[float] | None) -> float:
     """
     Computes cosine similarity between two vectors with Matryoshka prefix truncation
     and robust scale handling against float overflow/underflow and NaN poisoning.
+
+    Ordinary vectors take a C fast path; vectors with NaN/Inf, huge or tiny values fall
+    back to the scaled computation, so every case returns what it always did.
     """
     if not v1 or not v2:
         return 0.0
+    if _sumprod is not None:
+        # Sums of squares over the whole vectors: NaN/Inf anywhere makes them non-finite.
+        ss1 = _sumprod(v1, v1)
+        ss2 = _sumprod(v2, v2)
+        if math.isfinite(ss1) and math.isfinite(ss2):
+            min_dim = min(len(v1), len(v2))
+            a = v1 if len(v1) == min_dim else v1[:min_dim]
+            b = v2 if len(v2) == min_dim else v2[:min_dim]
+            n1 = ss1 if a is v1 else _sumprod(a, a)
+            n2 = ss2 if b is v2 else _sumprod(b, b)
+            if n1 > _TINY_NORM_SQ and n2 > _TINY_NORM_SQ:
+                dot = _sumprod(a, b) / (math.sqrt(n1) * math.sqrt(n2))
+                if math.isnan(dot):
+                    return 0.0
+                return max(0.0, min(1.0, dot))
+    return _cosine_similarity_scaled(v1, v2)
+
+
+def _cosine_similarity_scaled(v1: list[float], v2: list[float]) -> float:
+    """Max-abs scaled cosine for vectors the fast path can't take (overflow, underflow, NaN)."""
 
     # Guard against NaN / Inf poisoning
     if any(math.isnan(x) or math.isinf(x) for x in v1) or any(math.isnan(x) or math.isinf(x) for x in v2):

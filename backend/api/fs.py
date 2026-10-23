@@ -146,6 +146,49 @@ def check_user_path_access(
         raise HTTPException(status_code=403, detail="You have read-only access to this folder.")
 
 
+def indexed_path_checker(principal: AuthenticatedPrincipal | None) -> Any:
+    """Read access for file paths taken from the AI index, without touching the disks.
+
+    Same rules as check_user_path_access, applied to the stored canonical path, with the
+    user's share grants loaded once. Returns a function path -> bool (cached per path).
+    """
+    if not principal:
+        return lambda _path: False
+    if _is_files_admin(principal):
+        return lambda _path: True
+    from backend.services.share_access import file_level, grants_for
+
+    username = (principal.username or "").lower()
+    grants = grants_for(username) if username else []
+    cache: dict[str, bool] = {}
+
+    def readable(path: str) -> bool:
+        ok = cache.get(path)
+        if ok is None:
+            ok = cache[path] = _indexed_readable(path, username, grants, file_level)
+        return ok
+
+    return readable
+
+
+def _indexed_readable(path: str, username: str, grants: list[tuple[str, str]], file_level: Any) -> bool:
+    norm = os.path.normpath(str(path or "")).replace("\\", "/")
+    if not username or not norm.startswith("/"):
+        return False
+    parts = [p for p in norm.split("/") if p]
+    if parts and parts[0] == "boot":
+        return False
+    if "appdata" in parts:
+        idx_app = parts.index("appdata")
+        if idx_app == 0 or parts[0] == "mnt":
+            return False
+    if "homes" in parts:
+        idx_homes = parts.index("homes")
+        if idx_homes + 1 < len(parts) and parts[idx_homes + 1].lower() != username:
+            return False
+    return file_level(username, norm, grants) in ("read", "write")
+
+
 def user_can_access_path(req_path: str, principal: AuthenticatedPrincipal | None, allow_list: bool = False) -> bool:
     try:
         check_user_path_access(req_path, principal, allow_list=allow_list)
