@@ -197,7 +197,10 @@ def list_backup_jobs():
 )
 def create_or_update_backup_job(job: BackupJobModel):
     """Creates or updates a scheduled hyper-backup job."""
-    saved = save_backup_job(job.model_dump() if hasattr(job, "model_dump") else job.dict())
+    try:
+        saved = save_backup_job(job.model_dump() if hasattr(job, "model_dump") else job.dict())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     return {"status": "ok", "job": saved}
 
 

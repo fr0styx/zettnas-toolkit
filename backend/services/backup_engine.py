@@ -335,8 +335,18 @@ def get_backup_jobs() -> list[dict[str, Any]]:
     return []
 
 
+def checked_subvolume(value: Any) -> str:
+    """A backup source: empty (the whole pool) or a relative folder path inside the pool."""
+    raw = str(value or "").strip()
+    parts = [x for x in raw.split("/") if x]
+    if raw.startswith("/") or "\\" in raw or any(x in (".", "..") for x in parts):
+        raise ValueError("The backup source must be a folder inside the pool.")
+    return "/".join(parts)
+
+
 def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
     """Creates or updates a scheduled hyper-backup job."""
+    job_data = {**job_data, "source_subvolume": checked_subvolume(job_data.get("source_subvolume", ""))}
     jobs = get_backup_jobs()
     job_id = job_data.get("id") or str(uuid.uuid4())[:8]
     now = time.time()
@@ -440,7 +450,7 @@ def execute_backup_job(job_id: str) -> dict[str, Any]:
         raise ValueError(f"Job with ID '{job_id}' not found.")
 
     start_time = time.time()
-    subvol = job.get("source_subvolume", "").strip()
+    subvol = checked_subvolume(job.get("source_subvolume", ""))
     pool_id = job.get("source_pool", "default")
     dest_type = job.get("destination_type", "remote")
     remote_name = job.get("remote_name", "").strip()
@@ -500,6 +510,10 @@ def execute_backup_job(job_id: str) -> dict[str, Any]:
                 source_dir = os.path.join(pool_path, "@shares", subvol) if subvol else pool_path
                 if not os.path.exists(source_dir):
                     source_dir = os.path.join(pool_path, subvol) if subvol else pool_path
+                from backend.fsutil import resolve_within
+
+                if resolve_within(source_dir, [pool_path]) is None:
+                    raise ValueError("The backup source is outside the pool.")
 
             dest_target = f"{remote_name}:{remote_path}"
             rclone = get_rclone_engine()
