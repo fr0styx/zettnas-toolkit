@@ -1,5 +1,37 @@
 # ZettNAS Toolkit - Release Changelog
 
+## v1.9.4 (2026-10-23) - Security update
+### 🛡️ Security fixes for 1.9.3
+
+A security-only update for 1.9.3. It has no new features. Everyone on 1.9.x should install it.
+
+#### Before you upgrade
+
+- **New installs have no default password.** If `WEB_PASSWORD` is empty or `admin`, ZettNAS generates a first-time password on first start, prints it in the container log and saves it as `initial-admin-password` in the app data folder. You choose your own at first sign-in. Existing installs keep their password.
+- **Two-factor accounts and WebDAV/SFTP:** an account with two-factor sign-in can no longer use its ZettNAS password for WebDAV or SFTP, which have no second step. Create a dedicated SFTP/WebDAV account for file clients.
+- **Turning on or replacing two-factor** asks for your current password, and a code from your current app when you replace it.
+- **API tokens act with their own scopes**, not their owner's role. A token cannot confirm an action Ask Zetty proposed; confirm it in ZettNAS.
+- **App catalog:** community and sideloaded templates can only use folders inside the app's own folder.
+- **Cloud sync:** sources and destinations must be configured remotes or folders in the storage pool (storage admins may use any local path).
+- **Calendar:** notes and feeds belong to the person who made them. Items saved before this update are visible to full administrators only.
+- **Backup jobs** back up folders inside the pool only.
+- **Public share links** stop working when their creator is disabled or loses access to the shared item.
+- **Reverse-proxy sign-in:** changes must come from ZettNAS's own pages, as with browser sessions.
+
+#### Security
+
+- Sign-in: the built-in admin signs in with its own password only; role, status and account changes end that user's sessions and tokens at once; unknown usernames take as long to check as real ones.
+- File access: folders above a share can be browsed but not downloaded, zipped, copied or shared; Recycle Bin restore needs write access where the item was deleted; Ask Zetty's folder answers list only files you can read.
+- Containers: the terminal needs a valid signed-in session; masked container views also hide passwords in URLs and command-line flags; stack files named in container labels are opened only inside the storage folders.
+- Settings: only administrators change the shared client preferences.
+- Requests: the size limit also applies to uploads sent without a declared length; the document indexer limits how far a file may expand while it is read.
+- VMs: backup restores write only into the VM's own folder and get the same checks as a new VM; console tickets open only their own VM's console.
+- Shares: NFS export settings and generic Linux share paths are validated; a refused Samba or NFS setting stops the request.
+- Storage: a disk that belongs to an imported ZFS pool can't be formatted, and a failed pool creation is reported as an error.
+- CI: workflow permissions reduced to what each job needs.
+
+---
+
 ## v1.9.3 (2026-10-22) - Stable
 ### 🛡️ Security hardening, safer updates, and an honest, permission-aware Ask Zetty
 

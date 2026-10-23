@@ -1,6 +1,6 @@
 {
   "name": "zettnas-toolkit",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Universal hardware orchestration suite, glassmorphic Web Desktop OS, and container management platform for any NAS and homelab server.",
   "main": "index.js",
   "scripts": {
