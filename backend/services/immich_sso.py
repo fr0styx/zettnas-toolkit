@@ -21,6 +21,7 @@ from typing import Any
 import httpx
 
 from backend.config import logger
+from backend.fsutil import atomic_write_json
 
 
 class ImmichSsoError(Exception):
@@ -40,10 +41,7 @@ def _admin_password(app_dir: str) -> str:
         data = {}
     if not data.get("immich_admin_password"):
         data["immich_admin_password"] = secrets.token_urlsafe(18)
-        os.makedirs(app_dir, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f)
-        os.chmod(path, 0o600)
+        atomic_write_json(path, data)  # owner-only (0600)
     return data["immich_admin_password"]
 
 

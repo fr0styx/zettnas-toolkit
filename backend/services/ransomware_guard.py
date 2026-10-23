@@ -32,6 +32,7 @@ from collections import deque
 from typing import Any
 
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 
 STATE_FILE = os.path.join(DATA_DIR, "ransomware_guard.json")
 CANARY_NAME = "!ZettNAS-guard-file.docx"
@@ -133,11 +134,8 @@ class RansomwareGuard:
         return st
 
     def _save(self) -> None:
-        tmp = self.state_file + ".tmp"
         try:
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(self.state, f, indent=1)
-            os.replace(tmp, self.state_file)
+            atomic_write_json(self.state_file, self.state, indent=1)
         except OSError:
             logger.warning("[RansomwareGuard] Could not save state", exc_info=True)
 

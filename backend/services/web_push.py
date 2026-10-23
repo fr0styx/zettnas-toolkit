@@ -25,6 +25,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 
 KEY_FILE = os.path.join(DATA_DIR, "vapid.json")
 SUBS_FILE = os.path.join(DATA_DIR, "push_subscriptions.json")
@@ -52,11 +53,7 @@ def _keys() -> tuple[ec.EllipticCurvePrivateKey, str]:
             pem = priv.private_bytes(
                 serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
             )
-            tmp = KEY_FILE + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump({"private_pem": pem.decode(), "created": time.time()}, f)
-            os.chmod(tmp, 0o600)
-            os.replace(tmp, KEY_FILE)
+            atomic_write_json(KEY_FILE, {"private_pem": pem.decode(), "created": time.time()})  # owner-only
     pub = priv.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
     return priv, b64u(pub)
 
@@ -91,11 +88,7 @@ def _load_subs() -> dict[str, dict[str, Any]]:
 
 
 def _save_subs(subs: dict[str, dict[str, Any]]) -> None:
-    tmp = SUBS_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(subs, f, indent=1)
-    os.chmod(tmp, 0o600)
-    os.replace(tmp, SUBS_FILE)
+    atomic_write_json(SUBS_FILE, subs, indent=1)  # owner-only (0600)
 
 
 def valid_endpoint(endpoint: str) -> bool:

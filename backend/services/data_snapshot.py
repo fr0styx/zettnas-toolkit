@@ -19,6 +19,8 @@ import stat
 import time
 from typing import Any, Optional
 
+from backend.fsutil import atomic_write_json
+
 logger = logging.getLogger("zettnas.data_snapshot")
 
 SNAPSHOT_SUBDIR = os.path.join("backups", "pre-update")
@@ -92,8 +94,7 @@ def take_snapshot(
             files.append(name + "/")
 
     manifest = {"created_at": time.time(), "label": label, "files": files, **(extra or {})}
-    with open(os.path.join(dest, MANIFEST), "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
+    atomic_write_json(os.path.join(dest, MANIFEST), manifest, indent=2)
     _prune(root, protect)
     logger.info(f"[Snapshot] Saved {len(files)} item(s) to {dest}")
     return dest

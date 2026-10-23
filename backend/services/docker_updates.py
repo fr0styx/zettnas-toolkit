@@ -17,6 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Optional
 
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 from backend.services.container_mutator import _docker_request, pull_container_image, recreate_container
 
 # Container update policy configuration persistence
@@ -57,9 +58,7 @@ def set_container_update_policy(name_or_id: str, policy: str) -> dict[str, str]:
             policies = {}
         policies[name_or_id] = clean_policy
         try:
-            os.makedirs(os.path.dirname(DOCKER_POLICIES_FILE), exist_ok=True)
-            with open(DOCKER_POLICIES_FILE, "w", encoding="utf-8") as f:
-                json.dump(policies, f, indent=2)
+            atomic_write_json(DOCKER_POLICIES_FILE, policies, indent=2)
         except Exception as e:
             logger.error(f"[Docker Updates] Failed to save policies: {e}")
         return policies

@@ -20,6 +20,7 @@ import os
 import time
 
 from backend import config
+from backend.fsutil import atomic_write_json
 
 logger = logging.getLogger("ZettNAS")
 
@@ -112,10 +113,7 @@ def run_once() -> bool:
         logger.debug(f"[SecurityUpgrade] Could not record event: {e}")
 
     try:
-        os.makedirs(config.DATA_DIR, exist_ok=True)
-        with open(marker, "w", encoding="utf-8") as f:
-            json.dump({"applied_at": time.time(), **result}, f)
-        os.chmod(marker, 0o600)
+        atomic_write_json(marker, {"applied_at": time.time(), **result})  # owner-only (0600)
     except OSError as e:
         logger.error(f"[SecurityUpgrade] Could not write marker {marker}: {e}")
     return True

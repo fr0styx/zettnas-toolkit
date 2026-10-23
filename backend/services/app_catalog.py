@@ -955,9 +955,7 @@ def _save_stack_secrets(app_dir: str, secrets_map: dict[str, str]) -> None:
     if not secrets_map:
         return
     path = os.path.join(app_dir, ".zettnas-secrets.json")
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(secrets_map, f)
-    os.chmod(path, 0o600)
+    atomic_write_json(path, secrets_map)  # owner-only (0600)
 
 
 def _pull_image_blocking(image: str) -> tuple[bool, str]:

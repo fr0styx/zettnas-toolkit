@@ -20,6 +20,7 @@ import secrets
 from typing import Any
 
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 
 CONFIG_FILE = os.path.join(DATA_DIR, "ldap.json")
 DEFAULTS: dict[str, Any] = {
@@ -82,11 +83,7 @@ def save_config(changes: dict[str, Any]) -> dict[str, Any]:
     cfg["server_url"] = url
     cfg["admin_groups"] = [str(g) for g in cfg.get("admin_groups") or []]
     cfg["role_map"] = {str(k): str(v) for k, v in (cfg.get("role_map") or {}).items()}
-    tmp = CONFIG_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, indent=1)
-    os.chmod(tmp, 0o600)
-    os.replace(tmp, CONFIG_FILE)
+    atomic_write_json(CONFIG_FILE, cfg, indent=1)  # owner-only (0600)
     return masked_config()
 
 

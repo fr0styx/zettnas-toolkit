@@ -16,6 +16,7 @@ import time
 from typing import Any
 
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 
 STORE = os.path.join(DATA_DIR, "ip_blocks.json")
 FAIL_WINDOW_S = 15 * 60
@@ -55,11 +56,8 @@ def _load() -> dict[str, dict[str, Any]]:
 
 
 def _save(blocks: dict[str, dict[str, Any]]) -> None:
-    tmp = STORE + ".tmp"
     try:
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(blocks, f, indent=1)
-        os.replace(tmp, STORE)
+        atomic_write_json(STORE, blocks, indent=1)
     except OSError:
         logger.warning("[IPBlock] Could not save the block-list", exc_info=True)
 

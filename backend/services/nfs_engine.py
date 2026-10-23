@@ -17,6 +17,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field, field_validator
 
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 
 NFS_DIR = os.path.join(DATA_DIR, "nfs")
 NFS_EXPORTS_FILE = os.path.join(NFS_DIR, "exports.json")
@@ -134,10 +135,7 @@ class NfsEngine:
     def _save_exports(self) -> None:
         """Persists configured exports to JSON storage."""
         try:
-            temp_file = f"{NFS_EXPORTS_FILE}.tmp"
-            with open(temp_file, "w", encoding="utf-8") as f:
-                json.dump([rule.model_dump() for rule in self._exports.values()], f, indent=2)
-            os.replace(temp_file, NFS_EXPORTS_FILE)
+            atomic_write_json(NFS_EXPORTS_FILE, [rule.model_dump() for rule in self._exports.values()], indent=2)
         except Exception as e:
             logger.error(f"[NFS] Failed writing {NFS_EXPORTS_FILE}: {e}")
 

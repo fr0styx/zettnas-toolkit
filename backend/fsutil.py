@@ -12,18 +12,19 @@ from typing import Any
 _JSON_CACHE: dict[str, tuple[float, Any, float]] = {}
 
 
-def atomic_write_json(path: str, data: Any) -> None:
+def atomic_write_json(path: str, data: Any, indent: int | None = None) -> None:
     """Write JSON to `path` atomically (temp file + fsync + os.replace).
 
     A crash or power loss mid-write leaves either the old file or the new
-    file intact — never a truncated/corrupt one.
+    file intact — never a truncated/corrupt one. The file is readable by its
+    owner only (0600), which suits settings that hold secrets.
     """
     directory = os.path.dirname(os.path.abspath(path)) or "."
     os.makedirs(directory, exist_ok=True)
     fd, tmp_path = tempfile.mkstemp(prefix=".tmp-", suffix=".json", dir=directory)
     try:
-        with os.fdopen(fd, "w") as f:
-            json.dump(data, f)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=indent)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp_path, path)

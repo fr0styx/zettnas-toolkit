@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.config import docker_sock as _docker_sock_path
+from backend.fsutil import atomic_write_json
 
 SAMBA_DIR = os.path.join(DATA_DIR, "samba")
 SAMBA_CONF_FILE = os.path.join(SAMBA_DIR, "smb.conf")
@@ -249,9 +250,7 @@ class SambaEngine:
     def _save_shares_json(self) -> None:
         """Persists configured shares to JSON."""
         try:
-            with open(SAMBA_SHARES_FILE, "w", encoding="utf-8") as f:
-                data = [s.model_dump() for s in self._shares.values()]
-                json.dump(data, f, indent=2)
+            atomic_write_json(SAMBA_SHARES_FILE, [s.model_dump() for s in self._shares.values()], indent=2)
         except Exception as e:
             logger.error(f"[SambaEngine] Failed writing shares JSON: {e}")
 

@@ -24,6 +24,7 @@ from collections.abc import Callable
 from typing import Any
 
 from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json
 
 RESULTS_FILE = os.path.join(DATA_DIR, "model_benchmarks.json")
 PROMPT = "In two sentences, explain why a backup should also be kept somewhere other than the NAS itself."
@@ -151,10 +152,7 @@ def run(host: str | None = None, http: Callable = _http_json, only: list[str] | 
             _job.update(state="running", current=m["name"], done=i, total=len(models))
         results.append(benchmark_model(host, m, http))
     out = {"results": results, "finished_at": time.time(), "host": host, "recommended": recommend(results)}
-    tmp = RESULTS_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(out, f, indent=1)
-    os.replace(tmp, RESULTS_FILE)
+    atomic_write_json(RESULTS_FILE, out, indent=1)
     with _lock:
         _job.clear()
         _job.update(state="done", done=len(models), total=len(models))

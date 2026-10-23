@@ -968,10 +968,7 @@ class RagSearchEngine:
     def _write_reindex_progress(self, data: dict[str, Any]) -> None:
         prog_path = "/app/data/reindex_progress.json"
         try:
-            os.makedirs(os.path.dirname(prog_path), exist_ok=True)
-            with open(prog_path + ".tmp", "w") as pf:
-                json.dump(data, pf)
-            os.replace(prog_path + ".tmp", prog_path)
+            atomic_write_json(prog_path, data)
         except OSError:
             logger.debug("[RAG] could not write re-embed progress", exc_info=True)
 

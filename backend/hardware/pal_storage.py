@@ -19,6 +19,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, logger
+from backend.fsutil import atomic_write_json
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
 
 
@@ -2506,8 +2507,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             }
             meta_path = os.path.join(snaps_dir, f".{snapshot_name}.worm.json")
             try:
-                with open(meta_path, "w", encoding="utf-8") as f:
-                    json.dump(worm_meta, f, indent=2)
+                atomic_write_json(meta_path, worm_meta, indent=2)
             except Exception as e:
                 logger.warning(f"[PAL] Failed saving WORM metadata: {e}")
 

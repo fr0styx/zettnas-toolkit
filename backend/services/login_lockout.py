@@ -13,6 +13,8 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+from backend.fsutil import atomic_write_json
+
 FREE_ATTEMPTS = 5
 MAX_LOCK_SECS = 15 * 60
 FORGET_AFTER_SECS = 3600
@@ -41,11 +43,7 @@ def _with_store(fn: Callable[[dict[str, Any]], tuple[Any, bool]]) -> Any:
             if changed:
                 now = time.time()
                 data = {k: v for k, v in data.items() if now - v.get("last_seen", 0) < FORGET_AFTER_SECS}
-                tmp = path + ".tmp"
-                with open(tmp, "w", encoding="utf-8") as f:
-                    json.dump(data, f)
-                os.chmod(tmp, 0o600)
-                os.replace(tmp, path)
+                atomic_write_json(path, data)  # owner-only (0600)
             return result
         finally:
             fcntl.flock(lock_file, fcntl.LOCK_UN)
