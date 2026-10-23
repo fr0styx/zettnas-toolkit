@@ -311,6 +311,9 @@ def truncate_and_normalize_mrl(vec: list[float], target_dim: int | None) -> list
 
 
 _CACHED_OLLAMA_HOST: str | None = None
+_CACHED_OLLAMA_UNTIL = 0.0
+OLLAMA_HOST_RECHECK_SECS = 300.0  # a found runtime is looked for again after this (it may have moved)
+OLLAMA_HOST_MISS_SECS = 30.0  # nothing found: look again soon
 
 
 def _detected_host_ip() -> str | None:
@@ -333,13 +336,13 @@ def embedding_host(cfg: dict) -> str | None:
 
 def _resolve_ollama_host(explicit_host: str | None = None) -> str:
     """Discovers reachable Ollama host inside Docker bridge network or bare metal."""
-    global _CACHED_OLLAMA_HOST
+    global _CACHED_OLLAMA_HOST, _CACHED_OLLAMA_UNTIL
     if explicit_host:
         h = explicit_host
         if not h.startswith("http://") and not h.startswith("https://"):
             h = f"http://{h}"
         return h.rstrip("/")
-    if _CACHED_OLLAMA_HOST:
+    if _CACHED_OLLAMA_HOST and (not _CACHED_OLLAMA_UNTIL or time.time() < _CACHED_OLLAMA_UNTIL):
         return _CACHED_OLLAMA_HOST
 
     env_h = os.environ.get("OLLAMA_HOST")
@@ -359,10 +362,12 @@ def _resolve_ollama_host(explicit_host: str | None = None) -> str:
             with urllib.request.urlopen(req, timeout=0.35) as resp:
                 if resp.status == 200:
                     _CACHED_OLLAMA_HOST = f"http://{cand}:11434"
+                    _CACHED_OLLAMA_UNTIL = time.time() + OLLAMA_HOST_RECHECK_SECS
                     return _CACHED_OLLAMA_HOST
         except Exception:
             continue
     _CACHED_OLLAMA_HOST = "http://127.0.0.1:11434"
+    _CACHED_OLLAMA_UNTIL = time.time() + OLLAMA_HOST_MISS_SECS
     return _CACHED_OLLAMA_HOST
 
 
