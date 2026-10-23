@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-REMOTE_SSH="${ZETTNAS_SSH_HOST:-root@10.40.30.249}"
+REMOTE_SSH="${ZETTNAS_SSH_HOST:-}"  # e.g. root@192.168.1.50; needed only when the container is remote
 REMOTE_DIR="${ZETTNAS_REMOTE_DIR:-/mnt/user/appdata/zettnas-toolkit}"
 
 run_container_cmd() {
@@ -15,6 +15,7 @@ run_container_cmd() {
     if command -v docker &>/dev/null && docker ps --format '{{.Names}}' 2>/dev/null | grep -q "^zettnas-toolkit$"; then
         docker exec -w /app zettnas-toolkit sh -c "$cmd"
     else
+        [ -n "$REMOTE_SSH" ] || { echo "Set ZETTNAS_SSH_HOST (e.g. root@192.168.1.50), or run this where the zettnas-toolkit container is local." >&2; exit 1; }
         ssh -o BatchMode=yes "$REMOTE_SSH" "docker exec -w $REMOTE_DIR zettnas-toolkit sh -c \"$cmd\""
     fi
 }

@@ -26,7 +26,7 @@ TOKENIZER_DIR = os.environ.get("TOKENIZER_DIR", "/models/tokenizer")
 MODEL_NAME = os.environ.get("MODEL_NAME", "embeddinggemma-2-ov")
 DEVICE = os.environ.get("DEVICE", "GPU")
 PRECISION = os.environ.get("PRECISION", "f32")
-BATCH = int(os.environ.get("BATCH", "2"))  # fastest on an Arc iGPU: 7.6 docs/s vs 4.8 at 16
+BATCH = int(os.environ.get("BATCH", "2"))  # small batches were fastest on an Arc iGPU in testing
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "2048"))
 MAX_INPUTS = 256
 

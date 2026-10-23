@@ -34,7 +34,7 @@ describe('Revamped Image Previewer & Multi-Image Gallery Suite', () => {
           megapixels: '26.0 MP',
           color_mode: 'RGB',
           exif: {
-            camera: 'FUJIFILM X-T5',
+            camera: 'FUJIFILM X-S20',
             lens: 'XF23mmF1.4 R LM WR',
             shutter_speed: '1/250s',
             aperture: 'f/2.8',
@@ -54,7 +54,7 @@ describe('Revamped Image Previewer & Multi-Image Gallery Suite', () => {
           dimensions: '6240 × 4160',
           megapixels: '26.0 MP',
           exif: {
-            camera: 'FUJIFILM X-T5',
+            camera: 'FUJIFILM X-S20',
             shutter_speed: '1/500s',
             aperture: 'f/2.0',
             iso: 'ISO 160',
@@ -182,7 +182,7 @@ describe('Revamped Image Previewer & Multi-Image Gallery Suite', () => {
     expect(inspector.classList.contains('open')).toBe(true);
 
     const content = document.getElementById('quicklook-inspector-content');
-    expect(content.innerHTML).toContain('FUJIFILM X-T5');
+    expect(content.innerHTML).toContain('FUJIFILM X-S20');
     expect(content.innerHTML).toContain('XF23mmF1.4 R LM WR');
     expect(content.innerHTML).toContain('1/250s');
     expect(content.innerHTML).toContain('f/2.8');

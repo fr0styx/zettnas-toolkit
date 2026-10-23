@@ -85,8 +85,8 @@ describe('Network Port Configuration & Docker Network Fleet Management', () => {
   const mockTopology = {
     status: 'ok',
     summary: {
-      primary_ip: '10.40.30.249',
-      default_gateway: '10.40.30.1',
+      primary_ip: '192.168.1.50',
+      default_gateway: '192.168.1.1',
       total_physical: 2,
       active_physical: 1,
       max_speed: '10 Gbps',

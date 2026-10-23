@@ -26,7 +26,7 @@ INSPECT = {
     "HostConfig": {"Binds": ["/mnt/user/appdata/z:/app/data"], "NetworkMode": "br0"},
     "NetworkSettings": {
         "Networks": {
-            "br0": {"IPAMConfig": {"IPv4Address": "10.40.30.20"}, "Aliases": ["abcdef123456", "zettnas"]},
+            "br0": {"IPAMConfig": {"IPv4Address": "192.168.1.20"}, "Aliases": ["abcdef123456", "zettnas"]},
             "proxynet": {"Aliases": ["zettnas"]},
         }
     },
@@ -42,7 +42,7 @@ def test_recreate_plan_keeps_user_settings_only():
     assert body["Labels"] == {"net.unraid.docker.icon": "i"}
     assert body["HostConfig"]["Binds"] == ["/mnt/user/appdata/z:/app/data"]
     ep = body["NetworkingConfig"]["EndpointsConfig"]["br0"]
-    assert ep["IPAMConfig"] == {"IPv4Address": "10.40.30.20"}
+    assert ep["IPAMConfig"] == {"IPv4Address": "192.168.1.20"}
     assert ep["Aliases"] == ["zettnas"]
     assert extra == {"proxynet": {"Aliases": ["zettnas"]}}
 

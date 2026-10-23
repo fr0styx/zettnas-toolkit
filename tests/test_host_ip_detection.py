@@ -26,7 +26,7 @@ def test_docker_host_ips_include_detected_ip_only():
     with patch.object(agent, "_detected_host_ip", return_value="192.0.2.10"):
         ips = agent._get_docker_host_ips()
     assert "192.0.2.10" in ips
-    assert "10.40.30.249" not in ips
+    assert "192.168.1.50" not in ips
 
 
 def test_ollama_host_probe_uses_detected_ip(monkeypatch):
@@ -46,4 +46,4 @@ def test_ollama_host_probe_uses_detected_ip(monkeypatch):
 
     monkeypatch.setattr(rag, "_CACHED_OLLAMA_HOST", None)
     assert "http://192.0.2.10:11434/api/tags" in probed
-    assert not any("10.40.30.249" in u for u in probed)
+    assert not any("192.168.1.50" in u for u in probed)

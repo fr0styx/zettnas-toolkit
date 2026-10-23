@@ -451,7 +451,7 @@ export function openAddDesktopShortcutModal() {
           </div>
           <div>
             <label style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">Target URL</label>
-            <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://10.40.30.249:8123 or https://..." style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:#fff; font-family:var(--font-mono, monospace);">
+            <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:#fff; font-family:var(--font-mono, monospace);">
           </div>
           <div>
             <label style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:6px;">Select Icon / Emoji</label>

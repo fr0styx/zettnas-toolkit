@@ -213,8 +213,8 @@ describe('Desktop Shortcuts & Unified Context Menu Integration', () => {
         id: 'url-shortcut-12345',
         type: 'url',
         name: 'Home Assistant',
-        title: 'Home Assistant (http://10.40.30.50:8123)',
-        url: 'http://10.40.30.50:8123',
+        title: 'Home Assistant (http://192.168.1.60:8123)',
+        url: 'http://192.168.1.60:8123',
         icon: '🏠',
         svg: false,
         color: '#38bdf8'

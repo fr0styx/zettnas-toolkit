@@ -33,9 +33,9 @@ describe('Batch 5: Interactive Visual Network & Virtual Switch Inspector UI', ()
   const mockTopology = {
     status: 'ok',
     summary: {
-      primary_ip: '10.40.30.249',
-      default_gateway: '10.40.30.1',
-      dns_servers: ['10.40.30.1', '1.1.1.1'],
+      primary_ip: '192.168.1.50',
+      default_gateway: '192.168.1.1',
+      dns_servers: ['192.168.1.1', '1.1.1.1'],
       primary_interface: 'br0',
       total_physical: 2,
       active_physical: 1,
@@ -98,7 +98,7 @@ describe('Batch 5: Interactive Visual Network & Virtual Switch Inspector UI', ()
         interfaces: ['bond0'],
         carrier: 1,
         is_up: true,
-        ip_address: '10.40.30.249/24',
+        ip_address: '192.168.1.50/24',
       },
     ],
     docker_networks: [
@@ -134,10 +134,10 @@ describe('Batch 5: Interactive Visual Network & Virtual Switch Inspector UI', ()
 
     await fetchAndRenderNetworkTopology();
 
-    expect(document.getElementById('net-kpi-ip').textContent).toBe('10.40.30.249');
+    expect(document.getElementById('net-kpi-ip').textContent).toBe('192.168.1.50');
     expect(document.getElementById('net-kpi-iface').textContent).toBe('Via br0');
-    expect(document.getElementById('net-kpi-gw').textContent).toBe('10.40.30.1');
-    expect(document.getElementById('net-kpi-dns').textContent).toContain('10.40.30.1');
+    expect(document.getElementById('net-kpi-gw').textContent).toBe('192.168.1.1');
+    expect(document.getElementById('net-kpi-dns').textContent).toContain('192.168.1.1');
     expect(document.getElementById('net-kpi-speed').textContent).toBe('10 Gbps');
     expect(document.getElementById('net-kpi-carrier').textContent).toBe('1 of 2 Ports Online');
     expect(document.getElementById('net-kpi-docker').textContent).toBe('3 Networks');
@@ -192,7 +192,7 @@ describe('Batch 5: Interactive Visual Network & Virtual Switch Inspector UI', ()
 
     const bridgesContainer = document.getElementById('network-bridges-container');
     expect(bridgesContainer.textContent).toContain('Bridge: br0');
-    expect(bridgesContainer.textContent).toContain('10.40.30.249/24');
+    expect(bridgesContainer.textContent).toContain('192.168.1.50/24');
     expect(bridgesContainer.textContent).toContain('Bond: bond0');
     expect(bridgesContainer.textContent).toContain('active-backup 1');
     expect(bridgesContainer.textContent).toContain('eth1');

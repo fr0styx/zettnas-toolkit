@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { copyText } from '../utils.js';
 
-// Ark is usually opened over plain HTTP, where browsers hide navigator.clipboard
+// A NAS is often opened over plain HTTP, where browsers hide navigator.clipboard
 describe('copyText', () => {
   afterEach(() => {
     Object.defineProperty(window, 'isSecureContext', { value: false, configurable: true });

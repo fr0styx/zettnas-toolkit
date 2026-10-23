@@ -126,7 +126,7 @@ describe('Compact Disks Display & Standby Safety Suite', () => {
       applyStats({
         name: 'ZETTNEXT',
         status: '3 OK',
-        ip: '10.40.30.249',
+        ip: '192.168.1.50',
         storage: { pct: 40, used: '4TB', total: '10TB' },
         cpu: { temp: 45, util: 12 },
         mem: { pct: 30, used_gb: 8.0, total_gb: 32.0, used: '8G', total: '32G' },
@@ -149,7 +149,7 @@ describe('Compact Disks Display & Standby Safety Suite', () => {
       applyStats({
         name: 'ZETTNEXT',
         status: '1 ALERT',
-        ip: '10.40.30.249',
+        ip: '192.168.1.50',
         storage: { pct: 40, used: '4TB', total: '10TB' },
         cpu: { temp: 45, util: 12 },
         mem: { pct: 30, used_gb: 8.0, total_gb: 32.0, used: '8G', total: '32G' },

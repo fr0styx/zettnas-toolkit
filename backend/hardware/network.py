@@ -2341,7 +2341,7 @@ def _run_tailscale_cmd(args: list[str], timeout: float = 10.0) -> tuple[int, str
 
 
 def detect_local_subnets() -> list[str]:
-    """Detects local physical IPv4 network subnets (e.g. ['10.40.30.0/24'])."""
+    """Detects local physical IPv4 network subnets (e.g. ['192.168.1.0/24'])."""
     subnets = []
     try:
         routes = _parse_routes()

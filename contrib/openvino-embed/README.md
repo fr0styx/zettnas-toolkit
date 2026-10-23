@@ -25,13 +25,10 @@ Then re-embed the index onto it (AI settings, or `POST /api/ai/reindex` with
 `{"embedding_model": "embeddinggemma-2-ov", "embedding_dim": 768, "embedding_host": "http://<host>:11435"}`).
 Search keeps using the old vectors until every chunk is done.
 
-## Measured on an Intel Core Ultra (Arc iGPU), SciFact
+## Notes
 
-| Setup | nDCG@10 | docs/s |
-|---|---|---|
-| EmbeddingGemma 1 on Ollama, CPU | 79.2 | 6.1 |
-| EmbeddingGemma 2 here, GPU, f32, batch 2 | 85.4 | 7.6 |
-
+- EmbeddingGemma 2 scores clearly higher than EmbeddingGemma 1 on public retrieval benchmarks (SciFact),
+  and batch 2 was the fastest setting on an Arc iGPU in testing (`BATCH` changes it).
 - `PRECISION=f16` is faster but gives broken vectors (NaN) on Arc, with or without activation scaling.
 - Texts in one batch are kept within 480 tokens of each other: EmbeddingGemma attends in 512-token
   windows, and padding a short text to a long one gives windows of only padding, which come out NaN.

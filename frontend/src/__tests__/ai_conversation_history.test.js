@@ -344,7 +344,7 @@ describe('ZettAI Conversation History & Dual-Pane UI Suite', () => {
       tools_called: [
         { tool: 'calculate', summary: '67 + 20 = 87' },
         { tool: 'get_storage_status', summary: '4 pool(s): 7.7 TiB free' },
-        { tool: 'get_network_status', summary: '1 interface(s), GW: 10.40.30.1' },
+        { tool: 'get_network_status', summary: '1 interface(s), GW: 192.168.1.1' },
       ],
       llm_telemetry: {
         active_model: 'hf.co/ConwayResearch/Underdog-Bark-3.0-Pro',

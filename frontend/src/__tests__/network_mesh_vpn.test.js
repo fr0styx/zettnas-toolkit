@@ -325,7 +325,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       wireguard: { installed: true, active: true },
     });
 
-    const mockConf = `[Interface]\nPrivateKey = privkey123\nAddress = 10.13.13.2/32\n\n[Peer]\nPublicKey = pubkey456\nEndpoint = 10.40.30.249:51820\nAllowedIPs = 0.0.0.0/0\n`;
+    const mockConf = `[Interface]\nPrivateKey = privkey123\nAddress = 10.13.13.2/32\n\n[Peer]\nPublicKey = pubkey456\nEndpoint = 192.168.10.50:51820\nAllowedIPs = 0.0.0.0/0\n`;
     vi.spyOn(api, 'post').mockImplementation(async (url) => {
       if (url === '/api/network/mesh-vpn/wireguard/client-config') {
         return {
@@ -374,8 +374,8 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
       key_expiry: '2027-04-10T12:00:00Z',
       key_expired: false,
       is_subnet_router: true,
-      advertised_routes: '10.40.30.0/24',
-      detected_subnets: ['10.40.30.0/24'],
+      advertised_routes: '192.168.10.0/24',
+      detected_subnets: ['192.168.10.0/24'],
       is_exit_node: true,
       advertise_exit_node: true,
       ssh_enabled: true,
@@ -434,7 +434,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     const subnetToggle = document.getElementById('ts-subnet-router-toggle');
     expect(subnetToggle.checked).toBe(true);
     const subnetInput = document.getElementById('ts-subnet-routes-input');
-    expect(subnetInput.value).toBe('10.40.30.0/24');
+    expect(subnetInput.value).toBe('192.168.10.0/24');
 
     // 3. Exit Node
     const exitToggle = document.getElementById('ts-exit-node-toggle');
@@ -503,7 +503,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
         is_exit_node: false,
         is_subnet_router: false,
         advertised_routes: [],
-        detected_subnets: ['10.40.30.0/24'],
+        detected_subnets: ['192.168.10.0/24'],
         peers: [],
       },
       wireguard: { installed: true, active: false },

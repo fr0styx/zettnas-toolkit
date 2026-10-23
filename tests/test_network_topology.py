@@ -44,7 +44,7 @@ def test_format_speed():
 
 
 def test_hex_to_ip():
-    assert _hex_to_ip("011E280A") == "10.40.30.1"
+    assert _hex_to_ip("0101A8C0") == "192.168.1.1"
     assert _hex_to_ip("00000000") == "0.0.0.0"
     assert _hex_to_ip("000011AC") == "172.17.0.0"
     assert _hex_to_ip("invalid_hex") == "invalid_hex"
@@ -186,7 +186,7 @@ def test_get_network_topology_mocked(tmp_path):
 def test_network_topology_api_endpoints(client, token):
     mock_data = {
         "status": "ok",
-        "summary": {"primary_ip": "10.40.30.249", "default_gateway": "10.40.30.1"},
+        "summary": {"primary_ip": "192.168.1.50", "default_gateway": "192.168.1.1"},
         "physical_interfaces": [{"name": "eth1", "speed_human": "10 Gbps"}],
         "bonds": [],
         "bridges": [],
@@ -200,7 +200,7 @@ def test_network_topology_api_endpoints(client, token):
         assert res1.status_code == 200
         json1 = res1.json()
         assert json1["status"] == "ok"
-        assert json1["summary"]["primary_ip"] == "10.40.30.249"
+        assert json1["summary"]["primary_ip"] == "192.168.1.50"
 
         # Test /api/metrics/network-topology
         res2 = client.get("/api/metrics/network-topology", headers={"Authorization": f"Bearer {token}"})
@@ -328,15 +328,15 @@ def test_get_host_ip_config(tmp_path):
     mock_topo = {
         "status": "ok",
         "summary": {
-            "primary_ip": "10.40.30.249",
-            "default_gateway": "10.40.30.1",
+            "primary_ip": "192.168.1.50",
+            "default_gateway": "192.168.1.1",
             "primary_interface": "br0",
-            "dns_servers": ["10.40.30.1"],
+            "dns_servers": ["192.168.1.1"],
         },
         "physical_interfaces": [{"name": "eth0"}, {"name": "eth1"}],
         "bridges": [{"name": "br0"}],
         "bonds": [{"name": "bond0"}],
-        "routes": [{"iface": "br0", "destination": "10.40.30.0", "mask": "255.255.255.0", "cidr": 24}],
+        "routes": [{"iface": "br0", "destination": "192.168.1.0", "mask": "255.255.255.0", "cidr": 24}],
     }
 
     with (
@@ -349,11 +349,11 @@ def test_get_host_ip_config(tmp_path):
         assert res["interface"] == "br0"
         assert "br0" in res["available_interfaces"]
         assert "eth0" in res["available_interfaces"]
-        assert res["ip_address"] == "10.40.30.249"
+        assert res["ip_address"] == "192.168.1.50"
         assert res["netmask"] == "255.255.255.0"
         assert res["cidr"] == 24
-        assert res["gateway"] == "10.40.30.1"
-        assert res["dns1"] == "10.40.30.1"
+        assert res["gateway"] == "192.168.1.1"
+        assert res["dns1"] == "192.168.1.1"
         assert res["canary"]["is_active"] is False
 
 
@@ -361,7 +361,7 @@ def test_apply_host_ip_config_canary_and_confirm(tmp_path):
     cfg_file = tmp_path / "network_config.json"
     mock_topo = {
         "status": "ok",
-        "summary": {"primary_ip": "10.40.30.249", "default_gateway": "10.40.30.1", "primary_interface": "br0"},
+        "summary": {"primary_ip": "192.168.1.50", "default_gateway": "192.168.1.1", "primary_interface": "br0"},
         "physical_interfaces": [{"name": "eth0"}],
         "bridges": [{"name": "br0"}],
         "bonds": [],
@@ -382,9 +382,9 @@ def test_apply_host_ip_config_canary_and_confirm(tmp_path):
             {
                 "mode": "static",
                 "interface": "br0",
-                "ip_address": "10.40.30.250",
+                "ip_address": "192.168.1.51",
                 "netmask": "255.255.255.0",
-                "gateway": "10.40.30.1",
+                "gateway": "192.168.1.1",
                 "dns1": "1.1.1.1",
                 "dns2": "8.8.8.8",
             },
@@ -392,8 +392,8 @@ def test_apply_host_ip_config_canary_and_confirm(tmp_path):
         )
 
         assert res["status"] == "testing"
-        assert res["target_ip"] == "10.40.30.250"
-        assert res["target_url"] == "http://10.40.30.250:8082"
+        assert res["target_ip"] == "192.168.1.51"
+        assert res["target_url"] == "http://192.168.1.51:8082"
         assert res["expires_in"] == 60
         canary_id = res["canary_id"]
         assert canary_id
@@ -402,7 +402,7 @@ def test_apply_host_ip_config_canary_and_confirm(tmp_path):
         saved = load_network_config()
         assert "host_ip_staged" in saved
         assert saved["host_ip_staged"]["canary_id"] == canary_id
-        assert saved["host_ip_staged"]["target"]["ip_address"] == "10.40.30.250"
+        assert saved["host_ip_staged"]["target"]["ip_address"] == "192.168.1.51"
 
         # Verify Unraid update called
         mock_write_unraid.assert_called()
@@ -415,7 +415,7 @@ def test_apply_host_ip_config_canary_and_confirm(tmp_path):
         # Verify persisted permanently
         saved_final = load_network_config()
         assert "host_ip_staged" not in saved_final
-        assert saved_final["host_ip_config"]["ip_address"] == "10.40.30.250"
+        assert saved_final["host_ip_config"]["ip_address"] == "192.168.1.51"
         assert watchdog.is_active is False
 
 
@@ -423,7 +423,7 @@ def test_apply_host_ip_config_canary_revert(tmp_path):
     cfg_file = tmp_path / "network_config.json"
     mock_topo = {
         "status": "ok",
-        "summary": {"primary_ip": "10.40.30.249", "default_gateway": "10.40.30.1", "primary_interface": "br0"},
+        "summary": {"primary_ip": "192.168.1.50", "default_gateway": "192.168.1.1", "primary_interface": "br0"},
         "physical_interfaces": [{"name": "eth0"}],
         "bridges": [{"name": "br0"}],
         "bonds": [],
@@ -443,9 +443,9 @@ def test_apply_host_ip_config_canary_revert(tmp_path):
             {
                 "mode": "static",
                 "interface": "br0",
-                "ip_address": "10.40.30.251",
+                "ip_address": "192.168.1.52",
                 "netmask": "255.255.255.0",
-                "gateway": "10.40.30.1",
+                "gateway": "192.168.1.1",
             },
             timeout_sec=60,
         )
@@ -454,7 +454,7 @@ def test_apply_host_ip_config_canary_revert(tmp_path):
 
         revert_res = revert_host_ip_config(canary_id=canary_id)
         assert revert_res["status"] == "reverted"
-        assert revert_res["restored_ip"] == "10.40.30.249"
+        assert revert_res["restored_ip"] == "192.168.1.50"
 
         saved = load_network_config()
         assert "host_ip_staged" not in saved
@@ -465,8 +465,8 @@ def test_canary_watchdog_auto_rollback_on_timeout():
     watchdog = get_canary_watchdog()
     watchdog.confirm()  # Reset
 
-    target = {"ip_address": "10.40.30.252"}
-    original = {"ip_address": "10.40.30.249"}
+    target = {"ip_address": "192.168.1.53"}
+    original = {"ip_address": "192.168.1.50"}
 
     with (
         patch("backend.hardware.network._execute_revert") as mock_revert,
@@ -488,9 +488,9 @@ def test_host_ip_api_endpoints(client, token):
         "status": "ok",
         "mode": "static",
         "interface": "br0",
-        "ip_address": "10.40.30.249",
+        "ip_address": "192.168.1.50",
         "netmask": "255.255.255.0",
-        "gateway": "10.40.30.1",
+        "gateway": "192.168.1.1",
         "canary": {"is_active": False},
     }
 
@@ -506,12 +506,12 @@ def test_host_ip_api_endpoints(client, token):
         # 1. GET /api/network/host/config
         r1 = client.get("/api/network/host/config", headers=headers)
         assert r1.status_code == 200
-        assert r1.json()["ip_address"] == "10.40.30.249"
+        assert r1.json()["ip_address"] == "192.168.1.50"
 
         # 2. POST /api/network/host/apply
         r2 = client.post(
             "/api/network/host/apply",
-            json={"mode": "static", "interface": "br0", "ip_address": "10.40.30.250"},
+            json={"mode": "static", "interface": "br0", "ip_address": "192.168.1.51"},
             headers=headers,
         )
         assert r2.status_code == 200

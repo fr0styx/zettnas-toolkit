@@ -59,13 +59,13 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
         state: 'STARTED',
         color: 'green-on',
         version: '7.3.2',
-        server_name: 'Ark',
+        server_name: 'HomeNAS',
         model: 'D6U',
         disks: { total: 12, disabled: 0, invalid: 0 },
         parity_check: { active: false, errors: 0 },
         mover: { active: false }
       },
-      name: 'Ark',
+      name: 'HomeNAS',
       motherboard: {
         vendor: 'Zettlab',
         board: 'WY120',
@@ -92,7 +92,7 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
     expect(genericGrid.style.display).toBe('none');
     expect(hostLabel.textContent).toContain('UNRAID');
     expect(stateEl.textContent).toContain('STARTED');
-    expect(srvEl.textContent).toContain('Ark (D6U)');
+    expect(srvEl.textContent).toContain('HomeNAS (D6U)');
     expect(verEl.textContent).toBe('Unraid 7.3.2');
   });
 
@@ -103,7 +103,7 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
         os: 'Debian GNU/Linux 13 (trixie)',
         kernel: '6.18.38-generic',
         uptime_str: '5d 12h 30m',
-        hostname: 'Ark-Node'
+        hostname: 'HomeNAS-Node'
       },
       cpu: {
         model: 'Intel(R) Core(TM) Ultra 5 125H',

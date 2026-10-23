@@ -8,8 +8,8 @@ re-ordered by a blend of both scores. If the reranker is slow or down, search ke
 original order.
 
 The blend gives the reranker only RERANK_WEIGHT of the say, on min-max-scaled scores. On
-SciFact with EmbeddingGemma, a 70% sigmoid blend cut nDCG@10 from 78.3 to 66.5 and 20%
-scaled kept it at 78.8: a good embedding model is already hard to beat, so the reranker
+a public retrieval benchmark (SciFact) with EmbeddingGemma, a 70% sigmoid blend made results
+clearly worse while 20% scaled did not: a good embedding model is already hard to beat, so the reranker
 should nudge close calls, not override the first ranking.
 """
 

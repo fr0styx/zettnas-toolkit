@@ -144,7 +144,7 @@ def test_is_container_id():
     assert _is_container_id("a" * 64) is True
     assert _is_container_id("") is True
     assert _is_container_id(None) is True
-    assert _is_container_id("Ark") is False
+    assert _is_container_id("HomeNAS") is False
     assert _is_container_id("ZettNAS") is False
     assert _is_container_id("my-homelab-server") is False
 
@@ -200,7 +200,7 @@ def test_get_server_hostname_unraid_ident(monkeypatch, tmp_path):
     monkeypatch.delenv("NAS_NAME", raising=False)
 
     ident_file = tmp_path / "ident.cfg"
-    ident_file.write_text('NAME="Ark"\nCOMMENT="Main Storage"\n')
+    ident_file.write_text('NAME="HomeNAS"\nCOMMENT="Main Storage"\n')
 
     import os
 
@@ -226,4 +226,4 @@ def test_get_server_hostname_unraid_ident(monkeypatch, tmp_path):
 
     monkeypatch.setattr(builtins, "open", mock_open)
 
-    assert get_server_hostname() == "Ark"
+    assert get_server_hostname() == "HomeNAS"

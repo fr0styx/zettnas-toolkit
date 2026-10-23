@@ -3823,7 +3823,7 @@ class RagSearchEngine:
             all_blobs = [compute_384d_embedding(text=t, scene_tags=lexical_tags)[0] for t in child_texts]
         prepared_child_chunks: list[tuple[dict[str, Any], bytes]] = list(zip(child_chunks, all_blobs, strict=False))
         # Parents only give their children context in answers; search never ranks them, so they get
-        # no vector (embedding them was 44% of the text, and they took nearest-neighbour slots)
+        # no vector (they are the longest chunks, and they took nearest-neighbour slots)
         prepared_parent_chunks: list[tuple[dict[str, Any], bytes]] = [(p, b"") for p in parent_chunks]
 
         with self._write_lock:

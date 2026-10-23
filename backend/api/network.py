@@ -36,7 +36,7 @@ router = APIRouter(tags=["Network & Switching"])
 class HostIpConfigApplyRequest(BaseModel):
     mode: str = Field(default="static", description="Protocol mode: 'dhcp' or 'static'")
     interface: str | None = Field(default="br0", description="Target network interface (e.g. br0, eth0)")
-    ip_address: str | None = Field(default=None, description="Static IPv4 address (e.g. 10.40.30.249)")
+    ip_address: str | None = Field(default=None, description="Static IPv4 address (e.g. 192.168.1.50)")
     netmask: str | None = Field(default="255.255.255.0", description="Subnet mask or CIDR prefix")
     gateway: str | None = Field(default=None, description="Default gateway IPv4 address")
     dns1: str | None = Field(default=None, description="Primary upstream DNS server")

@@ -34,13 +34,13 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
           read_only: false,
           username: 'admin',
           auth_enabled: true,
-          direct_url: 'http://10.40.30.249:8084/',
+          direct_url: 'http://192.168.1.50:8084/',
           proxy_url: '/webdav/',
           quick_connect: {
-            macos: "open 'http://admin@10.40.30.249:8084/'",
-            windows: "net use Z: http://10.40.30.249:8084/ /user:admin",
-            ios: "http://10.40.30.249:8084/",
-            linux: "gio mount dav://admin@10.40.30.249:8084/",
+            macos: "open 'http://admin@192.168.1.50:8084/'",
+            windows: "net use Z: http://192.168.1.50:8084/ /user:admin",
+            ios: "http://192.168.1.50:8084/",
+            linux: "gio mount dav://admin@192.168.1.50:8084/",
           },
         });
       }

@@ -41,7 +41,7 @@ def test_replication_job_lifecycle(mock_replication_engine):
             "source_pool": "ark",
             "source_dataset": "vault",
             "target_type": "remote_ssh",
-            "target_host": "10.40.30.250",
+            "target_host": "192.168.1.51",
             "target_port": 22,
             "target_user": "backupuser",
             "target_pool": "backup_pool",
@@ -53,7 +53,7 @@ def test_replication_job_lifecycle(mock_replication_engine):
     )
 
     assert job["name"] == "Offsite Vault Backup"
-    assert job["target_host"] == "10.40.30.250"
+    assert job["target_host"] == "192.168.1.51"
     assert job["bandwidth_limit_kbps"] == 20000
     assert job["last_status"] == "idle"
 

@@ -142,7 +142,7 @@ export async function copyTextToClipboard(text) {
 
 /**
  * Copies text, also on plain HTTP where the browser hides navigator.clipboard
- * (Ark is usually opened as http://<ip>). Throws when nothing was copied.
+ * (a NAS is often opened as http://<ip>). Throws when nothing was copied.
  */
 export async function copyText(text) {
   if (!(await copyTextToClipboard(String(text ?? '')))) throw new Error('Copy failed');

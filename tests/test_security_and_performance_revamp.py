@@ -141,8 +141,8 @@ def test_validate_websocket_origin():
     # Matching Host header is permitted
     ws_matching = MagicMock()
     ws_matching.headers = {
-        "origin": "http://10.40.30.249:8082",
-        "host": "10.40.30.249:8082",
+        "origin": "http://192.168.1.50:8082",
+        "host": "192.168.1.50:8082",
     }
     assert validate_websocket_origin(ws_matching, is_cookie_auth=True) is True
 
@@ -159,7 +159,7 @@ def test_validate_websocket_origin():
     ws_attacker = MagicMock()
     ws_attacker.headers = {
         "origin": "https://evil-attacker.com",
-        "host": "10.40.30.249:8082",
+        "host": "192.168.1.50:8082",
     }
     assert validate_websocket_origin(ws_attacker, is_cookie_auth=True) is False
 

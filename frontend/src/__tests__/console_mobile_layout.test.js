@@ -36,7 +36,7 @@ describe('ZettNAS System Console Mobile Layout & Screen Adaptation Suite', () =>
                   <span class="lcd-dot" data-page="2">3</span>
                   <span class="lcd-dot" data-page="3">4</span>
                 </div>
-                <span id="ip">10.40.30.249</span>
+                <span id="ip">192.168.1.50</span>
               </div>
             </header>
             <div id="lcd-viewport" class="lcd-viewport">

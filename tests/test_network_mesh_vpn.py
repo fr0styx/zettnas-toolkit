@@ -316,15 +316,15 @@ def test_api_mesh_vpn_endpoints(client, token):
     # 4. POST /api/network/mesh-vpn/tailscale/set-routes
     with patch(
         "backend.hardware.network.execute_tailscale_set_routes",
-        return_value={"status": "success", "routes": "10.40.30.0/24", "enabled": True},
+        return_value={"status": "success", "routes": "192.168.10.0/24", "enabled": True},
     ):
         r = client.post(
             "/api/network/mesh-vpn/tailscale/set-routes",
-            json={"routes": "10.40.30.0/24", "enabled": True},
+            json={"routes": "192.168.10.0/24", "enabled": True},
             headers=headers,
         )
         assert r.status_code == 200
-        assert r.json()["routes"] == "10.40.30.0/24"
+        assert r.json()["routes"] == "192.168.10.0/24"
 
     # 5. POST /api/network/mesh-vpn/tailscale/set-exit-node
     with patch(
@@ -468,7 +468,7 @@ def test_tailscale_extended_hardware_functions(tmp_path):
     # Detect subnets
     with patch(
         "backend.hardware.network._parse_routes",
-        return_value=[{"destination": "10.40.30.0", "mask": "255.255.255.0", "iface": "eth0"}],
+        return_value=[{"destination": "192.168.10.0", "mask": "255.255.255.0", "iface": "eth0"}],
     ):
         subnets = detect_local_subnets()
-        assert "10.40.30.0/24" in subnets
+        assert "192.168.10.0/24" in subnets

@@ -21,7 +21,7 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     container.innerHTML = `
       <div id="net-kpi-ip-card">
         <button id="btn-open-host-ip-modal"></button>
-        <div id="net-kpi-ip">10.40.30.249</div>
+        <div id="net-kpi-ip">192.168.1.50</div>
         <div id="net-kpi-iface">Via br0</div>
       </div>
 
@@ -80,13 +80,13 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     mode: 'static',
     interface: 'br0',
     available_interfaces: ['br0', 'eth0', 'eth1'],
-    ip_address: '10.40.30.249',
+    ip_address: '192.168.1.50',
     netmask: '255.255.255.0',
     cidr: 24,
-    gateway: '10.40.30.1',
-    dns1: '10.40.30.1',
+    gateway: '192.168.1.1',
+    dns1: '192.168.1.1',
     dns2: '1.1.1.1',
-    dns_servers: ['10.40.30.1', '1.1.1.1'],
+    dns_servers: ['192.168.1.1', '1.1.1.1'],
     canary: { is_active: false, expires_in: 0 },
   };
 
@@ -97,10 +97,10 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
 
     const overlay = document.getElementById('network-host-config-overlay');
     expect(overlay.style.display).toBe('flex');
-    expect(document.getElementById('net-host-ip-input').value).toBe('10.40.30.249');
+    expect(document.getElementById('net-host-ip-input').value).toBe('192.168.1.50');
     expect(document.getElementById('net-host-netmask-input').value).toBe('255.255.255.0');
-    expect(document.getElementById('net-host-gateway-input').value).toBe('10.40.30.1');
-    expect(document.getElementById('net-host-dns1-input').value).toBe('10.40.30.1');
+    expect(document.getElementById('net-host-gateway-input').value).toBe('192.168.1.1');
+    expect(document.getElementById('net-host-dns1-input').value).toBe('192.168.1.1');
     expect(document.getElementById('net-host-dns2-input').value).toBe('1.1.1.1');
 
     const ifaceSelect = document.getElementById('net-host-iface-select');
@@ -154,15 +154,15 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     await openHostIpConfigModal();
 
     // Change IP
-    document.getElementById('net-host-ip-input').value = '10.40.30.250';
-    document.getElementById('net-host-gateway-input').value = '10.40.30.1';
+    document.getElementById('net-host-ip-input').value = '192.168.1.51';
+    document.getElementById('net-host-gateway-input').value = '192.168.1.1';
 
     const mockCanaryResponse = {
       status: 'testing',
       canary_id: 'test_canary_abc',
       expires_in: 60,
-      target_ip: '10.40.30.250',
-      target_url: 'http://10.40.30.250:8082',
+      target_ip: '192.168.1.51',
+      target_url: 'http://192.168.1.51:8082',
     };
 
     const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce(mockCanaryResponse);
@@ -172,10 +172,10 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     expect(postSpy).toHaveBeenCalledWith('/api/network/host/apply', {
       mode: 'static',
       interface: 'br0',
-      ip_address: '10.40.30.250',
+      ip_address: '192.168.1.51',
       netmask: '255.255.255.0',
-      gateway: '10.40.30.1',
-      dns1: '10.40.30.1',
+      gateway: '192.168.1.1',
+      dns1: '192.168.1.1',
       dns2: '1.1.1.1',
       timeout_sec: 60,
     });
@@ -185,7 +185,7 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     const canaryModal = document.getElementById('network-canary-overlay');
     expect(canaryModal.style.display).toBe('flex');
     expect(document.getElementById('net-canary-timer-digits').textContent).toBe('60');
-    expect(document.getElementById('net-canary-target-url').textContent).toBe('http://10.40.30.250:8082');
+    expect(document.getElementById('net-canary-target-url').textContent).toBe('http://192.168.1.51:8082');
 
     // Advance timer 10s
     vi.advanceTimersByTime(10000);
@@ -201,7 +201,7 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     openCanaryModal({
       canary_id: 'canary_123',
       expires_in: 60,
-      target_url: 'http://10.40.30.250:8082',
+      target_url: 'http://192.168.1.51:8082',
     });
 
     const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({ status: 'confirmed' });
@@ -219,7 +219,7 @@ describe('Host IP & DNS Administration with 60s Canary Watchdog (Tier 2)', () =>
     openCanaryModal({
       canary_id: 'canary_456',
       expires_in: 60,
-      target_url: 'http://10.40.30.250:8082',
+      target_url: 'http://192.168.1.51:8082',
     });
 
     const postSpy = vi.spyOn(api, 'post').mockResolvedValueOnce({ status: 'reverted' });

@@ -41,7 +41,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
         <header id="screen-header">
           <div class="h-left"><span id="nasName" class="nas-name">ZETTNEXT</span></div>
           <div id="clock" class="clock">12:00</div>
-          <div class="h-right"><span id="ip">10.40.30.249</span></div>
+          <div class="h-right"><span id="ip">192.168.1.50</span></div>
         </header>
 
         <div id="dashboard-cards-container" class="cards">
@@ -184,7 +184,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
   it('updates streamline telemetry deck including donut offset, sliders, and hero IP', () => {
     const stats = {
       name: 'ZETTNEXT-D8U',
-      ip: '10.40.30.249',
+      ip: '192.168.1.50',
       status: 'SYSTEM OK',
       storage: { pct: 24, used: '1.4TB', total: '5.8TB' },
       cpu: { util: 4.2, temp: 42 },
@@ -199,7 +199,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
 
     expect(document.getElementById('sl-nas-name').textContent).toBe('ZETTNEXT-D8U');
     expect(document.getElementById('sl-status-ring').className).toContain('sl-status-ring ok');
-    expect(document.getElementById('sl-hero-ip').textContent).toBe('10.40.30.249');
+    expect(document.getElementById('sl-hero-ip').textContent).toBe('192.168.1.50');
 
     // Storage Zone
     expect(document.getElementById('sl-storage-pct').textContent).toBe('24%');

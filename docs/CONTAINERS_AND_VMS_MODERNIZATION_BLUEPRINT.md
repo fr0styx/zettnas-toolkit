@@ -356,7 +356,7 @@ if target_vm.get("iso_path"):
 elif not target_vm.get("ip_address"):
     target_vm["ip_address"] = f"192.168.1.{100 + (hash(vm_id) % 150)}"
 ```
-- **Forensic Finding**: Rather than discovering real DHCP leases via QEMU Guest Agent or host ARP cache parsing, ZettNAS fabricates a synthetic IP in the `192.168.1.0/24` subnet. On networks with different subnets (e.g. `10.40.30.0/24`), 1-click SSH copy (`ssh root@192.168.1.142`) and web launchers fail.
+- **Forensic Finding**: Rather than discovering real DHCP leases via QEMU Guest Agent or host ARP cache parsing, ZettNAS fabricates a synthetic IP in the `192.168.1.0/24` subnet. On networks with different subnets (e.g. `10.0.0.0/24`), 1-click SSH copy (`ssh root@192.168.1.142`) and web launchers fail.
 
 #### 4. Total Snapshot Absence & Hyper-Backup Exclusion
 - **Location**: `backend/services/backup_engine.py:35–45`
