@@ -37,6 +37,14 @@ def _copy_db(src: str, dst: str) -> None:
     """Consistent copy of a SQLite file (includes anything still in its WAL); encrypted files stay encrypted."""
     from backend import db_crypto
 
+    if db_crypto.applies_to(src) and db_crypto.is_encrypted(src) and not db_crypto.enabled():
+        # The updater's helper has no data key (AI-20). ZettNAS is stopped while it snapshots, so the
+        # encrypted file is copied as it is; unsaved changes in its WAL would be lost, so refuse then.
+        wal = src + "-wal"
+        if os.path.exists(wal) and os.path.getsize(wal) > 0:
+            raise RuntimeError(f"{os.path.basename(src)} has unsaved changes in its WAL")
+        shutil.copy2(src, dst)
+        return
     db_crypto.copy(src, dst)
 
 

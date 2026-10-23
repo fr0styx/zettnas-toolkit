@@ -136,3 +136,27 @@ def test_index_waits_while_it_is_being_encrypted(tmp_path, monkeypatch):
     gate.set()
     db_crypto.wait_ready(path, timeout=5)
     db_crypto._ready.pop(path, None)
+
+
+def test_updater_snapshot_without_the_key_copies_encrypted_files_as_they_are(tmp_path, monkeypatch):
+    """The update helper runs without ZETTNAS_DATA_KEY; it must still snapshot and restore."""
+    from backend.services import data_snapshot
+
+    data = tmp_path / "data"
+    data.mkdir()
+    path = data / "ai_conversations.db"
+    conv = _plain_conversations(path)
+    monkeypatch.setenv(db_crypto.KEY_ENV, KEY)
+    db_crypto.prepare(str(path))
+    original = path.read_bytes()
+
+    monkeypatch.delenv(db_crypto.KEY_ENV)
+    snap = data_snapshot.take_snapshot(str(data), "pre-update")
+    assert (tmp_path / "data" / "backups").exists()
+    path.write_bytes(b"broken")
+    data_snapshot.restore_snapshot(snap, str(data))
+    assert path.read_bytes() == original
+
+    monkeypatch.setenv(db_crypto.KEY_ENV, KEY)
+    with conv.get_conv_db_connection(str(path)) as c:
+        assert c.execute("SELECT title FROM conversations").fetchone()[0] == "Secret plans for Tuesday"
