@@ -537,6 +537,24 @@ _CJK_RUN_RE = re.compile(rf"[{_CJK_CHARS}]")
 _TOKEN_RE = re.compile(rf"[{_CJK_CHARS}]+|[a-z0-9_\u00c0-\u024f\u0400-\u04ff]+")
 
 
+_SUB_TIMING = re.compile(r"\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}\s*-->\s*\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}[^\n\]]*")
+_SUB_INDEX = re.compile(r"^\s*\d+\s*$", re.M)
+_MICRODVD = re.compile(r"\{\d+\}\{\d*\}")
+SUBTITLE_EXTENSIONS = {".srt", ".vtt", ".sub"}
+
+
+def text_for_embedding(file_ext: str, text: str) -> str:
+    """The text a model embeds. Subtitles lose cue numbers and timings: the tokenizer spends a
+    token per digit, so they were two thirds of a subtitle's tokens and carry no meaning."""
+    if (file_ext or "").lower() not in SUBTITLE_EXTENSIONS:
+        return text
+    t = _SUB_TIMING.sub(" ", text)
+    t = _MICRODVD.sub(" ", t)
+    t = _SUB_INDEX.sub("", t)
+    t = re.sub(r"\n{2,}", "\n", t)
+    return re.sub(r"[ \t]{2,}", " ", t).strip()
+
+
 def binary_ratio(text: str, sample: int = 20000) -> float:
     """Share of characters that never occur in real text: control characters (other than tab and
     line breaks), C1 controls, U+FFFD and private-use or unassigned code points. Binary data read

@@ -127,6 +127,7 @@ from backend.services.rag_text import (  # noqa: E402, F401
     classify_rgb_pixel,
     looks_like_binary,
     parse_multimodal_query,
+    text_for_embedding,
     text_tokens,
 )
 
@@ -1033,7 +1034,7 @@ class RagSearchEngine:
             try:
                 marks = ",".join("?" * len(ids))
                 rows = c.execute(
-                    f"""SELECT c.chunk_id, c.file_name, c.heading_context, c.chunk_text, f.doc_title
+                    f"""SELECT c.chunk_id, c.file_name, c.heading_context, c.chunk_text, f.doc_title, f.file_ext
                         FROM document_chunks c LEFT JOIN indexed_files f ON f.file_id = c.file_id
                         WHERE c.chunk_id IN ({marks})""",
                     ids,
@@ -1045,7 +1046,9 @@ class RagSearchEngine:
                     int(r["chunk_id"]),
                     format_embeddinggemma_document(
                         r["doc_title"] or r["file_name"],
-                        f"{r['heading_context'] or ''} {r['chunk_text'] or ''}".strip(),
+                        text_for_embedding(
+                            r["file_ext"] or "", f"{r['heading_context'] or ''} {r['chunk_text'] or ''}".strip()
+                        ),
                     ),
                 )
                 for r in rows
@@ -3805,7 +3808,9 @@ class RagSearchEngine:
             else (["receipt", "document"] if doc_type == "invoice" else ["document"])
         )
         child_texts = [
-            format_embeddinggemma_document(effective_title, f"{ch['heading_context']} {ch['chunk_text']}".strip())
+            format_embeddinggemma_document(
+                effective_title, text_for_embedding(file_ext, f"{ch['heading_context']} {ch['chunk_text']}".strip())
+            )
             for ch in child_chunks
         ]
         # One batched call per file; every vector of a file comes from the same model (AI-15).

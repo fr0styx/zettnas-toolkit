@@ -48,3 +48,15 @@ def test_pdf_fallback_keeps_text_and_drops_binary_strings(tmp_path, monkeypatch)
     text = extract_document_text(str(p), ".pdf")
     assert "Hello world from the manual" in text
     assert not looks_like_binary(text) and binary_ratio(text) < 0.01
+
+
+def test_subtitles_are_embedded_without_cue_numbers_and_timings():
+    from backend.services.rag_text import text_for_embedding
+
+    srt = "[Folder: Season 4 | Doc: 00:00:00,665 --> 00:00:02,350]\n741\n00:45:25,808 --> 00:45:29,478\nBajar a la Zona Cero,\nfuneral por la tarde.\n\n742\n00:45:29,562 --> 00:45:32,150 X1:0\nY luego 3 cervezas."
+    out = text_for_embedding(".srt", srt)
+    assert "-->" not in out and "741" not in out and "00:45" not in out
+    assert "Bajar a la Zona Cero" in out and "3 cervezas" in out and "Season 4" in out
+    assert text_for_embedding(".sub", "{1}{50}Hello|there\n{60}{90}Bye") == "Hello|there\n Bye"
+    plain = "Invoice 741\n00:45 meeting"
+    assert text_for_embedding(".txt", plain) == plain
