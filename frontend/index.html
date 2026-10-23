@@ -272,7 +272,7 @@
   <div style="background: var(--card, #141b24); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.12); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative;">
     
     <!-- Step 1: Credentials (Dual Mode: Chooser vs Classic) -->
-    <div id="login-step-credentials">
+    <form id="login-step-credentials" novalidate>
       <svg class="ic" style="width: 44px; height: 44px; color: var(--ok2); margin-bottom: 16px;"><use href="#i-chip"/></svg>
       <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 2px; color: #fff;" data-i18n="login.title">ZETTNAS WORKBENCH</h2>
       <p id="login-identity-txt" style="margin: 0 0 20px 0; font-size: 12.5px; color: var(--muted);" data-i18n="login.auth_required">Select an account or enter credentials</p>
@@ -296,10 +296,12 @@
 
       <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->
       <div id="login-manual-fields" style="display: none; margin-bottom: 12px;">
+        <label for="login-username" class="sr-only" data-i18n="login.username_label">Username</label>
         <input type="text" id="login-username" placeholder="Username" autocomplete="username" style="width: 100%; padding: 11px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px;">
       </div>
 
       <!-- Password Input -->
+      <label for="login-password" class="sr-only" data-i18n="login.password_label">Password</label>
       <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" data-i18n-placeholder="login.placeholder" style="width: 100%; padding: 11px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.18); color: #fff; border-radius: 6px; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 15px; outline: none;">
 
       <!-- Remember Me -->
@@ -308,8 +310,9 @@
         <label for="login-remember-me" style="cursor: pointer; user-select: none;">Keep me signed in</label>
       </div>
 
-      <button id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">SECURE LOGIN</button>
+      <button type="button" id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">SECURE LOGIN</button>
       <button type="button" id="login-sso-btn" class="suite-toolkit-btn login-sso-btn" hidden>Sign in with SSO</button>
+      <p id="login-error" class="login-sso-error" role="alert" hidden></p>
       <p id="login-sso-error" class="login-sso-error" role="alert" hidden></p>
 
       <!-- Toggle Links -->
@@ -317,7 +320,7 @@
         <a href="#" id="login-toggle-manual" style="color: var(--muted); text-decoration: none;">Sign in with different account</a>
         <a href="#" id="login-toggle-chooser" style="color: var(--muted); text-decoration: none; display: none;">← Back to account list</a>
       </div>
-    </div>
+    </form>
 
     <!-- Step 2: 2FA / TOTP Challenge Interception -->
     <div id="login-step-mfa" style="display: none;">

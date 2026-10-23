@@ -166,6 +166,13 @@ export function initAuth() {
     });
   }
 
+  // The credentials step is a real form (for password managers); sign-in runs from the
+  // button and Enter handlers, so the browser's own submit never reloads the page.
+  const credsForm = document.getElementById('login-step-credentials');
+  if (credsForm && credsForm.tagName === 'FORM') {
+    credsForm.addEventListener('submit', (e) => e.preventDefault());
+  }
+
   // Login form submit
   if (loginBtn) {
     loginBtn.addEventListener('click', () => doLogin());
@@ -347,6 +354,13 @@ function setLoginMode(mode) {
   }
 }
 
+function _showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.hidden = !msg;
+}
+
 async function doLogin() {
   const loginBtn = document.getElementById('login-btn');
   const loginPwd = document.getElementById('login-password');
@@ -361,6 +375,7 @@ async function doLogin() {
   const password = loginPwd.value;
   const isRemembered = rememberMe ? rememberMe.checked : true;
 
+  _showLoginError('');
   if (loginBtn) loginBtn.textContent = t('login.authenticating', 'AUTHENTICATING...');
 
   try {
@@ -412,24 +427,20 @@ async function doLogin() {
         }, 350);
       }
     } else {
-      let msg = data.detail || t('login.invalid', 'INVALID CREDENTIALS');
-      let holdMs = 2000;
+      // The message stays on screen and is announced (role="alert") until the next attempt.
+      let msg = res.status === 401
+        ? t('login.invalid_msg', 'Wrong username or password.')
+        : (data.detail || t('login.invalid_msg', 'Wrong username or password.'));
       if (res.status === 429) {
         const retry = parseInt(res.headers.get('Retry-After') || '0', 10);
-        msg = retry > 0 ? `TOO MANY ATTEMPTS — WAIT ${retry}s` : 'TOO MANY ATTEMPTS';
-        holdMs = Math.min(Math.max(retry, 2), 15) * 1000;
+        msg = t('login.too_many', 'Too many attempts. Try again in {seconds} s.', { seconds: Math.max(retry, 1) });
       }
-      if (loginBtn) {
-        loginBtn.textContent = msg;
-        loginBtn.style.borderColor = 'var(--crit)';
-        setTimeout(() => {
-          loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
-          loginBtn.style.borderColor = '';
-        }, holdMs);
-      }
+      _showLoginError(msg);
+      if (loginBtn) loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
     }
   } catch (e) {
-    if (loginBtn) loginBtn.textContent = t('login.error', 'ERROR');
+    _showLoginError(t('login.error_network', "Couldn't reach ZettNAS. Check the connection and try again."));
+    if (loginBtn) loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
   }
 }
 
