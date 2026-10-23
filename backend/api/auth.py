@@ -314,6 +314,17 @@ def _build_session_response(
 # ==============================================================================
 
 
+_DUMMY_HASH: List[str] = []
+
+
+def _dummy_hash() -> str:
+    if not _DUMMY_HASH:
+        import secrets
+
+        _DUMMY_HASH.append(hash_password(secrets.token_urlsafe(16)))
+    return _DUMMY_HASH[0]
+
+
 @router.post("/auth/login")
 async def login(req: LoginRequest, request: Request):
     ip = _client_ip(request)
@@ -346,6 +357,10 @@ async def login(req: LoginRequest, request: Request):
     ok = False
     if user and user.get("password_hash"):
         ok = await run_in_threadpool(verify_password, req.password, user["password_hash"])
+    admin_names = ("admin", getattr(config, "ZETTNAS_USERNAME", "admin"))
+    if not user and target_username not in admin_names:
+        # Same work as a real check, so the response time doesn't tell which names exist.
+        await run_in_threadpool(verify_password, req.password, _dummy_hash())
 
     if not ok and target_username in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin")):
         if await run_in_threadpool(verify_password, req.password, config.STORED_PASSWORD_HASH):
