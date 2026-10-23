@@ -111,6 +111,7 @@ jobs:
         env:
           PORT: "8082"
           WEB_PASSWORD: "e2e-Test-Pass-1"  # not the shared default: that one now gets a generated password
+          ZETTNAS_E2E_PASSWORD: "e2e-Test-Pass-1"  # the tests read this (tests/conftest.py resets WEB_PASSWORD)
           DATA_DIR: "${{ github.workspace }}/data"
         run: |
           annotate() {
