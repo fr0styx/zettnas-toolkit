@@ -75,8 +75,8 @@ your compose file or Unraid template and recreate the container.
 ## Default Credentials & Initial Access
 
 - **Web Desktop URL**: `http://<server-ip>:8082`
-- **Default Username**: `admin`
-- **Default Password**: `admin`
+- **Username**: `admin`
+- **First-time password**: if you leave `WEB_PASSWORD` empty, ZettNAS generates one on first start. It is written to the container log (`docker logs zettnas-toolkit`) and saved as `initial-admin-password` in the app data folder (readable by root only). It works once: you choose your own password at first sign-in, and the file is then deleted.
 
 > [!WARNING]  
 > Upon your first login, immediately navigate to **Mission Control** → **System & Security** → **Security** (or press `Cmd+K` and type `>password`) to set a strong master password or provision a new user account.
@@ -137,7 +137,7 @@ Recommended for custom DIY homelab builds (Jonsbo N1/N2/N3/N4, Fractal Node 804,
          - "8084:8084"   # Universal WebDAV Server
        environment:
          - PORT=8082
-         - WEB_PASSWORD=admin
+         - WEB_PASSWORD=   # empty: a first-time password is generated (see the log)
          - DATA_DIR=/app/data
          - STORAGE_POOL_PATH=/mnt/storage
          - HOST_PROC=/host/proc
@@ -227,7 +227,7 @@ FygoOS provides a modern, turnkey private cloud OS with native Docker support.
          - /var/run/docker.sock:/var/run/docker.sock:ro
        environment:
          - PORT=8082
-         - WEB_PASSWORD=admin
+         - WEB_PASSWORD=   # empty: a first-time password is generated (see the log)
          - NAS_NAME=FygoNAS
          - POOL_PATH=/mnt/storage
          - HOST_PROC=/host/proc
@@ -345,7 +345,7 @@ docker run -d \
   -v $(pwd)/data:/app/data:rw \
   -v /mnt/storage:/mnt/storage:rw \
   -e PORT=8082 \
-  -e WEB_PASSWORD=admin \
+  -e WEB_PASSWORD= \
   -e HOST_PROC=/host/proc \
   -e HOST_SYS=/host/sys \
   -e HOST_DEV=/host/dev \
@@ -446,7 +446,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | Variable | Default | Description |
 | :--- | :--- | :--- |
 | `PORT` | `8082` | HTTP port for the Web Desktop and REST API |
-| `WEB_PASSWORD` | `admin` | Initial admin master password (overridden by `users.db` once set) |
+| `WEB_PASSWORD` | (empty) | First-time admin password. Empty or `admin`: a random one is generated and shown in the log. Ignored once `users.db` exists |
 | `ZETTNAS_DATA_KEY` | *(empty)* | Optional. Encrypts the AI search index and chat history at rest (SQLCipher, 16+ characters, e.g. `openssl rand -base64 32`). Keep it outside the data folder (Unraid template, or `.env` next to the compose file) and in a password manager. See SECURITY.md |
 | `LOGIN_USER_CHOOSER` | `0` | Show user tiles on the login screen. Off by default because it lists account names to anyone who can open the login page |
 | `CSRF_TRUSTED_ORIGINS` | *(empty)* | Extra origins (comma-separated, e.g. `https://nas.example.com`) allowed to make changes with the session cookie, for reverse proxies that rewrite the `Host` header |

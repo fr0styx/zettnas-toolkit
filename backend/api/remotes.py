@@ -22,7 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from backend.auth import require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.services.rclone_engine import get_rclone_engine
 
 logger = logging.getLogger("ZettNAS.RemotesApi")
@@ -197,13 +197,17 @@ async def list_remote_files(name: str, path: str = ""):
 
 
 @router.post("/remotes/sync", dependencies=[Depends(require_scope("backup:write", "storage:write", "storage:admin"))])
-async def start_remote_sync(req: RemoteSyncRequest):
+async def start_remote_sync(req: RemoteSyncRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Triggers an asynchronous cloud sync/copy/move operation."""
     engine = get_rclone_engine()
+    # Storage admins may use any local path; everyone else stays inside the storage pool.
+    confine = not principal.has_scope("storage:admin")
     try:
+        src = engine.checked_location(req.src, confine_local=confine)
+        dst = engine.checked_location(req.dst, confine_local=confine)
         return engine.start_sync_job(
-            src=req.src,
-            dst=req.dst,
+            src=src,
+            dst=dst,
             action=req.action,
             dry_run=req.dry_run,
             ignore_errors=req.ignore_errors,

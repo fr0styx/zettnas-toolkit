@@ -214,25 +214,38 @@ def request_is_https(request: Request) -> bool:
     return request.headers.get("x-forwarded-proto", "").lower() == "https" and is_ip_in_trusted_proxies(client)
 
 
-def _origin_matches_host(request: Request) -> bool:
-    """CSRF check for cookie-authenticated writes: Origin (or Referer) must be this server."""
-    host = (request.headers.get("host") or "").lower()
+def _allowed_origins(conn: Any) -> set[str]:
+    """This server's own host[:port] plus configured trusted origins (HTTP request or WebSocket)."""
+    host = (conn.headers.get("host") or "").lower()
     allowed = {host} | {o.lower().rstrip("/") for o in getattr(config, "CSRF_TRUSTED_ORIGINS", []) or []}
     # Behind a reverse proxy that rewrites Host, trust X-Forwarded-Host from that proxy only.
-    client = request.client.host if request.client else ""
-    fwd_host = (request.headers.get("x-forwarded-host") or "").split(",")[0].strip().lower()
-    if fwd_host and is_ip_in_trusted_proxies(client):
+    client = getattr(getattr(conn, "client", None), "host", "")
+    client = client if isinstance(client, str) else ""
+    fwd_host = (conn.headers.get("x-forwarded-host") or "").split(",")[0].strip().lower()
+    if fwd_host and client and is_ip_in_trusted_proxies(client):
         allowed.add(fwd_host)
+    allowed.discard("")
+    return allowed
+
+
+def _origin_in(value: str, allowed: set[str]) -> bool:
+    """Full match on host:port (or scheme://host:port), never on the hostname alone."""
+    try:
+        parsed = urlparse(value)
+    except ValueError:
+        return False
+    return bool(parsed.netloc) and (
+        parsed.netloc.lower() in allowed or f"{parsed.scheme}://{parsed.netloc}".lower() in allowed
+    )
+
+
+def _origin_matches_host(request: Request) -> bool:
+    """CSRF check for cookie-authenticated writes: Origin (or Referer) must be this server."""
+    allowed = _allowed_origins(request)
     for header in ("origin", "referer"):
         value = request.headers.get(header)
         if value:
-            try:
-                parsed = urlparse(value)
-            except ValueError:
-                return False
-            return bool(parsed.netloc) and (
-                parsed.netloc.lower() in allowed or f"{parsed.scheme}://{parsed.netloc}".lower() in allowed
-            )
+            return _origin_in(value, allowed)
     return False
 
 
@@ -574,32 +587,5 @@ def validate_websocket_origin(websocket: Any, is_cookie_auth: bool = False) -> b
     origin = websocket.headers.get("origin")
     if not origin:
         return not is_cookie_auth
-
-    from urllib.parse import urlparse
-
-    try:
-        parsed_origin = urlparse(origin)
-    except Exception:
-        return False
-
-    origin_netloc = (parsed_origin.netloc or "").lower()
-    origin_host = (parsed_origin.hostname or "").lower()
-
-    host_header = (websocket.headers.get("host") or "").lower()
-    x_forwarded_host = (websocket.headers.get("x-forwarded-host") or "").lower()
-
-    allowed_hosts = {"localhost", "127.0.0.1", "::1", "testserver"}
-    if host_header:
-        allowed_hosts.add(host_header)
-        if ":" in host_header:
-            allowed_hosts.add(host_header.split(":")[0])
-    if x_forwarded_host:
-        allowed_hosts.add(x_forwarded_host)
-        if ":" in x_forwarded_host:
-            allowed_hosts.add(x_forwarded_host.split(":")[0])
-
-    if origin_netloc in allowed_hosts or origin_host in allowed_hosts:
-        return True
-
-    trusted_proxies = getattr(config, "TRUSTED_PROXIES", [])
-    return origin_host in trusted_proxies
+    # Same rule as the HTTP CSRF check: another port or scheme on this hostname is another site.
+    return _origin_in(origin, _allowed_origins(websocket))

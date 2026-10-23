@@ -153,6 +153,7 @@ def test_validate_websocket_origin():
         "host": "127.0.0.1:8082",
         "x-forwarded-host": "nas.homelab.local",
     }
+    ws_proxy.client.host = "127.0.0.1"  # X-Forwarded-Host is trusted only from a trusted proxy
     assert validate_websocket_origin(ws_proxy, is_cookie_auth=True) is True
 
     # Foreign cross-origin attacker domain must be strictly rejected

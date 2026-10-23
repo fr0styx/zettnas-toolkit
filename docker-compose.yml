@@ -30,7 +30,7 @@ services:
       - LCD_FPS=${LCD_FPS:-10}
       - PORT=8082
       - WEBDAV_PORT=${WEBDAV_PORT:-8084}
-      - WEB_PASSWORD=${WEB_PASSWORD:-admin}
+      - WEB_PASSWORD=${WEB_PASSWORD:-}
       # Optional: encrypt the AI search index and chat history at rest (16+ characters).
       # Keep it in .env or your secret store, not in the data folder, and in a password manager.
       - ZETTNAS_DATA_KEY=${ZETTNAS_DATA_KEY:-}
