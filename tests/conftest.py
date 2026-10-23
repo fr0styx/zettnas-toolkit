@@ -92,6 +92,13 @@ def _auto_confirm_destructive_actions(request, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _fresh_smart_velocity_cache():
+    from backend import db
+
+    db._VELOCITY_CACHE.clear()
+
+
+@pytest.fixture(autouse=True)
 def _fresh_rate_limits():
     from backend import rate_limit
 

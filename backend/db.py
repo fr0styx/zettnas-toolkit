@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 import sqlite3
@@ -580,6 +581,11 @@ def get_smart_test_history(dev: str | None = None, limit: int = 20) -> list[dict
         return []
 
 
+# (database file, device) -> last velocity result and what it was computed from
+_VELOCITY_CACHE: dict[tuple[str, str], dict[str, Any]] = {}
+VELOCITY_RECHECK_SECS = 600  # temperature/power-on-hours-only changes refresh at most this often
+
+
 def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
     """
     Predictive SMART degradation engine:
@@ -640,17 +646,13 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             (dev, ts_30d),
         ).fetchone()
 
-        # Check for stuck pending sectors over past 48h
-        pending_48h_rows = c.execute(
-            "SELECT ts, pending_sectors FROM smart_history WHERE dev = ? AND ts >= ? ORDER BY ts ASC",
+        # Stuck pending sectors: every sample of the past 48 h has some, over at least 44 h (one aggregate row)
+        p48 = c.execute(
+            "SELECT COUNT(*) AS n, MIN(ts) AS t0, MAX(ts) AS t1, MIN(COALESCE(pending_sectors, 0)) AS low "
+            "FROM smart_history WHERE dev = ? AND ts >= ?",
             (dev, ts_48h),
-        ).fetchall()
-        time_span = (pending_48h_rows[-1]["ts"] - pending_48h_rows[0]["ts"]) if len(pending_48h_rows) >= 2 else 0
-        stuck_pending = (
-            len(pending_48h_rows) >= 2
-            and time_span >= 44 * 3600
-            and all(r["pending_sectors"] > 0 for r in pending_48h_rows)
-        )
+        ).fetchone()
+        stuck_pending = bool(p48["n"] >= 2 and (p48["t1"] - p48["t0"]) >= 44 * 3600 and p48["low"] > 0)
 
         curr_realloc = latest["reallocated_sectors"] or 0
         base_realloc_7d = rec_7d["reallocated_sectors"] if rec_7d else curr_realloc
@@ -809,11 +811,40 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             "sparkline_points": sparkline_points,
         }
 
+    def _cached(c: sqlite3.Connection) -> dict:
+        # The full evaluation reads up to 30 days of rows; it only changes when a disk's
+        # counters or self-test result change, so it is reused until then (PERF-1).
+        c.row_factory = sqlite3.Row
+        head = c.execute(
+            "SELECT ts, reallocated_sectors, pending_sectors, offline_uncorrectable, crc_errors, "
+            "nvme_pct_used, nvme_media_errors FROM smart_history WHERE dev = ? ORDER BY ts DESC LIMIT 1",
+            (dev,),
+        ).fetchone()
+        if head is None:
+            return _eval_velocity(c)
+        try:
+            test = c.execute("SELECT MAX(ts) FROM smart_test_history WHERE dev = ?", (dev,)).fetchone()[0]
+        except sqlite3.Error:
+            test = None
+        db_file = c.execute("PRAGMA database_list").fetchone()[2]
+        counters = (tuple(head)[1:], test)
+        key = (db_file, dev)
+        hit = _VELOCITY_CACHE.get(key)
+        if (
+            hit
+            and hit["counters"] == counters
+            and (hit["ts"] == head["ts"] or now_ts - hit["at"] < VELOCITY_RECHECK_SECS)
+        ):
+            return copy.deepcopy(hit["result"])
+        result = _eval_velocity(c)
+        _VELOCITY_CACHE[key] = {"counters": counters, "ts": head["ts"], "at": now_ts, "result": copy.deepcopy(result)}
+        return result
+
     try:
         if conn is not None:
-            return _eval_velocity(conn)
+            return _cached(conn)
         with db_session() as new_conn:
-            return _eval_velocity(new_conn)
+            return _cached(new_conn)
     except Exception as db_e:
         logger.info(f"[ZettNAS] DB Query SMART Velocity Error: {db_e}")
         return {

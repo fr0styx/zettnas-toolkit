@@ -24,7 +24,9 @@ from backend.fsutil import atomic_write_json, read_json
 
 _CACHED_UPS: dict[str, Any] = {}
 _LAST_UPS_POLL = 0.0
-_UPS_CACHE_TTL = 3.0
+_UPS_CACHE_TTL = 10.0
+# The hidraw UPS found by the last scan: node, device path, ids and parsed report descriptor
+_HID_UPS_CACHE: dict[str, Any] = {}
 
 DEFAULT_UPS_CONFIG: dict[str, Any] = {
     "enabled": True,
@@ -624,6 +626,125 @@ def _parse_hid_report_descriptor(desc_bytes: bytes) -> dict[tuple[int, int], tup
     return mapping
 
 
+def _read_hid_reports(fd: int, mapping: dict, vid: str, pid: str, hid_name: str) -> dict[str, Any]:
+    """Reads the UPS values from an open hidraw device using its parsed report descriptor."""
+    out: dict[str, Any] = {}
+    reports_cache: dict[int, bytearray | None] = {}
+
+    def _get_feature_report(rid: int) -> bytearray | None:
+        if rid not in reports_cache:
+            buf = bytearray(64)
+            buf[0] = rid
+            try:
+                # _IOC(3, ord('H'), 0x07, 64) = 0xc0404807
+                fcntl.ioctl(fd, 0xC0404807, buf)
+                reports_cache[rid] = buf
+            except Exception:
+                reports_cache[rid] = None
+        return reports_cache[rid]
+
+    # 1. RemainingCapacity (0x85, 0x66)
+    if (0x85, 0x66) in mapping:
+        rid, _, _ = mapping[(0x85, 0x66)]
+        rep = _get_feature_report(rid)
+        if rep and len(rep) > 1:
+            out["BCHARGE"] = str(rep[1])
+
+    # 2. RunTimeToEmpty (0x85, 0x68)
+    if (0x85, 0x68) in mapping:
+        rid, _, _ = mapping[(0x85, 0x68)]
+        rep = _get_feature_report(rid)
+        if rep and len(rep) >= 4:
+            val_sec = int.from_bytes(rep[2:4], "little")
+            if val_sec > 0:
+                out["TIMELEFT"] = str(round(val_sec / 60.0, 1))
+
+    # 3. Voltage: Input or Config (0x84, 0x57), (0x84, 0x30), (0x84, 0x04)
+    for v_key in [(0x84, 0x57), (0x84, 0x30), (0x84, 0x04)]:
+        if v_key in mapping:
+            rid, _, _ = mapping[v_key]
+            rep = _get_feature_report(rid)
+            if rep and len(rep) >= 3:
+                val = int.from_bytes(rep[1:3], "little")
+                if 80 <= val <= 260:
+                    out["LINEV"] = str(val)
+                    break
+                elif 800 <= val <= 2600:
+                    out["LINEV"] = str(round(val / 10.0, 1))
+                    break
+
+    # 4. PercentLoad (0x84, 0x24)
+    if (0x84, 0x24) in mapping:
+        rid, _, _ = mapping[(0x84, 0x24)]
+        rep = _get_feature_report(rid)
+        if rep and len(rep) > 1 and rep[1] <= 100:
+            out["LOADPCT"] = str(rep[1])
+
+    # 5. Output / Battery Current (0x84, 0x58), (0x85, 0x58), (0x85, 0x45)
+    for c_key in [(0x84, 0x58), (0x85, 0x58), (0x85, 0x45)]:
+        if c_key in mapping:
+            rid, _, _ = mapping[c_key]
+            rep = _get_feature_report(rid)
+            if rep and len(rep) >= 3:
+                val_raw = int.from_bytes(rep[1:3], "little")
+                if val_raw > 0:
+                    out["OUTCURR"] = str(round(val_raw / 1000.0, 2)) if val_raw > 50 else str(val_raw)
+                    break
+
+    # 6. Status: ACPresent (0x84, 0xd0) or Discharging (0x84, 0xd2)
+    status_parts = []
+    is_ac = True
+    if (0x84, 0xD0) in mapping:
+        rid, _, _ = mapping[(0x84, 0xD0)]
+        rep = _get_feature_report(rid)
+        if rep and len(rep) > 1:
+            is_ac = bool(rep[1])
+
+    if (0x84, 0xD2) in mapping:
+        rid, _, _ = mapping[(0x84, 0xD2)]
+        rep = _get_feature_report(rid)
+        if rep and len(rep) > 1 and rep[1]:
+            status_parts.append("OB")
+            is_ac = False
+
+    if (0x84, 0xD1) in mapping:
+        rid, _, _ = mapping[(0x84, 0xD1)]
+        rep = _get_feature_report(rid)
+        if rep and len(rep) > 1 and rep[1]:
+            status_parts.append("CHRG")
+
+    if is_ac and "OB" not in status_parts:
+        status_parts.insert(0, "ONLINE")
+    elif not is_ac and "OB" not in status_parts:
+        status_parts.insert(0, "ONBATT")
+
+    out["STATUS"] = " ".join(status_parts) if status_parts else "ONLINE"
+    out["MODEL"] = hid_name or KNOWN_UPS_VENDORS.get(vid, "USB HID UPS")
+    out["MFR"] = KNOWN_UPS_VENDORS.get(vid, "Generic USB")
+    out["PROTOCOL"] = "direct_usb_hid"
+    out["VENDOR_ID"] = vid
+    out["PRODUCT_ID"] = pid
+    return out
+
+
+def _cached_hid_ups() -> dict[str, Any] | None:
+    """Reads the UPS found by the last scan without listing devices or parsing its descriptor again."""
+    c = _HID_UPS_CACHE
+    if not c or fcntl is None or not os.path.exists(c["char"]) or not os.path.isdir(c["node_dir"]):
+        _HID_UPS_CACHE.clear()
+        return None
+    try:
+        fd = os.open(c["char"], os.O_RDWR | os.O_NONBLOCK)
+    except OSError:
+        _HID_UPS_CACHE.clear()
+        return None
+    try:
+        out = _read_hid_reports(fd, c["mapping"], c["vid"], c["pid"], c["name"])
+    finally:
+        os.close(fd)
+    return out if out.get("STATUS") else None
+
+
 def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
     """
     Directly queries local USB HID Power Devices via sysfs and /dev/hidraw ioctl.
@@ -706,7 +827,10 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
         except Exception as e:
             logger.debug(f"[Direct USB] sysfs power_supply scan error: {e}")
 
-    # Layer 2: Direct HIDRAW Query via fcntl ioctl
+    # Layer 2: Direct HIDRAW Query via fcntl ioctl (the device found last time first, PERF-1)
+    cached = _cached_hid_ups()
+    if cached:
+        return cached
     hidraw_roots = [p for p in ["/sys/class/hidraw", "/host/sys/class/hidraw"] if os.path.isdir(p)]
     permission_error_info = None
 
@@ -780,103 +904,10 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
                             with open(desc_file, "rb") as df:
                                 desc_data = df.read()
                             mapping = _parse_hid_report_descriptor(desc_data)
-                            reports_cache: dict[int, bytearray | None] = {}
-
-                            def _get_feature_report(rid: int) -> bytearray | None:
-                                if rid not in reports_cache:  # noqa: B023
-                                    buf = bytearray(64)
-                                    buf[0] = rid
-                                    try:
-                                        # _IOC(3, ord('H'), 0x07, 64) = 0xc0404807
-                                        fcntl.ioctl(fd, 0xC0404807, buf)  # noqa: B023
-                                        reports_cache[rid] = buf  # noqa: B023
-                                    except Exception:
-                                        reports_cache[rid] = None  # noqa: B023
-                                return reports_cache[rid]  # noqa: B023
-
-                            # 1. RemainingCapacity (0x85, 0x66)
-                            if (0x85, 0x66) in mapping:
-                                rid, _, _ = mapping[(0x85, 0x66)]
-                                rep = _get_feature_report(rid)
-                                if rep and len(rep) > 1:
-                                    out["BCHARGE"] = str(rep[1])
-
-                            # 2. RunTimeToEmpty (0x85, 0x68)
-                            if (0x85, 0x68) in mapping:
-                                rid, _, _ = mapping[(0x85, 0x68)]
-                                rep = _get_feature_report(rid)
-                                if rep and len(rep) >= 4:
-                                    val_sec = int.from_bytes(rep[2:4], "little")
-                                    if val_sec > 0:
-                                        out["TIMELEFT"] = str(round(val_sec / 60.0, 1))
-
-                            # 3. Voltage: Input or Config (0x84, 0x57), (0x84, 0x30), (0x84, 0x04)
-                            for v_key in [(0x84, 0x57), (0x84, 0x30), (0x84, 0x04)]:
-                                if v_key in mapping:
-                                    rid, _, _ = mapping[v_key]
-                                    rep = _get_feature_report(rid)
-                                    if rep and len(rep) >= 3:
-                                        val = int.from_bytes(rep[1:3], "little")
-                                        if 80 <= val <= 260:
-                                            out["LINEV"] = str(val)
-                                            break
-                                        elif 800 <= val <= 2600:
-                                            out["LINEV"] = str(round(val / 10.0, 1))
-                                            break
-
-                            # 4. PercentLoad (0x84, 0x24)
-                            if (0x84, 0x24) in mapping:
-                                rid, _, _ = mapping[(0x84, 0x24)]
-                                rep = _get_feature_report(rid)
-                                if rep and len(rep) > 1 and rep[1] <= 100:
-                                    out["LOADPCT"] = str(rep[1])
-
-                            # 5. Output / Battery Current (0x84, 0x58), (0x85, 0x58), (0x85, 0x45)
-                            for c_key in [(0x84, 0x58), (0x85, 0x58), (0x85, 0x45)]:
-                                if c_key in mapping:
-                                    rid, _, _ = mapping[c_key]
-                                    rep = _get_feature_report(rid)
-                                    if rep and len(rep) >= 3:
-                                        val_raw = int.from_bytes(rep[1:3], "little")
-                                        if val_raw > 0:
-                                            out["OUTCURR"] = (
-                                                str(round(val_raw / 1000.0, 2)) if val_raw > 50 else str(val_raw)
-                                            )
-                                            break
-
-                            # 6. Status: ACPresent (0x84, 0xd0) or Discharging (0x84, 0xd2)
-                            status_parts = []
-                            is_ac = True
-                            if (0x84, 0xD0) in mapping:
-                                rid, _, _ = mapping[(0x84, 0xD0)]
-                                rep = _get_feature_report(rid)
-                                if rep and len(rep) > 1:
-                                    is_ac = bool(rep[1])
-
-                            if (0x84, 0xD2) in mapping:
-                                rid, _, _ = mapping[(0x84, 0xD2)]
-                                rep = _get_feature_report(rid)
-                                if rep and len(rep) > 1 and rep[1]:
-                                    status_parts.append("OB")
-                                    is_ac = False
-
-                            if (0x84, 0xD1) in mapping:
-                                rid, _, _ = mapping[(0x84, 0xD1)]
-                                rep = _get_feature_report(rid)
-                                if rep and len(rep) > 1 and rep[1]:
-                                    status_parts.append("CHRG")
-
-                            if is_ac and "OB" not in status_parts:
-                                status_parts.insert(0, "ONLINE")
-                            elif not is_ac and "OB" not in status_parts:
-                                status_parts.insert(0, "ONBATT")
-
-                            out["STATUS"] = " ".join(status_parts) if status_parts else "ONLINE"
-                            out["MODEL"] = hid_name or KNOWN_UPS_VENDORS.get(vid, "USB HID UPS")
-                            out["MFR"] = KNOWN_UPS_VENDORS.get(vid, "Generic USB")
-                            out["PROTOCOL"] = "direct_usb_hid"
-                            out["VENDOR_ID"] = vid
-                            out["PRODUCT_ID"] = pid
+                            out.update(_read_hid_reports(fd, mapping, vid, pid, hid_name))
+                            _HID_UPS_CACHE.update(
+                                node_dir=node_dir, char=c_path, vid=vid, pid=pid, name=hid_name, mapping=mapping
+                            )
                             return out
                         finally:
                             os.close(fd)
