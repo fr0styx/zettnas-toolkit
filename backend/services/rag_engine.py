@@ -527,6 +527,10 @@ SYSTEM_SHARE_EXCLUSIONS: set[str] = {
 }
 
 
+# Rescan a disk's watched folders on spin-up at most this often (queued folders don't wait)
+SPINUP_RESCAN_COOLDOWN_SECS = 6 * 3600
+
+
 class RagSearchEngine:
     """
     Spindown-Safe Multi-Modal Local RAG & Visual Search Engine backed by SQLite WAL.
@@ -546,6 +550,7 @@ class RagSearchEngine:
         self._sync_thread: threading.Thread | None = None
         self._watcher_thread: threading.Thread | None = None
         self._known_sleeping_devs: set[str] = set(rag_standby.get_sleeping_disks_list())
+        self._last_spinup_rescan: dict[str, float] = {}  # disk -> when its watched folders were last rescanned
         self._last_auto_learn_event: dict[str, Any] | None = None
         self._sync_progress: dict[str, Any] = {
             "state": "idle",
@@ -1616,16 +1621,24 @@ class RagSearchEngine:
                 if dev:
                     ready_devs.add(dev)
 
-        # 2. Check watched_paths whose backing disk just transitioned from standby -> running
+        # 2. Watched folders whose disk just spun up. A full rescan keeps the disk busy, so it runs
+        # at most every SPINUP_RESCAN_COOLDOWN_SECS per disk; queued folders (step 1) don't wait (PERF-7).
+        now_ts = time.time()
+        rescanned: set[str] = set()
         for wp in cfg.get("watched_paths") or []:
             norm_wp = os.path.normpath(wp)
             if any(norm_wp == ex or norm_wp.startswith(ex.rstrip("/") + "/") for ex in excluded_set):
                 continue
             dev = rag_standby.resolve_path_backing_dev(norm_wp)
             if dev and dev in woken_devs and not rag_standby.is_backing_disk_in_standby(dev):
+                if now_ts - self._last_spinup_rescan.get(dev, 0.0) < SPINUP_RESCAN_COOLDOWN_SECS:
+                    continue
                 if norm_wp not in ready_paths:
                     ready_paths.append(norm_wp)
                 ready_devs.add(dev)
+                rescanned.add(dev)
+        for dev in rescanned:
+            self._last_spinup_rescan[dev] = now_ts
 
         if not ready_paths:
             return {

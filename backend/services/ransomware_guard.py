@@ -267,10 +267,26 @@ class RansomwareGuard:
             self._save()
         return len(placed)
 
+    @staticmethod
+    def _on_sleeping_disk(path: str) -> bool:
+        """True only when the guard file's disk is known and asleep. Checking it then could wake
+        it, and a sleeping disk is not being written to. Unknown disks are still checked (PERF-7)."""
+        try:
+            from backend.services import rag_standby
+
+            dev = rag_standby.resolve_path_backing_dev(path)
+            if not dev or dev == rag_standby.UNKNOWN_BACKING_DEV:
+                return False
+            return rag_standby.is_backing_disk_in_standby(dev)
+        except Exception:
+            return False
+
     def check_canaries(self) -> bool:
         if not self.state.get("enabled", True) or not self.state.get("canaries") or self.frozen:
             return False
         for p, seen in list((self.state.get("canary_files") or {}).items()):
+            if self._on_sleeping_disk(p):
+                continue
             try:
                 st = os.stat(p)
                 changed = st.st_size != seen["size"] or st.st_mtime_ns != seen["mtime"]
