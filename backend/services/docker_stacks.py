@@ -235,6 +235,31 @@ def topological_sort_stack_containers(
     return ordered_containers
 
 
+_COMPOSE_NAMES = {"docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml"}
+_EXTRA_STACK_ROOTS = ("/boot/config/plugins/compose.manager/projects",)  # Unraid Compose Manager
+
+
+def stack_path_ok(path: str, kind: str) -> bool:
+    """A stack file path taken from container labels is used only if it is a compose file
+    ("compose"), an env file ("env") or a folder ("dir") inside the storage folders, and not
+    in ZettNAS's own data folder."""
+    from backend import config
+
+    if not path or not os.path.isabs(path) or "," in path:
+        return False
+    real = os.path.realpath(path)
+    name = os.path.basename(real)
+    if kind == "compose" and not (name in _COMPOSE_NAMES or name.endswith((".yml", ".yaml"))):
+        return False
+    if kind == "env" and not (name == ".env" or name.endswith(".env")):
+        return False
+    data = os.path.realpath(getattr(config, "DATA_DIR", "/app/data"))
+    if real == data or real.startswith(data + "/"):
+        return False
+    roots = [os.path.realpath(r) for r in [*(getattr(config, "ALLOWED_BROWSE_ROOTS", []) or []), *_EXTRA_STACK_ROOTS]]
+    return any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots if r)
+
+
 def list_all_stacks() -> list[dict[str, Any]]:
     """
     Discovers and groups all containers by their Compose / Orchestrator stack.
@@ -350,6 +375,13 @@ def get_stack_details(stack_name: str) -> dict[str, Any]:
     env_content = None
     has_real_file = False
     resolved_location_type = "synthesized"  # "host_fs", "dockhand", "synthesized"
+
+    if config_file and not config_file.startswith("/app/data/") and not stack_path_ok(config_file, "compose"):
+        config_file = ""
+    if working_dir and not stack_path_ok(working_dir, "dir"):
+        working_dir = ""
+    if env_file and not stack_path_ok(env_file, "env"):
+        env_file = ""
 
     # 1. Attempt reading from host filesystem (e.g. /mnt/user/... or local path)
     if config_file and os.path.isfile(config_file):
@@ -515,6 +547,8 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: str | Non
     working_dir = details.get("working_dir")
 
     # A. Host filesystem
+    if location_type == "host_fs" and config_file and not stack_path_ok(config_file, "compose"):
+        return {"success": False, "error": "The stack's compose file is outside the storage folders."}
     if location_type == "host_fs" and config_file:
         try:
             # Backup

@@ -129,7 +129,8 @@ def test_save_stack_config_validation():
     assert "cannot be empty" in res_empty["error"]
 
 
-def test_save_stack_config_host(tmp_path):
+def test_save_stack_config_host(tmp_path, monkeypatch):
+    monkeypatch.setattr("backend.config.ALLOWED_BROWSE_ROOTS", [str(tmp_path)])  # stack files live in storage
     compose_file = tmp_path / "docker-compose.yml"
     compose_file.write_text("version: '3.8'\nservices:\n  web:\n    image: nginx\n")
 
