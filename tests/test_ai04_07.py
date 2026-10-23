@@ -27,7 +27,7 @@ def test_share_only_user_gets_no_container_or_storage_tools():
 
 
 def test_admin_gets_everything_and_web_only_when_allowed():
-    admin = _user(role="admin")
+    admin = _user("*", role="admin")  # an admin session carries "*"
     assert _names(agent.tools_for_principal(admin, True)) == _names(agent.OPENAI_TOOL_DEFINITIONS)
     assert "browse_internet" not in _names(agent.tools_for_principal(admin, False))
 

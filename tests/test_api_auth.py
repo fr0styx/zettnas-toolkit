@@ -108,9 +108,16 @@ def test_password_change_invalidates_sessions(client, auth_headers):
 
 
 def test_legacy_hash_upgraded_on_login(client):
-    config.STORED_PASSWORD_HASH = hashlib.sha256(b"legacy-pass").hexdigest()
+    from backend.users_db import get_user_by_id, users_db_session
+
+    admin_id = "admin-00000000-0000-0000-0000-000000000001"
+    legacy = hashlib.sha256(b"legacy-pass").hexdigest()
+    with users_db_session(None) as conn:
+        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (legacy, admin_id))
+    config.STORED_PASSWORD_HASH = legacy
     assert client.post("/api/auth/login", json={"password": "legacy-pass"}).status_code == 200
-    assert config.STORED_PASSWORD_HASH.startswith("$argon2id$") or config.STORED_PASSWORD_HASH.startswith("scrypt$")
+    for upgraded in (config.STORED_PASSWORD_HASH, get_user_by_id(admin_id)["password_hash"]):
+        assert upgraded.startswith("$argon2id$") or upgraded.startswith("scrypt$")
 
 
 def test_security_reports_min_length(client, auth_headers):

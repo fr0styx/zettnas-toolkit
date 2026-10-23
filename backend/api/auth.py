@@ -174,27 +174,16 @@ def _persist_security() -> None:
     )
 
 
-def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
-    sess = getattr(request.state, "session", None)
-    if sess and sess.get("user_id"):
-        if sess.get("is_system"):
-            return {
-                "id": sess["user_id"],
-                "username": sess["username"],
-                "display_name": "System Console",
-                "role_id": "superadmin",
-                "role_name": "SuperAdmin",
-                "scopes": ["*"],
-                "email": config.ZETTNAS_EMAIL,
-                "status": "active",
-            }
-        return get_user_by_id(sess["user_id"])
-    token = extract_token(request)
-    if not token or not validate_session(token):
-        return None
-    sess = get_current_session(token)
-    if not sess:
-        return None
+ADMIN_USER_ID = "admin-00000000-0000-0000-0000-000000000001"
+_NON_SESSION_FLAGS = ("is_api_token", "is_stream_ticket", "is_console_ticket", "is_system")
+
+
+def _credential_user(sess: dict[str, Any]) -> dict[str, Any] | None:
+    """The signed-in account as the presenting credential sees it.
+
+    Scopes come from the credential, not the account's role: an API token or ticket
+    may carry fewer. Disabled or deleted accounts resolve to nothing.
+    """
     if sess.get("is_system"):
         return {
             "id": sess["user_id"],
@@ -205,8 +194,65 @@ def _get_authenticated_user(request: Request) -> Optional[Dict[str, Any]]:
             "scopes": ["*"],
             "email": config.ZETTNAS_EMAIL,
             "status": "active",
+            "is_system": True,
         }
-    return get_user_by_id(sess["user_id"])
+    user = get_user_by_id(sess["user_id"])
+    if not user or user.get("status") != "active":
+        return None
+    user = dict(user)
+    user["scopes"] = list(sess.get("scopes") or [])
+    for flag in _NON_SESSION_FLAGS:
+        user[flag] = bool(sess.get(flag))
+    return user
+
+
+def _get_authenticated_user(request: Request) -> dict[str, Any] | None:
+    sess = getattr(request.state, "session", None)
+    if not (sess and sess.get("user_id")):
+        token = extract_token(request)
+        if not token or not validate_session(token):
+            return None
+        sess = get_current_session(token)
+        if not sess:
+            return None
+    return _credential_user(sess)
+
+
+def _is_person_session(user: dict[str, Any] | None) -> bool:
+    """A person's sign-in session, not an API token, a ticket or the internal token."""
+    return bool(user) and not any(user.get(f) for f in _NON_SESSION_FLAGS)
+
+
+def _is_builtin_admin(user: dict[str, Any] | None) -> bool:
+    if not user:
+        return False
+    name = (getattr(config, "ZETTNAS_USERNAME", "admin") or "admin").lower()
+    return user.get("id") == ADMIN_USER_ID or (user.get("username") or "").lower() == name
+
+
+async def _verify_current_password(user: dict[str, Any], password: str) -> bool:
+    """Checks the account's own password."""
+    if not password:
+        return False
+    stored = user.get("password_hash") or ""
+    return bool(stored) and await run_in_threadpool(verify_password, password, stored)
+
+
+def align_admin_password_mirror() -> None:
+    """Makes security.json's admin hash follow the built-in admin account's own hash.
+
+    Older versions also copied other superadmins' passwords into it. Sign-in now
+    checks only the account's own hash, and the copy is used for the default-password
+    warning, so it is reset to the account's hash at startup.
+    """
+    admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME or "admin")
+    if not admin or admin.get("idp_type") == "ldap":
+        return
+    own = admin.get("password_hash") or ""
+    if own and own != config.STORED_PASSWORD_HASH:
+        config.STORED_PASSWORD_HASH = own
+        _persist_security()
+        logger.info("[Auth] Admin password copy in security.json now matches the admin account.")
 
 
 def create_mfa_token(user_id: str, username: str, remember_me: bool) -> str:
@@ -362,7 +408,11 @@ async def login(req: LoginRequest, request: Request):
         # Same work as a real check, so the response time doesn't tell which names exist.
         await run_in_threadpool(verify_password, req.password, _dummy_hash())
 
-    if not ok and target_username in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin")):
+    if (
+        not ok
+        and not (user and user.get("password_hash"))
+        and target_username in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin"))
+    ):
         if await run_in_threadpool(verify_password, req.password, config.STORED_PASSWORD_HASH):
             ok = True
             if not user:
@@ -408,17 +458,19 @@ async def login(req: LoginRequest, request: Request):
     _clear_failures(ip)
     _clear_failures(f"user:{target_username}@{ip}")
 
-    # 4. Transparent zero-downtime hash upgrade to modern Argon2id
-    if (user and needs_rehash(user.get("password_hash", ""))) or needs_rehash(config.STORED_PASSWORD_HASH):
+    # 4. Transparent zero-downtime hash upgrade to modern Argon2id (never for directory accounts:
+    # their password must not be stored here)
+    admin_login = _is_builtin_admin(user)
+    if user.get("idp_type") != "ldap" and (
+        needs_rehash(user.get("password_hash", "")) or (admin_login and needs_rehash(config.STORED_PASSWORD_HASH))
+    ):
         try:
-            new_hash = await run_in_threadpool(hash_password, req.password)
-            if user:
-                update_user_password(user["id"], req.password)
-            if (user and user.get("role_id") == "superadmin") or target_username in (
-                "admin",
-                getattr(config, "ZETTNAS_USERNAME", "admin"),
-            ):
-                config.STORED_PASSWORD_HASH = new_hash
+            update_user_password(user["id"], req.password)
+            if admin_login:
+                refreshed = get_user_by_id(user["id"]) or {}
+                config.STORED_PASSWORD_HASH = refreshed.get("password_hash") or await run_in_threadpool(
+                    hash_password, req.password
+                )
                 _persist_security()
             logger.info(f"Transparently upgraded password hash for '{target_username}' to modern Argon2id.")
         except Exception as e:
@@ -515,11 +567,16 @@ async def mfa_challenge(req: MfaChallengeRequest, request: Request):
     return _build_session_response(user, token_data.get("rm", False), request, method=method)
 
 
+_MFA_SESSION_ONLY = "Two-factor settings can only be changed while signed in to ZettNAS."
+
+
 @router.post("/auth/mfa/setup")
 def setup_mfa(request: Request):
     user = _get_authenticated_user(request)
     if not user:
         return error_response(401, "Not authenticated.")
+    if not _is_person_session(user):
+        return error_response(403, _MFA_SESSION_ONLY, error="session_required")
 
     secret = generate_totp_secret()
     recovery_codes = generate_recovery_codes()
@@ -538,10 +595,38 @@ def setup_mfa(request: Request):
 
 
 @router.post("/auth/mfa/enable")
-def enable_mfa(data: MfaEnableRequest, request: Request):
+async def enable_mfa(data: MfaEnableRequest, request: Request):
     user = _get_authenticated_user(request)
     if not user:
         return error_response(401, "Not authenticated.")
+    if not _is_person_session(user):
+        return error_response(403, _MFA_SESSION_ONLY, error="session_required")
+
+    # Re-authenticate: a stolen session alone must not be able to enrol or replace the second factor.
+    lock_key = f"mfa:{user['id']}"
+    wait = _lockout_remaining(lock_key)
+    if wait > 0:
+        return _rate_limited(wait)
+    if user.get("idp_type") == "oidc" and not user.get("password_hash"):
+        return error_response(
+            403, "This account signs in through your identity provider; set up two-factor there.", error="idp_account"
+        )
+    if not await _verify_current_password(user, data.current_password):
+        _register_failure(lock_key, is_ip=False)
+        return error_response(403, "Enter your current password to set up two-factor.", error="invalid_credentials")
+    existing = get_user_mfa(user["id"])
+    if existing and existing.get("mfa_enabled"):
+        replaced_ok = bool(
+            data.current_code
+            and existing.get("mfa_secret")
+            and verify_totp_code(existing["mfa_secret"], data.current_code, user_id=user["id"])
+        )
+        if not replaced_ok:
+            _register_failure(lock_key, is_ip=False)
+            return error_response(
+                403, "Enter a code from your current authenticator app to replace it.", error="invalid_credentials"
+            )
+    _clear_failures(lock_key)
 
     if not verify_totp_code(data.secret, data.code):
         return error_response(400, "Invalid verification code. Please check your authenticator app and try again.")
@@ -572,6 +657,8 @@ def disable_mfa(data: MfaDisableRequest, request: Request):
     user = _get_authenticated_user(request)
     if not user:
         return error_response(401, "Not authenticated.")
+    if not _is_person_session(user):
+        return error_response(403, _MFA_SESSION_ONLY, error="session_required")
 
     user_mfa = get_user_mfa(user["id"])
     if not user_mfa or not user_mfa.get("mfa_enabled"):
@@ -580,8 +667,6 @@ def disable_mfa(data: MfaDisableRequest, request: Request):
     valid = False
     if data.password:
         valid = verify_password(data.password, user.get("password_hash", ""))
-        if not valid and user["username"] in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin")):
-            valid = verify_password(data.password, config.STORED_PASSWORD_HASH)
     elif data.code and user_mfa.get("mfa_secret"):
         valid = verify_totp_code(user_mfa["mfa_secret"], data.code, user_id=user["id"])
 
@@ -682,6 +767,8 @@ def request_stream_ticket(request: Request):
     user = _get_authenticated_user(request)
     if not user:
         return error_response(401, "Not authenticated.")
+    if user.get("is_stream_ticket") or user.get("is_console_ticket"):
+        return error_response(403, "A ticket cannot be used to get another ticket.", error="forbidden")
 
     ticket = create_stream_ticket(
         user_id=user["id"],
@@ -845,7 +932,7 @@ def get_user_detail(user_id: str, request: Request):
     current = _get_authenticated_user(request)
     if not current:
         return error_response(401, "Authentication required.", error="unauthorized")
-    if current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
+    if current["id"] != user_id and not has_scope(current.get("scopes") or [], "users:read"):
         return error_response(403, "Permission denied.", error="forbidden")
     target = get_user_by_id(user_id)
     if not target:
@@ -858,14 +945,15 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
     current = _get_authenticated_user(request)
     if not current:
         return error_response(401, "Authentication required.", error="unauthorized")
-    if current["id"] != user_id and current.get("role_id") not in ("superadmin", "admin"):
+    is_user_admin = has_scope(current.get("scopes") or [], "users:write")
+    if current["id"] != user_id and not is_user_admin:
         return error_response(403, "Permission denied.", error="forbidden")
 
     # Non-admins cannot alter their own role, status, or storage quota
     role_to_set = data.role_id
     status_to_set = data.status
     quota_to_set = data.storage_quota_bytes
-    if current.get("role_id") not in ("superadmin", "admin"):
+    if not is_user_admin:
         role_to_set = None
         status_to_set = None
         quota_to_set = None
@@ -949,8 +1037,8 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
         raise HTTPException(status_code=404, detail="User not found.")
 
     target = get_user_by_id(user_id)
-    if target and target.get("role_id") == "superadmin":
-        config.STORED_PASSWORD_HASH = hash_password(data.new_password)
+    if target and _is_builtin_admin(target) and target.get("password_hash"):
+        config.STORED_PASSWORD_HASH = target["password_hash"]
         _persist_security()
 
     log_security_event(
@@ -1175,7 +1263,11 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
     if remaining > 0:
         return _rate_limited(remaining)
 
-    current_ok = await run_in_threadpool(verify_password, data.current_password or "", config.STORED_PASSWORD_HASH)
+    caller = _get_authenticated_user(request)
+    if caller and caller.get("is_system"):
+        current_ok = await run_in_threadpool(verify_password, data.current_password or "", config.STORED_PASSWORD_HASH)
+    else:
+        current_ok = bool(caller) and await _verify_current_password(caller, data.current_password or "")
     if not current_ok:
         _register_failure(ip)
         return error_response(403, "Invalid current password.", error="invalid_credentials")
@@ -1193,9 +1285,12 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
         invalidate_all_sessions()
 
         # Also update in users.db for the admin user
-        admin = get_user_by_username(config.ZETTNAS_USERNAME) or get_user_by_username("admin")
+        admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME)
         if admin:
             update_user_password(admin["id"], new_pwd)
+            config.STORED_PASSWORD_HASH = (get_user_by_id(admin["id"]) or {}).get(
+                "password_hash"
+            ) or config.STORED_PASSWORD_HASH
 
     if data.username:
         config.ZETTNAS_USERNAME = data.username.strip()[:64]

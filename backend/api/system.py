@@ -523,7 +523,7 @@ def list_tokens(principal: AuthenticatedPrincipal = Depends(get_current_principa
 
 @router.post("/tokens", dependencies=[Depends(require_scope("users:write", "system:config"))])
 def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    if principal and principal.role_id != "superadmin" and not principal.has_scope("*"):
+    if principal and not principal.has_scope("*"):
         caller_scopes = set(principal.scopes or [])
         requested_scopes = set(req.scopes or [])
         if "*" in requested_scopes and "*" not in caller_scopes:
@@ -575,7 +575,7 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
 @router.delete("/tokens/{token_id}", dependencies=[Depends(require_scope("users:write", "system:config"))])
 def delete_token(token_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     user_id = None
-    if principal and principal.role_id != "superadmin" and not principal.has_scope("*"):
+    if principal and not principal.has_scope("*"):
         user_id = principal.user_id
 
     revoked = False

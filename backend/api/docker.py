@@ -115,11 +115,7 @@ async def get_docker_container_compose(container_id: str, request: Request, unma
             sess = get_current_session(tok) if tok else None
         if sess:
             principal = AuthenticatedPrincipal(sess)
-            allow_unmasked = (
-                principal.role_id in ("superadmin", "storage_admin")
-                or principal.has_scope("containers:manage")
-                or principal.has_scope("*")
-            )
+            allow_unmasked = principal.has_scope("containers:manage")
 
     data = await asyncio.to_thread(get_container_compose_data, container_id, allow_unmasked=allow_unmasked)
     if "error" in data:
@@ -147,11 +143,7 @@ async def get_docker_container_details(container_id: str, request: Request, unma
             sess = get_current_session(tok) if tok else None
         if sess:
             principal = AuthenticatedPrincipal(sess)
-            allow_unmasked = (
-                principal.role_id in ("superadmin", "storage_admin")
-                or principal.has_scope("containers:manage")
-                or principal.has_scope("*")
-            )
+            allow_unmasked = principal.has_scope("containers:manage")
 
     data = await asyncio.to_thread(get_container_full_details, container_id, allow_unmasked=allow_unmasked)
     if "error" in data:
@@ -590,11 +582,7 @@ async def get_docker_stack_details(
     if not details.get("containers") and not details.get("has_real_file"):
         raise HTTPException(status_code=404, detail=f"Stack '{stack_name}' not found")
 
-    can_unmask = principal and (
-        principal.role_id in ("superadmin", "admin")
-        or principal.has_scope("containers:manage")
-        or principal.has_scope("*")
-    )
+    can_unmask = principal and principal.has_scope("containers:manage")
     if not (unmask and can_unmask):
         if details.get("env_content"):
             masked_lines = []

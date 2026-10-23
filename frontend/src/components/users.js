@@ -691,6 +691,7 @@ async function start2FASetup() {
       form.onsubmit = async (e) => {
         e.preventDefault();
         const code = document.getElementById('mfa-verify-code').value.trim();
+        const currentPassword = document.getElementById('mfa-current-password')?.value || '';
         const verifyBtn = form.querySelector('button[type="submit"]');
         verifyBtn.disabled = true;
         verifyBtn.textContent = 'VERIFYING...';
@@ -703,6 +704,7 @@ async function start2FASetup() {
             body: JSON.stringify({
               secret: data.secret || data.totp_secret,
               code,
+              current_password: currentPassword,
               recovery_codes: data.recovery_codes || []
             })
           });

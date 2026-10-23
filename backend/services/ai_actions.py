@@ -67,6 +67,15 @@ def propose_action(tool: str, args: Optional[Dict[str, Any]], principal: Any) ->
 def confirm_action(action_id: str, principal: Any) -> Dict[str, Any]:
     """Runs a proposed action once, for the user it was proposed to, within the TTL."""
     owner = _principal_id(principal)
+    raw = getattr(principal, "raw_data", None) or {}
+    if (
+        getattr(principal, "is_api_token", False)
+        or getattr(principal, "is_system", False)
+        or raw.get("is_stream_ticket")
+        or raw.get("is_console_ticket")
+    ):
+        # A person confirms in ZettNAS; the token or ticket that proposed it cannot.
+        return {"status": "not_found", "error": "Confirm this action in ZettNAS while signed in."}
     with _lock:
         entry = _pending.get(action_id)
         if not entry or not owner or entry["owner"] != owner:

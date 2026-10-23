@@ -19,6 +19,12 @@ from backend.services import login_lockout
 from backend.services.webdav_engine import WebdavEngine
 from backend.users_db import create_user, init_users_db
 
+
+@pytest.fixture(autouse=True)
+def _webdav_enabled(webdav_on):
+    """These tests use the portal, which answers only while WebDAV is on."""
+
+
 PROXY = os.path.join(os.path.dirname(os.path.dirname(__file__)), "backend", "services", "rclone_auth_proxy.py")
 
 

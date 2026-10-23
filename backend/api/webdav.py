@@ -38,12 +38,21 @@ def _request_is_https(request) -> bool:
     return request_is_https(request)
 
 
+def _cookie_key(username: str) -> bytes:
+    """Signing key for one user's portal cookie. It includes the account's password hash,
+    so changing the password ends existing portal cookies."""
+    from backend.users_db import get_user_by_username
+
+    secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
+    pw_hash = (get_user_by_username(username) or {}).get("password_hash") or ""
+    return f"{secret}:{pw_hash}".encode()
+
+
 def _sign_webdav_cookie(username: str, role_label: str, issued_at: Optional[int] = None) -> str:
     """Creates an HMAC-SHA256 signed, expiring session cookie: user:role:issued_at:sig."""
-    secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
     iat = int(issued_at if issued_at is not None else time.time())
     payload = f"{username}:{role_label}:{iat}"
-    sig = hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    sig = hmac.new(_cookie_key(username), payload.encode("utf-8"), hashlib.sha256).hexdigest()
     return f"{payload}:{sig}"
 
 
@@ -60,9 +69,8 @@ def _verify_webdav_cookie(cookie_val: str) -> Optional[Tuple[str, str]]:
         age = time.time() - int(iat_raw)
         if age < -60 or age > WEBDAV_COOKIE_TTL:
             return None
-        secret = getattr(config, "SECRET_KEY", "zettnas-webdav-fallback-secret")
         payload = f"{username}:{role_label}:{iat_raw}"
-        expected_sig = hmac.new(secret.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+        expected_sig = hmac.new(_cookie_key(username), payload.encode("utf-8"), hashlib.sha256).hexdigest()
         if hmac.compare_digest(sig, expected_sig):
             return username, role_label
     except Exception as e:
@@ -125,6 +133,8 @@ async def restart_webdav():
 async def webdav_portal_login(request: Request):
     if request.method == "GET":
         return RedirectResponse(url="/webdav/", status_code=303)
+    if not get_webdav_engine().load_config().get("enabled", False):
+        raise HTTPException(status_code=404, detail="Not Found")
 
     try:
         content_type = request.headers.get("content-type", "")
@@ -162,6 +172,14 @@ async def webdav_portal_login(request: Request):
             if user.get("must_change_password"):
                 return HTMLResponse(
                     render_webdav_login(error_msg="Change your ZettNAS password before using WebDAV."),
+                    status_code=403,
+                )
+            if user.get("mfa_enabled"):
+                # The portal has no second-factor step; a password alone must not open the files.
+                return HTMLResponse(
+                    render_webdav_login(
+                        error_msg="Accounts with two-factor sign-in open WebDAV files from inside ZettNAS."
+                    ),
                     status_code=403,
                 )
             authenticated = True
@@ -266,7 +284,7 @@ def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[D
             from backend.users_db import get_user_by_username
 
             user = get_user_by_username(username)
-            if user and user.get("status") == "active":
+            if user and user.get("status") == "active" and not user.get("mfa_enabled"):
                 is_admin = user.get("role_id") in ("superadmin", "storage_admin")
                 return {
                     "username": user["username"],
@@ -285,10 +303,15 @@ def _get_webdav_portal_user(request: Request, cfg: Dict[str, Any]) -> Optional[D
             tok = extract_token(request)
             if tok:
                 sess = get_current_session(tok)
-        if sess:
+        # Only a person's sign-in session; API tokens and tickets do not open the portal.
+        if sess and not any(
+            sess.get(f) for f in ("is_api_token", "is_stream_ticket", "is_console_ticket", "is_system")
+        ):
+            from backend.auth import has_scope
+
             u_name = sess.get("username", "admin")
             role_id = sess.get("role_id", "share_user")
-            is_admin = role_id in ("superadmin", "storage_admin")
+            is_admin = has_scope(list(sess.get("scopes") or []), "storage:admin")
             from backend.users_db import get_user_by_username
 
             u_rec = get_user_by_username(u_name)
@@ -396,6 +419,8 @@ async def webdav_proxy_subpath(request: Request, path: str):
 
     engine = get_webdav_engine()
     cfg = engine.load_config()
+    if not cfg.get("enabled", False):
+        raise HTTPException(status_code=404, detail="Not Found")
 
     # Native WebDAV clients (Finder, Cyberduck, rclone, curl, etc.) or Basic Auth -> proxy to daemon
     if _is_webdav_client(request):

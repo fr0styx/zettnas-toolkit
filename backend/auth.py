@@ -89,17 +89,8 @@ def get_current_session(token: str) -> Optional[Dict[str, Any]]:
             return tok
 
     if token.startswith("zct_"):
-        from backend.api.vms import _CONSOLE_TICKETS
-
-        entry = _CONSOLE_TICKETS.get(token)
-        if entry and entry.get("expires_at", 0) > time.time():
-            return {
-                "user_id": entry.get("user_id", "admin-00000000-0000-0000-0000-000000000001"),
-                "username": entry.get("username", "admin"),
-                "role_id": "vm_console",
-                "scopes": ["vms:console", "vms:read"],
-                "is_console_ticket": True,
-            }
+        # VM console tickets open that VM's console WebSocket only (vms._validate_console_ticket).
+        return None
 
     if token.startswith("zat_"):
         tok = validate_scoped_api_token(token)
@@ -131,12 +122,7 @@ def validate_session(token: str) -> bool:
             return token in _STREAM_TICKETS
 
     if token.startswith("zct_"):
-        from backend.api.vms import _CONSOLE_TICKETS
-
-        entry = _CONSOLE_TICKETS.get(token)
-        if entry and entry.get("expires_at", 0) > time.time():
-            return True
-        return False
+        return False  # console WebSocket only
 
     # 1. Scoped API token (users DB only)
     if token.startswith("zat_"):
