@@ -60,6 +60,13 @@ async def stats_stream(request: Request):
     if not initial:
         initial = await asyncio.to_thread(collect)
     q = await broadcaster.subscribe(initial)
+    from backend.auth import extract_token, is_internal_token
+    from backend.hardware import docker_stats
+
+    # The front LCD is always connected; only people looking count as viewers (PERF-6)
+    is_viewer = not is_internal_token(extract_token(request))
+    if is_viewer:
+        docker_stats.viewer_joined()
 
     async def event_generator():
         try:
@@ -75,6 +82,8 @@ async def stats_stream(request: Request):
                 except TimeoutError:
                     yield ": keepalive\n\n"
         finally:
+            if is_viewer:
+                docker_stats.viewer_left()
             await broadcaster.unsubscribe(q)
 
     return StreamingResponse(

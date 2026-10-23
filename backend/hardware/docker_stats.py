@@ -21,6 +21,64 @@ _CACHED_CONTAINERS: list[dict[str, Any]] = []
 _LAST_DOCKER_POLL = 0.0
 _DOCKER_CACHE_TTL = 3.0
 _CONTAINER_METRICS: dict[str, dict[str, Any]] = {}
+
+# Container stats refresh often only while someone is looking (PERF-6): a browser on the live
+# stats stream, or a request for the container list in the last DEMAND_WINDOW_SECS.
+ACTIVE_POLL_SECS = 6.0
+IDLE_POLL_SECS = 60.0
+DEMAND_WINDOW_SECS = 60.0
+_VIEWERS = 0
+_LAST_DEMAND = 0.0
+_DEMAND_LOCK = threading.Lock()
+_DEMAND_WAKE = threading.Event()
+# container id -> (total CPU usage, system CPU usage) from the previous one-shot sample
+_PREV_CPU: dict[str, tuple[int, int]] = {}
+
+
+def note_container_demand() -> None:
+    """Someone wants fresh container stats: poll at the active rate, starting now."""
+    global _LAST_DEMAND
+    _LAST_DEMAND = time.time()
+    _DEMAND_WAKE.set()
+
+
+def viewer_joined() -> None:
+    global _VIEWERS
+    with _DEMAND_LOCK:
+        _VIEWERS += 1
+    note_container_demand()
+
+
+def viewer_left() -> None:
+    global _VIEWERS
+    with _DEMAND_LOCK:
+        _VIEWERS = max(0, _VIEWERS - 1)
+
+
+def container_poll_interval(now: float | None = None) -> float:
+    now = time.time() if now is None else now
+    if _VIEWERS > 0 or now - _LAST_DEMAND < DEMAND_WINDOW_SECS:
+        return ACTIVE_POLL_SECS
+    return IDLE_POLL_SECS
+
+
+def _cpu_pct(cid: str, cpu_stats: dict, precpu_stats: dict) -> float:
+    """CPU % from Docker's own previous sample when it sends one, else from ours (one-shot stats)."""
+    total = cpu_stats.get("cpu_usage", {}).get("total_usage", 0) or 0
+    system = cpu_stats.get("system_cpu_usage", 0) or 0
+    prev = _PREV_CPU.get(cid)
+    _PREV_CPU[cid] = (total, system)
+    pre_total = precpu_stats.get("cpu_usage", {}).get("total_usage", 0) or 0
+    pre_system = precpu_stats.get("system_cpu_usage", 0) or 0
+    if not pre_system and prev:
+        pre_total, pre_system = prev
+    cpu_delta, sys_delta = total - pre_total, system - pre_system
+    online_cpus = cpu_stats.get("online_cpus") or len(cpu_stats.get("cpu_usage", {}).get("percpu_usage", [1]))
+    if sys_delta > 0 and cpu_delta > 0 and online_cpus > 0:
+        return round((cpu_delta / sys_delta) * online_cpus * 100.0, 1)
+    return 0.0
+
+
 _CONTAINER_INSPECT_CACHE: dict[str, dict[str, Any]] = {}
 _TELEMETRY_THREAD_STARTED = False
 _TELEMETRY_LOCK = threading.Lock()
@@ -288,7 +346,10 @@ def _fetch_container_telemetry(cid: str) -> dict[str, Any]:
 
     try:
         conn = UnixHTTPConnection(sock_path, timeout=2.5)
-        conn.request("GET", f"/containers/{cid}/stats?stream=false")
+        # one-shot: Docker answers at once instead of sampling twice a second apart. The first
+        # request for a container still takes Docker's two samples, so its CPU % is right at once.
+        one_shot = "&one-shot=true" if cid in _PREV_CPU else ""
+        conn.request("GET", f"/containers/{cid}/stats?stream=false{one_shot}")
         res = conn.getresponse()
         if res.status != 200:
             return {}
@@ -299,16 +360,7 @@ def _fetch_container_telemetry(cid: str) -> dict[str, Any]:
         mem_stats = stats.get("memory_stats", {})
         networks = stats.get("networks", {})
 
-        # Calculate CPU %
-        cpu_delta = cpu_stats.get("cpu_usage", {}).get("total_usage", 0) - precpu_stats.get("cpu_usage", {}).get(
-            "total_usage", 0
-        )
-        sys_delta = cpu_stats.get("system_cpu_usage", 0) - precpu_stats.get("system_cpu_usage", 0)
-        online_cpus = cpu_stats.get("online_cpus") or len(cpu_stats.get("cpu_usage", {}).get("percpu_usage", [1]))
-
-        cpu_pct = 0.0
-        if sys_delta > 0 and cpu_delta > 0 and online_cpus > 0:
-            cpu_pct = round((cpu_delta / sys_delta) * online_cpus * 100.0, 1)
+        cpu_pct = _cpu_pct(cid, cpu_stats, precpu_stats)
 
         # Calculate Memory (excluding kernel buffer/cache)
         mem_usage = mem_stats.get("usage", 0)
@@ -388,10 +440,13 @@ def _docker_telemetry_worker():
                         logger.debug(
                             "backend.hardware.docker_stats._docker_telemetry_worker: ignored error", exc_info=True
                         )
-            for _ in range(12):
-                if Z_STATE.shutting_down:
-                    break
-                time.sleep(0.5)
+            for gone in set(_PREV_CPU) - set(cids):
+                _PREV_CPU.pop(gone, None)
+            _DEMAND_WAKE.clear()
+            deadline = time.time() + container_poll_interval()
+            while not Z_STATE.shutting_down and time.time() < deadline:
+                if _DEMAND_WAKE.wait(min(0.5, max(0.0, deadline - time.time()))):
+                    break  # someone started looking: refresh now
         except Exception as e:
             logger.debug(f"[Docker] Telemetry worker error: {e}")
             for _ in range(10):

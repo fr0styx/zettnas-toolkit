@@ -42,6 +42,9 @@ def _resolve_container_action():
     dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
 )
 async def get_docker_containers():
+    from backend.hardware.docker_stats import note_container_demand
+
+    note_container_demand()
     fn = _resolve_read_docker_containers()
     return await asyncio.to_thread(fn)
 
