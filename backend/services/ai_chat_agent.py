@@ -756,6 +756,24 @@ def _grounding_label(value: Any) -> str:
     return f"{score}% grounded" if score is not None else "grounding unverified"
 
 
+_DOC_MARKER = re.compile(r"\[(?:doc(?:ument)?|source)\s*(\d+)\]", re.IGNORECASE)
+_NUM_MARKER = re.compile(r" ?\[(\d+)\](?!\()")
+
+
+def tidy_citations(text: str | None, source_count: int) -> str | None:
+    """One citation style: [Doc 2] becomes [2], and numbers with no matching source are dropped.
+    Code blocks are left alone. With no sources, numbers are kept (they may not be citations)."""
+    if not text:
+        return text
+    parts = text.split("```")
+    for i in range(0, len(parts), 2):  # even parts are outside code blocks
+        seg = _DOC_MARKER.sub(r"[\1]", parts[i])
+        if source_count > 0:
+            seg = _NUM_MARKER.sub(lambda m: m.group(0) if 1 <= int(m.group(1)) <= source_count else "", seg)
+        parts[i] = seg
+    return "```".join(parts)
+
+
 def _has_write_permission(principal: Any, required_scopes: tuple[str, ...]) -> bool:
     """No principal means no write access; scopes use the same wildcard rules as the API."""
     if principal is None:
@@ -4246,7 +4264,7 @@ def _run_agentic_chat_turn(
             f"1. You have been provided with verified document chunks from the user's private NAS storage.\n"
             f"2. Strict Rule of Truth: Base your answers ONLY on the facts directly stated in the <retrieved_documents>.\n"
             f"3. Do NOT extrapolate, speculate, or invent details not present in the sources.\n"
-            f"4. Citations: Cite your sources inline using [Doc 1], [Doc 2], etc., matching the document indices provided.\n"
+            f"4. Citations: Cite sources inline as [1], [2], using the index of each <document>. Only cite documents that were provided.\n"
             f"5. Abstention: If the retrieved documents do not contain the answer, state clearly: 'I searched your indexed NAS documents, but could not find information regarding [topic].' Suggest indexing the specific folder if missing.\n"
             f"6. Reasoning Constraint: If generating internal reasoning (<think> or <thought>), restrict reasoning to identifying exact facts within the retrieved documents. Never exceed 250 tokens in reasoning. Always output your complete answer outside thinking tags.\n"
             f"7. If documents disagree, say so and cite both."
@@ -4634,6 +4652,8 @@ def _run_agentic_chat_turn(
     folder_manifest = rag_tool_res.get("folder_manifest")
     grounding_score = rag_tool_res.get("grounding_confidence_score")
     crag_grade = rag_tool_res.get("crag_grade")
+    # [n] points at web sources when there are any (that is what the prompt asks for), else at documents.
+    llm_reply = tidy_citations(llm_reply, len(web_sources) or len(citations or []))
 
     return {
         "status": "ok",

@@ -12854,7 +12854,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     ${_buildAiActionProposalsHtml(toolsCalled)}
     ${folderBannerHtml}
     <div class="ai-chat-reply-body" style="font-size: 12px; color: #f1f5f9; line-height: 1.55;">
-      ${_formatChatMarkdown(replyMd)}
+      ${_formatChatMarkdown(replyMd, { citations, webSources })}
     </div>
     ${docCitationsHtml}
     ${photosHtml}
@@ -13350,8 +13350,29 @@ export function isAiThinkingModel(modelName) {
          m.includes('deepseek');
 }
 
-function _formatChatMarkdown(rawText) {
-  let text = String(rawText || '');
+// One citation style: [n] points at a web source when the answer has any, else at a document.
+// Known numbers become chips that open the source; numbers with no source are dropped.
+function _citationChip(n, sources) {
+  const web = (sources && sources.webSources) || [];
+  const docs = (sources && sources.citations) || [];
+  const chip = 'display:inline-flex; align-items:center; font-size:11px; font-weight:700; color:#7dd3fc; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 6px; margin:0 2px; vertical-align:baseline; line-height:1.3; cursor:pointer; text-decoration:none;';
+  if (web.length) {
+    const ws = web[n - 1];
+    if (!ws || !/^https?:\/\//i.test(String(ws.url || ''))) return '';
+    return `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(ws.title || ws.url)}" style="${chip}">[${n}]</a>`;
+  }
+  if (docs.length) {
+    const c = docs[n - 1];
+    if (!c) return '';
+    const path = c.path || c.file_path || '';
+    const name = c.name || (path ? path.split('/').pop() : 'Document');
+    return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escapeHtml(path)}" data-name="${escapeHtml(name)}" title="${escapeHtml(name)}" style="${chip}">[${n}]</button>`;
+  }
+  return `<span style="${chip} cursor:default;">[${n}]</span>`;
+}
+
+export function _formatChatMarkdown(rawText, sources = null) {
+  let text = String(rawText || '').replace(/\[(?:doc(?:ument)?|source)\s*(\d+)\]/gi, '[$1]');
   // Strip out any trailing verbose "Verified Web Sources" section
   text = text.replace(/#{2,4}\s*🌐?\s*Verified\s+Web\s+Sources[\s\S]*$/i, '').trim();
   // Strip out duplicate trailing text-based "Sources:\n[1] ... \n[2] ..." list
@@ -13436,7 +13457,7 @@ function _formatChatMarkdown(rawText) {
       const lineStr = line ? ` (L${line})` : '';
       return `<button type="button" class="ai-citation-inline-pill" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="display:inline-flex; align-items:center; gap:3px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.38); border-radius:999px; padding:1px 7px; color:#7dd3fc; font-size:11px; font-weight:700; cursor:pointer; vertical-align:baseline; margin:0 2px;"><span>📄 [${idx}] ${escN}${lineStr}</span><span style="font-size:11px;">👁️</span></button>`;
     })
-    .replace(/\[(\d+)\]/g, '<span style="display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.35); border-radius:999px; padding:0 5px; margin:0 2px; vertical-align:baseline; line-height:1.3;">[$1]</span>')
+    .replace(/\[(\d+)\](?!\()/g, (m, n) => _citationChip(Number(n), sources))
     .replace(/\n\n+/g, '<div style="height:6px;"></div>')
     .replace(/\n/g, '<br/>');
 
