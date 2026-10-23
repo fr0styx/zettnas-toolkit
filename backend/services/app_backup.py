@@ -631,6 +631,40 @@ def list_vm_backups(vm_id_or_name: Optional[str] = None) -> List[Dict[str, Any]]
     return vm_records
 
 
+def _checked_vm_restore(vm_config: dict[str, Any], record: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
+    """The VM id, folder and settings a restore may write. The archive is data, not instructions:
+    the folder is always the VM's own one under DATA_DIR/vms, and the settings get the same
+    checks as creating a VM."""
+    from fastapi import HTTPException
+
+    from backend.api import vms as vm_store
+
+    vm_id = str(record.get("vm_id") or vm_config.get("id") or "")
+    if vm_config.get("id") and record.get("vm_id") and vm_config.get("id") != record.get("vm_id"):
+        raise ValueError("This backup archive belongs to a different VM.")
+    if not vm_store._VM_ID_RE.fullmatch(vm_id):
+        raise ValueError("The backup has an invalid VM id.")
+    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    cfg = dict(vm_config)
+    if cfg:
+        cfg["id"] = vm_id
+        if "vm_dir" in cfg:
+            cfg["vm_dir"] = vm_dir
+        problem = vm_store._primary_disk_problem(cfg, cfg.get("disk_path") or os.path.join(vm_dir, "disk.qcow2"))
+        if problem:
+            raise ValueError(f"Backup settings refused: {problem}")
+        try:
+            vm_store._validate_vm_inputs(cfg.get("secondary_disks"), cfg.get("iso_path"), cfg.get("host_shares"))
+        except HTTPException as e:
+            raise ValueError(f"Backup settings refused: {e.detail}") from e
+    return vm_id, vm_dir, cfg
+
+
+def _inside(path: str, folder: str) -> bool:
+    real, root = os.path.realpath(path), os.path.realpath(folder)
+    return real.startswith(root.rstrip(os.sep) + os.sep)
+
+
 def restore_vm_backup(backup_id: str) -> Dict[str, Any]:
     """
     Restores a VM configuration and disk files from a backup archive.
@@ -651,9 +685,7 @@ def restore_vm_backup(backup_id: str) -> Dict[str, Any]:
         f = tar.extractfile(manifest_member)
         manifest = json.loads(f.read().decode("utf-8")) if f else {}
 
-        vm_config = manifest.get("vm_config") or {}
-        vm_id = vm_config.get("id") or record.get("vm_id")
-        vm_dir = vm_config.get("vm_dir") or os.path.join(DATA_DIR, "vms", vm_id)
+        vm_id, vm_dir, vm_config = _checked_vm_restore(manifest.get("vm_config") or {}, record)
         os.makedirs(vm_dir, exist_ok=True)
 
         for member in tar.getmembers():
@@ -663,6 +695,11 @@ def restore_vm_backup(backup_id: str) -> Dict[str, Any]:
             if member.name.startswith("vm_data/"):
                 sub_name = member.name[len("vm_data/") :]
                 dest_path = os.path.join(vm_dir, sub_name)
+                # Check the path actually written, not the member name.
+                if not member.isfile() or not _inside(dest_path, vm_dir):
+                    if member.isfile():
+                        logger.warning(f"[VM Restore] Skipping file outside the VM folder: {member.name}")
+                    continue
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                 if member.isfile():
                     extracted_file = tar.extractfile(member)

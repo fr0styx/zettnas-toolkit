@@ -7,10 +7,9 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Least privilege: jobs read only; the build job and the release job ask for more below.
 permissions:
-  contents: write
-  packages: write
-  id-token: write # keyless cosign signing (OIDC)
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,6 +25,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v7
@@ -54,6 +55,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js 24
         uses: actions/setup-node@v7
@@ -77,6 +80,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js 24
         uses: actions/setup-node@v7
@@ -146,6 +151,10 @@ jobs:
     needs: [lint-and-test, frontend, e2e-integration]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/stable')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # push images to GHCR
+      id-token: write # keyless cosign signing (OIDC)
     env:
       DOCKER_CLIENT_TIMEOUT: "120"
       COMPOSE_HTTP_TIMEOUT: "120"
@@ -279,6 +288,8 @@ jobs:
     needs: [build-and-push]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the GitHub release
     steps:
       - name: Checkout code
         uses: actions/checkout@v7

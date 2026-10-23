@@ -79,6 +79,23 @@ def _confined(path: Any, roots: List[str], want: str = "file") -> Optional[str]:
     return real
 
 
+_MAC_RE = re.compile(r"[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}")
+_VM_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
+
+
+def _primary_disk_problem(vm: Dict[str, Any], disk_path: str) -> Optional[str]:
+    """Why the VM's main disk settings can't be given to QEMU, or None."""
+    if not _confined(disk_path, _vm_disk_roots(), "file"):
+        return "The VM disk must be an image file inside the VM or storage folders."
+    if str(vm.get("disk_bus") or "virtio") not in _DISK_BUSES:
+        return "The VM disk uses an unsupported bus."
+    if vm.get("disk_format") and str(vm.get("disk_format")) not in _DISK_FORMATS:
+        return "The VM disk format must be qcow2 or raw."
+    if vm.get("mac") and not _MAC_RE.fullmatch(str(vm.get("mac"))):
+        return "The VM network MAC address is not valid."
+    return None
+
+
 def _validate_vm_inputs(
     secondary_disks: Optional[List[Dict[str, Any]]] = None,
     iso_path: Optional[str] = None,
@@ -1704,6 +1721,12 @@ def _start_qemu(target_vm: Dict[str, Any], vnc_port: int) -> Tuple[bool, Optiona
 
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
     target_vm["disk_path"] = disk_path
+    disk_problem = _primary_disk_problem(target_vm, disk_path)
+    if disk_problem:
+        logger.error(f"[VM-{vm_id}] {disk_problem}")
+        target_vm["last_error"] = disk_problem
+        _LAST_QEMU_ERRORS[vm_id] = disk_problem
+        return False, disk_problem
 
     if not os.path.exists(disk_path):
         size_gb = int(target_vm.get("disk_size_gb", 32) or 32)

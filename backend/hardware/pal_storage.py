@@ -2304,7 +2304,22 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         nfs_clients: str = "*",
     ) -> Dict[str, Any]:
         """Provisions a network share and syncs with SambaEngine and NfsEngine."""
-        full_path = path if path else os.path.join(self._pool_path, name)
+        from backend.services.samba_engine import validate_share_path
+
+        full_path = validate_share_path(path if path else os.path.join(self._pool_path, name))
+        if export_nfs:  # refuse bad NFS settings before anything is created
+            from backend.services.nfs_engine import NfsExportRule
+
+            try:
+                NfsExportRule(
+                    name=name,
+                    path=full_path,
+                    clients=nfs_clients.strip() or "*",
+                    squash=nfs_squash or "no_root_squash",
+                    comment=comment,
+                )
+            except Exception as e:
+                raise ValueError(f"Invalid NFS export settings: {e}") from e
         try:
             os.makedirs(full_path, exist_ok=True)
         except OSError as e:
@@ -2344,14 +2359,15 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     write_list=write_list,
                 )
                 engine.add_or_update_share(share_cfg)
+            except ValueError:
+                raise  # refused settings (SEC-06): stop here, before anything is exported over NFS
             except Exception as e:
                 logger.warning(f"[PAL] SambaEngine registration failed: {e}")
 
         if export_nfs:
-            try:
-                from backend.services.nfs_engine import NfsExportRule, get_nfs_engine
+            from backend.services.nfs_engine import NfsExportRule
 
-                nfs_engine = get_nfs_engine()
+            try:
                 rule = NfsExportRule(
                     name=name,
                     path=full_path,
@@ -2363,7 +2379,12 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     sync_mode="sync" if nfs_sync else "async",
                     comment=comment,
                 )
-                nfs_engine.add_or_update_export(rule)
+            except Exception as e:  # pydantic ValidationError: a refused setting
+                raise ValueError(f"Invalid NFS export settings: {e}") from e
+            try:
+                from backend.services.nfs_engine import get_nfs_engine
+
+                get_nfs_engine().add_or_update_export(rule)
             except Exception as e:
                 logger.warning(f"[PAL] NfsEngine registration failed: {e}")
 

@@ -8,11 +8,13 @@ and atomic exports configuration reloading.
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import time
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, Field, field_validator
 
 from backend.config import DATA_DIR, logger
 
@@ -21,6 +23,11 @@ NFS_EXPORTS_FILE = os.path.join(NFS_DIR, "exports.json")
 SYSTEM_EXPORTS_D_DIR = "/etc/exports.d"
 SYSTEM_EXPORTS_FILE = "/etc/exports"
 ZETTNAS_EXPORTS_D_FILE = os.path.join(SYSTEM_EXPORTS_D_DIR, "zettnas.exports")
+
+
+_NFS_CTRL = re.compile(r"[\x00-\x1f\x7f]")
+_NFS_UNSAFE = re.compile(r'[\x00-\x1f\x7f"]')
+_NFS_CLIENT_RE = re.compile(r"[A-Za-z0-9.*?:/\[\]_-]{1,255}")
 
 
 class NfsExportRule(BaseModel):
@@ -44,6 +51,48 @@ class NfsExportRule(BaseModel):
     fsid: Optional[int] = Field(default=None, description="Optional unique numeric filesystem identifier for NFSv4")
     comment: str = Field(default="", description="Human-readable description")
     created_at: float = Field(default_factory=time.time)
+
+    # Every field ends up in exports(5) syntax, where a line break starts a new export.
+    @field_validator("path")
+    @classmethod
+    def _plain_path(cls, v: str) -> str:
+        if not v.startswith("/") or _NFS_UNSAFE.search(v):
+            raise ValueError("NFS export path must be an absolute path without quotes or control characters")
+        return v
+
+    @field_validator("clients")
+    @classmethod
+    def _one_client(cls, v: str) -> str:
+        v = (v or "").strip() or "*"
+        if not _NFS_CLIENT_RE.fullmatch(v):
+            raise ValueError("NFS clients must be one host, subnet (CIDR) or '*'")
+        return v
+
+    @field_validator("permission")
+    @classmethod
+    def _permission(cls, v: str) -> str:
+        if v not in ("rw", "ro"):
+            raise ValueError("NFS permission must be rw or ro")
+        return v
+
+    @field_validator("squash")
+    @classmethod
+    def _squash(cls, v: str) -> str:
+        if v not in ("no_root_squash", "root_squash", "all_squash"):
+            raise ValueError("NFS squash must be no_root_squash, root_squash or all_squash")
+        return v
+
+    @field_validator("sync_mode")
+    @classmethod
+    def _sync_mode(cls, v: str) -> str:
+        if v not in ("sync", "async"):
+            raise ValueError("NFS sync mode must be sync or async")
+        return v
+
+    @field_validator("comment")
+    @classmethod
+    def _one_line_comment(cls, v: str) -> str:
+        return " ".join(_NFS_CTRL.sub(" ", v or "").split())
 
 
 class NfsStatus(BaseModel):

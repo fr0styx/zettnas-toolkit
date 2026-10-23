@@ -254,8 +254,11 @@ def test_unraid_storage_adapter_shares_parsing(tmp_path):
     assert vault.security == "private"
 
 
-def test_generic_linux_storage_adapter(tmp_path):
+def test_generic_linux_storage_adapter(tmp_path, monkeypatch):
     adapter = GenericLinuxStorageAdapter(pool_path=str(tmp_path / "pools"))
+    monkeypatch.setattr("backend.config.ALLOWED_BROWSE_ROOTS", [str(tmp_path)])  # shares stay inside storage roots
+    ran = []
+    monkeypatch.setattr(adapter, "_run_cmd", lambda cmd: ran.append(cmd) or (0, "", ""))
     caps = adapter.get_capabilities()
     assert caps.is_observer_mode is False
     assert caps.can_create_pools is True
