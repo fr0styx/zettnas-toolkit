@@ -143,7 +143,7 @@ def test_mfa_setup_enable_and_status_api(test_env):
     bad_res = client.post(
         "/api/auth/mfa/enable",
         headers=headers,
-        json={"secret": secret, "code": "000000", "recovery_codes": recovery_codes},
+        json={"secret": secret, "code": "000000", "recovery_codes": recovery_codes, "current_password": "admin"},
     )
     assert bad_res.status_code == 400
 
@@ -152,7 +152,7 @@ def test_mfa_setup_enable_and_status_api(test_env):
     enable_res = client.post(
         "/api/auth/mfa/enable",
         headers=headers,
-        json={"secret": secret, "code": valid_code, "recovery_codes": recovery_codes},
+        json={"secret": secret, "code": valid_code, "recovery_codes": recovery_codes, "current_password": "admin"},
     )
     assert enable_res.status_code == 200
     assert enable_res.json()["status"] == "ok"

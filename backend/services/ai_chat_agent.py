@@ -745,9 +745,7 @@ def _has_write_permission(principal: Any, required_scopes: tuple[str, ...]) -> b
     """No principal means no write access; scopes use the same wildcard rules as the API."""
     if principal is None:
         return False
-    role = str(getattr(principal, "role_id", "") or "").lower()
-    if role in ("superadmin", "admin"):
-        return True
+    # Effective scopes only: an API token gets what it was given, not its owner's role.
     from backend.auth import has_scope
 
     scopes = list(getattr(principal, "scopes", None) or [])

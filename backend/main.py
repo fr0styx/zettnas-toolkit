@@ -120,6 +120,12 @@ def startup_system():
         security_upgrade.run_once()  # v1.9.2: revoke old credentials, disable unsafe WebDAV
     except Exception as e:
         logger.error(f"[Main] Security upgrade step failed: {e}")
+    try:
+        from backend.api.auth import align_admin_password_mirror
+
+        align_admin_password_mirror()
+    except Exception as e:
+        logger.error(f"[Main] Could not align the admin password copy: {e}")
     stamp_versions()
     from backend.services.rag_engine import RAG_DB_PATH as _rag_db_path
 

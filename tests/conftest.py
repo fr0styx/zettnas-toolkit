@@ -178,6 +178,26 @@ def get_cached_admin_hash() -> str:
     return _CACHED_ADMIN_HASH
 
 
+def _reset_admin_password() -> None:
+    """Sign-in checks the admin account's own hash, so tests that change it are undone here."""
+    from backend.users_db import users_db_session
+
+    with users_db_session(None) as conn:
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (get_cached_admin_hash(), "admin-00000000-0000-0000-0000-000000000001"),
+        )
+
+
+@pytest.fixture
+def webdav_on(monkeypatch):
+    """The WebDAV portal only answers while WebDAV is switched on (it is off by default)."""
+    from backend.services.webdav_engine import WebdavEngine
+
+    real = WebdavEngine.load_config
+    monkeypatch.setattr(WebdavEngine, "load_config", lambda self: {**real(self), "enabled": True})
+
+
 @pytest.fixture
 def client():
     """FastAPI TestClient (lifespan not started: no hardware threads)."""
@@ -189,6 +209,7 @@ def client():
 
     saved_hash = config.STORED_PASSWORD_HASH
     config.STORED_PASSWORD_HASH = get_cached_admin_hash()
+    _reset_admin_password()
     auth_api._failures.clear()
     yield TestClient(app_module.app)
     auth_api._failures.clear()

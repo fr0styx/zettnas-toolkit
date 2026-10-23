@@ -528,6 +528,16 @@ def update_user_password(
     return res.rowcount > 0
 
 
+def _evict_user_caches(user_id: str) -> None:
+    """Drops one user's cached sessions and API tokens so the next request re-reads role and status."""
+    with _SESSION_CACHE_LOCK:
+        for k in [k for k, v in _SESSION_CACHE.items() if v.get("user_id") == user_id]:
+            _SESSION_CACHE.pop(k, None)
+    with _TOKEN_CACHE_LOCK:
+        for k in [k for k, v in _TOKEN_CACHE.items() if v.get("user_id") == user_id]:
+            _TOKEN_CACHE.pop(k, None)
+
+
 def assert_remaining_superadmin_guard(
     conn: sqlite3.Connection, target_user_id: str, action: str = "disable, demote, or delete"
 ) -> None:
@@ -585,9 +595,10 @@ def update_user_profile(
         res = conn.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
         if status is not None and status != "active":
             conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
-            with _SESSION_CACHE_LOCK:
-                _SESSION_CACHE.clear()
-        return res.rowcount > 0
+        changed = res.rowcount > 0
+    if role_id is not None or status is not None:
+        _evict_user_caches(user_id)
+    return changed
 
 
 def delete_user(user_id: str, db_path: str | None = None) -> bool:
@@ -609,7 +620,8 @@ def delete_user(user_id: str, db_path: str | None = None) -> bool:
                 get_samba_engine().sync_samba_user(username=target_user["username"], delete=True)
             except Exception:
                 logger.debug("backend.users_db.delete_user: ignored error", exc_info=True)
-        return True
+    _evict_user_caches(user_id)
+    return True
 
 
 def disable_admin_user(admin_identifier: str = "admin", db_path: str | None = None) -> dict[str, Any]:
@@ -635,10 +647,7 @@ def disable_admin_user(admin_identifier: str = "admin", db_path: str | None = No
         conn.execute("UPDATE users SET status = 'disabled', updated_at = ? WHERE id = ?", (now, admin_id))
         conn.execute("DELETE FROM sessions WHERE user_id = ?", (admin_id,))
 
-    with _SESSION_CACHE_LOCK:
-        keys_to_remove = [k for k, v in _SESSION_CACHE.items() if v.get("user_id") == admin_id]
-        for k in keys_to_remove:
-            _SESSION_CACHE.pop(k, None)
+    _evict_user_caches(admin_id)
 
     log_security_event(
         "admin.account.disabled",

@@ -60,6 +60,11 @@ def setup_phase4_env(monkeypatch, tmp_path):
     config.POOL_PATH = orig_pool
 
 
+@pytest.fixture(autouse=True)
+def _webdav_enabled(webdav_on):
+    """These tests use the portal, which answers only while WebDAV is on."""
+
+
 def test_stream_ticket_lifecycle():
     """Verify single-use, 60-second stream tickets for SSE/WebSocket endpoints."""
     ticket = create_stream_ticket(

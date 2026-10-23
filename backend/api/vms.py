@@ -920,6 +920,7 @@ def create_console_token(
     ticket = f"zct_{uuid.uuid4().hex}"
     _CONSOLE_TICKETS[ticket] = {
         "vm_id": vm_id,
+        "user_id": principal.user_id,
         "username": principal.username,
         "created_at": time.time(),
         "expires_at": time.time() + 60,

@@ -21,6 +21,8 @@ class MfaEnableRequest(BaseModel):
     secret: str
     code: str
     recovery_codes: list[str] = []
+    current_password: str = ""
+    current_code: str = ""  # needed when replacing an authenticator that is already on
 
 
 class MfaDisableRequest(BaseModel):
