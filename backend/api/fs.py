@@ -2594,6 +2594,27 @@ async def access_shared_file(
     return await _serve_shared_item(token, request, info, request.headers.get("X-Share-Password") or "")
 
 
+def _share_creator_can_read(created_by: str | None, real_target: str) -> bool:
+    """A link works only while the person who made it is active and can still read the item.
+    Links saved before creators were recorded (no created_by) keep working."""
+    if not created_by:
+        return True
+    from backend.users_db import get_user_by_username
+
+    user = get_user_by_username(created_by)
+    if not user or user.get("status") != "active":
+        return False
+    creator = AuthenticatedPrincipal(
+        {
+            "user_id": user["id"],
+            "username": user["username"],
+            "role_id": user.get("role_id"),
+            "scopes": user.get("scopes") or [],
+        }
+    )
+    return user_can_access_path(real_target, creator)
+
+
 async def _serve_shared_item(token: str, request: Request, info: bool, provided_pwd: str):
     from backend.rate_limit import hit as _rl_hit
 
@@ -2641,6 +2662,8 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
 
     if resolve_within(real_target, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Target path is outside allowed system roots")
+    if not _share_creator_can_read(item.get("created_by"), real_target):
+        raise HTTPException(status_code=410, detail="This share link is no longer available")
 
     is_dir = os.path.isdir(real_target)
 
