@@ -110,7 +110,7 @@ jobs:
       - name: Launch Test Server & Run Playwright E2E Suite
         env:
           PORT: "8082"
-          WEB_PASSWORD: "admin"
+          WEB_PASSWORD: "e2e-Test-Pass-1"  # not the shared default: that one now gets a generated password
           DATA_DIR: "${{ github.workspace }}/data"
         run: |
           annotate() {
