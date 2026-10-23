@@ -42,7 +42,8 @@ def is_server_reachable(base_url="http://127.0.0.1:8082"):
 def get_live_server_auth_token(base_url="http://127.0.0.1:8082"):
     """Obtains a valid session token for the live test server."""
     # 1. Attempt login with environment or default password
-    for pwd in (os.environ.get("WEB_PASSWORD", "admin"), "admin"):
+    # tests/conftest.py sets WEB_PASSWORD for unit tests; the live server password comes separately
+    for pwd in (os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"), "admin"):
         try:
             req = urllib.request.Request(
                 f"{base_url}/api/auth/login",
@@ -194,7 +195,7 @@ def test_e2e_live_desktop_session_and_badge():
             page.click("#login-toggle-manual")
         if page.is_visible("#login-username"):
             page.fill("#login-username", "admin")
-        page.fill("#login-password", os.environ.get("WEB_PASSWORD", "admin"))
+        page.fill("#login-password", os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
         page.click("#login-btn")
         page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
 

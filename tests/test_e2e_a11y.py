@@ -71,7 +71,7 @@ def _login(page):
         page.click("#login-toggle-manual")
     if page.is_visible("#login-username"):
         page.fill("#login-username", "admin")
-    page.fill("#login-password", os.environ.get("WEB_PASSWORD", "admin"))
+    page.fill("#login-password", os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))
     page.click("#login-btn")
     page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
     page.reload(wait_until="domcontentloaded")
