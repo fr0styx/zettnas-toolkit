@@ -267,6 +267,7 @@ def test_generic_linux_storage_adapter(tmp_path, monkeypatch):
     # Creating pool & share succeeds in Generic Linux mode
     res_pool = adapter.create_pool("data_pool", "btrfs", "raid1", ["/dev/sdb", "/dev/sdc"], str(tmp_path / "data"))
     assert res_pool["status"] == "provisioned"
+    assert ran[0][0] == "mkfs.btrfs" and ran[1][0] == "mount"
 
     res_share = adapter.create_share("media", str(tmp_path / "media"), comment="Media share", security="public")
     assert res_share["status"] == "created"
