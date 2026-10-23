@@ -1609,7 +1609,7 @@ async function renderContainerEditTab(cid) {
         </label>
         <div style="display:flex; gap:8px;">
           <button class="btn-pill-toggle" id="cie-btn-cancel">Cancel</button>
-          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:#fff; border:none; padding:6px 16px;" ${isToolkit ? 'disabled' : ''}>
+          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 16px;" ${isToolkit ? 'disabled' : ''}>
             💾 Save & Recreate Container
           </button>
         </div>

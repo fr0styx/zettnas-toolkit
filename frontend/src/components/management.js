@@ -1146,7 +1146,7 @@ export function renderDockerContainersTable() {
         <div style="font-size:32px; opacity:0.8;">🐳</div>
         <div style="font-size:13.5px; font-weight:600; color:var(--text, #fff);">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
         <div style="font-size:12px; color:var(--muted, #94a3b8); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
-        <button id="btn-empty-deploy-app" class="btn-pill-toggle" style="margin-top:6px; background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9); font-weight:600; padding:6px 16px; cursor:pointer;">
+        <button id="btn-empty-deploy-app" class="btn-pill-toggle" style="margin-top:6px; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9); font-weight:600; padding:6px 16px; cursor:pointer;">
           🚀 ${t('mgmt.docker_open_catalog', 'Browse App Catalog')}
         </button>
       </div>
@@ -2630,7 +2630,7 @@ export async function openDockerPruneModal() {
           </div>
           <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
             <button class="btn-pill-toggle" id="dpm-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="dpm-confirm-btn" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:#fff; border:none; padding:6px 18px; font-weight:700; cursor:pointer;">
+            <button class="btn-pill-toggle" id="dpm-confirm-btn" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 18px; font-weight:700; cursor:pointer;">
               🧹 Run Prune & Reclaim Storage
             </button>
           </div>
@@ -2894,7 +2894,7 @@ export async function openAppSourcesModal() {
                   Comprehensive community catalog of self-hosted homelab applications, web tools, and stacks.
                 </div>
               </div>
-              <button class="btn-pill-toggle" id="asm-btn-add-lissy" style="background:var(--brand, #0ea5e9); color:#fff; border:none; padding:5px 12px; font-weight:700; font-size:11px; white-space:nowrap; cursor:pointer;">
+              <button class="btn-pill-toggle" id="asm-btn-add-lissy" style="background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:5px 12px; font-weight:700; font-size:11px; white-space:nowrap; cursor:pointer;">
                 + Add Lissy93 (790+ Apps)
               </button>
             </div>
@@ -2912,7 +2912,7 @@ export async function openAppSourcesModal() {
                   <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
                 </div>
                 <div>
-                  <button class="btn-pill-toggle" id="asm-btn-add-custom" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:#fff; border:none; padding:5px 14px; font-weight:700; font-size:11px; height:28px; white-space:nowrap; cursor:pointer;">
+                  <button class="btn-pill-toggle" id="asm-btn-add-custom" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:var(--accent-contrast-fg, #0b1118); border:none; padding:5px 14px; font-weight:700; font-size:11px; height:28px; white-space:nowrap; cursor:pointer;">
                     + Add & Sync
                   </button>
                 </div>

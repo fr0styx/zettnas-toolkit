@@ -1184,7 +1184,7 @@ export async function fetchAndRenderNetworkShares(container) {
           <div style="font-size:14px; font-weight:600; color:var(--text, #fff);">${t('mgmt.shares_none_title', 'No Network Shares Configured')}</div>
           <div style="font-size:12px; color:var(--muted, #94a3b8); max-width:440px; line-height:1.5;">${t('mgmt.shares_none_desc', 'Export folders across your local network via Samba (SMB), NFSv4, or secure SFTP for Windows, Mac, and Linux clients.')}</div>
           ${canManageShares ? `
-            <button id="btn-empty-create-share" class="btn-pill-toggle" style="margin-top:6px; background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9); font-weight:600; padding:6px 16px; cursor:pointer;">
+            <button id="btn-empty-create-share" class="btn-pill-toggle" style="margin-top:6px; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9); font-weight:600; padding:6px 16px; cursor:pointer;">
               + ${t('mgmt.create_share', 'Create Network Share')}
             </button>
           ` : ''}
@@ -1610,7 +1610,7 @@ export async function fetchAndRenderRemoteStorage(container) {
           <div style="font-size:12px; color:var(--muted); max-width:440px; margin:0 auto 16px auto; line-height:1.45;">
             Connect your cloud storage buckets (Amazon S3, Backblaze B2, Google Drive, OneDrive, SFTP) to mount them directly into the ZettNAS File Explorer (/mnt/remotes).
           </div>
-          <button class="btn-pill-toggle btn-trigger-new-remote" style="padding:7px 18px; font-size:12px; font-weight:700; background:var(--brand, #0ea5e9); color:#fff; border-color:var(--brand, #0ea5e9);">
+          <button class="btn-pill-toggle btn-trigger-new-remote" style="padding:7px 18px; font-size:12px; font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9);">
             ☁️ + Connect First Cloud Remote
           </button>
         </div>
