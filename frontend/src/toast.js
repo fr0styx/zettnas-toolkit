@@ -47,7 +47,7 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
       <div style="font-size: 12.5px; color: #f1f5f9; line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
     </div>
     <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; font-size: 11px; font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;">${escapeHtml(actionText)}</button>
-    <button class="top-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Dismiss">&times;</button>
+    <button class="top-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
 
   container.appendChild(toast);
@@ -123,7 +123,8 @@ function _showTopNotification(msg, type = "error") {
   const toast = document.createElement("div");
   toast.className = "top-toast-item";
 
-  const isErr = (type === "error" || type === "crit");
+  const isSecurity = type === "security";
+  const isErr = (type === "error" || type === "crit" || isSecurity);
   const isWarn = (type === "warn" || type === "warning");
   const isSucc = (type === "success" || type === "ok");
 
@@ -135,7 +136,8 @@ function _showTopNotification(msg, type = "error") {
   if (isErr) {
     borderColor = "#ef4444";
     icon = "⚠️";
-    tagText = t('toast.security_alert', "SECURITY / SYSTEM ALERT");
+    // Security wording only for security events; an ordinary failure is just an error.
+    tagText = isSecurity ? t('toast.security_alert', "SECURITY ALERT") : t('toast.error_heading', "ERROR");
     tagColor = "#ef4444";
   } else if (isWarn) {
     borderColor = "#f59e0b";
@@ -150,13 +152,14 @@ function _showTopNotification(msg, type = "error") {
   }
 
   toast.style.borderLeft = `4px solid ${borderColor}`;
+  if (isErr) toast.setAttribute("role", "alert");
   toast.innerHTML = `
     <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">${icon}</div>
     <div style="flex: 1; min-width: 0;">
       <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
       <div style="font-size: 12.5px; color: #f1f5f9; line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
     </div>
-    <button class="top-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="Dismiss">&times;</button>
+    <button class="top-toast-close" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
 
   container.appendChild(toast);
