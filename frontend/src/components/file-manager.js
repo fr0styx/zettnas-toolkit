@@ -1997,8 +1997,11 @@ export class FileManagerWindow {
         const datalist = this.windowEl.querySelector('datalist');
         if (datalist && datalist.dataset.populated !== res.roots.join(',')) {
           datalist.dataset.populated = res.roots.join(',');
-          datalist.innerHTML = res.roots.map((r) => `<option value="${r}"></option>`).join('') +
-            `<option value="${res.current}/.RecycleBin"></option>`;
+          datalist.replaceChildren(...[...res.roots, `${res.current}/.RecycleBin`].map((v) => {
+            const opt = document.createElement('option');
+            opt.value = v;
+            return opt;
+          }));
         }
       }
 
@@ -2278,7 +2281,7 @@ export class FileManagerWindow {
       row.innerHTML = `
         <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}</div>
         <div class="fm-col fm-col-name">${leading} <span class="fm-name-stack"><span class="fm-name-text">${escName}</span><span class="fm-row-sub">${escapeHtml(subLine)}</span></span></div>
-        <div class="fm-col fm-col-type">${file.name === '..' ? '--' : fileType}</div>
+        <div class="fm-col fm-col-type">${file.name === '..' ? '--' : escapeHtml(fileType)}</div>
         <div class="fm-col fm-col-size">${file.is_dir ? '--' : formatBytes(file.size)}</div>
         <div class="fm-col fm-col-mtime">${file.name === '..' ? '--' : mtimeStr}</div>
         <div class="fm-col fm-col-actions">

@@ -94,8 +94,15 @@ def _is_files_admin(principal: AuthenticatedPrincipal | None) -> bool:
     )
 
 
-def check_user_path_access(req_path: str, principal: AuthenticatedPrincipal | None, write: bool = False) -> None:
-    """Non-admins only reach their home and shares granted to them (SEC-10); write needs write access."""
+def check_user_path_access(
+    req_path: str, principal: AuthenticatedPrincipal | None, write: bool = False, allow_list: bool = False
+) -> None:
+    """Non-admins only reach their home and shares granted to them (SEC-10); write needs write access.
+
+    A folder above a granted share (the pool root, "homes") has level "list": it can be
+    browsed to reach the share, but it is not readable. Only listing-type callers pass
+    allow_list=True; anything that reads, copies, zips or shares content does not.
+    """
     if not principal:
         raise HTTPException(status_code=401, detail="Authentication required.")
     if _is_files_admin(principal):
@@ -133,15 +140,15 @@ def check_user_path_access(req_path: str, principal: AuthenticatedPrincipal | No
     from backend.services.share_access import level_for
 
     level = level_for(principal.username or "", real)
-    if level == "none":
+    if level == "none" or (level == "list" and not allow_list):
         raise HTTPException(status_code=403, detail="You don't have access to this folder.")
     if write and level != "write":
         raise HTTPException(status_code=403, detail="You have read-only access to this folder.")
 
 
-def user_can_access_path(req_path: str, principal: AuthenticatedPrincipal | None) -> bool:
+def user_can_access_path(req_path: str, principal: AuthenticatedPrincipal | None, allow_list: bool = False) -> bool:
     try:
-        check_user_path_access(req_path, principal)
+        check_user_path_access(req_path, principal, allow_list=allow_list)
         return True
     except HTTPException:
         return False
@@ -436,7 +443,7 @@ async def browse(
     dirs_only: str = "0",
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(path, principal)
+    check_user_path_access(path, principal, allow_list=True)
     return await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1", principal)
 
 
@@ -1251,7 +1258,7 @@ def fs_get_permissions(
     path: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(path, principal)
+    check_user_path_access(path, principal, allow_list=True)
     target = _contained(path, must_exist=True)
     st = os.stat(target, follow_symlinks=False)
     mode_int = st.st_mode
@@ -1661,7 +1668,7 @@ async def fs_search(
     offset = max(0, offset)
 
     if path and path.strip():
-        check_user_path_access(path, principal)
+        check_user_path_access(path, principal, allow_list=True)
         search_root = resolve_within(path, ALLOWED_BROWSE_ROOTS)
         if search_root is None or not os.path.isdir(search_root):
             raise HTTPException(status_code=400, detail="Invalid search path")
@@ -1686,7 +1693,7 @@ async def fs_search(
                                 break
                             if entry.name.startswith("."):
                                 continue
-                            if not user_can_access_path(entry.path, principal):
+                            if not user_can_access_path(entry.path, principal, allow_list=True):
                                 continue
 
                             is_match = query in entry.name.lower()
@@ -1847,6 +1854,10 @@ async def fs_trash_restore(
                     parts = item_id.split("_", 1)
                     orig_name = parts[1] if (len(parts) == 2 and parts[0].isdigit()) else item_id
 
+                if not _is_files_admin(principal):
+                    if not orig_path:
+                        raise HTTPException(status_code=403, detail="You can't restore this item.")
+                    check_user_path_access(orig_path, principal, write=True)
                 if req.target_path and os.path.isdir(req.target_path):
                     dest_dir = req.target_path
                     dest_path = os.path.join(dest_dir, orig_name)
@@ -2719,7 +2730,7 @@ def fs_list_favorites(principal: AuthenticatedPrincipal = Depends(get_current_pr
     for fav in _load_favorites(principal):
         ok = True
         try:
-            check_user_path_access(fav["path"], principal)
+            check_user_path_access(fav["path"], principal, allow_list=True)
             real = resolve_within(fav["path"], ALLOWED_BROWSE_ROOTS)
             ok = bool(real and os.path.isdir(real))
         except HTTPException:

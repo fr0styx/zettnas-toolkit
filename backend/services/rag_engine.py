@@ -2974,7 +2974,79 @@ class RagSearchEngine:
         finally:
             conn.close()
 
+    def _readable_paths(self, canonical_paths: Any, principal: Any) -> set[str]:
+        """The paths a principal may read. Checked once per folder: files share their folder's level."""
+        paths = list(canonical_paths)
+        if principal is None:
+            return set(paths)
+        by_dir: dict[str, bool] = {}
+        out: set[str] = set()
+        for p in paths:
+            d = os.path.dirname(p)
+            if d not in by_dir:
+                by_dir[d] = self._check_post_rbac(d, principal)
+            if by_dir[d] and self._check_post_rbac_cheap(p):
+                out.add(p)
+        return out
+
+    @staticmethod
+    def _check_post_rbac_cheap(canonical_path: str) -> bool:
+        return "/.RecycleBin/" not in canonical_path and not canonical_path.endswith("/.RecycleBin")
+
+    def _limit_manifest(self, manifest: dict[str, Any] | None, norm_path: str, principal: Any) -> dict[str, Any] | None:
+        """A folder manifest with only what the principal may read.
+
+        The stored rollup (titles, topics, outline) covers every file in the folder, so
+        when some files are not readable it is rebuilt from the readable files alone.
+        """
+        if not manifest or principal is None:
+            return manifest
+        prefix_slash = norm_path.rstrip("/") + "/"
+        prefix_upper = norm_path.rstrip("/") + "0"
+        conn = self._get_conn(readonly=True)
+        try:
+            rows = conn.execute(
+                """
+                SELECT f.file_id, f.file_name, f.canonical_path, f.size_bytes, f.file_ext FROM indexed_files f
+                WHERE (f.parent_dir = ? OR (f.canonical_path >= ? AND f.canonical_path < ?))
+                  AND f.parse_status = 'ok'
+                """,
+                (norm_path, prefix_slash, prefix_upper),
+            ).fetchall()
+            readable = self._readable_paths([r["canonical_path"] for r in rows], principal)
+            if len(readable) == len(rows):
+                return manifest
+            visible = [r for r in rows if r["canonical_path"] in readable]
+            file_types: dict[str, int] = {}
+            for r in visible:
+                ext = (r["file_ext"] or "").lower() or "other"
+                file_types[ext] = file_types.get(ext, 0) + 1
+            total_chunks = 0
+            ids = [r["file_id"] for r in visible]
+            for i in range(0, len(ids), 500):
+                part = ids[i : i + 500]
+                q = f"SELECT count(*) AS n FROM document_chunks WHERE file_id IN ({','.join('?' * len(part))})"
+                total_chunks += int(conn.execute(q, part).fetchone()["n"] or 0)
+        finally:
+            conn.close()
+        return {
+            **manifest,
+            "total_files": len(visible),
+            "total_size_bytes": sum(int(r["size_bytes"] or 0) for r in visible),
+            "total_chunks": total_chunks,
+            "files": [r["file_name"] for r in visible],
+            "file_types": file_types,
+            "outline": "",
+            "structural_summary": "",
+            "topics": [],
+        }
+
     def get_folder_manifest(self, folder_path: str, principal: Any = None) -> dict[str, Any] | None:
+        """Folder manifest rollup, limited to what the principal may read."""
+        norm_path = os.path.normpath(folder_path)
+        return self._limit_manifest(self._get_folder_manifest(norm_path, principal), norm_path, principal)
+
+    def _get_folder_manifest(self, folder_path: str, principal: Any = None) -> dict[str, Any] | None:
         """Retrieves folder manifest rollup with RBAC enforcement, or auto-generates from indexed_files."""
         self._ensure_schema()
         norm_path = os.path.normpath(folder_path)
@@ -3165,6 +3237,9 @@ class RagSearchEngine:
                 """,
                 rbac_params + sub_params,
             ).fetchall()
+            # The SQL tier check treats every share as public; drop what this principal can't read.
+            readable = self._readable_paths({r["canonical_path"] for r in rows}, principal)
+            rows = [r for r in rows if r["canonical_path"] in readable]
 
             if not rows:
                 return {
