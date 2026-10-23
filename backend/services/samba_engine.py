@@ -67,6 +67,20 @@ def _allowed_share_roots() -> list[str]:
     return [os.path.realpath(r) for r in roots if r]
 
 
+def validate_share_path(path: str) -> str:
+    """The real path of a share folder, which must be inside the storage roots (SEC-06)."""
+    path = (path or "").strip()
+    if not os.path.isabs(path) or _CONTROL_CHARS.search(path):
+        raise ValueError("Share path must be an absolute path")
+    real = os.path.realpath(path)
+    roots = _allowed_share_roots()
+    inside = any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots)
+    system_path = real == "/" or any(real == f or real.startswith(f + "/") for f in _FORBIDDEN_PREFIXES)
+    if not inside or system_path:
+        raise ValueError(f"Share path must be inside {', '.join(roots) or 'the storage pool'}")
+    return real
+
+
 def validate_share(share: "SambaShareConfig") -> None:
     """Rejects settings that would let a share expose system paths or inject smb.conf lines (SEC-06)."""
     for field in ("name", "path", "comment", "force_user", "force_group", "valid_users", "read_list", "write_list"):
@@ -76,16 +90,7 @@ def validate_share(share: "SambaShareConfig") -> None:
     if "[" in share.comment or "]" in share.comment:
         raise ValueError("'comment' must not contain square brackets")
 
-    path = (share.path or "").strip()
-    if not os.path.isabs(path):
-        raise ValueError("Share path must be an absolute path")
-    real = os.path.realpath(path)
-    roots = _allowed_share_roots()
-    inside = any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots)
-    system_path = real == "/" or any(real == f or real.startswith(f + "/") for f in _FORBIDDEN_PREFIXES)
-    if not inside or system_path:
-        raise ValueError(f"Share path must be inside {', '.join(roots) or 'the storage pool'}")
-    share.path = real
+    share.path = validate_share_path(share.path)
 
     for field in ("valid_users", "read_list", "write_list"):
         value = getattr(share, field)

@@ -82,6 +82,23 @@ def _confined(path: Any, roots: list[str], want: str = "file") -> str | None:
     return real
 
 
+_MAC_RE = re.compile(r"[0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}")
+_VM_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
+
+
+def _primary_disk_problem(vm: dict[str, Any], disk_path: str) -> str | None:
+    """Why the VM's main disk settings can't be given to QEMU, or None."""
+    if not _confined(disk_path, _vm_disk_roots(), "file"):
+        return "The VM disk must be an image file inside the VM or storage folders."
+    if str(vm.get("disk_bus") or "virtio") not in _DISK_BUSES:
+        return "The VM disk uses an unsupported bus."
+    if vm.get("disk_format") and str(vm.get("disk_format")) not in _DISK_FORMATS:
+        return "The VM disk format must be qcow2 or raw."
+    if vm.get("mac") and not _MAC_RE.fullmatch(str(vm.get("mac"))):
+        return "The VM network MAC address is not valid."
+    return None
+
+
 def _validate_vm_inputs(
     secondary_disks: list[dict[str, Any]] | None = None,
     iso_path: str | None = None,

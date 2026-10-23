@@ -71,6 +71,7 @@ def mock_vm_env(tmp_path, monkeypatch):
     monkeypatch.setattr("backend.services.app_backup.POOL_PATH", str(backup_base))
     monkeypatch.setattr("backend.services.app_backup.APP_BACKUPS_REGISTRY_FILE", str(app_backups_file))
     monkeypatch.setattr("backend.api.vms.DATA_DIR", str(data_dir))
+    monkeypatch.setattr("backend.services.vm_store.DATA_DIR", str(data_dir))  # VM disk roots
     monkeypatch.setattr("backend.services.vm_store.VMS_CONFIG_FILE", str(vms_file))
 
     return {

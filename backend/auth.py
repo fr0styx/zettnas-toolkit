@@ -402,7 +402,8 @@ async def auth_middleware(request: Request, call_next):
                 or request.headers.get("X-Forwarded-User")
                 or request.headers.get("X-Forwarded-Preferred-Username")
             )
-            if proxy_user:
+            # A ZettNAS API token sent through the proxy authenticates as that token.
+            if proxy_user and not request.headers.get("Authorization", "").startswith("Bearer "):
                 proxy_user = proxy_user.strip()
                 user = get_user_by_username(proxy_user)
                 if not user:
@@ -425,6 +426,13 @@ async def auth_middleware(request: Request, call_next):
                         user = get_user_by_username(proxy_user)
 
                 if user and user.get("status") == "active":
+                    # The proxy adds the identity header to every request it lets through, so a
+                    # write must come from this server's own pages (same rule as cookie sessions).
+                    if request.method in ("POST", "PUT", "PATCH", "DELETE") and not _origin_matches_host(request):
+                        logger.warning(
+                            f"[Auth] Blocked cross-site proxy-SSO {request.method} {path} from {client_host}"
+                        )
+                        return error_response(403, "Cross-site request blocked.", error="csrf_blocked")
                     sso_sess = {
                         "user_id": user["id"],
                         "username": user["username"],

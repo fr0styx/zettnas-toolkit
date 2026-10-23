@@ -307,6 +307,12 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
 
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
     target_vm["disk_path"] = disk_path
+    disk_problem = vm_store._primary_disk_problem(target_vm, disk_path)
+    if disk_problem:
+        logger.error(f"[VM-{vm_id}] {disk_problem}")
+        target_vm["last_error"] = disk_problem
+        vm_store._LAST_QEMU_ERRORS[vm_id] = disk_problem
+        return False, disk_problem
 
     if not os.path.exists(disk_path):
         size_gb = int(target_vm.get("disk_size_gb", 32) or 32)
