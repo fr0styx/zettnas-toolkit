@@ -12,6 +12,7 @@ A security-only update for 1.9.3. It has no new features. Everyone on 1.9.x shou
 - **Turning on or replacing two-factor** asks for your current password, and a code from your current app when you replace it.
 - **API tokens act with their own scopes**, not their owner's role. A token cannot confirm an action Ask Zetty proposed; confirm it in ZettNAS.
 - **App catalog:** community and sideloaded templates can only use folders inside the app's own folder.
+- **Pi-hole from the app catalog** no longer starts with a fixed admin password. Pi-hole generates one on first start and shows it in its container log. If you installed Pi-hole from the catalog before this update, set a new password with `pihole setpassword` in its console.
 - **Cloud sync:** sources and destinations must be configured remotes or folders in the storage pool (storage admins may use any local path).
 - **Calendar:** notes and feeds belong to the person who made them. Items saved before this update are visible to full administrators only.
 - **Backup jobs** back up folders inside the pool only.

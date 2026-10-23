@@ -178,7 +178,9 @@ CURATED_APP_CATALOG: List[Dict[str, Any]] = [
         "image": "pihole/pihole:latest",
         "default_port": 8080,
         "webui_path": "/admin",
-        "env": {"TZ": "UTC", "WEBPASSWORD": "admin"},
+        "env": {"TZ": "UTC"},  # no fixed password: Pi-hole generates one on first start
+        "first_login": "Pi-hole generated its admin password on first start: find it in the container's log, "
+        "or set your own with 'pihole setpassword' in the container's console.",
         "volumes": {"etc-pihole": "/etc/pihole", "etc-dnsmasq.d": "/etc/dnsmasq.d"},
     },
     {
@@ -1563,7 +1565,8 @@ def stream_deploy_catalog_app(
     yield {
         "step": "success",
         "percent": 100,
-        "message": f"✓ {app['name']} deployed and running successfully!",
+        "message": f"✓ {app['name']} deployed and running successfully!"
+        + (f" {app['first_login']}" if app.get("first_login") else ""),
         "container_id": cid,
         "container_name": service_name,
         "port": port,
