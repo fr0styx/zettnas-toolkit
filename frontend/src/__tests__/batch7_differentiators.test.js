@@ -18,8 +18,6 @@ describe('Batch 7: Consumer-Grade Differentiators Frontend Tests', () => {
           <input type="password" id="setup-new-pwd" value="" />
           <input type="password" id="setup-confirm-pwd" value="" />
           <div id="setup-wizard-err" style="display:none;"></div>
-          <input type="radio" name="setup-host-mode" id="setup-host-mode-observer" value="observer" checked />
-          <input type="radio" name="setup-host-mode" id="setup-host-mode-native" value="native" />
         </div>
       </div>
       <div id="sec-advisor-score-badge"></div>
@@ -77,13 +75,5 @@ describe('Batch 7: Consumer-Grade Differentiators Frontend Tests', () => {
     expect(html).toContain('Container started in');
     expect(html).toContain('120ms');
     expect(html).toContain('<span');
-  });
-
-  it('persists selected host operating mode on setup wizard interaction', () => {
-    const nativeRadio = document.getElementById('setup-host-mode-native');
-    nativeRadio.checked = true;
-
-    const selectedMode = document.querySelector('input[name="setup-host-mode"]:checked')?.value;
-    expect(selectedMode).toBe('native');
   });
 });

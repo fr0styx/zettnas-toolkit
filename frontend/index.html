@@ -1810,15 +1810,15 @@
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.cur_pwd">CURRENT PASSWORD</label>
+            <label for="setup-current-pwd" style="display:block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.cur_pwd">CURRENT PASSWORD</label>
             <input id="setup-current-pwd" aria-label="Current password" data-i18n-aria-label="setup.current_password" type="password" value="" autocomplete="current-password" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
           </div>
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.new_pwd">NEW PASSWORD</label>
+            <label for="setup-new-pwd" style="display:block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.new_pwd">NEW PASSWORD</label>
             <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
           </div>
           <div>
-            <label style="display:block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.confirm_pwd">CONFIRM NEW PASSWORD</label>
+            <label for="setup-confirm-pwd" style="display:block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;" data-i18n="setup.confirm_pwd">CONFIRM NEW PASSWORD</label>
             <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." data-i18n-placeholder="setup.confirm_pwd_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
           </div>
         </div>
@@ -1826,27 +1826,7 @@
       </div>
 
       <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step3_title">3. System Operating Mode</div>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;">
-            <input type="radio" name="setup-host-mode" value="observer" checked style="margin-top: 3px;">
-            <div>
-              <div style="font-size: 12px; font-weight: 700; color: #f8fafc;" data-i18n="setup.mode_observer">Homelab Coexistence Mode (Run alongside Unraid / TrueNAS / Proxmox)</div>
-              <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;" data-i18n="setup.mode_observer_desc">Non-destructive hardware monitoring, thermal management, ARGB, LCD and Docker management.</div>
-            </div>
-          </label>
-          <label style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;">
-            <input type="radio" name="setup-host-mode" value="native" style="margin-top: 3px;">
-            <div>
-              <div style="font-size: 12px; font-weight: 700; color: #f8fafc;" data-i18n="setup.mode_native">Native Storage OS Mode</div>
-              <div style="font-size: 11px; color: #94a3b8; line-height: 1.4;" data-i18n="setup.mode_native_desc">Direct storage pool management (ZFS / Btrfs), disk formatting, and native network sharing.</div>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">4. Power Protection & UPS</div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">3. Power Protection & UPS</div>
         <div id="setup-hw-ups" style="padding: 10px 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 11.5px; color: #94a3b8;">
           <span id="setup-ups-badge" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 6px;"></span>
           <span id="setup-ups-text" data-i18n="setup.ups_none">Checking UPS status...</span>
@@ -1854,7 +1834,7 @@
       </div>
 
       <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">5. Notification Alerts (Optional)</div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">4. Notification Alerts (Optional)</div>
         <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 8px;" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
         <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
       </div>

@@ -147,11 +147,7 @@ export function initSetupWizard() {
           console.warn('[SetupWizard] Re-auth failed after password change', authErr);
         }
 
-        // 3. Save Host Mode Preference
-        const selectedMode = document.querySelector('input[name="setup-host-mode"]:checked')?.value || 'observer';
-        localStorage.setItem('zettnas_host_mode', selectedMode);
-
-        // 4. Save Notification Webhook if provided (needs the new session)
+        // 3. Save Notification Webhook if provided (needs the new session)
         const notifUrl = (document.getElementById('setup-notif-url')?.value || '').trim();
         if (notifUrl) {
           try {
