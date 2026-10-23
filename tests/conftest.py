@@ -96,6 +96,9 @@ def _fresh_smart_velocity_cache():
     from backend import db
 
     db._VELOCITY_CACHE.clear()
+    db._SMART_STORED.clear()
+    db._SMART_PRUNED.clear()
+    db._METRICS_COLS.clear()
 
 
 @pytest.fixture(autouse=True)

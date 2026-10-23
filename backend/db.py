@@ -5,7 +5,7 @@ import sqlite3
 import threading
 import time
 from contextlib import contextmanager
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 from backend.config import DB_PATH, logger
 
@@ -38,6 +38,53 @@ def db_session():
 
 
 _LAST_PRUNE_TS: int = 0
+
+# One connection kept open for the history writers (metrics, SMART): no connect and PRAGMAs
+# per write, and the WAL file is not created and deleted around every row (PERF-3).
+_HISTORY: dict[str, Any] = {"conn": None, "path": None, "ino": None}
+_METRICS_COLS: dict[str, set[str]] = {}
+
+
+def _history_conn() -> sqlite3.Connection:
+    path = DB_PATH
+    try:
+        ino = os.stat(path).st_ino
+    except OSError:
+        ino = None
+    h = _HISTORY
+    if h["conn"] is None or h["path"] != path or h["ino"] != ino or ino is None:
+        if h["conn"] is not None:
+            try:
+                h["conn"].close()
+            except sqlite3.Error:
+                logger.debug("backend.db._history_conn: close failed", exc_info=True)
+        conn = get_db_connection()
+        h.update(conn=conn, path=path, ino=os.stat(path).st_ino)
+        return conn
+    return cast(sqlite3.Connection, h["conn"])
+
+
+@contextmanager
+def history_session():
+    """Like db_session, on the long-lived history connection."""
+    with _DB_LOCK:
+        conn = _history_conn()
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
+
+def close_history_connection() -> None:
+    with _DB_LOCK:
+        if _HISTORY["conn"] is not None:
+            try:
+                _HISTORY["conn"].close()
+            except sqlite3.Error:
+                logger.debug("backend.db.close_history_connection: close failed", exc_info=True)
+        _HISTORY.update(conn=None, path=None, ino=None)
 
 
 def init_db():
@@ -196,9 +243,12 @@ def log_metrics(
     disk_write_bytes_sec: float = 0.0,
 ):
     try:
-        with db_session() as conn:
-            cur = conn.execute("PRAGMA table_info(metrics)")
-            cols = {row[1] for row in cur.fetchall()}
+        with history_session() as conn:
+            cols = _METRICS_COLS.get(DB_PATH)
+            if cols is None:
+                cols = _METRICS_COLS[DB_PATH] = {
+                    row[1] for row in conn.execute("PRAGMA table_info(metrics)").fetchall()
+                }
             if "net_rx_bytes_sec" in cols:
                 conn.execute(
                     """INSERT INTO metrics
@@ -442,11 +492,48 @@ def compute_linear_regression_slope(x_vals: list[float], y_vals: list[float]) ->
     return round(slope, 5), round(r_squared, 4)
 
 
+SMART_HISTORY_EVERY_SECS = 600  # a row at least this often while nothing changes
+SMART_HISTORY_TEMP_STEP = 3.0  # a temperature move this large (°C) is stored at once
+_SMART_STORED: dict[tuple[str, str], tuple[int, tuple, float | None]] = {}
+_SMART_PRUNED: dict[str, int] = {}
+
+
+def _smart_counters(metrics: dict) -> tuple:
+    return tuple(
+        int(metrics.get(k, 0) or 0) for k in ("realloc", "pending", "offline", "crc", "nvme_used", "nvme_media_err")
+    )
+
+
+def _smart_row_due(conn: sqlite3.Connection, ts: int, dev: str, temp: float | None, counters: tuple) -> bool:
+    """A SMART sample is stored when a counter changes, the temperature moves, or every 10 minutes (PERF-3)."""
+    key = (DB_PATH, dev)
+    last = _SMART_STORED.get(key)
+    if last is None:
+        row = conn.execute(
+            "SELECT ts, reallocated_sectors, pending_sectors, offline_uncorrectable, crc_errors, nvme_pct_used, "
+            "nvme_media_errors, temp FROM smart_history WHERE dev = ? ORDER BY ts DESC LIMIT 1",
+            (dev,),
+        ).fetchone()
+        if row is None:
+            return True
+        last = (row[0], tuple(int(v or 0) for v in row[1:7]), row[7])
+        _SMART_STORED[key] = last
+    last_ts, last_counters, last_temp = last
+    if counters != last_counters:
+        return True
+    if temp is not None and (last_temp is None or abs(temp - last_temp) >= SMART_HISTORY_TEMP_STEP):
+        return True
+    return ts - last_ts >= SMART_HISTORY_EVERY_SECS or ts < last_ts
+
+
 def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, power_on_hours: int = 0):
-    """Logs disk SMART health metrics into SQLite and prunes entries older than 90 days."""
+    """Stores a SMART sample when it adds something (see _smart_row_due); prunes rows older than 90 days hourly."""
     poh = power_on_hours or metrics.get("power_on_hours", 0) or 0
+    counters = _smart_counters(metrics)
     try:
-        with db_session() as conn:
+        with history_session() as conn:
+            if not _smart_row_due(conn, ts, dev, temp, counters):
+                return
             conn.execute(
                 """
                 INSERT OR REPLACE INTO smart_history (
@@ -467,8 +554,10 @@ def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, powe
                     int(poh) if str(poh).isdigit() else 0,
                 ),
             )
-            # Prune records older than 90 days (7,776,000 seconds)
-            conn.execute("DELETE FROM smart_history WHERE ts < ?", (ts - 7776000,))
+            _SMART_STORED[(DB_PATH, dev)] = (ts, counters, round(temp, 1) if temp is not None else None)
+            if ts - _SMART_PRUNED.get(DB_PATH, 0) >= 3600:  # rows older than 90 days, hourly
+                conn.execute("DELETE FROM smart_history WHERE ts < ?", (ts - 7776000,))
+                _SMART_PRUNED[DB_PATH] = ts
     except Exception as db_e:
         logger.info(f"[ZettNAS] DB Log SMART History Error: {db_e}")
 
