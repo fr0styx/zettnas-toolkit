@@ -529,6 +529,8 @@ SYSTEM_SHARE_EXCLUSIONS: set[str] = {
 
 # Rescan a disk's watched folders on spin-up at most this often (queued folders don't wait)
 SPINUP_RESCAN_COOLDOWN_SECS = 6 * 3600
+# How often to retry giving files with fallback (lexical) vectors their neural vectors (AI-10)
+FALLBACK_REEMBED_EVERY_SECS = 300
 
 
 class RagSearchEngine:
@@ -551,6 +553,7 @@ class RagSearchEngine:
         self._watcher_thread: threading.Thread | None = None
         self._known_sleeping_devs: set[str] = set(rag_standby.get_sleeping_disks_list())
         self._last_spinup_rescan: dict[str, float] = {}  # disk -> when its watched folders were last rescanned
+        self._last_fallback_reembed = 0.0
         self._last_auto_learn_event: dict[str, Any] | None = None
         self._sync_progress: dict[str, Any] = {
             "state": "idle",
@@ -1405,6 +1408,7 @@ class RagSearchEngine:
                     if os.path.exists(RAG_CONFIG_PATH):
                         self.sync_watched_deferred_queue()
                     self.check_and_trigger_spinup_auto_learn(background=True)
+                    self._maybe_reembed_fallback_files()
                 except Exception as e:
                     logger.debug(f"[RAG] Spin-up auto-learn watcher error: {e}")
 
@@ -3460,6 +3464,86 @@ class RagSearchEngine:
         if stale:
             logger.info(f"[RAG] {len(stale)} file(s) with CJK/Cyrillic text will be learned again (Unicode tokens)")
         return len(stale)
+
+    def reembed_fallback_files(self, max_files: int = 20) -> dict[str, Any]:
+        """Files stored with the built-in lexical vectors because the embedding model was down
+        get neural vectors from the chunk text already in the index (no disk reads) (AI-10).
+
+        Stops at the first file the model can't embed; a full re-embed in progress goes first.
+        """
+        cfg = self.get_config()
+        model = cfg.get("embedding_model") or "embeddinggemma"
+        if model == "zett_lexical_384d":
+            return {"status": "lexical_model", "files": 0}
+        if self._is_indexing:
+            return {"status": "busy", "files": 0}
+        target_dim = cfg.get("embedding_dim")
+        conn = self._get_conn(readonly=True)
+        try:
+            try:
+                if conn.execute("SELECT 1 FROM reembed_staging LIMIT 1").fetchone():
+                    return {"status": "full_reembed_pending", "files": 0}
+            except sqlite3.Error:
+                logger.debug("[RAG] no re-embed staging table: no full re-embed has run")
+            files = conn.execute(
+                """SELECT file_id, file_name, file_ext, doc_title FROM indexed_files
+                   WHERE parse_status = 'ok' AND embedding_model = 'zett_lexical_384d' ORDER BY file_id LIMIT ?""",
+                (int(max_files),),
+            ).fetchall()
+        finally:
+            conn.close()
+        done = 0
+        for f in files:
+            fid = int(f["file_id"])
+            conn = self._get_conn(readonly=True)
+            try:
+                chunks = conn.execute(
+                    """SELECT chunk_id, heading_context, chunk_text, visibility_tier FROM document_chunks
+                       WHERE file_id = ? AND chunk_level != 'parent' ORDER BY chunk_id""",
+                    (fid,),
+                ).fetchall()
+            finally:
+                conn.close()
+            title = f["doc_title"] or f["file_name"]
+            texts = [
+                format_embeddinggemma_document(
+                    title,
+                    text_for_embedding(
+                        f["file_ext"] or "", f"{c['heading_context'] or ''} {c['chunk_text'] or ''}".strip()
+                    ),
+                )
+                for c in chunks
+            ]
+            blobs = compute_neural_embeddings_batch(texts, model, target_dim=target_dim, host=embedding_host(cfg))
+            if blobs is None:
+                return {"status": "embedder_unavailable", "files": done}
+            with self._write_lock:
+                w = self._get_conn(readonly=False)
+                try:
+                    for c, blob in zip(chunks, blobs, strict=True):
+                        dim = len(blob) // 4
+                        w.execute(
+                            "UPDATE document_chunks SET embedding_f32 = ?, embedding_model = ?, embedding_dim = ? WHERE chunk_id = ?",
+                            (blob, model, dim, int(c["chunk_id"])),
+                        )
+                        self.sync_vector_chunk(
+                            w, int(c["chunk_id"]), blob, fid, c["visibility_tier"] or "public_share", dim=dim
+                        )
+                    w.execute("UPDATE indexed_files SET embedding_model = ? WHERE file_id = ?", (model, fid))
+                    w.commit()
+                finally:
+                    w.close()
+            done += 1
+        if done:
+            logger.info(f"[RAG] Re-embedded {done} file(s) that had fallback vectors with '{model}'")
+        return {"status": "ok", "files": done}
+
+    def _maybe_reembed_fallback_files(self) -> None:
+        now = time.time()
+        if now - self._last_fallback_reembed < FALLBACK_REEMBED_EVERY_SECS:
+            return
+        self._last_fallback_reembed = now
+        self.reembed_fallback_files()
 
     def _record_deferred_subpath(self, subpath: str, dev: str) -> None:
         """Queues a file or folder on a sleeping disk to be learned when the disk spins up."""
