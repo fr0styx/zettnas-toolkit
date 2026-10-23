@@ -77,7 +77,9 @@ def get_client_preferences():
 
 @router.post(
     "/system/client-preferences",
-    dependencies=[Depends(require_scope("system:config", "shares:user_write"))],
+    # One file shared by every user's browser, so only admins write it; other users keep
+    # their settings in their own browser.
+    dependencies=[Depends(require_scope("system:config"))],
 )
 async def save_client_preferences(request: Request):
     """Persists client UI preferences into DATA_DIR so they are preserved in backups and cross-device sync."""
