@@ -918,6 +918,21 @@ class RagSearchEngine:
             logger.debug("vec0 table creation failed: %s", e)
             return False
 
+    def _drop_file_vectors(self, conn: sqlite3.Connection, file_ids_sql: str, params: Any) -> None:
+        """Removes the vector-table rows of these files' chunks; call it before the chunks go.
+
+        `file_ids_sql` is a list of placeholders or a subquery giving file ids."""
+        if not (self._has_sqlite_vec and self._vec_table_active):
+            return
+        try:
+            conn.execute(
+                f"""DELETE FROM vec_chunks_{int(self._vec_table_dim)} WHERE chunk_id IN (
+                    SELECT chunk_id FROM document_chunks WHERE file_id IN ({file_ids_sql}))""",
+                params,
+            )
+        except sqlite3.Error as e:
+            logger.debug(f"[RAG] vector cleanup skipped: {e}")
+
     def sync_vector_chunk(
         self,
         conn: sqlite3.Connection,
@@ -990,7 +1005,7 @@ class RagSearchEngine:
                 # staged vectors for another target are useless now
                 conn.execute("DELETE FROM reembed_staging WHERE model != ? OR dim != ?", (target_model, target_dim))
                 conn.commit()
-                total = conn.execute("SELECT COUNT(*) FROM document_chunks").fetchone()[0]
+                total = conn.execute("SELECT COUNT(*) FROM document_chunks WHERE chunk_level != 'parent'").fetchone()[0]
             finally:
                 conn.close()
         if total == 0:
@@ -1005,7 +1020,7 @@ class RagSearchEngine:
                 rows = c.execute(
                     f"""SELECT c.chunk_id FROM document_chunks c
                         LEFT JOIN reembed_staging s ON s.chunk_id = c.chunk_id
-                        WHERE s.chunk_id IS NULL {done_clause} ORDER BY c.chunk_id""",
+                        WHERE s.chunk_id IS NULL AND c.chunk_level != 'parent' {done_clause} ORDER BY c.chunk_id""",
                     params,
                 ).fetchall()
                 return [int(r[0]) for r in rows]
@@ -1038,7 +1053,12 @@ class RagSearchEngine:
         def staged_count() -> int:
             c = self._get_conn(readonly=True)
             try:
-                return int(c.execute("SELECT COUNT(*) FROM reembed_staging").fetchone()[0])
+                return int(
+                    c.execute(
+                        """SELECT COUNT(*) FROM reembed_staging s JOIN document_chunks c ON c.chunk_id = s.chunk_id
+                           WHERE c.chunk_level != 'parent'"""
+                    ).fetchone()[0]
+                )
             finally:
                 c.close()
 
@@ -1131,6 +1151,10 @@ class RagSearchEngine:
                 w.execute(
                     """UPDATE document_chunks SET embedding_f32 = s.embedding, embedding_model = s.model, embedding_dim = s.dim
                        FROM reembed_staging s WHERE document_chunks.chunk_id = s.chunk_id"""
+                )
+                w.execute(
+                    "UPDATE document_chunks SET embedding_f32 = X'', embedding_model = ?, embedding_dim = 0 WHERE chunk_level = 'parent'",
+                    (target_model,),
                 )
                 w.execute("UPDATE indexed_files SET embedding_model = ?", (target_model,))
                 if self._has_sqlite_vec and self._init_vec_table(w, target_dim):
@@ -1783,6 +1807,9 @@ class RagSearchEngine:
                 with self._write_lock:
                     conn = self._get_conn(readonly=False)
                     try:
+                        self._drop_file_vectors(
+                            conn, "SELECT file_id FROM indexed_files WHERE canonical_path = ?", (f_path,)
+                        )
                         conn.execute("DELETE FROM indexed_files WHERE canonical_path = ?", (f_path,))
                         conn.commit()
                     finally:
@@ -2045,6 +2072,11 @@ class RagSearchEngine:
             conn = self._get_conn(readonly=False)
             try:
                 # 1. Truncate indexed data tables
+                if self._has_sqlite_vec and self._vec_table_active:
+                    try:
+                        conn.execute(f"DELETE FROM vec_chunks_{int(self._vec_table_dim)}")
+                    except sqlite3.Error as e:
+                        logger.debug(f"[RAG] vector table reset skipped: {e}")
                 conn.execute("DELETE FROM document_chunks;")
                 conn.execute("DELETE FROM photo_assets;")
                 conn.execute("DELETE FROM folder_manifests;")
@@ -2758,6 +2790,7 @@ class RagSearchEngine:
                         conn_del = self._get_conn(readonly=False)
                         try:
                             placeholders = ",".join("?" for _ in stale_ids)
+                            self._drop_file_vectors(conn_del, placeholders, stale_ids)
                             conn_del.execute(f"DELETE FROM indexed_files WHERE file_id IN ({placeholders})", stale_ids)
                             conn_del.commit()
                         finally:
@@ -3658,6 +3691,7 @@ class RagSearchEngine:
                         ),
                     )
 
+                    self._drop_file_vectors(conn, "?", (file_id,))
                     conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
                     ocr_parent_id_map: dict[int, int] = {}
                     for p in ocr_parent_chunks:
@@ -3771,27 +3805,21 @@ class RagSearchEngine:
             format_embeddinggemma_document(effective_title, f"{ch['heading_context']} {ch['chunk_text']}".strip())
             for ch in child_chunks
         ]
-        parent_texts = [
-            format_embeddinggemma_document(effective_title, f"{p['heading_context']} {p['chunk_text']}".strip())
-            for p in parent_chunks
-        ]
         # One batched call per file; every vector of a file comes from the same model (AI-15).
         neural_blobs = None
         if configured_emb_model != "zett_lexical_384d":
             neural_blobs = compute_neural_embeddings_batch(
-                child_texts + parent_texts, configured_emb_model, target_dim=target_dim, host=embedding_host(cfg)
+                child_texts, configured_emb_model, target_dim=target_dim, host=embedding_host(cfg)
             )
         if neural_blobs is not None:
             effective_file_emb_model = configured_emb_model
             all_blobs = neural_blobs
         else:
-            all_blobs = [compute_384d_embedding(text=t, scene_tags=lexical_tags)[0] for t in child_texts + parent_texts]
-        prepared_child_chunks: list[tuple[dict[str, Any], bytes]] = list(
-            zip(child_chunks, all_blobs[: len(child_texts)], strict=False)
-        )
-        prepared_parent_chunks: list[tuple[dict[str, Any], bytes]] = list(
-            zip(parent_chunks, all_blobs[len(child_texts) :], strict=False)
-        )
+            all_blobs = [compute_384d_embedding(text=t, scene_tags=lexical_tags)[0] for t in child_texts]
+        prepared_child_chunks: list[tuple[dict[str, Any], bytes]] = list(zip(child_chunks, all_blobs, strict=False))
+        # Parents only give their children context in answers; search never ranks them, so they get
+        # no vector (embedding them was 44% of the text, and they took nearest-neighbour slots)
+        prepared_parent_chunks: list[tuple[dict[str, Any], bytes]] = [(p, b"") for p in parent_chunks]
 
         with self._write_lock:
             conn = self._get_conn(readonly=False)
@@ -3857,6 +3885,7 @@ class RagSearchEngine:
                 ).fetchone()
                 file_id = int(row_id["file_id"]) if row_id else int(cur.lastrowid or 0)
 
+                self._drop_file_vectors(conn, "?", (file_id,))
                 conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
                 parent_id_map: dict[int, int] = {}
                 for p, p_emb in prepared_parent_chunks:
@@ -3897,7 +3926,7 @@ class RagSearchEngine:
                 for ch, emb_blob in prepared_child_chunks:
                     p_id = parent_id_map.get(ch.get("parent_index"))
                     ch_dim = len(emb_blob) // 4
-                    conn.execute(
+                    cur_c = conn.execute(
                         """
                         INSERT INTO document_chunks (
                             file_id, chunk_index, parent_chunk_id, chunk_level, source_modality, file_name, doc_type,
@@ -3930,6 +3959,8 @@ class RagSearchEngine:
                             allowed_csv,
                         ),
                     )
+                    if effective_file_emb_model != "zett_lexical_384d" and ch_dim == self._vec_table_dim:
+                        self.sync_vector_chunk(conn, int(cur_c.lastrowid or 0), emb_blob, file_id, vis_tier, dim=ch_dim)
                 conn.commit()
                 return file_id
             finally:

@@ -30,18 +30,25 @@ def engine(tmp_path, monkeypatch):
                embedding_model, embedding_dim) VALUES (?, ?, ?, '', ?, 'old-model', 4)""",
             (cur.lastrowid, i, f"text {i}", old),
         )
+    conn.execute(
+        """INSERT INTO document_chunks (file_id, chunk_index, chunk_level, chunk_text, heading_context, embedding_f32,
+           embedding_model, embedding_dim) VALUES (?, -1, 'parent', 'all the text', '', ?, 'old-model', 4)""",
+        (cur.lastrowid, old),
+    )
     conn.commit()
     conn.close()
     yield eng
     eng.close()
 
 
-def chunk_models(eng):
+def chunk_models(eng, level="child"):
     c = eng._get_conn(readonly=True)
     try:
-        return [
-            tuple(r) for r in c.execute("SELECT embedding_model, embedding_dim FROM document_chunks ORDER BY chunk_id")
-        ]
+        rows = c.execute(
+            "SELECT embedding_model, embedding_dim FROM document_chunks WHERE chunk_level = ? ORDER BY chunk_id",
+            (level,),
+        )
+        return [tuple(r) for r in rows]
     finally:
         c.close()
 
@@ -82,6 +89,9 @@ def test_pauses_without_touching_search_then_resumes(engine):
     assert len(seen) == 2  # the staged chunk was not embedded again
     assert m.call_args.args[3] == "http://gpu:11434"
     assert chunk_models(engine) == [("new-model", 4)] * 3
+    # parents only give context: no vector, and they were never sent to the model
+    assert chunk_models(engine, "parent") == [("new-model", 0)]
+    assert "all the text" not in " ".join(seen)
     cfg = engine.get_config()
     assert (cfg["embedding_model"], cfg["embedding_dim"], cfg["embedding_host"]) == ("new-model", 4, "http://gpu:11434")
     c = engine._get_conn(readonly=True)
@@ -109,3 +119,55 @@ def test_switching_model_by_hand_drops_the_embedding_host(engine):
     assert engine.get_config()["embedding_host"] == "http://gpu:11434"
     engine.update_config({"embedding_model": "nomic-embed-text"})
     assert engine.get_config()["embedding_host"] == ""
+
+
+def test_indexing_keeps_the_vector_table_in_step(tmp_path, monkeypatch):
+    monkeypatch.setattr(re_mod, "RAG_CONFIG_PATH", str(tmp_path / "rag_config.json"))
+    eng = RagSearchEngine(db_path=str(tmp_path / "rag_index.db"))
+    eng._ensure_schema()
+    if not eng._has_sqlite_vec:
+        pytest.skip("sqlite-vec is not available here")
+    eng.update_config({"embedding_model": "m", "embedding_dim": 768})
+    doc = tmp_path / "guide.md"
+
+    def write(n):
+        doc.write_text(
+            "\n\n".join(f"## Part {i}\n\n" + " ".join(f"word{i}_{j}" for j in range(220)) for i in range(n)),
+            encoding="utf-8",
+        )
+
+    def vec(texts, *a, **k):
+        return [struct.pack("<768f", *([1.0] + [0.0] * 767)) for _ in texts]
+
+    def index():
+        st = doc.stat()
+        with (
+            mock.patch.object(re_mod, "compute_neural_embeddings_batch", side_effect=vec) as m,
+            mock.patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=False),
+        ):
+            eng._index_single_file(str(doc), doc.name, ".md", st.st_size, st.st_mtime_ns, None, force_wake=True)
+        return m
+
+    def counts():
+        c = eng._get_conn(readonly=True)
+        try:
+            levels = dict(c.execute("SELECT chunk_level, COUNT(*) FROM document_chunks GROUP BY 1").fetchall())
+            parent_dims = {
+                r[0] for r in c.execute("SELECT embedding_dim FROM document_chunks WHERE chunk_level = 'parent'")
+            }
+            vectors = c.execute("SELECT COUNT(*) FROM vec_chunks_768").fetchone()[0]
+            return levels, parent_dims, vectors
+        finally:
+            c.close()
+
+    write(12)
+    m = index()
+    levels, parent_dims, vectors = counts()
+    assert levels.get("parent") and parent_dims == {0}
+    assert vectors == levels["child"]
+    assert sum(len(c.args[0]) for c in m.call_args_list) == levels["child"]  # parents were not embedded
+    write(4)  # re-indexed with fewer chunks: the old vectors go
+    index()
+    levels, _, vectors = counts()
+    assert vectors == levels["child"]
+    eng.close()

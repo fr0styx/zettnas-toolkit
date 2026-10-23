@@ -536,7 +536,9 @@ def compute_neural_embeddings_batch(
                     headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
                     method="POST",
                 )
-                with urllib.request.urlopen(req, timeout=10.0 + 1.5 * len(batch)) as resp:
+                with urllib.request.urlopen(
+                    req, timeout=15.0 + 4.0 * len(batch)
+                ) as resp:  # a 2,048-token text takes ~3 s on an iGPU
                     data = json.loads(resp.read().decode("utf-8"))
                 got = data.get("embeddings")
                 if isinstance(got, list) and len(got) == len(batch) and all(isinstance(e, list) and e for e in got):
