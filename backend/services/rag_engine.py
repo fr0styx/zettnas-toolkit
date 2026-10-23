@@ -26,6 +26,8 @@ import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 import zlib
+
+MAX_EXPANDED_BYTES = 64 * 1024 * 1024  # most a document may expand to while its text is read
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from PIL import Image, ImageFile
@@ -1433,7 +1435,12 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
             with zipfile.ZipFile(file_path, "r") as zf:
                 if "word/document.xml" not in zf.namelist():
                     return ""
-                xml_bytes = zf.read("word/document.xml")
+                if zf.getinfo("word/document.xml").file_size > MAX_EXPANDED_BYTES:
+                    return ""
+                with zf.open("word/document.xml") as member:
+                    xml_bytes = member.read(MAX_EXPANDED_BYTES + 1)
+                if len(xml_bytes) > MAX_EXPANDED_BYTES:
+                    return ""
             root = ET.fromstring(xml_bytes)
             paragraphs: List[str] = []
             for p in root.iter():
@@ -1515,12 +1522,16 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
             with open(file_path, "rb") as f:
                 raw = f.read(min(MAX_INDEX_FILE_BYTES, 16 * 1024 * 1024))
             text_fragments: List[str] = []
+            budget = MAX_EXPANDED_BYTES  # shared by all streams of this file
             # Decompress FlateDecode streams and extract literal strings (...)
             for m in re.finditer(rb"stream[\r\n]+(.*?)[\r\n]+endstream", raw, re.DOTALL):
+                if budget <= 0:
+                    break
                 stream_bytes = m.group(1)
                 for wbits in (zlib.MAX_WBITS, -zlib.MAX_WBITS):
                     try:
-                        decompressed = zlib.decompress(stream_bytes, wbits)
+                        decompressed = zlib.decompressobj(wbits).decompress(stream_bytes, budget)
+                        budget -= len(decompressed)
                         decoded = decompressed.decode("latin-1", errors="ignore")
                         for s_match in re.finditer(r"\(([^()\\]{2,250}(?:\\.[^()\\]*)*)\)", decoded):
                             frag = s_match.group(1)
