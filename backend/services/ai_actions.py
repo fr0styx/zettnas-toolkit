@@ -31,7 +31,9 @@ def describe(tool: str, args: Dict[str, Any]) -> str:
         return f"{act.capitalize()} container '{name}'"
     if tool == "set_fan_profile":
         prof = args.get("profile") or args.get("fan_profile") or args.get("new_profile") or "auto"
-        return f"Switch fan profile to '{prof}'"
+        zero_rpm = args.get("zero_rpm_enabled")
+        extra = "" if zero_rpm is None else f" and turn Zero-RPM {'on' if bool(zero_rpm) else 'off'}"
+        return f"Switch fan profile to '{prof}'{extra}"
     if tool == "trigger_ai_sync":
         return f"{str(args.get('action') or 'start').capitalize()} AI sync"
     return tool

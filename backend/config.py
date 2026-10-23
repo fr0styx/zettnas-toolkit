@@ -240,12 +240,20 @@ ENFORCE_PASSWORD_CHANGE = not (
 )
 
 
+def initial_password_file() -> str:
+    """Where a fresh install keeps its generated first-time admin password until it is changed."""
+    return os.path.join(DATA_DIR, "initial-admin-password")
+
+
 def is_using_default_password() -> bool:
-    """True if the stored hash matches 'admin'. Cached per hash (scrypt is slow by design)."""
+    """True while the admin still has 'admin' or the generated first-time password.
+
+    The 'admin' check is cached per hash (scrypt is slow by design).
+    """
     if _default_pw_cache["hash"] != STORED_PASSWORD_HASH:
         _default_pw_cache["hash"] = STORED_PASSWORD_HASH
         _default_pw_cache["value"] = verify_password("admin", STORED_PASSWORD_HASH)
-    return _default_pw_cache["value"]
+    return bool(_default_pw_cache["value"]) or os.path.exists(initial_password_file())
 
 
 def _load_security():

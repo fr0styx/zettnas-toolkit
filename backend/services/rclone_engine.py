@@ -930,6 +930,38 @@ class RcloneEngine:
         except json.JSONDecodeError:
             return []
 
+    _REMOTE_SPEC_RE = re.compile(r"([A-Za-z0-9_][A-Za-z0-9_. -]{0,63}):(.*)", re.S)
+
+    def checked_location(self, spec: str, confine_local: bool = True) -> str:
+        """A sync source or destination: a configured remote ("name:path") or a local path.
+
+        Options and rclone's on-the-fly or connection-string remotes are refused, and
+        local paths must be inside the storage pool unless confine_local is False.
+        """
+        spec = (spec or "").strip()
+        if not spec or spec.startswith(("-", ":")) or re.search(r"[\x00-\x1f]", spec):
+            raise ValueError("Invalid sync location.")
+        m = self._REMOTE_SPEC_RE.fullmatch(spec)
+        if m and not spec.startswith("/"):
+            cfg = configparser.RawConfigParser(strict=False)
+            try:
+                cfg.read(self.config_file)
+            except configparser.Error as e:
+                raise ValueError("The rclone config could not be read.") from e
+            if not cfg.has_section(m.group(1)):
+                raise ValueError(f"Unknown remote '{m.group(1)}'.")
+            return spec
+        if not spec.startswith("/"):
+            raise ValueError("Local sync paths must be absolute.")
+        if not confine_local:
+            return spec
+        from backend.fsutil import resolve_within
+
+        real = resolve_within(spec, config.ALLOWED_BROWSE_ROOTS)
+        if not real:
+            raise ValueError("Local sync paths must be inside the storage pool.")
+        return real
+
     def start_sync_job(
         self,
         src: str,
@@ -977,8 +1009,6 @@ class RcloneEngine:
                 cmd = [
                     rclone_bin,
                     action,
-                    src,
-                    dst,
                     "--config",
                     self.config_file,
                     "--use-json-log",
@@ -995,6 +1025,7 @@ class RcloneEngine:
                     cmd.append("-v")
                 if dry_run:
                     cmd.append("--dry-run")
+                cmd += ["--", src, dst]  # locations are never read as options
 
                 logger.info(f"[RCLONE] Starting async sync job {job_id}: {' '.join(cmd)}")
                 proc = subprocess.Popen(

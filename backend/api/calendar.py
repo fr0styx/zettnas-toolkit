@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 
-from backend.auth import require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.fsutil import atomic_write_json, read_json
 from backend.services.ssrf_guard import validate_public_url
 
@@ -230,24 +230,53 @@ async def _sync_single_feed(feed: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 # -------------------------------------------------------------------------
+# Ownership: each person has their own notes and feeds
+# -------------------------------------------------------------------------
+def _owner_id(principal: AuthenticatedPrincipal) -> str:
+    return principal.user_id
+
+
+def _is_mine(item: dict[str, Any], principal: AuthenticatedPrincipal) -> bool:
+    owner = item.get("owner")
+    if owner:
+        return owner == principal.user_id
+    # Saved before notes had an owner: kept for administrators only.
+    return principal.is_system or principal.has_scope("*")
+
+
+def _my_feed_ids(store: dict[str, Any], principal: AuthenticatedPrincipal) -> set[str]:
+    return {f.get("id") for f in store.get("feeds", []) if _is_mine(f, principal)}
+
+
+def _my_feed_events(store: dict[str, Any], principal: AuthenticatedPrincipal) -> list[dict[str, Any]]:
+    feed_ids = _my_feed_ids(store, principal)
+    return [ev for ev in store.get("feed_events", []) if ev.get("feed_id") in feed_ids]
+
+
+def _public_item(item: dict[str, Any]) -> dict[str, Any]:
+    return {k: v for k, v in item.items() if k != "owner"}
+
+
+# -------------------------------------------------------------------------
 # REST API Endpoints: Events, Notes & Reminders
 # -------------------------------------------------------------------------
 @router.get("/events")
 async def get_calendar_events(
-    start_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
-    end_date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    start_date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    end_date: str | None = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """
-    Returns user notes/reminders combined with synced external calendar events.
+    Returns the caller's notes/reminders combined with events from their synced feeds.
     Optionally filters by date range.
     """
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
 
-    notes = store.get("notes", [])
-    feed_events = store.get("feed_events", [])
+    notes = [n for n in store.get("notes", []) if _is_mine(n, principal)]
+    feed_events = _my_feed_events(store, principal)
 
-    all_items = list(notes) + list(feed_events)
+    all_items = [_public_item(it) for it in list(notes) + list(feed_events)]
 
     if start_date:
         all_items = [it for it in all_items if it.get("date", "") >= start_date]
@@ -267,14 +296,16 @@ async def get_calendar_events(
 
 
 @router.post("/notes", dependencies=[Depends(require_scope("system:config", "shares:user_write"))])
-async def create_calendar_note(note: CalendarNoteModel):
+async def create_calendar_note(
+    note: CalendarNoteModel, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
     """
     Creates a new note, reminder, or task for a given date.
     """
-    note_id = note.id or str(uuid.uuid4())
+    owner = _owner_id(principal)
     now = time.time()
     item = {
-        "id": note_id,
+        "id": "",
         "date": note.date,
         "time": note.time or "",
         "title": note.title.strip(),
@@ -285,31 +316,33 @@ async def create_calendar_note(note: CalendarNoteModel):
         "source": "local",
         "created_at": now,
         "updated_at": now,
+        "owner": owner,
     }
 
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
         notes = store.get("notes", [])
+        # A caller-chosen id is kept only if no other note uses it.
+        taken = {n.get("id") for n in notes}
+        item["id"] = note.id if note.id and note.id not in taken else str(uuid.uuid4())
         notes.append(item)
         store["notes"] = notes
         await asyncio.to_thread(_save_calendar_store, store)
 
-    return {"status": "ok", "message": "Note created", "note": item}
+    return {"status": "ok", "message": "Note created", "note": _public_item(item)}
 
 
 @router.patch("/notes/{note_id}", dependencies=[Depends(require_scope("system:config", "shares:user_write"))])
-async def update_calendar_note(note_id: str, patch: CalendarNotePatchModel):
+async def update_calendar_note(
+    note_id: str, patch: CalendarNotePatchModel, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
     """
     Updates or toggles completed status of a note/reminder.
     """
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
         notes = store.get("notes", [])
-        found = None
-        for n in notes:
-            if n.get("id") == note_id:
-                found = n
-                break
+        found = next((n for n in notes if n.get("id") == note_id and _is_mine(n, principal)), None)
 
         if not found:
             raise HTTPException(status_code=404, detail="Note not found")
@@ -331,18 +364,18 @@ async def update_calendar_note(note_id: str, patch: CalendarNotePatchModel):
         store["notes"] = notes
         await asyncio.to_thread(_save_calendar_store, store)
 
-    return {"status": "ok", "message": "Note updated", "note": found}
+    return {"status": "ok", "message": "Note updated", "note": _public_item(found)}
 
 
 @router.delete("/notes/{note_id}", dependencies=[Depends(require_scope("system:config", "shares:user_write"))])
-async def delete_calendar_note(note_id: str):
+async def delete_calendar_note(note_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """
     Deletes a user note or reminder.
     """
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
         notes = store.get("notes", [])
-        new_notes = [n for n in notes if n.get("id") != note_id]
+        new_notes = [n for n in notes if not (n.get("id") == note_id and _is_mine(n, principal))]
         if len(new_notes) == len(notes):
             raise HTTPException(status_code=404, detail="Note not found")
 
@@ -356,20 +389,23 @@ async def delete_calendar_note(note_id: str):
 # REST API Endpoints: Calendar Provider Sync (Google, Apple, Outlook, CalDAV)
 # -------------------------------------------------------------------------
 @router.get("/feeds")
-async def list_calendar_feeds():
+async def list_calendar_feeds(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """
-    Lists configured external calendar feeds and their sync status.
+    Lists the caller's external calendar feeds and their sync status.
     """
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
-    return {"status": "ok", "feeds": store.get("feeds", [])}
+    return {"status": "ok", "feeds": [_public_item(f) for f in store.get("feeds", []) if _is_mine(f, principal)]}
 
 
 @router.post("/feeds", dependencies=[Depends(require_scope("system:config", "shares:user_write"))])
-async def add_or_update_calendar_feed(feed: CalendarFeedModel):
+async def add_or_update_calendar_feed(
+    feed: CalendarFeedModel, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
     """
-    Adds a new calendar provider feed (e.g. Google Calendar iCal URL) or updates an existing one.
+    Adds a new calendar provider feed (e.g. Google Calendar iCal URL) or updates one of the caller's.
     """
+    owner = _owner_id(principal)
     # Quick sanity check for valid URL format
     test_url = feed.url.strip()
     if test_url.startswith("webcal://"):
@@ -379,9 +415,8 @@ async def add_or_update_calendar_feed(feed: CalendarFeedModel):
     if not is_safe:
         raise HTTPException(status_code=400, detail=f"Invalid or disallowed calendar URL: {err_msg}")
 
-    feed_id = feed.id or str(uuid.uuid4())
     feed_item = {
-        "id": feed_id,
+        "id": "",
         "name": feed.name.strip(),
         "url": feed.url.strip(),
         "color": feed.color or "#00f0ff",
@@ -390,12 +425,17 @@ async def add_or_update_calendar_feed(feed: CalendarFeedModel):
         "last_synced": feed.last_synced,
         "event_count": feed.event_count,
         "error": None,
+        "owner": owner,
     }
 
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
         feeds = store.get("feeds", [])
-        idx = next((i for i, f in enumerate(feeds) if f.get("id") == feed_id), None)
+        idx = next((i for i, f in enumerate(feeds) if feed.id and f.get("id") == feed.id), None)
+        if idx is not None and not _is_mine(feeds[idx], principal):
+            raise HTTPException(status_code=404, detail="Calendar feed not found")
+        feed_id = feed.id if idx is not None else str(uuid.uuid4())
+        feed_item["id"] = feed_id
         if idx is not None:
             feeds[idx] = feed_item
         else:
@@ -420,17 +460,19 @@ async def add_or_update_calendar_feed(feed: CalendarFeedModel):
                     break
             await asyncio.to_thread(_save_calendar_store, store)
 
-    return {"status": "ok", "message": "Calendar feed saved", "feed": feed_item}
+    return {"status": "ok", "message": "Calendar feed saved", "feed": _public_item(feed_item)}
 
 
 @router.delete("/feeds/{feed_id}", dependencies=[Depends(require_scope("system:config", "shares:user_write"))])
-async def delete_calendar_feed(feed_id: str):
+async def delete_calendar_feed(feed_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """
-    Removes a calendar provider feed and cleans up all its cached events.
+    Removes one of the caller's calendar feeds and cleans up its cached events.
     """
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
         feeds = store.get("feeds", [])
+        if not any(f.get("id") == feed_id and _is_mine(f, principal) for f in feeds):
+            raise HTTPException(status_code=404, detail="Calendar feed not found")
         store["feeds"] = [f for f in feeds if f.get("id") != feed_id]
         store["feed_events"] = [ev for ev in store.get("feed_events", []) if ev.get("feed_id") != feed_id]
         await asyncio.to_thread(_save_calendar_store, store)
@@ -439,35 +481,37 @@ async def delete_calendar_feed(feed_id: str):
 
 
 @router.post("/sync", dependencies=[Depends(require_scope("system:config", "shares:user_write"))])
-async def sync_all_calendar_feeds():
+async def sync_all_calendar_feeds(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """
-    Syncs all enabled calendar provider feeds and updates the cached events.
+    Syncs the caller's enabled calendar feeds and updates their cached events.
     """
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
-        feeds = list(store.get("feeds", []))
+        feeds = [dict(f) for f in store.get("feeds", []) if _is_mine(f, principal)]
 
-    all_feed_events = []
+    new_events: dict[str, list[dict[str, Any]]] = {}
     synced_count = 0
 
     for feed in feeds:
         if not feed.get("enabled", True):
             continue
-        events = await _sync_single_feed(feed)
-        all_feed_events.extend(events)
+        new_events[feed["id"]] = await _sync_single_feed(feed)
         synced_count += 1
 
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
-        store["feeds"] = feeds
-        store["feed_events"] = all_feed_events
+        synced = {f["id"]: f for f in feeds}
+        store["feeds"] = [synced.get(f.get("id"), f) if _is_mine(f, principal) else f for f in store.get("feeds", [])]
+        kept = [ev for ev in store.get("feed_events", []) if ev.get("feed_id") not in new_events]
+        store["feed_events"] = kept + [ev for evs in new_events.values() for ev in evs]
         await asyncio.to_thread(_save_calendar_store, store)
 
+    total = sum(len(evs) for evs in new_events.values())
     return {
         "status": "ok",
         "message": f"Successfully synced {synced_count} calendar feed(s)",
-        "total_events": len(all_feed_events),
-        "feeds": feeds,
+        "total_events": total,
+        "feeds": [_public_item(f) for f in feeds],
     }
 
 
@@ -475,14 +519,14 @@ async def sync_all_calendar_feeds():
 # Export & Import
 # -------------------------------------------------------------------------
 @router.get("/export")
-async def export_calendar_ics():
+async def export_calendar_ics(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """
-    Exports all user notes and reminders as an RFC 5545 .ics calendar file.
+    Exports the caller's notes and reminders as an RFC 5545 .ics calendar file.
     """
     async with _calendar_lock:
         store = await asyncio.to_thread(_load_calendar_store)
 
-    notes = store.get("notes", [])
+    notes = [n for n in store.get("notes", []) if _is_mine(n, principal)]
 
     lines = [
         "BEGIN:VCALENDAR",

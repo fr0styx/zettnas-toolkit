@@ -394,6 +394,49 @@ def parse_portainer_ports(raw_ports: Any) -> tuple[int, list[str]]:
     return default_port, ports_list
 
 
+_VOL_KEY_RE = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}")
+
+
+def _safe_vol_key(key: Any) -> bool:
+    """A template volume key is a folder name inside the app's own folder, never a host path."""
+    k = str(key)
+    return bool(_VOL_KEY_RE.fullmatch(k)) and k not in (".", "..")
+
+
+def _vol_key_for(target: str, taken: dict[str, str]) -> str:
+    key = target.strip("/").split("/")[-1] or "data"
+    key = re.sub(r"[^a-zA-Z0-9_]+", "_", key).lower() or "data"
+    if key in taken:
+        key = f"{key}_{len(taken) + 1}"
+    return key
+
+
+def sanitize_volume_map(raw: Any) -> dict[str, str]:
+    """Template volumes as {folder under the app's folder: path in the container}.
+
+    Keys that are not plain folder names (host paths, '..') are replaced by a name
+    made from the container path, as the list form already does.
+    """
+    out: dict[str, str] = {}
+    if not isinstance(raw, dict):
+        return out
+    for key, target in raw.items():
+        target = str(target or "").split(":", 1)[0].strip()
+        if not target.startswith("/"):
+            continue
+        name = str(key) if _safe_vol_key(key) and str(key) not in out else _vol_key_for(target, out)
+        out[name] = target
+    return out
+
+
+def _unsafe_volumes(app: dict[str, Any]) -> list[str]:
+    return [
+        str(k)
+        for k, v in (app.get("volumes") or {}).items()
+        if not _safe_vol_key(k) or not str(v).startswith("/") or ":" in str(v)
+    ]
+
+
 def parse_portainer_volumes(raw_vols: Any) -> dict[str, str]:
     """Extracts clean volume mapping dictionary from Portainer template volumes."""
     vol_dict = {}
@@ -414,7 +457,7 @@ def parse_portainer_volumes(raw_vols: Any) -> dict[str, str]:
                 key = re.sub(r"[^a-zA-Z0-9_]+", "_", key).lower()
                 vol_dict[key] = target
     elif isinstance(raw_vols, dict):
-        vol_dict = raw_vols
+        vol_dict = sanitize_volume_map(raw_vols)
     if not vol_dict:
         vol_dict = {"config": "/config"}
     return vol_dict
@@ -741,8 +784,10 @@ def sideload_app_manifest(
             for v in raw_vols:
                 v_str = str(v)
                 if ":" in v_str:
-                    h, c = v_str.split(":", 1)
-                    volumes[h] = c
+                    _host, c = v_str.split(":", 1)
+                    target = c.split(":", 1)[0]
+                    if target.startswith("/"):
+                        volumes[_vol_key_for(target, volumes)] = target
         raw_env = svc_cfg.get("environment", {})
         if isinstance(raw_env, dict):
             env = {str(k): str(val) for k, val in raw_env.items()}
@@ -761,7 +806,7 @@ def sideload_app_manifest(
         default_port = int(manifest_data.get("default_port", 8080))
         logo = manifest_data.get("logo") or manifest_data.get("icon") or ""
         ports = manifest_data.get("ports", [default_port])
-        volumes = manifest_data.get("volumes", {})
+        volumes = sanitize_volume_map(manifest_data.get("volumes", {}))
         env = manifest_data.get("env", {})
 
     # 2. Security Assessment
@@ -1151,6 +1196,17 @@ def stream_deploy_catalog_app(
             "step": "error",
             "percent": 0,
             "message": f"Application '{app_id}' was not found in the curated catalog.",
+            "done": True,
+        }
+        return
+
+    unsafe = _unsafe_volumes(app)
+    if unsafe:
+        yield {
+            "step": "error",
+            "percent": 0,
+            "message": f"The template asks for host folders ({', '.join(unsafe)}); only folders inside the app's own folder are allowed.",
+            "error": "Invalid template volume",
             "done": True,
         }
         return

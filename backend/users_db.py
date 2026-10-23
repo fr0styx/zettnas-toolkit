@@ -238,6 +238,51 @@ def init_users_db(db_path: Optional[str] = None) -> None:
     migrate_legacy_data(target_path)
 
 
+def _shared_default_allowed() -> bool:
+    """Only the test suite may bootstrap with the published 'admin' password."""
+    return os.environ.get("TESTING") == "1" and os.environ.get("ZETTNAS_ALLOW_DEFAULT_PASSWORD", "1") == "1"
+
+
+def _first_time_password() -> str:
+    """A per-install first sign-in password instead of the shared default 'admin'.
+
+    Saved (mode 0600) in DATA_DIR and written to the log once, so only someone with
+    access to the server or its logs can claim a fresh install.
+    """
+    import secrets
+
+    path = config.initial_password_file()
+    try:
+        with open(path, encoding="utf-8") as f:
+            existing = f.read().strip()
+    except FileNotFoundError:
+        existing = ""
+    if existing:
+        return existing
+    password = secrets.token_urlsafe(15)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(password + "\n")
+    logger.warning(
+        "First-time admin sign-in: user 'admin', password '%s' (also saved in %s). "
+        "You will be asked to choose your own password.",
+        password,
+        path,
+    )
+    return password
+
+
+def _forget_first_time_password() -> None:
+    path = config.initial_password_file()
+    if not os.path.exists(path):
+        return
+    try:
+        os.remove(path)
+    except OSError as e:
+        logger.warning(f"Could not remove the first-time password file: {e}")
+
+
 def migrate_legacy_data(db_path: Optional[str] = None) -> None:
     """Seamlessly migrates existing security.json, sessions.json, and api_tokens.json."""
     target_path = db_path or USERS_DB_PATH
@@ -269,6 +314,11 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
 
             if not password_hash:
                 password_hash = hash_password("admin")
+            generated = False
+            if verify_password("admin", password_hash) and not _shared_default_allowed():
+                password_hash = hash_password(_first_time_password())
+                config.STORED_PASSWORD_HASH = password_hash
+                generated = True
 
             # Insert primary SuperAdmin
             conn.execute(
@@ -286,7 +336,7 @@ def migrate_legacy_data(db_path: Optional[str] = None) -> None:
                     password_hash,
                     "superadmin",
                     "active",
-                    1 if verify_password("admin", password_hash) else 0,
+                    1 if generated or verify_password("admin", password_hash) else 0,
                     f"/mnt/user/homes/{admin_username}",
                     now,
                     now,
@@ -497,6 +547,8 @@ def update_user_password(
     # Clear in-memory cache
     with _SESSION_CACHE_LOCK:
         _SESSION_CACHE.clear()
+    if res.rowcount > 0 and user_id == "admin-00000000-0000-0000-0000-000000000001":
+        _forget_first_time_password()
     if res.rowcount > 0:
         try:
             user = get_user_by_id(user_id, db_path=db_path)

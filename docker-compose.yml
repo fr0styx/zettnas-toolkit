@@ -30,7 +30,7 @@ services:
       - LCD_FPS=${LCD_FPS:-10}
       - PORT=8082
       - WEBDAV_PORT=${WEBDAV_PORT:-8084}
-      - WEB_PASSWORD=${WEB_PASSWORD:-admin}
+      - WEB_PASSWORD=${WEB_PASSWORD:-}
       - NAS_NAME=${NAS_NAME:-}
       - POOL_PATH=/mnt/user
       - OS_NVME=${OS_NVME:-nvme1n1}

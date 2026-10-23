@@ -1025,7 +1025,7 @@ export function applyStats(raw) {
       if (warnEl) warnEl.style.display = 'block';
       if (!_defaultPwdWarned) {
         _defaultPwdWarned = true;
-        showToast(t('toast.default_pwd_alert', "Security Warning: Default password 'admin' is active! Please change it in Settings."), 'error');
+        showToast(t('toast.default_pwd_alert', "Security Warning: the default or first-time password is still active! Please change it in Settings."), 'error');
       }
       checkAndTriggerSetupWizard(s);
     }
