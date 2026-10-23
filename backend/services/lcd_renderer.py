@@ -167,7 +167,7 @@ def render_lcd_loop():
                     args=chromium_args,
                     executable_path=os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"),
                 )
-                context = browser.new_context(viewport={"width": fb_width, "height": fb_height}, device_scale_factor=1)
+                context = browser.new_context(**lcd_context_options(fb_width, fb_height))
                 context.set_extra_http_headers({"Authorization": f"Bearer {config.LCD_INTERNAL_TOKEN}"})
                 try:
                     context.add_cookies(
@@ -221,6 +221,12 @@ def render_lcd_loop():
 
     Z_STATE.lcd_renderer_active = False
     logger.info("[LCD] Active render loop terminated cleanly.")
+
+
+def lcd_context_options(width: int, height: int) -> dict:
+    """Browser settings for the LCD page. Reduced motion stops CSS animations after one
+    run, so an idle screen stops repainting (and stops costing frames) (PERF-2)."""
+    return {"viewport": {"width": width, "height": height}, "device_scale_factor": 1, "reduced_motion": "reduce"}
 
 
 # ---------------------------------------------------------------------------
@@ -374,7 +380,9 @@ def _screencast_frames(page, cdp, fb: "_Framebuffer", fmt: str, frame_interval: 
                 if Z_STATE.ui_wake.wait(1.0):
                     Z_STATE.ui_wake.clear()
                 continue
-            page.wait_for_timeout(50)  # lets Playwright deliver the frame events
+            # Lets Playwright deliver the frame events. One frame interval is enough: frames are
+            # capped at that rate anyway, and a shorter wait only adds round trips while idle.
+            page.wait_for_timeout(max(50, frame_interval * 1000))
             woke = Z_STATE.ui_wake.is_set()
             if woke:
                 Z_STATE.ui_wake.clear()

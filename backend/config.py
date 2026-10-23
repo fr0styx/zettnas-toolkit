@@ -73,7 +73,7 @@ ENABLE_FB = os.environ.get("ENABLE_FB", "1") == "1"
 LCD_FPS = int(float(os.environ.get("LCD_FPS", "5")))
 SMART_POLL_INTERVAL_HDD = int(os.environ.get("SMART_POLL_HDD", "45"))
 SMART_POLL_INTERVAL_NVME = int(os.environ.get("SMART_POLL_NVME", "15"))
-LCD_FORMAT = os.environ.get("LCD_FORMAT", "png").lower()
+LCD_FORMAT = os.environ.get("LCD_FORMAT", "jpeg").lower()  # jpeg: cheaper to encode than png (PERF-2)
 PORT = int(os.environ.get("PORT", "8082"))
 SHOW_OS_DISK = os.environ.get("SHOW_OS_DISK", "1") == "1"
 
