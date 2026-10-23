@@ -450,16 +450,24 @@ def serve_index(request: Request):
     if not os.path.isfile(index_file):
         raise HTTPException(status_code=404, detail="index.html not found")
     is_lcd = request.query_params.get("mode") == "lcd" or "mode=lcd" in str(request.query_params)
-    headers = {"Cache-Control": "no-cache, no-store, must-revalidate", "Vary": "Accept-Encoding"}
+    # Revalidated on every load (no-cache), but an unchanged page is answered with 304 (PERF-5)
+    headers = {"Cache-Control": "no-cache", "Vary": "Accept-Encoding"}
+    picked = None
     if not is_lcd:
         # The page is the same for everyone: send the copy the build compressed (FE-01).
         from backend.static_files import pick_precompressed
 
         picked = pick_precompressed(index_file, request.headers.get("accept-encoding", ""))
-        if picked:
-            with open(picked[0], "rb") as f:
-                body = f.read()
-            return Response(content=body, media_type="text/html", headers={**headers, "Content-Encoding": picked[1]})
+    st = os.stat(picked[0] if picked else index_file)
+    variant = "lcd" if is_lcd else (picked[1] if picked else "identity")
+    etag = f'"{st.st_mtime_ns:x}-{st.st_size:x}-{variant}"'
+    headers["ETag"] = etag
+    if etag in [t.strip() for t in request.headers.get("if-none-match", "").split(",")]:
+        return Response(status_code=304, headers=headers)
+    if picked:
+        with open(picked[0], "rb") as f:
+            body = f.read()
+        return Response(content=body, media_type="text/html", headers={**headers, "Content-Encoding": picked[1]})
     with open(index_file, encoding="utf-8") as f:
         html_str = f.read()
     if is_lcd:
