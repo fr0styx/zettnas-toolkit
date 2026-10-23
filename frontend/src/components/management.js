@@ -1547,6 +1547,27 @@ export function updateCatalogSourcesBadge() {
   }
 }
 
+function _setCatalogCountBadges(n) {
+  for (const id of ['catalog-total-badge', 'catalog-total-badge-tab', 'catalog-all-count']) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(n);
+  }
+}
+
+let _catalogCountFetchedAt = 0;
+/** Shows the real number of catalog apps on the Containers view before the catalog is opened. */
+export async function refreshCatalogCountBadges() {
+  if (Date.now() - _catalogCountFetchedAt < 5 * 60 * 1000) return;
+  _catalogCountFetchedAt = Date.now();
+  try {
+    const list = await api.get('/api/docker/catalog');
+    if (Array.isArray(list)) _setCatalogCountBadges(list.length);
+  } catch (err) {
+    _catalogCountFetchedAt = 0;
+    console.warn('[Docker] Could not load the app catalog count:', err);
+  }
+}
+
 export async function fetchAndRenderAppCatalog() {
   _bindDockerEvents();
   const grid = document.getElementById('docker-catalog-grid');
@@ -1559,12 +1580,7 @@ export async function fetchAndRenderAppCatalog() {
     _catalogList = Array.isArray(list) ? list : [];
     _catalogSources = Array.isArray(sources) ? sources : [];
 
-    const totalBadge = document.getElementById('catalog-total-badge');
-    if (totalBadge) totalBadge.textContent = _catalogList.length;
-    const tabBadge = document.getElementById('catalog-total-badge-tab');
-    if (tabBadge) tabBadge.textContent = _catalogList.length;
-    const allCount = document.getElementById('catalog-all-count');
-    if (allCount) allCount.textContent = _catalogList.length;
+    _setCatalogCountBadges(_catalogList.length);
     updateCatalogSourcesBadge();
     renderCatalogChips();
 
@@ -7457,6 +7473,7 @@ export function initManagement() {
         tabCatalog.setAttribute('aria-selected', 'false');
       }
       fetchAndRenderDockerContainers();
+      refreshCatalogCountBadges();
     } else if (paneId === 'mgmt-pane-docker-catalog') {
       const wrapContainers = document.getElementById('docker-view-containers-wrap');
       const wrapCatalog = document.getElementById('docker-view-catalog-wrap');
