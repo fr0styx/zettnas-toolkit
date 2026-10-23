@@ -17,7 +17,7 @@ Recommended for everyone on 1.9.2. Read **Before you upgrade**: a few things tha
 #### Updates and backups
 
 - **Revert to the previous version** from Settings. Data is snapshotted before every update, and a newer database is never opened by an older version.
-- "Update available" is decided by image digest, and the in-app updater installs only this project's signed images.
+- "Update available" is decided by image digest, and the in-app updater installs only images from this project's registry. (Correction: release images are signed and the signature is checked when a release is promoted to Stable, but the in-app updater does not verify signatures yet; that is planned.)
 - Release images are built from pinned base images and hash-locked dependencies, smoke-tested, scanned for critical vulnerabilities, and signed before they're published.
 - Complete, encrypted backup of the app configuration, and a safer restore.
 
