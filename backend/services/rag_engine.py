@@ -3582,6 +3582,23 @@ class RagSearchEngine:
 
             doc_meta_json = json.dumps(doc_meta)
 
+            # Text read from the photo gets the same neural vectors as documents, so search
+            # finds it by meaning; keyword vectors only when the embedding model is unavailable.
+            cfg = self.get_config()
+            ocr_model = cfg.get("embedding_model") or "embeddinggemma"
+            ocr_texts = [
+                format_embeddinggemma_document(
+                    file_name, text_for_embedding(".txt", f"{ch['heading_context']} {ch['chunk_text']}".strip())
+                )
+                for ch in ocr_chunks
+            ]
+            ocr_blobs = None
+            if ocr_texts and ocr_model != "zett_lexical_384d":
+                ocr_blobs = compute_neural_embeddings_batch(
+                    ocr_texts, ocr_model, target_dim=cfg.get("embedding_dim"), host=embedding_host(cfg)
+                )
+            ocr_file_model = ocr_model if ocr_blobs is not None else "zett_lexical_384d"
+
             with self._write_lock:
                 conn = self._get_conn(readonly=False)
                 try:
@@ -3638,7 +3655,7 @@ class RagSearchEngine:
                             len(ocr_chunks),
                             now,
                             now,
-                            "zett_lexical_384d",
+                            ocr_file_model,
                         ),
                     )
                     row_id = conn.execute(
@@ -3696,20 +3713,15 @@ class RagSearchEngine:
                     conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
                     ocr_parent_id_map: dict[int, int] = {}
                     for p in ocr_parent_chunks:
-                        p_body = f"{p['heading_context']} {p['chunk_text']}".strip()
-                        p_full_text = format_embeddinggemma_document(file_name, p_body)
-                        p_blob, _ = compute_384d_embedding(
-                            text=p_full_text,
-                            scene_tags=photo_data["scene_tags"],
-                        )
+                        # parents only give context, like document parents: no vector
                         cur_p = conn.execute(
                             """
                             INSERT INTO document_chunks (
                                 file_id, chunk_index, parent_chunk_id, chunk_level, source_modality, file_name, doc_type,
                                 heading_context, structural_context, chunk_text, raw_chunk_text, doc_metadata_json,
-                                line_start, line_end, token_count, embedding_f32,
+                                line_start, line_end, token_count, embedding_f32, embedding_model, embedding_dim,
                                 visibility_tier, owner_username, share_name, allowed_users_csv
-                            ) VALUES (?, ?, NULL, 'parent', 'photo_ocr', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ) VALUES (?, ?, NULL, 'parent', 'photo_ocr', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
                             """,
                             (
                                 file_id,
@@ -3724,7 +3736,8 @@ class RagSearchEngine:
                                 p["line_start"],
                                 p["line_end"],
                                 p["token_count"],
-                                p_blob,
+                                b"",
+                                ocr_file_model,
                                 vis_tier,
                                 owner_user,
                                 share_name,
@@ -3733,22 +3746,21 @@ class RagSearchEngine:
                         )
                         ocr_parent_id_map[p["parent_index"]] = int(cur_p.lastrowid)
 
-                    for ch in ocr_chunks:
-                        ch_body = f"{ch['heading_context']} {ch['chunk_text']}".strip()
-                        ch_full_text = format_embeddinggemma_document(file_name, ch_body)
-                        ch_blob, _ = compute_384d_embedding(
-                            text=ch_full_text,
-                            scene_tags=photo_data["scene_tags"],
-                        )
+                    for i, ch in enumerate(ocr_chunks):
+                        if ocr_blobs is not None:
+                            ch_blob = ocr_blobs[i]
+                        else:
+                            ch_blob, _ = compute_384d_embedding(text=ocr_texts[i], scene_tags=photo_data["scene_tags"])
+                        ch_dim = len(ch_blob) // 4
                         p_id = ocr_parent_id_map.get(ch.get("parent_index"))
-                        conn.execute(
+                        cur_c = conn.execute(
                             """
                             INSERT INTO document_chunks (
                                 file_id, chunk_index, parent_chunk_id, chunk_level, source_modality, file_name, doc_type,
                                 heading_context, structural_context, chunk_text, raw_chunk_text, doc_metadata_json,
-                                line_start, line_end, token_count, embedding_f32,
+                                line_start, line_end, token_count, embedding_f32, embedding_model, embedding_dim,
                                 visibility_tier, owner_username, share_name, allowed_users_csv
-                            ) VALUES (?, ?, ?, 'child', 'photo_ocr', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ) VALUES (?, ?, ?, 'child', 'photo_ocr', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             (
                                 file_id,
@@ -3765,12 +3777,18 @@ class RagSearchEngine:
                                 ch["line_end"],
                                 ch["token_count"],
                                 ch_blob,
+                                ocr_file_model,
+                                ch_dim,
                                 vis_tier,
                                 owner_user,
                                 share_name,
                                 allowed_csv,
                             ),
                         )
+                        if ocr_blobs is not None and ch_dim == self._vec_table_dim:
+                            self.sync_vector_chunk(
+                                conn, int(cur_c.lastrowid or 0), ch_blob, file_id, vis_tier, dim=ch_dim
+                            )
 
                     conn.commit()
                     return file_id
