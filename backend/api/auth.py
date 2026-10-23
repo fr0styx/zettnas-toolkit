@@ -213,6 +213,17 @@ def _credential_user(sess: dict[str, Any]) -> dict[str, Any] | None:
     return user
 
 
+_DUMMY_HASH: list[str] = []
+
+
+def _dummy_hash() -> str:
+    if not _DUMMY_HASH:
+        import secrets
+
+        _DUMMY_HASH.append(hash_password(secrets.token_urlsafe(16)))
+    return _DUMMY_HASH[0]
+
+
 def _get_authenticated_user(request: Request) -> dict[str, Any] | None:
     sess = getattr(request.state, "session", None)
     if not (sess and sess.get("user_id")):
@@ -422,6 +433,10 @@ async def login(req: LoginRequest, request: Request):
                 ldap_user = None
             if ldap_user:
                 ok, user = True, ldap_user
+
+    if not ok and not user:
+        # Same work as a real check, so the response time doesn't tell which names exist.
+        await run_in_threadpool(verify_password, req.password, _dummy_hash())
 
     if (
         not ok
