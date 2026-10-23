@@ -49,24 +49,46 @@ jobs:
           HOLD: ${{ vars.HOLD_RELEASES }}
         run: |
           set -euo pipefail
-          releases=$(gh api "repos/${{ github.repository }}/releases?per_page=30")
+          releases=$(gh api "repos/${{ github.repository }}/releases?per_page=50")
+          held() { for h in $(echo "${HOLD:-}" | tr ',' ' '); do [ "$h" = "all" ] || [ "$h" = "$1" ] && return 0; done; return 1; }
+          age_of() { echo $(( ( $(date +%s) - $(date -d "$1" +%s) ) / 86400 )); }
+          rel=""
           if [ -n "$WANT" ]; then
             rel=$(echo "$releases" | jq -c --arg t "$WANT" 'map(select(.tag_name == $t)) | first // empty')
-          else
-            rel=$(echo "$releases" | jq -c 'map(select(.prerelease and (.draft | not) and (.tag_name | test("^v[0-9]")))) | first // empty')
-          fi
-          if [ -z "$rel" ]; then echo "No beta release to promote." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
-          tag=$(echo "$rel" | jq -r .tag_name); pre=$(echo "$rel" | jq -r .prerelease); created=$(echo "$rel" | jq -r .created_at)
-          if [ "$pre" != "true" ]; then echo "$tag is already promoted." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
-          for h in $(echo "${HOLD:-}" | tr ',' ' '); do
-            if [ "$h" = "all" ] || [ "$h" = "$tag" ]; then
-              echo "$tag is on hold (HOLD_RELEASES=$HOLD): not promoted." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+            if [ -z "$rel" ]; then echo "No release $WANT." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+            tag=$(echo "$rel" | jq -r .tag_name)
+            if [ "$(echo "$rel" | jq -r .prerelease)" != "true" ]; then echo "$tag is already promoted." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+            if held "$tag"; then echo "$tag is on hold (HOLD_RELEASES=$HOLD): not promoted." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+            age_days=$(age_of "$(echo "$rel" | jq -r .created_at)")
+            if [ "$SKIP" != "true" ] && [ "$age_days" -lt "$SOAK_DAYS" ]; then
+              echo "$tag has soaked $age_days of $SOAK_DAYS days." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
             fi
-          done
-          age_days=$(( ( $(date +%s) - $(date -d "$created" +%s) ) / 86400 ))
-          if [ "$SKIP" != "true" ] && [ "$age_days" -lt "$SOAK_DAYS" ]; then
-            echo "$tag has soaked $age_days of $SOAK_DAYS days: promoted on $(date -d "$created + $SOAK_DAYS days" +%F)." | tee -a "$GITHUB_STEP_SUMMARY"
-            echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+          else
+            # Newest beta that has finished its soak and isn't held; a newer beta in its
+            # soak no longer blocks an older one that is ready (OPS-2).
+            for row in $(echo "$releases" | jq -c '.[] | select(.prerelease and (.draft | not) and (.tag_name | test("^v[0-9]"))) | @base64'); do
+              cand=$(echo "$row" | tr -d '"' | base64 -d)
+              ctag=$(echo "$cand" | jq -r .tag_name)
+              cage=$(age_of "$(echo "$cand" | jq -r .created_at)")
+              if held "$ctag"; then echo "- $ctag: on hold" >> "$GITHUB_STEP_SUMMARY"; continue; fi
+              if [ "$SKIP" != "true" ] && [ "$cage" -lt "$SOAK_DAYS" ]; then echo "- $ctag: soaking ($cage of $SOAK_DAYS days)" >> "$GITHUB_STEP_SUMMARY"; continue; fi
+              rel=$cand; tag=$ctag; age_days=$cage; break
+            done
+            if [ -z "$rel" ]; then
+              echo "No beta ready to promote." | tee -a "$GITHUB_STEP_SUMMARY"
+              last=$(echo "$releases" | jq -r 'map(select((.prerelease | not) and (.draft | not))) | first | .published_at // empty')
+              if [ -n "$last" ] && [ "$(age_of "$last")" -ge 14 ]; then
+                echo "::warning title=Stable is stale::Nothing has been promoted to Stable for $(age_of "$last") days."
+              fi
+              echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            # Only promote forward: skip if Stable already has a newer release.
+            if [ "$(echo "$releases" | jq -r --arg t "$tag" '[.[] | select((.prerelease | not) and (.draft | not))][0].tag_name // ""')" != "" ]; then
+              newest_stable=$(echo "$releases" | jq -r '[.[] | select((.prerelease | not) and (.draft | not))][0].tag_name')
+              if [ "$(printf '%s\n%s\n' "${newest_stable#v}" "${tag#v}" | sort -V | tail -1)" = "${newest_stable#v}" ]; then
+                echo "$tag is older than Stable ($newest_stable): not promoted." | tee -a "$GITHUB_STEP_SUMMARY"; echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+              fi
+            fi
           fi
           version=${tag#v}
           echo "tag=$tag" >> "$GITHUB_OUTPUT"; echo "version=$version" >> "$GITHUB_OUTPUT"
