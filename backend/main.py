@@ -414,6 +414,11 @@ async def correlation_id_middleware(request: Request, call_next):
         correlation_id_ctx.reset(token)
 
 
+# Applies the body size limit to requests sent without a Content-Length (outermost)
+from backend.auth import BodySizeLimit  # noqa: E402
+
+app.add_middleware(BodySizeLimit)
+
 # WebDAV streaming reverse proxy
 app.include_router(webdav_proxy_router)
 

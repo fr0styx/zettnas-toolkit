@@ -189,6 +189,60 @@ def extract_token(request: Request) -> str:
     )
 
 
+_STREAMING_ENDPOINTS = ("/api/fs/upload", "/api/vms/isos/upload", "/api/system/restore", "/api/backup/upload")
+
+
+def body_limit_for(path: str) -> int:
+    """Largest request body accepted on `path`."""
+    norm_path = (path or "").replace("/api/v1/", "/api/")
+    if any(norm_path.startswith(prefix) for prefix in _STREAMING_ENDPOINTS):
+        return getattr(config, "MAX_UPLOAD_BYTES", 64 * 1024 * 1024 * 1024)
+    return config.MAX_BODY_BYTES
+
+
+class BodySizeLimit:
+    """ASGI middleware that applies body_limit_for() to bodies sent without a Content-Length."""
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
+        if scope.get("type") != "http" or any(k == b"content-length" for k, _ in scope.get("headers") or []):
+            await self.app(scope, receive, send)
+            return
+        limit = body_limit_for(scope.get("path", ""))
+        state = {"received": 0, "over": False, "started": False}
+
+        async def counted_receive() -> dict:
+            if state["over"]:
+                return {"type": "http.disconnect"}
+            message = await receive()
+            if message.get("type") == "http.request":
+                state["received"] += len(message.get("body", b""))
+                if state["received"] > limit:
+                    state["over"] = True
+                    return {"type": "http.disconnect"}
+            return message
+
+        async def checked_send(message: dict) -> None:
+            if state["over"] and not state["started"]:
+                return
+            if message.get("type") == "http.response.start":
+                state["started"] = True
+            await send(message)
+
+        try:
+            await self.app(scope, counted_receive, checked_send)
+        except Exception:
+            if not state["over"]:
+                raise
+        if state["over"] and not state["started"]:
+            body = json.dumps({"error": "payload_too_large", "detail": "Request body too large.", "code": 413}).encode()
+            headers = [(b"content-type", b"application/json"), (b"content-length", str(len(body)).encode())]
+            await send({"type": "http.response.start", "status": 413, "headers": headers})
+            await send({"type": "http.response.body", "body": body})
+
+
 def client_ip(request: Request) -> str:
     """Address of the real client (SEC-20).
 
@@ -359,23 +413,11 @@ async def auth_middleware(request: Request, call_next):
                 423, "Writes are frozen by the ransomware guard. An admin can lift the freeze under Security."
             )
 
-    # Reject oversized bodies early (before the route reads them into memory).
+    # Reject oversized bodies early (before the route reads them into memory). Bodies sent
+    # without a Content-Length are counted as they arrive by BodySizeLimit.
     content_length = request.headers.get("content-length")
     if content_length and content_length.isdigit():
-        cl_val = int(content_length)
-        norm_path = path.replace("/api/v1/", "/api/")
-        streaming_endpoints = (
-            "/api/fs/upload",
-            "/api/vms/isos/upload",
-            "/api/system/restore",
-            "/api/backup/upload",
-        )
-        limit = (
-            getattr(config, "MAX_UPLOAD_BYTES", 64 * 1024 * 1024 * 1024)
-            if any(norm_path.startswith(prefix) for prefix in streaming_endpoints)
-            else config.MAX_BODY_BYTES
-        )
-        if cl_val > limit:
+        if int(content_length) > body_limit_for(path):
             return error_response(413, "Request body too large.")
 
     is_api = path.startswith("/api/") or path.startswith("/redfish")
