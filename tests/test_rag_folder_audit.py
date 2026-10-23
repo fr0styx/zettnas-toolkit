@@ -202,8 +202,8 @@ def test_aggregate_folder_context_modes(temp_rag_env):
     assert len(res_a["chunks"]) >= 1
     # Check that payment section was retrieved
     assert "Payment and Invoicing" in res_a["context_text"] or "$250,000" in res_a["context_text"]
-    assert res_a["grounding_confidence_score"] >= 70
-    assert res_a["crag_grade"] in ("high", "ambiguous")
+    assert res_a["grounding_confidence_score"] is None  # nothing answered yet, so nothing measured
+    assert res_a["crag_grade"] == "unrated"
 
     # --- Mode B: Comprehensive Folder Audit (MMR Diversified) ---
     res_b = engine.aggregate_folder_context(
@@ -218,7 +218,7 @@ def test_aggregate_folder_context_modes(temp_rag_env):
     assert res_b["files_included"] >= 2  # MMR selected representative chunks across multiple files
     assert len(res_b["chunks"]) >= 2
     assert "msa_agreement.md" in res_b["context_text"]
-    assert res_b["grounding_confidence_score"] >= 80
+    assert res_b["grounding_confidence_score"] is None
 
 
 def test_primacy_recency_inversion():
@@ -302,8 +302,8 @@ def test_ai_chat_agent_folder_intent_and_grounded_synthesis(temp_rag_env):
         assert res["status"] == "ok"
         assert res["folder_path"] == docs_dir
         assert res["folder_manifest"] is not None
-        assert res["grounding_confidence_score"] >= 80
-        assert res["crag_grade"] in ("high", "ambiguous")
+        assert res["grounding_confidence_score"] is None
+        assert res["crag_grade"] == "unrated"
         assert len(res["citations"]) >= 1
 
         # 3. Grounded Synthesis Formatting
@@ -313,7 +313,7 @@ def test_ai_chat_agent_folder_intent_and_grounded_synthesis(temp_rag_env):
             active_model="qwen2.5:3b",
         )
         assert f"Folder Knowledge Scope: `{docs_dir}`" in syn
-        assert "Grounded" in syn
+        assert "grounding unverified" in syn  # folder context has no measured score
         assert "Standby Guard:" in syn and "0 Disk Wakeups" in syn
         assert "Folder Inventory & Structure Overview" in syn
 
@@ -362,7 +362,7 @@ def test_media_api_folder_endpoints(temp_rag_env):
         assert resp3.status_code == 200
         data3 = resp3.json()
         assert data3["status"] == "ok"
-        assert data3["grounding_confidence_score"] >= 70
+        assert data3["grounding_confidence_score"] is None
         assert len(data3["chunks"]) >= 1
 
 

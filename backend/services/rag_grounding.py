@@ -147,9 +147,10 @@ def compute_grounding_confidence_score(answer_text: str, evidence_texts: str | l
     # Split answer into clean sentences
     sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", answer_text) if len(s.strip()) > 15]
     if not sentences:
+        # Nothing checkable is not the same as fully supported.
         return GroundingScoreResult(
             {
-                "grounding_confidence_score": 100,
+                "grounding_confidence_score": 0,
                 "grounded_sentences": 0,
                 "total_sentences": 0,
                 "unsupported_claims": [],

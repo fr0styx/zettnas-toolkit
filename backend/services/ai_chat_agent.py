@@ -741,6 +741,21 @@ class EndpointRegistry:
 _ENDPOINT_REGISTRY = EndpointRegistry()
 
 
+def _grounding_or_none(value: Any) -> int | None:
+    """A measured grounding score, or None when nothing was measured (never a made-up default)."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _grounding_label(value: Any) -> str:
+    score = _grounding_or_none(value)
+    return f"{score}% grounded" if score is not None else "grounding unverified"
+
+
 def _has_write_permission(principal: Any, required_scopes: tuple[str, ...]) -> bool:
     """No principal means no write access; scopes use the same wildcard rules as the API."""
     if principal is None:
@@ -1361,8 +1376,8 @@ def tool_search_nas_knowledge(
 
     folder_manifest = None
     context_text = ""
-    grounding_score = 95
-    crag_grade = "high"
+    grounding_score: int | None = None
+    crag_grade = "unrated"
     raw_citations: list[dict[str, Any]] = []
     raw_photos: list[dict[str, Any]] = []
     answer_summary = ""
@@ -1379,7 +1394,7 @@ def tool_search_nas_knowledge(
         folder_manifest = agg_res.get("manifest")
         context_text = agg_res.get("context_text", "")
         answer_summary = agg_res.get("summary", "")
-        grounding_score = int(agg_res.get("grounding_confidence_score") or 95)
+        grounding_score = _grounding_or_none(agg_res.get("grounding_confidence_score"))
         crag_grade = str(agg_res.get("crag_grade") or "high")
         chunks = agg_res.get("chunks", [])
         raw_citations = [
@@ -1419,7 +1434,7 @@ def tool_search_nas_knowledge(
         answer_summary = ask_res.get("answer") or ""
         structured_card = ask_res.get("structured_card")
         folder_manifest = ask_res.get("folder_manifest")
-        grounding_score = int(ask_res.get("grounding_confidence_score") or 95)
+        grounding_score = _grounding_or_none(ask_res.get("grounding_confidence_score"))
         crag_grade = str(ask_res.get("crag_grade") or "high")
 
         if target_folder and not folder_manifest:
@@ -1995,7 +2010,7 @@ def _format_tool_trace_summary(tr: dict[str, Any], tool_name: str) -> str:
         return str(tr.get("message") or f"{tr.get('action')} {tr.get('container')}")
     elif tname == "search_nas_knowledge":
         f_str = f" in {tr.get('folder_path')}" if tr.get("folder_path") else ""
-        return f"{tr.get('citations_count', 0)} doc citations, {tr.get('photos_count', 0)} photos{f_str} ({tr.get('grounding_confidence_score', 95)}% grounded)"
+        return f"{tr.get('citations_count', 0)} doc citations, {tr.get('photos_count', 0)} photos{f_str} ({_grounding_label(tr.get('grounding_confidence_score'))})"
     elif tname == "trigger_ai_sync":
         return f"Sync {tr.get('action', 'start')} (Standby Safe)"
     elif tname == "browse_internet":
@@ -3013,8 +3028,8 @@ def _synthesize_rag_grounded_answer(
     citations = list(rag_tool_result.get("citations") or [])
     photos = list(rag_tool_result.get("photos") or [])
     ans_summary = str(rag_tool_result.get("answer_summary") or "").strip()
-    grounding_score = int(rag_tool_result.get("grounding_confidence_score") or 95)
-    crag_grade = str(rag_tool_result.get("crag_grade") or "high").upper()
+    grounding_score = _grounding_or_none(rag_tool_result.get("grounding_confidence_score"))
+    crag_grade = str(rag_tool_result.get("crag_grade") or "unrated").upper()
     mode = str(rag_tool_result.get("mode") or "targeted")
     is_reasoning_model = any(k in active_model.lower() for k in ("deepseek-r1", "qwq", "-r1"))
 
@@ -3027,11 +3042,11 @@ def _synthesize_rag_grounded_answer(
     if folder_path:
         file_cnt = manifest.get("total_files") or len(citations) or 1
         chunk_cnt = manifest.get("total_chunks") or (len(citations) * 2)
-        grade_icon = "🟢" if crag_grade == "HIGH" else ("🟡" if crag_grade == "AMBIGUOUS" else "🔴")
+        grade_icon = {"HIGH": "🟢", "AMBIGUOUS": "🟡", "UNRATED": "⚪"}.get(crag_grade, "🔴")
         sections.append(
             f"### 📁 Folder Knowledge Scope: `{folder_path}`\n"
             f"- **Files Analyzed:** `{file_cnt}` • **Hierarchical Sections:** `{chunk_cnt}`\n"
-            f"- **Fidelity:** {grade_icon} **`{grounding_score}%` Grounded** (`{crag_grade}` Precision) • **Standby Guard:** `0 Disk Wakeups`"
+            f"- **Fidelity:** {grade_icon} **{_grounding_label(grounding_score)}** (`{crag_grade}` precision) • **Standby Guard:** `0 Disk Wakeups`"
         )
 
     # 3. Main Answer / Executive Summary
@@ -3561,8 +3576,8 @@ def _build_structured_llm_context(tool_results: list[dict[str, Any]]) -> str:
             photos = tr.get("photos") or []
             card = tr.get("structured_card")
             ctx_text = tr.get("context_text") or ""
-            score = tr.get("grounding_confidence_score", 95)
-            grade = tr.get("crag_grade", "high")
+            score = _grounding_or_none(tr.get("grounding_confidence_score"))
+            grade = tr.get("crag_grade", "unrated")
 
             rag_lines: list[str] = []
             if not citations and not ctx_text and not photos:
@@ -3575,7 +3590,8 @@ def _build_structured_llm_context(tool_results: list[dict[str, Any]]) -> str:
                 )
             else:
                 rag_lines.append("## Verified Local NAS Knowledge Base:")
-                rag_lines.append(f"[Scope: {fpath or 'Entire Knowledge Base'} | Confidence: {score}% ({grade})]")
+                confidence = f"{score}%" if score is not None else "unverified"
+                rag_lines.append(f"[Scope: {fpath or 'Entire Knowledge Base'} | Confidence: {confidence} ({grade})]")
                 if str(grade).lower() == "low":
                     rag_lines.append(
                         f"[Notice: Low retrieval confidence ({score}%). The snippets below may only be tangentially related. Do not fabricate answers if the text does not directly state the answer.]"
@@ -4586,7 +4602,7 @@ def _run_agentic_chat_turn(
                 )
         elif tname == "search_nas_knowledge":
             f_str = f" in {tr.get('folder_path')}" if tr.get("folder_path") else ""
-            summary = f"{tr.get('citations_count', 0)} doc citations, {tr.get('photos_count', 0)} photos{f_str} ({tr.get('grounding_confidence_score', 95)}% grounded)"
+            summary = f"{tr.get('citations_count', 0)} doc citations, {tr.get('photos_count', 0)} photos{f_str} ({_grounding_label(tr.get('grounding_confidence_score'))})"
         elif tname == "trigger_ai_sync":
             summary = f"Sync {tr.get('action', 'start')} (Standby Safe)"
         elif tname == "browse_internet":

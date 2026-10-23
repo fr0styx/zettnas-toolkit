@@ -12758,6 +12758,11 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
           <code style="color: #e0f2fe; font-size: 11px; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
           ${folderManifest && folderManifest.total_files ? `<span style="font-size: 11px; color: #94a3b8;">(${folderManifest.total_files} files)</span>` : ''}
         </div>
+        ${groundingScore === null ? `
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="This answer's support in the sources wasn't measured.">Unverified</span>
+          </div>
+        ` : ''}
         ${groundingScore !== null ? `
           <div style="display: flex; align-items: center; gap: 5px;">
             <span style="font-size: 11px; font-weight: 800; color: ${groundingScore >= 80 ? '#34d399' : (groundingScore >= 50 ? '#fbbf24' : '#f87171')}; background: ${groundingScore >= 80 ? 'rgba(52,211,153,0.14)' : 'rgba(251,191,36,0.14)'}; border: 1px solid ${groundingScore >= 80 ? 'rgba(52,211,153,0.35)' : 'rgba(251,191,36,0.35)'}; padding: 1px 7px; border-radius: 999px;">

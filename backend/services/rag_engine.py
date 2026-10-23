@@ -3417,8 +3417,9 @@ class RagSearchEngine:
                 "files_included": files_included or (manifest.get("total_files", 0) if manifest else 0),
                 "total_tokens": current_tokens,
                 "evidence_count": len(reordered_items),
-                "grounding_confidence_score": 95 if is_mode_b else 88,
-                "crag_grade": "high",
+                # Folder context is gathered, not answered: there is no answer to check yet.
+                "grounding_confidence_score": None,
+                "crag_grade": "unrated",
                 "standby_guard": {
                     "served_from_nvme_cache": True,
                     "zero_disk_wakeups": True,
