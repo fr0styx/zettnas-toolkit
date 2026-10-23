@@ -1233,6 +1233,7 @@ export default {
   "setup.submit": "Completar y guardar",
   "setup.saving": "GUARDANDO...",
   "setup.success_toast": "🚀 ¡Configuración completada! Su nueva contraseña de administrador ya está activa.",
+  "setup.err_enter_current": "Introduzca su contraseña actual.",
   "setup.err_enter_pwd": "Por favor ingrese una nueva contraseña.",
   "setup.err_min_8": "La contraseña debe tener al menos 8 caracteres.",
   "setup.err_not_admin": "Elija una contraseña segura que no sea 'admin'.",

@@ -90,6 +90,10 @@ export function initSetupWizard() {
         }
       };
 
+      if (!currentPwd) {
+        setErr(t('setup.err_enter_current', 'Please enter your current password.'));
+        return;
+      }
       if (!newPwd) {
         setErr(t('setup.err_enter_pwd', 'Please enter a new password.'));
         return;
@@ -127,7 +131,7 @@ export function initSetupWizard() {
           });
         } else {
           await api.post('/api/security', {
-            current_password: currentPwd || 'admin',
+            current_password: currentPwd,
             new_password: newPwd
           });
         }

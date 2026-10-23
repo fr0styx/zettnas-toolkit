@@ -1233,6 +1233,7 @@ export default {
   "setup.submit": "完成设置并保存",
   "setup.saving": "正在保存...",
   "setup.success_toast": "🚀 设置完成！您的新管理员密码现已生效。",
+  "setup.err_enter_current": "请输入当前密码。",
   "setup.err_enter_pwd": "请输入新密码。",
   "setup.err_min_8": "密码长度必须至少为8个字符。",
   "setup.err_not_admin": "请选择不同于 'admin' 的安全密码。",

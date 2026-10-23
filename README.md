@@ -61,8 +61,8 @@ When specialized appliance peripherals (physical front LCD, ARGB lightbar, or fr
 ## Installation & Deployment
 
 > [!IMPORTANT]  
-> **Default Credentials**: Username `admin` | Password `admin`  
-> *(You can update credentials or provision multi-user accounts anytime in **Mission Control** → **System & Identity**).*
+> **First sign-in**: username `admin`. There is no default password: unless you set `WEB_PASSWORD`, ZettNAS generates a first-time password on first start, prints it in the container log (`docker logs zettnas-toolkit`) and saves it as `initial-admin-password` in the data folder. You choose your own password at first sign-in.  
+> *(Add more users anytime in **Mission Control** → **System & Identity**.)*
 
 ### 🚀 Quick Start (Docker Compose)
 

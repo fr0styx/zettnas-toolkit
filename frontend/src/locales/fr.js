@@ -1233,6 +1233,7 @@ export default {
   "setup.submit": "Terminer et enregistrer",
   "setup.saving": "ENREGISTREMENT...",
   "setup.success_toast": "🚀 Configuration terminée ! Votre nouveau mot de passe administrateur est actif.",
+  "setup.err_enter_current": "Veuillez saisir votre mot de passe actuel.",
   "setup.err_enter_pwd": "Veuillez entrer un nouveau mot de passe.",
   "setup.err_min_8": "Le mot de passe doit comporter au moins 8 caractères.",
   "setup.err_not_admin": "Veuillez choisir un mot de passe sécurisé différent de 'admin'.",

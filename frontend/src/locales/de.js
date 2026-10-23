@@ -1233,6 +1233,7 @@ export default {
   "setup.submit": "Einrichtung abschließen & Speichern",
   "setup.saving": "WIRD GESPEICHERT...",
   "setup.success_toast": "🚀 Einrichtung abgeschlossen! Ihr neues Administrator-Passwort ist jetzt aktiv.",
+  "setup.err_enter_current": "Bitte geben Sie Ihr aktuelles Passwort ein.",
   "setup.err_enter_pwd": "Bitte geben Sie ein neues Passwort ein.",
   "setup.err_min_8": "Das Passwort muss mindestens 8 Zeichen lang sein.",
   "setup.err_not_admin": "Bitte wählen Sie ein sicheres Passwort ungleich 'admin'.",

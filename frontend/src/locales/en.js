@@ -1233,6 +1233,7 @@ export default {
   "setup.submit": "Complete Setup & Save",
   "setup.saving": "SAVING...",
   "setup.success_toast": "🚀 Setup completed! Your new administrator password is now active.",
+  "setup.err_enter_current": "Please enter your current password.",
   "setup.err_enter_pwd": "Please enter a new password.",
   "setup.err_min_8": "Password must be at least 8 characters long.",
   "setup.err_not_admin": "Please choose a secure password other than 'admin'.",

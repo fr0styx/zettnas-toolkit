@@ -135,8 +135,16 @@ def docker_sock() -> str:
     return os.environ.get("ZETTNAS_DOCKER_SOCK") or RAW_DOCKER_SOCK
 
 
-WEB_PASSWORD = os.environ.get("WEB_PASSWORD", "admin")
-STORED_PASSWORD_HASH = hash_password(WEB_PASSWORD)
+# No shared default: empty means "generate a first-time password" (users_db bootstrap).
+WEB_PASSWORD = os.environ.get("WEB_PASSWORD", "")
+
+
+def initial_password_hash(password: str) -> str:
+    """Hash of the configured first-time password, or "" when none is configured."""
+    return hash_password(password) if password else ""
+
+
+STORED_PASSWORD_HASH = initial_password_hash(WEB_PASSWORD)
 ZETTNAS_USERNAME = "admin"
 ZETTNAS_EMAIL = ""
 SESSION_TTL = 30 * 86400  # 30 days
