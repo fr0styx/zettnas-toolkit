@@ -38,6 +38,18 @@ def mask_secret_value(val: str) -> str:
     return "••••••••"
 
 
+_URL_USERINFO_RE = re.compile(r"(://[^:/@\s]*:)[^@\s]+@")
+_SECRET_FLAG_RE = re.compile(r"(--?[\w.-]*(?:pass|secret|token|key|auth|pwd)[\w.-]*(?:=|\s+))(\S+)", re.IGNORECASE)
+
+
+def mask_inline_secrets(text: str) -> str:
+    """Masks passwords inside URLs (scheme://user:pass@host) and values of secret-looking flags."""
+    if not text:
+        return text
+    text = _URL_USERINFO_RE.sub(r"\1••••••••@", text)
+    return _SECRET_FLAG_RE.sub(r"\1••••••••", text)
+
+
 def fetch_container_raw_inspect(cid_or_name: str) -> dict[str, Any]:
     """Fetches full inspect JSON from local Docker socket."""
     sock_path = docker_sock()
@@ -140,6 +152,8 @@ def synthesize_compose_spec(inspect_data: dict[str, Any], mask_secrets: bool = F
             continue
         if mask_secrets and is_secret_key(k):
             env_list.append(f"{k}={mask_secret_value(v)}")
+        elif mask_secrets:
+            env_list.append(f"{k}={mask_inline_secrets(v)}")
         else:
             env_list.append(f"{k}={v}")
 
@@ -285,11 +299,11 @@ def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -
         else:
             k, v = item, ""
         is_sec = is_secret_key(k)
-        masked_v = mask_secret_value(v) if is_sec else v
+        masked_v = mask_secret_value(v) if is_sec else mask_inline_secrets(v)
         envs.append(
             {
                 "key": k,
-                "value": v if (allow_unmasked or not is_sec) else masked_v,
+                "value": v if allow_unmasked else masked_v,
                 "masked_value": masked_v,
                 "is_secret": is_sec,
             }
@@ -382,7 +396,9 @@ def get_container_full_details(cid_or_name: str, allow_unmasked: bool = False) -
             "gateway": gateway,
             "mac_address": mac_addr,
             "network_mode": hc.get("NetworkMode", "bridge"),
-            "command": " ".join(cfg.get("Entrypoint") or []) + " " + " ".join(cfg.get("Cmd") or []),
+            "command": (lambda c: c if allow_unmasked else mask_inline_secrets(c))(
+                " ".join(cfg.get("Entrypoint") or []) + " " + " ".join(cfg.get("Cmd") or [])
+            ),
         },
         "resources": {
             "nano_cpus": hc.get("NanoCPUs", 0),
