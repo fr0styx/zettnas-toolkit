@@ -41,9 +41,9 @@ import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
 import { lazyWindow } from './lazy-windows.js';
+import './file-preview-loader.js'; // window.openFilePreviewModal before the viewer loads
 import { installWindowFocus } from './window-focus.js';
 import { installDialogChrome } from './dialog-chrome.js';
-import { initContainersManager } from './components/containers-manager.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
 import { initDesktopContextMenu } from './components/desktop-context-menu.js';
@@ -327,7 +327,15 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
     globals: ['openVmManager'],
     openGlobal: 'openVmManager',
   });
-  initContainersManager();
+  // The containers window and its table (~175 kB) load the first time it's opened (PERF-5)
+  lazyWindow({
+    id: 'containers',
+    iconId: 'containers-desktop-icon',
+    load: () => import('./components/containers-manager.js'),
+    init: 'initContainersManager',
+    globals: ['openContainersManager', 'openContainersWindow'],
+    openGlobal: 'openContainersManager',
+  });
   initContainerModal();
   initStackModal();
   initDesktopContextMenu();

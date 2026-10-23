@@ -217,9 +217,9 @@ describe('File Manager True Multi-Instance Advanced Suite', () => {
     const spaceEv = new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true, cancelable: true });
     handleFmKeydown(spaceEv);
 
-    expect(openFilePreviewModal).toHaveBeenCalledWith(
-      '/mnt/user/downloads/archive.zip',
-      'archive.zip'
+    // The viewer loads on first use (PERF-5), so the call lands once its module is in
+    await vi.waitFor(() =>
+      expect(openFilePreviewModal).toHaveBeenCalledWith('/mnt/user/downloads/archive.zip', 'archive.zip')
     );
   });
 

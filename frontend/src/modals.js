@@ -5,7 +5,6 @@ import { api } from './api.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
 import { trapFocus, escapeHtml, copyText } from './utils.js';
 import { t } from './i18n.js';
-import { generateSmartSparklineSvg, triggerLocateDisk } from './components/chassis-visualizer.js';
 import { formatDateTime, formatNumber } from './format.js';
 // S.M.A.R.T. & INTERACTIVE METRIC DIAGNOSTIC MODAL CONTROLLER
 
@@ -725,6 +724,7 @@ async function openSmartModal(devName, forceWake = false) {
       if (smartRaw) smartRaw.textContent = data.raw || "No raw output.";
 
       const degBanner = document.getElementById("smart-degradation-banner");
+      let locateDisk = null;
       if (degBanner) {
         let bannerHtml = '';
         if (data.nvme_endurance) {
@@ -743,6 +743,9 @@ async function openSmartModal(devName, forceWake = false) {
           `;
         }
         if (data.degradation) {
+          // The chassis visualizer (~100 kB) loads with the first disk report, not the page (PERF-5)
+          const { generateSmartSparklineSvg, triggerLocateDisk } = await import('./components/chassis-visualizer.js');
+          locateDisk = triggerLocateDisk;
           const deg = data.degradation;
           const color = deg.status === 'critical' ? 'var(--crit)' : deg.status === 'warning' ? 'var(--warn)' : 'var(--ok)';
           const icon = deg.status === 'critical' ? '⚠️' : deg.status === 'warning' ? '⏳' : '🛡️';
@@ -788,7 +791,7 @@ async function openSmartModal(devName, forceWake = false) {
           if (locateBtn) {
             locateBtn.addEventListener('click', (e) => {
               e.stopPropagation();
-              triggerLocateDisk(devName, modalWin);
+              if (locateDisk) locateDisk(devName, modalWin);
             });
           }
         } else {

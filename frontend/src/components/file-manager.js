@@ -12,7 +12,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
-import { openFilePreviewModal } from './file-preview-modal.js';
+import { openFilePreview as openFilePreviewModal } from '../file-preview-loader.js';
 import { transferCenter } from './transfer-center.js';
 import { favorites, isFavorite, toggleFavorite, closestPath } from './fm-favorites.js';
 import { thumbKind, thumbUrl } from './viewer-kit.js';
