@@ -13,6 +13,7 @@ Mounts isolated home directories or designated shares for standard users, and fu
 import hmac
 import json
 import os
+import re
 import sys
 
 # Ensure repository root is on sys.path
@@ -25,6 +26,19 @@ from backend import config
 from backend.passwords import verify_password
 from backend.services import login_lockout
 from backend.users_db import get_user_by_username
+
+
+def _is_hash(stored: str) -> bool:
+    return stored.startswith(("$argon2", "scrypt$")) or bool(re.fullmatch(r"[0-9a-f]{64}", stored))
+
+
+def _sftp_password_ok(stored: str, password: str) -> bool:
+    """Hashed entries are checked as hashes; plain comparison only for entries saved before hashing."""
+    if not stored or not password:
+        return False
+    if _is_hash(stored):
+        return verify_password(password, stored)
+    return hmac.compare_digest(stored, password)
 
 
 def main():
@@ -62,10 +76,8 @@ def main():
             if isinstance(sftp_users, list):
                 for u in sftp_users:
                     if u.get("username", "").strip().lower() == username.lower() and u.get("enabled", True):
-                        u_pass = u.get("password")
-                        if u_pass and password:
-                            if hmac.compare_digest(str(u_pass), password) or verify_password(password, u_pass):
-                                authenticated = True
+                        if _sftp_password_ok(str(u.get("password") or ""), password):
+                            authenticated = True
                         u_key = str(u.get("pubkey") or "").strip()
                         if u_key and public_key:
                             u_parts = u_key.split()[:2]
@@ -109,7 +121,14 @@ def main():
     if not authenticated:
         db_path = os.environ.get("USERS_DB_PATH") or getattr(config, "USERS_DB_PATH", None)
         user = get_user_by_username(username, db_path=db_path)
-        if user and user.get("status") == "active" and not user.get("must_change_password"):
+        # WebDAV and SFTP have no second-factor step, so accounts with two-factor sign-in
+        # use a dedicated SFTP/WebDAV account instead of their ZettNAS password.
+        if (
+            user
+            and user.get("status") == "active"
+            and not user.get("must_change_password")
+            and not user.get("mfa_enabled")
+        ):
             if password and verify_password(password, user.get("password_hash", "")):
                 authenticated = True
                 is_admin = user.get("role_id") in ("superadmin", "storage_admin")
