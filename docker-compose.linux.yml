@@ -45,6 +45,9 @@ services:
       - NAS_NAME=${NAS_NAME:-}
       - UPDATE_CHANNEL=${UPDATE_CHANNEL:-stable}
       - ZETTNAS_OBSERVER_ADAPTER=${ZETTNAS_OBSERVER_ADAPTER:-auto}
+      # Optional: encrypt the AI search index and chat history at rest (16+ characters).
+      # Put it in the .env file next to this compose file (not in ./data) and in a password manager.
+      - ZETTNAS_DATA_KEY=${ZETTNAS_DATA_KEY:-}
     cap_add:
       - SYS_RAWIO
       - SYS_ADMIN

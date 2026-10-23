@@ -447,6 +447,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | :--- | :--- | :--- |
 | `PORT` | `8082` | HTTP port for the Web Desktop and REST API |
 | `WEB_PASSWORD` | `admin` | Initial admin master password (overridden by `users.db` once set) |
+| `ZETTNAS_DATA_KEY` | *(empty)* | Optional. Encrypts the AI search index and chat history at rest (SQLCipher, 16+ characters, e.g. `openssl rand -base64 32`). Keep it outside the data folder (Unraid template, or `.env` next to the compose file) and in a password manager. See SECURITY.md |
 | `LOGIN_USER_CHOOSER` | `0` | Show user tiles on the login screen. Off by default because it lists account names to anyone who can open the login page |
 | `CSRF_TRUSTED_ORIGINS` | *(empty)* | Extra origins (comma-separated, e.g. `https://nas.example.com`) allowed to make changes with the session cookie, for reverse proxies that rewrite the `Host` header |
 | `DATA_DIR` | `/app/data` | Path to persistent database, sessions, tokens, and configuration |

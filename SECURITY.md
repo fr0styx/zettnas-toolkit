@@ -55,7 +55,7 @@ text of indexed files) and the AI chat history (`ai_conversations.db`) with SQLC
 - Keep a copy in a password manager. Without it the chat history is lost and the index
   must be rebuilt from your files.
 - The first start with a key converts the existing files: the chat history at startup,
-  the index in the background (AI search waits; about a minute per GB). The plain-text
+  the index in the background (AI search waits until it finishes). The plain-text
   pages are not wiped from the disk, so on an SSD set the key before indexing much, or
   rebuild the index afterwards.
 - If the key is removed or changed, the encrypted files stay closed and the AI features
