@@ -41,6 +41,15 @@ if (typeof window !== 'undefined') {
 let _activeProfile = 'balanced';
 let _unbindMgmtTrap = null;
 
+
+// The deploy button: a soft tint of the accent with a thin border, like the dialog's other controls.
+function setDeployButtonTone(btn, tone) {
+  const color = tone === 'danger' ? 'var(--err, #eb5757)' : 'var(--brand, #0ea5e9)';
+  btn.style.background = `color-mix(in srgb, ${color} 22%, transparent)`;
+  btn.style.border = `1px solid color-mix(in srgb, ${color} 55%, transparent)`;
+  btn.style.color = 'var(--text, #e5e7eb)';
+}
+
 export const SUBPANE_MAP = {
   // --- Pillar 1: Dashboard & Telemetry ---
   'dashboard': { section: 'mgmt-sec-activity', pane: 'mgmt-pane-metrics' },
@@ -1752,7 +1761,7 @@ export async function openAppDeployModal(appId) {
           <!-- Footer for Config View -->
           <div id="adm-footer-config" style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
             <button class="btn-pill-toggle" id="adm-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="adm-deploy-confirm-btn" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:#fff; border:none; padding:6px 16px; font-weight:700; cursor:pointer;">
+            <button class="btn-pill-toggle" id="adm-deploy-confirm-btn" style="background:color-mix(in srgb, var(--brand, #0ea5e9) 22%, transparent); color:var(--text, #e5e7eb); border:1px solid color-mix(in srgb, var(--brand, #0ea5e9) 55%, transparent); padding:6px 16px; font-weight:700; cursor:pointer;">
               🚀 Deploy & Launch Container
             </button>
           </div>
@@ -1928,7 +1937,7 @@ export async function openAppDeployModal(appId) {
     deployConfirmBtn.style.opacity = '1';
     deployConfirmBtn.style.pointerEvents = 'auto';
     deployConfirmBtn.textContent = '🚀 Deploy & Launch Container';
-    deployConfirmBtn.style.background = 'linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0))';
+    setDeployButtonTone(deployConfirmBtn, 'brand');
   }
 
   title.textContent = `Deploy ${appId.toUpperCase()}`;
@@ -2022,7 +2031,7 @@ export async function openAppDeployModal(appId) {
 
     if (deployConfirmBtn) {
       deployConfirmBtn.textContent = '🔄 Stop, Replace & Launch';
-      deployConfirmBtn.style.background = 'linear-gradient(135deg, #e65100, var(--err, #eb5757))';
+      setDeployButtonTone(deployConfirmBtn, 'danger');
       deployConfirmBtn.disabled = false;
       deployConfirmBtn.style.opacity = '1';
       deployConfirmBtn.style.pointerEvents = 'auto';
@@ -2061,7 +2070,7 @@ export async function openAppDeployModal(appId) {
 
     if (deployConfirmBtn) {
       deployConfirmBtn.textContent = '🚀 Deploy New Instance';
-      deployConfirmBtn.style.background = 'linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0))';
+      setDeployButtonTone(deployConfirmBtn, 'brand');
       deployConfirmBtn.disabled = false;
       deployConfirmBtn.style.opacity = '1';
       deployConfirmBtn.style.pointerEvents = 'auto';
