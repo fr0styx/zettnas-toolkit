@@ -72,6 +72,7 @@ from backend.services.rag_embeddings import (  # noqa: E402, F401
     compute_neural_embedding_via_ollama,
     compute_neural_embeddings_batch,
     cosine_similarity_vec,
+    embedding_host,
     format_embeddinggemma_document,
     load_sqlite_vec_extension,
     truncate_and_normalize_mrl,
@@ -943,244 +944,232 @@ class RagSearchEngine:
         except Exception as e:
             logger.debug("Vector table sync deferred for chunk %d: %s", chunk_id, e)
 
+    def _write_reindex_progress(self, data: dict[str, Any]) -> None:
+        prog_path = "/app/data/reindex_progress.json"
+        try:
+            os.makedirs(os.path.dirname(prog_path), exist_ok=True)
+            with open(prog_path + ".tmp", "w") as pf:
+                json.dump(data, pf)
+            os.replace(prog_path + ".tmp", prog_path)
+        except OSError:
+            logger.debug("[RAG] could not write re-embed progress", exc_info=True)
+
     async def in_place_reembed_collection(
         self,
         target_model: str,
         target_dim: int,
-        batch_size: int = 10,
+        batch_size: int = 16,
         progress_callback: Any | None = None,
+        target_host: str | None = None,
+        retry_wait_s: float = 65.0,
     ) -> dict[str, Any]:
-        """
-        Performs in-place re-embedding over existing document_chunks on SSD (/app/data/rag_index.db).
-        Strict AGENTS.md §1.2 Invariant: 100% zero disk platters wakeups on sleeping drives.
-        Features:
-          - CPU Pacing: clamps to max_workers=1 on CPUs with <= 4 cores (e.g. Intel N100)
-          - Cooperative yield: 50ms pause after every batch_size chunks to prevent ASGI event loop starvation
-          - Thermal Watchdog: backs off to 200ms pause if CPU temp >= 75°C
+        """Re-embeds every chunk with another model, from the index on SSD (no disk wake-ups).
+
+        New vectors go to a staging table first; search keeps using the old ones until every
+        chunk is done, then the index switches over in one transaction, together with the
+        config (model, dimension, embedding host). Stopping half way (a restart, the model going
+        away) loses nothing: the next run picks up the staged vectors. Chunks added while it
+        runs are caught by the final passes. If the model stays unreachable, the run pauses
+        instead of storing fallback vectors under the new model's name.
         """
         import time
 
-        cooperative_delay = 0.05  # 50ms
+        cfg = self.get_config()
+        host = (target_host or "").strip() or None
+        current = (cfg.get("embedding_model"), int(cfg.get("embedding_dim") or 0), (cfg.get("embedding_host") or None))
+        same_target = current == (target_model, int(target_dim), host)
 
         with self._write_lock:
             conn = self._get_conn(readonly=False)
             try:
-                chunks_to_update = conn.execute(
-                    """
-                    SELECT c.chunk_id, c.file_id, c.file_name, c.heading_context, c.chunk_text, f.doc_title
-                    FROM document_chunks c
-                    LEFT JOIN indexed_files f ON f.file_id = c.file_id
-                    ORDER BY c.chunk_id ASC
-                    """
-                ).fetchall()
+                conn.execute(
+                    """CREATE TABLE IF NOT EXISTS reembed_staging (
+                        chunk_id INTEGER PRIMARY KEY, embedding BLOB NOT NULL, model TEXT NOT NULL, dim INTEGER NOT NULL
+                    )"""
+                )
+                # staged vectors for another target are useless now
+                conn.execute("DELETE FROM reembed_staging WHERE model != ? OR dim != ?", (target_model, target_dim))
+                conn.commit()
+                total = conn.execute("SELECT COUNT(*) FROM document_chunks").fetchone()[0]
             finally:
                 conn.close()
-
-        total = len(chunks_to_update)
         if total == 0:
             return {"status": "ok", "total": 0, "completed": 0, "message": "No chunks to re-embed"}
 
-        # Update config with new model and dimension
-        self.update_config({"embedding_model": target_model, "embedding_dim": target_dim})
-        self._vec_table_dim = target_dim
+        def pending_ids() -> list[int]:
+            # same model as now: only chunks that lack it; a new model: every chunk
+            done_clause = "" if not same_target else "AND NOT (c.embedding_model = ? AND c.embedding_dim = ?)"
+            params: tuple = () if not same_target else (target_model, target_dim)
+            c = self._get_conn(readonly=True)
+            try:
+                rows = c.execute(
+                    f"""SELECT c.chunk_id FROM document_chunks c
+                        LEFT JOIN reembed_staging s ON s.chunk_id = c.chunk_id
+                        WHERE s.chunk_id IS NULL {done_clause} ORDER BY c.chunk_id""",
+                    params,
+                ).fetchall()
+                return [int(r[0]) for r in rows]
+            finally:
+                c.close()
 
-        # Check existing vectors in vec_chunks_{target_dim} to enable seamless resume
-        existing_vec_ids = set()
-        conn_init = self._get_conn(readonly=False)
-        try:
-            if self._has_sqlite_vec:
-                self._init_vec_table(conn_init, target_dim)
-                self._vec_table_active = True
-                rows = conn_init.execute(f"SELECT chunk_id FROM vec_chunks_{target_dim}").fetchall()
-                existing_vec_ids = {r[0] for r in rows}
-        finally:
-            conn_init.close()
+        def texts_for(ids: list[int]) -> list[tuple[int, str]]:
+            c = self._get_conn(readonly=True)
+            try:
+                marks = ",".join("?" * len(ids))
+                rows = c.execute(
+                    f"""SELECT c.chunk_id, c.file_name, c.heading_context, c.chunk_text, f.doc_title
+                        FROM document_chunks c LEFT JOIN indexed_files f ON f.file_id = c.file_id
+                        WHERE c.chunk_id IN ({marks})""",
+                    ids,
+                ).fetchall()
+            finally:
+                c.close()
+            return [
+                (
+                    int(r["chunk_id"]),
+                    format_embeddinggemma_document(
+                        r["doc_title"] or r["file_name"],
+                        f"{r['heading_context'] or ''} {r['chunk_text'] or ''}".strip(),
+                    ),
+                )
+                for r in rows
+            ]
 
-        pending_chunks = [c for c in chunks_to_update if c["chunk_id"] not in existing_vec_ids]
-        completed = total - len(pending_chunks)
+        def staged_count() -> int:
+            c = self._get_conn(readonly=True)
+            try:
+                return int(c.execute("SELECT COUNT(*) FROM reembed_staging").fetchone()[0])
+            finally:
+                c.close()
+
         start_time = time.time()
+        session_done = 0
+        speed = 0.0
 
-        if completed > 0:
-            initial_progress = {
-                "type": "progress",
-                "status": "running",
-                "completed": completed,
-                "total": total,
-                "speed": 7.5,
-                "eta_sec": round((total - completed) / 7.5, 1),
-                "percentage": round((completed / total) * 100, 1),
-                "updated_at": time.time(),
-            }
-            try:
-                prog_path = "/app/data/reindex_progress.json"
-                os.makedirs(os.path.dirname(prog_path), exist_ok=True)
-                with open(prog_path + ".tmp", "w") as pf:
-                    json.dump(initial_progress, pf)
-                os.replace(prog_path + ".tmp", prog_path)
-            except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
-                    exc_info=True,
-                )
-
-        if len(pending_chunks) == 0:
-            final_data = {
-                "type": "complete",
-                "status": "completed",
-                "completed": total,
-                "total": total,
-                "speed": 0,
-                "eta_sec": 0,
-                "percentage": 100.0,
-                "updated_at": time.time(),
-            }
-            try:
-                prog_path = "/app/data/reindex_progress.json"
-                with open(prog_path + ".tmp", "w") as pf:
-                    json.dump(final_data, pf)
-                os.replace(prog_path + ".tmp", prog_path)
-            except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
-                    exc_info=True,
-                )
-            return {"status": "ok", "total": total, "completed": total, "message": "All chunks already indexed"}
-
-        for i in range(0, len(pending_chunks), batch_size):
-            batch = pending_chunks[i : i + batch_size]
-            updated_records = []
-            for row in batch:
-                cid = row["chunk_id"]
-                effective_title = row["doc_title"] or row["file_name"]
-                body_text = f"{row['heading_context']} {row['chunk_text']}".strip()
-                full_text = format_embeddinggemma_document(effective_title, body_text)
-                res = compute_neural_embedding_via_ollama(
-                    text=full_text,
-                    model=target_model,
-                    target_dim=target_dim,
-                    is_query=False,
-                )
-                if res is not None:
-                    blob, _ = res
-                else:
-                    blob, _ = compute_384d_embedding(text=full_text)
-                updated_records.append((blob, target_model, target_dim, cid))
-
-            # Write batch in single transaction
-            with self._write_lock:
-                w_conn = self._get_conn(readonly=False)
-                try:
-                    w_conn.executemany(
-                        "UPDATE document_chunks SET embedding_f32 = ?, embedding_model = ?, embedding_dim = ? WHERE chunk_id = ?",
-                        updated_records,
-                    )
-                    w_conn.commit()
-                    # Sync to vec virtual table
-                    for blob, _, _, cid in updated_records:
-                        self.sync_vector_chunk(w_conn, cid, blob, 0, "public_share", dim=target_dim)
-                    w_conn.commit()
-                finally:
-                    w_conn.close()
-
-            completed += len(batch)
-            elapsed = max(0.001, time.time() - start_time)
-            session_completed = completed - (total - len(pending_chunks))
-            speed = round(session_completed / elapsed, 2) if session_completed > 0 else 7.5
-            eta_sec = round((total - completed) / max(0.1, speed), 1)
-
-            progress_data = {
-                "type": "progress",
-                "status": "running",
-                "completed": completed,
+        def report(status: str, **extra: Any) -> dict[str, Any]:
+            done = min(total, staged_count())
+            data = {
+                "type": "progress" if status == "running" else status,
+                "status": status,
+                "completed": done,
                 "total": total,
                 "speed": speed,
-                "eta_sec": eta_sec,
-                "percentage": round((completed / total) * 100, 1),
+                "eta_sec": round((total - done) / speed, 1) if speed > 0 else 0.0,
+                "percentage": round(100.0 * done / total, 1),
+                "model": target_model,
                 "updated_at": time.time(),
+                **extra,
             }
-            try:
-                prog_path = "/app/data/reindex_progress.json"
-                os.makedirs(os.path.dirname(prog_path), exist_ok=True)
-                with open(prog_path + ".tmp", "w") as pf:
-                    json.dump(progress_data, pf)
-                os.replace(prog_path + ".tmp", prog_path)
-            except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
-                    exc_info=True,
-                )
-
+            self._write_reindex_progress(data)
             if progress_callback:
                 try:
-                    progress_callback(progress_data)
+                    progress_callback(data)
                 except Exception:
-                    logger.debug(
-                        "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
-                        exc_info=True,
-                    )
+                    logger.debug("[RAG] re-embed progress callback failed", exc_info=True)
+            return data
 
-            # Thermal watchdog check
-            delay = cooperative_delay
-            try:
-                from backend.hardware.cpu import read_cpu_temp
+        async def embed_and_stage(ids: list[int]) -> bool:
+            nonlocal session_done, speed
+            failures = 0
+            for i in range(0, len(ids), 256):
+                rows = texts_for(ids[i : i + 256])
+                for j in range(0, len(rows), batch_size):
+                    part = rows[j : j + batch_size]
+                    while True:
+                        blobs = await asyncio.to_thread(
+                            compute_neural_embeddings_batch,
+                            [t for _, t in part],
+                            target_model,
+                            target_dim,
+                            host,
+                            batch_size,
+                        )
+                        if blobs is not None:
+                            failures = 0
+                            break
+                        failures += 1
+                        if failures >= 5:
+                            return False
+                        report("running", message="The embedding model is not answering; retrying")
+                        await asyncio.sleep(retry_wait_s)
+                    with self._write_lock:
+                        w = self._get_conn(readonly=False)
+                        try:
+                            w.executemany(
+                                "INSERT OR REPLACE INTO reembed_staging(chunk_id, embedding, model, dim) VALUES (?, ?, ?, ?)",
+                                [(cid, b, target_model, target_dim) for (cid, _), b in zip(part, blobs, strict=True)],
+                            )
+                            w.commit()
+                        finally:
+                            w.close()
+                    session_done += len(part)
+                    speed = round(session_done / max(0.001, time.time() - start_time), 2)
+                    report("running")
+                    await asyncio.sleep(0.02)  # let searches and the indexer in
 
-                cpu_temp = read_cpu_temp() or 0.0
-                if cpu_temp >= 75.0:
-                    delay = 0.20  # 200ms thermal pause
-            except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
-                    exc_info=True,
-                )
+            return True
 
-            await asyncio.sleep(delay)
+        report("running")
+        for _ in range(5):  # later passes pick up chunks indexed meanwhile
+            ids = pending_ids()
+            if not ids:
+                break
+            if not await embed_and_stage(ids):
+                msg = f"Paused: '{target_model}' stopped answering. Start the re-embed again to continue."
+                report("paused", message=msg)
+                return {"status": "paused", "total": total, "completed": staged_count(), "message": msg}
 
-        # Update indexed_files embedding_model column
+        # Switch over: copy staged vectors in, rebuild the vector table, then the config
         with self._write_lock:
-            f_conn = self._get_conn(readonly=False)
+            late = pending_ids()
+            if late and not await embed_and_stage(late):
+                msg = f"Paused: '{target_model}' stopped answering. Start the re-embed again to continue."
+                report("paused", message=msg)
+                return {"status": "paused", "total": total, "completed": staged_count(), "message": msg}
+            w = self._get_conn(readonly=False)
             try:
-                f_conn.execute("UPDATE indexed_files SET embedding_model = ?", (target_model,))
-                f_conn.commit()
+                w.execute(
+                    """UPDATE document_chunks SET embedding_f32 = s.embedding, embedding_model = s.model, embedding_dim = s.dim
+                       FROM reembed_staging s WHERE document_chunks.chunk_id = s.chunk_id"""
+                )
+                w.execute("UPDATE indexed_files SET embedding_model = ?", (target_model,))
+                if self._has_sqlite_vec and self._init_vec_table(w, target_dim):
+                    w.execute(f"DELETE FROM vec_chunks_{target_dim}")
+                    w.execute(
+                        f"""INSERT INTO vec_chunks_{target_dim}(chunk_id, embedding, file_id, visibility_tier)
+                            SELECT chunk_id, embedding_f32, file_id, visibility_tier FROM document_chunks
+                            WHERE embedding_model = ? AND embedding_dim = ?""",
+                        (target_model, target_dim),
+                    )
+                w.execute("DELETE FROM reembed_staging")
+                w.commit()
             finally:
-                f_conn.close()
-
-        try:
-            prog_path = "/app/data/reindex_progress.json"
-            final_progress = {
-                "type": "complete",
-                "status": "complete",
-                "completed": total,
-                "total": total,
-                "speed": speed,
-                "eta_sec": 0.0,
-                "percentage": 100.0,
-                "updated_at": time.time(),
-            }
-            with open(prog_path + ".tmp", "w") as pf:
-                json.dump(final_progress, pf)
-            os.replace(prog_path + ".tmp", prog_path)
-        except Exception:
-            logger.debug(
-                "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error", exc_info=True
+                w.close()
+            self.update_config(
+                {"embedding_model": target_model, "embedding_dim": target_dim, "embedding_host": host or ""}
             )
+            self._vec_table_dim = target_dim
+            self._vec_table_active = bool(self._has_sqlite_vec)
 
         res_complete = {
             "status": "ok",
             "type": "complete",
             "total": total,
-            "completed": completed,
+            "completed": total,
+            "speed": speed,
+            "eta_sec": 0.0,
+            "percentage": 100.0,
             "duration_sec": round(time.time() - start_time, 2),
             "model": target_model,
             "dimension": target_dim,
+            "updated_at": time.time(),
         }
+        self._write_reindex_progress(dict(res_complete, status="complete"))
         if progress_callback:
             try:
                 progress_callback(res_complete)
             except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.in_place_reembed_collection: ignored error",
-                    exc_info=True,
-                )
+                logger.debug("[RAG] re-embed progress callback failed", exc_info=True)
         return res_complete
 
     def _default_watched_paths(self) -> list[str]:
@@ -1220,6 +1209,7 @@ class RagSearchEngine:
             "removed_models": [],
             "vision_captions": "auto",  # AI-14: "auto" (when a vision model is installed) or "off"
             "vision_model": "",
+            "embedding_host": "",  # Ollama-compatible server for embeddings only; empty = the Ollama host
             "rerank_endpoint": "",  # AI-13: Cohere/OVMS/TEI-style /rerank URL, empty = off
             "rerank_model": "",
             "rerank_top_n": 30,
@@ -1252,6 +1242,12 @@ class RagSearchEngine:
 
     def update_config(self, updates: dict[str, Any]) -> dict[str, Any]:
         cfg = self.get_config()
+        if (
+            "embedding_model" in updates
+            and updates["embedding_model"] != cfg.get("embedding_model")
+            and "embedding_host" not in updates
+        ):
+            updates = dict(updates, embedding_host="")  # a host serves one model: it doesn't follow a switch
         for k in (
             "enabled",
             "scope_mode",
@@ -1267,6 +1263,7 @@ class RagSearchEngine:
             "embedding_model",
             "embedding_dim",
             "embedding_provider",
+            "embedding_host",
             "llm_endpoint",
             "llm_model",
             "idle_unload_minutes",
@@ -3171,7 +3168,7 @@ class RagSearchEngine:
             cfg = self.get_config()
             chosen_emb_model = cfg.get("embedding_model") or "embeddinggemma"
             target_dim = cfg.get("embedding_dim")
-            ollama_host = cfg.get("ollama_host")
+            ollama_host = embedding_host(cfg)
             intent_type, task_prefix = classify_query_task_intent(query or norm_path)
             _, query_vec = compute_multimodal_query_embedding(
                 query=query or norm_path,
@@ -3782,7 +3779,7 @@ class RagSearchEngine:
         neural_blobs = None
         if configured_emb_model != "zett_lexical_384d":
             neural_blobs = compute_neural_embeddings_batch(
-                child_texts + parent_texts, configured_emb_model, target_dim=target_dim
+                child_texts + parent_texts, configured_emb_model, target_dim=target_dim, host=embedding_host(cfg)
             )
         if neural_blobs is not None:
             effective_file_emb_model = configured_emb_model
@@ -4116,6 +4113,7 @@ class RagSearchEngine:
         effective_emb_model, query_vec = compute_multimodal_query_embedding(
             query=query,
             model=chosen_emb_model,
+            ollama_host=embedding_host(cfg),
             target_dim=target_dim,
             req_scenes=req_scenes,
             req_colors=req_colors,

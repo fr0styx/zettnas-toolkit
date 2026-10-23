@@ -59,7 +59,8 @@ def test_one_failed_batch_means_no_neural_vectors_and_breaker(monkeypatch):
     assert len(calls) == n  # skipped while the breaker is open
 
 
-def test_unknown_model_name_tries_aliases(monkeypatch):
+def test_unknown_model_name_never_falls_back_to_another_model(monkeypatch):
+    """Only the model and its :latest tag: EmbeddingGemma 1 must not stand in for 2."""
     import urllib.error
 
     tried = []
@@ -67,11 +68,15 @@ def test_unknown_model_name_tries_aliases(monkeypatch):
     def fake(req, timeout=None):
         body = json.loads(req.data)
         tried.append(body["model"])
-        if body["model"] != "embeddinggemma":
+        if body["model"] != "embeddinggemma-2-ov:latest":
             raise urllib.error.HTTPError(req.full_url, 404, "not found", {}, None)
         return _Resp(json.dumps({"embeddings": [[1.0, 0.0]]}).encode())
 
     monkeypatch.setattr(rag_engine.urllib.request, "urlopen", fake)
-    assert rag_engine.compute_neural_embeddings_batch(["t"], "google/embeddinggemma-2", host="http://x:11434")
-    assert tried == ["google/embeddinggemma-2", "embeddinggemma"]
-    assert rag_engine._EMBED_MODEL_SEEN["google/embeddinggemma-2"] == "embeddinggemma"
+    monkeypatch.setitem(rag_engine._EMBED_BREAKER, "until", 0.0)
+    assert rag_engine.compute_neural_embeddings_batch(["t"], "embeddinggemma-2-ov", host="http://x:11434")
+    assert tried == ["embeddinggemma-2-ov", "embeddinggemma-2-ov:latest"]
+    tried.clear()
+    monkeypatch.setitem(rag_engine._EMBED_BREAKER, "until", 0.0)
+    assert rag_engine.compute_neural_embeddings_batch(["t"], "google/embeddinggemma-2", host="http://x:11434") is None
+    assert tried == ["google/embeddinggemma-2", "google/embeddinggemma-2:latest"]

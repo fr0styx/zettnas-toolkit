@@ -156,6 +156,7 @@ class RagConfigUpdateRequest(BaseModel):
     conversation_retention_days: int | None = Field(default=None, ge=0, le=3650)
     vision_captions: str | None = Field(default=None, pattern="^(auto|off)$")
     vision_model: str | None = Field(default=None, max_length=128)
+    embedding_host: str | None = Field(default=None, max_length=512)
     rerank_endpoint: str | None = Field(default=None, max_length=512)
     rerank_model: str | None = Field(default=None, max_length=128)
     rerank_top_n: int | None = Field(default=None, ge=2, le=100)
@@ -1276,6 +1277,11 @@ def update_rag_config(req: RagConfigUpdateRequest) -> dict[str, Any]:
 
         if not endpoint_ok(req.rerank_endpoint):
             raise HTTPException(status_code=400, detail="The reranker must be an http(s) URL.")
+    if req.embedding_host:
+        from backend.services.rag_rerank import endpoint_ok
+
+        if not endpoint_ok(req.embedding_host):
+            raise HTTPException(status_code=400, detail="The embedding host must be an http(s) URL.")
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
     return get_rag_engine().update_config(updates)
 
@@ -1393,6 +1399,7 @@ async def run_ai_benchmark() -> dict[str, Any]:
     import time
 
     from backend.services.media_engine import detect_hardware_accelerator
+    from backend.services.rag_embeddings import embedding_host
     from backend.services.rag_engine import compute_neural_embedding_via_ollama
 
     rag = get_rag_engine()
@@ -1414,6 +1421,7 @@ async def run_ai_benchmark() -> dict[str, Any]:
             compute_neural_embedding_via_ollama,
             text=s,
             model=model,
+            host=embedding_host(cfg),
             target_dim=target_dim,
             is_query=False,
         )
@@ -1471,6 +1479,12 @@ async def trigger_ai_reindex(
         req.embedding_model if (req and req.embedding_model) else (cfg.get("embedding_model") or "embeddinggemma")
     )
     target_dim = req.embedding_dim if (req and req.embedding_dim) else (cfg.get("embedding_dim") or 768)
+    target_host = req.embedding_host if (req and req.embedding_host is not None) else cfg.get("embedding_host")
+    if target_host:
+        from backend.services.rag_rerank import endpoint_ok
+
+        if not endpoint_ok(target_host):
+            raise HTTPException(status_code=400, detail="The embedding host must be an http(s) URL.")
 
     _REINDEX_STATUS = {
         "status": "running",
@@ -1491,18 +1505,18 @@ async def trigger_ai_reindex(
             res = await rag.in_place_reembed_collection(
                 target_model=target_model,
                 target_dim=target_dim,
-                batch_size=10,
                 progress_callback=_on_progress,
+                target_host=target_host or None,
             )
-            _REINDEX_STATUS["status"] = "complete"
             _REINDEX_STATUS.update(res)
+            _REINDEX_STATUS["status"] = "paused" if res.get("status") == "paused" else "complete"
         except Exception as e:
             logger.error("In-place re-index worker error: %s", e)
             _REINDEX_STATUS["status"] = "error"
             _REINDEX_STATUS["error"] = str(e)
 
     _REINDEX_TASK = asyncio.create_task(_worker())
-    return {"status": "started", "model": target_model, "dimension": target_dim}
+    return {"status": "started", "model": target_model, "dimension": target_dim, "embedding_host": target_host or ""}
 
 
 @router.post(

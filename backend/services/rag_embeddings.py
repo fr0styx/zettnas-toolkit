@@ -176,7 +176,7 @@ def load_sqlite_vec_extension(conn: sqlite3.Connection) -> bool:
     return False
 
 
-TASK_PREFIX_CODE = "task: code search | query: "
+TASK_PREFIX_CODE = "task: code retrieval | query: "  # the model card's prompt (v1 and v2)
 TASK_PREFIX_QA = "task: question answering | query: "
 TASK_PREFIX_CLASSIFICATION = "task: classification | query: "
 TASK_PREFIX_SEARCH = "task: search result | query: "
@@ -326,6 +326,11 @@ def _detected_host_ip() -> str | None:
     return ip
 
 
+def embedding_host(cfg: dict) -> str | None:
+    """Where embeddings come from: the AI config's embedding host, else its Ollama host (None = discover)."""
+    return (str(cfg.get("embedding_host") or "").strip() or str(cfg.get("ollama_host") or "").strip()) or None
+
+
 def _resolve_ollama_host(explicit_host: str | None = None) -> str:
     """Discovers reachable Ollama host inside Docker bridge network or bare metal."""
     global _CACHED_OLLAMA_HOST
@@ -408,18 +413,9 @@ def compute_neural_embedding_via_ollama(
     else:
         prompt_text = clean_text[:4000]
 
-    # Model resolution candidates
-    candidates = [model]
-    if is_eg:
-        for alias in (
-            "embeddinggemma",
-            "embeddinggemma:latest",
-            "google/embeddinggemma-2",
-            "hf.co/google/embeddinggemma-2",
-            "embeddinggemma:2",
-        ):
-            if alias not in candidates:
-                candidates.append(alias)
+    # Only the configured model (and its ":latest" tag): never another model under its name,
+    # or queries and the index end up embedded by different models
+    candidates = _embedding_model_candidates(model)
 
     for target_model in candidates:
         raw_emb = None
@@ -492,18 +488,11 @@ EMBED_BATCH_SIZE = 32
 
 
 def _embedding_model_candidates(model: str) -> list[str]:
-    cands = [_EMBED_MODEL_SEEN.get(model) or model]
-    if "embeddinggemma" in model.lower():
-        for alias in (
-            "embeddinggemma",
-            "embeddinggemma:latest",
-            "google/embeddinggemma-2",
-            "hf.co/google/embeddinggemma-2",
-        ):
-            if alias not in cands:
-                cands.append(alias)
-    elif model not in cands:
-        cands.append(model)
+    """The configured model and, without a tag, its ":latest" tag. Nothing else: falling back
+    to another model (EmbeddingGemma 1 for 2, say) silently mixes embedding spaces."""
+    cands = [model]
+    if ":" not in model.rsplit("/", 1)[-1]:
+        cands.append(f"{model}:latest")
     return cands
 
 
