@@ -54,8 +54,10 @@ def test_default_keeps_write_access_to_shares_but_not_other_folders(tree):
         with pytest.raises(HTTPException) as e:
             check_user_path_access(str(path), alice)
         assert e.value.status_code == 403
-    # the folder above the shares can be listed but not written
-    check_user_path_access(str(tree), alice)
+    # the folder above the shares can be listed (browse only) but not read or written
+    check_user_path_access(str(tree), alice, allow_list=True)
+    with pytest.raises(HTTPException):
+        check_user_path_access(str(tree), alice)
     with pytest.raises(HTTPException):
         check_user_path_access(str(tree), alice, write=True)
 

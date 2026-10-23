@@ -940,7 +940,7 @@ async def get_folder_manifest_endpoint(
     """Retrieves the recursive structure outline and topic inventory for a folder from NVMe SQLite WAL."""
     validated_path = _validate_media_path(folder_path, principal, must_exist=False)
     rag = get_rag_engine()
-    manifest = await asyncio.to_thread(rag.get_folder_manifest, validated_path)
+    manifest = await asyncio.to_thread(rag.get_folder_manifest, validated_path, principal)
     if not manifest:
         return {"status": "not_indexed", "folder_path": validated_path, "manifest": None}
     return {"status": "ok", "folder_path": validated_path, "manifest": manifest}
