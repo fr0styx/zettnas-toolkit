@@ -325,6 +325,8 @@ export default {
   "dock.vm_manager": "Virtuelle Maschinen",
   "dock.containers": "Container",
   "dock.zettai": "ZettAI Studio",
+  "updates.last_rolled_back": "Das letzte Update ({when}) ist nicht sauber gestartet und wurde zurückgesetzt: {reason}",
+  "updates.last_not_applied": "Das letzte Update ({when}) wurde nicht angewendet: {reason}",
   "updates.title": "Software-Updates",
   "updates.subtitle": "Prüfen Sie auf offizielle Stable-Releases oder abonnieren Sie die neuesten Commit-Funktionen.",
   "updates.channel_stable": "🌟 Stabil",

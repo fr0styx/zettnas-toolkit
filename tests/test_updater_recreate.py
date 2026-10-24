@@ -83,7 +83,10 @@ class FakeDocker:
 
 @pytest.fixture(autouse=True)
 def no_sleep(monkeypatch):
-    monkeypatch.setattr(self_updater.time, "sleep", lambda s: None)
+    # sleeping moves a fake clock, so the health dwell (OPS-6) passes instantly
+    clock = {"t": 1000.0}
+    monkeypatch.setattr(self_updater.time, "time", lambda: clock["t"])
+    monkeypatch.setattr(self_updater.time, "sleep", lambda s: clock.__setitem__("t", clock["t"] + s))
 
 
 def _run(monkeypatch, fake):
@@ -98,7 +101,8 @@ def test_success_waits_for_health_then_removes_rollback(monkeypatch):
     assert ("POST", "/networks/proxynet/connect") in paths
     health_checks = [i for i, p in enumerate(paths) if p == ("GET", "/containers/new123456789/json")]
     delete_rollback = paths.index(("DELETE", "/containers/zettnas-toolkit-rollback?v=false"))
-    assert len(health_checks) == 3 and delete_rollback > health_checks[-1]
+    # two "starting" checks, then healthy for the whole dwell before the old container goes
+    assert len(health_checks) >= 2 + self_updater.APP_OK_DWELL_SECS // 3 and delete_rollback > health_checks[-1]
 
 
 @pytest.mark.parametrize("state", ["unhealthy", "exited"])

@@ -150,6 +150,48 @@ def _rollback_container(
 _IMAGE_DEFAULT_KEYS = ("Cmd", "Entrypoint", "Healthcheck", "WorkingDir", "User", "ExposedPorts", "StopSignal", "Shell")
 HEALTH_TIMEOUT_SECS = 300
 STABLE_RUN_SECS = 20
+APP_OK_DWELL_SECS = 60  # the new version must report "ok" this long before the old one is removed (OPS-6)
+RESULT_FILE = "update_result.json"  # in the data folder: what the last update did (OPS-7)
+
+_HEALTH_PROBE = (
+    "import urllib.request, urllib.error, os, sys\n"
+    "u = 'http://127.0.0.1:%s/api/health' % os.environ.get('PORT', '8082')\n"
+    "try:\n    body = urllib.request.urlopen(u, timeout=4).read()\n"
+    "except urllib.error.HTTPError as e:\n    body = e.read()\n"
+    "except Exception:\n    body = b''\n"
+    "sys.stdout.write(body.decode('utf-8', 'replace'))\n"
+)
+
+
+def _app_status(cid: str) -> str | None:
+    """The app's own health status inside the container ("ok", "starting", "degraded", or "" when
+    it doesn't answer yet); None when it can't be asked (no exec support)."""
+    st, ex = _docker_request(
+        "POST",
+        f"/containers/{cid}/exec",
+        body={"Cmd": ["python3", "-c", _HEALTH_PROBE], "AttachStdout": True, "AttachStderr": False, "Tty": True},
+    )
+    if st not in (200, 201) or not isinstance(ex, dict) or not ex.get("Id"):
+        return None
+    st, out = _docker_request("POST", f"/exec/{ex['Id']}/start", body={"Detach": False, "Tty": True}, timeout=20)
+    if st != 200 or not isinstance(out, dict):
+        return ""
+    return str(out.get("status") or "")
+
+
+def write_update_result(data_dir: str | None, result: str, reason: str = "", **extra: Any) -> None:
+    """Records how the update ended, for the app to report after it starts (OPS-7)."""
+    if not data_dir:
+        return
+    try:
+        from backend.fsutil import atomic_write_json
+
+        atomic_write_json(
+            os.path.join(data_dir, RESULT_FILE),
+            {"result": result, "reason": reason, "at": time.time(), "reported": False, **extra},
+        )
+    except Exception as e:
+        logger.error(f"[SelfUpdater Helper] Could not record the update result: {e}")
 
 
 def _image_config(image_ref: str) -> dict[str, Any]:
@@ -220,28 +262,37 @@ def build_recreate_plan(
 
 
 def _wait_until_healthy(cid: str) -> tuple[bool, str]:
-    """Healthy if the image healthcheck passes, or (no healthcheck) it keeps running."""
+    """Healthy once the app itself reports "ok" and keeps doing so for APP_OK_DWELL_SECS, without
+    the container exiting (OPS-6). "starting" doesn't count. If the app can't be asked at all
+    (no exec support), the image healthcheck or a steady run stands in, for the same dwell."""
     deadline = time.time() + HEALTH_TIMEOUT_SECS
-    running_since: float | None = None
+    good_since: float | None = None
     while time.time() < deadline:
         st, data = _docker_request("GET", f"/containers/{cid}/json")
         state = (data.get("State") or {}) if st == 200 and isinstance(data, dict) else {}
         if not state.get("Running"):
             if state.get("Status") in ("exited", "dead"):
                 return False, f"container exited (code {state.get('ExitCode')})"
-            running_since = None
+            good_since = None
         else:
             health = (state.get("Health") or {}).get("Status")
-            if health == "healthy":
-                return True, "healthy"
             if health == "unhealthy":
                 return False, "healthcheck reported unhealthy"
-            if not health:
-                running_since = running_since or time.time()
-                if time.time() - running_since >= STABLE_RUN_SECS:
-                    return True, "running"
+            app = _app_status(cid)
+            if app == "degraded":
+                return False, "the app reported a failed part (degraded)"
+            if app is None:  # can't ask the app: the image healthcheck, or a steady run, decides
+                good = health == "healthy" or not health
+            else:
+                good = app == "ok"
+            if good:
+                good_since = good_since or time.time()
+                if time.time() - good_since >= APP_OK_DWELL_SECS:
+                    return True, f"ok for {APP_OK_DWELL_SECS} s" if app is not None else "running"
+            else:
+                good_since = None
         time.sleep(3)
-    return False, "timed out waiting for the container to become healthy"
+    return False, "timed out waiting for the app to report ok"
 
 
 def apply_update_from_helper(
@@ -298,6 +349,7 @@ def apply_update_from_helper(
         except Exception as e:
             logger.error(f"[SelfUpdater Helper] Could not snapshot the data folder ({e}); not updating.")
             _docker_request("POST", f"/containers/{target}/start")
+            write_update_result(data_dir, "not_applied", f"could not snapshot the data folder: {e}", to_image=image)
             sys.exit(1)
     elif restore_from:
         logger.error("[SelfUpdater Helper] A revert needs the data folder; not reverting.")
@@ -316,6 +368,7 @@ def apply_update_from_helper(
 
             _undo(snapshot, data_dir)
             _docker_request("POST", f"/containers/{target}/start")
+            write_update_result(data_dir, "not_applied", f"could not restore the earlier data: {e}", to_image=image)
             sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] Renaming '{target}' to '{rollback_name}' for rollback protection...")
@@ -323,6 +376,7 @@ def apply_update_from_helper(
     if st_ren not in (200, 204):
         logger.error(f"[SelfUpdater Helper] Failed to rename container for rollback: status={st_ren}, res={res_ren}")
         _docker_request("POST", f"/containers/{target}/start")
+        write_update_result(data_dir, "not_applied", "could not keep the current version aside", to_image=image)
         sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] Creating updated container '{target}' with image '{image}'...")
@@ -330,6 +384,7 @@ def apply_update_from_helper(
     if st_create not in (200, 201) or not isinstance(res_create, dict) or not res_create.get("Id"):
         logger.error(f"[SelfUpdater Helper] Failed to recreate container: status={st_create}, res={res_create}.")
         _rollback_container(target, rollback_name)
+        write_update_result(data_dir, "rolled_back", "the new version's container could not be created", to_image=image)
         sys.exit(1)
     new_cid = res_create["Id"]
 
@@ -340,6 +395,7 @@ def apply_update_from_helper(
         if st_net not in (200, 201, 204):
             logger.error(f"[SelfUpdater Helper] Could not connect network '{net_name}': status={st_net}, res={res_net}")
             _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
+            write_update_result(data_dir, "rolled_back", f"could not connect network {net_name}", to_image=image)
             sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] Starting updated container '{target}' ({new_cid[:12]})...")
@@ -347,16 +403,19 @@ def apply_update_from_helper(
     if st_start not in (200, 204):
         logger.error(f"[SelfUpdater Helper] Failed to start updated container: status={st_start}.")
         _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
+        write_update_result(data_dir, "rolled_back", "the new version did not start", to_image=image)
         sys.exit(1)
 
     healthy, why = _wait_until_healthy(new_cid)
     if not healthy:
         logger.error(f"[SelfUpdater Helper] Updated container is not healthy ({why}). Rolling back...")
         _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
+        write_update_result(data_dir, "rolled_back", why, to_image=image)
         sys.exit(1)
 
     logger.info(f"[SelfUpdater Helper] '{target}' is {why}. Removing the rollback container...")
     _docker_request("DELETE", f"/containers/{rollback_name}?v=false")
+    write_update_result(data_dir, "reverted" if restore_from else "updated", why, to_image=image)
     logger.info(f"[SelfUpdater Helper] OTA update complete for '{target}'.")
 
 
@@ -380,3 +439,40 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def last_update_result(data_dir: str) -> dict[str, Any] | None:
+    from backend.fsutil import read_json
+
+    data = read_json(os.path.join(data_dir, RESULT_FILE), None)
+    return data if isinstance(data, dict) and data.get("result") else None
+
+
+def report_last_update_result(data_dir: str) -> dict[str, Any] | None:
+    """Once after an update: an event for every result, and a notification when the update did
+    not take (OPS-7). Returns the result that was reported, if any."""
+    data = last_update_result(data_dir)
+    if not data or data.get("reported"):
+        return None
+    from backend.fsutil import atomic_write_json
+    from backend.state import add_event
+
+    target = str(data.get("to_image") or "the new version")
+    reason = str(data.get("reason") or "")
+    if data["result"] in ("rolled_back", "not_applied"):
+        title = "Update rolled back" if data["result"] == "rolled_back" else "Update not applied"
+        message = f"{target}: {reason}. The previous version is running." if reason else f"{target}."
+        add_event("error", title, message)
+        try:
+            from backend.services.notifications import send_notification
+
+            send_notification(
+                title, message, level="warning", event_type="system_update", dedup_key=f"update-{data.get('at')}"
+            )
+        except Exception as e:
+            logger.warning(f"[SelfUpdater] Could not send the update notification: {e}")
+    else:
+        add_event("info", "Update complete" if data["result"] == "updated" else "Reverted", f"Now running {target}.")
+    data["reported"] = True
+    atomic_write_json(os.path.join(data_dir, RESULT_FILE), data)
+    return data

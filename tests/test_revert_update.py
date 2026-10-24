@@ -51,7 +51,10 @@ class FakeDocker:
 
 @pytest.fixture(autouse=True)
 def no_sleep(monkeypatch):
-    monkeypatch.setattr(self_updater.time, "sleep", lambda s: None)
+    # sleeping moves a fake clock, so the health dwell (OPS-6) passes instantly
+    clock = {"t": 1000.0}
+    monkeypatch.setattr(self_updater.time, "time", lambda: clock["t"])
+    monkeypatch.setattr(self_updater.time, "sleep", lambda s: clock.__setitem__("t", clock["t"] + s))
 
 
 def test_revert_restores_old_data_and_keeps_a_safety_snapshot(tmp_path, monkeypatch):

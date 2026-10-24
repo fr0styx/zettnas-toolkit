@@ -1273,6 +1273,15 @@ def _previous_versions() -> list[dict[str, Any]]:
     return out
 
 
+@router.get("/system/updates/last-result", dependencies=[Depends(require_scope("system:view", "system:manage"))])
+def get_last_update_result():
+    """How the last in-app update or revert ended (OPS-7)."""
+    from backend.services.self_updater import last_update_result
+
+    data = last_update_result(config.DATA_DIR) or {}
+    return {k: data.get(k) for k in ("result", "reason", "at", "to_image")} if data else {"result": None}
+
+
 @router.get("/system/updates/previous", dependencies=[Depends(require_scope("system:power", "system:manage"))])
 async def get_previous_versions():
     """Versions this install can go back to: a pre-update snapshot whose image is still on the host."""

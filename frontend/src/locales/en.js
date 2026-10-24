@@ -297,6 +297,8 @@ export default {
   "dock.vm_manager": "Virtual Machines",
   "dock.containers": "Containers",
   "dock.zettai": "ZettAI Studio",
+  "updates.last_rolled_back": "The last update ({when}) did not start cleanly and was rolled back: {reason}",
+  "updates.last_not_applied": "The last update ({when}) was not applied: {reason}",
   "updates.title": "Software Updates",
   "updates.subtitle": "Check for the latest stable releases, security patches, or opt in to bleeding-edge commit features.",
   "updates.channel_stable": "🌟 Stable",

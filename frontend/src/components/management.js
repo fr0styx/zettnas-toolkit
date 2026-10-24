@@ -8861,7 +8861,10 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
     console.warn('[ZettNAS] Failed to fetch system about info:', err);
   }
 
-  // 2. Fetch update status
+  // 2. How the last update ended: a rollback is shown until the next successful update (OPS-7)
+  showLastUpdateResult();
+
+  // 3. Fetch update status
   try {
     const data = await api.get(`/api/system/updates?channel=${channel}${force ? '&force=true' : ''}`);
     _lastUpdateData = data;
@@ -8936,6 +8939,27 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
 
 // The newest version this install can go back to (a pre-update snapshot whose image is still on the host).
 let _previousVersion = null;
+
+export async function showLastUpdateResult() {
+  const box = document.getElementById('update-last-result');
+  if (!box) return;
+  try {
+    const r = await api.get('/api/system/updates/last-result');
+    if (r && (r.result === 'rolled_back' || r.result === 'not_applied')) {
+      const when = r.at ? formatDateTime(r.at * 1000, undefined, '') : '';
+      const key = r.result === 'rolled_back' ? 'updates.last_rolled_back' : 'updates.last_not_applied';
+      const fallback = r.result === 'rolled_back'
+        ? 'The last update ({when}) did not start cleanly and was rolled back: {reason}'
+        : 'The last update ({when}) was not applied: {reason}';
+      box.textContent = t(key, fallback).replace('{when}', when).replace('{reason}', r.reason || '');
+      box.hidden = false;
+    } else {
+      box.hidden = true;
+    }
+  } catch (e) {
+    box.hidden = true;
+  }
+}
 
 export async function refreshPreviousVersions() {
   const btn = document.getElementById('btn-revert-system-update');

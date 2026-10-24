@@ -127,6 +127,12 @@ def startup_system():
     except Exception as e:
         logger.error(f"[Main] Could not align the admin password copy: {e}")
     stamp_versions()
+    try:
+        from backend.services.self_updater import report_last_update_result
+
+        report_last_update_result(DATA_DIR)  # event + notification if the last update rolled back (OPS-7)
+    except Exception as e:
+        logger.error(f"[Main] Could not report the last update result: {e}")
     from backend.services.rag_engine import RAG_DB_PATH as _rag_db_path
 
     db_crypto.prepare_in_background(_rag_db_path)
