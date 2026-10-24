@@ -455,6 +455,20 @@ def get_lcd_page():
     }
 
 
+@router.get("/lcd/preview.png")
+def get_lcd_preview(page: int | None = Query(None, ge=0, le=3), theme: str | None = Query(None, max_length=20)):
+    """The LCD as the built-in (no-browser) renderer draws it, as a 640x172 PNG."""
+    from backend.services import lcd_pil
+
+    with Z_STATE.lock:
+        stats = dict(Z_STATE.cached_stats or {})
+    prefs = dict(stats.get("client_preferences") or {})
+    if theme:
+        prefs["lcd_theme"] = theme
+    png = lcd_pil.preview_png(stats, page, prefs=prefs)
+    return Response(content=png, media_type="image/png", headers={"Cache-Control": "no-store"})
+
+
 @router.post("/lcd/page", dependencies=[Depends(require_scope("system:config", "hardware:fans"))])
 def post_lcd_page(req: LcdPageRequest):
     if req.page is not None:

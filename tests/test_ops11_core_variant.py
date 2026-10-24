@@ -31,11 +31,26 @@ def test_core_image_updates_to_core_tags(monkeypatch):
 
 
 def test_lcd_renderer_stops_cleanly_without_chromium(monkeypatch):
+    from backend import config
     from backend.services import lcd_renderer
 
     monkeypatch.setattr("backend.hardware.screen.is_auxiliary_lcd_present", lambda: True)
     monkeypatch.setenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "/nonexistent/chromium")
+    monkeypatch.setattr(config, "LCD_RENDERER", "chromium")
     called = []
     monkeypatch.setattr(lcd_renderer, "find_fb_device", lambda **k: called.append(1))
     assert lcd_renderer.render_lcd_loop() is None
     assert called == []
+
+
+def test_core_image_falls_back_to_the_builtin_renderer(monkeypatch):
+    from backend import config
+    from backend.services import lcd_renderer
+
+    monkeypatch.setattr("backend.hardware.screen.is_auxiliary_lcd_present", lambda: True)
+    monkeypatch.setenv("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "/nonexistent/chromium")
+    monkeypatch.setattr(config, "LCD_RENDERER", "auto")
+    called = []
+    monkeypatch.setattr(lcd_renderer, "find_fb_device", lambda **k: called.append(1))
+    assert lcd_renderer.render_lcd_loop() is None
+    assert called == [1]  # went on to look for the framebuffer (none here, so it stops)

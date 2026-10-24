@@ -63,10 +63,12 @@ then reads pools, datasets and shares through the TrueNAS API and can take ZFS s
 
 | Tag | Size | Includes |
 | --- | ---- | -------- |
-| `latest`, `edge` | about 1.7 GB | Everything: virtual machines (QEMU, UEFI, vTPM) and the front-panel LCD renderer |
-| `latest-core`, `edge-core` | about 500 MB | Everything except virtual machines and the LCD renderer |
+| `latest`, `edge` | about 1.7 GB | Everything: virtual machines (QEMU, UEFI, vTPM) and Chromium for the front-panel LCD |
+| `latest-core`, `edge-core` | about 500 MB | Everything except virtual machines and Chromium; the front LCD uses the built-in renderer |
 
-Use the core tags on servers without the ZettLab front LCD that don't run VMs. The
+Use the core tags on servers that don't run VMs. The front LCD still works: the core
+images draw it with a built-in renderer instead of the web dashboard (`LCD_RENDERER`,
+see docs/CONFIGURATION.md; `/api/lcd/preview.png` shows the result). The
 in-app updater keeps you on the variant you installed. To switch, change the tag in
 your compose file or Unraid template and recreate the container.
 

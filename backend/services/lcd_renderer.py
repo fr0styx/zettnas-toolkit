@@ -4,8 +4,7 @@ import mmap
 import os
 import time
 
-from PIL import Image
-from playwright.sync_api import sync_playwright
+from PIL import Image, ImageChops
 
 from backend import config
 from backend.config import ENABLE_FB, HOST_SYS, LCD_FORMAT, LCD_FPS, PORT, logger
@@ -98,10 +97,9 @@ def render_lcd_loop():
         return
 
     chromium = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "/usr/lib/chromium/chromium-headless-shell")
-    if not os.path.exists(chromium):
-        logger.info(
-            "[LCD] The core image has no LCD renderer (no Chromium). Use the full image to drive the front LCD."
-        )
+    renderer = choose_renderer(config.LCD_RENDERER, os.path.exists(chromium))
+    if renderer is None:
+        logger.info("[LCD] LCD_RENDERER=chromium but this image has no Chromium. Use LCD_RENDERER=pil or auto.")
         return
 
     fb_path = find_fb_device(writable_only=True)
@@ -109,6 +107,10 @@ def render_lcd_loop():
         logger.info(
             "[LCD] Framebuffer device (/dev/fb0, /host/dev/fb0) not present, inaccessible, or is a directory. Running web-only."
         )
+        return
+
+    if renderer == "pil":
+        _run_pil(fb_path)
         return
 
     time.sleep(2)
@@ -157,6 +159,8 @@ def render_lcd_loop():
         "--media-cache-size=1",
     ]
 
+    from playwright.sync_api import sync_playwright
+
     retry_delay = 2.0
     while not Z_STATE.shutting_down:
         try:
@@ -184,6 +188,7 @@ def render_lcd_loop():
                 page = context.new_page()
                 page.goto(url, wait_until="domcontentloaded", timeout=15000)
                 Z_STATE.lcd_renderer_active = True
+                Z_STATE.lcd_renderer_name = "chromium"
 
                 cdp = context.new_cdp_session(page)
                 shot_params = {"format": "jpeg" if lcd_format == "jpeg" else "png", "optimizeForSpeed": True}
@@ -222,6 +227,52 @@ def render_lcd_loop():
     logger.info("[LCD] Active render loop terminated cleanly.")
 
 
+def choose_renderer(setting: str, chromium_present: bool) -> str | None:
+    """ "chromium" or "pil" for the LCD_RENDERER setting; None when Chromium is asked for but missing."""
+    setting = (setting or "auto").strip().lower()
+    if setting == "pil":
+        return "pil"
+    if setting == "chromium":
+        return "chromium" if chromium_present else None
+    return "chromium" if chromium_present else "pil"
+
+
+def _run_pil(fb_path: str) -> None:
+    """Drives the LCD with the Pillow renderer (no browser) until shutdown."""
+    from backend.services import lcd_pil
+
+    eff_bri = get_effective_brightness()
+    set_fb_blank(eff_bri > 0)
+    set_screen_brightness(eff_bri)
+    fb_width, fb_height, stride = discover_fb_geometry()
+    bpp = discover_fb_bpp()
+    total_fb_bytes = fb_height * stride
+    logger.info(f"[LCD] Starting the built-in renderer (no browser): {fb_width}x{fb_height} ({bpp}bpp) -> {fb_path}")
+    retry_delay = 2.0
+    while not Z_STATE.shutting_down:
+        try:
+            with open(fb_path, "r+b") as fb_file:
+                fb_mem = mmap.mmap(fb_file.fileno(), total_fb_bytes, mmap.MAP_SHARED, mmap.PROT_WRITE)
+                try:
+                    fb = _Framebuffer(fb_mem, total_fb_bytes, stride, bpp)
+                    fb.clear()
+                    Z_STATE.lcd_renderer_active = True
+                    Z_STATE.lcd_renderer_name = "pil"
+                    retry_delay = 2.0
+                    lcd_pil.run_loop(fb, 1.0, _screen_off, Z_STATE)
+                finally:
+                    fb_mem.close()
+        except Exception as e:
+            Z_STATE.lcd_renderer_active = False
+            if Z_STATE.shutting_down:
+                break
+            logger.info(f"[LCD] Built-in renderer error: {e}. Retrying in {retry_delay:.1f}s...")
+            time.sleep(retry_delay)
+            retry_delay = min(60.0, retry_delay * 1.5)
+    Z_STATE.lcd_renderer_active = False
+    Z_STATE.lcd_renderer_name = ""
+
+
 def lcd_context_options(width: int, height: int) -> dict:
     """Browser settings for the LCD page. Reduced motion stops CSS animations after one
     run, so an idle screen stops repainting (and stops costing frames) (PERF-2)."""
@@ -240,6 +291,31 @@ LCD_CAPTURE = os.environ.get("ZETTNAS_LCD_CAPTURE", "screencast").strip().lower(
 _NO_FRAME_FALLBACK_S = 5.0
 
 
+# Lookup tables for rgb565_bytes: each channel's share of the low and high byte
+_G_LOW = [(v & 0x1C) << 3 for v in range(256)]
+_B_LOW = [v >> 3 for v in range(256)]
+_R_HIGH = [v & 0xF8 for v in range(256)]
+_G_HIGH = [v >> 5 for v in range(256)]
+
+
+def rgb565_bytes(img: Image.Image, stride: int) -> bytes:
+    """
+    The image as little-endian RGB565 rows of `stride` bytes (16-bit framebuffers).
+    Pillow can read RGB565 but not write it, so the two bytes per pixel are built
+    from the colour channels: low = GGGBBBBB, high = RRRRRGGG.
+    """
+    img = img.convert("RGB")
+    width = max(img.width, stride // 2)
+    if width != img.width:
+        padded = Image.new("RGB", (width, img.height))
+        padded.paste(img, (0, 0))
+        img = padded
+    r, g, b = img.split()
+    low = ImageChops.add(g.point(_G_LOW), b.point(_B_LOW))
+    high = ImageChops.add(r.point(_R_HIGH), g.point(_G_HIGH))
+    return Image.merge("LA", (low, high)).tobytes()
+
+
 class _Framebuffer:
     def __init__(self, fb_mem, total_bytes: int, stride: int, bpp: int):
         self.mem = fb_mem
@@ -252,11 +328,17 @@ class _Framebuffer:
 
     def write(self, raw_bytes: bytes) -> None:
         with Image.open(io.BytesIO(raw_bytes)) as img:
-            if self.bpp == 16:
-                self.mem[: self.total] = img.convert("RGB").tobytes("raw", "BGR;16", self.stride, 1)
-            else:
-                raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
-                self.mem[: self.total] = img.tobytes("raw", raw_mode, self.stride, 1)
+            self.write_image(img)
+
+    def write_image(self, img: Image.Image) -> None:
+        """Writes a framebuffer-sized image (already in the framebuffer's orientation)."""
+        if self.bpp == 16:
+            self.mem[: self.total] = rgb565_bytes(img, self.stride)[: self.total]
+        else:
+            if img.mode not in ("RGB", "RGBA"):
+                img = img.convert("RGB")
+            raw_mode = "BGRA" if img.mode == "RGBA" else "BGRX"
+            self.mem[: self.total] = img.tobytes("raw", raw_mode, self.stride, 1)
         try:
             self.mem.flush()
         except Exception:

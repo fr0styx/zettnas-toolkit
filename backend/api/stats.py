@@ -29,6 +29,7 @@ def get_lcd_status():
         "fb_path": fb_path,
         "fps": LCD_FPS,
         "active": Z_STATE.lcd_renderer_active,
+        "renderer": Z_STATE.lcd_renderer_name or None,
         "power": bool(scr.get("power", True)),
         "screen_off": eff_bri <= 0,
     }

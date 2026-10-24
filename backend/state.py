@@ -59,6 +59,7 @@ class LcdState:
 
     lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
     renderer_active: bool = False
+    renderer: str = ""  # "chromium" or "pil" while running
     current_page: int = 0
     cycle_seconds: int = 0
     last_cycle_time: float = field(default_factory=time.time)
@@ -119,6 +120,7 @@ class ZettState:
     critical_temp_active = _Alias[bool]("fans", "critical_temp_active")
     thermal_watchdog_engaged = _Alias[bool]("fans", "thermal_watchdog_engaged")
     lcd_renderer_active = _Alias[bool]("lcd", "renderer_active")
+    lcd_renderer_name = _Alias[str]("lcd", "renderer")
     current_lcd_page = _Alias[int]("lcd", "current_page")
     lcd_cycle_seconds = _Alias[int]("lcd", "cycle_seconds")
     last_lcd_cycle_time = _Alias[float]("lcd", "last_cycle_time")

@@ -80,6 +80,7 @@ ENABLE_FB = SETTINGS.enable_fb
 LCD_FPS = SETTINGS.lcd_fps
 SMART_POLL_INTERVAL_HDD = SETTINGS.smart_poll_hdd
 SMART_POLL_INTERVAL_NVME = SETTINGS.smart_poll_nvme
+LCD_RENDERER = SETTINGS.lcd_renderer
 LCD_FORMAT = SETTINGS.lcd_format  # jpeg: cheaper to encode than png (PERF-2)
 PORT = SETTINGS.port
 SHOW_OS_DISK = SETTINGS.show_os_disk

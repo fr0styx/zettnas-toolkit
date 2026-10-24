@@ -9,7 +9,8 @@
 
 #### Smaller image
 
-- **New `latest-core` and `edge-core` images** (about 500 MB instead of 1.7 GB) leave out virtual machines and the front-LCD renderer. The updater stays on the variant you run. See docs/INSTALLATION.md.
+- **New `latest-core` and `edge-core` images** (about 500 MB instead of 1.7 GB) leave out virtual machines and Chromium. The updater stays on the variant you run. See docs/INSTALLATION.md.
+- **The front LCD works without a browser.** A built-in renderer draws the four LCD pages directly (a few milliseconds per frame, no Chromium). The core images use it automatically; `LCD_RENDERER=pil` turns it on in the full image, and `/api/lcd/preview.png` shows what it draws. 16-bit framebuffers work again.
 
 - **Ransomware guard.** Mass renames or deletes, files renamed to ransomware extensions, ransom notes or a changed guard file freeze writes, snapshot pools that support it, block the source address and send a critical alert. Optional guard files catch attacks over SMB and NFS. See SECURITY.md.
 - **Sign in with Authentik, Keycloak or another OpenID Connect provider.** Groups map to roles; a provider login never takes over a local account. See docs/SSO.md.

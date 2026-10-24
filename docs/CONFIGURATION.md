@@ -60,6 +60,7 @@ used keeps its default, and the log says which variable and why.
 | `ENABLE_FB` | `on` | Drive the front LCD. |
 | `LCD_FPS` | `5` | Frames per second sent to the front LCD. (1–30) |
 | `LCD_FORMAT` | `jpeg` | Image format of LCD frames. (one of `jpeg`, `png`) |
+| `LCD_RENDERER` | `auto` | What draws the front LCD: chromium (the web dashboard), pil (drawn directly, no browser) or auto (chromium when installed, otherwise pil). (one of `auto`, `chromium`, `pil`) |
 | `LCD_SLEEP_SEC` | `300` | Seconds without activity before the LCD dims. (0–86400) |
 
 ## Disks

@@ -110,6 +110,14 @@ class Settings:
     lcd_format: str = _s(
         "LCD_FORMAT", "jpeg", "Image format of LCD frames.", choices=("jpeg", "png"), group="Front panel"
     )
+    lcd_renderer: str = _s(
+        "LCD_RENDERER",
+        "auto",
+        "What draws the front LCD: chromium (the web dashboard), pil (drawn directly, no browser) "
+        "or auto (chromium when installed, otherwise pil).",
+        choices=("auto", "chromium", "pil"),
+        group="Front panel",
+    )
     lcd_sleep_sec: int = _s(
         "LCD_SLEEP_SEC", 300, "Seconds without activity before the LCD dims.", lo=0, hi=86400, group="Front panel"
     )
