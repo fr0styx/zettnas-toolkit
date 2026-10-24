@@ -1,0 +1,63 @@
+{
+  "model": "embeddinggemma",
+  "set": "all",
+  "distractors": 2000,
+  "overall": {
+    "recall@1": 0.834,
+    "recall@5": 0.848,
+    "mrr@10": 0.841,
+    "queries": 290
+  },
+  "by_language": {
+    "de": {
+      "recall@1": 0.821,
+      "recall@5": 0.821,
+      "mrr@10": 0.821,
+      "queries": 56
+    },
+    "en": {
+      "recall@1": 0.75,
+      "recall@5": 0.75,
+      "mrr@10": 0.75,
+      "queries": 72
+    },
+    "es": {
+      "recall@1": 0.87,
+      "recall@5": 0.889,
+      "mrr@10": 0.878,
+      "queries": 54
+    },
+    "fr": {
+      "recall@1": 0.927,
+      "recall@5": 0.964,
+      "mrr@10": 0.945,
+      "queries": 55
+    },
+    "zh": {
+      "recall@1": 0.83,
+      "recall@5": 0.849,
+      "mrr@10": 0.84,
+      "queries": 53
+    }
+  },
+  "by_kind": {
+    "cross": {
+      "recall@1": 0.54,
+      "recall@5": 0.56,
+      "mrr@10": 0.55,
+      "queries": 50
+    },
+    "paraphrase": {
+      "recall@1": 0.8,
+      "recall@5": 0.825,
+      "mrr@10": 0.808,
+      "queries": 40
+    },
+    "same-language": {
+      "recall@1": 0.915,
+      "recall@5": 0.925,
+      "mrr@10": 0.92,
+      "queries": 200
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "model": "embeddinggemma",
+  "set": "base",
+  "distractors": 0,
+  "overall": {
+    "recall@1": 0.935,
+    "recall@5": 0.955,
+    "mrr@10": 0.945,
+    "queries": 200
+  },
+  "by_language": {
+    "de": {
+      "recall@1": 0.9,
+      "recall@5": 0.9,
+      "mrr@10": 0.9,
+      "queries": 40
+    },
+    "en": {
+      "recall@1": 0.975,
+      "recall@5": 0.975,
+      "mrr@10": 0.975,
+      "queries": 40
+    },
+    "es": {
+      "recall@1": 0.975,
+      "recall@5": 1.0,
+      "mrr@10": 0.988,
+      "queries": 40
+    },
+    "fr": {
+      "recall@1": 0.95,
+      "recall@5": 1.0,
+      "mrr@10": 0.975,
+      "queries": 40
+    },
+    "zh": {
+      "recall@1": 0.875,
+      "recall@5": 0.9,
+      "mrr@10": 0.887,
+      "queries": 40
+    }
+  },
+  "by_kind": {
+    "same-language": {
+      "recall@1": 0.935,
+      "recall@5": 0.955,
+      "mrr@10": 0.945,
+      "queries": 200
+    }
+  },
+  "answers": {
+    "model": "qwen3:1.7b",
+    "accuracy": 0.794,
+    "source_hit": 0.938,
+    "model_answered": 1.0,
+    "by_language": {
+      "de": 0.842,
+      "en": 0.84,
+      "es": 0.941,
+      "fr": 0.722,
+      "zh": 0.611
+    }
+  }
+}
