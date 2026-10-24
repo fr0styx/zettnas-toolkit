@@ -15,6 +15,7 @@ from backend.api.diagnostics import router as diagnostics_router
 from backend.api.docker import router as docker_router
 from backend.api.fans import router as fans_router
 from backend.api.fs import router as fs_router
+from backend.api.jobs import router as jobs_router  # noqa: E402
 from backend.api.led import router as led_router
 from backend.api.mcp import router as mcp_router
 from backend.api.media import router as media_router
@@ -39,6 +40,7 @@ from backend.api.wallpapers import router as wallpapers_router
 from backend.api.webdav import router as webdav_router
 
 api_router = APIRouter()
+api_router.include_router(jobs_router)
 api_router.include_router(auth_router)
 api_router.include_router(oidc_router)
 api_router.include_router(ldap_router)
