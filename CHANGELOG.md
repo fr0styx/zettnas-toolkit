@@ -1,60 +1,116 @@
 # ZettNAS Toolkit - Release Changelog
 
-## Unreleased
+## v1.10.0 (2026-10-24)
+### 🗂️ Snapshots, offsite backup and family accounts; safer updates; a phone mode and a readable light theme
 
-#### Security
+Includes every fix from 1.9.4. Read **Before you upgrade**: a few defaults are stricter.
 
-- **Docker access goes through an allow-list proxy.** ZettNAS forwards only the Docker API calls it uses. Containers with host-level access are created only from flows you confirm (app install after review, recreate, update) and are logged to `data/docker-proxy-audit.log`. `ZETTNAS_DOCKER_PROXY=off` turns the proxy off.
-- SECURITY.md lists which permissions are root-equivalent on the host.
-- **In-app updates check the image signature.** Before installing, ZettNAS verifies that the image was signed by this project's CI (Sigstore, the same check as `cosign verify`) for exactly the digest it downloaded, and refuses it otherwise. `UPDATE_SIGNATURES=warn` installs with a warning, `off` skips the check.
-- **Cloud sign-in tokens stay on the NAS.** Connecting a cloud remote no longer sends the provider's access and refresh tokens to the browser: the phone (QR code) page only learns whether it worked, and the desktop gets a reference that saving the remote swaps back. The phone page needs the whole address the sign-in went to, not only the code, so a code from another account cannot be slipped in.
-- Values given to rclone, qemu-img and the QEMU monitor (client IDs, snapshot names) can no longer be read as command options.
-- Rebooting or powering off through the kernel fallback, used when no reboot command is available, writes cached data to the disks first.
+#### Before you upgrade
 
-#### Smaller image
+- **In-app updates check the image signature.** ZettNAS installs an update only when this project's CI signed exactly that image (Sigstore, the same check as `cosign verify`). `UPDATE_SIGNATURES=warn` installs with a warning, `off` skips the check.
+- **Docker access goes through an allow-list proxy.** ZettNAS forwards only the Docker API calls it uses; containers with host-level access are created only from flows you confirm, and are logged to `data/docker-proxy-audit.log`. `ZETTNAS_DOCKER_PROXY=off` turns the proxy off.
+- **The API lives at `/api/v1`.** `/api` keeps working for the web app; token clients there get `Deprecation` and `Sunset` (30 June 2027) headers. Server errors return an error code and a reference instead of exception text. See docs/API.md.
+- **The Content-Security-Policy is enforced.** Custom pages or scripts injected into ZettNAS's own pages stop working.
+- **Connecting a cloud remote from a phone (QR code)** needs the whole address the sign-in page went to, not only the code.
+- **Repeated failed sign-ins block the address** for an hour (web and WebDAV). Trusted networks are set with `ZETTNAS_TRUSTED_IPS`.
 
-- **New `latest-core` and `edge-core` images** (about 500 MB instead of 1.7 GB) leave out virtual machines and Chromium. The updater stays on the variant you run. See docs/INSTALLATION.md.
-- **The front LCD works without a browser.** A built-in renderer draws the four LCD pages directly (a few milliseconds per frame, no Chromium). The core images use it automatically; `LCD_RENDERER=pil` turns it on in the full image, and `/api/lcd/preview.png` shows what it draws. 16-bit framebuffers work again.
+#### Storage, backup and people
 
-- **Ransomware guard.** Mass renames or deletes, files renamed to ransomware extensions, ransom notes or a changed guard file freeze writes, snapshot pools that support it, block the source address and send a critical alert. Optional guard files catch attacks over SMB and NFS. See SECURITY.md.
-- **Sign in with Authentik, Keycloak or another OpenID Connect provider.** Groups map to roles; a provider login never takes over a local account. See docs/SSO.md.
-- **Sign in with LDAP or Active Directory.** Directory groups map to roles; local accounts keep their own password. See docs/SSO.md.
-- **Repeated failed sign-ins block the address** for an hour (web and WebDAV). Trusted networks are set with `ZETTNAS_TRUSTED_IPS`; blocked addresses are listed under Security.
+- **Snapshots you can use**: per-share schedules, browse and restore single files, Windows "Previous Versions", and snapshots the ransomware guard locks.
+- **Offsite backup**: versioned, deduplicated, encrypted backups with restic, a restore browser and verification.
+- **ZettNAS settings backups** run on a schedule, encrypted, to the pool or a remote, with a disaster-recovery guide (docs/BACKUP_GUIDE.md).
+- **Family accounts**: private folders, enforced space quotas, invite links, and guest and kid roles.
+- **Ransomware guard**: mass renames or deletes, ransomware file extensions, ransom notes or a changed guard file freeze writes, snapshot the pool where supported, block the source address and send a critical alert. See SECURITY.md.
+- **Sign in with Authentik, Keycloak or another OpenID Connect provider, or with LDAP / Active Directory.** Groups map to roles. See docs/SSO.md.
+- **Alerts**: a daily summary instead of a message per event (critical alerts still go out at once), and alerts per person.
 
-#### Light theme
+#### Updates you can trust
 
-- **The light theme is readable everywhere.** Panels, tables, buttons, inputs and badges that kept dark-theme colours now have light ones, and text meets WCAG AA contrast (4.5:1) in every window. Other themes are unchanged.
-
-#### Icons
-
-- **Drawn icons instead of emoji.** Every emoji used as an icon is now a crisp line icon that follows the text colour, in all themes and languages. Screen readers no longer read emoji names aloud.
-
-#### Phone and tablet
-
-- **Install ZettNAS as an app** from the browser menu on your phone. Sharing photos or files to ZettNAS from the share sheet saves them to your **Inbox** folder (never overwriting anything). Turn on **Notifications on this device** to get disk, ransomware and other critical alerts on your phone.
+- An update keeps the old version until the new one reports healthy for 60 seconds, and rolls back on its own otherwise; you get a notice when it does.
+- Every new version snapshots your data first; the last Stable snapshot and rollback images are kept.
+- Numbered database migrations, tested from older databases.
+- Open pages notice an update and offer a reload, instead of failing quietly on the next click.
 
 #### Apps
 
-- **One-click Immich works**: it installs the server, machine learning, Valkey and Postgres together on a private network with a generated database password. Apps can now ship companion containers. See docs/SSO.md for Immich sign-in with your provider.
+- **78 tested one-click apps** in a new catalog layout, with sign-in details for each.
+- **One-click Immich** installs the server, machine learning, Valkey and Postgres together, and can sign in with your provider. Photo search in ZettNAS goes through Immich, per person.
+- **One-step Jellyfin** with hardware transcoding.
+- **Jobs**: one list of everything running and recently finished (copies, imports, backups, AI indexing), with progress and cancel.
+- An updated app leaves the Updates list at once.
 
-#### Files, photos and videos
+#### Ask Zetty and search
 
-- **Uploading small files from the File Explorer works again** (button and drag-and-drop).
-- **The File Explorer works on phones and in narrow windows**: folders in a drawer, thumbnails, size and date under each name, and the full path on its own row.
-- **Photo viewer**: clear icons and an always-visible close button, next/previous wherever you open a photo from, swipe and pinch on touch screens, faster loading of large photos, and thumbnails in list view.
-- **Video viewer**: continues where you stopped, shows subtitles saved next to the video, and explains when a format can't play in the browser.
-- Markdown files are shown formatted.
+- **EmbeddingGemma 2 on the Intel GPU** for search, with a re-embed that can't break search while it runs.
+- **Multilingual search**: per-model ranking, a multilingual reranker, Chinese, Japanese and Korean text (Chinese went from 3% to 85% in the test set), Word, Excel, PowerPoint, EPUB and email files.
+- **Answers are checked sentence by sentence** against your files; unchecked answers say "Unverified", and citations are clickable.
+- **Photo search understands what's in a picture**: with a vision model installed (for example Gemma 3 4B), ZettNAS describes photos and reads the text in them while the NAS is idle. Scanned PDFs become searchable the same way.
+- **Qwen3 4B** is offered as a multilingual chat model; **Benchmark** (AI → Models) measures each installed model on your hardware and picks a tier.
+- The search index and chat history are encrypted at rest.
+- **Use ZettNAS from Claude, Cursor and other AI clients (MCP)** within your permissions; changes come back as a link you confirm. See docs/MCP.md.
 
-#### Reliability
+#### Look and feel
 
-- Background services (stats, SMART, fans, LCD, buttons) restart on their own after a crash, and `/api/health` shows their state.
-- Opening a VM console no longer stalls the rest of the UI while the VM starts.
-- Indexing respects sleeping disks on ZFS, Btrfs, mdadm and LVM, not only Unraid. Folders whose disks can't be identified are treated as asleep.
-- **Use ZettNAS from Claude, Cursor and other AI clients (MCP).** They get the same tools as Ask Zetty within your permissions; changes come back as a link you confirm in ZettNAS. Every assistant action is in the security audit log. See docs/MCP.md.
-- **Benchmark your AI models.** AI → Models measures how fast each installed model writes on your hardware and where it runs, and can pick the largest one that still answers at reading speed.
-- **Disks that are likely to fail turn amber or red** on the desktop and the front LCD before SMART calls them failed, with advice in the tooltip.
-- **Photo search understands what's in a picture.** With a vision model installed (for example Gemma 3 4B), ZettNAS describes each photo and reads the text in it while the NAS is idle, so you can search for "receipt" or "kids at the beach". Scanned PDFs become searchable the same way. Off switch under AI settings.
-- Ask Zetty finds Chinese, Japanese and Korean text (search quality for Chinese went from 3% to 85% in the test set).
+- **Phone mode**: a launcher with large tiles, one full-screen page at a time with Back, and tabs at the bottom. Install ZettNAS as an app from the browser menu; sharing files to it saves them to your **Inbox** folder; turn on notifications on the device for critical alerts.
+- **A light theme that is readable everywhere**, with WCAG AA contrast in every window.
+- **Drawn icons instead of emoji**, in all themes and languages; screen readers no longer read emoji names.
+- A setup wizard and a Getting started checklist; one name and one place for each task; empty states that say what to do next; consistent buttons and text sizes.
+- **File Explorer**: works on phones and narrow windows, favourite folders, progress for copy, move and merge, selection actions at the bottom.
+- **Photo and video viewer**: next/previous, swipe and pinch, faster large photos, full photo details, subtitles, resume where you stopped; Markdown files shown formatted.
+- Everything is translated into German, Spanish, French and Chinese; only the language in use is loaded.
+
+#### Hardware and performance
+
+- **The front LCD works without a browser**: a built-in renderer draws the pages in a few milliseconds and redraws as soon as new numbers arrive. `LCD_RENDERER=pil` turns it on in the full image; the new `latest-core` image (about 500 MB instead of 1.7 GB) uses it and leaves out virtual machines.
+- GPU and NPU load show measured values, or "–" when the hardware can't report them.
+- Disks that are likely to fail turn amber or red before SMART calls them failed.
+- Indexing respects sleeping disks on ZFS, Btrfs, mdadm and LVM, not only Unraid; fewer disk wake-ups overall.
+- Lighter SMART, UPS and history polling; container stats only while someone looks; compressed, cached web assets.
+- Background services restart on their own after a crash, and `/api/health` shows their state (503 when degraded).
+
+#### Fixes
+
+- VM snapshots list correct sizes and dates; snapshot names and cloud client IDs can no longer be read as command options.
+- Powering off through the kernel fallback writes cached data to the disks first.
+- Cloud sign-in tokens stay on the NAS; the browser only gets a reference.
+- SATA drives report offline-uncorrectable sectors again; whole NVMe disks keep their names in pools.
+- The stats loop no longer stops on a machine without disks; 16-bit LCD framebuffers work again.
+- Uploading small files from the File Explorer works again; copy buttons work over plain HTTP.
+
+---
+
+## v1.9.4 (2026-10-23) - Security update
+### 🛡️ Security fixes for 1.9.3
+
+A security-only update for 1.9.3. It has no new features. Everyone on 1.9.x should install it.
+
+#### Before you upgrade
+
+- **New installs have no default password.** If `WEB_PASSWORD` is empty or `admin`, ZettNAS generates a first-time password on first start, prints it in the container log and saves it as `initial-admin-password` in the app data folder. You choose your own at first sign-in. Existing installs keep their password.
+- **Two-factor accounts and WebDAV/SFTP:** an account with two-factor sign-in can no longer use its ZettNAS password for WebDAV or SFTP, which have no second step. Create a dedicated SFTP/WebDAV account for file clients.
+- **Turning on or replacing two-factor** asks for your current password, and a code from your current app when you replace it.
+- **API tokens act with their own scopes**, not their owner's role. A token cannot confirm an action Ask Zetty proposed; confirm it in ZettNAS.
+- **App catalog:** community and sideloaded templates can only use folders inside the app's own folder.
+- **Pi-hole from the app catalog** no longer starts with a fixed admin password. Pi-hole generates one on first start and shows it in its container log. If you installed Pi-hole from the catalog before this update, set a new password with `pihole setpassword` in its console.
+- **Cloud sync:** sources and destinations must be configured remotes or folders in the storage pool (storage admins may use any local path).
+- **Calendar:** notes and feeds belong to the person who made them. Items saved before this update are visible to full administrators only.
+- **Backup jobs** back up folders inside the pool only.
+- **Public share links** stop working when their creator is disabled or loses access to the shared item.
+- **Reverse-proxy sign-in:** changes must come from ZettNAS's own pages, as with browser sessions.
+
+#### Security
+
+- Sign-in: the built-in admin signs in with its own password only; role, status and account changes end that user's sessions and tokens at once; unknown usernames take as long to check as real ones.
+- File access: folders above a share can be browsed but not downloaded, zipped, copied or shared; Recycle Bin restore needs write access where the item was deleted; Ask Zetty's folder answers list only files you can read.
+- Containers: the terminal needs a valid signed-in session; masked container views also hide passwords in URLs and command-line flags; stack files named in container labels are opened only inside the storage folders.
+- Settings: only administrators change the shared client preferences.
+- Requests: the size limit also applies to uploads sent without a declared length; the document indexer limits how far a file may expand while it is read.
+- VMs: backup restores write only into the VM's own folder and get the same checks as a new VM; console tickets open only their own VM's console.
+- Shares: NFS export settings and generic Linux share paths are validated; a refused Samba or NFS setting stops the request.
+- Storage: a disk that belongs to an imported ZFS pool can't be formatted, and a failed pool creation is reported as an error.
+- CI: workflow permissions reduced to what each job needs.
+
+---
 
 ## v1.9.3 (2026-10-22) - Stable
 ### 🛡️ Security hardening, safer updates, and an honest, permission-aware Ask Zetty
