@@ -520,8 +520,9 @@ The Security Advisor warns when an AI container publishes a port on all interfac
 Administrators can check for updates and trigger 1-click container self-updates directly from the Web Desktop:
 1. Open **Mission Control** → **System & Identity** → **System Updates**.
 2. Select your preferred channel:
-   - **Stable**: Official tagged production releases with changelog notes.
-   - **Edge**: Latest tested commits from the GitHub `main` branch.
+   - **Stable** (default): tagged releases, after 7 days on Beta.
+   - **Beta**: each tagged release as soon as it passes CI.
+   - **Edge**: every tested commit on the GitHub `main` branch.
 3. If an update is available, click **⚡ Update Now**. ZettNAS will pull the target container image via Docker socket, recreate the container, and verify daemon health.
 
 ### Upgrading via Docker Compose

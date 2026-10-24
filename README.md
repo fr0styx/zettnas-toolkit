@@ -155,15 +155,15 @@ The frontend is built with vanilla modern ES modules and bundled via Vite. The b
 ```bash
 npm install
 npm run build          # Compiles minified production assets to static/
-npm test               # Runs full Vitest + JSDOM frontend test suite (75 test files, 591 tests)
+npm test               # Runs the frontend test suite (Vitest + jsdom)
 npm run test:coverage  # Generates Vitest V8 code coverage report
 npm run dev            # Starts local Vite development server with hot module reload
 ```
 
 ### Backend Workflow & Pytest Suite
 ```bash
-# Run full Pytest test suite (740+ unit and integration tests)
-docker exec -i zettnas-toolkit python3 -m pytest -q /app/tests
+# Run the backend test suite in the test container (tests are not shipped in the image)
+docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test
 
 # Run code style & formatting checks
 ruff check app.py backend tests

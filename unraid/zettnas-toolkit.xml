@@ -9,8 +9,8 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/fr0styx/zettnas-toolkit/issues</Support>
   <Project>https://github.com/fr0styx/zettnas-toolkit</Project>
-  <Overview>ZettNAS hardware controller, LCD dashboard (direct framebuffer renderer), ARGB lightbar effects &amp; active thermal fan curve daemon.</Overview>
-  <Category>Tools:Utilities Status:Information</Category>
+  <Overview>ZettNAS Toolkit: a web desktop for your NAS. Files and shares, Docker apps from a catalog, virtual machines, scheduled backups, private AI search and chat over your own files, disk health and a ransomware guard. On ZettLab and Aoostar hardware it also drives the front LCD, the fan curves and the lightbar.</Overview>
+  <Category>Tools:Utilities Tools:System Productivity: Status:Information</Category>
   <WebUI>http://[IP]:[PORT:8082]/</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/unraid/zettnas-toolkit.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
