@@ -288,7 +288,9 @@ def test_api_remotes_oauth_lifecycle(client, auth_headers):
         )
         assert resp.status_code == 200
         assert resp.json()["status"] == "ok"
-        assert resp.json()["token"] == '{"access_token": "secret_tok"}'
+        # the token stays on the server; saving the remote swaps the reference back
+        assert resp.json()["token"] == f"********oauth_ref:{session_id}"
+        assert "secret_tok" not in resp.text
 
     # 3. Check status (completed)
     resp = client.get(f"/api/remotes/oauth/status/{session_id}", headers=auth_headers)
@@ -347,6 +349,7 @@ def test_api_remotes_mobile_oauth_flow(client):
         )
         assert resp.status_code == 200
         assert resp.json()["status"] == "ok"
-        assert resp.json()["token"] == '{"access_token": "mobile_jwt"}'
+        # open without sign-in: no token in the answer
+        assert "token" not in resp.json() and "mobile_jwt" not in resp.text
 
     _ACTIVE_OAUTH_SESSIONS.pop(session_id, None)

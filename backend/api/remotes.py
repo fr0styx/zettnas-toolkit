@@ -239,9 +239,9 @@ async def get_sync_job_status(job_id: str):
 
 
 class OAuthStartRequest(BaseModel):
-    provider_type: str = Field(..., pattern="^[a-zA-Z0-9_\\-]+$")
-    client_id: str | None = None
-    client_secret: str | None = None
+    provider_type: str = Field(..., pattern="^[a-zA-Z0-9_][a-zA-Z0-9_\\-]*$")
+    client_id: str | None = Field(None, max_length=512)
+    client_secret: str | None = Field(None, max_length=512)
 
 
 class OAuthExchangeRequest(BaseModel):
@@ -283,7 +283,8 @@ async def start_oauth_session(req: OAuthStartRequest):
     if not os.path.exists(rclone_bin):
         raise HTTPException(status_code=500, detail="rclone binary not found on system.")
 
-    cmd = [rclone_bin, "authorize", "--auth-no-open-browser", req.provider_type]
+    # "--" ends the options: a client id such as "--log-file=..." stays a value, not an rclone option
+    cmd = [rclone_bin, "authorize", "--auth-no-open-browser", "--", req.provider_type]
     if req.client_id and req.client_secret:
         cmd.extend([req.client_id, req.client_secret])
 
@@ -409,8 +410,17 @@ def _resolve_onedrive_drive_details(token_json_str: str) -> tuple[str, str]:
     return "", "personal"
 
 
-async def _execute_code_exchange(session_id: str, redirect_url: str) -> dict[str, Any]:
-    """Helper that forwards redirect code to rclone loopback listener and waits for token resolution."""
+def _masked_token(session_id: str) -> str:
+    """What leaves the server instead of the token: saving a remote swaps it back
+    (_resolve_masked_oauth_parameters), so access and refresh tokens never reach a browser."""
+    return f"********oauth_ref:{session_id}"
+
+
+async def _execute_code_exchange(session_id: str, redirect_url: str, require_state: bool = False) -> dict[str, Any]:
+    """Helper that forwards redirect code to rclone loopback listener and waits for token resolution.
+
+    require_state: the code must come with the session's state (the whole redirect URL), so a
+    bare code from someone else's account cannot be slipped in."""
     session = _ACTIVE_OAUTH_SESSIONS.get(session_id)
     if not session:
         raise HTTPException(
@@ -422,6 +432,7 @@ async def _execute_code_exchange(session_id: str, redirect_url: str) -> dict[str
 
     code = ""
     req_state = state
+    state_given = False
     raw_url = redirect_url.strip()
 
     if "?" in raw_url:
@@ -431,17 +442,24 @@ async def _execute_code_exchange(session_id: str, redirect_url: str) -> dict[str
             code = params["code"][0]
         if "state" in params:
             req_state = params["state"][0]
+            state_given = True
     elif "&" in raw_url or "code=" in raw_url:
         params = urllib.parse.parse_qs(raw_url)
         if "code" in params:
             code = params["code"][0]
         if "state" in params:
             req_state = params["state"][0]
+            state_given = True
     else:
         code = raw_url
 
     if not code:
         raise HTTPException(status_code=400, detail="Could not find 'code' parameter in provided URL.")
+
+    if require_state and state and not state_given:
+        raise HTTPException(
+            status_code=400, detail="Paste the whole address the sign-in page went to, not only the code."
+        )
 
     if state and req_state and req_state != state:
         raise HTTPException(status_code=400, detail="OAuth state mismatch. Security verification failed.")
@@ -459,7 +477,7 @@ async def _execute_code_exchange(session_id: str, redirect_url: str) -> dict[str
                 drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
             res = {
                 "status": "ok",
-                "token": session["token"],
+                "token": _masked_token(session_id),
                 "drive_id": drive_id,
                 "drive_type": drive_type or "personal",
                 "session_id": session_id,
@@ -475,7 +493,7 @@ async def _execute_code_exchange(session_id: str, redirect_url: str) -> dict[str
             drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
         return {
             "status": "ok",
-            "token": session["token"],
+            "token": _masked_token(session_id),
             "drive_id": drive_id,
             "drive_type": drive_type or "personal",
             "session_id": session_id,
@@ -492,8 +510,12 @@ async def exchange_oauth_code(req: OAuthExchangeRequest):
 
 @router.post("/remotes/oauth/mobile-exchange")
 async def mobile_exchange_oauth_code(req: OAuthExchangeRequest):
-    """Allows a mobile phone scanning the QR code to submit authorization code to the active session."""
-    return await _execute_code_exchange(req.session_id, req.redirect_url)
+    """Allows a mobile phone scanning the QR code to submit authorization code to the active session.
+
+    Open without sign-in (the phone is not signed in), so it answers only whether it worked:
+    the desktop that started the sign-in picks the result up from the session status."""
+    res = await _execute_code_exchange(req.session_id, req.redirect_url, require_state=True)
+    return {"status": res["status"], "session_id": req.session_id}
 
 
 @router.get("/remotes/oauth/mobile-page", response_class=HTMLResponse)
@@ -803,7 +825,7 @@ async def get_oauth_session_status(session_id: str):
     if session.get("completed") and session.get("token") and session.get("provider_type") == "onedrive":
         drive_id, drive_type = _resolve_onedrive_drive_details(session["token"])
     raw_token = session.get("token")
-    masked_token = f"********oauth_ref:{session_id}" if raw_token else None
+    masked_token = _masked_token(session_id) if raw_token else None
     return {
         "session_id": session_id,
         "completed": bool(session.get("completed")),

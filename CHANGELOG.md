@@ -7,6 +7,9 @@
 - **Docker access goes through an allow-list proxy.** ZettNAS forwards only the Docker API calls it uses. Containers with host-level access are created only from flows you confirm (app install after review, recreate, update) and are logged to `data/docker-proxy-audit.log`. `ZETTNAS_DOCKER_PROXY=off` turns the proxy off.
 - SECURITY.md lists which permissions are root-equivalent on the host.
 - **In-app updates check the image signature.** Before installing, ZettNAS verifies that the image was signed by this project's CI (Sigstore, the same check as `cosign verify`) for exactly the digest it downloaded, and refuses it otherwise. `UPDATE_SIGNATURES=warn` installs with a warning, `off` skips the check.
+- **Cloud sign-in tokens stay on the NAS.** Connecting a cloud remote no longer sends the provider's access and refresh tokens to the browser: the phone (QR code) page only learns whether it worked, and the desktop gets a reference that saving the remote swaps back. The phone page needs the whole address the sign-in went to, not only the code, so a code from another account cannot be slipped in.
+- Values given to rclone, qemu-img and the QEMU monitor (client IDs, snapshot names) can no longer be read as command options.
+- Rebooting or powering off through the kernel fallback, used when no reboot command is available, writes cached data to the disks first.
 
 #### Smaller image
 
