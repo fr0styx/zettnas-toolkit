@@ -84,7 +84,7 @@ describe('AI Accelerator Desktop Widget (NPU + GPU Real-Time Gauges)', () => {
     expect(npuVal.textContent).toBe('95%');
     expect(npuArc.getAttribute('stroke-dasharray')).toBe('95, 100');
     expect(npuFreq.textContent).toBe('1400 MHz');
-    expect(npuState.textContent).toBe('Active (3W)');
+    expect(npuState.textContent).toBe('Active');
     expect(npuState.classList.contains('active-npu')).toBe(true);
 
     expect(gpuVal.textContent).toBe('42%');
@@ -97,7 +97,7 @@ describe('AI Accelerator Desktop Widget (NPU + GPU Real-Time Gauges)', () => {
     expect(engineStatus.innerHTML).toContain('Intel AI Boost NPU Active');
   });
 
-  it('dynamically reflects active compute when GPU clock frequency is boosted during inference', async () => {
+  it('shows the measured GPU load (no invented figure) while the clock is boosted', async () => {
     initWidgets();
 
     ZettEventBus.emit('stats:updated', {
@@ -125,14 +125,14 @@ describe('AI Accelerator Desktop Widget (NPU + GPU Real-Time Gauges)', () => {
     const aiBadge = document.getElementById('w-ai-accel-badge');
     const engineStatus = document.getElementById('w-ai-engine-status');
 
-    expect(parseInt(gpuVal.textContent)).toBeGreaterThan(0);
+    expect(gpuVal.textContent).toBe('0%');
     expect(gpuState.textContent).toBe('Compute');
     expect(gpuState.classList.contains('active-gpu')).toBe(true);
     expect(aiBadge.textContent).toBe('GPU RUN');
     expect(engineStatus.innerHTML).toContain('Intel Arc GPU Active');
   });
 
-  it('dynamically reflects active compute when NPU is in D0 active state during inference', async () => {
+  it('shows the measured NPU load (no invented figure) while the NPU is in D0', async () => {
     initWidgets();
 
     ZettEventBus.emit('stats:updated', {
@@ -160,8 +160,8 @@ describe('AI Accelerator Desktop Widget (NPU + GPU Real-Time Gauges)', () => {
     const aiBadge = document.getElementById('w-ai-accel-badge');
     const engineStatus = document.getElementById('w-ai-engine-status');
 
-    expect(parseInt(npuVal.textContent)).toBeGreaterThan(0);
-    expect(npuState.textContent).toBe('Active (3W)');
+    expect(npuVal.textContent).toBe('0%');
+    expect(npuState.textContent).toBe('Active');
     expect(npuState.classList.contains('active-npu')).toBe(true);
     expect(aiBadge.textContent).toBe('NPU RUN');
     expect(engineStatus.innerHTML).toContain('Intel AI Boost NPU Active');
@@ -175,5 +175,18 @@ describe('AI Accelerator Desktop Widget (NPU + GPU Real-Time Gauges)', () => {
       expect(TRANSLATIONS[lang]['widget.ai_accelerator_desc']).toBeDefined();
       expect(TRANSLATIONS[lang]['widget.ai_accelerator_desc'].length).toBeGreaterThan(0);
     });
+  });
+
+  it('shows a dash when the driver cannot measure the load', async () => {
+    initWidgets();
+    ZettEventBus.emit('stats:updated', {
+      ai_active: true,
+      ai_accelerator: 'gpu',
+      npu: { present: true, util_pct: null, cur_freq_mhz: 0, power_state: 'D3hot' },
+      gpu: { present: true, util_pct: null, cur_freq_mhz: 1800 },
+    });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(document.getElementById('w-ai-gpu-val').textContent).toBe('–');
+    expect(document.getElementById('w-ai-npu-val').textContent).toBe('–');
   });
 });

@@ -113,6 +113,18 @@ def _fresh_smart_velocity_cache():
 
 
 @pytest.fixture(autouse=True)
+def _collector_alive(monkeypatch):
+    """Tests don't run the stats collector, so /api/health would report it stalled once the
+    suite has run longer than the start-up grace (CI is slower than a dev box). Every test
+    starts with a fresh heartbeat; health tests set their own."""
+    import time
+
+    from backend.state import Z_STATE
+
+    monkeypatch.setattr(Z_STATE, "collector_heartbeat", time.time())
+
+
+@pytest.fixture(autouse=True)
 def _fresh_rate_limits():
     from backend import rate_limit
 

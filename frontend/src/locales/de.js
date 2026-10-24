@@ -421,7 +421,7 @@ export default {
   "ui.ai_semantic_search": "KI-Bedeutungssuche",
   "ui.aborted": "Abgebrochen",
   "ui.acrylic_blur_radius": "Acryl-Unschärferadius",
-  "ui.active_3w": "Aktiv (3 W)",
+  "ui.active_3w": "Aktiv",
   "ui.active_connected": "Aktiv (verbunden)",
   "ui.active_in_use": "Aktiv (in Benutzung)",
   "ui.active_llm_leveraged_for_rag": "Aktives Sprachmodell für RAG-Antworten, NAS-Hardware-Copilot und Web-Chat",

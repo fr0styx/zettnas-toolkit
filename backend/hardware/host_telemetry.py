@@ -353,15 +353,9 @@ def _sample_gpu_dynamic() -> dict[str, Any]:
         _GPU_LAST_SAMPLE["ts"] = now
         _GPU_LAST_SAMPLE["rc6_by_path"] = rc6_by_path
 
-    # If GPU clock frequency is boosted to active compute/turbo speed (>= 600 MHz),
-    # ensure util_pct reflects dynamic compute activity (never stuck at 0.0% during active inference)
-    if cur_freq >= 600 and max_freq > 0:
-        freq_floor = round((cur_freq / max_freq) * 75.0, 1)
-        util_pct = max(util_pct, freq_floor)
-        _GPU_LAST_SAMPLE["util_pct"] = util_pct
-
+    # Busy time comes only from RC6 residency; without it the load is unknown (None), not 0
     return {
-        "util_pct": util_pct,
+        "util_pct": util_pct if rc6_files else None,
         "cur_freq_mhz": cur_freq,
         "max_freq_mhz": max_freq,
     }
@@ -441,12 +435,8 @@ def _sample_npu_dynamic() -> dict[str, Any]:
         else:
             _NPU_LAST_SAMPLE["ts"] = now
 
-        # If NPU is powered on in active D0 state with boosted clock (>= 500 MHz),
-        # ensure util_pct reflects active NPU compute
-        if power_state == "D0" and cur_freq >= 500 and max_freq > 0:
-            npu_freq_floor = round((cur_freq / max_freq) * 75.0, 1)
-            util_pct = max(util_pct, npu_freq_floor)
-            _NPU_LAST_SAMPLE["util_pct"] = util_pct
+        if busy_us is None:
+            util_pct = None  # the driver does not report busy time: unknown, not 0
     else:
         util_pct = 0.0
 

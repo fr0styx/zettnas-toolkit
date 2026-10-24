@@ -421,7 +421,7 @@ export default {
   "ui.ai_semantic_search": "AI 语义搜索",
   "ui.aborted": "已中止",
   "ui.acrylic_blur_radius": "亚克力模糊半径",
-  "ui.active_3w": "活动（3 W）",
+  "ui.active_3w": "活动",
   "ui.active_connected": "活动（已连接）",
   "ui.active_in_use": "活动（使用中）",
   "ui.active_llm_leveraged_for_rag": "当前语言模型，用于 RAG 回答、NAS 硬件助手和网页聊天",

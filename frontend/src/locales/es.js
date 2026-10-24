@@ -421,7 +421,7 @@ export default {
   "ui.ai_semantic_search": "Búsqueda semántica con IA",
   "ui.aborted": "Cancelado",
   "ui.acrylic_blur_radius": "Radio de desenfoque acrílico",
-  "ui.active_3w": "Activo (3 W)",
+  "ui.active_3w": "Activo",
   "ui.active_connected": "Activo (conectado)",
   "ui.active_in_use": "Activo (en uso)",
   "ui.active_llm_leveraged_for_rag": "Modelo de lenguaje activo para respuestas RAG, el copiloto de hardware del NAS y el chat web",

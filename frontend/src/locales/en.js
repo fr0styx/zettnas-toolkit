@@ -393,7 +393,7 @@ export default {
   "ui.ai_semantic_search": "AI Semantic Search",
   "ui.aborted": "Aborted",
   "ui.acrylic_blur_radius": "Acrylic Blur Radius",
-  "ui.active_3w": "Active (3W)",
+  "ui.active_3w": "Active",
   "ui.active_connected": "Active (Connected)",
   "ui.active_in_use": "Active (In Use)",
   "ui.active_llm_leveraged_for_rag": "Active LLM leveraged for RAG synthesis, NAS Hardware Copilot tools & Web Chatbot",

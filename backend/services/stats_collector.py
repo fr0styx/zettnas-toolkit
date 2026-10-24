@@ -705,15 +705,12 @@ def _build_payload(
     ai_accel = getattr(Z_STATE, "ai_accelerator", "")
     ai_model = getattr(Z_STATE, "ai_model", "")
 
+    # Which accelerator the AI is using; the load figures stay as measured.
     if ai_active:
         if ai_accel == "gpu":
             gpu_telemetry["inference_active"] = True
-            if gpu_telemetry.get("util_pct", 0) < 15:
-                gpu_telemetry["util_pct"] = max(gpu_telemetry.get("util_pct", 0), 65.0)
         elif ai_accel == "npu":
             npu_telemetry["inference_active"] = True
-            if npu_telemetry.get("util_pct", 0) < 15:
-                npu_telemetry["util_pct"] = max(npu_telemetry.get("util_pct", 0), 75.0)
 
     data = {
         "name": get_server_hostname(),

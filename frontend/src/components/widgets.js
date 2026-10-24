@@ -2053,29 +2053,14 @@ export function initWidgets() {
       const npu = stats.npu || {};
       const gpu = stats.gpu || {};
 
-      let nUtil = Math.min(100, Math.max(0, Math.round(npu.util_pct || 0)));
-      let gUtil = Math.min(100, Math.max(0, Math.round(gpu.util_pct || 0)));
-
-      // Real-time dynamic floor when hardware frequency is boosted into compute clock:
-      if (gUtil === 0 && gpu.cur_freq_mhz && gpu.cur_freq_mhz >= 800) {
-        gUtil = Math.min(100, Math.round((gpu.cur_freq_mhz / (gpu.max_freq_mhz || 2200)) * 75));
-      }
-      if (nUtil === 0 && npu.cur_freq_mhz && npu.cur_freq_mhz >= 500 && npu.power_state === 'D0') {
-        nUtil = Math.min(100, Math.round((npu.cur_freq_mhz / (npu.max_freq_mhz || 1400)) * 75));
-      }
-
-      // If active AI generation is currently executing:
-      if (stats.ai_active) {
-        if ((stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc' || gpu.inference_active) && gUtil === 0) {
-          gUtil = 65;
-        }
-        if ((stats.ai_accelerator === 'npu' || npu.inference_active) && nUtil === 0) {
-          nUtil = 75;
-        }
-      }
+      // Measured busy time only; null means the driver can't report it (shown as "–")
+      const npuKnown = typeof npu.util_pct === 'number';
+      const gpuKnown = typeof gpu.util_pct === 'number';
+      const nUtil = npuKnown ? Math.min(100, Math.max(0, Math.round(npu.util_pct))) : 0;
+      const gUtil = gpuKnown ? Math.min(100, Math.max(0, Math.round(gpu.util_pct))) : 0;
 
       if (npuArc) npuArc.setAttribute('stroke-dasharray', `${nUtil}, 100`);
-      if (npuVal) npuVal.textContent = `${nUtil}%`;
+      if (npuVal) npuVal.textContent = npuKnown ? `${nUtil}%` : '–';
       if (npuFreq) {
         const curF = npu.cur_freq_mhz || 0;
         npuFreq.textContent = curF > 0 ? `${curF} MHz` : (npu.present ? '0 MHz' : 'N/A');
@@ -2085,7 +2070,7 @@ export function initWidgets() {
           npuState.textContent = t('ui.none', 'None');
           npuState.className = 'ai-metric-pill';
         } else if (nUtil > 5 || (npu.cur_freq_mhz && npu.cur_freq_mhz > 400) || npu.power_state === 'D0' || npu.inference_active || (stats.ai_active && stats.ai_accelerator === 'npu')) {
-          npuState.textContent = t('ui.active_3w', 'Active (3W)');
+          npuState.textContent = t('ui.active_3w', 'Active');
           npuState.className = 'ai-metric-pill active-npu';
         } else {
           npuState.textContent = t('ui.d3_sleep', 'D3 Sleep');
@@ -2094,7 +2079,7 @@ export function initWidgets() {
       }
 
       if (gpuArc) gpuArc.setAttribute('stroke-dasharray', `${gUtil}, 100`);
-      if (gpuVal) gpuVal.textContent = `${gUtil}%`;
+      if (gpuVal) gpuVal.textContent = gpuKnown ? `${gUtil}%` : '–';
       if (gpuFreq) {
         const curG = gpu.cur_freq_mhz || 0;
         gpuFreq.textContent = curG > 0 ? `${curG} MHz` : (gpu.present ? '0 MHz' : 'N/A');
@@ -2139,9 +2124,9 @@ export function initWidgets() {
 
       if (aiEngineStatus) {
         if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--brand,#00f0ff);">Intel AI Boost NPU Active</strong> <span style="opacity:0.65;">(~3W Silent)</span>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--brand,#00f0ff);">Intel AI Boost NPU Active</strong>';
         } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:#c084fc;">Intel Arc GPU Active</strong> <span style="opacity:0.65;">(Vulkan/Ollama)</span>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:#c084fc;">Intel Arc GPU Active</strong>';
         } else if (npu.present && gpu.present) {
           aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>Hybrid Dual Silicon</span> <span style="opacity:0.65;">(NPU + GPU Ready)</span>';
         } else {
