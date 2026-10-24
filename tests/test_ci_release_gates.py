@@ -34,3 +34,20 @@ def test_every_gate_runs_before_the_image_is_signed_and_tagged():
         "Upgrade and rollback test",
     ):
         assert _index(steps, prefix) < sign < publish, prefix
+
+
+def test_smoke_script_runs_each_platform_by_its_own_manifest():
+    """Running a second platform of an already pulled digest fails ("cannot overwrite digest")."""
+    root = os.path.dirname(os.path.dirname(__file__))
+    with open(os.path.join(root, "scripts", "smoke_test.sh"), encoding="utf-8") as f:
+        script = f.read()
+    assert "imagetools inspect --raw" in script and 'ref="$repo@$platform_digest"' in script
+
+
+def test_published_images_can_be_smoke_tested_on_demand():
+    root = os.path.dirname(os.path.dirname(__file__))
+    with open(os.path.join(root, ".github", "workflows", "smoke.yml"), encoding="utf-8") as f:
+        wf = yaml.safe_load(f)
+    run = wf["jobs"]["smoke"]["steps"][-1]["run"]
+    assert "scripts/smoke_test.sh" in run
+    assert "${{" not in run  # inputs reach the script through env, never pasted into the shell

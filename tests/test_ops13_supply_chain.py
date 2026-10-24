@@ -48,7 +48,10 @@ def test_arm64_images_are_started_in_ci():
     step = next(
         s for s in jobs["build-and-push"]["steps"] if s.get("name", "").startswith("Smoke-test the built image (arm64")
     )
-    assert "--platform linux/arm64" in step["run"] and "aarch64" in step["run"]
+    assert "scripts/smoke_test.sh" in step["run"] and "linux/arm64" in step["run"]
+    with open(os.path.join(ROOT, "scripts", "smoke_test.sh"), encoding="utf-8") as f:
+        script = f.read()
+    assert "--platform" in script and "aarch64" in script
 
 
 def test_the_update_path_is_exercised_before_publishing():
