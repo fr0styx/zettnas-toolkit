@@ -906,6 +906,12 @@ async def create_new_user(
             role_id=data.role_id,
             storage_quota_bytes=data.storage_quota_bytes,
         )
+        try:
+            from backend.services.user_spaces import ensure_home
+
+            ensure_home(new_user["username"], int(data.storage_quota_bytes or 0))
+        except Exception:
+            logger.warning("[Users] could not create the private folder", exc_info=True)
         log_security_event(
             "user.created",
             "success",

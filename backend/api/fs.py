@@ -1360,16 +1360,33 @@ async def fs_upload(
     if os.path.islink(file_path) and resolve_within(file_path, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Destination symlink points outside allowed folders")
 
+    # Personal space quota (Batch 6): refuse up front when the size is known, stop when it isn't
+    from backend.services.user_spaces import QuotaExceeded, check_upload
+
+    declared = int(request.headers.get("content-length") or 0)
+    try:
+        allowed = check_upload(principal.username, file_path, declared)
+    except QuotaExceeded as e:
+        raise HTTPException(status_code=507, detail=str(e)) from None
+
     staging_file = os.path.join(target_canonical, f".zettnas_tmp_{secrets.token_hex(8)}_{filename}")
     try:
+        written = 0
         async with aiofiles.open(staging_file, "wb") as f_out:
             async for chunk in request.stream():
                 if chunk:
+                    written += len(chunk)
+                    if allowed is not None and written > allowed:
+                        raise QuotaExceeded(0, 0, written)
                     await f_out.write(chunk)
 
         os.replace(staging_file, file_path)
         add_event("success", "File Explorer", f"Uploaded {filename} to {path}")
         return {"status": "ok", "message": "File uploaded"}
+    except QuotaExceeded:
+        if os.path.exists(staging_file):
+            os.remove(staging_file)
+        raise HTTPException(status_code=507, detail="This upload would go over your space.") from None
     except Exception as e:
         if os.path.exists(staging_file):
             try:
@@ -1413,6 +1430,13 @@ async def fs_upload_init(
     filename = os.path.basename(req.filename)
     if not filename or filename in (".", "..") or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
+
+    from backend.services.user_spaces import QuotaExceeded, check_upload
+
+    try:
+        check_upload(principal.username, os.path.join(target_canonical, filename), int(req.total_size or 0))
+    except QuotaExceeded as e:
+        raise HTTPException(status_code=507, detail=str(e)) from None
 
     upload_id = secrets.token_hex(16)
     staging_dir = os.path.join(target_canonical, f".zettnas_staging_{upload_id}_{filename}")

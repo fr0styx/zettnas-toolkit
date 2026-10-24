@@ -773,6 +773,8 @@ def run_agentic_chat(
     principal: Any = None,
 ) -> dict[str, Any]:
     """Runs one chat turn in its own context, so its web permission can't leak to later calls."""
+    if getattr(principal, "role_id", "") in ("kid", "guest"):
+        allow_web_search = False  # family roles stay on the NAS (Batch 6)
     return contextvars.copy_context().run(
         _run_agentic_chat_turn, message, history, allow_web_search, allow_nas_tools, model_override, principal
     )
@@ -1756,6 +1758,8 @@ async def stream_agentic_chat(
       - event: done       (final execution payload & telemetry)
       - event: error      (on failure)
     """
+    if getattr(principal, "role_id", "") in ("kid", "guest"):
+        allow_web_search = False  # family roles stay on the NAS (Batch 6)
     clean_msg = str(message or "").strip()
     if not clean_msg:
         yield f"event: error\ndata: {json.dumps({'error': 'Message cannot be empty'})}\n\n"

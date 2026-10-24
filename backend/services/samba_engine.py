@@ -317,6 +317,26 @@ class SambaEngine:
         frozen = get_guard().frozen  # M4: every share read-only while frozen
         conf_lines.append("")
 
+        # Private folders (Batch 6): each signed-in person sees only their own as a share named after them
+        try:
+            from backend.services.user_spaces import homes_root
+
+            if os.path.isdir(homes_root()):
+                conf_lines.extend(
+                    [
+                        "[homes]",
+                        f"   path = {homes_root()}/%S",
+                        "   valid users = %S",
+                        "   browseable = no",
+                        f"   read only = {'yes' if frozen else 'no'}",
+                        "   create mask = 0660",
+                        "   directory mask = 0770",
+                        "",
+                    ]
+                )
+        except Exception:
+            logger.debug("[SambaEngine] homes section skipped", exc_info=True)
+
         for share in self._shares.values():
             try:
                 validate_share(share)

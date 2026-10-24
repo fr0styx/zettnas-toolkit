@@ -13,6 +13,7 @@ import { initTopbarUserPill } from './dock.js';
 import { openShareAccessModal } from './share-access.js';
 
 import { formatDateTime } from '../format.js';
+import { renderInvites } from './invites.js';
 import { emptyRowHtml } from './empty-state.js';
 let _currentUser = null;
 
@@ -252,6 +253,7 @@ export async function loadUsersList() {
     const data = await res.json();
     const users = data.users || [];
 
+    renderInvites(document.getElementById('invites-mount'));
     if (users.length === 0) {
       container.innerHTML = emptyRowHtml(7, {
         title: t('users.none_title', 'Only you so far'),

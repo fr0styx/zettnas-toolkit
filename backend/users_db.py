@@ -108,6 +108,20 @@ DEFAULT_ROLES = [
         "is_system": 1,
     },
     {
+        "id": "guest",
+        "name": "Guest",
+        "description": "Read-only access to the shares granted to them; nothing else",
+        "scopes": ["shares:read"],
+        "is_system": 1,
+    },
+    {
+        "id": "kid",
+        "name": "Kid",
+        "description": "Their own private folder and the family shares granted to them; no settings, no AI web access",
+        "scopes": ["shares:read", "shares:user_write"],
+        "is_system": 1,
+    },
+    {
         "id": "auditor",
         "name": "Auditor",
         "description": "Read-only access to system telemetry, metrics, event logs, and status",
@@ -209,6 +223,22 @@ def init_users_db(db_path: str | None = None) -> None:
             );
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_security_audit_ts ON security_audit_log(timestamp DESC);")
+
+        # 6. Invite links (Batch 6): only a hash of each token is stored
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS invites (
+                id TEXT PRIMARY KEY,
+                token_hash TEXT NOT NULL UNIQUE,
+                role_id TEXT NOT NULL,
+                quota_bytes INTEGER DEFAULT 0,
+                note TEXT DEFAULT '',
+                max_uses INTEGER NOT NULL DEFAULT 1,
+                uses INTEGER NOT NULL DEFAULT 0,
+                created_by TEXT,
+                created_at REAL NOT NULL,
+                expires_at REAL NOT NULL
+            );
+        """)
 
         # Ensure MFA and IdP columns exist on users table
         cols = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
@@ -1199,3 +1229,113 @@ def consume_user_recovery_code(
             )
             return True
         return False
+
+
+# ---------------------------------------------------------------------------
+# Roles and invite links (Batch 6)
+# ---------------------------------------------------------------------------
+def get_role(role_id: str, db_path: str | None = None) -> dict[str, Any] | None:
+    with users_db_session(db_path, readonly=True) as conn:
+        row = conn.execute("SELECT id, name, description, scopes_json FROM roles WHERE id = ?", (role_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def _invite_hash(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def create_invite(
+    role_id: str, days: int, max_uses: int, note: str, created_by: str, quota_bytes: int = 0, db_path: str | None = None
+) -> tuple[str, dict[str, Any]]:
+    import secrets as _secrets
+
+    token = _secrets.token_urlsafe(24)
+    now = time.time()
+    inv = {
+        "id": str(uuid.uuid4())[:8],
+        "role_id": role_id,
+        "quota_bytes": int(quota_bytes or 0),
+        "note": note[:120],
+        "max_uses": max(1, int(max_uses)),
+        "uses": 0,
+        "created_by": created_by,
+        "created_at": now,
+        "expires_at": now + max(1, int(days)) * 86400,
+    }
+    with users_db_session(db_path) as conn:
+        conn.execute(
+            "INSERT INTO invites (id, token_hash, role_id, quota_bytes, note, max_uses, uses, created_by, created_at, expires_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
+            (
+                inv["id"],
+                _invite_hash(token),
+                role_id,
+                inv["quota_bytes"],
+                inv["note"],
+                inv["max_uses"],
+                created_by,
+                now,
+                inv["expires_at"],
+            ),
+        )
+    return token, inv
+
+
+def list_invites(db_path: str | None = None) -> list[dict[str, Any]]:
+    with users_db_session(db_path, readonly=True) as conn:
+        rows = conn.execute(
+            "SELECT id, role_id, quota_bytes, note, max_uses, uses, created_by, created_at, expires_at FROM invites ORDER BY created_at DESC"
+        ).fetchall()
+    now = time.time()
+    return [dict(r) | {"active": r["uses"] < r["max_uses"] and r["expires_at"] > now} for r in rows]
+
+
+def lookup_invite(token: str, db_path: str | None = None) -> dict[str, Any] | None:
+    """The invite for a token while it can still be used, else None."""
+    if not token or len(token) > 100:
+        return None
+    with users_db_session(db_path, readonly=True) as conn:
+        row = conn.execute("SELECT * FROM invites WHERE token_hash = ?", (_invite_hash(token),)).fetchone()
+    if not row or row["uses"] >= row["max_uses"] or row["expires_at"] <= time.time():
+        return None
+    return dict(row)
+
+
+def accept_invite(
+    token: str, username: str, display_name: str, password: str, db_path: str | None = None
+) -> dict[str, Any]:
+    """Creates the account an invite allows and counts the use. LookupError when the invite is
+    gone; ValueError for a taken or invalid username."""
+    inv = lookup_invite(token, db_path)
+    if not inv:
+        raise LookupError("invite")
+    if get_user_by_username(username, db_path=db_path):
+        raise ValueError("That username is taken.")
+    with users_db_session(db_path) as conn:
+        cur = conn.execute(
+            "UPDATE invites SET uses = uses + 1 WHERE id = ? AND uses < max_uses AND expires_at > ?",
+            (inv["id"], time.time()),
+        )
+        if cur.rowcount != 1:
+            raise LookupError("invite")
+    user = create_user(
+        username=username,
+        display_name=display_name,
+        password=password,
+        role_id=inv["role_id"],
+        storage_quota_bytes=int(inv.get("quota_bytes") or 0),
+        db_path=db_path,
+    )
+    log_security_event(
+        "user.created_by_invite",
+        "success",
+        actor_username=username,
+        details={"invite": inv["id"], "role": inv["role_id"]},
+        db_path=db_path,
+    )
+    return user
+
+
+def delete_invite(invite_id: str, db_path: str | None = None) -> bool:
+    with users_db_session(db_path) as conn:
+        return conn.execute("DELETE FROM invites WHERE id = ?", (invite_id,)).rowcount == 1

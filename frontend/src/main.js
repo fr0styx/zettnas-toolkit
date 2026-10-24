@@ -44,6 +44,7 @@ import { lazyWindow } from './lazy-windows.js';
 import { initJobsCentre } from './components/jobs-centre.js';
 import { initGettingStarted } from './components/getting-started.js';
 import { initRouter } from './router.js';
+import { initInviteLanding } from './components/invites.js';
 import './file-preview-loader.js'; // window.openFilePreviewModal before the viewer loads
 import { installWindowFocus } from './window-focus.js';
 import { installDialogChrome } from './dialog-chrome.js';
@@ -292,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   initDockSystem();
   installDialogChrome();
   installWindowFocus(DockManager);
+  initInviteLanding(); // the sign-up form for invite links, over the sign-in screen
   initAuth();
   initUsersManagement();
   initDashboardClicks();

@@ -442,6 +442,8 @@ async def auth_middleware(request: Request, call_next):
         # Public share links authenticate with their own token (+ password) (SEC-21)
         or path.startswith(("/api/fs/shared/", "/api/shared/", "/api/v1/fs/shared/", "/api/v1/shared/"))
         or path.startswith("/api/v1/wallpapers/download/")
+        # Invite links: the token is the credential; accepting creates the invited account (Batch 6)
+        or path.startswith(("/api/invite/", "/api/v1/invite/"))
         or (path.startswith("/api/vms/") and (path.endswith("/console/ws") or path.endswith("/serial/ws")))
     )
 

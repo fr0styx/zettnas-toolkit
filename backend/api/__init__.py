@@ -15,6 +15,7 @@ from backend.api.diagnostics import router as diagnostics_router
 from backend.api.docker import router as docker_router
 from backend.api.fans import router as fans_router
 from backend.api.fs import router as fs_router
+from backend.api.invites import router as invites_router  # noqa: E402
 from backend.api.jobs import router as jobs_router  # noqa: E402
 from backend.api.led import router as led_router
 from backend.api.mcp import router as mcp_router
@@ -47,6 +48,7 @@ api_router.include_router(jobs_router)
 api_router.include_router(setup_router)
 api_router.include_router(snapshots_router)
 api_router.include_router(offsite_router)
+api_router.include_router(invites_router)
 api_router.include_router(auth_router)
 api_router.include_router(oidc_router)
 api_router.include_router(ldap_router)

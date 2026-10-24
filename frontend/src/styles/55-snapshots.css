@@ -33,3 +33,21 @@
 .offsite-form fieldset { border: 1px solid var(--zn-line); border-radius: var(--zn-radius-sm); padding: var(--zn-space-1) var(--zn-space-2); display: flex; flex-wrap: wrap; gap: var(--zn-space-2); }
 .offsite-form legend { font-size: var(--zn-fs-xs); color: var(--muted); }
 .offsite-form .offsite-check { flex-direction: row; align-items: center; gap: 4px; color: var(--fg); }
+
+/* Invites (Batch 6) */
+.invite-card { margin-top: var(--zn-space-4); padding: var(--zn-space-3); border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); }
+.invite-title { margin: 0 0 var(--zn-space-1); font-size: var(--zn-fs); }
+.invite-meta { color: var(--muted); font-size: var(--zn-fs-xs); }
+.invite-list { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: flex; flex-direction: column; gap: var(--zn-space-1); }
+.invite-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-2); font-size: var(--zn-fs-sm); }
+.invite-row.is-used { opacity: 0.6; }
+.invite-role { font-weight: 700; }
+.invite-form, .invite-accept { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: flex-end; }
+.invite-accept { flex-direction: column; align-items: stretch; }
+.invite-form label, .invite-accept label { display: flex; flex-direction: column; gap: 2px; font-size: var(--zn-fs-xs); color: var(--muted); }
+.invite-form input, .invite-form select, .invite-accept input { min-height: var(--zn-btn-h); padding: 0 var(--zn-space-2); border-radius: var(--zn-radius-sm); border: 1px solid var(--zn-line-strong); background: rgba(0, 0, 0, 0.3); color: var(--fg); font-size: var(--zn-fs-sm); }
+.invite-link { margin-top: var(--zn-space-2); padding: var(--zn-space-2); border-radius: var(--zn-radius-sm); background: rgba(var(--brand-rgb), 0.08); font-size: var(--zn-fs-sm); }
+.invite-link code { display: block; margin: var(--zn-space-1) 0; word-break: break-all; }
+.invite-landing { width: min(420px, calc(100vw - 32px)); padding: var(--zn-space-5); border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); background: var(--card); color: var(--fg); z-index: 1000000; }
+.invite-landing::backdrop { background: rgba(0, 0, 0, 0.7); }
+.invite-error { color: var(--crit); font-size: var(--zn-fs-sm); }
