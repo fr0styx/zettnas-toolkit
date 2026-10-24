@@ -128,6 +128,8 @@ def health():
     body = {
         "status": status,
         "version": __version__,
+        # the commit the image was built from: open pages compare it to notice an update
+        "build": os.environ.get("BUILD_COMMIT", "")[:12],
         "image_variant": _image_variant(),
         "checks": checks,
         "daemons": {k: {"state": v["state"], "restarts": v["restarts"]} for k, v in _daemon_status().items()},

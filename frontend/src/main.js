@@ -51,7 +51,7 @@ import { initInviteLanding } from './components/invites.js';
 import { initPhoneShell } from './components/phone-shell.js';
 import './file-preview-loader.js'; // window.openFilePreviewModal before the viewer loads
 import { installWindowFocus } from './window-focus.js';
-import { installStaleBuildGuard } from './stale-build.js';
+import { installStaleBuildGuard, watchServerBuild } from './stale-build.js';
 import { installDialogChrome } from './dialog-chrome.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
@@ -335,6 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   initGettingStarted();
   initRouter();
   initPhoneShell();
+  if (!state.isLcdDirect && !state.isVmConsoleDirect) watchServerBuild(); // offer a reload after an update
   initWidgets();
   initFileManager();
   // The VM manager (~220 kB) loads the first time it's opened (FE-02)

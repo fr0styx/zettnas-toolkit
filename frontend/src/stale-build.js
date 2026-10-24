@@ -11,6 +11,9 @@ import { t } from "./i18n.js";
 const CHUNK_ERROR = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Unable to preload CSS|Loading (CSS )?chunk [\w-]+ failed/i;
 const QUIET_MS = 60000;
 let _shownAt = 0;
+let _loadedBuild = null;
+let _offeredBuild = null;
+export const BUILD_CHECK_MS = 5 * 60 * 1000;
 
 export function isStaleBuildError(reason) {
   const msg = reason && (reason.message || String(reason));
@@ -45,6 +48,44 @@ export function installStaleBuildGuard(win = window) {
   });
 }
 
+/**
+ * Notices an update before a click fails: the server reports the commit it runs
+ * (/api/health "build"); when it differs from the one this page loaded with, a reload is
+ * offered once for that version. Checked every few minutes and when the tab is shown again.
+ */
+export async function checkServerBuild(fetchFn = (...a) => window.fetch(...a), win = window) {
+  let build;
+  try {
+    const res = await fetchFn("/api/health", { cache: "no-store" });
+    if (!res || !res.ok) return false;
+    build = String((await res.json())?.build || "");
+  } catch (e) {
+    return false; // offline or restarting: the connection banner covers that
+  }
+  if (!build) return false;
+  if (_loadedBuild === null) {
+    _loadedBuild = build;
+    return false;
+  }
+  if (build === _loadedBuild || build === _offeredBuild) return false;
+  _offeredBuild = build;
+  _shownAt = 0; // a new version is always worth one offer
+  return offerReload(win);
+}
+
+export function watchServerBuild(win = window, doc = document) {
+  checkServerBuild(undefined, win);
+  const timer = win.setInterval(() => {
+    if (!doc.hidden) checkServerBuild(undefined, win);
+  }, BUILD_CHECK_MS);
+  doc.addEventListener("visibilitychange", () => {
+    if (!doc.hidden) checkServerBuild(undefined, win);
+  });
+  return timer;
+}
+
 export function _resetStaleBuildForTesting() {
   _shownAt = 0;
+  _loadedBuild = null;
+  _offeredBuild = null;
 }

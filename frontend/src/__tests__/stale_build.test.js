@@ -47,3 +47,30 @@ describe("page older than an update", () => {
     expect(showConfirmToast).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("noticing an update before a click fails", () => {
+  beforeEach(() => {
+    _resetStaleBuildForTesting();
+    showConfirmToast.mockClear();
+  });
+
+  const health = (build) => vi.fn(async () => ({ ok: true, json: async () => ({ status: "ok", build }) }));
+
+  it("offers a reload once when the server runs a new build", async () => {
+    const { checkServerBuild } = await import("../stale-build.js");
+    const win = { location: { reload: vi.fn() } };
+    expect(await checkServerBuild(health("a1cfea5348"), win)).toBe(false); // the build this page loaded with
+    expect(await checkServerBuild(health("a1cfea5348"), win)).toBe(false);
+    expect(await checkServerBuild(health("eb40b52aa1"), win)).toBe(true);
+    expect(await checkServerBuild(health("eb40b52aa1"), win)).toBe(false); // offered once for that build
+    expect(showConfirmToast).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays quiet without a build id or while the server is unreachable", async () => {
+    const { checkServerBuild } = await import("../stale-build.js");
+    expect(await checkServerBuild(health(""))).toBe(false);
+    expect(await checkServerBuild(vi.fn(async () => { throw new TypeError("offline"); }))).toBe(false);
+    expect(await checkServerBuild(vi.fn(async () => ({ ok: false })))).toBe(false);
+    expect(showConfirmToast).not.toHaveBeenCalled();
+  });
+});

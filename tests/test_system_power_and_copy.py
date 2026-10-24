@@ -208,3 +208,10 @@ def test_copy_start(client, auth_headers, copy_state, monkeypatch):
     assert r.json() == {"status": "started"} and copy_state.copy_active is True
     assert started == [{"source": "usb", "dest": "/mnt/b", "use_exif": True}]
     assert client.post("/api/copy/start", headers=auth_headers).status_code == 409
+
+
+def test_health_reports_the_build(client, monkeypatch):
+    monkeypatch.setenv("BUILD_COMMIT", "eb40b52aa1b2c3d4e5f6")
+    assert client.get("/api/health").json()["build"] == "eb40b52aa1b2"
+    monkeypatch.delenv("BUILD_COMMIT")
+    assert client.get("/api/health").json()["build"] == ""
