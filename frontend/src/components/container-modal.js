@@ -47,9 +47,9 @@ export function initContainerModal() {
             <span id="ci-header-state" class="ci-state-pill" style="display:none;"></span>
           </div>
           <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
-            <button class="win-btn min-btn" id="ci-min-btn" title="Minimize" aria-label="Minimize"></button>
-            <button class="win-btn max-btn" id="ci-max-btn" title="Maximize" aria-label="Maximize"></button>
-            <button class="win-btn close-btn" id="ci-close-btn" title="Close" aria-label="Close"></button>
+            <button class="win-btn min-btn" id="ci-min-btn" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+            <button class="win-btn max-btn" id="ci-max-btn" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+            <button class="win-btn close-btn" id="ci-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
         </div>
 
@@ -86,7 +86,7 @@ export function initContainerModal() {
           <!-- 4. Environment Tab -->
           <div id="ci-pane-env" class="ci-pane" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px;">
-              <input type="text" id="ci-env-search" placeholder="Filter variables..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:220px;">
+              <input type="text" id="ci-env-search" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:220px;">
               <span id="ci-env-stats" style="font-size:11px; color:var(--muted);"></span>
             </div>
             <div id="ci-env-content"></div>
@@ -123,11 +123,11 @@ export function initContainerModal() {
                   <option value="500">Last 500 lines</option>
                   <option value="1000">Last 1000 lines</option>
                 </select>
-                <input type="text" id="ci-logs-filter-input" placeholder="Filter output..." class="tz-text-input" style="font-size:11px; padding:3px 8px; width:160px;">
+                <input type="text" id="ci-logs-filter-input" placeholder="${t('ui.filter_output', 'Filter output...')}" class="tz-text-input" style="font-size:11px; padding:3px 8px; width:160px;">
                 <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); cursor:pointer;">
                   <input type="checkbox" id="ci-logs-autoscroll" checked> Auto-scroll
                 </label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--accent-cyan, #00f0ff); cursor:pointer; font-weight:600;" title="Stream live container logs continuously via SSE">
+                <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--accent-cyan, #00f0ff); cursor:pointer; font-weight:600;" title="${t('ui.stream_live_container_logs_continuously', 'Stream live container logs continuously via SSE')}">
                   <input type="checkbox" id="ci-logs-stream-toggle"> <span>Live Follow</span>
                 </label>
               </div>
@@ -163,7 +163,7 @@ export function initContainerModal() {
             </div>
             <div style="display:flex; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
               <span style="color:#10b981; font-family:var(--font-mono, monospace); font-weight:bold; font-size:12px;">$</span>
-              <input type="text" id="ci-term-input" placeholder="Type a command and press Enter..." style="flex:1; background:transparent; border:none; outline:none; color:#f8fafc; font-family:var(--font-mono, monospace); font-size:11.5px;" autocomplete="off" spellcheck="false">
+              <input type="text" id="ci-term-input" placeholder="${t('ui.type_a_command_and_press', 'Type a command and press Enter...')}" style="flex:1; background:transparent; border:none; outline:none; color:#f8fafc; font-family:var(--font-mono, monospace); font-size:11.5px;" autocomplete="off" spellcheck="false">
               <button class="btn-pill-toggle is-small" id="ci-term-send-btn">Run</button>
             </div>
           </div>
@@ -691,15 +691,15 @@ async function loadContainerDetails(cid) {
         </div>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; align-items:end;">
           <div>
-            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">Memory Limit (MB, 0=Unlimited)</label>
+            <label for="ci-res-mem" style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">Memory Limit (MB, 0=Unlimited)</label>
             <input type="number" id="ci-res-mem" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:4px 8px;" value="${memMb}" min="0" step="64">
           </div>
           <div>
-            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">CPU Cores (0=Unlimited)</label>
+            <label for="ci-res-cpu" style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">CPU Cores (0=Unlimited)</label>
             <input type="number" id="ci-res-cpu" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:4px 8px;" value="${cpuCores}" min="0" max="64" step="0.5">
           </div>
           <div>
-            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">Restart Policy</label>
+            <label for="ci-res-restart" style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px;">Restart Policy</label>
             <select id="ci-res-restart" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:4px 6px;">
               <option value="unless-stopped" ${currentRestart === 'unless-stopped' ? 'selected' : ''}>unless-stopped</option>
               <option value="always" ${currentRestart === 'always' ? 'selected' : ''}>always</option>
@@ -764,7 +764,7 @@ async function loadContainerDetails(cid) {
     if (backupActionBtn) {
       backupActionBtn.addEventListener('click', async () => {
         backupActionBtn.disabled = true;
-        backupActionBtn.textContent = '⏳ Backing up...';
+        backupActionBtn.textContent = t('ui.backing_up', '⏳ Backing up...');
         showToast(t('toast.creating_backup_for', 'Creating backup for {activeCname}...', { activeCname: _activeCname }), 'info');
         try {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/backup`);
@@ -775,7 +775,7 @@ async function loadContainerDetails(cid) {
           showToast(t('toast.backup_failed', 'Backup failed: {error}', { error: err.message }), 'error');
         } finally {
           backupActionBtn.disabled = false;
-          backupActionBtn.textContent = '💾 Backup App Now';
+          backupActionBtn.textContent = t('ui.backup_app_now', '💾 Backup App Now');
         }
       });
     }
@@ -792,7 +792,7 @@ async function loadContainerDetails(cid) {
         const restartVal = restartInput ? restartInput.value : null;
 
         applyResBtn.disabled = true;
-        applyResBtn.textContent = 'Applying...';
+        applyResBtn.textContent = t('ui.applying', 'Applying...');
         try {
           await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/resources`, {
             memory_mb: isNaN(memVal) ? 0 : memVal,
@@ -805,7 +805,7 @@ async function loadContainerDetails(cid) {
           showToast(t('toast.resource_update_failed', 'Resource update failed: {error}', { error: err.message }), 'error');
         } finally {
           applyResBtn.disabled = false;
-          applyResBtn.textContent = '💾 Apply Tuning';
+          applyResBtn.textContent = t('ui.apply_tuning', '💾 Apply Tuning');
         }
       });
     }
@@ -1025,7 +1025,7 @@ function renderPortsTab(details) {
           });
 
           applyPortsBtn.disabled = true;
-          applyPortsBtn.textContent = 'Recreating container...';
+          applyPortsBtn.textContent = t('ui.recreating_container', 'Recreating container...');
           showToast(t('toast.recreating_container_with_new_ports', 'Recreating container "{cname}" with new ports...', { cname: cname }), 'info');
 
           try {
@@ -1040,7 +1040,7 @@ function renderPortsTab(details) {
             showToast(t('toast.port_reconfiguration_failed', 'Port reconfiguration failed: {error}', { error: err.message }), 'error');
           } finally {
             applyPortsBtn.disabled = false;
-            applyPortsBtn.textContent = '🚀 Recreate Container with New Ports';
+            applyPortsBtn.textContent = t('ui.recreate_container_with_new_ports', '🚀 Recreate Container with New Ports');
           }
         },
         null,
@@ -1160,8 +1160,8 @@ function renderEnvTab(details) {
                   <span id="env-val-${idx}">${escapeHtml(e.masked_value)}</span>
                 </td>
                 <td style="text-align:right;">
-                  ${isSec ? `<button class="btn-toggle-secret btn-pill-toggle is-small" data-idx="${idx}" title="Toggle show/hide">👁️</button>` : ''}
-                  <button class="btn-copy-env btn-pill-toggle is-small" data-idx="${idx}" title="Copy value">📋</button>
+                  ${isSec ? `<button class="btn-toggle-secret btn-pill-toggle is-small" data-idx="${idx}" title="${t('ui.toggle_show_hide', 'Toggle show/hide')}">👁️</button>` : ''}
+                  <button class="btn-copy-env btn-pill-toggle is-small" data-idx="${idx}" title="${t('ui.copy_value', 'Copy value')}">📋</button>
                 </td>
               </tr>
             `;
@@ -1201,7 +1201,7 @@ function renderEnvTab(details) {
 async function loadContainerCompose(cid) {
   const codeEl = document.getElementById('ci-compose-code');
   const badgeEl = document.getElementById('ci-compose-source-badge');
-  if (codeEl) codeEl.textContent = 'Generating Docker Compose definition...';
+  if (codeEl) codeEl.textContent = t('ui.generating_docker_compose_definition', 'Generating Docker Compose definition...');
 
   try {
     const data = await api.get(`/api/docker/containers/${encodeURIComponent(cid)}/compose`);
@@ -1209,11 +1209,11 @@ async function loadContainerCompose(cid) {
 
     if (badgeEl) {
       if (data.source === 'disk') {
-        badgeEl.textContent = '📄 Read from Disk';
+        badgeEl.textContent = t('ui.read_from_disk', '📄 Read from Disk');
         badgeEl.style.color = '#38bdf8';
         badgeEl.style.background = 'rgba(56, 189, 248, 0.15)';
       } else {
-        badgeEl.textContent = '✨ Synthesized Compose Spec v3.8';
+        badgeEl.textContent = t('ui.synthesized_compose_spec_v3_8', '✨ Synthesized Compose Spec v3.8');
         badgeEl.style.color = 'var(--ok2)';
         badgeEl.style.background = 'rgba(37, 194, 160, 0.15)';
       }
@@ -1369,7 +1369,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
               <span style="font-size:18px;">⚠️</span>
               <span style="font-weight:700; color:var(--crit, #ff6b6b); font-size:13px;">Destroy Container</span>
             </div>
-            <button class="win-btn close-btn" id="cdm-close-btn" title="Close" aria-label="Close"></button>
+            <button class="win-btn close-btn" id="cdm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
             <div style="font-size:12px; line-height:1.5; color:#cbd5e1;">
@@ -1439,7 +1439,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
 
   const confirmBtn = document.getElementById('cdm-confirm-btn');
   confirmBtn.disabled = false;
-  confirmBtn.textContent = '💥 Destroy Container';
+  confirmBtn.textContent = t('ui.destroy_container', '💥 Destroy Container');
 
   confirmBtn.onclick = async () => {
     const archiveData = document.getElementById('cdm-archive')?.checked ?? true;
@@ -1448,7 +1448,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
     const removeImage = document.getElementById('cdm-image').checked;
 
     confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Destroying...';
+    confirmBtn.textContent = t('ui.destroying', 'Destroying...');
 
     try {
       const url = `/api/docker/containers/${encodeURIComponent(cid)}?force=${force}&remove_volumes=${removeVolumes}&remove_image=${removeImage}&archive_data=${archiveData}`;
@@ -1467,7 +1467,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
     } catch (err) {
       showToast(t('toast.failed_to_destroy_container', 'Failed to destroy container: {error}', { error: err.message }), 'error');
       confirmBtn.disabled = false;
-      confirmBtn.textContent = '💥 Destroy Container';
+      confirmBtn.textContent = t('ui.destroy_container', '💥 Destroy Container');
     }
   };
 }
@@ -1537,15 +1537,15 @@ async function renderContainerEditTab(cid) {
         <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">General Settings</div>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
           <div>
-            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">CONTAINER NAME</label>
+            <label for="cie-input-name" style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">CONTAINER NAME</label>
             <input type="text" id="cie-input-name" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:5px 8px;" value="${escapeHtml(currentName)}" ${isToolkit ? 'disabled' : ''}>
           </div>
           <div>
-            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">IMAGE REPO & TAG</label>
+            <label for="cie-input-image" style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">IMAGE REPO & TAG</label>
             <input type="text" id="cie-input-image" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:5px 8px;" value="${escapeHtml(currentImage)}" ${isToolkit ? 'disabled' : ''}>
           </div>
           <div>
-            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">NETWORK MODE</label>
+            <label for="cie-select-network" style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">NETWORK MODE</label>
             <select id="cie-select-network" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:4px 6px;" ${isToolkit ? 'disabled' : ''}>
               <option value="bridge" ${currentNetwork === 'bridge' ? 'selected' : ''}>bridge (Default)</option>
               <option value="host" ${currentNetwork === 'host' ? 'selected' : ''}>host (Direct Host Network)</option>
@@ -1554,7 +1554,7 @@ async function renderContainerEditTab(cid) {
             </select>
           </div>
           <div>
-            <label style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">RESTART POLICY</label>
+            <label for="cie-select-restart" style="font-size:11px; color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">RESTART POLICY</label>
             <select id="cie-select-restart" class="tz-select-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:4px 6px;" ${isToolkit ? 'disabled' : ''}>
               <option value="unless-stopped" ${currentRestart === 'unless-stopped' ? 'selected' : ''}>unless-stopped (Recommended)</option>
               <option value="always" ${currentRestart === 'always' ? 'selected' : ''}>always</option>
@@ -1594,7 +1594,7 @@ async function renderContainerEditTab(cid) {
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
           <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Environment Variables</div>
           <div style="display:flex; gap:6px; align-items:center;">
-            <input type="text" id="cie-env-filter" placeholder="Filter variables..." class="tz-text-input" style="font-size:11px; padding:2px 6px; width:130px;">
+            <input type="text" id="cie-env-filter" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input" style="font-size:11px; padding:2px 6px; width:130px;">
             <button class="btn-pill-toggle" id="cie-btn-add-env" style="font-size:11px; padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ Add Variable</button>
           </div>
         </div>
@@ -1638,8 +1638,8 @@ async function renderContainerEditTab(cid) {
       <span style="color:var(--muted);">➔</span>
       <span style="font-size:11px; color:var(--muted);">Host:</span>
       <input type="number" class="tz-text-input cie-hp-input" placeholder="8080" value="${p.host_port || ''}" style="width:75px; font-size:11px; padding:3px 6px;">
-      <input type="text" class="tz-text-input cie-ip-input" placeholder="0.0.0.0" value="${p.host_ip || '0.0.0.0'}" style="width:75px; font-size:11px; padding:3px 6px;" title="Host IP">
-      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="Remove">🗑️</button>
+      <input type="text" class="tz-text-input cie-ip-input" placeholder="0.0.0.0" value="${p.host_ip || '0.0.0.0'}" style="width:75px; font-size:11px; padding:3px 6px;" title="${t('ui.host_ip', 'Host IP')}">
+      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="${t('ai.remove_model_btn', 'Remove')}">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
     portsBox.appendChild(row);
@@ -1659,7 +1659,7 @@ async function renderContainerEditTab(cid) {
         <option value="rw" ${m.mode === 'ro' ? '' : 'selected'}>rw</option>
         <option value="ro" ${m.mode === 'ro' ? 'selected' : ''}>ro</option>
       </select>
-      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="Remove">🗑️</button>
+      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="${t('ai.remove_model_btn', 'Remove')}">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
     mountsBox.appendChild(row);
@@ -1673,7 +1673,7 @@ async function renderContainerEditTab(cid) {
       <input type="text" class="tz-text-input cie-key-input" placeholder="KEY" value="${escapeHtml(e.key || '')}" style="width:180px; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace); font-weight:700;">
       <span style="color:var(--muted);">=</span>
       <input type="text" class="tz-text-input cie-val-input" placeholder="value" value="${escapeHtml(e.value || '')}" style="flex:1; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace);">
-      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="Remove">🗑️</button>
+      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="${t('ai.remove_model_btn', 'Remove')}">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
     envBox.appendChild(row);
@@ -1761,11 +1761,11 @@ async function renderContainerEditTab(cid) {
         });
 
         saveBtn.disabled = true;
-        saveBtn.textContent = '⏳ Recreating Container...';
+        saveBtn.textContent = t('ui.recreating_container_2', '⏳ Recreating Container...');
         statusMsg.style.display = 'block';
         statusMsg.style.background = 'rgba(14,165,233,0.15)';
         statusMsg.style.color = '#38bdf8';
-        statusMsg.textContent = 'Validating configuration, creating backup, and recreating container...';
+        statusMsg.textContent = t('ui.validating_configuration_creating_backup_and', 'Validating configuration, creating backup, and recreating container...');
 
         try {
           const res = await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/recreate`, {
@@ -1807,7 +1807,7 @@ async function renderContainerEditTab(cid) {
           showToast(t('toast.recreation_failed', 'Recreation failed: {error}', { error: err.message }), 'error');
         } finally {
           saveBtn.disabled = false;
-          saveBtn.textContent = '💾 Save & Recreate Container';
+          saveBtn.textContent = t('ui.save_recreate_container', '💾 Save & Recreate Container');
         }
       },
       null,

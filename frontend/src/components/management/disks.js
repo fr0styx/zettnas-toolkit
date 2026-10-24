@@ -79,9 +79,9 @@ function buildDiskRowInner(d) {
     </td>
     <td style="text-align:right;">
       <div style="display:inline-flex; gap:6px; align-items:center;">
-        <button class="btn-pill-toggle btn-locate-row is-small" data-dev="${devName}" title="Locate Drive (Blink Bay LED)">⚡ Locate</button>
-        <button class="btn-pill-toggle btn-smart-row is-small" data-dev="${devName}" title="View S.M.A.R.T. Diagnostics">📊 S.M.A.R.T.</button>
-        <button type="button" class="btn-pill-toggle btn-disk-more-sheet is-small" data-dev="${devName}" title="More Actions" style="display: none;">···</button>
+        <button class="btn-pill-toggle btn-locate-row is-small" data-dev="${devName}" title="${t('ui.locate_drive_blink_bay_led', 'Locate Drive (Blink Bay LED)')}">⚡ Locate</button>
+        <button class="btn-pill-toggle btn-smart-row is-small" data-dev="${devName}" title="${t('ui.view_s_m_a_r', 'View S.M.A.R.T. Diagnostics')}">📊 S.M.A.R.T.</button>
+        <button type="button" class="btn-pill-toggle btn-disk-more-sheet is-small" data-dev="${devName}" title="${t('ui.more_actions', 'More Actions')}" style="display: none;">···</button>
       </div>
     </td>
   `;

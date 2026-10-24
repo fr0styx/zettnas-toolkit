@@ -46,7 +46,7 @@ export function initSpotlight() {
 
   const overlayHtml = `
     <div id="spotlight-palette-overlay" style="display:none;">
-      <div id="spotlight-palette-window" role="dialog" aria-modal="true" aria-label="Command Palette">
+      <div id="spotlight-palette-window" role="dialog" aria-modal="true" aria-label="${t('ui.command_palette', 'Command Palette')}">
         <div class="spotlight-search-bar">
           <span class="spotlight-search-icon">🔍</span>
           <input type="text" id="spotlight-input" placeholder="Search apps, containers, actions (>reboot, @container, #file)..." autocomplete="off" spellcheck="false">

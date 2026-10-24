@@ -574,7 +574,7 @@ export class FmInspector {
           ` : ''}
 
           <div style="margin-bottom: 10px;">
-            <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Octal Mode (e.g. 0755, 0644)</label>
+            <label for="fm-insp-octal-input" style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Octal Mode (e.g. 0755, 0644)</label>
             <div style="display: flex; gap: 6px;">
               <input type="text" id="fm-insp-octal-input" maxlength="4" placeholder="0755" value="${escapeHtml(item.mode || '0755')}" ${isGuarded ? 'disabled' : ''} style="flex: 1; padding: 5px 8px; font-family: monospace; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #fff;" />
               <span id="fm-insp-human-mode" style="padding: 5px 8px; font-family: monospace; font-size: 11px; color: #94a3b8; background: rgba(0,0,0,0.2); border-radius: 5px;">-rwxr-xr-x</span>
@@ -605,11 +605,11 @@ export class FmInspector {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
             <div>
-              <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">User (Owner)</label>
+              <label for="fm-insp-owner-input" style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">User (Owner)</label>
               <input type="text" id="fm-insp-owner-input" placeholder="e.g. root" value="root" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #fff;" />
             </div>
             <div>
-              <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Group</label>
+              <label for="fm-insp-group-input" style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Group</label>
               <input type="text" id="fm-insp-group-input" placeholder="e.g. users" value="users" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 5px; color: #fff;" />
             </div>
           </div>
@@ -721,7 +721,7 @@ export class FmInspector {
             return;
           }
           applyBtn.disabled = true;
-          applyBtn.textContent = 'Applying...';
+          applyBtn.textContent = t('ui.applying', 'Applying...');
           const modeVal = octInput ? octInput.value.trim() : '0755';
           const ownerVal = content.querySelector('#fm-insp-owner-input')?.value.trim() || null;
           const groupVal = content.querySelector('#fm-insp-group-input')?.value.trim() || null;
@@ -737,15 +737,15 @@ export class FmInspector {
             });
             item.mode = modeVal;
             showToast(t('toast.permissions_updated_successfully', 'Permissions updated successfully!'), 'success');
-            applyBtn.textContent = 'Applied ✓';
+            applyBtn.textContent = t('ui.applied', 'Applied ✓');
             setTimeout(() => {
               applyBtn.disabled = false;
-              applyBtn.textContent = 'Apply Permissions';
+              applyBtn.textContent = t('ui.apply_permissions', 'Apply Permissions');
             }, 1400);
           } catch (err) {
             showToast(t('toast.failed_updating_permissions', 'Failed updating permissions: {error}', { error: err.message }), 'error');
             applyBtn.disabled = false;
-            applyBtn.textContent = 'Apply Permissions';
+            applyBtn.textContent = t('ui.apply_permissions', 'Apply Permissions');
           }
         });
       }
@@ -837,7 +837,7 @@ export class FmInspector {
     const shaBtn = content.querySelector('#fm-btn-calc-sha');
     if (shaBtn) {
       shaBtn.addEventListener('click', async () => {
-        shaBtn.textContent = 'Calculating...';
+        shaBtn.textContent = t('ui.calculating', 'Calculating...');
         shaBtn.disabled = true;
         try {
           const cRes = await fetch('/api/fs/checksum', {
@@ -855,12 +855,12 @@ export class FmInspector {
               resEl.textContent = cData.checksum;
               resEl.style.display = 'block';
             }
-            shaBtn.textContent = 'Computed ✓';
+            shaBtn.textContent = t('ui.computed', 'Computed ✓');
           } else {
-            shaBtn.textContent = 'Error';
+            shaBtn.textContent = t('ui.error', 'Error');
           }
         } catch (_) {
-          shaBtn.textContent = 'Failed';
+          shaBtn.textContent = t('jobs.status_error', 'Failed');
         }
       });
     }
@@ -869,7 +869,7 @@ export class FmInspector {
     const fldrSzBtn = content.querySelector('#fm-btn-calc-folder-sz');
     if (fldrSzBtn) {
       fldrSzBtn.addEventListener('click', async () => {
-        fldrSzBtn.textContent = 'Scanning...';
+        fldrSzBtn.textContent = t('ui.scanning', 'Scanning...');
         fldrSzBtn.disabled = true;
         try {
           const sRes = await fetch('/api/fs/folder-size', {
@@ -891,10 +891,10 @@ export class FmInspector {
               }
               szEl.style.display = 'block';
             }
-            fldrSzBtn.textContent = 'Refreshed ✓';
+            fldrSzBtn.textContent = t('ui.refreshed', 'Refreshed ✓');
           }
         } catch (_) {
-          fldrSzBtn.textContent = 'Failed';
+          fldrSzBtn.textContent = t('jobs.status_error', 'Failed');
         }
       });
     }

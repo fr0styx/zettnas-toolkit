@@ -429,7 +429,7 @@ export function openAddDesktopShortcutModal() {
               <div style="font-size:11px; color:var(--muted);">Place quick-access shortcuts on your desktop workspace</div>
             </div>
           </div>
-          <button class="win-btn close-btn" id="btn-close-add-shortcut" title="Close" aria-label="Close" style="width:16px; height:16px; border-radius:50%; background:#ff5f56; border:none; cursor:pointer;"></button>
+          <button class="win-btn close-btn" id="btn-close-add-shortcut" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}" style="width:16px; height:16px; border-radius:50%; background:#ff5f56; border:none; cursor:pointer;"></button>
         </div>
 
         <!-- Tab Switcher -->
@@ -446,11 +446,11 @@ export function openAddDesktopShortcutModal() {
         <!-- Body: Tab 2 Custom URL -->
         <div id="pane-custom-shortcut" style="padding:20px; display:none; flex-direction:column; gap:14px;">
           <div>
-            <label style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">Shortcut Name</label>
-            <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="e.g. Plex, Home Assistant, Pi-hole, Proxmox..." style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:#fff;">
+            <label for="input-custom-shortcut-name" style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">Shortcut Name</label>
+            <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}" style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:#fff;">
           </div>
           <div>
-            <label style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">Target URL</label>
+            <label for="input-custom-shortcut-url" style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">Target URL</label>
             <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:#fff; font-family:var(--font-mono, monospace);">
           </div>
           <div>
@@ -595,7 +595,7 @@ function renderSystemShortcutsList(overlay) {
       if (isShortcutActive(scId)) {
         removeDesktopShortcut(scId);
         btn.classList.remove('active');
-        btn.textContent = '+ Add to Desktop';
+        btn.textContent = t('ui.add_to_desktop', '+ Add to Desktop');
         btn.style.color = '#38bdf8';
         btn.style.borderColor = 'rgba(56,189,248,0.4)';
         btn.style.background = 'rgba(14,165,233,0.12)';
@@ -613,7 +613,7 @@ function renderSystemShortcutsList(overlay) {
           targetPane: scDef.targetPane
         });
         btn.classList.add('active');
-        btn.textContent = '✓ On Desktop';
+        btn.textContent = t('ui.on_desktop', '✓ On Desktop');
         btn.style.color = '#22c55e';
         btn.style.borderColor = 'rgba(34,197,94,0.4)';
         btn.style.background = 'rgba(34,197,94,0.14)';

@@ -76,10 +76,10 @@ export async function fetchAndRenderBackupJobs(mountEl) {
           </td>
           <td style="padding: 10px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
-              <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" title="Run Backup Job Now">
+              <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" title="${t('ui.run_backup_job_now', 'Run Backup Job Now')}">
                 ▶ Run
               </button>
-              <button class="btn-rect danger btn-delete-backup-job" data-job-id="${escapeHtml(job.id)}" title="Delete Backup Job">
+              <button class="btn-rect danger btn-delete-backup-job" data-job-id="${escapeHtml(job.id)}" title="${t('ui.delete_backup_job', 'Delete Backup Job')}">
                 🗑️
               </button>
             </div>
@@ -183,10 +183,10 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
           </td>
           <td style="padding: 8px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
-              <button class="btn-rect btn-sys-restore-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="Rollback to this snapshot">
+              <button class="btn-rect btn-sys-restore-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="${t('ui.rollback_to_this_snapshot', 'Rollback to this snapshot')}">
                 ⏪ Restore
               </button>
-              <button class="btn-rect danger btn-sys-delete-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="Delete Snapshot">
+              <button class="btn-rect danger btn-sys-delete-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="${t('ui.delete_snapshot', 'Delete Snapshot')}">
                 🗑️
               </button>
             </div>
@@ -323,13 +323,13 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
           </td>
           <td style="padding: 10px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
-              <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || 'app_backup.tar.gz')}" title="Download Archive (.tar.gz)">
+              <button class="btn-rect btn-download-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || 'app_backup.tar.gz')}" title="${t('ui.download_archive_tar_gz', 'Download Archive (.tar.gz)')}">
                 ⬇️ Download
               </button>
-              <button class="btn-rect btn-restore-app-backup" data-backup-id="${escapeHtml(b.id)}" data-app-name="${escapeHtml(b.container_name || b.id)}" title="Restore Configuration & Data">
+              <button class="btn-rect btn-restore-app-backup" data-backup-id="${escapeHtml(b.id)}" data-app-name="${escapeHtml(b.container_name || b.id)}" title="${t('ui.restore_configuration_data', 'Restore Configuration & Data')}">
                 🔄 Restore
               </button>
-              <button class="btn-rect danger btn-delete-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || b.id)}" title="Delete Backup Archive">
+              <button class="btn-rect danger btn-delete-app-backup" data-backup-id="${escapeHtml(b.id)}" data-file="${escapeHtml(b.archive_file || b.id)}" title="${t('ui.delete_backup_archive', 'Delete Backup Archive')}">
                 🗑️
               </button>
             </div>

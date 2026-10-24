@@ -219,7 +219,7 @@ export function applyWidgetConfig() {
     if (!wClock.dataset.boundClick) {
       wClock.dataset.boundClick = '1';
       wClock.style.cursor = 'pointer';
-      wClock.title = 'Click to change timezone & clock format';
+      wClock.title = t('ui.click_to_change_timezone_clock', 'Click to change timezone & clock format');
       wClock.setAttribute('role', 'button');
       wClock.setAttribute('tabindex', '0');
       wClock.addEventListener('click', (e) => {
@@ -241,7 +241,7 @@ export function applyWidgetConfig() {
     if (!wAiAccel.dataset.boundClick) {
       wAiAccel.dataset.boundClick = '1';
       wAiAccel.style.cursor = 'pointer';
-      wAiAccel.title = 'Click to open AI Knowledge & Search';
+      wAiAccel.title = t('ui.click_to_open_ai_knowledge', 'Click to open AI Knowledge & Search');
       wAiAccel.setAttribute('role', 'button');
       wAiAccel.setAttribute('tabindex', '0');
       wAiAccel.addEventListener('click', (e) => {
@@ -267,7 +267,7 @@ export function applyWidgetConfig() {
     if (!wCalendar.dataset.boundClick) {
       wCalendar.dataset.boundClick = '1';
       wCalendar.style.cursor = 'pointer';
-      wCalendar.title = 'Click to view notes, reminders & calendar sync';
+      wCalendar.title = t('ui.click_to_view_notes_reminders', 'Click to view notes, reminders & calendar sync');
       wCalendar.setAttribute('role', 'button');
       wCalendar.setAttribute('tabindex', '0');
       wCalendar.addEventListener('click', (e) => {
@@ -309,7 +309,7 @@ export function applyWidgetConfig() {
     if (!wWeather.dataset.boundClick) {
       wWeather.dataset.boundClick = '1';
       wWeather.style.cursor = 'pointer';
-      wWeather.title = 'Click to open Weather & Widget Settings';
+      wWeather.title = t('ui.click_to_open_weather_widget', 'Click to open Weather & Widget Settings');
       wWeather.setAttribute('role', 'button');
       wWeather.setAttribute('tabindex', '0');
       wWeather.addEventListener('click', (e) => {
@@ -343,7 +343,7 @@ export function applyWidgetConfig() {
     if (!wSystem.dataset.boundClick) {
       wSystem.dataset.boundClick = '1';
       wSystem.style.cursor = 'pointer';
-      wSystem.title = 'Click to open Dashboard & Telemetry';
+      wSystem.title = t('ui.click_to_open_dashboard_telemetry', 'Click to open Dashboard & Telemetry');
       wSystem.setAttribute('role', 'button');
       wSystem.setAttribute('tabindex', '0');
       wSystem.addEventListener('click', (e) => {
@@ -369,7 +369,7 @@ export function applyWidgetConfig() {
     if (!wNetwork.dataset.boundClick) {
       wNetwork.dataset.boundClick = '1';
       wNetwork.style.cursor = 'pointer';
-      wNetwork.title = 'Click to open Network & Switch Inspector';
+      wNetwork.title = t('ui.click_to_open_network_switch', 'Click to open Network & Switch Inspector');
       wNetwork.setAttribute('role', 'button');
       wNetwork.setAttribute('tabindex', '0');
       wNetwork.addEventListener('click', (e) => {
@@ -395,7 +395,7 @@ export function applyWidgetConfig() {
     if (!wStorage.dataset.boundClick) {
       wStorage.dataset.boundClick = '1';
       wStorage.style.cursor = 'pointer';
-      wStorage.title = 'Click to open Storage Pool & Array Topology';
+      wStorage.title = t('ui.click_to_open_storage_pool', 'Click to open Storage Pool & Array Topology');
       wStorage.setAttribute('role', 'button');
       wStorage.setAttribute('tabindex', '0');
       wStorage.addEventListener('click', (e) => {
@@ -421,7 +421,7 @@ export function applyWidgetConfig() {
     if (!wUptime.dataset.boundClick) {
       wUptime.dataset.boundClick = '1';
       wUptime.style.cursor = 'pointer';
-      wUptime.title = 'Click to open Dashboard & Telemetry';
+      wUptime.title = t('ui.click_to_open_dashboard_telemetry', 'Click to open Dashboard & Telemetry');
       wUptime.setAttribute('role', 'button');
       wUptime.setAttribute('tabindex', '0');
       wUptime.addEventListener('click', (e) => {
@@ -447,7 +447,7 @@ export function applyWidgetConfig() {
     if (!wDriveTemp.dataset.boundClick) {
       wDriveTemp.dataset.boundClick = '1';
       wDriveTemp.style.cursor = 'pointer';
-      wDriveTemp.title = 'Click to open Storage & Disks';
+      wDriveTemp.title = t('ui.click_to_open_storage_disks', 'Click to open Storage & Disks');
       wDriveTemp.setAttribute('role', 'button');
       wDriveTemp.setAttribute('tabindex', '0');
       wDriveTemp.addEventListener('click', (e) => {
@@ -473,7 +473,7 @@ export function applyWidgetConfig() {
     if (!wNetDial.dataset.boundClick) {
       wNetDial.dataset.boundClick = '1';
       wNetDial.style.cursor = 'pointer';
-      wNetDial.title = 'Click to open Network Cockpit';
+      wNetDial.title = t('ui.click_to_open_network_cockpit', 'Click to open Network Cockpit');
       wNetDial.setAttribute('role', 'button');
       wNetDial.setAttribute('tabindex', '0');
       wNetDial.addEventListener('click', (e) => {
@@ -499,7 +499,7 @@ export function applyWidgetConfig() {
     if (!wUpsGauge.dataset.boundClick) {
       wUpsGauge.dataset.boundClick = '1';
       wUpsGauge.style.cursor = 'pointer';
-      wUpsGauge.title = 'Click to open Power & Battery Cockpit';
+      wUpsGauge.title = t('ui.click_to_open_power_battery', 'Click to open Power & Battery Cockpit');
       wUpsGauge.setAttribute('role', 'button');
       wUpsGauge.setAttribute('tabindex', '0');
       wUpsGauge.addEventListener('click', (e) => {
@@ -700,7 +700,7 @@ export function updateClock() {
       tzBadge.title = `Timezone: ${tz} (${tzAbbr || city}) - Click to change`;
     } else {
       tzBadge.textContent = format === '12' ? '12H' : '24H';
-      tzBadge.title = 'Local Timezone - Click to change';
+      tzBadge.title = t('ui.local_timezone_click_to_change', 'Local Timezone - Click to change');
     }
   }
 }
@@ -1368,7 +1368,7 @@ export async function fetchWeather(force = false) {
     console.warn('Weather update error:', err);
     const descEl = document.getElementById('w-weather-desc');
     if (descEl) {
-      descEl.textContent = 'Offline';
+      descEl.textContent = t('ui.offline', 'Offline');
     }
   }
 }
@@ -2025,7 +2025,7 @@ export function initWidgets() {
       if (wUpsGauge && !wUpsGauge.dataset.boundClick) {
         wUpsGauge.dataset.boundClick = '1';
         wUpsGauge.style.cursor = 'pointer';
-        wUpsGauge.title = 'Click to open Power & Battery Cockpit';
+        wUpsGauge.title = t('ui.click_to_open_power_battery', 'Click to open Power & Battery Cockpit');
         wUpsGauge.addEventListener('click', (e) => {
           if (e.target.closest('.widget-handle') || e.target.closest('.widget-close') || e.target.closest('button')) return;
           if (typeof window.openManagementWindow === 'function') {
@@ -2082,13 +2082,13 @@ export function initWidgets() {
       }
       if (npuState) {
         if (!npu.present) {
-          npuState.textContent = 'None';
+          npuState.textContent = t('ui.none', 'None');
           npuState.className = 'ai-metric-pill';
         } else if (nUtil > 5 || (npu.cur_freq_mhz && npu.cur_freq_mhz > 400) || npu.power_state === 'D0' || npu.inference_active || (stats.ai_active && stats.ai_accelerator === 'npu')) {
-          npuState.textContent = 'Active (3W)';
+          npuState.textContent = t('ui.active_3w', 'Active (3W)');
           npuState.className = 'ai-metric-pill active-npu';
         } else {
-          npuState.textContent = 'D3 Sleep';
+          npuState.textContent = t('ui.d3_sleep', 'D3 Sleep');
           npuState.className = 'ai-metric-pill sleep';
         }
       }
@@ -2101,13 +2101,13 @@ export function initWidgets() {
       }
       if (gpuState) {
         if (!gpu.present) {
-          gpuState.textContent = 'None';
+          gpuState.textContent = t('ui.none', 'None');
           gpuState.className = 'ai-metric-pill';
         } else if (gUtil > 5 || (gpu.cur_freq_mhz && gpu.cur_freq_mhz > 600) || gpu.inference_active || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
-          gpuState.textContent = 'Compute';
+          gpuState.textContent = t('vm.compute', 'Compute');
           gpuState.className = 'ai-metric-pill active-gpu';
         } else {
-          gpuState.textContent = 'Standby';
+          gpuState.textContent = t('common.standby', 'Standby');
           gpuState.className = 'ai-metric-pill sleep';
         }
       }
@@ -2129,7 +2129,7 @@ export function initWidgets() {
           aiBadge.textContent = 'NPU';
           aiBadge.style.color = 'var(--brand, #00f0ff)';
         } else if (gpu.present) {
-          aiBadge.textContent = 'GPU';
+          aiBadge.textContent = t('bench.gpu', 'GPU');
           aiBadge.style.color = '#c084fc';
         } else {
           aiBadge.textContent = 'CPU ONLY';
@@ -2949,7 +2949,7 @@ export function renderDayAgenda(dateKey) {
                 ${isSynced ? `<span style="font-size: 11px; font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: #eab308; padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: 11px; color: var(--muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
                 ${
                   !isSynced
-                    ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px 4px;" title="Delete Note">🗑️</button>`
+                    ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px 4px;" title="${t('ui.delete_note', 'Delete Note')}">🗑️</button>`
                     : ''
                 }
               </div>
@@ -2988,7 +2988,7 @@ export function renderFeedsList() {
             <div style="font-size: 11px; color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
           </div>
         </div>
-        <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px;" title="Delete Feed">🗑️</button>
+        <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: #ef4444; opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px;" title="${t('ui.delete_feed', 'Delete Feed')}">🗑️</button>
       </div>
     `;
   });
@@ -3228,7 +3228,7 @@ export function setupCalendarModalEvents() {
 
       try {
         submitFeedBtn.disabled = true;
-        submitFeedBtn.textContent = 'Connecting...';
+        submitFeedBtn.textContent = t('ui.connecting', 'Connecting...');
         const res = await api.post('/api/calendar/feeds', {
           name,
           url,
@@ -3249,7 +3249,7 @@ export function setupCalendarModalEvents() {
         showToast(t('toast.failed_connect_feed', 'Failed to connect feed: {error}', { error: err.body?.detail || err.message }), 'error');
       } finally {
         submitFeedBtn.disabled = false;
-        submitFeedBtn.textContent = 'Connect & Sync';
+        submitFeedBtn.textContent = t('ui.connect_sync', 'Connect & Sync');
       }
     });
   }
@@ -3279,7 +3279,7 @@ export function setupCalendarModalEvents() {
     syncBtn.addEventListener('click', async () => {
       try {
         syncBtn.disabled = true;
-        syncBtn.textContent = 'Syncing...';
+        syncBtn.textContent = t('ui.syncing', 'Syncing...');
         const res = await api.post('/api/calendar/sync');
         if (res && res.status === 'ok') {
           showToast(t('toast.synced_feed_s_with_event_s', 'Synced {synced_feeds} feed(s) with {total_events} event(s)', { synced_feeds: res.synced_feeds, total_events: res.total_events }), 'success');

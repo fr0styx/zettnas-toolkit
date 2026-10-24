@@ -139,9 +139,9 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   const updateBtn = hasUpdate
     ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image">⬆️</button>`
     : '';
-  const backupBtn = `<button class="btn-container-act btn-docker-backup" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="backup" title="Backup App Data & Config">💾</button>`;
+  const backupBtn = `<button class="btn-container-act btn-docker-backup" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="backup" title="${t('ui.backup_app_data_config', 'Backup App Data & Config')}">💾</button>`;
   const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}">🗑️</button>`;
-  const moreBtn = `<button class="btn-container-act btn-docker-more-sheet" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="more-sheet" title="More Actions">···</button>`;
+  const moreBtn = `<button class="btn-container-act btn-docker-more-sheet" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="more-sheet" title="${t('ui.more_actions', 'More Actions')}">···</button>`;
   const actions = isRunning
     ? `
       ${inspectBtn}

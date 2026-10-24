@@ -445,7 +445,7 @@ async function loadCurrentItem() {
   const filmstripBtn = _activePreviewModal.querySelector('#ql-filmstrip-toggle');
 
   if (titleEl) titleEl.textContent = _currentName;
-  if (metaEl) metaEl.textContent = 'Loading...';
+  if (metaEl) metaEl.textContent = t('ui.loading', 'Loading...');
 
   // Update gallery counter
   if (_gallery.length > 1 && counterPill) {
@@ -473,7 +473,7 @@ async function loadCurrentItem() {
     if (infoBtn) infoBtn.style.display = 'none';
     if (filmstripBtn) filmstripBtn.style.display = 'none';
 
-    metaEl.textContent = '💤 NVMe RAG Cache (Zero Disk Wake)';
+    metaEl.textContent = t('ui.nvme_rag_cache_zero_disk', '💤 NVMe RAG Cache (Zero Disk Wake)');
     const isPhoto = isImageFile(_currentName);
     const thumbHtml = isPhoto && _currentAiMeta.thumbnailUrl
       ? `<img src="${escapeHtml(_currentAiMeta.thumbnailUrl)}" class="quicklook-img" alt="${escapeHtml(_currentName)}" style="max-height:360px; border-radius:8px; object-fit:contain;" />`
@@ -596,7 +596,7 @@ async function loadCurrentItem() {
     }
   } catch (err) {
     if (err.name === 'AbortError') return;
-    metaEl.textContent = 'Preview error';
+    metaEl.textContent = t('ui.preview_error', 'Preview error');
     bodyEl.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--crit, #ff5c5c);">
         <div style="font-size:32px;">⚠️</div>

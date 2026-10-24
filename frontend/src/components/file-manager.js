@@ -197,23 +197,23 @@ export class FileManagerWindow {
                 <span class="fm-title-folder" style="margin-left: 6px; font-weight: normal; opacity: 0.75; font-size: 11px;"></span>
               </div>
               <div class="os-window-controls">
-                <button class="win-btn min-btn" id="fm-min" title="Minimize" aria-label="Minimize"></button>
-                <button class="win-btn max-btn" id="fm-max" title="Maximize" aria-label="Maximize"></button>
-                <button class="win-btn close-btn" id="fm-close" title="Close" aria-label="Close"></button>
+                <button class="win-btn min-btn" id="fm-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+                <button class="win-btn max-btn" id="fm-max" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+                <button class="win-btn close-btn" id="fm-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
               </div>
             </div>
             <div class="fm-toolbar">
               <div class="fm-nav-btn-group" style="display:flex; align-items:center; gap:2px;">
-                <button class="fm-tool-btn fm-back-btn" title="${t('fm.back', 'Back')}" data-i18n-title="fm.back" aria-label="Back" disabled>
+                <button class="fm-tool-btn fm-back-btn" title="${t('fm.back', 'Back')}" data-i18n-title="fm.back" aria-label="${t('fm.back', 'Back')}" disabled>
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 </button>
-                <button class="fm-tool-btn fm-fwd-btn" title="${t('fm.forward', 'Forward')}" data-i18n-title="fm.forward" aria-label="Forward" disabled>
+                <button class="fm-tool-btn fm-fwd-btn" title="${t('fm.forward', 'Forward')}" data-i18n-title="fm.forward" aria-label="${t('fm.forward', 'Forward')}" disabled>
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
-                <button id="fm-up-btn" class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
+                <button id="fm-up-btn" class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="${t('fm.go_up', 'Go Up')}">
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                 </button>
-                <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations" aria-haspopup="menu" aria-expanded="false">📍</button>
+                <button type="button" class="fm-tool-btn fm-locations-btn" title="${t('fm.quick_locations', 'Quick Locations')}" aria-label="${t('fm.quick_locations', 'Quick Locations')}" aria-haspopup="menu" aria-expanded="false">📍</button>
               </div>
               <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
                 <input type="text" id="fm-path-input" class="fm-path-input" aria-label="${escapeHtml(t('fm.path_input_label', 'Folder path'))}" spellcheck="false" list="fm-path-list" style="width: 100%; color: transparent;" />
@@ -226,40 +226,40 @@ export class FileManagerWindow {
                   <option value="/mnt/user/system"></option>
                 </datalist>
               </div>
-              <button id="fm-refresh-btn" class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="Refresh">
+              <button id="fm-refresh-btn" class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="${t('vm.refresh', 'Refresh')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               </button>
               <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
                 <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
+                <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Toggle ZettAI Semantic & Visual RAG Search (Zero Disk Wake)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
               </div>
-              <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
+              <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
               </button>
-              <button id="fm-new-window-btn" class="fm-tool-btn fm-new-win-btn" title="${t('fm.new_window', 'New Window (Ctrl+N)')}" data-i18n-title="fm.new_window" aria-label="New Window">
+              <button id="fm-new-window-btn" class="fm-tool-btn fm-new-win-btn" title="${t('fm.new_window', 'New Window (Ctrl+N)')}" data-i18n-title="fm.new_window" aria-label="${t('dock.new_fm_window', 'New Window')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" ry="2"></rect><line x1="21" y1="9" x2="21" y2="15"></line><line x1="18" y1="12" x2="24" y2="12"></line></svg>
               </button>
-              <button id="fm-organize-btn" class="fm-tool-btn fm-organize-btn" title="${t('fm.organize_media', 'Organize Media')}" data-i18n-title="fm.organize_media" aria-label="Organize Media">
+              <button id="fm-organize-btn" class="fm-tool-btn fm-organize-btn" title="${t('fm.organize_media', 'Organize Media')}" data-i18n-title="fm.organize_media" aria-label="${t('fm.organize_media', 'Organize Media')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
               </button>
               <div class="fm-view-mode-group">
-                <button id="fm-btn-view-list" class="fm-tool-btn fm-btn-view-list ${this.viewMode === 'list' ? 'active' : ''}" title="${t('fm.view_list', 'List View')}" data-i18n-title="fm.view_list" aria-label="List View">
+                <button id="fm-btn-view-list" class="fm-tool-btn fm-btn-view-list ${this.viewMode === 'list' ? 'active' : ''}" title="${t('fm.view_list', 'List View')}" data-i18n-title="fm.view_list" aria-label="${t('fm.view_list', 'List View')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                 </button>
-                <button id="fm-btn-view-compact" class="fm-tool-btn fm-btn-view-compact ${this.viewMode === 'compact' ? 'active' : ''}" title="${t('fm.view_compact', 'Compact View')}" data-i18n-title="fm.view_compact" aria-label="Compact View">
+                <button id="fm-btn-view-compact" class="fm-tool-btn fm-btn-view-compact ${this.viewMode === 'compact' ? 'active' : ''}" title="${t('fm.view_compact', 'Compact View')}" data-i18n-title="fm.view_compact" aria-label="${t('fm.view_compact', 'Compact View')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
-                <button id="fm-btn-view-icon" class="fm-tool-btn fm-btn-view-icon ${this.viewMode === 'icon' ? 'active' : ''}" title="${t('fm.view_icon', 'Icon View')}" data-i18n-title="fm.view_icon" aria-label="Icon View">
+                <button id="fm-btn-view-icon" class="fm-tool-btn fm-btn-view-icon ${this.viewMode === 'icon' ? 'active' : ''}" title="${t('fm.view_icon', 'Icon View')}" data-i18n-title="fm.view_icon" aria-label="${t('fm.view_icon', 'Icon View')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 </button>
               </div>
               <div class="fm-aux-tool-group" style="display: flex; align-items: center; gap: 3px; margin-left: 4px;">
-                <button type="button" id="fm-btn-transfers" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="Transfers">
+                <button type="button" id="fm-btn-transfers" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
                   <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
                 </button>
-                <button type="button" id="fm-btn-inspector" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="Toggle Inspector">
+                <button type="button" id="fm-btn-inspector" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                 </button>
               </div>
@@ -272,7 +272,7 @@ export class FileManagerWindow {
                 <div class="fm-main-pane" style="display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; overflow: hidden;">
                   ${selectionBarHtml(true)}
                   <div class="fm-header-row">
-                    <div class="fm-col fm-col-check"><input type="checkbox" id="fm-select-all-checkbox" class="fm-checkbox fm-select-all-checkbox" title="Select All" /></div>
+                    <div class="fm-col fm-col-check"><input type="checkbox" id="fm-select-all-checkbox" class="fm-checkbox fm-select-all-checkbox" title="${t('ui.select_all', 'Select All')}" /></div>
                     <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>
                     <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">Type <span class="fm-sort-icon"></span></div>
                     <div class="fm-col fm-col-size" data-i18n="fm.col_size" data-sort="size">${t('fm.col_size', 'Size')} <span class="fm-sort-icon"></span></div>
@@ -294,7 +294,7 @@ export class FileManagerWindow {
                 </div>
               </div>
               <input type="file" class="fm-file-upload-input" multiple style="display: none;" />
-              <button type="button" class="fm-mobile-fab" title="Quick Actions" aria-label="Quick Actions" style="display: none;">+</button>
+              <button type="button" class="fm-mobile-fab" title="${t('ui.quick_actions', 'Quick Actions')}" aria-label="${t('ui.quick_actions', 'Quick Actions')}" style="display: none;">+</button>
             </div>
           </div>
         `;
@@ -313,23 +313,23 @@ export class FileManagerWindow {
               <span class="fm-title-folder" style="margin-left: 6px; font-weight: normal; opacity: 0.75; font-size: 11px;"></span>
             </div>
             <div class="os-window-controls">
-              <button class="win-btn min-btn" title="Minimize" aria-label="Minimize"></button>
-              <button class="win-btn max-btn" title="Maximize" aria-label="Maximize"></button>
-              <button class="win-btn close-btn" title="Close" aria-label="Close"></button>
+              <button class="win-btn min-btn" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+              <button class="win-btn max-btn" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+              <button class="win-btn close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
             </div>
           </div>
           <div class="fm-toolbar">
             <div class="fm-nav-btn-group" style="display:flex; align-items:center; gap:2px;">
-              <button class="fm-tool-btn fm-back-btn" title="${t('fm.back', 'Back')}" data-i18n-title="fm.back" aria-label="Back" disabled>
+              <button class="fm-tool-btn fm-back-btn" title="${t('fm.back', 'Back')}" data-i18n-title="fm.back" aria-label="${t('fm.back', 'Back')}" disabled>
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 18 9 12 15 6"></polyline></svg>
               </button>
-              <button class="fm-tool-btn fm-fwd-btn" title="${t('fm.forward', 'Forward')}" data-i18n-title="fm.forward" aria-label="Forward" disabled>
+              <button class="fm-tool-btn fm-fwd-btn" title="${t('fm.forward', 'Forward')}" data-i18n-title="fm.forward" aria-label="${t('fm.forward', 'Forward')}" disabled>
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </button>
-              <button class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="Go Up">
+              <button class="fm-tool-btn fm-up-btn" title="${t('fm.go_up', 'Go Up')}" data-i18n-title="fm.go_up" aria-label="${t('fm.go_up', 'Go Up')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
               </button>
-              <button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations" aria-haspopup="menu" aria-expanded="false">📍</button>
+              <button type="button" class="fm-tool-btn fm-locations-btn" title="${t('fm.quick_locations', 'Quick Locations')}" aria-label="${t('fm.quick_locations', 'Quick Locations')}" aria-haspopup="menu" aria-expanded="false">📍</button>
             </div>
             <div class="fm-path-container" style="flex: 1; position: relative; display: flex; align-items: center; min-width: 0;">
               <input type="text" class="fm-path-input" aria-label="${escapeHtml(t('fm.path_input_label', 'Folder path'))}" spellcheck="false" list="${this.id}-path-list" style="width: 100%; color: transparent;" />
@@ -342,40 +342,40 @@ export class FileManagerWindow {
                 <option value="/mnt/user/system"></option>
               </datalist>
             </div>
-            <button class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="Refresh">
+            <button class="fm-tool-btn fm-refresh-btn" title="${t('fm.refresh', 'Refresh')}" data-i18n-title="fm.refresh" aria-label="${t('vm.refresh', 'Refresh')}">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
             <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
               <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: var(--fg); outline: none;" />
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="Toggle ZettAI Semantic &amp; Visual RAG Search (Zero Disk Wake)" aria-label="AI Semantic Search" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
+              <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Toggle ZettAI Semantic & Visual RAG Search (Zero Disk Wake)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
             </div>
-            <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="New Folder">
+            <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
             </button>
-            <button class="fm-tool-btn fm-new-win-btn" title="${t('fm.new_window', 'New Window (Ctrl+N)')}" data-i18n-title="fm.new_window" aria-label="New Window">
+            <button class="fm-tool-btn fm-new-win-btn" title="${t('fm.new_window', 'New Window (Ctrl+N)')}" data-i18n-title="fm.new_window" aria-label="${t('dock.new_fm_window', 'New Window')}">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" ry="2"></rect><line x1="21" y1="9" x2="21" y2="15"></line><line x1="18" y1="12" x2="24" y2="12"></line></svg>
             </button>
-            <button class="fm-tool-btn fm-organize-btn" title="${t('fm.organize_media', 'Organize Media')}" data-i18n-title="fm.organize_media" aria-label="Organize Media">
+            <button class="fm-tool-btn fm-organize-btn" title="${t('fm.organize_media', 'Organize Media')}" data-i18n-title="fm.organize_media" aria-label="${t('fm.organize_media', 'Organize Media')}">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
             </button>
             <div class="fm-view-mode-group">
-              <button class="fm-tool-btn fm-btn-view-list ${this.viewMode === 'list' ? 'active' : ''}" title="${t('fm.view_list', 'List View')}" data-i18n-title="fm.view_list" aria-label="List View">
+              <button class="fm-tool-btn fm-btn-view-list ${this.viewMode === 'list' ? 'active' : ''}" title="${t('fm.view_list', 'List View')}" data-i18n-title="fm.view_list" aria-label="${t('fm.view_list', 'List View')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
               </button>
-              <button class="fm-tool-btn fm-btn-view-compact ${this.viewMode === 'compact' ? 'active' : ''}" title="${t('fm.view_compact', 'Compact View')}" data-i18n-title="fm.view_compact" aria-label="Compact View">
+              <button class="fm-tool-btn fm-btn-view-compact ${this.viewMode === 'compact' ? 'active' : ''}" title="${t('fm.view_compact', 'Compact View')}" data-i18n-title="fm.view_compact" aria-label="${t('fm.view_compact', 'Compact View')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
               </button>
-              <button class="fm-tool-btn fm-btn-view-icon ${this.viewMode === 'icon' ? 'active' : ''}" title="${t('fm.view_icon', 'Icon View')}" data-i18n-title="fm.view_icon" aria-label="Icon View">
+              <button class="fm-tool-btn fm-btn-view-icon ${this.viewMode === 'icon' ? 'active' : ''}" title="${t('fm.view_icon', 'Icon View')}" data-i18n-title="fm.view_icon" aria-label="${t('fm.view_icon', 'Icon View')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
               </button>
             </div>
             <div class="fm-aux-tool-group" style="display: flex; align-items: center; gap: 3px; margin-left: 4px;">
-              <button type="button" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="Transfers">
+              <button type="button" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
                 <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
               </button>
-              <button type="button" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="Toggle Inspector">
+              <button type="button" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               </button>
             </div>
@@ -388,7 +388,7 @@ export class FileManagerWindow {
               <div class="fm-main-pane" style="display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; overflow: hidden;">
                   ${selectionBarHtml(false)}
                 <div class="fm-header-row">
-                  <div class="fm-col fm-col-check"><input type="checkbox" class="fm-checkbox fm-select-all-checkbox" title="Select All" /></div>
+                  <div class="fm-col fm-col-check"><input type="checkbox" class="fm-checkbox fm-select-all-checkbox" title="${t('ui.select_all', 'Select All')}" /></div>
                   <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>
                   <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">Type <span class="fm-sort-icon"></span></div>
                   <div class="fm-col fm-col-size" data-i18n="fm.col_size" data-sort="size">${t('fm.col_size', 'Size')} <span class="fm-sort-icon"></span></div>
@@ -410,7 +410,7 @@ export class FileManagerWindow {
               </div>
             </div>
             <input type="file" class="fm-file-upload-input" multiple style="display: none;" />
-            <button type="button" class="fm-mobile-fab" title="Quick Actions" aria-label="Quick Actions" style="display: none;">+</button>
+            <button type="button" class="fm-mobile-fab" title="${t('ui.quick_actions', 'Quick Actions')}" aria-label="${t('ui.quick_actions', 'Quick Actions')}" style="display: none;">+</button>
           </div>
         </div>
       `;
@@ -422,7 +422,7 @@ export class FileManagerWindow {
       if (!this.windowEl.querySelector('.fm-locations-btn')) {
         const navGrp = this.windowEl.querySelector('.fm-nav-btn-group');
         if (navGrp) {
-          navGrp.insertAdjacentHTML('beforeend', '<button type="button" class="fm-tool-btn fm-locations-btn" title="Quick Locations" aria-label="Quick Locations" aria-haspopup="menu" aria-expanded="false">📍</button>');
+          navGrp.insertAdjacentHTML('beforeend', '<button type="button" class="fm-tool-btn fm-locations-btn" title="' + t('fm.quick_locations', 'Quick Locations') + '" aria-label="' + t('fm.quick_locations', 'Quick Locations') + '" aria-haspopup="menu" aria-expanded="false">📍</button>');
         }
       }
       if (!this.windowEl.querySelector('.fm-sidebar-toggle')) {
@@ -453,7 +453,7 @@ export class FileManagerWindow {
           contentEl.insertAdjacentHTML('beforeend', '<input type="file" class="fm-file-upload-input" multiple style="display: none;" />');
         }
         if (!contentEl.querySelector('.fm-mobile-fab')) {
-          contentEl.insertAdjacentHTML('beforeend', '<button type="button" class="fm-mobile-fab" title="Quick Actions" aria-label="Quick Actions" style="display: none;">+</button>');
+          contentEl.insertAdjacentHTML('beforeend', '<button type="button" class="fm-mobile-fab" title="' + t('ui.quick_actions', 'Quick Actions') + '" aria-label="' + t('ui.quick_actions', 'Quick Actions') + '" style="display: none;">+</button>');
         }
       }
     }
@@ -1792,7 +1792,7 @@ export class FileManagerWindow {
             ellipsis.textContent = '...';
             ellipsis.className = 'fm-breadcrumb-ellipsis';
             ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: 11px; margin: 0 2px;';
-            ellipsis.title = 'Show intermediate folders';
+            ellipsis.title = t('ui.show_intermediate_folders', 'Show intermediate folders');
             ellipsis.onclick = (e) => {
               e.stopPropagation();
               this.showBreadcrumbsDropdown(ellipsis, parts, 1, hidden + 1);
@@ -2194,19 +2194,19 @@ export class FileManagerWindow {
 
         // One grid cell per card (a row of the grid); display: contents keeps the card's layout
         card.innerHTML = `<div class="fm-card-cell" role="gridcell">
-          ${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-card-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}
+          ${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-card-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="${t('ui.select_item', 'Select item')}" />` : ''}
           <div class="fm-card-preview">${iconContent}</div>
           <div class="fm-card-info">
             <div class="fm-card-name" title="${escName}">${escName}</div>
             <div class="fm-card-meta">${metaText}</div>
           </div>
           <div class="fm-card-actions">
-            ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="Preview">👁️</button>` : ''}
-            ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="Download">⬇️</button>` : ''}
-            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="Share via Link">🔗</button>` : ''}
-            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
-            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
-            ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" style="display:none;">···</button>` : ''}
+            ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="${t('ui.preview', 'Preview')}">👁️</button>` : ''}
+            ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="${t('preview.download', 'Download')}">⬇️</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="${t('ui.share_via_link', 'Share via Link')}">🔗</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="${t('vm.delete', 'Delete')}">🗑️</button>` : ''}
+            ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="${t('ui.more_actions', 'More Actions')}" style="display:none;">···</button>` : ''}
           </div>
         </div>`;
 
@@ -2279,18 +2279,18 @@ export class FileManagerWindow {
         : icon;
       const subLine = file.name === '..' ? '' : (file.is_dir ? mtimeStr : `${formatBytes(file.size)} · ${mtimeStr}`);
       row.innerHTML = `
-        <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="Select item" />` : ''}</div>
+        <div class="fm-col fm-col-check">${file.name !== '..' ? `<input type="checkbox" class="fm-checkbox fm-row-checkbox" ${this.selectedPaths.has(file.path) ? 'checked' : ''} data-path="${escPath}" title="${t('ui.select_item', 'Select item')}" />` : ''}</div>
         <div class="fm-col fm-col-name">${leading} <span class="fm-name-stack"><span class="fm-name-text">${escName}</span><span class="fm-row-sub">${escapeHtml(subLine)}</span></span></div>
         <div class="fm-col fm-col-type">${file.name === '..' ? '--' : escapeHtml(fileType)}</div>
         <div class="fm-col fm-col-size">${file.is_dir ? '--' : formatBytes(file.size)}</div>
         <div class="fm-col fm-col-mtime">${file.name === '..' ? '--' : mtimeStr}</div>
         <div class="fm-col fm-col-actions">
-          ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="Preview">👁️</button>` : ''}
-          ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="Download">⬇️</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="Share via Link">🔗</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="Rename">✏️</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="Delete">🗑️</button>` : ''}
-          ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="More Actions" aria-label="More Actions">···</button>` : ''}
+          ${(!file.is_dir && file.name !== '..' && isImage) ? `<button class="fm-act-btn" data-act="preview" data-path="${escPath}" title="${t('ui.preview', 'Preview')}">👁️</button>` : ''}
+          ${!file.is_dir && file.name !== '..' ? `<button class="fm-act-btn" data-act="download" data-path="${escPath}" title="${t('preview.download', 'Download')}">⬇️</button>` : ''}
+          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="share" data-path="${escPath}" title="${t('ui.share_via_link', 'Share via Link')}">🔗</button>` : ''}
+          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="rename" data-path="${escPath}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>` : ''}
+          ${file.name !== '..' ? `<button class="fm-act-btn" data-act="delete" data-path="${escPath}" title="${t('vm.delete', 'Delete')}">🗑️</button>` : ''}
+          ${file.name !== '..' ? `<button class="fm-act-btn fm-act-more-sheet" data-act="more-sheet" data-path="${escPath}" title="${t('ui.more_actions', 'More Actions')}" aria-label="${t('ui.more_actions', 'More Actions')}">···</button>` : ''}
         </div>
       `;
       row.querySelectorAll(':scope > .fm-col').forEach((cell) => cell.setAttribute('role', 'gridcell'));
@@ -3901,7 +3901,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
       <div class="smart-modal-header">
         <span class="smart-modal-title" id="fm-share-title"><span aria-hidden="true">🔗</span> Public Share Link</span>
         <div class="os-window-controls">
-          <button type="button" id="fm-share-close" class="win-btn close-btn" title="Close" aria-label="Close"></button>
+          <button type="button" id="fm-share-close" class="win-btn close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
       <div class="smart-modal-body fm-share-body">
@@ -3911,7 +3911,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
 
       <div id="fm-share-create-section">
         <div class="form-group" style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Link Expiration</label>
+          <label for="fm-share-expires" style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Link Expiration</label>
           <select id="fm-share-expires" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;">
             <option value="1">1 Hour</option>
             <option value="24" selected>24 Hours (1 Day)</option>
@@ -3922,13 +3922,13 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
-          <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Password Protection (Optional)</label>
-          <input type="password" id="fm-share-password" placeholder="Leave empty for public access" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;" />
+          <label for="fm-share-password" style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Password Protection (Optional)</label>
+          <input type="password" id="fm-share-password" placeholder="${t('ui.leave_empty_for_public_access', 'Leave empty for public access')}" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;" />
         </div>
 
         <div class="form-group" style="margin-bottom: 18px;">
-          <label style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Max Downloads (Optional)</label>
-          <input type="number" id="fm-share-max-dl" min="1" placeholder="Unlimited" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;" />
+          <label for="fm-share-max-dl" style="display: block; font-size: 11px; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Max Downloads (Optional)</label>
+          <input type="number" id="fm-share-max-dl" min="1" placeholder="${t('ui.unlimited', 'Unlimited')}" style="width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 12px;" />
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
@@ -3975,7 +3975,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
   if (submitBtn) {
     submitBtn.onclick = async () => {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Generating...';
+      submitBtn.textContent = t('ui.generating', 'Generating...');
 
       const expSelect = modal.querySelector('#fm-share-expires');
       const expHours = expSelect ? parseInt(expSelect.value, 10) : 24;
@@ -4028,7 +4028,7 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
       } catch (err) {
         showToast(t('toast.failed_to_create_share_link', 'Failed to create share link: {error}', { error: err.message }), 'error');
         submitBtn.disabled = false;
-        submitBtn.textContent = '✨ Generate Share Link';
+        submitBtn.textContent = t('ui.generate_share_link', '✨ Generate Share Link');
       }
     };
   }

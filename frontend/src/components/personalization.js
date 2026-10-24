@@ -34,9 +34,9 @@ export function initPersonalization() {
             <span data-i18n="dock.personalization">${t('dock.personalization', 'Desktop & Personalization')}</span>
           </div>
           <div class="os-window-controls">
-            <button class="os-control-btn os-btn-minimize" id="personalization-btn-min" title="Minimize">─</button>
-            <button class="os-control-btn os-btn-maximize" id="personalization-btn-max" title="Maximize">□</button>
-            <button class="os-control-btn os-btn-close" id="personalization-btn-close" title="Close">✕</button>
+            <button class="os-control-btn os-btn-minimize" id="personalization-btn-min" title="${t('window.minimize', 'Minimize')}">─</button>
+            <button class="os-control-btn os-btn-maximize" id="personalization-btn-max" title="${t('ui.maximize', 'Maximize')}">□</button>
+            <button class="os-control-btn os-btn-close" id="personalization-btn-close" title="${t('diagnostics.close_btn', 'Close')}">✕</button>
           </div>
         </div>
 

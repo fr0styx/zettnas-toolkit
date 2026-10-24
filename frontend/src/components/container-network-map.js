@@ -150,7 +150,7 @@ function ensureOverlay() {
           <span id="netmap-summary" style="font-size:11px; color:var(--muted);"></span>
         </div>
         <div class="os-window-controls">
-          <button class="win-btn close-btn" id="netmap-close-btn" title="Close" aria-label="Close"></button>
+          <button class="win-btn close-btn" id="netmap-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
       <div style="padding:8px 16px; font-size:11px; color:var(--muted); border-bottom:1px solid rgba(255,255,255,0.06);" data-i18n="cw.netmap_hint">${escapeHtml(t('cw.netmap_hint', 'Click a network to highlight its containers.'))}</div>

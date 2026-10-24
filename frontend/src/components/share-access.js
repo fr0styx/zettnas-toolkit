@@ -77,7 +77,7 @@ export async function openShareAccessModal() {
       <div class="smart-modal-header">
         <span class="smart-modal-title" id="share-access-title"><svg class="ic ic-sm"><use href="#i-users"/></svg> Share access</span>
         <div class="os-window-controls">
-          <button type="button" id="share-access-close" class="win-btn close-btn" title="Close" aria-label="Close"></button>
+          <button type="button" id="share-access-close" class="win-btn close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
       <div class="smart-modal-body">

@@ -224,7 +224,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
             </div>
           </div>
           <div class="bay-footer">
-            <button class="bay-locate-btn" data-dev="${devName}" title="Locate Drive (Blink Bay LED)" aria-label="Locate drive in Bay ${slotNum}">
+            <button class="bay-locate-btn" data-dev="${devName}" title="${t('ui.locate_drive_blink_bay_led', 'Locate Drive (Blink Bay LED)')}" aria-label="Locate drive in Bay ${slotNum}">
               <svg class="locate-icon" viewBox="0 0 24 24" width="12" height="12"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/></svg>
               <span>LOCATE</span>
             </button>
@@ -277,7 +277,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
           <div class="chassis-screw-head"></div>
           <div class="chassis-brand-mark">${escapeHtml(chassisModel)}</div>
           <div class="chassis-top-actions">
-            <button class="chassis-config-btn" id="chassis-open-slots-btn" title="Configure Chassis Bays & Profile" aria-label="Configure Chassis Bays & Profile">
+            <button class="chassis-config-btn" id="chassis-open-slots-btn" title="${t('ui.configure_chassis_bays_profile', 'Configure Chassis Bays & Profile')}" aria-label="${t('ui.configure_chassis_bays_profile', 'Configure Chassis Bays & Profile')}">
               <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/><path fill-rule="evenodd" d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 010-1.113zM17.25 12a5.25 5.25 0 11-10.5 0 5.25 5.25 0 0110.5 0z" clip-rule="evenodd" fill="currentColor"/></svg>
               <span>SLOTS / MAPPING</span>
             </button>
@@ -392,12 +392,12 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
           <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/></svg>
           <span>CHASSIS ENCLOSURE & BAY CONFIGURATION</span>
         </div>
-        <button class="win-btn close-btn" id="chassis-config-close" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="chassis-config-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
       </div>
       <div class="smart-modal-body" style="padding: 16px; overflow-y: auto; flex: 1; display:flex; flex-direction:column; gap: 14px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px;">ENCLOSURE PROFILE</label>
+            <label for="chassis-profile-select" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px;">ENCLOSURE PROFILE</label>
             <select id="chassis-profile-select" class="tz-select-input" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:12px;">
               <option value="auto" ${profile === 'auto' ? 'selected' : ''}>Auto Dynamic (Auto-Detect)</option>
               <option value="compact_dual" ${profile === 'compact_dual' ? 'selected' : ''}>Compact Dual (1–2 Bays)</option>
@@ -407,7 +407,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
             </select>
           </div>
           <div>
-            <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px;">TOTAL PHYSICAL BAYS</label>
+            <label for="chassis-total-bays-input" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px;">TOTAL PHYSICAL BAYS</label>
             <input type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}" style="width:100%; padding:8px; border-radius:6px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.12); color:#fff; font-size:12px;">
           </div>
         </div>
@@ -466,7 +466,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
             </select>
           </td>
           <td>
-            <input type="text" class="slot-label-input tz-text-input" maxlength="64" value="${escapeHtml(currentLabel)}" placeholder="e.g. Parity 1, Pool A" style="width:100%; padding:6px; font-size:11.5px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px;">
+            <input type="text" class="slot-label-input tz-text-input" maxlength="64" value="${escapeHtml(currentLabel)}" placeholder="${t('ui.e_g_parity_1_pool', 'e.g. Parity 1, Pool A')}" style="width:100%; padding:6px; font-size:11.5px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:#fff; border-radius:4px;">
           </td>
         </tr>
       `;
@@ -704,10 +704,10 @@ function buildPoolBlockInner(pool, isObserver) {
         </div>
         <div class="topo-disk-sub">
           <span class="topo-disk-size">${formatBytes(m.size_bytes)}</span>
-          <span class="topo-disk-io" title="Disk I/O Reads & Writes">R: ${readsStr} · W: ${writesStr}</span>
+          <span class="topo-disk-io" title="${t('ui.disk_i_o_reads_writes', 'Disk I/O Reads & Writes')}">R: ${readsStr} · W: ${writesStr}</span>
         </div>
         <div class="topo-disk-actions">
-          <button class="btn-locate-topo" data-dev="${escapeHtml(m.device || m.name)}" title="Blink drive activity LED">
+          <button class="btn-locate-topo" data-dev="${escapeHtml(m.device || m.name)}" title="${t('ui.blink_drive_activity_led', 'Blink drive activity LED')}">
             💡 Locate
           </button>
         </div>
@@ -725,7 +725,7 @@ function buildPoolBlockInner(pool, isObserver) {
         </div>
       </div>
       <div class="topo-pool-badges">
-        ${pool.parity_protected ? '<span class="topo-parity-badge" title="Protected against disk failure">🛡️ Parity Protected</span>' : ''}
+        ${pool.parity_protected ? '<span class="topo-parity-badge" title="' + t('ui.protected_against_disk_failure', 'Protected against disk failure') + '">🛡️ Parity Protected</span>' : ''}
         <span class="topo-status-pill ${statusClass}">${escapeHtml(statusLabel)}</span>
       </div>
     </div>
@@ -748,11 +748,11 @@ function buildPoolBlockInner(pool, isObserver) {
     </div>
 
     <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-      <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="Trigger filesystem scrub or parity check">⚡ Scrub Pool</button>
-      ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="Rename storage pool">✏️ Rename</button>` : ''}
-      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
-      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: #fbbf24;" title="Safely flush dirty cache and detach pool">⏏️ Safely Eject</button>` : ''}
-      ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
+      <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">⚡ Scrub Pool</button>
+      ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">✏️ Rename</button>` : ''}
+      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #38bdf8;" title="${t('ui.manage_subvolume_snapshots', 'Manage Subvolume Snapshots')}">📸 Snapshots</button>` : ''}
+      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: #fbbf24;" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">⏏️ Safely Eject</button>` : ''}
+      ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">🗑️ Destroy</button>` : ''}
     </div>
   `;
 }
@@ -831,7 +831,7 @@ function bindTopologyTreeEvents(tree, container) {
         async () => {
           try {
             exportBtn.disabled = true;
-            exportBtn.textContent = '⏳ Ejecting...';
+            exportBtn.textContent = t('ui.ejecting', '⏳ Ejecting...');
             const res = await api.post(`/api/storage/pools/${encodeURIComponent(pid)}/export`, { force: false });
             showToast(res.message || `Pool '${pid}' safely ejected. You may disconnect the cable.`, 'success');
             fetchAndRenderStorageTopology(container);
@@ -857,7 +857,7 @@ function bindTopologyTreeEvents(tree, container) {
             }
           } finally {
             exportBtn.disabled = false;
-            exportBtn.textContent = '⏏️ Safely Eject';
+            exportBtn.textContent = t('ui.safely_eject', '⏏️ Safely Eject');
           }
         },
         null,
@@ -873,14 +873,14 @@ function bindTopologyTreeEvents(tree, container) {
       const fstype = importBtn.dataset.fsType || 'zfs';
       try {
         importBtn.disabled = true;
-        importBtn.textContent = '⏳ Importing...';
+        importBtn.textContent = t('ui.importing', '⏳ Importing...');
         await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
         showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
         fetchAndRenderStorageTopology(container);
       } catch (err) {
         showToast(err.message || `Failed to import pool '${pid}'`, 'error');
         importBtn.disabled = false;
-        importBtn.textContent = '📥 Import Pool';
+        importBtn.textContent = t('ui.import_pool', '📥 Import Pool');
       }
       return;
     }
@@ -933,7 +933,7 @@ export async function fetchAndRenderStorageTopology(container) {
               <span style="color:var(--muted); font-size:12px; margin-left:8px;">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
             </div>
           </div>
-          <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #4ade80;" title="Import detached storage pool">
+          <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #4ade80;" title="${t('ui.import_detached_storage_pool', 'Import detached storage pool')}">
             📥 Import Pool
           </button>
         </div>
@@ -958,14 +958,14 @@ export async function fetchAndRenderStorageTopology(container) {
             const fstype = importBtn.dataset.fsType || 'zfs';
             try {
               importBtn.disabled = true;
-              importBtn.textContent = '⏳ Importing...';
+              importBtn.textContent = t('ui.importing', '⏳ Importing...');
               await api.post('/api/storage/pools/import', { pool_id: pid, fs_type: fstype });
               showToast(t('toast.successfully_imported_storage_pool', 'Successfully imported storage pool \'{pid}\'!', { pid: pid }), 'success');
               fetchAndRenderStorageTopology(container);
             } catch (err) {
               showToast(err.message || `Failed to import pool '${pid}'`, 'error');
               importBtn.disabled = false;
-              importBtn.textContent = '📥 Import Pool';
+              importBtn.textContent = t('ui.import_pool', '📥 Import Pool');
             }
           }
         });
@@ -1005,7 +1005,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
           <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:11px; font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:#f87171; border-color:rgba(239,68,68,0.3);' : ''}">
             ${isRunning ? '⏹ Stop SFTP' : '▶ Start SFTP'}
           </button>
-          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);" title="Manage SFTP users and permissions">
+          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);" title="${t('ui.manage_sftp_users_and_permissions', 'Manage SFTP users and permissions')}">
             👥 Manage Users (${usersCount})
           </button>
         </div>
@@ -1023,7 +1023,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
             <span>🍏 macOS Finder / Cyberduck</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(finderCmd)}" title="Copy SFTP URL">📋 Copy</button>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(finderCmd)}" title="${t('ui.copy_sftp_url', 'Copy SFTP URL')}">📋 Copy</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(finderCmd)}</span>
@@ -1033,7 +1033,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
             <span>💻 Terminal / OpenSSH</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(terminalCmd)}" title="Copy CLI Command">📋 Copy</button>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(terminalCmd)}" title="${t('ui.copy_cli_command', 'Copy CLI Command')}">📋 Copy</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(terminalCmd)}</span>
@@ -1043,7 +1043,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
             <span>📁 FileZilla / WinSCP Client</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(filezillaHint)}" title="Copy Connection Info">📋 Copy</button>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(filezillaHint)}" title="${t('ui.copy_connection_info', 'Copy Connection Info')}">📋 Copy</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(filezillaHint)}</span>
@@ -1053,7 +1053,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
         <div class="webdav-qc-item">
           <div class="webdav-qc-label">
             <span>📜 SSHFS Mount (Linux/macOS)</span>
-            <button class="btn-qc-copy" data-copy="${escapeHtml(sshfsCmd)}" title="Copy SSHFS Mount Command">📋 Copy</button>
+            <button class="btn-qc-copy" data-copy="${escapeHtml(sshfsCmd)}" title="${t('ui.copy_sshfs_mount_command', 'Copy SSHFS Mount Command')}">📋 Copy</button>
           </div>
           <div class="webdav-qc-code">
             <span>${escapeHtml(sshfsCmd)}</span>
@@ -1289,11 +1289,11 @@ function buildShareCardInner(s, canManageShares) {
     </div>
 
     <div class="share-card-actions" style="display:flex; justify-content:space-between; align-items:center;">
-      <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="Open share in File Explorer">
+      <button class="btn-share-reveal" data-path="${escapeHtml(s.mountpoint || '')}" title="${t('ui.open_share_in_file_explorer', 'Open share in File Explorer')}">
         📂 Open in File Explorer
       </button>
       ${canManageShares ? `
-        <button class="btn-share-delete btn-pill-toggle is-danger is-small" data-share-name="${escapeHtml(s.name)}" title="Delete network share">
+        <button class="btn-share-delete btn-pill-toggle is-danger is-small" data-share-name="${escapeHtml(s.name)}" title="${t('ui.delete_network_share', 'Delete network share')}">
           🗑️ Delete
         </button>
       ` : ''}
@@ -1666,22 +1666,22 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="remote-card-actions">
               <div>
                 ${isMounted ? `
-                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="Open in File Explorer" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
+                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="${t('ui.open_in_file_explorer', 'Open in File Explorer')}" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
                     📂 Open in File Explorer
                   </button>
                 ` : `
-                  <button class="btn-remote-mount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Mount to /mnt/remotes" style="background: rgba(59,245,139,0.12); color: #3bf58b; border-color: rgba(59,245,139,0.25);">
+                  <button class="btn-remote-mount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="${t('ui.mount_to_mnt_remotes', 'Mount to /mnt/remotes')}" style="background: rgba(59,245,139,0.12); color: #3bf58b; border-color: rgba(59,245,139,0.25);">
                     ▶ Mount
                   </button>
                 `}
               </div>
               <div style="display:flex; gap:6px;">
                 ${isMounted ? `
-                  <button class="btn-remote-unmount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Unmount from system">
+                  <button class="btn-remote-unmount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="${t('ui.unmount_from_system', 'Unmount from system')}">
                     ⏹ Unmount
                   </button>
                 ` : ''}
-                <button class="btn-remote-delete btn-pill-toggle is-danger" data-name="${escapeHtml(r.name)}" title="Delete remote">
+                <button class="btn-remote-delete btn-pill-toggle is-danger" data-name="${escapeHtml(r.name)}" title="${t('ui.delete_remote', 'Delete remote')}">
                   🗑
                 </button>
               </div>
@@ -1711,10 +1711,10 @@ export async function fetchAndRenderRemoteStorage(container) {
               <button class="btn-pill-toggle" id="btn-webdav-toggle">
                 ${isRunning ? '⏹ Stop Server' : '▶ Start Server'}
               </button>
-              <button class="btn-pill-toggle" id="btn-webdav-restart" title="Restart WebDAV Server">
+              <button class="btn-pill-toggle" id="btn-webdav-restart" title="${t('ui.restart_webdav_server', 'Restart WebDAV Server')}">
                 ↺ Restart
               </button>
-              <button class="btn-pill-toggle" id="btn-webdav-config-open" title="Configure WebDAV settings">
+              <button class="btn-pill-toggle" id="btn-webdav-config-open" title="${t('ui.configure_webdav_settings', 'Configure WebDAV settings')}">
                 ⚙️ Settings
               </button>
             </div>
@@ -1732,7 +1732,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
                 <span>🍏 macOS Finder (⌘K)</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.macos || '')}" title="Copy command">📋 Copy</button>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.macos || '')}" title="${t('ui.copy_command', 'Copy command')}">📋 Copy</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(qc.macos || '')}</span>
@@ -1742,7 +1742,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
                 <span>🪟 Windows Map Network Drive</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.windows || '')}" title="Copy command">📋 Copy</button>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.windows || '')}" title="${t('ui.copy_command', 'Copy command')}">📋 Copy</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(qc.windows || '')}</span>
@@ -1752,7 +1752,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
                 <span>📱 iOS & Android Files</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.ios || '')}" title="Copy URL">📋 Copy</button>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(qc.ios || '')}" title="${t('ui.copy_url', 'Copy URL')}">📋 Copy</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(qc.ios || '')}</span>
@@ -1762,7 +1762,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="webdav-qc-item">
               <div class="webdav-qc-label">
                 <span>🌐 Toolkit HTTP Reverse Proxy</span>
-                <button class="btn-qc-copy" data-copy="${escapeHtml(proxyUrl)}" title="Copy Proxy URL">📋 Copy</button>
+                <button class="btn-qc-copy" data-copy="${escapeHtml(proxyUrl)}" title="${t('ui.copy_proxy_url', 'Copy Proxy URL')}">📋 Copy</button>
               </div>
               <div class="webdav-qc-code">
                 <span>${escapeHtml(proxyUrl)}</span>
@@ -1780,7 +1780,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div style="font-size:13px; font-weight:800; color:#fff; letter-spacing:0.5px; text-transform:uppercase;">
               Connected Cloud Drives & Buckets (${remotes ? remotes.length : 0})
             </div>
-            <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);" title="Connect New Cloud Remote">
+            <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);" title="${t('ui.connect_new_cloud_remote', 'Connect New Cloud Remote')}">
               ☁️ + Add Remote
             </button>
           </div>
@@ -1862,7 +1862,7 @@ export async function fetchAndRenderRemoteStorage(container) {
     container.querySelectorAll('.btn-remote-mount').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const name = btn.dataset.name;
-        btn.textContent = 'Mounting...';
+        btn.textContent = t('ui.mounting', 'Mounting...');
         btn.disabled = true;
         try {
           await api.post(`/api/remotes/${name}/mount`, {});
@@ -1882,7 +1882,7 @@ export async function fetchAndRenderRemoteStorage(container) {
     container.querySelectorAll('.btn-remote-unmount').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const name = btn.dataset.name;
-        btn.textContent = 'Unmounting...';
+        btn.textContent = t('ui.unmounting', 'Unmounting...');
         btn.disabled = true;
         try {
           await api.post(`/api/remotes/${name}/unmount`);
@@ -2219,7 +2219,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   </div>
                   <div style="font-size: 11px; font-weight: 600; color: #e2e8f0; margin-top: 8px; display: flex; align-items: center; gap: 6px;">
                     <span>📱 Scan with your phone or tablet camera to sign in</span>
-                    <button type="button" id="btn-oauth-qr" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 11px; padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="Refresh QR Code">🔄 Refresh</button>
+                    <button type="button" id="btn-oauth-qr" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #38bdf8; font-size: 11px; padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">🔄 Refresh</button>
                   </div>
                 </div>
               </div>
@@ -2686,7 +2686,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               if (cmd) {
                 const ok = await copyTextToClipboard(cmd);
                 if (ok) {
-                  btn.textContent = '✅ Copied!';
+                  btn.textContent = t('ui.copied', '✅ Copied!');
                   showToast(t('toast.copied_command', 'Copied command: {cmd}', { cmd: cmd }), 'info');
                   setTimeout(() => {
                     btn.textContent = `📋 Copy: ${cmd}`;
@@ -2826,7 +2826,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
         const submitBtn = document.getElementById('new-remote-submit-btn');
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.textContent = 'Connecting...';
+          submitBtn.textContent = t('ui.connecting', 'Connecting...');
         }
 
         try {
@@ -2858,7 +2858,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Save & Connect Remote';
+            submitBtn.textContent = t('ui.save_connect_remote', 'Save & Connect Remote');
           }
         }
       };
@@ -2988,7 +2988,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
 
       if (disks.length === 0) {
         if (errorBox) {
-          errorBox.textContent = 'Please select at least one member disk.';
+          errorBox.textContent = t('ui.please_select_at_least_one', 'Please select at least one member disk.');
           errorBox.style.display = 'block';
         }
         return;
@@ -3007,7 +3007,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Provisioning...';
+        submitBtn.textContent = t('ui.provisioning', 'Provisioning...');
       }
 
       const body = { name, fs_type: fsType, profile, disks, mountpoint, confirm_name: typed, current_password: password };
@@ -3043,7 +3043,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = '🚀 Provision Storage Pool';
+          submitBtn.textContent = t('ui.provision_storage_pool', '🚀 Provision Storage Pool');
         }
       }
     };
@@ -3105,7 +3105,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       const users = Array.isArray(data) ? data : (data?.users || []);
       if (!users.length) {
         usersMatrix.innerHTML = '<div style="font-size:11px; color:var(--muted); padding:4px;">No custom users found. Defaulting to system access.</div>';
-        if (usersCount) usersCount.textContent = '0 Users';
+        if (usersCount) usersCount.textContent = t('ui.0_users', '0 Users');
         return;
       }
       if (usersCount) usersCount.textContent = `${users.length} Users`;
@@ -3134,7 +3134,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       }).join('');
     }).catch(() => {
       usersMatrix.innerHTML = '<div style="font-size:11px; color:var(--muted); padding:4px;">Standard user access rules apply.</div>';
-      if (usersCount) usersCount.textContent = 'Standard';
+      if (usersCount) usersCount.textContent = t('ui.standard', 'Standard');
     });
   }
 
@@ -3172,7 +3172,7 @@ export function openCreateNetworkShareModal(onSuccess) {
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Provisioning...';
+        submitBtn.textContent = t('ui.provisioning', 'Provisioning...');
       }
 
       try {
@@ -3221,7 +3221,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = '📁 Provision Share';
+          submitBtn.textContent = t('ui.provision_share', '📁 Provision Share');
         }
       }
     };
@@ -3437,7 +3437,7 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
       const newName = newNameInput?.value.trim();
       if (!newName) {
         if (errorBox) {
-          errorBox.textContent = 'Please enter a valid new pool name.';
+          errorBox.textContent = t('ui.please_enter_a_valid_new', 'Please enter a valid new pool name.');
           errorBox.style.display = 'block';
         }
         return;
@@ -3445,7 +3445,7 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Renaming...';
+        submitBtn.textContent = t('ui.renaming', 'Renaming...');
       }
 
       try {
@@ -3465,7 +3465,7 @@ export function openRenameStoragePoolModal(poolId, currentName, onSuccess) {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = '✏️ Apply Rename';
+          submitBtn.textContent = t('ui.apply_rename', '✏️ Apply Rename');
         }
       }
     };

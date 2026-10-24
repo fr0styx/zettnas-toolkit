@@ -55,6 +55,7 @@ import { initI18n } from './i18n.js';
 import { initA11y } from './a11y.js';
 import { initGlassTimePickers } from './components/time-picker.js';
 
+import { t } from './i18n.js';
 let _sseRetryCount = 0;
 let _sse = null;
 let _sseReconnectTimer = null;
@@ -71,15 +72,15 @@ async function checkLcdStatus() {
       if (!data.enabled) {
         badge.textContent = 'LCD: DISABLED';
         badge.className = 'lcd-status-badge lcd-status-disabled';
-        badge.title = 'LCD direct output is disabled in configuration.';
+        badge.title = t('ui.lcd_direct_output_is_disabled', 'LCD direct output is disabled in configuration.');
       } else if (!data.fb_present) {
         badge.textContent = 'LCD: NO /dev/fb0';
         badge.className = 'lcd-status-badge lcd-status-offline';
-        badge.title = 'No framebuffer device detected at /dev/fb0.';
+        badge.title = t('ui.no_framebuffer_device_detected_at', 'No framebuffer device detected at /dev/fb0.');
       } else if (data.screen_off || data.power === false) {
         badge.textContent = 'LCD: SCREEN OFF';
         badge.className = 'lcd-status-badge lcd-status-disabled';
-        badge.title = 'Physical LCD display is turned off (0 FPS).';
+        badge.title = t('ui.physical_lcd_display_is_turned', 'Physical LCD display is turned off (0 FPS).');
       } else if (data.active) {
         badge.textContent = `LCD: ${data.fps} FPS ACTIVE`;
         badge.className = 'lcd-status-badge lcd-status-active';
@@ -87,7 +88,7 @@ async function checkLcdStatus() {
       } else {
         badge.textContent = 'LCD: IDLE';
         badge.className = 'lcd-status-badge lcd-status-offline';
-        badge.title = 'LCD renderer process is offline or initializing.';
+        badge.title = t('ui.lcd_renderer_process_is_offline', 'LCD renderer process is offline or initializing.');
       }
     }
   } catch (e) {

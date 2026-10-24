@@ -10,6 +10,7 @@ import { api } from '../api.js';
 import { showToast } from '../toast.js';
 import { trapFocus, escapeHtml, copyTextToClipboard } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
+import { wireTablists, markCurrent } from './tab-a11y.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { fetchAndRenderAppCatalog, fetchAndRenderDockerContainers, presetCatalogSearch, refreshCatalogCountBadges, startDockerAutoRefresh, stopDockerAutoRefresh } from './management/docker.js';
 import { fetchAndRenderUpsTelemetry, initUpsDrawerControls, loadUpsConfigToDrawer, renderUpsTelemetry } from './management/ups.js';
@@ -234,7 +235,7 @@ export function updateManagementTelemetry(stats) {
         moverEl.textContent = `Active (${m.remain_files || 0} files left)`;
         moverEl.style.color = 'var(--warn)';
       } else {
-        moverEl.textContent = 'Idle';
+        moverEl.textContent = t('ui.idle', 'Idle');
         moverEl.style.color = 'var(--muted)';
       }
     }
@@ -653,6 +654,7 @@ export function initManagement() {
     document.querySelectorAll('.mgmt-sidebar-item').forEach((b) => {
       b.classList.toggle('active', b.dataset.mgmtTarget === 'management-hub-view');
     });
+    markCurrent(document.querySelectorAll('.mgmt-sidebar-item'), (b) => b.dataset.mgmtTarget === 'management-hub-view');
     document.querySelectorAll('.mgmt-detail-card').forEach((c) => (c.style.display = 'none'));
     if (detailContainer) {
       detailContainer.classList.remove('ai-active');
@@ -762,7 +764,7 @@ export function initManagement() {
       if (wrapCatalog) wrapCatalog.style.display = 'block';
       if (btnContainers) {
         btnContainers.style.display = 'inline-flex';
-        btnContainers.textContent = '← Back to Containers';
+        btnContainers.textContent = t('ui.back_to_containers', '← Back to Containers');
         btnContainers.classList.remove('active');
       }
       if (btnCatalog) btnCatalog.classList.add('active');
@@ -911,11 +913,11 @@ export function initManagement() {
                 </div>
                 <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
                   ${isRunning
-                    ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1;" title="Stop VM">⏹ Stop</button>`
-                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1; color: var(--ok2);" title="Start VM">▶ Start</button>`
+                    ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1;" title="${t('ui.stop_vm', 'Stop VM')}">⏹ Stop</button>`
+                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1; color: var(--ok2);" title="${t('ui.start_vm', 'Start VM')}">▶ Start</button>`
                   }
-                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex: 1; color: var(--accent-cyan);" title="Open Web Console">📺 Console</button>
-                  <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" title="Edit VM Config">⚙️</button>
+                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex: 1; color: var(--accent-cyan);" title="${t('ui.open_web_console', 'Open Web Console')}">📺 Console</button>
+                  <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.edit_vm_config', 'Edit VM Config')}">⚙️</button>
                 </div>
               </div>
             `;
@@ -933,7 +935,7 @@ export function initManagement() {
               } catch (err) {
                 showToast(t('toast.failed_to_start_vm', 'Failed to start VM: {error}', { error: err.message }), 'error');
                 btn.disabled = false;
-                btn.textContent = '▶ Start';
+                btn.textContent = t('ui.start', '▶ Start');
               }
             });
           });
@@ -950,7 +952,7 @@ export function initManagement() {
               } catch (err) {
                 showToast(t('toast.failed_to_stop_vm', 'Failed to stop VM: {error}', { error: err.message }), 'error');
                 btn.disabled = false;
-                btn.textContent = '⏹ Stop';
+                btn.textContent = t('ui.stop', '⏹ Stop');
               }
             });
           });
@@ -1065,6 +1067,7 @@ export function initManagement() {
     document.querySelectorAll('.mgmt-category-tab').forEach((t) => t.classList.remove('active'));
     if (targetTab) targetTab.classList.add('active');
 
+    markCurrent(document.querySelectorAll('.mgmt-sidebar-item'), (b) => b.dataset.mgmtTarget === targetId);
     document.querySelectorAll('.mgmt-sidebar-item').forEach((b) => {
       const isActive = b.dataset.mgmtTarget === targetId;
       b.classList.toggle('active', isActive);
@@ -1202,6 +1205,8 @@ export function initManagement() {
       saveOpenWindowsState();
     });
   });
+
+  wireTablists(document.getElementById('management-window') || document);
 
   document.querySelectorAll('.mgmt-sidebar-item').forEach((item) => {
     item.addEventListener('click', () => {
@@ -1679,7 +1684,7 @@ export function initManagement() {
         try {
           if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
+            submitBtn.textContent = t('ui.saving', 'Saving...');
           }
           const tType = document.getElementById('repl-target-type')?.value || 'local';
           const payload = {
@@ -1706,7 +1711,7 @@ export function initManagement() {
         } finally {
           if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Pipeline';
+            submitBtn.textContent = t('ui.save_pipeline', 'Save Pipeline');
           }
         }
       });

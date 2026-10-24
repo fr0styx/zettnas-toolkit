@@ -1808,7 +1808,7 @@ export function updateCopyToast(copyState) {
       statusText = 'SUCCESS!';
       barColor = 'var(--ok)';
       if ($('copy-toast-bar')) $('copy-toast-bar').style.width = '100%';
-      if ($('copy-toast-pct')) $('copy-toast-pct').textContent = '100%';
+      if ($('copy-toast-pct')) $('copy-toast-pct').textContent = t('preview.actual_size', '100%');
     } else if (copyState.status === 'error') {
       statusText = 'FAILED!';
       barColor = 'var(--crit)';
@@ -1836,7 +1836,7 @@ export function updateCopyToast(copyState) {
         }
         if ($('copy-toast-time')) $('copy-toast-time').textContent = `${filesLeftStr}${mbps} MB/s • ~${mins}m ${secs}s`;
       } else {
-        if ($('copy-toast-time')) $('copy-toast-time').textContent = 'Estimating time...';
+        if ($('copy-toast-time')) $('copy-toast-time').textContent = t('ui.estimating_time', 'Estimating time...');
       }
     } else {
       if ($('copy-toast-time')) $('copy-toast-time').textContent = '';

@@ -1,0 +1,47 @@
+{
+ "light-desktop": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-about": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-backups": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-docker": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-events": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-language": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-network": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-notifications": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-security": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-storage-disks": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-storage-remotes": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-storage-shares": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-users": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-vms-list": [
+  "color-contrast"
+ ],
+ "light-mgmt-pane-wallpaper": [
+  "color-contrast"
+ ]
+}

@@ -78,9 +78,9 @@ export function initContainersManager() {
             <span data-i18n="dock.containers">${t('dock.containers', 'Containers')}</span>
           </div>
           <div class="os-window-controls">
-            <button class="win-btn min-btn" id="containers-min" title="Minimize" aria-label="Minimize"></button>
-            <button class="win-btn max-btn" id="containers-max" title="Maximize" aria-label="Maximize"></button>
-            <button class="win-btn close-btn" id="containers-close" title="Close" aria-label="Close"></button>
+            <button class="win-btn min-btn" id="containers-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+            <button class="win-btn max-btn" id="containers-max" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+            <button class="win-btn close-btn" id="containers-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
         </div>
 
@@ -107,19 +107,19 @@ export function initContainersManager() {
 
             <!-- Quick Action Buttons -->
             <div class="cw-action-btns-wrap" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <button id="btn-cw-check-updates" class="btn-pill-toggle" title="Check remote registries for container image updates">
+              <button id="btn-cw-check-updates" class="btn-pill-toggle" title="${t('ui.check_remote_registries_for_container', 'Check remote registries for container image updates')}">
                 <span style="color: var(--ok2, #25c2a0);">✓</span> <span>Check Updates</span>
               </button>
-              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: #fbbf24; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="Update all containers with available image updates">
+              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: #fbbf24; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
                 <span>↑</span> <span>Update All (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
-              <button id="btn-cw-stacks" class="btn-pill-toggle" title="Manage Docker Compose Stacks" style="color: var(--accent-cyan, #38bdf8);">
+              <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--accent-cyan, #38bdf8);">
                 <span>📁</span> <span>Compose Stacks</span>
               </button>
               <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}">
                 <span>🕸️</span> <span data-i18n="cw.netmap_btn">${t('cw.netmap_btn', 'Network Map')}</span>
               </button>
-              <button id="btn-cw-prune" class="btn-pill-toggle" title="Clean up unused container images, stopped containers, and volumes">
+              <button id="btn-cw-prune" class="btn-pill-toggle" title="${t('ui.clean_up_unused_container_images', 'Clean up unused container images, stopped containers, and volumes')}">
                 <span>🧹</span> <span>Prune</span>
               </button>
               <button id="btn-cw-catalog" class="btn-save-preset" style="background: #0369a1; border-color: rgba(14, 165, 233, 0.4); color: #fff; font-weight: 700;">
@@ -150,23 +150,23 @@ export function initContainersManager() {
             <table class="copy-history-table docker-table responsive-cards">
               <thead>
                 <tr>
-                  <th class="cw-sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Name">
-                    <input type="checkbox" id="cw-docker-select-all" title="Select All Containers" style="margin: 0 6px 0 0; cursor: pointer; accent-color: var(--brand, #0ea5e9); vertical-align: middle;">
+                  <th class="cw-sortable-th" data-sort-col="name" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_name', 'Click to sort by Name')}">
+                    <input type="checkbox" id="cw-docker-select-all" title="${t('ui.select_all_containers', 'Select All Containers')}" style="margin: 0 6px 0 0; cursor: pointer; accent-color: var(--brand, #0ea5e9); vertical-align: middle;">
                     <span data-i18n="mgmt.tbl_name">${t('mgmt.tbl_name', 'Name')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
-                  <th class="cw-sortable-th" data-sort-col="stack" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Stack / Type">
+                  <th class="cw-sortable-th" data-sort-col="stack" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_stack', 'Click to sort by Stack / Type')}">
                     <span data-i18n="mgmt.tbl_stack">${t('mgmt.tbl_stack', 'Stack / Type')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
-                  <th class="cw-sortable-th" data-sort-col="hardware" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Hardware">
+                  <th class="cw-sortable-th" data-sort-col="hardware" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_hardware', 'Click to sort by Hardware')}">
                     <span data-i18n="mgmt.tbl_hardware">${t('mgmt.tbl_hardware', 'Hardware')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
-                  <th class="cw-sortable-th" data-sort-col="cpu" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by CPU / RAM">
+                  <th class="cw-sortable-th" data-sort-col="cpu" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_cpu', 'Click to sort by CPU / RAM')}">
                     <span data-i18n="mgmt.tbl_telemetry">${t('mgmt.tbl_telemetry', 'CPU / RAM')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
-                  <th class="cw-sortable-th" data-sort-col="ports" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Ports & Web UI">
+                  <th class="cw-sortable-th" data-sort-col="ports" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_ports', 'Click to sort by Ports & Web UI')}">
                     <span data-i18n="mgmt.tbl_ports">${t('mgmt.tbl_ports', 'Ports & Web UI')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
-                  <th class="cw-sortable-th" data-sort-col="status" role="columnheader" aria-sort="none" tabindex="0" title="Click to sort by Status & Uptime">
+                  <th class="cw-sortable-th" data-sort-col="status" role="columnheader" aria-sort="none" tabindex="0" title="${t('ui.click_to_sort_by_status', 'Click to sort by Status & Uptime')}">
                     <span data-i18n="mgmt.tbl_uptime">${t('mgmt.tbl_uptime', 'Status & Uptime')}</span><span class="docker-sort-indicator" aria-hidden="true"></span>
                   </th>
                   <th style="text-align: right;" data-i18n="mgmt.tbl_actions">${t('mgmt.tbl_actions', 'Actions')}</th>
@@ -178,7 +178,7 @@ export function initContainersManager() {
             </table>
           </div>
           <!-- Sticky Bottom Horizontal Scrollbar (Sticky to viewport bottom) -->
-          <div class="docker-table-sticky-scroll" id="cw-docker-table-sticky-scroll" style="display:none;" aria-label="Horizontal scrollbar (bottom)" title="Scroll table horizontally">
+          <div class="docker-table-sticky-scroll" id="cw-docker-table-sticky-scroll" style="display:none;" aria-label="${t('ui.horizontal_scrollbar_bottom', 'Horizontal scrollbar (bottom)')}" title="${t('ui.scroll_table_horizontally', 'Scroll table horizontally')}">
             <div class="docker-table-sticky-scroll-inner" id="cw-docker-table-sticky-scroll-inner"></div>
           </div>
           <div id="cw-docker-bulk-bar" class="docker-floating-bulk-bar" style="display: none;">
@@ -187,13 +187,13 @@ export function initContainersManager() {
               <span>selected</span>
             </div>
             <div class="bulk-bar-actions">
-              <button class="btn-bulk-action" data-bulk="start" title="Start selected containers">▶ Start</button>
-              <button class="btn-bulk-action" data-bulk="stop" title="Stop selected containers">⏹ Stop</button>
-              <button class="btn-bulk-action" data-bulk="restart" title="Restart selected containers">🔄 Restart</button>
-              <button class="btn-bulk-action" data-bulk="pause" title="Pause selected containers">⏸ Pause</button>
-              <button class="btn-bulk-action" data-bulk="unpause" title="Resume selected containers">⏵ Resume</button>
-              <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="Delete selected containers">🗑️ Delete</button>
-              <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="Deselect all">✕</button>
+              <button class="btn-bulk-action" data-bulk="start" title="${t('ui.start_selected_containers', 'Start selected containers')}">▶ Start</button>
+              <button class="btn-bulk-action" data-bulk="stop" title="${t('ui.stop_selected_containers', 'Stop selected containers')}">⏹ Stop</button>
+              <button class="btn-bulk-action" data-bulk="restart" title="${t('ui.restart_selected_containers', 'Restart selected containers')}">🔄 Restart</button>
+              <button class="btn-bulk-action" data-bulk="pause" title="${t('ui.pause_selected_containers', 'Pause selected containers')}">⏸ Pause</button>
+              <button class="btn-bulk-action" data-bulk="unpause" title="${t('ui.resume_selected_containers', 'Resume selected containers')}">⏵ Resume</button>
+              <button class="btn-bulk-action btn-bulk-delete" data-bulk="delete" title="${t('ui.delete_selected_containers', 'Delete selected containers')}">🗑️ Delete</button>
+              <button class="btn-bulk-action btn-bulk-cancel" data-bulk="cancel" title="${t('ui.deselect_all', 'Deselect all')}">✕</button>
             </div>
           </div>
           <div id="cw-docker-catalog-wrap" style="display: none; flex-direction: column; gap: 14px;">
@@ -208,7 +208,7 @@ export function initContainersManager() {
                 <button class="btn-pill-toggle cw-cat-btn" data-cat="downloaders">Downloaders</button>
               </div>
               <div style="position: relative;">
-                <input type="text" id="cw-catalog-search-input" placeholder="Search templates, apps, images..." class="tz-text-input" style="font-size: 11px; padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
+                <input type="text" id="cw-catalog-search-input" placeholder="${t('ui.search_templates_apps_images', 'Search templates, apps, images...')}" class="tz-text-input" style="font-size: 11px; padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
               </div>
             </div>
             <div id="cw-catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">

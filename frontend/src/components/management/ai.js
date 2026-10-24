@@ -327,7 +327,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
                 ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:11px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
                 : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:11px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
             }
-            <button type="button" class="btn-pill-toggle btn-ai-remove-model is-danger is-small" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="Remove model from catalog and disk" aria-label="Remove model ${escapeHtml(m.name)}">🗑️</button>
+            <button type="button" class="btn-pill-toggle btn-ai-remove-model is-danger is-small" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="${t('ui.remove_model_from_catalog_and', 'Remove model from catalog and disk')}" aria-label="Remove model ${escapeHtml(m.name)}">🗑️</button>
           </div>
         </div>
       </div>
@@ -827,8 +827,8 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
           <span style="font-size:11px; padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(37,194,160,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
             ${inStandby ? `💤 Standby${dev ? ` (${escapeHtml(dev)})` : ''}` : `🟢 Running${dev ? ` (${escapeHtml(dev)})` : ''}`}
           </span>
-          <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="Sync this folder now (Standby Safe)" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:11px; padding:0 2px;">🔄</button>
-          <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="Uncheck folder from RAG watched list" style="background:transparent; border:none; color:#f87171; cursor:pointer; font-size:11px; font-weight:800; padding:0 2px;">✕</button>
+          <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.sync_this_folder_now_standby', 'Sync this folder now (Standby Safe)')}" style="background:transparent; border:none; color:#38bdf8; cursor:pointer; font-size:11px; padding:0 2px;">🔄</button>
+          <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.uncheck_folder_from_rag_watched', 'Uncheck folder from RAG watched list')}" style="background:transparent; border:none; color:#f87171; cursor:pointer; font-size:11px; font-weight:800; padding:0 2px;">✕</button>
           <button type="button" class="btn-ai-forget-folder" data-folder-path="${escapeHtml(fp)}" title="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" aria-label="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" style="background:transparent; border:none; color:#fca5a5; cursor:pointer; font-size:11px; padding:0 2px;">🗑</button>
         </div>
       `;
@@ -946,12 +946,12 @@ export async function flushAiIndex() {
     ),
     async () => {
       const feedbackEl = document.getElementById('ai-index-run-feedback');
-      if (feedbackEl) feedbackEl.textContent = '⏳ Flushing RAG index database...';
+      if (feedbackEl) feedbackEl.textContent = t('ui.flushing_rag_index_database', '⏳ Flushing RAG index database...');
       showToast(t('toast.flushing_rag_index_database', 'Flushing RAG index database...'), 'info');
       try {
         const res = await api.post('/api/ai/index/flush');
         await fetchAndRenderAiStatus();
-        if (feedbackEl) feedbackEl.textContent = '✓ RAG database flushed clean. Ready for fresh sync.';
+        if (feedbackEl) feedbackEl.textContent = t('ui.rag_database_flushed_clean_ready', '✓ RAG database flushed clean. Ready for fresh sync.');
         showToast(
           t('ai.flush_index_success_toast', 'RAG index database successfully flushed clean. Ready for fresh sync.'),
           'success'
@@ -1975,7 +1975,7 @@ export async function fetchAndRenderAiStatus() {
         <div>• <strong>Deferred Standby Queue:</strong> ${defCount} path(s) waiting for drive wake${defDetail}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <span>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
-          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
+          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Flush existing RAG index, vector embeddings, and search catalog to start fresh')}"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
         </div>
       `;
       const flushLink = dbSummary.querySelector('#btn-ai-flush-index-link');
@@ -2158,7 +2158,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
             <span>${res.elapsed_ms || llmTel.elapsed_ms || 0} ms</span>
             <span>•</span>
             <span style="color: #6ee7b7;">💤 Standby Safe</span>
-            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle is-small" style="margin-left: 4px;" title="Hide synthesis card">✕</button>
+            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle is-small" style="margin-left: 4px;" title="${t('ui.hide_synthesis_card', 'Hide synthesis card')}">✕</button>
           </div>
         </div>
         <div style="font-size: 12px; color: #f1f5f9; line-height: 1.55; max-height: 150px; overflow-y: auto;">
@@ -2296,7 +2296,7 @@ export function renderAiPreviewInspector(item) {
       <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: #fff;">
         👁️ Open File
       </button>
-      <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: #6ee7b7;" title="Open parent folder in File Manager">
+      <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: #6ee7b7;" title="${t('ui.open_parent_folder_in_file', 'Open parent folder in File Manager')}">
         📂 Open Location
       </button>
       <button type="button" id="btn-ai-inspector-download" class="btn-pill-toggle">
@@ -2631,10 +2631,10 @@ function _bindAiConfirmHandler() {
     const status = row?.querySelector('.ai-chat-action-status');
     row?.querySelectorAll('button').forEach((b) => { b.disabled = true; });
     if (btn.dataset.decision === 'cancel') {
-      if (status) status.textContent = 'Cancelled';
+      if (status) status.textContent = t('jobs.status_cancelled', 'Cancelled');
       return;
     }
-    if (status) status.textContent = 'Running...';
+    if (status) status.textContent = t('ui.running', 'Running...');
     try {
       const out = await api.post(`/api/ai/actions/${encodeURIComponent(actionId)}/confirm`, {});
       const ok = out && out.status === 'ok';
@@ -2663,7 +2663,7 @@ function _buildAiActionProposalsHtml(toolsCalled) {
 function _buildAiExternalNoteHtml(res) {
   const ext = Array.isArray(res?.external_services) ? res.external_services : [];
   if (!ext.length) return '';
-  return `<div class="ai-chat-external-note" style="font-size:11px; color:#fbbf24; padding-top:2px;" title="This answer used services outside your NAS">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
+  return `<div class="ai-chat-external-note" style="font-size:11px; color:#fbbf24; padding-top:2px;" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
 }
 
 // Remember the Web toggle per browser (a convenience; the server default is off).
@@ -2733,7 +2733,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         </div>
         ${groundingScore === null ? `
           <div style="display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="This answer's support in the sources wasn't measured.">Unverified</span>
+            <span style="font-size: 11px; font-weight: 700; color: #cbd5e1; background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">Unverified</span>
           </div>
         ` : ''}
         ${groundingScore !== null ? `
@@ -2910,8 +2910,8 @@ export async function fetchAndRenderAiConversations(searchQuery = '') {
             <span class="ai-thread-title-text" title="${escapeHtml(c.title || 'New Conversation')}">${escapeHtml(c.title || 'New Conversation')}</span>
             <div class="ai-thread-actions">
               <button type="button" class="btn-ai-thread-action btn-ai-thread-pin" data-conv-id="${escapeHtml(c.id)}" data-pinned="${c.is_pinned ? '1' : '0'}" title="${pinTitle}">${pinIcon}</button>
-              <button type="button" class="btn-ai-thread-action btn-ai-thread-rename" data-conv-id="${escapeHtml(c.id)}" title="Rename">✏️</button>
-              <button type="button" class="btn-ai-thread-action btn-ai-thread-del" data-conv-id="${escapeHtml(c.id)}" title="Delete">🗑️</button>
+              <button type="button" class="btn-ai-thread-action btn-ai-thread-rename" data-conv-id="${escapeHtml(c.id)}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>
+              <button type="button" class="btn-ai-thread-action btn-ai-thread-del" data-conv-id="${escapeHtml(c.id)}" title="${t('vm.delete', 'Delete')}">🗑️</button>
             </div>
           </div>
         `;
@@ -3114,7 +3114,7 @@ export async function deleteAiConversation(convId) {
           _activeConversationId = null;
           _activeConversationTitle = 'New Conversation';
           const titleEl = document.getElementById('ai-chat-active-title');
-          if (titleEl) titleEl.textContent = 'New Conversation';
+          if (titleEl) titleEl.textContent = t('ui.new_conversation', 'New Conversation');
           const listEl = document.getElementById('ai-chat-messages-list');
           if (listEl) listEl.innerHTML = '';
           _aiChatHistory = [];

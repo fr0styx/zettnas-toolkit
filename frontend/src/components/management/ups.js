@@ -352,14 +352,14 @@ export async function saveUpsConfigFromDrawer() {
 
     const statusEl = document.getElementById('ups-save-status');
     if (statusEl) {
-      statusEl.textContent = 'Saving…';
+      statusEl.textContent = t('ui.saving_2', 'Saving…');
       statusEl.style.display = 'inline-flex';
     }
 
     await api.post('/api/ups/config', payload);
 
     if (statusEl) {
-      statusEl.textContent = '✓ Saved';
+      statusEl.textContent = t('mgmt.ups_auto_saved', '✓ Saved');
       statusEl.style.display = 'inline-flex';
       setTimeout(() => {
         if (statusEl && statusEl.textContent === '✓ Saved') {
@@ -372,7 +372,7 @@ export async function saveUpsConfigFromDrawer() {
     console.warn('Failed to auto-save UPS configuration:', err);
     const statusEl = document.getElementById('ups-save-status');
     if (statusEl) {
-      statusEl.textContent = '✗ Error';
+      statusEl.textContent = t('ui.error_2', '✗ Error');
       setTimeout(() => {
         if (statusEl) statusEl.style.display = 'none';
       }, 3000);
@@ -489,7 +489,7 @@ export function initUpsDrawerControls() {
   btnRefresh?.addEventListener('click', async () => {
     try {
       btnRefresh.disabled = true;
-      btnRefresh.textContent = 'Refreshing...';
+      btnRefresh.textContent = t('ui.refreshing', 'Refreshing...');
       await fetchAndRenderUpsTelemetry();
       await loadUpsConfigToDrawer();
       showToast(t('toast.ups_telemetry_parameters_updated', 'UPS telemetry & parameters updated'), 'info');
@@ -497,7 +497,7 @@ export function initUpsDrawerControls() {
       console.debug('Failed to refresh UPS telemetry:', err);
     } finally {
       btnRefresh.disabled = false;
-      btnRefresh.textContent = '🔄 Refresh';
+      btnRefresh.textContent = t('mgmt.refresh', '🔄 Refresh');
     }
   });
 
@@ -658,7 +658,7 @@ export function initUpsDrawerControls() {
   btnDiscover?.addEventListener('click', async () => {
     try {
       btnDiscover.disabled = true;
-      btnDiscover.textContent = 'Scanning...';
+      btnDiscover.textContent = t('ui.scanning', 'Scanning...');
       const res = await api.post('/api/ups/discover');
       const candidates = res && Array.isArray(res.candidates) ? res.candidates : [];
       if (!discoverContainer) return;
@@ -724,7 +724,7 @@ export function initUpsDrawerControls() {
       showToast(t('toast.auto_discovery_failed', 'Auto-discovery failed: {error}', { error: err.message }), 'error');
     } finally {
       btnDiscover.disabled = false;
-      btnDiscover.textContent = 'Scan Hardware';
+      btnDiscover.textContent = t('mgmt.ups_btn_scan', 'Scan Hardware');
     }
   });
 
@@ -733,7 +733,7 @@ export function initUpsDrawerControls() {
   btnTest?.addEventListener('click', async () => {
     try {
       btnTest.disabled = true;
-      btnTest.textContent = 'Testing...';
+      btnTest.textContent = t('ui.testing', 'Testing...');
       const mode = document.querySelector('input[name="ups-mode"]:checked')?.value || 'auto';
       const host = document.getElementById('ups-cfg-host')?.value.trim() || '127.0.0.1';
       const port = parseInt(document.getElementById('ups-cfg-port')?.value, 10) || 3551;
@@ -754,17 +754,17 @@ export function initUpsDrawerControls() {
 
       if (res && (res.connected || res.success)) {
         showToast(t('toast.connection_successful', 'Connection successful! ({model})', { model: res.model || res.status || 'ONLINE' }), 'success');
-        btnTest.textContent = '✓ Connected';
-        setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
+        btnTest.textContent = t('ui.connected', '✓ Connected');
+        setTimeout(() => { btnTest.textContent = t('mgmt.ups_btn_test_conn', '🔌 Test Connection'); }, 3000);
       } else {
         showToast(t('toast.connection_failed', 'Connection failed: {error}', { error: res.error || 'UPS daemon unreachable' }), 'error');
-        btnTest.textContent = '✗ Failed';
-        setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
+        btnTest.textContent = t('ui.failed', '✗ Failed');
+        setTimeout(() => { btnTest.textContent = t('mgmt.ups_btn_test_conn', '🔌 Test Connection'); }, 3000);
       }
     } catch (err) {
       showToast(t('toast.connection_test_error', 'Connection test error: {error}', { error: err.message }), 'error');
-      btnTest.textContent = '✗ Error';
-      setTimeout(() => { btnTest.textContent = '🔌 Test Connection'; }, 3000);
+      btnTest.textContent = t('ui.error_2', '✗ Error');
+      setTimeout(() => { btnTest.textContent = t('mgmt.ups_btn_test_conn', '🔌 Test Connection'); }, 3000);
     } finally {
       btnTest.disabled = false;
     }

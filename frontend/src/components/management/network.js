@@ -84,8 +84,8 @@ export async function fetchAndRenderReplication() {
             <td>${j.retention_count || 7} snaps</td>
             <td><span class="mgmt-app-pill ${j.enabled ? 'text-emerald' : 'text-muted'}">${j.enabled ? 'Active' : 'Disabled'}</span></td>
             <td style="text-align:right;">
-              <button class="btn-pill-toggle btn-run-repl is-small" data-id="${escapeHtml(j.id)}" style="margin-right: 4px;" title="Execute Replication Now">▶ Run</button>
-              <button class="btn-pill-toggle btn-del-repl is-danger is-small" data-id="${escapeHtml(j.id)}" title="Delete Pipeline">🗑️</button>
+              <button class="btn-pill-toggle btn-run-repl is-small" data-id="${escapeHtml(j.id)}" style="margin-right: 4px;" title="${t('ui.execute_replication_now', 'Execute Replication Now')}">▶ Run</button>
+              <button class="btn-pill-toggle btn-del-repl is-danger is-small" data-id="${escapeHtml(j.id)}" title="${t('ui.delete_pipeline', 'Delete Pipeline')}">🗑️</button>
             </td>
           </tr>
         `;
@@ -97,7 +97,7 @@ export async function fetchAndRenderReplication() {
           const id = btn.dataset.id;
           try {
             btn.disabled = true;
-            btn.textContent = '⏳ Running...';
+            btn.textContent = t('ui.running_2', '⏳ Running...');
             await api.post(`/api/storage/replication/jobs/${encodeURIComponent(id)}/run`);
             showToast(t('toast.replication_pipeline_dispatched', 'Replication pipeline \'{id}\' dispatched.', { id: id }), 'success');
             setTimeout(fetchAndRenderReplication, 1000);
@@ -105,7 +105,7 @@ export async function fetchAndRenderReplication() {
             showToast(t('toast.replication_failed', 'Replication failed: {message}', { message: e.message }), 'error');
           } finally {
             btn.disabled = false;
-            btn.textContent = '▶ Run';
+            btn.textContent = t('ui.run', '▶ Run');
           }
         });
       });
@@ -271,30 +271,30 @@ export async function fetchAndRenderWireguard() {
       const ts = meshData.tailscale;
       if (!ts.installed) {
         if (tsBadgeEl) {
-          tsBadgeEl.textContent = 'Not Installed';
+          tsBadgeEl.textContent = t('ui.not_installed', 'Not Installed');
           tsBadgeEl.style.color = 'var(--muted, #94a3b8)';
           tsBadgeEl.style.borderColor = 'rgba(255,255,255,0.1)';
         }
         if (tsPillEl) {
-          tsPillEl.textContent = 'Daemon Not Found';
+          tsPillEl.textContent = t('ui.daemon_not_found', 'Daemon Not Found');
           tsPillEl.style.color = 'var(--muted, #94a3b8)';
           tsPillEl.style.background = 'rgba(255,255,255,0.06)';
         }
         if (tsDeployBanner) tsDeployBanner.style.display = 'block';
         if (tsFormIntro) {
-          tsFormIntro.textContent = 'Deploy official Tailscale container or provide auth key to connect instantly:';
+          tsFormIntro.textContent = t('ui.deploy_official_tailscale_container_or', 'Deploy official Tailscale container or provide auth key to connect instantly:');
           tsFormIntro.style.color = '#f59e0b';
         }
         if (tsIpEl) tsIpEl.textContent = '--';
         if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
         if (tsTailnetEl) tsTailnetEl.textContent = '--';
         if (tsHostEl) tsHostEl.textContent = '--';
-        if (tsPeersEl) tsPeersEl.textContent = '0 peers';
+        if (tsPeersEl) tsPeersEl.textContent = t('ui.0_peers', '0 peers');
         if (tsConnectForm) tsConnectForm.style.display = 'flex';
         if (tsConnectedView) tsConnectedView.style.display = 'none';
         if (tsDownBtn) tsDownBtn.style.display = 'none';
         if (tsUpBtn) {
-          tsUpBtn.textContent = '⚡ 1-Click Deploy Tailscale';
+          tsUpBtn.textContent = t('net.tailscale_deploy_btn', '⚡ 1-Click Deploy Tailscale');
           tsUpBtn.dataset.mode = 'deploy';
         }
         if (tsExtContainer) {
@@ -307,12 +307,12 @@ export async function fetchAndRenderWireguard() {
         }
       } else if (ts.active) {
         if (tsBadgeEl) {
-          tsBadgeEl.textContent = 'Active (Connected)';
+          tsBadgeEl.textContent = t('ui.active_connected', 'Active (Connected)');
           tsBadgeEl.style.color = 'var(--ok2, #3bf58b)';
           tsBadgeEl.style.borderColor = 'rgba(59,245,139,0.3)';
         }
         if (tsPillEl) {
-          tsPillEl.textContent = 'Connected';
+          tsPillEl.textContent = t('ldap.test_ok', 'Connected');
           tsPillEl.style.color = '#3bf58b';
           tsPillEl.style.background = 'rgba(59,245,139,0.12)';
         }
@@ -331,7 +331,7 @@ export async function fetchAndRenderWireguard() {
         if (tsConnectedView) tsConnectedView.style.display = 'flex';
         if (tsDownBtn) tsDownBtn.style.display = 'inline-block';
         if (tsUpBtn) {
-          tsUpBtn.textContent = '🚀 Connect Tailscale';
+          tsUpBtn.textContent = t('ui.connect_tailscale', '🚀 Connect Tailscale');
           tsUpBtn.dataset.mode = 'connect';
         }
 
@@ -358,11 +358,11 @@ export async function fetchAndRenderWireguard() {
               keyExpiryDisplay.textContent = `⚠️ Expires in ${ts.key_expiry_days} days`;
               keyExpiryDisplay.style.color = '#fbbf24';
             } else {
-              keyExpiryDisplay.textContent = '❌ Key Expired';
+              keyExpiryDisplay.textContent = t('ui.key_expired', '❌ Key Expired');
               keyExpiryDisplay.style.color = '#f87171';
             }
           } else {
-            keyExpiryDisplay.textContent = 'Key Expiry Disabled';
+            keyExpiryDisplay.textContent = t('ui.key_expiry_disabled', 'Key Expiry Disabled');
             keyExpiryDisplay.style.color = 'var(--ok2, #3bf58b)';
           }
         }
@@ -392,12 +392,12 @@ export async function fetchAndRenderWireguard() {
         if (exitNodeToggle) exitNodeToggle.checked = Boolean(ts.advertise_exit_node);
         if (exitNodePill) {
           if (ts.is_exit_node) {
-            exitNodePill.textContent = 'Active (In Use)';
+            exitNodePill.textContent = t('ui.active_in_use', 'Active (In Use)');
             exitNodePill.style.color = '#3bf58b';
             exitNodePill.style.background = 'rgba(59,245,139,0.15)';
             if (exitNodeHint) exitNodeHint.style.display = 'none';
           } else if (ts.exit_node_approved) {
-            exitNodePill.textContent = 'Approved & Available';
+            exitNodePill.textContent = t('ui.approved_available', 'Approved & Available');
             exitNodePill.style.color = '#3bf58b';
             exitNodePill.style.background = 'rgba(59,245,139,0.15)';
             if (exitNodeHint) {
@@ -419,7 +419,7 @@ export async function fetchAndRenderWireguard() {
               exitNodeHint.style.borderColor = 'rgba(245,158,11,0.25)';
             }
           } else {
-            exitNodePill.textContent = 'Inactive';
+            exitNodePill.textContent = t('ui.inactive', 'Inactive');
             exitNodePill.style.color = 'var(--muted)';
             exitNodePill.style.background = 'rgba(255,255,255,0.06)';
             if (exitNodeHint) exitNodeHint.style.display = 'none';
@@ -486,7 +486,7 @@ export async function fetchAndRenderWireguard() {
             taildropList.innerHTML = files
               .map(
                 f => `
-              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="Click to view folder in Files">
+              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
                 <span style="font-weight:600; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
                 <span style="color:var(--muted); font-size:11px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
@@ -522,7 +522,7 @@ export async function fetchAndRenderWireguard() {
         if (tsCopyIpBtn) tsCopyIpBtn.style.display = 'none';
         if (tsTailnetEl) tsTailnetEl.textContent = '--';
         if (tsHostEl) tsHostEl.textContent = '--';
-        if (tsPeersEl) tsPeersEl.textContent = '0 peers';
+        if (tsPeersEl) tsPeersEl.textContent = t('ui.0_peers', '0 peers');
         if (tsConnectForm) tsConnectForm.style.display = 'flex';
         if (tsConnectedView) tsConnectedView.style.display = 'none';
         if (tsDownBtn) tsDownBtn.style.display = 'none';
@@ -549,14 +549,14 @@ export async function fetchAndRenderWireguard() {
             startTailscaleAuthPolling();
           }
           if (tsUpBtn) {
-            tsUpBtn.textContent = '🔗 Log in to Tailscale';
+            tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
             tsUpBtn.dataset.mode = 'login';
             tsUpBtn.dataset.authUrl = ts.auth_url || '';
           }
         } else {
           if (tsAuthPrompt) tsAuthPrompt.style.display = 'none';
           if (tsUpBtn) {
-            tsUpBtn.textContent = '🚀 Connect Tailscale';
+            tsUpBtn.textContent = t('ui.connect_tailscale', '🚀 Connect Tailscale');
             tsUpBtn.dataset.mode = 'connect';
             tsUpBtn.dataset.authUrl = '';
           }
@@ -592,7 +592,7 @@ export async function fetchAndRenderWireguard() {
     try {
       if (btn) {
         btn.disabled = true;
-        btn.textContent = '⏳ Deploying Container...';
+        btn.textContent = t('net.tailscale_deploying', '⏳ Deploying Container...');
       }
       showToast(t('toast.deploying_official_tailscale_container_to_docker', 'Deploying official Tailscale container to Docker...'), 'info');
 
@@ -613,7 +613,7 @@ export async function fetchAndRenderWireguard() {
         if (tsUpBtn) {
           tsUpBtn.dataset.authUrl = res.auth_url;
           tsUpBtn.dataset.mode = 'login';
-          tsUpBtn.textContent = '🔗 Log in to Tailscale';
+          tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
         }
         if (tsCopyAuthUrlBtn) {
           tsCopyAuthUrlBtn.onclick = () => {
@@ -635,7 +635,7 @@ export async function fetchAndRenderWireguard() {
       if (btn) {
         btn.disabled = false;
         if (btn.dataset.mode === 'login') {
-          btn.textContent = '🔗 Log in to Tailscale';
+          btn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
         } else {
           btn.textContent = origText;
         }
@@ -709,7 +709,7 @@ export async function fetchAndRenderWireguard() {
           if (tsAuthLink) tsAuthLink.href = res.auth_url;
           tsUpBtn.dataset.authUrl = res.auth_url;
           tsUpBtn.dataset.mode = 'login';
-          tsUpBtn.textContent = '🔗 Log in to Tailscale';
+          tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
           if (tsCopyAuthUrlBtn) {
             tsCopyAuthUrlBtn.onclick = () => {
               copyText(res.auth_url)
@@ -729,11 +729,11 @@ export async function fetchAndRenderWireguard() {
       } finally {
         tsUpBtn.disabled = false;
         if (tsUpBtn.dataset.mode === 'login') {
-          tsUpBtn.textContent = '🔗 Log in to Tailscale';
+          tsUpBtn.textContent = t('ui.log_in_to_tailscale', '🔗 Log in to Tailscale');
         } else if (tsUpBtn.dataset.mode === 'deploy') {
-          tsUpBtn.textContent = '⚡ 1-Click Deploy Tailscale';
+          tsUpBtn.textContent = t('net.tailscale_deploy_btn', '⚡ 1-Click Deploy Tailscale');
         } else {
-          tsUpBtn.textContent = '🚀 Connect Tailscale';
+          tsUpBtn.textContent = t('ui.connect_tailscale', '🚀 Connect Tailscale');
         }
       }
     });
@@ -792,7 +792,7 @@ export async function fetchAndRenderWireguard() {
         showToast(t('toast.re_authentication_failed', 'Re-authentication failed: {error}', { error: err.message }), 'error');
       } finally {
         btnTsReauth.disabled = false;
-        btnTsReauth.textContent = '⚡ Re-auth';
+        btnTsReauth.textContent = t('net.tailscale_reauth_btn', '⚡ Re-auth');
       }
     });
   }
@@ -821,7 +821,7 @@ export async function fetchAndRenderWireguard() {
     } finally {
       if (btnTsSaveRoutes) {
         btnTsSaveRoutes.disabled = false;
-        btnTsSaveRoutes.textContent = 'Save Subnets';
+        btnTsSaveRoutes.textContent = t('net.tailscale_save_routes', 'Save Subnets');
       }
     }
   }
@@ -981,7 +981,7 @@ export async function fetchAndRenderWireguard() {
         showToast(t('toast.failed_to_fetch_taildrop_files', 'Failed to fetch Taildrop files: {message}', { message: e.message }), 'error');
       } finally {
         btnTsTaildropFetch.disabled = false;
-        btnTsTaildropFetch.textContent = '📥 Fetch';
+        btnTsTaildropFetch.textContent = t('net.tailscale_taildrop_fetch', '📥 Fetch');
       }
     });
   }
@@ -1052,19 +1052,19 @@ export async function fetchAndRenderWireguard() {
           showToast(t('toast.pinged', 'Pinged {ip}: {latency} ({route})', { ip: ip, latency: res.latency, route: res.route || 'direct' }), 'success');
         } else {
           if (resSpan) {
-            resSpan.textContent = '❌ Failed';
+            resSpan.textContent = t('ui.failed_2', '❌ Failed');
             resSpan.style.color = '#f87171';
           }
           showToast(t('toast.ping_failed_or_timed_out', 'Ping {ip} failed or timed out.', { ip: ip }), 'warning');
         }
       } catch (err) {
         if (resSpan) {
-          resSpan.textContent = '❌ Error';
+          resSpan.textContent = t('ui.error_3', '❌ Error');
           resSpan.style.color = '#f87171';
         }
       } finally {
         pingBtn.disabled = false;
-        pingBtn.textContent = '⚡ Ping';
+        pingBtn.textContent = t('ui.ping', '⚡ Ping');
       }
     });
   }
@@ -1126,7 +1126,7 @@ export async function fetchAndRenderWireguard() {
     genBtn.addEventListener('click', async () => {
       try {
         genBtn.disabled = true;
-        genBtn.textContent = '🔑 Generating...';
+        genBtn.textContent = t('ui.generating_2', '🔑 Generating...');
         const cfg = await api.post('/api/network/mesh-vpn/wireguard/client-config', {
           server_endpoint: (window.location.hostname || '127.0.0.1') + ':51820',
           client_address: '10.100.0.2/24',
@@ -1247,7 +1247,7 @@ export async function fetchAndRenderWireguard() {
         showToast(t('toast.failed_to_generate_wireguard_config', 'Failed to generate WireGuard config: {error}', { error: err.message }), 'error');
       } finally {
         genBtn.disabled = false;
-        genBtn.textContent = '🔑 Generate Client .conf';
+        genBtn.textContent = t('ui.generate_client_conf', '🔑 Generate Client .conf');
       }
     });
   }
@@ -1551,7 +1551,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <div>↓ ${rxFmt} / ↑ ${txFmt}</div>
               </td>
               <td style="text-align: right;">
-                <button class="btn-pill-toggle btn-delete-vlan is-danger is-small" data-vlan="${escapeHtml(v.name)}" title="Delete VLAN">🗑</button>
+                <button class="btn-pill-toggle btn-delete-vlan is-danger is-small" data-vlan="${escapeHtml(v.name)}" title="${t('ui.delete_vlan', 'Delete VLAN')}">🗑</button>
               </td>
             </tr>
           `;
@@ -1582,7 +1582,7 @@ export async function fetchAndRenderNetworkTopology() {
                   <svg class="ic" style="width:14px; height:14px;"><use href="#i-chip"/></svg>
                   ${escapeHtml(net.name)}
                   <span class="network-docker-driver">${escapeHtml(net.driver)}</span>
-                  ${net.is_custom ? `<button class="net-docker-delete-btn" data-net-id="${escapeHtml(net.id)}" data-net-name="${escapeHtml(net.name)}" title="Delete Network">🗑</button>` : ''}
+                  ${net.is_custom ? `<button class="net-docker-delete-btn" data-net-id="${escapeHtml(net.id)}" data-net-name="${escapeHtml(net.name)}" title="${t('ui.delete_network', 'Delete Network')}">🗑</button>` : ''}
                 </div>
                 <div class="network-docker-cidr">
                   ${net.subnet ? `Subnet: <strong>${escapeHtml(net.subnet)}</strong>` : ''}
@@ -1774,7 +1774,7 @@ export async function saveNetworkPortConfig() {
 
   if (saveBtn) {
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
+    saveBtn.textContent = t('ui.saving', 'Saving...');
   }
 
   try {
@@ -1844,7 +1844,7 @@ export async function submitDockerNetworkCreate() {
 
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Creating...';
+    submitBtn.textContent = t('ui.creating', 'Creating...');
   }
 
   try {
@@ -1951,7 +1951,7 @@ export async function applyHostIpConfig() {
 
   if (applyBtn) {
     applyBtn.disabled = true;
-    applyBtn.textContent = 'Arming Watchdog...';
+    applyBtn.textContent = t('ui.arming_watchdog', 'Arming Watchdog...');
   }
 
   try {
@@ -2048,7 +2048,7 @@ export async function confirmCanaryConfig() {
   const confirmBtn = document.getElementById('net-canary-confirm-btn');
   if (confirmBtn) {
     confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Confirming...';
+    confirmBtn.textContent = t('ui.confirming', 'Confirming...');
   }
 
   try {
@@ -2070,7 +2070,7 @@ export async function revertCanaryConfig() {
   const revertBtn = document.getElementById('net-canary-revert-btn');
   if (revertBtn) {
     revertBtn.disabled = true;
-    revertBtn.textContent = 'Reverting...';
+    revertBtn.textContent = t('ui.reverting', 'Reverting...');
   }
 
   try {
@@ -2171,7 +2171,7 @@ export async function saveBondConfig() {
 
   if (saveBtn) {
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
+    saveBtn.textContent = t('ui.saving', 'Saving...');
   }
 
   try {
@@ -2270,7 +2270,7 @@ export async function saveBridgeConfig() {
 
   if (saveBtn) {
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
+    saveBtn.textContent = t('ui.saving', 'Saving...');
   }
 
   try {
@@ -2352,7 +2352,7 @@ export async function submitCreateVlan() {
 
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Creating...';
+    submitBtn.textContent = t('ui.creating', 'Creating...');
   }
 
   try {

@@ -62,9 +62,9 @@ export function initVmManager() {
             <span data-i18n="dock.vm_manager">${t('dock.vm_manager', 'Virtual Machines')}</span>
           </div>
           <div class="os-window-controls">
-            <button class="win-btn min-btn" id="vm-min" title="Minimize" aria-label="Minimize"></button>
-            <button class="win-btn max-btn" id="vm-max" title="Maximize" aria-label="Maximize"></button>
-            <button class="win-btn close-btn" id="vm-close" title="Close" aria-label="Close"></button>
+            <button class="win-btn min-btn" id="vm-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+            <button class="win-btn max-btn" id="vm-max" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+            <button class="win-btn close-btn" id="vm-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
         </div>
 
@@ -79,7 +79,7 @@ export function initVmManager() {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                 <span data-i18n="vm.refresh">${t('vm.refresh', 'Refresh')}</span>
               </button>
-              <button id="btn-vm-isos" class="btn-pill-toggle" title="ISO Library & Official Catalog">
+              <button id="btn-vm-isos" class="btn-pill-toggle" title="${t('ui.iso_library_official_catalog', 'ISO Library & Official Catalog')}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
                 <span>ISO Library</span>
               </button>
@@ -98,9 +98,9 @@ export function initVmManager() {
                 <span id="vm-headroom-text" style="color: #38bdf8; font-weight: 700;">--</span>
               </div>
               <div style="height: 10px; border-radius: 5px; background: rgba(255,255,255,0.08); overflow: hidden; display: flex;" id="vm-memory-segments">
-                <div id="vm-seg-running" style="width: 0%; background: #0ea5e9; transition: width 0.3s;" title="Running VMs"></div>
-                <div id="vm-seg-reserve" style="width: 10%; background: #f59e0b; transition: width 0.3s;" title="Host Reserve (Protected)"></div>
-                <div id="vm-seg-headroom" style="width: 0%; background: #10b981; transition: width 0.3s;" title="Available Safe Headroom"></div>
+                <div id="vm-seg-running" style="width: 0%; background: #0ea5e9; transition: width 0.3s;" title="${t('ui.running_vms', 'Running VMs')}"></div>
+                <div id="vm-seg-reserve" style="width: 10%; background: #f59e0b; transition: width 0.3s;" title="${t('ui.host_reserve_protected', 'Host Reserve (Protected)')}"></div>
+                <div id="vm-seg-headroom" style="width: 0%; background: #10b981; transition: width 0.3s;" title="${t('ui.available_safe_headroom', 'Available Safe Headroom')}"></div>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px;">
                 <span>Total Host: <strong id="vm-total-ram" style="color:#fff;">--</strong></span>
@@ -268,7 +268,7 @@ function renderTelemetry(tel) {
     kvmBadge.style.color = '#fbbf24';
     kvmBadge.style.borderColor = 'rgba(245,158,11,0.3)';
   } else if (kvmBadge && tel.kvm) {
-    kvmBadge.innerHTML = `<span>⚡</span> <span>${escapeHtml(tel.kvm.badge || 'KVM Active')}</span> <span style="font-size: 11px; opacity: 0.8; margin-left: 2px;" title="View KVM Diagnostics & Fix">ℹ️</span>`;
+    kvmBadge.innerHTML = `<span>⚡</span> <span>${escapeHtml(tel.kvm.badge || 'KVM Active')}</span> <span style="font-size: 11px; opacity: 0.8; margin-left: 2px;" title="${t('ui.view_kvm_diagnostics_fix', 'View KVM Diagnostics & Fix')}">ℹ️</span>`;
     kvmBadge.style.cursor = 'pointer';
     kvmBadge.onclick = () => openKvmDiagnosticsModal(tel.kvm);
     if (tel.kvm.state === 'active') {
@@ -330,15 +330,15 @@ function renderTelemetry(tel) {
       if (cpu.status === 'nominal') {
         elRatioBadge.style.background = 'rgba(16,185,129,0.2)';
         elRatioBadge.style.color = '#34d399';
-        if (elNote) elNote.textContent = 'Optimal execution. Dedicated physical thread capacity per vCPU.';
+        if (elNote) elNote.textContent = t('ui.optimal_execution_dedicated_physical_thread', 'Optimal execution. Dedicated physical thread capacity per vCPU.');
       } else if (cpu.status === 'moderate_overcommit') {
         elRatioBadge.style.background = 'rgba(245,158,11,0.2)';
         elRatioBadge.style.color = '#fbbf24';
-        if (elNote) elNote.textContent = 'Moderate overcommit. Bursty workloads normal; concurrent spikes may queue.';
+        if (elNote) elNote.textContent = t('ui.moderate_overcommit_bursty_workloads_normal', 'Moderate overcommit. Bursty workloads normal; concurrent spikes may queue.');
       } else {
         elRatioBadge.style.background = 'rgba(239,68,68,0.2)';
         elRatioBadge.style.color = '#f87171';
-        if (elNote) elNote.textContent = 'High thread contention risk. Advised only for idle background appliances.';
+        if (elNote) elNote.textContent = t('ui.high_thread_contention_risk_advised', 'High thread contention risk. Advised only for idle background appliances.');
       }
     }
   }
@@ -475,15 +475,15 @@ function buildVmCardHtml(vm, vms) {
             <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
               ${
                 bootOrder === 'disk'
-                  ? `<span class="vm-boot-order-pill disk" title="Boot order: Virtual disk first">💽 Disk</span>`
-                  : `<span class="vm-boot-order-pill iso" title="Boot order: ISO installer first">💿 ISO First</span>`
+                  ? `<span class="vm-boot-order-pill disk" title="${t('ui.boot_order_virtual_disk_first', 'Boot order: Virtual disk first')}">💽 Disk</span>`
+                  : `<span class="vm-boot-order-pill iso" title="${t('ui.boot_order_iso_installer_first', 'Boot order: ISO installer first')}">💿 ISO First</span>`
               }
               ${
                 isRunning
-                  ? `<span class="qemu-process-badge active" title="QEMU KVM hypervisor process active">● QEMU ${qemuPid ? `(${qemuPid})` : 'Active'}</span>`
+                  ? `<span class="qemu-process-badge active" title="${t('ui.qemu_kvm_hypervisor_process_active', 'QEMU KVM hypervisor process active')}">● QEMU ${qemuPid ? `(${qemuPid})` : 'Active'}</span>`
                   : isPaused
-                  ? `<span class="qemu-process-badge paused" title="QEMU process paused">⏸ QEMU Paused</span>`
-                  : `<span class="qemu-process-badge stopped" title="QEMU process inactive">○ QEMU Stopped</span>`
+                  ? `<span class="qemu-process-badge paused" title="${t('ui.qemu_process_paused', 'QEMU process paused')}">⏸ QEMU Paused</span>`
+                  : `<span class="qemu-process-badge stopped" title="${t('ui.qemu_process_inactive', 'QEMU process inactive')}">○ QEMU Stopped</span>`
               }
               ${stateBadge}
             </div>
@@ -532,12 +532,12 @@ function buildVmCardHtml(vm, vms) {
               <span style="color: rgba(255,255,255,0.15);">|</span>
               <span style="color: #38bdf8; display: inline-flex; align-items: center; gap: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                 <span>${escapeHtml(sshCmd)}</span>
-                <button class="btn-copy-ssh-cmd" data-cmd="${escapeHtml(sshCmd)}" style="background: none; border: none; cursor: pointer; color: var(--muted); padding: 1px 3px; display: inline-flex; align-items: center;" title="Copy SSH Command">
+                <button class="btn-copy-ssh-cmd" data-cmd="${escapeHtml(sshCmd)}" style="background: none; border: none; cursor: pointer; color: var(--muted); padding: 1px 3px; display: inline-flex; align-items: center;" title="${t('vm.copy_ssh', 'Copy SSH Command')}">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
               </span>
             </div>
-            <button class="btn-vm-join-toggle" data-id="${vm.id}" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); border-radius: 4px; color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 6px; cursor: pointer; flex-shrink: 0;" title="Join VM connection options">
+            <button class="btn-vm-join-toggle" data-id="${vm.id}" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); border-radius: 4px; color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 6px; cursor: pointer; flex-shrink: 0;" title="${t('ui.join_vm_connection_options', 'Join VM connection options')}">
               Join ▾
             </button>
           </div>
@@ -568,7 +568,7 @@ function buildVmCardHtml(vm, vms) {
                 ${escapeHtml(vm.ip_address)}
               </span>
               <div style="display: flex; align-items: center; gap: 4px;">
-                <button class="btn-copy-ip" data-ip="${escapeHtml(vm.ip_address)}" style="background: none; border: none; cursor: pointer; color: var(--muted); padding: 2px 4px; display: flex; align-items: center;" title="Copy IP">
+                <button class="btn-copy-ip" data-ip="${escapeHtml(vm.ip_address)}" style="background: none; border: none; cursor: pointer; color: var(--muted); padding: 2px 4px; display: flex; align-items: center;" title="${t('ui.copy_ip', 'Copy IP')}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
               </div>
@@ -644,7 +644,7 @@ function buildVmCardHtml(vm, vms) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               <span>${t('vm.start', 'Start')}</span>
             </button>
-            <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="Edit VM Configuration">
+            <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="${t('ui.edit_vm_configuration', 'Edit VM Configuration')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               <span>Edit</span>
             </button>
@@ -666,15 +666,15 @@ function buildVmCardHtml(vm, vms) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
               <span>${t('vm.pause', 'Pause')}</span>
             </button>
-            <button class="btn-vm-action btn-vm-restart" data-id="${vm.id}" data-act="restart" style="flex: 1;" title="Restart VM">
+            <button class="btn-vm-action btn-vm-restart" data-id="${vm.id}" data-act="restart" style="flex: 1;" title="${t('ui.restart_vm', 'Restart VM')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
               <span>Restart</span>
             </button>
-            <button class="btn-vm-action btn-vm-acpi" data-id="${vm.id}" data-act="stop" style="flex: 1;" title="ACPI Shutdown (Graceful Power Off)">
+            <button class="btn-vm-action btn-vm-acpi" data-id="${vm.id}" data-act="stop" style="flex: 1;" title="${t('ui.acpi_shutdown_graceful_power_off', 'ACPI Shutdown (Graceful Power Off)')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
               <span>Shutdown</span>
             </button>
-            <button class="btn-vm-action btn-vm-stop btn-vm-force-off" data-id="${vm.id}" data-act="force_off" style="flex: 1;" title="Force Stop (Hard Power Cut)">
+            <button class="btn-vm-action btn-vm-stop btn-vm-force-off" data-id="${vm.id}" data-act="force_off" style="flex: 1;" title="${t('ui.force_stop_hard_power_cut', 'Force Stop (Hard Power Cut)')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
               <span>Force Stop</span>
             </button>
@@ -686,7 +686,7 @@ function buildVmCardHtml(vm, vms) {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
               <span>${t('vm.console', 'Console')}</span>
             </button>
-            <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="Edit VM Configuration">
+            <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="${t('ui.edit_vm_configuration', 'Edit VM Configuration')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               <span>Edit</span>
             </button>
@@ -704,15 +704,15 @@ function buildVmCardHtml(vm, vms) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               <span>${t('vm.resume', 'Resume')}</span>
             </button>
-            <button class="btn-vm-action btn-vm-acpi" data-id="${vm.id}" data-act="stop" style="flex: 1;" title="ACPI Shutdown">
+            <button class="btn-vm-action btn-vm-acpi" data-id="${vm.id}" data-act="stop" style="flex: 1;" title="${t('ui.acpi_shutdown', 'ACPI Shutdown')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
               <span>Shutdown</span>
             </button>
-            <button class="btn-vm-action btn-vm-stop btn-vm-force-off" data-id="${vm.id}" data-act="force_off" style="flex: 1;" title="Force Stop">
+            <button class="btn-vm-action btn-vm-stop btn-vm-force-off" data-id="${vm.id}" data-act="force_off" style="flex: 1;" title="${t('ui.force_stop', 'Force Stop')}">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
               <span>Force Stop</span>
             </button>
-            <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="Edit VM Configuration">
+            <button class="btn-vm-action btn-vm-edit" data-id="${vm.id}" title="${t('ui.edit_vm_configuration', 'Edit VM Configuration')}">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               <span>Edit</span>
             </button>
@@ -723,7 +723,7 @@ function buildVmCardHtml(vm, vms) {
           `
               : ''
           }
-          <button type="button" class="btn-vm-more-sheet" data-id="${vm.id}" title="More Actions" style="display:none;">···</button>
+          <button type="button" class="btn-vm-more-sheet" data-id="${vm.id}" title="${t('ui.more_actions', 'More Actions')}" style="display:none;">···</button>
         </div>
       </div>
     `;
@@ -1135,9 +1135,9 @@ export function openVmEditModal(vmId, vmObj = null) {
             <span>Edit VM Configuration: ${escapeHtml(targetVm.name)}</span>
           </div>
           <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
-            <button class="win-btn min-btn" id="vm-edit-modal-min" title="Minimize" aria-label="Minimize"></button>
-            <button class="win-btn max-btn" id="vm-edit-modal-max" title="Maximize" aria-label="Maximize"></button>
-            <button class="win-btn close-btn" id="vm-edit-modal-close" title="Close" aria-label="Close"></button>
+            <button class="win-btn min-btn" id="vm-edit-modal-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+            <button class="win-btn max-btn" id="vm-edit-modal-max" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+            <button class="win-btn close-btn" id="vm-edit-modal-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
         </div>
 
@@ -1151,13 +1151,13 @@ export function openVmEditModal(vmId, vmObj = null) {
 
         <!-- General Info -->
         <div>
-          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
+          <label for="vm-edit-name" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
           <input type="text" id="vm-edit-name" value="${escapeHtml(targetVm.name || '')}" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;" />
         </div>
 
         <div>
-          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Description</label>
-          <input type="text" id="vm-edit-desc" value="${escapeHtml(targetVm.description || '')}" placeholder="Appliance description" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;" />
+          <label for="vm-edit-desc" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Description</label>
+          <input type="text" id="vm-edit-desc" value="${escapeHtml(targetVm.description || '')}" placeholder="${t('ui.appliance_description', 'Appliance description')}" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;" />
         </div>
 
         <!-- Snapshots Quick Launcher -->
@@ -1217,7 +1217,7 @@ export function openVmEditModal(vmId, vmObj = null) {
         <div style="display: flex; flex-direction: column; gap: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 12px;">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label style="font-size: 11px; font-weight: 700; color: var(--muted);">Attached ISO Image (CD-ROM)</label>
+              <label for="vm-edit-iso" style="font-size: 11px; font-weight: 700; color: var(--muted);">Attached ISO Image (CD-ROM)</label>
               ${targetVm.iso_path ? `<span style="font-size: 11px; color: #fbbf24;">💿 Currently Attached</span>` : ''}
             </div>
             <select id="vm-edit-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;">
@@ -1319,7 +1319,7 @@ export function openVmEditModal(vmId, vmObj = null) {
           <div id="vm-edit-custom-usb-wrap" class="usb-custom-row" style="display: none;">
             <input type="text" id="vm-edit-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
             <input type="text" id="vm-edit-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <input type="text" id="vm-edit-custom-desc" class="usb-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-edit-custom-desc" class="usb-custom-desc" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" style="padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
             <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399; cursor: pointer;">
               Add
             </button>
@@ -1620,8 +1620,8 @@ export function openVmEditModal(vmId, vmObj = null) {
     row.className = 'secondary-disk-row';
     row.style.cssText = 'display: flex; gap: 6px; align-items: center;';
     row.innerHTML = `
-      <input type="text" class="disk-name" placeholder="Disk Name" value="${escapeHtml(disk.name || `data-disk-${idx}`)}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-      <input type="number" class="disk-size" min="5" max="4000" placeholder="Size (GB)" value="${disk.size_gb || 50}" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+      <input type="text" class="disk-name" placeholder="${t('ui.disk_name', 'Disk Name')}" value="${escapeHtml(disk.name || `data-disk-${idx}`)}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+      <input type="number" class="disk-size" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="${disk.size_gb || 50}" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
       <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;">
         <option value="virtio" ${disk.bus === 'virtio' ? 'selected' : ''}>virtio</option>
         <option value="sata" ${disk.bus === 'sata' ? 'selected' : ''}>sata</option>
@@ -1742,7 +1742,7 @@ export function openVmEditModal(vmId, vmObj = null) {
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="usb-vidpid-badge">${escapeHtml(dev.vendor_id)}:${escapeHtml(dev.product_id)}</span>
-          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: #f87171; cursor: pointer; padding: 2px 6px; font-size: 12px;" title="Remove device">✕</button>
+          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: #f87171; cursor: pointer; padding: 2px 6px; font-size: 12px;" title="${t('ui.remove_device', 'Remove device')}">✕</button>
         </div>
       `;
       card.querySelector('.btn-remove-usb').onclick = () => {
@@ -1913,7 +1913,7 @@ export function openVmEditModal(vmId, vmObj = null) {
 
       try {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Saving...';
+        submitBtn.textContent = t('ui.saving', 'Saving...');
 
         try {
           if (api.put) {
@@ -1939,7 +1939,7 @@ export function openVmEditModal(vmId, vmObj = null) {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Save Configuration';
+          submitBtn.textContent = t('ui.save_configuration', 'Save Configuration');
         }
       }
     };
@@ -2007,7 +2007,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           <span>Multi-Protocol Connect: ${escapeHtml(name)}</span>
         </div>
-        <button id="vm-connect-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="Close" aria-label="Close">✕</button>
+        <button id="vm-connect-modal-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 4px;" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}">✕</button>
       </div>
 
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px 22px;">
@@ -2348,10 +2348,10 @@ export function openKvmDiagnosticsModal(kvm = null) {
     copyParam.onclick = async () => {
       const ok = await copyToClipboard('--device /dev/kvm');
       if (ok) {
-        copyParam.textContent = '✓ Copied';
+        copyParam.textContent = t('ui.copied_2', '✓ Copied');
         showToast(t('toast.copied_device_dev_kvm_to_clipboard', "Copied '--device /dev/kvm' to clipboard"), 'success');
         setTimeout(() => {
-          copyParam.textContent = 'Copy';
+          copyParam.textContent = t('catalog.copy', 'Copy');
         }, 2000);
       }
     };
@@ -2389,22 +2389,22 @@ export function openVmCreateModal() {
           <span data-i18n="vm.create_btn">${escapeHtml(t('vm.create_btn', 'Create Virtual Machine'))}</span>
         </div>
         <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
-          <button class="win-btn min-btn" id="vm-create-modal-min" title="Minimize" aria-label="Minimize"></button>
-          <button class="win-btn max-btn" id="vm-create-modal-max" title="Maximize" aria-label="Maximize"></button>
-          <button class="win-btn close-btn" id="vm-modal-close" title="Close" aria-label="Close"></button>
+          <button class="win-btn min-btn" id="vm-create-modal-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+          <button class="win-btn max-btn" id="vm-create-modal-max" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+          <button class="win-btn close-btn" id="vm-modal-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
 
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
         <!-- Step 1: General -->
         <div>
-          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
+          <label for="vm-create-name" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
           <input type="text" id="vm-create-name" placeholder="e.g. ubuntu-dev-node" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;" />
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Family</label>
+            <label for="vm-create-os" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Family</label>
             <select id="vm-create-os" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;">
               <option value="linux">Linux (Ubuntu / Debian / Alpine)</option>
               <option value="windows">Microsoft Windows</option>
@@ -2465,7 +2465,7 @@ export function openVmCreateModal() {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label style="font-size: 11px; font-weight: 700; color: var(--muted);">Boot ISO Image</label>
+              <label for="vm-create-iso" style="font-size: 11px; font-weight: 700; color: var(--muted);">Boot ISO Image</label>
               <button type="button" id="btn-browse-iso-catalog" style="background: none; border: none; color: #38bdf8; font-size: 11px; cursor: pointer; padding: 0;">🌐 ISO Catalog</button>
             </div>
             <select id="vm-create-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;">
@@ -2474,7 +2474,7 @@ export function openVmCreateModal() {
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Virtual Disk (GB)</label>
+            <label for="vm-create-disk" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Virtual Disk (GB)</label>
             <input type="number" id="vm-create-disk" min="10" max="2000" value="32" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;" />
           </div>
         </div>
@@ -2557,7 +2557,7 @@ export function openVmCreateModal() {
 
         <!-- Step 6: Network Bridge -->
         <div>
-          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Network Bridge</label>
+          <label for="vm-create-bridge" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Network Bridge</label>
           <select id="vm-create-bridge" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: #1e293b; border: 1px solid rgba(255,255,255,0.12); color: #fff; font-size: 12px; box-sizing: border-box;">
             ${vmBridges.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(b)} (Host Bridge)</option>`).join('')}
           </select>
@@ -2576,7 +2576,7 @@ export function openVmCreateModal() {
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div>
-              <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Video Adapter</label>
+              <label for="vm-create-gpu-driver" style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Video Adapter</label>
               <select id="vm-create-gpu-driver" class="tz-select" style="width: 100%; padding: 6px 8px; border-radius: 4px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;">
                 <option value="virtio-gpu" selected>VirtIO-GPU (Recommended / 3D Accel)</option>
                 <option value="qxl">QXL (SPICE / Standard)</option>
@@ -2620,7 +2620,7 @@ export function openVmCreateModal() {
           <div id="vm-create-custom-usb-wrap" class="usb-custom-row" style="display: none;">
             <input type="text" id="vm-create-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
             <input type="text" id="vm-create-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-            <input type="text" id="vm-create-custom-desc" class="usb-custom-desc" placeholder="Device Label (e.g. Zigbee Dongle)" style="padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+            <input type="text" id="vm-create-custom-desc" class="usb-custom-desc" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" style="padding: 5px 8px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
             <button type="button" id="btn-create-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: #34d399; cursor: pointer;">
               Add
             </button>
@@ -2862,8 +2862,8 @@ export function openVmCreateModal() {
       row.className = 'secondary-disk-row';
       row.style.cssText = 'display: flex; gap: 6px; align-items: center;';
       row.innerHTML = `
-        <input type="text" class="disk-name" placeholder="Disk Name" value="data-disk-${idx}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
-        <input type="number" class="disk-size" min="5" max="4000" placeholder="Size (GB)" value="50" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+        <input type="text" class="disk-name" placeholder="${t('ui.disk_name', 'Disk Name')}" value="data-disk-${idx}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
+        <input type="number" class="disk-size" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="50" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;" />
         <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 11px;">
           <option value="virtio">virtio</option>
           <option value="sata">sata</option>
@@ -2913,7 +2913,7 @@ export function openVmCreateModal() {
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="usb-vidpid-badge">${escapeHtml(dev.vendor_id)}:${escapeHtml(dev.product_id)}</span>
-          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: #f87171; cursor: pointer; padding: 2px 6px; font-size: 12px;" title="Remove device">✕</button>
+          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: #f87171; cursor: pointer; padding: 2px 6px; font-size: 12px;" title="${t('ui.remove_device', 'Remove device')}">✕</button>
         </div>
       `;
       card.querySelector('.btn-remove-usb').onclick = () => {
@@ -3060,7 +3060,7 @@ export function openVmCreateModal() {
       });
 
       btnSubmit.disabled = true;
-      btnSubmit.textContent = 'Provisioning VM...';
+      btnSubmit.textContent = t('ui.provisioning_vm', 'Provisioning VM...');
 
       try {
         await api.post('/api/vms', {
@@ -3093,7 +3093,7 @@ export function openVmCreateModal() {
         showToast(t('toast.failed_to_create_vm', 'Failed to create VM: {error}', { error: err.message }), 'error');
       } finally {
         btnSubmit.disabled = false;
-        btnSubmit.textContent = 'Create Virtual Machine';
+        btnSubmit.textContent = t('vm.create_btn', 'Create Virtual Machine');
       }
     };
   }
@@ -3158,12 +3158,12 @@ export function setConsoleFocus(focused) {
   const pill = consoleWin.querySelector('#vm-console-kbd-pill');
   if (pill) {
     if (focused) {
-      pill.textContent = '⌨️ Captured';
+      pill.textContent = t('ui.captured', '⌨️ Captured');
       pill.style.color = '#38bdf8';
       pill.style.borderColor = 'rgba(14, 165, 233, 0.4)';
       pill.setAttribute('title', 'Keyboard captured by VM console. Click outside or minimize to release.');
     } else {
-      pill.textContent = '⌨️ Click to capture';
+      pill.textContent = t('ui.click_to_capture', '⌨️ Click to capture');
       pill.style.color = 'var(--muted)';
       pill.style.borderColor = 'rgba(255, 255, 255, 0.1)';
       pill.setAttribute('title', 'Keyboard released to desktop. Click console to capture keyboard.');
@@ -4402,9 +4402,9 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             <span id="vm-console-status-pill" class="console-status-pill">● LIVE</span>
           </div>
           <div class="os-window-controls">
-            <button class="win-btn min-btn" id="vm-console-min" title="Minimize" aria-label="Minimize"></button>
-            <button class="win-btn max-btn" id="vm-console-max" title="Maximize" aria-label="Maximize"></button>
-            <button class="win-btn close-btn" id="vm-console-close" title="Close" aria-label="Close"></button>
+            <button class="win-btn min-btn" id="vm-console-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+            <button class="win-btn max-btn" id="vm-console-max" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+            <button class="win-btn close-btn" id="vm-console-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
         </div>
 
@@ -4424,17 +4424,17 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
             <span class="toolbar-stat"><span class="stat-dot-pulse"></span> 60 FPS</span>
             <span class="toolbar-stat" id="vm-console-resolution-stat">${initialMode === 'cli' ? '80 × 25 TTY' : '1920 × 1080'}</span>
             <span class="toolbar-stat" id="vm-console-adapter-stat" style="color: ${initialMode === 'cli' ? '#34d399' : '#38bdf8'};">${initialMode === 'cli' ? 'Serial TTY' : 'VirtIO-GPU'}</span>
-            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: #38bdf8; font-weight: 500; cursor: pointer;" title="Keyboard captured by VM console. Click outside or minimize to release.">⌨️ Captured</span>
+            <span class="toolbar-stat" id="vm-console-kbd-pill" style="color: #38bdf8; font-weight: 500; cursor: pointer;" title="${t('ui.keyboard_captured_by_vm_console', 'Keyboard captured by VM console. Click outside or minimize to release.')}">⌨️ Captured</span>
           </div>
           <div class="console-toolbar-right">
             <button class="btn-console-act" id="btn-vnc-softkbd" title="${t('vm.soft_kbd', 'Keyboard')}">
               <span>⌨️ ${t('vm.soft_kbd', 'Keyboard')}</span>
             </button>
-            <button class="btn-console-act" id="btn-vnc-cad" title="Send Ctrl+Alt+Del">
+            <button class="btn-console-act" id="btn-vnc-cad" title="${t('ui.send_ctrl_alt_del', 'Send Ctrl+Alt+Del')}">
               <span>Ctrl+Alt+Del</span>
             </button>
             <div class="dropdown-sendkey-wrap" style="position: relative;">
-              <button class="btn-console-act" id="btn-vnc-keys" title="Send Special Key">
+              <button class="btn-console-act" id="btn-vnc-keys" title="${t('ui.send_special_key', 'Send Special Key')}">
                 <span>Send Key ▾</span>
               </button>
               <div id="menu-vnc-keys" class="vnc-keys-menu" style="display: none;">
@@ -4445,16 +4445,16 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
                 <button class="vnc-key-item" data-key="F12">F12 (Boot Menu)</button>
               </div>
             </div>
-            <button class="btn-console-act" id="btn-vnc-clipboard" title="Paste text to guest">
+            <button class="btn-console-act" id="btn-vnc-clipboard" title="${t('ui.paste_text_to_guest', 'Paste text to guest')}">
               <span>📋 Paste Text</span>
             </button>
             <button class="btn-console-act" id="btn-vnc-popout" title="${t('vm.popout', 'Separate Window')}">
               <span>↗ ${t('vm.popout', 'Separate Window')}</span>
             </button>
-            <button class="btn-console-act" id="btn-vnc-reconnect" title="Reconnect stream">
+            <button class="btn-console-act" id="btn-vnc-reconnect" title="${t('ui.reconnect_stream', 'Reconnect stream')}">
               <span>↻ Reconnect</span>
             </button>
-            <button class="btn-console-act" id="btn-vnc-fullscreen" title="Toggle Fullscreen">
+            <button class="btn-console-act" id="btn-vnc-fullscreen" title="${t('ctx.fullscreen', 'Toggle Fullscreen')}">
               <span>⛶ Fullscreen</span>
             </button>
           </div>
@@ -4859,7 +4859,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
       if (btnGui) btnGui.classList.remove('active');
       if (resStat) resStat.textContent = '80 × 25 TTY';
       if (adpStat) {
-        adpStat.textContent = 'Serial TTY';
+        adpStat.textContent = t('vm.mode_tty', 'Serial TTY');
         adpStat.style.color = '#34d399';
       }
       if (titleTxt) titleTxt.textContent = `VM Console: ${consoleWin._vmName || vmName} (Serial TTY)`;
@@ -5425,9 +5425,9 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <span>ISO Storage & Official OS Catalog</span>
         </div>
         <div class="os-window-controls">
-          <button class="win-btn min-btn" id="iso-win-min" title="Minimize" aria-label="Minimize"></button>
-          <button class="win-btn max-btn" id="iso-win-max" title="Maximize" aria-label="Maximize"></button>
-          <button class="win-btn close-btn" id="iso-modal-close" title="Close" aria-label="Close"></button>
+          <button class="win-btn min-btn" id="iso-win-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+          <button class="win-btn max-btn" id="iso-win-max" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+          <button class="win-btn close-btn" id="iso-modal-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
 
@@ -5614,7 +5614,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     if (progCard) progCard.style.display = 'block';
     if (progFilename) progFilename.textContent = file.name;
     if (progBar) progBar.style.width = '0%';
-    if (progRate) progRate.textContent = 'Starting upload...';
+    if (progRate) progRate.textContent = t('ui.starting_upload', 'Starting upload...');
 
     const xhr = new XMLHttpRequest();
     let lastTime = Date.now();
@@ -5638,7 +5638,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     xhr.onload = async () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         if (progBar) progBar.style.width = '100%';
-        if (progRate) progRate.textContent = 'Upload Complete';
+        if (progRate) progRate.textContent = t('ui.upload_complete', 'Upload Complete');
         showToast(t('toast.iso_uploaded_successfully_to_mnt_user', 'ISO \'{name}\' uploaded successfully to /mnt/user/isos', { name: file.name }), 'success');
         await loadVmDashboard();
         renderLocalIsoList();
@@ -5657,7 +5657,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
 
     xhr.onerror = () => {
       showToast(t('toast.network_error_while_uploading_iso', 'Network error while uploading ISO'), 'error');
-      if (progRate) progRate.textContent = 'Network Error';
+      if (progRate) progRate.textContent = t('ui.network_error', 'Network Error');
     };
 
     xhr.open('POST', '/api/vms/isos/upload');
@@ -5686,7 +5686,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <div style="display: flex; align-items: center; gap: 8px; margin-left: 12px; flex-shrink: 0;">
             <span style="font-size: 11px; font-weight: 600; color: #94a3b8;">${iso.size_formatted}</span>
             <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(14,165,233,0.18); color: #38bdf8; border-color: rgba(14,165,233,0.35);">▶ Boot VM</button>
-            <button class="btn-pill-toggle btn-delete-iso is-danger" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" title="Delete ISO from storage">🗑</button>
+            <button class="btn-pill-toggle btn-delete-iso is-danger" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" title="${t('ui.delete_iso_from_storage', 'Delete ISO from storage')}">🗑</button>
           </div>
         </div>
       `).join('');
@@ -5753,20 +5753,20 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           }
           if (btn) {
             btn.disabled = true;
-            btn.textContent = '⏳ Downloading...';
+            btn.textContent = t('ui.downloading', '⏳ Downloading...');
           }
         } else if (task.status === 'completed') {
           clearInterval(_isoPollTimers[catalogId]);
           delete _isoPollTimers[catalogId];
           if (targetBar) targetBar.style.width = '100%';
-          if (targetPct) targetPct.textContent = '100%';
+          if (targetPct) targetPct.textContent = t('preview.actual_size', '100%');
           if (targetStat) {
-            targetStat.textContent = 'Downloaded to /mnt/user/isos';
+            targetStat.textContent = t('ui.downloaded_to_mnt_user_isos', 'Downloaded to /mnt/user/isos');
             targetStat.style.color = '#34d399';
           }
           if (btn) {
             btn.disabled = false;
-            btn.textContent = '✓ Ready';
+            btn.textContent = t('ui.ready', '✓ Ready');
             btn.style.background = 'rgba(16,185,129,0.2)';
             btn.style.borderColor = '#34d399';
             btn.style.color = '#34d399';
@@ -5785,7 +5785,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           }
           if (btn) {
             btn.disabled = false;
-            btn.textContent = '⬇ Retry';
+            btn.textContent = t('ui.retry', '⬇ Retry');
             btn.style.opacity = '1';
           }
           showToast(t('toast.download_failed', 'Download failed: {error}', { error: task.error || 'Error' }), 'error');
@@ -5855,13 +5855,13 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       btn.onclick = async () => {
         const id = btn.dataset.id;
         btn.disabled = true;
-        btn.textContent = '⏳ Connecting...';
+        btn.textContent = t('ui.connecting_2', '⏳ Connecting...');
 
         const targetProg = modal.querySelector(`#prog-wrap-${id}`);
         const targetStat = modal.querySelector(`#prog-stat-${id}`);
         if (targetProg) targetProg.style.display = 'block';
         if (targetStat) {
-          targetStat.textContent = 'Contacting download mirror...';
+          targetStat.textContent = t('ui.contacting_download_mirror', 'Contacting download mirror...');
           targetStat.style.color = '#38bdf8';
         }
 
@@ -5882,7 +5882,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             targetStat.style.color = '#ef4444';
           }
           btn.disabled = false;
-          btn.textContent = '⬇ Retry';
+          btn.textContent = t('ui.retry', '⬇ Retry');
         }
       };
     });
@@ -5994,7 +5994,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
           <span>${t('vm.snapshots', 'Snapshots & Rollback')}: ${escapeHtml(targetVm.name)}</span>
         </div>
         <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
-          <button class="win-btn close-btn" id="vm-snap-modal-close" title="Close" aria-label="Close"></button>
+          <button class="win-btn close-btn" id="vm-snap-modal-close" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
 
@@ -6347,7 +6347,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
   if (btnCreateBackup) {
     btnCreateBackup.onclick = async () => {
       btnCreateBackup.disabled = true;
-      btnCreateBackup.textContent = 'Archiving...';
+      btnCreateBackup.textContent = t('ui.archiving', 'Archiving...');
       try {
         await api.post(`/api/vms/${vmId}/backup`, { reason: 'on-demand' });
         showToast(t('toast.hyper_backup_created_for_vm', 'Hyper-backup created for VM \'{name}\'.', { name: targetVm.name }), 'success');
@@ -6356,7 +6356,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         showToast(t('toast.failed_creating_hyper_backup', 'Failed creating hyper-backup: {error}', { error: err.message || err.detail }), 'error');
       } finally {
         btnCreateBackup.disabled = false;
-        btnCreateBackup.textContent = '+ Create Hyper-Backup';
+        btnCreateBackup.textContent = t('ui.create_hyper_backup', '+ Create Hyper-Backup');
       }
     };
   }
@@ -6371,7 +6371,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         return;
       }
       btnSubmit.disabled = true;
-      btnSubmit.textContent = 'Saving...';
+      btnSubmit.textContent = t('ui.saving', 'Saving...');
       try {
         await api.post(`/api/vms/${vmId}/snapshots`, { name, description });
         showToast(t('toast.snapshot_created_successfully', 'Snapshot \'{name}\' created successfully.', { name: name }), 'success');
@@ -6382,7 +6382,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         showToast(t('toast.failed_to_create_snapshot', 'Failed to create snapshot: {error}', { error: err.message || err.detail }), 'error');
       } finally {
         btnSubmit.disabled = false;
-        btnSubmit.textContent = 'Save Snapshot';
+        btnSubmit.textContent = t('ui.save_snapshot', 'Save Snapshot');
       }
     };
   }

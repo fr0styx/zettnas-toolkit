@@ -311,7 +311,7 @@ function _bindDockerEvents() {
     const showCatalogView = () => {
       btnCatalog.classList.add('active');
       btnContainers.style.display = 'inline-flex';
-      btnContainers.textContent = '← Back to Containers';
+      btnContainers.textContent = t('ui.back_to_containers', '← Back to Containers');
       btnContainers.classList.remove('active');
       if (wrapContainers) wrapContainers.style.display = 'none';
       if (wrapCatalog) wrapCatalog.style.display = 'block';
@@ -1189,8 +1189,8 @@ export async function openAppDeployModal(appId) {
               <span id="adm-title" style="font-weight:700; color:#fff; font-size:13px;">Deploy Application Stack</span>
             </div>
             <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
-              <button class="win-btn min-btn" id="adm-min-btn" title="Minimize to Dock" aria-label="Minimize"></button>
-              <button class="win-btn close-btn" id="adm-close-btn" title="Close" aria-label="Close"></button>
+              <button class="win-btn min-btn" id="adm-min-btn" title="${t('ui.minimize_to_dock', 'Minimize to Dock')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+              <button class="win-btn close-btn" id="adm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
             </div>
           </div>
 
@@ -1221,16 +1221,16 @@ export async function openAppDeployModal(appId) {
 
             <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:10px;">
               <div>
-                <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">CONTAINER NAME</label>
+                <label for="adm-name-input" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">CONTAINER NAME</label>
                 <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
               </div>
               <div>
-                <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">HOST PORT MAPPING</label>
+                <label for="adm-port-input" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">HOST PORT MAPPING</label>
                 <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
               </div>
             </div>
             <div>
-              <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
+              <label for="adm-storage-input" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
               <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
             </div>
             <div>
@@ -1461,7 +1461,7 @@ export async function openAppDeployModal(appId) {
     deployConfirmBtn.disabled = false;
     deployConfirmBtn.style.opacity = '1';
     deployConfirmBtn.style.pointerEvents = 'auto';
-    deployConfirmBtn.textContent = '🚀 Deploy & Launch Container';
+    deployConfirmBtn.textContent = t('ui.deploy_launch_container', '🚀 Deploy & Launch Container');
     setDeployButtonTone(deployConfirmBtn, 'brand');
   }
 
@@ -1505,7 +1505,7 @@ export async function openAppDeployModal(appId) {
         banner.style.border = '1px solid var(--ok2, #25c2a0)';
         banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Deploy Alongside:</span> Suggested new container name <strong>${suggestedContainerName}</strong> on available port <strong>${suggestedPort}</strong>.`;
       }
-      if (deployConfirmBtn) deployConfirmBtn.textContent = '🚀 Deploy New Instance';
+      if (deployConfirmBtn) deployConfirmBtn.textContent = t('ui.deploy_new_instance', '🚀 Deploy New Instance');
     } else if (resolveData.conflict_detected) {
       if (nameInput) nameInput.value = appId;
       if (portInput) portInput.value = suggestedPort;
@@ -1555,7 +1555,7 @@ export async function openAppDeployModal(appId) {
     banner.innerHTML = `<span style="color:#ff8080; font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> The existing container <strong>${defaultContainerName}</strong> will be cleanly stopped and replaced on port <strong>${defaultPort}</strong>. Persistent data will be preserved.`;
 
     if (deployConfirmBtn) {
-      deployConfirmBtn.textContent = '🔄 Stop, Replace & Launch';
+      deployConfirmBtn.textContent = t('ui.stop_replace_launch', '🔄 Stop, Replace & Launch');
       setDeployButtonTone(deployConfirmBtn, 'danger');
       deployConfirmBtn.disabled = false;
       deployConfirmBtn.style.opacity = '1';
@@ -1594,7 +1594,7 @@ export async function openAppDeployModal(appId) {
     banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ New Instance Mode:</span> Configuring container <strong>${suggestedContainerName}</strong> on free port <strong>${suggestedPort}</strong> alongside existing instance.`;
 
     if (deployConfirmBtn) {
-      deployConfirmBtn.textContent = '🚀 Deploy New Instance';
+      deployConfirmBtn.textContent = t('ui.deploy_new_instance', '🚀 Deploy New Instance');
       setDeployButtonTone(deployConfirmBtn, 'brand');
       deployConfirmBtn.disabled = false;
       deployConfirmBtn.style.opacity = '1';
@@ -1821,7 +1821,7 @@ export async function openAppDeployModal(appId) {
     if (data.step === 'success') {
       if (progressFill) progressFill.style.width = '100%';
       if (progressPct) {
-        progressPct.textContent = '100%';
+        progressPct.textContent = t('preview.actual_size', '100%');
         progressPct.style.color = 'var(--ok2, #25c2a0)';
       }
       if (progressTitle) progressTitle.textContent = `✓ ${appId.toUpperCase()} Deployed!`;
@@ -1846,7 +1846,7 @@ export async function openAppDeployModal(appId) {
       }
       if (closeProgressBtn) {
         closeProgressBtn.style.display = 'inline-block';
-        closeProgressBtn.textContent = '✓ Done';
+        closeProgressBtn.textContent = t('ui.done', '✓ Done');
       }
       modal._isDeploying = false;
 
@@ -1869,7 +1869,7 @@ export async function openAppDeployModal(appId) {
         progressSpinner.textContent = '❌';
         progressSpinner.style.animation = 'none';
       }
-      if (progressTitle) progressTitle.textContent = 'Deployment Failed';
+      if (progressTitle) progressTitle.textContent = t('ui.deployment_failed', 'Deployment Failed');
       if (progressStatus) progressStatus.style.color = 'var(--crit, #ff6b6b)';
       if (progressPct) progressPct.style.color = 'var(--crit, #ff6b6b)';
 
@@ -1881,7 +1881,7 @@ export async function openAppDeployModal(appId) {
       if (backConfigBtn) backConfigBtn.style.display = 'inline-block';
       if (closeProgressBtn) {
         closeProgressBtn.style.display = 'inline-block';
-        closeProgressBtn.textContent = 'Close';
+        closeProgressBtn.textContent = t('diagnostics.close_btn', 'Close');
       }
 
       if (DockManager && DockManager.windows['app-deploy']) {
@@ -1952,7 +1952,7 @@ export async function openAppDeployModal(appId) {
     }
     if (progressTitle) progressTitle.textContent = `Deploying ${cName} Stack...`;
     if (progressStatus) {
-      progressStatus.textContent = 'Connecting to Docker daemon...';
+      progressStatus.textContent = t('ui.connecting_to_docker_daemon', 'Connecting to Docker daemon...');
       progressStatus.style.color = 'var(--muted)';
     }
     if (progressSpinner) {
@@ -2060,7 +2060,7 @@ export async function openDockerPruneModal() {
               <span style="font-size:18px;">🧹</span>
               <span style="font-weight:700; color:#fff; font-size:13px;">Docker Storage Prune & Cleanup</span>
             </div>
-            <button class="win-btn close-btn" id="dpm-close-btn" title="Close" aria-label="Close"></button>
+            <button class="win-btn close-btn" id="dpm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
             <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
@@ -2132,7 +2132,7 @@ export async function openDockerPruneModal() {
                 <span id="dpm-progress-msg" class="zn-muted"></span>
                 <strong id="dpm-progress-pct" class="dpm-progress-pct">0%</strong>
               </div>
-              <div class="dpm-bar" id="dpm-bar" role="progressbar" aria-label="Cleanup progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="dpm-bar-fill" id="dpm-bar-fill"></div></div>
+              <div class="dpm-bar" id="dpm-bar" role="progressbar" aria-label="${t('ui.cleanup_progress', 'Cleanup progress')}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="dpm-bar-fill" id="dpm-bar-fill"></div></div>
               <ul class="zn-list" id="dpm-steps"></ul>
               <div class="zn-muted" id="dpm-freed"></div>
             </div>
@@ -2251,7 +2251,7 @@ function setPruneIdle() {
   if (btn) {
     btn.disabled = false;
     btn.dataset.mode = 'start';
-    btn.textContent = '🧹 Run Prune & Reclaim Storage';
+    btn.textContent = t('ui.run_prune_reclaim_storage', '🧹 Run Prune & Reclaim Storage');
   }
   if (cancel) {
     cancel.hidden = false;
@@ -2385,7 +2385,7 @@ export async function openAppSourcesModal() {
               <span style="font-size:18px;">🌐</span>
               <span style="font-weight:700; color:#fff; font-size:13px;">App Template Sources</span>
             </div>
-            <button class="win-btn close-btn" id="asm-close-btn" title="Close" aria-label="Close"></button>
+            <button class="win-btn close-btn" id="asm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
             <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
@@ -2413,11 +2413,11 @@ export async function openAppSourcesModal() {
               <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Add Custom Template Source</div>
               <div style="display:grid; grid-template-columns:1fr 2fr auto; gap:8px; align-items:end;">
                 <div>
-                  <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
-                  <input type="text" id="asm-input-name" placeholder="e.g. Community Apps" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
+                  <label for="asm-input-name" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
+                  <input type="text" id="asm-input-name" placeholder="${t('ui.e_g_community_apps', 'e.g. Community Apps')}" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
                 </div>
                 <div>
-                  <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">TEMPLATE URL (JSON)</label>
+                  <label for="asm-input-url" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">TEMPLATE URL (JSON)</label>
                   <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
                 </div>
                 <div>
@@ -2465,7 +2465,7 @@ export async function openAppSourcesModal() {
     if (btnLissy) {
       btnLissy.onclick = async () => {
         btnLissy.disabled = true;
-        btnLissy.textContent = '⏳ Adding & Syncing...';
+        btnLissy.textContent = t('ui.adding_syncing', '⏳ Adding & Syncing...');
         try {
           await api.post('/api/docker/catalog/sources', {
             name: 'Lissy93 Templates',
@@ -2477,7 +2477,7 @@ export async function openAppSourcesModal() {
         } catch (err) {
           showToast(t('toast.failed_to_add_lissy93_templates', 'Failed to add Lissy93 templates: {error}', { error: err.message }), 'error');
           btnLissy.disabled = false;
-          btnLissy.textContent = '+ Add Lissy93 (790+ Apps)';
+          btnLissy.textContent = t('ui.add_lissy93_790_apps', '+ Add Lissy93 (790+ Apps)');
         }
       };
     }
@@ -2495,22 +2495,22 @@ export async function openAppSourcesModal() {
           statusEl.style.display = 'block';
           statusEl.style.background = 'rgba(239,68,68,0.15)';
           statusEl.style.color = '#fca5a5';
-          statusEl.textContent = 'Please enter both name and URL.';
+          statusEl.textContent = t('ui.please_enter_both_name_and', 'Please enter both name and URL.');
           return;
         }
         btnCustom.disabled = true;
-        btnCustom.textContent = '⏳ Syncing...';
+        btnCustom.textContent = t('ui.syncing_2', '⏳ Syncing...');
         statusEl.style.display = 'block';
         statusEl.style.background = 'rgba(14,165,233,0.15)';
         statusEl.style.color = '#38bdf8';
-        statusEl.textContent = 'Fetching and caching remote templates...';
+        statusEl.textContent = t('ui.fetching_and_caching_remote_templates', 'Fetching and caching remote templates...');
         try {
           await api.post('/api/docker/catalog/sources', { name, url });
           nameInput.value = '';
           urlInput.value = '';
           statusEl.style.background = 'rgba(37,194,160,0.15)';
           statusEl.style.color = 'var(--accent)';
-          statusEl.textContent = '✓ Source added and synced successfully!';
+          statusEl.textContent = t('ui.source_added_and_synced_successfully', '✓ Source added and synced successfully!');
           showToast(t('toast.added_template_source', 'Added template source "{name}"!', { name: name }), 'success');
           setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
           await refreshSourcesUI();
@@ -2522,7 +2522,7 @@ export async function openAppSourcesModal() {
           showToast(t('toast.failed_to_add_source', 'Failed to add source: {error}', { error: err.message }), 'error');
         } finally {
           btnCustom.disabled = false;
-          btnCustom.textContent = '+ Add & Sync';
+          btnCustom.textContent = t('ui.add_sync', '+ Add & Sync');
         }
       };
     }
@@ -2555,13 +2555,13 @@ async function refreshSourcesUI() {
         btnLissy.style.background = 'rgba(37,194,160,0.15)';
         btnLissy.style.color = 'var(--accent)';
         btnLissy.style.border = '1px solid rgba(37,194,160,0.3)';
-        btnLissy.textContent = '✓ Lissy93 Added';
+        btnLissy.textContent = t('ui.lissy93_added', '✓ Lissy93 Added');
       } else {
         btnLissy.disabled = false;
         btnLissy.style.background = 'var(--brand, #0ea5e9)';
         btnLissy.style.color = '#fff';
         btnLissy.style.border = 'none';
-        btnLissy.textContent = '+ Add Lissy93 (790+ Apps)';
+        btnLissy.textContent = t('ui.add_lissy93_790_apps', '+ Add Lissy93 (790+ Apps)');
       }
     }
 
@@ -2599,11 +2599,11 @@ async function refreshSourcesUI() {
             <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:11px; padding:3px 8px; cursor:pointer;">
               ${toggleText}
             </button>
-            <button class="btn-pill-toggle asm-btn-sync is-small" data-sourceid="${escapeHtml(src.id)}" title="Sync Now">
+            <button class="btn-pill-toggle asm-btn-sync is-small" data-sourceid="${escapeHtml(src.id)}" title="${t('ui.sync_now', 'Sync Now')}">
               🔄
             </button>
             ${!isBuiltin ? `
-              <button class="btn-pill-toggle asm-btn-delete is-danger is-small" data-sourceid="${escapeHtml(src.id)}" title="Delete Source">
+              <button class="btn-pill-toggle asm-btn-delete is-danger is-small" data-sourceid="${escapeHtml(src.id)}" title="${t('ui.delete_source', 'Delete Source')}">
                 🗑️
               </button>
             ` : ''}

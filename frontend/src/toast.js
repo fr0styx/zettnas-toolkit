@@ -226,12 +226,12 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
         <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #0ea5e9;" id="confirm-toast-title">
           Confirm Action
         </div>
-        <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="Cancel" aria-label="Close"></button>
+        <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="${t('jobs.cancel', 'Cancel')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
       </div>
       <div style="padding: 16px 20px;">
         <div id="confirm-toast-msg" style="font-size: 12.5px; color: #cbd5e1; line-height: 1.55; word-break: break-word;"></div>
         <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
-          <button id="confirm-toast-eject" style="display: none; padding: 7px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 12px; font-weight: 600; cursor: pointer; margin-right: auto;" title="Safely unmount and eject card">⏏ Eject</button>
+          <button id="confirm-toast-eject" style="display: none; padding: 7px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: #f87171; font-size: 12px; font-weight: 600; cursor: pointer; margin-right: auto;" title="${t('ui.safely_unmount_and_eject_card', 'Safely unmount and eject card')}">⏏ Eject</button>
           <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600; cursor: pointer;">Cancel</button>
           <button id="confirm-toast-ok" style="padding: 7px 18px; background: #0ea5e9; border: 1px solid #0284c7; border-radius: 6px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">Confirm</button>
         </div>
@@ -418,7 +418,7 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
       <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--brand, #00f0ff);" id="confirm-toast-title">
         <span>${icon}</span> ${escapeHtml(title || "Rename")}
       </div>
-      <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="Cancel" aria-label="Close"></button>
+      <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="${t('jobs.cancel', 'Cancel')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
     </div>
     <div style="padding: 16px 20px;">
       <div style="font-size: 12.5px; color: #cbd5e1; margin-bottom: 12px; line-height: 1.5;">${safePromptMsg}</div>

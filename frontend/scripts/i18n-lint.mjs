@@ -3,8 +3,10 @@
 //  - code or markup uses a key that en.js doesn't define;
 //  - a language is missing a key, or has keys en.js doesn't;
 //  - a translation drops or invents a {placeholder};
-//  - more toasts show hard-coded text than the recorded baseline (it can only go down).
-// Run with --update-baseline after converting toasts to t().
+//  - more toasts show hard-coded text than the recorded baseline (it can only go down);
+//  - more titles, placeholders, aria-labels or textContent writes are hard-coded English than
+//    the recorded baseline (UX-9, UX-12; it can only go down).
+// Run with --update-baseline after converting strings to t() or data-i18n-*.
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -24,8 +26,35 @@ function* walk(dir) {
   }
 }
 
-const files = [...walk(join(ROOT, 'frontend/src')), join(ROOT, 'frontend/index.html')];
+// Text a person reads, as opposed to examples like 192.168.1.2, file names or ids.
+function visible(text) {
+  const v = text.trim();
+  if (!/[a-z]/.test(v)) return false;
+  if (/:\/\/|^[\w.+-]+@[\w.-]+$|^\/|^~|^[\w.-]+\.(?:conf|json|ya?ml|sh|py|js|local|lan)$/.test(v)) return false;
+  if (/^e\.g\.?\s*[^\s]+$/.test(v)) return false;
+  if (!/\s/.test(v) && /^[a-z0-9_.:-]+$/.test(v)) return false;
+  if (/^[\d\s.,:%xX×/+-]+[a-zA-Z]{0,3}$/.test(v)) return false;
+  return true;
+}
+const UI_ATTR = /\s(title|placeholder|aria-label)="([^"$<>{}]*)"/g;
+const UI_ASSIGN = /\.(?:textContent|innerText|title|placeholder)\s*=\s*(['"`])((?:(?!\1)[^\\$]|\\.)*)\1\s*;/g;
+function hardcodedUi(src) {
+  let n = 0;
+  for (const m of src.matchAll(UI_ATTR)) {
+    const before = src.slice(Math.max(0, m.index - 400), m.index);
+    const tag = before.slice(before.lastIndexOf('<')) + src.slice(m.index, src.indexOf('>', m.index));
+    if (/\bt\(\s*['"]/.test(m[2])) continue; // a string that calls t() mid-way
+    if (!tag.includes(`data-i18n-${m[1]}`) && visible(m[2])) n++;
+  }
+  for (const m of src.matchAll(UI_ASSIGN)) if (visible(m[2])) n++;
+  return n;
+}
+
+const windowsDir = join(ROOT, 'frontend/src/windows');
+const files = [...walk(join(ROOT, 'frontend/src')), join(ROOT, 'frontend/index.html'),
+  ...readdirSync(windowsDir).filter((f) => f.endsWith('.html')).map((f) => join(windowsDir, f))];
 let rawToasts = 0;
+let rawUi = 0;
 for (const file of files) {
   const src = readFileSync(file, 'utf8');
   const rel = file.slice(ROOT.length + 1);
@@ -38,6 +67,7 @@ for (const file of files) {
     if (!(key in en)) errors.push(`${rel}: key "${key}" is not defined in locales/en.js`);
   }
   rawToasts += [...src.matchAll(/showToast\(\s*['"`]/g)].length;
+  rawUi += hardcodedUi(src);
   if (!rel.endsWith('format.js')) {
     for (const m of src.matchAll(/\.toLocale(?:Date|Time)?String\(/g)) {
       const line = src.slice(0, m.index).split('\n').length;
@@ -58,17 +88,22 @@ for (const [lang, dict] of Object.entries(ALL_TRANSLATIONS)) {
   for (const key of Object.keys(dict)) if (!(key in en)) errors.push(`locales/${lang}.js: "${key}" is not in en.js`);
 }
 
-let baseline = { raw_toasts: Infinity };
+let baseline = { raw_toasts: Infinity, hardcoded_ui: Infinity };
 try {
   baseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
 } catch (e) {
   /* first run */
 }
 if (process.argv.includes('--update-baseline')) {
-  writeFileSync(BASELINE, JSON.stringify({ raw_toasts: rawToasts }, null, 2) + '\n');
-  console.log(`baseline: ${rawToasts} toasts with hard-coded text`);
-} else if (rawToasts > baseline.raw_toasts) {
-  errors.push(`${rawToasts} toasts use hard-coded text (baseline ${baseline.raw_toasts}); use t('key', 'English text')`);
+  writeFileSync(BASELINE, JSON.stringify({ raw_toasts: rawToasts, hardcoded_ui: rawUi }, null, 2) + '\n');
+  console.log(`baseline: ${rawToasts} toasts and ${rawUi} UI strings with hard-coded text`);
+} else {
+  if (rawToasts > baseline.raw_toasts) {
+    errors.push(`${rawToasts} toasts use hard-coded text (baseline ${baseline.raw_toasts}); use t('key', 'English text')`);
+  }
+  if (rawUi > (baseline.hardcoded_ui ?? Infinity)) {
+    errors.push(`${rawUi} titles, placeholders, aria-labels or text writes are hard-coded English (baseline ${baseline.hardcoded_ui}); use t('key', 'English text') or data-i18n-title / -placeholder / -aria-label`);
+  }
 }
 
 if (errors.length) {
@@ -76,4 +111,4 @@ if (errors.length) {
   console.error(`\n${errors.length} translation problem(s).`);
   process.exit(1);
 }
-console.log(`i18n lint: ${Object.keys(en).length} keys in 5 languages, all used keys defined; ${rawToasts} hard-coded toasts (baseline ${baseline.raw_toasts}).`);
+console.log(`i18n lint: ${Object.keys(en).length} keys in 5 languages, all used keys defined; ${rawToasts} hard-coded toasts (baseline ${baseline.raw_toasts}); ${rawUi} hard-coded UI strings (baseline ${baseline.hardcoded_ui}).`);

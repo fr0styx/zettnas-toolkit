@@ -98,6 +98,7 @@ export function initWizardStepper(modal) {
 }
 
 export function initSetupWizard() {
+  window.openSetupWizard = openSetupWizard;
   if (_wizardInitialized) return;
   _wizardInitialized = true;
 
@@ -282,7 +283,7 @@ export function openSetupWizard(stats = null, forced = false) {
     if (skipBtn) skipBtn.style.display = 'inline-block';
     if (closeBtn) {
       closeBtn.style.display = 'inline-block';
-      closeBtn.title = 'Close dialog';
+      closeBtn.title = t('ui.close_dialog', 'Close dialog');
     }
   }
 
@@ -317,7 +318,7 @@ export function openSetupWizard(stats = null, forced = false) {
         hwFans.textContent = `Managed (${fanList.length} Fans Idle / 0 RPM)`;
         hwFans.style.color = 'var(--warn)';
       } else {
-        hwFans.textContent = 'Hardware tachometers unavailable';
+        hwFans.textContent = t('ui.hardware_tachometers_unavailable', 'Hardware tachometers unavailable');
         hwFans.style.color = 'var(--muted)';
       }
     }
@@ -329,7 +330,7 @@ export function openSetupWizard(stats = null, forced = false) {
         hwLeds.textContent = `WS2812B Controller Online (${ledPort || 'Serial'})`;
         hwLeds.style.color = 'var(--ok2)';
       } else {
-        hwLeds.textContent = 'WS2812B Controller Not Detected';
+        hwLeds.textContent = t('ui.ws2812b_controller_not_detected', 'WS2812B Controller Not Detected');
         hwLeds.style.color = 'var(--muted)';
       }
     }

@@ -1591,7 +1591,7 @@ export function toggleFmWindowSwitcher(anchorEl, fmWindows = []) {
   header.className = 'dock-switcher-header';
   header.innerHTML = `
     <span>${t('dock.switcher_title', 'File Explorer Windows')} (${fmWindows.length})</span>
-    <button class="win-btn close-btn" style="width:14px; height:14px;" title="Close" aria-label="Close"></button>
+    <button class="win-btn close-btn" style="width:14px; height:14px;" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
   `;
   header.querySelector('.close-btn').onclick = () => popover.remove();
   popover.appendChild(header);
@@ -1614,7 +1614,7 @@ export function toggleFmWindowSwitcher(anchorEl, fmWindows = []) {
         <span class="dock-switcher-name">${escapeHtml(folderName)}</span>
         ${pathStr ? `<span class="dock-switcher-path">${escapeHtml(pathStr)}</span>` : ''}
       </div>
-      <button class="dock-switcher-close" title="Close Window" aria-label="Close Window">✕</button>
+      <button class="dock-switcher-close" title="${t('dock.close_window', 'Close Window')}" aria-label="${t('dock.close_window', 'Close Window')}">✕</button>
     `;
 
     item.addEventListener('click', (e) => {
@@ -2518,7 +2518,7 @@ export const DockManager = {
 
       if (badgeEl) {
         if (id === 'home') {
-          badgeEl.textContent = 'Desktop';
+          badgeEl.textContent = t('ui.desktop', 'Desktop');
           badgeEl.className = 'dock-tooltip-status active';
         } else if (id === 'notif') {
           const events = (state.latestStats && Array.isArray(state.latestStats.events)) ? state.latestStats.events : [];
@@ -3352,15 +3352,15 @@ export function initSnapAssistFlyout() {
     flyout.innerHTML = `
       <div class="snap-layout-title">Snap Layouts</div>
       <div class="snap-templates-grid">
-        <div class="snap-card" title="Split Screen (1/2)">
-          <button class="snap-slot" data-snap="left" aria-label="Snap Left Half"></button>
-          <button class="snap-slot" data-snap="right" aria-label="Snap Right Half"></button>
+        <div class="snap-card" title="${t('ui.split_screen_1_2', 'Split Screen (1/2)')}">
+          <button class="snap-slot" data-snap="left" aria-label="${t('ui.snap_left_half', 'Snap Left Half')}"></button>
+          <button class="snap-slot" data-snap="right" aria-label="${t('ui.snap_right_half', 'Snap Right Half')}"></button>
         </div>
-        <div class="snap-card snap-card-quad" title="Quarter Grid (1/4)">
-          <button class="snap-slot" data-snap="top-left" aria-label="Snap Top Left"></button>
-          <button class="snap-slot" data-snap="top-right" aria-label="Snap Top Right"></button>
-          <button class="snap-slot" data-snap="bottom-left" aria-label="Snap Bottom Left"></button>
-          <button class="snap-slot" data-snap="bottom-right" aria-label="Snap Bottom Right"></button>
+        <div class="snap-card snap-card-quad" title="${t('ui.quarter_grid_1_4', 'Quarter Grid (1/4)')}">
+          <button class="snap-slot" data-snap="top-left" aria-label="${t('ui.snap_top_left', 'Snap Top Left')}"></button>
+          <button class="snap-slot" data-snap="top-right" aria-label="${t('ui.snap_top_right', 'Snap Top Right')}"></button>
+          <button class="snap-slot" data-snap="bottom-left" aria-label="${t('ui.snap_bottom_left', 'Snap Bottom Left')}"></button>
+          <button class="snap-slot" data-snap="bottom-right" aria-label="${t('ui.snap_bottom_right', 'Snap Bottom Right')}"></button>
         </div>
       </div>
     `;

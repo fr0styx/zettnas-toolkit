@@ -445,11 +445,11 @@ export function initSettings() {
       if (isOff) {
         badge.textContent = 'LCD: SCREEN OFF';
         badge.className = 'lcd-status-badge lcd-status-disabled';
-        badge.title = 'Physical LCD display is turned off (0 FPS).';
+        badge.title = t('ui.physical_lcd_display_is_turned', 'Physical LCD display is turned off (0 FPS).');
       } else {
         badge.textContent = 'LCD: 10 FPS ACTIVE';
         badge.className = 'lcd-status-badge lcd-status-active';
-        badge.title = 'LCD direct output is actively streaming.';
+        badge.title = t('ui.lcd_direct_output_is_actively', 'LCD direct output is actively streaming.');
       }
     }
   }
@@ -628,10 +628,10 @@ export function initSettings() {
 
   if (btnCopySave) {
     btnCopySave.addEventListener('click', async (e) => {
-      btnCopySave.textContent = 'Saving...';
+      btnCopySave.textContent = t('ui.saving', 'Saving...');
       await saveButtonConfig(e);
-      btnCopySave.textContent = 'Saved!';
-      setTimeout(() => { if (btnCopySave) btnCopySave.textContent = '💾 Save Configuration'; }, 2000);
+      btnCopySave.textContent = t('ui.saved', 'Saved!');
+      setTimeout(() => { if (btnCopySave) btnCopySave.textContent = t('settings.btn_save_config', '💾 Save Configuration'); }, 2000);
     });
   }
 
@@ -644,7 +644,7 @@ export function initSettings() {
   const btnMediaRescan = $('btn-media-rescan');
   if (btnMediaRescan) {
     btnMediaRescan.addEventListener('click', async () => {
-      btnMediaRescan.textContent = 'Scanning...';
+      btnMediaRescan.textContent = t('ui.scanning', 'Scanning...');
       try {
         await api.post('/api/copy/rescan');
         ZettEventBus.emit('media:slots_rescanned');
@@ -652,7 +652,7 @@ export function initSettings() {
       } catch (err) {
         showToast(t('toast.scan_failed', 'Scan failed: {error}', { error: err.message || err }), 'error');
       } finally {
-        setTimeout(() => { if (btnMediaRescan) btnMediaRescan.textContent = '🔄 Scan'; }, 1000);
+        setTimeout(() => { if (btnMediaRescan) btnMediaRescan.textContent = t('ui.scan', '🔄 Scan'); }, 1000);
       }
     });
   }
@@ -664,7 +664,7 @@ export function initSettings() {
       const dstPath = btnCopyDst ? btnCopyDst.value : '/mnt/user/';
       btnMediaCopyNow.disabled = true;
       const origText = btnMediaCopyNow.textContent;
-      btnMediaCopyNow.textContent = 'Starting...';
+      btnMediaCopyNow.textContent = t('ui.starting', 'Starting...');
       try {
         await api.post('/api/copy/start', {
           source: srcSlot,
@@ -915,7 +915,7 @@ export function initSettings() {
         email: $('sec-email') ? $('sec-email').value : ''
       };
 
-      secSaveBtn.textContent = 'SAVING...';
+      secSaveBtn.textContent = t('setup.saving', 'SAVING...');
       try {
         await api.post('/api/security', payload);
         showToast(t('mgmt.sec_saved', 'Security settings updated successfully.'), 'success');

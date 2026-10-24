@@ -112,7 +112,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         showToast(t('toast.test_error', 'Test error: {error}', { error: err.message }), "error");
-        if (testStatus) testStatus.textContent = "Error";
+        if (testStatus) testStatus.textContent = t('ui.error', 'Error');
       }
     }
 
@@ -412,7 +412,7 @@ export function updateSmartTestProgressUI(data, testType) {
     progressCard.style.display = "flex";
     progressBar.style.width = "100%";
     progressBar.style.background = "linear-gradient(90deg, #f59e0b, #ef4444)";
-    if (pctLabel) pctLabel.textContent = "Aborted";
+    if (pctLabel) pctLabel.textContent = t('ui.aborted', 'Aborted');
     if (statusDesc) statusDesc.textContent = t("modal.smart_test_aborted", "Self-test aborted");
     if (pulseDot) {
       pulseDot.style.background = "var(--warn, #f59e0b)";
@@ -431,12 +431,12 @@ export function updateSmartTestProgressUI(data, testType) {
       extBtn.style.cursor = "pointer";
     }
     if (abortBtn) abortBtn.style.display = "none";
-    if (testStatus) testStatus.textContent = "Test Aborted";
+    if (testStatus) testStatus.textContent = t('ui.test_aborted', 'Test Aborted');
   } else if (prog && prog.percent_completed === 100 && _smartPollingDev) {
     progressCard.style.display = "flex";
     progressBar.style.width = "100%";
     progressBar.style.background = "linear-gradient(90deg, #10b981, #22c55e)";
-    if (pctLabel) pctLabel.textContent = "100%";
+    if (pctLabel) pctLabel.textContent = t('preview.actual_size', '100%');
     if (statusDesc) statusDesc.textContent = `✓ ${t("modal.smart_test_completed", "Self-test completed successfully")}`;
     if (pulseDot) {
       pulseDot.style.background = "var(--ok, #10b981)";
@@ -455,7 +455,7 @@ export function updateSmartTestProgressUI(data, testType) {
       extBtn.style.cursor = "pointer";
     }
     if (abortBtn) abortBtn.style.display = "none";
-    if (testStatus) testStatus.textContent = "Completed";
+    if (testStatus) testStatus.textContent = t('ui.completed', 'Completed');
   } else {
     progressCard.style.display = "none";
     if (shortBtn) {

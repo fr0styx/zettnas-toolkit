@@ -253,8 +253,8 @@ window.addEventListener('DOMContentLoaded', () => {
       
       const btnCopySave = $("btn-copy-save");
       if (btnCopySave) {
-        btnCopySave.textContent = "Saved!";
-        setTimeout(() => { btnCopySave.textContent = "💾 Save Configuration"; }, 2000);
+        btnCopySave.textContent = t('ui.saved', 'Saved!');
+        setTimeout(() => { btnCopySave.textContent = t('settings.btn_save_config', '💾 Save Configuration'); }, 2000);
       }
     });
   }
@@ -275,7 +275,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
         if (res.ok) {
           fbNewFolderName.value = "";
-          fbNewFolderName.placeholder = "New folder name...";
+          fbNewFolderName.placeholder = t('modal.fb_new_folder', 'New folder name...');
           loadBrowsePath(currentBrowsePath); // Reload current path to show the new folder in the list
         } else {
           const errData = await res.json().catch(() => ({}));
@@ -284,9 +284,9 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       } catch(e) {
         fbNewFolderName.value = "";
-        fbNewFolderName.placeholder = "Network Error";
+        fbNewFolderName.placeholder = t('ui.network_error', 'Network Error');
       } finally {
-        fbCreateFolderBtn.textContent = "+ Create";
+        fbCreateFolderBtn.textContent = t('modal.fb_create', '+ Create');
       }
     });
     

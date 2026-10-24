@@ -75,7 +75,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
 
   if (btnIcon && btnText) {
     btnIcon.textContent = '⏳';
-    btnText.textContent = 'Checking...';
+    btnText.textContent = t('ui.checking', 'Checking...');
   }
   if (btnCheck) {
     btnCheck.disabled = true;
@@ -163,14 +163,14 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
   } catch (err) {
     if (statusIcon) statusIcon.textContent = '⚠️';
     if (statusTitle) {
-      statusTitle.textContent = 'Unable to check for updates';
+      statusTitle.textContent = t('ui.unable_to_check_for_updates', 'Unable to check for updates');
       statusTitle.style.color = 'var(--crit, #ff6b6b)';
     }
     if (statusDesc) statusDesc.textContent = err.message || 'Offline or network request failed.';
   } finally {
     if (btnIcon && btnText) {
       btnIcon.textContent = '🔄';
-      btnText.textContent = 'Check for Updates';
+      btnText.textContent = t('updates.check_btn', 'Check for Updates');
     }
     if (btnCheck) {
       btnCheck.disabled = false;
@@ -280,7 +280,7 @@ export async function revertSystemUpdate() {
             wentDown = true;
             if (attempts >= 80) {
               clearInterval(timer);
-              if (desc) desc.textContent = 'Please refresh the page once ZettNAS has restarted.';
+              if (desc) desc.textContent = t('ui.please_refresh_the_page_once', 'Please refresh the page once ZettNAS has restarted.');
             }
           }
         }, 1500);
@@ -312,7 +312,7 @@ export async function applySystemUpdate() {
       if (applyBtn) applyBtn.disabled = true;
       if (progressOverlay) progressOverlay.style.display = 'block';
       if (progressTitle) progressTitle.textContent = t('updates.installing', 'Downloading & Applying Update...');
-      if (progressDesc) progressDesc.textContent = 'Pulling container image layers from GHCR...';
+      if (progressDesc) progressDesc.textContent = t('ui.pulling_container_image_layers_from', 'Pulling container image layers from GHCR...');
 
       try {
         const targetImage = channel === 'edge'
@@ -322,7 +322,7 @@ export async function applySystemUpdate() {
         showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
 
         if (res && res.auto_restarting === false) {
-          if (progressTitle) progressTitle.textContent = '📦 Image Pulled';
+          if (progressTitle) progressTitle.textContent = t('ui.image_pulled', '📦 Image Pulled');
           if (progressDesc) {
             progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--brand,#00f0ff);font-weight:600;">Please restart the container in Unraid or Docker to finalize.</span>`;
           }
@@ -343,17 +343,17 @@ export async function applySystemUpdate() {
             // Only declare update complete after the old container has dropped offline, or after grace period
             if (h.ok && (hasGoneDown || attempts >= 8)) {
               clearInterval(interval);
-              if (progressTitle) progressTitle.textContent = '🎉 Update Complete!';
-              if (progressDesc) progressDesc.textContent = 'Reloading ZettNAS Workbench...';
+              if (progressTitle) progressTitle.textContent = t('ui.update_complete', '🎉 Update Complete!');
+              if (progressDesc) progressDesc.textContent = t('ui.reloading_zettnas_workbench', 'Reloading ZettNAS Workbench...');
               showToast(t('updates.updated_success', 'ZettNAS updated successfully!'), 'success');
               setTimeout(() => window.location.reload(), 1200);
             }
           } catch (e) {
             hasGoneDown = true;
-            if (progressDesc) progressDesc.textContent = 'Container restarting with updated image...';
+            if (progressDesc) progressDesc.textContent = t('ui.container_restarting_with_updated_image', 'Container restarting with updated image...');
             if (attempts >= maxAttempts) {
               clearInterval(interval);
-              if (progressDesc) progressDesc.textContent = 'Please refresh the page once the container has restarted.';
+              if (progressDesc) progressDesc.textContent = t('ui.please_refresh_the_page_once_2', 'Please refresh the page once the container has restarted.');
               if (applyBtn) applyBtn.disabled = false;
             }
           }

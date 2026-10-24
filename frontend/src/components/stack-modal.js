@@ -32,9 +32,9 @@ export function initStackModal() {
             <span id="stack-header-status" class="ci-state-pill" style="display:none;"></span>
           </div>
           <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
-            <button class="win-btn min-btn" id="stack-min-btn" title="Minimize" aria-label="Minimize"></button>
-            <button class="win-btn max-btn" id="stack-max-btn" title="Maximize" aria-label="Maximize"></button>
-            <button class="win-btn close-btn" id="stack-close-btn" title="Close" aria-label="Close"></button>
+            <button class="win-btn min-btn" id="stack-min-btn" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
+            <button class="win-btn max-btn" id="stack-max-btn" title="${t('ui.maximize', 'Maximize')}" aria-label="${t('ui.maximize', 'Maximize')}"></button>
+            <button class="win-btn close-btn" id="stack-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
         </div>
 
@@ -278,7 +278,7 @@ export async function openStackModal(stackName, initialYaml = null) {
     const originPill = document.getElementById('stack-header-origin');
     if (originPill) originPill.textContent = 'COPILOT TEMPLATE';
     const pathLabel = document.getElementById('stack-path-label');
-    if (pathLabel) pathLabel.textContent = 'Ready to Deploy via Compose Engine';
+    if (pathLabel) pathLabel.textContent = t('ui.ready_to_deploy_via_compose', 'Ready to Deploy via Compose Engine');
     const composeEd = document.getElementById('stack-compose-editor');
     if (composeEd) composeEd.value = initialYaml;
     const envEd = document.getElementById('stack-env-editor');
@@ -299,7 +299,7 @@ export async function openStackModal(stackName, initialYaml = null) {
   document.getElementById('stack-header-status').style.display = 'none';
   document.getElementById('stack-compose-editor').value = 'Loading stack configuration...';
   document.getElementById('stack-env-editor').value = '';
-  document.getElementById('stack-modal-msg').textContent = 'Fetching stack setup...';
+  document.getElementById('stack-modal-msg').textContent = t('ui.fetching_stack_setup', 'Fetching stack setup...');
 
   try {
     const data = await api.get(`/api/docker/stacks/${encodeURIComponent(_activeStackName)}`);
@@ -452,12 +452,12 @@ async function saveStack(redeployAfterSave = false) {
       );
     });
     if (!ok) {
-      if (msgEl) msgEl.textContent = 'Not deployed.';
+      if (msgEl) msgEl.textContent = t('ui.not_deployed', 'Not deployed.');
       return;
     }
   }
 
-  if (msgEl) msgEl.textContent = 'Saving configuration...';
+  if (msgEl) msgEl.textContent = t('ui.saving_configuration', 'Saving configuration...');
 
   try {
     const res = await api.post(`/api/docker/stacks/${encodeURIComponent(_activeStackName)}/save`, {
@@ -467,7 +467,7 @@ async function saveStack(redeployAfterSave = false) {
 
     if (res.success) {
       showToast(t('toast.stack_configuration_saved_successfully', 'Stack configuration saved successfully!'), 'success');
-      if (msgEl) msgEl.textContent = 'Configuration saved';
+      if (msgEl) msgEl.textContent = t('ui.configuration_saved', 'Configuration saved');
 
       if (redeployAfterSave) {
         await triggerStackAction('redeploy');
@@ -537,7 +537,7 @@ export async function openStackPickerModal(stacksInput = null) {
             <span id="stack-picker-badge" class="ci-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--accent-cyan, #38bdf8); border:1px solid rgba(56,189,248,0.3);">0 Stacks</span>
           </div>
           <div class="os-window-controls">
-            <button class="win-btn close-btn" id="stack-picker-close-btn" title="Close" aria-label="Close"></button>
+            <button class="win-btn close-btn" id="stack-picker-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
         </div>
 
@@ -546,7 +546,7 @@ export async function openStackPickerModal(stacksInput = null) {
           <div style="font-size:11.5px; color:var(--muted);">Select a Docker Compose stack to inspect services, modify setup YAML, or manage lifecycle:</div>
           <div style="position:relative; display:flex; align-items:center;">
             <span style="position:absolute; left:10px; font-size:12px; color:var(--muted); pointer-events:none;">🔍</span>
-            <input type="text" id="stack-picker-search" placeholder="Filter stacks by name, service, or path..." class="tz-text-input" style="width:100%; padding:7px 10px 7px 30px; font-size:12px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; outline:none; box-sizing:border-box;">
+            <input type="text" id="stack-picker-search" placeholder="${t('ui.filter_stacks_by_name_service', 'Filter stacks by name, service, or path...')}" class="tz-text-input" style="width:100%; padding:7px 10px 7px 30px; font-size:12px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.12); border-radius:6px; color:#fff; outline:none; box-sizing:border-box;">
           </div>
         </div>
 

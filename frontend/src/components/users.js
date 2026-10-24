@@ -305,13 +305,13 @@ export async function loadUsersList() {
           <td style="padding: 12px; font-size: var(--zn-fs-sm); color: #94a3b8;">${quotaStr}</td>
           <td style="padding: 12px; text-align:right;">
             <div style="display:inline-flex; gap: 6px;">
-              <button class="suite-toolkit-btn sm btn-edit-user" data-id="${u.id}" title="Edit User">✏️</button>
-              <button class="suite-toolkit-btn sm btn-pwd-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="Reset Password">🔑</button>
+              <button class="suite-toolkit-btn sm btn-edit-user" data-id="${u.id}" title="${t('ui.edit_user', 'Edit User')}">✏️</button>
+              <button class="suite-toolkit-btn sm btn-pwd-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="${t('ui.reset_password', 'Reset Password')}">🔑</button>
               ${!isSelf ? `
                 <button class="suite-toolkit-btn sm btn-toggle-user" data-id="${u.id}" data-status="${u.status}" title="${isActive ? 'Disable User' : 'Enable User'}">
                   ${isActive ? '🚫' : '✅'}
                 </button>
-                <button class="suite-toolkit-btn sm danger btn-delete-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="Delete User">🗑️</button>
+                <button class="suite-toolkit-btn sm danger btn-delete-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="${t('ui.delete_user', 'Delete User')}">🗑️</button>
               ` : ''}
             </div>
           </td>
@@ -429,7 +429,7 @@ export function showEditUserModal(user) {
 
       const submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      submitBtn.textContent = 'SAVING...';
+      submitBtn.textContent = t('setup.saving', 'SAVING...');
 
       try {
         const res = await apiFetch(`/api/users/${user.id}`, {

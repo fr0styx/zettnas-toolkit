@@ -143,13 +143,13 @@ export function initAuth() {
       const codeInput = document.getElementById('mfa-challenge-code');
       const isRecovery = codeInput.placeholder.includes('Recovery');
       if (isRecovery) {
-        codeInput.placeholder = '6-Digit Code (e.g. 123456)';
+        codeInput.placeholder = t('ui.6_digit_code_e_g', '6-Digit Code (e.g. 123456)');
         codeInput.maxLength = 6;
-        btnToggleRecovery.textContent = 'Use 8-character recovery code';
+        btnToggleRecovery.textContent = t('ui.use_8_character_recovery_code', 'Use 8-character recovery code');
       } else {
-        codeInput.placeholder = '8-Char Recovery Code (xxxx-xxxx)';
+        codeInput.placeholder = t('ui.8_char_recovery_code_xxxx', '8-Char Recovery Code (xxxx-xxxx)');
         codeInput.maxLength = 10;
-        btnToggleRecovery.textContent = 'Use 6-digit authenticator code';
+        btnToggleRecovery.textContent = t('ui.use_6_digit_authenticator_code', 'Use 6-digit authenticator code');
       }
       codeInput.value = '';
       codeInput.focus();
@@ -686,14 +686,14 @@ export async function unlockDesktop() {
       ZettEventBus.emit('auth:unlocked');
     } else {
       if (errorEl) {
-        errorEl.textContent = 'Incorrect password';
+        errorEl.textContent = t('ui.incorrect_password', 'Incorrect password');
         errorEl.style.display = 'block';
       }
       pwdInput.select();
     }
   } catch (err) {
     if (errorEl) {
-      errorEl.textContent = 'Connection error';
+      errorEl.textContent = t('ui.connection_error', 'Connection error');
       errorEl.style.display = 'block';
     }
   } finally {

@@ -150,7 +150,7 @@ export function updateFanCurveWorkstation(s) {
   const badgeZ2 = $('zero-rpm-badge-z2');
   if (badgeZ1) {
     if (fc.zone1_zero_rpm) {
-      badgeZ1.textContent = 'Zone 1: PASSIVE (0 RPM)';
+      badgeZ1.textContent = t('ui.zone_1_passive_0_rpm', 'Zone 1: PASSIVE (0 RPM)');
       badgeZ1.style.background = 'rgba(56, 189, 248, 0.18)';
       badgeZ1.style.color = '#38bdf8';
       badgeZ1.style.borderColor = 'rgba(56, 189, 248, 0.4)';
@@ -168,7 +168,7 @@ export function updateFanCurveWorkstation(s) {
       badgeZ1.style.color = 'var(--warn)';
       badgeZ1.style.borderColor = 'rgba(245, 183, 49, 0.4)';
     } else {
-      badgeZ1.textContent = 'Zone 1: Active Spinning';
+      badgeZ1.textContent = t('ui.zone_1_active_spinning', 'Zone 1: Active Spinning');
       badgeZ1.style.background = 'rgba(51, 209, 122, 0.12)';
       badgeZ1.style.color = 'var(--ok)';
       badgeZ1.style.borderColor = 'rgba(51, 209, 122, 0.3)';
@@ -176,7 +176,7 @@ export function updateFanCurveWorkstation(s) {
   }
   if (badgeZ2) {
     if (fc.zone2_zero_rpm) {
-      badgeZ2.textContent = 'Zone 2: PASSIVE (0 RPM)';
+      badgeZ2.textContent = t('ui.zone_2_passive_0_rpm', 'Zone 2: PASSIVE (0 RPM)');
       badgeZ2.style.background = 'rgba(56, 189, 248, 0.18)';
       badgeZ2.style.color = '#38bdf8';
       badgeZ2.style.borderColor = 'rgba(56, 189, 248, 0.4)';
@@ -194,7 +194,7 @@ export function updateFanCurveWorkstation(s) {
       badgeZ2.style.color = 'var(--warn)';
       badgeZ2.style.borderColor = 'rgba(245, 183, 49, 0.4)';
     } else {
-      badgeZ2.textContent = 'Zone 2: Active Spinning';
+      badgeZ2.textContent = t('ui.zone_2_active_spinning', 'Zone 2: Active Spinning');
       badgeZ2.style.background = 'rgba(51, 209, 122, 0.12)';
       badgeZ2.style.color = 'var(--ok)';
       badgeZ2.style.borderColor = 'rgba(51, 209, 122, 0.3)';
@@ -222,13 +222,13 @@ export function updateFanCurveWorkstation(s) {
   if (fanStatusBadge && fc.driver_mode) {
     if (fc.driver_mode === 'mmio') {
       fanStatusBadge.textContent = 'MMIO FALLBACK';
-      fanStatusBadge.title = 'Direct MMIO Memory Access (Userspace Fallback - No kernel module needed)';
+      fanStatusBadge.title = t('ui.direct_mmio_memory_access_userspace', 'Direct MMIO Memory Access (Userspace Fallback - No kernel module needed)');
       fanStatusBadge.style.background = 'rgba(56, 189, 248, 0.15)';
       fanStatusBadge.style.color = '#38bdf8';
       fanStatusBadge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
     } else if (fc.driver_mode === 'hwmon') {
       fanStatusBadge.textContent = 'KERNEL HWMON';
-      fanStatusBadge.title = 'Kernel module hwmon driver active';
+      fanStatusBadge.title = t('ui.kernel_module_hwmon_driver_active', 'Kernel module hwmon driver active');
       fanStatusBadge.style.background = 'rgba(51, 209, 122, 0.15)';
       fanStatusBadge.style.color = 'var(--ok)';
       fanStatusBadge.style.borderColor = 'rgba(51, 209, 122, 0.35)';
@@ -327,7 +327,7 @@ export function setZoneFilter(filterKey) {
 
   if (instruction) {
     if (filterKey === 'all') {
-      instruction.textContent = 'Displaying all thermal zones. Click a zone tachometer above or below to isolate.';
+      instruction.textContent = t('settings.fan_curve_desc', 'Displaying all thermal zones. Click a zone tachometer above or below to isolate.');
     } else {
       const nameMap = { zone1: 'Zone 1 (Left Bays)', zone2: 'Zone 2 (Right Bays)', cpu: 'CPU Package' };
       instruction.textContent = `Filtered to ${nameMap[filterKey]}. Only this zone is active on the graph.`;
@@ -388,7 +388,7 @@ export function initFanControl() {
         fanPwmVal.style.opacity = '1';
         fanPwmVal.style.fontWeight = '700';
       } else {
-        fanPwmVal.textContent = 'Auto Curve';
+        fanPwmVal.textContent = t('ui.auto_curve', 'Auto Curve');
         fanPwmVal.style.color = 'var(--muted)';
         fanPwmVal.style.opacity = '0.5';
         fanPwmVal.style.fontWeight = '500';

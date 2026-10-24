@@ -283,7 +283,7 @@
       </div>
 
       <!-- Selected Account Card (When clicked from chooser) -->
-      <div id="login-user-selected-card" role="button" tabindex="0" title="Click to change account" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none;">
+      <div id="login-user-selected-card" role="button" tabindex="0" title="Click to change account" data-i18n-title="ui.click_to_change_account" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none;">
         <div id="login-selected-initial" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px;">A</div>
         <div style="text-align: left; flex: 1; min-width: 0;">
           <div id="login-selected-name" style="font-weight: 700; color: #fff; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
@@ -297,7 +297,7 @@
       <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->
       <div id="login-manual-fields" style="display: none; margin-bottom: 12px;">
         <label for="login-username" class="sr-only" data-i18n="login.username_label">Username</label>
-        <input type="text" id="login-username" placeholder="Username" autocomplete="username" style="width: 100%; padding: 11px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px;">
+        <input type="text" id="login-username" placeholder="Username" data-i18n-placeholder="mgmt.ups_field_user" autocomplete="username" style="width: 100%; padding: 11px 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px;">
       </div>
 
       <!-- Password Input -->
@@ -331,7 +331,7 @@
       <p id="mfa-user-target" style="margin: 0 0 20px 0; font-size: 12.5px; color: var(--muted);">Enter verification code from your authenticator app</p>
 
       <form id="form-mfa-challenge">
-        <input type="text" id="mfa-challenge-code" placeholder="6-Digit Code" maxlength="6" autocomplete="one-time-code" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.4); color: #38bdf8; border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace;">
+        <input type="text" id="mfa-challenge-code" placeholder="6-Digit Code" data-i18n-placeholder="ui.6_digit_code" maxlength="6" autocomplete="one-time-code" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(56,189,248,0.4); color: #38bdf8; border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace;" aria-label="6-Digit Code" data-i18n-aria-label="ui.6_digit_code">
         <button type="submit" id="btn-submit-mfa" class="suite-toolkit-btn ok" style="width: 100%; padding: 12px; font-size: 13.5px; font-weight: 700;">VERIFY & SIGN IN</button>
       </form>
 
@@ -359,7 +359,7 @@
     </div>
 
     <div style="position: relative; margin-bottom: 12px;">
-      <input type="password" id="lock-password" placeholder="Enter password to unlock" autocomplete="current-password" style="width: 100%; padding: 12px 42px 12px 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;">
+      <input type="password" id="lock-password" placeholder="Enter password to unlock" data-i18n-placeholder="ui.enter_password_to_unlock" autocomplete="current-password" style="width: 100%; padding: 12px 42px 12px 14px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;" aria-label="Enter password to unlock" data-i18n-aria-label="ui.enter_password_to_unlock">
       <button id="lock-unlock-btn" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: #fff; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
     </div>
 
@@ -566,7 +566,7 @@
       <svg class="ic" id="suite-brand-icon" style="width:16px;height:16px;"><use href="#i-chip"/></svg>
       <span class="suite-title" id="suite-brand-title">ZETTNAS</span>
       <span class="suite-badge" id="suite-brand-badge" data-i18n="nav.toolkit">NAS WORKBENCH</span>
-      <div id="topbar-user-pill" class="topbar-user-pill" title="User Account & Security" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+      <div id="topbar-user-pill" class="topbar-user-pill" title="User Account & Security" data-i18n-title="ui.user_account_security" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
         <div id="topbar-user-avatar" class="topbar-user-avatar">
           <span id="topbar-user-avatar-initial">A</span>
           <span class="topbar-user-status-dot"></span>
@@ -580,16 +580,16 @@
       <div id="unraid-array-pill" class="suite-pill hidden"><span class="pulse-dot" id="unraid-array-dot"></span> <span data-i18n="nav.array">Array</span>: <strong id="unraid-array-status">STARTED</strong></div>
       <div id="unraid-parity-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.parity">Parity</span>: <strong id="unraid-parity-status">0.0%</strong></div>
       <div id="unraid-mover-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--warn,#f5a623);box-shadow:0 0 6px var(--warn,#f5a623)"></span> <span data-i18n="nav.mover">Mover</span>: <strong id="unraid-mover-status">Active</strong></div>
-      <div id="topbar-ups-pill" class="suite-pill hidden" style="cursor:pointer;" title="Click to open Power & Battery Cockpit"><span class="pulse-dot" id="topbar-ups-dot" style="background:var(--ok2,#25c2a0);box-shadow:0 0 6px var(--ok2,#25c2a0)"></span> <span data-i18n="nav.ups">UPS</span>: <strong id="topbar-ups-text">--%</strong></div>
-      <div id="topbar-ai-accel-pill" class="suite-pill" style="cursor:pointer;" title="AI Knowledge & Visual Search Engine • Click to view NPU/GPU/CPU acceleration & Standby Guard"><span class="pulse-dot" id="topbar-ai-accel-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.ai">AI</span>: <strong id="topbar-ai-accel-text">NPU • Standby Safe</strong></div>
-      <select id="suite-lang-select" class="language-picker-select tz-select-input" title="Select Display Language" style="width: auto; padding: 2px 6px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
+      <div id="topbar-ups-pill" class="suite-pill hidden" style="cursor:pointer;" title="Click to open Power & Battery Cockpit" data-i18n-title="ui.click_to_open_power_battery"><span class="pulse-dot" id="topbar-ups-dot" style="background:var(--ok2,#25c2a0);box-shadow:0 0 6px var(--ok2,#25c2a0)"></span> <span data-i18n="nav.ups">UPS</span>: <strong id="topbar-ups-text">--%</strong></div>
+      <div id="topbar-ai-accel-pill" class="suite-pill" style="cursor:pointer;" title="AI Knowledge & Visual Search Engine • Click to view NPU/GPU/CPU acceleration & Standby Guard" data-i18n-title="ui.ai_knowledge_visual_search_engine"><span class="pulse-dot" id="topbar-ai-accel-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.ai">AI</span>: <strong id="topbar-ai-accel-text">NPU • Standby Safe</strong></div>
+      <select id="suite-lang-select" class="language-picker-select tz-select-input" title="Select Display Language" data-i18n-title="ui.select_display_language" style="width: auto; padding: 2px 6px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
         <option value="en">🇺🇸 EN</option>
         <option value="de">🇩🇪 DE</option>
         <option value="zh">🇨🇳 中文</option>
         <option value="fr">🇫🇷 FR</option>
         <option value="es">🇪🇸 ES</option>
       </select>
-      <button id="mobile-view-toggle-btn" class="yak-egg-btn" title="Toggle Mobile / Stacked Mode" aria-label="Toggle Mobile Layout" data-i18n-title="nav.mobile_toggle">📱</button>
+      <button id="mobile-view-toggle-btn" class="yak-egg-btn" title="Toggle Mobile / Stacked Mode" aria-label="Toggle Mobile Layout" data-i18n-aria-label="ui.toggle_mobile_layout" data-i18n-title="nav.mobile_toggle">📱</button>
       <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]" data-i18n-title="nav.yak_egg">🐂</button>
       <button id="drawer-toggle-btn" class="suite-toolkit-btn hidden" title="Open Hardware Settings [Hot-key: T]" data-i18n-title="nav.settings_title">
         <span class="btn-ic">⚙</span><span class="btn-txt" data-i18n="nav.settings"> HARDWARE SETTINGS</span>
@@ -603,10 +603,10 @@
         <!-- Desktop Widgets Layer -->
     <div id="desktop-widgets-container" class="pos-top-right glass-standard scale-normal">
       <!-- 1. Time Clock Widget -->
-      <div class="desktop-widget" id="widget-clock" role="button" tabindex="0" title="Click to change timezone & clock format" style="cursor: pointer;">
+      <div class="desktop-widget" id="widget-clock" role="button" tabindex="0" title="Click to change timezone & clock format" data-i18n-title="ui.click_to_change_timezone_clock" style="cursor: pointer;">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-clock"/></svg> <span data-i18n="widget.clock">Time Clock</span></span>
-          <span class="widget-badge" id="w-clock-tz" title="Click to toggle 12h/24h" style="cursor: pointer; user-select: none;">24H</span>
+          <span class="widget-badge" id="w-clock-tz" title="Click to toggle 12h/24h" data-i18n-title="ui.click_to_toggle_12h_24h" style="cursor: pointer; user-select: none;">24H</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 4px;">
           <div style="display: flex; align-items: baseline; justify-content: space-between;">
@@ -666,7 +666,7 @@
         </div>
 
         <!-- Live Re-indexing Progress Box inside Widget -->
-        <div id="w-ai-reindex-strip" style="display:none; margin:8px 0 6px 0; padding:6px 10px; border-radius:6px; background:rgba(15,23,42,0.85); border:1px solid rgba(14,165,233,0.35); cursor:pointer;" title="Click to view Knowledge Base &amp; RAG Indexing">
+        <div id="w-ai-reindex-strip" style="display:none; margin:8px 0 6px 0; padding:6px 10px; border-radius:6px; background:rgba(15,23,42,0.85); border:1px solid rgba(14,165,233,0.35); cursor:pointer;" title="Click to view Knowledge Base &amp; RAG Indexing" data-i18n-title="ui.click_to_view_knowledge_base">
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:4px;">
             <div style="display:flex; align-items:center; gap:5px;">
               <span class="pulsing-dot" style="width:6px; height:6px; border-radius:50%; background:#00f0ff; display:inline-block;"></span>
@@ -691,16 +691,16 @@
       </div>
 
       <!-- 2. Weather Widget -->
-      <div class="desktop-widget" id="widget-weather" role="button" tabindex="0" title="Click to open Weather & Widget Settings">
+      <div class="desktop-widget" id="widget-weather" role="button" tabindex="0" title="Click to open Weather & Widget Settings" data-i18n-title="ui.click_to_open_weather_widget">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-weather"/></svg> <span data-i18n="widget.weather">Local Weather</span></span>
-          <span class="widget-badge" id="w-weather-city" title="Detected location">--</span>
+          <span class="widget-badge" id="w-weather-city" title="Detected location" data-i18n-title="ui.detected_location">--</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span id="w-weather-icon" style="font-size: 24px; line-height: 1;">⛅</span>
             <div style="display: flex; flex-direction: column;">
-              <span id="w-weather-temp" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none;" title="Click to toggle °C / °F">--°</span>
+              <span id="w-weather-temp" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none;" title="Click to toggle °C / °F" data-i18n-title="ui.click_to_toggle_c_f">--°</span>
               <span id="w-weather-desc" style="font-size: 11px; color: var(--muted); font-weight: 500;">Loading…</span>
             </div>
           </div>
@@ -712,17 +712,17 @@
       </div>
 
       <!-- 3. Calendar Widget -->
-      <div class="desktop-widget" id="widget-calendar" role="button" tabindex="0" title="Click to view notes, reminders & calendar sync" style="display: none; cursor: pointer;">
+      <div class="desktop-widget" id="widget-calendar" role="button" tabindex="0" title="Click to view notes, reminders & calendar sync" data-i18n-title="ui.click_to_view_notes_reminders" style="display: none; cursor: pointer;">
         <div class="widget-header">
           <span class="widget-title">
             <svg class="ic" style="width:12px;height:12px;"><use href="#i-calendar"/></svg>
             <span data-i18n="widget.calendar">Calendar</span>
-            <span class="widget-badge" id="w-cal-country-badge" style="margin-left: 5px; font-size: 11px; opacity: 0.85; cursor: pointer;" title="Official Holidays Country">US</span>
+            <span class="widget-badge" id="w-cal-country-badge" style="margin-left: 5px; font-size: 11px; opacity: 0.85; cursor: pointer;" title="Official Holidays Country" data-i18n-title="ui.official_holidays_country">US</span>
           </span>
           <div style="display: flex; align-items: center; gap: 4px;">
-            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: 11px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Previous Month">◀</button>
-            <span class="widget-badge" id="w-cal-month" style="font-size: 11px; cursor: pointer;" title="Click to jump to current month">OCT 2026</span>
-            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: 11px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Next Month">▶</button>
+            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: 11px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Previous Month" data-i18n-title="ui.previous_month">◀</button>
+            <span class="widget-badge" id="w-cal-month" style="font-size: 11px; cursor: pointer;" title="Click to jump to current month" data-i18n-title="ui.click_to_jump_to_current">OCT 2026</span>
+            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: 11px; background: rgba(255,255,255,0.08); border: none; border-radius: 3px; color: #cbd5e1; cursor: pointer;" title="Next Month" data-i18n-title="ui.next_month">▶</button>
           </div>
         </div>
         <div id="w-calendar-grid" class="widget-calendar-grid"></div>
@@ -730,7 +730,7 @@
       </div>
 
       <!-- 4. System Widget -->
-      <div class="desktop-widget" id="widget-system" role="button" tabindex="0" title="Click to open Dashboard & Telemetry">
+      <div class="desktop-widget" id="widget-system" role="button" tabindex="0" title="Click to open Dashboard & Telemetry" data-i18n-title="ui.click_to_open_dashboard_telemetry">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-cpu"/></svg> <span data-i18n="widget.system">System Status</span></span>
         </div>
@@ -754,7 +754,7 @@
       </div>
       
       <!-- 5. Network Widget -->
-      <div class="desktop-widget" id="widget-network" role="button" tabindex="0" title="Click to open Network & Switch Inspector">
+      <div class="desktop-widget" id="widget-network" role="button" tabindex="0" title="Click to open Network & Switch Inspector" data-i18n-title="ui.click_to_open_network_switch">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-net"/></svg> <span data-i18n="widget.network">Network IO</span></span>
           <span class="widget-badge" id="w-net-iface">bond0</span>
@@ -772,7 +772,7 @@
       </div>
 
       <!-- 6. Storage Pool Widget -->
-      <div class="desktop-widget" id="widget-storage" role="button" tabindex="0" title="Click to open Storage Pool & Array Topology">
+      <div class="desktop-widget" id="widget-storage" role="button" tabindex="0" title="Click to open Storage Pool & Array Topology" data-i18n-title="ui.click_to_open_storage_pool">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-storage"/></svg> <span data-i18n="widget.storage">Storage Pool</span></span>
           <span class="widget-badge" id="w-storage-status">ONLINE</span>
@@ -892,7 +892,7 @@
         </div>
       </div>
 
-      <div class="chassis-hero-box chassis-desktop-icon fm-desktop-icon" id="fm-desktop-icon" role="button" tabindex="0" title="Click to open File Explorer">
+      <div class="chassis-hero-box chassis-desktop-icon fm-desktop-icon" id="fm-desktop-icon" role="button" tabindex="0" title="Click to open File Explorer" data-i18n-title="ui.click_to_open_file_explorer">
         <div class="console-hero-box">
           <svg class="console-hero-icon"><use href="#i-storage"/></svg>
         </div>
@@ -902,7 +902,7 @@
         </div>
       </div>
 
-      <div class="chassis-hero-box chassis-desktop-icon rb-desktop-icon" id="rb-desktop-icon" role="button" tabindex="0" title="Click to open Recycle Bin" data-action="open-recycle-bin">
+      <div class="chassis-hero-box chassis-desktop-icon rb-desktop-icon" id="rb-desktop-icon" role="button" tabindex="0" title="Click to open Recycle Bin" data-i18n-title="ui.click_to_open_recycle_bin" data-action="open-recycle-bin">
         <div class="console-hero-box">
           <svg class="console-hero-icon"><use href="#i-trash"/></svg>
         </div>
@@ -932,11 +932,11 @@
         <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="modal.smart_title">S.M.A.R.T. Diagnostics</span>
       </span>
       <div style="display:flex; gap:12px; align-items:center;">
-        <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" style="font-size: 20px; padding: 2px; margin-right: 8px;">↻</button>
+        <button id="smart-modal-refresh" class="btn-icon" title="Refresh SMART data" data-i18n-title="ui.refresh_smart_data" style="font-size: 20px; padding: 2px; margin-right: 8px;">↻</button>
         <div class="os-window-controls">
-          <button class="win-btn min-btn" id="smart-modal-min" title="Minimize" aria-label="Minimize"></button>
-          <button class="win-btn max-btn" id="smart-modal-max" title="Maximize" aria-label="Maximize"></button>
-          <button class="win-btn close-btn" id="smart-modal-close" title="Close" aria-label="Close"></button>
+          <button class="win-btn min-btn" id="smart-modal-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
+          <button class="win-btn max-btn" id="smart-modal-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
+          <button class="win-btn close-btn" id="smart-modal-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
         </div>
       </div>
     </div>
@@ -1012,7 +1012,7 @@
               <span class="smart-report-badge-pill" id="smart-report-badge">✓ PASSED</span>
               <span class="smart-report-meta" id="smart-report-meta">Short Test • Completed</span>
             </div>
-            <button id="smart-btn-copy-report" type="button" class="smart-btn-copy-report" title="Copy formatted SMART report to clipboard">
+            <button id="smart-btn-copy-report" type="button" class="smart-btn-copy-report" title="Copy formatted SMART report to clipboard" data-i18n-title="ui.copy_formatted_smart_report_to">
               <span id="smart-copy-report-icon">📋</span>
               <span id="smart-copy-report-label" data-i18n="modal.smart_copy_report">Copy Report</span>
             </button>
@@ -1075,7 +1075,7 @@
       <!-- PANE 3: Raw SMART Telemetry -->
       <div id="smart-pane-raw" class="smart-pane">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-          <input type="text" id="smart-raw-filter" class="smart-raw-search-input" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #fff; font-family: monospace;" />
+          <input type="text" id="smart-raw-filter" class="smart-raw-search-input" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-placeholder="ui.filter_attributes_e_g_realloc" style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #fff; font-family: monospace;" aria-label="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-aria-label="ui.filter_attributes_e_g_realloc" />
           <button id="smart-btn-copy-raw" class="smart-test-action-btn" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer;">📋 Copy Raw</button>
         </div>
         <pre class="smart-raw-pre" id="smart-raw-output" style="max-height: none; flex: 1; margin: 0;">Querying telemetry...</pre>
@@ -1092,7 +1092,7 @@
         <span data-i18n="diagnostics.modal_title">Diagnostics Summary Preview</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="diagnostics-preview-close" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="diagnostics-preview-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
@@ -1136,7 +1136,7 @@
         <span data-i18n="sec.https_modal_title">HTTPS Transport Encryption & SSL Setup</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-https-guide-close" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-https-guide-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
@@ -1214,7 +1214,7 @@
         <span data-i18n="event_detail.title">Event Details</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="event-detail-close" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="event-detail-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
@@ -1284,13 +1284,13 @@
         <span data-i18n="fan.save_preset_title">Save Custom Preset</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="fan-preset-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="fan-preset-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div>
         <label for="fan-preset-name-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="fan.preset_name_label">Preset Name</label>
-        <input type="text" id="fan-preset-name-input" class="fan-preset-input" placeholder="e.g. Silent Curve, Heavy Load, Render Rig" maxlength="40" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: #fff; outline: none; transition: border-color 0.2s;" autocomplete="off" />
+        <input type="text" id="fan-preset-name-input" class="fan-preset-input" placeholder="e.g. Silent Curve, Heavy Load, Render Rig" data-i18n-placeholder="ui.e_g_silent_curve_heavy" maxlength="40" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: #fff; outline: none; transition: border-color 0.2s;" autocomplete="off" />
       </div>
       <div style="font-size: 11px; color: var(--muted); line-height: 1.45;" data-i18n="fan.save_preset_hint">
         Saves current 5-point fan curve to your system presets.
@@ -1315,7 +1315,7 @@
         <span data-i18n="fan.delete_preset_title">Delete Fan Preset</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="fan-delete-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="fan-delete-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -1343,20 +1343,20 @@
         <span data-i18n="net.port_cfg_title">Port Configuration</span>: <strong id="net-port-cfg-iface" style="color: var(--accent-cyan, #38bdf8); font-family: var(--font-mono, monospace);">ETH0</strong>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="net-port-cfg-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="net-port-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <!-- Port Alias -->
       <div>
         <label for="net-port-alias-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.alias_label">Port Friendly Alias</label>
-        <input type="text" id="net-port-alias-input" class="tz-text-input" placeholder="e.g. 10G Workstation Direct, Uplink to Switch" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+        <input type="text" id="net-port-alias-input" class="tz-text-input" placeholder="e.g. 10G Workstation Direct, Uplink to Switch" data-i18n-placeholder="ui.e_g_10g_workstation_direct" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
         <div style="font-size: 11px; color: var(--muted); margin-top: 4px;" data-i18n="net.alias_hint">Custom name shown on switch faceplate and Unraid network config.</div>
       </div>
 
       <!-- MTU Configuration -->
       <div>
-        <label style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.mtu_label">MTU (Maximum Transmission Unit)</label>
+        <label for="net-port-mtu-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.mtu_label">MTU (Maximum Transmission Unit)</label>
         <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 6px;">
           <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="1500" id="net-mtu-preset-1500">1500 (Standard)</button>
           <button type="button" class="btn-pill-toggle net-mtu-preset" data-mtu="9000" id="net-mtu-preset-9000">9000 (Jumbo Frames)</button>
@@ -1403,7 +1403,7 @@
       <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
         <div style="display: flex; align-items: center; justify-content: space-between; grid-column: span 2;">
           <div><span style="color: var(--muted);">MAC:</span> <span id="net-port-ro-mac" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
-          <button type="button" id="btn-copy-port-mac" class="btn-pill-toggle is-small" title="Copy MAC address for Wake-on-LAN Magic Packet dispatch">
+          <button type="button" id="btn-copy-port-mac" class="btn-pill-toggle is-small" title="Copy MAC address for Wake-on-LAN Magic Packet dispatch" data-i18n-title="ui.copy_mac_address_for_wake">
             <span>📋</span> <span data-i18n="net.copy_mac">Copy MAC</span>
           </button>
         </div>
@@ -1432,7 +1432,7 @@
         <span data-i18n="net.create_docker_title">Create Docker Network</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="net-docker-create-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="net-docker-create-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -1478,7 +1478,7 @@
         <span data-i18n="net.host_cfg_title">Host IP & DNS Configuration</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="net-host-cfg-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="net-host-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -1623,7 +1623,7 @@
         <span class="switch-speed-pill speed-10g" id="net-bond-target-badge" style="margin-left: 6px;">bond0</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="net-bond-cfg-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="net-bond-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -1687,7 +1687,7 @@
         <span class="switch-speed-pill speed-10g" id="net-bridge-target-badge" style="margin-left: 6px;">br0</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="net-bridge-cfg-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="net-bridge-cfg-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -1739,7 +1739,7 @@
         <span data-i18n="net.create_vlan_title">Create 802.1Q VLAN Sub-Interface</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="net-vlan-create-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="net-vlan-create-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -1762,7 +1762,7 @@
       <!-- Friendly Role / Alias -->
       <div>
         <label for="net-vlan-alias-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.vlan_alias_label">Friendly Alias / Role (Optional)</label>
-        <input type="text" id="net-vlan-alias-input" class="tz-text-input" placeholder="e.g. IoT Network, Guest Wi-Fi, Storage DMZ" maxlength="48" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+        <input type="text" id="net-vlan-alias-input" class="tz-text-input" placeholder="e.g. IoT Network, Guest Wi-Fi, Storage DMZ" data-i18n-placeholder="ui.e_g_iot_network_guest" maxlength="48" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
       </div>
 
       <!-- Footer Buttons -->
@@ -1783,9 +1783,9 @@
         <span style="font-size: 18px;">⚡</span> <span data-i18n="setup.title">ZettNAS Setup Wizard</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn min-btn" id="setup-wizard-min" title="Minimize" aria-label="Minimize"></button>
-        <button class="win-btn max-btn" id="setup-wizard-max" title="Maximize" aria-label="Maximize"></button>
-        <button class="win-btn close-btn" id="setup-wizard-close" title="Close" aria-label="Close"></button>
+        <button class="win-btn min-btn" id="setup-wizard-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
+        <button class="win-btn max-btn" id="setup-wizard-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
+        <button class="win-btn close-btn" id="setup-wizard-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="padding: 24px; gap: 18px;">
@@ -1836,12 +1836,12 @@
       <div>
         <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">4. Notification Alerts (Optional)</div>
         <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 8px;" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
-        <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;">
+        <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff;" aria-label="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-aria-label="setup.notif_placeholder">
       </div>
 
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
         <button id="setup-wizard-skip" class="btn-cancel" style="padding: 8px 16px; font-size: 12px;" data-i18n="setup.remind_later">Remind Me Later</button>
-        <button id="setup-wizard-submit" class="btn-save-preset" style="padding: 8px 20px; font-size: 12px; background: #e07a38; border-color: #d06d2d; color: #fff; font-weight: 700;" data-i18n="setup.submit">Complete Setup & Save</button>
+        <button id="setup-wizard-submit" class="btn-pill-toggle is-primary" data-i18n="setup.submit">Complete Setup & Save</button>
       </div>
     </div>
   </div>
@@ -1869,14 +1869,14 @@
   <div id="tab-layout" class="drawer-tab-content active">
     <div class="tab-sub-header">
       <span class="sub-title" data-i18n="settings.section_arrangement">Layout Section Arrangement</span>
-      <button id="layout-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
+      <button id="layout-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order" data-i18n-title="ui.lock_or_unlock_section_order">🔒 Locked</button>
     </div>
 
     <div id="layout-sections-container" class="drawer-cards-flow locked">
       <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
         <div class="card-headline" style="margin-bottom:2px;">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.canvas_preview">LCD Live Canvas Re-arrange & Preview</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
-          <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status">&#x2B24; Checking…</span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.canvas_preview">LCD Live Canvas Re-arrange & Preview</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
+          <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status" data-i18n-title="ui.lcd_framebuffer_renderer_status">&#x2B24; Checking…</span>
         </div>
         <div id="mini-lcd-canvas" class="mini-lcd-canvas">
           <div class="mini-preview-inner" id="mini-preview-inner"></div>
@@ -1885,31 +1885,31 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-style" id="sec-lcd-style">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="lcd-style-active-badge" class="preset-state-badge" style="color:var(--brand, #00f0ff); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Choose between the multi-card telemetry overview or the high-contrast streamline minimalist layout with hero IP display.</div>
-        <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style">
-          <button type="button" class="lcd-style-chip active" data-screen-style="classic" title="Classic Cards"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-apps"/></svg><span data-i18n="settings.style_classic">Classic Cards</span></button>
-          <button type="button" class="lcd-style-chip" data-screen-style="streamline" title="Streamline Big IP"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-globe"/></svg><span data-i18n="settings.style_streamline">Streamline Big IP</span></button>
+        <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style" data-i18n-aria-label="settings.lcd_layout_style_title">
+          <button type="button" class="lcd-style-chip active" data-screen-style="classic" title="Classic Cards" data-i18n-title="settings.style_classic"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-apps"/></svg><span data-i18n="settings.style_classic">Classic Cards</span></button>
+          <button type="button" class="lcd-style-chip" data-screen-style="streamline" title="Streamline Big IP" data-i18n-title="settings.style_streamline"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-globe"/></svg><span data-i18n="settings.style_streamline">Streamline Big IP</span></button>
         </div>
       </div>
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-lcd-theme" id="sec-lcd-theme">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-screen"/></svg><span data-i18n="settings.lcd_theme_title">LCD Screen Theme</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="lcd-theme-active-badge" class="preset-state-badge" style="color:var(--brand, #00f0ff); border-color:var(--brand, #00f0ff);">CYBER TEAL</span>
         </div>
         <div class="card-instruction" data-i18n="settings.lcd_theme_desc">Select a color scheme specifically for the physical 640x172 LCD screen and console dashboard.</div>
         <div class="lcd-theme-picker-row">
-          <button class="lcd-theme-chip active" data-lcd-theme="cyber" title="Cyber Teal"><span class="lcd-chip-swatch" style="background:#00f0ff;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_cyber">Cyber</span></button>
-          <button class="lcd-theme-chip" data-lcd-theme="amber" title="Amber Gold"><span class="lcd-chip-swatch" style="background:#ffbe40;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_amber">Amber</span></button>
-          <button class="lcd-theme-chip" data-lcd-theme="emerald" title="Emerald Matrix"><span class="lcd-chip-swatch" style="background:#3bf58b;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_emerald">Emerald</span></button>
-          <button class="lcd-theme-chip" data-lcd-theme="sapphire" title="Sapphire Ice"><span class="lcd-chip-swatch" style="background:#38bdf8;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_sapphire">Sapphire</span></button>
-          <button class="lcd-theme-chip" data-lcd-theme="amethyst" title="Amethyst Violet"><span class="lcd-chip-swatch" style="background:#c084fc;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_amethyst">Amethyst</span></button>
-          <button class="lcd-theme-chip" data-lcd-theme="crimson" title="Crimson Ruby"><span class="lcd-chip-swatch" style="background:#f43f5e;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_crimson">Crimson</span></button>
-          <button class="lcd-theme-chip" data-lcd-theme="light" title="Daylight White"><span class="lcd-chip-swatch" style="background:#f8fafc; border:1px solid #64748b;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_light">White</span></button>
-          <button class="lcd-theme-chip" data-lcd-theme="yak" title="Yak Bronze"><span class="lcd-chip-swatch" style="background:#d48a37;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_yak">Yak</span></button>
+          <button class="lcd-theme-chip active" data-lcd-theme="cyber" title="Cyber Teal" data-i18n-title="settings.theme_cyber"><span class="lcd-chip-swatch" style="background:#00f0ff;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_cyber">Cyber</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="amber" title="Amber Gold" data-i18n-title="settings.theme_amber"><span class="lcd-chip-swatch" style="background:#ffbe40;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_amber">Amber</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="emerald" title="Emerald Matrix" data-i18n-title="settings.theme_emerald"><span class="lcd-chip-swatch" style="background:#3bf58b;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_emerald">Emerald</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="sapphire" title="Sapphire Ice" data-i18n-title="settings.theme_sapphire"><span class="lcd-chip-swatch" style="background:#38bdf8;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_sapphire">Sapphire</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="amethyst" title="Amethyst Violet" data-i18n-title="settings.theme_amethyst"><span class="lcd-chip-swatch" style="background:#c084fc;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_amethyst">Amethyst</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="crimson" title="Crimson Ruby" data-i18n-title="settings.theme_crimson"><span class="lcd-chip-swatch" style="background:#f43f5e;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_crimson">Crimson</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="light" title="Daylight White" data-i18n-title="settings.theme_light"><span class="lcd-chip-swatch" style="background:#f8fafc; border:1px solid #64748b;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_light">White</span></button>
+          <button class="lcd-theme-chip" data-lcd-theme="yak" title="Yak Bronze" data-i18n-title="settings.theme_yak"><span class="lcd-chip-swatch" style="background:#d48a37;"></span><span class="lcd-chip-label" data-i18n="settings.theme_chip_yak">Yak</span></button>
         </div>
         <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -1930,7 +1930,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-clock">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg><span data-i18n="settings.clock_tz_title">Clock & Timezone</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg><span data-i18n="settings.clock_tz_title">Clock & Timezone</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <button id="clock-format-btn" class="btn-pill-toggle">24 Hours</button>
         </div>
         <div class="card-instruction" data-i18n="settings.clock_tz_desc">Override the screen time display and timezone / city.</div>
@@ -1958,7 +1958,7 @@
               <option value="custom">Custom IANA Identifier...</option>
             </optgroup>
           </select>
-          <input type="text" id="tz-custom-input" class="tz-text-input" placeholder="e.g. Asia/Seoul" style="display:none;">
+          <input type="text" id="tz-custom-input" class="tz-text-input" placeholder="e.g. Asia/Seoul" style="display:none;" aria-label="e.g. Asia/Seoul">
         </div>
       </div>
 
@@ -1966,10 +1966,10 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-backlight">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg><span data-i18n="settings.backlight_title">LCD Backlight & Night Dimming</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-chip"/></svg><span data-i18n="settings.backlight_title">LCD Backlight & Night Dimming</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <div style="display:flex; align-items:center; gap:8px;">
             <span id="screen-bri-val" class="card-head-val">100%</span>
-            <button id="btn-toggle-screen-power" type="button" class="btn-pill-toggle" data-i18n="settings.screen_turn_off" title="Turn physical LCD screen off or on">Turn Off</button>
+            <button id="btn-toggle-screen-power" type="button" class="btn-pill-toggle" data-i18n="settings.screen_turn_off" title="Turn physical LCD screen off or on" data-i18n-title="ui.turn_physical_lcd_screen_off">Turn Off</button>
           </div>
         </div>
         <div class="card-instruction" data-i18n="settings.backlight_desc">Control the physical front LCD display power, brightness, and scheduled nighttime dimming.</div>
@@ -1986,7 +1986,7 @@
             <span style="color:var(--muted); font-size:11px;" data-i18n="settings.to">to</span>
             <input type="time" id="screen-night-end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
             <span style="color:var(--muted); font-size:11px;">@</span>
-            <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input" style="width:48px; padding:3px 6px;" title="Night Brightness %">
+            <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input" style="width:48px; padding:3px 6px;" title="Night Brightness %" data-i18n-title="ui.night_brightness">
             <span style="color:var(--muted); font-size:11px;">%</span>
           </div>
         </div>
@@ -2006,7 +2006,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-presets">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.presets_title">Preset Layouts</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.presets_title">Preset Layouts</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="preset-state-badge" class="preset-state-badge">DEFAULT ENGAGED</span>
         </div>
         <div class="card-instruction" data-i18n="settings.presets_desc">1-click dashboard module arrangements.</div>
@@ -2048,7 +2048,7 @@
 
       <div class="draggable-card drawer-card" data-layout-card-id="sec-modules">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.modules_title">Screen Modules & Size Control</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.modules_title">Screen Modules & Size Control</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
         </div>
         <div class="card-instruction" data-i18n="settings.modules_desc">Toggle visibility and select compact or full gauge scaling for each module. (Drag cards inside the Live Preview above to reorder).</div>
 
@@ -2145,13 +2145,13 @@
   <div id="tab-led" class="drawer-tab-content">
     <div class="tab-sub-header">
       <span class="sub-title">Card arrangement</span>
-      <button id="drawer-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order">🔒 Locked</button>
+      <button id="drawer-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
     </div>
 
     <div id="drawer-cards-container" class="drawer-cards-flow locked">
       <div class="draggable-card preview-container" data-card-id="card-preview">
         <div class="preview-label-row">
-          <span class="drag-handle-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.live_bar_preview">LIVE BAR PREVIEW</span></span>
+          <span class="drag-handle-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.live_bar_preview">LIVE BAR PREVIEW</span></span>
           <span id="preview-state-txt">ON • SOLID</span>
         </div>
         <div class="preview-housing"><div id="preview-bar" class="preview-bar-element"></div></div>
@@ -2159,7 +2159,7 @@
 
       <div class="draggable-card drawer-card" data-card-id="card-reactive">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.reactive_alerts">System Reactive Alerts</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.reactive_alerts">System Reactive Alerts</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <label class="switch"><input type="checkbox" id="reactive-toggle" checked><span class="toggle-slider"></span></label>
         </div>
         <div class="card-instruction" data-i18n="settings.reactive_desc">Auto-flash red or pulse amber when drive errors, overheating, or fan faults occur.</div>
@@ -2167,7 +2167,7 @@
 
       <div class="draggable-card drawer-card" data-card-id="card-brightness">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.led_brightness">Front LED brightness</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.led_brightness">Front LED brightness</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="led-val-display" class="card-head-val">25%</span>
         </div>
         <div class="card-instruction" data-i18n="settings.led_brightness_desc">Adjust physical bar intensity. Changes apply automatically.</div>
@@ -2176,7 +2176,7 @@
 
       <div class="draggable-card drawer-card" data-card-id="card-led-schedule">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.led_night_title">Night Mode & Blackout Schedule</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.led_night_title">Night Mode & Blackout Schedule</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <label class="switch"><input type="checkbox" id="led-night-toggle"><span class="toggle-slider"></span></label>
         </div>
         <div class="card-instruction" data-i18n="settings.led_night_desc">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
@@ -2189,7 +2189,7 @@
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-profiles">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.lighting_profiles">Lighting Profiles</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.lighting_profiles">Lighting Profiles</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span></div>
         <div class="card-instruction" data-i18n="settings.lighting_profiles_desc">1-click quick hardware presets.</div>
         <div class="profiles-grid">
           <button class="profile-pill" data-profile="clean">Clean (Teal)</button>
@@ -2200,7 +2200,7 @@
       </div>
 
       <div class="draggable-card drawer-card" data-card-id="card-effects">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.lighting_effects">Lighting effects</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.lighting_effects">Lighting effects</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span></div>
         <div class="card-instruction" data-i18n="settings.lighting_effects_desc">Choose an active dynamic animation for the light bar.</div>
         <div class="effects-grid">
           <button class="effect-btn active" data-effect="solid">Solid</button>
@@ -2215,7 +2215,7 @@
 
       <div class="draggable-card drawer-card" id="speed-card" data-card-id="card-speed" style="display: none;">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.effect_speed">Effect speed</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.effect_speed">Effect speed</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="speed-val-display" class="card-head-val">Medium (50%)</span>
         </div>
         <div class="card-instruction" data-i18n="settings.effect_speed_desc">Control animation rate (1%: Slowest, 100%: Fastest).</div>
@@ -2224,7 +2224,7 @@
 
       <div class="draggable-card drawer-card" id="primary-color-card" data-card-id="card-color1">
         <div class="card-headline">
-          <span class="card-head-title" id="color1-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.primary_color">Primary Color</span></span>
+          <span class="card-head-title" id="color1-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.primary_color">Primary Color</span></span>
           <button id="btn-toggle-led" class="btn-pill-toggle" data-i18n="settings.turn_off">Turn Off</button>
         </div>
         <div class="card-instruction" data-i18n="settings.primary_color_desc">Select illumination preset or pick a custom hex color.</div>
@@ -2238,7 +2238,7 @@
           <button class="color-chip" data-hex="ff7800" style="background:#ff7800; color:#111;">Orange</button>
           <button class="color-chip" data-hex="ffb464" style="background:#ffb464; color:#111;">Warm</button>
           <button class="color-chip" data-hex="ffffff" style="background:#ffffff; color:#111;">White</button>
-          <label class="color-chip custom-picker-chip" id="custom-chip-label" title="Choose custom color">
+          <label class="color-chip custom-picker-chip" id="custom-chip-label" title="Choose custom color" data-i18n-title="ui.choose_custom_color">
             <span id="custom-chip-text">Custom</span>
             <input type="color" id="custom-color-picker" value="#25c2a0">
           </label>
@@ -2246,7 +2246,7 @@
       </div>
 
       <div class="draggable-card drawer-card" id="secondary-color-card" data-card-id="card-color2" style="display: none;">
-        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.secondary_color">Secondary Color (Gradient End)</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span></div>
+        <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.secondary_color">Secondary Color (Gradient End)</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span></div>
         <div class="card-instruction" data-i18n="settings.secondary_color_desc">Select the target tone that the primary color transitions toward.</div>
         <div class="color-grid">
           <button class="color-chip2" data-hex="ff0055" style="background:#ff0055; color:#fff;">Pink</button>
@@ -2258,7 +2258,7 @@
           <button class="color-chip2" data-hex="ff0000" style="background:#ff0000; color:#fff;">Red</button>
           <button class="color-chip2" data-hex="001428" style="background:#001428; color:#fff;">Deep</button>
           <button class="color-chip2" data-hex="ffffff" style="background:#ffffff; color:#111;">White</button>
-          <label class="color-chip2 custom-picker-chip" id="custom-chip2-label" title="Choose custom secondary color">
+          <label class="color-chip2 custom-picker-chip" id="custom-chip2-label" title="Choose custom secondary color" data-i18n-title="ui.choose_custom_secondary_color">
             <span>Custom</span>
             <input type="color" id="custom-color-picker2" value="#ff0055">
           </label>
@@ -2270,19 +2270,19 @@
   <div id="tab-fans" class="drawer-tab-content">
     <div class="tab-sub-header">
       <span class="sub-title">Fan Control Cards</span>
-      <button id="fan-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order">🔒 Locked</button>
+      <button id="fan-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
     </div>
 
     <div id="fan-cards-container" class="drawer-cards-flow locked">
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-tach">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg><span data-i18n="settings.fan_tachometers">Active Fan Tachometers</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic" style="margin-right:6px;"><use href="#i-fan"/></svg><span data-i18n="settings.fan_tachometers">Active Fan Tachometers</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span class="suite-badge" id="fan-status-badge">ONLINE</span>
         </div>
         <div class="card-instruction" data-i18n="settings.fan_tach_desc">Click any zone column below to isolate and track that zone on the Dynamic Fan Curve above.</div>
         
         <div class="drawer-fans-unified-grid">
-          <div class="drawer-fan-unified-col" id="fan-col-zone1" data-zone-filter="zone1" title="Click to isolate Zone 1 on Fan Curve">
+          <div class="drawer-fan-unified-col" id="fan-col-zone1" data-zone-filter="zone1" title="Click to isolate Zone 1 on Fan Curve" data-i18n-title="ui.click_to_isolate_zone_1">
             <div class="df-tach-box">
               <svg class="fan-ic" id="df-ic-0"><use href="#i-fan"/></svg>
               <span class="df-rpm" id="df-rpm-0">--</span>
@@ -2295,7 +2295,7 @@
             </div>
           </div>
 
-          <div class="drawer-fan-unified-col" id="fan-col-zone2" data-zone-filter="zone2" title="Click to isolate Zone 2 on Fan Curve">
+          <div class="drawer-fan-unified-col" id="fan-col-zone2" data-zone-filter="zone2" title="Click to isolate Zone 2 on Fan Curve" data-i18n-title="ui.click_to_isolate_zone_2">
             <div class="df-tach-box">
               <svg class="fan-ic" id="df-ic-1"><use href="#i-fan"/></svg>
               <span class="df-rpm" id="df-rpm-1">--</span>
@@ -2308,7 +2308,7 @@
             </div>
           </div>
 
-          <div class="drawer-fan-unified-col" id="fan-col-cpu" data-zone-filter="cpu" title="Click to isolate CPU Package on Fan Curve">
+          <div class="drawer-fan-unified-col" id="fan-col-cpu" data-zone-filter="cpu" title="Click to isolate CPU Package on Fan Curve" data-i18n-title="ui.click_to_isolate_cpu_package">
             <div class="df-tach-box">
               <svg class="fan-ic" id="df-ic-2"><use href="#i-fan"/></svg>
               <span class="df-rpm" id="df-rpm-2">--</span>
@@ -2325,7 +2325,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-curve">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.fan_curve_title">Dynamic Fan Curve • Thermal Map</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.fan_curve_title">Dynamic Fan Curve • Thermal Map</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span class="suite-badge" id="hysteresis-badge" style="background:rgba(51,209,122,0.15); color:var(--ok); border-color:rgba(51,209,122,0.35);">HOLD: READY</span>
         </div>
         <div class="card-instruction" id="curve-filter-instruction">Displaying all thermal zones. Click a zone tachometer above or below to isolate.</div>
@@ -2395,7 +2395,7 @@
             <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
             <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;">↺ Show All Zones</button>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">Ramp: 37°C – 50°C</span>
+              <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">Ramp: 37°C – 50°C</span>
               <div id="curve-readout-text" style="font-size:11px; font-weight:800; color:var(--ok2);">Active Mapping</div>
             </div>
           </div>
@@ -2404,7 +2404,7 @@
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-cpu-toggle">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.control_cpu_fan">Control CPU Fan</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.control_cpu_fan">Control CPU Fan</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <label class="switch">
             <input type="checkbox" id="cpu-fan-toggle">
             <span class="toggle-slider"></span>
@@ -2418,13 +2418,13 @@
           <span id="cpu-hold-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
         </div>
         <div class="slider-row" style="margin-top: 4px;">
-          <input type="range" id="cpu-hold-slider" min="10" max="90" value="30" step="5" class="custom-slider" aria-label="Anti-Flutter Hold Delay">
+          <input type="range" id="cpu-hold-slider" min="10" max="90" value="30" step="5" class="custom-slider" aria-label="Anti-Flutter Hold Delay" data-i18n-aria-label="settings.cpu_hold_label">
         </div>
       </div>
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-zero-rpm">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.zero_rpm_title">Zero RPM Fan Mode (HDD Standby)</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.zero_rpm_title">Zero RPM Fan Mode (HDD Standby)</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <label class="switch">
             <input type="checkbox" id="zero-rpm-toggle">
             <span class="toggle-slider"></span>
@@ -2442,13 +2442,13 @@
           <span id="zero-rpm-delay-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
         </div>
         <div class="slider-row" style="margin-top: 4px;">
-          <input type="range" id="zero-rpm-delay-slider" min="10" max="180" value="30" step="5" class="custom-slider" aria-label="Standby Cooldown Delay">
+          <input type="range" id="zero-rpm-delay-slider" min="10" max="180" value="30" step="5" class="custom-slider" aria-label="Standby Cooldown Delay" data-i18n-aria-label="settings.zero_rpm_stop_delay_label">
         </div>
       </div>
 
       <div class="draggable-card drawer-card" data-fan-card-id="fan-card-profiles">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.cooling_duty_profiles">Cooling Duty Profiles</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.cooling_duty_profiles">Cooling Duty Profiles</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
         </div>
         <div class="card-instruction" data-i18n="settings.cooling_duty_desc">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
         <div class="profiles-grid" style="grid-template-columns: repeat(5, 1fr);">
@@ -2464,7 +2464,7 @@
               <svg class="ic ic-xs"><use href="#i-sliders"/></svg>
               <span data-i18n="fan.presets_title">Custom Presets</span>
             </span>
-            <button id="btn-save-fan-preset" class="btn-fan-action btn-fan-save" type="button" title="Save current curve as preset">
+            <button id="btn-save-fan-preset" class="btn-fan-action btn-fan-save" type="button" title="Save current curve as preset" data-i18n-title="ui.save_current_curve_as_preset">
               <svg class="ic ic-xs"><use href="#i-save"/></svg>
               <span data-i18n="fan.save_preset">Save Preset</span>
             </button>
@@ -2475,11 +2475,11 @@
                 <option value="" data-i18n="fan.select_preset">-- Select Preset --</option>
               </select>
             </div>
-            <button id="btn-apply-fan-preset" class="btn-fan-action btn-fan-apply" type="button" disabled title="Apply selected preset">
+            <button id="btn-apply-fan-preset" class="btn-fan-action btn-fan-apply" type="button" disabled title="Apply selected preset" data-i18n-title="ui.apply_selected_preset">
               <svg class="ic ic-xs"><use href="#i-bolt"/></svg>
               <span data-i18n="fan.apply_preset">Apply</span>
             </button>
-            <button id="btn-delete-fan-preset" class="btn-fan-action btn-fan-delete" type="button" style="display: none;" title="Delete selected preset">
+            <button id="btn-delete-fan-preset" class="btn-fan-action btn-fan-delete" type="button" style="display: none;" title="Delete selected preset" data-i18n-title="ui.delete_selected_preset">
               <svg class="ic ic-xs"><use href="#i-trash"/></svg>
             </button>
           </div>
@@ -2489,7 +2489,7 @@
 
       <div class="draggable-card drawer-card" id="manual-pwm-card" data-fan-card-id="fan-card-override">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.manual_pwm_override">Manual PWM Override</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.manual_pwm_override">Manual PWM Override</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="fan-pwm-val-display" class="card-head-val">Auto Curve</span>
         </div>
         <div class="card-instruction" data-i18n="settings.manual_pwm_desc">Directly commands pwmX_enable = 1 and sets duty cycles 0-183.</div>
@@ -2500,7 +2500,7 @@
 
       <div class="draggable-card drawer-card" id="fan-card-acoustic" data-fan-card-id="fan-card-acoustic">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <span data-i18n="settings.acoustic_calibration_title">Acoustic Resonance Calibration</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.acoustic_calibration_title">Acoustic Resonance Calibration</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="acoustic-sweep-badge" class="suite-badge" style="background:rgba(56,189,248,0.15); color:var(--accent, #38bdf8); border-color:rgba(56,189,248,0.35);">READY</span>
         </div>
         <div class="card-instruction" data-i18n="settings.acoustic_calibration_desc">
@@ -2559,13 +2559,13 @@
   <div id="tab-buttons" class="drawer-tab-content">
     <div class="tab-sub-header">
       <span class="sub-title" data-i18n="settings.chassis_hw_bindings">Chassis Hardware Bindings</span>
-      <button id="btn-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order">🔒 Locked</button>
+      <button id="btn-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Section Order" data-i18n-title="ui.lock_or_unlock_section_order">🔒 Locked</button>
     </div>
     
     <div id="btn-sections-container" class="drawer-cards-flow locked">
       <div class="draggable-card drawer-card" data-btn-card-id="sec-copybtn" style="cursor: default;">
         <div class="card-headline">
-          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.copy_btn_title">Front-Panel COPY Button</span><button class="btn-minimize" title="Minimize/Expand" aria-label="Minimize/Expand card">▼</button></span>
+          <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.copy_btn_title">Front-Panel COPY Button</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <div style="display:flex; align-items:center; gap:8px;">
             <span id="btn-copy-status-text" style="font-size:11px; font-weight:700; text-transform:uppercase; opacity:0.8;">ENABLED</span>
             <label class="switch">
@@ -2582,9 +2582,9 @@
               <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>
               <div style="display:flex; gap:6px; align-items:center;">
                 <span id="media-slot-info-badge" class="suite-badge" style="font-size:11px;">SLOTS EMPTY</span>
-                <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards">🔄 Scan</button>
-                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Start media ingest now from inserted card">▶ Copy Now</button>
-                <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card">⏏ Eject</button>
+                <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted">🔄 Scan</button>
+                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Start media ingest now from inserted card" data-i18n-title="ui.start_media_ingest_now_from">▶ Copy Now</button>
+                <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card">⏏ Eject</button>
               </div>
             </div>
             <select id="btn-copy-src" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
@@ -2596,7 +2596,7 @@
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
             <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Destination Path (Ingest Target)</span>
             <div style="display: flex; gap: 8px; width: 100%;">
-              <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;">
+              <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;" aria-label="/mnt/user/">
               <button id="btn-browse-dst" class="btn-pill-toggle" style="text-transform: uppercase; margin: 0; height: auto;" data-i18n="settings.browse">📁 Browse</button>
             </div>
           </div>
@@ -2667,21 +2667,21 @@
     <div class="smart-modal-header">
       <div class="smart-modal-title" id="folder-browser-title"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.fb_title">Select Destination Folder</span></div>
       <div class="os-window-controls">
-        <button class="win-btn min-btn" id="fb-min" title="Minimize" aria-label="Minimize"></button>
-        <button class="win-btn max-btn" id="fb-max" title="Maximize" aria-label="Maximize"></button>
-        <button class="win-btn close-btn" id="fb-close" title="Close" aria-label="Close"></button>
+        <button class="win-btn min-btn" id="fb-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
+        <button class="win-btn max-btn" id="fb-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
+        <button class="win-btn close-btn" id="fb-close" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="padding-bottom: 20px;">
       <div id="fb-current-path" style="font-family: monospace; font-size: 11px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
       
       <div style="display: flex; gap: 8px; margin-top: 5px;">
-        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: 11px;">
-        <button id="fb-sort-btn" class="btn-pill-toggle" title="Toggle Sort">A-Z</button>
+        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: 11px;" aria-label="🔍 Filter folders..." data-i18n-aria-label="modal.fb_search">
+        <button id="fb-sort-btn" class="btn-pill-toggle" title="Toggle Sort" data-i18n-title="ui.toggle_sort">A-Z</button>
       </div>
 
       <div style="display: flex; gap: 8px; margin-top: 5px;">
-        <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." data-i18n-placeholder="modal.fb_new_folder" style="flex-grow: 1; font-size: 11px;">
+        <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." data-i18n-placeholder="modal.fb_new_folder" style="flex-grow: 1; font-size: 11px;" aria-label="New folder name..." data-i18n-aria-label="modal.fb_new_folder">
         <button id="fb-create-folder" class="btn-pill-toggle" data-i18n="modal.fb_create">+ Create</button>
       </div>
 
@@ -2704,27 +2704,27 @@
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
         <svg class="ic ic-sm"><use href="#i-users"/></svg> <span>Create New User</span>
       </div>
-      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <form id="form-add-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME (REQUIRED)</label>
+        <label for="add-user-username" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME (REQUIRED)</label>
         <input type="text" id="add-user-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. john" pattern="^[a-zA-Z0-9_\.-]{3,32}$" required>
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
-        <input type="text" id="add-user-display" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. John Doe">
+        <label for="add-user-display" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
+        <input type="text" id="add-user-display" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
+        <label for="add-user-email" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
         <input type="email" id="add-user-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="john@example.com">
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">PASSWORD (REQUIRED)</label>
-        <input type="password" id="add-user-password" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+        <label for="add-user-password" style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">PASSWORD (REQUIRED)</label>
+        <input type="password" id="add-user-password" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
+        <label for="add-user-role" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
         <select id="add-user-role" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;">
           <option value="share_user" selected>Family & Share User 👤 (Files & WebDAV only)</option>
           <option value="app_operator">App Operator 📦 (Docker & App management)</option>
@@ -2735,7 +2735,7 @@
         </select>
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
+        <label for="add-user-quota" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
         <input type="number" id="add-user-quota" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="0" min="0">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
@@ -2753,24 +2753,24 @@
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
         <svg class="ic ic-sm"><use href="#i-users"/></svg> <span>Edit User Profile</span>
       </div>
-      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <form id="form-edit-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <input type="hidden" id="edit-user-id">
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
+        <label for="edit-user-username" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
         <input type="text" id="edit-user-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.05); padding:8px 10px; color:var(--muted); cursor:not-allowed;" disabled>
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
-        <input type="text" id="edit-user-display" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. John Doe">
+        <label for="edit-user-display" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
+        <input type="text" id="edit-user-display" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
+        <label for="edit-user-email" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
         <input type="email" id="edit-user-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="john@example.com">
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
+        <label for="edit-user-role" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
         <select id="edit-user-role" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;">
           <option value="share_user">Family & Share User 👤 (Files & WebDAV only)</option>
           <option value="app_operator">App Operator 📦 (Docker & App management)</option>
@@ -2781,7 +2781,7 @@
         </select>
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
+        <label for="edit-user-quota" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
         <input type="number" id="edit-user-quota" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="0" min="0">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
@@ -2799,20 +2799,20 @@
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
         <span style="font-size:15px;">🔑</span> <span>Reset Password for <strong id="reset-pwd-username">@user</strong></span>
       </div>
-      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <form id="form-reset-password" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <div id="reset-pwd-current-wrap" style="display:none;">
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CURRENT PASSWORD</label>
-        <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Your current password" autocomplete="current-password">
+        <label for="reset-pwd-current" style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CURRENT PASSWORD</label>
+        <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Your current password" data-i18n-placeholder="ui.your_current_password" autocomplete="current-password">
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
-        <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+        <label for="reset-pwd-input" style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
+        <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
-        <label style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CONFIRM NEW PASSWORD</label>
-        <input type="password" id="reset-pwd-confirm" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Repeat new password" minlength="8" required autocomplete="new-password">
+        <label for="reset-pwd-confirm" style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CONFIRM NEW PASSWORD</label>
+        <input type="password" id="reset-pwd-confirm" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff;" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" required autocomplete="new-password">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
         <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
@@ -2829,7 +2829,7 @@
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
         <span style="font-size:15px;">🛡️</span> <span>Setup Two-Factor Authentication</span>
       </div>
-      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" aria-label="Close"></button>
+      <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <div class="smart-modal-body" style="padding: 18px;">
       <!-- Step 1: Scan & Verify -->
@@ -2849,7 +2849,7 @@
             <input type="password" id="mfa-current-password" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:rgba(0,0,0,0.3); padding:10px; color:#fff;" required autocomplete="current-password">
           </div>
           <div>
-            <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">6-DIGIT VERIFICATION CODE</label>
+            <label for="mfa-verify-code" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">6-DIGIT VERIFICATION CODE</label>
             <input type="text" id="mfa-verify-code" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:rgba(0,0,0,0.3); padding:10px; color:#fff; font-size:18px; font-family:monospace; text-align:center; letter-spacing:4px;" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
           </div>
           <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
@@ -2896,11 +2896,11 @@
   <div class="smart-modal-header" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
     <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Media card ingest</span></div>
     <div style="display:flex; gap:10px; align-items:center;">
-      <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px; margin-right: 2px;" aria-label="Pause copy">⏸</button>
+      <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px; margin-right: 2px;" aria-label="Pause copy" data-i18n-aria-label="ui.pause_copy">⏸</button>
       <div class="os-window-controls">
-        <button class="win-btn min-btn" id="copy-toast-min" title="Minimize" aria-label="Minimize"></button>
-        <button class="win-btn max-btn" id="copy-toast-max" title="Maximize" aria-label="Maximize" style="display:none;"></button>
-        <button class="win-btn close-btn" id="copy-toast-cancel" title="Close" aria-label="Close"></button>
+        <button class="win-btn min-btn" id="copy-toast-min" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
+        <button class="win-btn max-btn" id="copy-toast-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize" style="display:none;"></button>
+        <button class="win-btn close-btn" id="copy-toast-cancel" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
   </div>
@@ -2927,9 +2927,9 @@
         <div style="display:flex; gap:12px; align-items:center;">
           <span class="chassis-screen-spec">640 × 172 IPS</span>
           <div class="os-window-controls">
-            <button class="win-btn min-btn" id="console-min" title="Minimize to dock" aria-label="Minimize"></button>
-            <button class="win-btn max-btn" id="console-max" title="Maximize" aria-label="Maximize"></button>
-            <button class="win-btn close-btn" id="console-close" title="Close console window" aria-label="Close"></button>
+            <button class="win-btn min-btn" id="console-min" title="Minimize to dock" data-i18n-title="ui.minimize_to_dock_2" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
+            <button class="win-btn max-btn" id="console-max" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
+            <button class="win-btn close-btn" id="console-close" title="Close console window" data-i18n-title="ui.close_console_window" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
           </div>
         </div>
       </div>
@@ -2943,10 +2943,10 @@
           <div class="clock" id="clock">--:--</div>
           <div class="h-right">
             <div class="lcd-page-dots" id="lcd-page-dots">
-              <span class="lcd-dot active" data-page="0" title="Page 1: Overview">1</span>
-              <span class="lcd-dot" data-page="1" title="Page 2: Drive Bay Matrix">2</span>
-              <span class="lcd-dot" data-page="2" title="Page 3: Network & IO">3</span>
-              <span class="lcd-dot" data-page="3" title="Page 4: Unraid & Copy Hub">4</span>
+              <span class="lcd-dot active" data-page="0" title="Page 1: Overview" data-i18n-title="ui.page_1_overview">1</span>
+              <span class="lcd-dot" data-page="1" title="Page 2: Drive Bay Matrix" data-i18n-title="ui.page_2_drive_bay_matrix">2</span>
+              <span class="lcd-dot" data-page="2" title="Page 3: Network & IO" data-i18n-title="ui.page_3_network_io">3</span>
+              <span class="lcd-dot" data-page="3" title="Page 4: Unraid & Copy Hub" data-i18n-title="ui.page_4_unraid_copy_hub">4</span>
             </div>
             <svg class="ic ic-sm"><use href="#i-globe"/></svg>
             <span id="ip">0.0.0.0</span>
@@ -2957,7 +2957,7 @@
           <!-- Page 0: Overview Dashboard -->
           <div class="lcd-page active" id="lcd-page-0" data-page-index="0">
             <section class="cards" id="dashboard-cards-container">
-              <div class="card card-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
+              <div class="card card-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics" data-i18n-title="ui.click_to_view_storage_diagnostics">
                 <div class="card-title"><svg class="ic"><use href="#i-disk"/></svg><span class="card-title-txt" data-i18n="console.storage">STORAGE</span></div>
                 <div class="storage-body">
                   <div class="donut" id="donut"><span id="storagePct">0%</span></div>
@@ -2976,7 +2976,7 @@
                 </div>
               </div>
 
-              <div class="card card-cpu" data-metric-id="metric-cpu" title="Click to view CPU diagnostics">
+              <div class="card card-cpu" data-metric-id="metric-cpu" title="Click to view CPU diagnostics" data-i18n-title="ui.click_to_view_cpu_diagnostics">
                 <div class="card-title"><svg class="ic"><use href="#i-cpu"/></svg><span class="card-title-txt" data-i18n="console.cpu">CPU</span></div>
                 <div class="gauge-body">
                   <div class="arc" id="cpuArc"><div class="arc-val"><span id="cpuTemp">0</span><span class="u">°C</span></div></div>
@@ -2984,7 +2984,7 @@
                 </div>
               </div>
 
-              <div class="card card-mem" data-metric-id="metric-mem" title="Click to view Memory diagnostics">
+              <div class="card card-mem" data-metric-id="metric-mem" title="Click to view Memory diagnostics" data-i18n-title="ui.click_to_view_memory_diagnostics">
                 <div class="card-title"><svg class="ic"><use href="#i-mem"/></svg><span class="card-title-txt" data-i18n="console.memory">MEMORY</span></div>
                 <div class="gauge-body">
                   <div class="arc" id="memArc"><div class="arc-val"><span id="memPct">0</span><span class="u">%</span></div></div>
@@ -2992,13 +2992,13 @@
                 </div>
               </div>
 
-              <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry">
+              <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry" data-i18n-title="ui.click_to_view_fans_telemetry">
                 <div class="card-title"><svg class="ic"><use href="#i-fan"/></svg><span class="card-title-txt" data-i18n="console.fans">FANS</span></div>
                 <div class="fan-row" id="fanRow"></div>
                 <div class="uptime"><svg class="ic ic-sm"><use href="#i-clock"/></svg><span id="uptime">up --</span></div>
               </div>
 
-              <div class="card card-net" data-metric-id="metric-net" title="Click to view Network diagnostics">
+              <div class="card card-net" data-metric-id="metric-net" title="Click to view Network diagnostics" data-i18n-title="ui.click_to_view_network_diagnostics">
                 <div class="card-title"><svg class="ic"><use href="#i-net"/></svg><span class="card-title-txt" data-i18n="console.net">NETWORK I/O</span></div>
                 <div class="net-body">
                   <div class="net-row"><span>TX:</span><strong id="netTx">0.0 MB/s</strong></div>
@@ -3020,7 +3020,7 @@
 
               <div class="sl-main-deck">
                 <!-- Card 1: Storage -->
-                <div class="card sl-card sl-card-storage" id="sl-zone-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics">
+                <div class="card sl-card sl-card-storage" id="sl-zone-storage" data-metric-id="metric-storage" title="Click to view Storage diagnostics" data-i18n-title="ui.click_to_view_storage_diagnostics">
                   <div class="card-title">
                     <svg class="ic"><use href="#i-disk"/></svg>
                     <span class="card-title-txt" data-i18n="console.storage">STORAGE</span>
@@ -3047,13 +3047,13 @@
                 </div>
 
                 <!-- Card 2: Compute -->
-                <div class="card sl-card sl-card-compute" id="sl-zone-compute" data-metric-id="metric-cpu" title="Click to view Compute diagnostics">
+                <div class="card sl-card sl-card-compute" id="sl-zone-compute" data-metric-id="metric-cpu" title="Click to view Compute diagnostics" data-i18n-title="ui.click_to_view_compute_diagnostics">
                   <div class="card-title">
                     <svg class="ic"><use href="#i-cpu"/></svg>
                     <span class="card-title-txt" data-i18n="console.compute">COMPUTE</span>
                   </div>
                   <div class="sl-compute-body">
-                    <div class="sl-bar-row" id="sl-cpu-row" title="Click to view CPU diagnostics">
+                    <div class="sl-bar-row" id="sl-cpu-row" title="Click to view CPU diagnostics" data-i18n-title="ui.click_to_view_cpu_diagnostics">
                       <div class="sl-bar-header">
                         <span class="sl-bar-label">CPU</span>
                         <div class="sl-bar-stat">
@@ -3065,7 +3065,7 @@
                         <div class="sl-bar-fill sl-fill-cpu" id="sl-cpu-bar" style="width: 0%"></div>
                       </div>
                     </div>
-                    <div class="sl-bar-row" id="sl-mem-row" title="Click to view Memory diagnostics">
+                    <div class="sl-bar-row" id="sl-mem-row" title="Click to view Memory diagnostics" data-i18n-title="ui.click_to_view_memory_diagnostics">
                       <div class="sl-bar-header">
                         <span class="sl-bar-label">MEMORY</span>
                         <div class="sl-bar-stat">
@@ -3081,7 +3081,7 @@
                 </div>
 
                 <!-- Card 3: Hero Big IP -->
-                <div class="card sl-card sl-card-ip" id="sl-zone-ip" data-metric-id="metric-net" title="Click to view Network diagnostics">
+                <div class="card sl-card sl-card-ip" id="sl-zone-ip" data-metric-id="metric-net" title="Click to view Network diagnostics" data-i18n-title="ui.click_to_view_network_diagnostics">
                   <div class="card-title">
                     <svg class="ic"><use href="#i-globe"/></svg>
                     <span class="card-title-txt" data-i18n="console.ip_address">IP ADDRESS</span>
@@ -3200,11 +3200,11 @@
       <div style="font-size:12px; font-weight:800; color:#fff; letter-spacing:0.3px;" data-i18n="notif.title">Notification Center</div>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
-      <button id="notif-settings-btn" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; padding:2px 4px; display:inline-flex; align-items:center;" title="Configure Alert Channels" aria-label="Configure Alert Channels">⚙️</button>
+      <button id="notif-settings-btn" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:12px; padding:2px 4px; display:inline-flex; align-items:center;" title="Configure Alert Channels" data-i18n-title="notif.configure_channels" aria-label="Configure Alert Channels" data-i18n-aria-label="notif.configure_channels">⚙️</button>
       <button id="notif-mark-read" style="background:none; border:none; color:var(--brand, #0ea5e9); cursor:pointer; font-size:11px; font-weight:600; padding:2px 4px;" data-i18n="notif.mark_all_read">Mark all read</button>
-      <button id="notif-clear-all" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; font-weight:600; padding:2px 4px;" title="Clear notifications" data-i18n="notif.clear_all">Clear all</button>
+      <button id="notif-clear-all" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:11px; font-weight:600; padding:2px 4px;" title="Clear notifications" data-i18n-title="ui.clear_notifications" data-i18n="notif.clear_all">Clear all</button>
       <div class="os-window-controls" style="display:flex; gap:6px; align-items:center; margin-left:4px;">
-        <button class="win-btn close-btn" id="notif-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="notif-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
   </div>
@@ -3217,7 +3217,7 @@
   <div id="notif-center-list" data-scrollable="true" style="flex:1; overflow-y:auto; padding:6px 0 16px 0; min-height:160px;">
     <div style="padding:20px; text-align:center; color:var(--muted); font-size:11px;" data-i18n="notif.empty">No recent notifications.</div>
   </div>
-  <div id="notif-center-resizer" class="window-resizer-grip" title="Drag to resize window" aria-label="Drag to resize window"></div>
+  <div id="notif-center-resizer" class="window-resizer-grip" title="Drag to resize window" data-i18n-title="ui.drag_to_resize_window" aria-label="Drag to resize window" data-i18n-aria-label="ui.drag_to_resize_window"></div>
 </div>
 
 <!-- Notification Channel Configuration Modal -->
@@ -3229,7 +3229,7 @@
         <span style="font-size:16px;">🔔</span>
         <span id="notif-modal-title" style="font-size:14px; font-weight:700; color:#fff;">Configure Alert Channel</span>
       </div>
-      <button id="btn-close-channel-modal" class="win-btn close-btn" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:24px; height:24px; border-radius:50%; cursor:pointer;" title="Close">✕</button>
+      <button id="btn-close-channel-modal" class="win-btn close-btn" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:24px; height:24px; border-radius:50%; cursor:pointer;" title="Close" data-i18n-title="diagnostics.close_btn">✕</button>
     </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">
@@ -3258,7 +3258,7 @@
         <span>Configure WebDAV File Server</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-webdav-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-webdav-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="webdav-config-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -3280,7 +3280,7 @@
         </div>
         <div>
           <label for="webdav-cfg-pass" style="display:block; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
-          <input type="password" id="webdav-cfg-pass" class="tz-select-input" placeholder="(Leave blank to keep)" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+          <input type="password" id="webdav-cfg-pass" class="tz-select-input" placeholder="(Leave blank to keep)" data-i18n-placeholder="ui.leave_blank_to_keep" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
         </div>
       </div>
 
@@ -3312,9 +3312,9 @@
         <span>Connect New Cloud / Remote Storage</span>
       </span>
       <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
-        <button class="win-btn min-btn" id="modal-remote-min-btn" title="Minimize" aria-label="Minimize"></button>
-        <button class="win-btn max-btn" id="modal-remote-max-btn" title="Maximize" aria-label="Maximize"></button>
-        <button class="win-btn close-btn" id="modal-remote-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn min-btn" id="modal-remote-min-btn" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
+        <button class="win-btn max-btn" id="modal-remote-max-btn" title="Maximize" data-i18n-title="ui.maximize" aria-label="Maximize" data-i18n-aria-label="ui.maximize"></button>
+        <button class="win-btn close-btn" id="modal-remote-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="new-remote-form">
@@ -3371,7 +3371,7 @@
         <span>Provision Storage Pool & RAID</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-create-pool-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-create-pool-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="create-pool-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 80vh; overflow-y: auto;">
@@ -3442,12 +3442,12 @@
         <span data-i18n="storage.rename_pool_title">Rename Storage Pool</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-rename-pool-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-rename-pool-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="rename-pool-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div>
-        <label style="display:block; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="storage.current_pool_name">CURRENT POOL NAME</label>
+        <label for="rename-pool-current-name" style="display:block; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="storage.current_pool_name">CURRENT POOL NAME</label>
         <input type="text" id="rename-pool-current-name" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.08); background:rgba(0,0,0,0.4); padding:8px 10px; color:var(--muted); border-radius:6px; font-size:12px;" disabled />
       </div>
 
@@ -3484,7 +3484,7 @@
         <span>Provision Network Share</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-create-share-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-create-share-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="create-share-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -3510,7 +3510,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
           <label for="create-share-comment" style="display:block; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">DESCRIPTION / COMMENT</label>
-          <input type="text" id="create-share-comment" class="tz-select-input" placeholder="ZettNAS Managed Share" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
+          <input type="text" id="create-share-comment" class="tz-select-input" placeholder="ZettNAS Managed Share" data-i18n-placeholder="ui.zettnas_managed_share" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.3); padding:8px 10px; color:#fff; border-radius:6px; font-size:12px;" />
         </div>
         <div>
           <label for="create-share-quota-gb" style="display:flex; justify-content:space-between; font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">
@@ -3609,7 +3609,7 @@
         <span>Btrfs Subvolume Snapshots</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-snapshots-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-snapshots-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
@@ -3642,13 +3642,13 @@
         <span>Add Hyper-Backup Task</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-backup-job-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-backup-job-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="create-backup-job-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div>
         <label for="backup-job-name" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Task Name</label>
-        <input type="text" id="backup-job-name" class="tz-select-input" placeholder="e.g. Daily Documents & Photos Sync" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+        <input type="text" id="backup-job-name" class="tz-select-input" placeholder="e.g. Daily Documents & Photos Sync" data-i18n-placeholder="ui.e_g_daily_documents_photos" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
       </div>
 
       <div>
@@ -3661,7 +3661,7 @@
 
       <div id="backup-config-fields" hidden style="display: flex; flex-direction: column; gap: 6px;">
         <label for="backup-job-passphrase" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Backup passphrase</label>
-        <input type="password" id="backup-job-passphrase" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
+        <input type="password" id="backup-job-passphrase" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" data-i18n-placeholder="ui.at_least_8_characters" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
         <div style="font-size: 11px; color: var(--muted);">Needed to restore. Keep it somewhere other than this server, with your AI data key if you set one.</div>
       </div>
 
@@ -3736,13 +3736,13 @@
         <span>New Snapshot Replication Pipeline</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-repl-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-repl-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="create-replication-pipeline-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div>
         <label for="repl-job-name" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Pipeline Name</label>
-        <input type="text" id="repl-job-name" class="tz-select-input" placeholder="e.g. Offsite Pool Replication" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+        <input type="text" id="repl-job-name" class="tz-select-input" placeholder="e.g. Offsite Pool Replication" data-i18n-placeholder="ui.e_g_offsite_pool_replication" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -3826,7 +3826,7 @@
         <span>Take Storage Snapshot</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-create-snapshot-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-create-snapshot-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <form id="create-snapshot-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -3836,7 +3836,7 @@
       </div>
       <div>
         <label for="snapshot-custom-name-input" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Custom Snapshot Tag (Optional)</label>
-        <input type="text" id="snapshot-custom-name-input" class="tz-select-input" placeholder="Leave empty for auto timestamp" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
+        <input type="text" id="snapshot-custom-name-input" class="tz-select-input" placeholder="Leave empty for auto timestamp" data-i18n-placeholder="ui.leave_empty_for_auto_timestamp" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
         <input type="checkbox" id="snapshot-readonly-input" checked style="width: 16px; height: 16px; cursor: pointer;" />
@@ -3859,7 +3859,7 @@
         <span data-i18n="catalog.sideload_title">Sideload App Package</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-sideload-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-sideload-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -3906,7 +3906,7 @@
         <span data-i18n="sftp.title">Inbound SFTP Subsystem</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-sftp-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-sftp-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -3933,11 +3933,11 @@
         <div style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase;" data-i18n="sftp.add_user">+ Add SFTP User</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
-            <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Username</label>
+            <label for="sftp-new-username" style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Username</label>
             <input type="text" id="sftp-new-username" required class="tz-select-input" placeholder="e.g. backup_client" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 6px 8px; color: #fff; border-radius: 6px; font-size: 11px;" />
           </div>
           <div>
-            <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Password</label>
+            <label for="sftp-new-password" style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Password</label>
             <input type="password" id="sftp-new-password" required class="tz-select-input" placeholder="••••••••" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 6px 8px; color: #fff; border-radius: 6px; font-size: 11px;" />
           </div>
         </div>
@@ -3966,7 +3966,7 @@
         <span>WireGuard Mobile QR Profile</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-wg-qr-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-wg-qr-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 14px;">
@@ -3989,7 +3989,7 @@
         <span data-i18n="media.title">Media Organizer & Renamer</span>
       </span>
       <div class="os-window-controls">
-        <button class="win-btn close-btn" id="modal-media-org-close-btn" title="Close" aria-label="Close"></button>
+        <button class="win-btn close-btn" id="modal-media-org-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -4042,7 +4042,7 @@
 </div>
 
 <!-- Desktop Right-Click Context Menu -->
-<div id="desktop-context-menu" class="desktop-context-menu" role="menu" aria-label="Desktop Context Menu" style="display: none;">
+<div id="desktop-context-menu" class="desktop-context-menu" role="menu" aria-label="Desktop Context Menu" data-i18n-aria-label="ui.desktop_context_menu" style="display: none;">
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="add-shortcut">
     <span class="context-menu-icon">➕</span>
     <span class="context-menu-label">Add Desktop Shortcut…</span>
@@ -4107,7 +4107,7 @@
 </div>
 
 <!-- Widget Right-Click Context Menu -->
-<div id="widget-context-menu" class="desktop-context-menu widget-context-menu" role="menu" aria-label="Widget Context Menu" style="display: none;">
+<div id="widget-context-menu" class="desktop-context-menu widget-context-menu" role="menu" aria-label="Widget Context Menu" data-i18n-aria-label="ui.widget_context_menu" style="display: none;">
   <div class="context-menu-item danger" role="menuitem" tabindex="0" data-action="remove-widget" id="ctx-remove-widget-item">
     <span class="context-menu-icon">🗑️</span>
     <span class="context-menu-label" id="ctx-remove-widget-label" data-i18n="ctx.remove_widget">Remove Widget</span>
