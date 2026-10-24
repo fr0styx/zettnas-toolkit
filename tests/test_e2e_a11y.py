@@ -115,7 +115,12 @@ def _login(page):
     page.click("#login-btn")
     page.wait_for_function("() => localStorage.getItem('zettnas_signed_in') === '1'", timeout=8000)
     page.reload(wait_until="domcontentloaded")
-    page.wait_for_selector("#os-dock-container", timeout=8000)
+    # the desktop dock, or the launcher on a phone (phone mode hides the desktop, UX-13)
+    page.wait_for_function(
+        "() => ['#os-dock-container', '#phone-launcher'].some((s) => document.querySelector(s)"
+        "?.checkVisibility({ visibilityProperty: true }))",
+        timeout=8000,
+    )
     page.add_script_tag(path=AXE)
     page.wait_for_timeout(1500)
     return login

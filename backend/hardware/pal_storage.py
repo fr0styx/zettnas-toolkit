@@ -819,11 +819,7 @@ class StoragePlatformAdapter(ABC):
                                 exc_info=True,
                             )
 
-                    clean_dev = (
-                        re.sub(r"p?\d+$", "", real_dev)
-                        if (real_dev.startswith("sd") or real_dev.startswith("nvme") or real_dev.startswith("vd"))
-                        else real_dev
-                    )
+                    clean_dev = _whole_disk(real_dev)
 
                     m_role = "data"
                     m_type = "Data"
@@ -865,6 +861,26 @@ class StoragePlatformAdapter(ABC):
                     )
 
         return members
+
+
+def _whole_disk(name: str) -> str:
+    """The disk a partition belongs to: sdb1 -> sdb, nvme0n1p1 -> nvme0n1, mmcblk0p2 -> mmcblk0.
+    Whole NVMe disks keep their name (nvme1n1 is not a partition of nvme1n)."""
+    if name.startswith(("nvme", "mmcblk")):
+        return re.sub(r"p\d+$", "", name)
+    if name.startswith(("sd", "vd", "hd", "xvd")):
+        return re.sub(r"\d+$", "", name)
+    return name
+
+
+# Samba configs an observed host may export shares from (a constant so tests can point it elsewhere)
+SMB_CONF_PATHS = (
+    "/etc/samba/smb.conf",
+    "/host/etc/samba/smb.conf",
+    "/etc/ugreen/samba/smb.conf",
+    "/host/etc/ugreen/samba/smb.conf",
+    "/etc/samba/smb.conf.user",
+)
 
 
 def _parse_ini_sections(filepath: str) -> dict[str, dict[str, str]]:
@@ -1656,7 +1672,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
             members: list[PoolMember] = []
             for m_token in info.get("members", []):
-                clean_disk = re.sub(r"p?\d+$", "", m_token)
+                clean_disk = _whole_disk(m_token)
                 if clean_disk in hal_disks:
                     members.append(hal_disks[clean_disk])
                 else:
@@ -2767,14 +2783,7 @@ class ObserverStorageAdapter(StoragePlatformAdapter):
     def _parse_smb_conf(self) -> list[NetworkShare]:
         """Parses Samba configuration files to identify host-exported network shares."""
         shares: list[NetworkShare] = []
-        candidates = [
-            "/etc/samba/smb.conf",
-            "/host/etc/samba/smb.conf",
-            "/etc/ugreen/samba/smb.conf",
-            "/host/etc/ugreen/samba/smb.conf",
-            "/etc/samba/smb.conf.user",
-        ]
-        target_conf = next((c for c in candidates if os.path.isfile(c)), None)
+        target_conf = next((c for c in SMB_CONF_PATHS if os.path.isfile(c)), None)
         if not target_conf:
             return shares
 
@@ -3490,7 +3499,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
             # Map members to physical HAL disks
             members: list[PoolMember] = []
             for m_token in info.get("members", []):
-                clean_disk = re.sub(r"p?\d+$", "", m_token)
+                clean_disk = _whole_disk(m_token)
                 if clean_disk in hal_disks:
                     members.append(hal_disks[clean_disk])
                 else:

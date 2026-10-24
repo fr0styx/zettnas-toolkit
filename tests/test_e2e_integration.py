@@ -191,8 +191,11 @@ def test_e2e_live_desktop_session_and_badge():
         )
         page = context.new_page()
         page.goto("http://127.0.0.1:8082/", wait_until="domcontentloaded", timeout=12000)
+        # the login form settles first (it can swap the quick sign-in for the full form)
+        page.wait_for_selector("#login-password", state="visible", timeout=12000)
+        page.wait_for_load_state("networkidle")
         if page.is_visible("#login-toggle-manual"):
-            page.click("#login-toggle-manual")
+            page.click("#login-toggle-manual", timeout=5000)
         if page.is_visible("#login-username"):
             page.fill("#login-username", "admin")
         page.fill("#login-password", os.environ.get("ZETTNAS_E2E_PASSWORD") or os.environ.get("WEB_PASSWORD", "admin"))

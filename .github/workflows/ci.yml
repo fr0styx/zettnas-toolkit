@@ -30,6 +30,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0 # the changed-lines check compares with the previous commit
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v7
@@ -66,6 +67,20 @@ jobs:
           if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=69 -v -rfE 2>&1 | tee /tmp/zn-unit.log; then
             body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/zn-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Unit tests::$body"
+            exit 1
+          fi
+
+      # The overall coverage can hide new untested code: the backend lines a push or pull request
+      # changes must themselves be covered by tests (80 %). Pushes that add tests only pass trivially.
+      - name: Changed lines are tested (diff coverage)
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then BASE=HEAD~1; fi
+          diff-cover coverage.xml --compare-branch="$BASE" --fail-under=80 --markdown-report diff-cover.md || status=$?
+          cat diff-cover.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          if [ "${status:-0}" != 0 ]; then
+            echo "::error title=Changed lines are not tested::Fewer than 80% of the backend lines this change touches are covered by tests. See the step summary."
             exit 1
           fi
 

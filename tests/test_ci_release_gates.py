@@ -51,3 +51,15 @@ def test_published_images_can_be_smoke_tested_on_demand():
     run = wf["jobs"]["smoke"]["steps"][-1]["run"]
     assert "scripts/smoke_test.sh" in run
     assert "${{" not in run  # inputs reach the script through env, never pasted into the shell
+
+
+def test_changed_backend_lines_must_be_tested():
+    """Diff coverage: new code cannot hide behind the overall percentage."""
+    root = os.path.dirname(os.path.dirname(__file__))
+    with open(os.path.join(root, ".github", "workflows", "ci.yml"), encoding="utf-8") as f:
+        job = yaml.safe_load(f)["jobs"]["lint-and-test"]
+    run = "\n".join(s.get("run", "") for s in job["steps"])
+    assert "diff-cover coverage.xml" in run and "--fail-under=80" in run
+    assert job["steps"][0]["with"]["fetch-depth"] == 0
+    with open(os.path.join(root, "requirements-dev.txt"), encoding="utf-8") as f:
+        assert "diff-cover==" in f.read()

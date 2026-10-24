@@ -49,5 +49,6 @@ static/**/*.gz
 
 # Copied from frontend/public by every build (the app serves them; the sources are committed there)
 static/sw.js
+static/zi-sprite.svg
 static/img/icon-192.png
 static/img/icon-512.png
