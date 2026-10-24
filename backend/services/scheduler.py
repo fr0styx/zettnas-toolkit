@@ -124,6 +124,12 @@ def _run_scheduled_tasks():
             run_offsite(now)
         except Exception as e:
             logger.warning(f"[Scheduler] Offsite backups failed: {e}")
+        try:
+            from backend.services.notifications import send_digest_if_due
+
+            send_digest_if_due(now)
+        except Exception as e:
+            logger.warning(f"[Scheduler] Notification digest failed: {e}")
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

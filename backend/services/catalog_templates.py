@@ -62,6 +62,10 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "env": {"TZ": "UTC"},
         "volumes": {"config": "/config", "cache": "/cache", "media": "/media"},
         "devices": ["/dev/dri"],
+        # One step (Batch 6): an existing media share becomes the library (read-only) and
+        # hardware transcoding is switched on when the host has a GPU render node
+        "media_library": "/media",
+        "hw_transcoding": "jellyfin",
         "logo": "jellyfin",
     },
     {

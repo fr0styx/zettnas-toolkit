@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.auth import require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.services.notifications import (
     load_notification_config,
     mask_notification_config,
@@ -114,3 +114,28 @@ def trigger_test_notification(custom_cfg: dict[str, Any] | None = None):
 def trigger_test_channel(req: TestChannelRequest):
     """Test a specific notification channel with latency telemetry and detailed diagnostic feedback."""
     return test_single_channel(req.channel, req.config)
+
+
+class MyAlertsIn(BaseModel):
+    ntfy_topic: str = ""
+    email: str = ""
+    events: list[str] = []
+    min_level: str = "warning"
+
+
+@router.get("/notifications/me")
+def get_my_alerts(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """This person's own alerts: where they go and which kinds (Batch 6)."""
+    from backend.services.notifications import ROUTABLE_EVENTS, get_route
+
+    return {"route": get_route(principal.username), "events": list(ROUTABLE_EVENTS)}
+
+
+@router.put("/notifications/me")
+def put_my_alerts(req: MyAlertsIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    from backend.services.notifications import set_route
+
+    try:
+        return {"route": set_route(principal.username, req.ntfy_topic, req.email, req.events, req.min_level)}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None

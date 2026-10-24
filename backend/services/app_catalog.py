@@ -979,9 +979,70 @@ def _pull_image_blocking(image: str) -> tuple[bool, str]:
         conn.close()
 
 
+def _render_nodes() -> list[str]:
+    try:
+        return [os.path.join("/dev/dri", n) for n in sorted(os.listdir("/dev/dri")) if n.startswith("renderD")]
+    except OSError:
+        return []
+
+
+JELLYFIN_ENCODING_XML = """<?xml version="1.0" encoding="utf-8"?>
+<EncodingOptions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <HardwareAccelerationType>vaapi</HardwareAccelerationType>
+  <VaapiDevice>{device}</VaapiDevice>
+  <EnableHardwareEncoding>true</EnableHardwareEncoding>
+  <EnableDecodingColorDepth10Hevc>true</EnableDecodingColorDepth10Hevc>
+  <EnableDecodingColorDepth10Vp9>true</EnableDecodingColorDepth10Vp9>
+  <HardwareDecodingCodecs>
+    <string>h264</string>
+    <string>hevc</string>
+    <string>mpeg2video</string>
+    <string>vc1</string>
+    <string>vp8</string>
+    <string>vp9</string>
+    <string>av1</string>
+  </HardwareDecodingCodecs>
+  <EnableTonemapping>true</EnableTonemapping>
+</EncodingOptions>
+"""
+
+
+def hw_transcoding_seed(app: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """Starter config that turns on hardware transcoding when the host has a render node."""
+    nodes = _render_nodes()
+    if app.get("hw_transcoding") != "jellyfin" or not nodes:
+        return {}
+    return {"config": {"encoding.xml": JELLYFIN_ENCODING_XML.format(device=nodes[0])}}
+
+
+def media_library_bind(app: dict[str, Any]) -> str | None:
+    """ "<share>:/media:ro" for a template that wants the media library, when a media share exists."""
+    target = app.get("media_library")
+    if not target:
+        return None
+    try:
+        from backend.hardware.pal_storage import get_storage_platform
+
+        names = {"media": 0, "movies": 1, "videos": 2, "video": 3, "films": 4}
+        best = None
+        for sh in get_storage_platform().list_shares():
+            rank = names.get(str(sh.name).lower())
+            mp = getattr(sh, "mountpoint", "")
+            if rank is not None and mp and os.path.isdir(mp) and (best is None or rank < best[0]):
+                best = (rank, mp)
+        if best:
+            return f"{best[1]}:{target}:ro"
+    except Exception:
+        logger.debug("media library lookup failed", exc_info=True)
+    return None
+
+
 def _write_seed_files(app: dict[str, Any], app_dir: str) -> None:
     """Writes a template's starter files (e.g. a Caddyfile) once; never overwrites the user's."""
-    for vol_key, files in (app.get("seed_files") or {}).items():
+    seeds = {**(app.get("seed_files") or {})}
+    for vol_key, files in hw_transcoding_seed(app).items():
+        seeds[vol_key] = {**seeds.get(vol_key, {}), **files}
+    for vol_key, files in seeds.items():
         if vol_key not in (app.get("volumes") or {}) or not isinstance(files, dict):
             continue
         base = os.path.realpath(os.path.join(app_dir, vol_key))
@@ -1051,6 +1112,10 @@ def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> 
     ]
     if devices:  # only what this host has, e.g. /dev/dri for hardware transcoding
         host["Devices"] = [{"PathOnHost": d, "PathInContainer": d, "CgroupPermissions": "rwm"} for d in devices]
+        # the GPU's render group, so an app that doesn't run as root can open the render node
+        gids = sorted({os.stat(p).st_gid for p in _render_nodes()} - {0})
+        if gids:
+            host["GroupAdd"] = [str(g) for g in gids]
 
 
 def _deploy_companions(
@@ -1192,7 +1257,11 @@ def stream_deploy_catalog_app(
     binds = []
     try:
         os.makedirs(app_dir, exist_ok=True)
+        library = media_library_bind(app)
         for vol_key, vol_target in app.get("volumes", {}).items():
+            if library and vol_target == app.get("media_library"):
+                binds.append(library)  # the existing media share, read-only
+                continue
             vol_host_path = os.path.join(app_dir, vol_key)
             os.makedirs(vol_host_path, exist_ok=True)
             binds.append(f"{vol_host_path}:{vol_target}:rw")

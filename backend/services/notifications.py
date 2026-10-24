@@ -83,7 +83,16 @@ DEFAULT_NOTIFICATION_CONFIG: dict[str, Any] = {
     "cpu_temp_threshold": 80,
     # Cooldown in seconds per event key (30 minutes default)
     "cooldown_seconds": 1800,
+    # Daily digest (Batch 6): critical alerts go out at once, everything else in one summary
+    "digest_mode": "off",  # "off" or "daily"
+    "digest_hour": 8,
 }
+
+DIGEST_FILE = os.path.join(DATA_DIR, "notification_digest.json")
+ROUTES_FILE = os.path.join(DATA_DIR, "notification_routes.json")
+URGENT_LEVELS = ("critical", "alert", "error")
+ROUTABLE_EVENTS = ("smart", "temp", "fan", "ups", "copy", "container", "backup", "security", "general")
+_LEVEL_RANK = {"info": 0, "normal": 0, "warning": 1, "warn": 1, "critical": 2, "alert": 2, "error": 2}
 
 # Alert tracking for deduplication: key -> {"last_sent": float, "last_level": str}
 _alert_history: dict[str, dict[str, Any]] = {}
@@ -422,6 +431,14 @@ def send_notification(
 
         _alert_history[dedup_key] = {"last_sent": now, "last_level": level}
 
+    # Each person's own alerts (Batch 6), whether or not the shared channels are on
+    _route_to_people(cfg, str(title), str(message), level, event_type)
+
+    # Daily digest: only urgent alerts go out now
+    if cfg.get("digest_mode") == "daily" and level not in URGENT_LEVELS:
+        _queue_for_digest(str(title), str(message), level, event_type, now)
+        return {"dispatched": False, "reason": "digest"}
+
     results: dict[str, bool] = {}
 
     if push_on:
@@ -584,3 +601,133 @@ def test_single_channel(channel: str, channel_cfg: dict[str, Any]) -> dict[str, 
         "latency_ms": latency_ms,
         "message": f"Delivered to {channel} in {latency_ms}ms" if success else error_msg,
     }
+
+
+# ---------------------------------------------------------------------------
+# Daily digest and per-person routing (Batch 6)
+# ---------------------------------------------------------------------------
+def _queue_for_digest(title: str, message: str, level: str, event_type: str, now: float) -> None:
+    data = read_json(DIGEST_FILE, {}) or {}
+    items = data.get("items") or []
+    items.append({"ts": now, "title": title[:200], "message": message[:500], "level": level, "type": event_type})
+    data["items"] = items[-500:]
+    atomic_write_json(DIGEST_FILE, data)
+
+
+def digest_text(items: list[dict[str, Any]]) -> tuple[str, str]:
+    by_type: dict[str, int] = {}
+    for it in items:
+        by_type[it.get("type") or "general"] = by_type.get(it.get("type") or "general", 0) + 1
+    summary = ", ".join(f"{n} {t}" for t, n in sorted(by_type.items(), key=lambda x: -x[1]))
+    lines = [f"- {time.strftime('%H:%M', time.localtime(it['ts']))} {it['title']}" for it in items[-20:]]
+    more = f"\n... and {len(items) - 20} more" if len(items) > 20 else ""
+    return f"ZettNAS daily summary: {len(items)} alerts", f"{summary}\n\n" + "\n".join(lines) + more
+
+
+def send_digest_if_due(now: float | None = None) -> dict[str, Any]:
+    """Called by the scheduler every minute: sends the day's summary at the digest hour."""
+    cfg = load_notification_config()
+    now = now or time.time()
+    if cfg.get("digest_mode") != "daily":
+        return {"sent": False, "reason": "off"}
+    data = read_json(DIGEST_FILE, {}) or {}
+    t = time.localtime(now)
+    if t.tm_hour != int(cfg.get("digest_hour", 8)) or now - float(data.get("last_sent") or 0) < 20 * 3600:
+        return {"sent": False, "reason": "not due"}
+    items = data.get("items") or []
+    data["last_sent"] = now
+    data["items"] = []
+    atomic_write_json(DIGEST_FILE, data)
+    if not items:
+        return {"sent": False, "reason": "nothing to report"}
+    title, body = digest_text(items)
+    saved = dict(cfg)
+    saved["digest_mode"] = "off"  # send this one through the channels directly
+    res = _dispatch_configured(saved, title, body, "normal")
+    return {"sent": True, "count": len(items), "channels": res}
+
+
+def _dispatch_configured(cfg: dict[str, Any], title: str, message: str, level: str) -> dict[str, bool]:
+    results: dict[str, bool] = {}
+    if not cfg.get("enabled", False):
+        return results
+    if cfg.get("ntfy_enabled", False):
+        results["ntfy"] = _dispatch_ntfy(cfg, title, message, level)
+    if cfg.get("webhook_enabled", False):
+        results["webhook"] = _dispatch_webhook(cfg, title, message, level)
+    if any(
+        [
+            cfg.get("discord_enabled"),
+            cfg.get("telegram_enabled"),
+            cfg.get("email_enabled"),
+            bool(cfg.get("apprise_urls")),
+        ]
+    ):
+        results["apprise"] = _dispatch_apprise(cfg, title, message, level)
+    return results
+
+
+def get_routes() -> dict[str, dict[str, Any]]:
+    return (read_json(ROUTES_FILE, {}) or {}).get("people") or {}
+
+
+def get_route(username: str) -> dict[str, Any]:
+    return get_routes().get(username) or {
+        "ntfy_topic": "",
+        "email": "",
+        "events": ["ups", "security", "backup"],
+        "min_level": "warning",
+    }
+
+
+def set_route(
+    username: str, ntfy_topic: str = "", email: str = "", events: list[str] | None = None, min_level: str = "warning"
+) -> dict[str, Any]:
+    import re as _re
+
+    topic = (ntfy_topic or "").strip()
+    if topic and not _re.fullmatch(r"[A-Za-z0-9_-]{1,64}", topic):
+        raise ValueError("An ntfy topic uses letters, digits, - and _.")
+    addr = (email or "").strip()
+    if addr and not _re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", addr):
+        raise ValueError("That doesn't look like an e-mail address.")
+    route = {
+        "ntfy_topic": topic,
+        "email": addr,
+        "events": [e for e in (events or []) if e in ROUTABLE_EVENTS],
+        "min_level": min_level if min_level in ("info", "warning", "critical") else "warning",
+    }
+    data = read_json(ROUTES_FILE, {}) or {}
+    data.setdefault("people", {})[username] = route
+    atomic_write_json(ROUTES_FILE, data)
+    return route
+
+
+def _route_to_people(cfg: dict[str, Any], title: str, message: str, level: str, event_type: str) -> list[str]:
+    """Sends an alert to everyone who asked for this kind, at this level or above."""
+    sent = []
+    rank = _LEVEL_RANK.get(level, 0)
+    for username, r in get_routes().items():
+        if event_type not in r.get("events", []) or rank < _LEVEL_RANK.get(r.get("min_level", "warning"), 1):
+            continue
+        try:
+            if r.get("ntfy_topic"):
+                _dispatch_ntfy({**cfg, "ntfy_topic": r["ntfy_topic"]}, title, message, level)
+            if r.get("email") and cfg.get("smtp_host"):
+                _dispatch_apprise(
+                    {
+                        **cfg,
+                        "email_enabled": True,
+                        "email_to": r["email"],
+                        "discord_enabled": False,
+                        "telegram_enabled": False,
+                        "apprise_urls": [],
+                    },
+                    title,
+                    message,
+                    level,
+                )
+            sent.append(username)
+        except Exception:
+            logger.warning(f"[Notify] personal alert for {username} failed", exc_info=True)
+    return sent

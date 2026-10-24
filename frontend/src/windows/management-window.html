@@ -3685,6 +3685,21 @@
                   </div>
                 </div>
 
+                <section class="digest-card" aria-labelledby="digest-title">
+                  <h4 id="digest-title" class="my-alerts-title" data-i18n="alerts.digest_title">Daily summary</h4>
+                  <p class="my-alerts-note" data-i18n="alerts.digest_desc">Critical alerts still go out at once; everything else arrives in one message a day.</p>
+                  <div class="digest-row">
+                    <label for="notif-digest-mode" data-i18n="alerts.digest_mode">Send</label>
+                    <select id="notif-digest-mode"><option value="off" data-i18n="alerts.digest_off">each alert as it happens</option><option value="daily" data-i18n="alerts.digest_daily">a daily summary</option></select>
+                    <label for="notif-digest-hour" data-i18n="alerts.digest_hour">at</label>
+                    <input id="notif-digest-hour" type="number" min="0" max="23" value="8">
+                  </div>
+                </section>
+                <section class="my-alerts-card" aria-labelledby="my-alerts-title">
+                  <h4 id="my-alerts-title" class="my-alerts-title" data-i18n="alerts.mine_title">My alerts</h4>
+                  <p class="my-alerts-note" data-i18n="alerts.mine_desc">Alerts just for you, on your own phone or e-mail, about the things you care about.</p>
+                  <div id="my-alerts-mount"></div>
+                </section>
               </div>
             </div>
             <div id="mgmt-pane-events" class="mgmt-tab-pane" style="display: none;">

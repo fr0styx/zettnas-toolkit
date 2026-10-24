@@ -6,6 +6,7 @@ import { api } from '../../api.js';
 import { showToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
+import { renderMyAlerts } from '../my-alerts.js';
 
 // ============================================================================
 // Notifications & Alert Channels Subsystem
@@ -26,6 +27,11 @@ export async function fetchAndRenderNotificationConfig() {
 export function renderNotificationConfigUI() {
   if (!_notificationConfig) return;
   const cfg = _notificationConfig;
+  const digestMode = document.getElementById('notif-digest-mode');
+  if (digestMode) digestMode.value = cfg.digest_mode === 'daily' ? 'daily' : 'off';
+  const digestHour = document.getElementById('notif-digest-hour');
+  if (digestHour) digestHour.value = String(cfg.digest_hour ?? 8);
+  renderMyAlerts(document.getElementById('my-alerts-mount'));
 
   // Master switch
   const masterSwitch = document.getElementById('notif-master-enabled');
@@ -101,6 +107,10 @@ export async function saveNotificationsConfig() {
 
   const cd = parseInt(document.getElementById('notif-input-cooldown')?.value, 10);
   if (!isNaN(cd)) cfg.cooldown_seconds = Math.max(1, Math.min(1440, cd)) * 60;
+
+  cfg.digest_mode = document.getElementById('notif-digest-mode')?.value === 'daily' ? 'daily' : 'off';
+  const dh = parseInt(document.getElementById('notif-digest-hour')?.value, 10);
+  if (!isNaN(dh)) cfg.digest_hour = Math.max(0, Math.min(23, dh));
 
   try {
     const res = await api.post('/api/notifications/config', cfg);
