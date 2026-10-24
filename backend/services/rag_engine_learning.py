@@ -1,0 +1,915 @@
+"""Standby-safe learning, the deferred queue, sync control and re-embedding for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
+
+# pyright: reportAttributeAccessIssue=false
+
+import asyncio
+import os
+import threading
+import time
+from typing import (  # noqa: F401
+    Any,
+)
+
+from backend.config import (  # noqa: F401
+    logger,
+)
+from backend.db_crypto import (  # noqa: F401
+    sqlite3,
+)
+from backend.fsutil import (  # noqa: F401
+    atomic_write_json,
+)
+from backend.logging_config import (  # noqa: F401
+    sanitize_string,
+)
+from backend.services import (  # noqa: F401
+    rag_standby,
+)
+from backend.services.rag_embeddings import (  # noqa: F401
+    embedding_host,
+    format_embeddinggemma_document,
+)
+from backend.services.rag_text import (  # noqa: F401
+    text_for_embedding,
+)
+
+
+def _core():
+    """backend.services.rag_engine, read at call time: shared settings live there and tests patch them."""
+    from backend.services import rag_engine
+
+    return rag_engine
+
+
+class RagLearningMixin:
+    """Standby-safe learning, the deferred queue, sync control and re-embedding for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
+
+    async def in_place_reembed_collection(
+        self,
+        target_model: str,
+        target_dim: int,
+        batch_size: int = 16,
+        progress_callback: Any | None = None,
+        target_host: str | None = None,
+        retry_wait_s: float = 65.0,
+    ) -> dict[str, Any]:
+        """Re-embeds every chunk with another model, from the index on SSD (no disk wake-ups).
+
+        New vectors go to a staging table first; search keeps using the old ones until every
+        chunk is done, then the index switches over in one transaction, together with the
+        config (model, dimension, embedding host). Stopping half way (a restart, the model going
+        away) loses nothing: the next run picks up the staged vectors. Chunks added while it
+        runs are caught by the final passes. If the model stays unreachable, the run pauses
+        instead of storing fallback vectors under the new model's name.
+        """
+        import time
+
+        cfg = self.get_config()
+        host = (target_host or "").strip() or None
+        current = (cfg.get("embedding_model"), int(cfg.get("embedding_dim") or 0), (cfg.get("embedding_host") or None))
+        same_target = current == (target_model, int(target_dim), host)
+
+        with self._write_lock:
+            conn = self._get_conn(readonly=False)
+            try:
+                conn.execute(
+                    """CREATE TABLE IF NOT EXISTS reembed_staging (
+                        chunk_id INTEGER PRIMARY KEY, embedding BLOB NOT NULL, model TEXT NOT NULL, dim INTEGER NOT NULL
+                    )"""
+                )
+                # staged vectors for another target are useless now
+                conn.execute("DELETE FROM reembed_staging WHERE model != ? OR dim != ?", (target_model, target_dim))
+                conn.commit()
+                total = conn.execute("SELECT COUNT(*) FROM document_chunks WHERE chunk_level != 'parent'").fetchone()[0]
+            finally:
+                conn.close()
+        if total == 0:
+            return {"status": "ok", "total": 0, "completed": 0, "message": "No chunks to re-embed"}
+
+        def pending_ids() -> list[int]:
+            # same model as now: only chunks that lack it; a new model: every chunk
+            done_clause = "" if not same_target else "AND NOT (c.embedding_model = ? AND c.embedding_dim = ?)"
+            params: tuple = () if not same_target else (target_model, target_dim)
+            c = self._get_conn(readonly=True)
+            try:
+                rows = c.execute(
+                    f"""SELECT c.chunk_id FROM document_chunks c
+                        LEFT JOIN reembed_staging s ON s.chunk_id = c.chunk_id
+                        WHERE s.chunk_id IS NULL AND c.chunk_level != 'parent' {done_clause} ORDER BY c.chunk_id""",
+                    params,
+                ).fetchall()
+                return [int(r[0]) for r in rows]
+            finally:
+                c.close()
+
+        def texts_for(ids: list[int]) -> list[tuple[int, str]]:
+            c = self._get_conn(readonly=True)
+            try:
+                marks = ",".join("?" * len(ids))
+                rows = c.execute(
+                    f"""SELECT c.chunk_id, c.file_name, c.heading_context, c.chunk_text, f.doc_title, f.file_ext
+                        FROM document_chunks c LEFT JOIN indexed_files f ON f.file_id = c.file_id
+                        WHERE c.chunk_id IN ({marks})""",
+                    ids,
+                ).fetchall()
+            finally:
+                c.close()
+            return [
+                (
+                    int(r["chunk_id"]),
+                    format_embeddinggemma_document(
+                        r["doc_title"] or r["file_name"],
+                        text_for_embedding(
+                            r["file_ext"] or "", f"{r['heading_context'] or ''} {r['chunk_text'] or ''}".strip()
+                        ),
+                    ),
+                )
+                for r in rows
+            ]
+
+        def staged_count() -> int:
+            c = self._get_conn(readonly=True)
+            try:
+                return int(
+                    c.execute(
+                        """SELECT COUNT(*) FROM reembed_staging s JOIN document_chunks c ON c.chunk_id = s.chunk_id
+                           WHERE c.chunk_level != 'parent'"""
+                    ).fetchone()[0]
+                )
+            finally:
+                c.close()
+
+        start_time = time.time()
+        session_done = 0
+        speed = 0.0
+
+        def report(status: str, **extra: Any) -> dict[str, Any]:
+            done = min(total, staged_count())
+            data = {
+                "type": "progress" if status == "running" else status,
+                "status": status,
+                "completed": done,
+                "total": total,
+                "speed": speed,
+                "eta_sec": round((total - done) / speed, 1) if speed > 0 else 0.0,
+                "percentage": round(100.0 * done / total, 1),
+                "model": target_model,
+                "updated_at": time.time(),
+                **extra,
+            }
+            self._write_reindex_progress(data)
+            if progress_callback:
+                try:
+                    progress_callback(data)
+                except Exception:
+                    logger.debug("[RAG] re-embed progress callback failed", exc_info=True)
+            return data
+
+        async def embed_and_stage(ids: list[int]) -> bool:
+            nonlocal session_done, speed
+            failures = 0
+            for i in range(0, len(ids), 256):
+                rows = texts_for(ids[i : i + 256])
+                for j in range(0, len(rows), batch_size):
+                    part = rows[j : j + batch_size]
+                    while True:
+                        blobs = await asyncio.to_thread(
+                            _core().compute_neural_embeddings_batch,
+                            [t for _, t in part],
+                            target_model,
+                            target_dim,
+                            host,
+                            batch_size,
+                        )
+                        if blobs is not None:
+                            failures = 0
+                            break
+                        failures += 1
+                        if failures >= 5:
+                            return False
+                        report("running", message="The embedding model is not answering; retrying")
+                        await asyncio.sleep(retry_wait_s)
+                    with self._write_lock:
+                        w = self._get_conn(readonly=False)
+                        try:
+                            w.executemany(
+                                "INSERT OR REPLACE INTO reembed_staging(chunk_id, embedding, model, dim) VALUES (?, ?, ?, ?)",
+                                [(cid, b, target_model, target_dim) for (cid, _), b in zip(part, blobs, strict=True)],
+                            )
+                            w.commit()
+                        finally:
+                            w.close()
+                    session_done += len(part)
+                    speed = round(session_done / max(0.001, time.time() - start_time), 2)
+                    report("running")
+                    await asyncio.sleep(0.02)  # let searches and the indexer in
+
+            return True
+
+        report("running")
+        for _ in range(5):  # later passes pick up chunks indexed meanwhile
+            ids = pending_ids()
+            if not ids:
+                break
+            if not await embed_and_stage(ids):
+                msg = f"Paused: '{target_model}' stopped answering. Start the re-embed again to continue."
+                report("paused", message=msg)
+                return {"status": "paused", "total": total, "completed": staged_count(), "message": msg}
+
+        # Switch over: copy staged vectors in, rebuild the vector table, then the config
+        with self._write_lock:
+            late = pending_ids()
+            if late and not await embed_and_stage(late):
+                msg = f"Paused: '{target_model}' stopped answering. Start the re-embed again to continue."
+                report("paused", message=msg)
+                return {"status": "paused", "total": total, "completed": staged_count(), "message": msg}
+            w = self._get_conn(readonly=False)
+            try:
+                w.execute(
+                    """UPDATE document_chunks SET embedding_f32 = s.embedding, embedding_model = s.model, embedding_dim = s.dim
+                       FROM reembed_staging s WHERE document_chunks.chunk_id = s.chunk_id"""
+                )
+                w.execute(
+                    "UPDATE document_chunks SET embedding_f32 = X'', embedding_model = ?, embedding_dim = 0 WHERE chunk_level = 'parent'",
+                    (target_model,),
+                )
+                w.execute("UPDATE indexed_files SET embedding_model = ?", (target_model,))
+                if self._has_sqlite_vec and self._init_vec_table(w, target_dim):
+                    w.execute(f"DELETE FROM vec_chunks_{target_dim}")
+                    w.execute(
+                        f"""INSERT INTO vec_chunks_{target_dim}(chunk_id, embedding, file_id, visibility_tier)
+                            SELECT chunk_id, embedding_f32, file_id, visibility_tier FROM document_chunks
+                            WHERE embedding_model = ? AND embedding_dim = ?""",
+                        (target_model, target_dim),
+                    )
+                w.execute("DELETE FROM reembed_staging")
+                w.commit()
+            finally:
+                w.close()
+            self.update_config(
+                {"embedding_model": target_model, "embedding_dim": target_dim, "embedding_host": host or ""}
+            )
+            self._vec_table_dim = target_dim
+            self._vec_table_active = bool(self._has_sqlite_vec)
+
+        res_complete = {
+            "status": "ok",
+            "type": "complete",
+            "total": total,
+            "completed": total,
+            "speed": speed,
+            "eta_sec": 0.0,
+            "percentage": 100.0,
+            "duration_sec": round(time.time() - start_time, 2),
+            "model": target_model,
+            "dimension": target_dim,
+            "updated_at": time.time(),
+        }
+        self._write_reindex_progress(dict(res_complete, status="complete"))
+        if progress_callback:
+            try:
+                progress_callback(res_complete)
+            except Exception:
+                logger.debug("[RAG] re-embed progress callback failed", exc_info=True)
+        return res_complete
+
+    def _write_reindex_progress(self, data: dict[str, Any]) -> None:
+        prog_path = "/app/data/reindex_progress.json"
+        try:
+            atomic_write_json(prog_path, data)
+        except OSError:
+            logger.debug("[RAG] could not write re-embed progress", exc_info=True)
+
+    def _start_spinup_watcher(self) -> None:
+        """
+        Starts a lightweight background daemon thread that monitors disk spin-up transitions
+        (without ever touching or waking sleeping drives) and automatically triggers learning
+        when a sleeping disk spins up.
+        """
+        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+            return
+        if self.db_path != _core().RAG_DB_PATH:
+            return
+        if self._watcher_thread is not None and self._watcher_thread.is_alive():
+            return
+
+        def _watch_loop() -> None:
+            # Give host 3.0s to initialize devices, mount points, and PAL storage drivers
+            time.sleep(3.0)
+
+            # Auto-recovery on startup: Check for interrupted sync session from previous run
+            try:
+                cfg = self.get_config()
+                if cfg.get("enabled", True):
+                    active_session = cfg.get("active_sync_session")
+                    if active_session and active_session.get("status") == "running" and not self._is_indexing:
+                        session_paths = [os.path.normpath(p) for p in (active_session.get("paths") or []) if p]
+                        if session_paths:
+                            can_run = True
+                            for sp in session_paths:
+                                dev = rag_standby.resolve_path_backing_dev(sp)
+                                if bool(
+                                    active_session.get("respect_standby", True)
+                                ) and rag_standby.is_backing_disk_in_standby(dev or sp):
+                                    can_run = False
+                                    self.enqueue_deferred_path(sp, reason="disk_standby", priority=2)
+                            if can_run:
+                                logger.info(
+                                    f"[RAG] Automatically resuming interrupted sync session for: {session_paths}"
+                                )
+                                self.start_background_sync(
+                                    paths=session_paths,
+                                    respect_standby=bool(active_session.get("respect_standby", True)),
+                                    force_wake=bool(active_session.get("force_wake", False)),
+                                )
+            except Exception as init_err:
+                logger.debug(f"[RAG] Startup auto-resume error: {init_err}")
+
+            while True:
+                try:
+                    time.sleep(5.0)
+                    if os.path.exists(_core().RAG_CONFIG_PATH):
+                        self.sync_watched_deferred_queue()
+                    self.check_and_trigger_spinup_auto_learn(background=True)
+                    self._maybe_reembed_fallback_files()
+                except Exception as e:
+                    logger.debug(f"[RAG] Spin-up auto-learn watcher error: {e}")
+
+        t = threading.Thread(target=_watch_loop, name="zettnas-rag-spinup-watcher", daemon=True)
+        self._watcher_thread = t
+        t.start()
+
+    def enqueue_deferred_path(self, path: str, reason: str = "disk_standby", priority: int = 1) -> dict[str, Any]:
+        """Queues a folder path in rag_deferred_queue without touching the disk platter."""
+        self._ensure_schema()
+        norm_p = os.path.normpath(str(path or "").strip())
+        if not norm_p:
+            return {"queued": False}
+        dev = rag_standby.resolve_path_backing_dev(norm_p)
+        if dev:
+            self._known_sleeping_devs.add(dev)
+        with self._write_lock:
+            conn = self._get_conn(readonly=False)
+            try:
+                conn.execute(
+                    """
+                    INSERT INTO rag_deferred_queue(target_path, backing_dev, reason, queued_at, priority)
+                    VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(target_path) DO UPDATE SET
+                        backing_dev = excluded.backing_dev,
+                        reason = excluded.reason,
+                        queued_at = excluded.queued_at,
+                        priority = MAX(rag_deferred_queue.priority, excluded.priority)
+                    """,
+                    (norm_p, dev, reason, time.time(), int(priority)),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+        return {"queued": True, "path": norm_p, "backing_dev": dev}
+
+    def remove_deferred_path(self, path: str) -> int:
+        """Removes a path and any child subpaths from rag_deferred_queue."""
+        self._ensure_schema()
+        norm_p = os.path.normpath(str(path or "").strip())
+        if not norm_p:
+            return 0
+        prefix = norm_p.rstrip("/") + "/%"
+        with self._write_lock:
+            conn = self._get_conn(readonly=False)
+            try:
+                cur = conn.execute(
+                    "DELETE FROM rag_deferred_queue WHERE target_path = ? OR target_path LIKE ?",
+                    (norm_p, prefix),
+                )
+                conn.commit()
+                return int(cur.rowcount or 0)
+            finally:
+                conn.close()
+
+    def get_deferred_queue(self) -> list[dict[str, Any]]:
+        """Returns all paths currently waiting in rag_deferred_queue along with live standby status."""
+        self._ensure_schema()
+        conn = self._get_conn(readonly=True)
+        try:
+            rows = conn.execute(
+                """
+                SELECT target_path, backing_dev, reason, queued_at, priority
+                FROM rag_deferred_queue
+                ORDER BY priority DESC, queued_at ASC
+                """
+            ).fetchall()
+        except Exception:
+            return []
+        finally:
+            conn.close()
+
+        items: list[dict[str, Any]] = []
+        for r in rows:
+            tp = r["target_path"]
+            dev = r["backing_dev"] or rag_standby.resolve_path_backing_dev(tp)
+            standby = rag_standby.is_backing_disk_in_standby(dev or tp)
+            items.append(
+                {
+                    "path": tp,
+                    "backing_dev": dev,
+                    "in_standby": standby,
+                    "disk_state": "standby" if standby else "active",
+                    "reason": r["reason"] or "disk_standby",
+                    "queued_at": float(r["queued_at"] or 0.0),
+                    "priority": int(r["priority"] or 0),
+                }
+            )
+        return items
+
+    def sync_watched_deferred_queue(self) -> dict[str, Any]:
+        """
+        Reconciles `rag_deferred_queue` against the active `watched_paths` and `excluded_paths`:
+          1. Prunes stale deferred entries that are no longer inside any watched folder (or were excluded).
+          2. Ensures watched folders on currently-sleeping disks that have not yet been indexed
+             are queued in `rag_deferred_queue` so they auto-learn the moment the disk spins up.
+        """
+        self._ensure_schema()
+        cfg = self.get_config()
+        scope_mode = cfg.get("scope_mode", "include")
+        watched = [os.path.normpath(p) for p in (cfg.get("watched_paths") or []) if p]
+        excluded = {os.path.normpath(p) for p in (cfg.get("excluded_paths") or []) if p}
+
+        current_items = self.get_deferred_queue()
+        existing_deferred_paths = {os.path.normpath(it["path"]) for it in current_items}
+        pruned = 0
+        enqueued = 0
+
+        for it in current_items:
+            tp = os.path.normpath(it["path"])
+            is_excl = any(tp == ex or tp.startswith(ex.rstrip("/") + "/") for ex in excluded)
+            in_watched = True
+            if scope_mode == "include" and watched:
+                in_watched = any(tp == wp or tp.startswith(wp.rstrip("/") + "/") for wp in watched)
+            if is_excl or not in_watched:
+                pruned += self.remove_deferred_path(tp)
+                existing_deferred_paths.discard(tp)
+
+        if cfg.get("respect_standby", True) and cfg.get("auto_learn_on_spinup", True):
+            conn_ro = self._get_conn(readonly=True)
+            try:
+                for wp in watched:
+                    if any(wp == ex or wp.startswith(ex.rstrip("/") + "/") for ex in excluded):
+                        continue
+                    dev = rag_standby.resolve_path_backing_dev(wp)
+                    if rag_standby.is_backing_disk_in_standby(dev or wp):
+                        if dev:
+                            self._known_sleeping_devs.add(dev)
+                        if wp not in existing_deferred_paths:
+                            # Check if this watched path has any indexed files yet
+                            prefix_slash = wp.rstrip("/") + "/"
+                            prefix_upper = wp.rstrip("/") + "0"
+                            cnt = conn_ro.execute(
+                                """
+                                SELECT COUNT(*) FROM indexed_files
+                                WHERE canonical_path = ? OR (canonical_path >= ? AND canonical_path < ?)
+                                """,
+                                (wp, prefix_slash, prefix_upper),
+                            ).fetchone()[0]
+                            if cnt == 0:
+                                self.enqueue_deferred_path(wp, reason="disk_standby", priority=1)
+                                existing_deferred_paths.add(wp)
+                                enqueued += 1
+            except Exception:
+                logger.debug(
+                    "backend.services.rag_engine.RagSearchEngine.sync_watched_deferred_queue: ignored error",
+                    exc_info=True,
+                )
+            finally:
+                conn_ro.close()
+
+        # If sync progress message still mentions a pruned/removed path, refresh the status message
+        if pruned > 0 and not self._is_indexing:
+            remaining_q = self.get_deferred_queue()
+            if remaining_q:
+                first_q = remaining_q[0]
+                dev_s = f"/dev/{first_q['backing_dev']}" if first_q.get("backing_dev") else "standby disk"
+                self._sync_progress["deferred_standby"] = len(remaining_q)
+                self._sync_progress["message"] = (
+                    f"Deferred {first_q['path']}: backing disk {dev_s} is in standby "
+                    f"(auto-learns on spin-up, 0 wakeups)."
+                )
+            else:
+                self._sync_progress["deferred_standby"] = 0
+
+        return {"pruned": pruned, "enqueued": enqueued}
+
+    def check_and_trigger_spinup_auto_learn(self, background: bool = True) -> dict[str, Any]:
+        """
+        Detects when a sleeping/standby disk has spun up (transitioned to active/running)
+        or when paths in `rag_deferred_queue` now reside on a running disk, and automatically
+        starts learning/indexing those folders without ever waking sleeping drives.
+        """
+        self._ensure_schema()
+        cfg = self.get_config()
+        current_sleeping = set(rag_standby.get_sleeping_disks_list())
+        woken_devs = self._known_sleeping_devs - current_sleeping
+        self._known_sleeping_devs = set(current_sleeping)
+
+        if not cfg.get("enabled", True):
+            return {"triggered": False, "reason": "disabled", "woken_disks": sorted(woken_devs)}
+        if not cfg.get("auto_learn_on_spinup", True):
+            return {"triggered": False, "reason": "auto_learn_disabled", "woken_disks": sorted(woken_devs)}
+
+        in_sched, resume_time = self.is_within_learning_schedule()
+        if not in_sched:
+            return {
+                "triggered": False,
+                "reason": f"outside_schedule (resumes at {resume_time})",
+                "woken_disks": sorted(woken_devs),
+            }
+
+        if self._is_indexing or self._sync_state in ("running", "paused", "stopping"):
+            return {"triggered": False, "reason": "already_indexing", "woken_disks": sorted(woken_devs)}
+
+        excluded_set = {os.path.normpath(p) for p in (cfg.get("excluded_paths") or []) if p}
+        ready_paths: list[str] = []
+        ready_devs: set[str] = set(woken_devs)
+
+        # 1. Check all queued paths in rag_deferred_queue whose backing disk is now running
+        deferred_items = self.get_deferred_queue()
+        for item in deferred_items:
+            tp = os.path.normpath(item["path"])
+            if any(tp == ex or tp.startswith(ex.rstrip("/") + "/") for ex in excluded_set):
+                self.remove_deferred_path(tp)
+                continue
+            dev = item.get("backing_dev") or rag_standby.resolve_path_backing_dev(tp)
+            if not rag_standby.is_backing_disk_in_standby(dev or tp):
+                if tp not in ready_paths:
+                    ready_paths.append(tp)
+                if dev:
+                    ready_devs.add(dev)
+
+        # 2. Watched folders whose disk just spun up. A full rescan keeps the disk busy, so it runs
+        # at most every SPINUP_RESCAN_COOLDOWN_SECS per disk; queued folders (step 1) don't wait (PERF-7).
+        now_ts = time.time()
+        rescanned: set[str] = set()
+        for wp in cfg.get("watched_paths") or []:
+            norm_wp = os.path.normpath(wp)
+            if any(norm_wp == ex or norm_wp.startswith(ex.rstrip("/") + "/") for ex in excluded_set):
+                continue
+            dev = rag_standby.resolve_path_backing_dev(norm_wp)
+            if dev and dev in woken_devs and not rag_standby.is_backing_disk_in_standby(dev):
+                if now_ts - self._last_spinup_rescan.get(dev, 0.0) < _core().SPINUP_RESCAN_COOLDOWN_SECS:
+                    continue
+                if norm_wp not in ready_paths:
+                    ready_paths.append(norm_wp)
+                ready_devs.add(dev)
+                rescanned.add(dev)
+        for dev in rescanned:
+            self._last_spinup_rescan[dev] = now_ts
+
+        if not ready_paths:
+            return {
+                "triggered": False,
+                "reason": "no_awake_deferred_paths",
+                "woken_disks": sorted(woken_devs),
+                "sleeping_disks": sorted(current_sleeping),
+            }
+
+        for rp in ready_paths:
+            self.remove_deferred_path(rp)
+
+        dev_label = ", ".join(f"/dev/{d}" for d in sorted(ready_devs) if d) or "array disk"
+        auto_msg = f"⚡ Auto-learning started ({dev_label} spun up): syncing {', '.join(ready_paths)}..."
+        self._last_auto_learn_event = {
+            "timestamp": time.time(),
+            "paths": list(ready_paths),
+            "woken_disks": sorted(ready_devs),
+            "message": auto_msg,
+        }
+        logger.info(f"[RAG] {auto_msg}")
+
+        if background:
+            sync_res = self.start_background_sync(
+                paths=ready_paths,
+                respect_standby=bool(cfg.get("respect_standby", True)),
+                force_wake=False,
+                auto_spinup_devs=sorted(ready_devs),
+            )
+            return {
+                "triggered": True,
+                "mode": "background",
+                "paths": ready_paths,
+                "woken_disks": sorted(ready_devs),
+                "message": auto_msg,
+                "sync": sync_res,
+            }
+        else:
+            sync_res = self.index_paths(
+                paths=ready_paths,
+                respect_standby=bool(cfg.get("respect_standby", True)),
+                force_wake=False,
+                auto_spinup_devs=sorted(ready_devs),
+            )
+            return {
+                "triggered": True,
+                "mode": "synchronous",
+                "paths": ready_paths,
+                "woken_disks": sorted(ready_devs),
+                "message": self._sync_progress.get("message", auto_msg),
+                "sync": sync_res,
+            }
+
+    def is_within_learning_schedule(self) -> tuple[bool, str]:
+        """Checks whether current local time is within the configured ZettAI learning window."""
+        cfg = self.get_config()
+        if not cfg.get("schedule_enabled"):
+            return (True, "")
+        start_s = str(cfg.get("schedule_start") or "01:00").strip()
+        end_s = str(cfg.get("schedule_end") or "06:00").strip()
+        try:
+            now_lt = time.localtime()
+            cur_mins = now_lt.tm_hour * 60 + now_lt.tm_min
+            sh, sm = [int(x) for x in start_s.split(":")[:2]]
+            eh, em = [int(x) for x in end_s.split(":")[:2]]
+            start_mins = sh * 60 + sm
+            end_mins = eh * 60 + em
+            if start_mins <= end_mins:
+                in_win = start_mins <= cur_mins < end_mins
+            else:
+                in_win = cur_mins >= start_mins or cur_mins < end_mins
+            return (in_win, start_s if not in_win else "")
+        except Exception:
+            return (True, "")
+
+    def get_learning_results(self, principal: Any = None) -> dict[str, Any]:
+        """
+        Returns ZettAI 6-state status (Initializing | Learning | Idle | Paused | Disabled | Error),
+        succeeded/failed file counts, and failed file paths for the Learning Results dialog.
+        """
+        self._ensure_schema()
+        cfg = self.get_config()
+        in_sched, resume_time = self.is_within_learning_schedule()
+
+        conn = self._get_conn(readonly=True)
+        try:
+            rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
+            succeeded_count = conn.execute(
+                f"SELECT COUNT(*) FROM indexed_files f WHERE f.parse_status = 'ok' AND {rbac_sql}",
+                rbac_params,
+            ).fetchone()[0]
+            failed_rows = conn.execute(
+                f"""
+                SELECT f.file_id, f.canonical_path, f.file_name, f.parse_status, f.indexed_at
+                FROM indexed_files f
+                WHERE f.parse_status != 'ok' AND {rbac_sql}
+                ORDER BY f.indexed_at DESC
+                LIMIT 100
+                """,
+                rbac_params,
+            ).fetchall()
+            failed_count = conn.execute(
+                f"SELECT COUNT(*) FROM indexed_files f WHERE f.parse_status != 'ok' AND {rbac_sql}",
+                rbac_params,
+            ).fetchone()[0]
+            deferred_count = conn.execute("SELECT COUNT(*) FROM rag_deferred_queue").fetchone()[0]
+
+            failed_files = [
+                {
+                    "file_id": int(r["file_id"]),
+                    "path": r["canonical_path"],
+                    "name": r["file_name"],
+                    "reason": r["parse_status"] or "Unsupported or unreadable format",
+                    "indexed_at": float(r["indexed_at"] or 0.0),
+                }
+                for r in failed_rows
+                if self._check_post_rbac(r["canonical_path"], principal)
+            ]
+        except Exception as e:
+            return {
+                "zettai_status": "Error",
+                "status_reason": str(e),
+                "succeeded_count": 0,
+                "failed_count": 0,
+                "deferred_count": 0,
+                "failed_files": [],
+            }
+        finally:
+            conn.close()
+
+        if not cfg.get("enabled", True):
+            z_status = "Disabled"
+            reason = "ZettAI service is turned off in Settings."
+        elif self._is_indexing and self._sync_state == "running":
+            z_status = "Learning"
+            reason = self._sync_progress.get("message") or "Analyzing and indexing files..."
+        elif self._sync_state == "paused":
+            z_status = "Paused"
+            reason = "Learning paused by user."
+        elif not in_sched:
+            z_status = "Paused"
+            reason = f"Outside scheduled learning window (resumes at {resume_time})."
+        else:
+            z_status = "Idle"
+            reason = "No pending learning tasks."
+
+        return {
+            "zettai_status": z_status,
+            "status_reason": reason,
+            "resume_time": resume_time or None,
+            "succeeded_count": int(succeeded_count),
+            "failed_count": int(failed_count),
+            "deferred_count": int(deferred_count),
+            "failed_files": failed_files,
+        }
+
+    def relearn_failed_files(self) -> dict[str, Any]:
+        """Retries indexing any files that previously failed parsing (without waking sleeping drives)."""
+        res_info = self.get_learning_results()
+        failed_list = res_info.get("failed_files") or []
+        retried = 0
+        recovered = 0
+        for item in failed_list:
+            f_path = item.get("path") or ""
+            if not f_path:
+                continue
+            dev = rag_standby.resolve_path_backing_dev(f_path)
+            if rag_standby.is_backing_disk_in_standby(dev):
+                continue
+            retried += 1
+            if os.path.isfile(f_path):
+                try:
+                    st = os.stat(f_path)
+                    f_name = os.path.basename(f_path)
+                    f_ext = os.path.splitext(f_name)[1]
+                    fid = self._index_single_file(f_path, f_name, f_ext, st.st_size, st.st_mtime_ns, None)
+                    if fid is not None:
+                        recovered += 1
+                except Exception as e:
+                    logger.debug(f"[RAG] Relearn failed on {sanitize_string(f_path)}: {e}")
+            else:
+                with self._write_lock:
+                    conn = self._get_conn(readonly=False)
+                    try:
+                        self._drop_file_vectors(
+                            conn, "SELECT file_id FROM indexed_files WHERE canonical_path = ?", (f_path,)
+                        )
+                        conn.execute("DELETE FROM indexed_files WHERE canonical_path = ?", (f_path,))
+                        conn.commit()
+                    finally:
+                        conn.close()
+        updated = self.get_learning_results()
+        updated["retried"] = retried
+        updated["recovered"] = recovered
+        return updated
+
+    def toggle_favorite(self, path: str) -> dict[str, Any]:
+        """Adds or removes a file path from ZettAI favorites."""
+        norm_p = os.path.normpath(str(path or "").strip())
+        cfg = self.get_config()
+        favs: list[str] = list(cfg.get("favorites") or [])
+        if norm_p in favs:
+            favs.remove(norm_p)
+            is_fav = False
+        else:
+            favs.append(norm_p)
+            is_fav = True
+        self.update_config({"favorites": favs})
+        return {"status": "ok", "path": norm_p, "is_favorite": is_fav, "favorites": favs}
+
+    def get_sync_progress(self) -> dict[str, Any]:
+        """Returns live sync state, progress counters, and pause/resume/stop capabilities."""
+        state = self._sync_state
+        is_active = self._is_indexing or state in ("running", "paused", "stopping")
+        prog = dict(self._sync_progress)
+        prog["state"] = state
+        prog["sync_state"] = state
+        prog["is_scanning"] = is_active
+        prog["is_paused"] = state == "paused"
+        prog["can_pause"] = state == "running" and self._is_indexing
+        prog["can_resume"] = state == "paused" and self._is_indexing
+        prog["can_stop"] = state in ("running", "paused") and self._is_indexing
+        prog["last_message"] = prog.get("message", "")
+        prog["sleeping_disks"] = rag_standby.get_sleeping_disks_list()
+        prog["running_disks"] = rag_standby.get_running_disks_list()
+        prog["deferred_queue"] = self.get_deferred_queue()
+        prog["last_auto_learn_event"] = self._last_auto_learn_event
+        return prog
+
+    def pause_sync(self) -> dict[str, Any]:
+        """Pauses an active indexing job at the current file boundary."""
+        self._pause_event.clear()
+        self._sync_state = "paused"
+        self._sync_progress["state"] = "paused"
+        self._sync_progress["updated_at"] = time.time()
+        self._sync_progress["message"] = "Sync paused by user."
+        return self.get_sync_progress()
+
+    def resume_sync(self) -> dict[str, Any]:
+        """Resumes a paused indexing job (re-verifying disk standby before touching files)."""
+        self._pause_event.set()
+        self._sync_state = "running" if self._is_indexing else "idle"
+        self._sync_progress["state"] = self._sync_state
+        self._sync_progress["updated_at"] = time.time()
+        self._sync_progress["message"] = "Sync resumed."
+        return self.get_sync_progress()
+
+    def stop_sync(self) -> dict[str, Any]:
+        """Stops an active or paused indexing job immediately and cleanly."""
+        self._stop_requested = True
+        self._pause_event.set()
+        if self._is_indexing:
+            self._sync_state = "stopping"
+            self._sync_progress["state"] = "stopping"
+            self._sync_progress["message"] = "Stopping sync..."
+        else:
+            self._sync_state = "stopped"
+            self._sync_progress["state"] = "stopped"
+            self._sync_progress["message"] = "Sync stopped."
+        self._sync_progress["updated_at"] = time.time()
+        try:
+            cfg = self.get_config()
+            if cfg.get("active_sync_session"):
+                cfg["active_sync_session"] = None
+                atomic_write_json(_core().RAG_CONFIG_PATH, cfg)
+        except Exception:
+            logger.debug("backend.services.rag_engine.RagSearchEngine.stop_sync: ignored error", exc_info=True)
+        return self.get_sync_progress()
+
+    def reembed_fallback_files(self, max_files: int = 20) -> dict[str, Any]:
+        """Files stored with the built-in lexical vectors because the embedding model was down
+        get neural vectors from the chunk text already in the index (no disk reads) (AI-10).
+
+        Stops at the first file the model can't embed; a full re-embed in progress goes first.
+        """
+        cfg = self.get_config()
+        model = cfg.get("embedding_model") or "embeddinggemma"
+        if model == "zett_lexical_384d":
+            return {"status": "lexical_model", "files": 0}
+        if self._is_indexing:
+            return {"status": "busy", "files": 0}
+        target_dim = cfg.get("embedding_dim")
+        conn = self._get_conn(readonly=True)
+        try:
+            try:
+                if conn.execute("SELECT 1 FROM reembed_staging LIMIT 1").fetchone():
+                    return {"status": "full_reembed_pending", "files": 0}
+            except sqlite3.Error:
+                logger.debug("[RAG] no re-embed staging table: no full re-embed has run")
+            files = conn.execute(
+                """SELECT file_id, file_name, file_ext, doc_title FROM indexed_files
+                   WHERE parse_status = 'ok' AND embedding_model = 'zett_lexical_384d' ORDER BY file_id LIMIT ?""",
+                (int(max_files),),
+            ).fetchall()
+        finally:
+            conn.close()
+        done = 0
+        for f in files:
+            fid = int(f["file_id"])
+            conn = self._get_conn(readonly=True)
+            try:
+                chunks = conn.execute(
+                    """SELECT chunk_id, heading_context, chunk_text, visibility_tier FROM document_chunks
+                       WHERE file_id = ? AND chunk_level != 'parent' ORDER BY chunk_id""",
+                    (fid,),
+                ).fetchall()
+            finally:
+                conn.close()
+            title = f["doc_title"] or f["file_name"]
+            texts = [
+                format_embeddinggemma_document(
+                    title,
+                    text_for_embedding(
+                        f["file_ext"] or "", f"{c['heading_context'] or ''} {c['chunk_text'] or ''}".strip()
+                    ),
+                )
+                for c in chunks
+            ]
+            blobs = _core().compute_neural_embeddings_batch(
+                texts, model, target_dim=target_dim, host=embedding_host(cfg)
+            )
+            if blobs is None:
+                return {"status": "embedder_unavailable", "files": done}
+            with self._write_lock:
+                w = self._get_conn(readonly=False)
+                try:
+                    for c, blob in zip(chunks, blobs, strict=True):
+                        dim = len(blob) // 4
+                        w.execute(
+                            "UPDATE document_chunks SET embedding_f32 = ?, embedding_model = ?, embedding_dim = ? WHERE chunk_id = ?",
+                            (blob, model, dim, int(c["chunk_id"])),
+                        )
+                        self.sync_vector_chunk(
+                            w, int(c["chunk_id"]), blob, fid, c["visibility_tier"] or "public_share", dim=dim
+                        )
+                    w.execute("UPDATE indexed_files SET embedding_model = ? WHERE file_id = ?", (model, fid))
+                    w.commit()
+                finally:
+                    w.close()
+            done += 1
+        if done:
+            logger.info(f"[RAG] Re-embedded {done} file(s) that had fallback vectors with '{model}'")
+        return {"status": "ok", "files": done}
+
+    def _maybe_reembed_fallback_files(self) -> None:
+        now = time.time()
+        if now - self._last_fallback_reembed < _core().FALLBACK_REEMBED_EVERY_SECS:
+            return
+        self._last_fallback_reembed = now
+        self.reembed_fallback_files()
