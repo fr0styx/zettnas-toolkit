@@ -16,7 +16,7 @@ def test_browse_enriched_metadata(client, auth_headers, tmp_path):
     sub = root / "subfolder"
     sub.mkdir(parents=True, exist_ok=True)
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         res = client.get(f"/api/browse?path={root}", headers=auth_headers)
         assert res.status_code == 200
         data = res.json()
@@ -49,7 +49,7 @@ def test_fs_async_transfer_and_telemetry(client, auth_headers, tmp_path):
     f2 = src_dir / "file2.txt"
     f2.write_text("Content 2" * 100)
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         # 1. Submit async transfer
         res = client.post(
             "/api/fs/transfer/async",
@@ -101,7 +101,7 @@ def test_fs_archive_create_and_extract_safe(client, auth_headers, tmp_path):
     dest_dir = root / "archives"
     dest_dir.mkdir(parents=True, exist_ok=True)
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         # 1. Create zip archive
         res = client.post(
             "/api/fs/archive/create",
@@ -157,7 +157,7 @@ def test_fs_checksum_streaming(client, auth_headers, tmp_path):
     expected_sha256 = hashlib.sha256(raw_bytes).hexdigest()
     expected_md5 = hashlib.md5(raw_bytes).hexdigest()
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         # SHA256
         res_sha = client.post(
             "/api/fs/checksum",
@@ -186,7 +186,7 @@ def test_fs_folder_size_and_standby(client, auth_headers, tmp_path):
     (folder / "item1.txt").write_text("A" * 1024)
     (folder / "item2.txt").write_text("B" * 2048)
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         # 1. Normal folder size
         res = client.post(
             "/api/fs/folder-size",
@@ -220,7 +220,7 @@ def test_fs_permissions_endpoints(client, auth_headers, tmp_path):
     target = root / "perm_file.txt"
     target.write_text("Permissions check")
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         # 1. Get permissions
         res = client.get(f"/api/fs/permissions?path={target}", headers=auth_headers)
         assert res.status_code == 200

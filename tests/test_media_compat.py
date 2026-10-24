@@ -83,7 +83,7 @@ def test_endpoints(client, auth_headers, tmp_path):
     root.mkdir()
     _video(root / "a.mov", audio=False)
     (root / "notes.txt").write_text("x")
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         r = client.get("/api/fs/media/info", params={"path": str(root / "a.mov")}, headers=auth_headers)
         assert r.status_code == 200 and r.json()["video"]["codec"] == "mpeg4"
         assert (

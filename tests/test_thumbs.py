@@ -95,7 +95,7 @@ def test_endpoint(client, auth_headers, tmp_path):
     Image.new("RGB", (800, 600), (1, 2, 3)).save(root / "a.png")
     (root / "song.mp3").write_bytes(b"ID3" + b"\0" * 2000)
     (root / "broken.mov").write_bytes(b"nope")
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         r = client.get("/api/fs/preview/image", params={"path": str(root / "a.png"), "thumb": 1}, headers=auth_headers)
         assert r.status_code == 200 and r.headers["content-type"] == "image/webp"
         assert r.headers["cache-control"].startswith("private")

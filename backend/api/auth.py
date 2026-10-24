@@ -751,45 +751,16 @@ def logout(request: Request):
 
 
 # Stream Tickets (Single-Use, Short-Lived SSE/WebSocket tickets to prevent token leakage in query strings)
-_STREAM_TICKETS: dict[str, dict[str, Any]] = {}
-_STREAM_TICKETS_LOCK = threading.RLock()
-
-
-def create_stream_ticket(user_id: str, username: str, scopes: list[str], role_id: str) -> str:
-    import secrets
-
-    ticket = f"zst_{secrets.token_urlsafe(32)}"
-    now = time.time()
-    with _STREAM_TICKETS_LOCK:
-        expired = [k for k, v in _STREAM_TICKETS.items() if v["expires_at"] < now]
-        for k in expired:
-            _STREAM_TICKETS.pop(k, None)
-
-        _STREAM_TICKETS[ticket] = {
-            "user_id": user_id,
-            "username": username,
-            "scopes": scopes,
-            "role_id": role_id,
-            "expires_at": now + 60,
-        }
-    return ticket
-
-
-def validate_and_consume_stream_ticket(ticket: str) -> dict[str, Any] | None:
-    if not ticket or not ticket.startswith("zst_"):
-        return None
-    now = time.time()
-    with _STREAM_TICKETS_LOCK:
-        entry = _STREAM_TICKETS.pop(ticket, None)
-        if entry and entry.get("expires_at", 0) > now:
-            return {
-                "user_id": entry["user_id"],
-                "username": entry["username"],
-                "role_id": entry["role_id"],
-                "scopes": entry["scopes"],
-                "is_stream_ticket": True,
-            }
-    return None
+from backend.tickets import (  # noqa: E402,F401  (moved out of the API layer, ARCH-2)
+    STREAM_TICKETS as _STREAM_TICKETS,
+)
+from backend.tickets import (
+    STREAM_TICKETS_LOCK as _STREAM_TICKETS_LOCK,
+)
+from backend.tickets import (
+    create_stream_ticket,
+    validate_and_consume_stream_ticket,
+)
 
 
 @router.post("/auth/ticket")

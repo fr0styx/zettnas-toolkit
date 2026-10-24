@@ -44,7 +44,7 @@ _DISK_FORMATS = {"qcow2", "raw"}
 
 
 def _vm_disk_roots() -> list[str]:
-    from backend.api.fs import ALLOWED_BROWSE_ROOTS
+    from backend.services.path_access import ALLOWED_BROWSE_ROOTS
 
     roots = [os.path.join(DATA_DIR, "vms")] + [r for r in ALLOWED_BROWSE_ROOTS if r]
     return [os.path.realpath(r) for r in roots]
@@ -55,7 +55,7 @@ def _vm_iso_roots() -> list[str]:
 
 
 def _vm_share_roots() -> list[str]:
-    from backend.api.fs import ALLOWED_BROWSE_ROOTS
+    from backend.services.path_access import ALLOWED_BROWSE_ROOTS
 
     data = os.path.realpath(DATA_DIR)
     return [os.path.realpath(r) for r in ALLOWED_BROWSE_ROOTS if r and os.path.realpath(r) != data]
@@ -141,8 +141,7 @@ _DOWNLOAD_TASKS: dict[str, dict[str, Any]] = {}
 _ABORT_DOWNLOAD_TASKS: set = set()
 
 
-_CONSOLE_TICKETS: dict[str, dict[str, Any]] = {}
-
+from backend.tickets import CONSOLE_TICKETS as _CONSOLE_TICKETS  # noqa: E402  (shared with the auth middleware)
 
 # Curated Official Operating System ISO Catalog
 OFFICIAL_ISO_CATALOG: list[dict[str, Any]] = [

@@ -1367,7 +1367,7 @@ def tool_search_nas_knowledge(
     Queries the local NVMe RAG index for matching documents, recipes, and photos,
     or aggregates context across whatever folder (0 disk wakeups).
     """
-    from backend.api.fs import user_can_access_path
+    from backend.services.path_access import user_can_access_path
 
     rag = get_rag_engine()
 

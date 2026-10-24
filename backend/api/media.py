@@ -1295,91 +1295,14 @@ def get_vision_status() -> dict[str, Any]:
 
 
 _REINDEX_TASK: asyncio.Task | None = None
-_REINDEX_STATUS: dict[str, Any] = {
-    "status": "idle",
-    "completed": 0,
-    "total": 0,
-    "speed": 0.0,
-    "eta_sec": 0.0,
-    "percentage": 0.0,
-}
-
-
-_REINDEX_CACHE: dict[str, Any] = {"status": "idle"}
-_REINDEX_CACHE_TIME: float = 0.0
+from backend.services.rag_reindex_status import REINDEX_STATUS as _REINDEX_STATUS  # noqa: E402
+from backend.services.rag_reindex_status import get_reindex_status  # noqa: E402
 
 
 @router.get("/ai/reindex/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
 @router.get("/media/ai/reindex/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
 def get_ai_reindex_status() -> dict[str, Any]:
-    global _REINDEX_CACHE, _REINDEX_CACHE_TIME
-    import json
-    import time
-
-    now = time.time()
-    if (now - _REINDEX_CACHE_TIME) < 2.0 and _REINDEX_CACHE.get("status") == "running":
-        return dict(_REINDEX_CACHE)
-
-    # 1. Check persistent progress file on disk (shared across CLI and web server)
-    progress_file = "/app/data/reindex_progress.json"
-    if os.path.exists(progress_file):
-        try:
-            with open(progress_file) as f:
-                data = json.load(f)
-            if data.get("status") == "running":
-                mtime = os.path.getmtime(progress_file)
-                if (time.time() - mtime) < 90:
-                    _REINDEX_CACHE = data
-                    _REINDEX_CACHE_TIME = now
-                    return data
-                data["status"] = "idle"
-            _REINDEX_CACHE = data
-            _REINDEX_CACHE_TIME = now
-            return data
-        except Exception:
-            logger.debug("backend.api.media.get_ai_reindex_status: ignored error", exc_info=True)
-
-    # 2. Check in-memory task status
-    if _REINDEX_STATUS.get("status") == "running":
-        _REINDEX_CACHE = dict(_REINDEX_STATUS)
-        _REINDEX_CACHE_TIME = now
-        return dict(_REINDEX_STATUS)
-
-    # 3. Dynamic SQLite detection: detect if a CLI reindex or background job is running
-    try:
-        rag = get_rag_engine()
-        with rag._write_lock:
-            conn = rag._get_conn(readonly=True)
-            has_vec = conn.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='vec_chunks_768'"
-            ).fetchone()
-            if has_vec:
-                c_vec = conn.execute("SELECT COUNT(*) FROM vec_chunks_768").fetchone()[0]
-                total = conn.execute("SELECT COUNT(*) FROM document_chunks").fetchone()[0]
-                if 0 < c_vec < total:
-                    pct = round((c_vec / total) * 100, 1)
-                    speed = 2.6
-                    eta_sec = round((total - c_vec) / speed, 1)
-                    res = {
-                        "status": "running",
-                        "completed": c_vec,
-                        "total": total,
-                        "speed": speed,
-                        "eta_sec": eta_sec,
-                        "percentage": pct,
-                        "source": "cli_or_background",
-                        "updated_at": now,
-                    }
-                    _REINDEX_CACHE = res
-                    _REINDEX_CACHE_TIME = now
-                    return res
-            conn.close()
-    except Exception:
-        logger.debug("backend.api.media.get_ai_reindex_status: ignored error", exc_info=True)
-
-    _REINDEX_CACHE = dict(_REINDEX_STATUS)
-    _REINDEX_CACHE_TIME = now
-    return dict(_REINDEX_STATUS)
+    return get_reindex_status()
 
 
 @router.post(
@@ -1486,14 +1409,10 @@ async def trigger_ai_reindex(
         if not endpoint_ok(target_host):
             raise HTTPException(status_code=400, detail="The embedding host must be an http(s) URL.")
 
-    _REINDEX_STATUS = {
-        "status": "running",
-        "completed": 0,
-        "total": 0,
-        "speed": 0.0,
-        "eta_sec": 0.0,
-        "percentage": 0.0,
-    }
+    _REINDEX_STATUS.clear()  # shared with the status service: update in place
+    _REINDEX_STATUS.update(
+        {"status": "running", "completed": 0, "total": 0, "speed": 0.0, "eta_sec": 0.0, "percentage": 0.0}
+    )
 
     def _on_progress(data: dict[str, Any]):
         global _REINDEX_STATUS

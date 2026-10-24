@@ -4257,7 +4257,7 @@ class RagSearchEngine:
         checker = None
         if principal is not None:
             try:
-                from backend.api.fs import indexed_path_checker
+                from backend.services.path_access import indexed_path_checker
 
                 checker = indexed_path_checker(principal)
             except Exception:  # an unusable principal reads nothing, as with _check_post_rbac
@@ -4285,7 +4285,7 @@ class RagSearchEngine:
         if principal is None:
             return True
         try:
-            from backend.api.fs import check_user_path_access
+            from backend.services.path_access import check_user_path_access
 
             check_user_path_access(canonical_path, principal)
             return True

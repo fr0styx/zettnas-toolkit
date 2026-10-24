@@ -7,7 +7,6 @@ import time
 import traceback
 from typing import Any, Optional
 
-from backend.api.media import get_ai_reindex_status
 from backend.config import (
     CLIENT_PREFS_FILE,
     DB_PATH,
@@ -65,6 +64,7 @@ from backend.services.alert_rules import evaluate_system_alerts
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import check_media_slot_transitions, read_media_slots
 from backend.services.notifications import NOTIFICATIONS_FILE, send_notification
+from backend.services.rag_reindex_status import get_reindex_status as get_ai_reindex_status
 from backend.services.stats_delta import StatsDeltaEncoder
 from backend.state import Z_STATE, add_event
 

@@ -70,7 +70,7 @@ def test_fs_delete_offload_to_recycle_bin(client, auth_headers, tmp_path):
     target_file = browse_root / "sample.txt"
     target_file.write_text("hello world")
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
         with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
             response = client.post(
                 "/api/fs/delete",

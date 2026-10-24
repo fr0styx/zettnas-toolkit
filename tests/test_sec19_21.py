@@ -50,7 +50,7 @@ def test_share_links_work_without_a_session_and_ask_for_the_password(client, aut
     root = tmp_path / "user"
     root.mkdir()
     (root / "a.txt").write_text("hello")
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         res = client.post(
             "/api/fs/share-links", json={"path": str(root / "a.txt"), "password": "Secret12345"}, headers=auth_headers
         )

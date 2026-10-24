@@ -10,7 +10,7 @@ def test_add_list_remove_favorites(client, auth_headers, tmp_path):
     (root / "Photos" / "2025").mkdir(parents=True)
     (root / "notes.txt").write_text("x")
     with (
-        patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]),
+        patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]),
         patch.object(config, "DATA_DIR", str(tmp_path / "data")),
     ):
         (tmp_path / "data").mkdir()

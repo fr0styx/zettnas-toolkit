@@ -29,7 +29,7 @@ def tree(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "DATA_DIR", str(tmp_path / "data"))
     (tmp_path / "data").mkdir()
     monkeypatch.setattr(config, "POOL_PATH", str(root))
-    monkeypatch.setattr("backend.api.fs.ALLOWED_BROWSE_ROOTS", [str(root)])
+    monkeypatch.setattr("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)])
     monkeypatch.setattr(
         share_access,
         "known_shares",

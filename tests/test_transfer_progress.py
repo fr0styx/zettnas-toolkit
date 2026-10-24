@@ -213,7 +213,7 @@ def test_task_fails_only_when_nothing_was_done(tmp_path):
 def test_async_endpoint_checks_target_names(client, auth_headers, tmp_path):
     root = tmp_path / "user"
     make_tree(root, {"a.txt": b"1"})
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(root)]):
         base = {"sources": [str(root / "a.txt")], "destination_dir": str(root), "action": "copy"}
         for bad in (["../x"], ["a/b"], [".."], ["x", "y"]):
             res = client.post("/api/fs/transfer/async", json={**base, "target_names": bad}, headers=auth_headers)

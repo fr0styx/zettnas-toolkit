@@ -83,7 +83,7 @@ def get_current_session(token: str) -> dict[str, Any] | None:
             "is_system": True,
         }
     if token.startswith("zst_"):
-        from backend.api.auth import validate_and_consume_stream_ticket
+        from backend.tickets import validate_and_consume_stream_ticket
 
         tok = validate_and_consume_stream_ticket(token)
         if tok:
@@ -117,10 +117,10 @@ def validate_session(token: str) -> bool:
 
     # 0. Single-use stream or VM console ticket
     if token.startswith("zst_"):
-        from backend.api.auth import _STREAM_TICKETS, _STREAM_TICKETS_LOCK
+        from backend.tickets import STREAM_TICKETS, STREAM_TICKETS_LOCK
 
-        with _STREAM_TICKETS_LOCK:
-            return token in _STREAM_TICKETS
+        with STREAM_TICKETS_LOCK:
+            return token in STREAM_TICKETS
 
     if token.startswith("zct_"):
         return False  # console WebSocket only
@@ -160,9 +160,9 @@ def query_credential_allowed(value: str) -> str:
     if value.startswith("zst_") or is_internal_token(value):
         return value
     try:
-        from backend.api.vms import _CONSOLE_TICKETS
+        from backend.tickets import CONSOLE_TICKETS
 
-        if value in _CONSOLE_TICKETS:
+        if value in CONSOLE_TICKETS:
             return value
     except Exception:
         logger.debug("backend.auth.query_credential_allowed: ignored error", exc_info=True)

@@ -16,7 +16,7 @@ def roots(tmp_path, monkeypatch):
     data = tmp_path / "data"
     (data / "vms" / "vm1").mkdir(parents=True)
     (data / "secret.key").write_text("k")
-    monkeypatch.setattr("backend.api.fs.ALLOWED_BROWSE_ROOTS", [str(pool)])
+    monkeypatch.setattr("backend.config.ALLOWED_BROWSE_ROOTS", [str(pool)])
     monkeypatch.setattr(vms, "DATA_DIR", str(data))
     monkeypatch.setattr(vms, "VM_ISO_DIR", str(pool / "isos"))
     monkeypatch.setattr("backend.services.vm_store.DATA_DIR", str(data))

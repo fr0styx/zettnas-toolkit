@@ -24,7 +24,7 @@ def test_fs_search_and_trash_lifecycle(client, auth_headers, tmp_path):
     trashed_file = recycle_dir / f"{ts}_old_archive.zip"
     trashed_file.write_text("archived data")
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
         # 1. Test search query
         res = client.get("/api/fs/search?q=2026", headers=auth_headers)
         assert res.status_code == 200
@@ -75,7 +75,7 @@ def test_fs_roots_hierarchy(client, auth_headers, tmp_path):
     remotes_dir.mkdir(parents=True, exist_ok=True)
     (remotes_dir / "onedrive-test").mkdir(parents=True, exist_ok=True)
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(user_root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(user_root)]):
         with patch("backend.config.REMOTES_PATH", str(remotes_dir)):
             with patch(
                 "os.path.exists",
@@ -111,7 +111,7 @@ def test_freedesktop_trashinfo_lifecycle(client, auth_headers, tmp_path):
     sample = docs / "statement.txt"
     sample.write_text("Monthly Financial Statement")
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
         # 1. Delete item using /api/fs/delete
         del_res = client.post("/api/fs/delete", json={"path": str(sample)}, headers=auth_headers)
         assert del_res.status_code == 200
@@ -169,7 +169,7 @@ def test_fs_preview_redaction_and_hex(client, auth_headers, tmp_path):
     bin_file = browse_root / "firmware.bin"
     bin_file.write_bytes(bytes(range(64)))
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
         # Preview sensitive config
         res_conf = client.get(f"/api/fs/preview?path={secret_conf}", headers=auth_headers)
         assert res_conf.status_code == 200
@@ -235,7 +235,7 @@ def test_fs_stream_partial_range(client, auth_headers, tmp_path):
     sample_content = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" * 10
     media_file.write_bytes(sample_content)
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
         # Range request bytes 10-25
         headers = dict(auth_headers)
         headers["Range"] = "bytes=10-25"
@@ -253,7 +253,7 @@ def test_fs_download_zip_streaming(client, auth_headers, tmp_path):
     file_a.write_text("Hello from file A")
     file_b.write_text("Hello from file B")
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(browse_root)]):
         res = client.get(f"/api/fs/download-zip?paths={file_a},{file_b}", headers=auth_headers)
         assert res.status_code == 200
         assert res.headers.get("content-type") == "application/zip"
@@ -278,7 +278,7 @@ def test_mnt_can_be_declared_and_browsed(client, auth_headers, tmp_path):
     test_file = pool1 / "data.txt"
     test_file.write_text("pool1 data")
 
-    with patch("backend.api.system.ALLOWED_BROWSE_ROOTS", [str(mnt_dir)]):
+    with patch("backend.config.ALLOWED_BROWSE_ROOTS", [str(mnt_dir)]):
         # 1. Browse /mnt root
         res = client.get(f"/api/browse?path={mnt_dir}", headers=auth_headers)
         assert res.status_code == 200
