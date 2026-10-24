@@ -6,6 +6,7 @@
 
 - **Docker access goes through an allow-list proxy.** ZettNAS forwards only the Docker API calls it uses. Containers with host-level access are created only from flows you confirm (app install after review, recreate, update) and are logged to `data/docker-proxy-audit.log`. `ZETTNAS_DOCKER_PROXY=off` turns the proxy off.
 - SECURITY.md lists which permissions are root-equivalent on the host.
+- **In-app updates check the image signature.** Before installing, ZettNAS verifies that the image was signed by this project's CI (Sigstore, the same check as `cosign verify`) for exactly the digest it downloaded, and refuses it otherwise. `UPDATE_SIGNATURES=warn` installs with a warning, `off` skips the check.
 
 #### Smaller image
 

@@ -42,7 +42,7 @@ or the apps you install.
 | Web app → Docker | Allow-list proxy: no swarm, plugins, secrets, image build/import, commit or export; containers with host-level access only from confirmed flows, each logged |
 | Web app → network (SSRF) | Outbound fetches (web search, previews, webhooks) only to public addresses; AI runtimes only on this machine or its Docker network, never the LAN router |
 | Indexed content → Ask Zetty | File and web text is passed as quoted data, never as instructions; tools that change the system need your click on Confirm; web access only in chats where you turned it on; answers are limited to what your account may read |
-| Update channel → host | The updater installs only images from this project's registry; images are signed (cosign) and scanned (Trivy) in CI, and promotion to Stable verifies the signature. The in-app updater itself does not verify signatures yet (planned); data is snapshotted before each in-app update and can be rolled back |
+| Update channel → host | The updater installs only images from this project's registry; images are signed (cosign) and scanned (Trivy) in CI, and promotion to Stable verifies the signature. The in-app updater verifies the image's Sigstore signature before installing it: issued to this repository's CI workflow (main or a version tag) and naming the exact digest (`UPDATE_SIGNATURES`, default enforce); data is snapshotted before each in-app update and can be rolled back |
 | Files → shares (ransomware) | Ransomware guard: mass renames or deletes, ransomware extensions, ransom notes or a changed guard file freeze writes, snapshot where supported, block the source and alert |
 
 ## What remains

@@ -137,3 +137,15 @@ and Auditor aren't root-equivalent.
 | 1.9.2 | Uploaded HTML/SVG files ran script in the app's origin (SEC-05) | High |
 | 1.9.2 | Default password change was not enforced; no re-authentication to change a password (SEC-23, SEC-13) | High |
 | 1.9.2 | The AI assistant could restart/stop containers and change fans without confirmation (AI-01) | Medium |
+
+## Verifying images
+
+Every published image is signed with cosign (keyless) by the CI workflow. The in-app
+updater checks this signature before it installs an update (`UPDATE_SIGNATURES`, default
+`enforce`). To check an image yourself:
+
+```
+cosign verify ghcr.io/fr0styx/zettnas-toolkit:<tag> \
+  --certificate-identity-regexp '^https://github\.com/fr0styx/zettnas-toolkit/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```

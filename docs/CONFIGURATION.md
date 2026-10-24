@@ -42,6 +42,7 @@ used keeps its default, and the log says which variable and why.
 | Variable | Default | Meaning |
 |---|---|---|
 | `UPDATE_CHANNEL` | `stable` | Release channel to follow. (one of `stable`, `beta`, `edge`) |
+| `UPDATE_SIGNATURES` | `enforce` | In-app updates check the image's signature from this project's CI first: enforce (refuse an unsigned or wrongly signed image), warn (log it and install anyway) or off. (one of `enforce`, `warn`, `off`) |
 | `ZETTNAS_IMAGE_VARIANT` | `full` | full ships VMs and the LCD renderer; core leaves them out. (one of `full`, `core`) |
 
 ## Power

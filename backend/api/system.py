@@ -971,6 +971,33 @@ def _local_repo_digests(image_ref: str) -> list[str]:
     return [d[len(prefix) :] for d in img.get("RepoDigests") or [] if d.startswith(prefix)]
 
 
+async def _check_update_signature(target_img: str, expected_digest: str | None, pulled: list[str]) -> dict:
+    """Verifies the CI signature of the image about to be installed (UPDATE_SIGNATURES)."""
+    mode = config.UPDATE_SIGNATURES
+    if mode == "off":
+        return {"checked": False}
+    from backend.services.image_signature import SignatureResult, verify_image
+
+    if "@" in target_img:
+        digest = target_img.split("@", 1)[1]
+    else:
+        digest = expected_digest or (pulled[0] if pulled else "")
+    result = await asyncio.to_thread(verify_image, digest) if digest else SignatureResult(False, "no digest")
+    if result.ok:
+        logger.info(f"[System Update] Signature verified for {digest} ({result.identity}).")
+        return {"checked": True, **result.as_dict()}
+    if mode == "warn":
+        logger.warning(f"[System Update] Installing {digest} although its signature failed: {result.reason}")
+        add_event("warning", "Update signature not verified", result.reason)
+        return {"checked": True, **result.as_dict()}
+    logger.error(f"[System Update] Refusing {digest}: {result.reason}")
+    raise HTTPException(
+        status_code=502,
+        detail=f"Not updating: the image's signature could not be verified ({result.reason}). "
+        "Try again later; UPDATE_SIGNATURES=warn installs it anyway.",
+    )
+
+
 @router.get("/system/updates")
 async def check_system_updates(force: bool = False, channel: str = "stable"):
     """Release/commit check, then a registry digest check (OPS-18).
@@ -1242,6 +1269,9 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
             detail="The image changed while it was downloading (a new build was published). Check for updates again.",
         )
 
+    # 1c. The image must be signed by this project's CI (cosign keyless, Sigstore bundle)
+    signature = await _check_update_signature(target_img, expected_digest, pulled)
+
     # 2. Check if running inside container with docker socket access
     sock_path = docker_sock()
     if os.path.exists(sock_path):
@@ -1264,6 +1294,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
                 "channel": channel,
                 "target_image": target_img,
                 "auto_restarting": True,
+                "signature": signature,
                 "message": "Update downloaded. ZettNAS is recreating the container now and will reconnect shortly.",
             }
 
@@ -1272,6 +1303,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         "channel": channel,
         "target_image": target_img,
         "auto_restarting": False,
+        "signature": signature,
         "message": "Latest image downloaded to host. Please restart container via Unraid or Docker Compose to finalize.",
     }
 

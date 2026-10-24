@@ -113,6 +113,20 @@ def _fresh_smart_velocity_cache():
 
 
 @pytest.fixture(autouse=True)
+def _signed_updates(request, monkeypatch):
+    """Update tests see a valid CI signature; tests marked real_signatures check the real code."""
+    if request.node.get_closest_marker("real_signatures"):
+        return
+    from backend.services import image_signature
+
+    monkeypatch.setattr(
+        image_signature,
+        "verify_image",
+        lambda digest: image_signature.SignatureResult(True, "test", "https://github.com/test"),
+    )
+
+
+@pytest.fixture(autouse=True)
 def _collector_alive(monkeypatch):
     """Tests don't run the stats collector, so /api/health would report it stalled once the
     suite has run longer than the start-up grace (CI is slower than a dev box). Every test

@@ -92,6 +92,14 @@ class Settings:
     update_channel: str = _s(
         "UPDATE_CHANNEL", "stable", "Release channel to follow.", choices=("stable", "beta", "edge"), group="Updates"
     )
+    update_signatures: str = _s(
+        "UPDATE_SIGNATURES",
+        "enforce",
+        "In-app updates check the image's signature from this project's CI first: enforce (refuse "
+        "an unsigned or wrongly signed image), warn (log it and install anyway) or off.",
+        choices=("enforce", "warn", "off"),
+        group="Updates",
+    )
     image_variant: str = _s(
         "ZETTNAS_IMAGE_VARIANT",
         "full",
