@@ -104,3 +104,53 @@ def test_notices_workflow_is_scoped():
     assert "head_repository.full_name == github.repository" in job["if"]
     ci = yaml.safe_load((ROOT / ".github" / "workflows" / "ci.yml").read_text())
     assert ci["name"] == "CI & Release"
+
+
+def test_server_errors_are_retried_and_client_errors_are_not(monkeypatch):
+    import io
+    import urllib.error
+    import urllib.request
+
+    calls = []
+
+    class Resp(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def flaky(req, timeout=60):
+        calls.append(req.full_url)
+        if len(calls) < 3:
+            raise urllib.error.HTTPError(req.full_url, 502, "Bad Gateway", {}, None)
+        return Resp(b'{"ok": true}')
+
+    monkeypatch.setattr(cn.urllib.request, "urlopen", flaky)
+    monkeypatch.setattr(cn.time, "sleep", lambda s: None)
+    req = urllib.request.Request("https://api.github.com/x")
+    assert cn.open_url(req) == b'{"ok": true}' and len(calls) == 3
+
+    def missing(req, timeout=60):
+        calls.append("404")
+        raise urllib.error.HTTPError(req.full_url, 404, "Not Found", {}, None)
+
+    calls.clear()
+    monkeypatch.setattr(cn.urllib.request, "urlopen", missing)
+    try:
+        cn.open_url(req)
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 404
+    assert calls == ["404"]
+
+    def down(req, timeout=60):
+        calls.append("down")
+        raise urllib.error.HTTPError(req.full_url, 503, "Unavailable", {}, None)
+
+    calls.clear()
+    monkeypatch.setattr(cn.urllib.request, "urlopen", down)
+    try:
+        cn.open_url(req, retries=2)
+    except urllib.error.HTTPError as exc:
+        assert exc.code == 503
+    assert len(calls) == 3

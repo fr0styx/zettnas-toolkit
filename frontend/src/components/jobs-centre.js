@@ -6,11 +6,12 @@ import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
 import { formatDateTime } from '../format.js';
 import { t } from '../i18n.js';
-import { bringToFront, makeDraggable } from './dock.js';
+import { applyWindowSnap, bringToFront, makeDraggable, restoreWindowSnap } from './dock.js';
 import { showToast } from '../toast.js';
 
 const BADGE_POLL_MS = 15000;
 const OPEN_POLL_MS = 2000;
+const DOCK_ID = 'jobs';
 let _badgeTimer = null;
 let _openTimer = null;
 let _win = null;
@@ -112,6 +113,7 @@ function ensureWindow() {
         <div class="os-window-title" id="jobs-centre-title">${escapeHtml(t('jobs.title', 'Jobs'))}</div>
         <div class="os-window-controls">
           <button class="win-btn min-btn" id="jobs-centre-min" title="${escapeHtml(t('window.minimize', 'Minimize'))}" aria-label="${escapeHtml(t('window.minimize', 'Minimize'))}"></button>
+          <button class="win-btn max-btn" id="jobs-centre-max" title="${escapeHtml(t('ui.maximize', 'Maximize'))}" aria-label="${escapeHtml(t('ui.maximize', 'Maximize'))}"></button>
           <button class="win-btn close-btn" id="jobs-centre-close" title="${escapeHtml(t('window.close', 'Close'))}" aria-label="${escapeHtml(t('window.close', 'Close'))}"></button>
         </div>
       </div>
@@ -124,12 +126,15 @@ function ensureWindow() {
     document.body.appendChild(el);
     _win = el;
   }
-  const hide = (e) => {
-    if (e) e.preventDefault();
-    closeJobsCentre();
-  };
-  _win.querySelector('#jobs-centre-close')?.addEventListener('click', hide);
-  _win.querySelector('#jobs-centre-min')?.addEventListener('click', hide);
+  const on = (sel, fn) =>
+    _win.querySelector(sel)?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // not a drag of the title bar
+      fn();
+    });
+  on('#jobs-centre-close', closeJobsCentre);
+  on('#jobs-centre-min', minimizeJobsCentre);
+  on('#jobs-centre-max', toggleMaximizeJobsCentre);
   _win.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-job-cancel]');
     if (!btn) return;
@@ -150,17 +155,32 @@ function ensureWindow() {
   return _win;
 }
 
+// The window manager shows windows with an inline display, so the hidden attribute alone
+// does not hide this one: hiding sets display none too, showing removes it.
+function isShown() {
+  return Boolean(_win && !_win.hidden && _win.style.display !== 'none' && !_win.classList.contains('window-minimized'));
+}
+
+function dock() {
+  return typeof window !== 'undefined' ? window.DockManager : null;
+}
+
 export function openJobsCentre() {
   const win = ensureWindow();
   win.hidden = false;
   win.classList.remove('window-minimized');
-  if (window.DockManager && !window.DockManager.windows['jobs']) {
+  win.style.removeProperty('display');
+  const dm = dock();
+  if (dm) {
     try {
-      window.DockManager.register('jobs', win, '#i-chip', t('jobs.title', 'Jobs'));
+      // also brings it back when it was minimized to the dock
+      dm.register(DOCK_ID, win, '#i-chip', t('jobs.title', 'Jobs'));
+      if (dm.windows?.[DOCK_ID]) dm.windows[DOCK_ID].onClose = closeJobsCentre; // closing from the dock
     } catch (e) {
       /* optional */
     }
   }
+  win.style.display = 'flex';
   try {
     bringToFront(win);
   } catch (e) {
@@ -168,13 +188,44 @@ export function openJobsCentre() {
   }
   refreshJobs();
   clearInterval(_openTimer);
-  _openTimer = setInterval(refreshJobs, OPEN_POLL_MS);
+  // a minimized window keeps its place in the dock but stops asking for updates
+  _openTimer = setInterval(() => {
+    if (isShown()) refreshJobs();
+  }, OPEN_POLL_MS);
 }
 
 export function closeJobsCentre() {
-  if (_win) _win.hidden = true;
+  if (_win) {
+    _win.hidden = true;
+    _win.classList.remove('open', 'active-window');
+    _win.style.setProperty('display', 'none', 'important');
+  }
+  const dm = dock();
+  if (dm?.windows?.[DOCK_ID]) {
+    try {
+      dm.unregister(DOCK_ID);
+    } catch (e) {
+      /* optional */
+    }
+  }
   clearInterval(_openTimer);
   _openTimer = null;
+}
+
+/** Parks the window in the dock; its dock icon or the top-bar button brings it back. */
+export function minimizeJobsCentre() {
+  const dm = dock();
+  if (!_win || !dm?.windows?.[DOCK_ID]) {
+    closeJobsCentre();
+    return;
+  }
+  dm.minimize(DOCK_ID);
+}
+
+export function toggleMaximizeJobsCentre() {
+  if (!_win) return;
+  if (_win.dataset.snapped === 'maximize') restoreWindowSnap(_win, DOCK_ID);
+  else applyWindowSnap(_win, 'maximize', DOCK_ID);
 }
 
 export function initJobsCentre() {

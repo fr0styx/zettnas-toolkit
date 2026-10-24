@@ -24,6 +24,11 @@
   font-weight: 700;
   text-align: center;
 }
+/* Solid like the file manager: on the glass surface the wallpaper showed through the list */
+.os-window.jobs-centre-window {
+  background: var(--lt-b-0f172afa, rgba(15, 23, 42, 0.98));
+  border-color: var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+}
 .jobs-centre-window {
   position: fixed;
   top: 80px;
@@ -35,6 +40,7 @@
   flex-direction: column;
 }
 .jobs-centre-window[hidden] { display: none; }
+.jobs-centre-window[data-snapped] { max-height: none; max-width: none; }
 .jobs-body { padding: 12px 16px 16px; overflow-y: auto; font-size: 14px; }
 .jobs-heading { margin: 8px 0 6px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .jobs-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 8px; }

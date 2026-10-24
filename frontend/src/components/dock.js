@@ -374,15 +374,25 @@ export function restoreWindowSnap(dragEl, winId) {
   if (!dragEl) return;
   dragEl.dataset.snapped = '';
   dragEl.style.transition = 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+  const width = parseFloat(dragEl._preSnapWidth) || 0;
+  const height = parseFloat(dragEl._preSnapHeight) || 0;
   if (dragEl._preSnapWidth) dragEl.style.width = dragEl._preSnapWidth;
   if (dragEl._preSnapHeight) dragEl.style.height = dragEl._preSnapHeight;
+  // the next snap remembers the size the window has then
+  dragEl._preSnapWidth = null;
+  dragEl._preSnapHeight = null;
   setTimeout(() => {
     dragEl.style.transition = 'none';
   }, 250);
 
   const id = winId || dragEl.dataset.windowId || dragEl.id;
   if (id) {
-    saveWindowBounds(id, { snapped: '' });
+    // the restored size, not the snapped one: otherwise the window comes back snapped-size
+    // from the dock or after a reload
+    const bounds = { snapped: '', left: Math.round(parseFloat(dragEl.style.left) || 0), top: Math.round(parseFloat(dragEl.style.top) || 0) };
+    if (width) bounds.width = width;
+    if (height) bounds.height = height;
+    saveWindowBounds(id, bounds);
     saveOpenWindowsState();
   }
   if (typeof announceA11y === 'function') {

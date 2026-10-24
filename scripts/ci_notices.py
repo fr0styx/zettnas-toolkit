@@ -23,6 +23,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 import zipfile
@@ -162,6 +163,24 @@ def render(run: dict[str, Any] | None, behind: list[str], notices: dict[str, lis
 
 # ---------- GitHub access ----------
 
+RETRIES = 3
+
+
+def open_url(req: urllib.request.Request, retries: int = RETRIES, wait_s: float = 2.0) -> bytes:
+    """The response body; server errors (5xx) and dropped connections are retried, with growing pauses."""
+    for attempt in range(retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as exc:
+            if exc.code < 500 or attempt == retries:
+                raise
+        except urllib.error.URLError:
+            if attempt == retries:
+                raise
+        time.sleep(wait_s * (attempt + 1))
+    raise AssertionError("unreachable")
+
 
 class GitHub:
     def __init__(self, token: str, repo: str) -> None:
@@ -177,8 +196,7 @@ class GitHub:
         url = path if path.startswith("http") else API + path
         body = json.dumps(data).encode() if data is not None else None
         req = urllib.request.Request(url, data=body, method=method, headers=self.headers)
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            content = resp.read()
+        content = open_url(req)
         return content if raw else (json.loads(content) if content else None)
 
     def latest_release(self, repo: str) -> str | None:
@@ -194,8 +212,7 @@ class GitHub:
 
 def latest_node(major: int) -> str | None:
     req = urllib.request.Request("https://nodejs.org/dist/index.json", headers={"User-Agent": "zettnas-ci-notices"})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        releases = json.load(resp)
+    releases = json.loads(open_url(req))
     same = [r["version"] for r in releases if (version_tuple(r["version"]) or (0,))[0] == major]
     return max(same, key=lambda v: version_tuple(v) or (0,)) if same else None
 

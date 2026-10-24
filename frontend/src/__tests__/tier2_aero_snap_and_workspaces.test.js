@@ -125,6 +125,22 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
       expect(win.dataset.snapped).toBe('');
     });
 
+    it('remembers the restored size after a maximize, not the maximized one', () => {
+      const win = document.createElement('div');
+      win.id = 'snap-size-test';
+      document.body.appendChild(win);
+      win._preSnapWidth = '520px';
+      win._preSnapHeight = '320px';
+      applyWindowSnap(win, 'maximize', 'snap-size-test');
+      restoreWindowSnap(win, 'snap-size-test');
+      const saved = JSON.parse(localStorage.getItem('zettnas_window_bounds_v2') || '{}')['snap-size-test'] || {};
+      expect(saved.snapped).toBe('');
+      expect(saved.width).toBe(520);
+      expect(saved.height).toBe(320);
+      expect(win._preSnapWidth).toBeNull();
+      win.remove();
+    });
+
     it('identifies the active frontmost window element', () => {
       const activeEl = getActiveWindowElement();
       expect(activeEl).toBeTruthy();
