@@ -43,6 +43,7 @@ jobs:
           # The exact, hash-checked set the image ships, then the test tools (ARCH-13)
           pip install --require-hashes -r requirements.lock
           pip install -r requirements-dev.txt
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends restic  # offsite backup restore drill (Batch 6)
           python scripts/check_lock_versions.py
 
       - name: Run Ruff Lint

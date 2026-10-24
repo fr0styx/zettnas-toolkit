@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sg3-utils \
     usbutils \
     rclone \
+    restic \
     fuse3 \
     && rm -rf /var/lib/apt/lists/*
 

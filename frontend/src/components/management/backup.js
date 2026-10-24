@@ -9,6 +9,7 @@ import { t } from '../../i18n.js';
 import { formatDateTime } from '../../format.js';
 import { emptyStateHtml } from '../empty-state.js';
 import { openSnapshotBrowser, renderSnapshotSchedules } from '../snapshot-browser.js';
+import { renderOffsite } from '../offsite-backup.js';
 
 // =========================================================================
 // Hyper-Backup Tasks & 3-2-1 Pipelines
@@ -154,6 +155,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
   const mount = mountEl || document.getElementById('system-snapshots-mount');
   if (!mount) return;
   renderSnapshotSchedules(document.getElementById('snapshot-schedules-mount'));
+  renderOffsite(document.getElementById('offsite-backup-mount'));
 
   try {
     const data = await api.get('/api/backup/snapshots');

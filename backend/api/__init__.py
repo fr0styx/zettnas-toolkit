@@ -22,6 +22,7 @@ from backend.api.media import router as media_router
 from backend.api.metrics import router as metrics_router
 from backend.api.network import router as network_router
 from backend.api.notifications import router as notifications_router
+from backend.api.offsite import router as offsite_router  # noqa: E402
 from backend.api.oidc import ldap_router
 from backend.api.oidc import router as oidc_router
 from backend.api.push import router as push_router
@@ -45,6 +46,7 @@ api_router = APIRouter()
 api_router.include_router(jobs_router)
 api_router.include_router(setup_router)
 api_router.include_router(snapshots_router)
+api_router.include_router(offsite_router)
 api_router.include_router(auth_router)
 api_router.include_router(oidc_router)
 api_router.include_router(ldap_router)

@@ -118,6 +118,12 @@ def _run_scheduled_tasks():
             run_due(now)
         except Exception as e:
             logger.warning(f"[Scheduler] Snapshot schedules failed: {e}")
+        try:
+            from backend.services.offsite_backup import run_due as run_offsite
+
+            run_offsite(now)
+        except Exception as e:
+            logger.warning(f"[Scheduler] Offsite backups failed: {e}")
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

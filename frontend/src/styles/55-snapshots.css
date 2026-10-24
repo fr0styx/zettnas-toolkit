@@ -16,3 +16,20 @@
 .snap-entry.is-dir { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .snap-body { overflow: auto; max-height: 60vh; }
 .snap-subhead { margin: var(--zn-space-3) 0 var(--zn-space-2); font-size: var(--zn-fs-sm); color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Offsite backup (Batch 6) */
+.offsite-card { margin-bottom: var(--zn-space-5); padding: var(--zn-space-4); border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); background: rgba(255, 255, 255, 0.03); }
+.offsite-title { margin: 0 0 var(--zn-space-1); font-size: var(--zn-fs); }
+.offsite-note, .offsite-meta { color: var(--muted); font-size: var(--zn-fs-xs); }
+.offsite-list { list-style: none; margin: 0 0 var(--zn-space-3); padding: 0; display: flex; flex-direction: column; gap: var(--zn-space-2); }
+.offsite-repo, .offsite-version, .offsite-file { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-2); padding: var(--zn-space-2); border-radius: var(--zn-radius-sm); background: rgba(255, 255, 255, 0.04); }
+.offsite-repo-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 240px; }
+.offsite-repo-name { font-weight: 700; }
+.offsite-actions { display: flex; flex-wrap: wrap; gap: var(--zn-space-1); }
+.offsite-form { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: flex-end; }
+.offsite-form label { display: flex; flex-direction: column; gap: 2px; font-size: var(--zn-fs-xs); color: var(--muted); }
+.offsite-form input:not([type="checkbox"]) { min-height: var(--zn-btn-h); padding: 0 var(--zn-space-2); border-radius: var(--zn-radius-sm); border: 1px solid var(--zn-line-strong); background: rgba(0, 0, 0, 0.3); color: var(--fg); font-size: var(--zn-fs-sm); }
+.offsite-form input[type="number"] { width: 90px; }
+.offsite-form fieldset { border: 1px solid var(--zn-line); border-radius: var(--zn-radius-sm); padding: var(--zn-space-1) var(--zn-space-2); display: flex; flex-wrap: wrap; gap: var(--zn-space-2); }
+.offsite-form legend { font-size: var(--zn-fs-xs); color: var(--muted); }
+.offsite-form .offsite-check { flex-direction: row; align-items: center; gap: 4px; color: var(--fg); }
