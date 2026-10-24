@@ -122,8 +122,8 @@ export function initContainersManager() {
               <button id="btn-cw-prune" class="btn-pill-toggle" title="${t('ui.clean_up_unused_container_images', 'Clean up unused container images, stopped containers, and volumes')}">
                 <span>🧹</span> <span>Prune</span>
               </button>
-              <button id="btn-cw-catalog" class="btn-save-preset" style="background: #0369a1; border-color: rgba(14, 165, 233, 0.4); color: #fff; font-weight: 700;">
-                <span>📦</span> <span>App Catalog</span>
+              <button id="btn-cw-catalog" class="btn-pill-toggle is-primary">
+                <span aria-hidden="true">📦</span> <span>${t('apps.get_apps', 'Get apps')}</span>
               </button>
             </div>
           </div>
@@ -382,7 +382,7 @@ export function initContainersManager() {
         if (catalogWrap) catalogWrap.style.display = 'flex';
         if (searchWrap) searchWrap.style.display = 'none';
         if (filterPills) filterPills.style.display = 'none';
-        btnCatalog.innerHTML = '<span>🐳</span> <span>Container List</span>';
+        btnCatalog.innerHTML = `<span aria-hidden="true">🐳</span> <span>${t('apps.installed', 'Installed apps')}</span>`;
         if (_cwCatalogApps.length === 0) {
           loadCwCatalogData();
         } else {
@@ -393,7 +393,7 @@ export function initContainersManager() {
         if (catalogWrap) catalogWrap.style.display = 'none';
         if (searchWrap) searchWrap.style.display = 'block';
         if (filterPills) filterPills.style.display = 'flex';
-        btnCatalog.innerHTML = '<span>📦</span> <span>App Catalog</span>';
+        btnCatalog.innerHTML = `<span aria-hidden="true">📦</span> <span>${t('apps.get_apps', 'Get apps')}</span>`;
       }
     };
   }
@@ -610,11 +610,16 @@ export function _resetCwAutoRefreshForTesting() {
   _cwUpdatesCache = null;
 }
 
-export function openContainersManager() {
+export function openContainersManager(opts = {}) {
   if (!containersWindow) {
     containersWindow = document.getElementById('containers-manager-window');
   }
   if (!containersWindow) return;
+  const wantCatalog = opts && opts.view === 'catalog';
+  const wantInstalled = opts && opts.view === 'installed';
+  if ((wantCatalog && !_cwInCatalogView) || (wantInstalled && _cwInCatalogView)) {
+    document.getElementById('btn-cw-catalog')?.click();
+  }
 
   if (window.DockManager) {
     if (!window.DockManager.windows['containers']) {

@@ -21,74 +21,77 @@
             <!-- LEFT SIDEBAR -->
       <aside class="mgmt-sidebar" id="mgmt-sidebar" aria-label="Management Navigation" data-i18n-aria-label="ui.management_navigation">
         <nav class="mgmt-sidebar-nav" aria-label="Management Navigation" data-i18n-aria-label="mgmt.nav_label">
-          <button class="mgmt-sidebar-item active" aria-current="page" data-mgmt-target="management-hub-view" title="HUB" data-i18n-title="mgmt.sidebar_overview">
+          <button class="mgmt-sidebar-item active" aria-current="page" data-mgmt-target="management-hub-view" title="Overview" data-i18n-title="mgmt.sidebar_overview">
             <svg class="mgmt-sidebar-svg"><use href="#i-grid"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">HUB</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_overview">Overview</span>
           </button>
 
-          <!-- CATEGORY 1: INFRASTRUCTURE & STORAGE -->
-          <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_infrastructure">Infrastructure & Storage</div>
-          <!-- Pillar 1: Dashboard & Telemetry -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Dashboard & Telemetry" data-i18n-title="ui.dashboard_telemetry">
-            <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Dashboard & Telemetry</span>
+          <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_infrastructure">Files & storage</div>
+          <button class="mgmt-sidebar-item" data-mgmt-target="files" data-mgmt-action="files" title="Files" data-i18n-title="mgmt.sidebar_files">
+            <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_files">Files</span>
           </button>
-          <!-- Pillar 2: Storage & Disks -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage & Disks" data-i18n-title="mgmt.storage_title">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage" data-i18n-title="mgmt.sidebar_storage">
             <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage & Disks</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
           </button>
-          <!-- Pillar 6: Hardware & Profiles -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Hardware & Profiles" data-i18n-title="mgmt.sidebar_hardware">
-            <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware & Profiles</span>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" data-mgmt-pane="mgmt-pane-storage-shares" title="Shares" data-i18n-title="mgmt.sidebar_shares">
+            <svg class="mgmt-sidebar-svg"><use href="#i-net"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_shares">Shares</span>
           </button>
-          <!-- Pillar 7: Power & Battery -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" title="Power & Battery" data-i18n-title="ui.power_battery">
-            <svg class="mgmt-sidebar-svg"><use href="#i-bolt"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">Power & Battery</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" data-mgmt-pane="mgmt-pane-backups" title="Backup" data-i18n-title="mgmt.sidebar_backup">
+            <svg class="mgmt-sidebar-svg"><use href="#i-save"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_backup">Backup</span>
           </button>
 
-          <!-- CATEGORY 2: APPLICATIONS & INTELLIGENCE -->
-          <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_apps_ai">Applications & AI</div>
-          <!-- Pillar 3: Containers & Apps -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Containers & Apps" data-i18n-title="ui.containers_apps">
+          <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_apps_ai">Apps & AI</div>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Apps" data-i18n-title="mgmt.sidebar_containers">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Containers & Apps</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Apps</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">0 Active</span>
           </button>
-          <!-- Pillar 4: Virtual Machines -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-vms" title="Virtual Machines" data-i18n-title="dock.vm_manager">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-vms" title="Virtual machines" data-i18n-title="mgmt.sidebar_vms">
             <svg class="mgmt-sidebar-svg"><use href="#i-vm"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_vms">Virtual Machines</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_vms">Virtual machines</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-vms-badge" style="display:none;">0 VMs</span>
           </button>
-          <!-- Pillar 8: AI Knowledge & Visual Search -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ai" title="AI Knowledge & Search" data-i18n-title="ui.ai_knowledge_search">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ai" title="AI" data-i18n-title="mgmt.sidebar_ai">
             <svg class="mgmt-sidebar-svg"><use href="#i-search"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ai">AI Knowledge & Search</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ai">AI</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ai-badge" style="background:rgba(14,165,233,0.18); color:var(--accent-cyan,#00f0ff);">NPU/GPU</span>
           </button>
 
-          <!-- CATEGORY 3: ADMINISTRATION & PERSONALIZATION -->
-          <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_admin_personalization">Administration & Personalization</div>
-          <!-- Desktop & Appearance -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper" title="Desktop & Appearance" data-i18n-title="ui.desktop_appearance">
-            <svg class="mgmt-sidebar-svg"><use href="#i-screen"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_appearance">Desktop & Appearance</span>
+          <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_admin_personalization">System</div>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" data-mgmt-pane="mgmt-pane-users" title="Users" data-i18n-title="mgmt.sidebar_users">
+            <svg class="mgmt-sidebar-svg"><use href="#i-users"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_users">Users</span>
           </button>
-          <!-- Pillar 5: Network & Sharing -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" title="Network & Sharing" data-i18n-title="ui.network_sharing">
-            <svg class="mgmt-sidebar-svg"><use href="#i-net"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network & Sharing</span>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" title="Network" data-i18n-title="mgmt.sidebar_network">
+            <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;">Online</span>
           </button>
-          <!-- Pillar 9: System & Identity -->
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="System & Identity" data-i18n-title="ui.system_identity">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" title="Power" data-i18n-title="mgmt.sidebar_ups">
+            <svg class="mgmt-sidebar-svg"><use href="#i-bolt"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">Power</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Hardware" data-i18n-title="mgmt.sidebar_hardware">
+            <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Activity" data-i18n-title="mgmt.sidebar_activity">
+            <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Activity</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-wallpaper" title="Appearance" data-i18n-title="mgmt.sidebar_appearance">
+            <svg class="mgmt-sidebar-svg"><use href="#i-screen"/></svg>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_appearance">Appearance</span>
+          </button>
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" title="Settings" data-i18n-title="mgmt.sidebar_system">
             <svg class="mgmt-sidebar-svg"><use href="#i-shield"/></svg>
-            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">System & Identity</span>
+            <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_system">Settings</span>
             <span class="mgmt-sidebar-badge alert-badge" id="mgmt-sidebar-sec-badge" style="display:none;">!</span>
           </button>
         </nav>

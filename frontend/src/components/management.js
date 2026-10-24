@@ -1028,6 +1028,11 @@ export function initManagement() {
     } else if (SUBPANE_MAP[targetId]) {
       targetId = SUBPANE_MAP[targetId].section;
     }
+    if (targetId === 'mgmt-sec-docker' && typeof window.openContainersManager === 'function') {
+      // Apps live in one place, the Apps window (UX-4)
+      window.openContainersManager({ view: desiredSubPane === 'mgmt-pane-docker-catalog' ? 'catalog' : 'installed' });
+      return;
+    }
     if (desiredSubPane === 'mgmt-pane-ai-visual') {
       desiredSubPane = 'mgmt-pane-ai-rag';
       setAiVisualFiltersDrawerOpen(true);
@@ -1067,9 +1072,12 @@ export function initManagement() {
     document.querySelectorAll('.mgmt-category-tab').forEach((t) => t.classList.remove('active'));
     if (targetTab) targetTab.classList.add('active');
 
-    markCurrent(document.querySelectorAll('.mgmt-sidebar-item'), (b) => b.dataset.mgmtTarget === targetId);
+    const sidebarItems = document.querySelectorAll('.mgmt-sidebar-item');
+    const paneItem = desiredSubPane && Array.from(sidebarItems).find((b) => b.dataset.mgmtPane === desiredSubPane);
+    const isCurrentItem = (b) => (paneItem ? b === paneItem : b.dataset.mgmtTarget === targetId && !b.dataset.mgmtPane);
+    markCurrent(sidebarItems, isCurrentItem);
     document.querySelectorAll('.mgmt-sidebar-item').forEach((b) => {
-      const isActive = b.dataset.mgmtTarget === targetId;
+      const isActive = isCurrentItem(b);
       b.classList.toggle('active', isActive);
       if (isActive && typeof b.scrollIntoView === 'function') {
         try { b.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
@@ -1214,10 +1222,14 @@ export function initManagement() {
         try { item.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (_) {}
       }
       const targetId = item.dataset.mgmtTarget;
+      if (item.dataset.mgmtAction === 'files') {
+        if (typeof window.openFileManager === 'function') window.openFileManager();
+        return;
+      }
       if (targetId === 'management-hub-view') {
         showHub();
       } else if (targetId) {
-        showSection(targetId);
+        showSection(targetId, item.dataset.mgmtPane || null);
       }
       saveOpenWindowsState();
     });
