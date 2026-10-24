@@ -102,6 +102,7 @@ async def save_client_preferences(request: Request):
         if Z_STATE.cached_stats:
             Z_STATE.cached_stats["client_preferences"] = current
             broadcaster.broadcast(Z_STATE.cached_stats, full_data=Z_STATE.cached_stats)
+    Z_STATE.lcd_wake.set()
 
     return {"status": "ok", "message": "Client preferences saved", "preferences": current}
 

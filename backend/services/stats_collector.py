@@ -830,6 +830,7 @@ def _publish(data, disks, fans, net, now):
 
     with Z_STATE.lock:
         Z_STATE.cached_stats = data
+    Z_STATE.lcd_wake.set()  # the built-in LCD renderer redraws with the new numbers
 
     # Send only what changed; clients merge it into their copy (see stats_delta.py).
     broadcaster.broadcast(_delta_encoder.encode(data), full_data=data)

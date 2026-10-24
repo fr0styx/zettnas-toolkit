@@ -103,6 +103,7 @@ def test_framebuffer_write_image(bpp):
 class _State:
     def __init__(self, stats):
         self.shutting_down = False
+        self.lcd_wake = threading.Event()
         self.ui_wake = threading.Event()
         self.lock = threading.RLock()
         self.cached_stats = stats
@@ -161,3 +162,51 @@ def test_rgb565_packing_and_row_padding():
     assert out == bytes([0x00, 0xF8, 0x1F, 0x00, 0x00, 0x00])
     green = rgb565_bytes(Image.new("RGB", (1, 1), (0, 255, 0)), stride=2)
     assert int.from_bytes(green, "little") == 0x07E0
+
+
+def test_ui_wake_also_wakes_the_lcd_and_clearing_it_does_not_take_that_away():
+    from backend.state import ZettState
+
+    st = ZettState()
+    st.lcd_wake.clear()
+    st.ui_wake.set()
+    st.ui_wake.clear()  # another loop (the stats collector) took the ui wake-up
+    assert st.lcd_wake.is_set()
+
+
+def test_page_change_wakes_the_lcd():
+    from backend.state import ZettState
+
+    st = ZettState()
+    st.lcd_wake.clear()
+    st.set_lcd_page(2)
+    assert st.lcd_wake.is_set()
+
+
+def test_seconds_to_next_minute():
+    assert lcd_pil.seconds_to_next_minute(120.0) == pytest.approx(60.05)
+    assert lcd_pil.seconds_to_next_minute(179.5) == pytest.approx(0.55)
+
+
+def test_loop_sleeps_on_lcd_wake_until_the_minute_turns(monkeypatch):
+    state = _State(STATS)
+    waits = []
+
+    class Wake:
+        def wait(self, timeout):
+            waits.append(timeout)
+            state.shutting_down = True
+            return False
+
+        def clear(self):
+            pass
+
+    state.lcd_wake = Wake()
+    monkeypatch.setattr(lcd_pil, "seconds_to_next_minute", lambda: 12.5)
+
+    class FB:
+        def write_image(self, img):
+            pass
+
+    lcd_pil.run_loop(FB(), 30.0, lambda fb, blanked: False, state)
+    assert waits == [12.5]

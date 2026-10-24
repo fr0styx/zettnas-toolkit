@@ -53,6 +53,23 @@ class FanState:
     thermal_watchdog_engaged: bool = False
 
 
+class WakeEvent(threading.Event):
+    """
+    An Event that also sets its follower events. Several loops wait on ui_wake and the
+    first one to wake clears it, so a loop that must never miss a wake-up gets its own
+    follower event instead (the LCD: lcd_wake).
+    """
+
+    def __init__(self, *followers: threading.Event) -> None:
+        super().__init__()
+        self._followers = followers
+
+    def set(self) -> None:
+        super().set()
+        for follower in self._followers:
+            follower.set()
+
+
 @dataclass
 class LcdState:
     """The front LCD renderer and page cycling."""
@@ -140,7 +157,9 @@ class ZettState:
         self.lcd = LcdState()
         self.ai = AiState()
         self.smart = SmartState()
-        self.ui_wake = threading.Event()
+        # lcd_wake: set by every ui_wake.set() and by each new stats sample; only the LCD clears it
+        self.lcd_wake = threading.Event()
+        self.ui_wake = WakeEvent(self.lcd_wake)
         self.prev: dict[str, Any] = {"idle": 0, "total": 0}
         self.prev_net: dict[str, Any] = {"time": 0.0, "rx": 0, "tx": 0, "iface": "bond0"}
         self.prev_disk_io: dict[str, Any] = {}

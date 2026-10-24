@@ -17,6 +17,7 @@ import math
 import os
 import re
 import threading
+import time
 from datetime import datetime
 from functools import lru_cache
 from typing import Any
@@ -610,20 +611,28 @@ def preview_png(stats: dict | None, page: int | None = None, prefs: dict | None 
     return buf.getvalue()
 
 
-def run_loop(fb: Any, refresh_s: float, screen_off, state) -> None:
+def seconds_to_next_minute(now: float | None = None) -> float:
+    """Time until the clock on the LCD changes (a little after the minute turns)."""
+    now = time.time() if now is None else now
+    return 60.0 - (now % 60.0) + 0.05
+
+
+def run_loop(fb: Any, max_wait_s: float, screen_off, state) -> None:
     """
-    Draws frames until shutdown. A frame is written only when it differs from the last
-    one; the loop wakes once per refresh_s (the clock) or at once on ui_wake (a page
-    change, a button press, an alert).
+    Draws frames until shutdown. The loop sleeps on the LCD's own wake-up event
+    (state.lcd_wake), set by each new stats sample, a page change, a button press, an
+    alert or a theme change, and otherwise wakes when the clock's minute turns (at most
+    max_wait_s apart). A frame is written only when it differs from the last one.
     """
+    wake = getattr(state, "lcd_wake", None) or state.ui_wake
     prev = None
     blanked = False
     while not state.shutting_down:
         blanked = screen_off(fb, blanked)
         if blanked:
             prev = None
-            if state.ui_wake.wait(1.0):
-                state.ui_wake.clear()
+            if wake.wait(1.0):
+                wake.clear()
             continue
         with state.lock:
             stats = dict(state.cached_stats or {})
@@ -633,5 +642,5 @@ def run_loop(fb: Any, refresh_s: float, screen_off, state) -> None:
         if raw != prev:
             fb.write_image(frame)
             prev = raw
-        if state.ui_wake.wait(refresh_s):
-            state.ui_wake.clear()
+        if wake.wait(min(max_wait_s, seconds_to_next_minute())):
+            wake.clear()

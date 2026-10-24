@@ -259,7 +259,7 @@ def _run_pil(fb_path: str) -> None:
                     Z_STATE.lcd_renderer_active = True
                     Z_STATE.lcd_renderer_name = "pil"
                     retry_delay = 2.0
-                    lcd_pil.run_loop(fb, 1.0, _screen_off, Z_STATE)
+                    lcd_pil.run_loop(fb, 30.0, _screen_off, Z_STATE)
                 finally:
                     fb_mem.close()
         except Exception as e:
