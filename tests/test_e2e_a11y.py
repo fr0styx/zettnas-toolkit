@@ -47,7 +47,6 @@ PANES = [
     "mgmt-pane-storage-disks",
     "mgmt-pane-storage-remotes",
     "mgmt-pane-network",
-    "mgmt-pane-docker",
     "mgmt-pane-vms-list",
     "mgmt-pane-security",
     "mgmt-pane-users",
