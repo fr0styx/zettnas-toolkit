@@ -22,6 +22,13 @@ from backend.config import DATA_DIR, POOL_PATH, UPS_CONFIG_FILE, logger
 from backend.db import log_ups_event
 from backend.fsutil import atomic_write_json, read_json
 
+# Host paths read here (module constants so tests can point them elsewhere)
+PSY_ROOTS = ("/sys/class/power_supply", "/host/sys/class/power_supply")
+HIDRAW_ROOTS = ("/sys/class/hidraw", "/host/sys/class/hidraw")
+USB_DEVICE_ROOTS = ("/sys/bus/usb/devices", "/host/sys/bus/usb/devices")
+DEV_ROOTS = ("/dev", "/host/dev")
+PROC_NET_ROUTE = "/proc/net/route"
+
 _CACHED_UPS: dict[str, Any] = {}
 _LAST_UPS_POLL = 0.0
 _UPS_CACHE_TTL = 10.0
@@ -302,7 +309,7 @@ def _get_docker_gateway() -> str | None:
     to prevent probing local LAN router gateways when running in host networking mode.
     """
     try:
-        with open("/proc/net/route") as f:
+        with open(PROC_NET_ROUTE) as f:
             for line in f:
                 fields = line.strip().split()
                 if len(fields) >= 3 and (fields[1] == "00000000" or fields[1] == "0"):
@@ -754,7 +761,7 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
     out: dict[str, Any] = {}
 
     # Layer 1: Check Linux sysfs power_supply class (e.g. /sys/class/power_supply/* or /host/sys/class/power_supply/*)
-    psy_roots = [p for p in ["/sys/class/power_supply", "/host/sys/class/power_supply"] if os.path.isdir(p)]
+    psy_roots = [p for p in PSY_ROOTS if os.path.isdir(p)]
     for root in psy_roots:
         try:
             for node in sorted(os.listdir(root)):
@@ -831,7 +838,7 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
     cached = _cached_hid_ups()
     if cached:
         return cached
-    hidraw_roots = [p for p in ["/sys/class/hidraw", "/host/sys/class/hidraw"] if os.path.isdir(p)]
+    hidraw_roots = [p for p in HIDRAW_ROOTS if os.path.isdir(p)]
     permission_error_info = None
 
     if fcntl is not None:
@@ -871,7 +878,7 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
                     if not is_ups:
                         continue
 
-                    char_cands = [f"/dev/{node}", f"/host/dev/{node}"]
+                    char_cands = [os.path.join(d, node) for d in DEV_ROOTS]
                     desc_file = os.path.join(node_dir, "device/report_descriptor")
                     if not os.path.isfile(desc_file):
                         continue
@@ -919,7 +926,7 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
         return permission_error_info
 
     # Layer 3: Scan /sys/bus/usb/devices/ to detect connected USB UPS device metadata
-    usb_roots = [p for p in ["/sys/bus/usb/devices", "/host/sys/bus/usb/devices"] if os.path.isdir(p)]
+    usb_roots = [p for p in USB_DEVICE_ROOTS if os.path.isdir(p)]
     for u_root in usb_roots:
         try:
             for d in sorted(os.listdir(u_root)):
@@ -973,7 +980,7 @@ def discover_ups_sources() -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
 
     # 1. Probe USB HID devices in sysfs (both container and host mounts)
-    usb_devices = glob.glob("/sys/bus/usb/devices/*") + glob.glob("/host/sys/bus/usb/devices/*")
+    usb_devices = [d for root in USB_DEVICE_ROOTS for d in sorted(glob.glob(os.path.join(root, "*")))]
     seen_ids: set[str] = set()
 
     for dev_path in usb_devices:
@@ -1030,7 +1037,7 @@ def discover_ups_sources() -> list[dict[str, Any]]:
             continue
 
     # 2. Check /sys/class/power_supply devices
-    psy_paths = glob.glob("/sys/class/power_supply/*") + glob.glob("/host/sys/class/power_supply/*")
+    psy_paths = [d for root in PSY_ROOTS for d in sorted(glob.glob(os.path.join(root, "*")))]
     for p_dir in psy_paths:
         try:
             bname = os.path.basename(p_dir)

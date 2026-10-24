@@ -351,8 +351,9 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
                 realloc = int(defect_list)
             except (ValueError, TypeError):
                 pass
-        err_log = doc.get("scsi_error_counter_log", {})
-        if isinstance(err_log, dict):
+        # SAS drives only: SATA drives have no error counter log and keep attribute 198
+        err_log = doc.get("scsi_error_counter_log")
+        if isinstance(err_log, dict) and err_log:
             uncorr_read = (
                 err_log.get("read", {}).get("total_un_corrected_errors", 0)
                 if isinstance(err_log.get("read"), dict)
