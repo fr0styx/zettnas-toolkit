@@ -815,6 +815,14 @@ export function initManagement() {
       if (typeof fetchAndRenderUpsTelemetry === 'function') fetchAndRenderUpsTelemetry();
     } else if (paneId === 'mgmt-pane-ai-rag' || paneId === 'mgmt-pane-ai-chat' || paneId === 'mgmt-pane-ai-visual' || paneId === 'mgmt-pane-ai-index') {
       fetchAndRenderAiStatus();
+      if (paneId === 'mgmt-pane-ai-rag') {
+        Promise.all([import('./immich-settings.js'), import('./users.js')])
+          .then(([m, u]) => {
+            const scopes = (u.getCurrentUser() || {}).scopes || [];
+            m.renderImmichSettings(document.getElementById('immich-settings-mount'), scopes.includes('*') || scopes.includes('system:config'));
+          })
+          .catch(() => {});
+      }
       if (paneId === 'mgmt-pane-ai-rag' || paneId === 'mgmt-pane-ai-visual') {
         const q = _getActiveAiSearchQuery();
         if (q || _aiSelectedColor || _aiSelectedScene) {

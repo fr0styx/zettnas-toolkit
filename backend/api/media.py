@@ -810,6 +810,25 @@ def toggle_favorite_item(
     return get_rag_engine().toggle_favorite(vp)
 
 
+async def _with_immich(res: Any, q: str | None, mode: str | None, principal: Any, limit: int) -> Any:
+    """Adds this person's Immich photos to a photo search when they connected Immich (Batch 6)."""
+    if (
+        not isinstance(res, dict)
+        or not (q or "").strip()
+        or (mode or "all") not in ("all", "photos", "photo", "images")
+    ):
+        return res
+    from backend.services.immich_photos import smart_search
+
+    try:
+        res["immich_results"] = await asyncio.to_thread(
+            smart_search, principal.username if principal else "", q or "", min(limit, 24)
+        )
+    except Exception:
+        logger.debug("immich search skipped", exc_info=True)
+    return res
+
+
 @router.get(
     "/media/search",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
@@ -846,7 +865,7 @@ async def search_multimodal_get(
         validated_prefix = _validate_media_path(path_prefix, principal, must_exist=False)
 
     rag = get_rag_engine()
-    return await asyncio.to_thread(
+    res = await asyncio.to_thread(
         rag.search,
         effective_q,
         effective_mode,
@@ -858,6 +877,7 @@ async def search_multimodal_get(
         match_tab,
         sort_by,
     )
+    return await _with_immich(res, effective_q, effective_mode, principal, limit)
 
 
 @router.post(
@@ -887,7 +907,7 @@ async def search_multimodal_post(
         validated_prefix = _validate_media_path(req.path_prefix, principal, must_exist=False)
 
     rag = get_rag_engine()
-    return await asyncio.to_thread(
+    res = await asyncio.to_thread(
         rag.search,
         effective_q,
         effective_mode,
@@ -899,6 +919,7 @@ async def search_multimodal_post(
         req.match_tab,
         req.sort_by,
     )
+    return await _with_immich(res, effective_q, effective_mode, principal, req.limit)
 
 
 @router.post(

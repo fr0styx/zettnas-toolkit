@@ -8,6 +8,7 @@ import { api, auth } from '../../api.js';
 import { showToast, showConfirmToast, showPromptToast } from '../../toast.js';
 import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
+import { immichResultsHtml } from '../immich-settings.js';
 import { formatDateTime, formatNumber, formatTime } from '../../format.js';
 
 // ============================================================================
@@ -2549,6 +2550,13 @@ export async function runAiVisualSearch(rawQuery = null) {
 
     const results = res?.results || res?.photo_results || res?.items || [];
     _aiLastResultsList = results;
+    const immichStrip = document.getElementById('ai-immich-strip') || (() => {
+      const el = document.createElement('div');
+      el.id = 'ai-immich-strip';
+      grid.parentNode?.insertBefore(el, grid);
+      return el;
+    })();
+    immichStrip.innerHTML = immichResultsHtml(res?.immich_results);
     if (results.length === 0) {
       grid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 28px; color: var(--muted); font-size: 12px;">
