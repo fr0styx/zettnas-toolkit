@@ -1,4 +1,3 @@
-import copy
 import json
 import os
 import sqlite3
@@ -673,6 +672,7 @@ def get_smart_test_history(dev: str | None = None, limit: int = 20) -> list[dict
 # (database file, device) -> last velocity result and what it was computed from
 _VELOCITY_CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 VELOCITY_RECHECK_SECS = 600  # temperature/power-on-hours-only changes refresh at most this often
+SPARKLINE_BUCKET_SECS = 7200  # 30 days -> at most 360 sparkline points
 
 
 def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
@@ -852,18 +852,22 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             failure_prob = 0.01
             failure_risk = "low"
 
-        # Historical sparkline points for 30-day velocity visualization
+        # 30-day sparkline, one point per SPARKLINE_BUCKET_SECS: the chart is ~320 px wide, and older
+        # history has a row every 15 s (tens of thousands per disk)
         history_rows = c.execute(
-            "SELECT ts, temp, reallocated_sectors, pending_sectors, nvme_pct_used FROM smart_history WHERE dev = ? AND ts >= ? ORDER BY ts ASC",
-            (dev, ts_30d),
+            """SELECT MIN(ts) AS ts, ROUND(AVG(temp), 1) AS temp, MAX(reallocated_sectors) AS realloc,
+                      MAX(pending_sectors) AS pending, MAX(nvme_pct_used) AS wear
+               FROM smart_history WHERE dev = ? AND ts >= ?
+               GROUP BY ts / ? ORDER BY ts ASC""",
+            (dev, ts_30d, SPARKLINE_BUCKET_SECS),
         ).fetchall()
         sparkline_points = [
             {
                 "ts": r["ts"],
                 "temp": r["temp"],
-                "realloc": r["reallocated_sectors"] or 0,
-                "pending": r["pending_sectors"] or 0,
-                "wear": r["nvme_pct_used"] or 0,
+                "realloc": r["realloc"] or 0,
+                "pending": r["pending"] or 0,
+                "wear": r["wear"] or 0,
             }
             for r in history_rows
         ]
@@ -924,10 +928,10 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
             and hit["counters"] == counters
             and (hit["ts"] == head["ts"] or now_ts - hit["at"] < VELOCITY_RECHECK_SECS)
         ):
-            return copy.deepcopy(hit["result"])
+            return dict(hit["result"])  # shallow: callers only read the nested parts
         result = _eval_velocity(c)
-        _VELOCITY_CACHE[key] = {"counters": counters, "ts": head["ts"], "at": now_ts, "result": copy.deepcopy(result)}
-        return result
+        _VELOCITY_CACHE[key] = {"counters": counters, "ts": head["ts"], "at": now_ts, "result": result}
+        return dict(result)
 
     try:
         if conn is not None:

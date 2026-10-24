@@ -62,3 +62,20 @@ def test_stuck_pending_uses_one_aggregate():
     assert not any("pending_sectors FROM smart_history" in s and "ORDER BY ts ASC" in s for s in q)
     _log(now + 1, "perf_d", pending=0)
     assert db.query_smart_velocity("perf_d")["stuck_pending"] is False
+
+
+def test_sparkline_is_bucketed_and_cache_hits_are_cheap(monkeypatch):
+    import copy
+
+    db.init_db()
+    now = int(time.time())
+    with db.db_session() as conn:
+        conn.executemany(
+            "INSERT INTO smart_history (ts, dev, temp, reallocated_sectors, pending_sectors) VALUES (?, ?, ?, 0, 0)",
+            [(now - 29 * 86400 + i * 15, "perf_e", 35.0) for i in range(20000)],
+        )
+    first = db.query_smart_velocity("perf_e")
+    assert 0 < len(first["sparkline_points"]) <= 30 * 86400 // db.SPARKLINE_BUCKET_SECS + 1
+    monkeypatch.setattr(copy, "deepcopy", lambda *a, **k: (_ for _ in ()).throw(AssertionError("deep copy")))
+    again = db.query_smart_velocity("perf_e")
+    assert again == first and again is not first
