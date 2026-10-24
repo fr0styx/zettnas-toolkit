@@ -141,7 +141,13 @@ def test_sanitize_dict_recursive():
     assert "mypassword" not in clean["items"][2]
 
 
-def test_correlation_id_middleware(client):
+def test_correlation_id_middleware(client, monkeypatch):
+    import time
+
+    from backend.state import Z_STATE
+
+    # a fresh collector heartbeat, so health is 200 however long the suite has run
+    monkeypatch.setattr(Z_STATE, "collector_heartbeat", time.time())
     # 1. Without header: server generates a correlation ID
     res = client.get("/api/health")
     assert res.status_code == 200
