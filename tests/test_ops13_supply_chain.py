@@ -49,3 +49,13 @@ def test_arm64_images_are_started_in_ci():
         s for s in jobs["build-and-push"]["steps"] if s.get("name", "").startswith("Smoke-test the built image (arm64")
     )
     assert "--platform linux/arm64" in step["run"] and "aarch64" in step["run"]
+
+
+def test_the_update_path_is_exercised_after_publishing():
+    jobs = yaml.safe_load(_read(".github/workflows/ci.yml"))["jobs"]
+    steps = jobs["build-and-push"]["steps"]
+    names = [s.get("name", "") for s in steps]
+    test = names.index("Upgrade and rollback test")
+    assert test > next(i for i, n in enumerate(names) if n.startswith("Publish tags"))
+    assert "scripts/upgrade_rollback_test.sh" in steps[test]["run"]
+    assert os.path.isfile(os.path.join(ROOT, "scripts", "upgrade_rollback_test.sh"))

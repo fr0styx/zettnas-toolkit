@@ -404,6 +404,20 @@ jobs:
           echo "Published ${#args[@]} tag argument(s) for ${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
           echo "Verify: cosign verify ghcr.io/${{ github.repository }}@${DIGEST} --certificate-identity-regexp '^https://github\.com/${{ github.repository }}/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> "$GITHUB_STEP_SUMMARY"
 
+      # The real update path, end to end: the current Stable image on fresh data, updated to this
+      # build by its own update helper (data must survive), then to an image that can't start
+      # (must roll back). Reported, not blocking, until it has passed on a few releases (OPS-9).
+      - name: Upgrade and rollback test
+        if: matrix.variant == 'full'
+        continue-on-error: true
+        run: |
+          docker pull -q "ghcr.io/${{ github.repository }}:latest"
+          docker pull -q "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+          if ! sh scripts/upgrade_rollback_test.sh "ghcr.io/${{ github.repository }}:latest" "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"; then
+            echo "::warning title=Upgrade and rollback test::failed, see the step log"
+            exit 1
+          fi
+
   create-release:
     name: GitHub Release & Release Notes
     needs: [build-and-push]
