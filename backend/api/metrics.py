@@ -2,6 +2,7 @@ import time
 
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 
 from backend.state import Z_STATE
 
@@ -18,8 +19,10 @@ def _safe_float(val):
 @router.get("/metrics", response_class=PlainTextResponse)
 def prometheus_metrics():
     """Prometheus exposition format for ZettNAS telemetry."""
+    from backend.request_metrics import REQUEST_METRICS
+
     if not Z_STATE.cached_stats:
-        return "# ZettNAS metrics not ready yet\n"
+        return "# ZettNAS metrics not ready yet\n" + REQUEST_METRICS.prometheus()
 
     stats = Z_STATE.cached_stats
     lines = []
@@ -122,7 +125,7 @@ def prometheus_metrics():
     for _metric_name, metric_lines in lines_by_metric.items():
         out.extend(metric_lines)
 
-    return "\n".join(out) + "\n"
+    return "\n".join(out) + "\n" + REQUEST_METRICS.prometheus()
 
 
 @router.get("/metrics/network-topology")
@@ -133,3 +136,26 @@ async def metrics_network_topology():
     from backend.hardware.network import get_network_topology
 
     return await asyncio.to_thread(get_network_topology)
+
+
+class RouteMetrics(BaseModel):
+    method: str
+    route: str
+    requests: int
+    server_errors: int
+    client_errors: int
+    avg_ms: float | None = None
+    p50_ms_max: float | None = None
+    p95_ms_max: float | None = None
+
+
+class RequestMetricsOut(BaseModel):
+    routes: list[RouteMetrics]
+
+
+@router.get("/metrics/requests", response_model=RequestMetricsOut)
+def request_metrics_summary(top: int = 25):
+    """The busiest API routes: requests, errors and latency (ARCH-10)."""
+    from backend.request_metrics import REQUEST_METRICS
+
+    return {"routes": REQUEST_METRICS.summary(top=max(1, min(200, top)))}

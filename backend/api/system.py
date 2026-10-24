@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 import aiofiles
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -62,6 +62,7 @@ from backend.models.schemas import (
     StateRequest,
     SystemProfileRequest,
 )
+from backend.paging import PageParams
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import _do_copy
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
@@ -207,7 +208,7 @@ async def disk_smart_test(req: DiskSmartTestRequest):
 
 
 @router.get("/disk/smart_tests")
-async def get_disk_smart_tests(dev: str | None = None, limit: int = 20):
+async def get_disk_smart_tests(dev: str | None = None, limit: int = Query(20, ge=1, le=500)):
     """Returns persistent historical self-test runs and latest diagnostic report."""
     if dev:
         if dev.startswith("/dev/"):
@@ -477,8 +478,9 @@ def post_lcd_cycle():
 
 
 @router.get("/copy/history")
-def get_copy_history(limit: int = 50):
-    return query_copy_history(limit)
+def get_copy_history(page: PageParams = Depends()):
+    # a plain list, as before; limit and offset are validated and applied
+    return page.slice(query_copy_history(page.fetch))
 
 
 @router.get("/unraid")

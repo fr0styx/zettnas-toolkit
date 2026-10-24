@@ -8,10 +8,17 @@ import time
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ZettNAS")
 
+from backend.settings import load_settings  # noqa: E402
+
+# Typed settings (ARCH-9): unusable values keep their default and are reported here
+SETTINGS, SETTINGS_PROBLEMS = load_settings()
+for _problem in SETTINGS_PROBLEMS:
+    logger.warning(f"[config] {_problem}")
+
 # ---- Host paths & mounts ----
-HOST_PROC = os.environ.get("HOST_PROC", "/host/proc")
-HOST_SYS = os.environ.get("HOST_SYS", "/host/sys")
-HOST_DEV = os.environ.get("HOST_DEV", "/host/dev")
+HOST_PROC = SETTINGS.host_proc
+HOST_SYS = SETTINGS.host_sys
+HOST_DEV = SETTINGS.host_dev
 _env_pool = os.environ.get("STORAGE_POOL_PATH") or os.environ.get("POOL_PATH")
 if not _env_pool:
     if os.path.exists("/mnt/user") and (
@@ -64,18 +71,18 @@ elif _env_pool == "/mnt/storage" and not (
         POOL_PATH = _env_pool
 else:
     POOL_PATH = _env_pool
-DISKS = os.environ.get("DISKS", "")
-OS_NVME = os.environ.get("OS_NVME", "nvme1n1")
+DISKS = SETTINGS.disks
+OS_NVME = SETTINGS.os_nvme
 STATIC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"))
 
 # ---- Runtime & tuning ----
-ENABLE_FB = os.environ.get("ENABLE_FB", "1") == "1"
-LCD_FPS = int(float(os.environ.get("LCD_FPS", "5")))
-SMART_POLL_INTERVAL_HDD = int(os.environ.get("SMART_POLL_HDD", "45"))
-SMART_POLL_INTERVAL_NVME = int(os.environ.get("SMART_POLL_NVME", "15"))
-LCD_FORMAT = os.environ.get("LCD_FORMAT", "jpeg").lower()  # jpeg: cheaper to encode than png (PERF-2)
-PORT = int(os.environ.get("PORT", "8082"))
-SHOW_OS_DISK = os.environ.get("SHOW_OS_DISK", "1") == "1"
+ENABLE_FB = SETTINGS.enable_fb
+LCD_FPS = SETTINGS.lcd_fps
+SMART_POLL_INTERVAL_HDD = SETTINGS.smart_poll_hdd
+SMART_POLL_INTERVAL_NVME = SETTINGS.smart_poll_nvme
+LCD_FORMAT = SETTINGS.lcd_format  # jpeg: cheaper to encode than png (PERF-2)
+PORT = SETTINGS.port
+SHOW_OS_DISK = SETTINGS.show_os_disk
 
 
 # ---- Data directories & persistent files ----
@@ -107,14 +114,14 @@ UPS_CONFIG_FILE = os.path.join(DATA_DIR, "ups_config.json")
 NETWORK_CONFIG_FILE = os.path.join(DATA_DIR, "network_config.json")
 BACKUP_DIR = os.environ.get("BACKUP_DIR", os.path.join(DATA_DIR, "backups"))
 VM_ISO_DIR = os.environ.get("VM_ISO_DIR", os.path.join(DATA_DIR, "vms", "isos"))
-SFTP_PORT = int(os.environ.get("SFTP_PORT", "2222"))
+SFTP_PORT = SETTINGS.sftp_port
 TAILSCALE_STATE_DIR = os.environ.get("TAILSCALE_STATE_DIR", os.path.join(DATA_DIR, "tailscale"))
-UPDATE_CHANNEL = os.environ.get("UPDATE_CHANNEL", "stable").lower()
-UPS_MODE = os.environ.get("UPS_MODE", "auto").lower()
-NUT_HOST = os.environ.get("NUT_HOST", "127.0.0.1")
-NUT_PORT = int(os.environ.get("NUT_PORT", "3493"))
-NUT_NAME = os.environ.get("NUT_NAME", "ups")
-LCD_SLEEP_SEC = int(os.environ.get("LCD_SLEEP_SEC", "300"))
+UPDATE_CHANNEL = SETTINGS.update_channel
+UPS_MODE = SETTINGS.ups_mode.lower()
+NUT_HOST = SETTINGS.nut_host
+NUT_PORT = SETTINGS.nut_port
+NUT_NAME = SETTINGS.nut_name
+LCD_SLEEP_SEC = SETTINGS.lcd_sleep_sec
 
 # ---- Security & Auth ----
 from backend.passwords import hash_password, verify_password  # noqa: E402
@@ -122,7 +129,7 @@ from backend.passwords import hash_password, verify_password  # noqa: E402
 RAW_DOCKER_SOCK = "/var/run/docker.sock"
 
 # "full" ships VMs and the LCD renderer; "core" leaves them out (OPS-11)
-IMAGE_VARIANT = "core" if os.environ.get("ZETTNAS_IMAGE_VARIANT", "full").lower() == "core" else "full"
+IMAGE_VARIANT = SETTINGS.image_variant
 
 
 def variant_tag(tag: str) -> str:
@@ -151,8 +158,8 @@ SESSION_TTL = 30 * 86400  # 30 days
 MIN_PASSWORD_LENGTH = 8
 
 # Reverse Proxy SSO (Sprint 3)
-TRUSTED_PROXIES = [p.strip() for p in os.environ.get("TRUSTED_PROXIES", "127.0.0.1,::1").split(",") if p.strip()]
-ENABLE_PROXY_SSO = os.environ.get("ENABLE_PROXY_SSO", "0").lower() in ("1", "true", "yes")
+TRUSTED_PROXIES = list(SETTINGS.trusted_proxies)
+ENABLE_PROXY_SSO = SETTINGS.enable_proxy_sso
 
 # Random per-process token handed only to the headless LCD renderer.
 # Replaces the old "trust every request from 127.0.0.1" bypass.
@@ -190,8 +197,8 @@ def _get_or_create_secret_key() -> str:
 SECRET_KEY = _get_or_create_secret_key()
 
 # Universal WebDAV & Remote Storage (Sprint 4)
-REMOTES_PATH = os.environ.get("REMOTES_PATH", "/mnt/remotes")
-WEBDAV_PORT = int(os.environ.get("WEBDAV_PORT", "8084"))
+REMOTES_PATH = SETTINGS.remotes_path
+WEBDAV_PORT = SETTINGS.webdav_port
 WEBDAV_CONFIG_FILE = os.path.join(DATA_DIR, "webdav_config.json")
 RCLONE_CONFIG_FILE = os.path.join(DATA_DIR, "rclone", "rclone.conf")
 RCLONE_CACHE_DIR = os.path.join(DATA_DIR, "rclone", "vfs_cache")
@@ -216,35 +223,33 @@ ALLOWED_BROWSE_ROOTS = _roots_list
 
 # OpenAPI docs (/docs, /redoc, /openapi.json): disabled unless explicitly enabled,
 # and always require authentication when enabled.
-ENABLE_API_DOCS = os.environ.get("ENABLE_API_DOCS", "0") == "1"
+ENABLE_API_DOCS = SETTINGS.enable_api_docs
 
 
 # Reject request bodies larger than this (wallpaper uploads are base64 JSON).
-MAX_BODY_BYTES = int(os.environ.get("MAX_BODY_MB", "16")) * 1024 * 1024
-MAX_WALLPAPER_BYTES = int(os.environ.get("MAX_WALLPAPER_MB", "10")) * 1024 * 1024
-MAX_UPLOAD_BYTES = int(os.environ.get("MAX_UPLOAD_GB", "64")) * 1024 * 1024 * 1024
+MAX_BODY_BYTES = SETTINGS.max_body_mb * 1024 * 1024
+MAX_WALLPAPER_BYTES = SETTINGS.max_wallpaper_mb * 1024 * 1024
+MAX_UPLOAD_BYTES = SETTINGS.max_upload_gb * 1024 * 1024 * 1024
 
 # ---- Fan safety ----
 FAN_MIN_PWM = 58  # Lowest PWM the chassis fans reliably spin at
 FAN_MAX_PWM = 183  # Chassis maximum
-FAN_FAILSAFE_PWM = int(os.environ.get("FAN_FAILSAFE_PWM", "150"))
-FAN_KICKSTART_PWM = int(os.environ.get("FAN_KICKSTART_PWM", "150"))
-FAN_KICKSTART_SECS = float(os.environ.get("FAN_KICKSTART_SECS", "2.0"))
-FAN_SPINUP_GRACE_SECS = float(os.environ.get("FAN_SPINUP_GRACE_SECS", "6.0"))
-FAN_DISK_HOLD_SECS = int(os.environ.get("FAN_DISK_HOLD_SECS", "30"))
-FAN_CPU_HOLD_SECS = int(os.environ.get("FAN_CPU_HOLD_SECS", "30"))
-ZERO_RPM_ENABLED = os.environ.get("ZERO_RPM_ENABLED", "0").lower() in ("1", "true", "yes")
-FAN_ZERO_RPM_STOP_DELAY = int(os.environ.get("FAN_ZERO_RPM_STOP_DELAY", "30"))
-FAN_ZERO_RPM_DEFAULT_NVME_CEILING = int(
-    os.environ.get("ZERO_RPM_NVME") or os.environ.get("FAN_ZERO_RPM_NVME_CEILING", "50")
-)
-FAN_ZERO_RPM_DEFAULT_STOP_TEMP = int(os.environ.get("ZERO_RPM_TEMP") or os.environ.get("FAN_ZERO_RPM_STOP_TEMP", "34"))
-FAN_ZERO_RPM_DEFAULT_START_TEMP = int(os.environ.get("FAN_ZERO_RPM_START_TEMP", "38"))
-HDD_CRITICAL_TEMP = int(os.environ.get("HDD_CRITICAL_TEMP", "55"))
-NVME_CRITICAL_TEMP = int(os.environ.get("NVME_CRITICAL_TEMP", "75"))
-HDD_WARN_TEMP = int(os.environ.get("HDD_WARN_TEMP", "50"))
-NVME_WARN_TEMP = int(os.environ.get("NVME_WARN_TEMP", "70"))
-COLLECTOR_WATCHDOG_SECS = int(os.environ.get("COLLECTOR_WATCHDOG_SECS", "20"))
+FAN_FAILSAFE_PWM = SETTINGS.fan_failsafe_pwm
+FAN_KICKSTART_PWM = SETTINGS.fan_kickstart_pwm
+FAN_KICKSTART_SECS = SETTINGS.fan_kickstart_secs
+FAN_SPINUP_GRACE_SECS = SETTINGS.fan_spinup_grace_secs
+FAN_DISK_HOLD_SECS = SETTINGS.fan_disk_hold_secs
+FAN_CPU_HOLD_SECS = SETTINGS.fan_cpu_hold_secs
+ZERO_RPM_ENABLED = SETTINGS.zero_rpm_enabled
+FAN_ZERO_RPM_STOP_DELAY = SETTINGS.zero_rpm_stop_delay
+FAN_ZERO_RPM_DEFAULT_NVME_CEILING = SETTINGS.zero_rpm_nvme_ceiling
+FAN_ZERO_RPM_DEFAULT_STOP_TEMP = SETTINGS.zero_rpm_stop_temp
+FAN_ZERO_RPM_DEFAULT_START_TEMP = SETTINGS.zero_rpm_start_temp
+HDD_CRITICAL_TEMP = SETTINGS.hdd_critical_temp
+NVME_CRITICAL_TEMP = SETTINGS.nvme_critical_temp
+HDD_WARN_TEMP = SETTINGS.hdd_warn_temp
+NVME_WARN_TEMP = SETTINGS.nvme_warn_temp
+COLLECTOR_WATCHDOG_SECS = SETTINGS.collector_watchdog_secs
 
 _default_pw_cache = {"hash": None, "value": False}
 
@@ -253,11 +258,11 @@ _default_pw_cache = {"hash": None, "value": False}
 # endpoints (SEC-23). Only the test suite turns this off.
 # Show user tiles on the login screen (SEC-19). Off by default: it lists account names
 # to anyone who can open the login page.
-LOGIN_USER_CHOOSER = os.environ.get("LOGIN_USER_CHOOSER", "0").lower() in ("1", "true", "yes", "on")
+LOGIN_USER_CHOOSER = SETTINGS.login_user_chooser
 
 # Extra origins allowed to send cookie-authenticated writes (e.g. "https://nas.example.com"),
 # for reverse proxies that don't pass the original Host. Comma-separated.
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
+CSRF_TRUSTED_ORIGINS = list(SETTINGS.csrf_trusted_origins)
 
 ENFORCE_PASSWORD_CHANGE = not (
     os.environ.get("TESTING") == "1" and os.environ.get("ZETTNAS_ENFORCE_PASSWORD_CHANGE") == "0"

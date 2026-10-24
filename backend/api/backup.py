@@ -15,6 +15,7 @@ from backend.config import CLIENT_PREFS_FILE, logger
 from backend.confirmations import require_confirmation
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
+from backend.paging import PageParams
 from backend.services.backup_engine import (
     delete_backup_job,
     execute_backup_job,
@@ -244,9 +245,10 @@ async def trigger_backup_job(job_id: str):
 
 
 @router.get("/backup/history", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
-def list_backup_history(limit: int = 50):
+def list_backup_history(page: PageParams = Depends()):
     """Retrieves recent execution history for backup pipelines."""
-    return {"status": "ok", "history": get_backup_history(limit=limit)}
+    rows = get_backup_history(limit=page.fetch)
+    return {"status": "ok", "history": page.slice(rows), **page.meta(len(rows))}
 
 
 # -------------------------------------------------------------------------

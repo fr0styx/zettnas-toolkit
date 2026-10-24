@@ -417,16 +417,29 @@ async def csp_report(request: Request):
 
 
 # Request correlation ID tracking middleware (outermost in processing chain)
+
+from backend.request_metrics import REQUEST_METRICS, route_template  # noqa: E402
+
+
 @app.middleware("http")
 async def correlation_id_middleware(request: Request, call_next):
     corr_id = request.headers.get("X-Correlation-ID") or secrets.token_hex(8)
     token = correlation_id_ctx.set(corr_id)
+    started = time.perf_counter()
+    status = 500
     try:
         response = await call_next(request)
+        status = response.status_code
         response.headers["X-Correlation-ID"] = corr_id
         return response
     finally:
         correlation_id_ctx.reset(token)
+        # Request metrics by route template (ARCH-10); static files and the SPA are not API calls
+        path = request.url.path
+        if path.startswith(("/api", "/redfish")):
+            REQUEST_METRICS.observe(
+                request.method, route_template(request.scope), status, time.perf_counter() - started
+            )
 
 
 # Applies the body size limit to requests sent without a Content-Length (outermost)

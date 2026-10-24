@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
+from backend.paging import PageParams
 from backend.services.replication_engine import get_replication_engine
 
 router = APIRouter(prefix="/storage/replication", tags=["Storage Replication"])
@@ -73,6 +74,7 @@ def run_replication_job(job_id: str) -> dict[str, Any]:
 
 
 @router.get("/history", dependencies=[Depends(require_scope("storage:read"))])
-def get_replication_history(limit: int = 50) -> dict[str, Any]:
+def get_replication_history(page: PageParams = Depends()) -> dict[str, Any]:
     engine = get_replication_engine()
-    return {"history": engine.get_history(limit=limit)}
+    rows = engine.get_history(limit=page.fetch)
+    return {"history": page.slice(rows), **page.meta(len(rows))}

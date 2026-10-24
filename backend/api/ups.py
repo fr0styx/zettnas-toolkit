@@ -25,6 +25,7 @@ from backend.hardware.ups import (
     save_ups_config,
     test_ups_connection,
 )
+from backend.paging import PageParams
 from backend.services.ups_watchdog import trigger_outage_simulation
 
 logger = logging.getLogger("ZettNAS")
@@ -140,10 +141,11 @@ async def post_ups_self_test():
 
 
 @router.get("/ups/events")
-async def get_ups_event_history(limit: int = 50):
+async def get_ups_event_history(page: PageParams = Depends()):
     """Returns historical power events, outages, brownouts, and diagnostic logs from SQLite."""
-    events = await asyncio.to_thread(query_ups_events, limit=max(1, min(limit, 200)))
-    return {"events": events, "count": len(events)}
+    rows = await asyncio.to_thread(query_ups_events, limit=page.fetch)
+    events = page.slice(rows)
+    return {"events": events, "count": len(events), **page.meta(len(rows))}
 
 
 @router.post("/ups/simulate", dependencies=[Depends(require_scope("system:config"))])

@@ -40,6 +40,7 @@ from backend.models.schemas import (
     UserPasswordChangeRequest,
     UserUpdateRequest,
 )
+from backend.paging import PageParams
 from backend.passwords import hash_password, is_legacy_hash, needs_rehash, verify_password
 from backend.totp import (
     generate_qr_svg,
@@ -1232,9 +1233,10 @@ def revoke_all_other_sessions(request: Request):
 
 
 @router.get("/auth/audit", dependencies=[Depends(require_scope("audit:read"))])
-def get_security_audit_logs(request: Request, limit: int = 50, offset: int = 0):
-    logs = query_security_audit_logs(limit=min(200, limit), offset=offset)
-    return {"audit_logs": logs, "count": len(logs)}
+def get_security_audit_logs(request: Request, page: PageParams = Depends()):
+    rows = query_security_audit_logs(limit=page.limit + 1, offset=page.offset)
+    logs = rows[: page.limit]
+    return {"audit_logs": logs, "count": len(logs), **page.meta(page.offset + len(rows))}
 
 
 # ==============================================================================
