@@ -152,6 +152,7 @@ class RagConfigUpdateRequest(BaseModel):
     embedding_provider: str | None = None
     llm_endpoint: str | None = None
     llm_model: str | None = None
+    llm_fallback_model: str | None = Field(default=None, max_length=128)
     idle_unload_minutes: int | None = None
     conversation_retention_days: int | None = Field(default=None, ge=0, le=3650)
     vision_captions: str | None = Field(default=None, pattern="^(auto|off)$")

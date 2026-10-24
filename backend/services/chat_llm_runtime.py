@@ -4,6 +4,7 @@ import json
 import os
 import re
 import time
+import urllib.error
 import urllib.request
 from typing import (  # noqa: F401
     Any,
@@ -278,11 +279,24 @@ def _read_llm_stream(resp: Any, runtime_kind: str) -> dict[str, Any]:
     return out
 
 
+def _fallback_model() -> str:
+    """The Ollama model that answers when the chat model's own server (e.g. an OpenVINO Model
+    Server) can't: rag config "llm_fallback_model", empty for none."""
+    try:
+        from backend.services.rag_engine import get_rag_engine
+
+        return str(get_rag_engine().get_config().get("llm_fallback_model") or "").strip()
+    except Exception:
+        logger.debug("chat_llm_runtime: no fallback model", exc_info=True)
+        return ""
+
+
 def _try_local_llm_completion(
     active_model: str,
     llm_endpoint: str,
     messages: list[dict[str, str]],
     tools: list[dict[str, Any]] | None = None,
+    fallback_model: str | None = None,
 ) -> tuple[
     str | None,
     str | None,
@@ -364,11 +378,13 @@ def _try_local_llm_completion(
         candidate_endpoints = ovms_eps + other_eps
 
     streaming = _core()._TOKEN_SINK.get() is not None
+    fallback = _fallback_model() if fallback_model is None else fallback_model.strip()
     for runtime_kind, url in candidate_endpoints:
         if _cancelled():
             break
         if _core()._ENDPOINT_REGISTRY.is_tripped(url):
             continue
+        openai_req_body: dict[str, Any] = {}
         try:
             model_to_use = active_model
             if "ollama" in runtime_kind:
@@ -392,8 +408,21 @@ def _try_local_llm_completion(
                                 ),
                                 None,
                             )
+                            fb = next(
+                                (
+                                    m
+                                    for m in avail
+                                    if fallback
+                                    and m.lower().replace(":latest", "") == fallback.lower().replace(":latest", "")
+                                ),
+                                None,
+                            )
                             if matched:
                                 model_to_use = matched
+                            elif fb:
+                                # The chat model lives on another server that didn't answer: the chosen
+                                # fallback answers here, under its own name (AI-03).
+                                model_to_use = fb
                             else:
                                 # The selected model is not installed in this runtime. Never answer with
                                 # a different model under its name (AI-03): no copies, no prefix matches.
@@ -455,8 +484,12 @@ def _try_local_llm_completion(
                     "temperature": 0.2,
                     "max_tokens": 1024,
                 }
-                if tools and not is_ovms:
+                if tools:
                     openai_req_body["tools"] = tools
+                if is_ovms:
+                    # Qwen3 and other reasoning models would think before answering; Ask Zetty
+                    # answers from the files it found, so it asks for the answer straight away.
+                    openai_req_body["chat_template_kwargs"] = {"enable_thinking": False}
                 if streaming:
                     openai_req_body["stream"] = True
                     openai_req_body["stream_options"] = {"include_usage": True}
@@ -468,8 +501,29 @@ def _try_local_llm_completion(
                 headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
                 method="POST",
             )
-            # Give local neural generation up to 45s
-            with urllib.request.urlopen(req, timeout=45.0) as resp:
+            # Streaming: at most 45 s between pieces. Without streaming nothing arrives until the
+            # whole answer is written, which over a long document question takes minutes.
+            try:
+                resp = urllib.request.urlopen(req, timeout=45.0 if streaming else 180.0)
+            except urllib.error.HTTPError as http_err:
+                # A model server without tool support refuses the tools: ask again without them
+                if (
+                    http_err.code == 400
+                    and runtime_kind == "openai_compatible"
+                    and tools
+                    and "tools" in openai_req_body
+                ):
+                    openai_req_body.pop("tools", None)
+                    req = urllib.request.Request(
+                        url,
+                        data=json.dumps(openai_req_body).encode("utf-8"),
+                        headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
+                        method="POST",
+                    )
+                    resp = urllib.request.urlopen(req, timeout=45.0 if streaming else 180.0)
+                else:
+                    raise
+            with resp:
                 if streaming:
                     data = _read_llm_stream(resp, runtime_kind)
                 else:

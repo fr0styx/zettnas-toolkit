@@ -14,6 +14,8 @@
 
 #### AI
 
+- **Ask Zetty can chat through an OpenVINO Model Server**, with an Ollama model as the fallback (`llm_fallback_model`). On an Intel Arc iGPU it starts answering a long document question about three times sooner than Ollama. Reasoning models answer without a thinking pass, and Ask Zetty's tools work there too.
+- Long answers without streaming are no longer cut off after 45 seconds.
 - **Benchmark shows how long each model takes to start answering a long question** (6,000 tokens from documents, as Ask Zetty asks them), next to its writing speed.
 - `scripts/llm_bench.py` compares the same measurement across Ollama (GPU or CPU) and OpenVINO GenAI.
 

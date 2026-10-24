@@ -1065,6 +1065,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "embedding_host",
             "llm_endpoint",
             "llm_model",
+            "llm_fallback_model",
             "idle_unload_minutes",
             "favorites",
             "search_history",
