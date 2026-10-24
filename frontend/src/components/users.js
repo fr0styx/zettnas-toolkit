@@ -13,6 +13,7 @@ import { initTopbarUserPill } from './dock.js';
 import { openShareAccessModal } from './share-access.js';
 
 import { formatDateTime } from '../format.js';
+import { emptyRowHtml } from './empty-state.js';
 let _currentUser = null;
 
 export function setCurrentUser(user) {
@@ -252,7 +253,11 @@ export async function loadUsersList() {
     const users = data.users || [];
 
     if (users.length === 0) {
-      container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">No users found.</td></tr>';
+      container.innerHTML = emptyRowHtml(7, {
+        title: t('users.none_title', 'Only you so far'),
+        body: t('users.none_desc', 'Give each person in the house their own sign-in, so their files and access are their own.'),
+        action: { target: 'btn-add-user', label: t('users.add', 'Add a person') },
+      });
       return;
     }
 

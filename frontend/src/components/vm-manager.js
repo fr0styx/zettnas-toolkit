@@ -2075,7 +2075,7 @@ export function openVmConnectModal(vmId, vmObj = null) {
                 <div style="font-size: 11px; color: var(--muted);">Terminal command for OpenSSH / PuTTY</div>
               </div>
             </div>
-            <button class="btn-console-act btn-connect-copy-ssh" ${ip ? '' : 'disabled'} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+            <button class="btn-console-act btn-connect-copy-ssh" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
               📋 Copy SSH Command
             </button>
           </div>
@@ -2095,10 +2095,10 @@ export function openVmConnectModal(vmId, vmObj = null) {
               </div>
             </div>
             <div style="display: flex; gap: 6px;">
-              <button class="btn-console-act btn-connect-copy-rdp" ${ip ? '' : 'disabled'} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+              <button class="btn-console-act btn-connect-copy-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
                 📋 Copy RDP URI
               </button>
-              <button class="btn-console-act btn-connect-dl-rdp" ${ip ? '' : 'disabled'} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+              <button class="btn-console-act btn-connect-dl-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
                 ⬇ .rdp File
               </button>
             </div>

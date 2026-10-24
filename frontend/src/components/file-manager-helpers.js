@@ -623,7 +623,7 @@ export class FmInspector {
             </div>
           ` : ''}
 
-          <button type="button" id="fm-insp-apply-perms-btn" class="btn-pill-toggle active" ${isGuarded ? 'disabled' : ''} style="width: 100%; font-size: 11.5px; font-weight: 700; padding: 6px 12px; background: #0284c7; color: #fff;">
+          <button type="button" id="fm-insp-apply-perms-btn" class="btn-pill-toggle active" ${isGuarded ? `disabled title="${escapeHtml(t('fm.why_guarded', 'System folder: its permissions are protected'))}"` : ''} style="width: 100%; font-size: 11.5px; font-weight: 700; padding: 6px 12px; background: #0284c7; color: #fff;">
             Apply Permissions
           </button>
         </div>

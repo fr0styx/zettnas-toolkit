@@ -29,8 +29,8 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
 
     await fetchAndRenderAppBackups(mount);
 
-    expect(mount.innerHTML).toContain('No Application Backups Found');
-    expect(mount.innerHTML).toContain('Backups are automatically created');
+    expect(mount.innerHTML).toContain('No app backups yet');
+    expect(mount.innerHTML).toContain("An app backup is made when");
   });
 
   it('renders application backups table with uninstall and on-demand badges, file details, and action buttons', async () => {

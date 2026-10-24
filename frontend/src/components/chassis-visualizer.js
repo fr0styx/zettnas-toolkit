@@ -8,6 +8,7 @@ import { state } from '../state.js';
 import { makeDraggable, bringToFront, DockManager } from './dock.js';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
+import { emptyStateHtml } from './empty-state.js';
 /**
  * ZettNAS Physical Chassis Twin & Storage Topology Visualizer
  * - Parametric SVG chassis twin (Compact Dual, Desktop Tower, Enterprise Rackmount)
@@ -1123,12 +1124,15 @@ export async function fetchAndRenderNetworkShares(container) {
   `;
 
   try {
-    const [sharesData, platformData, sftpStatus, sftpUsersRes] = await Promise.all([
+    const [sharesData, platformData, sftpStatus, sftpUsersRes, sambaStatus, webdavStatus] = await Promise.all([
       api.get('/api/storage/shares'),
       api.get('/api/storage/platform').catch(() => ({})),
       api.get('/api/sftp/status').catch(() => ({ running: false, port: 2222 })),
       api.get('/api/sftp/users').catch(() => []),
+      api.get('/api/samba/status').catch(() => null),
+      api.get('/api/webdav/status').catch(() => null),
     ]);
+    _shareServices = { smb: sambaStatus, webdav: webdavStatus, sftp: sftpStatus };
 
     const shares = sharesData.shares || [];
     const isObserver = sharesData.is_observer_mode ?? true;
@@ -1178,18 +1182,14 @@ export async function fetchAndRenderNetworkShares(container) {
     }
 
     if (shares.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-shares-box" style="text-align:center; padding:48px 20px; color:var(--muted); grid-column:1/-1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;">
-          <svg viewBox="0 0 24 24" width="36" height="36" style="margin:0 auto 4px; opacity:0.6;"><use href="#i-storage"/></svg>
-          <div style="font-size:14px; font-weight:600; color:var(--text, #fff);">${t('mgmt.shares_none_title', 'No Network Shares Configured')}</div>
-          <div style="font-size:12px; color:var(--muted, #94a3b8); max-width:440px; line-height:1.5;">${t('mgmt.shares_none_desc', 'Export folders across your local network via Samba (SMB), NFSv4, or secure SFTP for Windows, Mac, and Linux clients.')}</div>
-          ${canManageShares ? `
-            <button id="btn-empty-create-share" class="btn-pill-toggle" style="margin-top:6px; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9); font-weight:600; padding:6px 16px; cursor:pointer;">
-              + ${t('mgmt.create_share', 'Create Network Share')}
-            </button>
-          ` : ''}
-        </div>
-      `;
+      grid.innerHTML = emptyStateHtml({
+        icon: '<svg viewBox="0 0 24 24" width="32" height="32"><use href="#i-storage"/></svg>',
+        title: t('mgmt.shares_none_title', 'No shares yet'),
+        body: canManageShares
+          ? t('mgmt.shares_none_desc', 'A share is a folder your computers and phones can open over the network (SMB for Windows and Mac, NFS for Linux).')
+          : t('mgmt.shares_none_observer', 'Shares are managed by the host system here; any it creates appear in this list.'),
+        action: canManageShares ? { id: 'btn-empty-create-share', label: t('mgmt.create_share', 'Create share') } : null,
+      });
       const emptyCreateBtn = grid.querySelector('#btn-empty-create-share');
       if (emptyCreateBtn) {
         emptyCreateBtn.onclick = () => openCreateNetworkShareModal(() => fetchAndRenderNetworkShares(container));
@@ -1225,6 +1225,33 @@ export async function fetchAndRenderNetworkShares(container) {
   }
 }
 
+let _shareServices = {};
+
+/**
+ * Protocol tags for a share that say whether each service really serves it (UX-11):
+ * on, off for this share, or turned on but not running.
+ */
+export function shareProtocolTags(s, services = {}) {
+  const tag = (label, state, why) => `<span class="proto-tag proto-${state}" title="${escapeHtml(why)}">${escapeHtml(label)}</span>`;
+  const svc = (status) => (status ? (status.running ? 'on' : 'down') : 'unknown');
+  const out = [];
+  const smb = svc(services.smb);
+  if (!s.export_smb) out.push(tag('SMB', 'off', t('share.proto_not_shared', 'Not shared over {proto}', { proto: 'SMB' })));
+  else if (smb === 'down') out.push(tag('SMB', 'down', t('share.proto_down', '{proto} is turned on for this share but its service is not running', { proto: 'SMB' })));
+  else out.push(tag('SMB', 'on', t('share.proto_on', 'Shared over {proto}', { proto: 'SMB' })));
+  out.push(s.export_nfs
+    ? tag('NFS', 'on', t('share.proto_on', 'Shared over {proto}', { proto: 'NFS' }))
+    : tag('NFS', 'off', t('share.proto_not_shared', 'Not shared over {proto}', { proto: 'NFS' })));
+  const dav = services.webdav;
+  if (dav && dav.running) out.push(tag(`WebDAV :${dav.port}`, 'on', t('share.proto_on', 'Shared over {proto}', { proto: 'WebDAV' })));
+  else if (dav && dav.enabled) out.push(tag('WebDAV', 'down', t('share.proto_service_down', '{proto} is turned on but not running', { proto: 'WebDAV' })));
+  else if (dav) out.push(tag('WebDAV', 'off', t('share.proto_service_off', '{proto} is turned off', { proto: 'WebDAV' })));
+  const sftp = services.sftp;
+  if (sftp && sftp.running) out.push(tag(`SFTP :${sftp.port}`, 'on', t('share.proto_on', 'Shared over {proto}', { proto: 'SFTP' })));
+  else if (sftp) out.push(tag('SFTP', 'off', t('share.proto_service_off', '{proto} is turned off', { proto: 'SFTP' })));
+  return out.join('\n      ');
+}
+
 function buildShareCardInner(s, canManageShares) {
   const usedStr = formatBytes(s.used_bytes);
   const totalStr = formatBytes(s.total_bytes);
@@ -1245,10 +1272,7 @@ function buildShareCardInner(s, canManageShares) {
     </div>
 
     <div class="share-protocols-row">
-      <span class="proto-tag ${s.export_smb ? 'proto-on' : 'proto-off'}" title="Samba SMB Protocol">SMB</span>
-      <span class="proto-tag ${s.export_nfs ? 'proto-on' : 'proto-off'}" title="NFS Protocol">NFS</span>
-      <span class="proto-tag proto-on" title="Universal WebDAV Port 8084">WebDAV :8084</span>
-      <span class="proto-tag proto-on" title="Inbound SFTP Subsystem Port 2222">SFTP :2222</span>
+      ${shareProtocolTags(s, _shareServices)}
       ${s.cache_mode && s.cache_mode !== 'none' ? `
         <span class="share-cache-tag" title="Cache Tiering: ${s.cache_mode}">Cache: ${escapeHtml(s.cache_mode)}${s.cache_pool ? ` (${escapeHtml(s.cache_pool)})` : ''}</span>
       ` : ''}

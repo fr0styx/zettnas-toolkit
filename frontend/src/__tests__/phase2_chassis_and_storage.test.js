@@ -379,6 +379,7 @@ describe('Sprint 3: Storage Pools Topology & Network Shares', () => {
           ]
         };
       }
+      if (url === '/api/webdav/status') return { enabled: true, running: true, port: 8084 };
       if (url === '/api/storage/platform') {
         return {
           platform: 'unraid',

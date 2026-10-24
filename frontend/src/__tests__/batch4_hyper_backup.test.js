@@ -31,8 +31,8 @@ describe('Batch 4: Hyper-Backup Orchestrator & Snapshot Manager UI', () => {
 
     await fetchAndRenderBackupJobs(mount);
 
-    expect(mount.innerHTML).toContain('No Backup Pipelines Configured');
-    expect(mount.innerHTML).toContain('Configure First Pipeline');
+    expect(mount.innerHTML).toContain('No backups scheduled');
+    expect(mount.innerHTML).toContain("Schedule a backup");
   });
 
   it('renders scheduled backup jobs table with pipeline badges and run/delete actions', async () => {
@@ -158,6 +158,6 @@ describe('Batch 4: Hyper-Backup Orchestrator & Snapshot Manager UI', () => {
 
     await fetchAndRenderSystemSnapshots(mount);
 
-    expect(mount.innerHTML).toContain('No active filesystem snapshots found');
+    expect(mount.innerHTML).toContain('No snapshots yet');
   });
 });

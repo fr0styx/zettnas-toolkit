@@ -1575,7 +1575,7 @@ async function renderContainerEditTab(cid) {
       <div class="ci-metric-card" style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Port Bindings</div>
-          <button class="btn-pill-toggle" id="cie-btn-add-port" style="font-size:11px; padding:2px 8px;" ${isToolkit ? 'disabled' : ''}>+ Add Port</button>
+          <button class="btn-pill-toggle" id="cie-btn-add-port" style="font-size:11px; padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ Add Port</button>
         </div>
         <div id="cie-ports-container" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
@@ -1584,7 +1584,7 @@ async function renderContainerEditTab(cid) {
       <div class="ci-metric-card" style="background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.08); padding:12px; border-radius:8px; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Storage Mounts & Paths (Binds)</div>
-          <button class="btn-pill-toggle" id="cie-btn-add-mount" style="font-size:11px; padding:2px 8px;" ${isToolkit ? 'disabled' : ''}>+ Add Mount</button>
+          <button class="btn-pill-toggle" id="cie-btn-add-mount" style="font-size:11px; padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ Add Mount</button>
         </div>
         <div id="cie-mounts-container" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
@@ -1595,7 +1595,7 @@ async function renderContainerEditTab(cid) {
           <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Environment Variables</div>
           <div style="display:flex; gap:6px; align-items:center;">
             <input type="text" id="cie-env-filter" placeholder="Filter variables..." class="tz-text-input" style="font-size:11px; padding:2px 6px; width:130px;">
-            <button class="btn-pill-toggle" id="cie-btn-add-env" style="font-size:11px; padding:2px 8px;" ${isToolkit ? 'disabled' : ''}>+ Add Variable</button>
+            <button class="btn-pill-toggle" id="cie-btn-add-env" style="font-size:11px; padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ Add Variable</button>
           </div>
         </div>
         <div id="cie-env-container" style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto;"></div>
@@ -1609,7 +1609,7 @@ async function renderContainerEditTab(cid) {
         </label>
         <div style="display:flex; gap:8px;">
           <button class="btn-pill-toggle" id="cie-btn-cancel">Cancel</button>
-          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 16px;" ${isToolkit ? 'disabled' : ''}>
+          <button class="btn-pill-toggle" id="cie-btn-save" style="font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 16px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>
             💾 Save & Recreate Container
           </button>
         </div>

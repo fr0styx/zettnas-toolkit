@@ -8,6 +8,7 @@ import { escapeHtml } from '../utils.js';
 
 import { t } from '../i18n.js';
 import { formatDateTime } from '../format.js';
+import { emptyStateHtml } from './empty-state.js';
 let _lastEventHash = '';
 let _expandedEvents = new Set();
 let _currentFilter = 'all';
@@ -21,7 +22,11 @@ export function renderEventLog(events) {
   _lastEventHash = currentHash;
 
   if (!events || events.length === 0) {
-    list.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--muted); font-size: 11px;">No events logged yet.</div>`;
+    list.innerHTML = emptyStateHtml({
+      compact: true,
+      title: t('events.none_title', 'Nothing has happened yet'),
+      body: t('events.none_desc', 'Disk, power, app and sign-in events appear here as they happen.'),
+    });
     return;
   }
 

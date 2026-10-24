@@ -220,7 +220,7 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
         <td style="padding:8px 12px; text-align:right;">
           <div style="display:inline-flex; align-items:center; gap:6px;">
             <span id="latency-${safeIpId}" style="font-size:11px; font-weight:700;"></span>
-            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:11px; padding:2px 8px;" ${!p.ip ? 'disabled' : ''}>⚡ Ping</button>
+            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:11px; padding:2px 8px;" ${!p.ip ? `disabled title="${escapeHtml(t('net.why_no_peer_ip', 'This device has no address to ping yet'))}"` : ''}>⚡ Ping</button>
           </div>
         </td>
       </tr>

@@ -7,6 +7,7 @@ import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { formatDateTime } from '../../format.js';
+import { emptyStateHtml } from '../empty-state.js';
 
 // =========================================================================
 // Hyper-Backup Tasks & 3-2-1 Pipelines
@@ -21,18 +22,12 @@ export async function fetchAndRenderBackupJobs(mountEl) {
     const jobs = (data && data.jobs) || [];
 
     if (jobs.length === 0) {
-      mount.innerHTML = `
-        <div style="text-align: center; padding: 24px 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1);">
-          <div style="font-size: 24px; margin-bottom: 8px;">🛡️</div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">No Backup Pipelines Configured</div>
-          <div style="font-size: 11.5px; color: var(--muted); max-width: 400px; margin: 0 auto 12px; line-height: 1.4;">
-            Automate snapshot rotation and offsite cloud backups to protect against drive failure, ransomware, or accidental deletion.
-          </div>
-          <button type="button" class="btn-rect primary" data-action="click-target" data-target="btn-open-create-backup-job" style="font-size: 11px; padding: 6px 14px;">
-            Configure First Pipeline
-          </button>
-        </div>
-      `;
+      mount.innerHTML = emptyStateHtml({
+        icon: '🛡️',
+        title: t('backup.none_title', 'No backups scheduled'),
+        body: t('backup.none_desc', 'A backup copies your files somewhere else on a schedule, so a failed disk, ransomware or a mistaken delete is not the end of them.'),
+        action: { target: 'btn-open-create-backup-job', label: t('backup.none_action', 'Schedule a backup') },
+      });
       return;
     }
 
@@ -163,11 +158,12 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
     const snaps = (data && data.snapshots) || [];
 
     if (snaps.length === 0) {
-      mount.innerHTML = `
-        <div style="text-align: center; padding: 20px; font-size: 12px; color: var(--muted);">
-          No active filesystem snapshots found. Click "Take Snapshot" to create an atomic snapshot.
-        </div>
-      `;
+      mount.innerHTML = emptyStateHtml({
+        compact: true,
+        title: t('backup.snap_none_title', 'No snapshots yet'),
+        body: t('backup.snap_none_desc', 'A snapshot freezes a folder as it is now, in seconds, so you can go back to it later.'),
+        action: { target: 'btn-take-snapshot-submit', label: t('backup.snap_take', 'Take a snapshot') },
+      });
       return;
     }
 
@@ -282,15 +278,13 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     }
 
     if (backups.length === 0) {
-      mount.innerHTML = `
-        <div style="text-align: center; padding: 24px 16px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1);">
-          <div style="font-size: 24px; margin-bottom: 8px;">📦</div>
-          <div style="font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px;">No Application Backups Found</div>
-          <div style="font-size: 11.5px; color: var(--muted); max-width: 440px; margin: 0 auto; line-height: 1.4;">
-            ${filterApp ? `No backups recorded for "${escapeHtml(filterApp)}".` : 'Backups are automatically created whenever containers are uninstalled with archiving enabled, or on-demand via the Container Inspector.'}
-          </div>
-        </div>
-      `;
+      mount.innerHTML = emptyStateHtml({
+        icon: '📦',
+        title: t('backup.app_none_title', 'No app backups yet'),
+        body: filterApp
+          ? t('backup.app_none_for', 'No backups recorded for {app}.', { app: filterApp })
+          : t('backup.app_none_desc', 'An app backup is made when you remove an app with "keep a backup" ticked, or from an app\'s details with Back up now.'),
+      });
       return;
     }
 

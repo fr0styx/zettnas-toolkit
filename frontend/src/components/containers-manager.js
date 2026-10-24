@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { catalogCardHtml, catalogChipsHtml, filterCatalog, isInstalled, bindCatalogChips } from './catalog-view.js';
 import { escapeHtml, reconcileKeyedTable } from '../utils.js';
+import { emptyStateHtml } from './empty-state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showBottomSheet } from '../toast.js';
 import { t } from '../i18n.js';
@@ -678,7 +679,18 @@ export function renderCwCatalogGrid() {
 
   const filtered = filterCatalog(_cwCatalogApps, _cwCatalogCategory, _cwCatalogSearch);
   if (filtered.length === 0) {
-    grid.innerHTML = '<div class="cat-empty">No applications found matching criteria.</div>';
+    grid.innerHTML = emptyStateHtml({
+      title: t('catalog.none_match', 'No apps match'),
+      body: t('catalog.none_match_desc', 'Try another word, or show every category.'),
+      action: { id: 'cw-catalog-clear-filters', label: t('catalog.show_all', 'Show all apps') },
+    });
+    grid.querySelector('#cw-catalog-clear-filters')?.addEventListener('click', () => {
+      _cwCatalogSearch = '';
+      _cwCatalogCategory = 'all';
+      const input = document.getElementById('cw-catalog-search-input');
+      if (input) input.value = '';
+      renderCwCatalogGrid();
+    });
     return;
   }
   grid.innerHTML = filtered.map((app) => catalogCardHtml(app, { installed: isInstalled(app, _cwContainersList) })).join('');
