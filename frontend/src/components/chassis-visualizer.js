@@ -630,6 +630,7 @@ export function renderStructuredPoolsTopology(container, data) {
 
   const pools = data.pools;
   const isObserver = data.is_observer_mode ?? true;
+  const platform = data.platform || '';
 
   let tree = container.querySelector('.storage-topology-tree');
   if (!tree) {
@@ -638,12 +639,12 @@ export function renderStructuredPoolsTopology(container, data) {
         ${isObserver ? `
           <div class="topo-observer-banner">
             <span class="observer-icon">ℹ️</span>
-            <span><strong>Host Observer Mode:</strong> Storage pools, arrays, and parity checks are managed authoritatively by the host OS. Zero risk of parity alteration.</span>
+            <span>${escapeHtml(t('storage.mode_host_desc', '{platform} manages the storage pools, array and parity checks here. ZettNAS shows them and never changes them.', { platform: platformName(platform) }))}</span>
           </div>
         ` : `
           <div class="topo-observer-banner" style="background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.25);">
             <span class="observer-icon">⚡</span>
-            <span><strong>Active Provisioner Mode:</strong> Generic Linux host detected. Storage pools, Btrfs RAID bitrot protection, and subvolume snapshots are fully managed.</span>
+            <span>${escapeHtml(t('storage.mode_zettnas_desc', 'ZettNAS manages the storage pools, RAID protection against bit rot, and snapshots on this machine.'))}</span>
           </div>
         `}
         <div class="topo-pools-container"></div>
@@ -1152,11 +1153,13 @@ export async function fetchAndRenderNetworkShares(container) {
     const badge = document.getElementById('mgmt-shares-platform-badge');
     if (badge) {
       if (isObserver) {
-        badge.textContent = `${platform.toUpperCase()} · Observer Mode`;
+        badge.textContent = t('storage.mode_host', 'Managed by {platform}', { platform: platformName(platform) });
+        badge.title = t('storage.mode_host_desc', '{platform} manages the storage pools, array and parity checks here. ZettNAS shows them and never changes them.', { platform: platformName(platform) });
         badge.style.background = 'rgba(59,245,139,0.12)';
         badge.style.color = '#3bf58b';
       } else {
-        badge.textContent = `${platform.toUpperCase()} · Active Provisioner`;
+        badge.textContent = t('storage.mode_zettnas', 'Managed by ZettNAS');
+        badge.title = t('storage.mode_zettnas_desc', 'ZettNAS manages the storage pools, RAID protection against bit rot, and snapshots on this machine.');
         badge.style.background = 'rgba(99,102,241,0.15)';
         badge.style.color = '#818cf8';
       }
@@ -1226,6 +1229,13 @@ export async function fetchAndRenderNetworkShares(container) {
 }
 
 let _shareServices = {};
+
+const PLATFORM_NAMES = { unraid: 'Unraid', truenas: 'TrueNAS', truenas_scale: 'TrueNAS SCALE', omv: 'OpenMediaVault', openmediavault: 'OpenMediaVault', synology: 'Synology DSM', qnap: 'QNAP', proxmox: 'Proxmox', generic_linux: 'Linux' };
+/** A platform id as people know it: "unraid" is Unraid. */
+export function platformName(id) {
+  const k = String(id || '').toLowerCase();
+  return PLATFORM_NAMES[k] || (k ? k.charAt(0).toUpperCase() + k.slice(1) : 'the host');
+}
 
 /**
  * Protocol tags for a share that say whether each service really serves it (UX-11):

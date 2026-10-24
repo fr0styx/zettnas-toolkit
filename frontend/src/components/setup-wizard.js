@@ -304,7 +304,8 @@ export function openSetupWizard(stats = null, forced = false) {
 
     if (hwFb) {
       const fbActive = currentStats?.peripherals?.fb_active ?? (currentStats?.lcd_active && currentStats?.lcd?.page !== undefined);
-      hwFb.textContent = fbActive ? 'Active (/dev/fb0)' : 'Not detected (Headless)';
+      hwFb.textContent = fbActive ? t('setup.hw_screen_on', 'Working') : t('setup.hw_screen_none', 'None found (that is fine)');
+      hwFb.title = fbActive ? '/dev/fb0' : t('ui.no_framebuffer_device_detected_at', 'No framebuffer device detected at /dev/fb0.');
       hwFb.style.color = fbActive ? 'var(--ok2)' : 'var(--muted)';
     }
 
@@ -312,13 +313,13 @@ export function openSetupWizard(stats = null, forced = false) {
       const fanList = Array.isArray(currentStats.fans) ? currentStats.fans : [];
       const spinningCount = fanList.filter(r => r > 0).length;
       if (spinningCount > 0) {
-        hwFans.textContent = `Online (${spinningCount}/${fanList.length} Fans Spinning)`;
+        hwFans.textContent = t('setup.hw_fans_on', '{n} of {total} fans running', { n: spinningCount, total: fanList.length });
         hwFans.style.color = 'var(--ok2)';
       } else if (fanList.length > 0) {
-        hwFans.textContent = `Managed (${fanList.length} Fans Idle / 0 RPM)`;
+        hwFans.textContent = t('setup.hw_fans_idle', '{total} fans, all stopped for now', { total: fanList.length });
         hwFans.style.color = 'var(--warn)';
       } else {
-        hwFans.textContent = t('ui.hardware_tachometers_unavailable', 'Hardware tachometers unavailable');
+        hwFans.textContent = t('setup.hw_fans_unknown', 'Fan speeds cannot be read on this machine');
         hwFans.style.color = 'var(--muted)';
       }
     }
@@ -327,10 +328,12 @@ export function openSetupWizard(stats = null, forced = false) {
       const ledReady = currentStats?.peripherals?.led_ready;
       const ledPort = currentStats?.peripherals?.led_port;
       if (ledReady) {
-        hwLeds.textContent = `WS2812B Controller Online (${ledPort || 'Serial'})`;
+        hwLeds.textContent = t('setup.hw_screen_on', 'Working');
+        hwLeds.title = `WS2812B (${ledPort || 'serial'})`;
         hwLeds.style.color = 'var(--ok2)';
       } else {
-        hwLeds.textContent = t('ui.ws2812b_controller_not_detected', 'WS2812B Controller Not Detected');
+        hwLeds.textContent = t('setup.hw_leds_none', 'None found');
+        hwLeds.title = t('ui.ws2812b_controller_not_detected', 'WS2812B Controller Not Detected');
         hwLeds.style.color = 'var(--muted)';
       }
     }

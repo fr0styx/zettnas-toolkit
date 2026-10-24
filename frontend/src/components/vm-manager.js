@@ -72,7 +72,7 @@ export function initVmManager() {
         <div id="vm-telemetry-header" class="vm-telemetry-header" style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.06);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <div id="vm-kvm-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);">
-              <span>⚡</span> <span>Loading KVM Status...</span>
+              <span aria-hidden="true">⚡</span> <span>Loading KVM Status...</span>
             </div>
             <div class="vm-action-btns-wrap" style="display: flex; gap: 8px;">
               <button id="btn-vm-refresh" class="btn-pill-toggle" title="${t('vm.refresh', 'Refresh')}">
@@ -268,7 +268,7 @@ function renderTelemetry(tel) {
     kvmBadge.style.color = '#fbbf24';
     kvmBadge.style.borderColor = 'rgba(245,158,11,0.3)';
   } else if (kvmBadge && tel.kvm) {
-    kvmBadge.innerHTML = `<span>⚡</span> <span>${escapeHtml(tel.kvm.badge || 'KVM Active')}</span> <span style="font-size: 11px; opacity: 0.8; margin-left: 2px;" title="${t('ui.view_kvm_diagnostics_fix', 'View KVM Diagnostics & Fix')}">ℹ️</span>`;
+    kvmBadge.innerHTML = `<span aria-hidden="true">⚡</span> <span>${escapeHtml(tel.kvm.badge || 'KVM Active')}</span> <span style="font-size: 11px; opacity: 0.8; margin-left: 2px;" title="${t('ui.view_kvm_diagnostics_fix', 'View KVM Diagnostics & Fix')}">ℹ️</span>`;
     kvmBadge.style.cursor = 'pointer';
     kvmBadge.onclick = () => openKvmDiagnosticsModal(tel.kvm);
     if (tel.kvm.state === 'active') {
@@ -547,7 +547,7 @@ function buildVmCardHtml(vm, vms) {
               ? `
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; margin-bottom: 10px;">
               <span style="color: #fbbf24; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-                <span>💿</span>
+                <span aria-hidden="true">💿</span>
                 <span>ISO Attached (${escapeHtml(vm.iso_path.split('/').pop())})</span>
               </span>
               <div style="display: flex; gap: 4px;">
@@ -619,7 +619,7 @@ function buildVmCardHtml(vm, vms) {
               ? `
             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); border-radius: 4px; margin-bottom: 10px;">
               <span style="color: #38bdf8; display: flex; align-items: center; gap: 6px;">
-                <span>🖥️</span>
+                <span aria-hidden="true">🖥️</span>
                 <span>Console Display Active</span>
               </span>
               <div style="display: flex; gap: 4px;">

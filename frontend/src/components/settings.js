@@ -441,7 +441,7 @@ export function initSettings() {
       screenBriSlider.style.opacity = isOff ? '0.45' : '1';
     }
     const badge = $('lcd-renderer-badge');
-    if (badge && !badge.textContent.includes('NO /dev/fb0') && !badge.textContent.includes('DISABLED')) {
+    if (badge && !['missing', 'disabled'].includes(badge.dataset.lcdState)) {
       if (isOff) {
         badge.textContent = 'LCD: SCREEN OFF';
         badge.className = 'lcd-status-badge lcd-status-disabled';

@@ -1152,7 +1152,7 @@ export class FileManagerWindow {
         try {
           const ghost = document.createElement('div');
           ghost.className = 'fm-drag-ghost';
-          ghost.innerHTML = `<span>📁</span> <span class="fm-drag-ghost-count">${paths.length}</span>`;
+          ghost.innerHTML = `<span aria-hidden="true">📁</span> <span class="fm-drag-ghost-count">${paths.length}</span>`;
           document.body.appendChild(ghost);
           if (e.dataTransfer.setDragImage) {
             e.dataTransfer.setDragImage(ghost, 15, 15);
@@ -1930,7 +1930,7 @@ export class FileManagerWindow {
       const item = document.createElement('div');
       item.className = 'ctx-item';
       item.style.cssText = 'padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #cbd5e1; display: flex; align-items: center; gap: 6px;';
-      item.innerHTML = `<span>📁</span> <span>${escapeHtml(parts[i])}</span>`;
+      item.innerHTML = `<span aria-hidden="true">📁</span> <span>${escapeHtml(parts[i])}</span>`;
       item.onmouseover = () => { item.style.background = 'rgba(255,255,255,0.1)'; };
       item.onmouseout = () => { item.style.background = 'transparent'; };
       item.onclick = (e) => {
@@ -3602,7 +3602,7 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
     <div class="fm-collision-dialog glassmorphic-card" style="padding: 24px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
-          <span>⚠️</span> <span>${escapeHtml(t('fm.collision_title', 'File & Directory Conflict'))}</span>
+          <span aria-hidden="true">⚠️</span> <span>${escapeHtml(t('fm.collision_title', 'File & Directory Conflict'))}</span>
         </h3>
         <button id="fm-collision-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px;" title="${escapeHtml(t('common.close', 'Close'))}">✕</button>
       </div>
@@ -3740,7 +3740,7 @@ export function openMediaOrganizerModal(initialPath = '') {
       }
 
       btnPreview.disabled = true;
-      btnPreview.innerHTML = '<span>⏳</span> <span>Analyzing...</span>';
+      btnPreview.innerHTML = '<span aria-hidden="true">⏳</span> <span>Analyzing...</span>';
       if (previewWrap) {
         previewWrap.innerHTML =
           '<div style="text-align:center; padding:25px; color:var(--muted); font-size:12px;"><div class="loader-spinner" style="margin:0 auto 10px;"></div>Parsing media files via regex heuristics...</div>';
@@ -3786,7 +3786,7 @@ export function openMediaOrganizerModal(initialPath = '') {
                     </div>
                     <div style="color:var(--muted); font-size:11px; font-family:monospace; display:flex; align-items:center; gap:6px;">
                       <span style="color:#f87171; text-decoration:line-through;">${escapeHtml(it.original_filename)}</span>
-                      <span>➔</span>
+                      <span aria-hidden="true">➔</span>
                       <span style="color:#4ade80;">${escapeHtml(it.proposed_relative_path)}</span>
                     </div>
                   </div>
@@ -3822,7 +3822,7 @@ export function openMediaOrganizerModal(initialPath = '') {
       const hardlink = mode === 'hardlink';
 
       btnApply.disabled = true;
-      btnApply.innerHTML = '<span>⏳</span> <span>Organizing...</span>';
+      btnApply.innerHTML = '<span aria-hidden="true">⏳</span> <span>Organizing...</span>';
 
       try {
         const res = await api.post('/api/media/organize/apply', {

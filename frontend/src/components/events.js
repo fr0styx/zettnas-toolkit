@@ -66,7 +66,7 @@ export function renderEventLog(events) {
         </div>
         <div style="display: flex; gap: 6px; align-items: center; padding-top: 2px;">
           <button class="event-inspect-btn" type="button" title="${t('ui.view_full_event_details', 'View full event details')}" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
-            <span>🔍</span> <span>More Info</span>
+            <span aria-hidden="true">🔍</span> <span>More Info</span>
           </button>
           <span style="font-size: 11px; color: var(--muted); cursor: pointer; padding: 2px 4px;">▼ Details</span>
         </div>

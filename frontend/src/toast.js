@@ -262,7 +262,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   }
 
   if (isMedia) {
-    titleEl.innerHTML = `<span>📷</span> ${safeTitle}`;
+    titleEl.innerHTML = `<span aria-hidden="true">📷</span> ${safeTitle}`;
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "📥 Import Media";
     okBtn.style.background = "linear-gradient(135deg, #0ea5e9, #25c2a0)";
     okBtn.style.border = "1px solid #0ea5e9";
@@ -270,7 +270,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     headerBg.style.background = "rgba(14, 165, 233, 0.12)";
     titleEl.style.color = "#38bdf8";
   } else if (isStandby) {
-    titleEl.innerHTML = `<span>⚡</span> ${safeTitle}`;
+    titleEl.innerHTML = `<span aria-hidden="true">⚡</span> ${safeTitle}`;
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "⚡ Wake & Inspect";
     okBtn.style.background = "#fbbf24";
     okBtn.style.border = "1px solid #f59e0b";
@@ -278,7 +278,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     headerBg.style.background = "rgba(245, 158, 11, 0.08)";
     titleEl.style.color = "#fbbf24";
   } else if (isUpdate) {
-    titleEl.innerHTML = `<span>⬆️</span> ${safeTitle}`;
+    titleEl.innerHTML = `<span aria-hidden="true">⬆️</span> ${safeTitle}`;
     okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "⬆️ Update Now";
     okBtn.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
     okBtn.style.border = "1px solid #f59e0b";

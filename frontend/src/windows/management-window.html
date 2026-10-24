@@ -2181,7 +2181,7 @@
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                       <button class="btn-pill-toggle" id="btn-docker-stacks-menu" style="color: var(--accent-cyan, #38bdf8);" title="View & Edit Docker Compose Stacks" data-i18n-title="ui.view_edit_docker_compose_stacks">
-                        <span>📁</span> <span>Manage Stacks</span>
+                        <span aria-hidden="true">📁</span> <span>Manage Stacks</span>
                       </button>
                       <button class="btn-pill-toggle" id="btn-docker-check-updates" title="Check remote registries for container image updates" data-i18n-title="ui.check_remote_registries_for_container">
                         <span style="color:var(--ok2, #25c2a0);">✓</span> <span>Check for updates</span>
@@ -3041,7 +3041,7 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.shares_desc">Host Samba (SMB), NFS, and Universal WebDAV network shares, security levels, and live storage usage.</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:rgba(59,245,139,0.12); color:#3bf58b;">Observer Mode</span>
+                  <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:rgba(59,245,139,0.12); color:#3bf58b;"></span>
                   <button class="btn-pill-toggle is-primary" id="btn-create-network-share" style="display: none;" title="Create Network Share" data-i18n-title="ui.create_network_share">+ Create Share</button>
                   <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n-title="ui.refresh_network_shares" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
@@ -3056,7 +3056,7 @@
                   <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(234,179,8,0.1); color: #facc15; border: 1px solid rgba(234,179,8,0.25);">WebDAV :8080</span>
                 </div>
                 <button class="btn-pill-toggle" id="btn-quick-manage-protocols" style="background: transparent; border-color: var(--border, rgba(255,255,255,0.15)); color: var(--text, #e2e8f0);">
-                  ⚙️ <span data-i18n="mgmt.manage_protocols">Protocol Daemons</span>
+                  ⚙️ <span data-i18n="mgmt.manage_protocols">Sharing services</span>
                 </button>
               </div>
               <div class="mgmt-detail-body" id="mgmt-storage-shares-mount">
@@ -3290,7 +3290,7 @@
                   </div>
                 </div>
                 <div id="sec-pwd-mismatch-msg" style="display:none; color:var(--crit, #ff6b6b); font-size: var(--zn-fs-xs); font-weight:600; margin-top:6px; align-items:center; gap:4px;">
-                  <span>⚠️</span> <span data-i18n="mgmt.sec_err_pwd_mismatch">New passwords do not match. Please verify and try again.</span>
+                  <span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.sec_err_pwd_mismatch">New passwords do not match. Please verify and try again.</span>
                 </div>
               </div>
 
@@ -3708,7 +3708,7 @@
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
                   <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                    <span>🛡️</span>
+                    <span aria-hidden="true">🛡️</span>
                     <span>Hyper-Backup Tasks & 3-2-1 Pipelines</span>
                   </span>
                   <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;">
@@ -3734,7 +3734,7 @@
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
                   <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                    <span>📸</span>
+                    <span aria-hidden="true">📸</span>
                     <span>Storage Pool Snapshots & Rollback</span>
                   </span>
                   <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;">
@@ -3760,7 +3760,7 @@
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
                   <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                    <span>📦</span>
+                    <span aria-hidden="true">📦</span>
                     <span data-i18n="mgmt.app_backups_title">Application Backups & Recovery</span>
                   </span>
                   <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;" data-i18n="mgmt.app_backups_desc">
@@ -3912,7 +3912,7 @@
                       <span id="btn-apply-update-text" data-i18n="updates.btn_install_now">Install Update Now</span>
                     </button>
                     <button id="btn-revert-system-update" type="button" class="btn-pill-toggle" style="display: none; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.18);">
-                      <span>↩</span>
+                      <span aria-hidden="true">↩</span>
                       <span id="btn-revert-update-text">Revert to previous version</span>
                     </button>
                   </div>
@@ -3949,11 +3949,11 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                   <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff;" title="Preview collected system telemetry before downloading" data-i18n-title="ui.preview_collected_system_telemetry_before">
-                    <span>👁️</span>
+                    <span aria-hidden="true">👁️</span>
                     <span data-i18n="diagnostics.preview_btn">Preview Summary</span>
                   </button>
                   <button id="btn-copy-support-md" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff;" title="Copy sanitized system support markdown to clipboard for GitHub, Reddit, or Discord" data-i18n-title="ui.copy_sanitized_system_support_markdown">
-                    <span>📋</span>
+                    <span aria-hidden="true">📋</span>
                     <span data-i18n="diagnostics.copy_md_btn">Copy Support Markdown</span>
                   </button>
                   <button id="btn-download-diagnostics" type="button" class="btn-pill-toggle is-primary">
@@ -4033,7 +4033,7 @@
                   <!-- Sidebar Header: + New Chat & Collapse Toggle -->
                   <div class="ai-sidebar-top-bar">
                     <button type="button" id="btn-ai-chat-new" class="btn-pill-toggle btn-ai-new-chat" title="Start a fresh conversation thread" data-i18n-title="ui.start_a_fresh_conversation_thread">
-                      <span>✨</span> <span data-i18n="ai.new_chat">+ New Chat</span>
+                      <span aria-hidden="true">✨</span> <span data-i18n="ai.new_chat">+ New Chat</span>
                     </button>
                     <button type="button" id="btn-ai-chat-sidebar-toggle" class="btn-ai-icon-toggle" title="Collapse sidebar" data-i18n-title="ui.collapse_sidebar">
                       <span>◀</span>
@@ -4054,7 +4054,7 @@
                   <div class="ai-sidebar-footer">
                     <span id="ai-chat-thread-count" class="ai-thread-count-badge">0 chats</span>
                     <button type="button" id="btn-ai-chat-clear-all" class="btn-ai-clear-all" title="Clear all conversation threads" data-i18n-title="ui.clear_all_conversation_threads">
-                      <span>🗑️</span> <span data-i18n="ai.clear_all">Clear All</span>
+                      <span aria-hidden="true">🗑️</span> <span data-i18n="ai.clear_all">Clear All</span>
                     </button>
                   </div>
                 </aside>
@@ -4080,14 +4080,14 @@
                       <!-- Export Menu -->
                       <div class="dropdown-wrapper" style="position:relative; display:inline-block;">
                         <button type="button" id="btn-ai-chat-export-toggle" class="btn-pill-toggle" style="color: #cbd5e1;" title="Export active conversation" data-i18n-title="ui.export_active_conversation">
-                          <span>📥</span> <span data-i18n="ai.export_chat">Export</span>
+                          <span aria-hidden="true">📥</span> <span data-i18n="ai.export_chat">Export</span>
                         </button>
                         <div id="ai-chat-export-menu" class="ai-dropdown-menu" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; z-index:100; min-width:180px; background:var(--card-solid, #0f172a); border:1px solid var(--border, rgba(255,255,255,0.15)); border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.5); padding:4px 0;">
                           <button type="button" id="btn-ai-chat-export-md" class="ai-menu-item" style="width:100%; text-align:left; background:transparent; border:none; padding:7px 12px; font-size:11.5px; color:#f1f5f9; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                            <span>📝</span> <span data-i18n="ai.export_md">Export as Markdown (.md)</span>
+                            <span aria-hidden="true">📝</span> <span data-i18n="ai.export_md">Export as Markdown (.md)</span>
                           </button>
                           <button type="button" id="btn-ai-chat-export-json" class="ai-menu-item" style="width:100%; text-align:left; background:transparent; border:none; padding:7px 12px; font-size:11.5px; color:#f1f5f9; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                            <span>📦</span> <span data-i18n="ai.export_json">Export as JSON (.json)</span>
+                            <span aria-hidden="true">📦</span> <span data-i18n="ai.export_json">Export as JSON (.json)</span>
                           </button>
                         </div>
                       </div>
@@ -4108,7 +4108,7 @@
                       <input type="checkbox" id="ai-chat-web-toggle" style="margin:0;"> 🌐 <span data-i18n="ai.web_toggle">Web</span>
                     </label>
                     <button type="button" id="btn-ai-chat-send" class="btn-pill-toggle" style="height:38px; padding:0 18px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(99,102,241,0.35), rgba(14,165,233,0.35)); border:1px solid rgba(99,102,241,0.6); color:#fff; border-radius:8px; cursor:pointer; white-space:nowrap;">
-                      <span>🚀</span> <span data-i18n="ai.chat_send_btn">Ask Zetty</span>
+                      <span aria-hidden="true">🚀</span> <span data-i18n="ai.chat_send_btn">Ask Zetty</span>
                     </button>
                     <button type="button" id="btn-ai-chat-stop" class="btn-pill-toggle" hidden aria-label="Stop generating" data-i18n-aria-label="ui.stop_generating" style="height:38px; padding:0 14px; font-size:12px; font-weight:700; background:rgba(239,68,68,0.18); border:1px solid rgba(248,113,113,0.55); color:#fecaca; border-radius:8px; cursor:pointer; white-space:nowrap;">
                       <span>■</span> <span data-i18n="ai.stop">Stop</span>
@@ -4131,7 +4131,7 @@
                     <option value="documents" data-i18n="ai.scope_docs">📄 Documents &amp; Manuals</option>
                   </select>
                   <button type="button" id="btn-ai-rag-ask" class="btn-pill-toggle" style="height:38px; padding:0 16px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(14,165,233,0.28), rgba(37,194,160,0.28)); border:1px solid rgba(14,165,233,0.55); color:#fff; border-radius:8px; cursor:pointer;">
-                    <span>✨</span> <span data-i18n="ai.ask_btn">Search &amp; Ask</span>
+                    <span aria-hidden="true">✨</span> <span data-i18n="ai.ask_btn">Search &amp; Ask</span>
                   </button>
                   <button type="button" id="btn-ai-visual-search" style="display:none;" aria-hidden="true"></button>
                   <button type="button" id="btn-ai-visual-clear" class="btn-pill-toggle" style="height:38px; padding:0 12px; font-size:11px; cursor:pointer;" title="Reset search query &amp; mode filters" data-i18n-title="ui.reset_search_query_mode_filters">
@@ -4232,16 +4232,16 @@
                     <span id="ai-sync-state-text" data-i18n="ai.sync_state_idle">Sync: Idle</span>
                   </span>
                   <button type="button" id="btn-ai-quick-sync" class="btn-pill-toggle is-small" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: var(--ok2,#25c2a0);" title="Sync configured watched folders on running drives (skips sleeping HDDs)" data-i18n-title="ui.sync_configured_watched_folders_on">
-                    <span>🔄</span> <span data-i18n="ai.sync_shares">Sync Active Shares</span>
+                    <span aria-hidden="true">🔄</span> <span data-i18n="ai.sync_shares">Sync Active Shares</span>
                   </button>
                   <button type="button" id="btn-ai-sync-pause" class="btn-pill-toggle is-small" style="display: none; background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.45); color: #fbbf24;" title="Pause active indexing scan" data-i18n-title="ui.pause_active_indexing_scan">
-                    <span>⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
+                    <span aria-hidden="true">⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
                   </button>
                   <button type="button" id="btn-ai-sync-resume" class="btn-pill-toggle is-small" style="display: none; background: rgba(37,194,160,0.2); border: 1px solid rgba(37,194,160,0.5); color: #34d399;" title="Resume paused indexing scan (only on running disks)" data-i18n-title="ui.resume_paused_indexing_scan_only">
                     <span>▶</span> <span data-i18n="ai.resume_sync">Resume</span>
                   </button>
                   <button type="button" id="btn-ai-sync-stop" class="btn-pill-toggle is-danger is-small" style="display: none;" title="Stop active indexing scan immediately" data-i18n-title="ui.stop_active_indexing_scan_immediately">
-                    <span>⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
+                    <span aria-hidden="true">⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
                   </button>
                 </div>
               </div>
@@ -4332,25 +4332,25 @@
                   <!-- Sync Transport Controls + Learning Results Button -->
                   <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                     <button type="button" id="btn-ai-sync-watched" class="btn-pill-toggle" style="background: rgba(37,194,160,0.22); border: 1px solid rgba(37,194,160,0.5); color: #fff;">
-                      <span>🔄</span> <span data-i18n="ai.sync_watched_btn">Sync Watched Folders</span>
+                      <span aria-hidden="true">🔄</span> <span data-i18n="ai.sync_watched_btn">Sync Watched Folders</span>
                     </button>
                     <button type="button" id="btn-ai-index-pause" class="btn-pill-toggle" style="background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.45); color: #fbbf24;">
-                      <span>⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
+                      <span aria-hidden="true">⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
                     </button>
                     <button type="button" id="btn-ai-index-resume" class="btn-pill-toggle" style="background: rgba(37,194,160,0.2); border: 1px solid rgba(37,194,160,0.5); color: #34d399;">
                       <span>▶</span> <span data-i18n="ai.resume_sync">Resume</span>
                     </button>
                     <button type="button" id="btn-ai-index-stop" class="btn-pill-toggle is-danger">
-                      <span>⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
+                      <span aria-hidden="true">⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
                     </button>
                     <button type="button" id="btn-ai-learning-results" class="btn-pill-toggle" style="background: rgba(99,102,241,0.16); border: 1px solid rgba(99,102,241,0.4); color: #c7d2fe;" title="View AI Learning Results (Succeeded / Failed / Deferred files)" data-i18n-title="ui.view_ai_learning_results_succeeded">
-                      <span>📊</span> <span data-i18n="ai.learning_results_btn">Learning Results</span>
+                      <span aria-hidden="true">📊</span> <span data-i18n="ai.learning_results_btn">Learning Results</span>
                     </button>
                     <button type="button" id="btn-ai-in-place-reindex" class="btn-pill-toggle" style="background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.45); color: #4ade80;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups" data-i18n-title="ui.re_embed_all_existing_document">
-                      <span>🔄</span> <span data-i18n="ai.btn_reindex">In-Place Re-index</span>
+                      <span aria-hidden="true">🔄</span> <span data-i18n="ai.btn_reindex">In-Place Re-index</span>
                     </button>
                     <button type="button" id="btn-ai-flush-index" class="btn-pill-toggle is-danger" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh" data-i18n-title="ui.flush_existing_rag_index_vector">
-                      <span>🗑️</span> <span data-i18n="ai.flush_index_btn">Flush Index</span>
+                      <span aria-hidden="true">🗑️</span> <span data-i18n="ai.flush_index_btn">Flush Index</span>
                     </button>
                   </div>
                 </div>
@@ -4372,7 +4372,7 @@
                     <div style="font-size:12.5px; font-weight:700; color:#fff;">📊 ZettAI Learning Results</div>
                     <div style="display:flex; align-items:center; gap:6px;">
                       <button type="button" id="btn-ai-relearn-failed" class="btn-pill-toggle is-small" style="background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.55); color: #fff;">
-                        <span>🔁</span> <span data-i18n="ai.relearn_failed_btn">Relearn Failed Files</span>
+                        <span aria-hidden="true">🔁</span> <span data-i18n="ai.relearn_failed_btn">Relearn Failed Files</span>
                       </button>
                       <button type="button" id="btn-ai-close-learning-results" class="btn-pill-toggle is-small">✕</button>
                     </div>
@@ -4405,7 +4405,7 @@
                     <div id="ai-watched-folders-dropdown-container" style="position:relative; flex:1; min-width:240px;">
                       <button type="button" id="btn-ai-watched-folders-dropdown" aria-expanded="false" style="width:100%; min-height:38px; padding:6px 12px; border-radius:8px; background:rgba(15,23,42,0.85); border:1px solid rgba(56,189,248,0.42); color:#f8fafc; font-size:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer; text-align:left;">
                         <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;">
-                          <span>📁</span>
+                          <span aria-hidden="true">📁</span>
                           <span id="ai-watched-dropdown-summary" style="font-family:monospace; font-weight:700; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Select Watched Folders for RAG...</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
@@ -4421,7 +4421,7 @@
                     </div>
 
                     <button type="button" id="btn-ai-run-index" class="btn-pill-toggle" style="height:38px; padding:0 16px; font-size:11.5px; font-weight:700; background:rgba(37,194,160,0.22); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:8px; cursor:pointer; white-space:nowrap; flex-shrink:0;" title="Index configured watched folders now (Standby Safe)" data-i18n-title="ui.index_configured_watched_folders_now">
-                      <span>🚀</span> <span data-i18n="ai.run_index_btn">Index Path Now</span>
+                      <span aria-hidden="true">🚀</span> <span data-i18n="ai.run_index_btn">Index Path Now</span>
                     </button>
                   </div>
 
@@ -4436,7 +4436,7 @@
               <!-- How Your Selected LLM Is Leveraged (Moved from Chatbot to AI Configuration) -->
               <div class="ai-chat-welcome-card" style="padding:12px 14px; border-radius:10px; background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.28); font-size:12px; color:#e2e8f0; line-height:1.5; margin-bottom:12px;">
                 <div style="font-weight:800; color:#fff; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                  <span>🤖</span>
+                  <span aria-hidden="true">🤖</span>
                   <span data-i18n="ai.how_llm_leveraged_title">How Your Selected LLM Is Leveraged:</span>
                 </div>
                 <ul style="margin:4px 0 0 18px; padding:0; color:#cbd5e1; font-size:11.5px; line-height:1.6;">
@@ -4451,7 +4451,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.07);">
                   <div>
                     <div style="font-size:13px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                      <span>🤖</span>
+                      <span aria-hidden="true">🤖</span>
                       <span data-i18n="ai.llm_advisor_title">Onboard NPU &amp; GPU Acceleration • Hugging Face Release Models</span>
                       <a href="https://huggingface.co/models" target="_blank" rel="noopener noreferrer" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(250,204,21,0.14); border:1px solid rgba(250,204,21,0.4); color:#fde047; text-decoration:none;">🤗 huggingface.co ↗</a>
                     </div>
@@ -4487,7 +4487,7 @@
                   <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(14,165,233,0.38); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(14,165,233,0.08);">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
                       <div style="font-size:12px; font-weight:800; color:var(--accent-cyan,#00f0ff); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
-                        <span>⚡</span>
+                        <span aria-hidden="true">⚡</span>
                         <span>Tier 1 • NPU Priority</span>
                       </div>
                       <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(14,165,233,0.18); color:var(--accent-cyan,#00f0ff); border:1px solid rgba(14,165,233,0.35);">Primary</span>
@@ -4497,7 +4497,7 @@
                   <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(56,189,248,0.32); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(56,189,248,0.06);">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
                       <div style="font-size:12px; font-weight:800; color:#38bdf8; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
-                        <span>🎮</span>
+                        <span aria-hidden="true">🎮</span>
                         <span>Tier 2 • GPU Fallback</span>
                       </div>
                       <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);">Secondary</span>
@@ -4507,7 +4507,7 @@
                   <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(37,194,160,0.32); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(37,194,160,0.06);">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
                       <div style="font-size:12px; font-weight:800; color:var(--ok2,#25c2a0); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
-                        <span>🖥️</span>
+                        <span aria-hidden="true">🖥️</span>
                         <span>Tier 3 • Universal CPU</span>
                       </div>
                       <span style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(37,194,160,0.15); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.3);">Universal</span>
@@ -4523,7 +4523,7 @@
                 <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(250,204,21,0.28); border-radius:8px; padding:10px 12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                     <div style="font-size:11.5px; font-weight:700; color:#fef08a; display:flex; align-items:center; gap:6px;">
-                      <span>🤗</span>
+                      <span aria-hidden="true">🤗</span>
                       <span data-i18n="ai.hf_hub_title">Pull Release Models from Hugging Face Database (https://huggingface.co)</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -4571,10 +4571,10 @@
                   </div>
                   <div style="display:flex; align-items:center; gap:8px;">
                     <button type="button" id="btn-ai-run-benchmark" class="btn-pill-toggle" style="background: rgba(14,165,233,0.18); border: 1px solid rgba(14,165,233,0.45); color: var(--accent-cyan,#00f0ff);">
-                      <span>⚡</span> <span data-i18n="ai.btn_run_benchmark">Run Latency Benchmark</span>
+                      <span aria-hidden="true">⚡</span> <span data-i18n="ai.btn_run_benchmark">Run Latency Benchmark</span>
                     </button>
                     <button type="button" id="btn-ai-trigger-reindex" class="btn-pill-toggle" style="background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.45); color: #4ade80;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups" data-i18n-title="ui.re_embed_all_existing_document">
-                      <span>🔄</span> <span data-i18n="ai.btn_reindex">Re-index Knowledge Base</span>
+                      <span aria-hidden="true">🔄</span> <span data-i18n="ai.btn_reindex">Re-index Knowledge Base</span>
                     </button>
                   </div>
                 </div>

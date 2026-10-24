@@ -303,7 +303,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: var(--zn-fs-sm);">
           <td style="padding: 10px 12px; font-weight: 600; color: #fff;">
             <div style="display:flex; align-items:center; gap:6px;">
-              <span>📦</span>
+              <span aria-hidden="true">📦</span>
               <strong>${escapeHtml(b.container_name || b.id)}</strong>
               ${stackHtml}
             </div>

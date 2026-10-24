@@ -822,7 +822,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
       const dev = info?.backing_dev || '';
       return `
         <div class="ai-watched-folder-chip" data-folder-path="${escapeHtml(fp)}" style="display:inline-flex; align-items:center; gap:7px; padding:4px 9px; border-radius:8px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.38); font-size:11px; color:#f8fafc;">
-          <span>☑</span>
+          <span aria-hidden="true">☑</span>
           <span style="font-family:monospace; font-weight:700;">${escapeHtml(fp)}</span>
           <span style="font-size:11px; padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(37,194,160,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
             ${inStandby ? `💤 Standby${dev ? ` (${escapeHtml(dev)})` : ''}` : `🟢 Running${dev ? ` (${escapeHtml(dev)})` : ''}`}
@@ -878,7 +878,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
           <div role="option" aria-selected="${isWatched ? 'true' : 'false'}" class="btn-pill-toggle ai-discovered-share-pill ai-watched-dropdown-item ${isWatched ? 'active' : ''}" data-folder-path="${escapeHtml(f.path)}" data-watched="${isWatched ? '1' : '0'}" style="display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; box-sizing:border-box; font-size:11.5px; padding:7px 10px; border-radius:8px; background:${isWatched ? 'rgba(37,194,160,0.16)' : 'rgba(255,255,255,0.03)'}; border:1px solid ${isWatched ? 'rgba(37,194,160,0.48)' : 'rgba(255,255,255,0.08)'}; color:${isWatched ? '#fff' : '#cbd5e1'}; cursor:pointer; text-align:left;" title="${inStandby ? `Backing disk (${dev}) is in STANDBY — will only sync when disk is running` : `Backing disk (${dev || 'NVMe/Pool'}) is RUNNING — click to check/uncheck for RAG`}">
             <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
               <span class="ai-folder-checkbox-icon" style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:4px; background:${isWatched ? '#10b981' : 'rgba(255,255,255,0.08)'}; border:1px solid ${isWatched ? '#34d399' : 'rgba(255,255,255,0.28)'}; color:#042f2e; font-size:11px; font-weight:900; flex-shrink:0;">${isWatched ? '✓' : ''}</span>
-              <span>📁</span>
+              <span aria-hidden="true">📁</span>
               <span style="font-family:monospace; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(f.path)}</span>
             </div>
             <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
@@ -1259,7 +1259,7 @@ export function initAiKnowledgeEngine() {
       const respect = respectCb ? Boolean(respectCb.checked) : true;
       syncBtn.disabled = true;
       const origHtml = syncBtn.innerHTML;
-      syncBtn.innerHTML = '<span>⏳</span> <span>Syncing Shares...</span>';
+      syncBtn.innerHTML = '<span aria-hidden="true">⏳</span> <span>Syncing Shares...</span>';
       try {
         await syncAiWatchedFolders(respect, true);
       } finally {
@@ -1784,7 +1784,7 @@ export async function fetchAndRenderAiStatus() {
       btnBenchmark.addEventListener('click', async () => {
         btnBenchmark.disabled = true;
         const origHtml = btnBenchmark.innerHTML;
-        btnBenchmark.innerHTML = `<span>⏳</span> <span>${t('ai.benchmark_running') || 'Benchmarking Hardware...'}</span>`;
+        btnBenchmark.innerHTML = `<span aria-hidden="true">⏳</span> <span>${t('ai.benchmark_running') || 'Benchmarking Hardware...'}</span>`;
         try {
           const bRes = await api.post('/api/ai/benchmark');
           if (bRes && bRes.status === 'ok') {
@@ -1975,7 +1975,7 @@ export async function fetchAndRenderAiStatus() {
         <div>• <strong>Deferred Standby Queue:</strong> ${defCount} path(s) waiting for drive wake${defDetail}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <span>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
-          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Flush existing RAG index, vector embeddings, and search catalog to start fresh')}"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
+          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Flush existing RAG index, vector embeddings, and search catalog to start fresh')}"><span aria-hidden="true">🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
         </div>
       `;
       const flushLink = dbSummary.querySelector('#btn-ai-flush-index-link');
@@ -2056,7 +2056,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
 
   if (askBtn) {
     askBtn.disabled = true;
-    askBtn.innerHTML = '<span>⏳</span> <span>Thinking...</span>';
+    askBtn.innerHTML = '<span aria-hidden="true">⏳</span> <span>Thinking...</span>';
   }
   const loadingHtml = `
     <div style="padding: 16px; text-align: center; color: var(--muted); font-size: 12px;">
@@ -2211,7 +2211,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
   } finally {
     if (askBtn) {
       askBtn.disabled = false;
-      askBtn.innerHTML = `<span>✨</span> <span data-i18n="ai.ask_btn">${escapeHtml(t('ai.ask_btn', 'Search & Ask'))}</span>`;
+      askBtn.innerHTML = `<span aria-hidden="true">✨</span> <span data-i18n="ai.ask_btn">${escapeHtml(t('ai.ask_btn', 'Search & Ask'))}</span>`;
     }
   }
 }
@@ -2563,7 +2563,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
   const feedbackEl = document.getElementById('ai-index-run-feedback');
   runBtns.forEach((b) => {
     b.disabled = true;
-    b.innerHTML = '<span>⏳</span> <span>Indexing...</span>';
+    b.innerHTML = '<span aria-hidden="true">⏳</span> <span>Indexing...</span>';
   });
 
   let targets;
@@ -2612,7 +2612,7 @@ export async function runAiPathIndex(targetPath = null, respectStandby = true) {
   } finally {
     runBtns.forEach((b) => {
       b.disabled = false;
-      b.innerHTML = `<span>🚀</span> <span data-i18n="ai.run_index_btn">${escapeHtml(t('ai.run_index_btn', 'Index Path Now'))}</span>`;
+      b.innerHTML = `<span aria-hidden="true">🚀</span> <span data-i18n="ai.run_index_btn">${escapeHtml(t('ai.run_index_btn', 'Index Path Now'))}</span>`;
     });
   }
 }
@@ -2726,7 +2726,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     ? `
       <div class="ai-chat-folder-banner" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 6px 10px; border-radius: 8px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.28); margin-bottom: 2px;">
         <div style="display: flex; align-items: center; gap: 6px; font-size: 11px;">
-          <span>📁</span>
+          <span aria-hidden="true">📁</span>
           <span style="font-weight: 700; color: #7dd3fc;">Folder Scope:</span>
           <code style="color: #e0f2fe; font-size: 11px; background: rgba(0,0,0,0.25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
           ${folderManifest && folderManifest.total_files ? `<span style="font-size: 11px; color: #94a3b8;">(${folderManifest.total_files} files)</span>` : ''}
@@ -3864,7 +3864,7 @@ export async function sendAiChatMessage(rawMessage = null) {
   } finally {
     if (sendBtn) {
       sendBtn.disabled = false;
-      sendBtn.innerHTML = `<span>🚀</span> <span data-i18n="ai.chat_send_btn">${escapeHtml(t('ai.chat_send_btn', 'Ask Zetty'))}</span>`;
+      sendBtn.innerHTML = `<span aria-hidden="true">🚀</span> <span data-i18n="ai.chat_send_btn">${escapeHtml(t('ai.chat_send_btn', 'Ask Zetty'))}</span>`;
     }
   }
 }

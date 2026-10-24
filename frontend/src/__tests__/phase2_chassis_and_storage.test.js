@@ -345,7 +345,7 @@ describe('Sprint 3: Storage Pools Topology & Network Shares', () => {
     expect(container.textContent).toContain('/dev/sda');
     expect(container.textContent).toContain('Standby');
     expect(container.textContent).toContain('41°C');
-    expect(container.textContent).toContain('Host Observer Mode');
+    expect(container.textContent).toContain("never changes them");
     expect(container.querySelectorAll('.btn-locate-topo').length).toBe(2);
   });
 
@@ -395,7 +395,7 @@ describe('Sprint 3: Storage Pools Topology & Network Shares', () => {
 
     await fetchAndRenderNetworkShares(container);
 
-    expect(badge.textContent).toContain('UNRAID · Observer Mode');
+    expect(badge.textContent).toContain("Managed by Unraid");
     expect(container.textContent).toContain('appdata');
     expect(container.textContent).toContain('application data');
     expect(container.textContent).toContain('PUBLIC');

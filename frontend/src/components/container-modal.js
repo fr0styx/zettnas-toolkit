@@ -720,7 +720,7 @@ async function loadContainerDetails(cid) {
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <div style="font-size:11px; font-weight:700; color:#fb923c; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
-              <span>💾</span>
+              <span aria-hidden="true">💾</span>
               <span>App Data & Config Backup</span>
             </div>
             <div style="font-size:11px; color:var(--muted); margin-top:2px;">

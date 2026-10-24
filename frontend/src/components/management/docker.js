@@ -408,7 +408,7 @@ function _bindDockerEvents() {
     btnCheckUpdates.addEventListener('click', async () => {
       btnCheckUpdates.disabled = true;
       const originalHtml = btnCheckUpdates.innerHTML;
-      btnCheckUpdates.innerHTML = '<span>⏳</span> <span>Checking updates...</span>';
+      btnCheckUpdates.innerHTML = '<span aria-hidden="true">⏳</span> <span>Checking updates...</span>';
       try {
         const res = await api.post('/api/docker/updates/check');
         _dockerUpdatesCache = res;
@@ -439,7 +439,7 @@ function _bindDockerEvents() {
         `Update all <strong>${count} containers</strong> with available image updates?<br><br><span style="font-size:11.5px; color:var(--muted);">Each container will be repulled and recreated with automated rollback protection if startup fails.</span>`,
         async () => {
           btnUpdateAll.disabled = true;
-          btnUpdateAll.innerHTML = '<span>⏳</span> <span>Updating all...</span>';
+          btnUpdateAll.innerHTML = '<span aria-hidden="true">⏳</span> <span>Updating all...</span>';
           showToast(t('toast.starting_batch_update_for_containers', 'Starting batch update for {count} containers...', { count: count }), 'info');
           try {
             const res = await api.post('/api/docker/updates/apply-all');
@@ -1202,7 +1202,7 @@ export async function openAppDeployModal(appId) {
             <div id="adm-existing-box" style="display:none; padding:11px 13px; border-radius:6px; background:rgba(245, 166, 35, 0.09); border:1px solid rgba(245, 166, 35, 0.35); flex-direction:column; gap:8px;">
               <div style="display:flex; align-items:center; justify-content:space-between;">
                 <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:11.5px;">
-                  <span>⚠️</span> <span id="adm-existing-title">Pre-existing Container Detected</span>
+                  <span aria-hidden="true">⚠️</span> <span id="adm-existing-title">Pre-existing Container Detected</span>
                 </div>
                 <span id="adm-existing-status-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.08); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
               </div>
@@ -2739,7 +2739,7 @@ export function openSideloadAppModal() {
         return;
       }
       btnInspect.disabled = true;
-      btnInspect.innerHTML = '<span>⏳</span> <span>Validating...</span>';
+      btnInspect.innerHTML = '<span aria-hidden="true">⏳</span> <span>Validating...</span>';
       try {
         const payload = url ? { url } : { manifest_content: manifest };
         const res = await api.post('/api/docker/catalog/sideload', payload);

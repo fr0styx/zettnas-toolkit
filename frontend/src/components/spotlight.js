@@ -379,7 +379,7 @@ export function parseNaturalLanguageAction(rawQuery) {
           const snapName = res?.snapshot_name || res?.name || `snap_${Date.now()}`;
           showToast(t('toast.snapshot_created_for_pool', 'Snapshot \'{snapName}\' created for pool \'{targetPool}\'', { snapName: snapName, targetPool: targetPool }), 'success', 3500);
         } catch (e) {
-          const errMsg = e?.detail || e?.message || 'Observer Mode restricts direct snapshots on Unraid';
+          const errMsg = e?.detail || e?.message || t('storage.snapshots_by_host', 'The host system makes snapshots here, not ZettNAS');
           showToast(t('toast.snapshot_failed_for', 'Snapshot failed for \'{targetPool}\': {errMsg}', { targetPool: targetPool, errMsg: errMsg }), 'error', 4500);
         }
       }

@@ -365,7 +365,7 @@
 
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 11.5px; color: var(--muted); padding: 0 2px;">
       <label for="lock-timeout-select" style="cursor: pointer; display: flex; align-items: center; gap: 5px; user-select: none;">
-        <span>⏱️</span>
+        <span aria-hidden="true">⏱️</span>
         <span data-i18n="lock.stay_unlocked">Auto-lock after:</span>
       </label>
       <select id="lock-timeout-select" class="tz-select-input" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.18); color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; outline: none;">
@@ -959,14 +959,14 @@
         <div id="smart-standby-banner" style="display: none; margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; font-size: 11px; line-height: 1.4; border: 1px solid rgba(234, 179, 8, 0.35); background: rgba(234, 179, 8, 0.12); align-items: center; justify-content: space-between; gap: 12px;">
           <div>
             <div style="color: #eab308; font-weight: 700; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
-              <span>💤</span> <span data-i18n="modal.smart_standby_title">Drive Platters in Low-Power Standby</span>
+              <span aria-hidden="true">💤</span> <span data-i18n="modal.smart_standby_title">Drive Platters in Low-Power Standby</span>
             </div>
             <div style="color: var(--muted); font-size: 11px; margin-top: 2px;" data-i18n="modal.smart_standby_desc">
               Platters are spun down to save power and eliminate mechanical wear. S.M.A.R.T. telemetry is paused.
             </div>
           </div>
           <button id="smart-btn-wake-modal" type="button" class="btn-primary" style="background: #eab308; color: #000; font-weight: 700; font-size: 11px; padding: 6px 14px; border-radius: 6px; cursor: pointer; border: none; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
-            <span>⚡</span> <span data-i18n="modal.smart_wake_btn">Wake Drive</span>
+            <span aria-hidden="true">⚡</span> <span data-i18n="modal.smart_wake_btn">Wake Drive</span>
           </button>
         </div>
         <div class="smart-meta-grid" id="smart-modal-grid">
@@ -1155,7 +1155,7 @@
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 200px;">
             <div style="font-weight: 700; font-size: 12px; color: #fff; display: flex; align-items: center; gap: 6px;">
-              <span>📦</span> <span data-i18n="sec.https_option_caddy_title">1-Click Reverse Proxy (Caddy / Nginx)</span>
+              <span aria-hidden="true">📦</span> <span data-i18n="sec.https_option_caddy_title">1-Click Reverse Proxy (Caddy / Nginx)</span>
             </div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4;" data-i18n="sec.https_option_caddy_desc">
               Deploy automated SSL reverse proxies with Let's Encrypt certificates directly via the Apps & Containers Catalog.
@@ -1169,7 +1169,7 @@
         <!-- Option 2: Tailscale Serve / HTTPS -->
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;">
           <div style="font-weight: 700; font-size: 12px; color: #fff; display: flex; align-items: center; gap: 6px;">
-            <span>🌐</span> <span data-i18n="sec.https_option_tailscale_title">Tailscale Serve / MagicDNS</span>
+            <span aria-hidden="true">🌐</span> <span data-i18n="sec.https_option_tailscale_title">Tailscale Serve / MagicDNS</span>
           </div>
           <div style="font-size: 11px; color: var(--muted); line-height: 1.4;" data-i18n="sec.https_option_tailscale_desc">
             Get instant zero-config HTTPS with automated Let's Encrypt certificates across your secure mesh network:
@@ -1184,7 +1184,7 @@
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
           <div style="flex: 1; min-width: 200px;">
             <div style="font-weight: 700; font-size: 12px; color: #fff; display: flex; align-items: center; gap: 6px;">
-              <span>🔌</span> <span data-i18n="sec.https_option_ports_title">Network Cockpit & Host Ports</span>
+              <span aria-hidden="true">🔌</span> <span data-i18n="sec.https_option_ports_title">Network Cockpit & Host Ports</span>
             </div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4;" data-i18n="sec.https_option_ports_desc">
               Inspect listening TCP ports (80, 443, 8082) and configure host reverse proxy port forwards.
@@ -1404,7 +1404,7 @@
         <div style="display: flex; align-items: center; justify-content: space-between; grid-column: span 2;">
           <div><span style="color: var(--muted);">MAC:</span> <span id="net-port-ro-mac" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
           <button type="button" id="btn-copy-port-mac" class="btn-pill-toggle is-small" title="Copy MAC address for Wake-on-LAN Magic Packet dispatch" data-i18n-title="ui.copy_mac_address_for_wake">
-            <span>📋</span> <span data-i18n="net.copy_mac">Copy MAC</span>
+            <span aria-hidden="true">📋</span> <span data-i18n="net.copy_mac">Copy MAC</span>
           </button>
         </div>
         <div><span style="color: var(--muted);">Driver:</span> <span id="net-port-ro-driver" style="color: #cbd5e1;">--</span></div>
@@ -1795,17 +1795,17 @@
       </div>
 
       <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">1. Hardware Subsystem Health</div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">Your hardware</div>
         <div class="smart-meta-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">CHASSIS MODEL</span><span class="val" id="setup-hw-chassis" style="font-size: 12px; color: #38bdf8;">Detecting...</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.lcd_screen">LCD SCREEN</span><span class="val" id="setup-hw-fb" style="font-size: 12px; color: #4ade80;">Active (/dev/fb0)</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.fans_controller">FANS CONTROLLER</span><span class="val" id="setup-hw-fans" style="font-size: 12px; color: #4ade80;">Active (hwmon)</span></div>
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.argb_lightbar">ARGB LIGHTBAR</span><span class="val" id="setup-hw-leds" style="font-size: 12px; color: #4ade80;">WS2812B Ready</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val" id="setup-hw-chassis" style="font-size: 12px; color: #38bdf8;">Detecting...</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.lcd_screen">Front screen</span><span class="val" id="setup-hw-fb" style="font-size: 12px; color: #4ade80;">…</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.fans_controller">Fans</span><span class="val" id="setup-hw-fans" style="font-size: 12px; color: #4ade80;">…</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.argb_lightbar">Light bar</span><span class="val" id="setup-hw-leds" style="font-size: 12px; color: #4ade80;">…</span></div>
         </div>
       </div>
 
       <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step2_title">2. Set Administrator Password</div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step2_title">Choose your password</div>
         <div style="font-size: 11.5px; color: #cbd5e1; margin-bottom: 10px;" data-i18n="setup.step2_desc">The default or first-time password is still active. Replace it with your own password (minimum 8 characters).</div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -1826,7 +1826,7 @@
       </div>
 
       <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">3. Power Protection & UPS</div>
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">Power protection</div>
         <div id="setup-hw-ups" style="padding: 10px 12px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 11.5px; color: #94a3b8;">
           <span id="setup-ups-badge" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 6px;"></span>
           <span id="setup-ups-text" data-i18n="setup.ups_none">Checking UPS status...</span>

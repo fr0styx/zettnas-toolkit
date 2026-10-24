@@ -71,11 +71,13 @@ async function checkLcdStatus() {
     const badge = document.getElementById('lcd-renderer-badge');
     if (badge) {
       if (!data.enabled) {
-        badge.textContent = 'LCD: DISABLED';
+        badge.textContent = t('lcd.badge_off_config', 'LCD: turned off');
+        badge.dataset.lcdState = 'disabled';
         badge.className = 'lcd-status-badge lcd-status-disabled';
         badge.title = t('ui.lcd_direct_output_is_disabled', 'LCD direct output is disabled in configuration.');
       } else if (!data.fb_present) {
-        badge.textContent = 'LCD: NO /dev/fb0';
+        badge.textContent = t('lcd.badge_none', 'LCD: not found');
+        badge.dataset.lcdState = 'missing';
         badge.className = 'lcd-status-badge lcd-status-offline';
         badge.title = t('ui.no_framebuffer_device_detected_at', 'No framebuffer device detected at /dev/fb0.');
       } else if (data.screen_off || data.power === false) {

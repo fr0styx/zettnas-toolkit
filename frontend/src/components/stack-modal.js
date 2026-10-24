@@ -41,7 +41,7 @@ export function initStackModal() {
         <!-- Quick Actions Bar & Path Info -->
         <div style="padding:8px 14px; background:rgba(0,0,0,0.45); border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div style="display:flex; align-items:center; gap:8px; font-size:11px; color:var(--muted); min-width:0; overflow:hidden;">
-            <span>📂</span>
+            <span aria-hidden="true">📂</span>
             <span id="stack-path-label" style="font-family:var(--font-mono, monospace); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:420px;"></span>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">

@@ -111,16 +111,16 @@ export function initContainersManager() {
                 <span style="color: var(--ok2, #25c2a0);">✓</span> <span>Check Updates</span>
               </button>
               <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: #fbbf24; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
-                <span>↑</span> <span>Update All (<span id="cw-updates-count-badge">0</span>)</span>
+                <span aria-hidden="true">↑</span> <span>Update All (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
               <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--accent-cyan, #38bdf8);">
-                <span>📁</span> <span>Compose Stacks</span>
+                <span aria-hidden="true">📁</span> <span>Compose Stacks</span>
               </button>
               <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}">
-                <span>🕸️</span> <span data-i18n="cw.netmap_btn">${t('cw.netmap_btn', 'Network Map')}</span>
+                <span aria-hidden="true">🕸️</span> <span data-i18n="cw.netmap_btn">${t('cw.netmap_btn', 'Network Map')}</span>
               </button>
               <button id="btn-cw-prune" class="btn-pill-toggle" title="${t('ui.clean_up_unused_container_images', 'Clean up unused container images, stopped containers, and volumes')}">
-                <span>🧹</span> <span>Prune</span>
+                <span aria-hidden="true">🧹</span> <span>Prune</span>
               </button>
               <button id="btn-cw-catalog" class="btn-pill-toggle is-primary">
                 <span aria-hidden="true">📦</span> <span>${t('apps.get_apps', 'Get apps')}</span>
@@ -293,7 +293,7 @@ export function initContainersManager() {
     btnCheckUpdates.onclick = async () => {
       btnCheckUpdates.disabled = true;
       const orig = btnCheckUpdates.innerHTML;
-      btnCheckUpdates.innerHTML = '<span>⏳</span> <span>Checking...</span>';
+      btnCheckUpdates.innerHTML = '<span aria-hidden="true">⏳</span> <span>Checking...</span>';
       try {
         const res = await api.post('/api/docker/updates/check');
         _cwUpdatesCache = res;

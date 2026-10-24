@@ -22,12 +22,12 @@ export function openHttpsGuideModal() {
       statusBanner.style.background = 'rgba(34,197,94,0.15)';
       statusBanner.style.border = '1px solid rgba(34,197,94,0.35)';
       statusBanner.style.color = '#22c55e';
-      statusBanner.innerHTML = `<span>🔒</span> <span>${t('sec.https_status_secure', 'Active Session is Encrypted via HTTPS (TLS)')}</span>`;
+      statusBanner.innerHTML = `<span aria-hidden="true">🔒</span> <span>${t('sec.https_status_secure', 'Active Session is Encrypted via HTTPS (TLS)')}</span>`;
     } else {
       statusBanner.style.background = 'rgba(234,179,8,0.15)';
       statusBanner.style.border = '1px solid rgba(234,179,8,0.35)';
       statusBanner.style.color = '#eab308';
-      statusBanner.innerHTML = `<span>⚠️</span> <span>${t('sec.https_status_insecure', 'Active Session is Plaintext HTTP (Unencrypted)')}</span>`;
+      statusBanner.innerHTML = `<span aria-hidden="true">⚠️</span> <span>${t('sec.https_status_insecure', 'Active Session is Plaintext HTTP (Unencrypted)')}</span>`;
     }
   }
   overlay.style.display = 'flex';
