@@ -12,6 +12,16 @@ same signed digest, it never rebuilds.
 
 Each tag also exists with `-core` for the core image.
 
+## Version numbers and changelog entries
+
+- **Patch** (1.9.3 → 1.9.4): fixes only. Nothing a user must do or relearn.
+- **Minor** (1.9 → 1.10): anything users must act on (a stricter default, a removed
+  option, a changed URL or API) and new features. List the actions under
+  "Before you upgrade" in the changelog entry.
+- **Changelog headings** are `## vX.Y.Z (date)`, without a channel. A release is a beta
+  until promotion marks it Stable on GitHub; the changelog doesn't change when it is
+  promoted. A test checks this for entries after v1.9.4.
+
 ## Cutting a release
 
 1. Update `CHANGELOG.md` and the version, commit, and push a tag such as `v1.9.3`. Only
