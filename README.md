@@ -1,204 +1,87 @@
 <div align="center">
-  <img src="static/img/icon.png" width="128" height="128" alt="ZettNAS Toolkit Icon" style="border-radius: 24px;">
+  <img src="static/img/icon.png" width="112" height="112" alt="ZettNAS Toolkit icon">
   <h1>ZettNAS Toolkit</h1>
-  <p><strong>Universal hardware orchestration suite, glassmorphic Web Desktop OS, and container management platform for any NAS and homelab server.</strong></p>
-
+  <p><strong>A web desktop for your NAS: files, apps, storage, backups, hardware and an AI assistant, in one place.</strong></p>
   <p>
-    <a href="https://github.com/fr0styx/zettnas-toolkit/releases"><img src="https://img.shields.io/github/v/release/fr0styx/zettnas-toolkit?color=25c2a0&style=flat-square" alt="GitHub Release"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License: MIT"></a>
-    <img src="https://img.shields.io/badge/Platform-Unraid%20%7C%20Linux%20%7C%20Docker-orange?style=flat-square" alt="Platform">
-    <img src="https://img.shields.io/badge/Display-640x172%20IPS%20%28%2Fdev%2Ffb0%29-informational?style=flat-square" alt="Display">
+    <a href="https://github.com/fr0styx/zettnas-toolkit/releases"><img src="https://img.shields.io/github/v/release/fr0styx/zettnas-toolkit?color=25c2a0&style=flat-square" alt="Latest release"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="MIT license"></a>
+    <img src="https://img.shields.io/badge/Runs%20on-Unraid%20%7C%20Linux%20%7C%20Docker-orange?style=flat-square" alt="Runs on Unraid, Linux and Docker">
   </p>
+  <img src="docs/img/ui-screenshot.png" width="90%" alt="The ZettNAS web desktop">
 </div>
 
----
+ZettNAS runs as one container next to your existing system: Unraid, Debian, Ubuntu, TrueNAS SCALE, Proxmox, FygoOS or plain Docker. It works on any NAS or homelab server, and adds extras on appliances with a front LCD, a light bar or a card reader (Zettlab, Aoostar).
 
-## Overview
+## What you get
 
-<div align="center">
-  <img src="docs/img/ui-screenshot.png" width="90%" alt="ZettNAS Web Studio & Desktop UI" style="border-radius: 8px; box-shadow: 0 12px 36px rgba(0,0,0,0.5);">
-</div>
+- **Files** — a File Explorer with several windows, drag and drop, a Recycle Bin, share links, a photo and video viewer, and import from the front card reader with checksum verification.
+- **Apps** — 78 tested one-click apps (Immich, Jellyfin and more), Docker Compose stacks, logs, a web terminal and update checks.
+- **Storage** — pools, disks and SMART health on ZFS, Btrfs, mdadm and Unraid arrays; disks that are likely to fail turn amber before SMART calls them failed; sleeping disks stay asleep.
+- **Snapshots and backup** — per-share snapshot schedules with file restore and Windows "Previous Versions", encrypted offsite backup with restic, and scheduled backups of ZettNAS's own settings.
+- **People** — accounts with roles, private folders and space quotas, invite links, guest and kid roles, two-factor sign-in, and sign-in with OpenID Connect or LDAP.
+- **Ask Zetty** — search and questions over your own files in five languages, on the NAS's own GPU or NPU; answers are checked against your files and cite them. Also available to Claude, Cursor and other AI clients over MCP.
+- **Virtual machines** — KVM with UEFI and TPM 2.0, an ISO catalog, and a console in the browser.
+- **Hardware** — fan curves, UPS monitoring with safe shutdown, the front LCD and light bar, and alerts by e-mail, Telegram, Discord, ntfy and more.
+- **Safety** — a ransomware guard that freezes writes and snapshots the pool, an allow-list in front of Docker, and updates that check the image signature and roll back on their own.
+- **Everywhere** — a phone mode you can install as an app, light and dark themes, and English, German, French, Spanish and Chinese.
 
-**ZettNAS Toolkit** (**NAS WORKBENCH**) is an enterprise-grade, hardware-agnostic orchestration platform, modern web desktop OS, and container/virtualization suite engineered for any NAS appliance or custom DIY homelab server (Aoostar, Zettlab, Fractal, Jonsbo, Supermicro, SilverStone) running Unraid, Debian, Ubuntu, TrueNAS SCALE, Proxmox, or Docker. It bridges low-level hardware intelligence with a fluid, multi-window desktop operating experience:
-
-* 🖥️ **Glassmorphic Web Desktop OS** — Fluid multi-window desktop with collision-free icon grid reallocation, 8-zone Aero snap, macOS-style dock magnification, Spotlight command palette (`Cmd+K`), visual wallpaper gallery, and instant themes (Cyber Teal, Amber CRT, Emerald Matrix, Yak Bronze, and Pure OLED Black).
-* 🐳 **Dedicated Containers Window & App Catalog** — Dedicated desktop window app (`#containers-manager-window`) with 2-way sync with Mission Control, Compose stack synthesis, live log streaming, interactive web terminal, and curated 25+ app catalog.
-* ⚡ **Virtual Machines & Next-Gen KVM Hypervisor** — Dedicated VM Manager desktop app (`#vm-manager-window`), full window controls (drag, min, max, close), dynamic elastic memory budgeting with safe host headroom, curated 1-click official ISO catalog, in-browser VNC web console (`#vm-console-window`), interactive bidirectional Serial TTY console (`/api/vms/{id}/serial-ws`), UEFI/OVMF firmware, software vTPM 2.0 (Windows 11 ready), and direct host USB device passthrough.
-* 🔋 **Option A UPS Power Cockpit & Multi-Tier Persistence** — Unified single-screen Power Cockpit with 2.5D animated SVG digital twin (`#ups-flow-svg`), active telemetry grid, inline safe shutdown policy sliders, outage ledger, and top-bar status pill. Supports zero-dependency native USB HID (`/dev/hidraw*`), network NUT, and APCUPSD daemons with 6-tier SQLite persistent configuration and dynamic wattage synthesis for DC homelab UPS units.
-* 💾 **Universal Storage PAL & S.M.A.R.T. Self-Tests** — Platform Abstraction Layer (PAL) with non-intrusive Observer Mode adapters for FygoOS, ZettOS, UGOS, TrueNAS SCALE, Proxmox VE, and generic Linux; OpenZFS RAIDZ1/2/3, Btrfs RAID, Unraid array coexistence, turnkey native Samba conflict auto-resolution, filesystem-accurate pool capacity, zero-wake ATA spindown safety (`smartctl -n standby`), and executive S.M.A.R.T. self-test reports with NVMe Device Self-Test (DST).
-* 📁 **File Explorer & Multi-Instance Grid** — Responsive Icon Grid View & sortable List View, multiple simultaneous window instances for cross-folder drag-and-drop, keyboard range selection (`Shift+Arrows`), non-destructive recursive directory merge (`CollisionPolicy.MERGE`), and trash/recycle bin handling.
-* 🔄 **In-App Self-Updater & Release Channels** — Administrators can inspect available updates and switch between Stable (official releases) and Edge (latest main branch commits) channels with 1-click container self-update and zero premature reload loops.
-* ☁️ **Cloud Remote Gateway & In-App OAuth** — Direct in-app OAuth assistant with mobile QR pairing for OneDrive, Google Drive, Dropbox, Box, and Nextcloud; line-rate WebDAV server (Port `8084`); and FUSE cloud mounts.
-* 🌐 **Enterprise Networking & Zero-Trust Mesh** — Combined LAN throughput telemetry across physical NICs, 1-click Tailscale SSO with QR login, WireGuard mobile QR export, 802.1Q VLAN tagging, LACP link aggregation, and 30-second canary rollback watchdog.
-* 🛡️ **Enterprise Multi-User & Granular RBAC** — SQLite WAL user store (`users.db`), RFC 9106 Argon2id credential hashing, TOTP two-factor authentication (2FA), Reverse Proxy SSO (`X-Forwarded-User`), scoped API tokens with CIDR whitelisting, private `/homes/` isolation, and desktop auto-lock (`Cmd+L`).
-* ❄️ **Hardware HAL, MMIO & Acoustic Zero-RPM Fans** — Dynamic Chassis Digital Twin (Aoostar, Zettlab D4/D6/D6U/D8U, DIY), userspace direct MMIO fan controller (`0xFE0B0456`) with strict D4 hardware safety gatekeeper (`is_zettlab_mmio_supported`), Zero RPM standby mode with optimized 30s cooldown and anti-flutter hysteresis, 6-point SVG fan curve designer, and hardware thermal watchdogs.
-* 🔔 **Multi-Channel Alerts, Hyper-Backup & Diagnostics Overhaul** — Unified Apprise alerting (Discord, Telegram, SMTP Email, ntfy, Pushover, Gotify, Webhooks), automated local/cloud snapshot schedules, retention pruning, and comprehensive multi-layer system observability diagnostics bundle with executive health summary preview modal.
-* 📊 **Enterprise Standards: Redfish & SNMP** — Native DMTF Redfish REST API (`/redfish/v1/`) and SNMP v2c/v3 telemetry engine for unified homelab and enterprise infrastructure monitoring.
-* 📺 **Physical LCD & Media Automation** — Direct memory-mapped front-panel LCD rendering (`/dev/fb0`, 640×172) with toggleable Streamline Big IP card layout, dynamic hardware button cycling, and front SD/TF card auto-detection with SHA-256 integrity verification.
-* 🌐 **Zero-Dependency Internationalization** — Full instant client-side localization across English, German, Simplified Chinese, French, and Spanish with 100% dictionary parity.
-
----
-
-## Hardware Compatibility
-
-ZettNAS Toolkit is architected around a universal **Hardware Abstraction Layer (HAL)**. It runs seamlessly on commercial NAS appliances, custom DIY homelab towers, enterprise rackmount servers, mini PCs, and ARM64 single-board computers—with **zero hardcoded hardware dependencies**.
-
-When specialized appliance peripherals (physical front LCD, ARGB lightbar, or front Copy button) are not present, the toolkit runs in standard **Headless Mode** without unhandled exceptions or log spam, and dynamically hides appliance-only badges (`MCU`, `FB`) and controls.
-
-| Subsystem | Supported Hardware & Form Factors | Driver / Interface & Capabilities |
-| :--- | :--- | :--- |
-| **Chassis & Enclosures** | • **Turnkey Appliances**: Aoostar (WTR Pro, R1), Zettlab (D4, D6, D6U, D8U), Minisforum, Terramaster<br>• **DIY Homelab Towers**: Fractal Design (Node 304/804, Define), Jonsbo (N1–N5 series), SilverStone (CS380/381), Lian Li, generic ATX/ITX<br>• **Enterprise Rackmounts**: 1U–4U backplanes (Supermicro, Dell PowerEdge, HP ProLiant, Chenbro, 4–24+ bays)<br>• **Mini-PCs & ARM64 SBCs**: Intel NUC, Beelink, GMKtec, Raspberry Pi 5 (PCIe NVMe HAT), Radxa Rock 5B | Auto-detected via DMI product name (`/sys/class/dmi/id/`) or synthesized from discovered storage topology. Features parametric 2.5D chassis digital twin with user drag-and-drop bay slot reordering. |
-| **Storage Controllers & Buses** | • **SATA AHCI**: Intel/AMD chipset AHCI, ASMedia (ASM1061/1064/1166), JMicron (JMB585), Marvell PCIe multiplexers<br>• **Enterprise SAS HBAs**: Broadcom / LSI MegaRAID & IT-mode HBAs (`mpt3sas`, `mpt2sas`, `mptsas` — LSI 9211-8i, 9300-8i, 9400-16i, 9500-16i)<br>• **PCIe NVMe**: Direct M.2 2280, U.2, U.3, E1.S direct CPU/PCH lanes (`nvme` driver)<br>• **USB Storage**: USB 3.x to SATA/NVMe bridges (Realtek RTL9210, ASMedia ASM1153E/2362, JMicron JMS567/583) | Unified discovery via persistent `/dev/disk/by-id/` symlinks and `lsblk -J -O`. Supports multi-protocol S.M.A.R.T. (SAT, NVMe, SCSI), non-invasive zero-wake spindown checks (`smartctl -n standby`), and NVMe Device Self-Test (DST). |
-| **Cooling Fans & PWM** | • **Super I/O Chips**: Nuvoton (`nct6775`, `nct6776`, `nct6779`, `nct6791`–`nct6799`), ITE Tech (`it87`, `it8620`, `it8628`), Fintek<br>• **Userspace MMIO Controller**: Direct physical register mapping (`0xFE0B0456`) via `/dev/mem` for kernel-agnostic fan control on Zettlab/Aoostar hardware<br>• **Appliance Fan Drivers**: `zettlab_d8_fans`, `zettos_pwm_fan`<br>• **Generic Linux PWM**: Any standard motherboard `hwmon*` PWM channels (`pwm1`–`pwm3` / `fan*_input`) | Dynamic 6-point SVG fan curves, acoustic profiles (Auto, Quiet, Balanced, Performance), optimized 30s Zero RPM standby cooldown, and anti-flutter hysteresis. Enforces strict hardware thermal clamp at ≥80°C. |
-| **Processors & Thermals** | • **Intel**: Core, Xeon, Celeron, Pentium (`coretemp`)<br>• **AMD**: Ryzen, Threadripper, EPYC (`k10temp`, `zenpower`)<br>• **ARM64 & SoCs**: Rockchip, Allwinner, Raspberry Pi Broadcom (`cpu_thermal`) | Direct kernel sysfs temperature polling, per-core telemetry, historical velocity tracking, and configurable Apprise thermal warning thresholds. |
-| **UPS & Battery Power** | • **Direct USB HID**: WalleCube W180, OpenUPS, APC, CyberPower, Eaton via `/dev/hidraw*`<br>• **Network UPS Tools**: NUT daemon (`localhost:3493`)<br>• **APCUPSD**: Local or remote APCUPSD (`localhost:3551`) | Native zero-dependency HID protocol parser, automated driver probing, safe shutdown policy controls, and 2.5D animated SVG power flow digital twin. |
-| **Physical LCD Display** *(Optional)* | Built-in 640×172 IPS front LCD panel (Zettlab D6U/D8U, Aoostar appliances) | Direct memory-mapped `/dev/fb0` (stride 704). Sleep timers, dynamic carousel pages, toggleable Streamline Big IP layout with bay chips, and instant Web Desktop mirroring. Dynamically hidden when display hardware is not present. |
-| **ARGB Lightbar** *(Optional)* | Front-panel WS2812B ambient lightbar (38 addressable LED nodes) | Serial USB microcontroller `/dev/ttyACM0` (`ZettOS_RGB`). 7 hardware effects (Aurora, Pulse, Thermal, Drive Activity, Cyber). Dynamically hidden when MCU is not present. |
-| **Media Ingest & Button** *(Optional)* | Front SD / MicroSD / TF card slots and physical front-panel COPY button | Removable block storage (`/dev/sd*`) with SHA-256 verified auto-ingest into `/mnt/user/media_ingest`. Hardware copy button polled via MMIO `/dev/mem` on supported hardware. |
-
----
-
-## Installation & Deployment
-
-> [!IMPORTANT]  
-> **First sign-in**: username `admin`. There is no default password: unless you set `WEB_PASSWORD`, ZettNAS generates a first-time password on first start, prints it in the container log (`docker logs zettnas-toolkit`) and saves it as `initial-admin-password` in the data folder. You choose your own password at first sign-in.  
-> *(Add more users anytime in **Mission Control** → **System & Identity**.)*
-
-### 🚀 Quick Start (Docker Compose)
-
-For Linux homelab servers, mini PCs, and custom NAS builds:
+## Quick start
 
 ```bash
-# 1. Clone repository & create persistent data folder
-git clone https://github.com/fr0styx/zettnas-toolkit.git && cd zettnas-toolkit
-mkdir -p data
-
-# 2. Launch production stack (pre-built GHCR image)
+mkdir -p zettnas && cd zettnas
+curl -fsSLO https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/docker-compose.linux.yml
 docker compose -f docker-compose.linux.yml up -d
-
-# Or build locally from source with Docker Compose
-docker compose up -d --build
 ```
-Open your browser to `http://<server-ip>:8082`.
 
----
+Open `http://<server-ip>:8082` and sign in as `admin`. There is no default password: ZettNAS creates a first-time password, prints it in the container log (`docker logs zettnas-toolkit`) and saves it as `initial-admin-password` in the data folder, unless you set `WEB_PASSWORD`. You pick your own at first sign-in.
 
-### 📖 Platform Deployment Guides
+On Unraid, use the template in [`unraid/zettnas-toolkit.xml`](unraid/zettnas-toolkit.xml). Every platform, the device mappings and all settings are in the **[installation guide](docs/INSTALLATION.md)**.
 
-For complete configuration templates, hardware pass-through rules, and platform-specific walkthroughs, see the **[Installation & Deployment Guide (docs/INSTALLATION.md)](docs/INSTALLATION.md)**:
+## Images and updates
 
-| Platform | Deployment Method | Guide Link |
-| :--- | :--- | :---: |
-| **Unraid OS** | Official DockerMan XML Template | [Unraid Setup](docs/INSTALLATION.md#option-a-unraid-os-docker-template) |
-| **Ubuntu / Debian / Generic Linux** | Production Docker Compose (`docker-compose.linux.yml`) | [Linux Compose Setup](docs/INSTALLATION.md#option-b-ubuntu--debian--generic-linux-docker-compose) |
-| **FygoOS / Fygos NAS** | Native App Center & Compose Stack | [FygoOS Setup](docs/INSTALLATION.md#option-c-fygoos--fygos-nas-app-center--compose-stack) |
-| **TrueNAS SCALE** | Custom App & Compose (Dragonfish / Electric Eel) | [TrueNAS Setup](docs/INSTALLATION.md#option-d-truenas-scale-custom-app--compose) |
-| **Standalone Docker CLI** | Direct `docker run` command with device permissions | [Docker CLI Setup](docs/INSTALLATION.md#option-e-standalone-docker-cli-docker-run) |
-| **Headless Servers** | Runs seamlessly without physical display (`/dev/fb0`) or ARGB | [Headless Guide](docs/INSTALLATION.md#headless-server-deployments-no-lcd--argb) |
+| Image tag | What it is |
+|---|---|
+| `latest` | Stable: each release after 7 days on beta. The default. |
+| `beta` | A new release as soon as its tests pass. |
+| `edge` | Every commit on `main` that passes CI. |
+| `…-core` | Any of the above without virtual machines or Chromium, about 500 MB instead of 1.7 GB. |
 
-👉 **Read the full [Installation & Deployment Guide](docs/INSTALLATION.md)** for hardware device mappings (`/dev/fb0`, `/dev/dri`, `/dev/ttyACM0`), environment variables, and storage configurations.
+Images are signed in CI; ZettNAS verifies the signature before it installs an update, and keeps the previous version until the new one is healthy. Choose the channel with `UPDATE_CHANNEL` (`stable`, `beta`, `edge`) or in Mission Control → Settings → About & Updates. See [releasing](docs/RELEASING.md).
 
----
+## Documentation
 
-## Web Desktop & Shortcuts
+| Topic | Guide |
+|---|---|
+| Install on Unraid, Linux, TrueNAS, FygoOS or Docker | [INSTALLATION.md](docs/INSTALLATION.md) |
+| Every setting | [CONFIGURATION.md](docs/CONFIGURATION.md) |
+| HTTPS with Nginx, Caddy, Traefik | [REVERSE_PROXY.md](docs/REVERSE_PROXY.md) |
+| Sign-in with OpenID Connect or LDAP | [SSO.md](docs/SSO.md) |
+| Backing up your computers; disaster recovery | [BACKUP_GUIDE.md](docs/BACKUP_GUIDE.md) |
+| Ask Zetty and document search | [RAG.md](docs/RAG.md) |
+| AI clients over MCP | [MCP.md](docs/MCP.md) |
+| What leaves the NAS, and when | [PRIVACY.md](docs/PRIVACY.md) |
+| Security policy and threat model | [SECURITY.md](SECURITY.md), [THREAT_MODEL.md](docs/THREAT_MODEL.md) |
+| REST API (`/api/v1`) | [API.md](docs/API.md) |
+| How it is built | [ARCHITECTURE.md](docs/ARCHITECTURE.md), [HARDWARE_PROTOCOL.md](docs/HARDWARE_PROTOCOL.md) |
+| What changed | [CHANGELOG.md](CHANGELOG.md) |
 
-When accessing the Web Desktop (`http://<server-ip>:8082`):
-* **Desktop Workspace & Custom Shortcuts** — Interactive glassmorphic workspace featuring **Mission Control**, **File Explorer**, **Recycle Bin**, and **Physical LCD Canvas**. Right-click empty workspace to create custom application shortcuts (Containers, Storage Pools, Activity Monitor) or align to grid; positions and window bounds persist automatically across browser reloads.
-* **macOS-Style Parabolic Dock** — Fluid magnification on hover, active running indicators, unread notification counter badges, and configurable dock positioning (Bottom, Left, Right).
-* **Spotlight Command Palette** — Press `Cmd+K` (macOS) or `Ctrl+K` (Linux/Windows) for fuzzy-search navigation across applications, active Docker containers, storage browse roots, and quick hardware actions (`>reboot`, `>spindown`, `>quiet fans`, `>turbo`, `>theme oled`).
-* **Dynamic Hardware Settings Drawer** — Press `T` or click `HARDWARE SETTINGS` in the top navbar. Dynamically displays only when custom appliance features (LCD `/dev/fb0`, front copy button, SD/TF card slot) are present; automatically hides on standard generic servers.
-* **Window Snapping & Aero Tiling** — 8-zone edge and corner window snapping with translucent acrylic preview ghost and maximize hover flyouts.
-* **Inactivity Auto-Lock & Lock Screen** — Lock the desktop workspace at any time via `Cmd+L` / `Win+L` or configurable inactivity timers without terminating background jobs.
-* **Themes & Personalization** — 8 curated themes: **Cyber Teal**, **Amber CRT**, **Emerald Matrix**, **Sapphire Ice**, **Amethyst**, **Crimson**, **Yak Bronze** (with instant Yak wallpaper switch), and **Pure OLED Black** (`theme-oled`). Includes visual wallpaper gallery with drag-and-drop upload and acrylic blur sliders.
-* **Multi-User Profile Switcher** — User avatar pill with role badge (`SuperAdmin`, `StorageAdmin`, `AppOperator`, `ShareUser`), fast account switching, and password rotation.
-* **1-Click Language Switcher** — Instant UI translation across 5 languages: English (`EN`), German (`DE`), Simplified Chinese (`ZH`), French (`FR`), and Spanish (`ES`).
-* **Mobile Responsive Mode** — Seamless touch-optimized viewport scaling, gesture window dragging, and haptic tactile feedback (`triggerHaptic`).
-* **Keyboard Hotkeys**:
-  * `Cmd+K` / `Ctrl+K` — Open Spotlight Command Palette
-  * `Cmd+L` / `Win+L` — Lock Desktop Workspace
-  * `T` — Toggle Hardware Settings Drawer (when appliance hardware present)
-  * `Z` or `Mouse Wheel` — Cycle Chassis Zoom scale (1x, 1.25x, 1.5x, 2x)
-  * `Y` — Toggle Yak theme aesthetic
-  * `Esc` — Close open modals, command palette, and drawers
+## Development
 
----
+The backend is FastAPI with SQLite; the frontend is plain JavaScript modules built with Vite.
 
-## REST API Reference
-
-All routes are mounted at `/api` (or versioned alias `/api/v1`). Authenticated endpoints accept `Authorization: Bearer <zat_token>` headers, HttpOnly SameSite session cookies, or the `X-ZettNAS-Token` header.
-
-For complete endpoint specifications, parameter schemas, Server-Sent Events (SSE) telemetry contracts, and curl examples, see the dedicated **[REST API Reference (docs/API.md)](docs/API.md)**.
-
-| Category | Highlights | Docs |
-| :--- | :--- | :---: |
-| **Virtual Machines (VMs) & Hypervisor** | KVM VM inventory & lifecycle (`/api/vms`), elastic budget (`/api/vms/budget`), official ISO catalog (`/api/vms/isos/catalog`), ISO upload (`/api/vms/isos`), noVNC web console. | [Details](docs/API.md#9-virtual-machines--hypervisor) |
-| **Identity & Multi-User RBAC** | User inventory & roles (`/api/auth/users`), TOTP 2FA setup & verify (`/api/auth/totp/*`), session revocation (`/api/auth/sessions`), scoped API tokens (`/api/tokens`). | [Details](docs/API.md#1-identity-multi-user--rbac) |
-| **Telemetry & Live Streaming** | Real-time system metrics snapshot (`/api/stats`), 1 Hz live SSE stream (`/api/stats/stream`), historical time-series graphs (`/api/history`), health probe (`/api/health`). | [Details](docs/API.md#2-telemetry--live-streaming) |
-| **Storage & Platform Abstraction (PAL)** | Platform storage pools (`/api/storage/pools`), OpenZFS RAIDZ provisioning, physical drive inventory (`/api/storage/disks`), bay slot mapping (`/api/storage/bay-slots`), locate strobe (`/api/storage/locate`). | [Details](docs/API.md#3-storage--platform-abstraction-layer-pal) |
-| **Docker Orchestration & Compose** | Containers & updates (`/api/docker/containers`, `/api/docker/updates/*`), Compose stack synthesis & editing (`/api/docker/stacks/*`), Web Terminal (`/api/docker/containers/{id}/exec`), 25+ app catalog (`/api/docker/catalog`). | [Details](docs/API.md#4-docker-containers-stacks--app-catalog) |
-| **Cloud Remotes & WebDAV** | In-app OAuth assistant with mobile QR pairing, universal WebDAV port 8084 (`/api/webdav/*`), Rclone multi-cloud mounting (`/api/remotes/*`) for 20+ cloud backends (S3, B2, OneDrive, Google Drive). | [Details](docs/API.md#5-remote-cloud-storage--webdav) |
-| **Network, Virtual Switch & Mesh** | Combined LAN telemetry (`/api/network/combined-lan`), 1-click Tailscale mesh (`/api/network/tailscale/*`), WireGuard mobile QR export (`/api/network/wireguard/*`), 802.1Q VLANs & bonding. | [Details](docs/API.md#10-network-virtual-switch--mesh) |
-| **Hardware Controls & Fans** | 6-point fan curves & Zero RPM mode (`/api/fans`), WS2812B ARGB lightbar effects (`/api/led`), physical LCD brightness/pages (`/api/lcd/*`), S.M.A.R.T. tests (`/api/disk/*`). | [Details](docs/API.md#6-hardware-controls--diagnostics) |
-| **UPS & Power Integrity Cockpit** | Native NUT/APCUPSD telemetry (`/api/ups`), safe shutdown policies (`/api/system/ups/policy`), interactive drills (`/api/system/ups/drill`), and operating modes (`/api/system/ups/mode`). | [Details](docs/API.md#12-ups--power-integrity-cockpit) |
-| **System Updates & Self-Updater** | In-app release updates (`/api/system/updates`), 1-click self-update trigger (`/api/system/updates/apply`), and extended version & commit telemetry (`/api/system/about`). | [Details](docs/API.md#13-system-updates--self-updater) |
-| **Alerts & Hyper-Backup** | Apprise multi-channel alerts & test dispatch (`/api/notifications/*`), local/cloud snapshot schedules & 1-click restore (`/api/backup/*`), sanitized diagnostics bundle (`/api/system/diagnostics`). | [Details](docs/API.md#7-notifications-hyper-backup--diagnostics) |
-| **Media & Filesystem** | Icon grid & list view, multi-instance file manager, chunked file streaming (`/api/fs/upload`), front SD/TF auto-ingest (`/api/media_slots`, `/api/copy/*`), safe ejection. | [Details](docs/API.md#8-media-ingest--filesystem-management) |
-| **Enterprise Standards: Redfish & SNMP** | Out-of-band Redfish API (`/redfish/v1/Chassis/1/Thermal`, `/redfish/v1/Systems/1`), SNMP v2c/v3 telemetry daemon for enterprise observability platforms. | [Details](docs/API.md#11-enterprise-standards-redfish--snmp) |
-
----
-
-## Development & Test Suite
-
-The frontend is built with vanilla modern ES modules and bundled via Vite. The backend is powered by FastAPI, SQLite WAL, and multi-protocol hardware daemons.
-
-### Frontend Workflow
 ```bash
-npm install
-npm run build          # Compiles minified production assets to static/
-npm test               # Runs the frontend test suite (Vitest + jsdom)
-npm run test:coverage  # Generates Vitest V8 code coverage report
-npm run dev            # Starts local Vite development server with hot module reload
+npm install && npm run build      # frontend into static/
+npm test                          # frontend tests (Vitest)
+docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test   # backend tests (pytest)
 ```
 
-### Backend Workflow & Pytest Suite
-```bash
-# Run the backend test suite in the test container (tests are not shipped in the image)
-docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and [AGENTS.md](AGENTS.md) for the project's rules and invariants.
 
-# Run code style & formatting checks
-ruff check app.py backend tests
-ruff format --check app.py backend tests
-```
+## Credits
 
-For remote test appliance execution rules and architectural invariants, see **[AGENTS.md](AGENTS.md)**.
-
----
-
-## Documentation & Guides
-
-* **[Installation & Deployment Guide (docs/INSTALLATION.md)](docs/INSTALLATION.md)** — Step-by-step setup for Unraid, Ubuntu/Debian, FygoOS, TrueNAS SCALE, Docker CLI, device rules, and headless servers.
-* **[Developer & AI Agent Guidelines (AGENTS.md)](AGENTS.md)** — Operational blueprint, testing gates, architectural invariants, and remote execution protocols.
-* **[REST API Reference (docs/API.md)](docs/API.md)** — Complete endpoint specifications, live SSE telemetry contracts, card reader auto-ingest, and hardware control APIs.
-* **[System Architecture (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)** — Threading model (`StatsCollector`, `LcdRenderer`, `ButtonListener`, `FanWatchdog`), SQLite WAL persistence, and data flow.
-* **[Hardware Protocol Reference (docs/HARDWARE_PROTOCOL.md)](docs/HARDWARE_PROTOCOL.md)** — WS2812B serial packet specifications, sysfs thermal & PWM mappings, and direct `/dev/fb0` memory buffers.
-* **[Document Search & Ask Zetty (docs/RAG.md)](docs/RAG.md)** — What gets indexed, vector types, measured retrieval quality, permissions, forgetting and retention.
-* **[Privacy & Data Flow (docs/PRIVACY.md)](docs/PRIVACY.md)** — Everything ZettNAS sends off the NAS, and when.
-* **[AI Clients over MCP (docs/MCP.md)](docs/MCP.md)** — Connect Claude, Cursor and other MCP clients to ZettNAS.
-* **[Single Sign-on (docs/SSO.md)](docs/SSO.md)** — OpenID Connect sign-in with Authentik, Keycloak and others.
-* **[Threat Model (docs/THREAT_MODEL.md)](docs/THREAT_MODEL.md)** — What ZettNAS protects, from whom, and which risks remain.
-* **[Backing Up Your Computers (docs/BACKUP_GUIDE.md)](docs/BACKUP_GUIDE.md)** — Time Machine, File History, Veeam Agent and restic to ZettNAS.
-* **[Reverse Proxy & TLS Guide (docs/REVERSE_PROXY.md)](docs/REVERSE_PROXY.md)** — Production configurations for Nginx, Caddy, Traefik, and Nginx Proxy Manager with SSE stream buffering disabled.
-* **[Contributing Guidelines](CONTRIBUTING.md)** — Pull request standards, local test environment, and automated test execution.
-
----
-
-## Acknowledgments & Credits
-
-* **[torharrington/zettlab-display](https://github.com/torharrington/zettlab-display)** — Foundational framebuffer layout experiments for Zettlab front-panel screens.
-* **[henryxwong/zettlab-ubuntu](https://github.com/henryxwong/zettlab-ubuntu)** — Comprehensive hardware reverse-engineering of Zettlab registers, fan controller paths, and LED microcontroller protocols.
-
----
+- [torharrington/zettlab-display](https://github.com/torharrington/zettlab-display) — early framebuffer layouts for the Zettlab front screen.
+- [henryxwong/zettlab-ubuntu](https://github.com/henryxwong/zettlab-ubuntu) — reverse engineering of the Zettlab fan, LED and register interfaces.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE)

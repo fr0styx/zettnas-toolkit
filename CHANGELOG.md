@@ -1117,7 +1117,7 @@ Comprehensive multi-domain architectural hardening based on the enterprise-grade
   - Added a dedicated Close button (`✕`) to `#console-window` header alongside the Minimize button (`–`), allowing users to close the dashboard window and enjoy an unobstructed desktop wallpaper.
   - Added a Pop-out button (`↗`) allowing users to launch the LCD dashboard into a dedicated standalone popup window (`/?mode=lcd`) for secondary displays.
 - **Physical LCD Isolation Guarantee**:
-  - Explicitly added `.chassis-desktop-icon` to [lcd-direct.css](file:///Volumes/appdata/zettnas-toolkit/frontend/src/lcd-direct.css) to ensure the physical 172×640 LCD display (`/dev/fb0`) remains 100% untouched and renders pure hardware telemetry without desktop shortcut elements.
+  - Explicitly added `.chassis-desktop-icon` to [lcd-direct.css](frontend/src/lcd-direct.css) to ensure the physical 172×640 LCD display (`/dev/fb0`) remains 100% untouched and renders pure hardware telemetry without desktop shortcut elements.
 
 ## v0.8.4 (2026-10-05)
 ### 🛠️ Hardware Integration & WebUI Controls Restoration

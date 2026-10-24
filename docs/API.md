@@ -102,7 +102,7 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | `/api/docker/updates/status` | `GET` | `containers:read` | Retrieve cached container image update availability. |
 | `/api/docker/updates/check` | `POST` | `containers:read` | Trigger fresh remote registry check for container updates. |
 | `/api/docker/updates/apply-all` | `POST` | `containers:manage` | Batch-update all containers with pending image updates. |
-| `/api/docker/catalog` | `GET` | `containers:read` | Browse curated 25+ homelab application template catalog. |
+| `/api/docker/catalog` | `GET` | `containers:read` | Browse the catalog of 78 tested one-click apps, plus any template sources you add. |
 | `/api/docker/system/df` | `GET` | `containers:read` | Inspect reclaimable Docker disk space (images, containers, volumes, cache). |
 | `/api/docker/system/prune` | `POST` | `containers:manage` | Execute Docker system prune with custom resource filters. |
 
@@ -243,7 +243,7 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 
 | Endpoint | Method | Auth / Scope | Description |
 | :--- | :---: | :---: | :--- |
-| `/api/system/updates` | `GET` | `system:read` | Query available releases across `stable` (GitHub Releases) and `edge` (GitHub `main` branch commits) channels. |
+| `/api/system/updates` | `GET` | `system:read` | Query available releases across `stable` (releases after a 7-day beta), `beta` (new releases) and `edge` (GitHub `main` branch commits) channels. |
 | `/api/system/updates/apply` | `POST` | `system:manage` | Pull target Docker image and trigger seamless container recreation via Docker socket with health polling. |
 | `/api/system/about` | `GET` | Public | System identity information including `version`, `commit_sha`, `commit_short`, `branch`, `channel`, and `build_timestamp`. |
 

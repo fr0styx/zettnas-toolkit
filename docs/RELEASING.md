@@ -29,7 +29,7 @@ Each tag also exists with `-core` for the core image.
    rulesets).
 2. CI builds, scans and signs the images and publishes `:beta` and `:1.9.3`. The GitHub
    release is created as a pre-release named "… (beta)".
-3. Run the beta on a real server (Mission Control > System > Updates > Beta, or
+3. Run the beta on a real server (Mission Control → Settings → About & Updates → Beta, or
    `UPDATE_CHANNEL=beta`).
 4. Seven days after the release was created, the **Promote release** workflow (daily, 06:00
    UTC) verifies the image signature, moves `:latest`, `:stable` and `:1.9` to it, and marks

@@ -86,7 +86,7 @@ your compose file or Unraid template and recreate the container.
 - **First-time password**: if you leave `WEB_PASSWORD` empty, ZettNAS generates one on first start. It is written to the container log (`docker logs zettnas-toolkit`) and saved as `initial-admin-password` in the app data folder (readable by root only). It works once: you choose your own password at first sign-in, and the file is then deleted.
 
 > [!WARNING]  
-> Upon your first login, immediately navigate to **Mission Control** → **System & Security** → **Security** (or press `Cmd+K` and type `>password`) to set a strong master password or provision a new user account.
+> Upon your first login, immediately navigate to **Mission Control** → **Settings** → **Security** (or press `Cmd+K` and type `>password`) to set a strong master password or provision a new user account.
 
 ---
 
@@ -394,7 +394,7 @@ For developers, homelab maintainers, and air-gapped homelabs building custom ima
 
 2. **Build the Container Image**:
    The multi-stage `Dockerfile` handles everything automatically:
-   - **Stage 1 (`frontend-builder`)**: Uses `node:26.12.1-alpine` (the version in `.nvmrc`) to compile and bundle the glassmorphic web desktop via Vite into minified offline assets.
+   - **Stage 1 (`frontend-builder`)**: Uses `node:26.12.1-alpine` (the version in `.nvmrc`) to compile and bundle the web desktop via Vite into minified offline assets.
    - **Stage 2 (`runtime`)**: Prepares `python:3.12-slim` with Linux system utilities (`smartmontools`, `nvme-cli`, `ovmf`, `qemu-system-x86`, `rclone`, `fuse3`), installs pip requirements, and overlays the built desktop assets.
 
    ```bash
@@ -444,7 +444,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 - If physical front-panel hardware (`/dev/fb0` or `/dev/ttyACM0`) is not present on your system, the toolkit automatically detects the absence during boot.
 - The LCD renderer cleanly enters standby without throwing errors or consuming CPU cycles.
 - The top-bar `MCU` and `FB` status indicators, as well as appliance-only menus, are dynamically hidden.
-- The full glassmorphic Web Desktop, Docker orchestrator, storage visualizer, and file manager operate at 100% functionality over standard HTTP.
+- The web desktop, apps, storage views and File Explorer work fully over plain HTTP.
 
 ---
 
@@ -462,7 +462,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `HOST_PROC` | `/host/proc` | Path to host procfs for real-time CPU, RAM, and network socket telemetry |
 | `HOST_SYS` | `/host/sys` | Path to host sysfs for hwmon temperatures, fan PWM, and disk telemetry |
 | `HOST_DEV` | `/host/dev` | Path to host devfs for block device discovery and disk serial lookups |
-| `LCD_FPS` | `10` | Frame rate for physical LCD display (`1`–`30`) |
+| `LCD_FPS` | `10` | Highest frame rate for the front LCD (`1`–`30`); the built-in renderer redraws only when the numbers change |
 | `LCD_SLEEP_SEC` | `180` | Inactivity timer (seconds) before turning off physical LCD panel |
 | `ZERO_RPM_ENABLED` | `true` | Enable Zero RPM fan mode for spun-down HDD bays |
 | `ZERO_RPM_TEMP` | `40` | Temperature ceiling (°C) above which Zero RPM is prohibited |
@@ -471,9 +471,13 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `VM_ISO_DIR` | `/mnt/user/isos` | Directory for uploaded and downloaded guest ISO images |
 | `TAILSCALE_STATE_DIR` | `/app/data/tailscale` | State and configuration directory for embedded Tailscale mesh node |
 | `SFTP_PORT` | `2222` | Port for drop-in chrooted SFTP server |
+| `UPDATE_SIGNATURES` | `enforce` | In-app updates install only images this project's CI signed: `enforce`, `warn` (install with a warning) or `off` |
+| `ZETTNAS_DOCKER_PROXY` | `on` | ZettNAS reaches Docker through an allow-list proxy that forwards only the calls it uses; `off` gives it the socket directly |
+| `ZETTNAS_TRUSTED_IPS` | *(empty)* | Comma-separated addresses or networks (CIDR) that are never blocked, neither after failed sign-ins nor by the ransomware guard, so you can always reach the console |
+| `LCD_RENDERER` | `auto` | What draws the front LCD: `pil` (built in, no browser), `chromium` (the web dashboard) or `auto` (Chromium when the image has it) |
 | `UPDATE_CHANNEL` | `stable` | Update channel: `stable` (releases after a 7-day beta, `:latest`), `beta` (new releases right away, `:beta`) or `edge` (every commit on main); see docs/RELEASING.md |
 | `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
-| `ZETTNAS_LCD_CAPTURE` | `screencast` | How the front LCD gets frames: `screencast` (Chromium sends one only when the screen changes) or `poll` (a screenshot every frame) |
+| `ZETTNAS_LCD_CAPTURE` | `screencast` | With the Chromium LCD renderer: `screencast` (a frame only when the screen changes) or `poll` (a screenshot every frame) |
 | `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos browsers can't play with Intel Quick Sync when `/dev/dri` is passed to the container (`--device /dev/dri`); `off` uses the CPU |
 | `ZETTNAS_THUMB_CACHE_MB` | `1024` | Disk space for photo and video thumbnails (`data/cache/thumbs`); the least recently used are removed first |
 
@@ -525,12 +529,12 @@ The Security Advisor warns when an AI container publishes a port on all interfac
 
 ### In-App Self-Updater (Web Desktop)
 Administrators can check for updates and trigger 1-click container self-updates directly from the Web Desktop:
-1. Open **Mission Control** → **System & Identity** → **System Updates**.
+1. Open **Mission Control** → **Settings** → **About & Updates**.
 2. Select your preferred channel:
    - **Stable** (default): tagged releases, after 7 days on Beta.
    - **Beta**: each tagged release as soon as it passes CI.
    - **Edge**: every tested commit on the GitHub `main` branch.
-3. If an update is available, click **⚡ Update Now**. ZettNAS will pull the target container image via Docker socket, recreate the container, and verify daemon health.
+3. If an update is available, click **Install Update Now**. ZettNAS downloads the image, checks that this project's CI signed exactly that image (`UPDATE_SIGNATURES`), snapshots its data, and recreates the container. The old version keeps running until the new one has reported healthy for 60 seconds; if it doesn't, ZettNAS goes back on its own and tells you why.
 
 ### Upgrading via Docker Compose
 ```bash
@@ -544,8 +548,8 @@ In the Unraid WebUI, navigate to **Docker**, click **Check for Updates**, and cl
 
 ### Snapshots, pinning a version and going back by hand
 - **Every update is snapshotted.** Before the data is touched, ZettNAS copies its settings and databases (not the AI index) to `data/backups/pre-update/<date>-from-<version+commit>/`. The in-app updater does this when it stops the old version; an update from the Unraid Docker tab or `docker compose pull` gets one when the new version first starts. The newest three are kept, plus the newest one taken from a Stable build.
-- **The previous image is kept.** After an in-app update the old image is tagged `zettnas-toolkit-rollback:<version+commit>`, so `docker image prune` doesn't remove it. **Mission Control → System Updates → Go back** uses it.
-- **Pin a version** by using a version tag instead of `latest`, e.g. `ghcr.io/fr0styx/zettnas-toolkit:1.9.4` (Compose `image:` line, or the Unraid template's Repository field). It changes only when you change the tag.
+- **The previous image is kept.** After an in-app update the old image is tagged `zettnas-toolkit-rollback:<version+commit>`, so `docker image prune` doesn't remove it. **Mission Control → Settings → About & Updates → Revert to previous version** uses it.
+- **Pin a version** by using a version tag instead of `latest`, e.g. `ghcr.io/fr0styx/zettnas-toolkit:1.10.1` (Compose `image:` line, or the Unraid template's Repository field). It changes only when you change the tag.
 - **Go back by hand:** stop the container, copy the files of the snapshot you want from `data/backups/pre-update/<snapshot>/` back into `data/` (overwrite), set the image to the version that snapshot came from (its folder name and `manifest.json` say which), and start it again. Don't start an older version on data a newer one has migrated without restoring its snapshot first: ZettNAS refuses to open newer databases.
 
 ---

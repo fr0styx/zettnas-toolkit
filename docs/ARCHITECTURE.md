@@ -48,22 +48,18 @@ The application starts four persistent background daemon threads upon startup vi
   1. Reads `/host/proc/stat` and `/host/proc/net/dev` for CPU utilization and network bandwidth.
   2. Queries drive temperatures and standby status via `smartctl` concurrently using `ThreadPoolExecutor(max_workers=min(8, len(targets)))`, preventing blocking of UPS telemetry during disk sleep.
   3. Reads Unraid telemetry (`var.ini`, `mover.ini`) with atomic retry backoff loops (`max_retries=3`, `retry_delay=0.05s`) to prevent false alerts during uncommitted array status writes.
-  4. Evaluates active thermal fan curves and calculates duty cycles (`calc_curve_pwm`) with floor clamps and critical temperature overrides (100% PWM at >= 55 °C).
+  4. Evaluates active thermal fan curves and calculates duty cycles (`calc_curve_pwm`) with floor clamps and a full-speed override when a hard disk reaches `HDD_CRITICAL_TEMP` (55 °C), an NVMe drive `NVME_CRITICAL_TEMP` (75 °C) or the CPU 80 °C.
   5. Writes PWM values to `/host/sys/class/hwmon/hwmon*/pwm*` and prunes stale fan trackers via `cleanup_stale_fan_trackers()`.
   6. Persists telemetry snapshots to SQLite via `backend.db.log_metrics()` utilizing WAL journal mode and a 5000ms `busy_timeout`.
   7. Updates `Z_STATE.collector_heartbeat` to signal liveness to the watchdog.
   8. Dispatches telemetry to connected Server-Sent Events (SSE) subscribers.
 
-### 2.2 Direct LCD Framebuffer Renderer (`LcdRenderer`)
-- **Display Target**: Physical portrait LCD panel mapped to `/dev/fb0` (resolution `172x640`, portrait scan orientation).
-- **Responsibilities**:
-  1. Launches an internal headless Chromium session via Playwright targeting `http://127.0.0.1:8082/?mode=lcd`.
-  2. Renders with upright hardware geometry (`transform: rotate(90deg) translate(0, -172px)`).
-  3. Authenticates using an ephemeral single-session `lcd_token`.
-  4. Periodically captures the dashboard canvas at target FPS (`LCD_FPS`, default 10).
-  5. Manages memory-mapped buffer via `mmap.mmap()` with explicit `fb_mem.close()` in `finally` blocks to prevent descriptor leaks.
-  6. Implements exponential backoff (2s → 60s) for Chromium crash recovery to mitigate CPU spikes.
-  7. Automatically sleeps or blanks the screen when screen timeout or night mode is enabled.
+### 2.2 Front LCD Renderer (`LcdRenderer`)
+- **Display Target**: Physical portrait LCD panel mapped to `/dev/fb0` (640×172 landscape content, written rotated to the panel's 172×640 portrait scan).
+- **Two renderers**, chosen by `LCD_RENDERER` (`auto`, `pil`, `chromium`; `auto` picks Chromium when it is installed):
+  - **Built-in (`pil`, `backend/services/lcd_pil.py`)**: draws the four LCD pages directly with Pillow in a few milliseconds. It redraws when the stats collector publishes new numbers (its own wake-up signal, `Z_STATE.lcd_wake`) and at the turn of each minute, otherwise it sleeps. Used by the `-core` images, which have no Chromium. `/api/lcd/preview.png` returns the current frame.
+  - **Chromium (`chromium`)**: a headless Chromium session (Playwright) renders `http://127.0.0.1:8082/?mode=lcd` with an ephemeral `lcd_token`; frames arrive by screencast when the page changes. Restarts back off from 2 s to 60 s after a crash.
+- **Both**: convert to the framebuffer's pixel format (32-bit BGRA or 16-bit RGB565), write through a memory map closed in `finally`, and blank the screen for the screen timeout and night mode.
 
 ### 2.3 Hardware Button Listener (`ButtonListener`)
 - **Input Targets**: Hardware chassis push-button mapped through sysfs GPIO or `/dev/input/event*`.
@@ -107,12 +103,12 @@ The application starts four persistent background daemon threads upon startup vi
   6. Filesystem-Accurate Capacity: Calculates pool used space from active filesystem mount statistics (`statvfs`) rather than raw block device allocation tables to prevent capacity inflation on mdraid and LVM.
 
 ### 2.8 In-App Self-Updater & Release Orchestration
-- **Dual Channels**: `stable` (official tagged releases) and `edge` (latest commits from GitHub `main`).
+- **Three channels**: `stable` (each release after 7 days on beta, `:latest`), `beta` (new releases at once) and `edge` (every commit on `main` that passes CI). The updater stays on the image variant you run (full or `-core`).
 - **Responsibilities**:
-  1. Inspects remote GitHub repository releases and commit SHAs without third-party dependencies.
-  2. Communicates with Docker Engine API over `/var/run/docker.sock` to pull updated image layers.
-  3. Spawns transient self-updater helper process to gracefully recreate the container with identical volume mounts and port bindings.
-  4. Preserves running state and avoids premature healthcheck reloads during container restart.
+  1. Finds the newest image for the channel and pins it by digest.
+  2. Verifies that this project's CI signed exactly that digest (Sigstore bundle, `backend/services/image_signature.py`) before installing; `UPDATE_SIGNATURES=warn|off` relaxes this.
+  3. Snapshots the data folder when the version changes, and keeps the last Stable snapshot and the rollback image.
+  4. Recreates the container with the same mounts and ports through a helper, keeps the old one until the new one has reported healthy for 60 seconds, and rolls back otherwise; the result is shown as a notice and a notification.
 
 ### 2.9 Direct Userspace MMIO Fan Controller
 - **Target**: Physical register block at `0xFE0B0456` via `/dev/mem` (or `/host/dev/mem`).

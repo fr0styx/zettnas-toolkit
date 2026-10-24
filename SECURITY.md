@@ -4,10 +4,11 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 1.9.x (latest patch) | ✅ |
-| < 1.9.2 | ❌ Upgrade to 1.9.2 or later: earlier versions have known critical issues (see below). |
+| 1.10.x (latest patch) | ✅ On beta now; Stable once it finishes its 7-day soak |
+| 1.9.4 | ✅ Until 1.10 reaches Stable |
+| < 1.9.2 | ❌ Upgrade: earlier versions have known critical issues (see below). |
 
-Only the latest stable release (`:latest` / `:stable`) gets security fixes. The `:edge` channel follows `main` and may contain unreleased fixes.
+Security fixes go to the release on Stable (`:latest` / `:stable`) and to the newest beta. The `:edge` channel follows `main` and may contain unreleased fixes.
 
 ## Reporting a vulnerability
 
@@ -36,7 +37,7 @@ See [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md) for what ZettNAS defends agains
 
 
 - Change the initial `admin` password on first login (1.9.2 and later enforce this).
-- Don't publish the web UI (port 8080) or WebDAV (port 8084) to the internet; use a VPN or a reverse proxy with its own authentication.
+- Don't publish the web UI (port 8082) or WebDAV (port 8084) to the internet; use a VPN or a reverse proxy with its own authentication.
 - Leave WebDAV off unless you need it. Give WebDAV users their own accounts.
 - Mount the Docker socket only into ZettNAS, and never `chmod 666` it. ZettNAS reaches it through its allow-list proxy (see below).
 - Keep the appdata folder private: it holds the session-signing key and password hashes.

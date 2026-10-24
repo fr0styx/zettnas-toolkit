@@ -95,7 +95,7 @@ zettnas-toolkit/
 │   │   ├── styles/                 # CSS per area; 50-components.css holds the shared zn-* components
 │   │   └── components/             # Modular desktop components
 │   │       ├── dock.js             # macOS-style dock, window drag/snap, taskbar
-│   │       ├── management.js       # Mission Control (Containers, Storage, System, Alerts)
+│   │       ├── management.js       # Mission Control shell; each panel lives in management/*.js
 │   │       ├── container-modal.js  # Tabbed Container Inspector & Compose Stack editor
 │   │       ├── chassis-visualizer.js # Parametric 2.5D chassis SVG digital twin
 │   │       ├── auth.js             # Multi-user login chooser, 2FA challenge, auto-lock

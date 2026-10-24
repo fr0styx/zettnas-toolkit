@@ -124,12 +124,12 @@ Pixel Format: 32-bit BGRA (8 bits per channel)
 
 ### 4.2 Rendering Pipeline
 
-1. **Chromium Canvas Capture**: Playwright headless browser renders `index.html?mode=lcd` in headless Chromium with an upright portrait transform (`transform: rotate(90deg) translate(0, -172px)`).
+1. **Frame source** (`LCD_RENDERER`): the built-in renderer draws the page with Pillow and rotates it to the portrait panel; the Chromium renderer captures `index.html?mode=lcd` from headless Chromium, rendered with an upright portrait transform (`transform: rotate(90deg) translate(0, -172px)`).
 2. **Buffer Alignment**:
    - Padded row-stride to align with 704-byte hardware stride.
-   - Converted to 32-bit BGRA byte order.
+   - Converted to 32-bit BGRA, or to RGB565 on 16-bit framebuffers.
 3. **Memory-Mapped Framebuffer I/O**: Direct framebuffer memory map (`mmap.mmap`) writes pixel data with explicit `fb_mem.close()` in `finally` blocks to prevent descriptor leaks.
-4. **Crash Resiliency**: Exponential backoff (2s → 60s) for Chromium context restarts prevents CPU lockups during graphics/driver anomalies.
+4. **Crash Resiliency**: the Chromium renderer backs off from 2 s to 60 s between restarts; the built-in renderer has no browser to restart.
 5. **Backlight Control**: Display brightness is regulated via `/sys/class/backlight/*/brightness`.
 
 ---
