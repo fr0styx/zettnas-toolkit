@@ -1234,6 +1234,8 @@ async def fs_update_permissions(
             mode_int = int(req.mode_octal, 8)
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid octal mode string") from None
+        if not 0 <= mode_int <= 0o7777:
+            raise HTTPException(status_code=400, detail="A mode has at most four octal digits (0000-7777)")
 
     uid = -1
     gid = -1
