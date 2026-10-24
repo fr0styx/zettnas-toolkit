@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.confirmations import require_confirmation
+from backend.errors import ShownServerError
 from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.services.vm_engine import QmpEngine
 from backend.state import Z_STATE, add_event
@@ -1120,9 +1121,8 @@ async def execute_vm_action(
             target_vm["state"] = "stopped"
             target_vm["last_error"] = err_msg
             vm_qemu._save_vms(vms)
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to start virtual machine '{target_vm['name']}': {err_msg}",
+            raise ShownServerError(
+                f"Failed to start virtual machine '{target_vm['name']}': {err_msg}", error="vm_start_failed"
             )
         target_vm["state"] = "running"
         target_vm["last_error"] = None

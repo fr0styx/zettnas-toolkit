@@ -200,6 +200,20 @@ def body_limit_for(path: str) -> int:
     return config.MAX_BODY_BYTES
 
 
+API_SUNSET = "Wed, 30 Jun 2027 00:00:00 GMT"  # bare /api for API-token clients (ARCH-8)
+
+
+def api_deprecation_headers(path: str, token: str) -> dict[str, str]:
+    """API tokens calling the unversioned /api: point them to /api/v1. The web UI isn't affected."""
+    if not (token or "").startswith("zat_") or not path.startswith("/api/") or path.startswith("/api/v1/"):
+        return {}
+    return {
+        "Deprecation": "true",
+        "Sunset": API_SUNSET,
+        "Link": f'</api/v1/{path[len("/api/") :]}>; rel="successor-version"',
+    }
+
+
 class BodySizeLimit:
     """ASGI middleware that applies body_limit_for() to bodies sent without a Content-Length."""
 
@@ -519,6 +533,11 @@ async def auth_middleware(request: Request, call_next):
         request.state.session = sess
         request.state.user = sess
         request.state.token = token
+        deprecation = api_deprecation_headers(path, token)
+        if deprecation:
+            response = await call_next(request)
+            response.headers.update(deprecation)
+            return response
 
     return await call_next(request)
 

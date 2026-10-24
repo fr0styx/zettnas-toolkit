@@ -4,6 +4,12 @@ All routes are mounted at `/api` (with the versioned alias `/api/v1`). The daemo
 
 ---
 
+## Versions, errors and deprecation
+
+- **Use `/api/v1/…`.** It is the documented API (`/openapi.json`, `/docs` when enabled) for API tokens, Home Assistant and MCP clients. The same routes are also served under the bare `/api/…` for the web UI; that prefix is not documented. Requests with an API token to the bare `/api/…` get `Deprecation: true`, `Sunset: Wed, 30 Jun 2027` and a `Link` to the `/api/v1` route; after that date token clients must use `/api/v1`.
+- **Errors** always have the shape `{"error": "<slug>", "detail": "<message>", "code": <status>}`; validation errors add `errors: [{field, message}]`. Branch on `error`, show `detail`.
+- **500 errors** never carry internal error text. They add a `reference`; the full error is in the server log under that reference (include it when reporting a problem). A few failures that are meant for you, such as why a VM didn't start, keep their message and have their own `error` slug (e.g. `vm_start_failed`).
+
 ## Authentication & Authorization
 
 Protected endpoints enforce Role-Based Access Control (RBAC). The daemon accepts authentication through any of the following mechanisms:

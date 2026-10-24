@@ -448,12 +448,22 @@ app.include_router(redfish_router, prefix="/redfish/v1")
 app.include_router(redfish_router, prefix="/redfish")
 
 # Register API routers with backwards-compatible /api alias and modern /api/v1 prefix
-app.include_router(api_router, prefix="/api")
+# /api/v1 is the documented API (tokens, Home Assistant, MCP); /api serves the web UI and is
+# not in the OpenAPI document. Token clients on /api get Deprecation/Sunset headers (ARCH-8).
+app.include_router(api_router, prefix="/api", include_in_schema=False)
 app.include_router(api_router, prefix="/api/v1")
 
 
-@app.api_route("/api/{unmatched_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
-@app.api_route("/api/v1/{unmatched_path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
+@app.api_route(
+    "/api/{unmatched_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
+@app.api_route(
+    "/api/v1/{unmatched_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
 def api_route_not_found(unmatched_path: str):
     raise HTTPException(status_code=404, detail=f"API route '/api/{unmatched_path}' not found.")
 
