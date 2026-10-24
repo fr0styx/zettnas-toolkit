@@ -246,13 +246,15 @@ def is_model_2026_or_newer(m: dict[str, Any]) -> bool:
     if ts >= 1767225600.0:  # 2026-01-01T00:00:00Z
         return True
 
-    # Check date strings for pre-2026 years (2020-2025)
+    # The year of a date string ("2025-03-01T...", "Mar 01, 2025"), not any digits in it:
+    # fractional seconds such as ".201534" used to read as the year 2015
     for k in ("release_date", "release_date_str", "created_at", "createdAt"):
         val = str(m.get(k) or "").strip()
         if val:
-            if any(f"{yr}" in val for yr in range(2000, 2026)):
-                return False
-            if "2026" in val or "2027" in val or "Recent" in val:
+            year = re.match(r"^(\d{4})-", val) or re.search(r"\b(20\d{2})\b", val)
+            if year:
+                return int(year.group(1)) >= 2026
+            if "Recent" in val:
                 return True
 
     if 0.0 < ts < 1767225600.0:
@@ -297,14 +299,15 @@ def _estimate_hf_model_specs(
                         break
             if param_match:
                 params_b = float(param_match.group(1))
+            # embedding models first: "bge-small" or "all-MiniLM" are millions of parameters, not 14B or 3.8B
+            elif "embed" in repo_lower or "minilm" in repo_lower or "bge-" in repo_lower or "clip" in repo_lower:
+                params_b = 0.4
             elif "mini" in repo_lower:
                 params_b = 3.8
             elif "small" in repo_lower:
                 params_b = 14.0
             elif "large" in repo_lower:
                 params_b = 32.0
-            elif "embed" in repo_lower or "minilm" in repo_lower or "bge-" in repo_lower or "clip" in repo_lower:
-                params_b = 0.4
             else:
                 params_b = 7.0
 

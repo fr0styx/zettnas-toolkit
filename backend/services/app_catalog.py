@@ -51,31 +51,15 @@ COMMUNITY_SOURCES: list[dict[str, Any]] = [
 ]
 
 
-def normalize_category(cats: Any) -> str:
-    """Normalizes arbitrary template categories to ZettNAS standard categories."""
-    if isinstance(cats, str):
-        cats = [cats]
-    elif not isinstance(cats, list):
-        cats = []
-    lower = " ".join([str(c).lower() for c in cats])
-    if any(
-        w in lower for w in ("media", "video", "music", "audio", "streaming", "movie", "tv", "book", "podcast", "radio")
-    ):
-        return "media"
-    if any(w in lower for w in ("photo", "gallery", "image")):
-        return "photos"
-    if any(
-        w in lower
-        for w in ("cloud", "storage", "file", "sync", "backup", "drive", "document", "office", "notes", "wiki")
-    ):
-        return "cloud"
-    if any(w in lower for w in ("auto", "ai", "smart home", "iot", "home automation", "mqtt", "zigbee", "workflow")):
-        return "automation"
-    if any(w in lower for w in ("download", "torrent", "usenet", "p2p", "arr", "nzb")):
-        return "downloads"
-    if any(
-        w in lower
-        for w in (
+_CATEGORY_WORDS: list[tuple[str, tuple[str, ...]]] = [
+    ("media", ("media", "video", "music", "audio", "streaming", "movie", "tv", "book", "podcast", "radio")),
+    ("photos", ("photo", "gallery", "image")),
+    ("cloud", ("cloud", "storage", "file", "sync", "backup", "drive", "document", "office", "notes", "wiki")),
+    ("automation", ("auto", "ai", "smart home", "iot", "home automation", "mqtt", "zigbee", "workflow")),
+    ("downloads", ("download", "torrent", "usenet", "p2p", "arr", "nzb")),
+    (
+        "utilities",
+        (
             "util",
             "tool",
             "dns",
@@ -90,9 +74,34 @@ def normalize_category(cats: Any) -> str:
             "finance",
             "admin",
             "dev",
-        )
-    ):
-        return "utilities"
+        ),
+    ),
+]
+
+
+def _category_word_re(word: str) -> re.Pattern[str]:
+    # Short words only at the start of a word: "ai" is not in "email" or "container",
+    # "tv" not in "ntvdm"; "arr" is the end of a name (Sonarr, Radarr), not "array".
+    if word == "arr":
+        return re.compile(r"[a-z]arr\b")
+    if len(word) <= 3:
+        return re.compile(r"\b" + re.escape(word))
+    return re.compile(re.escape(word))
+
+
+_CATEGORY_RES = [(cat, [_category_word_re(w) for w in words]) for cat, words in _CATEGORY_WORDS]
+
+
+def normalize_category(cats: Any) -> str:
+    """Normalizes arbitrary template categories to ZettNAS standard categories."""
+    if isinstance(cats, str):
+        cats = [cats]
+    elif not isinstance(cats, list):
+        cats = []
+    lower = " ".join([str(c).lower() for c in cats])
+    for cat, patterns in _CATEGORY_RES:
+        if any(p.search(lower) for p in patterns):
+            return cat
     return "other"
 
 
@@ -188,11 +197,10 @@ def parse_portainer_volumes(raw_vols: Any) -> dict[str, str]:
                         key = f"{key}_{len(vol_dict) + 1}"
                     vol_dict[key] = target
             elif isinstance(v, str) and ":" in v:
-                parts = v.split(":")
-                target = parts[1]
-                key = target.strip("/").split("/")[-1] or "data"
-                key = re.sub(r"[^a-zA-Z0-9_]+", "_", key).lower()
-                vol_dict[key] = target
+                # host:container[:mode]; two folders with the same name both stay
+                target = v.split(":")[1]
+                if target.startswith("/"):
+                    vol_dict[_vol_key_for(target, vol_dict)] = target
     elif isinstance(raw_vols, dict):
         vol_dict = sanitize_volume_map(raw_vols)
     if not vol_dict:

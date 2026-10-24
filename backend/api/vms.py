@@ -163,8 +163,20 @@ class VmUpdateRequest(BaseModel):
     pci_passthrough: list[dict[str, Any]] | None = None
 
 
+SNAPSHOT_NAME_PATTERN = r"^[a-zA-Z0-9_-]{1,64}$"
+
+
+def _snapshot_name(raw: str) -> str:
+    """A snapshot name from the URL, held to the rule names are created with: it goes into
+    QEMU monitor and qemu-img commands, where a space or a leading dash would change them."""
+    name = str(raw or "").strip()
+    if not re.fullmatch(SNAPSHOT_NAME_PATTERN, name) or name.startswith("-"):
+        raise HTTPException(status_code=400, detail="Invalid snapshot name.")
+    return name
+
+
 class VmSnapshotCreateRequest(BaseModel):
-    name: str = Field(..., pattern=r"^[a-zA-Z0-9_-]{1,64}$", description="Snapshot tag/name")
+    name: str = Field(..., pattern=SNAPSHOT_NAME_PATTERN, description="Snapshot tag/name")
     description: str | None = Field(None, max_length=256)
 
 
@@ -1454,6 +1466,11 @@ def _save_vm_snapshots_metadata(vm_id: str, data: dict[str, Any]):
         logger.warning(f"[VM-{vm_id}] Failed saving snapshots metadata: {e}")
 
 
+_QEMU_IMG_SNAPSHOT_LINE = re.compile(
+    r"^\s*\S+\s+\S+\s+(?P<size>[\d.]+\s*[KMGTPE]?i?B)\s+(?P<date>\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})"
+)
+
+
 def _list_qcow2_snapshots(disk_path: str) -> list[dict[str, Any]]:
     if not os.path.exists(disk_path):
         return []
@@ -1479,8 +1496,10 @@ def _list_qcow2_snapshots(disk_path: str) -> list[dict[str, Any]]:
                 if len(parts) >= 2:
                     snap_id = parts[0]
                     snap_tag = parts[1]
-                    vm_size = parts[2] if len(parts) > 2 else "0 B"
-                    date_str = " ".join(parts[3:5]) if len(parts) >= 5 else ""
+                    # the size is two words ("0 B", "512 MiB"), then the date and time
+                    m = _QEMU_IMG_SNAPSHOT_LINE.match(line)
+                    vm_size = m.group("size") if m else "0 B"
+                    date_str = m.group("date") if m else ""
                     snapshots.append(
                         {
                             "id": snap_id,
@@ -1548,7 +1567,7 @@ async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    name = req.name.strip()
+    name = _snapshot_name(req.name)
     is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
     vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
@@ -1600,7 +1619,7 @@ async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    name = snapshot_name.strip()
+    name = _snapshot_name(snapshot_name)
     is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
     vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
@@ -1646,7 +1665,7 @@ async def delete_vm_snapshot(vm_id: str, snapshot_name: str):
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    name = snapshot_name.strip()
+    name = _snapshot_name(snapshot_name)
     is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
     vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")

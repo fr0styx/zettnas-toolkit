@@ -669,6 +669,41 @@ def delete_token(token_id: str, principal: AuthenticatedPrincipal = Depends(get_
     raise HTTPException(status_code=404, detail="Token not found or unauthorized to revoke.")
 
 
+REBOOT_TRIGGERS = (
+    ("/host/reboot",),
+    ("/usr/local/sbin/reboot",),
+    ("reboot",),
+    ("shutdown", "-r", "now"),
+)
+POWEROFF_TRIGGERS = (
+    ("/host/powerdown",),
+    ("/usr/local/sbin/powerdown",),
+    ("/sbin/poweroff",),
+    ("poweroff",),
+    ("shutdown", "-h", "now"),
+)
+SYSRQ_TRIGGER = "/proc/sysrq-trigger"
+
+
+def _sysrq_power(action: str) -> bool:
+    """Last resort: the kernel's emergency keys. They act at once, so the disks are flushed
+    (s) and switched to read-only (u) first; otherwise unwritten data would be lost."""
+    if not os.path.exists(SYSRQ_TRIGGER):
+        return False
+    try:
+        os.sync()
+        for key in ("s", "u"):
+            with open(SYSRQ_TRIGGER, "w") as f:
+                f.write(key)
+            time.sleep(1.0)
+        with open(SYSRQ_TRIGGER, "w") as f:
+            f.write("b" if action == "reboot" else "o")
+        return True
+    except Exception as e:
+        logger.debug(f"[Power] Sysrq fallback failed: {e}")
+        return False
+
+
 def trigger_power_action(action: str) -> bool:
     """
     Triggers host system reboot or shutdown.
@@ -678,48 +713,17 @@ def trigger_power_action(action: str) -> bool:
         logger.info(f"[Power] Test mode active; harmlessly mocked host trigger for '{action}'")
         return True
 
-    if action == "reboot":
-        triggers = [
-            ["/host/reboot"],
-            ["/usr/local/sbin/reboot"],
-            ["reboot"],
-            ["shutdown", "-r", "now"],
-        ]
-    else:
-        triggers = [
-            ["/host/powerdown"],
-            ["/usr/local/sbin/powerdown"],
-            ["/sbin/poweroff"],
-            ["poweroff"],
-            ["shutdown", "-h", "now"],
-        ]
-
-    for cmd in triggers:
+    for cmd in REBOOT_TRIGGERS if action == "reboot" else POWEROFF_TRIGGERS:
         bin_path = cmd[0]
-        if os.path.exists(bin_path) and os.access(bin_path, os.X_OK):
+        if (os.path.exists(bin_path) and os.access(bin_path, os.X_OK)) or shutil.which(bin_path):
             try:
-                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                logger.info(f"[Power] Executed host trigger: {cmd}")
+                subprocess.Popen(list(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                logger.info(f"[Power] Executed host trigger: {list(cmd)}")
                 return True
             except Exception as e:
-                logger.error(f"[Power] Failed executing host trigger {cmd}: {e}")
-        elif shutil.which(bin_path):
-            try:
-                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                logger.info(f"[Power] Executed command: {cmd}")
-                return True
-            except Exception as e:
-                logger.error(f"[Power] Failed executing command {cmd}: {e}")
+                logger.error(f"[Power] Failed executing host trigger {list(cmd)}: {e}")
 
-    try:
-        if os.path.exists("/proc/sysrq-trigger"):
-            with open("/proc/sysrq-trigger", "w") as f:
-                f.write("b" if action == "reboot" else "o")
-            return True
-    except Exception as e:
-        logger.debug(f"[Power] Sysrq fallback failed: {e}")
-
-    return False
+    return _sysrq_power(action)
 
 
 @router.post(

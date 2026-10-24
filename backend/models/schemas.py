@@ -137,7 +137,8 @@ class EjectMediaRequest(BaseModel):
 
 
 class CopyConfirmRequest(BaseModel):
-    action: str = Field(..., description="'skip', 'overwrite', or 'cancel'")
+    # anything but skip or cancel used to mean overwrite, so a typo replaced files
+    action: str = Field(..., pattern="^(skip|overwrite|cancel)$", description="'skip', 'overwrite', or 'cancel'")
 
 
 class WallpaperSelectRequest(BaseModel):
