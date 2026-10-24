@@ -30,3 +30,14 @@ def test_linux_compose_caps_container_logs():
     for name in ("zettnas-toolkit", "zettnas-samba"):
         opts = services[name]["logging"]["options"]
         assert opts["max-size"] and opts["max-file"], name
+
+
+def test_images_get_tags_only_after_the_gates():
+    jobs = yaml.safe_load(_read(".github/workflows/ci.yml"))["jobs"]
+    steps = jobs["build-and-push"]["steps"]
+    names = [s.get("name", "") for s in steps]
+    build = next(s for s in steps if s.get("id") == "build")
+    assert "push-by-digest=true" in build["with"]["outputs"] and "tags" not in build["with"]
+    publish = next(i for i, n in enumerate(names) if n.startswith("Publish tags"))
+    for gate in ("Smoke-test", "Scan image with Trivy", "Sign image digest"):
+        assert next(i for i, n in enumerate(names) if n.startswith(gate)) < publish, gate

@@ -280,14 +280,14 @@ jobs:
             type=sha,format=short
 
       # Push under the commit tag only; the public tags are added after the scan and signature.
-      - name: Build and push Multi-Arch Docker image (commit tag)
+      # Pushed by digest only: no tag points at it until the smoke test, scan and signing pass (OPS-1)
+      - name: Build and push Multi-Arch Docker image (by digest)
         id: build
         uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}${{ matrix.suffix }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VARIANT=${{ matrix.variant }}

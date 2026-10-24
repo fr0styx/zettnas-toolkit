@@ -1195,6 +1195,16 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
 
     logger.info(f"[System Update] User initiated system update on '{channel}' channel using image '{target_img}'...")
 
+    # 0. The digest the registry serves for this tag right now: the pulled image must be exactly
+    #    that one, so the tag can't move between the check and the download (OPS-1)
+    expected_digest = None
+    tag = target_img.rsplit(":", 1)[1] if ":" in target_img.split("/")[-1] else "latest"
+    if "@" not in target_img:
+        try:
+            expected_digest = await _registry_digest(tag)
+        except Exception as exc:
+            logger.warning(f"[System Update] Could not look up the digest for '{tag}': {exc}")
+
     # 1. Pull the image
     try:
         await asyncio.to_thread(pull_container_image, target_img, 300.0)
@@ -1210,6 +1220,11 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         logger.warning(f"[System Update] Could not inspect the pulled image: {exc}")
     if not pulled:
         raise HTTPException(status_code=502, detail=f"The downloaded image is not from {_IMAGE_REPO}; not updating.")
+    if expected_digest and expected_digest not in pulled:
+        raise HTTPException(
+            status_code=409,
+            detail="The image changed while it was downloading (a new build was published). Check for updates again.",
+        )
 
     # 2. Check if running inside container with docker socket access
     sock_path = docker_sock()

@@ -92,6 +92,17 @@ def _auto_confirm_destructive_actions(request, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_registry_lookups(monkeypatch):
+    """Tests never ask the real registry; tests that need a digest set their own."""
+    from backend.api import system
+
+    async def _unknown(tag):
+        return None
+
+    monkeypatch.setattr(system, "_registry_digest", _unknown)
+
+
+@pytest.fixture(autouse=True)
 def _fresh_smart_velocity_cache():
     from backend import db
 
