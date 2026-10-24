@@ -40,8 +40,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # The exact, hash-checked set the image ships, then the test tools (ARCH-13)
+          pip install --require-hashes -r requirements.lock
           pip install -r requirements-dev.txt
-          pip install httpx playwright
+          python scripts/check_lock_versions.py
 
       - name: Run Ruff Lint
         run: ruff check app.py backend tests scripts
@@ -132,8 +134,9 @@ jobs:
       - name: Install Python dependencies & Playwright
         run: |
           python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements.lock
           pip install -r requirements-dev.txt
-          pip install httpx playwright
+          python scripts/check_lock_versions.py
           python -m playwright install --with-deps chromium
           # Run Playwright on the patched Node.js from setup-node, not its bundled copy
           echo "PLAYWRIGHT_NODEJS_PATH=$(command -v node)" >> "$GITHUB_ENV"
