@@ -1,0 +1,24 @@
+/* Phone mode (UX-13): a launcher, one full-screen page at a time, tabs at the bottom */
+.phone-shell #os-dock-container { display: none; }
+.phone-shell .os-window, .phone-shell .file-manager-window, .phone-shell #management-window, .phone-shell #containers-manager-window, .phone-shell #notif-center-panel {
+  position: fixed;
+  inset: 48px 0 calc(60px + env(safe-area-inset-bottom)) 0;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  border-radius: 0;
+}
+.phone-launcher { position: fixed; inset: 48px 0 calc(60px + env(safe-area-inset-bottom)) 0; overflow-y: auto; padding: var(--zn-space-3); z-index: 5000; background: var(--bg); }
+.phone-launcher[hidden] { display: none; }
+.phone-launcher-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--zn-space-3); }
+.phone-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--zn-space-1); min-height: 92px; border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); background: var(--card); color: var(--fg); font-size: var(--zn-fs-sm); font-weight: 600; }
+.phone-tile .ic { width: 28px; height: 28px; }
+.phone-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10050; display: grid; grid-template-columns: repeat(5, 1fr); padding-bottom: env(safe-area-inset-bottom); background: rgba(10, 14, 19, 0.96); border-top: 1px solid var(--zn-line-strong); }
+.phone-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 60px; background: none; border: none; color: var(--muted); font-size: var(--zn-fs-xs); }
+.phone-tab .ic { width: 22px; height: 22px; }
+.phone-tab.is-current { color: var(--brand); }
+.phone-back { position: fixed; top: 6px; left: 8px; z-index: 10060; min-height: 40px; padding: 0 var(--zn-space-3); border-radius: 20px; border: 1px solid var(--zn-line-strong); background: rgba(10, 14, 19, 0.92); color: var(--fg); font-size: var(--zn-fs); font-weight: 600; }
+.phone-back[hidden] { display: none; }
+body.theme-light .phone-tabs, body.theme-light .phone-back { background: rgba(255, 255, 255, 0.96); }
+.phone-shell .getting-started-card { display: none; }
