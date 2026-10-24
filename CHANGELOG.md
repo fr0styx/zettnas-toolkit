@@ -1,6 +1,9 @@
 # ZettNAS Toolkit - Release Changelog
 
-## Unreleased
+## v1.10.1 (2026-10-24)
+### 🛡️ Safer usernames and media import
+
+Fixes for 1.10.0. Nothing to do before upgrading.
 
 #### Security
 
@@ -14,6 +17,8 @@
 - Cancelling a RAID scrub no longer interrupts the rebuild of a replaced disk.
 - Btrfs volumes count as protected only with a redundant profile (raid1, raid10, raid5, raid6).
 - Your private folder shows up the first time you open `homes`.
+
+---
 
 ## v1.10.0 (2026-10-24)
 ### 🗂️ Snapshots, offsite backup and family accounts; safer updates; a phone mode and a readable light theme
