@@ -36,6 +36,17 @@ def db_session():
             conn.close()
 
 
+@contextmanager
+def db_read_session():
+    """A connection for reads only, without the global write lock: WAL lets readers run
+    alongside the writer, so history and SMART queries don't queue behind writes (ARCH-7)."""
+    conn = get_db_connection()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
 _LAST_PRUNE_TS: int = 0
 
 # One connection kept open for the history writers (metrics, SMART): no connect and PRAGMAs
@@ -283,7 +294,7 @@ def log_metrics(
 def query_history(range_str: str = "24h"):
     now_ts = int(time.time())
 
-    with db_session() as conn:
+    with db_read_session() as conn:
         conn.row_factory = sqlite3.Row
         cur = conn.execute("PRAGMA table_info(metrics)")
         cols = {row[1] for row in cur.fetchall()}
@@ -936,7 +947,7 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
     try:
         if conn is not None:
             return _cached(conn)
-        with db_session() as new_conn:
+        with db_read_session() as new_conn:
             return _cached(new_conn)
     except Exception as db_e:
         logger.info(f"[ZettNAS] DB Query SMART Velocity Error: {db_e}")

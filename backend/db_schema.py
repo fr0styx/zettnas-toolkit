@@ -11,26 +11,40 @@ Each database records its schema version in `PRAGMA user_version`. On start:
 - after the init code has created or upgraded the tables, each database is
   stamped with the version this code writes.
 
-When a release changes a table, bump its number here and add the upgrade step
-to that database's init code.
+Changing a table (ARCH-7): append a migration function to that database's list in
+MIGRATIONS. Never edit or remove one that has shipped. MIGRATIONS[name][i] upgrades
+schema v(i+1) to v(i+2); v1 is what the init code creates. Each migration runs in
+its own transaction together with the version bump, so a failed one changes nothing.
 """
 
 import logging
 import os
 import time
+from collections.abc import Callable
 
 from backend import config, db_crypto
 from backend.db_crypto import DataKeyError, sqlite3
 
 logger = logging.getLogger("ZettNAS")
 
-# name -> (schema version this code writes, can it be rebuilt from scratch?)
-SCHEMA_VERSIONS: dict[str, tuple[int, bool]] = {
-    "users.db": (1, False),
-    "history.db": (1, False),
-    "ai_conversations.db": (1, False),
-    "rag_index.db": (1, True),
+Migration = Callable[[sqlite3.Connection], None]
+
+# Numbered migrations per database, in order (see the module docstring)
+MIGRATIONS: dict[str, list[Migration]] = {
+    "users.db": [],
+    "history.db": [],
+    "ai_conversations.db": [],
+    "rag_index.db": [],
 }
+REBUILDABLE = {"rag_index.db"}
+
+
+def _versions() -> dict[str, tuple[int, bool]]:
+    return {name: (1 + len(steps), name in REBUILDABLE) for name, steps in MIGRATIONS.items()}
+
+
+# name -> (schema version this code writes, can it be rebuilt from scratch?)
+SCHEMA_VERSIONS: dict[str, tuple[int, bool]] = _versions()
 
 
 class NewerDatabaseError(RuntimeError):
@@ -85,20 +99,42 @@ def check_versions(data_dir: str = "") -> list[str]:
     return moved
 
 
+def migrate(name: str, path: str) -> int:
+    """Brings one database to the version this code writes; returns that version."""
+    steps = MIGRATIONS.get(name, [])
+    conn = db_crypto.connect(path, timeout=15.0)
+    try:
+        version = int(conn.execute("PRAGMA user_version").fetchone()[0])
+        if version == 0:  # just created by the init code, which writes v1
+            conn.execute("PRAGMA user_version = 1")
+            conn.commit()
+            version = 1
+        for index in range(version - 1, len(steps)):
+            target = index + 2
+            try:
+                conn.execute("BEGIN IMMEDIATE")
+                steps[index](conn)
+                conn.execute(f"PRAGMA user_version = {target}")
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                logger.critical(f"[DB Schema] Migration of {name} to v{target} failed; it stays at v{target - 1}")
+                raise
+            logger.info(f"[DB Schema] {name} migrated to schema v{target}")
+            version = target
+        return version
+    finally:
+        conn.close()
+
+
 def stamp_versions(data_dir: str = "") -> None:
-    """Records the current schema version in every database that is older."""
+    """Runs pending migrations and records the schema version in every existing database."""
     base = data_dir or config.DATA_DIR
-    for name, (known, _rebuildable) in SCHEMA_VERSIONS.items():
+    for name in SCHEMA_VERSIONS:
         path = _path(name, base)
         if not os.path.exists(path):
             continue
         try:
-            conn = db_crypto.connect(path, timeout=15.0)
-            try:
-                if int(conn.execute("PRAGMA user_version").fetchone()[0]) < known:
-                    conn.execute(f"PRAGMA user_version = {int(known)}")
-                    conn.commit()
-            finally:
-                conn.close()
+            migrate(name, path)
         except (sqlite3.Error, DataKeyError) as e:
-            logger.warning(f"[DB Schema] Could not stamp {name}: {e}")
+            logger.warning(f"[DB Schema] Could not migrate {name}: {e}")
