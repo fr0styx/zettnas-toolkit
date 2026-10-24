@@ -83,7 +83,7 @@ export async function openShareAccessModal() {
       <div class="smart-modal-body">
         <div id="share-access-body">${buildShareAccessHtml(data, plain)}</div>
         <div style="display:flex; justify-content:flex-end; gap:8px;">
-          <button type="button" id="share-access-cancel" class="btn-pill-toggle" style="padding:6px 12px; font-size:11px;">Cancel</button>
+          <button type="button" id="share-access-cancel" class="btn-pill-toggle">Cancel</button>
           <button type="button" id="share-access-save" class="btn-save-preset" style="padding:6px 14px; font-size:11.5px;">Save</button>
         </div>
       </div>

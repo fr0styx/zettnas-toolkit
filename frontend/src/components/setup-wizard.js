@@ -53,12 +53,12 @@ export function initWizardStepper(modal) {
   if (body) body.insertBefore(steps, body.firstChild);
   const back = document.createElement('button');
   back.type = 'button';
-  back.className = 'setup-step-nav';
+  back.className = 'btn-pill-toggle setup-step-nav';
   back.id = 'setup-wizard-back';
   back.textContent = t('setup.back', 'Back');
   const next = document.createElement('button');
   next.type = 'button';
-  next.className = 'setup-step-nav';
+  next.className = 'btn-pill-toggle is-primary setup-step-nav';
   next.id = 'setup-wizard-next';
   next.textContent = t('setup.next', 'Next');
   const submit = document.getElementById('setup-wizard-submit');

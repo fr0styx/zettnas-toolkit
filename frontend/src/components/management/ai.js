@@ -49,7 +49,7 @@ export function renderAiSearchHistory() {
   }
   bar.style.display = 'flex';
   chipsContainer.innerHTML = _aiSearchHistory.map((q) => `
-    <button type="button" class="btn-pill-toggle ai-history-chip" data-query="${escapeHtml(q)}" style="font-size:11px; padding:2px 8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); color:#cbd5e1; cursor:pointer;">
+    <button type="button" class="btn-pill-toggle ai-history-chip is-small" data-query="${escapeHtml(q)}" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1;">
       ${escapeHtml(q)}
     </button>
   `).join('');
@@ -322,12 +322,12 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
             ${isAct
               ? `<span style="font-size:11px; font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
               : (m.installed === false && m.ollama_tag && m.ollama_tag !== 'builtin-npu')
-                ? `<button type="button" class="btn-pill-toggle btn-ai-install-model" data-model-id="${escapeHtml(m.id)}" data-model-tag="${escapeHtml(m.ollama_tag)}" title="${escapeHtml(t('ai.install_model_title', 'Download this model into Ollama'))}" style="font-size:11px; font-weight:700; padding:2px 9px; background:rgba(250,204,21,0.18); border:1px solid rgba(250,204,21,0.48); color:#fde047; cursor:pointer;">⬇️ ${escapeHtml(t('ai.install_model', 'Install'))}</button>`
+                ? `<button type="button" class="btn-pill-toggle btn-ai-install-model is-small" data-model-id="${escapeHtml(m.id)}" data-model-tag="${escapeHtml(m.ollama_tag)}" title="${escapeHtml(t('ai.install_model_title', 'Download this model into Ollama'))}" style="background: rgba(250,204,21,0.18); border: 1px solid rgba(250,204,21,0.48); color: #fde047;">⬇️ ${escapeHtml(t('ai.install_model', 'Install'))}</button>`
               : isLiveHfResult
                 ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:11px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`
                 : `<button type="button" class="btn-pill-toggle btn-ai-activate-model" data-model-id="${escapeHtml(m.id)}" style="font-size:11px; font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.16)' : 'rgba(14,165,233,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(14,165,233,0.45)'}; color:${hasWarn ? '#fbbf24' : '#38bdf8'}; cursor:pointer;">${hasWarn ? '⚠️ Activate Anyway' : '⚡ Activate'}</button>`
             }
-            <button type="button" class="btn-pill-toggle btn-ai-remove-model" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="Remove model from catalog and disk" aria-label="Remove model ${escapeHtml(m.name)}" style="font-size:11px; font-weight:700; padding:2px 7px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35); color:#fca5a5; cursor:pointer;">🗑️</button>
+            <button type="button" class="btn-pill-toggle btn-ai-remove-model is-danger is-small" data-model-id="${escapeHtml(m.id)}" data-model-name="${escapeHtml(m.name)}" title="Remove model from catalog and disk" aria-label="Remove model ${escapeHtml(m.name)}">🗑️</button>
           </div>
         </div>
       </div>
@@ -1975,7 +1975,7 @@ export async function fetchAndRenderAiStatus() {
         <div>• <strong>Deferred Standby Queue:</strong> ${defCount} path(s) waiting for drive wake${defDetail}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <span>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
-          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle" style="padding:2px 8px; font-size:11px; font-weight:700; color:#fca5a5; border:1px solid rgba(239,68,68,0.35); background:rgba(239,68,68,0.12); border-radius:6px; cursor:pointer;" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
+          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh"><span>🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
         </div>
       `;
       const flushLink = dbSummary.querySelector('#btn-ai-flush-index-link');
@@ -2158,7 +2158,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
             <span>${res.elapsed_ms || llmTel.elapsed_ms || 0} ms</span>
             <span>•</span>
             <span style="color: #6ee7b7;">💤 Standby Safe</span>
-            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle" style="font-size: 11px; padding: 2px 7px; margin-left: 4px; cursor: pointer;" title="Hide synthesis card">✕</button>
+            <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle is-small" style="margin-left: 4px;" title="Hide synthesis card">✕</button>
           </div>
         </div>
         <div style="font-size: 12px; color: #f1f5f9; line-height: 1.55; max-height: 150px; overflow-y: auto;">
@@ -2278,7 +2278,7 @@ export function renderAiPreviewInspector(item) {
       <div style="font-weight:800; font-size:12.5px; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(fName)}">
         ${escapeHtml(fName)}
       </div>
-      <button type="button" id="btn-ai-inspector-close" class="btn-pill-toggle" style="font-size:11px; padding:2px 7px; cursor:pointer;">✕</button>
+      <button type="button" id="btn-ai-inspector-close" class="btn-pill-toggle is-small">✕</button>
     </div>
     ${isPhoto
       ? `<div style="height:170px; border-radius:8px; background:rgba(0,0,0,0.45); overflow:hidden; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">
@@ -2293,19 +2293,19 @@ export function renderAiPreviewInspector(item) {
     </div>
     <!-- 5 Official ZettAI File Actions (#apps/zettai/search) -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-      <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="font-size:11px; padding:6px 8px; font-weight:700; background:rgba(14,165,233,0.22); border:1px solid rgba(14,165,233,0.5); color:#fff; cursor:pointer;">
+      <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: #fff;">
         👁️ Open File
       </button>
-      <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="font-size:11px; padding:6px 8px; font-weight:700; background:rgba(37,194,160,0.18); border:1px solid rgba(37,194,160,0.45); color:#6ee7b7; cursor:pointer;" title="Open parent folder in File Manager">
+      <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: #6ee7b7;" title="Open parent folder in File Manager">
         📂 Open Location
       </button>
-      <button type="button" id="btn-ai-inspector-download" class="btn-pill-toggle" style="font-size:11px; padding:6px 8px; cursor:pointer;">
+      <button type="button" id="btn-ai-inspector-download" class="btn-pill-toggle">
         ⬇️ Download
       </button>
       <button type="button" id="btn-ai-inspector-favorite" class="btn-pill-toggle" style="font-size:11px; padding:6px 8px; cursor:pointer; color:${isFav ? '#fbbf24' : '#cbd5e1'};">
         ${isFav ? '⭐ Favorited' : '☆ Favorite'}
       </button>
-      <button type="button" id="btn-ai-inspector-share" class="btn-pill-toggle" style="grid-column:1 / -1; font-size:11px; padding:6px 8px; cursor:pointer;">
+      <button type="button" id="btn-ai-inspector-share" class="btn-pill-toggle" style="grid-column: 1 / -1;">
         🔗 Share File Path / Link
       </button>
     </div>

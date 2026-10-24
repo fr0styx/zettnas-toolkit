@@ -12,7 +12,7 @@ export function emptyStateHtml({ icon = '', title, body = '', action = null, com
       ? ` data-action="click-target" data-target="${escapeHtml(action.target)}"`
       : '';
     const id = action.id ? ` id="${escapeHtml(action.id)}"` : '';
-    button = `<button type="button" class="empty-state-action"${id}${attrs}>${escapeHtml(action.label)}</button>`;
+    button = `<button type="button" class="btn-pill-toggle is-primary empty-state-action"${id}${attrs}>${escapeHtml(action.label)}</button>`;
   }
   return `<div class="empty-state${compact ? ' is-compact' : ''}" role="status">
     ${icon ? `<div class="empty-state-icon" aria-hidden="true">${icon}</div>` : ''}

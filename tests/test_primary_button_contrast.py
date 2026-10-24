@@ -15,7 +15,7 @@ def test_no_white_text_on_brand_backgrounds():
     files = [
         FRONTEND / "index.html",
         *FRONTEND.glob("src/windows/*.html"),
-        *FRONTEND.glob("src/components/*.js"),
+        *FRONTEND.glob("src/components/**/*.js"),
         *FRONTEND.glob("src/*.js"),
     ]
     offenders = []

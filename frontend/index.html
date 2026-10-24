@@ -1116,10 +1116,10 @@
 
       <!-- Action Buttons -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
-        <button id="btn-diag-preview-copy" type="button" class="btn-pill-toggle" style="background: rgba(37,194,160,0.2); border-color: rgba(37,194,160,0.4); color: #fff; font-weight: 700; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+        <button id="btn-diag-preview-copy" type="button" class="btn-pill-toggle" style="background: rgba(37,194,160,0.2); border-color: rgba(37,194,160,0.4); color: #fff;">
           📋 <span data-i18n="diagnostics.copy_btn">Copy Markdown to Clipboard</span>
         </button>
-        <button id="btn-diag-preview-close" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;" data-i18n="diagnostics.close_btn">
+        <button id="btn-diag-preview-close" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #cbd5e1;" data-i18n="diagnostics.close_btn">
           Close
         </button>
       </div>
@@ -1161,7 +1161,7 @@
               Deploy automated SSL reverse proxies with Let's Encrypt certificates directly via the Apps & Containers Catalog.
             </div>
           </div>
-          <button type="button" id="btn-https-guide-apps" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.4); color: var(--brand, #38bdf8); font-weight: 700; font-size: 11px; padding: 6px 14px; white-space: nowrap;">
+          <button type="button" id="btn-https-guide-apps" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.4); color: var(--brand, #38bdf8);">
             <span data-i18n="sec.btn_open_apps">Open Apps Catalog →</span>
           </button>
         </div>
@@ -1176,7 +1176,7 @@
           </div>
           <div style="display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 6px 10px;">
             <code style="font-family: monospace; font-size: 11px; color: #38bdf8; flex: 1; user-select: all;">tailscale serve --https=443 127.0.0.1:8082</code>
-            <button type="button" id="btn-copy-tailscale-serve" class="btn-pill-toggle" style="font-size: 11px; padding: 3px 8px; white-space: nowrap;">📋 Copy</button>
+            <button type="button" id="btn-copy-tailscale-serve" class="btn-pill-toggle is-small">📋 Copy</button>
           </div>
         </div>
 
@@ -1190,7 +1190,7 @@
               Inspect listening TCP ports (80, 443, 8082) and configure host reverse proxy port forwards.
             </div>
           </div>
-          <button type="button" id="btn-https-guide-ports" class="btn-pill-toggle" style="background: rgba(37,194,160,0.15); border-color: rgba(37,194,160,0.4); color: var(--ok2, #25c2a0); font-weight: 700; font-size: 11px; padding: 6px 14px; white-space: nowrap;">
+          <button type="button" id="btn-https-guide-ports" class="btn-pill-toggle" style="background: rgba(37,194,160,0.15); border-color: rgba(37,194,160,0.4); color: var(--ok2, #25c2a0);">
             <span data-i18n="sec.btn_open_ports">Open Network Ports →</span>
           </button>
         </div>
@@ -1198,7 +1198,7 @@
 
       <!-- Action Buttons -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
-        <button id="btn-modal-https-guide-close" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #cbd5e1; padding: 7px 16px; border-radius: 6px; cursor: pointer;">
+        <button id="btn-modal-https-guide-close" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); color: #cbd5e1;">
           Close
         </button>
       </div>
@@ -1403,7 +1403,7 @@
       <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
         <div style="display: flex; align-items: center; justify-content: space-between; grid-column: span 2;">
           <div><span style="color: var(--muted);">MAC:</span> <span id="net-port-ro-mac" style="font-family: var(--font-mono, monospace); color: #cbd5e1;">--</span></div>
-          <button type="button" id="btn-copy-port-mac" class="btn-pill-toggle" style="font-size: 11px; padding: 2px 8px; height: 22px; display: inline-flex; align-items: center; gap: 4px;" title="Copy MAC address for Wake-on-LAN Magic Packet dispatch">
+          <button type="button" id="btn-copy-port-mac" class="btn-pill-toggle is-small" title="Copy MAC address for Wake-on-LAN Magic Packet dispatch">
             <span>📋</span> <span data-i18n="net.copy_mac">Copy MAC</span>
           </button>
         </div>
@@ -1415,7 +1415,7 @@
       <!-- Action buttons -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button id="net-port-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-port-cfg-save-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+        <button id="net-port-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_port_cfg">Save & Apply</span>
         </button>
       </div>
@@ -1461,7 +1461,7 @@
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button id="net-docker-create-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-docker-create-submit-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+        <button id="net-docker-create-submit-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.create_btn">+ Create Network</span>
         </button>
       </div>
@@ -1486,8 +1486,8 @@
       <div>
         <label style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.host_proto_label">IPv4 Assignment Protocol</label>
         <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn-pill-toggle net-proto-btn active" data-proto="static" id="net-proto-btn-static" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.proto_static">Static IP Configuration</button>
-          <button type="button" class="btn-pill-toggle net-proto-btn" data-proto="dhcp" id="net-proto-btn-dhcp" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.proto_dhcp">DHCP (Auto-Assign)</button>
+          <button type="button" class="btn-pill-toggle net-proto-btn active" data-proto="static" id="net-proto-btn-static" style="flex: 1;" data-i18n="net.proto_static">Static IP Configuration</button>
+          <button type="button" class="btn-pill-toggle net-proto-btn" data-proto="dhcp" id="net-proto-btn-dhcp" style="flex: 1;" data-i18n="net.proto_dhcp">DHCP (Auto-Assign)</button>
         </div>
       </div>
 
@@ -1532,9 +1532,9 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
           <label style="font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px;" data-i18n="net.dns1_label">DNS Nameservers</label>
           <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-            <button type="button" class="btn-pill-toggle net-dns-preset" data-dns1="1.1.1.1" data-dns2="1.0.0.1" style="font-size: 11px; padding: 2px 6px;">Cloudflare</button>
-            <button type="button" class="btn-pill-toggle net-dns-preset" data-dns1="8.8.8.8" data-dns2="8.8.4.4" style="font-size: 11px; padding: 2px 6px;">Google</button>
-            <button type="button" class="btn-pill-toggle net-dns-preset" data-dns1="9.9.9.9" data-dns2="149.112.112.112" style="font-size: 11px; padding: 2px 6px;">Quad9</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="1.1.1.1" data-dns2="1.0.0.1">Cloudflare</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="8.8.8.8" data-dns2="8.8.4.4">Google</button>
+            <button type="button" class="btn-pill-toggle net-dns-preset is-small" data-dns1="9.9.9.9" data-dns2="149.112.112.112">Quad9</button>
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -1560,7 +1560,7 @@
       <!-- Modal Footer -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button id="net-host-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-host-cfg-apply-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+        <button id="net-host-cfg-apply-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.apply_canary_btn">Test & Apply (60s Canary)</span>
         </button>
       </div>
@@ -1606,8 +1606,8 @@
 
       <!-- Action Buttons -->
       <div style="display: flex; gap: 12px; width: 100%; justify-content: center; margin-top: 6px;">
-        <button id="net-canary-revert-btn" type="button" class="btn-pill-toggle" style="flex: 1; padding: 9px 14px; font-size: 12px; font-weight: 700; color: #f87171; border-color: rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1);" data-i18n="net.canary_revert_btn">Revert Changes Now</button>
-        <button id="net-canary-confirm-btn" type="button" class="btn-pill-toggle active" style="flex: 1.2; padding: 9px 14px; font-size: 12px; font-weight: 700; background: var(--ok2, #25c2a0); border-color: transparent; color: #000;" data-i18n="net.canary_confirm_btn">Confirm & Keep Settings</button>
+        <button id="net-canary-revert-btn" type="button" class="btn-pill-toggle is-danger" style="flex: 1; background: rgba(248, 113, 113, 0.1);" data-i18n="net.canary_revert_btn">Revert Changes Now</button>
+        <button id="net-canary-confirm-btn" type="button" class="btn-pill-toggle active is-primary" style="flex: 1.2;" data-i18n="net.canary_confirm_btn">Confirm & Keep Settings</button>
       </div>
     </div>
   </div>
@@ -1669,7 +1669,7 @@
       <!-- Footer Buttons -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button id="net-bond-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-bond-cfg-save-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+        <button id="net-bond-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_bond_btn">Save Bonding Config</span>
         </button>
       </div>
@@ -1695,8 +1695,8 @@
       <div>
         <label style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.bridge_stp_label">Spanning Tree Protocol (STP)</label>
         <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn-pill-toggle net-stp-toggle-btn active" data-stp="true" id="net-stp-btn-enable" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.stp_enabled">Enabled (Loop Protection)</button>
-          <button type="button" class="btn-pill-toggle net-stp-toggle-btn" data-stp="false" id="net-stp-btn-disable" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;" data-i18n="net.stp_disabled">Disabled (Faster Link)</button>
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn active" data-stp="true" id="net-stp-btn-enable" style="flex: 1;" data-i18n="net.stp_enabled">Enabled (Loop Protection)</button>
+          <button type="button" class="btn-pill-toggle net-stp-toggle-btn" data-stp="false" id="net-stp-btn-disable" style="flex: 1;" data-i18n="net.stp_disabled">Disabled (Faster Link)</button>
         </div>
         <div style="font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.45;" data-i18n="net.stp_hint">
           Prevents Ethernet bridge loops and broadcast storms when bridging multiple interfaces connected to switches.
@@ -1722,7 +1722,7 @@
       <!-- Footer Buttons -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button id="net-bridge-cfg-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-bridge-cfg-save-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+        <button id="net-bridge-cfg-save-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.save_bridge_btn">Save Bridge Config</span>
         </button>
       </div>
@@ -1768,7 +1768,7 @@
       <!-- Footer Buttons -->
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
         <button id="net-vlan-create-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
-        <button id="net-vlan-create-submit-btn" type="button" class="btn-pill-toggle active" style="background: var(--accent-cyan, #0ea5e9); border-color: transparent; color: #fff; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+        <button id="net-vlan-create-submit-btn" type="button" class="btn-pill-toggle active is-primary">
           <span data-i18n="net.create_vlan_btn">+ Create VLAN Sub-Interface</span>
         </button>
       </div>
@@ -1917,7 +1917,7 @@
             <input type="color" id="lcd-custom-color-picker" aria-label="Custom LCD accent colour" data-i18n-aria-label="a11y.lcd_custom_color" value="#00f0ff" style="width: 22px; height: 22px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 3px;">
             <span id="lcd-custom-hex-val" style="font-size: 11px; font-family: monospace; color: var(--muted);">#00F0FF</span>
           </div>
-          <button id="lcd-reset-accent-btn" class="btn-pill-toggle" style="font-size: 11px; padding: 1px 7px;" data-i18n="settings.reset_accent">↺ Reset</button>
+          <button id="lcd-reset-accent-btn" class="btn-pill-toggle is-small" data-i18n="settings.reset_accent">↺ Reset</button>
         </div>
         <div style="margin-top: 10px; padding: 8px 10px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
           <div>
@@ -2582,9 +2582,9 @@
               <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>
               <div style="display:flex; gap:6px; align-items:center;">
                 <span id="media-slot-info-badge" class="suite-badge" style="font-size:11px;">SLOTS EMPTY</span>
-                <button id="btn-media-rescan" type="button" class="btn-pill-toggle" style="padding: 2px 8px; font-size: 11px; margin: 0; height: 22px; cursor: pointer;" title="Rescan and re-detect inserted cards">🔄 Scan</button>
-                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle" style="padding: 2px 8px; font-size: 11px; margin: 0; height: 22px; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4); cursor: pointer;" title="Start media ingest now from inserted card">▶ Copy Now</button>
-                <button id="btn-media-eject" type="button" class="btn-pill-toggle" style="padding: 2px 8px; font-size: 11px; margin: 0; height: 22px; color: #f87171; border-color: rgba(239,68,68,0.3); cursor: pointer;" title="Safely unmount and eject card">⏏ Eject</button>
+                <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards">🔄 Scan</button>
+                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Start media ingest now from inserted card">▶ Copy Now</button>
+                <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card">⏏ Eject</button>
               </div>
             </div>
             <select id="btn-copy-src" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
@@ -2597,7 +2597,7 @@
             <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Destination Path (Ingest Target)</span>
             <div style="display: flex; gap: 8px; width: 100%;">
               <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;">
-              <button id="btn-browse-dst" class="btn-pill-toggle" style="padding: 0 16px; white-space: nowrap; font-size: 11px; text-transform: uppercase; margin: 0; height: auto;" data-i18n="settings.browse">📁 Browse</button>
+              <button id="btn-browse-dst" class="btn-pill-toggle" style="text-transform: uppercase; margin: 0; height: auto;" data-i18n="settings.browse">📁 Browse</button>
             </div>
           </div>
           
@@ -2677,12 +2677,12 @@
       
       <div style="display: flex; gap: 8px; margin-top: 5px;">
         <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: 11px;">
-        <button id="fb-sort-btn" class="btn-pill-toggle" style="padding: 0 10px; white-space: nowrap; font-size: 11px;" title="Toggle Sort">A-Z</button>
+        <button id="fb-sort-btn" class="btn-pill-toggle" title="Toggle Sort">A-Z</button>
       </div>
 
       <div style="display: flex; gap: 8px; margin-top: 5px;">
         <input type="text" id="fb-new-folder-name" class="tz-text-input" placeholder="New folder name..." data-i18n-placeholder="modal.fb_new_folder" style="flex-grow: 1; font-size: 11px;">
-        <button id="fb-create-folder" class="btn-pill-toggle" style="padding: 0 12px; white-space: nowrap;" data-i18n="modal.fb_create">+ Create</button>
+        <button id="fb-create-folder" class="btn-pill-toggle" data-i18n="modal.fb_create">+ Create</button>
       </div>
 
       <div id="fb-list" style="max-height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; margin-top: 10px; margin-bottom: 10px;">
@@ -2872,7 +2872,7 @@
           <!-- Populated via users.js -->
         </div>
         <div style="display:flex; justify-content:space-between; gap:10px;">
-          <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background:rgba(56,189,248,0.15); border-color:rgba(56,189,248,0.35); color:#38bdf8; font-weight:700;">
+          <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.35); color: #38bdf8;">
             📋 COPY ALL CODES
           </button>
           <button type="button" class="btn-save-preset modal-close-btn" style="padding:8px 18px;">
@@ -3242,8 +3242,8 @@
     </div>
 
     <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid rgba(255,255,255,0.08); padding-top:14px;">
-      <button class="btn-pill-toggle" data-action="hide-target" data-target="modal-notification-channel" style="padding:8px 16px; font-size:11.5px;">Cancel</button>
-      <button id="btn-save-channel-modal" class="btn-pill-toggle active" style="padding:8px 18px; font-size:11.5px; font-weight:700; background:var(--ok2, #25c2a0); color:#000;">Save Channel</button>
+      <button class="btn-pill-toggle" data-action="hide-target" data-target="modal-notification-channel">Cancel</button>
+      <button id="btn-save-channel-modal" class="btn-pill-toggle active is-primary">Save Channel</button>
     </div>
 
   </div>
@@ -3882,7 +3882,7 @@
         <textarea id="sideload-content-input" rows="7" class="tz-select-input" placeholder="services:&#10;  app:&#10;    image: alpine:latest&#10;    ports:&#10;      - '8080:80'" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 11px; font-family: monospace; resize: vertical;"></textarea>
       </div>
 
-      <button type="button" id="btn-sideload-inspect" class="btn-pill-toggle" style="align-self: flex-start; padding: 6px 14px; background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">
+      <button type="button" id="btn-sideload-inspect" class="btn-pill-toggle" style="align-self: flex-start; background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">
         🔍 <span data-i18n="catalog.sideload_inspect_btn">Inspect & Validate</span>
       </button>
 
@@ -3920,7 +3920,7 @@
 
       <div style="background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.15); border-radius: 6px; padding: 8px 12px; font-size: 11px; display: flex; justify-content: space-between; align-items: center;">
         <span style="font-family: monospace; color: #38bdf8;" id="sftp-quick-connect-hint">sftp -P 2222 username@&lt;host&gt;</span>
-        <button type="button" class="btn-pill-toggle" id="btn-copy-sftp-cmd" style="font-size: 11px; padding: 2px 8px;">📋 Copy</button>
+        <button type="button" class="btn-pill-toggle is-small" id="btn-copy-sftp-cmd">📋 Copy</button>
       </div>
 
       <div>
@@ -3946,7 +3946,7 @@
             <input type="checkbox" id="sftp-new-readonly" style="width: 14px; height: 14px;" />
             <span>Read-only access (download only)</span>
           </label>
-          <button type="submit" class="btn-pill-toggle" style="background: var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color: var(--brand, #0ea5e9); padding: 4px 14px; font-size: 11px;">+ Create User</button>
+          <button type="submit" class="btn-pill-toggle is-primary">+ Create User</button>
         </div>
       </form>
 
@@ -3973,8 +3973,8 @@
       <div style="font-size: 12px; color: var(--muted); line-height: 1.4;">Scan with the official WireGuard app on iOS or Android to import tunnel instantly:</div>
       <div id="modal-wg-qr-wrap" style="background: #ffffff; padding: 12px; border-radius: 10px; line-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
       <div style="display: flex; gap: 10px; margin-top: 6px; width: 100%; justify-content: center;">
-        <button type="button" class="btn-pill-toggle" id="modal-wg-qr-copy-btn" style="padding: 6px 14px; font-size: 11px;">📋 Copy Config</button>
-        <button type="button" class="btn-pill-toggle" id="modal-wg-qr-dl-btn" style="padding: 6px 14px; font-size: 11px; background: var(--ok2, #3bf58b); color: #000; border-color: var(--ok2, #3bf58b); font-weight: 700;">📥 Export .conf</button>
+        <button type="button" class="btn-pill-toggle" id="modal-wg-qr-copy-btn">📋 Copy Config</button>
+        <button type="button" class="btn-pill-toggle is-primary" id="modal-wg-qr-dl-btn">📥 Export .conf</button>
       </div>
     </div>
   </div>
@@ -4017,7 +4017,7 @@
             <option value="copy" data-i18n="media.mode_copy">Copy Files</option>
           </select>
         </div>
-        <button type="button" id="btn-media-org-preview" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); padding: 6px 14px;">
+        <button type="button" id="btn-media-org-preview" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3);">
           🔍 <span data-i18n="media.preview_btn">Scan & Preview Diff</span>
         </button>
       </div>

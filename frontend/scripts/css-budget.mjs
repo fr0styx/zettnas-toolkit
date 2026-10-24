@@ -1,5 +1,5 @@
-// CSS budget (FE-18): the number of !important declarations and button class names may
-// only go down. Run with --update after lowering them to record the new baseline.
+// CSS budget (FE-18, UX-6): the number of !important declarations, button class names and
+// inline style attributes may only go down; new markup uses classes and the shared tokens. Run with --update after lowering them to record the new baseline.
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -18,15 +18,17 @@ function walk(dir, out = []) {
 
 const files = walk(join(ROOT, 'src')).concat([join(ROOT, 'index.html')]);
 let important = 0;
+let inlineStyles = 0;
 const buttonClasses = new Set();
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
   important += (src.match(/!important/g) || []).length;
+  if (!f.endsWith('.css')) inlineStyles += (src.match(/\sstyle=["'`]|\.style\.cssText\s*=/g) || []).length;
   if (f.endsWith('.css')) {
     for (const m of src.matchAll(/\.((?:btn|button)[-_][\w-]+)/g)) buttonClasses.add(m[1]);
   }
 }
-const now = { important, buttonClasses: buttonClasses.size };
+const now = { important, buttonClasses: buttonClasses.size, inlineStyles };
 if (process.argv.includes('--update')) {
   writeFileSync(BASELINE, JSON.stringify(now, null, 2) + '\n');
   console.log('css budget baseline updated:', now);
@@ -35,8 +37,8 @@ if (process.argv.includes('--update')) {
 const base = JSON.parse(readFileSync(BASELINE, 'utf8'));
 let failed = false;
 for (const k of Object.keys(now)) {
-  if (now[k] > base[k]) {
-    console.error(`✗ ${k}: ${now[k]} (budget ${base[k]}). Use a component class or a more specific selector instead.`);
+  if (now[k] > (base[k] ?? 0)) {
+    console.error(`✗ ${k}: ${now[k]} (budget ${base[k] ?? 0}). Use a component class, a token or a more specific selector instead.`);
     failed = true;
   } else if (now[k] < base[k]) {
     console.log(`✓ ${k}: ${now[k]} (budget ${base[k]}); run "npm run lint:css -- --update" to lower the budget`);

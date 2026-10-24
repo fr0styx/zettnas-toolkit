@@ -40,7 +40,7 @@ export function checklistHtml(data) {
     const [tk, tf, dk, df] = ITEMS[item.id] || [item.id, item.id, '', ''];
     const action = item.done
       ? `<span class="gs-done" aria-label="${escapeHtml(t('gs.done', 'Done'))}">✓</span>`
-      : `<button type="button" class="gs-open" data-gs-open="${escapeHtml(item.open)}">${escapeHtml(t('gs.open', 'Open'))}</button>`;
+      : `<button type="button" class="btn-pill-toggle is-primary is-small gs-open" data-gs-open="${escapeHtml(item.open)}">${escapeHtml(t('gs.open', 'Open'))}</button>`;
     return `<li class="gs-item${item.done ? ' is-done' : ''}">
       <div class="gs-text"><span class="gs-title">${escapeHtml(t(tk, tf))}</span><span class="gs-desc">${escapeHtml(t(dk, df))}</span></div>
       ${action}</li>`;
@@ -48,7 +48,7 @@ export function checklistHtml(data) {
   return `<div class="gs-head">
       <h2 class="gs-heading" id="gs-heading">${escapeHtml(t('gs.title', 'Getting started'))}</h2>
       <span class="gs-progress">${escapeHtml(t('gs.progress', '{done} of {total} done', { done: data.done, total: data.total }))}</span>
-      <button type="button" class="gs-hide" data-gs-hide>${escapeHtml(t('gs.hide', 'Hide'))}</button>
+      <button type="button" class="btn-pill-toggle is-ghost is-small gs-hide" data-gs-hide>${escapeHtml(t('gs.hide', 'Hide'))}</button>
     </div>
     <ul class="gs-list">${rows.join('')}</ul>`;
 }

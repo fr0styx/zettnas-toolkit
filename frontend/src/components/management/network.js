@@ -84,8 +84,8 @@ export async function fetchAndRenderReplication() {
             <td>${j.retention_count || 7} snaps</td>
             <td><span class="mgmt-app-pill ${j.enabled ? 'text-emerald' : 'text-muted'}">${j.enabled ? 'Active' : 'Disabled'}</span></td>
             <td style="text-align:right;">
-              <button class="btn-pill-toggle btn-run-repl" data-id="${escapeHtml(j.id)}" style="font-size:11px; padding:2px 8px; margin-right:4px;" title="Execute Replication Now">▶ Run</button>
-              <button class="btn-pill-toggle btn-del-repl" data-id="${escapeHtml(j.id)}" style="font-size:11px; padding:2px 8px; color:var(--crit);" title="Delete Pipeline">🗑️</button>
+              <button class="btn-pill-toggle btn-run-repl is-small" data-id="${escapeHtml(j.id)}" style="margin-right: 4px;" title="Execute Replication Now">▶ Run</button>
+              <button class="btn-pill-toggle btn-del-repl is-danger is-small" data-id="${escapeHtml(j.id)}" title="Delete Pipeline">🗑️</button>
             </td>
           </tr>
         `;
@@ -1430,7 +1430,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <div style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.pci_slot || '--')}</div>
               </td>
               <td style="text-align: right;">
-                <button class="btn-pill-toggle btn-config-port" data-iface="${escapeHtml(nic.name)}" style="font-size:11px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-port is-small" data-iface="${escapeHtml(nic.name)}" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
               </td>
             </tr>
           `;
@@ -1461,7 +1461,7 @@ export async function fetchAndRenderNetworkTopology() {
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
-                <button class="btn-pill-toggle btn-config-bridge" data-bridge="${escapeHtml(br.name)}" style="font-size:11px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-bridge is-small" data-bridge="${escapeHtml(br.name)}" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
               </div>
             </div>
             <div style="font-size:11px; color:var(--muted);">Member Ports:</div>
@@ -1482,7 +1482,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <span class="switch-speed-pill speed-10g" title="${escapeHtml(b.mode_title || b.mode_name || b.mode)}">${escapeHtml(b.mode_title || b.mode_name || b.mode || 'Bonding')}</span>
                 <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
               </div>
-              <button class="btn-pill-toggle btn-config-bond" data-bond="${escapeHtml(b.name)}" style="font-size:11px; padding:2px 8px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
+              <button class="btn-pill-toggle btn-config-bond is-small" data-bond="${escapeHtml(b.name)}" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
             </div>
             <div style="font-size:11px; color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
             <div class="network-bridge-members">
@@ -1551,7 +1551,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <div>↓ ${rxFmt} / ↑ ${txFmt}</div>
               </td>
               <td style="text-align: right;">
-                <button class="btn-pill-toggle btn-delete-vlan" data-vlan="${escapeHtml(v.name)}" style="font-size:11px; padding:2px 8px; color:#f87171; border-color:rgba(248,113,113,0.3);" title="Delete VLAN">🗑</button>
+                <button class="btn-pill-toggle btn-delete-vlan is-danger is-small" data-vlan="${escapeHtml(v.name)}" title="Delete VLAN">🗑</button>
               </td>
             </tr>
           `;

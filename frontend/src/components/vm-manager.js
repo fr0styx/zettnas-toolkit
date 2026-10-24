@@ -75,11 +75,11 @@ export function initVmManager() {
               <span>⚡</span> <span>Loading KVM Status...</span>
             </div>
             <div class="vm-action-btns-wrap" style="display: flex; gap: 8px;">
-              <button id="btn-vm-refresh" class="btn-pill-toggle" title="${t('vm.refresh', 'Refresh')}" style="display: inline-flex; align-items: center; gap: 6px;">
+              <button id="btn-vm-refresh" class="btn-pill-toggle" title="${t('vm.refresh', 'Refresh')}">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                 <span data-i18n="vm.refresh">${t('vm.refresh', 'Refresh')}</span>
               </button>
-              <button id="btn-vm-isos" class="btn-pill-toggle" title="ISO Library & Official Catalog" style="display: inline-flex; align-items: center; gap: 6px;">
+              <button id="btn-vm-isos" class="btn-pill-toggle" title="ISO Library & Official Catalog">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
                 <span>ISO Library</span>
               </button>
@@ -1300,7 +1300,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
               <div style="font-size: 11px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
             </div>
-            <button type="button" id="btn-edit-toggle-custom-usb" class="btn-pill-toggle" data-i18n="vm.usb_custom_btn" style="padding: 4px 8px; font-size: 11px; white-space: nowrap; flex-shrink: 0; cursor: pointer;">
+            <button type="button" id="btn-edit-toggle-custom-usb" class="btn-pill-toggle" data-i18n="vm.usb_custom_btn" style="flex-shrink: 0;">
               ${t('vm.usb_custom_btn', '+ Custom VID:PID')}
             </button>
           </div>
@@ -1345,7 +1345,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               <span style="font-size: 12px; font-weight: 700; color: #fff;">Host Directory Passthrough (VirtIO-FS / 9p)</span>
               <div style="font-size: 11px; color: var(--muted);">Map host folders (/mnt/user/appdata, /mnt/storage) into guest</div>
             </div>
-            <button type="button" id="btn-edit-add-host-share" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px;">
+            <button type="button" id="btn-edit-add-host-share" class="btn-pill-toggle is-small">
               + Add Folder
             </button>
           </div>
@@ -1359,7 +1359,7 @@ export function openVmEditModal(vmId, vmObj = null) {
               <span style="font-size: 12px; font-weight: 700; color: #fff;">Secondary Virtual Disks</span>
               <div style="font-size: 11px; color: var(--muted);">Attach additional block devices (data pools, databases)</div>
             </div>
-            <button type="button" id="btn-edit-add-secondary-disk" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px;">
+            <button type="button" id="btn-edit-add-secondary-disk" class="btn-pill-toggle is-small">
               + Add Disk
             </button>
           </div>
@@ -2321,7 +2321,7 @@ export function openKvmDiagnosticsModal(kvm = null) {
       </div>
 
       <div class="smart-modal-footer" style="display: flex; justify-content: flex-end; padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2);">
-        <button id="kvm-diag-ok" class="btn-pill-toggle" style="padding: 6px 16px;">Close</button>
+        <button id="kvm-diag-ok" class="btn-pill-toggle">Close</button>
       </div>
     </div>
   `;
@@ -2534,7 +2534,7 @@ export function openVmCreateModal() {
               <span style="font-size: 12px; font-weight: 700; color: #fff;">Host Directory Passthrough (VirtIO-FS / 9p)</span>
               <div style="font-size: 11px; color: var(--muted);">Map host folders (/mnt/user/appdata, /mnt/storage) into guest</div>
             </div>
-            <button type="button" id="btn-add-host-share" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px;">
+            <button type="button" id="btn-add-host-share" class="btn-pill-toggle is-small">
               + Add Folder
             </button>
           </div>
@@ -2548,7 +2548,7 @@ export function openVmCreateModal() {
               <span style="font-size: 12px; font-weight: 700; color: #fff;">Secondary Virtual Disks</span>
               <div style="font-size: 11px; color: var(--muted);">Attach additional block devices (data pools, databases)</div>
             </div>
-            <button type="button" id="btn-add-secondary-disk" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px;">
+            <button type="button" id="btn-add-secondary-disk" class="btn-pill-toggle is-small">
               + Add Disk
             </button>
           </div>
@@ -2601,7 +2601,7 @@ export function openVmCreateModal() {
               <div style="font-size: 12px; font-weight: 700; color: #fff;" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
               <div style="font-size: 11px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
             </div>
-            <button type="button" id="btn-create-toggle-custom-usb" class="btn-pill-toggle" data-i18n="vm.usb_custom_btn" style="padding: 4px 8px; font-size: 11px; white-space: nowrap; flex-shrink: 0; cursor: pointer;">
+            <button type="button" id="btn-create-toggle-custom-usb" class="btn-pill-toggle" data-i18n="vm.usb_custom_btn" style="flex-shrink: 0;">
               ${t('vm.usb_custom_btn', '+ Custom VID:PID')}
             </button>
           </div>
@@ -2632,7 +2632,7 @@ export function openVmCreateModal() {
       </div>
 
       <div class="smart-modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2);">
-        <button id="vm-create-cancel" class="btn-pill-toggle" style="padding: 7px 16px;">${t('common.cancel', 'Cancel')}</button>
+        <button id="vm-create-cancel" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
         <button id="vm-create-submit" class="btn-save-preset" style="padding: 7px 18px; font-weight: 700; background: var(--accent-cyan, #0ea5e9); border-color: rgba(14, 165, 233, 0.4); color: #fff;">${t('vm.create_btn', 'Create Virtual Machine')}</button>
       </div>
     </div>
@@ -5433,10 +5433,10 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
 
       <!-- Navigation Tabs -->
       <div class="iso-modal-tabs" style="display: flex; gap: 8px; padding: 10px 18px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.06); flex-shrink: 0;">
-        <button id="tab-btn-catalog" class="btn-pill-toggle active" style="flex: 1; padding: 8px 14px; font-weight: 700;">
+        <button id="tab-btn-catalog" class="btn-pill-toggle active" style="flex: 1;">
           <span>🌐 Official ISO Catalog</span>
         </button>
-        <button id="tab-btn-local" class="btn-pill-toggle" style="flex: 1; padding: 8px 14px; font-weight: 700;">
+        <button id="tab-btn-local" class="btn-pill-toggle" style="flex: 1;">
           <span>📁 Local Storage ISOs (/mnt/user/isos)</span>
         </button>
       </div>
@@ -5460,7 +5460,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             <div style="font-weight: 700; color: #fff; font-size: 13px;">Drag & Drop ISO files here to upload</div>
             <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Destination: <code style="color: #38bdf8;">/mnt/user/isos</code> • Supports .iso, .img up to 50 GB</div>
             <input type="file" id="iso-file-input" accept=".iso,.img" style="display: none;" />
-            <button id="btn-browse-iso" class="btn-pill-toggle" style="margin-top: 12px; padding: 6px 14px; font-size: 11px;">Select ISO File...</button>
+            <button id="btn-browse-iso" class="btn-pill-toggle" style="margin-top: 12px;">Select ISO File...</button>
           </div>
 
           <!-- Upload Progress Card -->
@@ -5478,7 +5478,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <div style="margin-top: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
               <div style="font-size: 12px; font-weight: 700; color: #fff;">Discovered Images in /mnt/user/isos</div>
-              <button id="btn-refresh-local-isos" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px;">↺ Refresh</button>
+              <button id="btn-refresh-local-isos" class="btn-pill-toggle is-small">↺ Refresh</button>
             </div>
             <div id="local-iso-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
           </div>
@@ -5685,8 +5685,8 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-left: 12px; flex-shrink: 0;">
             <span style="font-size: 11px; font-weight: 600; color: #94a3b8;">${iso.size_formatted}</span>
-            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="padding: 4px 10px; font-size: 11px; font-weight: 700; background: rgba(14,165,233,0.18); color: #38bdf8; border-color: rgba(14,165,233,0.35);">▶ Boot VM</button>
-            <button class="btn-pill-toggle btn-delete-iso" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" style="padding: 4px 8px; font-size: 11px; color: var(--crit, #ef4444); border-color: rgba(239,68,68,0.3);" title="Delete ISO from storage">🗑</button>
+            <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(14,165,233,0.18); color: #38bdf8; border-color: rgba(14,165,233,0.35);">▶ Boot VM</button>
+            <button class="btn-pill-toggle btn-delete-iso is-danger" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" title="Delete ISO from storage">🗑</button>
           </div>
         </div>
       `).join('');
@@ -5833,7 +5833,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
             <span style="font-size: 11px; color: var(--muted); font-family: monospace;">${item.arch || item.architecture || 'x86_64'} • ${item.kernel || 'Linux'}</span>
             <div style="display: flex; gap: 6px;">
               ${inStorage ? `
-                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="padding: 5px 12px; font-size: 11px; font-weight: 700; background: rgba(14,165,233,0.18); color: #38bdf8; border-color: rgba(14,165,233,0.35);">
+                <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="background: rgba(14,165,233,0.18); color: #38bdf8; border-color: rgba(14,165,233,0.35);">
                   ▶ Boot VM
                 </button>
                 <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border-color: #34d399;">
@@ -6000,11 +6000,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
 
       <!-- Navigation Tabs -->
       <div style="display: flex; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 8px 18px; background: rgba(0,0,0,0.15);">
-        <button type="button" id="tab-btn-snaps" class="btn-pill-toggle active" style="font-size: 11px; padding: 5px 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        <button type="button" id="tab-btn-snaps" class="btn-pill-toggle active">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           <span>QCOW2 Checkpoints</span>
         </button>
-        <button type="button" id="tab-btn-backups" class="btn-pill-toggle" style="font-size: 11px; padding: 5px 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        <button type="button" id="tab-btn-backups" class="btn-pill-toggle">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Hyper-Backups (.tar.gz)</span>
         </button>
@@ -6018,7 +6018,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
               <div style="font-size: 12px; font-weight: 700; color: #fff;">QCOW2 Checkpoints & State Snapshots</div>
               <div style="font-size: 11px; color: var(--muted);">Live memory + disk snapshots while running; disk snapshots while offline.</div>
             </div>
-            <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.35); color: #38bdf8; font-weight: 700; font-size: 11px; padding: 5px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+            <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.35); color: #38bdf8;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>${t('vm.take_snapshot', '+ Take Snapshot')}</span>
             </button>
@@ -6032,8 +6032,8 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
               <input type="text" id="vm-snap-desc-input" placeholder="${t('vm.snapshot_desc', 'Description (optional)')}" style="flex: 2; min-width: 200px; padding: 6px 10px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 11px;" />
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
-              <button type="button" id="btn-cancel-take-snapshot" class="btn-pill-toggle" style="font-size: 11px; padding: 4px 10px;">Cancel</button>
-              <button type="button" id="btn-submit-take-snapshot" class="btn-pill-toggle" style="background: #0284c7; color: #fff; font-weight: 700; font-size: 11px; padding: 4px 14px; cursor: pointer;">Save Snapshot</button>
+              <button type="button" id="btn-cancel-take-snapshot" class="btn-pill-toggle">Cancel</button>
+              <button type="button" id="btn-submit-take-snapshot" class="btn-pill-toggle is-primary">Save Snapshot</button>
             </div>
           </div>
 
@@ -6049,7 +6049,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
               <div style="font-size: 12px; font-weight: 700; color: #fff;">Complete VM Hyper-Backups</div>
               <div style="font-size: 11px; color: var(--muted);">Self-contained archives (.tar.gz) containing complete hardware specs and virtual disk images.</div>
             </div>
-            <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #34d399; font-weight: 700; font-size: 11px; padding: 5px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+            <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #34d399;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>+ Create Hyper-Backup</span>
             </button>
@@ -6190,11 +6190,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
                 </td>
                 <td style="padding: 8px 12px; text-align: right;">
                   <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                    <button class="btn-pill-toggle btn-snap-revert" data-name="${escapeHtml(s.name)}" style="padding: 4px 10px; font-size: 11px; color: #38bdf8; border-color: rgba(14,165,233,0.3); cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    <button class="btn-pill-toggle btn-snap-revert" data-name="${escapeHtml(s.name)}" style="color: #38bdf8; border-color: rgba(14,165,233,0.3);">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
                       <span>${t('vm.revert_snapshot', 'Revert')}</span>
                     </button>
-                    <button class="btn-pill-toggle btn-snap-del" data-name="${escapeHtml(s.name)}" style="padding: 4px 10px; font-size: 11px; color: var(--crit, #ff6b6b); border-color: rgba(255,107,107,0.3); cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    <button class="btn-pill-toggle btn-snap-del is-danger" data-name="${escapeHtml(s.name)}">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       <span>${t('vm.delete_snapshot', 'Delete')}</span>
                     </button>
@@ -6285,11 +6285,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
                 <td style="padding: 8px 12px; color: var(--muted);">${escapeHtml(b.size_formatted || '—')}</td>
                 <td style="padding: 8px 12px; text-align: right;">
                   <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                    <button class="btn-pill-toggle btn-bk-restore" data-id="${escapeHtml(b.id)}" style="padding: 4px 10px; font-size: 11px; color: #34d399; border-color: rgba(16,185,129,0.3); cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    <button class="btn-pill-toggle btn-bk-restore" data-id="${escapeHtml(b.id)}" style="color: #34d399; border-color: rgba(16,185,129,0.3);">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
                       <span>Restore</span>
                     </button>
-                    <button class="btn-pill-toggle btn-bk-del" data-id="${escapeHtml(b.id)}" style="padding: 4px 10px; font-size: 11px; color: var(--crit, #ff6b6b); border-color: rgba(255,107,107,0.3); cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                    <button class="btn-pill-toggle btn-bk-del is-danger" data-id="${escapeHtml(b.id)}">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                       <span>Delete</span>
                     </button>

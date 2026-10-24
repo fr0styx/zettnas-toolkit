@@ -553,8 +553,8 @@ export class FmInspector {
 
     const tabsHeaderHtml = `
       <div class="fm-inspector-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
-        <button type="button" class="btn-pill-toggle ${this.activeTab === 'details' ? 'active' : ''}" id="fm-insp-tab-details" style="flex: 1; font-size: 11px; padding: 4px 6px;">ℹ️ Info</button>
-        <button type="button" class="btn-pill-toggle ${this.activeTab === 'permissions' ? 'active' : ''}" id="fm-insp-tab-perms" style="flex: 1; font-size: 11px; padding: 4px 6px;">🔒 Permissions</button>
+        <button type="button" class="btn-pill-toggle ${this.activeTab === 'details' ? 'active' : ''}" id="fm-insp-tab-details" style="flex: 1;">ℹ️ Info</button>
+        <button type="button" class="btn-pill-toggle ${this.activeTab === 'permissions' ? 'active' : ''}" id="fm-insp-tab-perms" style="flex: 1;">🔒 Permissions</button>
       </div>
     `;
 
@@ -766,26 +766,26 @@ export class FmInspector {
         <div class="fm-inspector-row"><span>Mode:</span> <span id="fm-insp-mode">${item.mode || '--'}</span></div>
         <div class="fm-inspector-row"><span>Owner:</span> <span id="fm-insp-owner">Loading...</span></div>
         ${isVideo ? '<div id="fm-insp-media" class="fm-inspector-media" aria-live="polite"></div>' : ''}
-        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle" style="width: 100%; font-size: 11px; padding: 3px 8px; margin-top: 8px;">🔒 Edit Permissions & Mode</button>
+        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle is-block is-small" style="margin-top: 8px;">🔒 Edit Permissions & Mode</button>
       </div>
 
       ${!item.is_dir ? `
         <div class="fm-inspector-section" style="margin-top: 10px;">
           <div style="font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px;">Integrity (SHA-256)</div>
-          <button type="button" id="fm-btn-calc-sha" class="btn-pill-toggle" style="width: 100%; font-size: 11px; padding: 4px 8px;">Compute Checksum</button>
+          <button type="button" id="fm-btn-calc-sha" class="btn-pill-toggle is-block">Compute Checksum</button>
           <div id="fm-insp-sha-result" style="font-family: monospace; font-size: 11px; word-break: break-all; margin-top: 6px; color: var(--accent); display: none;"></div>
         </div>
       ` : `
         <div class="fm-inspector-section" style="margin-top: 10px;">
           <div style="font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 6px;">Folder Size</div>
-          <button type="button" id="fm-btn-calc-folder-sz" class="btn-pill-toggle" style="width: 100%; font-size: 11px; padding: 4px 8px;">Calculate Disk Usage</button>
+          <button type="button" id="fm-btn-calc-folder-sz" class="btn-pill-toggle is-block">Calculate Disk Usage</button>
           <div id="fm-insp-folder-sz-res" style="font-size: 11px; margin-top: 6px; color: var(--fg); display: none;"></div>
         </div>
       `}
 
       <div class="fm-inspector-actions" style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px;">
-        ${!item.is_dir ? `<button type="button" id="fm-insp-preview-btn" class="btn-pill-toggle" style="width: 100%;">QuickLook Preview (Space)</button>` : ''}
-        ${!item.is_dir ? `<button type="button" id="fm-insp-download-btn" class="btn-pill-toggle" style="width: 100%;">Download File</button>` : ''}
+        ${!item.is_dir ? `<button type="button" id="fm-insp-preview-btn" class="btn-pill-toggle is-block">QuickLook Preview (Space)</button>` : ''}
+        ${!item.is_dir ? `<button type="button" id="fm-insp-download-btn" class="btn-pill-toggle is-block">Download File</button>` : ''}
       </div>
     `;
 

@@ -3631,20 +3631,20 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
         </label>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;">
-        <button id="fm-collision-cancel" class="btn-pill-toggle" style="padding: 7px 16px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: #94a3b8;">${escapeHtml(t('fm.cancel', 'Cancel'))}</button>
-        <button id="fm-collision-skip" class="btn-pill-toggle" style="padding: 7px 16px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0;">${escapeHtml(t('fm.skip', 'Skip'))}</button>
+        <button id="fm-collision-cancel" class="btn-pill-toggle" style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); color: #94a3b8;">${escapeHtml(t('fm.cancel', 'Cancel'))}</button>
+        <button id="fm-collision-skip" class="btn-pill-toggle" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0;">${escapeHtml(t('fm.skip', 'Skip'))}</button>
         ${
           !hasDir
             ? `
-          <button id="fm-collision-keep-both" class="btn-pill-toggle" style="padding: 7px 16px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0;">${escapeHtml(t('fm.keep_both', 'Keep Both'))}</button>
+          <button id="fm-collision-keep-both" class="btn-pill-toggle" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); color: #e2e8f0;">${escapeHtml(t('fm.keep_both', 'Keep Both'))}</button>
         `
             : ''
         }
-        <button id="fm-collision-overwrite" class="btn-pill-toggle" style="padding: 7px 16px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.45); color: #f87171;">${escapeHtml(t('fm.overwrite', 'Overwrite'))}</button>
+        <button id="fm-collision-overwrite" class="btn-pill-toggle is-danger">${escapeHtml(t('fm.overwrite', 'Overwrite'))}</button>
         ${
           hasDir
             ? `
-          <button id="fm-collision-merge" class="btn-pill-toggle" style="padding: 7px 20px; font-size: 12px; font-weight: 700; border-radius: 8px; cursor: pointer; background: linear-gradient(135deg, rgba(14, 165, 233, 0.8), rgba(37, 194, 160, 0.8)); border: 1px solid rgba(56, 189, 248, 0.6); color: #ffffff; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);">${escapeHtml(t('fm.merge', 'Merge'))}</button>
+          <button id="fm-collision-merge" class="btn-pill-toggle is-primary" style="box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);">${escapeHtml(t('fm.merge', 'Merge'))}</button>
         `
             : ''
         }
@@ -3932,8 +3932,8 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
-          <button id="fm-share-cancel" class="btn-pill-toggle" style="padding: 8px 16px; font-size: 12px;">Cancel</button>
-          <button id="fm-share-submit" class="btn-pill-toggle active" style="padding: 8px 18px; font-size: 12px; font-weight: 700; background: #0284c7; color: #fff; border-color: #38bdf8;">✨ Generate Share Link</button>
+          <button id="fm-share-cancel" class="btn-pill-toggle">Cancel</button>
+          <button id="fm-share-submit" class="btn-pill-toggle active is-primary">✨ Generate Share Link</button>
         </div>
       </div>
 
@@ -3942,12 +3942,12 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
           <div style="font-size: 11px; color: #38bdf8; font-weight: 600; margin-bottom: 6px;">Link Generated Successfully!</div>
           <div style="display: flex; gap: 8px;">
             <input type="text" id="fm-share-url-output" readonly style="flex: 1; padding: 8px 10px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 11.5px; font-family: monospace;" />
-            <button id="fm-share-copy-btn" class="btn-pill-toggle active" style="padding: 8px 14px; font-size: 12px; font-weight: 700; background: #0284c7; color: #fff; white-space: nowrap;">📋 Copy</button>
+            <button id="fm-share-copy-btn" class="btn-pill-toggle active is-primary">📋 Copy</button>
           </div>
         </div>
         <div id="fm-share-meta-info" style="font-size: 11px; color: var(--muted); margin-bottom: 16px;"></div>
         <div style="display: flex; justify-content: flex-end;">
-          <button id="fm-share-done" class="btn-pill-toggle" style="padding: 8px 18px; font-size: 12px;">Done</button>
+          <button id="fm-share-done" class="btn-pill-toggle">Done</button>
         </div>
       </div>
       </div>

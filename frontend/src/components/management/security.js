@@ -244,14 +244,14 @@ export async function fetchAndRenderSecurityPosture() {
         return `
           <div class="sec-advisor-item ${c.passed ? 'passed' : 'needs-action'}" data-check-id="${escapeHtml(c.id)}" role="button" tabindex="0" title="${t('sec.click_to_configure', 'Click to configure')}" style="background:${badgeBg}; border:1px solid ${c.passed ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.3)'};">
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
-              <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size:13px; line-height:1;">${passIcon}</span>
+              <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--zn-fs-sm); line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
-                <div style="font-weight:600; color:#f8fafc; font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
-                <div style="font-size:11px; color:${c.passed ? '#94a3b8' : '#fca5a5'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
+                <div style="font-weight:600; color:#f8fafc; font-size: var(--zn-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
+                <div style="font-size: var(--zn-fs-xs); color:${c.passed ? '#94a3b8' : '#fca5a5'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-              <span class="sec-advisor-status-badge" style="font-size:11px; font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
+              <span class="sec-advisor-status-badge" style="font-size: var(--zn-fs-xs); font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
               <span class="sec-advisor-action-pill">${actionText}</span>
             </div>
           </div>

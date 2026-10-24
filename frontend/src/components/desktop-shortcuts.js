@@ -434,8 +434,8 @@ export function openAddDesktopShortcutModal() {
 
         <!-- Tab Switcher -->
         <div style="display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid rgba(255,255,255,0.06);">
-          <button class="btn-pill-toggle active" id="tab-btn-system-shortcuts" style="padding:5px 12px; font-size:11.5px; font-weight:700;">📦 System Apps & Dashboards</button>
-          <button class="btn-pill-toggle" id="tab-btn-custom-shortcut" style="padding:5px 12px; font-size:11.5px; font-weight:700;">🔗 Custom URL / Bookmark</button>
+          <button class="btn-pill-toggle active" id="tab-btn-system-shortcuts">📦 System Apps & Dashboards</button>
+          <button class="btn-pill-toggle" id="tab-btn-custom-shortcut">🔗 Custom URL / Bookmark</button>
         </div>
 
         <!-- Body: Tab 1 System Apps -->

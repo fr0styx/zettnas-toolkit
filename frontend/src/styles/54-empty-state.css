@@ -16,18 +16,7 @@
 .empty-state-icon { font-size: 24px; line-height: 1; opacity: 0.8; }
 .empty-state-title { font-size: 14px; font-weight: 700; color: var(--fg); }
 .empty-state-body { max-width: 440px; font-size: 13px; line-height: 1.5; }
-.empty-state-action {
-  min-height: 32px;
-  margin-top: 4px;
-  padding: 0 16px;
-  border: none;
-  border-radius: 6px;
-  background: var(--brand);
-  color: var(--accent-contrast-fg, #0b1118);
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
+.empty-state-action { margin-top: var(--zn-space-1); }
 .empty-state-row > td { padding: 0; }
 /* Share protocols: whether each service is really running (UX-11) */
 .proto-tag.proto-down { background: rgba(245, 158, 11, 0.12); color: var(--warn, #f59e0b); border-color: rgba(245, 158, 11, 0.3); }

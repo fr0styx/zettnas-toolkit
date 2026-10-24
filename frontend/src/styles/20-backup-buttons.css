@@ -5,10 +5,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 5px;
-  font-size: 11px;
+  gap: 6px;
+  min-height: var(--zn-btn-h, 32px);
+  padding: 0 var(--zn-btn-px, 12px);
+  border-radius: 6px;
+  font-size: var(--zn-fs-sm, 13px);
   font-weight: 600;
   cursor: pointer;
   border: 1px solid rgba(255, 255, 255, 0.12);

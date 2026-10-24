@@ -1,7 +1,7 @@
 /* Getting started checklist (UX-1) and the setup wizard steps */
 .getting-started-card {
   position: fixed;
-  left: 24px;
+  left: 196px; /* clear of the desktop icon column */
   top: 72px;
   z-index: 40;
   width: 380px;
@@ -18,15 +18,6 @@
 .gs-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .gs-heading { flex: 1; margin: 0; font-size: 16px; font-weight: 700; }
 .gs-progress { font-size: 13px; color: var(--muted); }
-.gs-hide, .gs-open {
-  min-height: 32px;
-  padding: 0 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-}
-.gs-hide { border: 1px solid rgba(255, 255, 255, 0.16); background: transparent; color: var(--fg); }
-.gs-open { border: none; background: var(--brand); color: var(--accent-contrast-fg, #0b1118); font-weight: 700; }
 .gs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .gs-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); }
 .gs-item.is-done { opacity: 0.6; }
@@ -38,4 +29,6 @@
 .setup-steps li { flex: 1; padding-top: 6px; border-top: 3px solid rgba(255, 255, 255, 0.12); }
 .setup-steps li.is-current { color: var(--fg); border-top-color: var(--brand); font-weight: 700; }
 .setup-steps li.is-done { border-top-color: rgba(var(--brand-rgb), 0.5); }
-.setup-step-nav { min-height: 32px; padding: 0 16px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.06); color: var(--fg); }
+@media (max-width: 720px) {
+  .getting-started-card { left: 16px; right: 16px; width: auto; }
+}

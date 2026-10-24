@@ -415,7 +415,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         <div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <label style="font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.5px;">PHYSICAL BAY ALLOCATION & LABELS</label>
-            <button id="chassis-auto-assign-btn" class="btn-pill-toggle" style="padding:4px 10px; font-size:11px;">⚡ Auto-Assign Sequentially</button>
+            <button id="chassis-auto-assign-btn" class="btn-pill-toggle">⚡ Auto-Assign Sequentially</button>
           </div>
           <div style="max-height: 320px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; background: rgba(0,0,0,0.2);">
             <table class="copy-history-table chassis-slots-table" style="width:100%;">
@@ -433,7 +433,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         </div>
       </div>
       <div class="smart-modal-footer" style="padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); display:flex; justify-content:flex-end; gap: 8px;">
-        <button id="chassis-config-cancel-btn" class="btn-pill-toggle" style="padding: 8px 16px;">Cancel</button>
+        <button id="chassis-config-cancel-btn" class="btn-pill-toggle">Cancel</button>
         <button id="chassis-config-save-btn" class="btn-save-preset" style="padding: 8px 20px;">Save Bay Mapping</button>
       </div>
     </div>
@@ -750,9 +750,9 @@ function buildPoolBlockInner(pool, isObserver) {
     <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
       <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="Trigger filesystem scrub or parity check">⚡ Scrub Pool</button>
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="Rename storage pool">✏️ Rename</button>` : ''}
-      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.3); color:#38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
-      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24;" title="Safely flush dirty cache and detach pool">⏏️ Safely Eject</button>` : ''}
-      ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171;" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
+      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: #38bdf8;" title="Manage Subvolume Snapshots">📸 Snapshots</button>` : ''}
+      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: #fbbf24;" title="Safely flush dirty cache and detach pool">⏏️ Safely Eject</button>` : ''}
+      ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="Destroy storage pool">🗑️ Destroy</button>` : ''}
     </div>
   `;
 }
@@ -933,7 +933,7 @@ export async function fetchAndRenderStorageTopology(container) {
               <span style="color:var(--muted); font-size:12px; margin-left:8px;">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
             </div>
           </div>
-          <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.3); color:#4ade80;" title="Import detached storage pool">
+          <button class="btn-import-external-pool btn-pill-toggle" data-pool-id="${escapeHtml(p.pool_id)}" data-fs-type="${escapeHtml(p.fs_type || 'zfs')}" style="background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: #4ade80;" title="Import detached storage pool">
             📥 Import Pool
           </button>
         </div>
@@ -1005,7 +1005,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
           <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:11px; font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:#f87171; border-color:rgba(239,68,68,0.3);' : ''}">
             ${isRunning ? '⏹ Stop SFTP' : '▶ Start SFTP'}
           </button>
-          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="padding:5px 10px; font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border-color:rgba(14,165,233,0.3);" title="Manage SFTP users and permissions">
+          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);" title="Manage SFTP users and permissions">
             👥 Manage Users (${usersCount})
           </button>
         </div>
@@ -1293,7 +1293,7 @@ function buildShareCardInner(s, canManageShares) {
         📂 Open in File Explorer
       </button>
       ${canManageShares ? `
-        <button class="btn-share-delete btn-pill-toggle" data-share-name="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:3px 8px; font-size:11px;" title="Delete network share">
+        <button class="btn-share-delete btn-pill-toggle is-danger is-small" data-share-name="${escapeHtml(s.name)}" title="Delete network share">
           🗑️ Delete
         </button>
       ` : ''}
@@ -1450,7 +1450,7 @@ export async function openSftpUsersModal(onSuccess) {
                   Chroot: ${escapeHtml(u.home_dir || '/home/' + u.username)}
                 </div>
               </div>
-              <button class="btn-pill-toggle btn-delete-sftp-user" data-user="${escapeHtml(u.username)}" style="padding:2px 8px; font-size:11px; background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3);">
+              <button class="btn-pill-toggle btn-delete-sftp-user is-danger is-small" data-user="${escapeHtml(u.username)}">
                 Delete
               </button>
             </div>
@@ -1634,7 +1634,7 @@ export async function fetchAndRenderRemoteStorage(container) {
           <div style="font-size:12px; color:var(--muted); max-width:440px; margin:0 auto 16px auto; line-height:1.45;">
             Connect your cloud storage buckets (Amazon S3, Backblaze B2, Google Drive, OneDrive, SFTP) to mount them directly into the ZettNAS File Explorer (/mnt/remotes).
           </div>
-          <button class="btn-pill-toggle btn-trigger-new-remote" style="padding:7px 18px; font-size:12px; font-weight:700; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9);">
+          <button class="btn-pill-toggle btn-trigger-new-remote is-primary">
             ☁️ + Connect First Cloud Remote
           </button>
         </div>
@@ -1666,22 +1666,22 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div class="remote-card-actions">
               <div>
                 ${isMounted ? `
-                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="Open in File Explorer" style="padding:4px 10px; font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8; border-color:rgba(14,165,233,0.3);">
+                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="Open in File Explorer" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
                     📂 Open in File Explorer
                   </button>
                 ` : `
-                  <button class="btn-remote-mount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Mount to /mnt/remotes" style="padding:4px 10px; font-size:11px; background:rgba(59,245,139,0.12); color:#3bf58b; border-color:rgba(59,245,139,0.25);">
+                  <button class="btn-remote-mount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Mount to /mnt/remotes" style="background: rgba(59,245,139,0.12); color: #3bf58b; border-color: rgba(59,245,139,0.25);">
                     ▶ Mount
                   </button>
                 `}
               </div>
               <div style="display:flex; gap:6px;">
                 ${isMounted ? `
-                  <button class="btn-remote-unmount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Unmount from system" style="padding:4px 8px; font-size:11px;">
+                  <button class="btn-remote-unmount btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Unmount from system">
                     ⏹ Unmount
                   </button>
                 ` : ''}
-                <button class="btn-remote-delete btn-pill-toggle" data-name="${escapeHtml(r.name)}" title="Delete remote" style="padding:4px 8px; font-size:11px; color:var(--crit,#ef4444); border-color:rgba(239,68,68,0.25);">
+                <button class="btn-remote-delete btn-pill-toggle is-danger" data-name="${escapeHtml(r.name)}" title="Delete remote">
                   🗑
                 </button>
               </div>
@@ -1708,13 +1708,13 @@ export async function fetchAndRenderRemoteStorage(container) {
               <span class="webdav-status-pill ${webdavPillClass}">${webdavPillText}</span>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
-              <button class="btn-pill-toggle" id="btn-webdav-toggle" style="padding:5px 12px; font-size:11px; font-weight:700;">
+              <button class="btn-pill-toggle" id="btn-webdav-toggle">
                 ${isRunning ? '⏹ Stop Server' : '▶ Start Server'}
               </button>
-              <button class="btn-pill-toggle" id="btn-webdav-restart" style="padding:5px 10px; font-size:11px;" title="Restart WebDAV Server">
+              <button class="btn-pill-toggle" id="btn-webdav-restart" title="Restart WebDAV Server">
                 ↺ Restart
               </button>
-              <button class="btn-pill-toggle" id="btn-webdav-config-open" style="padding:5px 10px; font-size:11px;" title="Configure WebDAV settings">
+              <button class="btn-pill-toggle" id="btn-webdav-config-open" title="Configure WebDAV settings">
                 ⚙️ Settings
               </button>
             </div>
@@ -1780,7 +1780,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <div style="font-size:13px; font-weight:800; color:#fff; letter-spacing:0.5px; text-transform:uppercase;">
               Connected Cloud Drives & Buckets (${remotes ? remotes.length : 0})
             </div>
-            <button class="btn-pill-toggle btn-trigger-new-remote" style="padding:4px 10px; font-size:11px; font-weight:700; background:rgba(14,165,233,0.15); color:#38bdf8; border-color:rgba(14,165,233,0.3);" title="Connect New Cloud Remote">
+            <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);" title="Connect New Cloud Remote">
               ☁️ + Add Remote
             </button>
           </div>
@@ -3297,10 +3297,10 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
             <td style="color:var(--muted); font-size:11px;">${dt}</td>
             <td>
               <div style="display:flex; gap:6px; align-items:center;">
-                <button class="btn-snap-restore btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3); color:#fbbf24; padding:2px 8px; font-size:11px; cursor:pointer;">
+                <button class="btn-snap-restore btn-pill-toggle is-small" data-snap="${escapeHtml(s.name)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: #fbbf24;">
                   ⏪ Revert
                 </button>
-                <button class="btn-snap-del btn-pill-toggle" data-snap="${escapeHtml(s.name)}" style="background:rgba(239,68,68,0.15); border-color:rgba(239,68,68,0.3); color:#f87171; padding:2px 8px; font-size:11px; cursor:pointer;">
+                <button class="btn-snap-del btn-pill-toggle is-danger is-small" data-snap="${escapeHtml(s.name)}">
                   🗑️ Delete
                 </button>
               </div>

@@ -911,11 +911,11 @@ export function initManagement() {
                 </div>
                 <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
                   ${isRunning
-                    ? `<button class="btn-pill-toggle btn-vm-action-stop" data-vm-id="${escapeHtml(vm.id)}" style="flex:1; font-size:11px; padding:4px 6px; color:#f87171;" title="Stop VM">⏹ Stop</button>`
-                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex:1; font-size:11px; padding:4px 6px; color:var(--ok2);" title="Start VM">▶ Start</button>`
+                    ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1;" title="Stop VM">⏹ Stop</button>`
+                    : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1; color: var(--ok2);" title="Start VM">▶ Start</button>`
                   }
-                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex:1; font-size:11px; padding:4px 6px; color:var(--accent-cyan);" title="Open Web Console">📺 Console</button>
-                  <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" style="font-size:11px; padding:4px 8px;" title="Edit VM Config">⚙️</button>
+                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex: 1; color: var(--accent-cyan);" title="Open Web Console">📺 Console</button>
+                  <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" title="Edit VM Config">⚙️</button>
                 </div>
               </div>
             `;

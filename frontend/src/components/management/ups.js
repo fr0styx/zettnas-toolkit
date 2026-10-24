@@ -680,7 +680,7 @@ export function initUpsDrawerControls() {
             <div style="font-size:12px; font-weight:600; color:#fff;">${escapeHtml(displayTitle)}</div>
             <div style="font-size:11px; color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
           </div>
-          <button type="button" class="btn-rect" style="font-size:11px; padding:3px 8px;">Apply</button>
+          <button type="button" class="btn-rect is-small">Apply</button>
         </div>`;
       }).join('');
 

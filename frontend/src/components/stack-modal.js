@@ -45,10 +45,10 @@ export function initStackModal() {
             <span id="stack-path-label" style="font-family:var(--font-mono, monospace); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:420px;"></span>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button class="btn-pill-toggle" id="stack-action-start" style="font-size:11px; padding:3px 9px; color:var(--ok2, #10b981);">▶ Start</button>
-            <button class="btn-pill-toggle" id="stack-action-stop" style="font-size:11px; padding:3px 9px; color:var(--err2, #ef4444);">⏹ Stop</button>
-            <button class="btn-pill-toggle" id="stack-action-restart" style="font-size:11px; padding:3px 9px;">↻ Restart</button>
-            <button class="btn-pill-toggle" id="stack-action-redeploy" style="font-size:11px; padding:3px 9px; background:rgba(14,165,233,0.2); border-color:rgba(56,189,248,0.4); color:#38bdf8;">⬆️ Redeploy / Up</button>
+            <button class="btn-pill-toggle is-small" id="stack-action-start" style="color: var(--ok2, #10b981);">▶ Start</button>
+            <button class="btn-pill-toggle is-danger is-small" id="stack-action-stop">⏹ Stop</button>
+            <button class="btn-pill-toggle is-small" id="stack-action-restart">↻ Restart</button>
+            <button class="btn-pill-toggle is-small" id="stack-action-redeploy" style="background: rgba(14,165,233,0.2); border-color: rgba(56,189,248,0.4); color: #38bdf8;">⬆️ Redeploy / Up</button>
           </div>
         </div>
 
@@ -99,8 +99,8 @@ export function initStackModal() {
           <div id="stack-modal-msg" style="font-size:11px; color:var(--muted);"></div>
           <div style="display:flex; gap:8px;">
             <button class="btn-pill-toggle" id="stack-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="stack-save-btn" style="background:rgba(255,255,255,0.1); font-weight:600;">Save Configuration</button>
-            <button class="btn-pill-toggle" id="stack-save-redeploy-btn" style="background:var(--brand, #00f0ff); color:#000; font-weight:700; border-color:var(--brand, #00f0ff);">Save & Redeploy Stack</button>
+            <button class="btn-pill-toggle" id="stack-save-btn" style="background: rgba(255,255,255,0.1);">Save Configuration</button>
+            <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">Save & Redeploy Stack</button>
           </div>
         </div>
       </div>
@@ -417,7 +417,7 @@ function renderServicesList(containers) {
 
         <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:4px;">
           ${c.webui_url ? `<a href="${escapeHtml(c.webui_url)}" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="font-size:11px; padding:2px 8px; text-decoration:none; color:var(--accent-cyan, #38bdf8);">🌐 WebUI</a>` : ''}
-          <button class="btn-pill-toggle stack-inspect-container-btn" data-cid="${escapeHtml(c.id)}" style="font-size:11px; padding:2px 8px;">🔍 Inspect Container</button>
+          <button class="btn-pill-toggle stack-inspect-container-btn is-small" data-cid="${escapeHtml(c.id)}">🔍 Inspect Container</button>
         </div>
       </div>
     `;

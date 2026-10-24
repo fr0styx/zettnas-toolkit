@@ -107,16 +107,16 @@ export function initContainersManager() {
 
             <!-- Quick Action Buttons -->
             <div class="cw-action-btns-wrap" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-              <button id="btn-cw-check-updates" class="btn-pill-toggle" title="Check remote registries for container image updates" style="display: inline-flex; align-items: center; gap: 5px;">
+              <button id="btn-cw-check-updates" class="btn-pill-toggle" title="Check remote registries for container image updates">
                 <span style="color: var(--ok2, #25c2a0);">✓</span> <span>Check Updates</span>
               </button>
-              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; align-items: center; gap: 5px; font-weight: 700; color: #fbbf24; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="Update all containers with available image updates">
+              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: #fbbf24; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="Update all containers with available image updates">
                 <span>↑</span> <span>Update All (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
-              <button id="btn-cw-stacks" class="btn-pill-toggle" title="Manage Docker Compose Stacks" style="display: inline-flex; align-items: center; gap: 5px; color: var(--accent-cyan, #38bdf8);">
+              <button id="btn-cw-stacks" class="btn-pill-toggle" title="Manage Docker Compose Stacks" style="color: var(--accent-cyan, #38bdf8);">
                 <span>📁</span> <span>Compose Stacks</span>
               </button>
-              <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}" style="display: inline-flex; align-items: center; gap: 5px;">
+              <button id="btn-cw-netmap" class="btn-pill-toggle" title="${t('cw.netmap_title', 'Container Network Map')}">
                 <span>🕸️</span> <span data-i18n="cw.netmap_btn">${t('cw.netmap_btn', 'Network Map')}</span>
               </button>
               <button id="btn-cw-prune" class="btn-pill-toggle" title="Clean up unused container images, stopped containers, and volumes">

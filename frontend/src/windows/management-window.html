@@ -412,7 +412,7 @@
                         Enhance desktop icon and widget legibility over bright or busy photographic backgrounds.
                       </div>
                     </div>
-                    <button id="wallpaper-readability-reset-btn" class="btn-pill-toggle" style="font-size:11px; padding:2px 8px;" title="Reset dimming and blur to defaults" data-i18n="mgmt.reset_defaults">↺ Reset Defaults</button>
+                    <button id="wallpaper-readability-reset-btn" class="btn-pill-toggle is-small" title="Reset dimming and blur to defaults" data-i18n="mgmt.reset_defaults">↺ Reset Defaults</button>
                   </div>
 
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -545,7 +545,7 @@
                 <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <label style="font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.custom_accent_label">CUSTOM ACCENT COLOR</label>
-                    <button id="desktop-theme-reset-accent-btn" class="btn-pill-toggle" style="font-size:11px; padding:2px 8px;" data-i18n="settings.reset_accent">↺ Reset to Theme Color</button>
+                    <button id="desktop-theme-reset-accent-btn" class="btn-pill-toggle is-small" data-i18n="settings.reset_accent">↺ Reset to Theme Color</button>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <div class="custom-color-chips">
@@ -572,7 +572,7 @@
                       <div style="font-size:11px; font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.wallpaper_harmony_label">WALLPAPER HARMONY PALETTE (WCAG 2.2 AA)</div>
                       <div style="font-size:11px; color:var(--muted); margin-top:1px;" data-i18n="settings.wallpaper_harmony_desc">Extracts harmonious accents directly from active wallpaper.</div>
                     </div>
-                    <button id="extract-palette-btn" class="btn-pill-toggle" style="font-size:11px; padding:3px 10px; display:inline-flex; align-items:center; gap:4px;">
+                    <button id="extract-palette-btn" class="btn-pill-toggle is-small">
                       <svg class="ic" style="width:11px; height:11px;"><use href="#i-sliders"/></svg>
                       <span data-i18n="settings.extract_palette_btn">🪄 Sample Wallpaper</span>
                     </button>
@@ -590,9 +590,9 @@
                   </div>
                   <div style="display:flex; gap:6px; align-items:center;">
                     <input type="file" id="theme-import-file" accept=".json,.zett-theme.json" style="display:none;">
-                    <button type="button" id="theme-export-btn" class="btn-pill-toggle" style="font-size:11px; padding:3px 10px;" data-i18n="settings.theme_export_btn">⬆ Export Theme</button>
-                    <button type="button" id="theme-import-btn" class="btn-pill-toggle" style="font-size:11px; padding:3px 10px;" data-i18n="settings.theme_import_btn">⬇ Import Theme</button>
-                    <button type="button" id="theme-reset-all-btn" class="btn-pill-toggle danger" style="font-size:11px; padding:3px 10px; color:#ef4444;" data-i18n="settings.theme_reset_all_btn">↺ Restore Defaults</button>
+                    <button type="button" id="theme-export-btn" class="btn-pill-toggle is-small" data-i18n="settings.theme_export_btn">⬆ Export Theme</button>
+                    <button type="button" id="theme-import-btn" class="btn-pill-toggle is-small" data-i18n="settings.theme_import_btn">⬇ Import Theme</button>
+                    <button type="button" id="theme-reset-all-btn" class="btn-pill-toggle danger is-danger is-small" data-i18n="settings.theme_reset_all_btn">↺ Restore Defaults</button>
                   </div>
                 </div>
               </div>
@@ -621,7 +621,7 @@
                       <div style="font-size: 13.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.acrylic_material_title">Acrylic Glass Material</div>
                       <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.acrylic_material_desc">Controls window and drawer backdrop-filter blur and surface translucency.</div>
                     </div>
-                    <button id="glass-reset-btn" class="btn-pill-toggle" style="font-size:11px; padding:2px 8px;" title="Reset glass settings to defaults" data-i18n="mgmt.reset_glass">↺ Reset Glass Defaults</button>
+                    <button id="glass-reset-btn" class="btn-pill-toggle is-small" title="Reset glass settings to defaults" data-i18n="mgmt.reset_glass">↺ Reset Glass Defaults</button>
                   </div>
 
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
@@ -664,9 +664,9 @@
                     <div>
                       <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.window_radius_label">WINDOW CORNER CURVATURE</label>
                       <div class="window-radius-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Window Corner Curvature">
-                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="6px" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;">Sharp (6px)</button>
-                        <button type="button" class="btn-pill-toggle window-radius-btn active" data-radius="12px" role="radio" aria-checked="true" style="flex:1; padding:6px; font-size:11px;">Modern (12px)</button>
-                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="20px" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;">Rounded (20px)</button>
+                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="6px" role="radio" aria-checked="false" style="flex: 1;">Sharp (6px)</button>
+                        <button type="button" class="btn-pill-toggle window-radius-btn active" data-radius="12px" role="radio" aria-checked="true" style="flex: 1;">Modern (12px)</button>
+                        <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="20px" role="radio" aria-checked="false" style="flex: 1;">Rounded (20px)</button>
                       </div>
                     </div>
 
@@ -731,7 +731,7 @@
                       <div style="font-size: 13.5px; font-weight: 700; color: #fff;" data-i18n="mgmt.dock_position_title">Screen Alignment & Dimensions</div>
                       <div style="font-size: 11.5px; color: var(--muted); margin-top: 2px;" data-i18n="mgmt.dock_position_desc">Position the application dock along display edges with dynamic workspace padding.</div>
                     </div>
-                    <button id="dock-reset-btn" class="btn-pill-toggle" style="font-size:11px; padding:2px 8px;" title="Reset dock settings to defaults" data-i18n="mgmt.reset_dock">↺ Reset Dock Defaults</button>
+                    <button id="dock-reset-btn" class="btn-pill-toggle is-small" title="Reset dock settings to defaults" data-i18n="mgmt.reset_dock">↺ Reset Dock Defaults</button>
                   </div>
 
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
@@ -739,9 +739,9 @@
                     <div>
                       <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_placement_label">SCREEN POSITION</label>
                       <div class="dock-position-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Dock Screen Position">
-                        <button type="button" class="btn-pill-toggle dock-pos-btn active" data-pos="bottom" role="radio" aria-checked="true" style="flex:1; padding:6px; font-size:11px;" data-i18n="mgmt.dock_pos_bottom">Bottom (Default)</button>
-                        <button type="button" class="btn-pill-toggle dock-pos-btn" data-pos="left" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;" data-i18n="mgmt.dock_pos_left">Left (Widescreen)</button>
-                        <button type="button" class="btn-pill-toggle dock-pos-btn" data-pos="top" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;" data-i18n="mgmt.dock_pos_top">Top (Status Bar)</button>
+                        <button type="button" class="btn-pill-toggle dock-pos-btn active" data-pos="bottom" role="radio" aria-checked="true" style="flex: 1;" data-i18n="mgmt.dock_pos_bottom">Bottom (Default)</button>
+                        <button type="button" class="btn-pill-toggle dock-pos-btn" data-pos="left" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_pos_left">Left (Widescreen)</button>
+                        <button type="button" class="btn-pill-toggle dock-pos-btn" data-pos="top" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_pos_top">Top (Status Bar)</button>
                       </div>
                     </div>
 
@@ -749,9 +749,9 @@
                     <div>
                       <label style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_size_label">ICON FOOTPRINT</label>
                       <div class="dock-size-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Dock Icon Size">
-                        <button type="button" class="btn-pill-toggle dock-size-btn" data-size="small" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;" data-i18n="mgmt.dock_size_small">Small (42px)</button>
-                        <button type="button" class="btn-pill-toggle dock-size-btn active" data-size="medium" role="radio" aria-checked="true" style="flex:1; padding:6px; font-size:11px;" data-i18n="mgmt.dock_size_medium">Medium (52px)</button>
-                        <button type="button" class="btn-pill-toggle dock-size-btn" data-size="large" role="radio" aria-checked="false" style="flex:1; padding:6px; font-size:11px;" data-i18n="mgmt.dock_size_large">Large (64px)</button>
+                        <button type="button" class="btn-pill-toggle dock-size-btn" data-size="small" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_size_small">Small (42px)</button>
+                        <button type="button" class="btn-pill-toggle dock-size-btn active" data-size="medium" role="radio" aria-checked="true" style="flex: 1;" data-i18n="mgmt.dock_size_medium">Medium (52px)</button>
+                        <button type="button" class="btn-pill-toggle dock-size-btn" data-size="large" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_size_large">Large (64px)</button>
                       </div>
                     </div>
                   </div>
@@ -895,10 +895,10 @@
 
                 <!-- Card 4: Action Buttons (Preview & Reset) -->
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 4px;">
-                  <button type="button" id="screensaver-preview-btn" class="btn-pill-toggle btn-primary-accent" style="padding: 8px 18px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                  <button type="button" id="screensaver-preview-btn" class="btn-pill-toggle btn-primary-accent">
                     <span data-i18n="mgmt.screensaver_preview_btn">👁️ Preview Screensaver</span>
                   </button>
-                  <button type="button" id="screensaver-reset-btn" class="btn-pill-toggle" style="padding: 8px 16px; font-size: 11.5px; cursor: pointer;">
+                  <button type="button" id="screensaver-reset-btn" class="btn-pill-toggle">
                     <span data-i18n="mgmt.screensaver_reset_btn">Reset Defaults</span>
                   </button>
                 </div>
@@ -1246,7 +1246,7 @@
 
                 <!-- Card 4: Reset Actions -->
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
-                  <button id="widget-reset-defaults-btn" class="btn-pill-toggle" style="padding: 8px 16px; font-size: 11.5px;">↺ Reset to Defaults</button>
+                  <button id="widget-reset-defaults-btn" class="btn-pill-toggle">↺ Reset to Defaults</button>
                 </div>
 
               </div>
@@ -1261,10 +1261,10 @@
                 <div class="mgmt-card-intro-desc" data-i18n="cal.modal_desc">Organize your schedule, track maintenance reminders, tasks, and sync external Google/iCal feeds.</div>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <button type="button" id="btn-cal-sync-now" class="btn-pill-toggle" style="padding: 5px 12px; font-size: 11px; margin: 0; background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3); color: #38bdf8;" title="Sync external calendar feeds now">
+                <button type="button" id="btn-cal-sync-now" class="btn-pill-toggle" style="margin: 0; background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3); color: #38bdf8;" title="Sync external calendar feeds now">
                   🔄 <span data-i18n="cal.sync_now">Sync Feeds</span>
                 </button>
-                <button type="button" id="btn-cal-export-ics" class="btn-pill-toggle" style="padding: 5px 12px; font-size: 11px; margin: 0;" title="Export all notes and events to .ics">
+                <button type="button" id="btn-cal-export-ics" class="btn-pill-toggle" style="margin: 0;" title="Export all notes and events to .ics">
                   📤 <span data-i18n="cal.export_ics">Export .ics</span>
                 </button>
               </div>
@@ -1281,7 +1281,7 @@
                     <div id="modal-cal-month-title" style="font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.5px;">October 2026</div>
                     <div style="display: flex; align-items: center; gap: 4px;">
                       <button type="button" id="btn-modal-cal-prev" class="btn-icon" style="padding: 3px 8px; font-size: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: #cbd5e1; cursor: pointer;">◀</button>
-                      <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px; margin: 0;">Today</button>
+                      <button type="button" id="btn-modal-cal-today" class="btn-pill-toggle is-small" style="margin: 0;">Today</button>
                       <button type="button" id="btn-modal-cal-next" class="btn-icon" style="padding: 3px 8px; font-size: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; color: #cbd5e1; cursor: pointer;">▶</button>
                     </div>
                   </div>
@@ -1305,7 +1305,7 @@
                   <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                       <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px;" data-i18n="cal.synced_feeds">Calendar Feeds (Google, iCal)</span>
-                      <button type="button" id="btn-toggle-add-feed" class="btn-pill-toggle" style="margin: 0; padding: 2px 8px; font-size: 11px;">+ Add Feed</button>
+                      <button type="button" id="btn-toggle-add-feed" class="btn-pill-toggle is-small" style="margin: 0;">+ Add Feed</button>
                     </div>
 
                     <!-- Add Feed Drawer / Form (hidden by default) -->
@@ -1321,8 +1321,8 @@
                           <option value="#8b5cf6">🟣 Violet</option>
                         </select>
                         <div style="display: flex; gap: 6px;">
-                          <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle" style="padding: 3px 8px; font-size: 11px; margin: 0;">Cancel</button>
-                          <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle" style="padding: 3px 10px; font-size: 11px; margin: 0; background: var(--ok2, #25c2a0); color: #000; border-color: var(--ok2, #25c2a0); font-weight: 700;">Connect & Sync</button>
+                          <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle is-small" style="margin: 0;">Cancel</button>
+                          <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle is-primary is-small" style="margin: 0;">Connect & Sync</button>
                         </div>
                       </div>
                       <div style="font-size: 11px; color: var(--muted); line-height: 1.3;">
@@ -1430,7 +1430,7 @@
                 <!-- Quick Action / Auto-detect -->
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
                   <div style="font-size: 12px; font-weight: 700; color: #e2e8f0;" data-i18n="tz.select_heading">Select Desktop Timezone</div>
-                  <button type="button" id="btn-tz-use-browser" class="btn-pill-toggle" style="margin: 0; padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: #fff;">
+                  <button type="button" id="btn-tz-use-browser" class="btn-pill-toggle" style="margin: 0; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: #fff;">
                     📍 <span data-i18n="tz.use_local">Use Local System Timezone</span>
                   </button>
                 </div>
@@ -1457,7 +1457,7 @@
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                   <label for="tz-custom-input" style="font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap;">Custom IANA Timezone:</label>
                   <input type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" style="flex: 1; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 6px 10px; color: #fff; border-radius: 6px; font-size: 11px;" />
-                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="padding: 6px 14px; font-size: 11px; margin: 0;">Apply</button>
+                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="margin: 0;">Apply</button>
                 </div>
 
                 <!-- Save Actions -->
@@ -1504,7 +1504,7 @@
                     <svg class="ic" style="width: 13px; height: 13px;"><use href="#i-grid"/></svg>
                     <span data-i18n="mgmt.zoom_hint">Drag to pan • Scroll to zoom</span>
                   </span>
-                  <button id="metrics-reset-zoom-btn" class="btn-pill-toggle" style="display: none; padding: 4px 8px; font-size: 11px; color: var(--accent-cyan); border-color: var(--accent-cyan);" title="Reset Zoom View" data-i18n="mgmt.reset_zoom">↺ Reset Zoom</button>
+                  <button id="metrics-reset-zoom-btn" class="btn-pill-toggle" style="display: none; color: var(--accent-cyan); border-color: var(--accent-cyan);" title="Reset Zoom View" data-i18n="mgmt.reset_zoom">↺ Reset Zoom</button>
                   <select id="metrics-range-select" class="tz-select-input" style="width: auto; padding: 6px 12px; font-size: 11px; cursor: pointer;">
                     <option value="1h" data-i18n="mgmt.range_1h">Last 1 Hour</option>
                     <option value="6h" data-i18n="mgmt.range_6h">Last 6 Hours</option>
@@ -1583,7 +1583,7 @@
                   <div class="network-kpi-card" id="net-kpi-ip-card">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                       <div class="network-kpi-label">Primary Host IP</div>
-                      <button class="btn-pill-toggle" id="btn-open-host-ip-modal" style="font-size: 11px; padding: 1px 7px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.35); text-transform: none; margin-top: -2px;" data-i18n="net.host_cfg_btn">⚙️ Configure</button>
+                      <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.35); text-transform: none; margin-top: -2px;" data-i18n="net.host_cfg_btn">⚙️ Configure</button>
                     </div>
                     <div class="network-kpi-val" id="net-kpi-ip">--</div>
                     <div class="network-kpi-sub" id="net-kpi-iface">--</div>
@@ -1653,7 +1653,7 @@
                 <!-- 802.1Q VLAN Sub-Interfaces -->
                 <div class="network-section-header" style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
                   <span class="network-section-title">VLAN SUB-INTERFACES (802.1Q TAGGING)</span>
-                  <button class="btn-pill-toggle" id="btn-open-create-vlan-modal" style="font-size: 11px; padding: 3px 10px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
+                  <button class="btn-pill-toggle is-small" id="btn-open-create-vlan-modal" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_vlan_btn">+ Add VLAN</button>
                 </div>
                 <div class="network-table-wrap" id="network-vlan-table-wrap">
                   <table class="copy-history-table">
@@ -1691,12 +1691,12 @@
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                   <div class="btn-group" id="mesh-service-filter" style="display:flex; gap:4px; margin-right:4px;">
-                    <button class="btn-pill-toggle active" data-mesh-filter="all" style="font-size:11px; padding:4px 10px;">All</button>
-                    <button class="btn-pill-toggle" data-mesh-filter="tailscale" style="font-size:11px; padding:4px 10px;">Tailscale</button>
-                    <button class="btn-pill-toggle" data-mesh-filter="wireguard" style="font-size:11px; padding:4px 10px;">WireGuard</button>
+                    <button class="btn-pill-toggle active" data-mesh-filter="all">All</button>
+                    <button class="btn-pill-toggle" data-mesh-filter="tailscale">Tailscale</button>
+                    <button class="btn-pill-toggle" data-mesh-filter="wireguard">WireGuard</button>
                   </div>
-                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="font-size: 11px; padding: 5px 12px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);">🔑 Generate Client .conf</button>
-                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" style="font-size: 11px; padding: 5px 12px;" title="Refresh Mesh VPN Status">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);">🔑 Generate Client .conf</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh Mesh VPN Status">🔄 Refresh</button>
                 </div>
               </div>
 
@@ -1719,7 +1719,7 @@
                         <span style="color:var(--muted);">Tailscale IP (IPv4):</span>
                         <div style="display:flex; align-items:center; gap:6px;">
                           <code id="ts-ipv4-display" style="font-size:11.5px; color:#38bdf8; font-weight:600;">--</code>
-                          <button class="btn-pill-toggle" id="btn-copy-ts-ip" style="display:none; font-size:11px; padding:1px 6px;" title="Copy Tailscale IP">📋 Copy</button>
+                          <button class="btn-pill-toggle is-small" id="btn-copy-ts-ip" style="display: none;" title="Copy Tailscale IP">📋 Copy</button>
                         </div>
                       </div>
                       <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
@@ -1738,7 +1738,7 @@
                         <span style="color:var(--muted);" data-i18n="net.tailscale_key_expiry">Node Key Expiry:</span>
                         <div style="display:flex; align-items:center; gap:8px;">
                           <span id="ts-key-expiry-display" style="font-weight:600; color:var(--ok2, #3bf58b); font-size:11px;">--</span>
-                          <button class="btn-pill-toggle" id="btn-ts-reauth" style="font-size:11px; padding:2px 8px; display:none;" title="Re-authenticate node key" data-i18n="net.tailscale_reauth_btn">⚡ Re-auth</button>
+                          <button class="btn-pill-toggle is-small" id="btn-ts-reauth" style="display: none;" title="Re-authenticate node key" data-i18n="net.tailscale_reauth_btn">⚡ Re-auth</button>
                         </div>
                       </div>
                     </div>
@@ -1748,7 +1748,7 @@
                   <div class="network-card" id="tailscale-controls-card">
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> Tailscale Connection & Auth</div>
-                      <button class="btn-pill-toggle" id="btn-tailscale-down" style="font-size:11px; padding:2px 10px; color:#f87171; border-color:rgba(239,68,68,0.3); display:none;">🔌 Disconnect</button>
+                      <button class="btn-pill-toggle is-danger is-small" id="btn-tailscale-down" style="display: none;">🔌 Disconnect</button>
                     </div>
                     <div style="padding:12px; font-size:12px;" id="ts-controls-body">
                       <!-- 1-Click Deploy Banner (shown when daemon is not installed) -->
@@ -1773,7 +1773,7 @@
                           <a id="ts-auth-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:#f59e0b; color:#000; font-weight:700; font-size:11px; padding:5px 12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
                             <span data-i18n="net.tailscale_open_login">🔗 Open Tailscale Login</span>
                           </a>
-                          <button class="btn-pill-toggle" id="btn-copy-ts-auth-url" style="font-size:11px; padding:4px 8px;">
+                          <button class="btn-pill-toggle" id="btn-copy-ts-auth-url">
                             <span data-i18n="net.tailscale_copy_link">📋 Copy Link</span>
                           </button>
                           <span style="font-size:11px; color:var(--muted); margin-left:auto;" data-i18n="net.tailscale_waiting_auth">⏳ Waiting for authorization...</span>
@@ -1802,7 +1802,7 @@
                           </div>
                         </div>
                         <div style="display:flex; justify-content:flex-end; margin-top:2px;">
-                          <button class="btn-pill-toggle" id="btn-tailscale-up" style="font-size:11.5px; padding:5px 14px; background:rgba(56,189,248,0.15); color:#38bdf8; border-color:rgba(56,189,248,0.4); font-weight:700;">🚀 Connect Tailscale</button>
+                          <button class="btn-pill-toggle" id="btn-tailscale-up" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.4);">🚀 Connect Tailscale</button>
                         </div>
                       </div>
 
@@ -1822,7 +1822,7 @@
                               <input type="checkbox" id="ts-subnet-router-toggle" style="accent-color:var(--accent-cyan, #38bdf8);" />
                               <span data-i18n="net.tailscale_subnet_router">Subnet Router Gateway (--advertise-routes)</span>
                             </label>
-                            <button class="btn-pill-toggle" id="btn-ts-save-routes" style="font-size:11px; padding:2px 8px;" data-i18n="net.tailscale_save_routes">Save Subnets</button>
+                            <button class="btn-pill-toggle is-small" id="btn-ts-save-routes" data-i18n="net.tailscale_save_routes">Save Subnets</button>
                           </div>
                           <div style="font-size:11px; color:var(--text-sub); line-height:1.3;" data-i18n="net.tailscale_subnet_desc">
                             Advertise local LAN subnets to access devices remotely without per-device clients.
@@ -1887,7 +1887,7 @@
                         <span style="color:var(--muted); font-size:11px;">Direct HTTPS URL:</span>
                         <div style="display:flex; align-items:center; gap:8px;">
                           <a id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; font-weight:600; text-decoration:underline;">https://--</a>
-                          <button class="btn-pill-toggle" id="btn-copy-ts-serve-url" style="font-size:11px; padding:1px 6px;">📋 Copy</button>
+                          <button class="btn-pill-toggle is-small" id="btn-copy-ts-serve-url">📋 Copy</button>
                         </div>
                       </div>
                       <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
@@ -1909,8 +1909,8 @@
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-download"/></svg> <span data-i18n="net.tailscale_taildrop">Taildrop Inbox (Zero-Trust AirDrop)</span></div>
                       <div style="display:flex; align-items:center; gap:6px;">
                         <span class="mgmt-app-pill" id="ts-taildrop-badge" style="font-size:11px; padding:2px 8px;">0 files</span>
-                        <button class="btn-pill-toggle" id="btn-ts-taildrop-fetch" style="font-size:11px; padding:2px 7px;" title="Fetch pending files from Taildrop queue" data-i18n="net.tailscale_taildrop_fetch">📥 Fetch</button>
-                        <button class="btn-pill-toggle" id="btn-ts-taildrop-open" style="font-size:11px; padding:2px 7px;" title="Open Taildrop folder in Files app" data-i18n="net.tailscale_taildrop_open">📂 Files</button>
+                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-fetch" title="Fetch pending files from Taildrop queue" data-i18n="net.tailscale_taildrop_fetch">📥 Fetch</button>
+                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-open" title="Open Taildrop folder in Files app" data-i18n="net.tailscale_taildrop_open">📂 Files</button>
                       </div>
                     </div>
                     <div style="padding:12px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
@@ -1975,7 +1975,7 @@
                       </div>
                       <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="color:var(--muted);">Subnet NAT Router:</span>
-                        <button class="btn-pill-toggle" id="btn-toggle-wg-subnet-nat" style="font-size:11px; padding:3px 10px;">Toggle NAT Routing</button>
+                        <button class="btn-pill-toggle is-small" id="btn-toggle-wg-subnet-nat">Toggle NAT Routing</button>
                       </div>
                     </div>
                   </div>
@@ -1984,8 +1984,8 @@
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> Client Configuration (.conf)</div>
                       <div style="display:flex; gap:6px; align-items:center;">
-                        <button class="btn-pill-toggle" id="btn-copy-wg-conf" style="font-size:11px; padding:2px 8px; display:none;" title="Copy WireGuard configuration to clipboard">📋 Copy</button>
-                        <button class="btn-pill-toggle" id="btn-download-wg-conf" style="font-size:11px; padding:2px 8px; display:none;" title="Download WireGuard .conf profile">📥 Export .conf</button>
+                        <button class="btn-pill-toggle is-small" id="btn-copy-wg-conf" style="display: none;" title="Copy WireGuard configuration to clipboard">📋 Copy</button>
+                        <button class="btn-pill-toggle is-small" id="btn-download-wg-conf" style="display: none;" title="Download WireGuard .conf profile">📥 Export .conf</button>
                       </div>
                     </div>
                     <div style="padding:12px; font-size:12px; display:flex; flex-direction:column; gap:10px;">
@@ -2016,7 +2016,7 @@
                   </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="font-size: 11px; padding: 5px 12px; color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
+                  <button class="btn-pill-toggle" id="btn-create-docker-net" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56, 189, 248, 0.4);" data-i18n="net.create_docker_net">+ Create Network</button>
                 </div>
               </div>
 
@@ -2158,7 +2158,7 @@
                 </div>
                 <div style="display:flex; gap:6px; align-items:center;">
                   <button class="btn-pill-toggle" id="btn-mgmt-docker-launch-window" title="Open Dedicated Window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
-                  <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display:none;">← Back to Containers</button>
+                  <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display: none;">← Back to Containers</button>
                   <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">…</span></button>
                   <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers">🧹 Prune / Cleanup</button>
                   <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
@@ -2172,18 +2172,18 @@
                       <button class="btn-pill-toggle docker-filter-btn active" data-filter="all"><span data-i18n="mgmt.docker_filter_all">All</span> <span id="docker-count-all" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="running"><span data-i18n="mgmt.docker_filter_running">Running</span> <span id="docker-count-running" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="stopped"><span data-i18n="mgmt.docker_filter_stopped">Stopped</span> <span id="docker-count-stopped" class="docker-count-badge">0</span></button>
-                      <button class="btn-pill-toggle docker-filter-btn" id="btn-docker-filter-updates" data-filter="updates" style="display:none;"><span data-i18n="mgmt.docker_filter_updates">Updates</span> <span id="docker-count-updates" class="docker-count-badge badge-warning">0</span></button>
+                      <button class="btn-pill-toggle docker-filter-btn" id="btn-docker-filter-updates" data-filter="updates" style="display: none;"><span data-i18n="mgmt.docker_filter_updates">Updates</span> <span id="docker-count-updates" class="docker-count-badge badge-warning">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="compose"><span data-i18n="mgmt.docker_filter_compose">Stacks</span> <span id="docker-count-compose" class="docker-count-badge">0</span></button>
                       <button class="btn-pill-toggle docker-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">Standalone</span> <span id="docker-count-standalone" class="docker-count-badge">0</span></button>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                      <button class="btn-pill-toggle" id="btn-docker-stacks-menu" style="display:inline-flex; align-items:center; gap:5px; font-weight:600; color:var(--accent-cyan, #38bdf8);" title="View & Edit Docker Compose Stacks">
+                      <button class="btn-pill-toggle" id="btn-docker-stacks-menu" style="color: var(--accent-cyan, #38bdf8);" title="View & Edit Docker Compose Stacks">
                         <span>📁</span> <span>Manage Stacks</span>
                       </button>
-                      <button class="btn-pill-toggle" id="btn-docker-check-updates" style="display:inline-flex; align-items:center; gap:5px; font-weight:600;" title="Check remote registries for container image updates">
+                      <button class="btn-pill-toggle" id="btn-docker-check-updates" title="Check remote registries for container image updates">
                         <span style="color:var(--ok2, #25c2a0);">✓</span> <span>Check for updates</span>
                       </button>
-                      <button class="btn-pill-toggle" id="btn-docker-update-all" style="display:none; align-items:center; gap:5px; font-weight:700; color:#fbbf24; border-color:rgba(251,191,36,0.4); background:rgba(251,191,36,0.12);" title="Update all containers with available image updates">
+                      <button class="btn-pill-toggle" id="btn-docker-update-all" style="display: none; color: #fbbf24; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="Update all containers with available image updates">
                         <span style="display:inline-flex; align-items:center; justify-content:center; width:13px; height:13px; border-radius:50%; border:1.5px solid #fbbf24; font-size:11px; line-height:1;">↑</span> <span>Update all (<span id="docker-updates-count-badge">0</span>)</span>
                       </button>
                       <div class="docker-search-wrap" style="position:relative;">
@@ -2813,7 +2813,7 @@
 
                 <!-- Toggle Manual Parameters button (visible when USB is active) -->
                 <div id="ups-toggle-params-container" style="display:none; justify-content:flex-end; margin-top:2px;">
-                  <button type="button" id="btn-toggle-ups-conn-params" class="btn-pill-toggle" style="font-size:11px; padding:3px 10px; background:transparent; border-color:rgba(255,255,255,0.15); color:var(--muted); cursor:pointer;">
+                  <button type="button" id="btn-toggle-ups-conn-params" class="btn-pill-toggle is-small" style="background: transparent; border-color: rgba(255,255,255,0.15); color: var(--muted);">
                     ⚙️ <span id="ups-toggle-params-text" data-i18n="mgmt.ups_show_params">Show Connection Parameters</span>
                   </button>
                 </div>
@@ -2850,7 +2850,7 @@
                   </div>
                   <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:11px; color:var(--muted);">Port :3551 (apcupsd) · :3493 (NUT)</span>
-                    <button id="btn-ups-test-conn" class="btn-pill-toggle" style="padding:5px 12px; font-weight:600; display:inline-flex; align-items:center; gap:6px;" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
+                    <button id="btn-ups-test-conn" class="btn-pill-toggle" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
                   </div>
                 </div>
 
@@ -2867,7 +2867,7 @@
                   </div>
                   <div style="display:flex; align-items:center; gap:6px;">
                     <span id="ups-save-status" class="ups-save-badge" style="display:none;" data-i18n="mgmt.ups_auto_saved">✓ Saved</span>
-                    <button type="button" id="btn-toggle-ups-policy" class="btn-pill-toggle" style="font-size:11px; padding:3px 10px; background:transparent; border-color:rgba(255,255,255,0.15); color:var(--muted); cursor:pointer;">
+                    <button type="button" id="btn-toggle-ups-policy" class="btn-pill-toggle is-small" style="background: transparent; border-color: rgba(255,255,255,0.15); color: var(--muted);">
                       <span id="ups-toggle-policy-text" data-i18n="mgmt.ups_collapse_policy">Collapse Policy</span>
                     </button>
                   </div>
@@ -3020,8 +3020,8 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.topo_desc">Hierarchical view of storage pools, parity protection drives, data array disks, and SSD cache tiers.</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <button class="btn-pill-toggle" id="btn-create-storage-pool" style="display:none; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9);" title="Create New Storage Pool">+ Create Pool</button>
-                  <button class="btn-pill-toggle" id="btn-manage-snapshots" style="display:none;" title="Manage Btrfs Snapshots">📸 Snapshots</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-create-storage-pool" style="display: none;" title="Create New Storage Pool">+ Create Pool</button>
+                  <button class="btn-pill-toggle" id="btn-manage-snapshots" style="display: none;" title="Manage Btrfs Snapshots">📸 Snapshots</button>
                   <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
               </div>
@@ -3039,20 +3039,20 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                   <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:rgba(59,245,139,0.12); color:#3bf58b;">Observer Mode</span>
-                  <button class="btn-pill-toggle" id="btn-create-network-share" style="display:none; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9);" title="Create Network Share">+ Create Share</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-create-network-share" style="display: none;" title="Create Network Share">+ Create Share</button>
                   <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
               </div>
               <!-- Sharing Protocols Quickbar -->
               <div class="mgmt-protocol-quickbar" style="margin: 0 16px 12px 16px; padding: 10px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border, rgba(255, 255, 255, 0.08)); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                  <span style="font-size: 11.5px; font-weight: 600; color: var(--muted, #94a3b8);" data-i18n="mgmt.protocols_status_title">File Sharing Protocols:</span>
-                  <span class="mgmt-app-pill" style="font-size: 11px; background: rgba(14,165,233,0.12); color: var(--brand, #0ea5e9); border: 1px solid rgba(14,165,233,0.25);">SMB3 Active</span>
-                  <span class="mgmt-app-pill" style="font-size: 11px; background: rgba(59,245,139,0.1); color: #3bf58b; border: 1px solid rgba(59,245,139,0.25);">NFSv4 Ready</span>
-                  <span class="mgmt-app-pill" style="font-size: 11px; background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.25);">SFTP Port 2222</span>
-                  <span class="mgmt-app-pill" style="font-size: 11px; background: rgba(234,179,8,0.1); color: #facc15; border: 1px solid rgba(234,179,8,0.25);">WebDAV :8080</span>
+                  <span style="font-size: var(--zn-fs-sm); font-weight: 600; color: var(--muted, #94a3b8);" data-i18n="mgmt.protocols_status_title">File Sharing Protocols:</span>
+                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(14,165,233,0.12); color: var(--brand, #0ea5e9); border: 1px solid rgba(14,165,233,0.25);">SMB3 Active</span>
+                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(59,245,139,0.1); color: #3bf58b; border: 1px solid rgba(59,245,139,0.25);">NFSv4 Ready</span>
+                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.25);">SFTP Port 2222</span>
+                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(234,179,8,0.1); color: #facc15; border: 1px solid rgba(234,179,8,0.25);">WebDAV :8080</span>
                 </div>
-                <button class="btn-pill-toggle" id="btn-quick-manage-protocols" style="font-size: 11px; padding: 4px 10px; cursor: pointer; background: transparent; border-color: var(--border, rgba(255,255,255,0.15)); color: var(--text, #e2e8f0);">
+                <button class="btn-pill-toggle" id="btn-quick-manage-protocols" style="background: transparent; border-color: var(--border, rgba(255,255,255,0.15)); color: var(--text, #e2e8f0);">
                   ⚙️ <span data-i18n="mgmt.manage_protocols">Protocol Daemons</span>
                 </button>
               </div>
@@ -3069,7 +3069,7 @@
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.remotes_desc">Embedded Universal WebDAV server, FUSE cloud bucket mounting (/mnt/remotes), and automated offsite sync.</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <button class="btn-pill-toggle" id="btn-add-cloud-remote" style="background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9);" title="Connect New Cloud Remote">☁️ + Connect Cloud Remote</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-add-cloud-remote" title="Connect New Cloud Remote">☁️ + Connect Cloud Remote</button>
                   <button class="btn-pill-toggle" id="btn-refresh-remotes" title="Refresh Remotes" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
               </div>
@@ -3152,7 +3152,7 @@
                   <div class="mgmt-card-intro-desc">Asynchronous recursive dataset transfers supporting local pools and remote SSH/WireGuard endpoints with bandwidth throttling and retention.</div>
                 </div>
                 <div style="display:flex; gap:8px;">
-                  <button class="btn-pill-toggle" id="btn-create-replication-job" style="background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9);" title="Create Replication Pipeline">+ New Replication Pipeline</button>
+                  <button class="btn-pill-toggle is-primary" id="btn-create-replication-job" title="Create Replication Pipeline">+ New Replication Pipeline</button>
                   <button class="btn-pill-toggle" id="btn-refresh-replication" title="Refresh Replication Jobs">🔄 Refresh</button>
                 </div>
               </div>
@@ -3239,24 +3239,24 @@
             <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sec_title">Account Security & Credentials</span></div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.sec_desc">Manage administrator login credentials, security preferences, and system provisioning.</div>
           </div>
-          <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: #ff6b6b; font-size: 11.5px; font-weight: 600; line-height: 1.45;" data-i18n="mgmt.sec_default_warning">
+          <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: #ff6b6b; font-size: var(--zn-fs-sm); font-weight: 600; line-height: 1.45;" data-i18n="mgmt.sec_default_warning">
             ⚠️ DEFAULT PASSWORD ACTIVE: Your server still uses its default or first-time password. Please set a custom password below immediately.
           </div>
           <div id="sec-advisor-card" style="margin: 12px 0; padding: 14px; background: rgba(15,23,42,0.65); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; display: flex; flex-direction: column; gap: 10px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: var(--zn-fs-sm); font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
                 <svg class="ic" style="width: 14px; height: 14px; color: var(--accent-cyan);"><use href="#i-chip"/></svg>
                 <span data-i18n="sec.advisor_title">Security Advisor Hardening Checklist</span>
               </span>
-              <span id="sec-advisor-score-badge" class="ci-badge" style="background: rgba(37,194,160,0.15); color: #25c2a0; border: 1px solid rgba(37,194,160,0.3); font-size: 11px; font-weight: 700;">Score: 100/100</span>
+              <span id="sec-advisor-score-badge" class="ci-badge" style="background: rgba(37,194,160,0.15); color: #25c2a0; border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs); font-weight: 700;">Score: 100/100</span>
             </div>
-            <div id="sec-advisor-items" style="display: flex; flex-direction: column; gap: 6px; font-size: 11px;">
+            <div id="sec-advisor-items" style="display: flex; flex-direction: column; gap: 6px; font-size: var(--zn-fs-xs);">
               <!-- Dynamic checklist items -->
             </div>
             <div id="sec-disable-admin-container" style="display: none; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08);">
               <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
-                <span style="font-size: 11px; color: var(--muted);" data-i18n="sec.disable_admin_desc">Retire the default 'admin' account to harden system against automated brute-force attacks.</span>
-                <button type="button" id="btn-disable-default-admin" class="btn-pill-toggle" style="background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.5); color: #f87171; white-space: nowrap; font-size: 11px; padding: 5px 12px; cursor: pointer; border-radius: 4px; font-weight: 600;">
+                <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="sec.disable_admin_desc">Retire the default 'admin' account to harden system against automated brute-force attacks.</span>
+                <button type="button" id="btn-disable-default-admin" class="btn-pill-toggle is-danger">
                   🔒 <span data-i18n="sec.disable_admin_btn">Disable Default Admin</span>
                 </button>
               </div>
@@ -3266,11 +3266,11 @@
             <div style="display:flex; flex-direction:column; gap: 14px;">
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                 <div>
-                  <label for="sec-username" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
+                  <label for="sec-username" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
                   <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin">
                 </div>
                 <div>
-                  <label for="sec-email" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
+                  <label for="sec-email" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
                   <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="admin@zettnas.local">
                 </div>
               </div>
@@ -3278,21 +3278,21 @@
               <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                   <div>
-                    <label for="sec-new-pwd" style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
+                    <label for="sec-new-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_new_pwd">NEW PASSWORD (Optional)</label>
                     <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="New password (min. 8 characters)" minlength="8" autocomplete="new-password">
                   </div>
                   <div>
-                    <label for="sec-confirm-pwd" style="display:block; font-size:11px; font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">CONFIRM NEW PASSWORD</label>
+                    <label for="sec-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">CONFIRM NEW PASSWORD</label>
                     <input type="password" id="sec-confirm-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
                   </div>
                 </div>
-                <div id="sec-pwd-mismatch-msg" style="display:none; color:var(--crit, #ff6b6b); font-size:11px; font-weight:600; margin-top:6px; align-items:center; gap:4px;">
+                <div id="sec-pwd-mismatch-msg" style="display:none; color:var(--crit, #ff6b6b); font-size: var(--zn-fs-xs); font-weight:600; margin-top:6px; align-items:center; gap:4px;">
                   <span>⚠️</span> <span data-i18n="mgmt.sec_err_pwd_mismatch">New passwords do not match. Please verify and try again.</span>
                 </div>
               </div>
 
               <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
-                <label for="sec-cur-pwd" style="display:block; font-size:11px; font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
+                <label for="sec-cur-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--ok2); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_cur_pwd">CURRENT PASSWORD (Required to commit changes)</label>
                 <input type="password" id="sec-cur-pwd" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" placeholder="Enter current password">
               </div>
 
@@ -3302,7 +3302,7 @@
               </div>
 
               <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; padding-top: 14px;">
-                <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: 11.5px; background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;" data-i18n="mgmt.sec_wizard">🚀 Launch Initial Hardware Setup Wizard</button>
+                <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: var(--zn-fs-sm); background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: #f8fafc;" data-i18n="mgmt.sec_wizard">🚀 Launch Initial Hardware Setup Wizard</button>
               </div>
 
               <!-- Ransomware guard and blocked addresses (M4, M5) -->
@@ -3313,27 +3313,27 @@
               <!-- Scoped API Tokens -->
               <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 14px; padding-top: 14px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                  <span style="font-weight:700; font-size:12.5px; color:#fff;" data-i18n="settings.api_tokens">API Tokens & Automation Keys</span>
+                  <span style="font-weight:700; font-size: var(--zn-fs-sm); color:#fff;" data-i18n="settings.api_tokens">API Tokens & Automation Keys</span>
                 </div>
-                <div style="font-size: 11px; color: var(--muted); margin-bottom: 12px; line-height: 1.4;">
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 12px; line-height: 1.4;">
                   Generate scoped API tokens for third-party integrations (e.g., Home Assistant, Prometheus, or backup automation).
                 </div>
                 <div id="api-tokens-list" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
-                  <div style="font-size:11px; color:var(--muted); text-align:center;">Loading...</div>
+                  <div style="font-size: var(--zn-fs-xs); color:var(--muted); text-align:center;">Loading...</div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" class="tz-select-input" style="flex:1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 7px 12px; font-size: 11.5px; border-radius: 6px;">
-                  <button id="btn-generate-token" class="btn-pill-toggle" style="font-weight:700; color:var(--brand, #38bdf8); border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.12); padding:6px 14px;">Generate</button>
+                  <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" class="tz-select-input" style="flex:1; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 7px 12px; font-size: var(--zn-fs-sm); border-radius: 6px;">
+                  <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--brand, #38bdf8); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">Generate</button>
                 </div>
               </div>
 
               <!-- Two-Factor Authentication Quick Access -->
               <div style="border-top: 1px solid rgba(255,255,255,0.06); margin-top: 14px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center; background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.2); border-radius: 8px; padding: 12px 14px;">
                 <div>
-                  <div style="font-weight:700; font-size:12.5px; color:#fff;">🛡️ Two-Factor Authentication (2FA)</div>
-                  <div style="font-size:11px; color:var(--muted); margin-top:2px;">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
+                  <div style="font-weight:700; font-size: var(--zn-fs-sm); color:#fff;">🛡️ Two-Factor Authentication (2FA)</div>
+                  <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Protect your account with RFC 6238 TOTP authenticator app verification.</div>
                 </div>
-                <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="font-size:11.5px; padding:6px 14px; color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.4); white-space:nowrap;">Configure 2FA →</button>
+                <button type="button" class="btn-pill-toggle" id="btn-jump-to-2fa" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56,189,248,0.4);">Configure 2FA →</button>
               </div>
             </div>
           </div>
@@ -3370,23 +3370,23 @@
             <!-- Subpane 1: User Inventory -->
             <div id="users-pane-list" class="users-subpane" style="display: block;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE USER ACCOUNTS</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE USER ACCOUNTS</div>
                 <div style="display:flex; gap: 8px;">
-                  <button type="button" id="btn-refresh-users" class="btn-pill-toggle" style="padding: 6px 12px; font-size: 11px;">
+                  <button type="button" id="btn-refresh-users" class="btn-pill-toggle">
                     🔄 Refresh
                   </button>
-                  <button type="button" id="btn-share-access" class="btn-pill-toggle" style="padding: 6px 12px; font-size: 11px;" title="Choose which users can use which shares">
+                  <button type="button" id="btn-share-access" class="btn-pill-toggle" title="Choose which users can use which shares">
                     🔐 Share access
                   </button>
-                  <button type="button" id="btn-add-user" class="btn-save-preset" style="padding: 6px 14px; font-size: 11.5px;">
+                  <button type="button" id="btn-add-user" class="btn-save-preset" style="padding: 6px 14px; font-size: var(--zn-fs-sm);">
                     ➕ Add User
                   </button>
                 </div>
               </div>
               <div class="table-container" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 650px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 760px;">
                   <thead>
-                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
                       <th style="padding: 10px 12px;">User</th>
                       <th style="padding: 10px 12px;">Email</th>
                       <th style="padding: 10px 12px;">Role</th>
@@ -3407,14 +3407,14 @@
             <div id="users-pane-sessions" class="users-subpane" style="display: none;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
                 <div>
-                  <div style="font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE LOGIN SESSIONS</div>
-                  <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Review browser and client sessions authorized on this NAS.</div>
+                  <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE LOGIN SESSIONS</div>
+                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;">Review browser and client sessions authorized on this NAS.</div>
                 </div>
                 <div style="display:flex; gap: 8px;">
-                  <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle" style="padding: 6px 12px; font-size: 11px;">
+                  <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle">
                     🔄 Refresh
                   </button>
-                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger" style="padding: 6px 14px; font-size: 11px;">
+                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger" style="padding: 6px 14px; font-size: var(--zn-fs-xs);">
                     Revoke Other Sessions
                   </button>
                 </div>
@@ -3422,7 +3422,7 @@
               <div class="table-container" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;">
                   <thead>
-                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                    <tr style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
                       <th style="padding: 10px 12px;">Device / Client</th>
                       <th style="padding: 10px 12px;">IP Address</th>
                       <th style="padding: 10px 12px;">First Login</th>
@@ -3446,28 +3446,28 @@
                       🛡️
                     </div>
                     <div>
-                      <div style="font-size: 14px; font-weight: 700; color: #fff;">Two-Factor Authentication (RFC 6238 TOTP)</div>
-                      <div style="font-size: 11px; color: var(--muted);">Authenticator app verification for enhanced sign-in security.</div>
+                      <div style="font-size: var(--zn-fs); font-weight: 700; color: #fff;">Two-Factor Authentication (RFC 6238 TOTP)</div>
+                      <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Authenticator app verification for enhanced sign-in security.</div>
                     </div>
                   </div>
                   <div>
-                    <span id="mfa-status-badge" style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--crit); border: 1px solid rgba(239,68,68,0.3);">DISABLED</span>
+                    <span id="mfa-status-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--crit); border: 1px solid rgba(239,68,68,0.3);">DISABLED</span>
                   </div>
                 </div>
-                <div id="mfa-status-desc" style="font-size: 12px; line-height: 1.5; color: #cbd5e1; margin-bottom: 16px;">
+                <div id="mfa-status-desc" style="font-size: var(--zn-fs-sm); line-height: 1.5; color: #cbd5e1; margin-bottom: 16px;">
                   Two-factor authentication is currently disabled. Add an extra layer of defense against password theft with an authenticator app (Google Authenticator, Aegis, 1Password, Bitwarden).
                 </div>
                 <div style="display: flex; gap: 10px;">
-                  <button type="button" id="btn-enable-2fa" class="btn-save-preset" style="padding: 8px 16px; font-size: 12px;">
+                  <button type="button" id="btn-enable-2fa" class="btn-save-preset" style="padding: 8px 16px; font-size: var(--zn-fs-sm);">
                     🛡️ Set Up Two-Factor Authentication
                   </button>
-                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: 12px; display: none;">
+                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: var(--zn-fs-sm); display: none;">
                     Disable 2FA
                   </button>
                 </div>
                 <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                  <div style="font-size: 11px; color: var(--muted);">Looking to change your admin username, password, or API automation keys?</div>
-                  <button type="button" class="btn-pill-toggle" id="btn-jump-to-security" style="font-size: 11px; padding: 5px 12px; color: #fff;">Admin Credentials & Password →</button>
+                  <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Looking to change your admin username, password, or API automation keys?</div>
+                  <button type="button" class="btn-pill-toggle" id="btn-jump-to-security" style="color: #fff;">Admin Credentials & Password →</button>
                 </div>
               </div>
             </div>
@@ -3489,10 +3489,10 @@
                   </div>
                 </div>
                 <div style="display:flex; gap:8px;">
-                  <button id="btn-send-test-alert" class="btn-pill-toggle" style="background:rgba(14,165,233,0.15); border-color:rgba(14,165,233,0.35); color:#38bdf8; display:flex; align-items:center; gap:6px; font-weight:600;">
+                  <button id="btn-send-test-alert" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.35); color: #38bdf8;">
                     ⚡ <span data-i18n="mgmt.notif_btn_test_all">Send Test Alert</span>
                   </button>
-                  <button id="btn-save-notifications" class="btn-pill-toggle active" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; display:flex; align-items:center; gap:6px;">
+                  <button id="btn-save-notifications" class="btn-pill-toggle active is-primary">
                     💾 <span data-i18n="mgmt.notif_btn_save">Save Settings</span>
                   </button>
                 </div>
@@ -3502,11 +3502,11 @@
                 <!-- Master Toggle Card -->
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; margin-bottom:16px;">
                   <div>
-                    <div style="font-size:12.5px; font-weight:700; color:#fff;" data-i18n="mgmt.notif_master_label">Master Notification Engine</div>
-                    <div style="font-size:11px; color:var(--muted); margin-top:2px;" data-i18n="mgmt.notif_master_desc">When disabled, no external notifications or chat webhooks will be dispatched.</div>
+                    <div style="font-size: var(--zn-fs-sm); font-weight:700; color:#fff;" data-i18n="mgmt.notif_master_label">Master Notification Engine</div>
+                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:2px;" data-i18n="mgmt.notif_master_desc">When disabled, no external notifications or chat webhooks will be dispatched.</div>
                   </div>
                   <div style="display:flex; align-items:center; gap:10px;">
-                    <span id="notif-master-status-badge" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(37,194,160,0.15); color:var(--ok2); border:1px solid rgba(37,194,160,0.4);">Active</span>
+                    <span id="notif-master-status-badge" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(37,194,160,0.15); color:var(--ok2); border:1px solid rgba(37,194,160,0.4);">Active</span>
                     <label class="switch-toggle" for="notif-master-enabled" style="position:relative; display:inline-block; width:38px; height:20px; margin:0;" aria-label="Toggle Master Notification Engine">
                       <input type="checkbox" id="notif-master-enabled" checked style="opacity:0; width:0; height:0;">
                       <span class="slider round" style="position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.2); border-radius:20px; transition:.3s;"></span>
@@ -3515,7 +3515,7 @@
                 </div>
 
                 <!-- Alert Channels Header -->
-                <div style="font-size:11px; font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 16px 0 10px;" data-i18n="mgmt.notif_channels_title">ALERT DISPATCH CHANNELS</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 16px 0 10px;" data-i18n="mgmt.notif_channels_title">ALERT DISPATCH CHANNELS</div>
 
                 <!-- Channels Grid -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px;">
@@ -3525,14 +3525,14 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:18px;">💬</span>
-                        <span style="font-size:12.5px; font-weight:700; color:#fff;">Discord</span>
+                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:#fff;">Discord</span>
                       </div>
-                      <span id="notif-badge-discord" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
+                      <span id="notif-badge-discord" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
                     </div>
-                    <div style="font-size:11px; color:var(--muted); line-height:1.4;">Rich embed alerts to any Discord channel via incoming webhook.</div>
+                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;">Rich embed alerts to any Discord channel via incoming webhook.</div>
                     <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="discord" style="flex:1; justify-content:center; padding:6px; font-size:11px; font-weight:600;">Configure</button>
-                      <button class="notif-test-btn btn-pill-toggle" data-channel="discord" style="padding:6px 12px; font-size:11px; font-weight:600;" title="Test Discord">Test</button>
+                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="discord" style="flex: 1;">Configure</button>
+                      <button class="notif-test-btn btn-pill-toggle" data-channel="discord" title="Test Discord">Test</button>
                     </div>
                   </div>
 
@@ -3541,14 +3541,14 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:18px;">✈️</span>
-                        <span style="font-size:12.5px; font-weight:700; color:#fff;">Telegram</span>
+                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:#fff;">Telegram</span>
                       </div>
-                      <span id="notif-badge-telegram" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
+                      <span id="notif-badge-telegram" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
                     </div>
-                    <div style="font-size:11px; color:var(--muted); line-height:1.4;">Instant push messages to your Telegram bot or group chat.</div>
+                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;">Instant push messages to your Telegram bot or group chat.</div>
                     <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="telegram" style="flex:1; justify-content:center; padding:6px; font-size:11px; font-weight:600;">Configure</button>
-                      <button class="notif-test-btn btn-pill-toggle" data-channel="telegram" style="padding:6px 12px; font-size:11px; font-weight:600;" title="Test Telegram">Test</button>
+                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="telegram" style="flex: 1;">Configure</button>
+                      <button class="notif-test-btn btn-pill-toggle" data-channel="telegram" title="Test Telegram">Test</button>
                     </div>
                   </div>
 
@@ -3557,14 +3557,14 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:18px;">✉️</span>
-                        <span style="font-size:12.5px; font-weight:700; color:#fff;">Email (SMTP)</span>
+                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:#fff;">Email (SMTP)</span>
                       </div>
-                      <span id="notif-badge-email" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
+                      <span id="notif-badge-email" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
                     </div>
-                    <div style="font-size:11px; color:var(--muted); line-height:1.4;">Standard SMTP delivery with TLS encryption to administrator inbox.</div>
+                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;">Standard SMTP delivery with TLS encryption to administrator inbox.</div>
                     <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="email" style="flex:1; justify-content:center; padding:6px; font-size:11px; font-weight:600;">Configure</button>
-                      <button class="notif-test-btn btn-pill-toggle" data-channel="email" style="padding:6px 12px; font-size:11px; font-weight:600;" title="Test Email">Test</button>
+                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="email" style="flex: 1;">Configure</button>
+                      <button class="notif-test-btn btn-pill-toggle" data-channel="email" title="Test Email">Test</button>
                     </div>
                   </div>
 
@@ -3573,14 +3573,14 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:18px;">🔔</span>
-                        <span style="font-size:12.5px; font-weight:700; color:#fff;">ntfy Push</span>
+                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:#fff;">ntfy Push</span>
                       </div>
-                      <span id="notif-badge-ntfy" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
+                      <span id="notif-badge-ntfy" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
                     </div>
-                    <div style="font-size:11px; color:var(--muted); line-height:1.4;">Lightweight HTTP push notifications via ntfy.sh or self-hosted server.</div>
+                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;">Lightweight HTTP push notifications via ntfy.sh or self-hosted server.</div>
                     <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="ntfy" style="flex:1; justify-content:center; padding:6px; font-size:11px; font-weight:600;">Configure</button>
-                      <button class="notif-test-btn btn-pill-toggle" data-channel="ntfy" style="padding:6px 12px; font-size:11px; font-weight:600;" title="Test ntfy">Test</button>
+                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="ntfy" style="flex: 1;">Configure</button>
+                      <button class="notif-test-btn btn-pill-toggle" data-channel="ntfy" title="Test ntfy">Test</button>
                     </div>
                   </div>
 
@@ -3589,14 +3589,14 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:18px;">🌐</span>
-                        <span style="font-size:12.5px; font-weight:700; color:#fff;">Generic Webhook</span>
+                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:#fff;">Generic Webhook</span>
                       </div>
-                      <span id="notif-badge-webhook" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
+                      <span id="notif-badge-webhook" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">Off</span>
                     </div>
-                    <div style="font-size:11px; color:var(--muted); line-height:1.4;">Custom HTTP POST JSON endpoint for Home Assistant, Node-RED, or scripts.</div>
+                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;">Custom HTTP POST JSON endpoint for Home Assistant, Node-RED, or scripts.</div>
                     <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="webhook" style="flex:1; justify-content:center; padding:6px; font-size:11px; font-weight:600;">Configure</button>
-                      <button class="notif-test-btn btn-pill-toggle" data-channel="webhook" style="padding:6px 12px; font-size:11px; font-weight:600;" title="Test Webhook">Test</button>
+                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="webhook" style="flex: 1;">Configure</button>
+                      <button class="notif-test-btn btn-pill-toggle" data-channel="webhook" title="Test Webhook">Test</button>
                     </div>
                   </div>
 
@@ -3605,56 +3605,56 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:18px;">🚀</span>
-                        <span style="font-size:12.5px; font-weight:700; color:#fff;">Apprise (100+ Services)</span>
+                        <span style="font-size: var(--zn-fs-sm); font-weight:700; color:#fff;">Apprise (100+ Services)</span>
                       </div>
-                      <span id="notif-badge-apprise" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">0 URLs</span>
+                      <span id="notif-badge-apprise" style="font-size: var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,0.06); color:var(--muted); border:1px solid rgba(255,255,255,0.1);">0 URLs</span>
                     </div>
-                    <div style="font-size:11px; color:var(--muted); line-height:1.4;">Power-user multi-target list supporting Pushover, Slack, Gotify, Matrix, and more.</div>
+                    <div style="font-size: var(--zn-fs-xs); color:var(--muted); line-height:1.4;">Power-user multi-target list supporting Pushover, Slack, Gotify, Matrix, and more.</div>
                     <div style="display:flex; gap:8px; margin-top:auto;">
-                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="apprise_raw" style="flex:1; justify-content:center; padding:6px; font-size:11px; font-weight:600;">Configure</button>
-                      <button class="notif-test-btn btn-pill-toggle" data-channel="apprise_raw" style="padding:6px 12px; font-size:11px; font-weight:600;" title="Test Apprise">Test</button>
+                      <button class="notif-cfg-btn btn-pill-toggle" data-channel="apprise_raw" style="flex: 1;">Configure</button>
+                      <button class="notif-test-btn btn-pill-toggle" data-channel="apprise_raw" title="Test Apprise">Test</button>
                     </div>
                   </div>
 
                 </div>
 
                 <!-- Subsystem Event Triggers & Sensitivity -->
-                <div style="font-size:11px; font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 20px 0 10px;" data-i18n="mgmt.notif_rules_title">SUBSYSTEM EVENT TRIGGERS & SENSITIVITY</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 20px 0 10px;" data-i18n="mgmt.notif_rules_title">SUBSYSTEM EVENT TRIGGERS & SENSITIVITY</div>
                 
                 <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px;">
                   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
                     
-                    <label for="notif-toggle-smart" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-smart" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:#fff;">
                       <input type="checkbox" id="notif-toggle-smart" checked>
                       <span>S.M.A.R.T. Drive Health & Sector Errors</span>
                     </label>
 
-                    <label for="notif-toggle-temp" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-temp" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:#fff;">
                       <input type="checkbox" id="notif-toggle-temp" checked>
                       <span>Thermal Overheat Warnings (CPU / HDD)</span>
                     </label>
 
-                    <label for="notif-toggle-ups" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-ups" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:#fff;">
                       <input type="checkbox" id="notif-toggle-ups" checked>
                       <span>UPS On-Battery, Low-Battery & Shutdown</span>
                     </label>
 
-                    <label for="notif-toggle-fan" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-fan" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:#fff;">
                       <input type="checkbox" id="notif-toggle-fan" checked>
                       <span>Fan Stalls & Hardware Cooling Anomalies</span>
                     </label>
 
-                    <label for="notif-toggle-copy" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-copy" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:#fff;">
                       <input type="checkbox" id="notif-toggle-copy" checked>
                       <span>Media Card Auto-Ingest Completion / Errors</span>
                     </label>
 
-                    <label for="notif-toggle-container" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-container" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:#fff;">
                       <input type="checkbox" id="notif-toggle-container">
                       <span>Container Crashes & OOM Events</span>
                     </label>
 
-                    <label for="notif-toggle-backup" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:11.5px; color:#fff;">
+                    <label for="notif-toggle-backup" style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size: var(--zn-fs-sm); color:#fff;">
                       <input type="checkbox" id="notif-toggle-backup">
                       <span>Configuration Backup & Snapshot Status</span>
                     </label>
@@ -3663,15 +3663,15 @@
 
                   <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:14px; display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
                     <div>
-                      <label for="notif-input-hdd-temp" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">HDD TEMP THRESHOLD (°C)</label>
+                      <label for="notif-input-hdd-temp" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">HDD TEMP THRESHOLD (°C)</label>
                       <input type="number" id="notif-input-hdd-temp" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" min="30" max="80" value="50">
                     </div>
                     <div>
-                      <label for="notif-input-cpu-temp" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">CPU TEMP THRESHOLD (°C)</label>
+                      <label for="notif-input-cpu-temp" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">CPU TEMP THRESHOLD (°C)</label>
                       <input type="number" id="notif-input-cpu-temp" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" min="40" max="105" value="80">
                     </div>
                     <div>
-                      <label for="notif-input-cooldown" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">ALERT COOLDOWN (MINUTES)</label>
+                      <label for="notif-input-cooldown" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">ALERT COOLDOWN (MINUTES)</label>
                       <input type="number" id="notif-input-cooldown" class="tz-select-input" style="width:100%; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); padding:8px 10px; color:#fff;" min="1" max="1440" value="30">
                     </div>
                   </div>
@@ -3704,11 +3704,11 @@
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
-                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>🛡️</span>
                     <span>Hyper-Backup Tasks & 3-2-1 Pipelines</span>
                   </span>
-                  <div style="font-size: 12px; color: var(--muted); line-height: 1.4;">
+                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;">
                     Automated local filesystem snapshot scheduling with offsite cloud synchronization via Rclone and rotation retention policies.
                   </div>
                 </div>
@@ -3716,13 +3716,13 @@
                   <button class="btn-pill-toggle" id="btn-refresh-backup-jobs" title="Refresh Backup Tasks" data-i18n="mgmt.refresh">
                     🔄 Refresh
                   </button>
-                  <button class="btn-pill-toggle" id="btn-open-create-backup-job" style="color:var(--brand, #38bdf8); border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.12); font-weight:700;">
+                  <button class="btn-pill-toggle" id="btn-open-create-backup-job" style="color: var(--brand, #38bdf8); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
                     <svg class="ic"><use href="#i-plus"/></svg> Add Backup Task
                   </button>
                 </div>
               </div>
               <div id="backup-jobs-mount">
-                <div style="font-size: 12px; color: var(--muted); text-align: center; padding: 16px;">Loading hyper-backup jobs...</div>
+                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;">Loading hyper-backup jobs...</div>
               </div>
             </div>
 
@@ -3730,11 +3730,11 @@
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
-                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>📸</span>
                     <span>Storage Pool Snapshots & Rollback</span>
                   </span>
-                  <div style="font-size: 12px; color: var(--muted); line-height: 1.4;">
+                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;">
                     Atomic copy-on-write subvolume snapshots with instant point-in-time rollback and retention pruning.
                   </div>
                 </div>
@@ -3742,13 +3742,13 @@
                   <button class="btn-pill-toggle" id="btn-refresh-snapshots" title="Refresh Snapshots" data-i18n="mgmt.refresh">
                     🔄 Refresh
                   </button>
-                  <button class="btn-pill-toggle" id="btn-open-create-snapshot" style="color:var(--brand, #38bdf8); border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.12); font-weight:700;">
+                  <button class="btn-pill-toggle" id="btn-open-create-snapshot" style="color: var(--brand, #38bdf8); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
                     <svg class="ic"><use href="#i-camera"/></svg> Take Snapshot
                   </button>
                 </div>
               </div>
               <div id="system-snapshots-mount">
-                <div style="font-size: 12px; color: var(--muted); text-align: center; padding: 16px;">Loading snapshots...</div>
+                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;">Loading snapshots...</div>
               </div>
             </div>
 
@@ -3756,16 +3756,16 @@
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
                 <div>
-                  <span class="card-head-title" style="font-weight: 700; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span>📦</span>
                     <span data-i18n="mgmt.app_backups_title">Application Backups & Recovery</span>
                   </span>
-                  <div style="font-size: 12px; color: var(--muted); line-height: 1.4;" data-i18n="mgmt.app_backups_desc">
+                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;" data-i18n="mgmt.app_backups_desc">
                     Point-in-time archives of container configurations, compose specs, and host appdata mounts created on uninstall (never delete) or on-demand.
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                  <select id="app-backups-filter-app" class="tz-select-input" style="font-size: 11px; padding: 5px 8px; min-width: 140px;" title="Filter by Application">
+                  <select id="app-backups-filter-app" class="tz-select-input" style="font-size: var(--zn-fs-xs); padding: 5px 8px; min-width: 140px;" title="Filter by Application">
                     <option value="" data-i18n="mgmt.app_backups_all">All Applications (Box-Wide)</option>
                   </select>
                   <button class="btn-pill-toggle" id="btn-refresh-app-backups" title="Refresh Application Backups" data-i18n="mgmt.refresh">
@@ -3774,25 +3774,25 @@
                 </div>
               </div>
               <div id="app-backups-mount">
-                <div style="font-size: 12px; color: var(--muted); text-align: center; padding: 16px;">Loading application backups...</div>
+                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;">Loading application backups...</div>
               </div>
             </div>
 
             <!-- System Configuration Backup & Restore -->
             <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
               <div class="card-headline">
-                <span class="card-head-title" data-i18n="settings.backup_title" style="font-weight: 700; font-size: 14px; margin-bottom: 8px; display: block;">System Configuration Backup & Restore</span>
+                <span class="card-head-title" data-i18n="settings.backup_title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 8px; display: block;">System Configuration Backup & Restore</span>
               </div>
-              <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.backup_desc">
+              <div style="font-size: var(--zn-fs-sm); color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.backup_desc">
                 Download a complete backup archive of all system configurations, 6-point fan curves, layouts, widgets, and themes. Restoring will apply all configurations across the suite.
               </div>
               <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                <button id="btn-backup-download" class="btn-pill-toggle" style="flex:1; justify-content:center; padding:8px 16px; font-size:11.5px; font-weight:700; color:#38bdf8; border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.12);">
+                <button id="btn-backup-download" class="btn-pill-toggle" style="flex: 1; color: #38bdf8; border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.12);">
                   <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="settings.btn_download_backup">Download Backup Archive (.zip)</span>
                 </button>
                 <div style="flex:1; min-width: 200px; position: relative;">
                   <input type="file" id="backup-upload-input" accept=".zip,.zettbak" style="opacity:0; position:absolute; inset:0; cursor:pointer; z-index:2;" title="Upload backup file">
-                  <button class="btn-pill-toggle" style="width:100%; justify-content:center; padding:8px 16px; font-size:11.5px; font-weight:700; color:#fb7185; border-color:rgba(244,63,94,0.4); background:rgba(244,63,94,0.12); pointer-events:none;">
+                  <button class="btn-pill-toggle is-block is-danger" style="pointer-events: none;">
                      🔄 <span data-i18n="settings.btn_restore_backup">Upload & Restore Archive</span>
                   </button>
                 </div>
@@ -3873,7 +3873,7 @@
                       <span data-i18n="updates.channel_edge">⚡ Edge (Latest Commits)</span>
                     </button>
                   </div>
-                  <button id="btn-check-updates" class="btn-pill-toggle" style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:6px 14px; font-size:11.5px; font-weight:600; min-width:152px; text-align:center; white-space:nowrap; box-sizing:border-box;">
+                  <button id="btn-check-updates" class="btn-pill-toggle" style="min-width: 152px; text-align: center; box-sizing: border-box;">
                     <span id="btn-check-updates-icon">🔄</span> <span id="btn-check-updates-text" data-i18n="updates.check_btn">Check for Updates</span>
                   </button>
                 </div>
@@ -3904,11 +3904,11 @@
                       <div style="font-size:12px; font-weight:700; color:#fff;" data-i18n="updates.in_app_title">Direct In-App Upgrade</div>
                       <div style="font-size:11px; color:var(--muted); margin-top:1px;" data-i18n="updates.in_app_desc">Download the latest container image and restart the workbench automatically.</div>
                     </div>
-                    <button id="btn-apply-system-update" type="button" class="btn-pill-toggle" style="display:flex; align-items:center; gap:6px; padding:8px 16px; font-size:12px; font-weight:700; background:linear-gradient(135deg, #25c2a0, #0ea5e9); color:#000; border:none; border-radius:6px; cursor:pointer; box-shadow:0 4px 14px rgba(37,194,160,0.35);">
+                    <button id="btn-apply-system-update" type="button" class="btn-pill-toggle is-primary" style="box-shadow: 0 4px 14px rgba(37,194,160,0.35);">
                       <span id="btn-apply-update-icon">⚡</span>
                       <span id="btn-apply-update-text" data-i18n="updates.btn_install_now">Install Update Now</span>
                     </button>
-                    <button id="btn-revert-system-update" type="button" class="btn-pill-toggle" style="display:none; align-items:center; gap:6px; padding:8px 14px; font-size:12px; font-weight:700; background:rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.18); border-radius:6px; cursor:pointer;">
+                    <button id="btn-revert-system-update" type="button" class="btn-pill-toggle" style="display: none; background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.18);">
                       <span>↩</span>
                       <span id="btn-revert-update-text">Revert to previous version</span>
                     </button>
@@ -3945,15 +3945,15 @@
                   </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                  <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle" style="display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:11px; font-weight:600; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; cursor:pointer;" title="Preview collected system telemetry before downloading">
+                  <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff;" title="Preview collected system telemetry before downloading">
                     <span>👁️</span>
                     <span data-i18n="diagnostics.preview_btn">Preview Summary</span>
                   </button>
-                  <button id="btn-copy-support-md" type="button" class="btn-pill-toggle" style="display:inline-flex; align-items:center; gap:6px; padding:7px 12px; font-size:11px; font-weight:600; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:6px; cursor:pointer;" title="Copy sanitized system support markdown to clipboard for GitHub, Reddit, or Discord">
+                  <button id="btn-copy-support-md" type="button" class="btn-pill-toggle" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff;" title="Copy sanitized system support markdown to clipboard for GitHub, Reddit, or Discord">
                     <span>📋</span>
                     <span data-i18n="diagnostics.copy_md_btn">Copy Support Markdown</span>
                   </button>
-                  <button id="btn-download-diagnostics" type="button" class="btn-pill-toggle" style="display:flex; align-items:center; gap:8px; padding:8px 16px; font-size:12px; font-weight:700; background:linear-gradient(135deg, rgba(37,194,160,0.2), rgba(14,165,233,0.2)); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:6px; cursor:pointer;">
+                  <button id="btn-download-diagnostics" type="button" class="btn-pill-toggle is-primary">
                     <span id="btn-download-diagnostics-icon">📦</span>
                     <span id="btn-download-diagnostics-text" data-i18n="diagnostics.download_btn">Download Diagnostics Bundle</span>
                   </button>
@@ -4076,7 +4076,7 @@
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                       <!-- Export Menu -->
                       <div class="dropdown-wrapper" style="position:relative; display:inline-block;">
-                        <button type="button" id="btn-ai-chat-export-toggle" class="btn-pill-toggle" style="font-size:11px; padding:4px 10px; color:#cbd5e1; cursor:pointer;" title="Export active conversation">
+                        <button type="button" id="btn-ai-chat-export-toggle" class="btn-pill-toggle" style="color: #cbd5e1;" title="Export active conversation">
                           <span>📥</span> <span data-i18n="ai.export_chat">Export</span>
                         </button>
                         <div id="ai-chat-export-menu" class="ai-dropdown-menu" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; z-index:100; min-width:180px; background:var(--card-solid, #0f172a); border:1px solid var(--border, rgba(255,255,255,0.15)); border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.5); padding:4px 0;">
@@ -4089,7 +4089,7 @@
                         </div>
                       </div>
 
-                      <button type="button" id="btn-ai-chat-clear" class="btn-pill-toggle" style="font-size:11px; padding:4px 10px; color:#94a3b8; cursor:pointer;" title="Clear conversation history">
+                      <button type="button" id="btn-ai-chat-clear" class="btn-pill-toggle" style="color: #94a3b8;" title="Clear conversation history">
                         <span data-i18n="ai.chat_clear_btn">🗑️ Clear Chat</span>
                       </button>
                     </div>
@@ -4140,18 +4140,18 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                   <div id="ai-search-filetype-bar" style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
                     <span style="font-size:11px; font-weight:700; color:var(--muted,#94a3b8); margin-right:2px;" data-i18n="ai.file_type_label">Type:</span>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip active" data-filetype="all" data-base-label="All" style="font-size:11px; padding:3px 9px; border-color:#38bdf8;">All</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip" data-filetype="photos" data-base-label="📷 Images" style="font-size:11px; padding:3px 9px;">📷 Images</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip" data-filetype="documents" data-base-label="📄 Documents" style="font-size:11px; padding:3px 9px;">📄 Documents</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip" data-filetype="videos" data-base-label="🎬 Videos" style="font-size:11px; padding:3px 9px;">🎬 Videos</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip" data-filetype="audio" data-base-label="🎵 Audio" style="font-size:11px; padding:3px 9px;">🎵 Audio</button>
-                    <button type="button" class="btn-pill-toggle ai-filetype-chip" data-filetype="folders" data-base-label="📁 Folders" style="font-size:11px; padding:3px 9px;">📁 Folders</button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip active is-small" data-filetype="all" data-base-label="All" style="border-color: #38bdf8;">All</button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="photos" data-base-label="📷 Images">📷 Images</button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="documents" data-base-label="📄 Documents">📄 Documents</button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="videos" data-base-label="🎬 Videos">🎬 Videos</button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="audio" data-base-label="🎵 Audio">🎵 Audio</button>
+                    <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="folders" data-base-label="📁 Folders">📁 Folders</button>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <div id="ai-search-match-tabs" style="display:inline-flex; background:rgba(15,23,42,0.75); border:1px solid rgba(255,255,255,0.12); border-radius:7px; padding:2px;">
-                      <button type="button" class="btn-pill-toggle ai-match-tab active" data-match-tab="semantic" style="font-size:11px; padding:3px 10px; border:none; background:rgba(14,165,233,0.28); color:#fff;">✨ Semantic</button>
-                      <button type="button" class="btn-pill-toggle ai-match-tab" data-match-tab="keyword" style="font-size:11px; padding:3px 10px; border:none; background:transparent; color:#94a3b8;">🔤 Keyword</button>
-                      <button type="button" class="btn-pill-toggle ai-match-tab" data-match-tab="audio" style="font-size:11px; padding:3px 10px; border:none; background:transparent; color:#94a3b8;">🎙️ Audio</button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab active is-small" data-match-tab="semantic" style="border: none; background: rgba(14,165,233,0.28); color: #fff;">✨ Semantic</button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="keyword" style="border: none; background: transparent; color: #94a3b8;">🔤 Keyword</button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="audio" style="border: none; background: transparent; color: #94a3b8;">🎙️ Audio</button>
                     </div>
                     <select id="ai-search-sort-select" aria-label="Sort search results" class="tz-select-input" style="height:28px; padding:0 8px; font-size:11px; border-radius:6px;">
                       <option value="relevance" data-i18n="ai.sort_relevance">Sort: AI Relevance</option>
@@ -4165,7 +4165,7 @@
                 <div id="ai-history-bar" style="display:none; align-items:center; gap:5px; flex-wrap:wrap; padding-top:8px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.07); font-size:11px;">
                   <span style="color:var(--muted,#94a3b8); font-weight:600;">🕘 History:</span>
                   <div id="ai-history-chips" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
-                  <button type="button" id="btn-ai-clear-history" class="btn-pill-toggle" style="font-size:11px; padding:2px 7px; color:#94a3b8;" title="Clear search history">🗑️</button>
+                  <button type="button" id="btn-ai-clear-history" class="btn-pill-toggle is-small" style="color: #94a3b8;" title="Clear search history">🗑️</button>
                 </div>
               </div>
 
@@ -4228,16 +4228,16 @@
                     <span id="ai-sync-state-dot" style="width:6px; height:6px; border-radius:50%; background:#94a3b8; display:inline-block;"></span>
                     <span id="ai-sync-state-text" data-i18n="ai.sync_state_idle">Sync: Idle</span>
                   </span>
-                  <button type="button" id="btn-ai-quick-sync" class="btn-pill-toggle" style="font-size:11px; padding:3px 10px; font-weight:700; background:rgba(37,194,160,0.18); border:1px solid rgba(37,194,160,0.45); color:var(--ok2,#25c2a0); cursor:pointer; white-space:nowrap; border-radius:6px;" title="Sync configured watched folders on running drives (skips sleeping HDDs)">
+                  <button type="button" id="btn-ai-quick-sync" class="btn-pill-toggle is-small" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: var(--ok2,#25c2a0);" title="Sync configured watched folders on running drives (skips sleeping HDDs)">
                     <span>🔄</span> <span data-i18n="ai.sync_shares">Sync Active Shares</span>
                   </button>
-                  <button type="button" id="btn-ai-sync-pause" class="btn-pill-toggle" style="display:none; font-size:11px; padding:3px 8px; font-weight:700; background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.45); color:#fbbf24; cursor:pointer; white-space:nowrap; border-radius:6px;" title="Pause active indexing scan">
+                  <button type="button" id="btn-ai-sync-pause" class="btn-pill-toggle is-small" style="display: none; background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.45); color: #fbbf24;" title="Pause active indexing scan">
                     <span>⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
                   </button>
-                  <button type="button" id="btn-ai-sync-resume" class="btn-pill-toggle" style="display:none; font-size:11px; padding:3px 8px; font-weight:700; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.5); color:#34d399; cursor:pointer; white-space:nowrap; border-radius:6px;" title="Resume paused indexing scan (only on running disks)">
+                  <button type="button" id="btn-ai-sync-resume" class="btn-pill-toggle is-small" style="display: none; background: rgba(37,194,160,0.2); border: 1px solid rgba(37,194,160,0.5); color: #34d399;" title="Resume paused indexing scan (only on running disks)">
                     <span>▶</span> <span data-i18n="ai.resume_sync">Resume</span>
                   </button>
-                  <button type="button" id="btn-ai-sync-stop" class="btn-pill-toggle" style="display:none; font-size:11px; padding:3px 8px; font-weight:700; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.45); color:#f87171; cursor:pointer; white-space:nowrap; border-radius:6px;" title="Stop active indexing scan immediately">
+                  <button type="button" id="btn-ai-sync-stop" class="btn-pill-toggle is-danger is-small" style="display: none;" title="Stop active indexing scan immediately">
                     <span>⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
                   </button>
                 </div>
@@ -4276,7 +4276,7 @@
                       <input type="time" id="ai-schedule-start-input" aria-label="Learning schedule start time" value="01:00" class="tz-select-input" style="height:28px; padding:0 6px; font-size:11px; width:86px; border-radius:6px;" />
                       <span style="color:#94a3b8; font-size:11px;">to</span>
                       <input type="time" id="ai-schedule-end-input" aria-label="Learning schedule end time" value="06:00" class="tz-select-input" style="height:28px; padding:0 6px; font-size:11px; width:86px; border-radius:6px;" />
-                      <button type="button" id="btn-ai-save-schedule" class="btn-pill-toggle" style="height:28px; padding:0 10px; font-size:11px; font-weight:700; cursor:pointer;" data-i18n="ai.save_schedule_btn">Save</button>
+                      <button type="button" id="btn-ai-save-schedule" class="btn-pill-toggle" data-i18n="ai.save_schedule_btn">Save</button>
                     </div>
                   </div>
 
@@ -4328,25 +4328,25 @@
                   </div>
                   <!-- Sync Transport Controls + Learning Results Button -->
                   <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                    <button type="button" id="btn-ai-sync-watched" class="btn-pill-toggle" style="height:32px; padding:0 12px; font-size:11.5px; font-weight:700; background:rgba(37,194,160,0.22); border:1px solid rgba(37,194,160,0.5); color:#fff; border-radius:8px; cursor:pointer;">
+                    <button type="button" id="btn-ai-sync-watched" class="btn-pill-toggle" style="background: rgba(37,194,160,0.22); border: 1px solid rgba(37,194,160,0.5); color: #fff;">
                       <span>🔄</span> <span data-i18n="ai.sync_watched_btn">Sync Watched Folders</span>
                     </button>
-                    <button type="button" id="btn-ai-index-pause" class="btn-pill-toggle" style="height:32px; padding:0 10px; font-size:11.5px; font-weight:700; background:rgba(245,158,11,0.18); border:1px solid rgba(245,158,11,0.45); color:#fbbf24; border-radius:8px; cursor:pointer;">
+                    <button type="button" id="btn-ai-index-pause" class="btn-pill-toggle" style="background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.45); color: #fbbf24;">
                       <span>⏸</span> <span data-i18n="ai.pause_sync">Pause</span>
                     </button>
-                    <button type="button" id="btn-ai-index-resume" class="btn-pill-toggle" style="height:32px; padding:0 10px; font-size:11.5px; font-weight:700; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.5); color:#34d399; border-radius:8px; cursor:pointer;">
+                    <button type="button" id="btn-ai-index-resume" class="btn-pill-toggle" style="background: rgba(37,194,160,0.2); border: 1px solid rgba(37,194,160,0.5); color: #34d399;">
                       <span>▶</span> <span data-i18n="ai.resume_sync">Resume</span>
                     </button>
-                    <button type="button" id="btn-ai-index-stop" class="btn-pill-toggle" style="height:32px; padding:0 10px; font-size:11.5px; font-weight:700; background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.45); color:#f87171; border-radius:8px; cursor:pointer;">
+                    <button type="button" id="btn-ai-index-stop" class="btn-pill-toggle is-danger">
                       <span>⏹</span> <span data-i18n="ai.stop_sync">Stop</span>
                     </button>
-                    <button type="button" id="btn-ai-learning-results" class="btn-pill-toggle" style="height:32px; padding:0 11px; font-size:11.5px; font-weight:700; background:rgba(99,102,241,0.16); border:1px solid rgba(99,102,241,0.4); color:#c7d2fe; border-radius:8px; cursor:pointer;" title="View AI Learning Results (Succeeded / Failed / Deferred files)">
+                    <button type="button" id="btn-ai-learning-results" class="btn-pill-toggle" style="background: rgba(99,102,241,0.16); border: 1px solid rgba(99,102,241,0.4); color: #c7d2fe;" title="View AI Learning Results (Succeeded / Failed / Deferred files)">
                       <span>📊</span> <span data-i18n="ai.learning_results_btn">Learning Results</span>
                     </button>
-                    <button type="button" id="btn-ai-in-place-reindex" class="btn-pill-toggle" style="height:32px; padding:0 11px; font-size:11.5px; font-weight:700; background:rgba(34,197,94,0.18); border:1px solid rgba(34,197,94,0.45); color:#4ade80; border-radius:8px; cursor:pointer;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups">
+                    <button type="button" id="btn-ai-in-place-reindex" class="btn-pill-toggle" style="background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.45); color: #4ade80;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups">
                       <span>🔄</span> <span data-i18n="ai.btn_reindex">In-Place Re-index</span>
                     </button>
-                    <button type="button" id="btn-ai-flush-index" class="btn-pill-toggle" style="height:32px; padding:0 11px; font-size:11.5px; font-weight:700; background:rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; border-radius:8px; cursor:pointer;" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh">
+                    <button type="button" id="btn-ai-flush-index" class="btn-pill-toggle is-danger" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh">
                       <span>🗑️</span> <span data-i18n="ai.flush_index_btn">Flush Index</span>
                     </button>
                   </div>
@@ -4368,10 +4368,10 @@
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                     <div style="font-size:12.5px; font-weight:700; color:#fff;">📊 ZettAI Learning Results</div>
                     <div style="display:flex; align-items:center; gap:6px;">
-                      <button type="button" id="btn-ai-relearn-failed" class="btn-pill-toggle" style="font-size:11px; padding:3px 10px; font-weight:700; background:rgba(99,102,241,0.25); border:1px solid rgba(99,102,241,0.55); color:#fff; cursor:pointer;">
+                      <button type="button" id="btn-ai-relearn-failed" class="btn-pill-toggle is-small" style="background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.55); color: #fff;">
                         <span>🔁</span> <span data-i18n="ai.relearn_failed_btn">Relearn Failed Files</span>
                       </button>
-                      <button type="button" id="btn-ai-close-learning-results" class="btn-pill-toggle" style="font-size:11px; padding:3px 8px; cursor:pointer;">✕</button>
+                      <button type="button" id="btn-ai-close-learning-results" class="btn-pill-toggle is-small">✕</button>
                     </div>
                   </div>
                   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px; margin-bottom:8px;">
@@ -4525,9 +4525,9 @@
                     </div>
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                       <div id="ai-hf-filter-pills" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn active" data-hf-filter="all" style="font-size:11px; padding:2px 9px; background:rgba(56,189,248,0.2); border:1px solid rgba(56,189,248,0.45); color:#38bdf8; cursor:pointer;" data-i18n="ai.filter_all_2026">2026+ Releases</button>
-                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn" data-hf-filter="compatible" style="font-size:11px; padding:2px 9px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); color:#34d399; cursor:pointer;" data-i18n="ai.filter_fits_hardware">✅ Fits Hardware</button>
-                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn" data-hf-filter="warning" style="font-size:11px; padding:2px 9px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.38); color:#fbbf24; cursor:pointer;">⚠️ Exceeds Hardware</button>
+                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn active is-small" data-hf-filter="all" style="background: rgba(56,189,248,0.2); border: 1px solid rgba(56,189,248,0.45); color: #38bdf8;" data-i18n="ai.filter_all_2026">2026+ Releases</button>
+                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="compatible" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: #34d399;" data-i18n="ai.filter_fits_hardware">✅ Fits Hardware</button>
+                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="warning" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.38); color: #fbbf24;">⚠️ Exceeds Hardware</button>
                       </div>
                       <div style="display:flex; align-items:center; gap:5px; font-size:11px; color:#94a3b8; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.08);">
                         <span data-i18n="ai.sort_models_label">Sort:</span>
@@ -4542,13 +4542,13 @@
                   </div>
                   <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                     <input id="ai-hf-search-input" type="text" placeholder="Search https://huggingface.co models or paste repo/URL (e.g. Qwen/Qwen2.5-14B-Instruct-GGUF, meta-llama/Llama-3.3-70B-Instruct)..." style="flex:1; min-width:240px; height:32px; padding:0 11px; border-radius:6px; background:rgba(15,23,42,0.9); border:1px solid rgba(255,255,255,0.16); color:#fff; font-size:11.5px;">
-                    <button id="btn-ai-hf-search" type="button" class="btn-pill-toggle" style="height:32px; padding:0 12px; font-size:11px; font-weight:700; background:rgba(14,165,233,0.18); border:1px solid rgba(14,165,233,0.45); color:#38bdf8; cursor:pointer;">
+                    <button id="btn-ai-hf-search" type="button" class="btn-pill-toggle" style="background: rgba(14,165,233,0.18); border: 1px solid rgba(14,165,233,0.45); color: #38bdf8;">
                       🔍 <span data-i18n="ai.hf_search_btn">Search HF Hub</span>
                     </button>
-                    <button id="btn-ai-hf-pull" type="button" class="btn-pill-toggle" style="height:32px; padding:0 12px; font-size:11px; font-weight:700; background:rgba(250,204,21,0.16); border:1px solid rgba(250,204,21,0.45); color:#fde047; cursor:pointer;">
+                    <button id="btn-ai-hf-pull" type="button" class="btn-pill-toggle" style="background: rgba(250,204,21,0.16); border: 1px solid rgba(250,204,21,0.45); color: #fde047;">
                       ⬇️ <span data-i18n="ai.hf_pull_btn">Pull from Hugging Face</span>
                     </button>
-                    <button id="btn-ai-hf-reset" type="button" class="btn-pill-toggle" style="display:none; height:32px; padding:0 10px; font-size:11px; background:rgba(148,163,184,0.14); border:1px solid rgba(148,163,184,0.3); color:#cbd5e1; cursor:pointer;">
+                    <button id="btn-ai-hf-reset" type="button" class="btn-pill-toggle" style="display: none; background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.3); color: #cbd5e1;">
                       ✕ Reset
                     </button>
                   </div>
@@ -4567,10 +4567,10 @@
                     <div style="font-size:11.5px; color:var(--muted,#94a3b8); margin-top:2px;">Select embedding architectures, scale Matryoshka vector dimensions, and benchmark edge inference latency without disk platters spinning up.</div>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px;">
-                    <button type="button" id="btn-ai-run-benchmark" class="btn-pill-toggle" style="font-size:11px; padding:5px 12px; font-weight:700; background:rgba(14,165,233,0.18); border:1px solid rgba(14,165,233,0.45); color:var(--accent-cyan,#00f0ff); cursor:pointer; border-radius:6px;">
+                    <button type="button" id="btn-ai-run-benchmark" class="btn-pill-toggle" style="background: rgba(14,165,233,0.18); border: 1px solid rgba(14,165,233,0.45); color: var(--accent-cyan,#00f0ff);">
                       <span>⚡</span> <span data-i18n="ai.btn_run_benchmark">Run Latency Benchmark</span>
                     </button>
-                    <button type="button" id="btn-ai-trigger-reindex" class="btn-pill-toggle" style="font-size:11px; padding:5px 12px; font-weight:700; background:rgba(34,197,94,0.18); border:1px solid rgba(34,197,94,0.45); color:#4ade80; cursor:pointer; border-radius:6px;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups">
+                    <button type="button" id="btn-ai-trigger-reindex" class="btn-pill-toggle" style="background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.45); color: #4ade80;" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups">
                       <span>🔄</span> <span data-i18n="ai.btn_reindex">Re-index Knowledge Base</span>
                     </button>
                   </div>

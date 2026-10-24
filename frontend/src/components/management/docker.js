@@ -655,7 +655,7 @@ export function renderDockerContainersTable() {
         <div style="font-size:32px; opacity:0.8;">🐳</div>
         <div style="font-size:13.5px; font-weight:600; color:var(--text, #fff);">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
         <div style="font-size:12px; color:var(--muted, #94a3b8); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
-        <button id="btn-empty-deploy-app" class="btn-pill-toggle" style="margin-top:6px; background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border-color:var(--brand, #0ea5e9); font-weight:600; padding:6px 16px; cursor:pointer;">
+        <button id="btn-empty-deploy-app" class="btn-pill-toggle is-primary" style="margin-top: 6px;">
           🚀 ${t('mgmt.docker_open_catalog', 'Browse App Catalog')}
         </button>
       </div>
@@ -1210,10 +1210,10 @@ export async function openAppDeployModal(appId) {
                 A container with this name or port already exists on your system. Choose an action:
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
-                <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle" style="justify-content:center; text-align:center; padding:7px 10px; font-size:11px; border:1px solid rgba(235, 87, 87, 0.4); background:rgba(235, 87, 87, 0.12); color:#ff8080; font-weight:700; cursor:pointer;">
+                <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle is-danger" style="text-align: center; color: #ff8080;">
                   🔄 Stop &amp; Replace Existing
                 </button>
-                <button type="button" id="adm-choice-new-btn" class="btn-pill-toggle" style="justify-content:center; text-align:center; padding:7px 10px; font-size:11px; border:2px solid var(--ok2, #25c2a0); background:rgba(37, 194, 160, 0.18); color:var(--ok2, #25c2a0); font-weight:700; cursor:pointer;">
+                <button type="button" id="adm-choice-new-btn" class="btn-pill-toggle" style="text-align: center; border: 2px solid var(--ok2, #25c2a0); background: rgba(37, 194, 160, 0.18); color: var(--ok2, #25c2a0);">
                   ➕ Deploy Alongside (New)
                 </button>
               </div>
@@ -1286,16 +1286,16 @@ export async function openAppDeployModal(appId) {
           <!-- Footer for Config View -->
           <div id="adm-footer-config" style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
             <button class="btn-pill-toggle" id="adm-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="adm-deploy-confirm-btn" style="background:color-mix(in srgb, var(--brand, #0ea5e9) 22%, transparent); color:var(--text, #e5e7eb); border:1px solid color-mix(in srgb, var(--brand, #0ea5e9) 55%, transparent); padding:6px 16px; font-weight:700; cursor:pointer;">
+            <button class="btn-pill-toggle is-primary" id="adm-deploy-confirm-btn">
               🚀 Deploy & Launch Container
             </button>
           </div>
 
           <!-- Footer for Progress View -->
           <div id="adm-footer-progress" style="display:none; padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
-            <button class="btn-pill-toggle" id="adm-back-to-config-btn" style="display:none;">← Reconfigure</button>
+            <button class="btn-pill-toggle" id="adm-back-to-config-btn" style="display: none;">← Reconfigure</button>
             <div style="flex:1;"></div>
-            <button class="btn-pill-toggle" id="adm-progress-close-btn" style="display:none; background:var(--ok2, #25c2a0); color:#fff; border:none; padding:6px 16px; font-weight:700;">✓ Done</button>
+            <button class="btn-pill-toggle is-primary" id="adm-progress-close-btn" style="display: none;">✓ Done</button>
           </div>
         </div>
       </div>
@@ -2139,7 +2139,7 @@ export async function openDockerPruneModal() {
           </div>
           <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
             <button class="btn-pill-toggle" id="dpm-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="dpm-confirm-btn" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:var(--accent-contrast-fg, #0b1118); border:none; padding:6px 18px; font-weight:700; cursor:pointer;">
+            <button class="btn-pill-toggle is-primary" id="dpm-confirm-btn">
               🧹 Run Prune & Reclaim Storage
             </button>
           </div>
@@ -2403,7 +2403,7 @@ export async function openAppSourcesModal() {
                   Comprehensive community catalog of self-hosted homelab applications, web tools, and stacks.
                 </div>
               </div>
-              <button class="btn-pill-toggle" id="asm-btn-add-lissy" style="background:var(--brand, #0ea5e9); color:var(--accent-contrast-fg, #0b1118); border:none; padding:5px 12px; font-weight:700; font-size:11px; white-space:nowrap; cursor:pointer;">
+              <button class="btn-pill-toggle is-primary" id="asm-btn-add-lissy">
                 + Add Lissy93 (790+ Apps)
               </button>
             </div>
@@ -2421,7 +2421,7 @@ export async function openAppSourcesModal() {
                   <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
                 </div>
                 <div>
-                  <button class="btn-pill-toggle" id="asm-btn-add-custom" style="background:linear-gradient(135deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); color:var(--accent-contrast-fg, #0b1118); border:none; padding:5px 14px; font-weight:700; font-size:11px; height:28px; white-space:nowrap; cursor:pointer;">
+                  <button class="btn-pill-toggle is-primary" id="asm-btn-add-custom">
                     + Add & Sync
                   </button>
                 </div>
@@ -2599,11 +2599,11 @@ async function refreshSourcesUI() {
             <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:11px; padding:3px 8px; cursor:pointer;">
               ${toggleText}
             </button>
-            <button class="btn-pill-toggle asm-btn-sync" data-sourceid="${escapeHtml(src.id)}" title="Sync Now" style="font-size:11px; padding:3px 8px; cursor:pointer;">
+            <button class="btn-pill-toggle asm-btn-sync is-small" data-sourceid="${escapeHtml(src.id)}" title="Sync Now">
               🔄
             </button>
             ${!isBuiltin ? `
-              <button class="btn-pill-toggle asm-btn-delete" data-sourceid="${escapeHtml(src.id)}" title="Delete Source" style="font-size:11px; padding:3px 8px; color:#fca5a5; cursor:pointer;">
+              <button class="btn-pill-toggle asm-btn-delete is-danger is-small" data-sourceid="${escapeHtml(src.id)}" title="Delete Source">
                 🗑️
               </button>
             ` : ''}

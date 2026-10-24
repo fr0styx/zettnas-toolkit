@@ -1957,7 +1957,7 @@ export async function renderApiTokens() {
           <div style="font-size:11px; font-weight:700; color:#fff;">${escapeHtml(t.name)}</div>
           <div style="font-size:11px; color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
         </div>
-        <button class="btn-rect danger" style="padding:4px 8px; font-size:11px;" data-id="${escapeHtml(t.id)}">Revoke</button>
+        <button class="btn-rect danger" data-id="${escapeHtml(t.id)}">Revoke</button>
       `;
       
       row.querySelector('button').addEventListener('click', async () => {

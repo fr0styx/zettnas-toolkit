@@ -278,31 +278,31 @@ export async function loadUsersList() {
       return `
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s ease;">
           <td style="padding: 12px; display:flex; align-items:center; gap: 10px;">
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:13px; border: 1px solid rgba(255,255,255,0.2);">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size: var(--zn-fs-sm); border: 1px solid rgba(255,255,255,0.2);">
               ${escapeHtml(letter)}
             </div>
             <div>
-              <div style="font-weight:700; color:#fff; font-size:13px;">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size:11px; background:rgba(14,165,233,0.2); color:#38bdf8; padding:2px 6px; border-radius:4px; margin-left:4px;">YOU</span>' : ''}</div>
-              <div style="font-size:11px; color:var(--muted);">@${escapeHtml(u.username)}</div>
+              <div style="font-weight:700; color:#fff; font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(14,165,233,0.2); color:#38bdf8; padding:2px 6px; border-radius:4px; margin-left:4px;">YOU</span>' : ''}</div>
+              <div style="font-size: var(--zn-fs-xs); color:var(--muted);">@${escapeHtml(u.username)}</div>
             </div>
           </td>
-          <td style="padding: 12px; font-size: 12px; color:#cbd5e1;">${escapeHtml(u.email || '--')}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#cbd5e1;">${escapeHtml(u.email || '--')}</td>
           <td style="padding: 12px;">
-            <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color:#fff;">
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color:#fff;">
               ${escapeHtml(formatRole(u.role_id))}
             </span>
           </td>
           <td style="padding: 12px;">
-            <span style="font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${isActive ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isActive ? 'var(--ok2)' : 'var(--crit)'}; border: 1px solid ${isActive ? 'rgba(37,194,160,0.3)' : 'rgba(239,68,68,0.3)'};">
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${isActive ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isActive ? 'var(--ok2)' : 'var(--crit)'}; border: 1px solid ${isActive ? 'rgba(37,194,160,0.3)' : 'rgba(239,68,68,0.3)'};">
               ${isActive ? 'ACTIVE' : 'DISABLED'}
             </span>
           </td>
           <td style="padding: 12px;">
-            <span style="font-size: 11px; display:inline-flex; align-items:center; gap: 4px; color: ${isMfa ? 'var(--ok2)' : 'var(--muted)'};">
+            <span style="font-size: var(--zn-fs-xs); display:inline-flex; align-items:center; gap: 4px; color: ${isMfa ? 'var(--ok2)' : 'var(--muted)'};">
               ${isMfa ? '🛡️ Enabled' : '⚪ Off'}
             </span>
           </td>
-          <td style="padding: 12px; font-size: 12px; color: #94a3b8;">${quotaStr}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color: #94a3b8;">${quotaStr}</td>
           <td style="padding: 12px; text-align:right;">
             <div style="display:inline-flex; gap: 6px;">
               <button class="suite-toolkit-btn sm btn-edit-user" data-id="${u.id}" title="Edit User">✏️</button>
@@ -591,16 +591,16 @@ export async function loadSessionsList() {
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
           <td style="padding: 12px; font-weight:700; color:#fff;">
             ${isCurrent ? '💻 Current Browser' : '🌐 Remote Device'}
-            ${isCurrent ? '<span style="font-size:11px; background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">THIS DEVICE</span>' : ''}
-            <div style="font-size:11px; font-weight:normal; color:var(--muted); margin-top:2px;">${escapeHtml(s.user_agent || 'Unknown Browser')}</div>
+            ${isCurrent ? '<span style="font-size: var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">THIS DEVICE</span>' : ''}
+            <div style="font-size: var(--zn-fs-xs); font-weight:normal; color:var(--muted); margin-top:2px;">${escapeHtml(s.user_agent || 'Unknown Browser')}</div>
           </td>
-          <td style="padding: 12px; font-size:12px; color:#cbd5e1; font-family:monospace;">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
-          <td style="padding: 12px; font-size:11.5px; color:#94a3b8;">${createdStr}</td>
-          <td style="padding: 12px; font-size:11.5px; color:#94a3b8;">${lastStr}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#cbd5e1; font-family:monospace;">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#94a3b8;">${createdStr}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#94a3b8;">${lastStr}</td>
           <td style="padding: 12px; text-align:right;">
             ${!isCurrent ? `
               <button class="suite-toolkit-btn sm danger btn-revoke-session" data-id="${s.id}">Revoke</button>
-            ` : '<span style="font-size:11px; color:var(--muted);">Active</span>'}
+            ` : '<span style="font-size: var(--zn-fs-xs); color:var(--muted);">Active</span>'}
           </td>
         </tr>
       `;
@@ -733,7 +733,7 @@ async function start2FASetup() {
             const codesContainer = document.getElementById('mfa-recovery-codes-list');
             if (codesContainer && Array.isArray(verifyData.recovery_codes)) {
               codesContainer.innerHTML = verifyData.recovery_codes.map((rc) => `
-                <div style="background:rgba(0,0,0,0.4); padding:6px 10px; border-radius:6px; font-family:monospace; font-size:13px; font-weight:700; color:#38bdf8; text-align:center; border:1px solid rgba(255,255,255,0.1);">
+                <div style="background:rgba(0,0,0,0.4); padding:6px 10px; border-radius:6px; font-family:monospace; font-size: var(--zn-fs-sm); font-weight:700; color:#38bdf8; text-align:center; border:1px solid rgba(255,255,255,0.1);">
                   ${escapeHtml(rc)}
                 </div>
               `).join('');

@@ -249,8 +249,13 @@ body.theme-yak select.fan-preset-select:focus {
 .effect-btn:hover { background: #253547; color: #fff; }
 .effect-btn.active { background: rgba(37, 194, 160, 0.15); color: var(--ok2); border-color: var(--ok2); box-shadow: 0 0 8px rgba(37, 194, 160, 0.25); }
 
+/* The system button (UX-6): secondary by default; .is-primary, .is-danger, .is-ghost;
+   .is-small for dense rows; .is-block to fill the row. Sizes come from 50-components. */
 .btn-pill-toggle {
-  background: #233142; color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; font-size: 11px; font-weight: 700; padding: 4px 10px; cursor: pointer; transition: all 0.15s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: var(--zn-btn-h, 32px); padding: 0 var(--zn-btn-px, 12px); line-height: 1.2; white-space: nowrap;
+  background: #233142; color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px;
+  font-size: var(--zn-fs-sm, 13px); font-weight: 600; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .btn-pill-toggle:hover { background: #2d3e54; }
 .btn-pill-toggle.active {

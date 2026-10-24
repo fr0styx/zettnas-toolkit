@@ -485,7 +485,7 @@ async function loadCurrentItem() {
       <div style="display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; padding:14px;">
         <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:11.5px; color:#6ee7b7;">
           <span>💤 <strong>Standby Guard Active:</strong> Showing cached NVMe index preview without spinning up physical array disks.</span>
-          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="padding:4px 10px; font-size:11px; color:#38bdf8; border-color:rgba(56,189,248,0.4);">⚡ Load Full File from Disk</button>
+          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">⚡ Load Full File from Disk</button>
         </div>
         ${thumbHtml}
         ${excerptHtml}

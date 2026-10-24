@@ -154,17 +154,17 @@ export function initContainerModal() {
             </div>
             <div id="ci-term-output" style="background:#030712; border:1px solid rgba(255,255,255,0.12); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
             <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:#0b1120; border-left:1px solid rgba(255,255,255,0.12); border-right:1px solid rgba(255,255,255,0.12); padding:5px 8px; scrollbar-width:none;">
-              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="ls -la" style="font-size:11px; padding:2px 8px; flex-shrink:0;">ls -la</button>
-              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="ps aux" style="font-size:11px; padding:2px 8px; flex-shrink:0;">ps aux</button>
-              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-cmd="df -h" style="font-size:11px; padding:2px 8px; flex-shrink:0;">df -h</button>
-              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-key="ArrowUp" style="font-size:11px; padding:2px 8px; flex-shrink:0;">↑ Prev</button>
-              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-key="ArrowDown" style="font-size:11px; padding:2px 8px; flex-shrink:0;">↓ Next</button>
-              <button type="button" class="btn-pill-toggle ci-term-key-btn" data-key="clear" style="font-size:11px; padding:2px 8px; flex-shrink:0;">🧹 Clear</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-cmd="ls -la" style="flex-shrink: 0;">ls -la</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-cmd="ps aux" style="flex-shrink: 0;">ps aux</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-cmd="df -h" style="flex-shrink: 0;">df -h</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="ArrowUp" style="flex-shrink: 0;">↑ Prev</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="ArrowDown" style="flex-shrink: 0;">↓ Next</button>
+              <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="clear" style="flex-shrink: 0;">🧹 Clear</button>
             </div>
             <div style="display:flex; background:#0f172a; border:1px solid rgba(255,255,255,0.12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
               <span style="color:#10b981; font-family:var(--font-mono, monospace); font-weight:bold; font-size:12px;">$</span>
               <input type="text" id="ci-term-input" placeholder="Type a command and press Enter..." style="flex:1; background:transparent; border:none; outline:none; color:#f8fafc; font-family:var(--font-mono, monospace); font-size:11.5px;" autocomplete="off" spellcheck="false">
-              <button class="btn-pill-toggle" id="ci-term-send-btn" style="padding:2px 10px; font-size:11px;">Run</button>
+              <button class="btn-pill-toggle is-small" id="ci-term-send-btn">Run</button>
             </div>
           </div>
 
@@ -708,7 +708,7 @@ async function loadContainerDetails(cid) {
             </select>
           </div>
           <div>
-            <button class="btn-pill-toggle" id="ci-btn-apply-resources" style="width:100%; padding:6px 12px; font-weight:700; color:var(--ok2); border-color:var(--ok2); background:rgba(37,194,160,0.15);">
+            <button class="btn-pill-toggle is-block" id="ci-btn-apply-resources" style="color: var(--ok2); border-color: var(--ok2); background: rgba(37,194,160,0.15);">
               💾 Apply Tuning
             </button>
           </div>
@@ -728,7 +728,7 @@ async function loadContainerDetails(cid) {
             </div>
           </div>
           <div>
-            <button class="btn-pill-toggle ci-btn-backup-orange" id="ci-btn-backup-action" style="padding:5px 14px; font-size:11px; font-weight:700; color:#fb923c; border-color:rgba(249,115,22,0.4); background:rgba(249,115,22,0.12); cursor:pointer;">
+            <button class="btn-pill-toggle ci-btn-backup-orange" id="ci-btn-backup-action" style="color: #fb923c; border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.12);">
               💾 Backup App Now
             </button>
           </div>
@@ -743,8 +743,8 @@ async function loadContainerDetails(cid) {
             <div style="font-size:11px; color:var(--muted); margin-top:2px;">Restart or permanently destroy this container and its volumes/images.</div>
           </div>
           <div style="display:flex; gap:6px;">
-            <button class="btn-pill-toggle" id="ci-btn-restart-action" style="padding:5px 12px; font-size:11px; font-weight:700;">🔄 Restart</button>
-            <button class="btn-pill-toggle" id="ci-btn-destroy-action" style="padding:5px 12px; font-size:11px; font-weight:700; color:#fff; background:var(--crit, #ff6b6b); border-color:var(--crit, #ff6b6b); cursor:pointer;">🗑️ Destroy Container</button>
+            <button class="btn-pill-toggle" id="ci-btn-restart-action">🔄 Restart</button>
+            <button class="btn-pill-toggle is-danger" id="ci-btn-destroy-action" style="color: #fff;">🗑️ Destroy Container</button>
           </div>
         </div>
       </div>
@@ -955,7 +955,7 @@ function renderPortsTab(details) {
               </div>
             `).join('')}
             <div style="margin-top:6px;">
-              <button class="btn-pill-toggle" id="ci-btn-apply-ports" style="padding:6px 14px; font-weight:700; color:var(--accent-cyan,#00f0ff); border-color:var(--accent-cyan,#00f0ff); background:rgba(0,240,255,0.12);">
+              <button class="btn-pill-toggle" id="ci-btn-apply-ports" style="color: var(--accent-cyan,#00f0ff); border-color: var(--accent-cyan,#00f0ff); background: rgba(0,240,255,0.12);">
                 🚀 Recreate Container with New Ports
               </button>
             </div>
@@ -1082,7 +1082,7 @@ function renderMountsTab(details) {
               ? '<span style="display:inline-block; margin-left:4px; padding:1px 4px; border-radius:3px; font-size:11px; font-weight:700; background:rgba(167, 139, 250, 0.2); color:#c4b5fd;">APPDATA</span>'
               : '';
             const btnHtml = isFmNavigable
-              ? `<button class="btn-pill-toggle btn-reveal-fm" data-path="${escapeHtml(m.source)}" style="font-size:11px; padding:2px 7px;">📁 Open in Explorer</button>`
+              ? `<button class="btn-pill-toggle btn-reveal-fm is-small" data-path="${escapeHtml(m.source)}">📁 Open in Explorer</button>`
               : '—';
 
             return `
@@ -1160,8 +1160,8 @@ function renderEnvTab(details) {
                   <span id="env-val-${idx}">${escapeHtml(e.masked_value)}</span>
                 </td>
                 <td style="text-align:right;">
-                  ${isSec ? `<button class="btn-toggle-secret btn-pill-toggle" data-idx="${idx}" style="font-size:11px; padding:1px 5px;" title="Toggle show/hide">👁️</button>` : ''}
-                  <button class="btn-copy-env btn-pill-toggle" data-idx="${idx}" style="font-size:11px; padding:1px 5px;" title="Copy value">📋</button>
+                  ${isSec ? `<button class="btn-toggle-secret btn-pill-toggle is-small" data-idx="${idx}" title="Toggle show/hide">👁️</button>` : ''}
+                  <button class="btn-copy-env btn-pill-toggle is-small" data-idx="${idx}" title="Copy value">📋</button>
                 </td>
               </tr>
             `;
@@ -1399,7 +1399,7 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
           </div>
           <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
             <button class="btn-pill-toggle" id="cdm-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="cdm-confirm-btn" style="background:var(--crit, #ff6b6b); color:#fff; border:none; padding:6px 16px; font-weight:700; cursor:pointer;">
+            <button class="btn-pill-toggle is-danger" id="cdm-confirm-btn" style="color: #fff; border: none;">
               💥 Destroy Container
             </button>
           </div>
@@ -1639,7 +1639,7 @@ async function renderContainerEditTab(cid) {
       <span style="font-size:11px; color:var(--muted);">Host:</span>
       <input type="number" class="tz-text-input cie-hp-input" placeholder="8080" value="${p.host_port || ''}" style="width:75px; font-size:11px; padding:3px 6px;">
       <input type="text" class="tz-text-input cie-ip-input" placeholder="0.0.0.0" value="${p.host_ip || '0.0.0.0'}" style="width:75px; font-size:11px; padding:3px 6px;" title="Host IP">
-      <button class="btn-pill-toggle cie-row-del" title="Remove" style="color:#fca5a5; padding:2px 6px;">🗑️</button>
+      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="Remove">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
     portsBox.appendChild(row);
@@ -1659,7 +1659,7 @@ async function renderContainerEditTab(cid) {
         <option value="rw" ${m.mode === 'ro' ? '' : 'selected'}>rw</option>
         <option value="ro" ${m.mode === 'ro' ? 'selected' : ''}>ro</option>
       </select>
-      <button class="btn-pill-toggle cie-row-del" title="Remove" style="color:#fca5a5; padding:2px 6px;">🗑️</button>
+      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="Remove">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
     mountsBox.appendChild(row);
@@ -1673,7 +1673,7 @@ async function renderContainerEditTab(cid) {
       <input type="text" class="tz-text-input cie-key-input" placeholder="KEY" value="${escapeHtml(e.key || '')}" style="width:180px; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace); font-weight:700;">
       <span style="color:var(--muted);">=</span>
       <input type="text" class="tz-text-input cie-val-input" placeholder="value" value="${escapeHtml(e.value || '')}" style="flex:1; font-size:11px; padding:3px 6px; font-family:var(--font-mono, monospace);">
-      <button class="btn-pill-toggle cie-row-del" title="Remove" style="color:#fca5a5; padding:2px 6px;">🗑️</button>
+      <button class="btn-pill-toggle cie-row-del is-danger is-small" title="Remove">🗑️</button>
     `;
     row.querySelector('.cie-row-del').onclick = () => row.remove();
     envBox.appendChild(row);

@@ -6,15 +6,25 @@
    specificity low, so they never need an important flag.
    ========================================================================== */
 :root {
+  /* Spacing scale (UX-6) */
   --zn-space-1: 4px;
   --zn-space-2: 8px;
   --zn-space-3: 12px;
-  --zn-space-4: 14px;
+  --zn-space-4: 16px;
+  --zn-space-5: 24px;
+  --zn-space-6: 32px;
   --zn-radius: 8px;
   --zn-radius-sm: 6px;
-  --zn-fs-sm: 11px;
-  --zn-fs: 11.5px;
-  --zn-fs-title: 12.5px;
+  /* Type scale (UX-8): 14 px body, 13 px secondary, 12 px the smallest */
+  --zn-fs-xs: 12px;
+  --zn-fs-sm: 13px;
+  --zn-fs: 14px;
+  --zn-fs-title: 16px;
+  --zn-fs-heading: 20px;
+  /* Buttons (UX-6, UX-8): 32 px tall, 28 px in dense rows; both clear the 24 px target */
+  --zn-btn-h: 32px;
+  --zn-btn-h-sm: 28px;
+  --zn-btn-px: 12px;
   --zn-text-strong: #fff;
   --zn-text: #e2e8f0;
   --zn-text-soft: #cbd5e1;
@@ -181,3 +191,14 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
 
 /* Visible to screen readers only */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Button variants (UX-6) on the system button, .btn-pill-toggle */
+.btn-pill-toggle.is-primary { background: var(--brand); border-color: var(--brand); color: var(--accent-contrast-fg, #0b1118); font-weight: 700; }
+.btn-pill-toggle.is-primary:hover { filter: brightness(1.08); background: var(--brand); }
+.btn-pill-toggle.is-danger { background: var(--zn-danger-bg); border-color: var(--zn-danger-line); color: var(--zn-danger-text); }
+.btn-pill-toggle.is-danger:hover { background: rgba(235, 87, 87, 0.3); }
+.btn-pill-toggle.is-ghost { background: transparent; border-color: transparent; color: var(--zn-text-soft); }
+.btn-pill-toggle.is-ghost:hover { background: rgba(255, 255, 255, 0.06); }
+.btn-pill-toggle.is-small, .btn-rect.is-small { min-height: var(--zn-btn-h-sm); padding: 0 10px; font-size: var(--zn-fs-xs); }
+.btn-pill-toggle.is-block, .btn-rect.is-block { width: 100%; }
+.btn-pill-toggle:disabled, .btn-rect:disabled { opacity: 0.5; cursor: not-allowed; }
