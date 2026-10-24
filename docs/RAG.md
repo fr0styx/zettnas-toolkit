@@ -126,6 +126,11 @@ small chat model. An answer counts as right when it contains the fact
 model answered at all. Results are kept as workflow artifacts and compared with
 `tests/rag_eval/baseline_nightly*.json` once those are recorded.
 
+On the test NAS with Llama 3.2 3B on the iGPU, the answer set went from 0.74 to 0.89
+right answers after the prompt asked for the answer first, in the question's language,
+without a stock "could not find" sentence to copy (English 0.24 → 0.76; the right file
+was cited in every case). Most remaining misses are the small model misreading a number.
+
 ## How answers are checked
 
 **Grounding** is scored on the model's final answer, sentence by sentence. A sentence
