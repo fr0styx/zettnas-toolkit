@@ -3651,8 +3651,22 @@
         <input type="text" id="backup-job-name" class="tz-select-input" placeholder="e.g. Daily Documents & Photos Sync" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
       </div>
 
+      <div>
+        <label for="backup-job-kind" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">What to back up</label>
+        <select id="backup-job-kind" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
+          <option value="data" selected>A folder in the pool</option>
+          <option value="config">ZettNAS settings (users, shares, apps; encrypted)</option>
+        </select>
+      </div>
+
+      <div id="backup-config-fields" hidden style="display: flex; flex-direction: column; gap: 6px;">
+        <label for="backup-job-passphrase" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Backup passphrase</label>
+        <input type="password" id="backup-job-passphrase" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
+        <div style="font-size: 11px; color: var(--muted);">Needed to restore. Keep it somewhere other than this server, with your AI data key if you set one.</div>
+      </div>
+
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <div>
+        <div id="backup-subvolume-wrap">
           <label for="backup-job-subvolume" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Source Share / Subvolume</label>
           <input type="text" id="backup-job-subvolume" class="tz-select-input" placeholder="e.g. shares, documents" required style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;" />
         </div>
@@ -3661,8 +3675,14 @@
           <select id="backup-job-dest-type" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
             <option value="remote" selected>Snapshot + Cloud Sync (3-2-1)</option>
             <option value="local_snapshot">Local Snapshot Only</option>
+            <option value="local_folder" hidden>Folder in the pool</option>
           </select>
         </div>
+      </div>
+
+      <div id="backup-local-fields" hidden>
+        <label for="backup-job-local-path" style="display: block; font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Folder in the pool</label>
+        <input type="text" id="backup-job-local-path" placeholder="e.g. /mnt/user/backups/zettnas" class="tz-select-input" style="width: 100%; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.3); padding: 8px 10px; color: #fff; border-radius: 6px; font-size: 12px;">
       </div>
 
       <div id="backup-remote-fields" style="display: flex; flex-direction: column; gap: 12px;">

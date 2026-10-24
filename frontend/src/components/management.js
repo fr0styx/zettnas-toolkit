@@ -8642,17 +8642,20 @@ export function initManagement() {
   const destTypeSelect = document.getElementById('backup-job-dest-type');
   const remoteFieldsDiv = document.getElementById('backup-remote-fields');
   if (destTypeSelect && remoteFieldsDiv) {
-    destTypeSelect.addEventListener('change', () => {
-      remoteFieldsDiv.style.display = destTypeSelect.value === 'remote' ? 'flex' : 'none';
-    });
+    destTypeSelect.addEventListener('change', () => syncBackupJobForm());
   }
+  const kindSelect = document.getElementById('backup-job-kind');
+  if (kindSelect) kindSelect.addEventListener('change', () => syncBackupJobForm());
 
   if (formBackupJob) {
     formBackupJob.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const kind = document.getElementById('backup-job-kind')?.value || 'data';
       const payload = {
         name: document.getElementById('backup-job-name')?.value.trim() || 'Untitled Backup Task',
-        source_subvolume: document.getElementById('backup-job-subvolume')?.value.trim() || '',
+        kind,
+        local_path: document.getElementById('backup-job-local-path')?.value.trim() || '',
+        source_subvolume: kind === 'config' ? '' : document.getElementById('backup-job-subvolume')?.value.trim() || '',
         destination_type: document.getElementById('backup-job-dest-type')?.value || 'remote',
         remote_name: document.getElementById('backup-job-remote-name')?.value.trim() || '',
         remote_path: document.getElementById('backup-job-remote-path')?.value.trim() || '',
@@ -8660,6 +8663,8 @@ export function initManagement() {
         retention_count: parseInt(document.getElementById('backup-job-retention')?.value, 10) || 7,
         enabled: !!document.getElementById('backup-job-enabled')?.checked,
       };
+      const passphrase = document.getElementById('backup-job-passphrase')?.value || '';
+      if (kind === 'config' && passphrase) payload.encryption_password = passphrase;
 
       try {
         await api.post('/api/backup/schedule', payload);
@@ -8939,6 +8944,32 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
 
 // The newest version this install can go back to (a pre-update snapshot whose image is still on the host).
 let _previousVersion = null;
+
+/** Backup job form: a settings backup (OPS-8) has a passphrase and a folder or remote, no source share. */
+export function syncBackupJobForm() {
+  const kind = document.getElementById('backup-job-kind')?.value || 'data';
+  const isConfig = kind === 'config';
+  const dest = document.getElementById('backup-job-dest-type');
+  const sub = document.getElementById('backup-job-subvolume');
+  const subWrap = document.getElementById('backup-subvolume-wrap');
+  const cfg = document.getElementById('backup-config-fields');
+  const local = document.getElementById('backup-local-fields');
+  const remote = document.getElementById('backup-remote-fields');
+  if (subWrap) subWrap.hidden = isConfig;
+  if (sub) sub.required = !isConfig;
+  if (cfg) cfg.hidden = !isConfig;
+  if (dest) {
+    const folderOpt = dest.querySelector('option[value="local_folder"]');
+    const snapOpt = dest.querySelector('option[value="local_snapshot"]');
+    if (folderOpt) folderOpt.hidden = !isConfig;
+    if (snapOpt) snapOpt.hidden = isConfig;
+    if (isConfig && dest.value === 'local_snapshot') dest.value = 'local_folder';
+    if (!isConfig && dest.value === 'local_folder') dest.value = 'remote';
+  }
+  const value = dest ? dest.value : 'remote';
+  if (local) local.hidden = !(isConfig && value === 'local_folder');
+  if (remote) remote.style.display = value === 'remote' ? 'flex' : 'none';
+}
 
 export async function showLastUpdateResult() {
   const box = document.getElementById('update-last-result');
@@ -9672,9 +9703,12 @@ export async function fetchAndRenderBackupJobs(mountEl) {
 
     const rowsHtml = jobs.map(job => {
       const isRemote = job.destination_type === 'remote';
+      const isSettings = job.kind === 'config';
       const destBadge = isRemote
         ? `<span class="badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); font-size: 11px; padding: 2px 6px; border-radius: 4px;">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
-        : `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: 11px; padding: 2px 6px; border-radius: 4px;">📸 Local Snapshot</span>`;
+        : job.destination_type === 'local_folder'
+          ? `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: 11px; padding: 2px 6px; border-radius: 4px;">📁 ${escapeHtml(job.local_path || '')}</span>`
+          : `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: 11px; padding: 2px 6px; border-radius: 4px;">📸 Local Snapshot</span>`;
 
       const schedBadge = `<span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 11px; padding: 2px 6px; border-radius: 4px; text-transform: capitalize;">${escapeHtml(job.schedule || 'daily')}</span>`;
       
@@ -9695,7 +9729,9 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11.5px;">
           <td style="padding: 10px 12px; font-weight: 600; color: #fff;">
             <div>${escapeHtml(job.name)}</div>
-            <div style="font-size: 11px; color: var(--muted); font-weight: normal;">Subvolume: <code>${escapeHtml(job.source_subvolume || '@shares')}</code></div>
+            <div style="font-size: 11px; color: var(--muted); font-weight: normal;">${isSettings
+              ? escapeHtml(t('backup.kind_config_source', 'ZettNAS settings (encrypted)'))
+              : `Subvolume: <code>${escapeHtml(job.source_subvolume || '@shares')}</code>`}</div>
           </td>
           <td style="padding: 10px 12px;">${destBadge}</td>
           <td style="padding: 10px 12px;">

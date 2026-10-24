@@ -337,6 +337,7 @@ export default {
   "dock.zettai": "Studio ZettAI",
   "updates.last_rolled_back": "La dernière mise à jour ({when}) n'a pas démarré correctement et a été annulée : {reason}",
   "updates.last_not_applied": "La dernière mise à jour ({when}) n'a pas été appliquée : {reason}",
+  "backup.kind_config_source": "Paramètres ZettNAS (chiffrés)",
   "updates.title": "Mises à jour du logiciel",
   "updates.subtitle": "Vérifiez les versions stables ou activez les fonctionnalités des derniers commits.",
   "updates.channel_stable": "🌟 Stable",

@@ -59,3 +59,14 @@ Run the backup from a systemd timer or cron, and `restic forget --keep-daily 7
   freezes writes before it reaches the rest.
 - Send a copy off the box: **Storage → Replication** to another NAS, or a cloud remote
   under **Remotes**.
+
+
+## Disaster recovery: getting ZettNAS itself back
+
+Your files live on the pool; ZettNAS's own settings (users and their passwords and two-factor, shares and their permissions, NFS/SFTP/rclone settings, app stacks, VM definitions) live in its data folder. Keep a copy of those somewhere else:
+
+1. **Schedule a settings backup.** Mission Control → System & Identity → *Hyper-Backup Tasks & 3-2-1 Pipelines* → new task → *What to back up: ZettNAS settings*. Pick a folder in the pool (ideally one that is itself copied offsite) or an rclone remote, a frequency, and how many copies to keep. Every copy is encrypted with the passphrase you set.
+2. **Keep the passphrase off the server**, in a password manager. Without it a settings backup can't be opened.
+3. **If you set an AI data key** (`ZETTNAS_DATA_KEY`), keep a copy with the passphrase. A settings backup holds the encrypted AI chat history as it is; it needs the same key to be read.
+
+To recover on a new install: install ZettNAS with the same `ZETTNAS_DATA_KEY` (if you used one), open Mission Control → System & Identity → *System Configuration Backup & Restore* → *Upload & Restore Archive*, choose the newest `zettnas_backup_*.zettbak` and enter the passphrase. Users, shares and settings come back; the AI index is rebuilt from your files in the background.

@@ -39,8 +39,10 @@ class BackupJobModel(BaseModel):
     id: str | None = None
     name: str = Field(..., description="Human-readable job name")
     source_pool: str = Field("default", description="Storage pool ID")
-    source_subvolume: str = Field(..., description="Subvolume or share name to backup")
-    destination_type: str = Field("remote", description="'remote' or 'local_snapshot'")
+    source_subvolume: str = Field("", description="Subvolume or share name to backup (data jobs)")
+    kind: str = Field("data", description="'data' (a pool folder) or 'config' (ZettNAS settings, encrypted)")
+    local_path: str | None = Field("", description="Folder in the pool for settings backups")
+    destination_type: str = Field("remote", description="'remote', 'local_snapshot' or (settings) 'local_folder'")
     remote_name: str | None = Field("", description="Configured Rclone remote name")
     remote_path: str | None = Field("", description="Remote bucket or directory path")
     schedule: str = Field("daily", description="'hourly', 'daily', 'weekly', or 'manual'")
@@ -191,7 +193,12 @@ async def restore_backup(request: Request):
 @router.get("/backup/schedule", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
 def list_backup_jobs():
     """Lists all scheduled hyper-backup jobs."""
-    return {"status": "ok", "jobs": get_backup_jobs()}
+    # Passphrases never leave the server
+    jobs = [
+        {**j, "encryption_password": None, "has_passphrase": bool(j.get("encryption_password"))}
+        for j in get_backup_jobs()
+    ]
+    return {"status": "ok", "jobs": jobs}
 
 
 @router.post(
@@ -203,7 +210,10 @@ def create_or_update_backup_job(job: BackupJobModel):
         saved = save_backup_job(job.model_dump() if hasattr(job, "model_dump") else job.dict())
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-    return {"status": "ok", "job": saved}
+    return {
+        "status": "ok",
+        "job": {**saved, "encryption_password": None, "has_passphrase": bool(saved.get("encryption_password"))},
+    }
 
 
 @router.delete(

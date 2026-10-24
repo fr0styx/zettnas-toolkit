@@ -327,6 +327,7 @@ export default {
   "dock.zettai": "ZettAI 智能工作室",
   "updates.last_rolled_back": "上次更新（{when}）未能正常启动，已回滚：{reason}",
   "updates.last_not_applied": "上次更新（{when}）未应用：{reason}",
+  "backup.kind_config_source": "ZettNAS 设置（已加密）",
   "updates.title": "软件更新",
   "updates.subtitle": "检查最新的稳定发布版本、安全补丁，或抢先体验主分支提交功能。",
   "updates.channel_stable": "🌟 稳定版",

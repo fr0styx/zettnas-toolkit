@@ -8,6 +8,7 @@ and background scheduling.
 import io
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 import threading
@@ -17,7 +18,7 @@ import zipfile
 from typing import Any, BinaryIO, Optional
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
 from backend.services.rclone_engine import get_rclone_engine
 
@@ -344,12 +345,42 @@ def checked_subvolume(value: Any) -> str:
     return "/".join(parts)
 
 
+CONFIG_EXPORT_PREFIX = "zettnas_backup_"
+MIN_PASSPHRASE = 8
+
+
+def _settings_job_checks(job_data: dict[str, Any], password: str) -> None:
+    """A ZettNAS-settings backup is always encrypted and goes to a pool folder or an rclone remote (OPS-8)."""
+    from backend import config
+
+    if len(password) < MIN_PASSPHRASE:
+        raise ValueError(f"A settings backup needs a passphrase of at least {MIN_PASSPHRASE} characters.")
+    dest = job_data.get("destination_type")
+    if dest == "local_folder":
+        if not resolve_within(str(job_data.get("local_path") or ""), config.ALLOWED_BROWSE_ROOTS):
+            raise ValueError("The destination folder must be inside the storage folders.")
+    elif dest == "remote":
+        if not str(job_data.get("remote_name") or "").strip():
+            raise ValueError("Choose an rclone remote for the settings backup.")
+    else:
+        raise ValueError("A settings backup goes to a folder in the pool or to an rclone remote.")
+
+
 def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
     """Creates or updates a scheduled hyper-backup job."""
-    job_data = {**job_data, "source_subvolume": checked_subvolume(job_data.get("source_subvolume", ""))}
+    kind = "config" if job_data.get("kind") == "config" else "data"
+    if kind == "data":
+        job_data = {**job_data, "source_subvolume": checked_subvolume(job_data.get("source_subvolume", ""))}
+    else:
+        job_data = {**job_data, "source_subvolume": ""}
     jobs = get_backup_jobs()
     job_id = job_data.get("id") or str(uuid.uuid4())[:8]
     now = time.time()
+    existing = next((j for j in jobs if j.get("id") == job_id), {})
+    # Editing a job without retyping its passphrase keeps the stored one
+    password = str(job_data.get("encryption_password") or existing.get("encryption_password") or "")
+    if kind == "config":
+        _settings_job_checks(job_data, password)
 
     normalized: dict[str, Any] = {
         "id": job_id,
@@ -361,6 +392,10 @@ def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
         "remote_path": job_data.get("remote_path", "").strip(),
         "schedule": job_data.get("schedule", "daily"),  # "hourly", "daily", "weekly", "manual"
         "retention_count": max(1, int(job_data.get("retention_count", 7))),
+        "kind": kind,  # "data" (a pool folder) or "config" (ZettNAS settings, OPS-8)
+        "local_path": str(job_data.get("local_path") or "").strip(),
+        "encrypted": bool(job_data.get("encrypted", False)) or kind == "config",
+        "encryption_password": password,
         "encryption_enabled": bool(job_data.get("encryption_enabled", False)),
         "encryption_mode": str(job_data.get("encryption_mode", "none")),  # "none", "rclone_crypt", "aes256"
         "bandwidth_limit_kbps": int(job_data.get("bandwidth_limit_kbps", 0)),
@@ -442,6 +477,50 @@ def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) ->
     return pruned
 
 
+def _export_settings(job: dict[str, Any], retention: int) -> str:
+    """Writes an encrypted ZettNAS settings backup to the job's folder or remote; returns where (OPS-8)."""
+    from backend import config
+
+    password = str(job.get("encryption_password") or "")
+    if len(password) < MIN_PASSPHRASE:
+        raise ValueError("This settings backup has no passphrase; edit the job and set one.")
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    name = f"{CONFIG_EXPORT_PREFIX}{ts}.zettbak"
+    stream = generate_backup_zip_stream(passphrase=password)
+    try:
+        data = stream.read()
+    finally:
+        stream.close()
+    if job.get("destination_type") == "local_folder":
+        folder = resolve_within(str(job.get("local_path") or ""), config.ALLOWED_BROWSE_ROOTS)
+        if not folder:
+            raise ValueError("The destination folder must be inside the storage folders.")
+        os.makedirs(folder, exist_ok=True)
+        tmp = os.path.join(folder, f".{name}.tmp")
+        with open(tmp, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, os.path.join(folder, name))
+        ours = sorted(n for n in os.listdir(folder) if n.startswith(CONFIG_EXPORT_PREFIX) and n.endswith(".zettbak"))
+        for old in ours[: -max(1, int(retention))]:
+            os.remove(os.path.join(folder, old))
+        return os.path.join(folder, name)
+    remote = str(job.get("remote_name") or "").strip()
+    if not remote:
+        raise ValueError("Choose an rclone remote or a folder for the settings backup.")
+    outbox = os.path.join(DATA_DIR, "backups", "config-outbox")  # not part of backups or snapshots
+    run_dir = os.path.join(outbox, ts)
+    os.makedirs(run_dir, mode=0o700, exist_ok=True)
+    with open(os.path.join(run_dir, name), "wb") as f:
+        f.write(data)
+    for old in sorted(os.listdir(outbox))[:-2]:  # the copy runs in the background: keep the last two
+        shutil.rmtree(os.path.join(outbox, old), ignore_errors=True)
+    remote_path = str(job.get("remote_path") or "").strip()
+    get_rclone_engine().start_sync_job(src=run_dir, dst=f"{remote}:{remote_path}", action="copy")
+    return f"{remote}:{remote_path.rstrip('/')}/{name}"
+
+
 def execute_backup_job(job_id: str) -> dict[str, Any]:
     """Executes a hyper-backup pipeline: atomic snapshot + Rclone offsite sync + retention pruning."""
     jobs = get_backup_jobs()
@@ -477,70 +556,76 @@ def execute_backup_job(job_id: str) -> dict[str, Any]:
     pal = get_storage_platform()
     snap_result = None
     snap_name = None
+    dest_target = ""
 
     try:
-        # Step 1: Create atomic local filesystem snapshot
-        if subvol:
-            snap_name = f"{subvol}_{time.strftime('%Y%m%d_%H%M%S')}"
-            try:
-                snap_result = pal.create_snapshot(
-                    pool_id=pool_id,
-                    subvol_name=subvol,
-                    snapshot_name=snap_name,
-                    readonly=True,
-                )
-                history_record["snapshot_name"] = snap_name
-                logger.info(f"[HYPER-BACKUP] Created atomic snapshot: {snap_name} ({snap_result.get('status')})")
-            except PlatformCapabilityError as pce:
-                logger.info(f"[HYPER-BACKUP] Platform in observer mode ({pce}); skipping local snapshot.")
-                history_record["snapshot_name"] = f"skipped ({pce})"
-
-            # Prune older snapshots
-            pruned = prune_job_snapshots(pool_id, subvol, retention)
-            history_record["pruned_snapshots"] = pruned
-
-        # Step 2: Trigger Rclone offsite sync if configured
-        if dest_type == "remote" and remote_name:
-            # Determine source path - prioritize read-only snapshot directory for atomic point-in-time consistency
-            source_dir = None
-            if snap_result and isinstance(snap_result, dict):
-                source_dir = snap_result.get("snapshot_path") or snap_result.get("path")
-            if not source_dir or not os.path.exists(source_dir):
-                pool_path = pal.get_pool_path(pool_id)
-                source_dir = os.path.join(pool_path, "@shares", subvol) if subvol else pool_path
-                if not os.path.exists(source_dir):
-                    source_dir = os.path.join(pool_path, subvol) if subvol else pool_path
-                from backend.fsutil import resolve_within
-
-                if resolve_within(source_dir, [pool_path]) is None:
-                    raise ValueError("The backup source is outside the pool.")
-
-            dest_target = f"{remote_name}:{remote_path}"
-            rclone = get_rclone_engine()
-
-            # Client-side rclone crypt encryption wrapper
-            if job.get("encrypted") and job.get("encryption_password"):
-                crypt_remote_name = f"crypt_{job_id[:8]}"
+        if job.get("kind") == "config":
+            history_record["snapshot_name"] = dest_target = _export_settings(job, retention)
+        else:
+            # Step 1: Create atomic local filesystem snapshot
+            if subvol:
+                snap_name = f"{subvol}_{time.strftime('%Y%m%d_%H%M%S')}"
                 try:
-                    rclone.create_crypt_remote(
-                        name=crypt_remote_name,
-                        base_remote_path=dest_target,
-                        password=job["encryption_password"],
+                    snap_result = pal.create_snapshot(
+                        pool_id=pool_id,
+                        subvol_name=subvol,
+                        snapshot_name=snap_name,
+                        readonly=True,
                     )
-                    dest_target = f"{crypt_remote_name}:"
-                    logger.info(f"[HYPER-BACKUP] Initialized client-side encrypted crypt overlay: {dest_target}")
-                except Exception as crypt_err:
-                    logger.warning(
-                        f"[HYPER-BACKUP] Failed creating crypt overlay, falling back to base remote: {crypt_err}"
-                    )
+                    history_record["snapshot_name"] = snap_name
+                    logger.info(f"[HYPER-BACKUP] Created atomic snapshot: {snap_name} ({snap_result.get('status')})")
+                except PlatformCapabilityError as pce:
+                    logger.info(f"[HYPER-BACKUP] Platform in observer mode ({pce}); skipping local snapshot.")
+                    history_record["snapshot_name"] = f"skipped ({pce})"
 
-            sync_job = rclone.start_sync_job(
-                src=source_dir,
-                dst=dest_target,
-                action="sync",
-            )
-            history_record["rclone_job_id"] = sync_job.get("id")
-            logger.info(f"[HYPER-BACKUP] Dispatched Rclone offsite sync to {dest_target} (Job: {sync_job.get('id')})")
+                # Prune older snapshots
+                pruned = prune_job_snapshots(pool_id, subvol, retention)
+                history_record["pruned_snapshots"] = pruned
+
+            # Step 2: Trigger Rclone offsite sync if configured
+            if dest_type == "remote" and remote_name:
+                # Determine source path - prioritize read-only snapshot directory for atomic point-in-time consistency
+                source_dir = None
+                if snap_result and isinstance(snap_result, dict):
+                    source_dir = snap_result.get("snapshot_path") or snap_result.get("path")
+                if not source_dir or not os.path.exists(source_dir):
+                    pool_path = pal.get_pool_path(pool_id)
+                    source_dir = os.path.join(pool_path, "@shares", subvol) if subvol else pool_path
+                    if not os.path.exists(source_dir):
+                        source_dir = os.path.join(pool_path, subvol) if subvol else pool_path
+                    from backend.fsutil import resolve_within
+
+                    if resolve_within(source_dir, [pool_path]) is None:
+                        raise ValueError("The backup source is outside the pool.")
+
+                dest_target = f"{remote_name}:{remote_path}"
+                rclone = get_rclone_engine()
+
+                # Client-side rclone crypt encryption wrapper
+                if job.get("encrypted") and job.get("encryption_password"):
+                    crypt_remote_name = f"crypt_{job_id[:8]}"
+                    try:
+                        rclone.create_crypt_remote(
+                            name=crypt_remote_name,
+                            base_remote_path=dest_target,
+                            password=job["encryption_password"],
+                        )
+                        dest_target = f"{crypt_remote_name}:"
+                        logger.info(f"[HYPER-BACKUP] Initialized client-side encrypted crypt overlay: {dest_target}")
+                    except Exception as crypt_err:
+                        logger.warning(
+                            f"[HYPER-BACKUP] Failed creating crypt overlay, falling back to base remote: {crypt_err}"
+                        )
+
+                sync_job = rclone.start_sync_job(
+                    src=source_dir,
+                    dst=dest_target,
+                    action="sync",
+                )
+                history_record["rclone_job_id"] = sync_job.get("id")
+                logger.info(
+                    f"[HYPER-BACKUP] Dispatched Rclone offsite sync to {dest_target} (Job: {sync_job.get('id')})"
+                )
 
         # Mark job run success
         job["last_run_at"] = time.time()
