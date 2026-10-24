@@ -9,6 +9,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import socket
 import sys
 import time
@@ -179,6 +180,36 @@ def _app_status(cid: str) -> str | None:
     return str(out.get("status") or "")
 
 
+ROLLBACK_REPO = "zettnas-toolkit-rollback"
+
+
+def _container_build(inspect_data: dict[str, Any], version: str) -> str:
+    """The build a container runs: version plus short commit from its BUILD_COMMIT."""
+    env = (inspect_data.get("Config") or {}).get("Env") or []
+    commit = next((e.split("=", 1)[1] for e in env if e.startswith("BUILD_COMMIT=")), "")[:7]
+    base = version or "unknown"
+    return f"{base}+{commit}" if commit else base
+
+
+def _tag_name(build: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", build)[:120] or "previous"
+
+
+def _protect_rollback_image(image_id: str, build: str, data_dir: str) -> None:
+    """Tags the previous image so `docker image prune` can't remove a rollback target, and drops
+    the tags whose snapshot is gone (OPS-5)."""
+    from backend.services.data_snapshot import list_snapshots
+
+    tag = _tag_name(build)
+    _docker_request("POST", f"/images/{image_id}/tag?repo={ROLLBACK_REPO}&tag={tag}")
+    keep = {_tag_name(str(s.get("from_build"))) for s in list_snapshots(data_dir) if s.get("from_build")} | {tag}
+    st, images = _docker_request("GET", f"/images/json?filters={json.dumps({'reference': [ROLLBACK_REPO]})}")
+    for img in images if st == 200 and isinstance(images, list) else []:
+        for ref in img.get("RepoTags") or []:
+            if ref.startswith(ROLLBACK_REPO + ":") and ref.split(":", 1)[1] not in keep:
+                _docker_request("DELETE", f"/images/{ref}?noprune=1")
+
+
 def write_update_result(data_dir: str | None, result: str, reason: str = "", **extra: Any) -> None:
     """Records how the update ended, for the app to report after it starts (OPS-7)."""
     if not data_dir:
@@ -331,16 +362,21 @@ def apply_update_from_helper(
     snapshot = None
     if data_dir and os.path.isdir(data_dir):
         try:
-            from backend.services.data_snapshot import take_snapshot
+            from backend.services.data_snapshot import current_build, is_stable_tag, take_snapshot
 
             from_version = str((old_image_cfg.get("Labels") or {}).get("org.opencontainers.image.version") or "")
+            from_tag = str((inspect_data.get("Config") or {}).get("Image") or "")
+            from_build = _container_build(inspect_data, from_version)
             snapshot = take_snapshot(
                 data_dir,
-                label=f"from-{from_version or 'unknown'}",
+                label=f"from-{from_build}",
                 extra={
                     "from_version": from_version,
+                    "from_build": from_build,
+                    "to_build": current_build(),
                     "from_image": old_image_ref,
-                    "from_tag": str((inspect_data.get("Config") or {}).get("Image") or ""),
+                    "from_tag": from_tag,
+                    "stable": is_stable_tag(from_tag),
                     "to_image": image,
                     "kind": "revert" if restore_from else "update",
                 },
@@ -415,6 +451,8 @@ def apply_update_from_helper(
 
     logger.info(f"[SelfUpdater Helper] '{target}' is {why}. Removing the rollback container...")
     _docker_request("DELETE", f"/containers/{rollback_name}?v=false")
+    if snapshot and old_image_ref and data_dir:
+        _protect_rollback_image(old_image_ref, _container_build(inspect_data, ""), data_dir)
     write_update_result(data_dir, "reverted" if restore_from else "updated", why, to_image=image)
     logger.info(f"[SelfUpdater Helper] OTA update complete for '{target}'.")
 

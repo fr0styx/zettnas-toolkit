@@ -13,18 +13,21 @@ caches, and the backups folder itself.
 import json
 import logging
 import os
+import re
 import shutil
 import sqlite3
 import stat
 import time
 from typing import Any, Optional
 
-from backend.fsutil import atomic_write_json
+from backend.fsutil import atomic_write_json, read_json
 
 logger = logging.getLogger("zettnas.data_snapshot")
 
 SNAPSHOT_SUBDIR = os.path.join("backups", "pre-update")
-KEEP = 3
+KEEP = 3  # newest snapshots kept; the newest one taken from a Stable build is kept as well (OPS-5)
+LAST_RUN = "last_run.json"  # the build that last ran on this data folder (OPS-4)
+RECENT_SNAPSHOT_SECS = 3600
 INCLUDE_DIRS = ("rclone", "samba", "sftp", "nfs", "stacks")
 SKIP_PREFIXES = ("rag_index.db",)
 SKIP_SUFFIXES = (".png", ".bmp", ".jpg", ".py", ".tmp", "-wal", "-shm", ".lock")
@@ -48,6 +51,47 @@ def _copy_db(src: str, dst: str) -> None:
         shutil.copy2(src, dst)
         return
     db_crypto.copy(src, dst)
+
+
+def current_build() -> str:
+    """This build: version plus short commit (edge builds share a version number)."""
+    from backend import __version__
+
+    commit = (os.environ.get("BUILD_COMMIT") or "")[:7]
+    return f"{__version__}+{commit}" if commit else __version__
+
+
+def is_stable_tag(image_tag: str) -> bool:
+    """latest, stable or a version tag (1.9, 1.9.4, v1.9.4, with or without -core)."""
+    last = image_tag.split("/")[-1]
+    tag = last.rsplit(":", 1)[1] if ":" in last else "latest"
+    tag = tag.removesuffix("-core")
+    return tag in ("latest", "stable") or bool(re.fullmatch(r"v?\d+\.\d+(\.\d+)?", tag))
+
+
+def snapshot_if_build_changed(data_dir: str, build: str | None = None) -> str | None:
+    """At startup: if a different build ran on this data folder last, and the in-app updater
+    didn't just snapshot it, take a snapshot before anything is migrated. Updates from the
+    Unraid Docker tab or `docker compose pull` get one too (OPS-4)."""
+    build = build or current_build()
+    path = os.path.join(data_dir, LAST_RUN)
+    prev = str((read_json(path, {}) or {}).get("build") or "")
+    taken = None
+    if prev and prev != build:
+        now = time.time()
+        recent = [
+            s
+            for s in list_snapshots(data_dir)
+            if s.get("to_build") == build and now - float(s.get("created_at") or 0) < RECENT_SNAPSHOT_SECS
+        ]
+        if not recent:
+            taken = take_snapshot(
+                data_dir,
+                label=f"from-{prev}",
+                extra={"kind": "startup", "from_build": prev, "from_version": prev.split("+")[0], "to_build": build},
+            )
+    atomic_write_json(path, {"build": build, "at": time.time()})
+    return taken
 
 
 def snapshot_root(data_dir: str) -> str:
@@ -101,9 +145,12 @@ def take_snapshot(
 
 
 def _prune(root: str, protect: str | None = None) -> None:
-    keep_name = os.path.basename(os.path.normpath(protect)) if protect else None
-    snaps = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)) and d != keep_name)
-    for old in snaps[:-KEEP]:
+    keep = {os.path.basename(os.path.normpath(protect))} if protect else set()
+    snaps = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
+    stable = [d for d in snaps if (read_json(os.path.join(root, d, MANIFEST), {}) or {}).get("stable")]
+    if stable:
+        keep.add(stable[-1])  # always one way back to the last Stable build (OPS-5)
+    for old in [d for d in snaps if d not in keep][:-KEEP]:
         shutil.rmtree(os.path.join(root, old), ignore_errors=True)
 
 

@@ -99,6 +99,15 @@ def startup_system():
         logger.critical(f"[Main] {e}")
         raise SystemExit(3) from e
 
+    # A new build on this data folder without an in-app update (Unraid Docker tab, compose pull):
+    # snapshot the data before anything is migrated (OPS-4)
+    try:
+        from backend.services.data_snapshot import snapshot_if_build_changed
+
+        snapshot_if_build_changed(DATA_DIR)
+    except Exception as e:
+        logger.error(f"[Main] Could not snapshot the data folder for the new build: {e}")
+
     # Encryption at rest for the AI chat history (AI-20); the index follows in the background
     from backend import db_crypto
     from backend.services.ai_conversations_db import get_db_path as _conv_db_path

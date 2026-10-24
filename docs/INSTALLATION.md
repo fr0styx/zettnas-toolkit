@@ -534,6 +534,12 @@ docker compose up -d
 ### Upgrading via Unraid
 In the Unraid WebUI, navigate to **Docker**, click **Check for Updates**, and click **Update** next to `zettnas-toolkit`.
 
+### Snapshots, pinning a version and going back by hand
+- **Every update is snapshotted.** Before the data is touched, ZettNAS copies its settings and databases (not the AI index) to `data/backups/pre-update/<date>-from-<version+commit>/`. The in-app updater does this when it stops the old version; an update from the Unraid Docker tab or `docker compose pull` gets one when the new version first starts. The newest three are kept, plus the newest one taken from a Stable build.
+- **The previous image is kept.** After an in-app update the old image is tagged `zettnas-toolkit-rollback:<version+commit>`, so `docker image prune` doesn't remove it. **Mission Control → System Updates → Go back** uses it.
+- **Pin a version** by using a version tag instead of `latest`, e.g. `ghcr.io/fr0styx/zettnas-toolkit:1.9.4` (Compose `image:` line, or the Unraid template's Repository field). It changes only when you change the tag.
+- **Go back by hand:** stop the container, copy the files of the snapshot you want from `data/backups/pre-update/<snapshot>/` back into `data/` (overwrite), set the image to the version that snapshot came from (its folder name and `manifest.json` say which), and start it again. Don't start an older version on data a newer one has migrated without restoring its snapshot first: ZettNAS refuses to open newer databases.
+
 ---
 
 ## Troubleshooting & FAQ
