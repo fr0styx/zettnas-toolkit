@@ -145,6 +145,46 @@ def _fresh_rate_limits():
     rate_limit.reset()
 
 
+def _install_response_hook():
+    """Every JSON response of the test client goes through one hook (ARCH-11):
+    ZETTNAS_RECORD_RESPONSES=<file> records them for scripts/gen_response_models.py;
+    otherwise each one is checked against the response schema documented for its route."""
+    import json as _json
+
+    from starlette.testclient import TestClient
+
+    if getattr(TestClient, "_zn_response_hook", False):
+        return
+    record_to = os.environ.get("ZETTNAS_RECORD_RESPONSES")
+    original = TestClient.request
+
+    def request(self, method, url, *args, **kwargs):
+        resp = original(self, method, url, *args, **kwargs)
+        if not (200 <= resp.status_code < 300) or "json" not in resp.headers.get("content-type", ""):
+            return resp
+        if len(resp.content) > 300_000:
+            return resp
+        try:
+            body = _json.loads(resp.content)
+        except ValueError:
+            return resp
+        path = resp.request.url.path
+        if record_to:
+            with open(record_to, "a", encoding="utf-8") as f:
+                f.write(_json.dumps({"method": method.upper(), "path": path, "body": body}) + "\n")
+        else:
+            from tests.response_contract import check_response
+
+            check_response(self.app, method.upper(), path, body)
+        return resp
+
+    TestClient.request = request
+    TestClient._zn_response_hook = True
+
+
+_install_response_hook()
+
+
 def pytest_sessionfinish(session, exitstatus):
     shutil.rmtree(SANDBOX, ignore_errors=True)
 

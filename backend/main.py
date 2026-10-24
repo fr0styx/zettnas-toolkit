@@ -466,6 +466,11 @@ app.include_router(redfish_router, prefix="/redfish")
 app.include_router(api_router, prefix="/api", include_in_schema=False)
 app.include_router(api_router, prefix="/api/v1")
 
+# Response schemas in the OpenAPI document for the routes without a response_model (ARCH-11)
+from backend.api_docs import document_responses  # noqa: E402
+
+document_responses(app)
+
 
 @app.api_route(
     "/api/{unmatched_path:path}",
