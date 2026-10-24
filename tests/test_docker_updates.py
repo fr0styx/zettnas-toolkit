@@ -166,3 +166,31 @@ def test_check_container_image_update_private_registry_authenticated(mock_docker
     # Verify X-Registry-Auth header was passed to the distribution query
     first_call_headers = mock_docker_req.call_args_list[0][1].get("headers", {})
     assert "X-Registry-Auth" in first_call_headers
+
+
+@patch("backend.services.docker_updates.pull_container_image")
+@patch("backend.services.docker_updates.recreate_container")
+@patch("backend.services.compose_synthesizer.fetch_container_raw_inspect")
+def test_update_clears_the_cached_update_and_counts_it_once(mock_inspect, mock_recreate, mock_pull, monkeypatch):
+    from backend.services import docker_updates
+
+    entry = {"name": "dozzle", "id": "old1", "has_update": True, "status": "update_available"}
+    monkeypatch.setattr(
+        docker_updates,
+        "_update_cache",
+        {
+            "checked_at": 1,
+            "total_containers": 2,
+            "updates_available_count": 2,
+            "containers": {"dozzle": entry, "old1": entry},
+        },
+    )
+    mock_inspect.return_value = {"Id": "old1", "Name": "/dozzle", "Config": {"Image": "amir20/dozzle:latest"}}
+    mock_recreate.return_value = {"status": "success", "new_id": "new1"}
+    update_single_container("dozzle")
+    status = docker_updates.get_cached_update_status()
+    assert status["containers"]["dozzle"]["has_update"] is False and status["containers"]["old1"]["has_update"] is False
+    assert status["updates_available_count"] == 1
+    # updating it again (already up to date) does not lower the count of the others
+    update_single_container("dozzle")
+    assert docker_updates.get_cached_update_status()["updates_available_count"] == 1

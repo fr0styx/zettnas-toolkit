@@ -51,6 +51,7 @@ import { initInviteLanding } from './components/invites.js';
 import { initPhoneShell } from './components/phone-shell.js';
 import './file-preview-loader.js'; // window.openFilePreviewModal before the viewer loads
 import { installWindowFocus } from './window-focus.js';
+import { installStaleBuildGuard } from './stale-build.js';
 import { installDialogChrome } from './dialog-chrome.js';
 import { initContainerModal } from './components/container-modal.js';
 import { initStackModal } from './components/stack-modal.js';
@@ -62,6 +63,8 @@ import { initA11y } from './a11y.js';
 import { initGlassTimePickers } from './components/time-picker.js';
 
 import { t } from './i18n.js';
+
+installStaleBuildGuard(); // a page older than an update offers a reload instead of silent clicks
 let _sseRetryCount = 0;
 let _sse = null;
 let _sseReconnectTimer = null;

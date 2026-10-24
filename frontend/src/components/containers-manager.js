@@ -326,7 +326,8 @@ export function initContainersManager() {
           try {
             await api.post('/api/docker/updates/apply-all');
             showToast(t('toast.all_container_updates_dispatched', 'All container updates dispatched.'), 'success');
-            await loadContainersData();
+            await Promise.all([refreshCwUpdatesStatus(), loadContainersData()]);
+            renderContainersWindowTable(_cwContainersList);
           } catch (err) {
             showToast(t('toast.batch_update_failed', 'Batch update failed: {error}', { error: err.message }), 'error');
           } finally {
@@ -549,7 +550,31 @@ export const CW_WATCHDOG_MS = 15000;
 export const CW_SSE_STALE_MS = 10000;
 const CW_UPDATES_EVERY_TICKS = 4; // ~60 s
 
-function refreshCwUpdatesStatus() {
+// An updated container is up to date at once: its badge and the Updates count drop now,
+// then the server's list replaces this guess.
+export function markCwContainerUpdated(name, id) {
+  const map = _cwUpdatesCache?.containers;
+  if (!map) return;
+  let dropped = false;
+  for (const key of [name, id]) {
+    const entry = key && map[key];
+    if (entry?.has_update) {
+      entry.has_update = false;
+      entry.status = 'up_to_date';
+      dropped = true;
+    }
+  }
+  if (dropped) {
+    _cwUpdatesCache.updates_available_count = Math.max(0, (_cwUpdatesCache.updates_available_count || 1) - 1);
+    updateCwUpdatesUI(_cwUpdatesCache.updates_available_count);
+  }
+}
+
+export function _setCwUpdatesCacheForTesting(value) {
+  _cwUpdatesCache = value;
+}
+
+export function refreshCwUpdatesStatus() {
   return api
     .get('/api/docker/updates/status')
     .then((res) => {
@@ -1144,7 +1169,9 @@ function bindCwTableEvents(tbody) {
             try {
               await api.post(`/api/docker/containers/${encodeURIComponent(cid)}/update-image`);
               showToast(t('toast.container_updated_and_restarted_successfully', 'Container "{cname}" updated and restarted successfully!', { cname: cname }), 'success');
-              await loadContainersData();
+              markCwContainerUpdated(cname, cid);
+              await Promise.all([refreshCwUpdatesStatus(), loadContainersData()]);
+              renderContainersWindowTable(_cwContainersList);
             } catch (err) {
               showToast(t('toast.update_failed', 'Update failed: {error}', { error: err.message }), 'error');
               actBtn.disabled = false;

@@ -397,10 +397,13 @@ def update_single_container(cid: str) -> dict[str, Any]:
 
     # Invalidate / update cache for this container
     with _update_lock:
-        if orig_name in _update_cache.get("containers", {}):
-            _update_cache["containers"][orig_name]["has_update"] = False
-            _update_cache["containers"][orig_name]["status"] = "up_to_date"
-            _update_cache["updates_available_count"] = max(0, _update_cache.get("updates_available_count", 1) - 1)
+        entry = _update_cache.get("containers", {}).get(orig_name)
+        if entry is not None:
+            had_update = bool(entry.get("has_update"))
+            entry["has_update"] = False
+            entry["status"] = "up_to_date"
+            if had_update:  # the count only goes down for a container that was counted
+                _update_cache["updates_available_count"] = max(0, _update_cache.get("updates_available_count", 1) - 1)
 
     return res
 

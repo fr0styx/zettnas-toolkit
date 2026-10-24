@@ -385,3 +385,23 @@ describe('Dedicated Containers Window & Desktop Icon Suite', () => {
 
 
 
+
+describe("Apps window update badges", () => {
+  it("drops an updated container from the Updates list at once", async () => {
+    const mod = await import("../components/containers-manager.js");
+    document.body.innerHTML = `<span id="cw-count-updates-wrap"><span id="cw-count-updates">2</span></span>
+      <button id="btn-cw-filter-updates"><span id="cw-pill-updates">2</span></button>
+      <button id="btn-cw-update-all"><span id="cw-updates-count-badge">2</span></button>`;
+    const dozzle = { name: "dozzle", id: "8b7b", has_update: true };
+    mod._setCwUpdatesCacheForTesting({ updates_available_count: 2, containers: { dozzle, "8b7b": dozzle, other: { has_update: true } } });
+    mod.markCwContainerUpdated("dozzle", "8b7b");
+    expect(dozzle.has_update).toBe(false);
+    expect(document.getElementById("cw-pill-updates").textContent).toBe("1");
+    mod.markCwContainerUpdated("dozzle", "8b7b"); // already up to date: no change
+    expect(document.getElementById("cw-pill-updates").textContent).toBe("1");
+    mod.markCwContainerUpdated("other");
+    expect(document.getElementById("btn-cw-filter-updates").style.display).toBe("none");
+    mod._setCwUpdatesCacheForTesting(null);
+    expect(() => mod.markCwContainerUpdated("x")).not.toThrow();
+  });
+});
