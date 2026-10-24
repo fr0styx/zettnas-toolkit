@@ -1,5 +1,20 @@
 # ZettNAS Toolkit - Release Changelog
 
+## Unreleased
+
+#### Security
+
+- **Usernames can't name a folder above the private folders.** A name like `..` made the whole pool that person's private folder. Account creation (the admin form, sign-in with OpenID Connect, LDAP or a reverse proxy) refuses names that start with a dot or contain a slash.
+
+#### Fixes
+
+- **Media import never loses the copy you already had.** Overwriting a file used to delete it when the new copy failed its checksum, the card was pulled or you cancelled. Files are now copied next to the destination and swapped in only when complete and verified.
+- Two photos with the same name taken on the same day (two cameras, two card folders) both arrive; the second is named `name (2).ext`.
+- Removing a VLAN removes only VLANs; it could remove a bridge such as `br0` and cut the NAS off the network. VLAN names longer than 15 characters are refused.
+- Cancelling a RAID scrub no longer interrupts the rebuild of a replaced disk.
+- Btrfs volumes count as protected only with a redundant profile (raid1, raid10, raid5, raid6).
+- Your private folder shows up the first time you open `homes`.
+
 ## v1.10.0 (2026-10-24)
 ### 🗂️ Snapshots, offsite backup and family accounts; safer updates; a phone mode and a readable light theme
 
