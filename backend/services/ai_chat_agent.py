@@ -40,6 +40,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import FAN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
+from backend.services.ai_safeguards import compose_warning_for_reply, safe_web_query
 from backend.services.chat_web_tools import (  # noqa: F401  (re-exported for callers and tests)
     _WEB_ALLOWED,
     _clean_complete_snippet,
@@ -66,10 +67,15 @@ from backend.services.rag_engine import (
     get_rag_engine,
     get_running_disks_list,
     get_sleeping_disks_list,
+    similarity_profile,
 )
+from backend.services.rag_grounding import score_answer_grounding
 from backend.state import Z_STATE
 
 CHAT_HISTORY_MAX_TURNS = 20
+# Strict knowledge search with neural vectors: the least similarity that counts as about the
+# question (relevant files ~0.65-0.8, best unrelated file ~0.63 on tests/rag_eval)
+STRICT_NEURAL_SCORE = 0.6
 
 REASONING_TAG_RE = re.compile(
     r"<(?:think|thought|reasoning)>(.*?)</(?:think|thought|reasoning)>",
@@ -640,6 +646,42 @@ class ContextualQueryRewriter:
         return clean, None, None
 
 
+_FOLLOWUP_START = re.compile(
+    r"^(?:and|also|what about|how about|and what about|same for|und|und was ist mit|was ist mit|auch|et|et pour|"
+    r"quid de|y|y qué hay de|también|还有|那|那么|另外)\b",
+    re.I,
+)
+_FOLLOWUP_REF = re.compile(
+    r"\b(?:it|its|that|this|those|them|there|the same|the second|the first|the other|es|das|dort|dafür|"
+    r"ça|cela|celui|celle|là|eso|ese|esa|allí)\b|[它这那]",
+    re.I,
+)
+
+
+def rewrite_followup_for_search(message: str, history: list[dict[str, Any]] | None) -> str:
+    """The query to search the files with for a follow-up such as "and the warranty?" or
+    "und wann läuft der TÜV ab?": the previous question's words plus this one (AI-13). The model
+    still sees the conversation; only the search needs the topic spelled out."""
+    msg = str(message or "").strip()
+    if not history or not msg:
+        return msg
+    prev = next(
+        (
+            str(h.get("content") or "").strip()
+            for h in reversed(history)
+            if isinstance(h, dict) and h.get("role") == "user"
+        ),
+        "",
+    )
+    if not prev or prev == msg:
+        return msg
+    words = re.findall(r"\w+", msg)
+    short = len(words) <= 6 or (len(msg) <= 20 and any("\u4e00" <= ch <= "\u9fff" for ch in msg))
+    if short and (_FOLLOWUP_START.search(msg) or _FOLLOWUP_REF.search(msg) or len(words) <= 3):
+        return f"{prev} {msg}"[:500]
+    return msg
+
+
 class EdgeTokenBudgeter:
     """
     Mathematical context window budgeting across hardware tiers:
@@ -774,6 +816,52 @@ def tidy_citations(text: str | None, source_count: int) -> str | None:
     return "```".join(parts)
 
 
+_SMALLTALK = frozenset(
+    (
+        "hi",
+        "hello",
+        "hey",
+        "greetings",
+        "good morning",
+        "good evening",
+        "good afternoon",
+        "thanks",
+        "thank you",
+        "bye",
+        "goodbye",
+        "cool",
+        "awesome",
+        "nice",
+        "great",
+        "ok",
+        "okay",
+        "understood",
+        "got it",
+        "hallo",
+        "danke",
+        "merci",
+        "bonjour",
+        "salut",
+        "hola",
+        "gracias",
+        "你好",
+        "谢谢",
+    )
+)
+
+
+def _mentions(text: str, words: tuple[str, ...] | list[str]) -> bool:
+    """True when text contains one of the words or phrases as whole words: "ram" is not in
+    "program", "lan" is not in "plan" (AI-7)."""
+    return any(re.search(r"(?<![\w])" + re.escape(w) + r"(?![\w])", text) for w in words)
+
+
+_HARDWARE_TEMP_RE = re.compile(
+    r"\b(?:cpu|gpu|npu|nas|server|system|disk|disks|drive|drives|hdd|ssd|nvme|hardware|board|chassis|box)\b.{0,40}\btemp(?:erature)?s?\b"
+    r"|\btemp(?:erature)?s?\b.{0,40}\b(?:cpu|gpu|npu|nas|server|system|disk|disks|drive|drives|hdd|ssd|nvme|hardware|board|chassis|box)\b"
+)
+
+
 def _has_write_permission(principal: Any, required_scopes: tuple[str, ...]) -> bool:
     """No principal means no write access; scopes use the same wildcard rules as the API."""
     if principal is None:
@@ -815,23 +903,50 @@ def tools_for_principal(principal: Any, web_allowed: bool) -> list[dict[str, Any
     return TOOL_REGISTRY.for_principal(principal, web_allowed)
 
 
-def _context_window_for(messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None) -> int:
-    """num_ctx big enough for this prompt plus a reply, so Ollama doesn't silently cut it (AI-09).
+DEFAULT_NUM_CTX = 8192
+REPLY_TOKENS = 1024
 
-    ZETTNAS_AI_NUM_CTX overrides it. Otherwise ~3.5 characters per token, plus room for the
-    reply, rounded up to a power of two between 4096 and 16384.
-    """
+
+def _context_window_for(messages: list[dict[str, Any]] | None = None, tools: list[dict[str, Any]] | None = None) -> int:
+    """One fixed num_ctx (AI-7). Ollama reloads the model whenever num_ctx changes, and a window
+    sized to each prompt grew to 16384 and a 1.8 GiB KV cache on an iGPU; the prompt is fitted to
+    the window instead (see _fit_to_window). ZETTNAS_AI_NUM_CTX overrides it."""
     override = os.environ.get("ZETTNAS_AI_NUM_CTX", "").strip()
-    if override.isdigit() and int(override) >= 1024:
+    if override.isdigit() and int(override) >= 2048:
         return int(override)
-    chars = sum(len(str(m.get("content") or "")) for m in messages)
-    if tools:
-        chars += len(json.dumps(tools))
-    need = int(chars / 3.5) + 1536
-    ctx = 4096
-    while ctx < need and ctx < 16384:
-        ctx *= 2
-    return ctx
+    return DEFAULT_NUM_CTX
+
+
+_CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
+
+
+def estimate_tokens(text: str) -> int:
+    """Rough token count without a tokenizer: about 4 characters per token for Latin script,
+    one per CJK character."""
+    t = str(text or "")
+    cjk = len(_CJK_RE.findall(t))
+    return cjk + (len(t) - cjk + 3) // 4
+
+
+def _fit_to_window(
+    messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None, num_ctx: int
+) -> list[dict[str, Any]]:
+    """Drops the oldest history, then shortens the last user turn's context, so the prompt and a
+    reply fit in num_ctx (AI-7). The system prompt and the question itself are kept."""
+    budget = num_ctx - REPLY_TOKENS - (estimate_tokens(json.dumps(tools)) if tools else 0)
+    msgs = [dict(m) for m in messages]
+    total = lambda: sum(estimate_tokens(m.get("content") or "") + 4 for m in msgs)  # noqa: E731
+    while total() > budget and len(msgs) > 2:
+        msgs.pop(1)  # oldest turn after the system prompt
+    over = total() - budget
+    if over > 0 and msgs:
+        last = msgs[-1]
+        content = str(last.get("content") or "")
+        keep_tokens = max(200, estimate_tokens(content) - over)
+        # characters to keep, assuming the same mix of scripts as the whole text
+        ratio = len(content) / max(1, estimate_tokens(content))
+        last["content"] = content[: int(keep_tokens * ratio)] + "\n[context shortened to fit]"
+    return msgs
 
 
 # ============================================================================
@@ -1458,9 +1573,14 @@ def tool_search_nas_knowledge(
         if target_folder and not folder_manifest:
             folder_manifest = rag.get_folder_manifest(target_folder)
 
-    if strict_relevance:
+    neural_scores = not similarity_profile(rag.get_config().get("embedding_model"))["strict_terms"]
+    if strict_relevance and neural_scores and not target_folder:
+        # Neural vectors match across languages and wording, so shared words prove nothing;
+        # the engine's similarity does (relevant files score ~0.65-0.8 on the eval set).
+        raw_citations = [c for c in raw_citations if float(c.get("score") or 0.0) >= STRICT_NEURAL_SCORE]
+    elif strict_relevance:
         q_norm = re.sub(r"(\w)['’]s\b", r"\1s", str(query or "").lower())
-        q_tokens = [t for t in re.findall(r"[a-z0-9]+", q_norm) if t not in _CHAT_STOPWORDS and len(t) >= 3]
+        q_tokens = [t for t in re.findall(r"\w+", q_norm) if t not in _CHAT_STOPWORDS and len(t) >= 3]
         if q_tokens and not target_folder:
             primary_tok = max(q_tokens, key=len)
             filtered_citations = []
@@ -2344,7 +2464,7 @@ def _try_local_llm_completion(
                     "model": model_to_use,
                     "messages": messages,
                     "stream": streaming,
-                    "options": {"temperature": 0.2, "num_ctx": _context_window_for(messages, tools)},
+                    "options": {"temperature": 0.2, "num_ctx": _context_window_for()},
                 }
                 if tools:
                     ollama_req_body["tools"] = tools
@@ -3349,8 +3469,8 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
                 "    restart: unless-stopped\n"
                 "    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW\n"
                 "    environment:\n"
-                "      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changeme_root}\n"
-                "      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme_user}\n"
+                "      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}\n"
+                "      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}\n"
                 "      MYSQL_DATABASE: nextcloud\n"
                 "      MYSQL_USER: nextcloud\n"
                 "    volumes:\n"
@@ -3372,7 +3492,7 @@ def _generate_local_code_response(clean_msg: str, active_model: str) -> str | No
                 "      MYSQL_HOST: nextcloud-db\n"
                 "      MYSQL_DATABASE: nextcloud\n"
                 "      MYSQL_USER: nextcloud\n"
-                "      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme_user}\n"
+                "      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}\n"
                 "      REDIS_HOST: nextcloud-redis\n"
                 "    volumes:\n"
                 "      - /mnt/user/appdata/nextcloud/html:/var/www/html\n"
@@ -3873,8 +3993,8 @@ def _run_agentic_chat_turn(
             res_fan_set = execute_nas_tool("set_fan_profile", {"profile": target_prof}, principal=principal)
             tool_results.append(res_fan_set)
             tools_called.append("set_fan_profile")
-        elif "get_fan_and_thermal_status" not in tools_called and any(
-            w in msg_lower for w in ("fan", "fans", "rpm", "pwm", "cooling", "thermal", "zero rpm", "acoustic")
+        elif "get_fan_and_thermal_status" not in tools_called and _mentions(
+            msg_lower, ("fan", "fans", "rpm", "pwm", "cooling", "thermal", "zero rpm", "acoustic")
         ):
             res_fan = tool_get_fan_and_thermal_status()
             tool_results.append(res_fan)
@@ -3888,9 +4008,8 @@ def _run_agentic_chat_turn(
         if (
             docker_ctrl_match
             and "control_docker_container" not in tools_called
-            and any(
-                w in msg_lower
-                for w in ("container", "docker", "sonarr", "radarr", "plex", "immich", "dozzle", "scrutiny")
+            and _mentions(
+                msg_lower, ("container", "docker", "sonarr", "radarr", "plex", "immich", "dozzle", "scrutiny")
             )
         ):
             act_verb = docker_ctrl_match.group(1)
@@ -3902,9 +4021,9 @@ def _run_agentic_chat_turn(
                 tool_results.append(res_dctrl)
                 tools_called.append("control_docker_container")
 
-        if "list_docker_containers" not in tools_called and any(
-            w in msg_lower
-            for w in (
+        if "list_docker_containers" not in tools_called and _mentions(
+            msg_lower,
+            (
                 "docker",
                 "dockers",
                 "container",
@@ -3915,7 +4034,7 @@ def _run_agentic_chat_turn(
                 "radarr",
                 "immich",
                 "plex",
-            )
+            ),
         ):
             res_dlist = tool_list_docker_containers()
             tool_results.append(res_dlist)
@@ -3928,9 +4047,9 @@ def _run_agentic_chat_turn(
             tools_called.append("calculate")
 
         # 1d. Storage pools & capacity status
-        if "get_storage_status" not in tools_called and any(
-            w in msg_lower
-            for w in (
+        if "get_storage_status" not in tools_called and _mentions(
+            msg_lower,
+            (
                 "storage pool",
                 "storage pools",
                 "zpool",
@@ -3945,16 +4064,16 @@ def _run_agentic_chat_turn(
                 "disk space",
                 "btrfs raid",
                 "zfs pool",
-            )
+            ),
         ):
             res_stor = tool_get_storage_status()
             tool_results.append(res_stor)
             tools_called.append("get_storage_status")
 
         # 1e. Network status & interface topology
-        if "get_network_status" not in tools_called and any(
-            w in msg_lower
-            for w in (
+        if "get_network_status" not in tools_called and _mentions(
+            msg_lower,
+            (
                 "network",
                 "interfaces",
                 "ip address",
@@ -3967,16 +4086,16 @@ def _run_agentic_chat_turn(
                 "link speed",
                 "subnet",
                 "network card",
-            )
+            ),
         ):
             res_net = tool_get_network_status()
             tool_results.append(res_net)
             tools_called.append("get_network_status")
 
         # 1f. Disks & Standby Guard status
-        if "get_disks_and_standby_status" not in tools_called and any(
-            w in msg_lower
-            for w in (
+        if "get_disks_and_standby_status" not in tools_called and _mentions(
+            msg_lower,
+            (
                 "disk",
                 "disks",
                 "drive",
@@ -3988,30 +4107,31 @@ def _run_agentic_chat_turn(
                 "spun down",
                 "spinup",
                 "smart",
-            )
+            ),
         ):
             res_disks = tool_get_disks_and_standby_status()
             tool_results.append(res_disks)
             tools_called.append("get_disks_and_standby_status")
 
         # 1d. System Telemetry (CPU, RAM, NPU/GPU, Uptime, Status)
-        if "get_system_telemetry" not in tools_called and any(
-            w in msg_lower
-            for w in (
-                "cpu",
-                "ram",
-                "memory",
-                "npu",
-                "gpu",
-                "hardware",
-                "telemetry",
-                "system",
-                "uptime",
-                "temp",
-                "temperature",
-                "leveraged",
-                "llm",
+        if (
+            "get_system_telemetry" not in tools_called
+            and _mentions(
+                msg_lower,
+                (
+                    "cpu",
+                    "ram",
+                    "memory",
+                    "npu",
+                    "gpu",
+                    "hardware",
+                    "telemetry",
+                    "uptime",
+                    "system load",
+                    "system status",
+                ),
             )
+            or _HARDWARE_TEMP_RE.search(msg_lower)
         ):
             res_sys = tool_get_system_telemetry()
             tool_results.append(res_sys)
@@ -4033,9 +4153,17 @@ def _run_agentic_chat_turn(
 
         # 1f. Explicit Local NAS RAG Knowledge / Files / Recipes / Photos / Folders search
         folder_detected, remaining_q, detected_mode = _extract_folder_and_intent(clean_msg)
-        explicit_local_rag = folder_detected is not None or any(
-            w in msg_lower
-            for w in (
+        # A question no tool above claimed is a question about the files, whatever its language
+        open_question = (
+            not tools_called
+            and clean_norm not in _SMALLTALK
+            and len(clean_norm) >= 6
+            and not _is_self_identity_question(msg_lower)
+            and _extract_weather_location(clean_msg) is None
+        )
+        keyword_rag = folder_detected is not None or _mentions(
+            msg_lower,
+            (
                 "recipe",
                 "recipes",
                 "pasta",
@@ -4059,21 +4187,24 @@ def _run_agentic_chat_turn(
                 "folder summary",
                 "summarize folder",
                 "folder manifest",
-            )
+            ),
         )
+        explicit_local_rag = keyword_rag or open_question
         if explicit_local_rag:
             res_know = tool_search_nas_knowledge(
-                clean_msg,
+                rewrite_followup_for_search(clean_msg, history),
                 principal=principal,
                 strict_relevance=False,
                 folder_path=folder_detected,
                 mode=detected_mode,
             )
+            # An open question only counts as answered locally when files actually matched;
+            # otherwise the web (when allowed) or the model answers it
             if (
                 res_know.get("citations_count", 0) > 0
                 or res_know.get("photos_count", 0) > 0
                 or res_know.get("folder_manifest")
-                or res_know.get("answer_summary")
+                or (keyword_rag and res_know.get("answer_summary"))
             ):
                 tool_results.append(res_know)
                 tools_called.append("search_nas_knowledge")
@@ -4084,30 +4215,7 @@ def _run_agentic_chat_turn(
     is_self_identity = _is_self_identity_question(msg_lower)
 
     # Check if this is a purely conversational message (never trigger web search on greetings/affirmations)
-    is_pure_conversational = is_conversational_affirmation or any(
-        clean_norm == greeting
-        for greeting in (
-            "hi",
-            "hello",
-            "hey",
-            "greetings",
-            "good morning",
-            "good evening",
-            "good afternoon",
-            "thanks",
-            "thank you",
-            "bye",
-            "goodbye",
-            "cool",
-            "awesome",
-            "nice",
-            "great",
-            "ok",
-            "okay",
-            "understood",
-            "got it",
-        )
-    )
+    is_pure_conversational = is_conversational_affirmation or clean_norm in _SMALLTALK
 
     # Check if this is a calculation / math query
     is_math_query = _is_math_or_calculation_query(clean_msg)
@@ -4166,9 +4274,9 @@ def _run_agentic_chat_turn(
         or "https://" in msg_lower
     )
     has_local_tools_run = bool(tool_results)
-    explicit_web_mention = any(
-        w in msg_lower
-        for w in (
+    explicit_web_mention = _mentions(
+        msg_lower,
+        (
             "internet",
             "web",
             "online",
@@ -4179,7 +4287,7 @@ def _run_agentic_chat_turn(
             "confirm",
             "http://",
             "https://",
-        )
+        ),
     )
 
     if (
@@ -4205,7 +4313,9 @@ def _run_agentic_chat_turn(
 
     # Only if web search found nothing (or was disabled) and no tools ran yet, check strict local RAG or system telemetry
     if not tool_results and allow_nas_tools:
-        res_know = tool_search_nas_knowledge(clean_msg, principal=principal, strict_relevance=True)
+        res_know = tool_search_nas_knowledge(
+            rewrite_followup_for_search(clean_msg, history), principal=principal, strict_relevance=True
+        )
         if (
             res_know.get("citations_count", 0) > 0
             or res_know.get("photos_count", 0) > 0
@@ -4216,10 +4326,6 @@ def _run_agentic_chat_turn(
             tools_called.append("search_nas_knowledge")
             citations = res_know.get("citations", [])
             photos = res_know.get("photos", [])
-        else:
-            res_sys = tool_get_system_telemetry()
-            tool_results.append(res_sys)
-            tools_called.append("get_system_telemetry")
 
     # --- Step 3: Build Context & Invoke Local LLM (or Model-Aware ReAct Synthesizer) ---
     act_accel = resolve_model_runtime_accelerator(active_model, host_accel=accel)
@@ -4322,12 +4428,20 @@ def _run_agentic_chat_turn(
         MAX_TOOL_RECURSIONS = 3
         tool_recursions = 0
 
+        # Tool definitions cost thousands of prompt tokens; the router above already ran the
+        # tools this turn needs, so the model only gets them when it found nothing (AI-7).
+        llm_tools = (
+            tools_for_principal(principal, _WEB_ALLOWED.get())
+            if allow_nas_tools and not tool_results and not is_pure_conversational
+            else None
+        )
+        llm_messages = _fit_to_window(llm_messages, llm_tools, _context_window_for())
         llm_reply, runtime_name, eval_tokens, measured_tok_sec, runtime_accel, raw_tool_calls = (
             _try_local_llm_completion(
                 active_model=active_model,
                 llm_endpoint=llm_endpoint,
                 messages=llm_messages,
-                tools=tools_for_principal(principal, _WEB_ALLOWED.get()) if allow_nas_tools else None,
+                tools=llm_tools,
             )
         )
         if runtime_accel and runtime_accel.get("has_npu"):
@@ -4373,6 +4487,16 @@ def _run_agentic_chat_turn(
                         }
                     else:
                         t_res = execute_nas_tool(t_name, t_args, principal=principal)
+                elif t_name == "browse_internet":
+                    private = [str(c.get("excerpt") or c.get("raw_chunk_text") or "") for c in (citations or [])]
+                    private += [
+                        json.dumps(tr, default=str)[:4000] for tr in tool_results if tr.get("tool") != "browse_internet"
+                    ]
+                    q_safe, why = safe_web_query(str(t_args.get("query") or ""), private)
+                    if q_safe is None:
+                        t_res = {"tool": "browse_internet", "status": "blocked", "error": f"Web search refused: {why}."}
+                    else:
+                        t_res = execute_nas_tool(t_name, {**t_args, "query": q_safe}, principal=principal)
                 else:
                     already_done = next(
                         (
@@ -4404,7 +4528,7 @@ def _run_agentic_chat_turn(
                     active_model=active_model,
                     llm_endpoint=llm_endpoint,
                     messages=llm_messages,
-                    tools=tools_for_principal(principal, _WEB_ALLOWED.get()) if allow_nas_tools else None,
+                    tools=llm_tools,
                 )
             )
     finally:
@@ -4654,6 +4778,14 @@ def _run_agentic_chat_turn(
     crag_grade = rag_tool_res.get("crag_grade")
     # [n] points at web sources when there are any (that is what the prompt asks for), else at documents.
     llm_reply = tidy_citations(llm_reply, len(web_sources) or len(citations or []))
+    if llm_reply:
+        llm_reply += compose_warning_for_reply(llm_reply)
+    # Grounding of what the model actually said, sentence by sentence (AI-1)
+    grounding_detail = None
+    if citations and not web_sources and llm_reply:
+        grounding_detail = score_answer_grounding(llm_reply, citations, embed=_grounding_embedder(cfg))
+        if grounding_detail:
+            grounding_score = grounding_detail["score"]
 
     return {
         "status": "ok",
@@ -4675,8 +4807,27 @@ def _run_agentic_chat_turn(
         "folder_path": folder_path,
         "folder_manifest": folder_manifest,
         "grounding_confidence_score": grounding_score,
+        "grounding_detail": grounding_detail,
         "crag_grade": crag_grade,
     }
+
+
+def _grounding_embedder(cfg: dict[str, Any]) -> Any:
+    """Text -> vector with the configured neural embedder, or None for lexical vectors."""
+    model = str(cfg.get("embedding_model") or "")
+    if similarity_profile(model)["strict_terms"]:
+        return None
+    from backend.services.rag_embeddings import compute_neural_embedding_via_ollama
+    from backend.services.rag_engine import embedding_host
+
+    host = embedding_host(cfg)
+    dim = cfg.get("embedding_dim")
+
+    def embed(text: str) -> list[float] | None:
+        res = compute_neural_embedding_via_ollama(text=text, model=model, host=host, target_dim=dim, is_query=False)
+        return res[1] if res else None
+
+    return embed
 
 
 async def stream_agentic_chat(

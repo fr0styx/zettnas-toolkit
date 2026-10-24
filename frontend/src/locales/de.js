@@ -970,6 +970,8 @@ export default {
   "storage.snapshots_by_host": "Snapshots erstellt hier das Hostsystem, nicht ZettNAS",
   "lcd.badge_off_config": "LCD: ausgeschaltet",
   "lcd.badge_none": "LCD: nicht gefunden",
+  "ai.grounded_sentences": "{n} von {total} Sätzen durch die Quellen belegt",
+  "ai.unsupported_title": "In den Quellen nicht gefunden",
   "updates.title": "Software-Updates",
   "updates.subtitle": "Prüfen Sie auf offizielle Stable-Releases oder abonnieren Sie die neuesten Commit-Funktionen.",
   "updates.channel_stable": "🌟 Stabil",

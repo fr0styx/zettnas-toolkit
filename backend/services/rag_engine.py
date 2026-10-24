@@ -482,6 +482,29 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
     }
 
 
+# Similarity profiles per embedding model (AI-2). Neural models give high, tightly packed cosines
+# (EmbeddingGemma: right file ~0.72, best wrong file ~0.63 on the eval set) and match across
+# languages; the built-in lexical vectors give low, wide ones and only match shared words. One
+# fixed cut-off tuned on English lexical vectors threw away most cross-language matches.
+#
+# Measured with tests/rag_eval (290 queries; EmbeddingGemma): the old blend scored recall@5 0.28
+# cross-language, 0.65 paraphrase, 0.88 same-language. Ranking by vector similarity with a small
+# keyword tie-break, and without the lexical-only gates, scores 0.98, 0.975 and 1.0. Plain RRF
+# of the two rankings and the title/word boosts both scored lower, so neither is used for
+# neural models (AI-5).
+SIMILARITY_PROFILES: dict[str, dict[str, Any]] = {
+    # strict_terms: drop 3+ word queries that match at most one word of the text, and documents
+    # without a title match when the query reads like a photo search
+    "lexical": {"vec_min": 0.45, "strict_terms": True, "ranker": "blend"},
+    "neural": {"vec_min": 0.50, "strict_terms": False, "ranker": "vector", "w_vec": 1.0, "w_bm25": 0.05},
+}
+
+
+def similarity_profile(model: str | None) -> dict[str, Any]:
+    m = (model or "").lower()
+    return SIMILARITY_PROFILES["lexical" if (not m or "lexical" in m) else "neural"]
+
+
 def classify_path_rbac(canonical_path: str) -> tuple[str, str, str, str]:
     """
     Classifies a file's canonical path into RBAC visibility tiers:
@@ -4807,17 +4830,40 @@ class RagSearchEngine:
         recipe_sql = "AND f.doc_type = 'recipe'" if only_recipes else ""
 
         fts_chunk_ids = list(bm25_map.keys())
+        vec_ids: set[int] | None = None
         if self._has_sqlite_vec and self._vec_table_active and query_vec and len(query_vec) == self._vec_table_dim:
             try:
                 target_dim = self._vec_table_dim
                 query_blob = struct.pack(f"<{target_dim}f", *query_vec)
                 vec_table = f"vec_chunks_{target_dim}"
-                vec_hits = conn.execute(
-                    f"SELECT chunk_id FROM {vec_table} WHERE embedding MATCH ? AND k = ? LIMIT 60",
-                    (query_blob, max(limit * 2, 60)),
-                ).fetchall()
-                for vh in vec_hits:
-                    cid_v = int(vh["chunk_id"])
+                # Filters apply while fetching: ask for more neighbours until enough of them are
+                # files this person may read under the chosen folder, instead of filtering a
+                # global top 60 afterwards (AI-4).
+                want = max(limit * 4, 100)
+                k = max(want, 200)
+                filtered = bool(rbac_params or sub_params)
+                while True:
+                    vec_hits = conn.execute(
+                        f"SELECT chunk_id FROM {vec_table} WHERE embedding MATCH ? AND k = ?",
+                        (query_blob, k),
+                    ).fetchall()
+                    ids = [int(vh["chunk_id"]) for vh in vec_hits]
+                    if filtered and ids:
+                        ph = ",".join("?" * len(ids))
+                        ok = {
+                            int(r[0])
+                            for r in conn.execute(
+                                f"SELECT c.chunk_id FROM document_chunks c JOIN indexed_files f ON f.file_id = c.file_id "
+                                f"WHERE c.chunk_id IN ({ph}) AND {rbac_sql} AND {sub_sql}",
+                                ids + rbac_params + sub_params,
+                            ).fetchall()
+                        }
+                        ids = [i for i in ids if i in ok]
+                    if len(ids) >= want or len(vec_hits) < k or k >= 4000:
+                        break
+                    k *= 2
+                vec_ids = set(ids)
+                for cid_v in ids:
                     if cid_v not in fts_chunk_ids:
                         fts_chunk_ids.append(cid_v)
             except Exception as e:
@@ -4844,14 +4890,19 @@ class RagSearchEngine:
             ).fetchall()
 
         seen_chunk_ids = {int(r["chunk_id"]) for r in fts_rows}
-        remaining_slots = max(500, 3000 - len(seen_chunk_ids))
+        # Without a vector index the newest chunks stand in for a vector search; with one, the
+        # nearest neighbours already are the candidates and age plays no part (AI-4).
+        remaining_slots = 0 if vec_ids is not None else max(500, 3000 - len(seen_chunk_ids))
 
         # The newest chunks: sort only ids (served by idx_chunks_file_level, without reading the
         # chunk rows), then load just those rows, in the same order.
-        recent_ids = [
-            int(r[0])
-            for r in conn.execute(
-                f"""
+        recent_ids = (
+            []
+            if not remaining_slots
+            else [
+                int(r[0])
+                for r in conn.execute(
+                    f"""
                 SELECT c.chunk_id
                 FROM document_chunks c
                 JOIN indexed_files f ON f.file_id = c.file_id
@@ -4859,9 +4910,10 @@ class RagSearchEngine:
                 ORDER BY f.mtime_ns DESC, c.chunk_id DESC
                 LIMIT {remaining_slots}
                 """,
-                rbac_params + sub_params,
-            ).fetchall()
-        ]
+                    rbac_params + sub_params,
+                ).fetchall()
+            ]
+        )
         wanted = [cid for cid in recent_ids if cid not in seen_chunk_ids]
         by_id: dict[int, sqlite3.Row] = {}
         for i in range(0, len(wanted), 900):
@@ -4914,6 +4966,7 @@ class RagSearchEngine:
         vec_rank: dict[int, int] = {int(tup[1]["chunk_id"]): idx for idx, tup in enumerate(scored_chunks, start=1)}
 
         q_tokens = [t for t in text_tokens((raw_query or "").lower()) if t not in _STOPWORDS]
+        prof = similarity_profile(query_embedding_model)
         per_file_best: dict[int, dict[str, Any]] = {}
         readable = self._post_rbac_checker(principal)  # one check per file, no disk access
 
@@ -4954,7 +5007,7 @@ class RagSearchEngine:
             s_rrf = (61.0 / 2.0) * (
                 (1.0 / (60.0 + r_v)) + (1.0 / (60.0 + r_b) if (cid in bm25_rank and has_lexical_hit) else 0.0)
             )
-            effective_rrf = s_rrf if (has_lexical_hit or s_vec >= 0.45) else 0.0
+            effective_rrf = s_rrf if (has_lexical_hit or s_vec >= prof["vec_min"]) else 0.0
             # Dynamic Token-Density-Aware Hybrid RRF Scoring (Batch 2 Item 2.3)
             if intent_type == "code":
                 w_vec, w_bm25, w_rrf = 0.25, 0.55, 0.20
@@ -4965,16 +5018,38 @@ class RagSearchEngine:
             else:
                 w_vec, w_bm25, w_rrf = 0.50, 0.30, 0.20
 
-            score = min(1.0, w_vec * s_vec + w_bm25 * s_bm25 + w_rrf * effective_rrf + lex_boost)
+            if prof["ranker"] == "vector":
+                score = min(1.0, prof["w_vec"] * s_vec + prof["w_bm25"] * s_bm25)
+            else:
+                score = min(1.0, w_vec * s_vec + w_bm25 * s_bm25 + w_rrf * effective_rrf + lex_boost)
             if raw_query.strip():
-                if not has_lexical_hit and s_vec < 0.45 and not ("recipe" in req_scenes and r["doc_type"] == "recipe"):
+                if (
+                    not has_lexical_hit
+                    and s_vec < prof["vec_min"]
+                    and not ("recipe" in req_scenes and r["doc_type"] == "recipe")
+                ):
                     continue
-                # Reject weak single-word body coincidences on 3+ word queries (e.g. "states" in a book when asking "president of the united states")
-                if len(q_tokens) >= 3 and matched_title == 0 and matched_chunk <= 1 and not req_scenes:
+                # Lexical vectors: reject weak single-word body coincidences on 3+ word queries
+                # (e.g. "states" in a book when asking "president of the united states")
+                if (
+                    prof["strict_terms"]
+                    and len(q_tokens) >= 3
+                    and matched_title == 0
+                    and matched_chunk <= 1
+                    and not req_scenes
+                ):
                     continue
                 # When the query is a visual subject (e.g. "car", "beach", "pool") and user has not
                 # explicitly filtered to Documents, only include documents whose title/filename matches
-                if modality_hint == "photos" and not only_docs and not only_recipes and matched_title == 0:
+                # (lexical vectors only: a neural model already tells a document about a car from
+                # a photo of one)
+                if (
+                    prof["strict_terms"]
+                    and modality_hint == "photos"
+                    and not only_docs
+                    and not only_recipes
+                    and matched_title == 0
+                ):
                     continue
                 if score < 0.16:
                     continue

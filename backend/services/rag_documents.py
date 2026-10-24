@@ -17,6 +17,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.logging_config import sanitize_string
+from backend.services.rag_office import OFFICE_EXTENSIONS, extract_office_text
 from backend.services.rag_text import (
     _STOPWORDS,
     AUDIO_EXTENSIONS,
@@ -89,6 +90,9 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
         except Exception as e:
             logger.debug(f"[RAG] DOCX parse error on {sanitize_string(file_path)}: {e}")
             return ""
+
+    if ext in OFFICE_EXTENSIONS:
+        return extract_office_text(file_path, ext)
 
     if ext in AUDIO_EXTENSIONS:
         try:

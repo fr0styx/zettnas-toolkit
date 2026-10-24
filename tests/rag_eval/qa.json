@@ -1,0 +1,1125 @@
+[
+ {
+  "id": "qa-001",
+  "lang": "en",
+  "question": "At what temperature do I bake the banana bread?",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ],
+  "answer_any": [
+   "175"
+  ]
+ },
+ {
+  "id": "qa-002",
+  "lang": "en",
+  "question": "How long does the banana bread bake?",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ],
+  "answer_any": [
+   "55",
+   "60"
+  ]
+ },
+ {
+  "id": "qa-003",
+  "lang": "en",
+  "question": "How many bananas go in the banana bread?",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ],
+  "answer_any": [
+   "three",
+   "3"
+  ]
+ },
+ {
+  "id": "qa-004",
+  "lang": "en",
+  "question": "What boiler pressure should I aim for when refilling?",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ],
+  "answer_any": [
+   "1.2"
+  ]
+ },
+ {
+  "id": "qa-005",
+  "lang": "en",
+  "question": "What does boiler fault F22 mean?",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ],
+  "answer_any": [
+   "pressure",
+   "0.8"
+  ]
+ },
+ {
+  "id": "qa-006",
+  "lang": "en",
+  "question": "Until when does the boiler warranty run?",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ],
+  "answer_any": [
+   "2029"
+  ]
+ },
+ {
+  "id": "qa-007",
+  "lang": "en",
+  "question": "Who serviced the boiler last time?",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ],
+  "answer_any": [
+   "Dave Morris"
+  ]
+ },
+ {
+  "id": "qa-008",
+  "lang": "en",
+  "question": "When is Sam due his next MMR dose?",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ],
+  "answer_any": [
+   "3 years 4 months",
+   "pre-school"
+  ]
+ },
+ {
+  "id": "qa-009",
+  "lang": "en",
+  "question": "When did Lily have the flu nasal spray?",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ],
+  "answer_any": [
+   "2025-10-14",
+   "14 October",
+   "October 14"
+  ]
+ },
+ {
+  "id": "qa-010",
+  "lang": "en",
+  "question": "How much was the car insurance in February?",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ],
+  "answer_any": [
+   "604"
+  ]
+ },
+ {
+  "id": "qa-011",
+  "lang": "en",
+  "question": "How much is the mortgage each month?",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ],
+  "answer_any": [
+   "1240",
+   "1,240"
+  ]
+ },
+ {
+  "id": "qa-012",
+  "lang": "en",
+  "question": "Where is the holiday cottage in August?",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ],
+  "answer_any": [
+   "Cornwall"
+  ]
+ },
+ {
+  "id": "qa-013",
+  "lang": "en",
+  "question": "Which port does Jellyfin use?",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ],
+  "answer_any": [
+   "8096"
+  ]
+ },
+ {
+  "id": "qa-014",
+  "lang": "en",
+  "question": "Which Jellyfin version runs in the media stack?",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ],
+  "answer_any": [
+   "10.10.7"
+  ]
+ },
+ {
+  "id": "qa-015",
+  "lang": "en",
+  "question": "Where does the photo backup script copy the photos to?",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ],
+  "answer_any": [
+   "usb_backup",
+   "USB"
+  ]
+ },
+ {
+  "id": "qa-016",
+  "lang": "en",
+  "question": "Which flight do we take to Tokyo?",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ],
+  "answer_any": [
+   "JAL 44",
+   "JAL44"
+  ]
+ },
+ {
+  "id": "qa-017",
+  "lang": "en",
+  "question": "When is the tea ceremony in Kyoto?",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ],
+  "answer_any": [
+   "10 April",
+   "April 10"
+  ]
+ },
+ {
+  "id": "qa-018",
+  "lang": "en",
+  "question": "When should the JR Pass be activated?",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ],
+  "answer_any": [
+   "7 April",
+   "April 7"
+  ]
+ },
+ {
+  "id": "qa-019",
+  "lang": "en",
+  "question": "Who owns the database cut-over?",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ],
+  "answer_any": [
+   "Tom"
+  ]
+ },
+ {
+  "id": "qa-020",
+  "lang": "en",
+  "question": "When does the payment provider sunset the old API?",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ],
+  "answer_any": [
+   "30 September",
+   "September 30"
+  ]
+ },
+ {
+  "id": "qa-021",
+  "lang": "de",
+  "question": "Bei wie viel Grad werden die Kässpätzle überbacken?",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ],
+  "answer_any": [
+   "180"
+  ]
+ },
+ {
+  "id": "qa-022",
+  "lang": "de",
+  "question": "Wie viel Mehl brauche ich für die Kässpätzle?",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ],
+  "answer_any": [
+   "400"
+  ]
+ },
+ {
+  "id": "qa-023",
+  "lang": "de",
+  "question": "Wann ist die nächste Inspektion beim Golf fällig?",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ],
+  "answer_any": [
+   "60.000",
+   "60000",
+   "Juni"
+  ]
+ },
+ {
+  "id": "qa-024",
+  "lang": "de",
+  "question": "Was hat die letzte Inspektion gekostet?",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ],
+  "answer_any": [
+   "612,40",
+   "612.40"
+  ]
+ },
+ {
+  "id": "qa-025",
+  "lang": "de",
+  "question": "Bis wann läuft der TÜV?",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ],
+  "answer_any": [
+   "Mai 2027"
+  ]
+ },
+ {
+  "id": "qa-026",
+  "lang": "de",
+  "question": "Wie hoch ist die Nachzahlung bei den Nebenkosten?",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ],
+  "answer_any": [
+   "217,45",
+   "217.45"
+  ]
+ },
+ {
+  "id": "qa-027",
+  "lang": "de",
+  "question": "Was kostet die Heizung laut Nebenkostenabrechnung?",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ],
+  "answer_any": [
+   "1184,20",
+   "1184.20",
+   "1.184,20"
+  ]
+ },
+ {
+  "id": "qa-028",
+  "lang": "de",
+  "question": "Welches Medikament nimmt Opa gegen Blutdruck?",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ],
+  "answer_any": [
+   "Ramipril"
+  ]
+ },
+ {
+  "id": "qa-029",
+  "lang": "de",
+  "question": "Wie oft nimmt Opa Metformin?",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ],
+  "answer_any": [
+   "zweimal",
+   "morgens und abends",
+   "2"
+  ]
+ },
+ {
+  "id": "qa-030",
+  "lang": "de",
+  "question": "Wie heißt Opas Hausarzt?",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ],
+  "answer_any": [
+   "Lehmann"
+  ]
+ },
+ {
+  "id": "qa-031",
+  "lang": "de",
+  "question": "Wohin geht die Klassenfahrt?",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ],
+  "answer_any": [
+   "Bad Tölz"
+  ]
+ },
+ {
+  "id": "qa-032",
+  "lang": "de",
+  "question": "Wer wurde zum Elternsprecher gewählt?",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ],
+  "answer_any": [
+   "Huber",
+   "Demir"
+  ]
+ },
+ {
+  "id": "qa-033",
+  "lang": "de",
+  "question": "Wie lautet der Code für den Schlüsselkasten?",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ],
+  "answer_any": [
+   "4711"
+  ]
+ },
+ {
+  "id": "qa-034",
+  "lang": "de",
+  "question": "Was kostet der Hund pro Nacht?",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ],
+  "answer_any": [
+   "10 Euro",
+   "10"
+  ]
+ },
+ {
+  "id": "qa-035",
+  "lang": "de",
+  "question": "Unter welcher Domain ist die Nextcloud erreichbar?",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ],
+  "answer_any": [
+   "cloud.familie-keller.de"
+  ]
+ },
+ {
+  "id": "qa-036",
+  "lang": "de",
+  "question": "Welche Postgres-Version nutzt die Nextcloud?",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ],
+  "answer_any": [
+   "16"
+  ]
+ },
+ {
+  "id": "qa-037",
+  "lang": "de",
+  "question": "Nach wie vielen Fehlversuchen startet das Skript den Router neu?",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ],
+  "answer_any": [
+   "10"
+  ]
+ },
+ {
+  "id": "qa-038",
+  "lang": "es",
+  "question": "¿Cuántos huevos lleva la tortilla de patatas?",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ],
+  "answer_any": [
+   "seis",
+   "6"
+  ]
+ },
+ {
+  "id": "qa-039",
+  "lang": "es",
+  "question": "¿Cuánto tiempo se fríen las patatas?",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ],
+  "answer_any": [
+   "20"
+  ]
+ },
+ {
+  "id": "qa-040",
+  "lang": "es",
+  "question": "¿Hasta cuándo dura la garantía de la lavadora?",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ],
+  "answer_any": [
+   "2027"
+  ]
+ },
+ {
+  "id": "qa-041",
+  "lang": "es",
+  "question": "¿Qué significa el error E18 de la lavadora?",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ],
+  "answer_any": [
+   "bomba",
+   "filtro"
+  ]
+ },
+ {
+  "id": "qa-042",
+  "lang": "es",
+  "question": "¿Cuánto costó la lavadora?",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ],
+  "answer_any": [
+   "549"
+  ]
+ },
+ {
+  "id": "qa-043",
+  "lang": "es",
+  "question": "¿Cuándo es la cita del dentista?",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ],
+  "answer_any": [
+   "2025-11-20",
+   "20 de noviembre"
+  ]
+ },
+ {
+  "id": "qa-044",
+  "lang": "es",
+  "question": "¿A qué hora es la cita de dermatología?",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ],
+  "answer_any": [
+   "10:30"
+  ]
+ },
+ {
+  "id": "qa-045",
+  "lang": "es",
+  "question": "¿Cuánto es el alquiler?",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ],
+  "answer_any": [
+   "950"
+  ]
+ },
+ {
+  "id": "qa-046",
+  "lang": "es",
+  "question": "¿Cuánto costó el seguro del coche?",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ],
+  "answer_any": [
+   "420"
+  ]
+ },
+ {
+  "id": "qa-047",
+  "lang": "es",
+  "question": "¿Quién será el presidente de la comunidad?",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ],
+  "answer_any": [
+   "Luis Ortega"
+  ]
+ },
+ {
+  "id": "qa-048",
+  "lang": "es",
+  "question": "¿Cuánto es la derrama del ascensor por piso?",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ],
+  "answer_any": [
+   "1.200",
+   "1200"
+  ]
+ },
+ {
+  "id": "qa-049",
+  "lang": "es",
+  "question": "¿Cuántos kilómetros tiene la ruta del Cares?",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ],
+  "answer_any": [
+   "24"
+  ]
+ },
+ {
+  "id": "qa-050",
+  "lang": "es",
+  "question": "¿Antes de qué hora hay que subir a los lagos de Covadonga?",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ],
+  "answer_any": [
+   "9"
+  ]
+ },
+ {
+  "id": "qa-051",
+  "lang": "es",
+  "question": "¿Qué versión de Home Assistant se usa?",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ],
+  "answer_any": [
+   "2025.9"
+  ]
+ },
+ {
+  "id": "qa-052",
+  "lang": "es",
+  "question": "¿A partir de qué porcentaje avisa el script del disco?",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ],
+  "answer_any": [
+   "90"
+  ]
+ },
+ {
+  "id": "qa-053",
+  "lang": "fr",
+  "question": "Combien de temps cuit la quiche lorraine ?",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ],
+  "answer_any": [
+   "35"
+  ]
+ },
+ {
+  "id": "qa-054",
+  "lang": "fr",
+  "question": "Combien de lardons faut-il pour la quiche ?",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ],
+  "answer_any": [
+   "200"
+  ]
+ },
+ {
+  "id": "qa-055",
+  "lang": "fr",
+  "question": "Quel est le prix de la Freebox après la première année ?",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ],
+  "answer_any": [
+   "39,99",
+   "39.99"
+  ]
+ },
+ {
+  "id": "qa-056",
+  "lang": "fr",
+  "question": "Quel est le préavis de résiliation de la box ?",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ],
+  "answer_any": [
+   "10 jours"
+  ]
+ },
+ {
+  "id": "qa-057",
+  "lang": "fr",
+  "question": "Quel est le débit montant de la fibre ?",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ],
+  "answer_any": [
+   "700"
+  ]
+ },
+ {
+  "id": "qa-058",
+  "lang": "fr",
+  "question": "Quand faut-il faire le rappel des vaccins de Minou ?",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ],
+  "answer_any": [
+   "2026-03-02",
+   "2 mars 2026"
+  ]
+ },
+ {
+  "id": "qa-059",
+  "lang": "fr",
+  "question": "Qui est le vétérinaire de Minou ?",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ],
+  "answer_any": [
+   "Martin",
+   "Tilleuls"
+  ]
+ },
+ {
+  "id": "qa-060",
+  "lang": "fr",
+  "question": "Combien avons-nous payé de taxe foncière ?",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ],
+  "answer_any": [
+   "1240",
+   "1 240"
+  ]
+ },
+ {
+  "id": "qa-061",
+  "lang": "fr",
+  "question": "Quels sont les frais de garde déclarés ?",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ],
+  "answer_any": [
+   "3200",
+   "3 200"
+  ]
+ },
+ {
+  "id": "qa-062",
+  "lang": "fr",
+  "question": "Quand le nouveau logiciel de facturation est-il déployé ?",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ],
+  "answer_any": [
+   "1er avril",
+   "1 avril"
+  ]
+ },
+ {
+  "id": "qa-063",
+  "lang": "fr",
+  "question": "Qui réserve le stand au salon de Lyon ?",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ],
+  "answer_any": [
+   "Karim"
+  ]
+ },
+ {
+  "id": "qa-064",
+  "lang": "fr",
+  "question": "Quel est le budget marketing du deuxième trimestre ?",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ],
+  "answer_any": [
+   "12 000",
+   "12000"
+  ]
+ },
+ {
+  "id": "qa-065",
+  "lang": "fr",
+  "question": "Où se trouve le gîte en Bretagne ?",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ],
+  "answer_any": [
+   "Perros-Guirec"
+  ]
+ },
+ {
+  "id": "qa-066",
+  "lang": "fr",
+  "question": "Quel jour a lieu le marché de Lannion ?",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ],
+  "answer_any": [
+   "jeudi"
+  ]
+ },
+ {
+  "id": "qa-067",
+  "lang": "fr",
+  "question": "Quel port utilise l'interface web de Pi-hole ?",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ],
+  "answer_any": [
+   "8081"
+  ]
+ },
+ {
+  "id": "qa-068",
+  "lang": "fr",
+  "question": "Vers quel dossier la sauvegarde des papiers copie-t-elle ?",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ],
+  "answer_any": [
+   "disque_externe"
+  ]
+ },
+ {
+  "id": "qa-069",
+  "lang": "zh",
+  "question": "红烧肉要炖多久？",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ],
+  "answer_any": [
+   "一个小时",
+   "1小时",
+   "一小时"
+  ]
+ },
+ {
+  "id": "qa-070",
+  "lang": "zh",
+  "question": "红烧肉用多少克冰糖？",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ],
+  "answer_any": [
+   "三十",
+   "30"
+  ]
+ },
+ {
+  "id": "qa-071",
+  "lang": "zh",
+  "question": "空调上次清洗花了多少钱？",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ],
+  "answer_any": [
+   "三百二十",
+   "320"
+  ]
+ },
+ {
+  "id": "qa-072",
+  "lang": "zh",
+  "question": "空调出现E1是什么问题？",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ],
+  "answer_any": [
+   "高压保护"
+  ]
+ },
+ {
+  "id": "qa-073",
+  "lang": "zh",
+  "question": "空调保修到什么时候？",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ],
+  "answer_any": [
+   "二〇二八",
+   "2028"
+  ]
+ },
+ {
+  "id": "qa-074",
+  "lang": "zh",
+  "question": "李明的血压是多少？",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ],
+  "answer_any": [
+   "135/88"
+  ]
+ },
+ {
+  "id": "qa-075",
+  "lang": "zh",
+  "question": "总胆固醇的结果怎么样？",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ],
+  "answer_any": [
+   "6.1",
+   "偏高"
+  ]
+ },
+ {
+  "id": "qa-076",
+  "lang": "zh",
+  "question": "Hyper Backup 每天几点备份？",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ],
+  "answer_any": [
+   "两点",
+   "2点"
+  ]
+ },
+ {
+  "id": "qa-077",
+  "lang": "zh",
+  "question": "备份保留多少个版本？",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ],
+  "answer_any": [
+   "三十",
+   "30"
+  ]
+ },
+ {
+  "id": "qa-078",
+  "lang": "zh",
+  "question": "测试服务器申请扩容到多少内存？",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ],
+  "answer_any": [
+   "三十二",
+   "32"
+  ]
+ },
+ {
+  "id": "qa-079",
+  "lang": "zh",
+  "question": "客户演示定在什么时候？",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ],
+  "answer_any": [
+   "周五",
+   "三点"
+  ]
+ },
+ {
+  "id": "qa-080",
+  "lang": "zh",
+  "question": "云南之行哪天从上海出发？",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ],
+  "answer_any": [
+   "十月一日",
+   "10月1日"
+  ]
+ },
+ {
+  "id": "qa-081",
+  "lang": "zh",
+  "question": "上玉龙雪山要带什么？",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ],
+  "answer_any": [
+   "羽绒服",
+   "氧气"
+  ]
+ },
+ {
+  "id": "qa-082",
+  "lang": "zh",
+  "question": "下载文件夹里超过多少天的文件会被删除？",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ],
+  "answer_any": [
+   "三十",
+   "30"
+  ]
+ },
+ {
+  "id": "qa-083",
+  "lang": "zh",
+  "question": "一月份房贷是多少？",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ],
+  "answer_any": [
+   "6800"
+  ]
+ },
+ {
+  "id": "qa-084",
+  "lang": "zh",
+  "question": "春节红包花了多少？",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ],
+  "answer_any": [
+   "5000"
+  ]
+ },
+ {
+  "id": "qa-085",
+  "lang": "en",
+  "question": "How much did the Golf inspection cost?",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ],
+  "answer_any": [
+   "612,40",
+   "612.40"
+  ]
+ },
+ {
+  "id": "qa-086",
+  "lang": "en",
+  "question": "What is the key box code for the Baltic holiday flat?",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ],
+  "answer_any": [
+   "4711"
+  ]
+ },
+ {
+  "id": "qa-087",
+  "lang": "en",
+  "question": "How many eggs go into the Spanish tortilla?",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ],
+  "answer_any": [
+   "six",
+   "6",
+   "seis"
+  ]
+ },
+ {
+  "id": "qa-088",
+  "lang": "en",
+  "question": "When does the cat need its next vaccination?",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ],
+  "answer_any": [
+   "2026-03-02",
+   "March 2026",
+   "2 March 2026"
+  ]
+ },
+ {
+  "id": "qa-089",
+  "lang": "en",
+  "question": "How long does the braised pork belly simmer?",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ],
+  "answer_any": [
+   "one hour",
+   "1 hour",
+   "一个小时"
+  ]
+ },
+ {
+  "id": "qa-090",
+  "lang": "de",
+  "question": "Bei welcher Temperatur wird das Bananenbrot gebacken?",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ],
+  "answer_any": [
+   "175"
+  ]
+ },
+ {
+  "id": "qa-091",
+  "lang": "de",
+  "question": "Welcher Fehlercode zeigt beim Heizkessel zu wenig Druck an?",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ],
+  "answer_any": [
+   "F22"
+  ]
+ },
+ {
+  "id": "qa-092",
+  "lang": "fr",
+  "question": "Quel vol prenons-nous pour Tokyo ?",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ],
+  "answer_any": [
+   "JAL 44",
+   "JAL44"
+  ]
+ },
+ {
+  "id": "qa-093",
+  "lang": "fr",
+  "question": "Combien coûte le chien par nuit dans la location de la Baltique ?",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ],
+  "answer_any": [
+   "10"
+  ]
+ },
+ {
+  "id": "qa-094",
+  "lang": "es",
+  "question": "¿Cuánto cuesta la Freebox el primer año?",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ],
+  "answer_any": [
+   "29,99",
+   "29.99"
+  ]
+ },
+ {
+  "id": "qa-095",
+  "lang": "es",
+  "question": "¿Qué temperatura necesita la quiche?",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ],
+  "answer_any": [
+   "180"
+  ]
+ },
+ {
+  "id": "qa-096",
+  "lang": "zh",
+  "question": "香蕉面包要烤多久？",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ],
+  "answer_any": [
+   "55",
+   "60"
+  ]
+ },
+ {
+  "id": "qa-097",
+  "lang": "zh",
+  "question": "爷爷早上吃什么降压药？",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ],
+  "answer_any": [
+   "Ramipril"
+  ]
+ }
+]

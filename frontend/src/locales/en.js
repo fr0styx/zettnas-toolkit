@@ -942,6 +942,8 @@ export default {
   "storage.snapshots_by_host": "The host system makes snapshots here, not ZettNAS",
   "lcd.badge_off_config": "LCD: turned off",
   "lcd.badge_none": "LCD: not found",
+  "ai.grounded_sentences": "{n} of {total} sentences backed by the sources",
+  "ai.unsupported_title": "Not found in the sources",
   "updates.title": "Software Updates",
   "updates.subtitle": "Check for the latest stable releases, security patches, or opt in to bleeding-edge commit features.",
   "updates.channel_stable": "🌟 Stable",

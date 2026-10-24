@@ -13,6 +13,15 @@ import { formatDateTime, formatNumber, formatTime } from '../../format.js';
 // ============================================================================
 // ZettAI — Multi-Modal Local RAG & Visual Search Engine Controller
 // ============================================================================
+/** The sentences of an answer that the sources do not back up (AI-1), for a closer look. */
+export function unsupportedHtml(detail) {
+  const rows = (detail && Array.isArray(detail.sentences) ? detail.sentences : []).filter((r) => !r.supported);
+  if (!rows.length) return '';
+  return `<details class="ai-unsupported"><summary>${escapeHtml(t('ai.unsupported_title', 'Not found in the sources'))} (${rows.length})</summary><ul>${rows
+    .map((r) => `<li>${escapeHtml(r.text)}</li>`)
+    .join('')}</ul></details>`;
+}
+
 export let _aiSelectedColor = '';
 export let _aiSelectedScene = '';
 let _aiSelectedFileType = 'all';
@@ -2739,8 +2748,11 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         ${groundingScore !== null ? `
           <div style="display: flex; align-items: center; gap: 5px;">
             <span style="font-size: 11px; font-weight: 800; color: ${groundingScore >= 80 ? '#34d399' : (groundingScore >= 50 ? '#fbbf24' : '#f87171')}; background: ${groundingScore >= 80 ? 'rgba(52,211,153,0.14)' : 'rgba(251,191,36,0.14)'}; border: 1px solid ${groundingScore >= 80 ? 'rgba(52,211,153,0.35)' : 'rgba(251,191,36,0.35)'}; padding: 1px 7px; border-radius: 999px;">
-              🎯 ${groundingScore}% Grounded (${escapeHtml(cragGrade.toUpperCase() || 'HIGH')})
+              🎯 ${res.grounding_detail
+                ? escapeHtml(t('ai.grounded_sentences', '{n} of {total} sentences backed by the sources', { n: res.grounding_detail.supported, total: res.grounding_detail.total }))
+                : `${groundingScore}% Grounded (${escapeHtml(cragGrade.toUpperCase() || 'HIGH')})`}
             </span>
+            ${unsupportedHtml(res.grounding_detail)}
           </div>
         ` : ''}
       </div>

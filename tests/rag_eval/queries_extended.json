@@ -1,0 +1,812 @@
+[
+ {
+  "id": "cross-001",
+  "lang": "en",
+  "kind": "cross",
+  "query": "grandpa's blood pressure tablets",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "cross-002",
+  "lang": "en",
+  "kind": "cross",
+  "query": "when is the next service for the Golf car",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "cross-003",
+  "lang": "en",
+  "kind": "cross",
+  "query": "heating and rubbish costs for the flat in 2024",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "cross-004",
+  "lang": "en",
+  "kind": "cross",
+  "query": "Baltic sea holiday key box code",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "cross-005",
+  "lang": "en",
+  "kind": "cross",
+  "query": "cheese noodles recipe with fried onions",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "cross-006",
+  "lang": "en",
+  "kind": "cross",
+  "query": "script that restarts the router when the internet drops",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "cross-007",
+  "lang": "en",
+  "kind": "cross",
+  "query": "parents evening class trip cost",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "cross-008",
+  "lang": "en",
+  "kind": "cross",
+  "query": "Spanish potato omelette",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "cross-009",
+  "lang": "en",
+  "kind": "cross",
+  "query": "washing machine warranty and error E18",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "cross-010",
+  "lang": "en",
+  "kind": "cross",
+  "query": "dermatologist appointment for moles",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "cross-011",
+  "lang": "en",
+  "kind": "cross",
+  "query": "telegram alert when the NAS disk is almost full",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "cross-012",
+  "lang": "en",
+  "kind": "cross",
+  "query": "neighbours meeting about replacing the lift",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "cross-013",
+  "lang": "en",
+  "kind": "cross",
+  "query": "hiking the Cares gorge trail in Asturias",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "cross-014",
+  "lang": "en",
+  "kind": "cross",
+  "query": "cat vaccination booster dates",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "cross-015",
+  "lang": "en",
+  "kind": "cross",
+  "query": "internet box contract cancellation notice",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "cross-016",
+  "lang": "en",
+  "kind": "cross",
+  "query": "tax credit for childcare in 2025",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "cross-017",
+  "lang": "en",
+  "kind": "cross",
+  "query": "ad blocker DNS container compose file",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-018",
+  "lang": "en",
+  "kind": "cross",
+  "query": "bacon and egg tart with cream",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "cross-019",
+  "lang": "en",
+  "kind": "cross",
+  "query": "puffins boat trip in Brittany",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "cross-020",
+  "lang": "en",
+  "kind": "cross",
+  "query": "air conditioner cleaning record",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "cross-021",
+  "lang": "en",
+  "kind": "cross",
+  "query": "cholesterol result from the health check",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "cross-022",
+  "lang": "en",
+  "kind": "cross",
+  "query": "braised pork belly with rock sugar",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "cross-023",
+  "lang": "en",
+  "kind": "cross",
+  "query": "Yunnan trip Jade Dragon Snow Mountain",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "cross-024",
+  "lang": "en",
+  "kind": "cross",
+  "query": "script deleting old files from downloads",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "cross-025",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Bananenbrot backen",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "cross-026",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Heizkessel Druck zu niedrig Fehler",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "cross-027",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Japanreise Hotel in Tokio",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "cross-028",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Impfungen der Kinder Masern",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "cross-029",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Mediaserver mit Hardware-Transkodierung",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "cross-030",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Tapas Rezept Kartoffeltortilla",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "cross-031",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Steuererklärung Frankreich Spenden",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "cross-032",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Klimaanlage Fehlercode E1",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "cross-033",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "pain à la banane",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "cross-034",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "sauvegarde nocturne des photos sur clé USB",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "cross-035",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "réunion de planification du troisième trimestre",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "cross-036",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "vacances à la mer Baltique avec le chien",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "cross-037",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "contrôle technique de la voiture Golf",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "cross-038",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "domotique Home Assistant avec Zigbee",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-039",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "porc braisé à la chinoise",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "cross-040",
+  "lang": "es",
+  "kind": "cross",
+  "query": "presupuesto familiar en libras",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "cross-041",
+  "lang": "es",
+  "kind": "cross",
+  "query": "itinerario de viaje a Japón",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "cross-042",
+  "lang": "es",
+  "kind": "cross",
+  "query": "receta alemana de spätzle con queso",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "cross-043",
+  "lang": "es",
+  "kind": "cross",
+  "query": "nube privada Nextcloud para la familia",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-044",
+  "lang": "es",
+  "kind": "cross",
+  "query": "quiche con bacon",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "cross-045",
+  "lang": "es",
+  "kind": "cross",
+  "query": "copia de seguridad del NAS Synology",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "cross-046",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "香蕉面包怎么做",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "cross-047",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "日本旅行行程",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "cross-048",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "爷爷的药",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "cross-049",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "西班牙土豆饼",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "cross-050",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "猫的疫苗",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "paraphrase-051",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "how hot should the oven be for the loaf with nuts",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "paraphrase-052",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "what to do when the heating unit loses water pressure",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "paraphrase-053",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "which jabs have the little ones had",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "paraphrase-054",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "how much did we pay to insure the car",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "paraphrase-055",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "program that mirrors our pictures to an external stick every night",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "paraphrase-056",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "where did we stay in the old imperial capital",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "paraphrase-057",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "when must payments leave the legacy provider",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "paraphrase-058",
+  "lang": "en",
+  "kind": "paraphrase",
+  "query": "which film server uses the graphics chip for conversion",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "paraphrase-059",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "was nimmt der Großvater gegen Zucker",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "paraphrase-060",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "wann muss das Auto wieder in die Werkstatt",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "paraphrase-061",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "wie viel müssen wir für die Wohnung nachzahlen",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "paraphrase-062",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "wohin fährt die Schulklasse im Frühling",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "paraphrase-063",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "darf der Vierbeiner mit in die Ferienwohnung",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "paraphrase-064",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "Teig durch die Presse ins Wasser drücken",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "paraphrase-065",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "automatischer Neustart der Fritzbox bei Ausfall",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "paraphrase-066",
+  "lang": "de",
+  "kind": "paraphrase",
+  "query": "Datenbank für die Familien-Cloud",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "paraphrase-067",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "quand faut-il refaire les piqûres de Minou",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "paraphrase-068",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "combien coûte la fibre après douze mois",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "paraphrase-069",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "qui remplace Sophie auprès de ses clients",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "paraphrase-070",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "où observer des oiseaux marins en été",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "paraphrase-071",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "copie hebdomadaire des papiers administratifs",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "paraphrase-072",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "combien avons-nous donné aux associations",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "paraphrase-073",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "tarte salée lorraine sans fromage",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "paraphrase-074",
+  "lang": "fr",
+  "kind": "paraphrase",
+  "query": "bloquer la publicité sur tous les appareils",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "paraphrase-075",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "qué hacer si la máquina de lavar no desagua",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "paraphrase-076",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "cuándo me miran la vista",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "paraphrase-077",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "cuánto pagamos de piso cada mes",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "paraphrase-078",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "quién preside la comunidad el año que viene",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "paraphrase-079",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "a qué hora hay que subir a los lagos",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "paraphrase-080",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "cuánto tiempo freír las patatas para el plato de huevo",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "paraphrase-081",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "controlar las persianas y luces de casa",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "paraphrase-082",
+  "lang": "es",
+  "kind": "paraphrase",
+  "query": "avisar al móvil cuando falta espacio",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "paraphrase-083",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "空调多久请人洗一次",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "paraphrase-084",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "血脂高要多久再查",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "paraphrase-085",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "异地备份放在哪里",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "paraphrase-086",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "服务器内存不够怎么办",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "paraphrase-087",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "去雪山要准备什么",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "paraphrase-088",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "自动删掉一个月前下载的东西",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "paraphrase-089",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "过年花了多少钱买菜",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "paraphrase-090",
+  "lang": "zh",
+  "kind": "paraphrase",
+  "query": "炒糖色用什么糖",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ }
+]

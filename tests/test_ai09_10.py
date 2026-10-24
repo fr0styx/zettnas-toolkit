@@ -40,12 +40,37 @@ def _setup(monkeypatch, handler):
     return sent
 
 
-def test_context_window_grows_with_prompt(monkeypatch):
+def test_context_window_is_fixed_and_prompts_fit_it(monkeypatch):
+    """AI-7: one num_ctx (no model reloads, no oversized KV cache); the prompt is fitted to it."""
     monkeypatch.delenv("ZETTNAS_AI_NUM_CTX", raising=False)
-    assert ai_chat_agent._context_window_for([{"content": "hi"}]) == 4096
-    assert ai_chat_agent._context_window_for([{"content": "x" * 30000}]) == 16384
-    monkeypatch.setenv("ZETTNAS_AI_NUM_CTX", "32768")
-    assert ai_chat_agent._context_window_for([{"content": "hi"}]) == 32768
+    assert ai_chat_agent._context_window_for([{"content": "hi"}]) == 8192
+    assert ai_chat_agent._context_window_for([{"content": "x" * 30000}]) == 8192
+    monkeypatch.setenv("ZETTNAS_AI_NUM_CTX", "16384")
+    assert ai_chat_agent._context_window_for() == 16384
+
+    msgs = [{"role": "system", "content": "rules"}]
+    msgs += [{"role": "user", "content": "old " * 2000}, {"role": "assistant", "content": "older " * 2000}]
+    msgs += [{"role": "user", "content": "question\n" + "context " * 20000}]
+    fitted = ai_chat_agent._fit_to_window(msgs, None, 8192)
+    total = sum(ai_chat_agent.estimate_tokens(m["content"]) + 4 for m in fitted)
+    assert total <= 8192 - ai_chat_agent.REPLY_TOKENS + 50
+    assert fitted[0]["content"] == "rules" and fitted[-1]["content"].startswith("question")
+    assert len(fitted) == 2  # history went first
+
+
+def test_token_estimate_counts_cjk_characters():
+    assert ai_chat_agent.estimate_tokens("abcd" * 10) == 10
+    assert ai_chat_agent.estimate_tokens("红烧肉要炖多久") == 7
+
+
+def test_routing_uses_whole_words():
+    """AI-7: "temperature" in a recipe question is not a hardware question; "ram" is not in
+    "program", "lan" is not in "plan"."""
+    assert not ai_chat_agent._mentions("which program copies photos", ("ram",))
+    assert not ai_chat_agent._mentions("the q3 plan", ("lan",))
+    assert ai_chat_agent._mentions("how much ram is free", ("ram",))
+    assert not ai_chat_agent._HARDWARE_TEMP_RE.search("at what temperature do i bake the banana bread")
+    assert ai_chat_agent._HARDWARE_TEMP_RE.search("what is the cpu temperature")
 
 
 def test_ollama_request_sets_num_ctx_and_reports_real_tokens(monkeypatch):

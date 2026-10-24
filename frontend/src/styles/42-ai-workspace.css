@@ -113,3 +113,8 @@
   animation: fadeIn 0.25s ease;
 }
 
+
+/* Sentences the sources do not back up (AI-1) */
+.ai-unsupported { font-size: var(--zn-fs-xs, 12px); color: var(--muted); }
+.ai-unsupported summary { cursor: pointer; }
+.ai-unsupported ul { margin: 4px 0 0; padding-left: 18px; }

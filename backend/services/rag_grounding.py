@@ -190,3 +190,96 @@ def compute_grounding_confidence_score(answer_text: str, evidence_texts: str | l
             "unsupported_claims": unsupported[:5],
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Grounding of the final answer, sentence by sentence (AI-1)
+# ---------------------------------------------------------------------------
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?。！？])\s+|(?<=[。！？])|\n+")
+_META = re.compile(
+    r"^(?:sources?|quellen|fuentes|références|来源)\s*[:：]|"
+    r"\b(?:i (?:could ?n[o']t|did ?n[o']t|cannot|can't) find|not (?:in|found in) (?:your|the) (?:files|documents|sources))\b",
+    re.I,
+)
+_DIGITS = re.compile(r"\d+")
+SENTENCE_SIMILARITY_MIN = 0.72  # neural cosine at which a sentence counts as said by a source
+
+
+def _answer_sentences(answer: str) -> list[str]:
+    out = []
+    for raw in _SENTENCE_SPLIT.split(str(answer or "")):
+        t = re.sub(r"\[(\d+)\]", "", raw)  # citation markers
+        t = re.sub(r"^[\s>*#\-•\d.)]+", "", t).strip(" *_`")
+        if not t or _META.search(t):
+            continue
+        words = [w for w in text_tokens(t.lower()) if w not in _STOPWORDS]
+        if len(words) < 3 and not _DIGITS.search(t) and not _has_cjk(t):
+            continue  # headings, "Sure!", one-word lines
+        out.append(t)
+    return out
+
+
+def score_answer_grounding(
+    answer: str,
+    sources: list[dict[str, Any]] | None,
+    embed: Any = None,
+) -> dict[str, Any] | None:
+    """How much of the final answer the cited sources back up.
+
+    Each factual sentence is supported when every number in it appears in one source and the
+    rest matches that source: by shared words, or, when `embed` (text -> vector) is given, by
+    meaning, so an English answer about a German file can count. Returns None when there is
+    nothing to score (no sources or no factual sentences).
+    """
+    texts = [
+        " ".join(str(src.get(k) or "") for k in ("name", "breadcrumb", "excerpt", "raw_chunk_text", "chunk_text"))
+        for src in (sources or [])
+    ]
+    texts = [t for t in texts if t.strip()]
+    sentences = _answer_sentences(answer)
+    if not texts or not sentences:
+        return None
+    src_tokens = [set(text_tokens(t.lower())) for t in texts]
+    src_digits = [set(_DIGITS.findall(t)) for t in texts]
+    src_vecs: list[Any] | None = None
+    method = "lexical"
+    if embed is not None:
+        try:
+            src_vecs = [embed(t[:1500]) for t in texts]
+            method = "neural" if all(v for v in src_vecs) else "lexical"
+        except Exception:
+            src_vecs = None
+
+    from backend.services.rag_embeddings import cosine_similarity_vec
+
+    rows = []
+    for sent in sentences:
+        digits = set(_DIGITS.findall(sent))
+        words = [w for w in text_tokens(sent.lower()) if w not in _STOPWORDS and not w.isdigit()]
+        sent_vec = None
+        if method == "neural" and src_vecs and embed is not None:
+            try:
+                sent_vec = embed(sent)
+            except Exception:
+                sent_vec = None
+        best, best_i = 0.0, None
+        for i, toks in enumerate(src_tokens):
+            if digits and not digits <= src_digits[i]:
+                continue  # a number the source does not contain is not supported by it
+            lex = (sum(1 for w in words if w in toks) / len(words)) if words else (1.0 if digits else 0.0)
+            sim = cosine_similarity_vec(sent_vec, src_vecs[i]) if (sent_vec and src_vecs and src_vecs[i]) else 0.0
+            support = max(lex, sim / SENTENCE_SIMILARITY_MIN * 0.6 if sim else 0.0)
+            if support > best:
+                best, best_i = support, i
+        # numbers that all appear in the source are strong evidence, so fewer words need to match
+        need = 0.4 if digits else 0.6
+        source = best_i + 1 if (best_i is not None and best >= need) else None
+        rows.append({"text": sent[:300], "supported": source is not None, "source": source})
+    supported = sum(1 for r in rows if r["supported"])
+    return {
+        "score": round(100 * supported / len(rows)),
+        "supported": supported,
+        "total": len(rows),
+        "method": method,
+        "sentences": rows,
+    }

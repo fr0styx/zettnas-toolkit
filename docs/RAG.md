@@ -6,7 +6,11 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
 ## What gets indexed
 
 - Only folders you add under **AI → Watched folders**. Folders in *Excluded* are never read.
-- Text-like files: Markdown, plain text, CSV, JSON, YAML, HTML, code, `.docx` and `.pdf`.
+- Text-like files: Markdown, plain text, CSV, JSON, YAML, HTML, code, `.pdf`, Word (`.docx`),
+  Excel (`.xlsx`), PowerPoint (`.pptx`, with speaker notes), OpenDocument (`.odt`, `.ods`,
+  `.odp`), e-books (`.epub`), e-mail (`.eml`, `.mbox`: headers, text and attachment names)
+  and `.rtf`. Each part is capped at 64 MiB uncompressed, so a small file can't expand into
+  gigabytes.
   Photos get colour and scene tags plus any text found in them.
 - **Photo captions.** When a vision model is installed in Ollama (for example
   `gemma3:4b` or `qwen2.5vl:3b`), ZettNAS describes each photo in one sentence and copies
@@ -60,6 +64,22 @@ Set `rerank_endpoint` in the AI config to its rerank URL (OVMS:
 the server needs it, `rerank_model`. The top `rerank_top_n` results (default 30) are
 re-ordered; if the reranker is down, search keeps its usual order.
 
+## How results are ranked
+
+Each embedding model has a profile (`SIMILARITY_PROFILES` in `rag_engine.py`):
+
+- **Lexical vectors** blend vector, keyword (BM25) and title matches, and drop weak
+  coincidences: a 3+ word query that matches at most one word of the text, or a document
+  without a title match when the query reads like a photo search.
+- **Neural vectors** rank by vector similarity with a small keyword tie-break, without
+  those word rules. A neural model matches across languages and wording, so requiring
+  shared words threw away good matches.
+
+Search asks the vector index for more neighbours until enough of them are files the
+person may read in the chosen folder, so access and folder filters apply while searching
+rather than to a global top 60. With a vector index there is no "newest files first"
+window.
+
 ## Measured retrieval quality
 
 `tests/rag_eval` has 40 home-NAS files in English, German, Chinese, French and Spanish
@@ -81,8 +101,57 @@ CI fails if any of these numbers drops by more than 0.01. To measure a
 neural model on your NAS:
 
 ```bash
-python -m tests.rag_eval.run_eval --model embeddinggemma
+python -m tests.rag_eval.run_eval --model embeddinggemma --set all
 ```
+
+Two more sets measure what lexical vectors can't do: 50 **cross-language** questions
+(asked in one language about a file in another) and 40 **paraphrases** that share few
+words with the file. Measured on a test NAS with EmbeddingGemma (OpenVINO, 768
+dimensions), before and after the ranking above:
+
+| Set | Right file in top 5, before | after | Right file first, after |
+|---|---|---|---|
+| Same language (200) | 0.88 | 1.00 | 0.96 |
+| Cross-language (50) | 0.28 | 0.98 | 0.86 |
+| Paraphrase (40) | 0.65 | 0.98 | 0.88 |
+
+With 2,000 extra distractor files (`--distractors 2000`) the right file is still in the
+top 5 for about 0.9 of the questions. Plain reciprocal-rank fusion and the title and word
+boosts were measured too and scored lower for neural models, so they are not used.
+
+**Nightly.** `.github/workflows/ai-eval-nightly.yml` runs all sets with EmbeddingGemma
+served by Ollama and 2,000 distractors, and answers the 97 questions in `qa.json` with a
+small chat model. An answer counts as right when it contains the fact
+(`answer_any`); the report also says how often the right file was cited and how often a
+model answered at all. Results are kept as workflow artifacts and compared with
+`tests/rag_eval/baseline_nightly*.json` once those are recorded.
+
+## How answers are checked
+
+**Grounding** is scored on the model's final answer, sentence by sentence. A sentence
+is backed by a source when every number in it appears in that source and the rest of it
+matches the source: by shared words, or by meaning when a neural embedder is set, so an
+English answer about a German file can count. The chat shows "N of M sentences backed by
+the sources" and lists the others under **Not found in the sources**.
+
+**Routing.** Hardware, Docker, network and similar questions run their tool; everything
+else searches your files, in any language. Words match as whole words ("ram" is not in
+"program"), and "temperature" counts as a hardware question only next to a hardware word.
+If nothing matches, the model answers without system status filling the gap. Tool
+definitions go to the model only when the router found nothing, which keeps prompts
+short. The context window is fixed at 8,192 tokens (`ZETTNAS_AI_NUM_CTX` changes it):
+Ollama reloads the model whenever it changes, so the prompt is fitted to the window,
+oldest history first, instead.
+
+**Follow-ups** such as "and the warranty?" search with the previous question's words
+added, so the search knows the topic.
+
+**What leaves the NAS.** A web search (only when you allow web access) carries the
+question without addresses, e-mail addresses, file paths, long numbers or keys, and a
+search the model asks for is refused when it repeats text from your files. When an
+answer contains a Compose file with risky settings (privileged mode, the Docker socket,
+host networking, system folders, raw disks, default passwords) it ends with a note
+listing them.
 
 ## Who sees what
 

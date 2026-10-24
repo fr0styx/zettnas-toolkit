@@ -970,6 +970,8 @@ export default {
   "storage.snapshots_by_host": "Aquí las instantáneas las hace el sistema anfitrión, no ZettNAS",
   "lcd.badge_off_config": "LCD: apagado",
   "lcd.badge_none": "LCD: no encontrado",
+  "ai.grounded_sentences": "{n} de {total} frases respaldadas por las fuentes",
+  "ai.unsupported_title": "No aparece en las fuentes",
   "updates.title": "Actualizaciones de software",
   "updates.subtitle": "Busque las últimas versiones estables o active las funciones de los últimos commits.",
   "updates.channel_stable": "🌟 Estable",

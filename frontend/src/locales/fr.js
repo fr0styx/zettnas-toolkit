@@ -980,6 +980,8 @@ export default {
   "storage.snapshots_by_host": "Ici, les instantanés sont faits par le système hôte, pas par ZettNAS",
   "lcd.badge_off_config": "LCD : désactivé",
   "lcd.badge_none": "LCD : introuvable",
+  "ai.grounded_sentences": "{n} phrases sur {total} appuyées par les sources",
+  "ai.unsupported_title": "Introuvable dans les sources",
   "updates.title": "Mises à jour du logiciel",
   "updates.subtitle": "Vérifiez les versions stables ou activez les fonctionnalités des derniers commits.",
   "updates.channel_stable": "🌟 Stable",

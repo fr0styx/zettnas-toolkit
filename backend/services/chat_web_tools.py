@@ -369,6 +369,13 @@ def tool_browse_internet(query: str, max_results: int = 5) -> dict[str, Any]:
     clean_q = str(query or "").strip()
     if not clean_q:
         return {"tool": "browse_internet", "status": "error", "sources": [], "error": "Empty search query"}
+    # the search carries the question, not addresses, paths, numbers or keys (AI-12)
+    from backend.services.ai_safeguards import safe_web_query
+
+    scrubbed, why = safe_web_query(clean_q)
+    if scrubbed is None:
+        return {"tool": "browse_internet", "status": "blocked", "sources": [], "error": f"Web search refused: {why}."}
+    clean_q = scrubbed
 
     if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
         return {

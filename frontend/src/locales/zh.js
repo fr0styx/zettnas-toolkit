@@ -970,6 +970,8 @@ export default {
   "storage.snapshots_by_host": "这里的快照由主机系统创建，而不是 ZettNAS",
   "lcd.badge_off_config": "LCD：已关闭",
   "lcd.badge_none": "LCD：未找到",
+  "ai.grounded_sentences": "{total} 句中有 {n} 句有来源支持",
+  "ai.unsupported_title": "来源中未找到",
   "updates.title": "软件更新",
   "updates.subtitle": "检查最新的稳定发布版本、安全补丁，或抢先体验主分支提交功能。",
   "updates.channel_stable": "🌟 稳定版",

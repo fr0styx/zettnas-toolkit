@@ -1,0 +1,83 @@
+name: AI eval (nightly)
+
+# Retrieval and answer quality with a real neural embedder, cross-language and paraphrase
+# queries and 2,000 distractor files (AI-3). CI's per-commit eval uses the built-in lexical
+# vectors; this one uses EmbeddingGemma served by Ollama, and a small chat model for answers.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-eval-nightly
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    services:
+      ollama:
+        image: ollama/ollama@sha256:5c6707fcf2e1a30cffe2ecb7e315584fc87747c389327e4bc711c4959aa1eecc
+        ports:
+          - 11434:11434
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install the hash-locked dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements.lock
+          pip install -r requirements-dev.txt
+      - name: Pull the models
+        run: |
+          for m in embeddinggemma qwen3:1.7b; do
+            curl -sf http://127.0.0.1:11434/api/pull -d "{\"model\": \"$m\", \"stream\": false}" >/dev/null
+          done
+      - name: Retrieval (all sets, 2,000 distractors)
+        env:
+          TESTING: "1"
+        run: |
+          python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
+            --set all --distractors 2000 --misses --out eval-retrieval.json > /dev/null
+          python -m tests.rag_eval.compare eval-retrieval.json tests/rag_eval/baseline_nightly.json
+      - name: Answers (97 questions, scored)
+        if: always()
+        env:
+          TESTING: "1"
+        run: |
+          python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
+            --answers qwen3:1.7b --misses --out eval-answers.json > /dev/null
+          python -m tests.rag_eval.compare eval-answers.json tests/rag_eval/baseline_nightly_answers.json
+      - name: Summary
+        if: always()
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, os
+          for name in ("eval-retrieval.json", "eval-answers.json"):
+              if not os.path.exists(name):
+                  continue
+              d = json.load(open(name))
+              print(f"### {name}\n")
+              print("| scope | recall@1 | recall@5 | mrr@10 |\n|---|---|---|---|")
+              rows = [("overall", d["overall"])] + [(k, v) for k, v in d.get("by_kind", {}).items()] + [(k, v) for k, v in d.get("by_language", {}).items()]
+              for k, v in rows:
+                  print(f"| {k} | {v['recall@1']} | {v['recall@5']} | {v['mrr@10']} |")
+              if "answers" in d:
+                  a = d["answers"]
+                  print(f"\nAnswers ({a['model']}): accuracy {a['accuracy']}, right source cited {a['source_hit']}; by language {a['by_language']}\n")
+          PY
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-eval
+          path: eval-*.json
+          retention-days: 30
