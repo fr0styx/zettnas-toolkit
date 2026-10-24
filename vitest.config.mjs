@@ -12,7 +12,7 @@ export default defineConfig({
       include: ['frontend/src/**/*.js'],
       exclude: ['frontend/src/__tests__/**'],
       // OPS-16: floors a little under today's numbers; raise them as coverage grows
-      thresholds: { lines: 58, statements: 56, functions: 48, branches: 44 },
+      thresholds: { lines: 59, statements: 57, functions: 49, branches: 45 },
     },
   },
 });
