@@ -13,17 +13,7 @@ from typing import Any, Optional
 
 from backend.config import docker_sock, logger
 from backend.logging_config import sanitize_dict, sanitize_string
-
-
-class UnixHTTPConnection(http.client.HTTPConnection):
-    def __init__(self, socket_path: str | None = None, timeout: float = 2.5):
-        super().__init__("localhost", timeout=timeout)
-        self.socket_path = socket_path or docker_sock()
-
-    def connect(self):
-        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.settimeout(self.timeout)
-        self.sock.connect(self.socket_path)
+from backend.services.docker_client import UnixHTTPConnection  # noqa: E402,F401  (one client, ARCH-3)
 
 
 def _docker_api_get(endpoint: str, timeout: float = 2.5) -> Any | None:

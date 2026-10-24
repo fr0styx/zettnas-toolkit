@@ -31,25 +31,14 @@ from backend.services.compose_synthesizer import (
 
 
 def _docker_request(method: str, path: str, body: bytes | None = None, timeout: float = 6.0) -> tuple[int, bytes]:
-    """Helper to query Docker Unix socket."""
-    if not os.path.exists(docker_sock()):
-        return 503, b'{"error": "Docker socket unavailable"}'
-    conn = None
+    """Raw Docker request (see backend.services.docker_client); 503 when the socket is missing."""
+    from backend.services.docker_client import DockerUnavailable, raw_request
+
     try:
-        conn = UnixHTTPConnection(docker_sock(), timeout=timeout)
-        headers = {}
-        if body:
-            headers["Content-Type"] = "application/json"
-        conn.request(method, path, body=body, headers=headers)
-        res = conn.getresponse()
-        data = res.read()
-        return res.status, data
-    except Exception as e:
+        return raw_request(method, path, body=body or None, timeout=timeout)
+    except DockerUnavailable as e:
         logger.debug(f"[DockerStacks] Request {method} {path} error: {e}")
-        return 500, str(e).encode()
-    finally:
-        if conn:
-            conn.close()
+        return 503, b'{"error": "Docker socket unavailable"}'
 
 
 def _read_file_from_container(cid: str, container_path: str) -> str | None:

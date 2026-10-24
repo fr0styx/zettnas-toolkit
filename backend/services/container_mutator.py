@@ -15,8 +15,8 @@ import urllib.parse
 from typing import Any, Optional
 
 from backend.config import docker_sock, logger
-from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.compose_synthesizer import fetch_container_raw_inspect
+from backend.services.docker_client import UnixHTTPConnection  # noqa: F401
 
 # Sent with container creates the user confirmed; the Docker proxy refuses
 # privileged settings without it (SEC-09).
@@ -30,48 +30,13 @@ def _docker_request(
     timeout: float = 15.0,
     headers: dict[str, str] | None = None,
 ) -> tuple[int, Any]:
-    """Helper for making synchronous HTTP requests over the Docker Unix socket."""
-    sock_path = docker_sock()
-    if not os.path.exists(sock_path):
-        raise RuntimeError("Docker socket /var/run/docker.sock not found")
-
-    # Sanitize URL path and query parameters so control chars and unencoded JSON in query strings never cause InvalidURL
-    if "?" in path:
-        base, query = path.split("?", 1)
-        parts = query.split("&")
-        safe_parts = []
-        for p in parts:
-            if "=" in p:
-                k, v = p.split("=", 1)
-                unquoted = urllib.parse.unquote(v)
-                safe_parts.append(f"{k}={urllib.parse.quote(unquoted)}")
-            else:
-                safe_parts.append(p)
-        query_str = "&".join(safe_parts)
-        path = f"{base}?{query_str}"
-    elif " " in path:
-        path = path.replace(" ", "%20")
-
-    conn = UnixHTTPConnection(sock_path, timeout=timeout)
-    req_headers = {"Content-Type": "application/json"} if body is not None else {}
-    if headers:
-        req_headers.update(headers)
-    body_bytes = json.dumps(body).encode("utf-8") if body is not None else None
+    """Docker API request: status and decoded body (see backend.services.docker_client)."""
+    from backend.services.docker_client import DockerUnavailable, request
 
     try:
-        conn.request(method, path, body=body_bytes, headers=req_headers)
-        res = conn.getresponse()
-        raw = res.read().decode("utf-8", errors="replace")
-        try:
-            data = json.loads(raw) if raw.strip() else {}
-        except Exception:
-            data = {"raw": raw}
-        return res.status, data
-    finally:
-        try:
-            conn.close()
-        except Exception:
-            logger.debug("backend.services.container_mutator._docker_request: ignored error", exc_info=True)
+        return request(method, path, body=body, timeout=timeout, headers=headers)
+    except DockerUnavailable as e:
+        raise RuntimeError(f"Docker socket not reachable: {e.message}") from e
 
 
 def check_port_available_detailed(port: int, proto: str = "tcp", host: str = "0.0.0.0") -> tuple[bool, str | None]:
