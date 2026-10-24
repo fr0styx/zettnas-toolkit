@@ -217,7 +217,11 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
         if not os.path.exists(user_home_path):
             try:
                 os.makedirs(user_home_path, exist_ok=True)
-                if not use_scandir and user_home_name not in scanned_entries:
+                # the listing was read before the folder existed: read it again so it shows now
+                if use_scandir:
+                    with os.scandir(real) as it:
+                        scanned_entries = list(it)
+                elif user_home_name not in scanned_entries:
                     scanned_entries.append(user_home_name)
             except OSError as e:
                 logger.warning(f"[BROWSE] Failed to auto-provision home directory {user_home_path}: {e}")

@@ -227,7 +227,8 @@ def role_for(groups: list[str], cfg: dict[str, Any]) -> str:
 
 
 def _clean_username(raw: str) -> str:
-    base = "".join(ch for ch in str(raw or "").lower().split("@")[0] if ch.isalnum() or ch in "._-")[:28]
+    base = "".join(ch for ch in str(raw or "").lower().split("@")[0] if ch.isalnum() or ch in "._-")
+    base = base.lstrip(".")[:28]  # a name like ".." would be a folder above the private folders
     return base if len(base) >= 2 else f"user{secrets.token_hex(3)}"
 
 

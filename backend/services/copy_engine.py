@@ -432,7 +432,9 @@ def build_copy_plan(src_path, dst_path, use_exif, date_func=None):
     """
     date_func = date_func or _get_exif_date
     entries, collisions = [], []
-    for dirpath, _, filenames in os.walk(src_path):
+    planned: set[str] = set()
+    for dirpath, dirnames, filenames in os.walk(src_path):
+        dirnames.sort()  # the same card gives the same names on every import
         for name in sorted(filenames):
             src_file = os.path.join(dirpath, name)
             if os.path.islink(src_file):
@@ -445,6 +447,16 @@ def build_copy_plan(src_path, dst_path, use_exif, date_func=None):
             dst_file = os.path.normpath(os.path.join(dst_path, rel_path))
             if not dst_file.startswith(dst_path):
                 continue
+            if dst_file in planned:
+                # Two files of this import land on one name (two cameras, two DCIM folders on
+                # the same day): the later one becomes "name (2).ext" rather than replacing it.
+                base, ext = os.path.splitext(dst_file)
+                n = 2
+                while f"{base} ({n}){ext}" in planned:
+                    n += 1
+                dst_file = f"{base} ({n}){ext}"
+                rel_path = os.path.relpath(dst_file, dst_path)
+            planned.add(dst_file)
             is_collision = os.path.exists(dst_file)
             if is_collision:
                 collisions.append(rel_path)
@@ -465,6 +477,73 @@ def select_files_to_copy(entries, skip_existing):
         files.append((src_file, dst_file))
         total += size
     return files, total
+
+
+PART_SUFFIX = ".zettnas-part"
+CHUNK = 4 * 1024 * 1024
+
+
+async def copy_one_file(src_f: str, dst_f: str, verify_checksum: bool = True) -> bool:
+    """Copies one file through "<dst>.zettnas-part" next to it, verifies it, then moves it into
+    place. A file being overwritten stays untouched until the new copy is complete, so a pulled
+    card, a read error, a checksum mismatch or a cancel never leaves you with neither copy.
+    Returns False when the copy was cancelled."""
+    tmp = dst_f + PART_SUFFIX
+    hasher_src = hashlib.sha256()
+    try:
+        async with aiofiles.open(src_f, "rb") as fsrc, aiofiles.open(tmp, "wb") as fdst:
+            while True:
+                if Z_STATE.copy_abort_flag:
+                    return False
+                while getattr(Z_STATE, "copy_paused", False):
+                    if Z_STATE.copy_status != "paused":
+                        Z_STATE.copy_status = "paused"
+                        Z_STATE.ui_wake.set()
+                    await asyncio.sleep(0.5)
+                if Z_STATE.copy_status != "copying" and not Z_STATE.copy_abort_flag:
+                    Z_STATE.copy_status = "copying"
+                    Z_STATE.ui_wake.set()
+                buf = await fsrc.read(CHUNK)
+                if not buf:
+                    break
+                if verify_checksum:
+                    hasher_src.update(buf)
+                await fdst.write(buf)
+                Z_STATE.copy_progress["copied"] += len(buf)
+            await fdst.flush()
+            try:
+                os.fdatasync(fdst.fileno())
+            except (AttributeError, OSError):
+                pass
+            try:
+                if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_DONTNEED"):
+                    os.posix_fadvise(fdst.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+            except (AttributeError, OSError):
+                pass
+
+        # read the copy back from the disk, not from the cache
+        if verify_checksum:
+            hasher_dst = hashlib.sha256()
+            async with aiofiles.open(tmp, "rb") as fcheck:
+                try:
+                    if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_DONTNEED"):
+                        os.posix_fadvise(fcheck.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+                except (AttributeError, OSError):
+                    pass
+                while True:
+                    cbuf = await fcheck.read(CHUNK)
+                    if not cbuf:
+                        break
+                    hasher_dst.update(cbuf)
+            if hasher_src.hexdigest() != hasher_dst.hexdigest():
+                raise OSError(f"Checksum mismatch for {os.path.basename(src_f)}")
+
+        shutil.copystat(src_f, tmp)
+        os.replace(tmp, dst_f)
+        return True
+    finally:
+        if os.path.exists(tmp):
+            os.remove(tmp)
 
 
 async def _do_copy(cfg):
@@ -574,71 +653,13 @@ async def _do_copy(cfg):
                 break
             os.makedirs(os.path.dirname(dst_f), exist_ok=True)
             Z_STATE.copy_progress["file"] = os.path.basename(src_f)
-            length = 1024 * 1024 * 4
-            hasher_src = hashlib.sha256()
-            hasher_dst = hashlib.sha256()
             try:
-                async with aiofiles.open(src_f, "rb") as fsrc, aiofiles.open(dst_f, "wb") as fdst:
-                    while True:
-                        if Z_STATE.copy_abort_flag:
-                            break
-                        while getattr(Z_STATE, "copy_paused", False):
-                            if Z_STATE.copy_status != "paused":
-                                Z_STATE.copy_status = "paused"
-                                Z_STATE.ui_wake.set()
-                            await asyncio.sleep(0.5)
-
-                        if Z_STATE.copy_status != "copying" and not Z_STATE.copy_abort_flag:
-                            Z_STATE.copy_status = "copying"
-                            Z_STATE.ui_wake.set()
-
-                        buf = await fsrc.read(length)
-                        if not buf:
-                            break
-                        if verify_checksum:
-                            hasher_src.update(buf)
-                        await fdst.write(buf)
-                        Z_STATE.copy_progress["copied"] += len(buf)
-                    await fdst.flush()
-                    try:
-                        os.fdatasync(fdst.fileno())
-                    except (AttributeError, OSError):
-                        pass
-                    try:
-                        if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_DONTNEED"):
-                            os.posix_fadvise(fdst.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
-                    except (AttributeError, OSError):
-                        pass
-
-                if Z_STATE.copy_abort_flag:
-                    if os.path.exists(dst_f):
-                        os.remove(dst_f)
-                    break
-
-                # Genuine post-write destination verification directly against physical media
-                if verify_checksum:
-                    hasher_dst = hashlib.sha256()
-                    async with aiofiles.open(dst_f, "rb") as fdst_check:
-                        try:
-                            if hasattr(os, "posix_fadvise") and hasattr(os, "POSIX_FADV_DONTNEED"):
-                                os.posix_fadvise(fdst_check.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
-                        except (AttributeError, OSError):
-                            pass
-                        while True:
-                            cbuf = await fdst_check.read(length)
-                            if not cbuf:
-                                break
-                            hasher_dst.update(cbuf)
-                    if hasher_src.hexdigest() != hasher_dst.hexdigest():
-                        if os.path.exists(dst_f):
-                            os.remove(dst_f)
-                        raise OSError(f"Checksum mismatch for {os.path.basename(src_f)}")
-
-                shutil.copystat(src_f, dst_f)
-                Z_STATE.copy_progress["files_done"] += 1
+                if not await copy_one_file(src_f, dst_f, verify_checksum):
+                    break  # aborted
             except Exception as e:
                 logger.info(f"[ZettNAS] Error copying {src_f}: {e}")
                 raise
+            Z_STATE.copy_progress["files_done"] += 1
 
         if Z_STATE.copy_abort_flag:
             Z_STATE.copy_status = "aborted"

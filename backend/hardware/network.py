@@ -1284,10 +1284,14 @@ def get_vlans() -> list[dict[str, Any]]:
     return sorted(vlans, key=lambda v: (v.get("parent", ""), v.get("vlan_id", 0)))
 
 
+# A Linux interface name: at most 15 characters, and no leading dash (it would read as an option)
+_IFNAME = re.compile(r"^[a-zA-Z0-9_][a-zA-Z0-9_\-\.]{0,14}$")
+
+
 def create_vlan(parent: str, vlan_id: int, alias: str = "") -> dict[str, Any]:
     """Create an 802.1Q VLAN sub-interface (e.g. eth0.10) and persist metadata."""
     parent = (parent or "").strip()
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", parent):
+    if not _IFNAME.match(parent):
         return {"status": "error", "message": "Invalid parent interface name"}
 
     try:
@@ -1298,6 +1302,11 @@ def create_vlan(parent: str, vlan_id: int, alias: str = "") -> dict[str, Any]:
         return {"status": "error", "message": "VLAN ID must be an integer between 1 and 4094"}
 
     vname = f"{parent}.{vid}"
+    if len(vname) > 15:  # it would never apply, not even after a restart
+        return {
+            "status": "error",
+            "message": f"'{vname}' is longer than the 15 characters Linux allows for an interface name.",
+        }
 
     # Attempt creation using ip link
     cmd = ["ip", "link", "add", "link", parent, "name", vname, "type", "vlan", "id", str(vid)]
@@ -1373,35 +1382,48 @@ def create_vlan(parent: str, vlan_id: int, alias: str = "") -> dict[str, Any]:
     }
 
 
-def delete_vlan(vlan_name: str) -> dict[str, Any]:
-    """Delete an 802.1Q VLAN sub-interface."""
-    vlan_name = (vlan_name or "").strip()
-    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", vlan_name):
-        return {"status": "error", "message": "Invalid VLAN interface name"}
-
-    # Attempt deletion using ip link
-    cmd = ["ip", "link", "del", "dev", vlan_name]
-    success = False
+def _ip_link_delete(name: str) -> tuple[bool, str]:
+    """Runs "ip link del" here, then in the host's network namespace if that failed."""
+    cmd = ["ip", "link", "del", "dev", name]
     err_msg = ""
     try:
         res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
         if res.returncode == 0:
-            success = True
-        else:
-            err_msg = res.stderr.strip()
+            return True, ""
+        err_msg = res.stderr.strip()
     except Exception as e:
         err_msg = str(e)
-
-    if not success and os.path.exists("/host/proc/1/ns/net"):
+    if os.path.exists("/host/proc/1/ns/net"):
         try:
-            ns_cmd = ["nsenter", "--net=/host/proc/1/ns/net"] + cmd
-            res = subprocess.run(ns_cmd, capture_output=True, text=True, timeout=5)
+            res = subprocess.run(
+                ["nsenter", "--net=/host/proc/1/ns/net"] + cmd, capture_output=True, text=True, timeout=5
+            )
             if res.returncode == 0:
-                success = True
-            else:
-                err_msg = res.stderr.strip()
+                return True, ""
+            err_msg = res.stderr.strip()
         except Exception as e:
             err_msg = str(e)
+    return False, err_msg
+
+
+def delete_vlan(vlan_name: str) -> dict[str, Any]:
+    """Delete an 802.1Q VLAN sub-interface."""
+    vlan_name = (vlan_name or "").strip()
+    if not _IFNAME.match(vlan_name) or not re.search(r"\.\d{1,4}$", vlan_name):
+        return {"status": "error", "message": "Invalid VLAN interface name"}
+    # Only VLANs: "ip link del" would just as well remove br0 or bond0 and cut the NAS off the network
+    in_kernel = vlan_name in _parse_proc_net_vlan()
+    in_config = vlan_name in (load_network_config().get("vlans") or {})
+    if not in_kernel and not in_config:
+        return {
+            "status": "error",
+            "message": f"'{vlan_name}' is not a VLAN; only VLAN sub-interfaces can be removed here.",
+        }
+
+    # a VLAN that is only in the saved settings just leaves them
+    success, err_msg = _ip_link_delete(vlan_name) if in_kernel else (True, "")
+    if not success:
+        return {"status": "error", "message": f"Could not remove '{vlan_name}': {err_msg or 'unknown error'}"}
 
     # Remove from network_config.json
     cfg = load_network_config()

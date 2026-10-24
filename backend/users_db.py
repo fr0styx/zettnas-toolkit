@@ -513,6 +513,13 @@ def list_users(db_path: str | None = None) -> list[dict[str, Any]]:
         return res
 
 
+def unsafe_username(name: str) -> bool:
+    """A username that can't be a folder name: every account gets <pool>/homes/<username>, so
+    ".." would make the whole pool someone's private folder."""
+    name = str(name or "")
+    return name.startswith(".") or any(ch in name for ch in "/\\\x00") or any(ord(ch) < 32 for ch in name)
+
+
 def create_user(
     username: str,
     display_name: str,
@@ -528,6 +535,8 @@ def create_user(
     username_clean = username.strip().lower()
     if len(username_clean) < 2 or len(username_clean) > 32:
         raise ValueError("Username must be between 2 and 32 characters.")
+    if unsafe_username(username_clean):
+        raise ValueError("A username can't start with a dot or contain slashes.")
 
     now = time.time()
     user_id = str(uuid.uuid4())

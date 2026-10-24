@@ -863,6 +863,36 @@ class StoragePlatformAdapter(ABC):
         return members
 
 
+BTRFS_REDUNDANT = {"raid1", "raid1c3", "raid1c4", "raid10", "raid5", "raid6"}
+
+
+def btrfs_data_profiles(device: str, sys_roots: tuple[str, ...] | None = None) -> list[str]:
+    """The data profiles of the Btrfs filesystem on this device, from /sys/fs/btrfs
+    (["single"], ["raid1"]; two while a balance converts). Empty when unknown."""
+    dev = os.path.basename(os.path.realpath(device)) if device else ""
+    if not dev:
+        return []
+    for base in sys_roots or (HOST_SYS, "/sys", "/host/sys"):
+        root = os.path.join(base or "", "fs", "btrfs")
+        if not base or not os.path.isdir(root):
+            continue
+        for fsid in sorted(os.listdir(root)):
+            if not os.path.exists(os.path.join(root, fsid, "devices", dev)):
+                continue
+            data = os.path.join(root, fsid, "allocation", "data")
+            try:
+                return sorted(d for d in os.listdir(data) if os.path.isdir(os.path.join(data, d)))
+            except OSError:
+                return []
+    return []
+
+
+def btrfs_is_redundant(profiles: list[str]) -> bool:
+    """Survives a disk failure: every data profile in use keeps copies on other disks
+    (dup keeps two copies on the same disk)."""
+    return bool(profiles) and all(p in BTRFS_REDUNDANT for p in profiles)
+
+
 def _whole_disk(name: str) -> str:
     """The disk a partition belongs to: sdb1 -> sdb, nvme0n1p1 -> nvme0n1, mmcblk0p2 -> mmcblk0.
     Whole NVMe disks keep their name (nvme1n1 is not a partition of nvme1n)."""
@@ -3243,13 +3273,16 @@ class FygoOSStorageAdapter(ObserverStorageAdapter):
                     pct = round(usd / tot * 100, 1)
                     checked_mounts.add(mp)
                     p_id = os.path.basename(mp) or "fygoos_storage"
+                    # protected only when the Btrfs profile keeps copies on other disks
+                    profiles = btrfs_data_profiles(m.get("device", "")) if fstype == "btrfs" else []
+                    redundant = btrfs_is_redundant(profiles)
                     pools.append(
                         StoragePool(
                             id=p_id,
                             name=f"{p_id} (FygoOS Storage Volume)",
-                            pool_type="single" if fstype != "btrfs" else "btrfs_raid",
+                            pool_type="btrfs_raid" if redundant else "single",
                             fs_type=fstype,
-                            fs_profile="single",
+                            fs_profile="+".join(profiles) or "single",
                             status="HEALTHY",
                             mountpoint=mp,
                             total_bytes=tot,
@@ -3257,7 +3290,7 @@ class FygoOSStorageAdapter(ObserverStorageAdapter):
                             free_bytes=fre,
                             used_pct=pct,
                             members=hal_disks,
-                            parity_protected=fstype == "btrfs",
+                            parity_protected=redundant,
                         )
                     )
 
@@ -3399,6 +3432,18 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                     "message": "ZettOS manages RAID parity sync via kernel mdadm.",
                 }
             elif action == "cancel":
+                # Only a scrub (check/repair) is stopped: "idle" during a resync or recovery would
+                # interrupt the rebuild of a replaced disk and leave the array degraded longer.
+                if sync_action and sync_action not in ("check", "repair"):
+                    return {
+                        "platform": "zettos",
+                        "pool_id": pool_id,
+                        "action": action,
+                        "status": "active",
+                        "sync_action": sync_action,
+                        "progress_pct": progress_pct,
+                        "message": f"The array is running a {sync_action}, not a scrub; it was left running.",
+                    }
                 for base in [HOST_SYS, "/sys", "/host/sys"]:
                     if not base:
                         continue

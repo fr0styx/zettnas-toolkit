@@ -251,6 +251,8 @@ async def create_vlan_endpoint(req: VlanCreateRequest):
 async def delete_vlan_endpoint(vlan_iface: str):
     """Delete an existing 802.1Q VLAN tagged sub-interface."""
     res = await asyncio.to_thread(delete_vlan, vlan_iface)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=400, detail=res.get("message", "Could not remove the VLAN"))
     return res
 
 

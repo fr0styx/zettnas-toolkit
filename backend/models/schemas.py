@@ -31,7 +31,8 @@ class MfaDisableRequest(BaseModel):
 
 
 class UserCreateRequest(BaseModel):
-    username: str = Field(..., min_length=2, max_length=32, pattern=r"^[a-zA-Z0-9_\-\.]+$")
+    # no leading dot: the username names the private folder <pool>/homes/<username>
+    username: str = Field(..., min_length=2, max_length=32, pattern=r"^[a-zA-Z0-9_\-][a-zA-Z0-9_\-\.]*$")
     display_name: str | None = None
     password: str = Field(..., min_length=8)
     email: str | None = None

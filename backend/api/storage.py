@@ -27,8 +27,9 @@ router = APIRouter(prefix="/storage", tags=["Storage Subsystem & PAL"])
 
 
 class StorageScrubRequest(BaseModel):
-    pool_id: str = "unraid_array"
-    action: str = "start"
+    # pool names go to zpool/btrfs as arguments: no leading dash, no spaces
+    pool_id: str = Field("unraid_array", pattern=r"^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$")
+    action: str = Field("start", pattern=r"^[a-z_]{1,16}$")
 
 
 class StoragePoolCreateRequest(BaseModel):
