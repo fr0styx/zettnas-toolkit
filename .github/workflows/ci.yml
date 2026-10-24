@@ -336,6 +336,17 @@ jobs:
           exit-code: "1"
           format: table
 
+      # High findings are reported, not blocking, until each is triaged (OPS-13)
+      - name: Report High vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.76.1
+          image-ref: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          severity: HIGH
+          ignore-unfixed: true
+          exit-code: "0"
+          format: table
+
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
@@ -362,7 +373,7 @@ jobs:
           done <<< "$TAGS"
           docker buildx imagetools create "${args[@]}" "ghcr.io/${{ github.repository }}@${DIGEST}"
           echo "Published ${#args[@]} tag argument(s) for ${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Verify: cosign verify ghcr.io/${{ github.repository }}@${DIGEST} --certificate-identity-regexp 'https://github.com/${{ github.repository }}/' --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verify: cosign verify ghcr.io/${{ github.repository }}@${DIGEST} --certificate-identity-regexp '^https://github\.com/${{ github.repository }}/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> "$GITHUB_STEP_SUMMARY"
 
   create-release:
     name: GitHub Release & Release Notes

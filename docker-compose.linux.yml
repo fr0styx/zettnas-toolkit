@@ -11,6 +11,11 @@ services:
     image: ghcr.io/fr0styx/zettnas-toolkit:latest
     container_name: zettnas-toolkit
     restart: unless-stopped
+    logging:  # keep container logs from filling the disk (OPS-13)
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8082:8082"   # ZettNAS Workbench WebUI & REST API
       - "8084:8084"   # Universal WebDAV Engine (Direct Line-Rate Access)
@@ -84,6 +89,11 @@ services:
     image: crazymax/samba:4.23.8
     container_name: zettnas-samba
     restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     network_mode: host                    # Line-rate 10GbE throughput + Windows (WSD) discovery
     volumes:
       - /mnt/storage:/mnt/storage:rw

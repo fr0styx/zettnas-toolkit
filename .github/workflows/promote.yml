@@ -124,7 +124,7 @@ jobs:
             src="$IMAGE:${VERSION}${suffix}"
             digest=$(docker buildx imagetools inspect "$src" --format '{{json .Manifest}}' | jq -r .digest)
             cosign verify "$IMAGE@$digest" \
-              --certificate-identity-regexp "https://github.com/${{ github.repository }}/" \
+              --certificate-identity-regexp '^https://github\.com/${{ github.repository }}/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' \
               --certificate-oidc-issuer https://token.actions.githubusercontent.com > /dev/null
             docker buildx imagetools create \
               -t "$IMAGE:latest${suffix}" -t "$IMAGE:stable${suffix}" -t "$IMAGE:${MINOR}${suffix}" \
