@@ -87,8 +87,8 @@ def test_brand_coloured_text_gets_a_dark_shade():
 
 
 def test_fallbacks_of_variables_the_light_theme_lacks():
-    out = lt.rewrite_css(".t { color: var(--text, #e2e8f0); }")
-    assert "var(--text, var(--lt-t-e2e8f0ff, #e2e8f0))" in out
+    out = lt.rewrite_css(".t { color: var(--never-defined, #e2e8f0); }")
+    assert "var(--never-defined, var(--lt-t-e2e8f0ff, #e2e8f0))" in out
     assert lt.rewrite_css(".t { color: var(--fg, #e2e8f0); }") == ".t { color: var(--fg, #e2e8f0); }"
 
 

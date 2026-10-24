@@ -19,6 +19,11 @@ body.theme-light {
   --pill-active-fg: #075985;
   --pill-active-line: rgba(3, 105, 161, 0.55);
   --pill-active-glow: none;
+  /* status colours some scripts set by name (their dark-theme fallbacks are too light here) */
+  --danger: #b91c1c;
+  --err: #b91c1c;
+  --alert: #b91c1c;
+  --text: #1e293b;
 }
 
 /* Labels set on the --ok2 fill, which is dark in the light theme */
