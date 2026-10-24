@@ -653,7 +653,7 @@ export function renderDockerContainersTable() {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:36px 20px;">
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
         <div style="font-size:32px; opacity:0.8;">🐳</div>
-        <div style="font-size:13.5px; font-weight:600; color:var(--text, #fff);">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
+        <div style="font-size:13.5px; font-weight:600; color:var(--text, var(--lt-t-ffffffff, #fff));">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
         <div style="font-size:12px; color:var(--muted, #94a3b8); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
         <button id="btn-empty-deploy-app" class="btn-pill-toggle is-primary" style="margin-top: 6px;">
           🚀 ${t('mgmt.docker_open_catalog', 'Browse App Catalog')}
@@ -1186,7 +1186,7 @@ export async function openAppDeployModal(appId) {
           <div class="smart-modal-header" id="adm-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span id="adm-icon" style="font-size:18px;">📦</span>
-              <span id="adm-title" style="font-weight:700; color:#fff; font-size:13px;">Deploy Application Stack</span>
+              <span id="adm-title" style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13px;">Deploy Application Stack</span>
             </div>
             <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
               <button class="win-btn min-btn" id="adm-min-btn" title="${t('ui.minimize_to_dock', 'Minimize to Dock')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
@@ -1204,13 +1204,13 @@ export async function openAppDeployModal(appId) {
                 <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:11.5px;">
                   <span aria-hidden="true">⚠️</span> <span id="adm-existing-title">Pre-existing Container Detected</span>
                 </div>
-                <span id="adm-existing-status-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; background:rgba(255,255,255,0.08); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
+                <span id="adm-existing-status-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
               </div>
-              <div id="adm-existing-desc" style="color:#cbd5e1; font-size:11px; line-height:1.4;">
+              <div id="adm-existing-desc" style="color:var(--lt-t-cbd5e1ff, #cbd5e1); font-size:11px; line-height:1.4;">
                 A container with this name or port already exists on your system. Choose an action:
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
-                <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle is-danger" style="text-align: center; color: #ff8080;">
+                <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle is-danger" style="text-align: center; color: var(--lt-t-ff8080ff, #ff8080);">
                   🔄 Stop &amp; Replace Existing
                 </button>
                 <button type="button" id="adm-choice-new-btn" class="btn-pill-toggle" style="text-align: center; border: 2px solid var(--ok2, #25c2a0); background: rgba(37, 194, 160, 0.18); color: var(--ok2, #25c2a0);">
@@ -1241,7 +1241,7 @@ export async function openAppDeployModal(appId) {
                   <button class="btn-pill-toggle" id="adm-download-btn">⬇️ Download</button>
                 </div>
               </div>
-              <pre id="adm-compose-pre" style="margin:0; background:#080c14; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:11px; color:#e2e8f0; line-height:1.45;"></pre>
+              <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:11px; color:var(--lt-t-e2e8f0ff, #e2e8f0); line-height:1.45;"></pre>
             </div>
           </div>
 
@@ -1251,22 +1251,22 @@ export async function openAppDeployModal(appId) {
               <div style="display:flex; align-items:center; gap:10px;">
                 <span id="adm-progress-spinner" style="font-size:22px; display:inline-block;">⚙️</span>
                 <div>
-                  <div id="adm-progress-title" style="font-size:13px; font-weight:700; color:#fff;">Deploying Application...</div>
+                  <div id="adm-progress-title" style="font-size:13px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">Deploying Application...</div>
                   <div id="adm-progress-status-text" style="font-size:11px; color:var(--muted); margin-top:2px;">Preparing environment and directories...</div>
                 </div>
               </div>
-              <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--accent-cyan, #00f0ff); background:rgba(0,240,255,0.08); padding:3px 9px; border-radius:6px; border:1px solid rgba(0,240,255,0.2);">0%</div>
+              <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff14, rgba(0,240,255,0.08)); padding:3px 9px; border-radius:6px; border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2));">0%</div>
             </div>
 
             <!-- Stylized Progress Bar -->
-            <div style="width:100%; height:10px; background:rgba(255,255,255,0.06); border-radius:5px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); position:relative;">
+            <div style="width:100%; height:10px; background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); border-radius:5px; overflow:hidden; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); position:relative;">
               <div id="adm-progress-bar-fill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); transition:width 0.25s ease; box-shadow:0 0 10px rgba(37,194,160,0.5);"></div>
             </div>
 
             <!-- Real-time Activity Log Terminal -->
             <div style="margin-top:2px;">
               <div style="font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Deployment Console Log</div>
-              <div id="adm-deploy-logs" style="background:#05080f; border:1px solid rgba(255,255,255,0.1); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:11px; line-height:1.5; color:#cbd5e1;">
+              <div id="adm-deploy-logs" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:11px; line-height:1.5; color:var(--lt-t-cbd5e1ff, #cbd5e1);">
                 <div style="color:var(--muted);">Waiting for deployment stream to begin...</div>
               </div>
             </div>
@@ -1275,7 +1275,7 @@ export async function openAppDeployModal(appId) {
             <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(37,194,160,0.12); border:1px solid var(--ok2, #25c2a0); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
               <div>
                 <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:12px;">🚀 Container is Live & Running!</div>
-                <div id="adm-success-msg" style="font-size:11px; color:#cbd5e1; margin-top:2px;">Your application has been deployed and started successfully.</div>
+                <div id="adm-success-msg" style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); margin-top:2px;">Your application has been deployed and started successfully.</div>
               </div>
               <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; font-size:11px; padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                 🌐 Open Web UI ↗
@@ -1284,7 +1284,7 @@ export async function openAppDeployModal(appId) {
           </div>
 
           <!-- Footer for Config View -->
-          <div id="adm-footer-config" style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+          <div id="adm-footer-config" style="padding:10px 16px; border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:space-between; align-items:center; background:var(--lt-b-00000033, rgba(0,0,0,0.2));">
             <button class="btn-pill-toggle" id="adm-cancel-btn">Cancel</button>
             <button class="btn-pill-toggle is-primary" id="adm-deploy-confirm-btn">
               🚀 Deploy & Launch Container
@@ -1292,7 +1292,7 @@ export async function openAppDeployModal(appId) {
           </div>
 
           <!-- Footer for Progress View -->
-          <div id="adm-footer-progress" style="display:none; padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+          <div id="adm-footer-progress" style="display:none; padding:10px 16px; border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); justify-content:space-between; align-items:center; background:var(--lt-b-00000033, rgba(0,0,0,0.2));">
             <button class="btn-pill-toggle" id="adm-back-to-config-btn" style="display: none;">← Reconfigure</button>
             <div style="flex:1;"></div>
             <button class="btn-pill-toggle is-primary" id="adm-progress-close-btn" style="display: none;">✓ Done</button>
@@ -1552,7 +1552,7 @@ export async function openAppDeployModal(appId) {
 
     banner.style.background = 'rgba(235, 87, 87, 0.12)';
     banner.style.border = '1px solid var(--err, #eb5757)';
-    banner.innerHTML = `<span style="color:#ff8080; font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> The existing container <strong>${defaultContainerName}</strong> will be cleanly stopped and replaced on port <strong>${defaultPort}</strong>. Persistent data will be preserved.`;
+    banner.innerHTML = `<span style="color:var(--lt-t-ff8080ff, #ff8080); font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> The existing container <strong>${defaultContainerName}</strong> will be cleanly stopped and replaced on port <strong>${defaultPort}</strong>. Persistent data will be preserved.`;
 
     if (deployConfirmBtn) {
       deployConfirmBtn.textContent = t('ui.stop_replace_launch', '🔄 Stop, Replace & Launch');
@@ -1614,7 +1614,7 @@ export async function openAppDeployModal(appId) {
       banner.style.background = 'rgba(235, 87, 87, 0.12)';
       banner.style.border = '1px solid var(--err, #eb5757)';
       if (nameInput) nameInput.style.borderColor = 'var(--err, #eb5757)';
-      banner.innerHTML = `<span style="color:var(--err, #eb5757); font-weight:bold;">✕ Invalid Name:</span> Container name cannot be empty.`;
+      banner.innerHTML = `<span style="color:var(--err, var(--lt-t-eb5757ff, #eb5757)); font-weight:bold;">✕ Invalid Name:</span> Container name cannot be empty.`;
       if (deployConfirmBtn) {
         deployConfirmBtn.disabled = true;
         deployConfirmBtn.style.opacity = '0.5';
@@ -1630,7 +1630,7 @@ export async function openAppDeployModal(appId) {
           if (nameInput) nameInput.style.borderColor = '';
           banner.style.background = 'rgba(235, 87, 87, 0.12)';
           banner.style.border = '1px solid var(--err, #eb5757)';
-          banner.innerHTML = `<span style="color:#ff8080; font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Existing container <strong>${check.name}</strong> will be stopped and replaced.`;
+          banner.innerHTML = `<span style="color:var(--lt-t-ff8080ff, #ff8080); font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Existing container <strong>${check.name}</strong> will be stopped and replaced.`;
           if (deployConfirmBtn) {
             deployConfirmBtn.disabled = false;
             deployConfirmBtn.style.opacity = '1';
@@ -1663,7 +1663,7 @@ export async function openAppDeployModal(appId) {
       banner.style.background = 'rgba(235, 87, 87, 0.12)';
       banner.style.border = '1px solid var(--err, #eb5757)';
       portInput.style.borderColor = 'var(--err, #eb5757)';
-      banner.innerHTML = `<span style="color:var(--err, #eb5757); font-weight:bold;">✕ Invalid Port:</span> Please enter a valid port between 1 and 65535.`;
+      banner.innerHTML = `<span style="color:var(--err, var(--lt-t-eb5757ff, #eb5757)); font-weight:bold;">✕ Invalid Port:</span> Please enter a valid port between 1 and 65535.`;
       if (deployConfirmBtn) {
         deployConfirmBtn.disabled = true;
         deployConfirmBtn.style.opacity = '0.5';
@@ -1685,7 +1685,7 @@ export async function openAppDeployModal(appId) {
           banner.style.background = 'rgba(235, 87, 87, 0.12)';
           banner.style.border = '1px solid var(--err, #eb5757)';
           portInput.style.borderColor = '';
-          banner.innerHTML = `<span style="color:#ff8080; font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Port ${val} is currently bound by <strong>${cName}</strong>, which will be stopped and replaced.`;
+          banner.innerHTML = `<span style="color:var(--lt-t-ff8080ff, #ff8080); font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Port ${val} is currently bound by <strong>${cName}</strong>, which will be stopped and replaced.`;
           if (deployConfirmBtn) {
             deployConfirmBtn.disabled = false;
             deployConfirmBtn.style.opacity = '1';
@@ -2058,66 +2058,66 @@ export async function openDockerPruneModal() {
           <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:18px;">🧹</span>
-              <span style="font-weight:700; color:#fff; font-size:13px;">Docker Storage Prune & Cleanup</span>
+              <span style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13px;">Docker Storage Prune & Cleanup</span>
             </div>
             <button class="win-btn close-btn" id="dpm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-            <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
+            <div style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.4;">
               Reclaim host storage space by pruning unused Docker resources. Safe for running containers.
             </div>
 
             <!-- Live Disk Usage Breakdown -->
             <div id="dpm-df-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px;">
-              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
+              <div style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 10px; border-radius:6px; text-align:center;">
                 <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Images</div>
-                <div id="dpm-df-images" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
+                <div id="dpm-df-images" style="font-size:12.5px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
               </div>
-              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
+              <div style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 10px; border-radius:6px; text-align:center;">
                 <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Containers</div>
-                <div id="dpm-df-containers" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
+                <div id="dpm-df-containers" style="font-size:12.5px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
               </div>
-              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:6px; text-align:center;">
+              <div style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 10px; border-radius:6px; text-align:center;">
                 <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Volumes</div>
-                <div id="dpm-df-volumes" style="font-size:12.5px; font-weight:700; color:#fff; margin-top:2px;">Loading...</div>
+                <div id="dpm-df-volumes" style="font-size:12.5px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
               </div>
-              <div style="background:rgba(0,240,255,0.06); border:1px solid rgba(0,240,255,0.2); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:11px; color:var(--accent-cyan, #00f0ff); text-transform:uppercase; font-weight:700;">Reclaimable</div>
+              <div style="background:var(--lt-b-00f0ff0f, rgba(0,240,255,0.06)); border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2)); padding:8px 10px; border-radius:6px; text-align:center;">
+                <div style="font-size:11px; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); text-transform:uppercase; font-weight:700;">Reclaimable</div>
                 <div id="dpm-df-reclaimable" style="font-size:12.5px; font-weight:800; color:var(--ok2, #25c2a0); margin-top:2px;">--</div>
               </div>
             </div>
 
             <!-- Prune Options -->
-            <div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:12px; display:flex; flex-direction:column; gap:10px;">
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+            <div style="background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-containers" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Stopped Containers</strong>
                   <div style="font-size:11px; color:var(--muted);">Deletes all exited, stopped, and dead containers.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-images" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Dangling Images</strong>
                   <div style="font-size:11px; color:var(--muted);">Removes untagged &lt;none&gt; build layers and intermediate images.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-all-images" style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune ALL Unused Images</strong>
                   <div style="font-size:11px; color:var(--muted);">Removes images no container uses, running or stopped. Images of stopped containers (such as update rollbacks) are kept.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-volumes" style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Unused Local Volumes</strong>
                   <div style="font-size:11px; color:var(--warn, #f5a623);">Caution: Removes local anonymous volumes not mounted by containers.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:#e2e8f0; cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-buildcache" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Build Cache & Unused Networks</strong>
@@ -2137,7 +2137,7 @@ export async function openDockerPruneModal() {
               <div class="zn-muted" id="dpm-freed"></div>
             </div>
           </div>
-          <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+          <div style="padding:10px 16px; border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:space-between; align-items:center; background:var(--lt-b-00000033, rgba(0,0,0,0.2));">
             <button class="btn-pill-toggle" id="dpm-cancel-btn">Cancel</button>
             <button class="btn-pill-toggle is-primary" id="dpm-confirm-btn">
               🧹 Run Prune & Reclaim Storage
@@ -2383,23 +2383,23 @@ export async function openAppSourcesModal() {
           <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span style="font-size:18px;">🌐</span>
-              <span style="font-weight:700; color:#fff; font-size:13px;">App Template Sources</span>
+              <span style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13px;">App Template Sources</span>
             </div>
             <button class="win-btn close-btn" id="asm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
-            <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
+            <div style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.4;">
               Expand your App Catalog with external Portainer v2/v3 or custom JSON template repositories.
             </div>
 
             <!-- Quick Add Preset Banner -->
             <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(37,194,160,0.08)); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
               <div>
-                <div style="font-size:12px; font-weight:700; color:#fff; display:flex; align-items:center; gap:6px;">
+                <div style="font-size:12px; font-weight:700; color:var(--lt-t-ffffffff, #fff); display:flex; align-items:center; gap:6px;">
                   <span>⭐ Lissy93 Portainer Templates</span>
                   <span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
                 </div>
-                <div style="font-size:11px; color:#94a3b8; margin-top:2px;">
+                <div style="font-size:11px; color:var(--lt-t-94a3b8ff, #94a3b8); margin-top:2px;">
                   Comprehensive community catalog of self-hosted homelab applications, web tools, and stacks.
                 </div>
               </div>
@@ -2409,8 +2409,8 @@ export async function openAppSourcesModal() {
             </div>
 
             <!-- Add Custom Source Form -->
-            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:10px;">
-              <div style="font-size:11px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Add Custom Template Source</div>
+            <div style="background:var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+              <div style="font-size:11px; font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">Add Custom Template Source</div>
               <div style="display:grid; grid-template-columns:1fr 2fr auto; gap:8px; align-items:end;">
                 <div>
                   <label for="asm-input-name" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
@@ -2439,7 +2439,7 @@ export async function openAppSourcesModal() {
               </div>
             </div>
           </div>
-          <div style="padding:10px 16px; border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:flex-end; align-items:center; background:rgba(0,0,0,0.2);">
+          <div style="padding:10px 16px; border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:flex-end; align-items:center; background:var(--lt-b-00000033, rgba(0,0,0,0.2));">
             <button class="btn-pill-toggle" id="asm-done-btn">Done</button>
           </div>
         </div>
@@ -2576,24 +2576,24 @@ async function refreshSourcesUI() {
       const statusBadge = src.status === 'ok'
         ? `<span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.15); color:var(--accent);">✓ Synced (${formatRelativeTime(src.last_synced)})</span>`
         : (src.status === 'error'
-          ? `<span class="ci-badge" style="font-size:11px; background:rgba(239,68,68,0.15); color:#fca5a5;" title="${escapeHtml(src.error || 'Sync failed')}">⚠️ Error</span>`
-          : `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:#38bdf8;">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
+          ? `<span class="ci-badge" style="font-size:11px; background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5);" title="${escapeHtml(src.error || 'Sync failed')}">⚠️ Error</span>`
+          : `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:var(--lt-t-38bdf8ff, #38bdf8);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
 
       const toggleBtnClass = isEnabled ? 'btn-pill-toggle active' : 'btn-pill-toggle';
       const toggleText = isEnabled ? 'Enabled' : 'Disabled';
 
       return `
-        <div class="asm-source-card" data-sourceid="${escapeHtml(src.id)}" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div class="asm-source-card" data-sourceid="${escapeHtml(src.id)}" style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
           <div style="overflow:hidden; flex:1;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <strong style="font-size:12px; color:#fff;">${escapeHtml(src.name)}</strong>
-              <span class="ci-badge" style="font-size:11px; background:rgba(255,255,255,0.06); color:#cbd5e1;">${src.item_count || 0} apps</span>
+              <strong style="font-size:12px; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(src.name)}</strong>
+              <span class="ci-badge" style="font-size:11px; background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color:var(--lt-t-cbd5e1ff, #cbd5e1);">${src.item_count || 0} apps</span>
               ${statusBadge}
             </div>
             <div style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
               ${escapeHtml(src.url)}
             </div>
-            ${src.error ? `<div style="font-size:11px; color:#fca5a5; margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
+            ${src.error ? `<div style="font-size:11px; color:var(--lt-t-fca5a5ff, #fca5a5); margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
           </div>
           <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
             <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:11px; padding:3px 8px; cursor:pointer;">
@@ -2756,7 +2756,7 @@ export function openSideloadAppModal() {
         showToast(t('toast.failed_to_inspect_manifest', 'Failed to inspect manifest: {error}', { error: err.message }), 'error');
         if (resultBox) {
           resultBox.style.display = 'block';
-          resultBox.innerHTML = `<div style="color:var(--alert, #ef4444); font-size:12px;">Inspection Failed: ${escapeHtml(err.message)}</div>`;
+          resultBox.innerHTML = `<div style="color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:12px;">Inspection Failed: ${escapeHtml(err.message)}</div>`;
         }
       } finally {
         btnInspect.disabled = false;
@@ -2800,17 +2800,17 @@ function renderSideloadInspection(app, rating, flags, container) {
   }
 
   const flagsHtml = (flags && flags.length > 0)
-    ? `<div style="margin-top:8px; font-size:11px; background:rgba(0,0,0,0.3); border-radius:4px; padding:6px 10px;">
+    ? `<div style="margin-top:8px; font-size:11px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border-radius:4px; padding:6px 10px;">
         <div style="font-weight:700; color:${badgeColor}; margin-bottom:4px;">Security Audit Findings:</div>
-        <ul style="margin:0; padding-left:16px; color:#cbd5e1;">
+        <ul style="margin:0; padding-left:16px; color:var(--lt-t-cbd5e1ff, #cbd5e1);">
           ${flags.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}
         </ul>
       </div>`
-    : `<div style="margin-top:8px; font-size:11px; color:#4ade80;">✓ Zero high-privilege risk flags detected. Standard isolated container sandbox.</div>`;
+    : `<div style="margin-top:8px; font-size:11px; color:var(--lt-t-4ade80ff, #4ade80);">✓ Zero high-privilege risk flags detected. Standard isolated container sandbox.</div>`;
 
   container.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <div style="font-weight:700; font-size:13px; color:#fff;">${escapeHtml(app.name)}</div>
+      <div style="font-weight:700; font-size:13px; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(app.name)}</div>
       <span class="ci-badge" style="font-size:11px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
     </div>
     <div style="font-size:11px; color:var(--muted); line-height:1.4;">

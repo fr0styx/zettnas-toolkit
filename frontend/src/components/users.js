@@ -278,19 +278,19 @@ export async function loadUsersList() {
         : 'Unlimited';
 
       return `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s ease;">
+        <tr style="border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); transition: background 0.15s ease;">
           <td style="padding: 12px; display:flex; align-items:center; gap: 10px;">
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size: var(--zn-fs-sm); border: 1px solid rgba(255,255,255,0.2);">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size: var(--zn-fs-sm); border: 1px solid var(--lt-r-ffffff33, rgba(255,255,255,0.2));">
               ${escapeHtml(letter)}
             </div>
             <div>
-              <div style="font-weight:700; color:#fff; font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(14,165,233,0.2); color:#38bdf8; padding:2px 6px; border-radius:4px; margin-left:4px;">YOU</span>' : ''}</div>
+              <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(14,165,233,0.2); color:var(--lt-t-38bdf8ff, #38bdf8); padding:2px 6px; border-radius:4px; margin-left:4px;">YOU</span>' : ''}</div>
               <div style="font-size: var(--zn-fs-xs); color:var(--muted);">@${escapeHtml(u.username)}</div>
             </div>
           </td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#cbd5e1;">${escapeHtml(u.email || '--')}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--lt-t-cbd5e1ff, #cbd5e1);">${escapeHtml(u.email || '--')}</td>
           <td style="padding: 12px;">
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color:#fff;">
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff);">
               ${escapeHtml(formatRole(u.role_id))}
             </span>
           </td>
@@ -304,7 +304,7 @@ export async function loadUsersList() {
               ${isMfa ? '🛡️ Enabled' : '⚪ Off'}
             </span>
           </td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color: #94a3b8;">${quotaStr}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color: var(--lt-t-94a3b8ff, #94a3b8);">${quotaStr}</td>
           <td style="padding: 12px; text-align:right;">
             <div style="display:inline-flex; gap: 6px;">
               <button class="suite-toolkit-btn sm btn-edit-user" data-id="${u.id}" title="${t('ui.edit_user', 'Edit User')}">✏️</button>
@@ -590,15 +590,15 @@ export async function loadSessionsList() {
       const isCurrent = !!s.is_current;
 
       return `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
-          <td style="padding: 12px; font-weight:700; color:#fff;">
+        <tr style="border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
+          <td style="padding: 12px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">
             ${isCurrent ? '💻 Current Browser' : '🌐 Remote Device'}
             ${isCurrent ? '<span style="font-size: var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">THIS DEVICE</span>' : ''}
             <div style="font-size: var(--zn-fs-xs); font-weight:normal; color:var(--muted); margin-top:2px;">${escapeHtml(s.user_agent || 'Unknown Browser')}</div>
           </td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#cbd5e1; font-family:monospace;">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#94a3b8;">${createdStr}</td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:#94a3b8;">${lastStr}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--lt-t-cbd5e1ff, #cbd5e1); font-family:monospace;">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--lt-t-94a3b8ff, #94a3b8);">${createdStr}</td>
+          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--lt-t-94a3b8ff, #94a3b8);">${lastStr}</td>
           <td style="padding: 12px; text-align:right;">
             ${!isCurrent ? `
               <button class="suite-toolkit-btn sm danger btn-revoke-session" data-id="${s.id}">Revoke</button>
@@ -735,7 +735,7 @@ async function start2FASetup() {
             const codesContainer = document.getElementById('mfa-recovery-codes-list');
             if (codesContainer && Array.isArray(verifyData.recovery_codes)) {
               codesContainer.innerHTML = verifyData.recovery_codes.map((rc) => `
-                <div style="background:rgba(0,0,0,0.4); padding:6px 10px; border-radius:6px; font-family:monospace; font-size: var(--zn-fs-sm); font-weight:700; color:#38bdf8; text-align:center; border:1px solid rgba(255,255,255,0.1);">
+                <div style="background:var(--lt-b-00000066, rgba(0,0,0,0.4)); padding:6px 10px; border-radius:6px; font-family:monospace; font-size: var(--zn-fs-sm); font-weight:700; color:var(--lt-t-38bdf8ff, #38bdf8); text-align:center; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1));">
                   ${escapeHtml(rc)}
                 </div>
               `).join('');

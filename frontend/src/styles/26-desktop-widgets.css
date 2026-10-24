@@ -97,20 +97,20 @@
   max-width: 270px;
   box-sizing: border-box;
   flex-shrink: 0;
-  background: rgba(13, 20, 30, 0.65);
+  background: var(--lt-b-0d141ea6, rgba(13, 20, 30, 0.65));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   padding: 14px 16px;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
 }
 
 .desktop-widget:hover {
-  border-color: rgba(0, 240, 255, 0.25);
+  border-color: var(--lt-r-00f0ff40, rgba(0, 240, 255, 0.25));
   box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55), 0 0 15px rgba(0, 240, 255, 0.08);
 }
 
@@ -122,7 +122,7 @@
 .desktop-widget[role="button"]:hover,
 .desktop-widget.clickable:hover {
   transform: translateY(-2px);
-  border-color: var(--brand, rgba(0, 240, 255, 0.45));
+  border-color: var(--brand, var(--lt-r-00f0ff73, rgba(0, 240, 255, 0.45)));
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.15);
 }
 
@@ -138,7 +138,7 @@
 }
 
 body.theme-yak .desktop-widget {
-  background: rgba(17, 26, 20, 0.7);
+  background: var(--lt-b-111a14b2, rgba(17, 26, 20, 0.7));
   border-color: rgba(212, 138, 55, 0.2);
 }
 body.theme-yak .desktop-widget:hover {
@@ -153,15 +153,15 @@ body.theme-yak .desktop-widget.clickable:hover {
 
 /* Glass Transparency Themes */
 #desktop-widgets-container.glass-subtle .desktop-widget {
-  background: rgba(13, 20, 30, 0.4);
+  background: var(--lt-b-0d141e66, rgba(13, 20, 30, 0.4));
   backdrop-filter: blur(8px);
 }
 #desktop-widgets-container.glass-standard .desktop-widget {
-  background: rgba(13, 20, 30, 0.65);
+  background: var(--lt-b-0d141ea6, rgba(13, 20, 30, 0.65));
   backdrop-filter: blur(16px);
 }
 #desktop-widgets-container.glass-solid .desktop-widget {
-  background: rgba(13, 20, 30, 0.88);
+  background: var(--lt-b-0d141ee0, rgba(13, 20, 30, 0.88));
   backdrop-filter: blur(24px);
 }
 
@@ -174,7 +174,7 @@ body.theme-yak .desktop-widget.clickable:hover {
 .widget-title {
   font-size: 10.5px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   display: flex;
@@ -202,7 +202,7 @@ body.theme-yak .desktop-widget.clickable:hover {
 .cal-weekday {
   font-size: 9.5px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--lt-t-64748bff, #64748b);
   padding: 2px 0;
   text-transform: uppercase;
   user-select: none;
@@ -212,15 +212,15 @@ body.theme-yak .desktop-widget.clickable:hover {
   font-weight: 600;
   padding: 3px 0;
   border-radius: 4px;
-  color: #e2e8f0;
+  color: var(--lt-t-e2e8f0ff, #e2e8f0);
   user-select: none;
   transition: all 0.15s ease;
 }
 .cal-day:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
 }
 .cal-day.cal-other-month {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--lt-t-ffffff33, rgba(255, 255, 255, 0.2));
 }
 .cal-day.cal-today {
   background: var(--brand, #00f0ff);
@@ -236,7 +236,7 @@ body.theme-yak .cal-day.cal-today {
 
 /* Calendar Holiday Highlighting */
 .cal-day.cal-holiday {
-  color: #fbd38d;
+  color: var(--lt-t-fbd38dff, #fbd38d);
   font-weight: 700;
   position: relative;
   cursor: pointer;
@@ -256,7 +256,7 @@ body.theme-yak .cal-day.cal-today {
 }
 .cal-day.cal-holiday:hover {
   background: rgba(246, 173, 85, 0.22);
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(246, 173, 85, 0.4);
   transform: scale(1.08);
   z-index: 3;
@@ -271,11 +271,11 @@ body.theme-yak .cal-day.cal-today {
   box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
 }
 .cal-day.cal-holiday.cal-today::after {
-  background: #0b1118;
+  background: var(--lt-b-0b1118ff, #0b1118);
   box-shadow: none;
 }
 .cal-day.cal-other-month.cal-holiday {
-  color: rgba(251, 211, 141, 0.35);
+  color: var(--lt-t-fbd38d59, rgba(251, 211, 141, 0.35));
 }
 .cal-day.cal-other-month.cal-holiday::after {
   background: rgba(246, 173, 85, 0.35);
@@ -283,7 +283,7 @@ body.theme-yak .cal-day.cal-today {
 }
 
 body.theme-yak .cal-day.cal-holiday {
-  color: #fed7aa;
+  color: var(--lt-t-fed7aaff, #fed7aa);
 }
 body.theme-yak .cal-day.cal-holiday::after {
   background: #fb923c;
@@ -299,12 +299,12 @@ body.theme-yak .cal-day.cal-holiday:hover {
   position: fixed;
   pointer-events: none;
   z-index: 10000;
-  background: rgba(13, 20, 30, 0.96);
+  background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
   border: 1px solid rgba(246, 173, 85, 0.5);
   border-radius: 7px;
   padding: 6px 10px;
   font-size: 11px;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 14px rgba(246, 173, 85, 0.25);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -331,13 +331,13 @@ body.theme-yak .cal-day.cal-holiday:hover {
   line-height: 1;
 }
 .cal-holiday-tooltip-name {
-  color: #fbd38d;
+  color: var(--lt-t-fbd38dff, #fbd38d);
   font-weight: 700;
   font-size: 11.5px;
   letter-spacing: 0.2px;
 }
 .cal-holiday-tooltip-sub {
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   font-size: 11px;
   margin-top: 1px;
 }
@@ -346,10 +346,10 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .cal-glance-bar {
   margin-top: 6px;
   padding-top: 5px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   font-size: 11px;
   font-weight: 600;
-  color: #fbd38d;
+  color: var(--lt-t-fbd38dff, #fbd38d);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -405,7 +405,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .modal-calendar-grid .cal-weekday {
   font-size: 11px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   padding: 4px 0;
   text-transform: uppercase;
 }
@@ -414,25 +414,25 @@ body.theme-yak .cal-day.cal-holiday:hover {
   font-weight: 600;
   padding: 8px 0;
   border-radius: 6px;
-  color: #e2e8f0;
+  color: var(--lt-t-e2e8f0ff, #e2e8f0);
   cursor: pointer;
   position: relative;
   transition: all 0.15s ease;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--lt-b-ffffff08, rgba(255, 255, 255, 0.03));
   border: 1px solid transparent;
 }
 .modal-calendar-grid .cal-day:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
+  border-color: var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15));
 }
 .modal-calendar-grid .cal-day.cal-other-month {
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--lt-t-ffffff40, rgba(255, 255, 255, 0.25));
   background: transparent;
 }
 .modal-calendar-grid .cal-day.cal-today {
   border-color: var(--brand, #00f0ff);
-  color: var(--brand, #00f0ff);
-  background: rgba(0, 240, 255, 0.08);
+  color: var(--lt-ink-brand, var(--brand, #00f0ff));
+  background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08));
   font-weight: 800;
 }
 .modal-calendar-grid .cal-day.cal-selected {
@@ -453,15 +453,15 @@ body.theme-yak .cal-day.cal-holiday:hover {
   font-size: 10.5px;
   font-weight: 600;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  color: #94a3b8;
+  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .tz-region-pill:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
+  color: var(--lt-t-ffffffff, #fff);
 }
 .tz-region-pill.active {
   background: var(--brand, #00f0ff);
@@ -480,12 +480,12 @@ body.theme-yak .cal-day.cal-holiday:hover {
   border: 1px solid transparent;
 }
 .tz-item-row:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
+  border-color: var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
 }
 .tz-item-row.selected {
-  background: rgba(0, 240, 255, 0.12);
-  border-color: rgba(0, 240, 255, 0.35);
+  background: var(--lt-b-00f0ff1f, rgba(0, 240, 255, 0.12));
+  border-color: var(--lt-r-00f0ff59, rgba(0, 240, 255, 0.35));
 }
 
 /* Filter pills in Agenda */
@@ -494,15 +494,15 @@ body.theme-yak .cal-day.cal-holiday:hover {
   font-size: 10.5px;
   font-weight: 600;
   border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
-  color: #94a3b8;
+  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
+  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .cal-filter-pill:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--lt-t-ffffffff, #fff);
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
 }
 .cal-filter-pill.active {
   background: var(--brand, #00f0ff);
@@ -517,21 +517,21 @@ body.theme-yak .cal-day.cal-holiday:hover {
   align-items: flex-start;
   gap: 12px;
   padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-00000040, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   transition: all 0.15s ease;
 }
 .cal-agenda-card:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
+  border-color: var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14));
 }
 .cal-agenda-card.completed {
   opacity: 0.55;
 }
 .cal-agenda-card.completed .cal-agenda-title {
   text-decoration: line-through;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
 }
 
 /* Weather City Autocomplete Dropdown */
@@ -542,10 +542,10 @@ body.theme-yak .cal-day.cal-holiday:hover {
   right: 0;
   max-height: 220px;
   overflow-y: auto;
-  background: rgba(13, 20, 30, 0.96);
+  background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
   border-radius: 8px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 15px rgba(0, 240, 255, 0.1);
   z-index: 1000;
@@ -563,8 +563,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
 }
 .weather-city-item:hover,
 .weather-city-item.active {
-  background: rgba(0, 240, 255, 0.15);
-  color: #fff;
+  background: var(--lt-b-00f0ff26, rgba(0, 240, 255, 0.15));
+  color: var(--lt-t-ffffffff, #fff);
 }
 body.theme-yak .weather-city-item:hover,
 body.theme-yak .weather-city-item.active {
@@ -573,20 +573,20 @@ body.theme-yak .weather-city-item.active {
 .weather-city-name {
   font-size: 12.5px;
   font-weight: 700;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
 }
 .weather-city-sub {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   margin-top: 1px;
 }
 .weather-city-badge {
   font-size: 10px;
   font-weight: 700;
   padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 4px;
-  color: #cbd5e1;
+  color: var(--lt-t-cbd5e1ff, #cbd5e1);
 }
 
 /* Toggle Switch Component */
@@ -615,8 +615,8 @@ body.theme-yak .weather-city-item.active {
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--lt-b-00000047, rgba(0, 0, 0, 0.28));
+  border: 1px solid var(--lt-r-ffffff12, rgba(255, 255, 255, 0.07));
   border-radius: 8px;
   cursor: grab;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
@@ -628,8 +628,8 @@ body.theme-yak .weather-city-item.active {
 }
 
 .widget-sortable-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
+  border-color: var(--lt-r-ffffff2e, rgba(255, 255, 255, 0.18));
 }
 
 .widget-sortable-left {
@@ -640,7 +640,7 @@ body.theme-yak .weather-city-item.active {
 
 .widget-drag-handle {
   cursor: grab;
-  color: #64748b;
+  color: var(--lt-t-64748bff, #64748b);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -650,18 +650,18 @@ body.theme-yak .weather-city-item.active {
 }
 
 .widget-sortable-item:hover .widget-drag-handle {
-  color: #cbd5e1;
+  color: var(--lt-t-cbd5e1ff, #cbd5e1);
 }
 
 .widget-drag-handle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--accent-cyan, #00f0ff);
+  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
+  color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
 }
 
 .widget-sortable-item.dragging {
   opacity: 0.45;
   border: 1px dashed var(--accent-cyan, #00f0ff);
-  background: rgba(0, 240, 255, 0.06);
+  background: var(--lt-b-00f0ff0f, rgba(0, 240, 255, 0.06));
 }
 
 .widget-sortable-item.drag-over-top {
@@ -685,7 +685,7 @@ body.theme-yak .widget-sortable-item.drag-over-bottom {
   border-bottom-color: var(--accent-yak, #d48a37) !important;
 }
 body.theme-yak .widget-drag-handle:hover {
-  color: var(--accent-yak, #d48a37);
+  color: var(--accent-yak, var(--lt-t-d48a37ff, #d48a37));
 }
 
 /* Notification Center Draggable Window */
@@ -731,7 +731,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 #notif-center-panel .notif-center-item:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)) !important;
 }
 
 #notif-center-panel .notif-filter-btn {
@@ -747,8 +747,8 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 #event-detail-copy-btn:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
+  background: var(--lt-b-ffffff24, rgba(255, 255, 255, 0.14)) !important;
+  border-color: var(--lt-r-ffffff40, rgba(255, 255, 255, 0.25)) !important;
 }
 
 #event-detail-context-btn:hover {
@@ -756,7 +756,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 #event-detail-close-btn:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: var(--lt-b-ffffff26, rgba(255, 255, 255, 0.15)) !important;
 }
 
 /* Checked (read) notification events - Dimmed Effect */
@@ -768,7 +768,7 @@ body.theme-yak #notif-center-resizer:hover {
 
 .notif-center-item.notif-event-checked:hover {
   opacity: 0.95 !important;
-  background: rgba(255, 255, 255, 0.07) !important;
+  background: var(--lt-b-ffffff12, rgba(255, 255, 255, 0.07)) !important;
 }
 
 .notif-center-item.notif-event-checked .notif-center-title {
@@ -781,7 +781,7 @@ body.theme-yak #notif-center-resizer:hover {
 
 .notif-center-item:not(.notif-event-checked) {
   opacity: 1 !important;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
   border-left: 2.5px solid var(--brand, #0ea5e9);
 }
 
@@ -800,9 +800,9 @@ body.theme-yak #notif-center-resizer:hover {
 
 /* Dock Item Context Menu */
 .dock-context-menu {
-  background: rgba(20, 24, 32, 0.96) !important;
+  background: var(--lt-b-141820f5, rgba(20, 24, 32, 0.96)) !important;
   backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12)) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
   border-radius: 8px !important;
   padding: 6px !important;
@@ -819,7 +819,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 .dock-context-menu .ctx-item:hover {
-  background: rgba(255, 255, 255, 0.09) !important;
+  background: var(--lt-b-ffffff17, rgba(255, 255, 255, 0.09)) !important;
 }
 
 /* Fan Preset Modals */
@@ -834,7 +834,7 @@ body.theme-yak #notif-center-resizer:hover {
 
 #fan-preset-cancel-btn:hover,
 #fan-delete-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.14) !important;
+  background: var(--lt-b-ffffff24, rgba(255, 255, 255, 0.14)) !important;
 }
 
 #fan-preset-submit-btn:hover,

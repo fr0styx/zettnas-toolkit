@@ -10,8 +10,8 @@
   margin: 16px 0;
   padding: 18px 20px;
   border-radius: 12px;
-  background: rgba(16, 25, 40, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-10192873, rgba(16, 25, 40, 0.45));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(16px);
   position: relative;
   transition: all 0.3s ease;
@@ -22,8 +22,8 @@
   min-width: 140px;
   padding: 16px 14px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--lt-b-ffffff08, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--lt-r-ffffff12, rgba(255, 255, 255, 0.07));
   text-align: center;
   position: relative;
   transition: all 0.25s ease;
@@ -33,8 +33,8 @@
 }
 
 .ups-flow-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
+  border-color: var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15));
 }
 
 .ups-card-status-dot {
@@ -79,7 +79,7 @@
 .ups-card-val {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text, #ffffff);
+  color: var(--text, var(--lt-t-ffffffff, #ffffff));
   font-variant-numeric: tabular-nums;
   margin-bottom: 4px;
 }
@@ -182,13 +182,13 @@
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  color: var(--text, #ffffff);
+  color: var(--text, var(--lt-t-ffffffff, #ffffff));
 }
 
 /* Outage / Emergency State */
 .ups-power-flow-container.on-battery {
   border-color: rgba(245, 166, 35, 0.4);
-  background: rgba(40, 28, 10, 0.45);
+  background: var(--lt-b-281c0a73, rgba(40, 28, 10, 0.45));
 }
 
 .ups-power-flow-container.on-battery #ups-card-grid {
@@ -245,7 +245,7 @@
 
 .ups-eb-desc {
   font-size: 12px;
-  color: var(--text, #ffffff);
+  color: var(--text, var(--lt-t-ffffffff, #ffffff));
 }
 
 .ups-countdown-badge {
@@ -278,15 +278,15 @@
   text-align: center;
   padding: 10px 8px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .ups-mode-box strong {
   font-size: 12px;
-  color: var(--text, #ffffff);
+  color: var(--text, var(--lt-t-ffffffff, #ffffff));
   margin-bottom: 2px;
 }
 
@@ -302,7 +302,7 @@
 }
 
 .ups-mode-box:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
 }
 
 .slider-val-badge {
@@ -326,8 +326,8 @@
 }
 
 .input-modern {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--lt-b-00000066, rgba(0, 0, 0, 0.4));
+  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
   border-radius: 8px;
   color: var(--fg, #eaf1f8);
   font-size: 13px;
@@ -341,18 +341,18 @@
 }
 
 .input-modern:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(0, 0, 0, 0.55);
+  border-color: var(--lt-r-ffffff38, rgba(255, 255, 255, 0.22));
+  background: var(--lt-b-0000008c, rgba(0, 0, 0, 0.55));
 }
 
 .input-modern:focus {
   border-color: var(--ok2, #25c2a0);
-  background: #0b131e;
+  background: var(--lt-b-0b131eff, #0b131e);
   box-shadow: 0 0 0 3px rgba(37, 194, 160, 0.22);
 }
 
 .input-modern::placeholder {
-  color: rgba(148, 163, 184, 0.45);
+  color: var(--lt-t-94a3b873, rgba(148, 163, 184, 0.45));
   font-weight: 400;
 }
 

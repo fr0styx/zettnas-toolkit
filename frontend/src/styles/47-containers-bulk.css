@@ -15,10 +15,10 @@ tr.docker-row-selected {
   align-items: center;
   gap: 12px;
   padding: 8px 18px;
-  background: rgba(15, 23, 42, 0.94);
+  background: var(--lt-b-0f172af0, rgba(15, 23, 42, 0.94));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
   border-radius: 9999px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 18px rgba(14, 165, 233, 0.25);
   z-index: 50;
@@ -39,9 +39,9 @@ tr.docker-row-selected {
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--lt-t-f1f5f9ff, #f1f5f9);
   padding-right: 10px;
-  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
 }
 
 .docker-floating-bulk-bar .bulk-bar-count {
@@ -53,7 +53,7 @@ tr.docker-row-selected {
   padding: 0 6px;
   border-radius: 10px;
   background: var(--brand, #0ea5e9);
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   font-size: 11px;
   font-weight: 700;
 }
@@ -72,29 +72,29 @@ tr.docker-row-selected {
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
-  color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--lt-t-e2e8f0ff, #e2e8f0);
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .docker-floating-bulk-bar .btn-bulk-action:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
+  background: var(--lt-b-ffffff29, rgba(255, 255, 255, 0.16));
+  color: var(--lt-t-ffffffff, #fff);
   transform: translateY(-1px);
 }
 
 .docker-floating-bulk-bar .btn-bulk-delete:hover {
   background: rgba(239, 68, 68, 0.25);
   border-color: rgba(239, 68, 68, 0.5);
-  color: #fca5a5;
+  color: var(--lt-t-fca5a5ff, #fca5a5);
 }
 
 .docker-floating-bulk-bar .btn-bulk-cancel {
   padding: 4px 8px;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
 }
 
 
@@ -183,7 +183,7 @@ tr.docker-row-selected {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: #080c13;
+    background: var(--lt-b-080c13ff, #080c13);
   }
 
   /* One horizontal scrollbar: keep the synced bar under the table, hide the one
@@ -219,7 +219,7 @@ tr.docker-row-selected {
 
 /* replaces inline onmouseover handlers (FE-06) */
 [data-hover-bg]:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05)) !important;
 }
 
 /* "Can't reach ZettNAS" banner (FE-16) */
@@ -231,8 +231,8 @@ tr.docker-row-selected {
   z-index: 2147483000;
   padding: 8px 16px;
   border-radius: 999px;
-  background: #7f1d1d;
-  color: #fff;
+  background: var(--lt-b-7f1d1dff, #7f1d1d);
+  color: var(--lt-t-ffffffff, #fff);
   font-size: 13px;
   font-weight: 600;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
@@ -244,16 +244,16 @@ tr.docker-row-selected {
 
 /* Single sign-on button on the login screen (M6) */
 .login-sso-btn { width: 100%; padding: 11px; font-size: 13px; font-weight: 700; margin-top: 10px; background: rgba(56,189,248,0.12); }
-.login-sso-error { margin: 10px 0 0; font-size: 12px; color: #fca5a5; }
+.login-sso-error { margin: 10px 0 0; font-size: 12px; color: var(--lt-t-fca5a5ff, #fca5a5); }
 
 /* Docker cleanup progress */
-.dpm-bar { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.dpm-bar { height: 8px; border-radius: 999px; background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)); overflow: hidden; }
 .dpm-bar-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); transition: width 0.4s ease; }
 .dpm-progress-pct { font-size: 12px; color: var(--zn-text-strong); font-variant-numeric: tabular-nums; }
 .dpm-step-icon { width: 14px; text-align: center; color: var(--zn-text-muted); }
 .dpm-step.is-done .dpm-step-icon { color: var(--ok, #33d17a); }
 .dpm-step.is-error .dpm-step-icon { color: var(--crit, #f0553b); }
-.dpm-step.is-running .dpm-step-icon { color: var(--brand, #0ea5e9); display: inline-block; animation: dpm-spin 1.2s linear infinite; }
+.dpm-step.is-running .dpm-step-icon { color: var(--lt-ink-brand, var(--brand, #0ea5e9)); display: inline-block; animation: dpm-spin 1.2s linear infinite; }
 @keyframes dpm-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .dpm-bar-fill { transition: none; }

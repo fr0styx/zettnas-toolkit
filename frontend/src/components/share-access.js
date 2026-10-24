@@ -13,7 +13,7 @@ function levelSelect(attrs, value, withInherit) {
   const opts = (withInherit ? ['inherit', ...LEVELS] : LEVELS)
     .map((l) => `<option value="${l}"${l === value ? ' selected' : ''}>${l}</option>`)
     .join('');
-  return `<select ${attrs} style="background:rgba(0,0,0,0.35); color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:4px; font-size:11px; padding:2px 4px;">${opts}</select>`;
+  return `<select ${attrs} style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); color:var(--lt-t-ffffffff, #fff); border:1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius:4px; font-size:11px; padding:2px 4px;">${opts}</select>`;
 }
 
 export function buildShareAccessHtml(data, users) {
@@ -23,7 +23,7 @@ export function buildShareAccessHtml(data, users) {
     const cells = userNames
       .map((u) => `<td style="padding:4px 8px;">${levelSelect(`data-share="${escapeHtml(s.name)}" data-user="${escapeHtml(u)}"`, (s.users || {})[u] || 'inherit', true)}</td>`)
       .join('');
-    return `<tr style="border-top:1px solid rgba(255,255,255,0.06);">
+    return `<tr style="border-top:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
       <td style="padding:6px 8px; font-weight:700;" title="${escapeHtml(s.path)}">${escapeHtml(s.name)}</td>
       <td style="padding:4px 8px;">${levelSelect(`data-share-default="${escapeHtml(s.name)}"`, s.default || 'inherit', true)}</td>
       ${cells}</tr>`;

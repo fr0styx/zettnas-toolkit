@@ -320,7 +320,7 @@ export function updateManagementTelemetry(stats) {
       if (stats.gpu.codecs.length > 0) {
         gpuCodecsEl.innerHTML = stats.gpu.codecs.map(c => `<span class="gpu-codec-tag">${escapeHtml(c)}</span>`).join('');
       } else {
-        gpuCodecsEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:rgba(255,255,255,0.1);">CPU Decode Only</span>`;
+        gpuCodecsEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--lt-r-ffffff1a, rgba(255,255,255,0.1));">CPU Decode Only</span>`;
       }
     }
   }
@@ -366,11 +366,11 @@ export function updateManagementTelemetry(stats) {
         npuFrameworksEl.innerHTML = stats.npu.frameworks
           .map(
             f =>
-              `<span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:#c084fc; border-color:rgba(168,85,247,0.25);">${escapeHtml(f)}</span>`
+              `<span class="gpu-codec-tag" style="background:rgba(168,85,247,0.12); color:var(--lt-t-c084fcff, #c084fc); border-color:rgba(168,85,247,0.25);">${escapeHtml(f)}</span>`
           )
           .join('');
       } else {
-        npuFrameworksEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:rgba(255,255,255,0.1);">CPU Fallback</span>`;
+        npuFrameworksEl.innerHTML = `<span class="gpu-codec-tag" style="color:var(--muted); border-color:var(--lt-r-ffffff1a, rgba(255,255,255,0.1));">CPU Fallback</span>`;
       }
     }
   }
@@ -868,21 +868,21 @@ export function initManagement() {
         const cpuRatio = tel?.cpu?.ratio ? `${tel.cpu.ratio}:1 Allocation` : 'Optimal';
 
         strip.innerHTML = `
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
+          <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 10px 14px;">
             <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">HYPERVISOR ENGINE</div>
             <div style="font-size: 13px; font-weight: 700; color: ${kvmColor}; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
               <span aria-hidden="true">⚡</span> <span>${escapeHtml(kvmBadge)}</span>
             </div>
           </div>
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
+          <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 10px 14px;">
             <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">MEMORY CEILING</div>
-            <div style="font-size: 13px; font-weight: 700; color: var(--accent-cyan, #0ea5e9); margin-top: 4px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); margin-top: 4px;">
               ${escapeHtml(headroom)}
             </div>
           </div>
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 14px;">
+          <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 10px 14px;">
             <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">vCPU OVERCOMMIT</div>
-            <div style="font-size: 13px; font-weight: 700; color: #fff; margin-top: 4px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); margin-top: 4px;">
               ${escapeHtml(cpuRatio)}
             </div>
           </div>
@@ -906,12 +906,12 @@ export function initManagement() {
             const osType = vm.os_family ? (vm.os_family.charAt(0).toUpperCase() + vm.os_family.slice(1)) : (vm.os_type || 'Linux');
 
             return `
-              <div class="mgmt-vm-card" data-vm-id="${escapeHtml(vm.id)}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;">
+              <div class="mgmt-vm-card" data-vm-id="${escapeHtml(vm.id)}" style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff12, rgba(255,255,255,0.07)); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 18px;">🖥️</span>
                     <div>
-                      <div style="font-weight: 700; font-size: 13px; color: #fff;">${escapeHtml(vm.name || vm.id)}</div>
+                      <div style="font-weight: 700; font-size: 13px; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(vm.name || vm.id)}</div>
                       <div style="font-size: 11px; color: var(--muted);">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
                     </div>
                   </div>
@@ -919,12 +919,12 @@ export function initManagement() {
                     ${escapeHtml(vm.state || 'stopped')}
                   </span>
                 </div>
-                <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05));">
                   ${isRunning
                     ? `<button class="btn-pill-toggle btn-vm-action-stop is-danger" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1;" title="${t('ui.stop_vm', 'Stop VM')}">⏹ Stop</button>`
                     : `<button class="btn-pill-toggle btn-vm-action-start" data-vm-id="${escapeHtml(vm.id)}" style="flex: 1; color: var(--ok2);" title="${t('ui.start_vm', 'Start VM')}">▶ Start</button>`
                   }
-                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex: 1; color: var(--accent-cyan);" title="${t('ui.open_web_console', 'Open Web Console')}">📺 Console</button>
+                  <button class="btn-pill-toggle btn-vm-action-console" data-vm-id="${escapeHtml(vm.id)}" data-vm-name="${escapeHtml(vm.name || vm.id)}" style="flex: 1; color: var(--lt-ink-brand, var(--accent-cyan));" title="${t('ui.open_web_console', 'Open Web Console')}">📺 Console</button>
                   <button class="btn-pill-toggle btn-vm-action-edit" data-vm-id="${escapeHtml(vm.id)}" title="${t('ui.edit_vm_config', 'Edit VM Config')}">⚙️</button>
                 </div>
               </div>
@@ -993,9 +993,9 @@ export function initManagement() {
 
       if (kvmBody && tel?.kvm) {
         kvmBody.innerHTML = `
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="font-weight: 700; font-size: 13px; color: #fff;">Hardware Virtualization Extension</div>
+              <div style="font-weight: 700; font-size: 13px; color: var(--lt-t-ffffffff, #fff);">Hardware Virtualization Extension</div>
               <span style="padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
                 ${escapeHtml(tel.kvm.badge || 'KVM')}
               </span>
@@ -1004,17 +1004,17 @@ export function initManagement() {
               ${escapeHtml(tel.kvm.details || 'Linux KVM hypervisor acceleration provides near bare-metal guest performance.')}
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 6px;">
-              <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
+              <div style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); padding: 8px 12px; border-radius: 6px;">
                 <div style="font-size: 11px; color: var(--muted);">CPU Host Threads</div>
-                <div style="font-size: 14px; font-weight: 700; color: #fff; margin-top: 2px;">${tel.cpu?.host_threads || 8} Threads</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); margin-top: 2px;">${tel.cpu?.host_threads || 8} Threads</div>
               </div>
-              <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
+              <div style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); padding: 8px 12px; border-radius: 6px;">
                 <div style="font-size: 11px; color: var(--muted);">vhost-net Acceleration</div>
                 <div style="font-size: 14px; font-weight: 700; color: var(--ok2); margin-top: 2px;">Supported</div>
               </div>
-              <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px;">
+              <div style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); padding: 8px 12px; border-radius: 6px;">
                 <div style="font-size: 11px; color: var(--muted);">Default Network Bridge</div>
-                <div style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-top: 2px;">br0 / virbr0</div>
+                <div style="font-size: 14px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan)); margin-top: 2px;">br0 / virbr0</div>
               </div>
             </div>
           </div>

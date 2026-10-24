@@ -419,13 +419,13 @@ export function openAddDesktopShortcutModal() {
     overlay.style.cssText = 'display:none; z-index:99999;';
 
     overlay.innerHTML = `
-      <div class="smart-modal-window" style="max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:rgba(15,23,42,0.92); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.14); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(0,240,255,0.12); overflow:hidden;">
+      <div class="smart-modal-window" style="max-width:580px; width:92%; max-height:85vh; display:flex; flex-direction:column; background:var(--lt-b-0f172aeb, rgba(15,23,42,0.92)); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid var(--lt-r-ffffff24, rgba(255,255,255,0.14)); border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 35px rgba(0,240,255,0.12); overflow:hidden;">
         <!-- Header -->
-        <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02);">
+        <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background:var(--lt-b-ffffff05, rgba(255,255,255,0.02));">
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:18px;">➕</span>
             <div>
-              <div style="font-size:14px; font-weight:700; color:#fff;">Add Desktop Shortcut</div>
+              <div style="font-size:14px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">Add Desktop Shortcut</div>
               <div style="font-size:11px; color:var(--muted);">Place quick-access shortcuts on your desktop workspace</div>
             </div>
           </div>
@@ -433,7 +433,7 @@ export function openAddDesktopShortcutModal() {
         </div>
 
         <!-- Tab Switcher -->
-        <div style="display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
           <button class="btn-pill-toggle active" id="tab-btn-system-shortcuts">📦 System Apps & Dashboards</button>
           <button class="btn-pill-toggle" id="tab-btn-custom-shortcut">🔗 Custom URL / Bookmark</button>
         </div>
@@ -446,15 +446,15 @@ export function openAddDesktopShortcutModal() {
         <!-- Body: Tab 2 Custom URL -->
         <div id="pane-custom-shortcut" style="padding:20px; display:none; flex-direction:column; gap:14px;">
           <div>
-            <label for="input-custom-shortcut-name" style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">Shortcut Name</label>
-            <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}" style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:#fff;">
+            <label for="input-custom-shortcut-name" style="font-size:11px; font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:4px;">Shortcut Name</label>
+            <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}" style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff);">
           </div>
           <div>
-            <label for="input-custom-shortcut-url" style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:4px;">Target URL</label>
-            <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.12); color:#fff; font-family:var(--font-mono, monospace);">
+            <label for="input-custom-shortcut-url" style="font-size:11px; font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:4px;">Target URL</label>
+            <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff); font-family:var(--font-mono, monospace);">
           </div>
           <div>
-            <label style="font-size:11px; font-weight:700; color:#cbd5e1; display:block; margin-bottom:6px;">Select Icon / Emoji</label>
+            <label style="font-size:11px; font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:6px;">Select Icon / Emoji</label>
             <div style="display:flex; flex-wrap:wrap; gap:6px;" id="custom-shortcut-emojis">
               ${['🌐', '🏠', '🎬', '🛡️', '📦', '⚡', '🔌', '🚀', '🎮', '🎵', '💾', '📊', '📡', '🛠️'].map((emoji, idx) => `
                 <button type="button" class="btn-emoji-chip ${idx === 0 ? 'active' : ''}" data-emoji="${emoji}" style="padding:6px 10px; font-size:16px; background:${idx === 0 ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${idx === 0 ? 'rgba(0,240,255,0.6)' : 'rgba(255,255,255,0.1)'}; border-radius:6px; cursor:pointer;">${emoji}</button>
@@ -564,21 +564,21 @@ function renderSystemShortcutsList(overlay) {
   container.innerHTML = SYSTEM_SHORTCUTS.map((s) => {
     const isActive = activeIds.has(s.id);
     return `
-      <div class="shortcut-system-card" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; gap:12px;">
+      <div class="shortcut-system-card" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:10px; gap:12px;">
         <div style="display:flex; align-items:center; gap:12px; min-width:0;">
-          <div style="width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(0,240,255,0.12) 0%, rgba(37,194,160,0.08) 100%); border:1px solid rgba(0,240,255,0.3); color:${s.color}; flex-shrink:0;">
+          <div style="width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--lt-b-00f0ff1f, rgba(0,240,255,0.12)) 0%, rgba(37,194,160,0.08) 100%); border:1px solid var(--lt-r-00f0ff4c, rgba(0,240,255,0.3)); color:${s.color}; flex-shrink:0;">
             <svg style="width:20px; height:20px; fill:currentColor;"><use href="${s.icon}"/></svg>
           </div>
           <div style="min-width:0;">
             <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:13px; font-weight:700; color:#fff;">${escapeHtml(s.name)}</span>
-              ${s.badge ? `<span style="font-size:11px; padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.08); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
+              <span style="font-size:13px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(s.name)}</span>
+              ${s.badge ? `<span style="font-size:11px; padding:1px 5px; border-radius:3px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
             </div>
             <div style="font-size:11px; color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.desc)}</div>
           </div>
         </div>
 
-        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:11px; font-weight:700; cursor:pointer; ${isActive ? 'color:#22c55e; border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:#38bdf8; border-color:rgba(56,189,248,0.4); background:rgba(14,165,233,0.12);'}">
+        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:11px; font-weight:700; cursor:pointer; ${isActive ? 'color:var(--lt-t-22c55eff, #22c55e); border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:var(--lt-t-38bdf8ff, #38bdf8); border-color:rgba(56,189,248,0.4); background:rgba(14,165,233,0.12);'}">
           ${isActive ? '✓ On Desktop' : '+ Add to Desktop'}
         </button>
       </div>

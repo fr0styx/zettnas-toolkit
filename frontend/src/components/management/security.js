@@ -218,19 +218,19 @@ export async function fetchAndRenderSecurityPosture() {
       badge.textContent = `Score: ${data.score}/100 (Grade ${data.grade})`;
       if (data.score >= 90) {
         badge.style.background = 'rgba(37,194,160,0.15)';
-        badge.style.color = '#25c2a0';
+        badge.style.color = 'var(--lt-t-25c2a0ff, #25c2a0)';
         badge.style.borderColor = 'rgba(37,194,160,0.3)';
       } else if (data.score >= 75) {
         badge.style.background = 'rgba(56,189,248,0.15)';
-        badge.style.color = '#38bdf8';
+        badge.style.color = 'var(--lt-t-38bdf8ff, #38bdf8)';
         badge.style.borderColor = 'rgba(56,189,248,0.3)';
       } else if (data.score >= 50) {
         badge.style.background = 'rgba(234,179,8,0.15)';
-        badge.style.color = '#eab308';
+        badge.style.color = 'var(--lt-t-eab308ff, #eab308)';
         badge.style.borderColor = 'rgba(234,179,8,0.3)';
       } else {
         badge.style.background = 'rgba(239,68,68,0.15)';
-        badge.style.color = '#ef4444';
+        badge.style.color = 'var(--lt-t-ef4444ff, #ef4444)';
         badge.style.borderColor = 'rgba(239,68,68,0.3)';
       }
     }
@@ -238,7 +238,7 @@ export async function fetchAndRenderSecurityPosture() {
     if (container && Array.isArray(data.checks)) {
       container.innerHTML = data.checks.map(c => {
         const passIcon = c.passed ? '✔' : '✖';
-        const passColor = c.passed ? '#22c55e' : '#ef4444';
+        const passColor = c.passed ? 'var(--lt-t-22c55eff, #22c55e)' : 'var(--lt-t-ef4444ff, #ef4444)';
         const badgeBg = c.passed ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
         const actionText = c.passed ? t('sec.action_review', 'Review ➔') : t('sec.action_configure', 'Configure ➔');
         return `
@@ -246,8 +246,8 @@ export async function fetchAndRenderSecurityPosture() {
             <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
               <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--zn-fs-sm); line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
-                <div style="font-weight:600; color:#f8fafc; font-size: var(--zn-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
-                <div style="font-size: var(--zn-fs-xs); color:${c.passed ? '#94a3b8' : '#fca5a5'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
+                <div style="font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc); font-size: var(--zn-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
+                <div style="font-size: var(--zn-fs-xs); color:${c.passed ? 'var(--lt-t-94a3b8ff, #94a3b8)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">

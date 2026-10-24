@@ -81,12 +81,12 @@
 
 .screensaver-style-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.25) !important;
+  border-color: var(--lt-r-ffffff40, rgba(255, 255, 255, 0.25)) !important;
 }
 
 .screensaver-style-card.active {
   border-color: var(--brand, #00f0ff) !important;
-  background: rgba(0, 240, 255, 0.08) !important;
+  background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08)) !important;
   box-shadow: 0 0 16px rgba(0, 240, 255, 0.15) !important;
 }
 
@@ -116,8 +116,8 @@
 
 .shortcut-system-card:hover {
   transform: translateY(-1.5px);
-  border-color: rgba(255, 255, 255, 0.22) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--lt-r-ffffff38, rgba(255, 255, 255, 0.22)) !important;
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05)) !important;
 }
 
 .btn-emoji-chip {
@@ -127,12 +127,12 @@
 .btn-emoji-chip:hover {
   transform: scale(1.12);
   border-color: rgba(0, 240, 255, 0.5) !important;
-  background: rgba(0, 240, 255, 0.15) !important;
+  background: var(--lt-b-00f0ff26, rgba(0, 240, 255, 0.15)) !important;
 }
 
 .btn-emoji-chip.active {
   border-color: #00f0ff !important;
-  background: rgba(0, 240, 255, 0.22) !important;
+  background: var(--lt-b-00f0ff38, rgba(0, 240, 255, 0.22)) !important;
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
 }
 

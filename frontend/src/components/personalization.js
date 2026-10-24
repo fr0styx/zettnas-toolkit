@@ -42,7 +42,7 @@ export function initPersonalization() {
 
         <div class="personalization-container" style="display: flex; flex: 1; height: calc(100% - 38px); overflow: hidden;">
           <!-- Left Navigation Sidebar -->
-          <div class="personalization-sidebar" style="width: 220px; background: rgba(0,0,0,0.2); border-right: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; padding: 12px 8px; gap: 4px; overflow-y: auto;">
+          <div class="personalization-sidebar" style="width: 220px; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-right: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display: flex; flex-direction: column; padding: 12px 8px; gap: 4px; overflow-y: auto;">
             <button class="personalization-nav-item active" data-tab="wallpaper">
               <span class="p-nav-icon">🖼️</span>
               <span class="p-nav-text" data-i18n="mgmt.subtab_wallpaper">${t('mgmt.subtab_wallpaper', 'Wallpaper')}</span>
@@ -74,7 +74,7 @@ export function initPersonalization() {
           </div>
 
           <!-- Main Content Area -->
-          <div class="personalization-content-area" id="personalization-content-body" style="flex: 1; padding: 20px; overflow-y: auto; background: rgba(0,0,0,0.1);">
+          <div class="personalization-content-area" id="personalization-content-body" style="flex: 1; padding: 20px; overflow-y: auto; background: var(--lt-b-0000001a, rgba(0,0,0,0.1));">
             <!-- Dynamic tab content container -->
             <div id="p-pane-wallpaper" class="personalization-pane" style="display: block;"></div>
             <div id="p-pane-theme" class="personalization-pane" style="display: none;"></div>

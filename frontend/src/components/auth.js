@@ -242,12 +242,12 @@ export async function renderLoginChooser(options = {}) {
     chooserContainer.innerHTML = users.map((u) => {
       const letter = (u.display_name?.[0] || u.username?.[0] || 'U').toUpperCase();
       return `
-        <div class="login-user-card" data-username="${escapeHtml(u.username)}" data-display="${escapeHtml(u.display_name || u.username)}" style="cursor:pointer; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:12px; transition:all 0.2s ease;">
-          <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:14px; border:1px solid rgba(255,255,255,0.2);">
+        <div class="login-user-card" data-username="${escapeHtml(u.username)}" data-display="${escapeHtml(u.display_name || u.username)}" style="cursor:pointer; background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:10px; padding:12px 14px; display:flex; align-items:center; gap:12px; transition:all 0.2s ease;">
+          <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:14px; border:1px solid var(--lt-r-ffffff33, rgba(255,255,255,0.2));">
             ${escapeHtml(letter)}
           </div>
           <div style="text-align:left; flex:1; min-width:0;">
-            <div style="font-weight:700; color:#fff; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(u.display_name || u.username)}</div>
+            <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(u.display_name || u.username)}</div>
             <div style="font-size:11px; color:var(--muted);">@${escapeHtml(u.username)}</div>
           </div>
           <div style="color:var(--muted); font-size:14px;">➔</div>

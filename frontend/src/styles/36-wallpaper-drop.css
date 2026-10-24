@@ -5,7 +5,7 @@
   position: fixed;
   inset: 0;
   z-index: 99990;
-  background: rgba(8, 12, 16, 0.75);
+  background: var(--lt-b-080c10bf, rgba(8, 12, 16, 0.75));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   display: flex;
@@ -21,7 +21,7 @@
 }
 
 .desktop-drop-card {
-  background: rgba(18, 26, 36, 0.92);
+  background: var(--lt-b-121a24eb, rgba(18, 26, 36, 0.92));
   border: 2px dashed var(--brand, #00f0ff);
   border-radius: 20px;
   padding: 48px 56px;
@@ -52,7 +52,7 @@
 .desktop-drop-title {
   font-size: 18px;
   font-weight: 800;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   letter-spacing: 0.3px;
   margin-bottom: 6px;
 }

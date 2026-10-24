@@ -4,7 +4,7 @@
 #window-snap-ghost {
   position: fixed;
   border-radius: 14px;
-  background: rgba(0, 240, 255, 0.08);
+  background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08));
   border: 2px dashed var(--focus-ring, #00f0ff);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 240, 255, 0.18) inset;
   backdrop-filter: blur(16px);
@@ -18,9 +18,9 @@
 }
 
 .snap-ghost-indicator {
-  background: rgba(10, 14, 19, 0.85);
+  background: var(--lt-b-0a0e13d9, rgba(10, 14, 19, 0.85));
   border: 1px solid var(--focus-ring, rgba(0, 240, 255, 0.6));
-  color: #ffffff;
+  color: var(--lt-t-ffffffff, #ffffff);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -36,8 +36,8 @@
 .snap-assist-flyout {
   position: fixed;
   z-index: 9999;
-  background: rgba(18, 25, 36, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--lt-b-121924f0, rgba(18, 25, 36, 0.94));
+  border: 1px solid var(--lt-r-ffffff2e, rgba(255, 255, 255, 0.18));
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 1px rgba(255, 255, 255, 0.25) inset;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -85,8 +85,8 @@
 
 .snap-card {
   height: 52px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
   border-radius: 6px;
   display: flex;
   padding: 4px;
@@ -97,13 +97,13 @@
 
 .snap-card:hover {
   border-color: var(--focus-ring, #00f0ff);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
 }
 
 .snap-slot {
   flex: 1;
   height: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
   border-radius: 4px;
   border: none;
   cursor: pointer;

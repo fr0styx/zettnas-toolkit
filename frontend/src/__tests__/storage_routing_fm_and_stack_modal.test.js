@@ -81,11 +81,11 @@ describe('Storage Routing, File Manager Solid Styling, and Stack Inspector Eleva
       const cssContent = readStyleCss();
 
       expect(cssContent).toContain('#file-manager-window.file-manager-window');
-      expect(cssContent).toContain('rgba(15, 23, 42, 0.98) !important');
+      expect(cssContent).toMatch(/rgba\(15, 23, 42, 0\.98\)\)? !important/); // may carry its light-theme var() (UX-7)
       expect(cssContent).toContain('.fm-content');
       expect(cssContent).toContain('.fm-viewport');
       expect(cssContent).toContain('.fm-list');
-      expect(cssContent).toContain('background: #0b111a');
+      expect(cssContent).toMatch(/background: (?:var\(--lt-b-0b111aff, )?#0b111a/);
     });
   });
 
@@ -97,7 +97,7 @@ describe('Storage Routing, File Manager Solid Styling, and Stack Inspector Eleva
       expect(cssContent).toContain('#stack-picker-overlay');
       expect(cssContent).toMatch(/#stack-inspector-overlay[\s\S]*?z-index:\s*10030\s*!important/);
       expect(cssContent).toContain('#stack-inspector-overlay .stack-inspector-window');
-      expect(cssContent).toContain('background: #0d141e !important');
+      expect(cssContent).toMatch(/background: (?:var\(--lt-b-0d141eff, )?#0d141e\)? !important/);
     });
 
     it('openStackModal properly removes display:none, removes window-minimized, adds open, and calls bringToFront', async () => {

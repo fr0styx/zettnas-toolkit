@@ -30,9 +30,9 @@ export async function setUpdateChannel(channel) {
 
 function syncUpdateChannelUI() {
   const looks = {
-    stable: ['rgba(37, 194, 160, 0.25)', '#25c2a0'],
-    beta: ['rgba(245, 183, 49, 0.22)', '#f5b731'],
-    edge: ['rgba(14, 165, 233, 0.25)', '#38bdf8'],
+    stable: ['rgba(37, 194, 160, 0.25)', 'var(--lt-t-25c2a0ff, #25c2a0)'],
+    beta: ['rgba(245, 183, 49, 0.22)', 'var(--lt-t-f5b731ff, #f5b731)'],
+    edge: ['rgba(14, 165, 233, 0.25)', 'var(--lt-t-38bdf8ff, #38bdf8)'],
   };
   for (const ch of UPDATE_CHANNELS) {
     const btn = document.getElementById(`btn-channel-${ch}`);
@@ -324,7 +324,7 @@ export async function applySystemUpdate() {
         if (res && res.auto_restarting === false) {
           if (progressTitle) progressTitle.textContent = t('ui.image_pulled', '📦 Image Pulled');
           if (progressDesc) {
-            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--brand,#00f0ff);font-weight:600;">Please restart the container in Unraid or Docker to finalize.</span>`;
+            progressDesc.innerHTML = `${escapeHtml(res.message || 'Latest image downloaded.')}<br><br><span style="color:var(--lt-ink-brand, var(--brand, #00f0ff));font-weight:600;">Please restart the container in Unraid or Docker to finalize.</span>`;
           }
           if (applyBtn) applyBtn.disabled = false;
           return;
@@ -458,11 +458,11 @@ export function openDiagnosticsPreviewModal(data) {
     let alertItemsHtml = '';
     if (alerts.length > 0) {
       alertItemsHtml = `
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 4px;">
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display: flex; flex-direction: column; gap: 4px;">
           ${alerts
             .map(
               (a) => `
-            <div style="font-size: 11px; color: #f1f5f9; display: flex; align-items: flex-start; gap: 6px;">
+            <div style="font-size: 11px; color: var(--lt-t-f1f5f9ff, #f1f5f9); display: flex; align-items: flex-start; gap: 6px;">
               <span style="font-size: 11px; margin-top: 2px;">${a.level === 'critical' ? '🔴' : '🟡'}</span>
               <span>${escapeHtml(a.message || '')}</span>
             </div>
@@ -500,29 +500,29 @@ export function openDiagnosticsPreviewModal(data) {
     const memUsedGb = memory.used_gb !== undefined ? memory.used_gb : Math.round((memory.used_bytes || 0) / (1024 ** 3));
 
     grid.innerHTML = `
-      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+      <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
         <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Host & OS</div>
-        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
+        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
         <div style="font-size:11px; color:var(--muted); margin-top:1px;">Uptime: ${data.uptime_hours || 0}h</div>
       </div>
-      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+      <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
         <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
-        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${memPct}% Used</div>
+        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${memPct}% Used</div>
         <div style="font-size:11px; color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
       </div>
-      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+      <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
         <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
-        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${storage.pools_count || 0} Pools</div>
+        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${storage.pools_count || 0} Pools</div>
         <div style="font-size:11px; color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
       </div>
-      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+      <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
         <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>
-        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
+        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
         <div style="font-size:11px; color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
       </div>
-      <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:10px;">
+      <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
         <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Virtual Machines</div>
-        <div style="font-size:12px; font-weight:800; color:#fff; margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
+        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
         <div style="font-size:11px; color:var(--muted); margin-top:1px;">Headroom: Safe</div>
       </div>
     `;
@@ -544,7 +544,7 @@ export async function previewDiagnosticsSummary() {
   try {
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = `<span class="ci-spinner" style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${t('diagnostics.loading_preview', 'Loading Preview...')}</span>`;
+      btn.innerHTML = `<span class="ci-spinner" style="display:inline-block; width:12px; height:12px; border:2px solid var(--lt-r-ffffff4c, rgba(255,255,255,0.3)); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${t('diagnostics.loading_preview', 'Loading Preview...')}</span>`;
     }
     const data = await api.get('/api/system/diagnostics-summary');
     openDiagnosticsPreviewModal(data);
@@ -571,7 +571,7 @@ export async function copySupportMarkdown() {
     } else {
       if (targetBtn) {
         targetBtn.disabled = true;
-        targetBtn.innerHTML = `<span class="ci-spinner" style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${t('diagnostics.copying_md', 'Copying...')}</span>`;
+        targetBtn.innerHTML = `<span class="ci-spinner" style="display:inline-block; width:12px; height:12px; border:2px solid var(--lt-r-ffffff4c, rgba(255,255,255,0.3)); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${t('diagnostics.copying_md', 'Copying...')}</span>`;
       }
       const data = await api.get('/api/system/diagnostics-summary');
       md = data?.support_markdown || '';

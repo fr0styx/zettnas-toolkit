@@ -18,6 +18,10 @@
 - **Sign in with LDAP or Active Directory.** Directory groups map to roles; local accounts keep their own password. See docs/SSO.md.
 - **Repeated failed sign-ins block the address** for an hour (web and WebDAV). Trusted networks are set with `ZETTNAS_TRUSTED_IPS`; blocked addresses are listed under Security.
 
+#### Light theme
+
+- **The light theme is readable everywhere.** Panels, tables, buttons, inputs and badges that kept dark-theme colours now have light ones, and text meets WCAG AA contrast (4.5:1) in every window. Other themes are unchanged.
+
 #### Phone and tablet
 
 - **Install ZettNAS as an app** from the browser menu on your phone. Sharing photos or files to ZettNAS from the share sheet saves them to your **Inbox** folder (never overwriting anything). Turn on **Notifications on this device** to get disk, ransomware and other critical alerts on your phone.

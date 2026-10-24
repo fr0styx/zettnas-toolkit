@@ -854,9 +854,9 @@ export function initAcousticCalibration() {
 
       if (summaryEl) {
         if (hasResonance) {
-          summaryEl.innerHTML = `<span style="color:#f43f5e; font-weight:600;">⚠️ Chassis resonance detected at specific PWM steps. Consider adjusting curve around these frequencies.</span>`;
+          summaryEl.innerHTML = `<span style="color:var(--lt-t-f43f5eff, #f43f5e); font-weight:600;">⚠️ Chassis resonance detected at specific PWM steps. Consider adjusting curve around these frequencies.</span>`;
         } else if (data.completed_at) {
-          summaryEl.innerHTML = `<span style="color:#22c55e; font-weight:600;">✓ Excellent acoustic linearity across entire 58–183 PWM range. No chassis harmonics detected.</span>`;
+          summaryEl.innerHTML = `<span style="color:var(--lt-t-22c55eff, #22c55e); font-weight:600;">✓ Excellent acoustic linearity across entire 58–183 PWM range. No chassis harmonics detected.</span>`;
         }
       }
     }

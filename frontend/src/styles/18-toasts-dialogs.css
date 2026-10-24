@@ -25,10 +25,10 @@
   min-width: 340px;
   max-width: 620px;
   width: max-content;
-  background: rgba(13, 20, 30, 0.96);
+  background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15));
   border-radius: 10px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.2);
   padding: 10px 16px;
@@ -48,7 +48,7 @@
 #confirm-toast-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--lt-b-0000008c, rgba(0, 0, 0, 0.55));
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: var(--z-confirm-backdrop, 11000);
@@ -75,7 +75,7 @@
   transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   width: 480px;
   max-width: 92vw;
-  background: rgba(15, 23, 34, 0.98);
+  background: var(--lt-b-0f1722fa, rgba(15, 23, 34, 0.98));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(245, 158, 11, 0.5);

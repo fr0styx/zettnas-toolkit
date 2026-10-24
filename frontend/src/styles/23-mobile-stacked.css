@@ -705,7 +705,7 @@
     min-height: auto !important;
     padding: 2px 2px 6px 2px !important;
     gap: 6px 8px !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) !important;
   }
 
   #console-window #screen .h-left {
@@ -1035,7 +1035,7 @@
     min-height: 42px !important;
     max-height: 42px !important;
     flex-shrink: 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -1091,9 +1091,9 @@
     min-width: 100% !important;
     height: auto !important;
     flex-shrink: 0 !important;
-    background: rgba(10, 16, 24, 0.98) !important;
+    background: var(--lt-b-0a1018fa, rgba(10, 16, 24, 0.98)) !important;
     border-right: none !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) !important;
     padding: 6px 8px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
@@ -1225,8 +1225,8 @@
     border-left: none !important;
     border-right: none !important;
     border-bottom: none !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
-    background: rgba(10, 16, 26, 0.94) !important;
+    border-top: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12)) !important;
+    background: var(--lt-b-0a101af0, rgba(10, 16, 26, 0.94)) !important;
     -webkit-backdrop-filter: blur(24px) !important;
     backdrop-filter: blur(24px) !important;
     padding: 0 4px calc(env(safe-area-inset-bottom, 0px)) 4px !important;
@@ -1263,7 +1263,7 @@
   }
   .dock-item:active {
     transform: scale(0.92) !important;
-    background: rgba(255, 255, 255, 0.08) !important;
+    background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)) !important;
   }
   .dock-item.active-window::before,
   .dock-item.active::before {
@@ -1329,7 +1329,7 @@
   .smart-modal-window::-webkit-scrollbar-track,
   .smart-modal-body::-webkit-scrollbar-track,
   .slide-drawer::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.25) !important;
+    background: var(--lt-b-00000040, rgba(0, 0, 0, 0.25)) !important;
     border-radius: 4px !important;
   }
 
@@ -1341,7 +1341,7 @@
   .slide-drawer::-webkit-scrollbar-thumb {
     background: rgba(37, 194, 160, 0.6) !important;
     border-radius: 4px !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) !important;
   }
 
   #management-modal-overlay .mgmt-content-pane::-webkit-scrollbar-thumb:active,
@@ -1395,8 +1395,8 @@
   .copy-history-table.responsive-cards tbody tr {
     display: flex !important;
     flex-direction: column !important;
-    background: rgba(15, 23, 42, 0.65) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: var(--lt-b-0f172aa6, rgba(15, 23, 42, 0.65)) !important;
+    border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) !important;
     border-radius: 10px !important;
     padding: 12px 14px !important;
     gap: 8px !important;
@@ -1413,7 +1413,7 @@
     justify-content: space-between !important;
     align-items: center !important;
     padding: 4px 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid var(--lt-r-ffffff0d, rgba(255, 255, 255, 0.05)) !important;
     font-size: 11.5px !important;
     min-height: 26px !important;
     width: 100% !important;
@@ -1461,13 +1461,13 @@
     touch-action: manipulation !important;
     font-size: 14px !important;
     font-weight: 700 !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #e2e8f0 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--lt-t-e2e8f0ff, #e2e8f0) !important;
+    border: 1px solid var(--lt-r-ffffff33, rgba(255, 255, 255, 0.2)) !important;
     border-radius: 6px !important;
   }
   .btn-docker-more-sheet:active {
-    background: rgba(255, 255, 255, 0.2) !important;
+    background: var(--lt-b-ffffff33, rgba(255, 255, 255, 0.2)) !important;
     transform: scale(0.95) !important;
   }
 

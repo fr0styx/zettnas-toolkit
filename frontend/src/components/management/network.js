@@ -196,25 +196,25 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
       else if (osLower.includes('linux')) osLabel = '🐧 Linux';
 
       const routeBadge = p.cur_addr
-        ? '<span style="color:#3bf58b; font-weight:600;">⚡ Direct P2P</span>'
+        ? '<span style="color:var(--lt-t-3bf58bff, #3bf58b); font-weight:600;">⚡ Direct P2P</span>'
         : p.relay
-          ? `<span style="color:#f59e0b;">🌐 DERP (${escapeHtml(p.relay)})</span>`
+          ? `<span style="color:var(--lt-t-f59e0bff, #f59e0b);">🌐 DERP (${escapeHtml(p.relay)})</span>`
           : '<span style="color:var(--muted);">--</span>';
 
       const statusPill = p.online
-        ? '<span class="mgmt-app-pill" style="color:#3bf58b; background:rgba(59,245,139,0.12); font-size:11px; padding:2px 7px;">Online</span>'
-        : '<span class="mgmt-app-pill" style="color:var(--muted); background:rgba(255,255,255,0.06); font-size:11px; padding:2px 7px;">Offline</span>';
+        ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:11px; padding:2px 7px;">Online</span>'
+        : '<span class="mgmt-app-pill" style="color:var(--muted); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); font-size:11px; padding:2px 7px;">Offline</span>';
 
       const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
 
       return `
-      <tr style="border-bottom:1px solid rgba(255,255,255,0.05); font-size:11.5px;">
+      <tr style="border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:11.5px;">
         <td style="padding:8px 12px;">
-          <div style="font-weight:700; color:#fff;">${escapeHtml(p.name || p.hostname || 'Unnamed')}</div>
+          <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(p.name || p.hostname || 'Unnamed')}</div>
           ${p.dns_name ? `<div style="font-size:11px; color:var(--muted);">${escapeHtml(p.dns_name)}</div>` : ''}
         </td>
         <td style="padding:8px 12px; color:var(--text-sub);">${osLabel}</td>
-        <td style="padding:8px 12px;"><code style="color:#38bdf8; font-size:11px;">${escapeHtml(p.ip || '--')}</code></td>
+        <td style="padding:8px 12px;"><code style="color:var(--lt-t-38bdf8ff, #38bdf8); font-size:11px;">${escapeHtml(p.ip || '--')}</code></td>
         <td style="padding:8px 12px;">${routeBadge}</td>
         <td style="padding:8px 12px;">${statusPill}</td>
         <td style="padding:8px 12px; text-align:right;">
@@ -408,12 +408,12 @@ export async function fetchAndRenderWireguard() {
               exitNodeHint.style.borderColor = 'rgba(59,245,139,0.25)';
             }
           } else if (ts.advertise_exit_node) {
-            exitNodePill.innerHTML = '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline;">Pending Admin Approval ↗</a>';
+            exitNodePill.innerHTML = '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8); text-decoration:underline;">Pending Admin Approval ↗</a>';
             exitNodePill.style.color = '#38bdf8';
             exitNodePill.style.background = 'rgba(56,189,248,0.15)';
             if (exitNodeHint) {
               exitNodeHint.style.display = 'block';
-              exitNodeHint.innerHTML = '⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).';
+              exitNodeHint.innerHTML = '⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8); text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).';
               exitNodeHint.style.color = '#fbbf24';
               exitNodeHint.style.background = 'rgba(245,158,11,0.08)';
               exitNodeHint.style.borderColor = 'rgba(245,158,11,0.25)';
@@ -486,8 +486,8 @@ export async function fetchAndRenderWireguard() {
             taildropList.innerHTML = files
               .map(
                 f => `
-              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
-                <span style="font-weight:600; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
+              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
+                <span style="font-weight:600; color:var(--lt-t-ffffffff, #fff); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
                 <span style="color:var(--muted); font-size:11px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
             `
@@ -893,7 +893,7 @@ export async function fetchAndRenderWireguard() {
         const featName = res.feature === 'funnel' ? 'Funnel' : 'Serve';
         showConfirmToast(
           `Tailscale ${featName} Approval Required`,
-          `Tailscale ${featName} is not yet authorized on your Tailnet. Please approve this node in the Tailscale Admin Console:<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>After clicking Approve in Tailscale, re-enable this toggle to activate.`,
+          `Tailscale ${featName} is not yet authorized on your Tailnet. Please approve this node in the Tailscale Admin Console:<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>After clicking Approve in Tailscale, re-enable this toggle to activate.`,
           () => {
             window.open(res.approval_url, '_blank', 'noopener,noreferrer');
           },
@@ -1371,7 +1371,7 @@ export async function fetchAndRenderNetworkTopology() {
               </div>
               <div class="switch-port-meta">
                 <div>MAC: ${escapeHtml(nic.mac || 'N/A')}</div>
-                ${nic.master ? `<div style="color:var(--accent-cyan);">Master: ${escapeHtml(nic.master)}</div>` : ''}
+                ${nic.master ? `<div style="color:var(--lt-ink-brand, var(--accent-cyan));">Master: ${escapeHtml(nic.master)}</div>` : ''}
               </div>
             </div>
           `;
@@ -1419,7 +1419,7 @@ export async function fetchAndRenderNetworkTopology() {
               <td style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.mac || '--')}</td>
               <td style="font-family:var(--font-mono, monospace);">${escapeHtml(String(nic.mtu || 1500))}</td>
               <td>
-                ${nic.master ? `<span class="network-member-pill" style="color:var(--accent-cyan); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : '<span style="color:var(--muted);">Standalone</span>'}
+                ${nic.master ? `<span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan)); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : '<span style="color:var(--muted);">Standalone</span>'}
               </td>
               <td style="font-family:var(--font-mono, monospace); font-size:11px;">
                 <div>↓ ${rxFmt} <span style="font-size:11px; color:var(--muted);">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
@@ -1430,7 +1430,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <div style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.pci_slot || '--')}</div>
               </td>
               <td style="text-align: right;">
-                <button class="btn-pill-toggle btn-config-port is-small" data-iface="${escapeHtml(nic.name)}" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-port is-small" data-iface="${escapeHtml(nic.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
               </td>
             </tr>
           `;
@@ -1461,7 +1461,7 @@ export async function fetchAndRenderNetworkTopology() {
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
-                <button class="btn-pill-toggle btn-config-bridge is-small" data-bridge="${escapeHtml(br.name)}" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
+                <button class="btn-pill-toggle btn-config-bridge is-small" data-bridge="${escapeHtml(br.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
               </div>
             </div>
             <div style="font-size:11px; color:var(--muted);">Member Ports:</div>
@@ -1482,7 +1482,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <span class="switch-speed-pill speed-10g" title="${escapeHtml(b.mode_title || b.mode_name || b.mode)}">${escapeHtml(b.mode_title || b.mode_name || b.mode || 'Bonding')}</span>
                 <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
               </div>
-              <button class="btn-pill-toggle btn-config-bond is-small" data-bond="${escapeHtml(b.name)}" style="color: var(--accent-cyan, #38bdf8); border-color: rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
+              <button class="btn-pill-toggle btn-config-bond is-small" data-bond="${escapeHtml(b.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
             </div>
             <div style="font-size:11px; color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
             <div class="network-bridge-members">
@@ -1536,7 +1536,7 @@ export async function fetchAndRenderNetworkTopology() {
                 <span class="network-member-pill">${escapeHtml(v.parent)}</span>
               </td>
               <td>
-                <span class="network-member-pill" style="color:var(--accent-cyan, #38bdf8); border-color:rgba(56,189,248,0.4); font-weight:700;">VID ${escapeHtml(String(v.vlan_id))}</span>
+                <span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color:rgba(56,189,248,0.4); font-weight:700;">VID ${escapeHtml(String(v.vlan_id))}</span>
               </td>
               <td>
                 ${v.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(v.alias)}">${escapeHtml(v.alias)}</span>` : '<span style="color:var(--muted); font-size:11px;">--</span>'}
@@ -2124,7 +2124,7 @@ export async function openBondConfigModal(bondName) {
             return `
             <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; cursor:pointer; user-select:none;">
               <input type="checkbox" class="net-bond-slave-checkbox" value="${escapeHtml(nic.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
-              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:#f8fafc;">${escapeHtml(nic.name)}</span>
+              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc);">${escapeHtml(nic.name)}</span>
               ${nic.alias ? `<span class="switch-port-alias-tag">${escapeHtml(nic.alias)}</span>` : ''}
               <span style="font-size:11px; color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? 'Connected' : 'Disconnected'))}</span>
             </label>
@@ -2227,7 +2227,7 @@ export async function openBridgeConfigModal(brName) {
             return `
             <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; cursor:pointer; user-select:none;">
               <input type="checkbox" class="net-bridge-member-checkbox" value="${escapeHtml(cand.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
-              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:#f8fafc;">${escapeHtml(cand.name)}</span>
+              <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc);">${escapeHtml(cand.name)}</span>
               <span class="network-member-pill" style="font-size:11px; padding:1px 5px;">${escapeHtml(cand.type || 'interface')}</span>
               ${cand.alias ? `<span class="switch-port-alias-tag">${escapeHtml(cand.alias)}</span>` : ''}
               <span style="font-size:11px; color:var(--muted); margin-left:auto;">${escapeHtml(cand.speed_human || (cand.is_up ? 'Connected' : 'Disconnected'))}</span>

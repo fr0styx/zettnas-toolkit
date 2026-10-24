@@ -734,7 +734,7 @@ async function openSmartModal(devName, forceWake = false) {
           const wear = nv.percentage_used != null ? `${nv.percentage_used}%` : '--';
           const spare = nv.available_spare != null ? `${nv.available_spare}%` : '--';
           bannerHtml += `
-            <div style="display: flex; gap: 12px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-color);">
+            <div style="display: flex; gap: 12px; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-color);">
               <span>💾 <strong>TBW:</strong> ${tbw}</span>
               <span>📖 <strong>TBR:</strong> ${tbr}</span>
               <span>⚡ <strong>Wear:</strong> ${wear}</span>
@@ -753,7 +753,7 @@ async function openSmartModal(devName, forceWake = false) {
           let sparklineHtml = '';
           if (deg.sparkline_points && deg.sparkline_points.length > 0) {
             sparklineHtml = `
-              <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.06);">
+              <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">
                   <span>30-Day Degradation Sparkline</span>
                   <span>Rate: ${deg.realloc_7d_delta > 0 ? '+' + deg.realloc_7d_delta + ' / 7d' : 'STABLE'}</span>
@@ -771,7 +771,7 @@ async function openSmartModal(devName, forceWake = false) {
                   <div style="font-weight: 700; color: ${color}; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
                     ${escapeHtml(deg.status.replace('_', ' '))} • SMART Velocity Analysis
                   </div>
-                  <button id="smart-btn-locate-drive" style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); color:#38bdf8; border-radius:4px; padding:2px 8px; cursor:pointer; font-weight:600; font-size:11px; display:flex; align-items:center; gap:4px;">
+                  <button id="smart-btn-locate-drive" style="background:rgba(56, 189, 248, 0.12); border:1px solid rgba(56, 189, 248, 0.35); color:var(--lt-t-38bdf8ff, #38bdf8); border-radius:4px; padding:2px 8px; cursor:pointer; font-weight:600; font-size:11px; display:flex; align-items:center; gap:4px;">
                     <svg viewBox="0 0 24 24" width="10" height="10"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/></svg>
                     LOCATE
                   </button>

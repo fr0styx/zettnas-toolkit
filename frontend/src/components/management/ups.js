@@ -147,11 +147,11 @@ export async function fetchAndRenderUpsEvents() {
     }
     tbody.innerHTML = events.map(ev => {
       const dateStr = formatDateTime(ev.ts);
-      let typeBadge = `<span class="badge" style="background:rgba(0,240,255,0.15); border:1px solid #00f0ff; color:#00f0ff; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+      let typeBadge = `<span class="badge" style="background:var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); border:1px solid #00f0ff; color:var(--lt-t-00f0ffff, #00f0ff); padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
       if (ev.event_type.includes('OUTAGE') || ev.event_type.includes('FAILSAFE')) {
-        typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:#f5a623; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+        typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:var(--lt-t-f5a623ff, #f5a623); padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
       } else if (ev.event_type.includes('SELF_TEST')) {
-        typeBadge = `<span class="badge" style="background:rgba(37,194,160,0.15); border:1px solid #25c2a0; color:#25c2a0; padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+        typeBadge = `<span class="badge" style="background:rgba(37,194,160,0.15); border:1px solid #25c2a0; color:var(--lt-t-25c2a0ff, #25c2a0); padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
       }
       const durStr = ev.duration_sec ? `${ev.duration_sec}s` : '--';
       const battDelta = ev.start_battery_pct != null && ev.end_battery_pct != null
@@ -675,9 +675,9 @@ export function initUpsDrawerControls() {
           ? (cand.description || `USB ${cand.vendor_id || ''}:${cand.product_id || ''}`)
           : (cand.port ? `${cand.host}:${cand.port}` : (cand.path || cand.host || 'local'));
         const displayTitle = cand.title || cand.label || typeLabel;
-        return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); padding:8px 12px; border-radius:6px; cursor:pointer;">
+        return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 12px; border-radius:6px; cursor:pointer;">
           <div>
-            <div style="font-size:12px; font-weight:600; color:#fff;">${escapeHtml(displayTitle)}</div>
+            <div style="font-size:12px; font-weight:600; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(displayTitle)}</div>
             <div style="font-size:11px; color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
           </div>
           <button type="button" class="btn-rect is-small">Apply</button>

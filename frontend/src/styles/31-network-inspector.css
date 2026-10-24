@@ -11,8 +11,8 @@
 }
 
 .network-kpi-card {
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-0f172a73, rgba(15, 23, 42, 0.45));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
   padding: 12px 14px;
   backdrop-filter: blur(12px);
@@ -30,26 +30,26 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   margin-bottom: 4px;
 }
 
 .network-kpi-val {
   font-size: 18px;
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--lt-t-f8fafcff, #f8fafc);
   font-family: var(--font-mono, monospace);
   letter-spacing: -0.02em;
 }
 
 .network-kpi-val.text-emerald {
-  color: #3bf58b;
-  text-shadow: 0 0 12px rgba(59, 245, 139, 0.35);
+  color: var(--lt-t-3bf58bff, #3bf58b);
+  text-shadow: var(--lt-text-shadow, 0 0 12px rgba(59, 245, 139, 0.35));
 }
 
 .network-kpi-sub {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   margin-top: 4px;
   white-space: nowrap;
   overflow: hidden;
@@ -69,23 +69,23 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
 }
 
 .network-section-badge {
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 9999px;
-  background: rgba(59, 245, 139, 0.12);
-  color: #3bf58b;
-  border: 1px solid rgba(59, 245, 139, 0.25);
+  background: var(--lt-b-3bf58b1f, rgba(59, 245, 139, 0.12));
+  color: var(--lt-t-3bf58bff, #3bf58b);
+  border: 1px solid var(--lt-r-3bf58b40, rgba(59, 245, 139, 0.25));
   font-weight: 600;
 }
 
 /* Front-Panel Switch Chassis */
 .network-switch-chassis {
-  background: linear-gradient(180deg, #131b2e 0%, #0b1120 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, var(--lt-b-131b2eff, #131b2e) 0%, var(--lt-b-0b1120ff, #0b1120) 100%);
+  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
   border-radius: 12px;
   padding: 16px;
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -102,8 +102,8 @@
 .switch-port-jack {
   flex: 1 1 200px;
   max-width: 320px;
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--lt-b-0f172aa6, rgba(15, 23, 42, 0.65));
+  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   padding: 12px;
   display: flex;
@@ -114,7 +114,7 @@
 }
 
 .switch-port-jack.is-active {
-  border-color: rgba(59, 245, 139, 0.3);
+  border-color: var(--lt-r-3bf58b4c, rgba(59, 245, 139, 0.3));
   box-shadow: inset 0 0 16px rgba(59, 245, 139, 0.05);
 }
 
@@ -133,7 +133,7 @@
   font-size: 10px;
   font-weight: 600;
   font-family: inherit;
-  color: var(--accent-cyan, #38bdf8);
+  color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.25);
   padding: 1px 6px;
@@ -172,7 +172,7 @@
   font-size: 13px;
   font-weight: 700;
   font-family: var(--font-mono, monospace);
-  color: #f1f5f9;
+  color: var(--lt-t-f1f5f9ff, #f1f5f9);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -194,7 +194,7 @@
 .switch-led-lbl {
   font-size: 8px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--lt-t-64748bff, #64748b);
   text-transform: uppercase;
 }
 
@@ -202,7 +202,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #334155;
+  background: var(--lt-b-334155ff, #334155);
   transition: all 0.3s;
 }
 
@@ -229,8 +229,8 @@
 
 /* Port SVG Cutout representation */
 .switch-port-socket {
-  background: #090e1a;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--lt-b-090e1aff, #090e1a);
+  border: 1px solid var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15));
   border-radius: 5px;
   height: 44px;
   display: flex;
@@ -266,33 +266,33 @@
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
+  color: var(--lt-t-38bdf8ff, #38bdf8);
   border: 1px solid rgba(56, 189, 248, 0.25);
 }
 
 .switch-speed-pill.speed-10g {
-  background: rgba(59, 245, 139, 0.15);
-  color: #3bf58b;
-  border-color: rgba(59, 245, 139, 0.3);
+  background: var(--lt-b-3bf58b26, rgba(59, 245, 139, 0.15));
+  color: var(--lt-t-3bf58bff, #3bf58b);
+  border-color: var(--lt-r-3bf58b4c, rgba(59, 245, 139, 0.3));
 }
 
 .switch-speed-pill.speed-down {
   background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   border-color: rgba(148, 163, 184, 0.2);
 }
 
 .switch-port-meta {
   font-size: 10.5px;
-  color: #64748b;
+  color: var(--lt-t-64748bff, #64748b);
   font-family: var(--font-mono, monospace);
 }
 
 .network-table-wrap {
   overflow-x: auto;
   max-height: 380px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--lt-b-00000040, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
   border-radius: 8px;
 }
 
@@ -304,8 +304,8 @@
 }
 
 .network-card {
-  background: rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-0f172a73, rgba(15, 23, 42, 0.45));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -317,22 +317,22 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--lt-b-ffffff08, rgba(255, 255, 255, 0.03));
+  border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
 }
 
 .network-card-title {
   font-weight: 700;
   font-size: 12.5px;
-  color: #f1f5f9;
+  color: var(--lt-t-f1f5f9ff, #f1f5f9);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .network-bridge-card {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-0f172a66, rgba(15, 23, 42, 0.4));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   padding: 12px 14px;
 }
@@ -348,12 +348,12 @@
   font-weight: 700;
   font-size: 13px;
   font-family: var(--font-mono, monospace);
-  color: #f8fafc;
+  color: var(--lt-t-f8fafcff, #f8fafc);
 }
 
 .network-bridge-ip {
   font-size: 11.5px;
-  color: #38bdf8;
+  color: var(--lt-t-38bdf8ff, #38bdf8);
   font-family: var(--font-mono, monospace);
 }
 
@@ -369,9 +369,9 @@
   font-family: var(--font-mono, monospace);
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
+  color: var(--lt-t-94a3b8ff, #94a3b8);
+  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
 }
 
 /* Docker network cards */
@@ -382,8 +382,8 @@
 }
 
 .network-docker-card {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-0f172a66, rgba(15, 23, 42, 0.4));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   padding: 12px 14px;
 }
@@ -400,7 +400,7 @@
 .network-docker-name {
   font-weight: 700;
   font-size: 13px;
-  color: #f1f5f9;
+  color: var(--lt-t-f1f5f9ff, #f1f5f9);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -411,7 +411,7 @@
   padding: 2px 6px;
   border-radius: 4px;
   background: rgba(56, 189, 248, 0.1);
-  color: #38bdf8;
+  color: var(--lt-t-38bdf8ff, #38bdf8);
   border: 1px solid rgba(56, 189, 248, 0.2);
   text-transform: uppercase;
 }
@@ -419,7 +419,7 @@
 .network-docker-cidr {
   font-size: 11px;
   font-family: var(--font-mono, monospace);
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
 }
 
 .network-docker-containers {
@@ -432,8 +432,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3));
+  border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 11px;
@@ -448,17 +448,17 @@
 
 .network-chip-name {
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--lt-t-f8fafcff, #f8fafc);
 }
 
 .network-chip-ip {
-  color: #38bdf8;
+  color: var(--lt-t-38bdf8ff, #38bdf8);
   font-family: var(--font-mono, monospace);
   font-size: 11px;
 }
 
 .network-chip-ports {
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   font-size: 11px;
   font-family: var(--font-mono, monospace);
 }

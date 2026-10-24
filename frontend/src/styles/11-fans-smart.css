@@ -9,8 +9,8 @@
   margin-top: 4px;
 }
 .drawer-fan-unified-col {
-  background: #0d141e;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--lt-b-0d141eff, #0d141e);
+  border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
   border-radius: 10px;
   padding: 10px 8px;
   display: flex;
@@ -49,7 +49,7 @@
 .df-tach-box .df-rpm {
   font-size: 15px;
   font-weight: 800;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
 }
@@ -61,7 +61,7 @@
 }
 .df-zone-box {
   width: 100%;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
   padding-top: 6px;
   display: flex;
   flex-direction: column;
@@ -78,7 +78,7 @@
 .df-zone-box .zp-val {
   font-size: 13px;
   font-weight: 800;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   font-variant-numeric: tabular-nums;
 }
 .df-zone-box .zp-pwm {
@@ -91,8 +91,8 @@
    SVG THERMAL FAN CURVE WORKSTATION
    ========================================================================= */
 .fan-curve-box {
-  background: #080c10;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-080c10ff, #080c10);
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
   padding: 12px 14px;
   display: flex;
@@ -102,7 +102,7 @@
 .fan-curve-svg {
   width: 100%;
   height: 145px;
-  background: #040609;
+  background: var(--lt-b-040609ff, #040609);
   border-radius: 8px;
   border: 1px solid rgba(37, 194, 160, 0.25);
   box-shadow: inset 0 0 14px rgba(0,0,0,0.85);
@@ -124,10 +124,10 @@
 /* Mission Control Enhanced Stretching for Dynamic Fan Curve Thermal Map */
 .mgmt-hardware-tab-slot .fan-curve-box {
   padding: 16px 20px;
-  background: rgba(8, 12, 16, 0.85);
+  background: var(--lt-b-080c10d9, rgba(8, 12, 16, 0.85));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--lt-r-ffffff17, rgba(255, 255, 255, 0.09));
   gap: 12px;
 }
 
@@ -199,7 +199,7 @@
   border-radius: 4px;
 }
 .legend-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
 }
 .legend-dot {
   width: 7px;
@@ -207,9 +207,9 @@
   border-radius: 50%;
 }
 .btn-reset-curve-view {
-  background: #1a2533;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #a4b4c4;
+  background: var(--lt-b-1a2533ff, #1a2533);
+  border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1));
+  color: var(--lt-t-a4b4c4ff, #a4b4c4);
   font-size: 9px;
   font-weight: 800;
   padding: 2px 8px;
@@ -218,13 +218,13 @@
   margin-left: auto;
 }
 .btn-reset-curve-view:hover {
-  background: #253547;
-  color: #fff;
+  background: var(--lt-b-253547ff, #253547);
+  color: var(--lt-t-ffffffff, #fff);
 }
 
 .thermal-inspector-box {
-  background: #0d141e;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--lt-b-0d141eff, #0d141e);
+  border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
   border-radius: 8px;
   padding: 10px 12px;
   display: flex;
@@ -242,7 +242,7 @@
   font-weight: 700;
 }
 .ti-row strong {
-  color: #e2e8f0;
+  color: var(--lt-t-e2e8f0ff, #e2e8f0);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -254,7 +254,7 @@
   position: fixed; inset: 0; 
   opacity: 0; pointer-events: none; transition: opacity 0.2s ease; z-index: var(--z-modal-backdrop, 9000);
   display: flex; align-items: center; justify-content: center; padding: 20px;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--lt-b-00000073, rgba(0, 0, 0, 0.45));
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -348,7 +348,7 @@
 #modal-create-backup-job,
 #modal-create-snapshot {
   z-index: 10030 !important;
-  background: rgba(0, 0, 0, 0.65) !important;
+  background: var(--lt-b-000000a6, rgba(0, 0, 0, 0.65)) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
 }
@@ -413,15 +413,15 @@
 
 #stack-inspector-overlay .stack-inspector-window,
 .stack-inspector-window {
-  background: #0d141e !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: var(--lt-b-0d141eff, #0d141e) !important;
+  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12)) !important;
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.9) !important;
   border-radius: 12px;
   overflow: hidden;
 }
 #stack-inspector-overlay .smart-modal-header {
-  background: #111a26 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-111a26ff, #111a26) !important;
+  border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
 }
 
 #console-modal-overlay:not(.open),

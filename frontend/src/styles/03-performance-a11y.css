@@ -8,7 +8,7 @@
   .drawer-card {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: rgba(17, 24, 34, 0.96) !important;
+    background: var(--lt-b-111822f5, rgba(17, 24, 34, 0.96)) !important;
   }
 }
 
@@ -29,7 +29,7 @@
 [data-performance-mode="eco"] .os-dock {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background: rgba(17, 24, 34, 0.95) !important;
+  background: var(--lt-b-111822f2, rgba(17, 24, 34, 0.95)) !important;
 }
 
 /* Transient Dragging & Resizing De-blurring */
@@ -342,7 +342,7 @@ body.lcd-direct.lcd-theme-light.text-clarity-on #screen {
   font-weight: 800;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--brand, #00f0ff);
+  color: var(--lt-ink-brand, var(--brand, #00f0ff));
   display: inline-block;
   line-height: 1.2;
 }

@@ -112,21 +112,21 @@
 
 .tz-controls-row { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .tz-select-input, .tz-text-input {
-  background: #111822; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #eaf1f8; font-size: 12px; font-weight: 600; padding: 8px 10px; outline: none; width: 100%;
+  background: var(--lt-b-111822ff, #111822); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius: 8px; color: var(--lt-t-eaf1f8ff, #eaf1f8); font-size: 12px; font-weight: 600; padding: 8px 10px; outline: none; width: 100%;
 }
 .tz-select-input:focus, .tz-text-input:focus { border-color: var(--ok2); box-shadow: 0 0 6px rgba(37, 194, 160, 0.3); }
 
 select.tz-select-input, select.tz-select {
   appearance: none;
   -webkit-appearance: none;
-  background-color: #0f1622;
+  background-color: var(--lt-b-0f1622ff, #0f1622);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2325c2a0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
   padding: 6px 26px 6px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14));
   border-radius: 6px;
-  color: #f1f5f9;
+  color: var(--lt-t-f1f5f9ff, #f1f5f9);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -134,15 +134,15 @@ select.tz-select-input, select.tz-select {
 }
 select.tz-select-input:hover, select.tz-select:hover {
   border-color: rgba(37, 194, 160, 0.4);
-  background-color: #141e2e;
+  background-color: var(--lt-b-141e2eff, #141e2e);
 }
 select.tz-select-input:focus, select.tz-select:focus {
   border-color: var(--ok2, #25c2a0);
   box-shadow: 0 0 8px rgba(37, 194, 160, 0.3);
 }
 select.tz-select-input option, select.tz-select option {
-  background-color: #0d141e;
-  color: #f1f5f9;
+  background-color: var(--lt-b-0d141eff, #0d141e);
+  color: var(--lt-t-f1f5f9ff, #f1f5f9);
   padding: 6px 10px;
 }
 

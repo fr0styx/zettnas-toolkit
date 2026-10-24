@@ -8,8 +8,8 @@
   margin-top: 8px;
 }
 .theme-preset-card {
-  background: #141f2d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-141f2dff, #141f2d);
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 9px;
   padding: 8px 10px;
   display: flex;
@@ -21,12 +21,12 @@
   user-select: none;
 }
 .theme-preset-card:hover {
-  background: #1b2a3d;
-  border-color: rgba(0, 240, 255, 0.4);
+  background: var(--lt-b-1b2a3dff, #1b2a3d);
+  border-color: var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4));
   transform: translateY(-1px);
 }
 .theme-preset-card.active {
-  background: rgba(0, 240, 255, 0.12);
+  background: var(--lt-b-00f0ff1f, rgba(0, 240, 255, 0.12));
   border-color: var(--brand, #00f0ff);
   box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
 }
@@ -46,13 +46,13 @@
 .theme-preset-name {
   font-size: 11.5px;
   font-weight: 800;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .theme-preset-card.active .theme-preset-name {
-  color: var(--brand, #00f0ff);
+  color: var(--lt-ink-brand, var(--brand, #00f0ff));
 }
 .theme-preset-desc {
   font-size: 9px;

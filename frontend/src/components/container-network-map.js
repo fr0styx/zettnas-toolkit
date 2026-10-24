@@ -146,14 +146,14 @@ function ensureOverlay() {
       <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:16px;">🕸️</span>
-          <span style="font-weight:700; color:#fff; font-size:13.5px;" data-i18n="cw.netmap_title">${escapeHtml(t('cw.netmap_title', 'Container Network Map'))}</span>
+          <span style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13.5px;" data-i18n="cw.netmap_title">${escapeHtml(t('cw.netmap_title', 'Container Network Map'))}</span>
           <span id="netmap-summary" style="font-size:11px; color:var(--muted);"></span>
         </div>
         <div class="os-window-controls">
           <button class="win-btn close-btn" id="netmap-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
-      <div style="padding:8px 16px; font-size:11px; color:var(--muted); border-bottom:1px solid rgba(255,255,255,0.06);" data-i18n="cw.netmap_hint">${escapeHtml(t('cw.netmap_hint', 'Click a network to highlight its containers.'))}</div>
+      <div style="padding:8px 16px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));" data-i18n="cw.netmap_hint">${escapeHtml(t('cw.netmap_hint', 'Click a network to highlight its containers.'))}</div>
       <div id="netmap-body" style="flex:1; overflow:auto; padding:10px 12px;"></div>
     </div>`;
   document.body.appendChild(overlay);
@@ -206,6 +206,6 @@ export async function openNetworkMap() {
     renderBody(overlay);
   } catch {
     _topology = null;
-    body.innerHTML = `<div class="netmap-error" style="padding:24px; text-align:center; color:#f87171; font-size:12px;">${escapeHtml(t('cw.netmap_failed', 'Could not load Docker networks.'))}</div>`;
+    body.innerHTML = `<div class="netmap-error" style="padding:24px; text-align:center; color:var(--lt-t-f87171ff, #f87171); font-size:12px;">${escapeHtml(t('cw.netmap_failed', 'Could not load Docker networks.'))}</div>`;
   }
 }

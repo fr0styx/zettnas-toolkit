@@ -759,7 +759,7 @@ export function initSettings() {
               <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
                 <span>${icon}</span>
                 <div style="min-width:0;">
-                  <span style="font-weight:600; color:#fff; font-size:11.5px;">${escapeHtml(chk.title)}: </span>
+                  <span style="font-weight:600; color:var(--lt-t-ffffffff, #fff); font-size:11.5px;">${escapeHtml(chk.title)}: </span>
                   <span style="color:${color}; font-size:11px;">${escapeHtml(chk.message)}</span>
                 </div>
               </div>
@@ -1185,7 +1185,7 @@ export async function sampleWallpaperPalette() {
   }
 
   try {
-    container.innerHTML = `<span style="font-size:11px; color:var(--brand); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
+    container.innerHTML = `<span style="font-size:11px; color:var(--lt-ink-brand, var(--brand)); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -1954,7 +1954,7 @@ export async function renderApiTokens() {
       row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);';
       row.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:2px;">
-          <div style="font-size:11px; font-weight:700; color:#fff;">${escapeHtml(t.name)}</div>
+          <div style="font-size:11px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(t.name)}</div>
           <div style="font-size:11px; color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
         </div>
         <button class="btn-rect danger" data-id="${escapeHtml(t.id)}">Revoke</button>

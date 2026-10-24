@@ -19,7 +19,7 @@
   background: rgba(13, 20, 30, var(--glass-opacity, 0.72));
   backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
   -webkit-backdrop-filter: blur(var(--glass-blur, 24px)) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
   border-radius: var(--window-radius, 14px);
   box-shadow: 0 25px 65px rgba(0, 0, 0, 0.88), 0 0 24px rgba(var(--accent-rgb, 37, 194, 160), calc(0.18 * var(--window-glow-enabled, 1)));
   overflow: hidden;
@@ -33,8 +33,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: radial-gradient(circle, #556677 30%, #202b38 90%);
-  border: 1px solid #101620;
+  background: radial-gradient(circle, #556677 30%, var(--lt-b-202b38ff, #202b38) 90%);
+  border: 1px solid var(--lt-r-101620ff, #101620);
   box-shadow: inset 0 1px 1px rgba(255,255,255,0.3);
   z-index: 5;
   pointer-events: none;
@@ -46,11 +46,11 @@
 
 .management-window-header {
   padding: 12px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(180deg, #16202c 0%, #111a24 100%);
+  background: linear-gradient(180deg, var(--lt-b-16202cff, #16202c) 0%, var(--lt-b-111a24ff, #111a24) 100%);
   cursor: move;
   user-select: none;
   min-height: 52px;
@@ -68,7 +68,7 @@
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.8px;
-  color: #f8fafc;
+  color: var(--lt-t-f8fafcff, #f8fafc);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -94,7 +94,7 @@
   overflow: hidden;
   flex: 1;
   min-height: 0;
-  background: #0d141e;
+  background: var(--lt-b-0d141eff, #0d141e);
 }
 
 /* LEFT SIDEBAR */
@@ -102,8 +102,8 @@
   width: 215px;
   min-width: 215px;
   height: 100%;
-  background: rgba(10, 16, 24, 0.95);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-0a1018f2, rgba(10, 16, 24, 0.95));
+  border-right: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   display: flex;
   flex-direction: column;
   padding: 12px 8px;
@@ -123,7 +123,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   padding: 10px 10px 4px 10px;
   margin-top: 6px;
   display: flex;
@@ -143,7 +143,7 @@
   border-radius: 6px;
   background: transparent;
   border: 1px solid transparent;
-  color: #94a3b8;
+  color: var(--lt-t-94a3b8ff, #94a3b8);
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
@@ -155,14 +155,14 @@
 }
 
 .mgmt-sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f8fafc;
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
+  color: var(--lt-t-f8fafcff, #f8fafc);
 }
 
 .mgmt-sidebar-item.active {
   background: rgba(37, 194, 160, 0.14);
   border-color: rgba(37, 194, 160, 0.35);
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   font-weight: 700;
 }
 
@@ -197,8 +197,8 @@
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  color: var(--lt-t-94a3b8ff, #94a3b8);
 }
 
 .mgmt-sidebar-badge.alert-badge {
@@ -214,7 +214,7 @@
   padding: 20px;
   overflow-y: auto;
   min-width: 0;
-  background: #0d141e;
+  background: var(--lt-b-0d141eff, #0d141e);
   box-sizing: border-box;
 }
 
@@ -272,75 +272,75 @@
 }
 .btn-docker-more-sheet {
   display: none !important;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  color: var(--lt-t-e2e8f0ff, #e2e8f0);
+  border-color: var(--lt-r-ffffff33, rgba(255, 255, 255, 0.2));
 }
 .btn-docker-more-sheet:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #fff;
+  background: var(--lt-b-ffffff2e, rgba(255, 255, 255, 0.18));
+  border-color: var(--lt-r-ffffff66, rgba(255, 255, 255, 0.4));
+  color: var(--lt-t-ffffffff, #fff);
 }
 .btn-docker-edit {
-  background: rgba(254, 240, 138, 0.12);
-  color: #fde047;
-  border-color: rgba(254, 240, 138, 0.35);
+  background: var(--lt-b-fef08a1f, rgba(254, 240, 138, 0.12));
+  color: var(--lt-t-fde047ff, #fde047);
+  border-color: var(--lt-r-fef08a59, rgba(254, 240, 138, 0.35));
 }
 .btn-docker-edit:hover:not(:disabled) {
-  background: rgba(254, 240, 138, 0.28);
+  background: var(--lt-b-fef08a47, rgba(254, 240, 138, 0.28));
   border-color: #fde047;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(253, 224, 71, 0.35);
 }
 .btn-docker-delete {
   background: rgba(244, 63, 94, 0.12);
-  color: #fb7185;
+  color: var(--lt-t-fb7185ff, #fb7185);
   border-color: rgba(244, 63, 94, 0.35);
 }
 .btn-docker-delete:hover:not(:disabled) {
   background: rgba(244, 63, 94, 0.28);
   border-color: #f43f5e;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
 }
 .btn-docker-stack {
   background: rgba(56, 189, 248, 0.1);
-  color: var(--accent-cyan, #38bdf8);
+  color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));
   border-color: rgba(56, 189, 248, 0.3);
 }
 .btn-docker-stack:hover:not(:disabled) {
   background: rgba(56, 189, 248, 0.25);
   border-color: #38bdf8;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
 }
 .btn-docker-update-single {
   background: rgba(245, 158, 11, 0.14);
-  color: #fbbf24;
+  color: var(--lt-t-fbbf24ff, #fbbf24);
   border-color: rgba(245, 158, 11, 0.35);
 }
 .btn-docker-update-single:hover:not(:disabled) {
   background: rgba(245, 158, 11, 0.3);
   border-color: #fbbf24;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
 }
 .btn-docker-backup {
   background: rgba(249, 115, 22, 0.14);
-  color: #fb923c;
+  color: var(--lt-t-fb923cff, #fb923c);
   border-color: rgba(249, 115, 22, 0.35);
 }
 .btn-docker-backup:hover:not(:disabled) {
   background: rgba(249, 115, 22, 0.3);
   border-color: #f97316;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(249, 115, 22, 0.45);
 }
 .ci-btn-backup-orange:hover:not(:disabled),
 #ci-btn-backup-action:hover:not(:disabled) {
   background: rgba(249, 115, 22, 0.28) !important;
   border-color: #f97316 !important;
-  color: #fff !important;
+  color: var(--lt-t-ffffffff, #fff) !important;
   box-shadow: 0 0 12px rgba(249, 115, 22, 0.45);
 }
 .btn-docker-update-badge {
@@ -348,7 +348,7 @@
   align-items: center;
   gap: 3px;
   background: rgba(245, 158, 11, 0.18);
-  color: #fbbf24;
+  color: var(--lt-t-fbbf24ff, #fbbf24);
   border: 1px solid rgba(245, 158, 11, 0.45);
   font-size: 9px;
   font-weight: 700;
@@ -364,7 +364,7 @@
 .btn-docker-update-badge:hover:not(:disabled) {
   background: rgba(245, 158, 11, 0.35);
   border-color: #fbbf24;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.45);
   transform: translateY(-1px);
 }
@@ -373,7 +373,7 @@
 }
 .btn-docker-stop {
   background: rgba(239, 68, 68, 0.12);
-  color: #f87171;
+  color: var(--lt-t-f87171ff, #f87171);
   border-color: rgba(239, 68, 68, 0.3);
   vertical-align: middle !important;
   padding: 0 !important;
@@ -391,12 +391,12 @@
 .btn-docker-stop:hover:not(:disabled) {
   background: rgba(239, 68, 68, 0.25);
   border-color: #ef4444;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 .btn-docker-restart {
   background: rgba(56, 189, 248, 0.12);
-  color: #38bdf8;
+  color: var(--lt-t-38bdf8ff, #38bdf8);
   border-color: rgba(56, 189, 248, 0.3);
   vertical-align: middle !important;
   margin-top: 0 !important;
@@ -405,7 +405,7 @@
 .btn-docker-restart:hover:not(:disabled) {
   background: rgba(56, 189, 248, 0.25);
   border-color: #0284c7;
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
 }
 .btn-docker-start {
@@ -420,7 +420,7 @@
 .btn-docker-start:hover:not(:disabled) {
   background: rgba(37, 194, 160, 0.25);
   border-color: var(--ok2, #25c2a0);
-  color: #fff;
+  color: var(--lt-t-ffffffff, #fff);
   box-shadow: 0 0 10px rgba(37, 194, 160, 0.4);
 }
 .btn-container-act:disabled {

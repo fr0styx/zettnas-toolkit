@@ -42,7 +42,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--lt-b-00000066, rgba(0, 0, 0, 0.4));
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -56,11 +56,11 @@
   font-weight: 800;
   font-family: var(--font-mono, monospace);
   line-height: 1;
-  color: #fbbf24;
+  color: var(--lt-t-fbbf24ff, #fbbf24);
 }
 
 .canary-timer-circle.danger .canary-digits {
-  color: #f87171;
+  color: var(--lt-t-f87171ff, #f87171);
 }
 
 .canary-unit {
@@ -73,14 +73,14 @@
 
 .net-proto-btn.active {
   background: var(--accent-cyan, #0ea5e9);
-  color: #ffffff;
+  color: var(--lt-t-ffffffff, #ffffff);
   border-color: var(--accent-cyan, #0ea5e9);
 }
 
 .net-cidr-preset.active,
 .net-dns-preset.active {
   background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
+  color: var(--lt-t-38bdf8ff, #38bdf8);
   border-color: rgba(56, 189, 248, 0.5);
 }
 
@@ -94,8 +94,8 @@
   gap: 6px;
   max-height: 150px;
   overflow-y: auto;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3));
+  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
   border-radius: 6px;
   padding: 8px 10px;
 }
@@ -105,7 +105,7 @@
 }
 
 .network-member-checkbox-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--lt-b-ffffff26, rgba(255, 255, 255, 0.15));
   border-radius: 3px;
 }
 
@@ -122,7 +122,7 @@
 }
 
 .network-member-checkbox-list label:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
 }
 
 .network-member-checkbox-list input[type="checkbox"] {
@@ -134,7 +134,7 @@
 
 .net-stp-toggle-btn.active {
   background: var(--accent-cyan, #0ea5e9);
-  color: #ffffff;
+  color: var(--lt-t-ffffffff, #ffffff);
   border-color: var(--accent-cyan, #0ea5e9);
 }
 
@@ -145,7 +145,7 @@
 .btn-delete-vlan:hover {
   background: rgba(239, 68, 68, 0.18) !important;
   border-color: rgba(239, 68, 68, 0.6) !important;
-  color: #ef4444 !important;
+  color: var(--lt-t-ef4444ff, #ef4444) !important;
   transform: scale(1.05);
 }
 

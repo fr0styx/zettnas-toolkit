@@ -37,20 +37,20 @@ export async function fetchAndRenderBackupJobs(mountEl) {
       const isRemote = job.destination_type === 'remote';
       const isSettings = job.kind === 'config';
       const destBadge = isRemote
-        ? `<span class="badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border: 1px solid rgba(14,165,233,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
+        ? `<span class="badge" style="background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border: 1px solid rgba(14,165,233,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">☁️ ${escapeHtml(job.remote_name || 'Cloud')}:${escapeHtml(job.remote_path || '')}</span>`
         : job.destination_type === 'local_folder'
-          ? `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">📁 ${escapeHtml(job.local_path || '')}</span>`
-          : `<span class="badge" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">📸 Local Snapshot</span>`;
+          ? `<span class="badge" style="background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">📁 ${escapeHtml(job.local_path || '')}</span>`
+          : `<span class="badge" style="background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">📸 Local Snapshot</span>`;
 
-      const schedBadge = `<span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; text-transform: capitalize;">${escapeHtml(job.schedule || 'daily')}</span>`;
+      const schedBadge = `<span class="badge" style="background: var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; text-transform: capitalize;">${escapeHtml(job.schedule || 'daily')}</span>`;
       
       let statusHtml;
       if (job.last_status === 'running') {
-        statusHtml = `<span style="display:inline-flex; align-items:center; gap:4px; color: #38bdf8; font-size: var(--zn-fs-xs);"><span class="spinner-inline" style="width:10px; height:10px;"></span> Running...</span>`;
+        statusHtml = `<span style="display:inline-flex; align-items:center; gap:4px; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs);"><span class="spinner-inline" style="width:10px; height:10px;"></span> Running...</span>`;
       } else if (job.last_status === 'success') {
-        statusHtml = `<span style="color: #34d399; font-size: var(--zn-fs-xs); font-weight:600;">✓ Success</span>`;
+        statusHtml = `<span style="color: var(--lt-t-34d399ff, #34d399); font-size: var(--zn-fs-xs); font-weight:600;">✓ Success</span>`;
       } else if (job.last_status === 'error') {
-        statusHtml = `<span style="color: #f43f5e; font-size: var(--zn-fs-xs); font-weight:600;" title="${escapeHtml(job.last_error || '')}">⚠ Failed</span>`;
+        statusHtml = `<span style="color: var(--lt-t-f43f5eff, #f43f5e); font-size: var(--zn-fs-xs); font-weight:600;" title="${escapeHtml(job.last_error || '')}">⚠ Failed</span>`;
       } else {
         statusHtml = `<span style="color: var(--muted); font-size: var(--zn-fs-xs);">Idle</span>`;
       }
@@ -58,8 +58,8 @@ export async function fetchAndRenderBackupJobs(mountEl) {
       const lastRunStr = formatDateTime(job.last_run_at, undefined, t('common.never', 'Never'));
 
       return `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: var(--zn-fs-sm);">
-          <td style="padding: 10px 12px; font-weight: 600; color: #fff;">
+        <tr style="border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); font-size: var(--zn-fs-sm);">
+          <td style="padding: 10px 12px; font-weight: 600; color: var(--lt-t-ffffffff, #fff);">
             <div>${escapeHtml(job.name)}</div>
             <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: normal;">${isSettings
               ? escapeHtml(t('backup.kind_config_source', 'ZettNAS settings (encrypted)'))
@@ -91,10 +91,10 @@ export async function fetchAndRenderBackupJobs(mountEl) {
     }).join('');
 
     mount.innerHTML = `
-      <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+      <div style="overflow-x: auto; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 8px; border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase;">
+            <tr style="border-bottom: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase;">
               <th style="padding: 8px 12px;">Task & Target</th>
               <th style="padding: 8px 12px;">Pipeline</th>
               <th style="padding: 8px 12px;">Schedule & Retention</th>
@@ -143,7 +143,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
     });
 
   } catch (err) {
-    mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: var(--zn-fs-sm);">Failed to load backup jobs: ${escapeHtml(err.message)}</div>`;
+    mount.innerHTML = `<div style="padding: 16px; color: var(--lt-t-f43f5eff, #f43f5e); font-size: var(--zn-fs-sm);">Failed to load backup jobs: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -175,8 +175,8 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
       const createdDate = formatDateTime(s.created_at, undefined, 'N/A');
       const poolId = s.pool_id || 'default';
       return `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: var(--zn-fs-sm);">
-          <td style="padding: 8px 12px; font-weight: 600; color: #fff;">
+        <tr style="border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); font-size: var(--zn-fs-sm);">
+          <td style="padding: 8px 12px; font-weight: 600; color: var(--lt-t-ffffffff, #fff);">
             <span style="font-family: monospace;">📸 ${escapeHtml(s.name)}</span>
           </td>
           <td style="padding: 8px 12px; color: var(--muted); font-size: var(--zn-fs-xs);">
@@ -203,10 +203,10 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
     }).join('');
 
     mount.innerHTML = `
-      <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+      <div style="overflow-x: auto; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 8px; border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase;">
+            <tr style="border-bottom: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase;">
               <th style="padding: 8px 12px;">Snapshot Name</th>
               <th style="padding: 8px 12px;">Filesystem Path</th>
               <th style="padding: 8px 12px;">Created</th>
@@ -259,7 +259,7 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
     });
 
   } catch (err) {
-    mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: var(--zn-fs-sm);">Failed to load snapshots: ${escapeHtml(err.message)}</div>`;
+    mount.innerHTML = `<div style="padding: 16px; color: var(--lt-t-f43f5eff, #f43f5e); font-size: var(--zn-fs-sm);">Failed to load snapshots: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -302,8 +302,8 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     const rowsHtml = backups.map(b => {
       const isUninstall = b.reason === 'uninstall';
       const reasonBadge = isUninstall
-        ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">⚠️ Auto-Archive (Uninstall)</span>`
-        : `<span class="badge" style="background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
+        ? `<span class="badge" style="background: rgba(239,68,68,0.15); color: var(--lt-t-fca5a5ff, #fca5a5); border: 1px solid rgba(239,68,68,0.3); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">⚠️ Auto-Archive (Uninstall)</span>`
+        : `<span class="badge" style="background: rgba(249, 115, 22, 0.15); color: var(--lt-t-fb923cff, #fb923c); border: 1px solid rgba(249, 115, 22, 0.35); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">💾 On-Demand</span>`;
 
       const createdDate = formatDateTime(b.created_at_epoch || b.created_at, undefined, 'N/A');
       const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? `${(b.archive_size_bytes / (1024 * 1024)).toFixed(1)} MB` : '--');
@@ -311,20 +311,20 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
       const mountsCount = b.mounts_count || (b.mounts ? b.mounts.length : 0);
 
       return `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06); font-size: var(--zn-fs-sm);">
-          <td style="padding: 10px 12px; font-weight: 600; color: #fff;">
+        <tr style="border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); font-size: var(--zn-fs-sm);">
+          <td style="padding: 10px 12px; font-weight: 600; color: var(--lt-t-ffffffff, #fff);">
             <div style="display:flex; align-items:center; gap:6px;">
               <span aria-hidden="true">📦</span>
               <strong>${escapeHtml(b.container_name || b.id)}</strong>
               ${stackHtml}
             </div>
             <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: normal; margin-top:2px;">
-              Image: <code style="font-size: var(--zn-fs-xs); color:#cbd5e1;">${escapeHtml(b.image || 'N/A')}</code>
+              Image: <code style="font-size: var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1);">${escapeHtml(b.image || 'N/A')}</code>
             </div>
           </td>
           <td style="padding: 10px 12px;">${reasonBadge}</td>
           <td style="padding: 10px 12px;">
-            <div style="font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: #e2e8f0;">${escapeHtml(b.archive_file || b.id)}</div>
+            <div style="font-family: var(--font-mono, monospace); font-size: var(--zn-fs-xs); color: var(--lt-t-e2e8f0ff, #e2e8f0);">${escapeHtml(b.archive_file || b.id)}</div>
             <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;">
               ${sizeStr} • ${mountsCount} volume${mountsCount === 1 ? '' : 's'}
             </div>
@@ -350,10 +350,10 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     }).join('');
 
     mount.innerHTML = `
-      <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+      <div style="overflow-x: auto; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 8px; border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase;">
+            <tr style="border-bottom: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase;">
               <th style="padding: 8px 12px;">Application</th>
               <th style="padding: 8px 12px;">Trigger</th>
               <th style="padding: 8px 12px;">Archive File & Size</th>
@@ -431,6 +431,6 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
     });
 
   } catch (err) {
-    mount.innerHTML = `<div style="padding: 16px; color: #f43f5e; font-size: var(--zn-fs-sm);">Failed to load application backups: ${escapeHtml(err.message)}</div>`;
+    mount.innerHTML = `<div style="padding: 16px; color: var(--lt-t-f43f5eff, #f43f5e); font-size: var(--zn-fs-sm);">Failed to load application backups: ${escapeHtml(err.message)}</div>`;
   }
 }

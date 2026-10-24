@@ -5,7 +5,7 @@
 #modal-vm-edit.smart-modal-backdrop,
 #modal-vm-create.smart-modal-backdrop,
 #modal-vm-snapshots.smart-modal-backdrop {
-  background: rgba(0, 0, 0, 0.6) !important;
+  background: var(--lt-b-00000099, rgba(0, 0, 0, 0.6)) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   z-index: var(--z-modal-backdrop, 9000);
@@ -42,8 +42,8 @@
   resize: both;
   min-width: 480px;
   min-height: 400px;
-  background: #0d131d !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: var(--lt-b-0d131dff, #0d131d) !important;
+  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12)) !important;
   border-radius: var(--window-radius, 14px) !important;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
   transition: width 0.18s ease, height 0.18s ease, border-radius 0.18s ease, box-shadow 0.18s ease;
@@ -70,7 +70,7 @@
 .vm-modal-window .smart-modal-body {
   overflow-x: hidden !important;
   overflow-y: auto !important;
-  background: #0d131d !important;
+  background: var(--lt-b-0d131dff, #0d131d) !important;
 }
 
 .vm-modal-window .smart-modal-body > * {
@@ -81,8 +81,8 @@
   height: 40px !important;
   min-height: 40px !important;
   padding: 0 16px !important;
-  background: #141c28 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--lt-b-141c28ff, #141c28) !important;
+  border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) !important;
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
@@ -91,8 +91,8 @@
 }
 
 .vm-modal-window .smart-modal-footer {
-  background: #0a0e16 !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--lt-b-0a0e16ff, #0a0e16) !important;
+  border-top: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) !important;
 }
 
 .vm-modal-window .smart-modal-title {
@@ -101,7 +101,7 @@
   gap: 8px !important;
   font-size: 13px !important;
   font-weight: 700 !important;
-  color: #fff !important;
+  color: var(--lt-t-ffffffff, #fff) !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
