@@ -97,7 +97,7 @@ def render_lcd_loop():
         logger.info("[LCD] No auxiliary front-panel LCD detected or ENABLE_FB=0. Running web-only.")
         return
 
-    chromium = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "/usr/bin/chromium")
+    chromium = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", "/usr/lib/chromium/chromium-headless-shell")
     if not os.path.exists(chromium):
         logger.info(
             "[LCD] The core image has no LCD renderer (no Chromium). Use the full image to drive the front LCD."
@@ -135,7 +135,6 @@ def render_lcd_loop():
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
-        "--headless=shell",
         "--disable-background-networking",
         "--disable-background-timer-throttling",
         "--disable-renderer-backgrounding",

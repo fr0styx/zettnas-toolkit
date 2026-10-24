@@ -43,7 +43,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Multi-arch Playwright support (linux/amd64 and linux/arm64)
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+# The LCD needs only headless rendering: Chromium's headless shell, not the full browser (PERF-2)
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/lib/chromium/chromium-headless-shell
 
 WORKDIR /app
 
@@ -81,8 +82,7 @@ RUN if [ "$VARIANT" = "full" ]; then \
         qemu-system-modules-spice \
         qemu-system-modules-opengl \
         libslirp0 \
-        chromium \
-        chromium-sandbox \
+        chromium-headless-shell \
         libnss3 \
         libnspr4 \
         libatk1.0-0 \
