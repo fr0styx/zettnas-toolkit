@@ -1,5 +1,22 @@
 # ZettNAS Toolkit - Release Changelog
 
+## Unreleased
+
+#### Security
+
+- **Cloud remote passwords never appear on a command line.** They are handed to rclone on stdin; before, anyone who could list the host's processes could read them while a remote was saved.
+- Remote names can't start with a dot: a remote named `.` or `..` could unmount every cloud mount or mount over `/mnt`.
+
+#### Fixes
+
+- **A SMART self-test is never reported as passed without a result.** When the drive gave no answer (a timeout, a busy disk), the test was recorded as passed; ZettNAS now asks again, and after two days reports the result as unknown.
+- Saving a cloud remote with its password shown as `********` keeps the stored password.
+
+#### AI
+
+- **Benchmark shows how long each model takes to start answering a long question** (6,000 tokens from documents, as Ask Zetty asks them), next to its writing speed.
+- `scripts/llm_bench.py` compares the same measurement across Ollama (GPU or CPU) and OpenVINO GenAI.
+
 ## v1.10.1 (2026-10-24)
 ### 🛡️ Safer usernames and media import
 

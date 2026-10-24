@@ -42,8 +42,8 @@ class RemoteTestRequest(BaseModel):
 
 
 class RemoteMountRequest(BaseModel):
-    remote_path: str = ""
-    vfs_cache: str = "writes"
+    remote_path: str = Field("", max_length=1024)
+    vfs_cache: str = Field("writes", pattern="^(off|minimal|writes|full)$")
     read_only: bool = False
 
 
@@ -143,6 +143,8 @@ async def test_existing_remote(name: str):
     engine = get_rclone_engine()
     try:
         return await asyncio.to_thread(engine.test_remote, name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -155,6 +157,8 @@ async def delete_cloud_remote(name: str):
         res = await asyncio.to_thread(engine.delete_remote, name)
         _broadcast_remotes_change(name, "delete")
         return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -170,6 +174,8 @@ async def mount_cloud_remote(name: str, req: RemoteMountRequest | None = None):
         res = await asyncio.to_thread(engine.mount_remote, name, r_path, vfs, ro)
         _broadcast_remotes_change(name, "mount")
         return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -182,6 +188,8 @@ async def unmount_cloud_remote(name: str):
         res = await asyncio.to_thread(engine.unmount_remote, name)
         _broadcast_remotes_change(name, "unmount")
         return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
@@ -192,6 +200,8 @@ async def list_remote_files(name: str, path: str = ""):
     engine = get_rclone_engine()
     try:
         return await asyncio.to_thread(engine.list_remote_files, name, path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 

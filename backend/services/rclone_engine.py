@@ -24,7 +24,17 @@ from backend.services.webdav_engine import ensure_fuse_device
 
 logger = logging.getLogger("ZettNAS.Rclone")
 
-VALID_REMOTE_NAME = re.compile(r"^[a-zA-Z0-9_\-\.]{1,64}$")
+# The first character is never a dot: a remote is mounted at <remotes>/<name>, and "." or ".." would be
+# the remotes folder itself (unmounting every cloud mount) or the folder above it.
+VALID_REMOTE_NAME = re.compile(r"^[a-zA-Z0-9_][a-zA-Z0-9_\-\.]{0,63}$")
+MASKED = "********"  # what list_remotes shows instead of a secret
+
+
+def check_remote_name(name: str) -> str:
+    if not VALID_REMOTE_NAME.fullmatch(str(name or "")):
+        raise ValueError(f"Invalid remote name: '{name}'.")
+    return name
+
 
 SENSITIVE_KEYS = {
     "pass",
@@ -430,33 +440,24 @@ class RcloneEngine:
         return os.path.ismount(mount_path)
 
     def _obscure_password(self, password: str) -> str:
-        """Obscures plaintext password using rclone obscure if not already obscured."""
+        """rclone's obscured form of a password, passed on stdin: on a command line it would be
+        visible to anyone who can list the host's processes."""
         if not password:
             return ""
         try:
-            rclone_bin = self._get_rclone_bin()
-            # Check if already obscured
-            check = subprocess.run(
-                [rclone_bin, "reveal", password],
-                capture_output=True,
-                text=True,
-                timeout=3,
-            )
-            if check.returncode == 0 and check.stdout.strip():
-                # Already obscured
-                return password
-
             proc = subprocess.run(
-                [rclone_bin, "obscure", password],
+                [self._get_rclone_bin(), "obscure", "-"],
+                input=password,
                 capture_output=True,
                 text=True,
-                timeout=3,
+                timeout=5,
             )
             if proc.returncode == 0 and proc.stdout.strip():
                 return proc.stdout.strip()
+            logger.warning("[RCLONE] rclone obscure failed: %s", proc.stderr.strip()[:200])
         except Exception as e:
             logger.warning(f"[RCLONE] Failed obscuring password: {e}")
-        return password
+        raise ValueError("The password could not be stored.")
 
     def _resolve_onedrive_metadata(self, parameters: dict[str, Any]) -> dict[str, Any]:
         """Auto-queries Microsoft Graph API to resolve drive_id and drive_type if missing."""
@@ -534,7 +535,9 @@ class RcloneEngine:
     def create_remote(self, name: str, remote_type: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Creates or updates a remote in rclone.conf via RawConfigParser."""
         if not VALID_REMOTE_NAME.fullmatch(name):
-            raise ValueError(f"Invalid remote name: '{name}'. Must be 1-64 alphanumeric chars, dash, or underscore.")
+            raise ValueError(
+                f"Invalid remote name: '{name}'. 1-64 letters, digits, dots, dashes or underscores, not starting with a dot."
+            )
 
         parameters = dict(parameters)
         if remote_type == "onedrive" and not parameters.get("drive_id") and parameters.get("token"):
@@ -557,8 +560,12 @@ class RcloneEngine:
             for k, v in parameters.items():
                 if v is None or v == "":
                     continue
-                # If password field, obscure it
+                if str(v) == MASKED:
+                    continue  # the masked value from list_remotes: keep what is stored
+                # If password field, obscure it (unless it is the stored, already obscured value)
                 if k.lower() in ("pass", "password", "password2"):
+                    if cfg.has_option(name, k) and cfg.get(name, k) == str(v):
+                        continue
                     v = self._obscure_password(str(v))
                 elif k == "token" and isinstance(v, str):
                     v_str = v.strip()
@@ -603,6 +610,7 @@ class RcloneEngine:
 
     def delete_remote(self, name: str) -> dict[str, Any]:
         """Unmounts and removes a remote from rclone.conf."""
+        check_remote_name(name)
         if self._check_is_mounted(name, os.path.join(self.remotes_dir, name)):
             try:
                 self.unmount_remote(name)
@@ -628,6 +636,7 @@ class RcloneEngine:
 
     def test_remote(self, name: str) -> dict[str, Any]:
         """Tests connectivity and credentials of an existing remote in rclone.conf."""
+        check_remote_name(name)
         with self._lock:
             self._ensure_directories()
             rclone_bin = self._get_rclone_bin()
@@ -777,6 +786,7 @@ class RcloneEngine:
         read_only: bool = False,
     ) -> dict[str, Any]:
         """Mounts remote storage into /mnt/remotes/{name} via FUSE."""
+        check_remote_name(name)
         with self._lock:
             ensure_fuse_device()
             mount_path = os.path.join(self.remotes_dir, name)
@@ -864,6 +874,7 @@ class RcloneEngine:
 
     def unmount_remote(self, name: str) -> dict[str, Any]:
         """Unmounts /mnt/remotes/{name} and cleans up mount directory."""
+        check_remote_name(name)
         with self._lock:
             mount_path = os.path.join(self.remotes_dir, name)
             logger.info(f"[RCLONE] Unmounting remote '{name}' at {mount_path}...")
@@ -906,6 +917,7 @@ class RcloneEngine:
 
     def list_remote_files(self, name: str, path: str = "") -> list[dict[str, Any]]:
         """Lists files and folders inside a remote using rclone lsf --json."""
+        check_remote_name(name)
         rclone_bin = self._get_rclone_bin()
         target = f"{name}:{path}" if path else f"{name}:"
         cmd = [

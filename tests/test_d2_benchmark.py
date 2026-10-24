@@ -65,3 +65,34 @@ def test_api_applies_the_balanced_tier(client, auth_headers, tmp_path, monkeypat
     r = client.post("/api/ai/models/benchmark/apply", json={"tier": "balanced"}, headers=auth_headers)
     assert r.status_code == 200 and applied["active_model"] == "gemma3:12b"
     assert client.get("/api/ai/models/benchmark", headers=auth_headers).json()["recommended"]["fast"] == "qwen2.5:3b"
+
+
+def test_document_question_is_measured(tmp_path, monkeypatch):
+    """Each model also reads a 6,000-token document question; its reading time is the wait
+    before Ask Zetty starts answering from files."""
+    monkeypatch.setattr(mb, "RESULTS_FILE", str(tmp_path / "bench.json"))
+    prompts = []
+    base = _fake_ollama({"qwen2.5:3b": 45.0, "gemma3:12b": 18.0, "big:70b": 4.0})
+
+    def http(url, body=None, timeout=30):
+        if url.endswith("/api/generate") and body["options"].get("num_ctx") == mb.DOC_CONTEXT:
+            prompts.append(body["prompt"])
+            if body["model"] == "big:70b":
+                raise TimeoutError("too slow")
+            return {"prompt_eval_count": 6012, "prompt_eval_duration": 26_600_000_000, "eval_count": 1}
+        return base(url, body, timeout)
+
+    out = mb.run("http://ollama", http)
+    by = {r["name"]: r for r in out["results"]}
+    assert by["qwen2.5:3b"]["doc_first_token_s"] == 26.6 and by["qwen2.5:3b"]["doc_prompt_tokens"] == 6012
+    assert by["big:70b"]["doc_first_token_s"] is None and by["big:70b"]["ok"] is True
+    assert len(prompts) == 3 and len(set(prompts)) == 3  # a new prompt each time: no cached answer
+    assert 5500 <= len(prompts[0]) / 4.45 <= 6500
+
+
+def test_document_prompt_size():
+    from backend.services.doc_prompt import QUESTION, build_document_prompt
+
+    p = build_document_prompt(2000)
+    assert p.rstrip().endswith("Answer:") and QUESTION in p
+    assert 1900 <= len(p) / 4.45 <= 2100

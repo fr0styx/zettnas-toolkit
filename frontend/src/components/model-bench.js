@@ -48,13 +48,15 @@ export async function renderModelBench() {
     const table = document.createElement('table');
     table.className = 'zn-table';
     const tr = document.createElement('tr');
-    [t('bench.model', 'Model'), t('bench.speed', 'Tokens/s'), t('bench.first', 'First token'), t('bench.where', 'Runs on')].forEach((h) => tr.append(cell('th', h)));
+    [t('bench.model', 'Model'), t('bench.speed', 'Tokens/s'), t('bench.first', 'First token'), t('bench.doc_first', 'Long question'), t('bench.where', 'Runs on')].forEach((h) => tr.append(cell('th', h)));
     table.append(tr);
     for (const r of st.results) {
       const row = document.createElement('tr');
       row.append(cell('td', r.name));
       row.append(cell('td', r.ok ? String(r.tokens_per_s) : t('bench.failed', 'failed')));
       row.append(cell('td', r.ok ? `${r.first_token_s} s` : '—'));
+      // time to start answering a 6,000-token question from documents, as Ask Zetty does
+      row.append(cell('td', r.ok && r.doc_first_token_s != null ? `${r.doc_first_token_s} s` : '—'));
       row.append(cell('td', r.ok ? placementLabel(r.placement) : (r.error || '').slice(0, 60)));
       table.append(row);
     }

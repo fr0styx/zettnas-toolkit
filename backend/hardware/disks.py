@@ -1516,6 +1516,9 @@ def generate_smart_test_report_markdown(
     return md
 
 
+UNREADABLE_TEST_GIVE_UP_S = 48 * 3600
+
+
 def check_active_smart_tests():
     """
     Background watcher invoked by stats_collector smart_poller_daemon.
@@ -1572,6 +1575,21 @@ def check_active_smart_tests():
                 raw_text = f"Error: {e}"
 
             progress, log_entries = _parse_self_test_info(doc, raw_text)
+
+            # smartctl said nothing usable (a timeout, a busy disk): that is no result, not a pass.
+            # Ask again on the next poll; after two days give up and say the result is unknown.
+            if not doc and not log_entries and not progress.get("in_progress") and not progress.get("is_aborted"):
+                if time.time() - test_info.get("start_time", time.time()) < UNREADABLE_TEST_GIVE_UP_S:
+                    continue
+                with Z_STATE.lock:
+                    Z_STATE.active_smart_tests.pop(dev_name, None)
+                add_event(
+                    level="warning",
+                    title=f"S.M.A.R.T. test result unknown: /dev/{dev_name}",
+                    message="The drive never reported how its self-test ended. Run it again.",
+                    details={"type": "smart_test_result", "dev": dev_name, "status": "UNKNOWN", "passed": False},
+                )
+                continue
 
             if progress.get("in_progress"):
                 with Z_STATE.lock:

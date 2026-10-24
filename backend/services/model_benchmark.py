@@ -3,7 +3,9 @@ Model benchmarks and model tiers (D2).
 
 An admin starts a benchmark; it runs one fixed prompt on every installed chat model in
 Ollama, one at a time, and records generation speed (tokens/s), time to the first
-token, load time and where the model ran (GPU, split, CPU) from Ollama's /api/ps.
+token, load time and where the model ran (GPU, split, CPU) from Ollama's /api/ps. It then
+asks each model a 6,000-token document question and records how long the model takes to
+read it (doc_first_token_s): that is the wait before Ask Zetty starts answering from files.
 From that it recommends two tiers:
 
 - fast: the quickest model, for short jobs;
@@ -25,10 +27,12 @@ from typing import Any
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json
+from backend.services.doc_prompt import build_document_prompt
 
 RESULTS_FILE = os.path.join(DATA_DIR, "model_benchmarks.json")
 PROMPT = "In two sentences, explain why a backup should also be kept somewhere other than the NAS itself."
 READING_SPEED_TPS = 12.0
+DOC_CONTEXT = 8192  # Ask Zetty's context window (AI-7)
 _lock = threading.Lock()
 _job: dict[str, Any] = {"state": "idle"}
 
@@ -108,14 +112,41 @@ def benchmark_model(host: str, model: dict[str, Any], http: Callable = _http_jso
         return {**model, "ok": False, "error": f"{type(e).__name__}: {e}"[:200]}
     ev_n, ev_ns = int(r.get("eval_count") or 0), int(r.get("eval_duration") or 0)
     pe_ns, load_ns = int(r.get("prompt_eval_duration") or 0), int(r.get("load_duration") or 0)
+    ok = ev_n > 0 and ev_ns > 0
     return {
         **model,
-        "ok": ev_n > 0 and ev_ns > 0,
+        **(_document_question(host, model["name"], http) if ok else {}),
+        "ok": ok,
         "tokens_per_s": round(ev_n / (ev_ns / 1e9), 1) if ev_ns else 0.0,
         "first_token_s": round((load_ns + pe_ns) / 1e9, 2),
         "load_s": round(load_ns / 1e9, 2),
         "wall_s": round(time.time() - started, 1),
         "placement": _placement(host, model["name"], http),
+    }
+
+
+def _document_question(host: str, name: str, http: Callable) -> dict[str, Any]:
+    """How long the model takes to read a 6,000-token document question (the model is
+    loaded by then, so this is the reading alone)."""
+    try:
+        r = http(
+            f"{host}/api/generate",
+            {
+                "model": name,
+                "prompt": build_document_prompt(),
+                "stream": False,
+                "keep_alive": "30s",
+                "options": {"num_predict": 1, "temperature": 0, "num_ctx": DOC_CONTEXT},
+            },
+            timeout=900,
+        )
+    except Exception as e:
+        logger.debug("model_benchmark: document question failed for %s: %s", name, e)
+        return {"doc_first_token_s": None}
+    pe_ns = int(r.get("prompt_eval_duration") or 0)
+    return {
+        "doc_first_token_s": round(pe_ns / 1e9, 1) if pe_ns else None,
+        "doc_prompt_tokens": int(r.get("prompt_eval_count") or 0),
     }
 
 
