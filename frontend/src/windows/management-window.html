@@ -1584,7 +1584,7 @@
                 <!-- 4 KPI Metrics Header -->
                 <div class="network-kpi-grid">
                   <div class="network-kpi-card" id="net-kpi-ip-card">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: flex-start;">
                       <div class="network-kpi-label">Primary Host IP</div>
                       <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.35); text-transform: none; margin-top: -2px;" data-i18n="net.host_cfg_btn">⚙️ Configure</button>
                     </div>
@@ -4133,7 +4133,7 @@
 
                   <!-- Chat Composer -->
                   <div class="ai-chat-composer-row" style="display:flex; gap:8px; align-items:center; flex-shrink:0; margin-top:auto;">
-                    <input type="text" id="ai-chat-input" class="tz-select-input" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-placeholder="ui.ask_any_question_browse_the" style="flex:1; height:38px; padding:0 12px; font-size:12.5px; border-radius:8px;" aria-label="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-aria-label="ui.ask_any_question_browse_the" />
+                    <input type="text" id="ai-chat-input" class="tz-select-input" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-placeholder="ui.ask_any_question_browse_the" style="height:38px; padding:0 12px; font-size:12.5px; border-radius:8px;" aria-label="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-aria-label="ui.ask_any_question_browse_the" />
                     <label id="ai-chat-web-toggle-wrap" title="Off: ZettAI stays on this NAS. On: it may search the web and fetch the weather, which sends your question to outside services." data-i18n-title="ui.off_zettai_stays_on_this" style="display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); white-space:nowrap; cursor:pointer;">
                       <input type="checkbox" id="ai-chat-web-toggle" style="margin:0;"> 🌐 <span data-i18n="ai.web_toggle">Web</span>
                     </label>

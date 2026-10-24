@@ -2952,6 +2952,9 @@ export async function fetchAndRenderAiConversations(searchQuery = '') {
       item.addEventListener('click', (e) => {
         if (e.target.closest('.ai-thread-actions')) return;
         selectAiConversation(cid);
+        // on a phone the list covers the chat: close it once a conversation is picked
+        const sidebar = document.getElementById('ai-chat-sidebar');
+        if (document.body.classList.contains('phone-shell') && sidebar && !sidebar.classList.contains('collapsed')) toggleAiSidebar();
       });
     });
 
@@ -3320,7 +3323,9 @@ export function initAiConversationControls() {
   }
 
   try {
-    if (localStorage.getItem('zettnas_ai_sidebar_collapsed') === '1') {
+    // On a phone the list starts closed: open, it covers the chat (56-phone.css)
+    const onPhone = document.body.classList.contains('phone-shell');
+    if (onPhone || localStorage.getItem('zettnas_ai_sidebar_collapsed') === '1') {
       const sidebar = document.getElementById('ai-chat-sidebar');
       if (sidebar) sidebar.classList.add('collapsed');
       if (btnOpen) btnOpen.style.display = 'flex';

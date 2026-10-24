@@ -16,6 +16,7 @@ export const ROUTES = {
   vms: () => window.openManagementSection?.('mgmt-sec-vms'),
   settings: () => window.openManagementSection?.('mgmt-sec-system-group'),
   alerts: () => window.openManagementSection?.('mgmt-pane-notifications'),
+  activity: () => window.openManagementSection?.('mgmt-pane-events'),
 };
 
 export function routeFromHash(hash) {

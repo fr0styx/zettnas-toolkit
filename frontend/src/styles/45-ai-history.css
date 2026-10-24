@@ -285,3 +285,6 @@
   font-style: italic;
 }
 
+
+/* The message box fills the composer row (phones put it on a line of its own, 56-phone.css) */
+.ai-chat-composer-row #ai-chat-input { flex: 1; }

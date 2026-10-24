@@ -1,6 +1,21 @@
-/* Phone mode (UX-13): a launcher, one full-screen page at a time, tabs at the bottom */
-.phone-shell #os-dock-container { display: none; }
-.phone-shell .os-window, .phone-shell .file-manager-window, .phone-shell #management-window, .phone-shell #containers-manager-window, .phone-shell #notif-center-panel {
+/* Phone mode (UX-13): a launcher, one full-screen page at a time, tabs at the bottom.
+   The launcher is the layer under every page; the desktop is hidden on phones. */
+
+/* The desktop is hidden as soon as a signed-in page loads on a phone, before the shell starts,
+   so it never flashes (visibility: the stacked mobile layout forces their display) */
+@media (max-width: 600px) {
+  html.has-auth-session body:not(.lcd-direct) #desktop-widgets-container,
+  html.has-auth-session body:not(.lcd-direct) #desktop-icons-container,
+  html.has-auth-session body:not(.lcd-direct) #os-dock-container,
+  html.has-auth-session body:not(.lcd-direct) .getting-started-card { visibility: hidden; pointer-events: none; }
+}
+body.phone-shell #desktop-widgets-container,
+body.phone-shell #desktop-icons-container,
+body.phone-shell #os-dock-container,
+body.phone-shell .getting-started-card { visibility: hidden; pointer-events: none; }
+
+/* Pages: full screen between the top bar and the tabs, opaque (the launcher is underneath) */
+.phone-shell .os-window, .phone-shell .file-manager-window, .phone-shell #management-window, .phone-shell #containers-manager-window {
   position: fixed;
   inset: 48px 0 calc(60px + env(safe-area-inset-bottom)) 0;
   width: 100%;
@@ -9,16 +24,50 @@
   max-height: none;
   border-radius: 0;
 }
-.phone-launcher { position: fixed; inset: 48px 0 calc(60px + env(safe-area-inset-bottom)) 0; overflow-y: auto; padding: var(--zn-space-3); z-index: 5000; background: var(--bg); }
-.phone-launcher[hidden] { display: none; }
+body.phone-shell #management-modal-overlay #management-window,
+body.phone-shell .os-window,
+body.phone-shell .file-manager-window { background-color: var(--bg); backdrop-filter: none; }
+
+.phone-launcher { position: fixed; inset: 48px 0 calc(60px + env(safe-area-inset-bottom)) 0; overflow-y: auto; padding: var(--zn-space-3); z-index: 500; background: var(--bg); }
 .phone-launcher-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--zn-space-3); }
-.phone-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--zn-space-1); min-height: 92px; border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); background: var(--card); color: var(--fg); font-size: var(--zn-fs-sm); font-weight: 600; }
+.phone-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--zn-space-1); min-height: 92px; border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); background: var(--card); color: var(--fg); font-size: var(--zn-fs-sm); font-weight: 600; text-align: center; }
 .phone-tile .ic { width: 28px; height: 28px; }
+
+/* What the desktop widgets showed, in one line of numbers */
+.phone-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--zn-space-2); margin-bottom: var(--zn-space-3); }
+.phone-stat { display: flex; flex-direction: column; gap: 2px; padding: var(--zn-space-2) var(--zn-space-3); border-radius: var(--zn-radius); border: 1px solid var(--zn-line); background: var(--card); }
+.phone-stat-label { font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.phone-stat-val { font-size: var(--zn-fs); font-weight: 700; color: var(--fg); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 .phone-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10050; display: grid; grid-template-columns: repeat(5, 1fr); padding-bottom: env(safe-area-inset-bottom); background: var(--lt-b-0a0e13f5, rgba(10, 14, 19, 0.96)); border-top: 1px solid var(--zn-line-strong); }
 .phone-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 60px; background: none; border: none; color: var(--muted); font-size: var(--zn-fs-xs); }
 .phone-tab .ic { width: 22px; height: 22px; }
 .phone-tab.is-current { color: var(--lt-ink-brand, var(--brand)); }
-.phone-back { position: fixed; top: 6px; left: 8px; z-index: 10060; min-height: 40px; padding: 0 var(--zn-space-3); border-radius: 20px; border: 1px solid var(--zn-line-strong); background: var(--lt-b-0a0e13eb, rgba(10, 14, 19, 0.92)); color: var(--fg); font-size: var(--zn-fs); font-weight: 600; }
+
+/* Back takes the brand's place in the top bar while a page is open */
+.phone-back { position: fixed; top: 4px; left: 8px; z-index: 10060; min-height: 40px; padding: 0 var(--zn-space-3); border-radius: 20px; border: 1px solid var(--zn-line-strong); background: var(--lt-b-0a0e13eb, rgba(10, 14, 19, 0.92)); color: var(--fg); font-size: var(--zn-fs); font-weight: 600; }
 .phone-back[hidden] { display: none; }
+body.phone-page-open .suite-navbar .suite-brand { visibility: hidden; }
 body.theme-light .phone-tabs, body.theme-light .phone-back { background: rgba(255, 255, 255, 0.96); }
-.phone-shell .getting-started-card { display: none; }
+
+/* A quieter top bar: the stacked-layout switch and the easter egg are desktop things */
+body.phone-shell #mobile-view-toggle-btn, body.phone-shell #yak-easter-egg-btn, body.phone-shell .suite-badge { display: none; }
+
+/* Messages sit above the tabs */
+body.phone-shell #top-toast-container { bottom: calc(68px + env(safe-area-inset-bottom)); }
+
+/* Section headers with an action button wrap instead of pushing it off screen */
+body.phone-shell .mgmt-card-intro { flex-wrap: wrap; gap: var(--zn-space-2); }
+
+/* Navigation is the launcher, Back and the tabs: no sidebar strip or window buttons in pages */
+body.phone-shell #management-modal-overlay .mgmt-sidebar { display: none; }
+/* (the stacked layout forces their display; Back still uses the close button behind the scenes) */
+body.phone-shell .management-window-header .win-btn,
+body.phone-shell .os-window-header .win-btn { visibility: hidden; pointer-events: none; }
+
+/* AI chat: the conversation list opens over the chat, full width, instead of squeezing it */
+body.phone-shell #ai-chat-sidebar:not(.collapsed) { position: absolute; inset: 0; width: 100%; min-width: 0; max-width: none; }
+
+/* AI chat: the message box gets its own full-width line, the buttons the line below */
+body.phone-shell .ai-chat-composer-row { flex-wrap: wrap; }
+body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-width: 0; }

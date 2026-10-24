@@ -9,6 +9,7 @@ import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 import { formatDateTime } from '../format.js';
 import { emptyStateHtml } from './empty-state.js';
+import { state } from '../state.js';
 let _lastEventHash = '';
 let _expandedEvents = new Set();
 let _currentFilter = 'all';
@@ -44,7 +45,7 @@ export function renderEventLog(events) {
   filtered.forEach((e) => {
     const dt = new Date(e.ts * 1000);
     const timeStr = formatDateTime(dt);
-    let color = '#e2e8f0';
+    let color = 'var(--lt-t-e2e8f0ff, #e2e8f0)';
     let icon = 'ℹ️';
     if (e.level === 'error') { color = 'var(--crit)'; icon = '❌'; }
     else if (e.level === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
@@ -110,6 +111,10 @@ export function renderEventLog(events) {
 }
 
 export function initEvents() {
+  // The stats stream sends the events only when they change, usually before this list existed:
+  // draw the ones the page already has
+  _lastEventHash = '';
+  if (state.latestStats?.events) renderEventLog(state.latestStats.events);
   const clearBtn = document.querySelector('.btn-pill-toggle[title="Clear Logs"]') || document.getElementById('btn-clear-events');
   if (clearBtn) {
     clearBtn.addEventListener('click', (e) => {
