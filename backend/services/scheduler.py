@@ -112,6 +112,12 @@ def _run_scheduled_tasks():
         now = time.time()
         t = time.localtime(now)
         _run_ai_retention(now)
+        try:
+            from backend.services.snapshot_service import run_due
+
+            run_due(now)
+        except Exception as e:
+            logger.warning(f"[Scheduler] Snapshot schedules failed: {e}")
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

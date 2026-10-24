@@ -8,6 +8,7 @@ import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { formatDateTime } from '../../format.js';
 import { emptyStateHtml } from '../empty-state.js';
+import { openSnapshotBrowser, renderSnapshotSchedules } from '../snapshot-browser.js';
 
 // =========================================================================
 // Hyper-Backup Tasks & 3-2-1 Pipelines
@@ -152,6 +153,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
 export async function fetchAndRenderSystemSnapshots(mountEl) {
   const mount = mountEl || document.getElementById('system-snapshots-mount');
   if (!mount) return;
+  renderSnapshotSchedules(document.getElementById('snapshot-schedules-mount'));
 
   try {
     const data = await api.get('/api/backup/snapshots');
@@ -183,6 +185,9 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
           </td>
           <td style="padding: 8px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
+              <button class="btn-rect btn-sys-browse-snap" data-snap-name="${escapeHtml(s.name)}" title="${t('snap.browse', 'Browse and restore files')}">
+                <svg class="ic" aria-hidden="true"><use href="#i-storage"/></svg> ${t('snap.browse_short', 'Files')}
+              </button>
               <button class="btn-rect btn-sys-restore-snap" data-snap-name="${escapeHtml(s.name)}" data-pool-id="${escapeHtml(poolId)}" title="${t('ui.rollback_to_this_snapshot', 'Rollback to this snapshot')}">
                 ⏪ Restore
               </button>
@@ -210,6 +215,10 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
         </table>
       </div>
     `;
+
+    mount.querySelectorAll('.btn-sys-browse-snap').forEach((btn) => {
+      btn.addEventListener('click', () => openSnapshotBrowser(btn.dataset.snapName));
+    });
 
     mount.querySelectorAll('.btn-sys-restore-snap').forEach(btn => {
       btn.addEventListener('click', () => {

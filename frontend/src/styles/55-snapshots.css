@@ -1,0 +1,18 @@
+/* Snapshot schedules and the snapshot browser (Batch 6) */
+.snap-sched-list, .snap-entries { list-style: none; margin: 0 0 var(--zn-space-3); padding: 0; display: flex; flex-direction: column; gap: var(--zn-space-1); }
+.snap-sched-row, .snap-entry-row { display: flex; align-items: center; gap: var(--zn-space-2); flex-wrap: wrap; padding: var(--zn-space-1) var(--zn-space-2); border-radius: var(--zn-radius-sm); background: rgba(255, 255, 255, 0.04); font-size: var(--zn-fs-sm); }
+.snap-sched-share { font-weight: 700; color: var(--fg); }
+.snap-sched-last, .snap-entry-meta, .snap-help, .snap-path, .snap-sched-empty { color: var(--muted); font-size: var(--zn-fs-xs); }
+.snap-sched-row > button:first-of-type { margin-left: auto; }
+.snap-sched-form { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: flex-end; }
+.snap-sched-form label { display: flex; flex-direction: column; gap: 2px; font-size: var(--zn-fs-xs); color: var(--muted); }
+.snap-sched-form input, .snap-sched-form select { min-height: var(--zn-btn-h); padding: 0 var(--zn-space-2); border-radius: var(--zn-radius-sm); border: 1px solid var(--zn-line-strong); background: rgba(0, 0, 0, 0.3); color: var(--fg); font-size: var(--zn-fs-sm); }
+.snap-sched-form input[type="number"] { width: 90px; }
+.snapshot-browser { width: min(720px, calc(100vw - 32px)); max-height: 80vh; padding: var(--zn-space-4); border: 1px solid var(--zn-line-strong); border-radius: var(--zn-radius); background: var(--card); color: var(--fg); }
+.snapshot-browser::backdrop { background: rgba(0, 0, 0, 0.55); }
+.snap-head { display: flex; align-items: center; justify-content: space-between; gap: var(--zn-space-2); }
+.snap-head h2 { margin: 0; font-size: var(--zn-fs-title); }
+.snap-entry { flex: 1; display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--fg); font-size: var(--zn-fs-sm); text-align: left; padding: 0; }
+.snap-entry.is-dir { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.snap-body { overflow: auto; max-height: 60vh; }
+.snap-subhead { margin: var(--zn-space-3) 0 var(--zn-space-2); font-size: var(--zn-fs-sm); color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }

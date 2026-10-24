@@ -24,6 +24,16 @@ SAMBA_CONF_FILE = os.path.join(SAMBA_DIR, "smb.conf")
 SAMBA_SHARES_FILE = os.path.join(SAMBA_DIR, "shares.json")
 
 
+def _snapshot_dir_for(share_path: str) -> str | None:
+    """The pool's snapshot folder for a share at <pool>/@shares/<name> or <pool>/<name>."""
+    import os
+
+    parent = os.path.dirname(share_path.rstrip("/"))
+    pool = os.path.dirname(parent) if os.path.basename(parent) == "@shares" else parent
+    snapdir = os.path.join(pool, "@snapshots")
+    return snapdir if pool else None
+
+
 class SambaShareConfig(BaseModel):
     name: str
     path: str
@@ -39,6 +49,7 @@ class SambaShareConfig(BaseModel):
     valid_users: str | None = None
     read_list: str | None = None
     write_list: str | None = None
+    previous_versions: bool = False  # Windows Previous Versions from scheduled snapshots
 
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
@@ -332,6 +343,18 @@ class SambaEngine:
                 conf_lines.append(f"   read list = {share.read_list}")
             if share.write_list:
                 conf_lines.append(f"   write list = {share.write_list}")
+
+            if share.previous_versions:
+                # Windows "Previous Versions" from the scheduled snapshots
+                # (<pool>/@snapshots/<share>@auto-YYYYMMDD-HHMM, see snapshot_service)
+                snapdir = _snapshot_dir_for(share.path)
+                if snapdir:
+                    conf_lines.append("   vfs objects = catia fruit streams_xattr shadow_copy2")
+                    conf_lines.append(f"   shadow:snapdir = {snapdir}")
+                    conf_lines.append(f"   shadow:basedir = {share.path}")
+                    conf_lines.append(f"   shadow:format = {share.name}@auto-%Y%m%d-%H%M")
+                    conf_lines.append("   shadow:sort = desc")
+                    conf_lines.append("   shadow:localtime = yes")
 
             if share.timemachine:
                 conf_lines.append("   fruit:time machine = yes")

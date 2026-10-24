@@ -395,7 +395,13 @@ def _snapshot_pools() -> list[dict[str, Any]]:
                 continue
             name = f"ransomware-guard-{stamp}"
             try:
-                res = pal.create_snapshot(pool.id, "", name, readonly=True)
+                # locked for a week, so whoever triggered the guard can't delete them (Batch 6)
+                try:
+                    res = pal.create_snapshot(
+                        pool.id, "", name, readonly=True, worm_mode="governance", retention_days=7
+                    )
+                except TypeError:  # an adapter without retention locks
+                    res = pal.create_snapshot(pool.id, "", name, readonly=True)
                 out.append({"pool": pool.id, "name": name, "ok": bool(res.get("success", True))})
             except Exception as e:
                 out.append({"pool": pool.id, "name": name, "ok": False, "error": str(e)[:200]})
