@@ -18,6 +18,14 @@ def real_power(monkeypatch, tmp_path):
     monkeypatch.setattr(system_api, "SYSRQ_TRIGGER", str(tmp_path / "sysrq-trigger"))
     monkeypatch.setattr(system_api.time, "sleep", lambda s: None)
     monkeypatch.setattr(system_api.os, "sync", lambda: started.append("sync"))
+    # The tests own the command lists: a real /sbin/poweroff on the machine running them
+    # (as on CI runners) must not be what they find.
+    monkeypatch.setattr(
+        system_api, "REBOOT_TRIGGERS", ((str(tmp_path / "host-reboot"),), ("reboot",), ("shutdown", "-r", "now"))
+    )
+    monkeypatch.setattr(
+        system_api, "POWEROFF_TRIGGERS", ((str(tmp_path / "host-powerdown"),), ("poweroff",), ("shutdown", "-h", "now"))
+    )
     return started, tmp_path
 
 
@@ -49,13 +57,13 @@ def test_a_failing_command_falls_through_to_the_next(real_power, monkeypatch):
     monkeypatch.setattr(system_api.shutil, "which", lambda name: "/bin/" + name)
 
     def popen(cmd, **kw):
-        if cmd[0] == "/host/reboot":
+        if cmd[0].endswith("host-reboot"):
             raise OSError("not executable")
         started.append(cmd)
 
     monkeypatch.setattr(system_api.subprocess, "Popen", popen)
     assert system_api.trigger_power_action("reboot") is True
-    assert started == [["/usr/local/sbin/reboot"]]
+    assert started == [["reboot"]]
 
 
 @pytest.mark.parametrize(("action", "last_key"), [("reboot", "b"), ("shutdown", "o")])
