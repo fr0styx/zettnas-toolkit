@@ -15,7 +15,8 @@
     "lint:py": "ruff check app.py backend tests",
     "format:py": "ruff format app.py backend tests",
     "lint": "ruff check app.py backend tests scripts && ruff format --check app.py backend tests scripts",
-    "check:all": "npm run lint && npm test"
+    "check:all": "npm run lint && npm test",
+    "icons": "node frontend/scripts/build-icons.mjs"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
     "eslint": "10.13.0",
     "globals": "17.13.0",
     "jsdom": "^30.1.3",
+    "lucide-static": "1.55.0",
     "vite": "^8.3.4",
     "vitest": "^5.0.3"
   },

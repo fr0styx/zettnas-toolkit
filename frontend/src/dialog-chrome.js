@@ -42,6 +42,7 @@ function findClose(header) {
   if (marked) return marked;
   return Array.from(header.querySelectorAll('button')).find((b) =>
     GLYPH_CLOSE.test((b.textContent || '').trim())
+    || (!(b.textContent || '').trim() && b.querySelector('svg[data-zi="x"], svg[data-zi="circle-x"]'))
     || /close/i.test(b.getAttribute('aria-label') || '')
     || /close/i.test(b.title || '')) || null;
 }

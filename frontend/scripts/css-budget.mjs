@@ -1,6 +1,7 @@
 // CSS budget (FE-18, UX-6, UX-14): the number of !important declarations, button class names,
-// inline style attributes and emoji used as icons may only go down; new markup uses classes,
-// the shared tokens and the SVG sprite. Run with --update after lowering them to record the new baseline.
+// inline style attributes and emoji without an icon may only go down; new markup uses classes,
+// the shared tokens and the SVG sprite. Emoji with an entry in src/icons/emoji-icons.json are
+// drawn as icons by icons.js; any other emoji in the sources, translations included, counts. Run with --update after lowering them to record the new baseline.
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -22,12 +23,15 @@ let important = 0;
 let inlineStyles = 0;
 let emojiIcons = 0;
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu;
+const ICONS = JSON.parse(readFileSync(join(ROOT, 'src', 'icons', 'emoji-icons.json'), 'utf8'));
 const buttonClasses = new Set();
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
   important += (src.match(/!important/g) || []).length;
   if (!f.endsWith('.css')) inlineStyles += (src.match(/\sstyle=["'`]|\.style\.cssText\s*=/g) || []).length;
-  if (!f.endsWith('.css') && !f.includes('locales')) emojiIcons += (src.match(EMOJI) || []).length;
+  if (!f.endsWith('.css') && !f.endsWith('.json')) {
+    for (const m of src.matchAll(EMOJI)) if (!ICONS[m[0]]) emojiIcons += 1;
+  }
   if (f.endsWith('.css')) {
     for (const m of src.matchAll(/\.((?:btn|button)[-_][\w-]+)/g)) buttonClasses.add(m[1]);
   }

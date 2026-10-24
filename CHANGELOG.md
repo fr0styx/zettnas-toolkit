@@ -22,6 +22,10 @@
 
 - **The light theme is readable everywhere.** Panels, tables, buttons, inputs and badges that kept dark-theme colours now have light ones, and text meets WCAG AA contrast (4.5:1) in every window. Other themes are unchanged.
 
+#### Icons
+
+- **Drawn icons instead of emoji.** Every emoji used as an icon is now a crisp line icon that follows the text colour, in all themes and languages. Screen readers no longer read emoji names aloud.
+
 #### Phone and tablet
 
 - **Install ZettNAS as an app** from the browser menu on your phone. Sharing photos or files to ZettNAS from the share sheet saves them to your **Inbox** folder (never overwriting anything). Turn on **Notifications on this device** to get disk, ransomware and other critical alerts on your phone.

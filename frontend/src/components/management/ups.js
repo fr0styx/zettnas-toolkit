@@ -361,8 +361,10 @@ export async function saveUpsConfigFromDrawer() {
     if (statusEl) {
       statusEl.textContent = t('mgmt.ups_auto_saved', '✓ Saved');
       statusEl.style.display = 'inline-flex';
+      const savedAt = String(Date.now());
+      statusEl.dataset.savedAt = savedAt;
       setTimeout(() => {
-        if (statusEl && statusEl.textContent === '✓ Saved') {
+        if (statusEl && statusEl.dataset.savedAt === savedAt) {
           statusEl.style.display = 'none';
         }
       }, 1500);

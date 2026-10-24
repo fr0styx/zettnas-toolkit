@@ -8,10 +8,13 @@ import './lcd-direct.css';
 import './vm-console-direct.css';
 
 import { initClientLogger } from './client-logger.js';
+import { startIconizer } from './icons.js';
 import { installDomActions } from './dom-actions.js';
 
 installDomActions();
 initClientLogger();
+// Emoji in the interface are drawn as icons from here on (UX-14)
+startIconizer();
 
 import { ZettEventBus } from './event-bus.js';
 import { auth, api, setConfirmationHandler } from './api.js';

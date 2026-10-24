@@ -1,0 +1,14 @@
+/* Icons that replace emoji (UX-14, icons.js): they follow the text colour and size */
+.zi {
+  width: 1.15em; height: 1.15em; display: inline-block; flex: none; vertical-align: -0.2em;
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+/* Status dots (were coloured circle emoji) keep their colour */
+.zi-dot { width: 0.65em; height: 0.65em; border-radius: 50%; vertical-align: 0.05em; background: currentColor; }
+.zi-dot-green { background: #22c55e; }
+.zi-dot-red { background: #ef4444; }
+.zi-dot-yellow { background: #eab308; }
+.zi-dot-orange { background: #f97316; }
+.zi-dot-purple { background: #a855f7; }
+.zi-dot-blue { background: #3b82f6; }
+.zi-dot-grey { background: #94a3b8; }
