@@ -18,6 +18,12 @@ from backend.config import docker_sock as _docker_sock_path
 from backend.fsutil import atomic_write_json, read_json
 from backend.state import Z_STATE
 
+# Host files read or written here (module constants so tests can point them elsewhere)
+UNRAID_NETWORK_CFG = ("/boot/config/network.cfg", "/host/boot/config/network.cfg")
+DNS_SOURCES = ("/boot/config/network.cfg", "/host/etc/resolv.conf", "/etc/resolv.conf")
+HOST_IP_SOURCES = ("/boot/config/network.cfg", "/host/etc/network/interfaces")
+IP_FORWARD_PATHS = ("/proc/sys/net/ipv4/ip_forward", os.path.join(HOST_PROC, "sys/net/ipv4/ip_forward"))
+
 
 def _find_sys_net_dir() -> str | None:
     """Find the sysfs class/net directory on host or container."""
@@ -142,12 +148,7 @@ def _parse_routes() -> list[dict[str, Any]]:
 def _get_dns_servers() -> list[str]:
     """Retrieve DNS nameservers from config or resolv.conf."""
     servers: list[str] = []
-    candidates = [
-        "/boot/config/network.cfg",
-        "/host/etc/resolv.conf",
-        "/etc/resolv.conf",
-    ]
-    for c in candidates:
+    for c in DNS_SOURCES:
         if os.path.isfile(c):
             try:
                 with open(c, encoding="utf-8", errors="replace") as f:
@@ -404,8 +405,7 @@ def get_canary_watchdog() -> CanaryWatchdog:
 def _parse_unraid_network_cfg() -> dict[str, str]:
     """Parse key-values from Unraid /boot/config/network.cfg if present."""
     cfg: dict[str, str] = {}
-    candidates = ["/boot/config/network.cfg", "/host/boot/config/network.cfg"]
-    for c in candidates:
+    for c in UNRAID_NETWORK_CFG:
         if os.path.isfile(c):
             try:
                 with open(c, encoding="utf-8", errors="replace") as f:
@@ -422,8 +422,7 @@ def _parse_unraid_network_cfg() -> dict[str, str]:
 
 def _write_unraid_network_cfg(updates: dict[str, str]) -> bool:
     """Update Unraid /boot/config/network.cfg preserving order and unmanaged keys."""
-    candidates = ["/boot/config/network.cfg", "/host/boot/config/network.cfg"]
-    for c in candidates:
+    for c in UNRAID_NETWORK_CFG:
         if os.path.isfile(c):
             try:
                 lines = []
@@ -781,8 +780,7 @@ def revert_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
 def _get_unraid_descriptions() -> dict[str, str]:
     """Parse descriptions from /boot/config/network.cfg if on Unraid."""
     desc_map: dict[str, str] = {}
-    candidates = ["/boot/config/network.cfg", "/host/boot/config/network.cfg"]
-    for c in candidates:
+    for c in UNRAID_NETWORK_CFG:
         if os.path.isfile(c):
             try:
                 with open(c, encoding="utf-8", errors="replace") as f:
@@ -2210,7 +2208,7 @@ def read_ip():
         return Z_STATE.discovered_host_ip
 
     # 1. Check known network configs
-    for p in ["/boot/config/network.cfg", "/host/etc/network/interfaces"]:
+    for p in HOST_IP_SOURCES:
         if os.path.exists(p):
             try:
                 with open(p, encoding="utf-8", errors="replace") as f:
@@ -3215,7 +3213,7 @@ def generate_wireguard_client_config(
 
 def get_ip_forwarding_status() -> bool:
     """Checks whether IPv4 packet forwarding is enabled in kernel sysctl."""
-    for p in ["/proc/sys/net/ipv4/ip_forward", os.path.join(HOST_PROC, "sys/net/ipv4/ip_forward")]:
+    for p in IP_FORWARD_PATHS:
         if os.path.isfile(p):
             try:
                 with open(p) as f:
@@ -3228,7 +3226,7 @@ def get_ip_forwarding_status() -> bool:
 def set_ip_forwarding(enable: bool) -> bool:
     """Configures kernel IPv4 packet forwarding."""
     val = "1" if enable else "0"
-    for p in ["/proc/sys/net/ipv4/ip_forward", os.path.join(HOST_PROC, "sys/net/ipv4/ip_forward")]:
+    for p in IP_FORWARD_PATHS:
         if os.path.isfile(p):
             try:
                 with open(p, "w") as f:

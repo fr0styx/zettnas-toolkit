@@ -481,7 +481,6 @@ def _run_fan_control(
         "active_pwm1": active_pwm1,
         "active_pwm2": active_pwm2,
         "active_pwm3": active_pwm3,
-        "d": d,
         "now": now,
         "nvme_over_ceiling": nvme_over_ceiling,
         "storage_busy": storage_busy,
@@ -911,7 +910,6 @@ def stats_collector_daemon():
             active_pwm1 = _r["active_pwm1"]
             active_pwm2 = _r["active_pwm2"]
             active_pwm3 = _r["active_pwm3"]
-            d = _r["d"]
             now = _r["now"]
             nvme_over_ceiling = _r["nvme_over_ceiling"]
             storage_busy = _r["storage_busy"]
