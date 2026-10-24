@@ -89,3 +89,28 @@ describe('Emoji drawn as icons (UX-14)', () => {
     expect([...missing]).toEqual([]);
   });
 });
+
+describe('Icons in flex and grid rows', () => {
+  beforeEach(() => { document.body.innerHTML = ''; });
+
+  it('keeps the icon and its words together where a row could spread them apart', () => {
+    document.body.innerHTML =
+      '<div id="row" style="display:flex;justify-content:space-between">👁️ QuickLook <span class="key">Space</span></div>' +
+      '<div id="grid" style="display:grid">📋 Copy</div>';
+    iconizeTree(document.body);
+    const row = document.getElementById('row');
+    const run = row.firstElementChild;
+    expect(run.className).toBe('zi-run');
+    expect(run.querySelector('svg.zi').dataset.zi).toBe('eye');
+    expect(run.textContent.trim()).toBe('QuickLook');
+    expect([...row.children].map((c) => c.className)).toEqual(['zi-run', 'key']);
+    expect(document.querySelector('#grid > .zi-run')).not.toBeNull();
+  });
+
+  it('adds nothing outside flex and grid, or for an icon on its own', () => {
+    document.body.innerHTML = '<p id="p">💾 Save</p><div id="solo" style="display:flex"><span>🗑️</span></div>';
+    iconizeTree(document.body);
+    expect(document.querySelector('.zi-run')).toBeNull();
+    expect(document.querySelector('#p > svg.zi')).not.toBeNull();
+  });
+});

@@ -1017,7 +1017,7 @@ export class FmContextMenu {
     this.menuEl.style.display = 'block';
 
     // Viewport edge clamping
-    const menuWidth = 220;
+    const menuWidth = this.menuEl.offsetWidth || 220; // sized to its longest row
     const menuHeight = this.menuEl.offsetHeight || 300;
     let left = e.clientX;
     let top = e.clientY;

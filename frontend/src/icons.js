@@ -22,6 +22,7 @@ const SKIP_SELECTOR = [
 ].join(',');
 // Tooltips and placeholders are cleaned everywhere except in what people wrote
 const ATTR_SKIP_SELECTOR = '[data-no-icons], .ai-chat-msg, .fm-name, #screen, #mini-lcd-canvas';
+const FLEX_OR_GRID = /flex|grid/;
 const TEXT_ATTRS = ['title', 'placeholder', 'aria-label'];
 
 // Readable names for icon-only buttons without a title
@@ -110,7 +111,16 @@ function convertTextNode(node) {
   }
   if (!firstIcon) return;
   if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-  parent.replaceChild(frag, node);
+  // "👁️ QuickLook" was one piece of text. In a flex or grid row the icon and the words would
+  // become separate items and could be spread apart (space-between), so they stay together.
+  const hasWords = Array.from(frag.childNodes).some((n) => n.nodeType === Node.TEXT_NODE && n.nodeValue.trim());
+  let replacement = frag;
+  if (hasWords && FLEX_OR_GRID.test(String(window.getComputedStyle(parent).display))) {
+    replacement = document.createElement('span');
+    replacement.className = 'zi-run';
+    replacement.appendChild(frag);
+  }
+  parent.replaceChild(replacement, node);
   nameIconOnly(parent, firstIcon);
 }
 

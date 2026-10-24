@@ -149,7 +149,9 @@
 
 /* Glassmorphic Context Menu */
 .fm-context-menu {
-  width: 210px;
+  min-width: 210px;
+  width: max-content;
+  max-width: calc(100vw - 16px);
   background: var(--lt-b-0f172af5, rgba(15, 23, 42, 0.96)) !important;
   backdrop-filter: blur(24px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
@@ -169,7 +171,9 @@
 .fm-ctx-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 16px;
+  white-space: nowrap; /* the menu widens to the longest row instead of wrapping it */
   padding: 6px 10px;
   font-size: 12px;
   color: var(--fg, #e2e8f0);
@@ -188,7 +192,15 @@
   color: var(--lt-t-fca5a5ff, #fca5a5);
 }
 
+/* icon, label, then the shortcut on the right; icons in one column so the labels line up */
+.fm-ctx-item .zi {
+  width: 15px;
+  height: 15px;
+  margin-right: 4px;
+}
+
 .fm-ctx-key {
+  margin-left: auto;
   font-size: 11px;
   color: var(--muted, #64748b);
   font-family: monospace;
