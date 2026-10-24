@@ -329,15 +329,14 @@ jobs:
           docker rm -f zettnas-smoke
 
       # arm64 is built and published, so start it too (under QEMU, hence the longer wait).
-      # Reported, not blocking, until it has passed on a few releases (OPS-10).
+      # Blocking since it passed on every build for two weeks (OPS-10).
       - name: Smoke-test the built image (arm64, emulated, ${{ matrix.variant }})
-        continue-on-error: true
         env:
           IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
         run: |
           fail() {
             logs=$(docker logs zettnas-smoke-arm 2>&1 | tail -40 | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
-            echo "::warning title=arm64 smoke test::$1%0A--- container log (last 40 lines) ---%0A$logs"
+            echo "::error title=arm64 smoke test::$1%0A--- container log (last 40 lines) ---%0A$logs"
             exit 1
           }
           docker run -d --platform linux/arm64 --name zettnas-smoke-arm -p 18083:8082 -e PORT=8082 -e ENABLE_FB=0 "$IMAGE"
@@ -377,6 +376,20 @@ jobs:
           exit-code: "0"
           format: table
 
+      # The real update path, end to end: the current Stable image on fresh data, updated to this
+      # build by its own update helper (data must survive), then to an image that can't start
+      # (must roll back). Blocking, and run before any tag is published, so a build that breaks
+      # updating or rolling back never reaches edge/main (OPS-9).
+      - name: Upgrade and rollback test
+        if: matrix.variant == 'full'
+        run: |
+          docker pull -q "ghcr.io/${{ github.repository }}:latest"
+          docker pull -q "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+          if ! sh scripts/upgrade_rollback_test.sh "ghcr.io/${{ github.repository }}:latest" "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"; then
+            echo "::error title=Upgrade and rollback test::failed, see the step log"
+            exit 1
+          fi
+
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
 
@@ -404,20 +417,6 @@ jobs:
           docker buildx imagetools create "${args[@]}" "ghcr.io/${{ github.repository }}@${DIGEST}"
           echo "Published ${#args[@]} tag argument(s) for ${DIGEST}" >> "$GITHUB_STEP_SUMMARY"
           echo "Verify: cosign verify ghcr.io/${{ github.repository }}@${DIGEST} --certificate-identity-regexp '^https://github\.com/${{ github.repository }}/\.github/workflows/ci\.yml@refs/(heads/main|tags/v[0-9].*)$' --certificate-oidc-issuer https://token.actions.githubusercontent.com" >> "$GITHUB_STEP_SUMMARY"
-
-      # The real update path, end to end: the current Stable image on fresh data, updated to this
-      # build by its own update helper (data must survive), then to an image that can't start
-      # (must roll back). Reported, not blocking, until it has passed on a few releases (OPS-9).
-      - name: Upgrade and rollback test
-        if: matrix.variant == 'full'
-        continue-on-error: true
-        run: |
-          docker pull -q "ghcr.io/${{ github.repository }}:latest"
-          docker pull -q "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
-          if ! sh scripts/upgrade_rollback_test.sh "ghcr.io/${{ github.repository }}:latest" "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"; then
-            echo "::warning title=Upgrade and rollback test::failed, see the step log"
-            exit 1
-          fi
 
   create-release:
     name: GitHub Release & Release Notes
