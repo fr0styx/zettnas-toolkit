@@ -14,6 +14,89 @@ import { t } from '../i18n.js';
 let _wizardInitialized = false;
 let _wizardShown = false;
 
+function setWizardError(msg) {
+  const errEl = document.getElementById('setup-wizard-err');
+  if (errEl) {
+    errEl.textContent = msg;
+    errEl.style.display = msg ? 'block' : 'none';
+  }
+}
+
+/** The password step's problem, or '' when it can be submitted. */
+export function passwordStepProblem() {
+  const currentPwd = (document.getElementById('setup-current-pwd')?.value || '').trim();
+  const newPwd = (document.getElementById('setup-new-pwd')?.value || '').trim();
+  const confirmPwd = (document.getElementById('setup-confirm-pwd')?.value || '').trim();
+  if (!currentPwd) return t('setup.err_enter_current', 'Please enter your current password.');
+  if (!newPwd) return t('setup.err_enter_pwd', 'Please enter a new password.');
+  if (newPwd.length < 8) return t('setup.err_min_8', 'Password must be at least 8 characters long.');
+  if (newPwd.toLowerCase() === 'admin') return t('setup.err_not_admin', "Please choose a secure password other than 'admin'.");
+  if (newPwd !== confirmPwd) return t('setup.err_no_match', 'New password and confirmation do not match.');
+  return '';
+}
+
+/**
+ * Shows the wizard one step at a time (UX-1): 1 welcome, hardware and power; 2 password;
+ * 3 alerts. The body's blocks keep their markup; this groups them and adds Back/Next.
+ */
+export function initWizardStepper(modal) {
+  const body = modal.querySelector('.smart-modal-body');
+  const blocks = body ? Array.from(body.children) : [];
+  const footer = blocks[blocks.length - 1];
+  const groups = { 1: [blocks[0], blocks[1], blocks[3]], 2: [blocks[2]], 3: [blocks[4]] };
+  const names = [t('setup.step_welcome', 'Welcome'), t('setup.step_password', 'Password'), t('setup.step_alerts', 'Alerts')];
+  let current = 1;
+  const steps = document.createElement('ol');
+  steps.className = 'setup-steps';
+  steps.setAttribute('aria-label', t('setup.steps_label', 'Setup steps'));
+  steps.innerHTML = names.map((n, i) => `<li data-step="${i + 1}">${n}</li>`).join('');
+  if (body) body.insertBefore(steps, body.firstChild);
+  const back = document.createElement('button');
+  back.type = 'button';
+  back.className = 'setup-step-nav';
+  back.id = 'setup-wizard-back';
+  back.textContent = t('setup.back', 'Back');
+  const next = document.createElement('button');
+  next.type = 'button';
+  next.className = 'setup-step-nav';
+  next.id = 'setup-wizard-next';
+  next.textContent = t('setup.next', 'Next');
+  const submit = document.getElementById('setup-wizard-submit');
+  if (footer && submit) {
+    footer.insertBefore(back, submit);
+    footer.insertBefore(next, submit);
+  }
+  function show(step) {
+    current = Math.max(1, Math.min(3, step));
+    for (const [n, els] of Object.entries(groups)) {
+      els.forEach((el) => {
+        if (el) el.hidden = Number(n) !== current;
+      });
+    }
+    steps.querySelectorAll('li').forEach((li) => {
+      const n = Number(li.dataset.step);
+      li.classList.toggle('is-current', n === current);
+      li.classList.toggle('is-done', n < current);
+      if (n === current) li.setAttribute('aria-current', 'step');
+      else li.removeAttribute('aria-current');
+    });
+    back.hidden = current === 1;
+    next.hidden = current === 3;
+    if (submit) submit.hidden = current !== 3;
+  }
+  back.addEventListener('click', () => show(current - 1));
+  next.addEventListener('click', () => {
+    if (current === 2) {
+      const problem = passwordStepProblem();
+      setWizardError(problem);
+      if (problem) return;
+    }
+    show(current + 1);
+  });
+  show(1);
+  return { show, get current() { return current; } };
+}
+
 export function initSetupWizard() {
   if (_wizardInitialized) return;
   _wizardInitialized = true;
@@ -76,38 +159,17 @@ export function initSetupWizard() {
     }
   }, true);
 
+  const stepper = initWizardStepper(modal);
+
   if (btnSubmit) {
     btnSubmit.addEventListener('click', async () => {
       const currentPwd = (document.getElementById('setup-current-pwd')?.value || '').trim();
       const newPwd = (document.getElementById('setup-new-pwd')?.value || '').trim();
-      const confirmPwd = (document.getElementById('setup-confirm-pwd')?.value || '').trim();
-      const errEl = document.getElementById('setup-wizard-err');
-
-      const setErr = (msg) => {
-        if (errEl) {
-          errEl.textContent = msg;
-          errEl.style.display = msg ? 'block' : 'none';
-        }
-      };
-
-      if (!currentPwd) {
-        setErr(t('setup.err_enter_current', 'Please enter your current password.'));
-        return;
-      }
-      if (!newPwd) {
-        setErr(t('setup.err_enter_pwd', 'Please enter a new password.'));
-        return;
-      }
-      if (newPwd.length < 8) {
-        setErr(t('setup.err_min_8', 'Password must be at least 8 characters long.'));
-        return;
-      }
-      if (newPwd.toLowerCase() === 'admin') {
-        setErr(t('setup.err_not_admin', "Please choose a secure password other than 'admin'."));
-        return;
-      }
-      if (newPwd !== confirmPwd) {
-        setErr(t('setup.err_no_match', 'New password and confirmation do not match.'));
+      const setErr = setWizardError;
+      const problem = passwordStepProblem();
+      if (problem) {
+        setErr(problem);
+        stepper.show(2);
         return;
       }
 
@@ -174,8 +236,10 @@ export function initSetupWizard() {
         if (warnEl) warnEl.style.display = 'none';
 
         showToast(t('setup.success_toast', '🚀 Setup completed! Your new administrator password is now active.'), 'success');
+        if (typeof window.openGettingStarted === 'function') window.openGettingStarted();
       } catch (err) {
         setErr(err.message || 'Failed to update password. Check current password.');
+        stepper.show(2);
       } finally {
         btnSubmit.textContent = t('setup.submit', 'Complete Setup & Save');
         btnSubmit.disabled = false;

@@ -29,6 +29,7 @@ from backend.api.remotes import router as remotes_router
 from backend.api.replication import router as replication_router
 from backend.api.samba import router as samba_router
 from backend.api.security import router as security_router
+from backend.api.setup import router as setup_router  # noqa: E402
 from backend.api.sftp import router as sftp_router
 from backend.api.snmp import router as snmp_router
 from backend.api.stats import router as stats_router
@@ -41,6 +42,7 @@ from backend.api.webdav import router as webdav_router
 
 api_router = APIRouter()
 api_router.include_router(jobs_router)
+api_router.include_router(setup_router)
 api_router.include_router(auth_router)
 api_router.include_router(oidc_router)
 api_router.include_router(ldap_router)

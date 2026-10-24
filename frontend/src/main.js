@@ -42,6 +42,7 @@ import { initWidgets } from './components/widgets.js';
 import { initFileManager } from './components/file-manager.js';
 import { lazyWindow } from './lazy-windows.js';
 import { initJobsCentre } from './components/jobs-centre.js';
+import { initGettingStarted } from './components/getting-started.js';
 import './file-preview-loader.js'; // window.openFilePreviewModal before the viewer loads
 import { installWindowFocus } from './window-focus.js';
 import { installDialogChrome } from './dialog-chrome.js';
@@ -318,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   idleLoad(() => ensureManagement().then(() => { managementReady = true; }, () => {}));
   initCommandPalette();
   initJobsCentre();
+  initGettingStarted();
   initWidgets();
   initFileManager();
   // The VM manager (~220 kB) loads the first time it's opened (FE-02)
