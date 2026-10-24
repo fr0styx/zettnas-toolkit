@@ -327,6 +327,32 @@ jobs:
           [ -z "$bad" ] || fail "errors in startup log: $bad"
           docker rm -f zettnas-smoke
 
+      # arm64 is built and published, so start it too (under QEMU, hence the longer wait).
+      # Reported, not blocking, until it has passed on a few releases (OPS-10).
+      - name: Smoke-test the built image (arm64, emulated, ${{ matrix.variant }})
+        continue-on-error: true
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+        run: |
+          fail() {
+            logs=$(docker logs zettnas-smoke-arm 2>&1 | tail -40 | sed 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
+            echo "::warning title=arm64 smoke test::$1%0A--- container log (last 40 lines) ---%0A$logs"
+            exit 1
+          }
+          docker run -d --platform linux/arm64 --name zettnas-smoke-arm -p 18083:8082 -e PORT=8082 -e ENABLE_FB=0 "$IMAGE"
+          arch=$(docker exec zettnas-smoke-arm uname -m 2>/dev/null || echo unknown)
+          [ "$arch" = "aarch64" ] || fail "container is not running arm64 (uname: $arch)"
+          ok=0
+          for i in $(seq 1 120); do
+            if curl -fsS http://127.0.0.1:18083/api/health | grep -q '"status":"ok"'; then ok=1; break; fi
+            sleep 5
+          done
+          [ "$ok" = 1 ] || fail "no ok /api/health within 10 minutes"
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:18083/api/users)
+          [ "$code" = 401 ] || fail "/api/users without a session returned $code, expected 401"
+          docker rm -f zettnas-smoke-arm
+          echo "arm64 (${{ matrix.variant }}): started under emulation and served the app" >> "$GITHUB_STEP_SUMMARY"
+
       # Release gate (OPS-06): no Critical vulnerability that already has a fix.
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0

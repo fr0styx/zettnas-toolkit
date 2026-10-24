@@ -70,6 +70,11 @@ Use the core tags on servers without the ZettLab front LCD that don't run VMs. T
 in-app updater keeps you on the variant you installed. To switch, change the tag in
 your compose file or Unraid template and recreate the container.
 
+| Architecture | Built | Tested |
+| --- | --- | --- |
+| `amd64` (x86-64) | every release | CI starts every image and runs the test suites; used on real servers |
+| `arm64` | every release | CI starts every image under emulation and checks it serves the app; not yet tested on real arm64 hardware |
+
 ---
 
 ## Default Credentials & Initial Access

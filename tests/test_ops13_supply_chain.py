@@ -41,3 +41,11 @@ def test_images_get_tags_only_after_the_gates():
     publish = next(i for i, n in enumerate(names) if n.startswith("Publish tags"))
     for gate in ("Smoke-test", "Scan image with Trivy", "Sign image digest"):
         assert next(i for i, n in enumerate(names) if n.startswith(gate)) < publish, gate
+
+
+def test_arm64_images_are_started_in_ci():
+    jobs = yaml.safe_load(_read(".github/workflows/ci.yml"))["jobs"]
+    step = next(
+        s for s in jobs["build-and-push"]["steps"] if s.get("name", "").startswith("Smoke-test the built image (arm64")
+    )
+    assert "--platform linux/arm64" in step["run"] and "aarch64" in step["run"]
