@@ -19,7 +19,19 @@ from backend.state import Z_STATE
 
 _CACHED_CONTAINERS: list[dict[str, Any]] = []
 _LAST_DOCKER_POLL = 0.0
-_DOCKER_CACHE_TTL = 3.0
+_DOCKER_CACHE_TTL = 3.0  # while someone watches
+_DOCKER_IDLE_TTL = 30.0  # PERF-5: nobody watching, so the 2 s loop needn't ask dockerd every other tick
+
+
+def _docker_ttl() -> float:
+    try:
+        from backend.services.broadcaster import broadcaster
+
+        return _DOCKER_CACHE_TTL if broadcaster.get_subscriber_count() else _DOCKER_IDLE_TTL
+    except Exception:
+        return _DOCKER_CACHE_TTL
+
+
 _CONTAINER_METRICS: dict[str, dict[str, Any]] = {}
 
 # Container stats refresh often only while someone is looking (PERF-6): a browser on the live
@@ -460,7 +472,7 @@ def start_docker_telemetry_collector():
 def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
     now = time.time()
-    if not force and _CACHED_CONTAINERS and (now - _LAST_DOCKER_POLL) < _DOCKER_CACHE_TTL:
+    if not force and _CACHED_CONTAINERS and (now - _LAST_DOCKER_POLL) < _docker_ttl():
         return _CACHED_CONTAINERS
 
     sock_path = docker_sock()

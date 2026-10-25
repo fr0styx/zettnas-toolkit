@@ -50,3 +50,15 @@ def test_idle_intervals():
 
     assert button_listener.BUTTON_POLL_SECS >= 0.25
     assert rag_engine_learning.SPINUP_WATCH_SECS >= 30
+
+
+def test_docker_is_asked_less_often_when_nobody_watches(monkeypatch):
+    from backend.hardware import docker_stats
+    from backend.services.broadcaster import broadcaster
+
+    monkeypatch.setattr(broadcaster, "get_subscriber_count", lambda: 0)
+    assert docker_stats._docker_ttl() == docker_stats._DOCKER_IDLE_TTL
+    monkeypatch.setattr(broadcaster, "get_subscriber_count", lambda: 2)
+    assert docker_stats._docker_ttl() == docker_stats._DOCKER_CACHE_TTL
+    monkeypatch.setattr(broadcaster, "get_subscriber_count", lambda: 1 / 0)
+    assert docker_stats._docker_ttl() == docker_stats._DOCKER_CACHE_TTL
