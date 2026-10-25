@@ -2,6 +2,7 @@
  * ZettNAS Toolkit - Main Frontend Entrypoint (v0.8.0)
  * Modular architecture orchestrating telemetry streaming, layout management, and desktop widgets.
  */
+import { installHiddenPause, pageHidden } from './hidden-pause.js';
 import { ensureManagementDom, onManagementDom } from './management-dom.js';
 import './style.css';
 import './lcd-direct.css';
@@ -385,10 +386,21 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   }
 
   setInterval(() => {
+    // nobody sees a hidden tab's LCD badge: skip the request (PERF-11)
+    if (!state.isLcdDirect && pageHidden()) return;
     if (!state.isVmConsoleDirect && (auth.hasToken() || state.isLcdDirect)) {
       checkLcdStatus();
     }
   }, 10000);
+
+  // A tab hidden for 30 s closes its live stream; showing it reconnects (PERF-3)
+  installHiddenPause({
+    start: () => {
+      if (auth.hasToken()) startSSE();
+    },
+    stop: stopSSE,
+    enabled: () => !state.isLcdDirect && !state.isVmConsoleDirect,
+  });
 
   window.addEventListener('resize', fitMiniPreviewScale);
 

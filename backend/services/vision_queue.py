@@ -218,6 +218,10 @@ def describe_image(path: str, model: str, host: str, post: Callable = _http_json
 
 def system_idle() -> bool:
     try:
+        from backend.services.chat_llm_runtime import chat_recently_active
+
+        if chat_recently_active():
+            return False  # someone is chatting: the iGPU is theirs (AI-14)
         if os.getloadavg()[0] > max(1, os.cpu_count() or 1) * 0.5:
             return False
         from backend.hardware.cpu import read_cpu_temp
@@ -347,7 +351,7 @@ class VisionQueue:
         """Reads one scanned PDF (no text layer) through the vision model and re-indexes it (D3)."""
         row = conn.execute(
             """SELECT f.file_id, f.canonical_path, f.mtime_ns, f.size_bytes FROM indexed_files f
-               WHERE lower(f.canonical_path) LIKE '%.pdf'
+               WHERE f.file_ext = '.pdf'
                  AND NOT EXISTS (SELECT 1 FROM pdf_ocr o WHERE o.path = f.canonical_path AND o.mtime_ns = f.mtime_ns)
                  AND (SELECT COALESCE(SUM(LENGTH(c.chunk_text)), 0) FROM document_chunks c WHERE c.file_id = f.file_id) < 400
                ORDER BY f.file_id DESC LIMIT 1"""

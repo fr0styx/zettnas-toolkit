@@ -99,6 +99,10 @@ class StatsBroadcaster:
         elif self._latest_full_data is None:
             self._latest_full_data = data
 
+        if not self._subscribers and self._loop and self._loop.is_running():
+            # Nobody listening: the next subscriber gets a fresh snapshot of _latest_full_data,
+            # so serialising this delta would be wasted work every two seconds (PERF-6)
+            return
         try:
             payload = f"data: {fast_dumps(data)}\n\n"
         except (TypeError, ValueError) as e:

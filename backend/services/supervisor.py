@@ -63,3 +63,31 @@ def supervise(
 def daemon_status() -> dict[str, dict[str, Any]]:
     with _lock:
         return {k: dict(v) for k, v in _daemons.items()}
+
+
+def install_os_thread_names() -> bool:
+    """Gives every Python thread its name at the OS level (/proc/<pid>/task/<tid>/comm), so
+    top, ps and diagnostics show "StatsCollector" instead of "python3" (audit PERF-5)."""
+    try:
+        import ctypes
+
+        libc = ctypes.CDLL(None)
+        prctl = libc.prctl
+    except (OSError, AttributeError):
+        return False
+    original = getattr(threading.Thread, "run", None)
+    if original is None:
+        return False  # threading.Thread replaced (tests)
+    if getattr(original, "_zn_named", False):
+        return True
+
+    def run(self):  # type: ignore[no-untyped-def]
+        try:
+            prctl(15, self.name.encode("utf-8", "replace")[:15], 0, 0, 0)  # PR_SET_NAME
+        except Exception:
+            logger.debug("supervisor: thread name not set", exc_info=True)
+        return original(self)
+
+    run._zn_named = True  # type: ignore[attr-defined]
+    threading.Thread.run = run  # type: ignore[method-assign]
+    return True

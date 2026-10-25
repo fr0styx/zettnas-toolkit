@@ -1,11 +1,27 @@
 import json
 import os
 import shutil
+import time
 
 from backend.config import DASH_LAYOUT_FILE, HOST_PROC, HOST_SYS, POOL_PATH, logger
 from backend.fsutil import read_json_cached
 from backend.hardware.disks import _discover_disks
 from backend.state import Z_STATE
+
+POOLS_CACHE_SECS = 30.0
+_POOLS_CACHE: dict = {"at": 0.0, "pools": None, "adapter": None}
+
+
+def _cached_pools(adapter):
+    """The pool list for the dashboard total, read at most every 30 s: on ZFS hosts each read
+    forks zpool and zfs several times, and the totals change slowly (PERF-7)."""
+    now = time.monotonic()
+    c = _POOLS_CACHE
+    if c["pools"] is not None and c["adapter"] is adapter and now - c["at"] < POOLS_CACHE_SECS:
+        return c["pools"]
+    pools = adapter.list_pools()
+    c.update(at=now, pools=pools, adapter=adapter)
+    return pools
 
 
 def read_storage():
@@ -41,7 +57,7 @@ def read_storage():
                 engine = "Btrfs Native Subvolumes"
 
             adapter = get_storage_platform()
-            pools = adapter.list_pools()
+            pools = _cached_pools(adapter)
             # Filter real storage data pools (exclude OS boot / eMMC)
             data_pools = [
                 p for p in pools if p.total_bytes > 0 and getattr(p, "pool_type", "") != "os_boot" and p.id != "os_boot"

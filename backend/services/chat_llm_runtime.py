@@ -291,6 +291,31 @@ def _fallback_model() -> str:
         return ""
 
 
+CHAT_BUSY_SECS = 120.0
+_LAST_CHAT = {"at": 0.0}
+
+
+def mark_chat_activity() -> None:
+    """Someone is chatting: background model work (photo captions) waits (AI-14)."""
+    _LAST_CHAT["at"] = time.time()
+
+
+def chat_recently_active(now: float | None = None) -> bool:
+    return (now or time.time()) - _LAST_CHAT["at"] < CHAT_BUSY_SECS
+
+
+def _keep_alive() -> str:
+    """Ollama keep_alive from AI settings ("idle_unload_minutes"; 0 keeps the model loaded)."""
+    try:
+        from backend.services.rag_engine import get_rag_engine
+
+        minutes = int(get_rag_engine().get_config().get("idle_unload_minutes", 15))
+    except Exception:
+        logger.debug("chat_llm_runtime: idle unload setting unavailable", exc_info=True)
+        minutes = 15
+    return "-1" if minutes <= 0 else f"{minutes}m"
+
+
 def _try_local_llm_completion(
     active_model: str,
     llm_endpoint: str,
@@ -316,6 +341,7 @@ def _try_local_llm_completion(
     if active_model in ("OpenVINO/clip-vit-base-patch16-int8-ov",) or is_embedding_only_model(active_model):
         return (None, None, 0, None, None, None)
 
+    mark_chat_activity()
     candidate_endpoints: list[tuple[str, str]] = []
     if llm_endpoint and llm_endpoint.strip():
         ep = llm_endpoint.strip().rstrip("/")
@@ -439,6 +465,8 @@ def _try_local_llm_completion(
                     "messages": messages,
                     "stream": streaming,
                     "options": {"temperature": 0.2, "num_ctx": _context_window_for()},
+                    # unloads after the idle time set in AI settings, giving its memory back (PERF-1)
+                    "keep_alive": _keep_alive(),
                 }
                 if tools:
                     ollama_req_body["tools"] = tools

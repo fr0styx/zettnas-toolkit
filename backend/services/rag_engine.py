@@ -729,6 +729,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                     CREATE INDEX IF NOT EXISTS idx_files_rbac ON indexed_files(visibility_tier, owner_username, share_name);
                     CREATE INDEX IF NOT EXISTS idx_files_modality_type ON indexed_files(modality, doc_type);
                     CREATE INDEX IF NOT EXISTS idx_files_parent ON indexed_files(parent_dir);
+                    CREATE INDEX IF NOT EXISTS idx_files_ext ON indexed_files(file_ext);
 
                     CREATE TABLE IF NOT EXISTS document_chunks (
                         chunk_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -1001,7 +1002,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "embedding_provider": "ollama",
             "llm_endpoint": "",
             "llm_model": "qwen2.5:3b",
-            "idle_unload_minutes": 5,
+            "idle_unload_minutes": 15,  # chat models unload after this many idle minutes (decision 4)
             "favorites": [],
             "search_history": [],
             "custom_hf_models": [],

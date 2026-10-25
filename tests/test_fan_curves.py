@@ -384,7 +384,15 @@ def test_start_acoustic_sweep_background():
 def test_acoustic_sweep_custom_pwms_formatting():
     from unittest.mock import patch
 
+    from backend.hardware import fans
     from backend.hardware.fans import start_acoustic_sweep, stop_acoustic_sweep
+
+    # a sweep another test started in the background must not make this one "already running"
+    stop_acoustic_sweep()
+    if fans._calibration_thread is not None:
+        fans._calibration_thread.join(timeout=5)
+    with fans._calibration_lock:
+        fans._calibration_state["running"] = False
 
     with (
         patch("backend.hardware.fans.set_fan_pwm") as mock_set_pwm,

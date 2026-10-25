@@ -86,6 +86,9 @@ def startup_system():
 
     gc.set_threshold(50000, 10, 10)
     setup_structured_logging()
+    from backend.services.supervisor import install_os_thread_names
+
+    install_os_thread_names()  # threads show their names in top and /proc
     read_cpu_util()
     if DATA_DIR:
         os.makedirs(DATA_DIR, exist_ok=True)
