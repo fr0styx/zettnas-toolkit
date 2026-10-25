@@ -145,6 +145,25 @@ def _fresh_rate_limits():
     rate_limit.reset()
 
 
+@pytest.fixture(autouse=True)
+def _fresh_idle_caches():
+    """The idle-loop caches (PERF-5) start empty, so a test sees the files it writes."""
+    import backend.config as cfg
+    from backend import fsutil
+    from backend.hardware import fans, screen
+    from backend.hardware.hal import DiskDiscoveryHAL
+    from backend.services import rag_reindex_status
+
+    fsutil.clear_json_cache()
+    screen._cached_screen_state = None
+    screen._screen_checked_at = float("-inf")
+    cfg._default_pw_cache["file_at"] = float("-inf")
+    fans._APPLIANCE_CACHE.clear()
+    DiskDiscoveryHAL.clear_cache()
+    rag_reindex_status._REINDEX_CACHE = {"status": "idle"}
+    rag_reindex_status._REINDEX_CACHE_TIME = 0.0
+
+
 def _install_response_hook():
     """Every JSON response of the test client goes through one hook (ARCH-11):
     ZETTNAS_RECORD_RESPONSES=<file> records them for scripts/gen_response_models.py;

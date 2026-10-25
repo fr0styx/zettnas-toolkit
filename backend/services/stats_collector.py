@@ -30,7 +30,7 @@ from backend.config import (
     logger,
 )
 from backend.db import log_metrics
-from backend.fsutil import read_json, read_json_cached
+from backend.fsutil import SETTINGS_RECHECK_SECS, read_json, read_json_cached
 from backend.hardware.chassis import ChassisEngine
 from backend.hardware.cpu import read_cpu_temp, read_cpu_util
 from backend.hardware.disks import poll_all_disks_smart, read_disk_temps_and_io
@@ -99,7 +99,7 @@ def _fan_settings():
         "disk_hold_secs": FAN_DISK_HOLD_SECS,
         "cpu_hold_secs": FAN_CPU_HOLD_SECS,
     }
-    loaded_fan_cfg = read_json_cached(FAN_STATE_FILE, {})
+    loaded_fan_cfg = read_json_cached(FAN_STATE_FILE, {}, max_age=SETTINGS_RECHECK_SECS)
     if isinstance(loaded_fan_cfg, dict):
         fan_cfg.update(loaded_fan_cfg)
 
@@ -499,7 +499,7 @@ def _run_fan_control(
 def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now):
     """Fan stalls, CPU temperature and drive health: events and notifications."""
     # Evaluate hardware health, stalls, and thermal alerts (unconditionally)
-    notif_cfg = read_json_cached(NOTIFICATIONS_FILE, {})
+    notif_cfg = read_json_cached(NOTIFICATIONS_FILE, {}, max_age=SETTINGS_RECHECK_SECS)
     if not isinstance(notif_cfg, dict):
         notif_cfg = {}
     cpu_crit_threshold = notif_cfg.get("cpu_temp_threshold", 85)
@@ -615,7 +615,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now):
 def _update_leds(is_crit, is_warn):
     """The light bar: alerts, copy progress and night mode."""
     # LED Lighting & Schedule (runs only if hardware present/configured)
-    cfg = read_json_cached(LED_STATE_FILE, {})
+    cfg = read_json_cached(LED_STATE_FILE, {}, max_age=SETTINGS_RECHECK_SECS)
     if not isinstance(cfg, dict):
         cfg = {}
 
@@ -798,7 +798,7 @@ def _build_payload(
         "client_preferences": (
             Z_STATE.client_preferences
             if Z_STATE.client_preferences is not None
-            else read_json_cached(CLIENT_PREFS_FILE, default={})
+            else read_json_cached(CLIENT_PREFS_FILE, default={}, max_age=SETTINGS_RECHECK_SECS)
         ),
         "hardware": hw_features,
         "peripherals": {

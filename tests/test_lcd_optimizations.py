@@ -60,21 +60,27 @@ def test_discover_backlight_dir_found():
 
 
 def test_get_effective_brightness(tmp_path):
+    from backend.hardware import screen
+
     state_file = tmp_path / "screen_state.json"
     with patch("backend.hardware.screen.SCREEN_STATE_FILE", str(state_file)):
         # Default state
+        screen._screen_checked_at = float("-inf")  # 30 s later: outside edits are seen (PERF-5)
         assert get_effective_brightness() == 100
 
         # Custom daytime brightness
         state_file.write_text(json.dumps({"brightness": 80, "night_mode": False}))
+        screen._screen_checked_at = float("-inf")  # 30 s later: outside edits are seen (PERF-5)
         assert get_effective_brightness() == 80
 
         # Explicit power off overrides daytime brightness
         state_file.write_text(json.dumps({"power": False, "brightness": 80, "night_mode": False}))
+        screen._screen_checked_at = float("-inf")  # 30 s later: outside edits are seen (PERF-5)
         assert get_effective_brightness() == 0
 
         # String "off" also turns screen off
         state_file.write_text(json.dumps({"power": "off", "brightness": 95}))
+        screen._screen_checked_at = float("-inf")  # 30 s later: outside edits are seen (PERF-5)
         assert get_effective_brightness() == 0
 
         # Night mode active
@@ -91,9 +97,11 @@ def test_get_effective_brightness(tmp_path):
             )
         )
         with patch("backend.hardware.screen.is_in_time_window", return_value=True):
+            screen._screen_checked_at = float("-inf")  # 30 s later: outside edits are seen (PERF-5)
             assert get_effective_brightness() == 15
 
         with patch("backend.hardware.screen.is_in_time_window", return_value=False):
+            screen._screen_checked_at = float("-inf")  # 30 s later: outside edits are seen (PERF-5)
             assert get_effective_brightness() == 80
 
 

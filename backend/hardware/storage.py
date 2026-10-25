@@ -4,7 +4,7 @@ import shutil
 import time
 
 from backend.config import DASH_LAYOUT_FILE, HOST_PROC, HOST_SYS, POOL_PATH, logger
-from backend.fsutil import read_json_cached
+from backend.fsutil import SETTINGS_RECHECK_SECS, read_json_cached
 from backend.hardware.disks import _discover_disks
 from backend.state import Z_STATE
 
@@ -393,7 +393,7 @@ def get_current_layout():
         "style": "classic",
         "version": 1,
     }
-    loaded = read_json_cached(DASH_LAYOUT_FILE, default=None)
+    loaded = read_json_cached(DASH_LAYOUT_FILE, default=None, max_age=SETTINGS_RECHECK_SECS)
     if isinstance(loaded, dict):
         layout.update(loaded)
         if "style" not in loaded or not loaded["style"]:

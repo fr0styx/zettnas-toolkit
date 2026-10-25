@@ -24,13 +24,30 @@ from backend.state import Z_STATE
 logger = logging.getLogger("ZettNAS")
 
 
+_APPLIANCE_CACHE: dict[str, tuple[bool, float]] = {}
+APPLIANCE_RECHECK_SECS = 300.0
+
+
 def is_zettlab_appliance() -> bool:
-    """Detects whether running host is a Zettlab or Aoostar NAS appliance."""
+    """Detects whether running host is a Zettlab or Aoostar NAS appliance.
+
+    Asked several times a tick (fans, LEDs, layout); the answer is kept for five minutes (PERF-5).
+    """
     force = os.environ.get("FORCE_ZETTLAB_MMIO", "").strip()
     if force == "1":
         return True
     if force == "0":
         return False
+    now = time.monotonic()
+    hit = _APPLIANCE_CACHE.get("value")
+    if hit is not None and now - hit[1] < APPLIANCE_RECHECK_SECS:
+        return hit[0]
+    value = _detect_zettlab_appliance()
+    _APPLIANCE_CACHE["value"] = (value, now)
+    return value
+
+
+def _detect_zettlab_appliance() -> bool:
     try:
         from backend.hardware.storage import detect_chassis_model
 

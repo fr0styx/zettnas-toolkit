@@ -45,8 +45,27 @@ class DiskDiscoveryHAL:
     """
 
     _CACHE_TTL = 10.0  # seconds
+    _SAME_DISKS_TTL = 60.0  # with the same block devices, lsblk runs at most once a minute (PERF-5)
     _cached_disks: list[PhysicalDiskRecord] | None = None
+    _cached_signature: tuple | None = None
     _last_scan_time: float = 0.0
+
+    @classmethod
+    def _block_signature(cls) -> tuple:
+        """The block devices and their by-id names: cheap to read, and they change on hotplug."""
+        out = []
+        for d in (os.path.join(cls._resolve_sys_root(), "block"), os.path.join(cls._resolve_dev_root(), "disk/by-id")):
+            try:
+                out.append(tuple(sorted(os.listdir(d))))
+            except OSError:
+                out.append(())
+        return tuple(out)
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        cls._cached_disks = None
+        cls._cached_signature = None
+        cls._last_scan_time = 0.0
 
     @classmethod
     def _resolve_dev_root(cls) -> str:
@@ -132,8 +151,16 @@ class DiskDiscoveryHAL:
     @classmethod
     def discover_physical_disks(cls, force: bool = False) -> list[PhysicalDiskRecord]:
         now = time.time()
-        if not force and cls._cached_disks is not None and (now - cls._last_scan_time) < cls._CACHE_TTL:
-            return cls._cached_disks
+        signature = None
+        if not force and cls._cached_disks is not None:
+            age = now - cls._last_scan_time
+            if age < cls._CACHE_TTL:
+                return cls._cached_disks
+            signature = cls._block_signature()
+            if age < cls._SAME_DISKS_TTL and signature == cls._cached_signature:
+                return cls._cached_disks
+        if signature is None:
+            signature = cls._block_signature()
 
         by_id_map = cls._read_by_id_links()
         records: list[PhysicalDiskRecord] = []
@@ -272,5 +299,6 @@ class DiskDiscoveryHAL:
             records.append(record)
 
         cls._cached_disks = records
+        cls._cached_signature = signature
         cls._last_scan_time = now
         return records

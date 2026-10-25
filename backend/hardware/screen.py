@@ -4,7 +4,7 @@ import os
 import time
 
 from backend.config import HOST_DEV, HOST_SYS, SCREEN_STATE_FILE, logger
-from backend.fsutil import atomic_write_json
+from backend.fsutil import SETTINGS_RECHECK_SECS, atomic_write_json
 
 
 def find_fb_device(writable_only: bool = True) -> str | None:
@@ -65,6 +65,7 @@ def is_in_time_window(start_str, end_str, now_minutes=None):
 
 _cached_screen_state: dict | None = None
 _cached_screen_key: tuple[str, int, int] = ("", 0, 0)
+_screen_checked_at = float("-inf")  # monotonic time of the last look at SCREEN_STATE_FILE
 
 
 def _normalize_power(val) -> bool:
@@ -78,7 +79,11 @@ def _normalize_power(val) -> bool:
 
 
 def get_screen_state():
-    global _cached_screen_state, _cached_screen_key
+    global _cached_screen_state, _cached_screen_key, _screen_checked_at
+    now = time.monotonic()
+    if _cached_screen_state is not None and now - _screen_checked_at < SETTINGS_RECHECK_SECS:
+        return dict(_cached_screen_state)  # saves update the copy; outside edits show within 30 s
+    _screen_checked_at = now
     try:
         if os.path.exists(SCREEN_STATE_FILE):
             st = os.stat(SCREEN_STATE_FILE)
@@ -247,7 +252,7 @@ def set_screen_brightness(pct, now=None, cached=False):
 
 
 def save_screen_state(updates: dict):
-    global _cached_screen_state, _cached_screen_key
+    global _cached_screen_state, _cached_screen_key, _screen_checked_at
     state = get_screen_state()
     clean_updates = dict(updates)
     if "power" in clean_updates:
@@ -264,6 +269,7 @@ def save_screen_state(updates: dict):
     except OSError:
         pass
     _cached_screen_state = state
+    _screen_checked_at = time.monotonic()
     eff_bri = get_effective_brightness()
     set_screen_brightness(eff_bri)
     try:

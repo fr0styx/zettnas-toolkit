@@ -64,19 +64,21 @@ def nvme(dev, temp):
 
 class TestFanSettings:
     def test_defaults(self, monkeypatch):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default: {})
+        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: {})
         s = sc._fan_settings()
         assert s["profile"] == "auto" and s["temp_min"] == 37 and s["temp_max"] == 50
 
     def test_saved_values_win(self, monkeypatch):
         monkeypatch.setattr(
-            sc, "read_json_cached", lambda path, default: {"profile": "quiet", "temp_max": 55, "cpu_hold_secs": "7"}
+            sc,
+            "read_json_cached",
+            lambda path, default, **kw: {"profile": "quiet", "temp_max": 55, "cpu_hold_secs": "7"},
         )
         s = sc._fan_settings()
         assert s["profile"] == "quiet" and s["temp_max"] == 55 and s["cpu_hold_secs"] == 7
 
     def test_a_broken_file_falls_back(self, monkeypatch):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default: ["not", "a", "dict"])
+        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: ["not", "a", "dict"])
         assert sc._fan_settings()["profile"] == "auto"
 
 
@@ -172,7 +174,7 @@ class TestFanControl:
 class TestHealth:
     @pytest.fixture(autouse=True)
     def _cfg(self, monkeypatch):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default: {"cpu_temp_threshold": 85})
+        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: {"cpu_temp_threshold": 85})
         monkeypatch.setattr(Z_STATE, "known_active_fans", {0, 1, 2})
 
     def test_quiet_when_all_is_well(self, hw):
@@ -218,7 +220,7 @@ class TestLeds:
         monkeypatch.setattr(Z_STATE, "copy_active", False)
 
     def cfg(self, monkeypatch, **cfg):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default: cfg)
+        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: cfg)
 
     def test_critical_is_red(self, hw, monkeypatch):
         self.cfg(monkeypatch)

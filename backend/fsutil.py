@@ -17,6 +17,15 @@ from typing import Any
 
 _JSON_CACHE: dict[str, tuple[float, Any, float]] = {}
 
+# Settings files the app writes itself: atomic_write_json refreshes the cached copy, so hot
+# loops only need to look at the file now and then for edits made outside the app. On hosts
+# where the data folder is a FUSE mount (Unraid's /mnt/user) every look blocks (PERF-5).
+SETTINGS_RECHECK_SECS = 30.0
+
+
+def clear_json_cache() -> None:
+    _JSON_CACHE.clear()
+
 
 def atomic_write_json(path: str, data: Any, indent: int | None = None) -> None:
     """Write JSON to `path` atomically (temp file + fsync + os.replace).

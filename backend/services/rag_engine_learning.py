@@ -47,6 +47,7 @@ FRESH_RESCAN_HDD_SECS = 12 * 3600  # spinning disks that happen to be awake: twi
 
 # How often the watcher looks for disks that woke up and for deferred work (PERF-5)
 SPINUP_WATCH_SECS = 30.0
+WATCH_FULL_EVERY_SECS = 300.0  # the queue checks run at least this often even when nothing changed
 
 
 def _is_solid_state(dev: str | None) -> bool:
@@ -350,19 +351,48 @@ class RagLearningMixin:
             except Exception as init_err:
                 logger.debug(f"[RAG] Startup auto-resume error: {init_err}")
 
+            last: dict[str, Any] = {}
             while True:
                 try:
                     time.sleep(SPINUP_WATCH_SECS)  # PERF-5: was 5 s
-                    if os.path.exists(_core().RAG_CONFIG_PATH):
-                        self.sync_watched_deferred_queue()
-                    self.check_and_trigger_spinup_auto_learn(background=True)
-                    self._maybe_reembed_fallback_files()
+                    self._watch_tick(last)
                 except Exception as e:
                     logger.debug(f"[RAG] Spin-up auto-learn watcher error: {e}")
 
         t = threading.Thread(target=_watch_loop, name="zettnas-rag-spinup-watcher", daemon=True)
         self._watcher_thread = t
         t.start()
+
+    def _watch_signature(self) -> tuple:
+        """What the spin-up checks depend on. Cheap: no database, one stat of the config file."""
+        try:
+            st = os.stat(_core().RAG_CONFIG_PATH)
+            config_key: tuple | None = (st.st_mtime_ns, st.st_size)
+        except OSError:
+            config_key = None
+        return (
+            tuple(rag_standby.get_sleeping_disks_list()),
+            config_key,
+            bool(self._is_indexing),
+            str(self._sync_state),
+        )
+
+    def _watch_tick(self, last: dict[str, Any]) -> bool:
+        """One pass of the spin-up watcher. The queue checks open the index database, which on
+        a FUSE data folder costs hundreds of blocking calls, so they run only when a disk went
+        to sleep or woke, the settings changed, indexing started or stopped, or every five
+        minutes (the learning schedule window). Returns whether the checks ran."""
+        now = time.monotonic()
+        signature = self._watch_signature()
+        ran = signature != last.get("signature") or now - last.get("at", float("-inf")) >= WATCH_FULL_EVERY_SECS
+        if ran:
+            if signature[1] is not None:
+                self.sync_watched_deferred_queue()
+            self.check_and_trigger_spinup_auto_learn(background=True)
+            last["signature"] = self._watch_signature()  # the checks may have changed the state
+            last["at"] = now
+        self._maybe_reembed_fallback_files()
+        return ran
 
     def enqueue_deferred_path(self, path: str, reason: str = "disk_standby", priority: int = 1) -> dict[str, Any]:
         """Queues a folder path in rag_deferred_queue without touching the disk platter."""

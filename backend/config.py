@@ -257,7 +257,8 @@ HDD_WARN_TEMP = SETTINGS.hdd_warn_temp
 NVME_WARN_TEMP = SETTINGS.nvme_warn_temp
 COLLECTOR_WATCHDOG_SECS = SETTINGS.collector_watchdog_secs
 
-_default_pw_cache = {"hash": None, "value": False}
+_default_pw_cache = {"hash": None, "value": False, "file": False, "file_at": float("-inf")}
+DEFAULT_PW_FILE_RECHECK_SECS = 30.0
 
 
 # Sessions that must change their password are limited to the password-change
@@ -288,7 +289,12 @@ def is_using_default_password() -> bool:
     if _default_pw_cache["hash"] != STORED_PASSWORD_HASH:
         _default_pw_cache["hash"] = STORED_PASSWORD_HASH
         _default_pw_cache["value"] = verify_password("admin", STORED_PASSWORD_HASH)
-    return bool(_default_pw_cache["value"]) or os.path.exists(initial_password_file())
+        _default_pw_cache["file_at"] = float("-inf")
+    now = time.monotonic()
+    if now - _default_pw_cache["file_at"] >= DEFAULT_PW_FILE_RECHECK_SECS:
+        _default_pw_cache["file"] = os.path.exists(initial_password_file())
+        _default_pw_cache["file_at"] = now
+    return bool(_default_pw_cache["value"]) or bool(_default_pw_cache["file"])
 
 
 def _load_security():

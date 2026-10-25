@@ -4,6 +4,7 @@ Multi-protocol Hardware Abstraction Layer (HAL) supporting Network UPS Tools (NU
 APCUPSD NIS protocol, direct USB HID discovery, and enterprise SNMP monitoring.
 """
 
+import copy
 import glob
 import ipaddress
 import os
@@ -20,7 +21,7 @@ except ImportError:
 
 from backend.config import DATA_DIR, POOL_PATH, UPS_CONFIG_FILE, logger
 from backend.db import log_ups_event
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import SETTINGS_RECHECK_SECS, atomic_write_json, read_json, read_json_cached
 
 # Host paths read here (module constants so tests can point them elsewhere)
 PSY_ROOTS = ("/sys/class/power_supply", "/host/sys/class/power_supply")
@@ -159,7 +160,8 @@ def load_ups_config() -> dict[str, Any]:
     6. Environment variables fallback
     """
     cfg = dict(DEFAULT_UPS_CONFIG)
-    stored = read_json(UPS_CONFIG_FILE, None)
+    # saves go through atomic_write_json, which refreshes the cached copy (PERF-5)
+    stored = copy.deepcopy(read_json_cached(UPS_CONFIG_FILE, None, max_age=SETTINGS_RECHECK_SECS))
 
     recovered_from_backup = False
 

@@ -18,6 +18,7 @@ REINDEX_STATUS: dict[str, Any] = {
 
 _REINDEX_CACHE: dict[str, Any] = {"status": "idle"}
 _REINDEX_CACHE_TIME: float = 0.0
+IDLE_RECHECK_SECS = 15.0
 
 
 def get_reindex_status() -> dict[str, Any]:
@@ -28,6 +29,13 @@ def get_reindex_status() -> dict[str, Any]:
     now = time.time()
     if (now - _REINDEX_CACHE_TIME) < 2.0 and _REINDEX_CACHE.get("status") == "running":
         return dict(_REINDEX_CACHE)
+    if (
+        _REINDEX_CACHE
+        and (now - _REINDEX_CACHE_TIME) < IDLE_RECHECK_SECS
+        and _REINDEX_CACHE.get("status") != "running"
+        and REINDEX_STATUS.get("status") != "running"
+    ):
+        return dict(_REINDEX_CACHE)  # PERF-5: idle, so the progress file is read every 15 s
 
     # 1. Check persistent progress file on disk (shared across CLI and web server)
     progress_file = "/app/data/reindex_progress.json"
