@@ -27,6 +27,11 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
   Updates still follow the app's tag: the Updates page offers them as before and pins the new
   image. Images you pinned yourself are left alone.
 
+#### Storage
+
+- A warning appears when the app keeps its data on a spinning disk, which then can never sleep
+  (moving it to an SSD or cache pool saves power and noise).
+
 #### Backups
 
 - **Hyper-Backup copies to the cloud instead of mirroring.** A file deleted at home (or

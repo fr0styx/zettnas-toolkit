@@ -98,3 +98,86 @@ def test_unreadable_diskstats_count_as_busy(monkeypatch, tmp_path):
     (tmp_path / "diskstats").write_text("   8       0 sda x y z a b c d e f g h\n")
     monkeypatch.setattr(disks, "HOST_PROC", str(tmp_path))
     assert disks._idle_for("sda", 1000.0) == 0.0
+
+
+def _fake_sys(tmp_path, disks):
+    """A sysfs tree: /sys/dev/block/8:1 -> devices/.../sda/sda1, plus md0 over two members."""
+    import os
+
+    base = tmp_path / "sys"
+    for name, rot in disks.items():
+        q = base / "devices" / "pci" / "block" / name / "queue"
+        q.mkdir(parents=True)
+        (q / "rotational").write_text(f"{rot}\n")
+        (base / "block").mkdir(exist_ok=True)
+        os.symlink(q.parent, base / "block" / name)
+    part = base / "devices" / "pci" / "block" / "sda" / "sda1"
+    part.mkdir()
+    (part / "partition").write_text("1\n")
+    (base / "dev" / "block").mkdir(parents=True)
+    os.symlink(part, base / "dev" / "block" / "8:1")
+    os.symlink(base / "devices" / "pci" / "block" / "nvme0n1", base / "dev" / "block" / "259:0")
+    return base
+
+
+def test_the_data_folder_on_a_spinning_disk_is_reported(tmp_path, monkeypatch):
+    import os
+
+    from backend.services import data_health
+    from backend.state import Z_STATE
+
+    base = _fake_sys(tmp_path, {"sda": 1, "nvme0n1": 0})
+    assert data_health.data_disk("/x", str(base), st_dev=os.makedev(8, 1)) == ("sda", True)
+    assert data_health.data_disk("/x", str(base), st_dev=os.makedev(259, 0)) == ("nvme0n1", False)
+    assert data_health.data_disk("/x", str(base), st_dev=os.makedev(0, 51)) == ("", None)  # FUSE / overlay
+    before = len(Z_STATE.events) if hasattr(Z_STATE, "events") else 0
+    assert data_health.warn_if_on_spinning_disk("/x", str(base), st_dev=os.makedev(8, 1)) is True
+    assert data_health.warn_if_on_spinning_disk("/x", str(base), st_dev=os.makedev(259, 0)) is False
+    if hasattr(Z_STATE, "events"):
+        assert len(Z_STATE.events) == before + 1
+
+
+def test_raid_devices_answer_for_their_member_disks(tmp_path):
+    import os
+
+    from backend.services import data_health
+
+    base = _fake_sys(tmp_path, {"sda": 1, "nvme0n1": 0, "md0": 0, "sdb": 0})
+    (base / "block" / "md0" / "slaves").mkdir()
+    os.symlink(base / "block" / "sda", base / "block" / "md0" / "slaves" / "sda")
+    assert data_health._spinning("md0", str(base)) is True
+    assert data_health._spinning("missing", str(base)) is None
+
+
+def test_raid_over_partitions_and_unknown_devices(tmp_path):
+    """md over sda1 answers for sda; a device number sysfs doesn't know, or a missing folder, is unknown."""
+    import os
+
+    from backend.services import data_health
+
+    base = _fake_sys(tmp_path, {"sda": 1, "nvme0n1": 0, "md1": 0})
+    (base / "class" / "block").mkdir(parents=True)
+    os.symlink(base / "devices" / "pci" / "block" / "sda" / "sda1", base / "class" / "block" / "sda1")
+    (base / "block" / "md1" / "slaves").mkdir()
+    os.symlink(base / "class" / "block" / "sda1", base / "block" / "md1" / "slaves" / "sda1")
+    assert data_health._spinning("md1", str(base)) is True
+    assert data_health._parent("nvme0n1", str(base)) == "nvme0n1"
+    assert data_health.data_disk("/x", str(base), st_dev=os.makedev(8, 9)) == ("", None)
+    assert data_health.data_disk(str(tmp_path / "missing"), str(base)) == ("", None)
+
+
+def test_the_data_guard_checks_the_disk_once_at_start(monkeypatch, tmp_path):
+    from backend.services import data_health
+
+    seen = []
+    monkeypatch.setattr(data_health, "warn_if_on_spinning_disk", lambda folder: seen.append(folder) or 1 / 0)
+    monkeypatch.setattr(data_health, "take_daily_snapshot_if_due", lambda folder: None)
+
+    def stop(_):
+        raise KeyboardInterrupt
+
+    try:
+        data_health.data_guard_daemon(str(tmp_path), sleep=stop)
+    except KeyboardInterrupt:
+        pass
+    assert seen == [str(tmp_path)]  # a failing check never stops the snapshots

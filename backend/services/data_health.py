@@ -132,11 +132,81 @@ def take_daily_snapshot_if_due(data_dir: str, now: float | None = None) -> str |
     return take_snapshot(data_dir, label="daily", root=root, keep=DAILY_KEEP)
 
 
+def _spinning(disk: str, sysbase: str, depth: int = 0) -> bool | None:
+    """True/False from sysfs; RAID and LVM devices answer for their member disks."""
+    block = os.path.join(sysbase, "block", disk)
+    try:
+        members = os.listdir(os.path.join(block, "slaves"))
+    except OSError:
+        members = []
+    if members and depth < 4:
+        answers = [
+            _spinning(
+                m if os.path.isdir(os.path.join(sysbase, "block", m)) else _parent(m, sysbase), sysbase, depth + 1
+            )
+            for m in members
+        ]
+        known = [a for a in answers if a is not None]
+        return any(known) if known else None
+    try:
+        with open(os.path.join(block, "queue", "rotational"), encoding="ascii") as f:
+            return f.read().strip() == "1"
+    except OSError:
+        return None
+
+
+def _parent(part: str, sysbase: str) -> str:
+    """The disk a partition belongs to ("sda1" -> "sda")."""
+    real = os.path.realpath(os.path.join(sysbase, "class", "block", part))
+    return os.path.basename(os.path.dirname(real)) if os.path.exists(os.path.join(real, "partition")) else part
+
+
+def data_disk(folder: str, sysbase: str | None = None, st_dev: int | None = None) -> tuple[str, bool | None]:
+    """(disk name, spinning?) for the disk under a folder; ("", None) when it can't be told
+    (network, FUSE and overlay filesystems have no block device)."""
+    from backend import config
+
+    sysbase = sysbase or str(getattr(config, "HOST_SYS", "/sys") or "/sys")
+    try:
+        dev = os.stat(folder).st_dev if st_dev is None else st_dev
+    except OSError:
+        return "", None
+    if os.major(dev) == 0:
+        return "", None
+    real = os.path.realpath(os.path.join(sysbase, "dev", "block", f"{os.major(dev)}:{os.minor(dev)}"))
+    if not os.path.isdir(real):
+        return "", None
+    name = os.path.basename(real)
+    disk = os.path.basename(os.path.dirname(real)) if os.path.exists(os.path.join(real, "partition")) else name
+    return disk, _spinning(disk, sysbase)
+
+
+def warn_if_on_spinning_disk(folder: str, sysbase: str | None = None, st_dev: int | None = None) -> bool:
+    """PERF-15: the data folder is written every few seconds, so a spinning disk under it never sleeps."""
+    disk, spinning = data_disk(folder, sysbase, st_dev)
+    if not spinning:
+        return False
+    from backend.state import add_event
+
+    logger.warning(f"[DataHealth] the app's data folder is on a spinning disk ({disk})")
+    add_event(
+        "warning",
+        "App data on a spinning disk",
+        f"ZettNAS keeps its settings and databases on {disk}, a spinning disk, so that disk can never "
+        "sleep. Moving the app's data folder to an SSD or cache pool saves power and noise.",
+    )
+    return True
+
+
 def data_guard_daemon(data_dir: str | None = None, sleep=time.sleep) -> None:
     """Supervised: takes the daily snapshot when it is due."""
     from backend import config
 
     folder = data_dir or config.DATA_DIR
+    try:
+        warn_if_on_spinning_disk(folder)
+    except Exception:
+        logger.debug("[DataHealth] could not tell which disk holds the data folder", exc_info=True)
     while True:
         try:
             take_daily_snapshot_if_due(folder)
