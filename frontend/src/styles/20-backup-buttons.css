@@ -801,3 +801,8 @@ body.theme-yak .mgmt-back-btn:hover {
   }
 }
 
+
+/* Sharing-protocol pills: live state (UX-4) */
+.proto-pill { font-size: var(--zn-fs-xs); border: 1px solid var(--border, var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12))); color: var(--muted, #94a3b8); background: transparent; }
+.proto-pill[data-state="on"] { color: var(--ok2, #25c2a0); border-color: color-mix(in srgb, var(--ok2, #25c2a0) 40%, transparent); }
+.proto-pill[data-state="off"] { color: var(--muted, #94a3b8); }

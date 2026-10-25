@@ -211,7 +211,7 @@
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_ups_title">Power & Battery</span>
-                <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill" data-i18n="mgmt.hub_ups_pill">Online</span>
+                <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill">…</span>
               </div>
               <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Real-time 2.5D power flow digital twin, battery runtime reserve, safe shutdown automation, and outage ledger.</p>
             </div>
@@ -3050,10 +3050,9 @@
               <div class="mgmt-protocol-quickbar" style="margin: 0 16px 12px 16px; padding: 10px 14px; background: var(--lt-b-ffffff08, rgba(255, 255, 255, 0.03)); border: 1px solid var(--border, var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08))); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                   <span style="font-size: var(--zn-fs-sm); font-weight: 600; color: var(--muted, #94a3b8);" data-i18n="mgmt.protocols_status_title">File Sharing Protocols:</span>
-                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(14,165,233,0.12); color: var(--lt-ink-brand, var(--brand, #0ea5e9)); border: 1px solid rgba(14,165,233,0.25);">SMB3 Active</span>
-                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: var(--lt-b-3bf58b1a, rgba(59,245,139,0.1)); color: var(--lt-t-3bf58bff, #3bf58b); border: 1px solid var(--lt-r-3bf58b40, rgba(59,245,139,0.25));">NFSv4 Ready</span>
-                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(168,85,247,0.1); color: var(--lt-t-c084fcff, #c084fc); border: 1px solid rgba(168,85,247,0.25);">SFTP Port 2222</span>
-                  <span class="mgmt-app-pill" style="font-size: var(--zn-fs-xs); background: rgba(234,179,8,0.1); color: var(--lt-t-facc15ff, #facc15); border: 1px solid rgba(234,179,8,0.25);">WebDAV :8080</span>
+                  <span class="mgmt-app-pill proto-pill" id="proto-pill-smb" data-state="unknown">SMB</span>
+                  <span class="mgmt-app-pill proto-pill" id="proto-pill-sftp" data-state="unknown">SFTP</span>
+                  <span class="mgmt-app-pill proto-pill" id="proto-pill-webdav" data-state="unknown">WebDAV</span>
                 </div>
                 <button class="btn-pill-toggle" id="btn-quick-manage-protocols" style="background: transparent; border-color: var(--border, var(--lt-r-ffffff26, rgba(255,255,255,0.15))); color: var(--text, var(--lt-t-e2e8f0ff, #e2e8f0));">
                   ⚙️ <span data-i18n="mgmt.manage_protocols">Sharing services</span>

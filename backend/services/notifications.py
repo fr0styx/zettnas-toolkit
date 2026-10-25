@@ -703,12 +703,34 @@ def set_route(
     return route
 
 
+ADMIN_ONLY_EVENTS = ("security",)
+
+
+def may_receive(username: str, event_type: str) -> bool:
+    """Security alerts (sign-in attacks, the ransomware guard) go to admins only (SEC-8)."""
+    if event_type not in ADMIN_ONLY_EVENTS:
+        return True
+    try:
+        from backend.auth import has_scope
+        from backend.users_db import get_role, get_user_by_username
+
+        user = get_user_by_username(username) or {}
+        role = get_role(str(user.get("role_id") or "")) or {}
+        scopes = json.loads(role.get("scopes_json") or "[]")
+        return user.get("status") == "active" and (has_scope(scopes, "*") or has_scope(scopes, "audit:read"))
+    except Exception:
+        logger.debug("notifications: could not check who may get security alerts", exc_info=True)
+        return False
+
+
 def _route_to_people(cfg: dict[str, Any], title: str, message: str, level: str, event_type: str) -> list[str]:
     """Sends an alert to everyone who asked for this kind, at this level or above."""
     sent = []
     rank = _LEVEL_RANK.get(level, 0)
     for username, r in get_routes().items():
         if event_type not in r.get("events", []) or rank < _LEVEL_RANK.get(r.get("min_level", "warning"), 1):
+            continue
+        if not may_receive(username, event_type):
             continue
         try:
             if r.get("ntfy_topic"):

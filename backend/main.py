@@ -41,7 +41,7 @@ from backend.hardware.led import apply_led_state
 from backend.hardware.network import read_ip
 from backend.hardware.storage import detect_chassis_model
 from backend.logging_config import correlation_id_ctx, setup_structured_logging
-from backend.services.backup_engine import start_backup_scheduler, stop_backup_scheduler
+from backend.services.backup_engine import stop_backup_scheduler
 from backend.services.broadcaster import broadcaster
 from backend.services.button_listener import button_listener_daemon
 from backend.services.lcd_renderer import render_lcd_loop
@@ -107,6 +107,14 @@ def startup_system():
         snapshot_if_build_changed(DATA_DIR)
     except Exception as e:
         logger.error(f"[Main] Could not snapshot the data folder for the new build: {e}")
+
+    # Damaged databases are found before anything opens them (REL-2)
+    try:
+        from backend.services.data_health import check_and_repair
+
+        check_and_repair(DATA_DIR)
+    except Exception as e:
+        logger.error(f"[Main] Could not check the data folder's databases: {e}")
 
     # Encryption at rest for the AI chat history (AI-20); the index follows in the background
     from backend import db_crypto
@@ -228,23 +236,23 @@ def startup_system():
         from backend.services.ransomware_guard import guard_daemon
 
         supervise("RansomwareGuard", guard_daemon)  # M4: guard-file checks
+        from backend.services.data_health import data_guard_daemon
+
+        supervise("DataGuard", data_guard_daemon)  # REL-2: daily data snapshot
 
     try:
         get_webdav_engine().start_if_enabled()
     except Exception as e:
         logger.warning(f"Could not auto-start WebDAV engine: {e}")
 
-    try:
-        start_backup_scheduler()
-    except Exception as e:
-        logger.warning(f"Could not auto-start hyper-backup scheduler: {e}")
+    # Schedulers run supervised, so a crash is restarted and shows in health (ARC-10)
+    from backend.services.backup_engine import backup_scheduler_daemon
 
-    try:
-        from backend.services.scheduler import start_scheduler
+    supervise("BackupScheduler", backup_scheduler_daemon)
 
-        start_scheduler()
-    except Exception as e:
-        logger.warning(f"Could not auto-start SMART test scheduler: {e}")
+    from backend.services.scheduler import scheduler_daemon
+
+    supervise("TaskScheduler", scheduler_daemon)  # SMART tests and scrubs on schedule
 
     try:
         from backend.services.rag_engine import get_rag_engine

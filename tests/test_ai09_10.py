@@ -98,7 +98,10 @@ def test_model_server_never_swaps_models(monkeypatch):
         return None
 
     sent = _setup(monkeypatch, handler)
-    reply = ai_chat_agent._try_local_llm_completion("llama3.1:8b", "", [{"role": "user", "content": "hi"}])
+    # a configured OpenAI-compatible server (guessed ports are never tried, AI-19)
+    reply = ai_chat_agent._try_local_llm_completion(
+        "llama3.1:8b", "http://10.9.9.9:8000/v1", [{"role": "user", "content": "hi"}]
+    )
     assert reply[0] is None
     assert not any(u.endswith("/chat/completions") for u, _ in sent)
     assert "not served" in ai_chat_agent._LAST_MODEL_PROBLEM["text"]

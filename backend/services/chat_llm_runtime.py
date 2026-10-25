@@ -340,11 +340,9 @@ def _try_local_llm_completion(
         candidate_endpoints.append(("ollama_local", f"http://{ip}:11434/api/chat"))
     candidate_endpoints.append(("ollama_host", "http://host.docker.internal:11434/api/chat"))
 
-    # Also probe local OpenAI-compatible endpoints (OpenVINO Model Server :8000 on NPU, LM Studio :1234, vLLM/llama.cpp :8080)
-    for ip in host_ips:
-        candidate_endpoints.append(("openai_compatible", f"http://{ip}:8000/v1/chat/completions"))
-        candidate_endpoints.append(("openai_compatible", f"http://{ip}:1234/v1/chat/completions"))
-        candidate_endpoints.append(("openai_compatible", f"http://{ip}:8080/v1/chat/completions"))
+    # OpenAI-compatible servers (OpenVINO Model Server, LM Studio, vLLM) are used only when
+    # configured: guessing ports would send the prompt, which holds file text, to whatever
+    # service listens there (AI-19).
 
     # Deduplicate candidate endpoints preserving order
     seen_eps = set()

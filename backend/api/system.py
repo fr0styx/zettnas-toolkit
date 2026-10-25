@@ -169,7 +169,7 @@ from backend.hardware.docker_stats import container_action, read_docker_containe
 logger = logging.getLogger("ZettNAS")
 
 
-@router.get("/disk_detail")
+@router.get("/disk_detail", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 async def disk_detail(dev: str = "sda", wake: bool = False):
     if dev.startswith("/dev/"):
         dev = dev.replace("/dev/", "")
@@ -493,13 +493,13 @@ def post_lcd_cycle():
     return {"status": "ok", "page": new_page}
 
 
-@router.get("/copy/history")
+@router.get("/copy/history", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_copy_history(page: PageParams = Depends()):
     # a plain list, as before; limit and offset are validated and applied
     return page.slice(query_copy_history(page.fetch))
 
 
-@router.get("/unraid")
+@router.get("/unraid", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_unraid_telemetry():
     return read_unraid_status(force=True)
 
@@ -1008,7 +1008,7 @@ async def _check_update_signature(target_img: str, expected_digest: str | None, 
     )
 
 
-@router.get("/system/updates")
+@router.get("/system/updates", dependencies=[Depends(require_scope("system:view"))])
 async def check_system_updates(force: bool = False, channel: str = "stable"):
     """Release/commit check, then a registry digest check (OPS-18).
 

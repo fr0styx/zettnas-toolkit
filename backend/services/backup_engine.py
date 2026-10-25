@@ -839,6 +839,13 @@ def _backup_scheduler_loop() -> None:
     logger.info("[HYPER-BACKUP] Scheduler daemon stopped.")
 
 
+def backup_scheduler_daemon() -> None:
+    """The scheduler loop for the supervisor: restarted if it crashes (ARC-10)."""
+    global _SCHEDULER_RUNNING
+    _SCHEDULER_RUNNING = True
+    _backup_scheduler_loop()
+
+
 def start_backup_scheduler() -> None:
     """Starts the background hyper-backup scheduler daemon if not already running."""
     global _SCHEDULER_RUNNING, _SCHEDULER_THREAD

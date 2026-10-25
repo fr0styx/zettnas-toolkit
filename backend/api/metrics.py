@@ -1,9 +1,10 @@
 import time
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
+from backend.auth import require_scope
 from backend.state import Z_STATE
 
 router = APIRouter(tags=["Metrics"])
@@ -16,7 +17,7 @@ def _safe_float(val):
         return 0.0
 
 
-@router.get("/metrics", response_class=PlainTextResponse)
+@router.get("/metrics", response_class=PlainTextResponse, dependencies=[Depends(require_scope("system:view"))])
 def prometheus_metrics():
     """Prometheus exposition format for ZettNAS telemetry."""
     from backend.request_metrics import REQUEST_METRICS
@@ -128,7 +129,7 @@ def prometheus_metrics():
     return "\n".join(out) + "\n" + REQUEST_METRICS.prometheus()
 
 
-@router.get("/metrics/network-topology")
+@router.get("/metrics/network-topology", dependencies=[Depends(require_scope("system:view"))])
 async def metrics_network_topology():
     """Network topology metrics and switch status."""
     import asyncio
@@ -153,7 +154,7 @@ class RequestMetricsOut(BaseModel):
     routes: list[RouteMetrics]
 
 
-@router.get("/metrics/requests", response_model=RequestMetricsOut)
+@router.get("/metrics/requests", response_model=RequestMetricsOut, dependencies=[Depends(require_scope("system:view"))])
 def request_metrics_summary(top: int = 25):
     """The busiest API routes: requests, errors and latency (ARCH-10)."""
     from backend.request_metrics import REQUEST_METRICS

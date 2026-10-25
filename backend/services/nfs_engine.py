@@ -167,7 +167,9 @@ class NfsEngine:
         Builds the options string for /etc/exports entry according to RFC & Linux NFS kernel semantics.
         e.g. rw,sync,no_root_squash,anonuid=1000,anongid=1000,no_subtree_check,insecure
         """
-        opts = [rule.permission]
+        from backend.services.ransomware_guard import writes_frozen
+
+        opts = ["ro" if writes_frozen() else rule.permission]  # read-only while frozen (SEC-6)
 
         if rule.sync_mode == "async":
             opts.append("async")

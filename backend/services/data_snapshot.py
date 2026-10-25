@@ -112,9 +112,16 @@ def _skip_special_files(directory: str, names: list[str]) -> list[str]:
 
 
 def take_snapshot(
-    data_dir: str, label: str = "", extra: dict[str, Any] | None = None, protect: str | None = None
+    data_dir: str,
+    label: str = "",
+    extra: dict[str, Any] | None = None,
+    protect: str | None = None,
+    root: str | None = None,
+    keep: int = KEEP,
 ) -> str:
-    root = snapshot_root(data_dir)
+    """Copies the data folder's settings and databases into a new snapshot under `root`
+    (pre-update snapshots by default) and keeps the newest `keep`."""
+    root = root or snapshot_root(data_dir)
     safe_label = "".join(c if c.isalnum() or c in ".-_" else "_" for c in label)[:40]
     dest = os.path.join(root, time.strftime("%Y%m%d-%H%M%S") + (f"-{safe_label}" if safe_label else ""))
     os.makedirs(dest, mode=0o700, exist_ok=True)
@@ -139,18 +146,18 @@ def take_snapshot(
 
     manifest = {"created_at": time.time(), "label": label, "files": files, **(extra or {})}
     atomic_write_json(os.path.join(dest, MANIFEST), manifest, indent=2)
-    _prune(root, protect)
+    _prune(root, protect, keep)
     logger.info(f"[Snapshot] Saved {len(files)} item(s) to {dest}")
     return dest
 
 
-def _prune(root: str, protect: str | None = None) -> None:
+def _prune(root: str, protect: str | None = None, keep_count: int = KEEP) -> None:
     keep = {os.path.basename(os.path.normpath(protect))} if protect else set()
     snaps = sorted(d for d in os.listdir(root) if os.path.isdir(os.path.join(root, d)))
     stable = [d for d in snaps if (read_json(os.path.join(root, d, MANIFEST), {}) or {}).get("stable")]
     if stable:
         keep.add(stable[-1])  # always one way back to the last Stable build (OPS-5)
-    for old in [d for d in snaps if d not in keep][:-KEEP]:
+    for old in [d for d in snaps if d not in keep][:-keep_count]:
         shutil.rmtree(os.path.join(root, old), ignore_errors=True)
 
 

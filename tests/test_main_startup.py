@@ -40,8 +40,7 @@ def quiet(monkeypatch):
     monkeypatch.setattr(main, "read_ip", lambda: "10.0.0.2")
     monkeypatch.setattr(main, "detect_chassis_model", lambda: "d6u")
     monkeypatch.setattr(main, "apply_led_state", lambda cfg: None)
-    monkeypatch.setattr(main, "start_backup_scheduler", lambda: rec["started"].append("backup"))
-    monkeypatch.setattr("backend.services.scheduler.start_scheduler", lambda: rec["started"].append("scheduler"))
+    monkeypatch.setattr("backend.services.data_health.check_and_repair", lambda d: {})
     monkeypatch.setattr("backend.services.rag_engine.get_rag_engine", lambda: rec["started"].append("rag"))
     monkeypatch.setattr(main.get_webdav_engine(), "start_if_enabled", lambda: rec["started"].append("webdav"))
     monkeypatch.setattr(main.atexit, "register", lambda fn: rec["atexit"].append(fn))
@@ -65,7 +64,8 @@ class TestStartup:
         assert {"StatsCollector", "SmartPoller", "ButtonListener", "LcdRenderer", "FanWatchdog"} <= set(
             quiet["supervised"]
         )
-        assert {"backup", "scheduler", "rag", "webdav"} <= set(quiet["started"])
+        assert {"BackupScheduler", "TaskScheduler"} <= set(quiet["supervised"])  # ARC-10
+        assert {"rag", "webdav"} <= set(quiet["started"])
         assert "VmAutostart" in [n for n, _ in quiet["threads"]] and quiet["atexit"]
 
     def test_no_button_listener_on_other_hardware(self, quiet, monkeypatch):
@@ -93,8 +93,7 @@ class TestStartup:
         def boom():
             raise RuntimeError("down")
 
-        monkeypatch.setattr(main, "start_backup_scheduler", boom)
-        monkeypatch.setattr("backend.services.scheduler.start_scheduler", boom)
+        monkeypatch.setattr("backend.services.data_health.check_and_repair", boom)
         monkeypatch.setattr("backend.services.rag_engine.get_rag_engine", boom)
         monkeypatch.setattr(main.get_webdav_engine(), "start_if_enabled", boom)
         main.startup_system()

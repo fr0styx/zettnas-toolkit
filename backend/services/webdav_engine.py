@@ -205,7 +205,9 @@ class WebdavEngine:
 
             # the app's own folders stay hidden whatever a user's root is (SEC-3)
             cmd += protected_rclone_excludes(config.POOL_PATH if os.path.exists(proxy_script) else root)
-            if cfg.get("read_only"):
+            from backend.services.ransomware_guard import writes_frozen
+
+            if cfg.get("read_only") or writes_frozen():
                 cmd.append("--read-only")
 
             logger.info(f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (proxy={os.path.exists(proxy_script)})")

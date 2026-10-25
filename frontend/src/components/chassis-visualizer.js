@@ -1115,6 +1115,21 @@ export function bindSftpCardEvents(container, onRefresh) {
 /**
  * Fetches and renders Network Shares & Protocols
  */
+/** The sharing-protocol pills show what each service is doing now, never a fixed "Active" (UX-4). */
+export function renderProtocolPills({ smb, sftp, webdav } = {}) {
+  const set = (id, label, status, port) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const state = !status ? 'unknown' : status.running ? 'on' : 'off';
+    const word = state === 'on' ? t('proto.on', 'on') : state === 'off' ? t('proto.off', 'off') : t('proto.unknown', 'unknown');
+    el.dataset.state = state;
+    el.textContent = `${label}${state === 'on' && port ? ` :${port}` : ''} · ${word}`;
+  };
+  set('proto-pill-smb', 'SMB', smb, null);
+  set('proto-pill-sftp', 'SFTP', sftp, sftp?.port);
+  set('proto-pill-webdav', 'WebDAV', webdav, webdav?.port);
+}
+
 export async function fetchAndRenderNetworkShares(container) {
   if (!container) return;
   container.innerHTML = `
@@ -1134,6 +1149,7 @@ export async function fetchAndRenderNetworkShares(container) {
       api.get('/api/webdav/status').catch(() => null),
     ]);
     _shareServices = { smb: sambaStatus, webdav: webdavStatus, sftp: sftpStatus };
+    renderProtocolPills({ smb: sambaStatus, sftp: sftpStatus, webdav: webdavStatus });
 
     const shares = sharesData.shares || [];
     const isObserver = sharesData.is_observer_mode ?? true;

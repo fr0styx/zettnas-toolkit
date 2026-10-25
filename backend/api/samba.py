@@ -72,7 +72,7 @@ def delete_samba_share(name: str) -> dict[str, Any]:
     raise HTTPException(status_code=404, detail=f"Share '{name}' not found")
 
 
-@router.get("/config")
+@router.get("/config", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
 def get_samba_config() -> Response:
     """Returns current smb.conf text."""
     engine = get_samba_engine()

@@ -43,12 +43,41 @@ def atomic_write_json(path: str, data: Any, indent: int | None = None) -> None:
 
 
 def read_json(path: str, default: Any = None) -> Any:
-    """Read JSON from `path`, returning `default` if missing or unreadable."""
+    """Read JSON from `path`, returning `default` if missing or unreadable.
+
+    A file that exists but isn't valid JSON is renamed to `<name>.corrupt-<time>` first, so the
+    next save can't overwrite what might still be recovered from it (REL-2)."""
     try:
         with open(path) as f:
             return json.load(f)
-    except (OSError, json.JSONDecodeError):
+    except OSError:
         return default
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        quarantine_corrupt(path)
+        return default
+
+
+def quarantine_corrupt(path: str) -> str | None:
+    """Moves an unreadable settings file aside and records it; returns the new name."""
+    dest = f"{path}.corrupt-{time.strftime('%Y%m%d-%H%M%S')}"
+    try:
+        os.replace(path, dest)
+    except OSError:
+        logger.warning(f"[fsutil] {path} is unreadable and could not be moved aside", exc_info=True)
+        return None
+    logger.error(f"[fsutil] {os.path.basename(path)} was not valid JSON; kept as {os.path.basename(dest)}")
+    try:
+        from backend.state import add_event
+
+        add_event(
+            "error",
+            "Damaged settings file",
+            f"{os.path.basename(path)} could not be read and was set aside as {os.path.basename(dest)}; "
+            "its defaults are used until you restore it from a backup.",
+        )
+    except Exception:
+        logger.debug("fsutil: could not record the damaged-file event", exc_info=True)
+    return dest
 
 
 def read_json_cached(path: str, default: Any = None, max_age: float = 3.0) -> Any:

@@ -1396,7 +1396,11 @@ def _run_agentic_chat_turn(
                     else:
                         t_res = execute_nas_tool(t_name, t_args, principal=principal)
                 elif t_name == "browse_internet":
-                    private = [str(c.get("excerpt") or c.get("raw_chunk_text") or "") for c in (citations or [])]
+                    # everything the model saw, not just the 320-character excerpt (AI-6)
+                    private = [
+                        " ".join(str(c.get(k) or "") for k in ("full_parent_context", "excerpt", "raw_chunk_text"))
+                        for c in (citations or [])
+                    ]
                     private += [
                         json.dumps(tr, default=str)[:4000] for tr in tool_results if tr.get("tool") != "browse_internet"
                     ]

@@ -233,6 +233,12 @@ def _run_scheduled_tasks():
                 )
 
 
+def scheduler_daemon():
+    """The task scheduler loop for the supervisor: restarted if it crashes (ARC-10)."""
+    _SCHEDULER_STOP_EVENT.clear()
+    _run_scheduled_tasks()
+
+
 def start_scheduler():
     global _SCHEDULER_THREAD
     if _SCHEDULER_THREAD and _SCHEDULER_THREAD.is_alive():

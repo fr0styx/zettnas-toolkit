@@ -370,6 +370,20 @@ def _apply_share_freeze(frozen: bool) -> None:
         eng.reload_service()
     except Exception:
         logger.debug("ransomware_guard: Samba not managed here", exc_info=True)
+    try:
+        from backend.services.nfs_engine import get_nfs_engine
+
+        get_nfs_engine().apply_exports()  # exports become read-only while frozen
+    except Exception:
+        logger.debug("ransomware_guard: NFS not managed here", exc_info=True)
+    try:
+        from backend.services.webdav_engine import get_webdav_engine
+
+        dav = get_webdav_engine()
+        if dav.is_running():
+            dav.restart()  # restarts read-only while frozen, writable again after
+    except Exception:
+        logger.debug("ransomware_guard: WebDAV not running", exc_info=True)
     if frozen:
         try:
             from backend.services.container_mutator import _docker_request
@@ -377,6 +391,15 @@ def _apply_share_freeze(frozen: bool) -> None:
             _docker_request("POST", "/containers/zettnas-sftp/stop?t=2")
         except Exception:
             logger.debug("ransomware_guard: no SFTP service to stop", exc_info=True)
+
+
+def writes_frozen() -> bool:
+    """True while the guard has frozen writes on every share (M4, SEC-6)."""
+    try:
+        return get_guard().frozen
+    except Exception:
+        logger.debug("ransomware_guard: state unavailable", exc_info=True)
+        return False
 
 
 def _snapshot_pools() -> list[dict[str, Any]]:

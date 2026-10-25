@@ -1411,11 +1411,19 @@ async def fs_upload(
         raise HTTPException(status_code=500, detail="Failed to upload file") from e
 
 
+UPLOAD_CHUNK_SIZE = 16 * 1024 * 1024
+UPLOAD_SESSION_TTL = 24 * 3600
+UPLOAD_FREE_FLOOR = 1024**3  # an upload never fills the pool to the last gigabyte (SEC-7)
+
+
 class UploadInitRequest(BaseModel):
-    path: str
+    # the File Explorer sends destination_dir and no chunk count; scripts send path
+    path: str | None = None
+    destination_dir: str | None = None
     filename: str
-    total_size: int
-    total_chunks: int
+    total_size: int = Field(ge=0)
+    total_chunks: int | None = Field(default=None, ge=1, le=1_000_000)
+    chunk_size: int | None = None
 
 
 class UploadCompleteRequest(BaseModel):
@@ -1435,8 +1443,16 @@ async def fs_upload_init(
     req: UploadInitRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(req.path, principal, write=True)
-    target_unresolved, _, _ = _safe_fs_target(req.path)
+    dest = req.path or req.destination_dir or ""
+    if not dest:
+        raise HTTPException(status_code=400, detail="Choose a folder to upload to")
+    fewest = max(1, -(-int(req.total_size) // UPLOAD_CHUNK_SIZE))
+    total_chunks = int(req.total_chunks or fewest)
+    if not fewest <= total_chunks <= max(1, int(req.total_size)):
+        raise HTTPException(status_code=400, detail="The chunk count doesn't match the file size")
+    await _expire_uploads()
+    check_user_path_access(dest, principal, write=True)
+    target_unresolved, _, _ = _safe_fs_target(dest)
     target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
     if target_canonical is None or not os.path.isdir(target_canonical):
         raise HTTPException(status_code=400, detail="Target path is not a valid directory within allowed folders")
@@ -1452,6 +1468,13 @@ async def fs_upload_init(
     except QuotaExceeded as e:
         raise HTTPException(status_code=507, detail=str(e)) from None
 
+    try:
+        free = shutil.disk_usage(target_canonical).free
+    except OSError:
+        free = None
+    if free is not None and free - int(req.total_size) < UPLOAD_FREE_FLOOR:
+        raise HTTPException(status_code=507, detail="Not enough free space for this file.")
+
     upload_id = secrets.token_hex(16)
     staging_dir = os.path.join(target_canonical, f".zettnas_staging_{upload_id}_{filename}")
     os.makedirs(staging_dir, exist_ok=True)
@@ -1462,9 +1485,10 @@ async def fs_upload_init(
             "target_dir": target_canonical,
             "staging_dir": staging_dir,
             "filename": filename,
-            "total_size": req.total_size,
-            "total_chunks": req.total_chunks,
+            "total_size": int(req.total_size),
+            "total_chunks": total_chunks,
             "chunks_received": set(),
+            "chunk_bytes": {},
             "created_at": time.time(),
             "created_by": principal.username,
         }
@@ -1472,9 +1496,20 @@ async def fs_upload_init(
     return {
         "status": "ok",
         "upload_id": upload_id,
-        "chunk_size": 16 * 1024 * 1024,
-        "total_chunks": req.total_chunks,
+        "chunk_size": UPLOAD_CHUNK_SIZE,
+        "total_chunks": total_chunks,
     }
+
+
+async def _expire_uploads() -> None:
+    """Uploads left unfinished for a day are removed with their staged chunks (SEC-7)."""
+    cutoff = time.time() - UPLOAD_SESSION_TTL
+    async with _CHUNKED_UPLOADS_LOCK:
+        stale = [u for u in _CHUNKED_UPLOADS.values() if u.get("created_at", 0) < cutoff]
+        for u in stale:
+            _CHUNKED_UPLOADS.pop(u["upload_id"], None)
+    for u in stale:
+        shutil.rmtree(u.get("staging_dir", ""), ignore_errors=True)
 
 
 @router.post(
@@ -1497,16 +1532,32 @@ async def fs_upload_chunk(
     staging_dir = upload_info["staging_dir"]
     if not os.path.isdir(staging_dir):
         raise HTTPException(status_code=404, detail="Staging directory missing for upload session")
+    if not 0 <= chunk_index < int(upload_info["total_chunks"]):
+        raise HTTPException(status_code=400, detail="Chunk number out of range")
 
+    # This chunk may not exceed the chunk size, nor all chunks together the declared size (SEC-7)
+    others = sum(b for i, b in upload_info["chunk_bytes"].items() if i != chunk_index)
+    allowed = min(UPLOAD_CHUNK_SIZE, int(upload_info["total_size"]) - others)
     chunk_path = os.path.join(staging_dir, f"chunk_{chunk_index:06d}")
+    written = 0
     async with aiofiles.open(chunk_path, "wb") as f_out:
         async for content in request.stream():
             if content:
+                written += len(content)
+                if written > allowed:
+                    break
                 await f_out.write(content)
+    if written > allowed:
+        try:
+            os.remove(chunk_path)
+        except OSError:
+            logger.debug("fs_upload_chunk: oversized chunk already gone", exc_info=True)
+        raise HTTPException(status_code=413, detail="This upload is larger than the size it announced.")
 
     async with _CHUNKED_UPLOADS_LOCK:
         if upload_id in _CHUNKED_UPLOADS:
             _CHUNKED_UPLOADS[upload_id]["chunks_received"].add(chunk_index)
+            _CHUNKED_UPLOADS[upload_id]["chunk_bytes"][chunk_index] = written
 
     return {"status": "ok", "chunk_index": chunk_index}
 
@@ -1533,6 +1584,8 @@ async def fs_upload_complete(
     if len(chunks_received) < total_chunks:
         missing = set(range(total_chunks)) - chunks_received
         raise HTTPException(status_code=400, detail=f"Upload incomplete. Missing {len(missing)} chunks")
+    if sum(upload_info.get("chunk_bytes", {}).values()) != int(upload_info["total_size"]):
+        raise HTTPException(status_code=400, detail="The uploaded size doesn't match the announced size")
 
     final_target = os.path.join(target_dir, filename)
     check_user_path_access(final_target, principal, write=True)
@@ -2285,10 +2338,14 @@ def _load_share_links() -> dict[str, Any]:
 
 
 def _save_share_links(links: dict[str, Any]) -> None:
+    """Saves share links; a failure is an error the caller sees, never a silent "ok" (SEC-10)."""
     try:
         atomic_write_json(SHARE_LINKS_FILE, links)
     except Exception as e:
         logger.error(f"[FS] Failed to persist share links: {e}")
+        raise HTTPException(
+            status_code=500, detail="The share links could not be saved (is the disk full?). Nothing was changed."
+        ) from e
 
 
 class CreateShareLinkRequest(BaseModel):
@@ -2514,6 +2571,101 @@ def _share_creator_can_read(created_by: str | None, real_target: str) -> bool:
     return user_can_access_path(real_target, creator)
 
 
+SHARE_ZIP_LIMIT = 5 * 1024**3
+SHARE_ZIP_MAX_RUNNING = 2
+SHARE_ZIP_SLOT_TTL = 6 * 3600  # a download that never started (client gone) frees its slot later
+_SHARE_ZIP_ACTIVE: dict[str, float] = {}
+_SHARE_ZIP_LOCK = threading.Lock()
+
+
+def _share_zip_slot() -> str | None:
+    """A slot for one folder download, or None when two are already running."""
+    now = time.time()
+    with _SHARE_ZIP_LOCK:
+        for k in [k for k, t in _SHARE_ZIP_ACTIVE.items() if now - t > SHARE_ZIP_SLOT_TTL]:
+            _SHARE_ZIP_ACTIVE.pop(k, None)
+        if len(_SHARE_ZIP_ACTIVE) >= SHARE_ZIP_MAX_RUNNING:
+            return None
+        slot = secrets.token_hex(8)
+        _SHARE_ZIP_ACTIVE[slot] = now
+        return slot
+
+
+def _release_share_zip_slot(slot: str) -> None:
+    with _SHARE_ZIP_LOCK:
+        _SHARE_ZIP_ACTIVE.pop(slot, None)
+
+
+def _folder_size_capped(folder: str, limit: int) -> int:
+    """Total size of a folder; raises ValueError as soon as it passes `limit`."""
+    total = 0
+    for root_dir, sub_dirs, files in os.walk(folder):
+        prune_protected(root_dir, sub_dirs)
+        for f in files:
+            try:
+                total += os.path.getsize(os.path.join(root_dir, f))
+            except OSError:
+                continue
+            if total > limit:
+                raise ValueError("too large")
+    return total
+
+
+class _ZipSink:
+    """A write-only stream for zipfile: the bytes written so far, handed out as they come."""
+
+    def __init__(self) -> None:
+        self.buf = bytearray()
+        self.pos = 0
+
+    def write(self, data) -> int:
+        self.buf += data
+        self.pos += len(data)
+        return len(data)
+
+    def tell(self) -> int:
+        return self.pos
+
+    def flush(self) -> None:
+        return None
+
+    def take(self) -> bytes:
+        out = bytes(self.buf)
+        self.buf.clear()
+        return out
+
+
+def _stream_folder_zip(folder: str, slot: str = ""):
+    """Yields a zip of `folder` while it is built; never holds more than one read buffer (SEC-9)."""
+    folder_abs = os.path.realpath(folder)
+    sink = _ZipSink()
+    try:
+        with zipfile.ZipFile(sink, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for root_dir, sub_dirs, files in os.walk(folder):
+                prune_protected(root_dir, sub_dirs)
+                for f in files:
+                    fp = os.path.join(root_dir, f)
+                    real_fp = os.path.realpath(fp)
+                    if not (real_fp == folder_abs or real_fp.startswith(folder_abs + os.sep)):
+                        logger.warning(f"[Share Download] Skipping symlink outside shared directory: {fp} -> {real_fp}")
+                        continue
+                    rel = os.path.relpath(fp, os.path.dirname(folder))
+                    try:
+                        with open(fp, "rb") as src, zf.open(rel, "w", force_zip64=True) as dst:
+                            while block := src.read(1024 * 1024):
+                                dst.write(block)
+                                if len(sink.buf) >= 256 * 1024:
+                                    yield sink.take()
+                    except OSError:
+                        logger.warning(f"[Share Download] Skipping unreadable file {fp}", exc_info=True)
+                    if sink.buf:
+                        yield sink.take()
+        if sink.buf:
+            yield sink.take()
+    finally:
+        _release_share_zip_slot(slot)
+
+
 async def _serve_shared_item(token: str, request: Request, info: bool, provided_pwd: str):
     from backend.rate_limit import hit as _rl_hit
 
@@ -2585,56 +2737,35 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
             "max_downloads": item.get("max_downloads"),
         }
 
+    if is_dir:
+        base_name = os.path.basename(real_target) or "shared_folder"
+        # the size check walks the folder: in a thread, so a big folder never freezes the server
+        try:
+            await asyncio.to_thread(_folder_size_capped, real_target, SHARE_ZIP_LIMIT)
+        except ValueError:
+            raise HTTPException(
+                status_code=400, detail="Shared folder exceeds maximum download size limit (5 GB)."
+            ) from None
+        slot = _share_zip_slot()
+        if not slot:
+            raise HTTPException(
+                status_code=429,
+                detail="Too many folder downloads at once. Try again in a minute.",
+                headers={"Retry-After": "60"},
+            )
+
     async with _SHARE_LOCK:
         cur_links = _load_share_links()
         if token in cur_links:
             cur_links[token]["download_count"] = cur_links[token].get("download_count", 0) + 1
-            _save_share_links(cur_links)
+            try:
+                _save_share_links(cur_links)
+            except HTTPException:
+                logger.warning("[FS] Download count not saved; serving the download anyway")
 
     if is_dir:
-        base_name = os.path.basename(real_target) or "shared_folder"
-        real_target_abs = os.path.realpath(real_target)
-
-        # 5 GB safety check
-        total_uncompressed = 0
-        for root_dir, sub_dirs, files in os.walk(real_target):
-            prune_protected(root_dir, sub_dirs)
-            for f in files:
-                fp = os.path.join(root_dir, f)
-                try:
-                    total_uncompressed += os.path.getsize(fp)
-                except OSError:
-                    pass
-                if total_uncompressed > 5 * 1024 * 1024 * 1024:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Shared folder exceeds maximum download size limit (5 GB).",
-                    )
-
-        def _dir_zip_generator():
-            spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # noqa: SIM115
-            try:
-                with zipfile.ZipFile(spool, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-                    for root_dir, sub_dirs, files in os.walk(real_target):
-                        prune_protected(root_dir, sub_dirs)
-                        for f in files:
-                            fp = os.path.join(root_dir, f)
-                            real_fp = os.path.realpath(fp)
-                            if not (real_fp == real_target_abs or real_fp.startswith(real_target_abs + os.sep)):
-                                logger.warning(
-                                    f"[Share Download] Skipping symlink outside shared directory: {fp} -> {real_fp}"
-                                )
-                                continue
-                            rel = os.path.relpath(fp, os.path.dirname(real_target))
-                            zf.write(fp, arcname=rel)
-                spool.seek(0)
-                while chunk := spool.read(65536):
-                    yield chunk
-            finally:
-                spool.close()
-
         return StreamingResponse(
-            _dir_zip_generator(),
+            _stream_folder_zip(real_target, slot),
             media_type="application/zip",
             headers={"Content-Disposition": f'attachment; filename="{base_name}.zip"'},
         )

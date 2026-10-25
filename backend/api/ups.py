@@ -90,7 +90,7 @@ async def get_ups_telemetry():
     return await asyncio.to_thread(read_ups_status)
 
 
-@router.get("/ups/config")
+@router.get("/ups/config", dependencies=[Depends(require_scope("system:view"))])
 async def get_ups_configuration():
     """Returns persistent UPS configuration with secret passwords masked."""
     cfg = await asyncio.to_thread(load_ups_config)

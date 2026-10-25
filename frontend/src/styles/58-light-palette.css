@@ -189,7 +189,6 @@ body.theme-light:not(.lcd-direct) {
   --lt-b-2d3e54ff: #e5e8ec;
   --lt-b-334155ff: #e4e7ea;
   --lt-b-3bf58b14: rgba(15, 23, 42, 0.048);
-  --lt-b-3bf58b1a: rgba(15, 23, 42, 0.06);
   --lt-b-3bf58b1f: rgba(15, 23, 42, 0.06);
   --lt-b-3bf58b26: rgba(15, 23, 42, 0.06);
   --lt-b-78838f2e: rgba(219, 222, 225, 0.96);
@@ -313,7 +312,6 @@ body.theme-light:not(.lcd-direct) {
   --lt-t-f5b731ff: #7a5506;
   --lt-t-f87171ff: #be0909;
   --lt-t-f8fafcff: #3a6188;
-  --lt-t-facc15ff: #6e5802;
   --lt-t-fb7185ff: #bc0520;
   --lt-t-fb923cff: #964503;
   --lt-t-fbbf24ff: #785702;
