@@ -38,7 +38,7 @@ def test_measures_and_judges(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
     values = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"])
-    assert values == {"idle-cpu": 1.0, "wakeups": 600, "backend-memory": 180.0, "ai-memory": 3072.0}
+    assert values == {"viewers": 0, "idle-cpu": 1.0, "wakeups": 600, "backend-memory": 180.0, "ai-memory": 3072.0}
     ok = hb.verdicts(values)
     assert ok == {"idle-cpu": True, "wakeups": True, "backend-memory": True, "ai-memory": False}
 
@@ -61,3 +61,23 @@ def test_no_backend_is_reported(tmp_path):
         hb.measure(0, proc=str(tmp_path), sleep=lambda s: None)
     assert hb.cpu_ticks("99", str(tmp_path)) == 0 and hb.context_switches("99", str(tmp_path)) == 0
     assert hb.rss_mb("99", str(tmp_path)) == 0.0
+
+
+def test_idle_budgets_are_skipped_while_someone_uses_the_app(tmp_path, capsys, monkeypatch):
+    _proc(tmp_path, 1, "python3 -m backend.main", 0, 0, 1024)
+    (tmp_path / "1" / "net").mkdir()
+    header = "  sl  local_address rem_address   st\n"
+    (tmp_path / "1" / "net" / "tcp").write_text(
+        header + "   0: 00000000:1F92 0100007F:C350 01 0\n   1: 00000000:1F92 00000000:0000 0A 0\n"
+    )
+    (tmp_path / "1" / "net" / "tcp6").write_text(header)
+    assert hb.viewers("1", str(tmp_path)) == 1  # one established, one listening
+    ok = hb.verdicts({"viewers": 1, "idle-cpu": 9.0, "wakeups": 99999, "backend-memory": 100.0, "ai-memory": 10.0})
+    assert ok == {"idle-cpu": None, "wakeups": None, "backend-memory": True, "ai-memory": True}
+    monkeypatch.setattr(
+        hb,
+        "measure",
+        lambda seconds: {"viewers": 1, "idle-cpu": 9.0, "wakeups": 99999, "backend-memory": 100.0, "ai-memory": 10.0},
+    )
+    assert hb.main(["--seconds", "1", "--results", str(tmp_path / "r"), "--strict"]) == 0
+    assert "SKIP idle-cpu" in capsys.readouterr().out

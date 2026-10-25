@@ -28,6 +28,8 @@ BUDGETS = {
     "ai-memory": float(os.environ.get("HW_BUDGET_AI_MEMORY", "1024")),
 }
 CHAT_SERVERS = ("ovms", "ollama", "llama-server", "vllm")
+APP_PORT = int(os.environ.get("HW_APP_PORT", "8082"))
+IDLE_BUDGETS = ("idle-cpu", "wakeups")  # only meaningful with nobody using the app
 
 
 def _read(path):
@@ -92,17 +94,31 @@ def chat_server_mb(procs, proc=HOST_PROC):
     return round(total, 1)
 
 
+def viewers(pid, proc=HOST_PROC, port=APP_PORT):
+    """Open connections to the app's web port, seen from its own network namespace."""
+    n = 0
+    for name in ("tcp", "tcp6"):
+        for line in _read(os.path.join(proc, pid, "net", name)).splitlines()[1:]:
+            parts = line.split()
+            if len(parts) > 3 and parts[3] == "01" and int(parts[1].rsplit(":", 1)[1], 16) == port:
+                n += 1
+    return n
+
+
 def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time):
     procs = processes(proc)
     pid = backend_pid(procs)
     if not pid:
         raise SystemExit("the ZettNAS backend is not running on this machine")
     hz = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
+    seen = viewers(pid, proc)
     t0, c0, s0 = clock(), cpu_ticks(pid, proc), context_switches(pid, proc)
     sleep(seconds)
     t1, c1, s1 = clock(), cpu_ticks(pid, proc), context_switches(pid, proc)
+    seen = max(seen, viewers(pid, proc))
     elapsed = max(1e-6, t1 - t0)
     return {
+        "viewers": seen,
         "idle-cpu": round(100 * (c1 - c0) / hz / elapsed, 2),
         "wakeups": round((s1 - s0) / elapsed * 60),
         "backend-memory": round(rss_mb(pid, proc), 1),
@@ -111,7 +127,13 @@ def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time):
 
 
 def verdicts(values, budgets=BUDGETS):
-    return {name: values[name] <= limit for name, limit in budgets.items() if name in values}
+    """True/False per budget; None (skipped) for the idle budgets while someone used the app."""
+    busy = bool(values.get("viewers"))
+    return {
+        name: (None if busy and name in IDLE_BUDGETS else values[name] <= limit)
+        for name, limit in budgets.items()
+        if name in values
+    }
 
 
 def main(argv=None):
@@ -123,6 +145,9 @@ def main(argv=None):
     values = measure(args.seconds)
     ok = verdicts(values)
     for name in BUDGETS:
+        if ok.get(name) is None:
+            print(f"SKIP {name} (someone was using the app)")
+            continue
         print(f"{'PASS' if ok.get(name) else 'FAIL'} {name}")
         if not ok.get(name):
             print(f"::warning title=Hardware budget::{name} is over its budget")
@@ -133,7 +158,7 @@ def main(argv=None):
             json.dump({"values": values, "budgets": BUDGETS, "pass": ok}, f, indent=1)
     except OSError as e:
         print(f"results not saved: {e.strerror}")
-    return 1 if args.strict and not all(ok.values()) else 0
+    return 1 if args.strict and any(v is False for v in ok.values()) else 0
 
 
 if __name__ == "__main__":
