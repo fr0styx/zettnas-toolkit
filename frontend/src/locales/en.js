@@ -3218,4 +3218,6 @@ export default {
   "overview.open": "Open",
   "overview.attention": "{n} thing(s) need your attention",
   "overview.status_label": "Status",
+  "gs.share_host": "Make a shared folder in {host}",
+  "gs.share_host_desc": "{host} creates shared folders; ZettNAS lists them under Shares.",
 };

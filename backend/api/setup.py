@@ -13,6 +13,7 @@ class ChecklistItem(BaseModel):
     id: str
     open: str
     done: bool
+    host: str = ""
 
 
 class Checklist(BaseModel):

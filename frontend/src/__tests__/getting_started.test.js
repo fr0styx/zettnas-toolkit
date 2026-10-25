@@ -56,3 +56,12 @@ describe('Setup wizard steps', () => {
     expect(document.getElementById('setup-wizard-submit').hidden).toBe(false);
   });
 });
+
+describe('Getting started on a host that makes shares (UX-17)', () => {
+  it('names the host in the share row', async () => {
+    const { checklistHtml } = await import('../components/getting-started.js');
+    const html = checklistHtml({ items: [{ id: 'share_host', open: 'mgmt-pane-storage-shares', done: false, host: 'truenas' }, { id: 'share_host', open: 'x', done: true, host: 'unraid' }], done: 1, total: 2 });
+    expect(html).toContain('Make a shared folder in TrueNAS');
+    expect(html).toContain('Unraid creates shared folders');
+  });
+});

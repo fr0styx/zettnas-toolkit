@@ -21,11 +21,23 @@ def _password_changed() -> bool:
     return not config.is_using_default_password()
 
 
+def _host_managed() -> str:
+    """The host's name when it makes shares itself (Unraid, TrueNAS…), else ""."""
+    from backend.hardware.pal_storage import get_storage_platform
+
+    adapter = get_storage_platform()
+    return adapter.get_platform_type().value if adapter.get_capabilities().is_observer_mode else ""
+
+
 def _has_share() -> bool:
     from backend.services.nfs_engine import get_nfs_engine
     from backend.services.samba_engine import get_samba_engine
 
-    return bool(get_samba_engine().list_shares()) or bool(get_nfs_engine().list_exports())
+    if get_samba_engine().list_shares() or get_nfs_engine().list_exports():
+        return True
+    from backend.hardware.pal_storage import get_storage_platform
+
+    return bool(get_storage_platform().list_shares())  # shares the host made count too
 
 
 def _has_app() -> bool:
@@ -63,17 +75,22 @@ def _alerts_set_up() -> bool:
 
 def checklist(username: str, is_admin: bool) -> dict[str, Any]:
     """Items in the order a new owner should do them. `open` is a Mission Control section key."""
+    try:
+        host = _host_managed()
+    except Exception:
+        logger.debug("[GettingStarted] platform unknown", exc_info=True)
+        host = ""
     items = [
         ("password", "system", _safe(_password_changed), True),
         ("two_factor", "system", _safe(lambda: _two_factor(username)), False),
-        ("share", "mgmt-pane-storage-shares", _safe(_has_share), True),
+        ("share_host" if host else "share", "mgmt-pane-storage-shares", _safe(_has_share), True),
         ("app", "catalog", _safe(_has_app), True),
         ("backup", "mgmt-pane-backups", _safe(_has_backup), True),
         ("alerts", "mgmt-pane-notifications", _safe(_alerts_set_up), True),
         ("ai_folder", "ai", _safe(_ai_has_files), True),
     ]
     rows = [
-        {"id": item_id, "open": where, "done": done}
+        {"id": item_id, "open": where, "done": done, "host": host if item_id == "share_host" else ""}
         for item_id, where, done, admin_only in items
         if is_admin or not admin_only or item_id == "password"
     ]

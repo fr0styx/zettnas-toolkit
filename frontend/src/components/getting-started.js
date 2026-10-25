@@ -12,6 +12,7 @@ const ITEMS = {
   password: ['gs.password', 'Choose your own password', 'gs.password_desc', 'Replace the first-time password.'],
   two_factor: ['gs.two_factor', 'Turn on two-factor sign-in', 'gs.two_factor_desc', 'A code from your phone, on top of the password.'],
   share: ['gs.share', 'Create a share', 'gs.share_desc', 'A folder your computers and phones can open over the network.'],
+  share_host: ['gs.share_host', 'Make a shared folder in {host}', 'gs.share_host_desc', '{host} creates shared folders; ZettNAS lists them under Shares.'],
   app: ['gs.app', 'Install an app', 'gs.app_desc', 'Photos, media, home automation and more from the app catalog.'],
   backup: ['gs.backup', 'Set up a backup', 'gs.backup_desc', 'Copy your files, and ZettNAS settings, somewhere else on a schedule.'],
   alerts: ['gs.alerts', 'Get alerts', 'gs.alerts_desc', 'Hear about failing disks and power cuts on your phone or by email.'],
@@ -35,6 +36,11 @@ function setHidden(v) {
   }
 }
 
+const hostName = (h) => {
+  const s = String(h || '');
+  return s === 'truenas' ? 'TrueNAS' : s.charAt(0).toUpperCase() + s.slice(1);
+};
+
 export function checklistHtml(data) {
   const rows = (data.items || []).map((item) => {
     const [tk, tf, dk, df] = ITEMS[item.id] || [item.id, item.id, '', ''];
@@ -42,7 +48,7 @@ export function checklistHtml(data) {
       ? `<span class="gs-done" role="img" aria-label="${escapeHtml(t('gs.done', 'Done'))}">✓</span>`
       : `<button type="button" class="btn-pill-toggle is-primary is-small gs-open" data-gs-open="${escapeHtml(item.open)}">${escapeHtml(t('gs.open', 'Open'))}</button>`;
     return `<li class="gs-item${item.done ? ' is-done' : ''}">
-      <div class="gs-text"><span class="gs-title">${escapeHtml(t(tk, tf))}</span><span class="gs-desc">${escapeHtml(t(dk, df))}</span></div>
+      <div class="gs-text"><span class="gs-title">${escapeHtml(t(tk, tf, { host: hostName(item.host) }))}</span><span class="gs-desc">${escapeHtml(t(dk, df, { host: hostName(item.host) }))}</span></div>
       ${action}</li>`;
   });
   return `<div class="gs-head">

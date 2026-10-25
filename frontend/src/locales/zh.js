@@ -3218,4 +3218,6 @@ export default {
   "overview.open": "打开",
   "overview.attention": "有 {n} 项需要处理",
   "overview.status_label": "状态",
+  "gs.share_host": "在 {host} 中创建共享文件夹",
+  "gs.share_host_desc": "共享文件夹由 {host} 创建；ZettNAS 会在“共享”中列出。",
 };

@@ -3218,4 +3218,6 @@ export default {
   "overview.open": "Öffnen",
   "overview.attention": "{n} Punkt(e) brauchen Ihre Aufmerksamkeit",
   "overview.status_label": "Status",
+  "gs.share_host": "Freigegebenen Ordner in {host} anlegen",
+  "gs.share_host_desc": "{host} legt freigegebene Ordner an; ZettNAS zeigt sie unter Freigaben.",
 };
