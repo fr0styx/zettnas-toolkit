@@ -1,6 +1,9 @@
 # ZettNAS Toolkit - Release Changelog
 
-## Unreleased
+## v1.10.3 (2026-10-25)
+### 🧰 Backups that can't lose your data; damaged files repaired at start; uploads over 16 MB fixed
+
+Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Backups
 
@@ -33,6 +36,8 @@
 - A superadmin can replace the install's secret key (`POST /api/security/rotate-secret-key`)
   if someone may have copied the data folder; two-factor secrets and backup passphrases are
   re-encrypted.
+
+---
 
 ## v1.10.2 (2026-10-25)
 ### 🔒 Security fixes from the October audit; OpenVINO chat
