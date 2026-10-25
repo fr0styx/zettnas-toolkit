@@ -60,3 +60,20 @@ def test_nothing_runs_with_the_built_in_model_or_during_a_full_reembed(tmp_path)
         w.commit()
         w.close()
         assert eng.reembed_fallback_files()["status"] == "full_reembed_pending"
+
+
+def test_the_fallback_check_uses_its_index_not_a_full_scan(tmp_path):
+    with patch.object(rag_engine, "RAG_CONFIG_PATH", str(tmp_path / "cfg.json")):
+        eng = _engine(tmp_path)
+        conn = eng._get_conn(readonly=True)
+        try:
+            plan = " ".join(
+                str(r[-1])
+                for r in conn.execute(
+                    "EXPLAIN QUERY PLAN SELECT file_id, file_name, file_ext, doc_title FROM indexed_files "
+                    "WHERE parse_status = 'ok' AND embedding_model = 'zett_lexical_384d' ORDER BY file_id LIMIT 20"
+                )
+            )
+        finally:
+            conn.close()
+    assert "idx_files_fallback_vectors" in plan

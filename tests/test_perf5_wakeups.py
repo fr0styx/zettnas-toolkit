@@ -62,3 +62,11 @@ def test_docker_is_asked_less_often_when_nobody_watches(monkeypatch):
     assert docker_stats._docker_ttl() == docker_stats._DOCKER_CACHE_TTL
     monkeypatch.setattr(broadcaster, "get_subscriber_count", lambda: 1 / 0)
     assert docker_stats._docker_ttl() == docker_stats._DOCKER_CACHE_TTL
+
+
+def test_container_inspections_share_one_pool():
+    from backend.hardware import docker_stats
+
+    first = docker_stats._inspect_pool()
+    assert docker_stats._inspect_pool() is first and first._max_workers == 4
+    assert docker_stats._INSPECT_CACHE_TTL >= 600

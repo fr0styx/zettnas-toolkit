@@ -95,7 +95,9 @@ _CONTAINER_INSPECT_CACHE: dict[str, dict[str, Any]] = {}
 _TELEMETRY_THREAD_STARTED = False
 _TELEMETRY_LOCK = threading.Lock()
 _INSPECT_LOCK = threading.Lock()
-_INSPECT_CACHE_TTL = 60.0
+# A container's inspect data changes only when it is recreated, which gives it a new id (a cache
+# miss anyway); refreshed every 10 minutes for the rest (PERF-5: was 60 s)
+_INSPECT_CACHE_TTL = 600.0
 
 # Universal well-known HTTP web service ports (prioritized by common NAS services)
 WELL_KNOWN_WEB_PORTS = [
@@ -469,6 +471,17 @@ def start_docker_telemetry_collector():
                 _TELEMETRY_THREAD_STARTED = True
 
 
+_INSPECT_POOL: concurrent.futures.ThreadPoolExecutor | None = None
+
+
+def _inspect_pool() -> concurrent.futures.ThreadPoolExecutor:
+    """One small pool for container inspections, kept, instead of a new pool of threads each time."""
+    global _INSPECT_POOL
+    if _INSPECT_POOL is None:
+        _INSPECT_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="DockerInspect")
+    return _INSPECT_POOL
+
+
 def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
     global _CACHED_CONTAINERS, _LAST_DOCKER_POLL
     now = time.time()
@@ -505,8 +518,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
             def _inspect_worker(cid: str) -> None:
                 _fetch_container_inspect(cid, conn=None)
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(cids_to_inspect))) as pool:
-                list(pool.map(_inspect_worker, cids_to_inspect))
+            list(_inspect_pool().map(_inspect_worker, cids_to_inspect))
 
         out = []
         for c in raw:
