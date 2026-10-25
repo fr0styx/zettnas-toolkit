@@ -143,7 +143,7 @@ def download_encrypted_backup(req: ConfigBackupRequest):
 
 def _safe_restore_archive(path: str, passphrase: str = "") -> dict:
     with open(path, "rb") as archive_file:
-        return restore_backup_archive(archive_file, passphrase=passphrase)
+        return restore_backup_archive(archive_file, passphrase=passphrase, staged=True)
 
 
 @router.post(
@@ -164,11 +164,16 @@ async def restore_backup(request: Request):
         result = await asyncio.to_thread(
             _safe_restore_archive, tmp_path, request.headers.get("x-backup-passphrase", "")
         )
-        client_prefs = await asyncio.to_thread(read_json, CLIENT_PREFS_FILE, {})
+        staged_prefs = os.path.join(
+            os.path.dirname(CLIENT_PREFS_FILE), ".restore-staged", os.path.basename(CLIENT_PREFS_FILE)
+        )
+        client_prefs = await asyncio.to_thread(read_json, staged_prefs, None)
+        if client_prefs is None:
+            client_prefs = await asyncio.to_thread(read_json, CLIENT_PREFS_FILE, {})
 
         return {
             "status": "ok",
-            "message": "Restore complete. Restart ZettNAS to apply everything; you will need to sign in again.",
+            "message": "The backup is checked and ready. Restart ZettNAS to apply it; you will need to sign in again.",
             "restored_files": (result or {}).get("restored"),
             "client_preferences": client_prefs,
         }

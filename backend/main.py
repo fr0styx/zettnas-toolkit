@@ -90,6 +90,14 @@ def startup_system():
     if DATA_DIR:
         os.makedirs(DATA_DIR, exist_ok=True)
 
+    # A settings restore staged before the restart goes into place first (REL-3)
+    try:
+        from backend.services.backup_engine import apply_staged_restore
+
+        apply_staged_restore(DATA_DIR)
+    except Exception as e:
+        logger.error(f"[Main] Could not apply the staged settings restore: {e}")
+
     # Refuse databases written by a newer ZettNAS before touching them (OPS-03).
     from backend.db_schema import NewerDatabaseError, check_versions, stamp_versions
 

@@ -278,3 +278,85 @@ def test_console_urls_accept_only_single_use_tickets():
     assert vms._ws_credential(ws) == ("zct_once", False)
     ws = SimpleNamespace(query_params={}, cookies={"session_token": "s"})
     assert vms._ws_credential(ws) == ("s", True)
+
+
+# ------------------------------------------------------------------ REL-3 staged restore
+def test_a_settings_restore_is_staged_until_the_next_start(paths):
+    from backend import config
+    from backend.services import backup_engine
+
+    marker = os.path.join(config.DATA_DIR, "client_preferences.json")
+    fsutil.atomic_write_json(marker, {"theme": "before"})
+    stream = backup_engine.generate_backup_zip_stream(passphrase="")
+    data = stream.read()
+    stream.close()
+    fsutil.atomic_write_json(marker, {"theme": "changed later"})
+
+    res = backup_engine.restore_backup_archive(io.BytesIO(data), snapshot=False, staged=True)
+    assert res["staged"] and fsutil.read_json(marker)["theme"] == "changed later"  # nothing live touched
+    moved = backup_engine.apply_staged_restore(config.DATA_DIR)
+    assert "client_preferences.json" in moved and fsutil.read_json(marker)["theme"] == "before"
+    assert not os.path.exists(os.path.join(config.DATA_DIR, backup_engine.STAGED_RESTORE_DIR))
+    assert backup_engine.apply_staged_restore(config.DATA_DIR) == []
+
+
+# ------------------------------------------------------------------ backups that stopped, restore drills
+def test_overdue_and_failed_backups_are_found(monkeypatch):
+    from backend.services import backup_engine, backup_watch, offsite_backup
+
+    now = 10_000_000.0
+    jobs = [
+        {
+            "id": "a",
+            "name": "Fine",
+            "schedule": "daily",
+            "enabled": True,
+            "created_at": 0,
+            "last_success_at": now - 3600,
+        },
+        {
+            "id": "b",
+            "name": "Stalled",
+            "schedule": "daily",
+            "enabled": True,
+            "created_at": 0,
+            "last_success_at": now - 5 * 86400,
+        },
+        {"id": "c", "name": "Broken", "schedule": "daily", "enabled": True, "created_at": 0, "last_status": "error"},
+        {"id": "d", "name": "Manual", "schedule": "manual", "enabled": True, "created_at": 0},
+    ]
+    monkeypatch.setattr(backup_engine, "get_backup_jobs", lambda: jobs)
+    repos = [
+        {"id": "r", "name": "Cloud", "hour": 2, "created_at": 0, "last_backup": now - 4 * 86400, "last_result": "ok"}
+    ]
+    monkeypatch.setattr(offsite_backup, "list_repos", lambda: repos)
+    names = {b["name"] for b in backup_watch.overdue_backups(now)}
+    assert names == {"Stalled", "Broken", "Cloud"}
+
+    sent = []
+    monkeypatch.setattr(
+        "backend.services.notifications.send_notification", lambda *a, **k: sent.append(k.get("dedup_key"))
+    )
+    backup_watch._LAST_CHECK["at"] = 0
+    backup_watch.check_and_alert(now)
+    assert len(sent) == 3 and backup_watch.check_and_alert(now + 60) == []  # once an hour
+
+
+def test_a_restore_drill_brings_back_one_file(monkeypatch):
+    from backend.services import offsite_backup
+
+    calls = []
+    monkeypatch.setattr(offsite_backup, "get_repo", lambda rid: {"id": rid})
+    monkeypatch.setattr(offsite_backup, "_update", lambda rid, **f: calls.append(f))
+
+    def fake_restic(repo, args, timeout=0, track=False):
+        if args[0] == "ls":
+            return json.dumps({"struct_type": "node", "type": "file", "path": "/docs/a.txt", "size": 5})
+        target = args[args.index("--target") + 1]
+        os.makedirs(os.path.join(target, "docs"))
+        with open(os.path.join(target, "docs", "a.txt"), "w") as f:
+            f.write("hello")
+        return ""
+
+    monkeypatch.setattr(offsite_backup, "run_restic", fake_restic)
+    assert offsite_backup.drill("cloud")["ok"] and calls[-1]["last_drill_result"] == "ok"

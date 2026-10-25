@@ -126,6 +126,12 @@ def _run_scheduled_tasks():
         except Exception as e:
             logger.warning(f"[Scheduler] Offsite backups failed: {e}")
         try:
+            from backend.services.backup_watch import check_and_alert
+
+            check_and_alert(now)  # backups without a recent success
+        except Exception as e:
+            logger.warning(f"[Scheduler] Backup watch failed: {e}")
+        try:
             from backend.services.notifications import send_digest_if_due
 
             send_digest_if_due(now)

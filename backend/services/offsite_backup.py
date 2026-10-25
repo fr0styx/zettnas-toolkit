@@ -93,6 +93,9 @@ def save_repo(
             "last_backup": old.get("last_backup"),
             "last_check": old.get("last_check"),
             "last_result": old.get("last_result", ""),
+            "last_drill": old.get("last_drill"),
+            "last_drill_result": old.get("last_drill_result", ""),
+            "created_at": old.get("created_at") or time.time(),
         }
         _save(repos)
     return repos[repo_id]
@@ -294,6 +297,50 @@ def check(repo_id: str, read_percent: int = 5) -> dict[str, Any]:
     return {"ok": True, "read_percent": pct}
 
 
+DRILL_EVERY_SECS = 30 * 86400
+DRILL_MAX_FILE_BYTES = 20 * 1024 * 1024
+
+
+def drill(repo_id: str) -> dict[str, Any]:
+    """A restore drill: brings back one small file of the newest version into a scratch folder and
+    checks its size, proving the backup can actually be restored (audit batch 1)."""
+    import shutil
+    import tempfile
+
+    repo = get_repo(repo_id)
+    out = run_restic(repo, ["ls", "--json", "latest"], timeout=900)
+    pick = None
+    for line in out.splitlines():
+        try:
+            node = json.loads(line)
+        except ValueError:
+            continue
+        if (
+            node.get("struct_type") == "node"
+            and node.get("type") == "file"
+            and 0 < int(node.get("size") or 0) <= DRILL_MAX_FILE_BYTES
+        ):
+            pick = node
+            break
+    if not pick:
+        _update(repo_id, last_drill=time.time(), last_drill_result="no file small enough to test")
+        return {"ok": False, "reason": "no file small enough to test"}
+    scratch = tempfile.mkdtemp(prefix="zettnas-drill-")
+    try:
+        run_restic(repo, ["restore", "latest", "--target", scratch, "--include", pick["path"]], timeout=1800)
+        restored = os.path.join(scratch, pick["path"].lstrip("/"))
+        ok = os.path.isfile(restored) and os.path.getsize(restored) == int(pick["size"])
+    except ResticError as e:
+        _update(repo_id, last_drill=time.time(), last_drill_result=f"failed: {e}"[:300])
+        raise
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+    _update(repo_id, last_drill=time.time(), last_drill_result="ok" if ok else "failed: restored file differs")
+    if not ok:
+        raise ResticError("the restored test file differs from the backup")
+    return {"ok": True, "file": pick["path"], "size": int(pick["size"])}
+
+
 def _update(repo_id: str, **fields: Any) -> None:
     with _LOCK:
         repos = _repos()
@@ -320,6 +367,14 @@ def run_due(now: float | None = None) -> list[str]:
         ):
             threading.Thread(
                 target=_safe, args=(check, repo["id"]), daemon=True, name=f"offsite-check-{repo['id']}"
+            ).start()
+        elif (
+            now - float(repo.get("last_drill") or 0) > DRILL_EVERY_SECS
+            and repo.get("last_backup")
+            and t.tm_hour == (repo["hour"] + 4) % 24
+        ):
+            threading.Thread(
+                target=_safe, args=(drill, repo["id"]), daemon=True, name=f"offsite-drill-{repo['id']}"
             ).start()
     return started
 

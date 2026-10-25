@@ -244,12 +244,74 @@ def _check_archive_schema(z: "zipfile.ZipFile", names: set) -> None:
             raise ValueError(f"The backup's {name} comes from a newer ZettNAS (schema v{found}); update first")
 
 
-def restore_backup_archive(archive_file: BinaryIO, passphrase: str = "", snapshot: bool = True) -> dict[str, Any]:
+STAGED_RESTORE_DIR = ".restore-staged"
+STAGED_MANIFEST = "staged.json"
+
+
+def _clear_sessions_and_tokens(users_db: str) -> None:
+    """Sessions and API tokens from the backup's users DB (older exports kept them) must not come back."""
+    from backend.users_db import _SESSION_CACHE, _SESSION_CACHE_LOCK, _TOKEN_CACHE, _TOKEN_CACHE_LOCK
+
+    with sqlite3.connect(users_db, timeout=15.0) as conn:
+        for table in ("sessions", "api_tokens"):
+            try:
+                conn.execute(f"DELETE FROM {table}")
+            except sqlite3.Error:
+                logger.debug(f"[BACKUP] no {table} table to clear", exc_info=True)
+    with _SESSION_CACHE_LOCK:
+        _SESSION_CACHE.clear()
+    with _TOKEN_CACHE_LOCK:
+        _TOKEN_CACHE.clear()
+
+
+def apply_staged_restore(data_dir: str) -> list[str]:
+    """Moves a staged settings restore into place. Run at start, before any database is opened (REL-3)."""
+    staged = os.path.join(data_dir, STAGED_RESTORE_DIR)
+    manifest = os.path.join(staged, STAGED_MANIFEST)
+    files = read_json(manifest, None)
+    if not os.path.isdir(staged):
+        return []
+    if not isinstance(files, list):
+        shutil.rmtree(staged, ignore_errors=True)  # an interrupted staging: nothing to apply
+        return []
+    moved = []
+    for rel in files:
+        src, dst = os.path.join(staged, rel), os.path.join(data_dir, rel)
+        if not os.path.isfile(src):
+            continue
+        for suffix in ("-wal", "-shm"):
+            if dst.endswith(".db") and os.path.exists(dst + suffix):
+                os.remove(dst + suffix)
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        os.replace(src, dst)
+        moved.append(rel)
+    if "users.db" in moved:
+        try:
+            _clear_sessions_and_tokens(os.path.join(data_dir, "users.db"))
+        except Exception as e:
+            logger.warning(f"[BACKUP] Could not reset sessions after restore: {e}")
+    shutil.rmtree(staged, ignore_errors=True)
+    logger.warning(f"[BACKUP] Applied a staged settings restore: {len(moved)} file(s)")
+    try:
+        from backend.state import add_event
+
+        add_event("success", "Settings restored", f"The settings backup was applied ({len(moved)} files).")
+    except Exception:
+        logger.debug("[BACKUP] could not record the restore event", exc_info=True)
+    return moved
+
+
+def restore_backup_archive(
+    archive_file: BinaryIO, passphrase: str = "", snapshot: bool = True, staged: bool = False
+) -> dict[str, Any]:
     """Validates and restores a configuration backup into DATA_DIR.
 
     Rejects zip-slip paths, symlinks, oversized archives and databases from a
     newer version; restores only what an export can contain; saves the current
     data to data/backups/pre-update/ first; and ends every session afterwards.
+
+    `staged` extracts into data/.restore-staged; the next start swaps it in before any database
+    is opened, so a restore never writes over files the running app has open (REL-3).
     """
     target_dir = os.path.abspath(DATA_DIR)
     os.makedirs(target_dir, exist_ok=True)
@@ -293,6 +355,16 @@ def restore_backup_archive(archive_file: BinaryIO, passphrase: str = "", snapsho
             except Exception as e:
                 raise ValueError(f"Could not save the current data before restoring: {e}") from e
 
+        if staged:
+            stage_dir = os.path.join(target_dir, STAGED_RESTORE_DIR)
+            shutil.rmtree(stage_dir, ignore_errors=True)
+            os.makedirs(stage_dir, mode=0o700)
+            for member in selected:
+                z.extract(member, stage_dir)
+            atomic_write_json(os.path.join(stage_dir, STAGED_MANIFEST), [m.filename for m in selected])
+            logger.info(f"[BACKUP] Staged {len(selected)} file(s); they are applied at the next start.")
+            return {"restored": len(selected), "snapshot": snapshot_path, "staged": True}
+
         for member in selected:
             dst = os.path.join(target_dir, member.filename)
             for suffix in ("-wal", "-shm"):
@@ -300,22 +372,9 @@ def restore_backup_archive(archive_file: BinaryIO, passphrase: str = "", snapsho
                     os.remove(dst + suffix)
             z.extract(member, target_dir)
 
-    # Sessions and API tokens from the backup's users DB (older exports kept them)
-    # must not come back.
     if any(m.filename == "users.db" for m in selected):
         try:
-            from backend.users_db import _SESSION_CACHE, _SESSION_CACHE_LOCK, _TOKEN_CACHE, _TOKEN_CACHE_LOCK
-
-            with sqlite3.connect(os.path.join(target_dir, "users.db"), timeout=15.0) as conn:
-                for table in ("sessions", "api_tokens"):
-                    try:
-                        conn.execute(f"DELETE FROM {table}")
-                    except sqlite3.Error:
-                        pass
-            with _SESSION_CACHE_LOCK:
-                _SESSION_CACHE.clear()
-            with _TOKEN_CACHE_LOCK:
-                _TOKEN_CACHE.clear()
+            _clear_sessions_and_tokens(os.path.join(target_dir, "users.db"))
         except Exception as e:
             logger.warning(f"[BACKUP] Could not reset sessions after restore: {e}")
 
@@ -707,10 +766,12 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                     dest_target = f"{crypt_remote_name}:"
                     logger.info(f"[HYPER-BACKUP] Initialized client-side encrypted crypt overlay: {dest_target}")
 
+                # copy, never sync: a file deleted (or encrypted away) at home is never deleted
+                # from the backup. Versions of changed files are what offsite backup (restic) is for.
                 sync_job = rclone.start_sync_job(
                     src=source_dir,
                     dst=dest_target,
-                    action="sync",
+                    action="copy",
                     extra_flags=["--max-delete", str(MAX_DELETE_PER_RUN)],
                 )
                 history_record["rclone_job_id"] = sync_job.get("id")
@@ -733,7 +794,13 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
         job["last_run_at"] = time.time()
         job["last_status"] = "success"
         job["last_error"] = None
-        _update_job_status(job_id, last_run_at=job["last_run_at"], last_status="success", last_error=None)
+        _update_job_status(
+            job_id,
+            last_run_at=job["last_run_at"],
+            last_success_at=job["last_run_at"],
+            last_status="success",
+            last_error=None,
+        )
 
         history_record["completed_at"] = time.time()
         history_record["status"] = "success"

@@ -1,5 +1,32 @@
 # ZettNAS Toolkit - Release Changelog
 
+## Unreleased
+
+#### Backups
+
+- **Hyper-Backup copies to the cloud instead of mirroring.** A file deleted at home (or
+  encrypted away by ransomware) is no longer deleted from the backup. For versions of changed
+  files, use **Offsite backup**, which keeps daily, weekly and monthly versions.
+- **You hear about a backup that stopped.** A scheduled backup without a successful run in
+  twice its interval, or whose last run failed, sends one alert a day.
+- **Offsite backups are restore-tested every month**: one small file of the newest version is
+  brought back and checked.
+- A settings restore is checked, then applied at the next start, never over open databases.
+- At start, damaged databases are restored from the newest snapshot; a daily snapshot of the
+  data folder keeps the last seven days.
+
+#### Fixes
+
+- Files over 16 MB upload again from the File Explorer.
+
+#### Security
+
+- The ransomware freeze also makes WebDAV and NFS read-only.
+- Guest and kid accounts can't read system details; security alerts go to admins only.
+- Folder downloads through share links stream as they're built; at most two run at once.
+- Guessing one account's password from many addresses slows every address; IPv6 addresses
+  count per /64. The VM console takes only single-use tickets in its address.
+
 ## v1.10.2 (2026-10-25)
 ### 🔒 Security fixes from the October audit; OpenVINO chat
 
