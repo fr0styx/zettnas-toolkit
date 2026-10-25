@@ -135,3 +135,15 @@ def test_best_source_stays_first_for_short_lists():
 
     src = inspect.getsource(rag_engine_search)
     assert "raw_citations if len(raw_citations) <= 8 else apply_primacy_recency_inversion(raw_citations)" in src
+
+
+def test_the_benchmark_measures_an_openai_compatible_server():
+    """AI-20: the model that answers on OpenVINO Model Server is benchmarked too."""
+    from backend.services import model_benchmark
+
+    def fake_stream(ep, name, prompt, max_tokens, timeout=600.0):
+        return (0.5, 49, 4.5) if max_tokens > 1 else (12.0, 1, 12.0)
+
+    res = model_benchmark.benchmark_openai("http://ovms:8000/v1", "Qwen3-4B", stream=fake_stream)
+    assert res["ok"] and res["tokens_per_s"] == 12.0 and res["first_token_s"] == 0.5
+    assert res["doc_first_token_s"] == 12.0 and res["runtime"] == "openai_compatible"

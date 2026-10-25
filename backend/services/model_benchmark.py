@@ -150,6 +150,80 @@ def _document_question(host: str, name: str, http: Callable) -> dict[str, Any]:
     }
 
 
+def _openai_endpoint() -> str:
+    """The configured OpenAI-compatible chat server ("http://host:8000/v1"), or "" for none."""
+    try:
+        from backend.services.rag_engine import get_rag_engine
+
+        ep = str(get_rag_engine().get_config().get("llm_endpoint") or "").strip().rstrip("/")
+    except Exception:
+        logger.debug("model_benchmark: no chat endpoint configured", exc_info=True)
+        return ""
+    return ep if ep.endswith("/v1") else ""
+
+
+def _stream_chat(ep: str, model: str, prompt: str, max_tokens: int, timeout: float = 600.0) -> tuple[float, int, float]:
+    """Streams one answer: (seconds to the first token, pieces received, seconds in total)."""
+    body = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": True,
+        "max_tokens": max_tokens,
+        "temperature": 0,
+        "chat_template_kwargs": {"enable_thinking": False},
+    }
+    req = urllib.request.Request(
+        f"{ep}/chat/completions",
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    started = time.time()
+    first = None
+    pieces = 0
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        for raw in resp:
+            line = raw.decode("utf-8", "replace").strip()
+            if not line.startswith("data:") or line == "data: [DONE]":
+                continue
+            try:
+                delta = (json.loads(line[5:]).get("choices") or [{}])[0].get("delta") or {}
+            except ValueError:
+                continue
+            if delta.get("content"):
+                pieces += 1
+                if first is None:
+                    first = time.time() - started
+    total = time.time() - started
+    return (first if first is not None else total), pieces, total
+
+
+def benchmark_openai(ep: str, name: str, stream: Callable = _stream_chat) -> dict[str, Any]:
+    """The same measurements as for Ollama, from a streamed answer (pieces count as tokens)."""
+    entry = {"name": name, "size_bytes": 0, "runtime": "openai_compatible", "host": ep}
+    started = time.time()
+    try:
+        first, pieces, total = stream(ep, name, PROMPT, 96)
+    except Exception as e:
+        return {**entry, "ok": False, "error": f"{type(e).__name__}: {e}"[:200]}
+    try:
+        doc_first, _, _ = stream(ep, name, build_document_prompt(), 1, timeout=900.0)
+    except Exception:
+        logger.debug("model_benchmark: document question failed on %s", ep, exc_info=True)
+        doc_first = None
+    writing = max(0.001, total - first)
+    return {
+        **entry,
+        "ok": pieces > 1,
+        "tokens_per_s": round((pieces - 1) / writing, 1) if pieces > 1 else 0.0,
+        "first_token_s": round(first, 2),
+        "load_s": 0.0,
+        "doc_first_token_s": round(doc_first, 1) if doc_first is not None else None,
+        "wall_s": round(time.time() - started, 1),
+        "placement": "model server",
+    }
+
+
 def recommend(results: list[dict[str, Any]]) -> dict[str, Any]:
     ok = [r for r in results if r.get("ok")]
     if not ok:
@@ -177,16 +251,31 @@ def status() -> dict[str, Any]:
 def run(host: str | None = None, http: Callable = _http_json, only: list[str] | None = None) -> dict[str, Any]:
     host = host or _host()
     models = [m for m in chat_models(host, http) if not only or m["name"] in only]
+    ep = _openai_endpoint()
+    served: list[str] = []
+    if ep:
+        try:
+            served = [
+                str(m.get("id")) for m in (http(f"{ep}/models", timeout=10) or {}).get("data") or [] if m.get("id")
+            ]
+        except Exception:
+            logger.debug("model_benchmark: %s/models unavailable", ep, exc_info=True)
+        served = [s for s in served if not only or s in only]
+    total = len(models) + len(served)
     results = []
     for i, m in enumerate(models):
         with _lock:
-            _job.update(state="running", current=m["name"], done=i, total=len(models))
+            _job.update(state="running", current=m["name"], done=i, total=total)
         results.append(benchmark_model(host, m, http))
+    for j, name in enumerate(served):
+        with _lock:
+            _job.update(state="running", current=name, done=len(models) + j, total=total)
+        results.append(benchmark_openai(ep, name))
     out = {"results": results, "finished_at": time.time(), "host": host, "recommended": recommend(results)}
     atomic_write_json(RESULTS_FILE, out, indent=1)
     with _lock:
         _job.clear()
-        _job.update(state="done", done=len(models), total=len(models))
+        _job.update(state="done", done=total, total=total)
     return out
 
 
