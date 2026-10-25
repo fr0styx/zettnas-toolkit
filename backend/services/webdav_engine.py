@@ -13,7 +13,7 @@ import time
 from typing import Any, Optional
 
 import backend.config as config
-from backend.fsutil import atomic_write_json, protected_rclone_excludes, read_json, resolve_within
+from backend.fsutil import atomic_write_json, json_locked, protected_rclone_excludes, read_json, resolve_within
 
 logger = logging.getLogger("ZettNAS.WebDAV")
 
@@ -113,6 +113,7 @@ class WebdavEngine:
             merged["root_path"] = defaults["root_path"]
         return merged
 
+    @json_locked(lambda self, *a, **k: config.WEBDAV_CONFIG_FILE)
     def save_config(self, new_cfg: dict[str, Any]) -> dict[str, Any]:
         """Saves settings. Raises ValueError for a shared folder outside the browse roots."""
         if "root_path" in new_cfg:
@@ -168,6 +169,7 @@ class WebdavEngine:
                     logger.warning(f"[WEBDAV] Could not create root path {root}: {e}")
 
             proxy_script = os.path.join(os.path.dirname(__file__), "rclone_auth_proxy.py")
+            proc_env = None
             if os.path.exists(proxy_script):
                 cmd = [
                     rclone_bin,
@@ -201,7 +203,8 @@ class WebdavEngine:
                     self._last_error = "WebDAV needs a dedicated password of at least 8 characters."
                     logger.error(f"[WEBDAV] Not starting: {self._last_error}")
                     return self.get_status()
-                cmd.extend(["--user", username, "--pass", password])
+                # given to rclone through its environment, never on the command line (SEC-12)
+                proc_env = {**os.environ, "RCLONE_USER": username, "RCLONE_PASS": password}
 
             # the app's own folders stay hidden whatever a user's root is (SEC-3)
             cmd += protected_rclone_excludes(config.POOL_PATH if os.path.exists(proxy_script) else root)
@@ -214,6 +217,7 @@ class WebdavEngine:
             try:
                 self._proc = subprocess.Popen(
                     cmd,
+                    env=proc_env,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
                     text=True,

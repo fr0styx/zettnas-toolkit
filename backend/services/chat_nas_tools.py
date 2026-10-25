@@ -15,6 +15,7 @@ from backend.config import (  # noqa: F401
 )
 from backend.fsutil import (  # noqa: F401
     atomic_write_json,
+    json_locked,
     read_json,
 )
 from backend.services.chat_context import (  # noqa: F401
@@ -174,6 +175,7 @@ def tool_get_fan_and_thermal_status() -> dict[str, Any]:
     }
 
 
+@json_locked(lambda *a, **k: FAN_STATE_FILE)
 def tool_set_fan_profile(
     profile: str,
     zero_rpm_enabled: bool | None = None,

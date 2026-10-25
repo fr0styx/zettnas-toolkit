@@ -96,7 +96,7 @@ class WebdavToggleRequest(BaseModel):
 
 
 @router.get("/webdav/status")
-async def get_webdav_status():
+def get_webdav_status():
     """Returns WebDAV daemon operational status, port, URLs, and quick-connect commands."""
     engine = get_webdav_engine()
     return engine.get_status()

@@ -3,7 +3,7 @@ import time
 from typing import Any
 
 from backend.config import SMART_SCHEDULE_FILE, logger
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, json_locked, read_json
 from backend.hardware.disks import _discover_disks, run_disk_smart_test
 from backend.hardware.unraid import read_unraid_status
 from backend.state import Z_STATE, add_event
@@ -39,6 +39,7 @@ def get_smart_schedule() -> dict[str, Any]:
     return merged
 
 
+@json_locked(lambda *a, **k: SMART_SCHEDULE_FILE)
 def save_smart_schedule(cfg: dict[str, Any]) -> dict[str, Any]:
     """Persist updated SMART test and storage scrub schedule configuration."""
     current = get_smart_schedule()

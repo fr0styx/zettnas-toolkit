@@ -233,7 +233,7 @@ def remove_backup_job(job_id: str):
     "/backup/schedule/{job_id}/run",
     dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))],
 )
-async def trigger_backup_job(job_id: str):
+def trigger_backup_job(job_id: str):
     """Starts a hyper-backup job in the background. The run reports its result through the job's
     status, the history and a notification: an upload can take hours (ARC-1)."""
     import threading

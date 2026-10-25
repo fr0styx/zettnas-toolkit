@@ -33,7 +33,7 @@ def close_notification_client() -> None:
 
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, json_locked, read_json
 
 NOTIFICATIONS_FILE = os.path.join(DATA_DIR, "notifications.json")
 
@@ -134,6 +134,7 @@ def unmask_notification_config(new_cfg: dict[str, Any], existing_cfg: dict[str, 
     return resolved
 
 
+@json_locked(lambda *a, **k: NOTIFICATIONS_FILE)
 def save_notification_config(cfg: dict[str, Any]) -> None:
     existing = load_notification_config()
     merged = unmask_notification_config(cfg, existing)
@@ -606,6 +607,7 @@ def test_single_channel(channel: str, channel_cfg: dict[str, Any]) -> dict[str, 
 # ---------------------------------------------------------------------------
 # Daily digest and per-person routing (Batch 6)
 # ---------------------------------------------------------------------------
+@json_locked(lambda *a, **k: DIGEST_FILE)
 def _queue_for_digest(title: str, message: str, level: str, event_type: str, now: float) -> None:
     data = read_json(DIGEST_FILE, {}) or {}
     items = data.get("items") or []
@@ -624,6 +626,7 @@ def digest_text(items: list[dict[str, Any]]) -> tuple[str, str]:
     return f"ZettNAS daily summary: {len(items)} alerts", f"{summary}\n\n" + "\n".join(lines) + more
 
 
+@json_locked(lambda *a, **k: DIGEST_FILE)
 def send_digest_if_due(now: float | None = None) -> dict[str, Any]:
     """Called by the scheduler every minute: sends the day's summary at the digest hour."""
     cfg = load_notification_config()
@@ -680,6 +683,7 @@ def get_route(username: str) -> dict[str, Any]:
     }
 
 
+@json_locked(lambda *a, **k: ROUTES_FILE)
 def set_route(
     username: str, ntfy_topic: str = "", email: str = "", events: list[str] | None = None, min_level: str = "warning"
 ) -> dict[str, Any]:

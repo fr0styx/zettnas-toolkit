@@ -18,7 +18,7 @@ import zipfile
 from typing import Any, BinaryIO, Optional
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
 from backend.services.rclone_engine import get_rclone_engine
 
@@ -392,6 +392,7 @@ def job_passphrase(job: dict[str, Any]) -> str:
     return secret_box.unseal(str(job.get("encryption_password") or ""))
 
 
+@json_locked(lambda *a, **k: BACKUP_JOBS_FILE)
 def _update_job_status(job_id: str, **fields: Any) -> None:
     """Writes status fields onto the job as it is now, so edits made during a run are kept (ARC-1)."""
     jobs = get_backup_jobs()
@@ -421,6 +422,7 @@ def _wait_for_sync(rclone: Any, sync_id: str) -> dict[str, Any]:
     return {"status": "error", "error": "The upload did not finish within 48 hours."}
 
 
+@json_locked(lambda *a, **k: BACKUP_JOBS_FILE)
 def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
     """Creates or updates a scheduled hyper-backup job."""
     kind = "config" if job_data.get("kind") == "config" else "data"
@@ -477,6 +479,7 @@ def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+@json_locked(lambda *a, **k: BACKUP_JOBS_FILE)
 def delete_backup_job(job_id: str) -> bool:
     """Deletes a scheduled hyper-backup job."""
     jobs = get_backup_jobs()
@@ -497,6 +500,7 @@ def get_backup_history(limit: int = 50) -> list[dict[str, Any]]:
     return history[:limit]
 
 
+@json_locked(lambda *a, **k: BACKUP_HISTORY_FILE)
 def record_backup_history(record: dict[str, Any]) -> None:
     """Appends an execution record to the history log."""
     history = read_json(BACKUP_HISTORY_FILE, default=[])

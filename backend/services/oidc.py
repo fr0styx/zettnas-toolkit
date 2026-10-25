@@ -27,7 +27,7 @@ from typing import Any
 import httpx
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json
+from backend.fsutil import atomic_write_json, json_locked
 
 CONFIG_FILE = os.path.join(DATA_DIR, "oidc.json")
 STATE_TTL_S = 600
@@ -81,6 +81,7 @@ def masked_config() -> dict[str, Any]:
     return cfg
 
 
+@json_locked(lambda *a, **k: CONFIG_FILE)
 def save_config(changes: dict[str, Any]) -> dict[str, Any]:
     cfg = load_config()
     for k, v in changes.items():

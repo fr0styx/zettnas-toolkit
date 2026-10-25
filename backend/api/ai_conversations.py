@@ -68,7 +68,7 @@ def _get_principal_uid(principal: AuthenticatedPrincipal) -> str:
     "/media/conversations",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
-async def api_list_conversations(
+def api_list_conversations(
     search: str | None = Query(default=None),
     include_archived: bool = Query(default=False),
     limit: int = Query(default=60, ge=1, le=200),
@@ -93,7 +93,7 @@ async def api_list_conversations(
     "/media/conversations",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
-async def api_create_conversation(
+def api_create_conversation(
     req: ConversationCreateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
@@ -117,7 +117,7 @@ async def api_create_conversation(
     "/media/conversations/{conv_id}",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
-async def api_get_conversation(
+def api_get_conversation(
     conv_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
@@ -137,7 +137,7 @@ async def api_get_conversation(
     "/media/conversations/{conv_id}",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
-async def api_update_conversation(
+def api_update_conversation(
     conv_id: str,
     req: ConversationUpdateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -166,7 +166,7 @@ async def api_update_conversation(
     "/media/conversations/{conv_id}",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
-async def api_delete_conversation(
+def api_delete_conversation(
     conv_id: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
@@ -186,7 +186,7 @@ async def api_delete_conversation(
     "/media/conversations",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
-async def api_clear_all_conversations(
+def api_clear_all_conversations(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
     """Deletes all conversations belonging to the authenticated user."""
@@ -199,7 +199,7 @@ async def api_clear_all_conversations(
     "/ai/conversations/{conv_id}/messages",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
 )
-async def api_append_conversation_message(
+def api_append_conversation_message(
     conv_id: str,
     req: ConversationMessageAppendRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),

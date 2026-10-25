@@ -251,3 +251,30 @@ def test_one_daily_snapshot_a_day_and_seven_kept(tmp_path):
     future = 4e9
     data_health.take_daily_snapshot_if_due(str(data), now=future)
     assert len(list(root.iterdir())) == data_health.DAILY_KEEP
+
+
+def test_sign_in_with_a_two_factor_token_reaches_the_challenge(client):
+    """The two-factor step runs in the threadpool now; sign-in must still reach it."""
+    r = client.post("/api/auth/login", json={"password": "x", "mfa_token": "not-a-real-token", "mfa_code": "123456"})
+    assert r.status_code == 401 and r.json()["error"] == "invalid_mfa_token"
+
+
+def test_ipv6_addresses_share_a_lockout_per_64():
+    from backend.api import auth as auth_api
+
+    assert auth_api._ip_key("2001:db8:1:2:aaaa::1") == auth_api._ip_key("2001:db8:1:2:bbbb::9")
+    assert auth_api._norm_key("user:bob@2001:db8:1:2::5") == "user:bob@2001:db8:1:2::/64"
+    assert auth_api._ip_key("192.168.1.5") == "192.168.1.5"
+
+
+def test_console_urls_accept_only_single_use_tickets():
+    from types import SimpleNamespace
+
+    from backend.api import vms
+
+    ws = SimpleNamespace(query_params={"token": "zat_longlived"}, cookies={})
+    assert vms._ws_credential(ws) == (None, False)
+    ws = SimpleNamespace(query_params={"ticket": "zct_once"}, cookies={})
+    assert vms._ws_credential(ws) == ("zct_once", False)
+    ws = SimpleNamespace(query_params={}, cookies={"session_token": "s"})
+    assert vms._ws_credential(ws) == ("s", True)

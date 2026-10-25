@@ -14,7 +14,7 @@ import time
 from typing import Any
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within
 
 SCHEDULES_FILE = os.path.join(DATA_DIR, "snapshot_schedules.json")
 EVERY = {"hourly": 3600, "daily": 86400, "weekly": 7 * 86400}
@@ -44,6 +44,7 @@ def list_schedules() -> list[dict[str, Any]]:
     return list((data.get("schedules") or {}).values()) if isinstance(data, dict) else []
 
 
+@json_locked(lambda *a, **k: SCHEDULES_FILE)
 def save_schedule(
     share: str, every: str, keep: int, immutable_days: int = 0, pool_id: str | None = None
 ) -> dict[str, Any]:
@@ -71,6 +72,7 @@ def save_schedule(
     return sched[share]
 
 
+@json_locked(lambda *a, **k: SCHEDULES_FILE)
 def delete_schedule(share: str) -> bool:
     with _LOCK:
         data = read_json(SCHEDULES_FILE, {}) or {}
@@ -126,6 +128,7 @@ def prune(share: str, keep: int, pool_id: str, pal: Any) -> list[str]:
     return removed
 
 
+@json_locked(lambda *a, **k: SCHEDULES_FILE)
 def run_due(now: float | None = None, pal: Any = None) -> list[dict[str, Any]]:
     """Called by the scheduler every minute: takes the snapshots that are due."""
     now = now or time.time()

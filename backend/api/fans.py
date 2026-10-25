@@ -12,7 +12,7 @@ from backend.config import (
     FAN_ZERO_RPM_DEFAULT_STOP_TEMP,
     FAN_ZERO_RPM_STOP_DELAY,
 )
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, json_locked, read_json
 from backend.hardware.fans import (
     get_acoustic_sweep_status,
     sanitize_curve_points,
@@ -58,6 +58,7 @@ def get_fans():
 
 
 @router.post("/fans", dependencies=[Depends(require_scope("hardware:fans"))])
+@json_locked(lambda *a, **k: FAN_STATE_FILE)
 def post_fans(req: FanConfigRequest):
     data = req.model_dump(exclude_unset=True)
 
@@ -110,6 +111,7 @@ def get_fan_presets():
 
 
 @router.post("/fans/presets", dependencies=[Depends(require_scope("hardware:fans"))])
+@json_locked(lambda *a, **k: FAN_STATE_FILE)
 def create_fan_preset(req: FanPresetCreate):
     """Saves or updates a custom named fan curve preset."""
     clean_curve = sanitize_curve_points(req.curve_points)
@@ -139,6 +141,7 @@ def create_fan_preset(req: FanPresetCreate):
 
 
 @router.delete("/fans/presets/{preset_name}", dependencies=[Depends(require_scope("hardware:fans"))])
+@json_locked(lambda *a, **k: FAN_STATE_FILE)
 def delete_fan_preset(preset_name: str):
     """Deletes a custom named fan curve preset."""
     fan_cfg = _load_fans()
@@ -153,6 +156,7 @@ def delete_fan_preset(preset_name: str):
 
 
 @router.post("/fans/presets/{preset_name}/apply", dependencies=[Depends(require_scope("hardware:fans"))])
+@json_locked(lambda *a, **k: FAN_STATE_FILE)
 def apply_fan_preset(preset_name: str):
     """Applies a custom named preset to the active fan curve."""
     fan_cfg = _load_fans()

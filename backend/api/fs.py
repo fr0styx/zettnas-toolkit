@@ -39,7 +39,15 @@ except Exception:
     logger.debug("backend.api.fs.<module>: ignored error", exc_info=True)
 
 
-from backend.fsutil import atomic_write_json, is_protected, prune_protected, read_json, resolve_within, root_for
+from backend.fsutil import (
+    atomic_write_json,
+    is_protected,
+    json_locked,
+    prune_protected,
+    read_json,
+    resolve_within,
+    root_for,
+)
 from backend.logging_config import sanitize_string
 from backend.models.schemas import MkdirRequest
 from backend.services import media_info, thumbs, video_compat
@@ -1312,7 +1320,7 @@ def _inbox_dir(principal: AuthenticatedPrincipal) -> str:
 
 
 @router.get("/fs/inbox", dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin"))])
-async def fs_inbox(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+def fs_inbox(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     return {"path": _inbox_dir(principal)}
 
 
@@ -2157,7 +2165,7 @@ async def fs_media_info(path: str, principal: AuthenticatedPrincipal = Depends(g
     "/fs/stream/compat",
     dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))],
 )
-async def fs_stream_compat(
+def fs_stream_compat(
     path: str,
     start: float = 0.0,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -2179,7 +2187,7 @@ async def fs_stream_compat(
 
 
 @router.get("/fs/stream")
-async def fs_stream(
+def fs_stream(
     path: str,
     request: Request,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -2456,7 +2464,7 @@ async def create_share_link(
 
 @router.get("/fs/share-links", dependencies=[Depends(require_scope("files:read", "storage:read", "storage:admin"))])
 @router.get("/share-links", dependencies=[Depends(require_scope("files:read", "storage:read", "storage:admin"))])
-async def list_share_links(
+def list_share_links(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Lists active public share links created by the current user or all if admin."""
@@ -2806,6 +2814,7 @@ def _load_favorites(principal: AuthenticatedPrincipal | None) -> list[dict[str, 
     return [i for i in items if isinstance(i, dict) and isinstance(i.get("path"), str)]
 
 
+@json_locked(lambda *a, **k: _favorites_file())
 def _save_favorites(principal: AuthenticatedPrincipal | None, items: list[dict[str, str]]) -> None:
     from backend.fsutil import atomic_write_json, read_json
 

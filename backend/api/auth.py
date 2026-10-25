@@ -116,7 +116,33 @@ def _load_failures() -> None:
         logger.debug(f"[Auth] Could not load login failure counters: {e}")
 
 
+# Guessing one account's password from many addresses: after this many failures in an hour,
+# every address waits (capped short, so nobody can keep the owner out for long) (SEC-11)
+_FREE_ATTEMPTS_ACCOUNT = 20
+_MAX_ACCOUNT_LOCK_SECS = 5 * 60
+
+
+def _ip_key(ip: str) -> str:
+    """IPv6 addresses count per /64: one home or one attacker owns the whole block (SEC-11)."""
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if addr.version == 6:
+        return str(ipaddress.ip_network(f"{addr}/64", strict=False))
+    return ip
+
+
+def _norm_key(key: str) -> str:
+    """Lockout keys with their address grouped (IPv6 per /64)."""
+    if "@" in key:
+        who, _, ip = key.rpartition("@")
+        return f"{who}@{_ip_key(ip)}"
+    return _ip_key(key)
+
+
 def _lockout_remaining(key: str) -> int:
+    key = _norm_key(key)
     with _failures_lock:
         entry = _failures.get(key)
         if not entry:
@@ -133,7 +159,11 @@ def _register_failure(key: str, is_ip: bool = False) -> None:
         ip_block.record_auth_failure(key, "web")  # M5
     except ValueError:
         logger.debug("auth: failure key is not an address", exc_info=False)
+    key = _norm_key(key)
     threshold = _FREE_ATTEMPTS_IP if is_ip else _FREE_ATTEMPTS_USER
+    cap = _MAX_LOCKOUT_SECS
+    if key.startswith("account:"):
+        threshold, cap = _FREE_ATTEMPTS_ACCOUNT, _MAX_ACCOUNT_LOCK_SECS
     with _failures_lock:
         if len(_failures) > 1000:
             expired = [
@@ -147,7 +177,7 @@ def _register_failure(key: str, is_ip: bool = False) -> None:
         entry["last_seen"] = now
         over = entry["count"] - threshold
         if over >= 0:
-            entry["locked_until"] = now + min(_MAX_LOCKOUT_SECS, 2**over * 5)
+            entry["locked_until"] = now + min(cap, 2**over * 5)
         _save_failures()
     if over == 0:
         try:
@@ -157,6 +187,7 @@ def _register_failure(key: str, is_ip: bool = False) -> None:
 
 
 def _clear_failures(key: str) -> None:
+    key = _norm_key(key)
     with _failures_lock:
         if _failures.pop(key, None) is not None:
             _save_failures()
@@ -399,7 +430,7 @@ async def login(req: LoginRequest, request: Request):
             mfa_code=req.mfa_code,
             recovery_code=req.recovery_code,
         )
-        return await mfa_challenge(challenge_req, request)
+        return await run_in_threadpool(mfa_challenge, challenge_req, request)
 
     username = (req.username or "").strip().lower()
     target_username = username or (getattr(config, "ZETTNAS_USERNAME", "admin") or "admin").lower()
@@ -412,6 +443,9 @@ async def login(req: LoginRequest, request: Request):
     remaining_user = _lockout_remaining(f"user:{target_username}@{ip}")
     if remaining_user > 0:
         return _rate_limited(remaining_user)
+    remaining_account = _lockout_remaining(f"account:{target_username}")
+    if remaining_account > 0:
+        return _rate_limited(remaining_account)
 
     # 1. Lookup user in SQLite
     user = get_user_by_username(target_username)
@@ -464,6 +498,7 @@ async def login(req: LoginRequest, request: Request):
     if not ok or not user:
         _register_failure(ip, is_ip=True)
         _register_failure(f"user:{target_username}@{ip}", is_ip=False)
+        _register_failure(f"account:{target_username}")
         log_security_event(
             "auth.login.failure",
             "failure",
@@ -552,7 +587,7 @@ async def login(req: LoginRequest, request: Request):
 
 
 @router.post("/auth/mfa/challenge")
-async def mfa_challenge(req: MfaChallengeRequest, request: Request):
+def mfa_challenge(req: MfaChallengeRequest, request: Request):
     ip = _client_ip(request)
     remaining_ip = _lockout_remaining(ip)
     if remaining_ip > 0:
@@ -888,7 +923,7 @@ def get_users_list(request: Request):
 
 
 @router.post("/users", dependencies=[Depends(require_scope("users:write"))])
-async def create_new_user(
+def create_new_user(
     data: UserCreateRequest,
     request: Request,
     principal: AuthenticatedPrincipal = Depends(require_scope("users:write")),  # noqa: B008

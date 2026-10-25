@@ -2,6 +2,8 @@
 Filesystem helpers: crash-safe JSON persistence and path containment checks.
 """
 
+import contextlib
+import functools
 import glob
 import json
 import logging
@@ -40,6 +42,37 @@ def atomic_write_json(path: str, data: Any, indent: int | None = None) -> None:
         except OSError:
             pass
         raise
+
+
+_JSON_LOCKS: dict[str, threading.RLock] = {}
+_JSON_LOCKS_GUARD = threading.Lock()
+
+
+@contextlib.contextmanager
+def locked_json(path: str):
+    """Hold this file's lock for a read-modify-write, so two writers can't undo each other (ARC-2).
+
+    Re-entrant: a locked function may call another that locks the same file."""
+    key = os.path.abspath(path)
+    with _JSON_LOCKS_GUARD:
+        lock = _JSON_LOCKS.setdefault(key, threading.RLock())
+    with lock:
+        yield
+
+
+def json_locked(path_of):
+    """Decorator: holds the lock of the file `path_of(*args, **kwargs)` names for the whole call.
+    `path_of` runs at call time, so a path a test or a setting changes is honoured."""
+
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            with locked_json(path_of(*args, **kwargs)):
+                return fn(*args, **kwargs)
+
+        return wrapper
+
+    return deco
 
 
 def read_json(path: str, default: Any = None) -> Any:

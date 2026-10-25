@@ -15,7 +15,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Optional
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, json_locked, read_json
 
 REPLICATION_JOBS_FILE = os.path.join(DATA_DIR, "replication_jobs.json")
 REPLICATION_HISTORY_FILE = os.path.join(DATA_DIR, "replication_history.json")
@@ -125,6 +125,7 @@ class ReplicationEngine:
         # Record in history ledger
         self._record_history(job_id, status, error, bytes_transferred)
 
+    @json_locked(lambda *a, **k: REPLICATION_HISTORY_FILE)
     def _record_history(
         self,
         job_id: str,

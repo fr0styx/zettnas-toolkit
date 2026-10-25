@@ -1007,29 +1007,32 @@ def _validate_console_ticket(ticket: str | None, vm_id: str) -> bool:
     return False
 
 
-@router.websocket("/{vm_id}/console/ws")
-async def websocket_vm_console(websocket: WebSocket, vm_id: str):
-    """WebSocket proxy bridging browser to QEMU RFB VNC display socket."""
-    ticket = (
-        websocket.query_params.get("ticket")
-        or websocket.query_params.get("token")
-        or websocket.cookies.get("session_token")
+def _ws_credential(websocket: WebSocket) -> tuple[str | None, bool]:
+    """What a console WebSocket signs in with, and whether it came from a cookie.
+
+    A URL may carry only a single-use ticket: URLs end up in logs, history and Referer headers,
+    so sessions and API tokens are accepted from cookies only (SEC-12)."""
+    query = websocket.query_params.get("ticket") or websocket.query_params.get("token")
+    if query:
+        if query.startswith(("zct_", "zst_")) or query in _CONSOLE_TICKETS:
+            return query, False
+        return None, False
+    cookie = (
+        websocket.cookies.get("session_token")
         or websocket.cookies.get("zettnas_session")
         or websocket.cookies.get("zat_token")
     )
+    return cookie, bool(cookie)
+
+
+@router.websocket("/{vm_id}/console/ws")
+async def websocket_vm_console(websocket: WebSocket, vm_id: str):
+    """WebSocket proxy bridging browser to QEMU RFB VNC display socket."""
+    ticket, is_cookie_auth = _ws_credential(websocket)
     if not _validate_console_ticket(ticket, vm_id):
         await websocket.close(code=1008, reason="Unauthorized or expired console ticket")
         return
 
-    is_cookie_auth = (
-        not websocket.query_params.get("ticket")
-        and not websocket.query_params.get("token")
-        and bool(
-            websocket.cookies.get("session_token")
-            or websocket.cookies.get("zettnas_session")
-            or websocket.cookies.get("zat_token")
-        )
-    )
     from backend.auth import validate_websocket_origin
 
     if not validate_websocket_origin(websocket, is_cookie_auth=is_cookie_auth):
@@ -1059,26 +1062,11 @@ async def websocket_vm_console(websocket: WebSocket, vm_id: str):
 @router.websocket("/{vm_id}/serial/ws")
 async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
     """WebSocket proxy bridging browser to QEMU serial PTY / UNIX domain socket."""
-    ticket = (
-        websocket.query_params.get("ticket")
-        or websocket.query_params.get("token")
-        or websocket.cookies.get("session_token")
-        or websocket.cookies.get("zettnas_session")
-        or websocket.cookies.get("zat_token")
-    )
+    ticket, is_cookie_auth = _ws_credential(websocket)
     if not _validate_console_ticket(ticket, vm_id):
         await websocket.close(code=1008, reason="Unauthorized or expired serial ticket")
         return
 
-    is_cookie_auth = (
-        not websocket.query_params.get("ticket")
-        and not websocket.query_params.get("token")
-        and bool(
-            websocket.cookies.get("session_token")
-            or websocket.cookies.get("zettnas_session")
-            or websocket.cookies.get("zat_token")
-        )
-    )
     from backend.auth import validate_websocket_origin
 
     if not validate_websocket_origin(websocket, is_cookie_auth=is_cookie_auth):

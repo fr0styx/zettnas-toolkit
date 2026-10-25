@@ -36,7 +36,7 @@ from backend.config import (
 )
 from backend.confirmations import require_confirmation
 from backend.db import query_copy_history
-from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
+from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within, root_for
 from backend.hardware.disks import fetch_disk_smart_detail, locate_disk, run_disk_smart_test
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.fans import set_fan_pwm
@@ -505,6 +505,7 @@ def get_unraid_telemetry():
 
 
 @router.post("/system/profile", dependencies=[Depends(require_scope("system:config"))])
+@json_locked(lambda *a, **k: FAN_STATE_FILE)
 def set_system_profile(req: SystemProfileRequest):
     profile = req.profile.lower()
     # Profile mappings:
@@ -885,7 +886,7 @@ def _is_newer_version(latest_str: str, current_str: str) -> bool:
 
 
 @router.get("/system/about")
-async def get_system_about():
+def get_system_about():
     """Returns high-level system information, current version, chassis twin, and runtime stats."""
     import platform
     import sys

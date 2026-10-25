@@ -20,7 +20,7 @@ import secrets
 from typing import Any
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json
+from backend.fsutil import atomic_write_json, json_locked
 
 CONFIG_FILE = os.path.join(DATA_DIR, "ldap.json")
 DEFAULTS: dict[str, Any] = {
@@ -70,6 +70,7 @@ def masked_config() -> dict[str, Any]:
     return cfg
 
 
+@json_locked(lambda *a, **k: CONFIG_FILE)
 def save_config(changes: dict[str, Any]) -> dict[str, Any]:
     cfg = load_config()
     for k, v in changes.items():
