@@ -277,6 +277,7 @@ export function initSetupWizard() {
       }
 
       setErr('');
+      const firstRun = isPasswordDefault();
       btnSubmit.textContent = t('setup.saving', 'SAVING...');
       btnSubmit.disabled = true;
 
@@ -329,6 +330,8 @@ export function initSetupWizard() {
         }
 
         localStorage.setItem('zettnas_wizard_completed', '1');
+        // a new owner starts with the everyday places; Advanced is one switch away (UX-2)
+        if (firstRun) localStorage.setItem('zettnas_advanced', '0');
         if (state.stats?.security) {
           state.stats.security.is_default_password = false;
         }

@@ -20,6 +20,7 @@ import { closeHttpsGuideModal, fetchAndRenderSecurityPosture, handleSecurityAdvi
 import { applySystemUpdate, closeDiagnosticsPreviewModal, copySupportMarkdown, downloadDiagnosticsBundle, fetchAndRenderSystemAbout, previewDiagnosticsSummary, revertSystemUpdate, setUpdateChannel, syncBackupJobForm } from './management/system.js';
 import { fetchAndRenderNotificationConfig, openChannelConfigModal, saveCurrentChannelModal, saveNotificationsConfig, testAllNotificationChannels, testSingleChannel } from './management/notifications.js';
 import { fetchAndRenderAppBackups, fetchAndRenderBackupJobs, fetchAndRenderSystemSnapshots } from './management/backup.js';
+import { installAdvancedSwitch, renderStatusSummary } from './management/overview.js';
 import { _aiSelectedColor, _aiSelectedScene, _getActiveAiSearchQuery, _renderAiRagInitialEmptyState, fetchAndRenderAiStatus, initAiKnowledgeEngine, runAiVisualSearch, setAiVisualFiltersDrawerOpen } from './management/ai.js';
 
 export * from './management/docker.js';
@@ -645,6 +646,7 @@ export function initManagement() {
   function showHub() {
     const earlyStyle = document.getElementById('zettnas-mgmt-early-style');
     if (earlyStyle) earlyStyle.remove();
+    renderStatusSummary(); // UX-1: what needs attention comes first
     if (hubView) hubView.style.display = 'grid';
     if (detailContainer) detailContainer.style.display = 'none';
     if (headerNav) headerNav.style.display = 'none';
@@ -1242,6 +1244,8 @@ export function initManagement() {
       saveOpenWindowsState();
     });
   });
+
+  installAdvancedSwitch(); // UX-2: the everyday places, with the rest behind Advanced
 
   // Hub cards click listener
   document.querySelectorAll('.mgmt-app-card').forEach((card) => {

@@ -36,6 +36,10 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Everyday use
 
+- **The Overview says what needs attention** first: "Everything is fine", or a failing drive,
+  nearly full storage, an overdue backup and the like, each with a way to it.
+- **An Advanced switch** in Mission Control hides virtual machines, network, hardware, power and
+  activity (on for existing setups; new owners start with the shorter list).
 - **A six-step first setup**: name the server, choose a password, see your storage, create a
   first shared folder, add someone else, and pick the time zone (schedules follow it) and alerts.
 - **Previous versions** in File Explorer (right-click a file): the copies kept in snapshots, to

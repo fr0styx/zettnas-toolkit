@@ -908,6 +908,14 @@ def put_server_identity(req: IdentityIn):
         raise HTTPException(status_code=400, detail=str(e)) from None
 
 
+@router.get("/system/status-summary", dependencies=[Depends(require_scope("system:view"))])
+def get_status_summary():
+    """What needs attention, for the Overview (UX-1)."""
+    from backend.services.status_summary import summary
+
+    return summary()
+
+
 @router.get("/system/about")
 def get_system_about():
     """Returns high-level system information, current version, chassis twin, and runtime stats."""

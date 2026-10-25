@@ -114,3 +114,16 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 #setup-wizard-modal .setup-head { font-size: 13px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
 #setup-wizard-modal .setup-desc { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
 #setup-wizard-modal .setup-input { width: 100%; font-size: 12px; padding: 8px 10px; background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15)); border-radius: 6px; color: var(--fg); }
+
+/* UX-1, UX-2: the Overview's status line and the Advanced switch */
+.mgmt-status-summary { grid-column: 1 / -1; }
+.ov-status { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--track); background: var(--card); font-size: 13px; }
+.ov-status span { color: var(--muted); }
+.ov-ok strong { color: var(--ok2); }
+.ov-attention strong { color: var(--warn); }
+.ov-status ul { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ov-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 8px; background: var(--card-hi); border-left: 3px solid var(--warn); }
+.ov-item.ov-crit { border-left-color: var(--crit); }
+.mgmt-advanced-row { display: flex; align-items: flex-start; gap: 8px; margin: 12px 8px 4px; padding-top: 10px; border-top: 1px solid var(--track); cursor: pointer; font-size: 12px; color: var(--fg); }
+.mgmt-advanced-row small { display: block; color: var(--muted); font-size: 11px; line-height: 1.35; margin-top: 2px; }
+.mgmt-sidebar-item[hidden], .mgmt-app-card[hidden] { display: none; }
