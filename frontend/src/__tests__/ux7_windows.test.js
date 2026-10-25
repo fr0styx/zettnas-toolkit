@@ -32,3 +32,23 @@ describe('window semantics (UX-7)', () => {
     expect((html.match(/<main\b/g) || []).length).toBe(1);
   });
 });
+
+describe('opening a window moves focus into it (UX-8)', () => {
+  it('skips SVG icons, which have an href but cannot take focus', async () => {
+    const { focusWindow } = await import('../window-focus.js');
+    document.body.innerHTML = '<button id="opener">open</button><div id="w" class="os-window"><svg><use href="#i-x"></use></svg><button id="first">Go</button></div>';
+    document.getElementById('opener').focus();
+    focusWindow(document.getElementById('w'));
+    expect(document.activeElement.id).toBe('first');
+  });
+
+  it('the focus trap does the same', async () => {
+    const { trapFocus } = await import('../utils.js');
+    document.body.innerHTML = '<div id="d"><button id="a">a</button><svg><use href="#i-y"></use></svg><button id="b">b</button></div>';
+    const d = document.getElementById('d');
+    trapFocus(d);
+    document.getElementById('b').focus();
+    d.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+    expect(document.activeElement.id).toBe('a');
+  });
+});

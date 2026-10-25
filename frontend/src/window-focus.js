@@ -9,7 +9,7 @@
  */
 const FOCUSABLE =
   '[autofocus], input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), ' +
-  'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+  'button:not([disabled]), a[href], area[href], [tabindex]:not([tabindex="-1"])';
 const KEEP_ESCAPE = '.xterm, canvas, .vm-console-window, #vm-console-window, [data-keep-escape]';
 const DIALOGS = '#confirm-toast-modal, .prompt-toast-modal, [role="dialog"][aria-modal="true"]';
 
