@@ -14,6 +14,7 @@ from backend.api.chassis import router as chassis_router
 from backend.api.diagnostics import router as diagnostics_router
 from backend.api.docker import router as docker_router
 from backend.api.fans import router as fans_router
+from backend.api.file_versions import router as file_versions_router  # noqa: E402
 from backend.api.fs import router as fs_router
 from backend.api.immich import router as immich_router  # noqa: E402
 from backend.api.invites import router as invites_router  # noqa: E402
@@ -48,6 +49,7 @@ api_router = APIRouter()
 api_router.include_router(jobs_router)
 api_router.include_router(setup_router)
 api_router.include_router(snapshots_router)
+api_router.include_router(file_versions_router)
 api_router.include_router(offsite_router)
 api_router.include_router(invites_router)
 api_router.include_router(immich_router)

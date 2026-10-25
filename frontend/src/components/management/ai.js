@@ -3514,6 +3514,42 @@ export function stopAiChatGeneration() {
   return true;
 }
 
+// "Ask Zetty about this" (missing feature 6): the file or folder the next questions are about
+let _aiFocus = null;
+
+export function aiChatFocus() {
+  return _aiFocus;
+}
+
+export function setAiChatFocus(path, name = '') {
+  _aiFocus = path ? { path, name: name || String(path).split('/').pop() } : null;
+  const input = document.getElementById('ai-chat-input');
+  document.getElementById('ai-chat-focus')?.remove();
+  if (!_aiFocus || !input) return;
+  const chip = document.createElement('div');
+  chip.id = 'ai-chat-focus';
+  chip.className = 'ai-chat-focus';
+  chip.innerHTML = `<span>${escapeHtml(t('ai.focus_about', 'About {name}', { name: _aiFocus.name }))}</span>
+    <button type="button" class="win-btn close-btn" aria-label="${escapeHtml(t('ai.focus_clear', 'Stop asking about this file'))}"></button>`;
+  chip.querySelector('button').addEventListener('click', () => setAiChatFocus(null));
+  (input.closest('div') || input).insertAdjacentElement('beforebegin', chip);
+}
+
+/** Opens Ask Zetty with a file or folder in focus. */
+export function askZettyAbout(path, name = '') {
+  if (typeof window.openManagementSection === 'function') window.openManagementSection('mgmt-sec-ai', 'mgmt-pane-ai-chat');
+  setTimeout(() => {
+    document.querySelector('.mgmt-inner-tab[data-tab-target="mgmt-pane-ai-chat"]')?.click();
+    setAiChatFocus(path, name);
+    const input = document.getElementById('ai-chat-input');
+    if (input) {
+      input.placeholder = t('ai.ask_about_file', 'Ask about {name}…', { name: _aiFocus?.name || '' });
+      input.focus();
+    }
+  }, 350);
+}
+if (typeof window !== 'undefined') window.askZettyAbout = askZettyAbout;
+
 export async function sendAiChatMessage(rawMessage = null) {
   const inputEl = document.getElementById('ai-chat-input');
   const sendBtn = document.getElementById('btn-ai-chat-send');
@@ -3593,6 +3629,7 @@ export async function sendAiChatMessage(rawMessage = null) {
         allow_web_search: allowWeb,
         allow_nas_tools: allowTools,
         conversation_id: _activeConversationId,
+        focus_path: _aiFocus?.path || undefined,
       });
       if (res && res.conversation_title && _activeConversationId) {
         _activeConversationTitle = res.conversation_title;
@@ -3849,6 +3886,7 @@ export async function sendAiChatMessage(rawMessage = null) {
           allow_web_search: allowWeb,
           allow_nas_tools: allowTools,
           conversation_id: _activeConversationId,
+          focus_path: _aiFocus?.path || undefined,
         });
         }
       } finally {

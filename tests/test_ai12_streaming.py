@@ -79,7 +79,7 @@ def test_cancel_stops_reading():
 
 
 def _fake_chat(seen):
-    def run(message, history, allow_web, allow_tools, model, principal):
+    def run(message, history, allow_web, allow_tools, model, principal, focus_path=None):
         sink = agent._TOKEN_SINK.get()
         seen["cancel"] = agent._CANCEL_EVENT.get()
         for piece in ("Live ", "tokens"):

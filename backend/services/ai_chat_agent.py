@@ -771,11 +771,16 @@ def run_agentic_chat(
     allow_nas_tools: bool = True,
     model_override: str | None = None,
     principal: Any = None,
+    focus_path: str | None = None,
 ) -> dict[str, Any]:
     """Runs one chat turn in its own context, so its web permission can't leak to later calls."""
+    from backend.services.chat_nas_tools import FOCUS_PATH
+
     if getattr(principal, "role_id", "") in ("kid", "guest"):
         allow_web_search = False  # family roles stay on the NAS (Batch 6)
-    return contextvars.copy_context().run(
+    ctx = contextvars.copy_context()
+    ctx.run(FOCUS_PATH.set, focus_path or None)
+    return ctx.run(
         _run_agentic_chat_turn, message, history, allow_web_search, allow_nas_tools, model_override, principal
     )
 
@@ -1060,6 +1065,11 @@ def _run_agentic_chat_turn(
 
         # 1f. Explicit Local NAS RAG Knowledge / Files / Recipes / Photos / Folders search
         folder_detected, remaining_q, detected_mode = _extract_folder_and_intent(clean_msg)
+        from backend.services.chat_nas_tools import FOCUS_PATH
+
+        focus = FOCUS_PATH.get()
+        if focus:
+            folder_detected = focus  # "Ask Zetty about this": answer from that file
         # A question no tool above claimed is a question about the files, whatever its language
         open_question = (
             not tools_called
@@ -1096,7 +1106,7 @@ def _run_agentic_chat_turn(
                 "folder manifest",
             ),
         )
-        explicit_local_rag = keyword_rag or open_question
+        explicit_local_rag = keyword_rag or open_question or bool(focus)
         if explicit_local_rag:
             res_know = tool_search_nas_knowledge(
                 rewrite_followup_for_search(clean_msg, history),
@@ -1753,6 +1763,7 @@ async def stream_agentic_chat(
     model_override: str | None = None,
     principal: Any = None,
     conversation_id: str | None = None,
+    focus_path: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Streams conversational tokens, tool events, and execution telemetry via Server-Sent Events (SSE).
@@ -1808,6 +1819,7 @@ async def stream_agentic_chat(
                     allow_nas_tools,
                     model_override,
                     principal,
+                    focus_path,
                 )
             )
         finally:

@@ -185,6 +185,21 @@ class AiChatRequest(BaseModel):
     allow_nas_tools: bool = True
     model: str | None = Field(default=None, max_length=256)
     conversation_id: str | None = Field(default=None, max_length=64)
+    # "Ask Zetty about this" in File Explorer: answer from this file or folder (missing feature 6)
+    focus_path: str | None = Field(default=None, max_length=4096)
+
+
+def _checked_focus(req: "AiChatRequest", principal: AuthenticatedPrincipal) -> str | None:
+    """The file or folder the question is about, when the user may read it."""
+    if not req.focus_path:
+        return None
+    from backend.fsutil import resolve_within
+    from backend.services.path_access import ALLOWED_BROWSE_ROOTS, user_can_access_path
+
+    target = resolve_within(req.focus_path, ALLOWED_BROWSE_ROOTS)
+    if target is None or not user_can_access_path(target, principal):
+        raise HTTPException(status_code=403, detail="You can't ask about that file.")
+    return target
 
 
 class FavoriteToggleRequest(BaseModel):
@@ -1097,6 +1112,7 @@ async def chat_with_zettai_agent(
     """
     history = req.history
     uid = (principal.user_id or principal.username or "admin").strip().lower()
+    focus = _checked_focus(req, principal)
 
     if req.conversation_id:
         try:
@@ -1118,6 +1134,7 @@ async def chat_with_zettai_agent(
             req.allow_nas_tools,
             req.model,
             principal,
+            focus,
         )
 
         if req.conversation_id:
@@ -1170,6 +1187,7 @@ async def chat_with_zettai_agent_stream(
 
     history = req.history
     uid = (principal.user_id or principal.username or "admin").strip().lower()
+    focus = _checked_focus(req, principal)
 
     if req.conversation_id:
         try:
@@ -1190,6 +1208,7 @@ async def chat_with_zettai_agent_stream(
         model_override=req.model,
         principal=principal,
         conversation_id=req.conversation_id,
+        focus_path=focus,
     )
     return StreamingResponse(
         generator,

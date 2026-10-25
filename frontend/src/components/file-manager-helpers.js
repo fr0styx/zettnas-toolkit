@@ -1003,6 +1003,8 @@ export class FmContextMenu {
         ${isZip ? `<div class="fm-ctx-item" data-act="archive-extract">📦 Extract Archive Here</div>` : ''}
         ${isSingle ? `<div class="fm-ctx-item" data-act="share">🔗 Share Link…</div>` : ''}
         ${isSingle && !isDir ? `<div class="fm-ctx-item" data-act="checksum">🛡️ Compute SHA-256</div>` : ''}
+        ${isSingle && !isDir ? `<div class="fm-ctx-item" data-act="versions">🕘 ${escapeHtml(t('fm.versions_menu', 'Previous versions…'))}</div>` : ''}
+        ${isSingle ? `<div class="fm-ctx-item" data-act="ask-zetty">✨ ${escapeHtml(t('fm.ask_zetty', 'Ask Zetty about this'))}</div>` : ''}
         ${isSingle && isDir ? `<div class="fm-ctx-item" data-act="fav-toggle">${isFavorite(fileItem.path) ? `☆ ${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add', 'Add to Favorites'))}`}</div>` : ''}
         ${!fileItem ? `<div class="fm-ctx-item" data-act="fav-toggle-here">${isFavorite(this.fm.currentPath) ? `☆ ${escapeHtml(t('fm.fav_remove_here', 'Remove this folder from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add_here', 'Add this folder to Favorites'))}`}</div>` : ''}
       </div>
@@ -1095,6 +1097,14 @@ export class FmContextMenu {
             }, 100);
           }
         }
+        break;
+      case 'versions':
+        if (item) {
+          import('./file-versions.js').then((m) => m.openPreviousVersions(item.path, item.name, () => this.fm.loadPath(this.fm.currentPath)));
+        }
+        break;
+      case 'ask-zetty':
+        if (item) window.askZettyAbout?.(item.path, item.name);
         break;
       case 'fav-toggle':
         if (item && item.is_dir) toggleFavorite(item.path, item.name);

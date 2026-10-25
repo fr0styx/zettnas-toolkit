@@ -1,6 +1,7 @@
 """The NAS tools ZettAI can run: status, disks, fans, Docker, file search, sync, calculations, storage and network (split out of ai_chat_agent.py, ARCH-1)."""
 
 import ast
+import contextvars
 import os
 import re
 import subprocess
@@ -443,6 +444,10 @@ def tool_control_docker_container(
         return {"tool": "control_docker_container", "status": "error", "error": str(e)}
 
 
+# The file or folder a question is about ("Ask Zetty about this"); set per chat turn
+FOCUS_PATH: contextvars.ContextVar[str | None] = contextvars.ContextVar("zettnas_chat_focus", default=None)
+
+
 def _extract_folder_and_intent(query: str) -> tuple[str | None, str, str]:
     """
     Extracts a target folder path, remaining clean query, and retrieval mode (comprehensive vs targeted).
@@ -518,7 +523,7 @@ def tool_search_nas_knowledge(
     rag = _core().get_rag_engine()
 
     extracted_folder, clean_q, extracted_mode = _extract_folder_and_intent(query)
-    target_folder = (folder_path or extracted_folder or "").strip() or None
+    target_folder = (folder_path or FOCUS_PATH.get() or extracted_folder or "").strip() or None
     effective_mode = mode or extracted_mode or "targeted"
     effective_query = (clean_q if (clean_q and len(clean_q) >= 2) else query).strip()
 

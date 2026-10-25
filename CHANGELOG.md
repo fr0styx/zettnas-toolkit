@@ -34,6 +34,10 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Everyday use
 
+- **Previous versions** in File Explorer (right-click a file): the copies kept in snapshots, to
+  open, restore as a copy, or put back in place. Works with ZFS snapshots (TrueNAS, Unraid ZFS
+  pools) and the btrfs share snapshots ZettNAS takes.
+- **Ask Zetty about this** (right-click a file or folder): the chat answers from that file.
 - **Undo after deleting files**: File Explorer's "Moved to the Recycle Bin" message has an Undo
   button. Two files of the same name deleted in the same second no longer collide in the bin.
 - Confirm dialogs take keyboard focus (and give it back), keep Tab inside, say what they do on
