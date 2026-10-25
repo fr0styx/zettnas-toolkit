@@ -3232,4 +3232,6 @@ export default {
   "err.next_internal": "请重试。如果持续出现，请下载诊断包（设置 → 关于）。",
   "dash.disk_asleep": "休眠（已停转）",
   "dash.disk_busy": "正在读写",
+  "a11y.night_start": "夜间开始时间",
+  "a11y.night_end": "夜间结束时间",
 };

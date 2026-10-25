@@ -194,6 +194,11 @@ def test_main_views_have_no_serious_accessibility_issues():
         results["login"] = _login(page)
         for name, opener, selector in VIEWS:
             _open(page, results, name, opener, selector)
+        # the hardware-settings drawer loads after the first paint: checked open, every time
+        _open(page, results, "settings-drawer", "window.openDrawer && window.openDrawer()", "#led-drawer")
+        page.keyboard.press("Escape")
+        page.evaluate("() => document.getElementById('drawer-close-btn')?.click()")
+        page.wait_for_timeout(400)
         if page.is_visible("#btn-cw-prune"):
             page.evaluate("() => document.getElementById('btn-cw-prune').click()")  # the setup wizard may cover it
             try:

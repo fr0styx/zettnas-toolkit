@@ -10,7 +10,7 @@ measures them every night (`.github/workflows/hardware.yml`, `scripts/hardware_b
   trigger, so code from a fork never reaches the machine. No other workflow uses the runner's
   label (`zettnas-hardware`), and the runner has no default labels.
 - The runner container sees the host's `/proc` read-only and a results folder. It has no Docker
-  socket, no host network and no access to your files.
+  socket, no host network, no access to your files, no sudo and no capabilities.
 - The repository is public, so its Actions logs are public: the log says only PASS or FAIL per
   budget. The measured numbers are written to the results folder on the machine.
 
@@ -26,7 +26,7 @@ docker run -d --name zettnas-hw-runner --restart unless-stopped --hostname zettn
   -v /proc:/host/proc:ro \
   -v /mnt/user/appdata/zettnas-hw-runner/state:/home/runner/state \
   -v /mnt/user/appdata/zettnas-hw-runner/results:/results \
-  --memory 1g zettnas-hw-runner
+  --memory 1g --cap-drop ALL --security-opt no-new-privileges zettnas-hw-runner
 ```
 
 Results: one JSON file per run in the results folder. Budgets can be tuned with

@@ -132,9 +132,9 @@
             <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text);" data-i18n="settings.night_dimming">Night Dimming</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs);">
-            <input type="time" id="screen-night-start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
+            <input type="time" id="screen-night-start" aria-label="Night starts at" data-i18n-aria-label="a11y.night_start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
             <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="settings.to">to</span>
-            <input type="time" id="screen-night-end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
+            <input type="time" id="screen-night-end" aria-label="Night ends at" data-i18n-aria-label="a11y.night_end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
             <span style="color:var(--muted); font-size:var(--zn-fs-xs);">@</span>
             <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input" style="width:48px; padding:3px 6px;" title="Night Brightness %" data-i18n-title="ui.night_brightness">
             <span style="color:var(--muted); font-size:var(--zn-fs-xs);">%</span>
@@ -332,9 +332,9 @@
         <div class="card-instruction" data-i18n="settings.led_night_desc">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
         <div class="schedule-controls-row" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs);">
           <span style="color:var(--muted); font-size:var(--zn-fs-xs); font-weight:700;" data-i18n="settings.blackout">BLACKOUT:</span>
-          <input type="time" id="led-night-start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
+          <input type="time" id="led-night-start" aria-label="Night starts at" data-i18n-aria-label="a11y.night_start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
           <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="settings.to">to</span>
-          <input type="time" id="led-night-end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
+          <input type="time" id="led-night-end" aria-label="Night ends at" data-i18n-aria-label="a11y.night_end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
         </div>
       </div>
 

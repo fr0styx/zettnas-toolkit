@@ -3232,4 +3232,6 @@ export default {
   "err.next_internal": "Inténtelo de nuevo. Si sigue pasando, descargue un paquete de diagnóstico (Ajustes → Acerca de).",
   "dash.disk_asleep": "En reposo (detenido)",
   "dash.disk_busy": "Leyendo o escribiendo",
+  "a11y.night_start": "La noche empieza a las",
+  "a11y.night_end": "La noche termina a las",
 };

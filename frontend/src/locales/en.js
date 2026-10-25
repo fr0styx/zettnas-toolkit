@@ -3232,4 +3232,6 @@ export default {
   "err.next_internal": "Try again. If it keeps happening, download a diagnostics bundle (Settings → About).",
   "dash.disk_asleep": "Asleep (spun down)",
   "dash.disk_busy": "Reading or writing",
+  "a11y.night_start": "Night starts at",
+  "a11y.night_end": "Night ends at",
 };

@@ -3232,4 +3232,6 @@ export default {
   "err.next_internal": "Versuchen Sie es erneut. Wenn es wieder passiert, laden Sie ein Diagnosepaket herunter (Einstellungen → Info).",
   "dash.disk_asleep": "Schläft (heruntergefahren)",
   "dash.disk_busy": "Liest oder schreibt",
+  "a11y.night_start": "Nacht beginnt um",
+  "a11y.night_end": "Nacht endet um",
 };
