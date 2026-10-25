@@ -1,11 +1,21 @@
 # ZettNAS Toolkit - Release Changelog
 
-## Unreleased
+## v1.10.2 (2026-10-25)
+### 🔒 Security fixes from the October audit; OpenVINO chat
+
+This release closes weaknesses found in an October 2026 audit. Update soon. After
+updating, read the security notice on the **Activity** page.
+
+#### Before you upgrade
+
+- **WebDAV without a password is gone.** If you used WebDAV's "no authentication"
+  option, sign in with a ZettNAS account (or the dedicated WebDAV password) after updating.
+- **MCP clients that search your files need a new token** with the `ai:knowledge:read`
+  permission (Settings → API tokens).
+- Scripts that create API tokens through the API must list the scopes they need; a token
+  created without scopes gets its creator's permissions, never "everything".
 
 #### Security
-
-This release closes weaknesses found in an October 2026 audit. Update soon; nothing to do
-before updating. After updating, read the security notice on the **Activity** page.
 
 - **ZettNAS's own data folder can't be reached through the file features.** On hosts that
   show it inside a shared folder (Unraid's `appdata`), an account allowed to manage shares
@@ -47,6 +57,8 @@ before updating. After updating, read the security notice on the **Activity** pa
 - Long answers without streaming are no longer cut off after 45 seconds.
 - **Benchmark shows how long each model takes to start answering a long question** (6,000 tokens from documents, as Ask Zetty asks them), next to its writing speed.
 - `scripts/llm_bench.py` compares the same measurement across Ollama (GPU or CPU) and OpenVINO GenAI.
+
+---
 
 ## v1.10.1 (2026-10-24)
 ### 🛡️ Safer usernames and media import
