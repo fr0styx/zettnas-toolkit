@@ -93,4 +93,8 @@ services:
       - DATA_DIR=/tmp/zettnas-watchdog
     device_cgroup_rules:
       - 'c 1:1 rwm'     # /dev/mem: the appliance fan registers
+    cap_add:
+      - SYS_RAWIO       # needed to open /dev/mem
+    healthcheck:
+      disable: true     # it serves no web page; the image's check is for the app
     mem_limit: 128m

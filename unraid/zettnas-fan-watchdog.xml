@@ -10,7 +10,7 @@
   <Overview>Puts the chassis fans in a safe state if the ZettNAS Toolkit app is killed while it controls them. Runs next to the app; needs no ports.</Overview>
   <Category>Tools:</Category>
   <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
-  <ExtraParams>--restart unless-stopped --memory 128m --device-cgroup-rule='c 1:1 rwm'</ExtraParams>
+  <ExtraParams>--restart unless-stopped --memory 128m --no-healthcheck --cap-add SYS_RAWIO --device-cgroup-rule='c 1:1 rwm'</ExtraParams>
   <PostArgs>python3 -m backend.fan_watchdog</PostArgs>
   <Config Name="Host sys" Target="/host/sys" Default="/sys" Mode="rw" Description="The host's /sys (fan controls)" Type="Path" Display="advanced" Required="true">/sys</Config>
   <Config Name="Host dev" Target="/host/dev" Default="/dev" Mode="rw" Description="The host's /dev (the app's heartbeat in /dev/shm, and the fan registers)" Type="Path" Display="advanced" Required="true">/dev</Config>

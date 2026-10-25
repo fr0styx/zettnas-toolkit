@@ -21,8 +21,8 @@ Add a second container from the template `unraid/zettnas-fan-watchdog.xml` (Dock
 → the template), or by hand:
 
 ```bash
-docker run -d --name zettnas-fan-watchdog --restart unless-stopped \
-  -v /sys:/host/sys:rw -v /dev:/host/dev:rw --device-cgroup-rule='c 1:1 rwm' \
+docker run -d --name zettnas-fan-watchdog --restart unless-stopped --no-healthcheck --network none \
+  --cap-add SYS_RAWIO -v /sys:/host/sys:rw -v /dev:/host/dev:rw --device-cgroup-rule='c 1:1 rwm' \
   -e HOST_SYS=/host/sys -e HOST_DEV=/host/dev -e DATA_DIR=/tmp/zettnas-watchdog \
   --memory 128m ghcr.io/fr0styx/zettnas-toolkit:latest python3 -m backend.fan_watchdog
 ```
