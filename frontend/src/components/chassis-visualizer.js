@@ -1376,7 +1376,7 @@ function bindSharesGridEvents(grid, container) {
           }
         },
         null,
-        { okText: 'Remove Share', cancelText: 'Cancel' }
+        { okText: t('shares.remove_share', 'Remove Share'), destructive: true, typeToConfirm: sName }
       );
     }
   });

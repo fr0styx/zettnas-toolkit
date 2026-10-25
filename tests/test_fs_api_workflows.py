@@ -274,3 +274,28 @@ class TestShareLinks:
         )["token"]
         assert client.get(f"/api/fs/shared/{token}").status_code == 200
         assert client.get(f"/api/fs/shared/{token}").status_code in (403, 404, 410)
+
+
+def test_delete_returns_the_recycle_bin_id_for_undo(client, auth_headers, pool_tree, monkeypatch):
+    """UX-6: the id comes back so Undo can restore it; two items of one name never collide."""
+    import os
+
+    from backend.api import fs as fs_api
+
+    monkeypatch.setattr(fs_api.time, "time", lambda: 1700000000.0)  # both deletes in the same second
+
+    base = os.path.join(
+        pool_tree["root"] if isinstance(pool_tree, dict) and "root" in pool_tree else pool_tree, "undo-test"
+    )
+    ids = []
+    for _ in range(2):
+        os.makedirs(base, exist_ok=True)
+        with open(os.path.join(base, "same.txt"), "w") as f:
+            f.write("x")
+        r = client.post("/api/fs/delete", json={"path": os.path.join(base, "same.txt")}, headers=auth_headers)
+        assert r.status_code == 200, r.text
+        ids.append(r.json()["trash_id"])
+    assert ids == ["1700000000_same.txt", "1700000000-2_same.txt"]
+    r = client.post("/api/fs/trash/restore", json={"item_id": ids[1]}, headers=auth_headers)
+    assert r.status_code == 200, r.text
+    assert os.path.exists(os.path.join(base, "same.txt"))

@@ -9,7 +9,7 @@ import {
 import { api, auth, ApiError } from '../api.js';
 import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
-import { showToast, showConfirmToast, showPromptToast, showBottomSheet } from '../toast.js';
+import { showToast, showConfirmToast, showPromptToast, showBottomSheet, showActionToast } from '../toast.js';
 import { t } from '../i18n.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreview as openFilePreviewModal } from '../file-preview-loader.js';
@@ -3119,10 +3119,12 @@ export class FileManagerWindow {
     });
     let success = 0;
     const errors = [];
+    const trashIds = [];
     for (const p of targets) {
       job.progress({ current: p.split('/').pop() });
       try {
-        await api.post('/api/fs/delete', permanent ? { path: p, permanent: true } : { path: p });
+        const res = await api.post('/api/fs/delete', permanent ? { path: p, permanent: true } : { path: p });
+        if (res?.trash_id) trashIds.push(res.trash_id);
         success++;
       } catch (err) {
         errors.push(`${p.split('/').pop()}: ${err.message}`);
@@ -3132,19 +3134,44 @@ export class FileManagerWindow {
     if (errors.length && !success) job.finish('failed', errors[0]);
     else job.finish('completed', errors.length ? `${errors.length} item(s) failed: ${errors[0]}` : null);
     this.loadPath(this.currentPath);
+    if (trashIds.length) this.offerUndo(trashIds);
     return { success, failed: errors.length };
+  }
+
+  /** UX-6: a toast with Undo that brings the items back from the Recycle Bin. */
+  offerUndo(trashIds) {
+    showActionToast(
+      t('fm.moved_to_bin', 'Moved {count} item(s) to the Recycle Bin', { count: trashIds.length }),
+      t('fm.undo', 'Undo'),
+      async () => {
+        let restored = 0;
+        for (const id of trashIds) {
+          try {
+            await api.post('/api/fs/trash/restore', { item_id: id });
+            restored++;
+          } catch (err) {
+            showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');
+          }
+        }
+        if (restored) showToast(t('fm.restored_count', 'Restored {count} item(s)', { count: restored }), 'success');
+        this.loadPath(this.currentPath);
+      },
+    );
   }
 
   bulkDelete(isPermanent = false) {
     const count = this.selectedPaths.size;
     if (count === 0) return;
     const confirmMsg = isPermanent
-      ? `Are you sure you want to PERMANENTLY delete ${count} selected item(s)? This cannot be undone.`
+      ? t('fm.confirm_bulk_delete_permanent', "{count} item(s) will be deleted for good. This can't be undone.", { count })
       : t('fm.confirm_bulk_delete', `Are you sure you want to delete ${count} selected item(s)?`).replace('{count}', count);
-    showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
+    showConfirmToast(t('fm.delete_title', 'Delete {count} item(s)?', { count }), confirmMsg, async () => {
       const targets = Array.from(this.selectedPaths);
       this.clearSelection();
       await this.deleteWithProgress(targets, { permanent: isPermanent });
+    }, null, {
+      destructive: true,
+      okText: isPermanent ? t('fm.delete_permanently', 'Delete permanently') : t('fm.move_to_bin', 'Move to Recycle Bin'),
     });
   }
 

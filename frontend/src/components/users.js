@@ -564,7 +564,7 @@ export function confirmDeleteUser(userId, username) {
       }
     },
     null,
-    { okText: 'Delete User', cancelText: 'Cancel' }
+    { okText: t('users.delete_user', 'Delete User'), destructive: true, typeToConfirm: username }
   );
 }
 

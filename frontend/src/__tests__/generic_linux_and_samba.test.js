@@ -168,6 +168,10 @@ describe('Sprint 5: Generic Linux Active Provisioner & Samba Engine (Frontend)',
     const delBtn = container.querySelector('.btn-share-delete');
     expect(delBtn).not.toBeNull();
     delBtn.click();
+    // removing a share asks for its name first (UX-6)
+    const typed = document.getElementById('confirm-toast-type-input');
+    typed.value = 'vault';
+    typed.dispatchEvent(new Event('input'));
     const okBtn = document.getElementById('confirm-toast-ok');
     if (okBtn) okBtn.click();
     await Promise.resolve();

@@ -32,6 +32,14 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 - A warning appears when the app keeps its data on a spinning disk, which then can never sleep
   (moving it to an SSD or cache pool saves power and noise).
 
+#### Everyday use
+
+- **Undo after deleting files**: File Explorer's "Moved to the Recycle Bin" message has an Undo
+  button. Two files of the same name deleted in the same second no longer collide in the bin.
+- Confirm dialogs take keyboard focus (and give it back), keep Tab inside, say what they do on
+  the button ("Delete VM", "Move to Recycle Bin") and are red only for destructive actions.
+- Deleting a user, a share or a virtual machine asks you to type its name first.
+
 #### Backups
 
 - **Hyper-Backup copies to the cloud instead of mirroring.** A file deleted at home (or

@@ -291,7 +291,9 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       expect(showConfirmToast).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining('arch-box'),
-        expect.any(Function)
+        expect.any(Function),
+        null,
+        expect.objectContaining({ destructive: true, typeToConfirm: 'arch-box' })
       );
     });
 

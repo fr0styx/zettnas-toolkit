@@ -859,7 +859,9 @@ function bindVmGridHandlers(grid) {
           } catch (err) {
             showToast(t('toast.delete_failed', 'Delete failed: {error}', { error: err.message }), 'error');
           }
-        }
+        },
+        null,
+        { okText: t('vm.delete_vm', 'Delete VM'), destructive: true, typeToConfirm: vmName }
       );
     };
   });

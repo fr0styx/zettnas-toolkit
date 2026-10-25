@@ -75,6 +75,28 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
   toast._dismissTimer = timer;
 }
 
+// Words that mark an action as destructive (the button turns red), in the five UI languages
+const DESTRUCTIVE_RE = /\b(delete|remove|destroy|wipe|format|erase|revoke|reset|clear|uninstall|purge|discard|kill|löschen|entfernen|zurücksetzen|supprimer|effacer|retirer|eliminar|borrar|quitar)\b|删除|移除|清除|清空/i;
+const GENERIC_TITLES = new Set(['confirm action', 'confirm', 'are you sure?']);
+
+/** The button label and colour for a confirm dialog (UX-5: verbs, red only when destructive). */
+export function confirmButtonFor(title, msg, options = {}) {
+  const text = `${title || ''} ${options.okText || ''}`;
+  const destructive = options.destructive ?? (DESTRUCTIVE_RE.test(text) || (GENERIC_TITLES.has(String(title || '').trim().toLowerCase()) && DESTRUCTIVE_RE.test(String(msg || '').slice(0, 60))));
+  let label = options.okText;
+  if (!label) {
+    const plain = String(title || '').trim();
+    if (plain && !GENERIC_TITLES.has(plain.toLowerCase()) && plain.length <= 28) label = plain.replace(/[?.!…]+$/, '');
+    else label = t('confirm.continue', 'Continue');
+  }
+  return { label, destructive };
+}
+
+function _focusables(card) {
+  return [...card.querySelectorAll('button, input, textarea, select, [tabindex]:not([tabindex="-1"])')]
+    .filter((el) => !el.disabled && el.style.display !== 'none' && !el.closest('[hidden]'));
+}
+
 // A dialog that was dragged opens in its usual place next time
 function resetDraggedPosition(el) {
   for (const prop of ["position", "left", "top", "right", "bottom", "margin", "transition"]) el.style.removeProperty(prop);
@@ -287,21 +309,56 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     headerBg.style.background = "rgba(245, 158, 11, 0.14)";
     titleEl.style.color = "#fbbf24";
   } else {
-    const isDelete = options.icon === '🗑️' || (title && (title.toLowerCase().includes('delete') || title.toLowerCase().includes('remove') || title.toLowerCase().includes('destroy')));
-    const icon = options.icon || (isDelete ? '🗑️' : '💬');
-    titleEl.innerHTML = `<span>${icon}</span> ${safeTitle}`;
-    okBtn.innerHTML = options.okText ? escapeHtml(options.okText) : "Confirm";
-    okBtn.style.background = "#ef4444";
-    okBtn.style.border = "1px solid #dc2626";
+    const { label, destructive } = confirmButtonFor(title, msg, options);
+    card.dataset.destructive = destructive ? "true" : "false";
+    const icon = options.icon || (destructive ? '🗑️' : '💬');
+    titleEl.innerHTML = `<span aria-hidden="true">${icon}</span> ${safeTitle}`;
+    okBtn.innerHTML = escapeHtml(label);
+    if (destructive) {
+      okBtn.style.background = "#ef4444";
+      okBtn.style.border = "1px solid #dc2626";
+      headerBg.style.background = "rgba(239, 68, 68, 0.1)";
+      titleEl.style.color = "#ef4444";
+      card.style.borderColor = "rgba(239, 68, 68, 0.45)";
+      card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.15)";
+    } else {
+      okBtn.style.background = "#0ea5e9";
+      okBtn.style.border = "1px solid #0284c7";
+      headerBg.style.background = "rgba(14, 165, 233, 0.1)";
+      titleEl.style.color = "#0ea5e9";
+      card.style.borderColor = "";
+      card.style.boxShadow = "";
+    }
     okBtn.style.color = "#fff";
-    headerBg.style.background = "rgba(239, 68, 68, 0.1)";
-    titleEl.style.color = "#ef4444";
-    card.style.borderColor = "rgba(239, 68, 68, 0.45)";
-    card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.15)";
   }
 
-  cancelBtn.innerHTML = options.cancelText ? escapeHtml(options.cancelText) : "Cancel";
+  cancelBtn.innerHTML = options.cancelText ? escapeHtml(options.cancelText) : escapeHtml(t('confirm.cancel', 'Cancel'));
   msgEl.innerHTML = safeMsg;
+
+  // UX-6: big deletes ask to type the name first
+  card.querySelector('#confirm-toast-type')?.remove();
+  let typeInput = null;
+  okBtn.disabled = false;
+  okBtn.style.opacity = "";
+  if (options.typeToConfirm) {
+    const expected = String(options.typeToConfirm);
+    const wrap = document.createElement('div');
+    wrap.id = 'confirm-toast-type';
+    wrap.style.marginTop = '12px';
+    wrap.innerHTML = `<label for="confirm-toast-type-input" style="display:block; font-size: 12px; color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom: 6px;"></label>
+      <input id="confirm-toast-type-input" type="text" autocomplete="off" spellcheck="false" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); padding: 8px 10px; color: var(--lt-t-ffffffff, white); border-radius: 6px; font-size: 13px; outline: none;" />`;
+    wrap.querySelector('label').textContent = t('confirm.type_to_confirm', 'Type {name} to confirm', { name: expected });
+    msgEl.after(wrap);
+    typeInput = wrap.querySelector('input');
+    const sync = () => {
+      const ok = typeInput.value.trim() === expected;
+      okBtn.disabled = !ok;
+      okBtn.style.opacity = ok ? "" : "0.45";
+    };
+    typeInput.addEventListener('input', sync);
+    sync();
+  }
+  const returnFocusTo = document.activeElement;
 
   if (options.onEject && ejectBtn) {
     ejectBtn.style.display = "block";
@@ -321,6 +378,9 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     backdrop.style.opacity = "1";
     card.style.opacity = "1";
     card.style.transform = "translate(-50%, 0) scale(1)";
+    // UX-5: focus moves into the dialog; a destructive action starts on Cancel
+    const start = typeInput || (card.dataset.destructive === "true" ? cancelBtn : okBtn);
+    try { start.focus({ preventScroll: true }); } catch { start.focus(); }
   }, 10);
 
   const cleanup = () => {
@@ -340,6 +400,9 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     okBtn.removeEventListener("click", onOkClick);
     if (ejectBtn) ejectBtn.removeEventListener("click", onEjectClick);
     document.removeEventListener("keydown", onKeyDown);
+    if (returnFocusTo && typeof returnFocusTo.focus === 'function' && document.contains(returnFocusTo)) {
+      try { returnFocusTo.focus({ preventScroll: true }); } catch { /* the element went away */ }
+    }
   };
 
   const onCancelClick = (e) => {
@@ -349,6 +412,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   };
   const onOkClick = (e) => {
     if (e) e.preventDefault();
+    if (okBtn.disabled) return;
     cleanup();
     if (onConfirm) onConfirm();
   };
@@ -360,6 +424,16 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   const onKeyDown = (e) => {
     if (e.key === "Escape") {
       onCancelClick(e);
+    } else if (e.key === "Enter" && e.target === typeInput) {
+      onOkClick(e);
+    } else if (e.key === "Tab") {
+      // UX-5: Tab stays inside the dialog
+      const items = _focusables(card);
+      if (!items.length) return;
+      const i = items.indexOf(document.activeElement);
+      const next = e.shiftKey ? (i <= 0 ? items.length - 1 : i - 1) : (i === -1 || i === items.length - 1 ? 0 : i + 1);
+      e.preventDefault();
+      items[next].focus();
     }
   };
 

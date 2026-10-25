@@ -677,6 +677,10 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         base_name = os.path.basename(target_unresolved)
         ts = int(time.time())
         dest_name = f"{ts}_{base_name}"
+        n = 1
+        while os.path.lexists(os.path.join(files_dir, dest_name)):  # two items of one name in one second
+            n += 1
+            dest_name = f"{ts}-{n}_{base_name}"
         dest_path = os.path.join(files_dir, dest_name)
         info_path = os.path.join(info_dir, f"{dest_name}.trashinfo")
 
@@ -694,7 +698,7 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         await asyncio.to_thread(_move_to_recycle)
         add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
 
-        return {"status": "ok", "message": "Item moved to Recycle Bin"}
+        return {"status": "ok", "message": "Item moved to Recycle Bin", "trash_id": dest_name}
     except Exception as e:
         logger.error(f"[FS] Delete/Recycle failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to process delete request") from e
@@ -1854,7 +1858,7 @@ async def fs_trash_restore(
                         logger.debug("backend.api.fs.fs_trash_restore._do_restore: ignored error", exc_info=True)
                 if not orig_path:
                     parts = item_id.split("_", 1)
-                    orig_name = parts[1] if (len(parts) == 2 and parts[0].isdigit()) else item_id
+                    orig_name = parts[1] if (len(parts) == 2 and parts[0].replace("-", "").isdigit()) else item_id
 
                 if not _is_files_admin(principal):
                     if not orig_path:
