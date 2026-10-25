@@ -1,5 +1,20 @@
 # ZettNAS Toolkit - Release Changelog
 
+## Unreleased
+
+#### AI
+
+- **The AI Configuration tab is grouped**: a Chatbot section (the model, where it runs, conversation
+  history) and a Search & knowledge section (what ZettAI learns from and when, how it reads files,
+  the embedding model, and Immich, moved here from the RAG tab).
+- Search finds the best matches in large libraries (keyword hits are ranked before they are cut),
+  photo search looks past the first 2,000 photos, and results say when the AI model didn't answer
+  and only words matched.
+- New and deleted files reach the index from SSDs and disks that never sleep (hourly and twice a
+  day), not only when a sleeping disk wakes.
+- Long document questions on a CPU fallback get their answer instead of timing out; follow-up
+  questions about the same files start faster.
+
 ## v1.10.3 (2026-10-25)
 ### 🧰 Backups that can't lose your data; damaged files repaired at start; uploads over 16 MB fixed
 
