@@ -3221,4 +3221,13 @@ export default {
   "gs.share_host": "Make a shared folder in {host}",
   "gs.share_host_desc": "{host} creates shared folders; ZettNAS lists them under Shares.",
   "ai.conversation_label": "Conversation",
+  "err.next_forbidden": "Ask the owner of this server if you need access.",
+  "err.next_not_found": "Refresh the page: it may have been moved or deleted.",
+  "err.next_conflict": "Choose another name, or refresh to see the current state.",
+  "err.next_too_large": "Try a smaller file, or upload from File Explorer, which sends large files in parts.",
+  "err.next_rate_limited": "Wait a minute, then try again.",
+  "err.next_unavailable": "That part of the server is starting or stopped. Try again in a moment.",
+  "err.next_timeout": "The server may be busy. Try again; if it keeps happening, check that it is running.",
+  "err.next_internal_ref": "Try again. If it keeps happening, download a diagnostics bundle (Settings → About) and mention reference {ref}.",
+  "err.next_internal": "Try again. If it keeps happening, download a diagnostics bundle (Settings → About).",
 };

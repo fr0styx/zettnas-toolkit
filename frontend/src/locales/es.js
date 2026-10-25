@@ -3221,4 +3221,13 @@ export default {
   "gs.share_host": "Crear una carpeta compartida en {host}",
   "gs.share_host_desc": "{host} crea las carpetas compartidas; ZettNAS las muestra en Recursos compartidos.",
   "ai.conversation_label": "Conversación",
+  "err.next_forbidden": "Pida acceso al propietario de este servidor si lo necesita.",
+  "err.next_not_found": "Actualice la página: puede que se haya movido o eliminado.",
+  "err.next_conflict": "Elija otro nombre o actualice para ver el estado actual.",
+  "err.next_too_large": "Pruebe con un archivo más pequeño o súbalo desde el Explorador de archivos, que envía los archivos grandes por partes.",
+  "err.next_rate_limited": "Espere un minuto y vuelva a intentarlo.",
+  "err.next_unavailable": "Esa parte del servidor se está iniciando o está detenida. Inténtelo de nuevo en un momento.",
+  "err.next_timeout": "Puede que el servidor esté ocupado. Inténtelo de nuevo; si sigue pasando, compruebe que está en marcha.",
+  "err.next_internal_ref": "Inténtelo de nuevo. Si sigue pasando, descargue un paquete de diagnóstico (Ajustes → Acerca de) e indique la referencia {ref}.",
+  "err.next_internal": "Inténtelo de nuevo. Si sigue pasando, descargue un paquete de diagnóstico (Ajustes → Acerca de).",
 };

@@ -4,6 +4,7 @@
  */
 import { ZettEventBus } from './event-bus.js';
 import { reportOffline, reportOnline } from './connection.js';
+import { explain } from './error-text.js';
 
 // Defaults (FE-16): reads give up after 15 s, writes after 5 minutes; uploads and streams
 // have no limit. Pass { timeout: ms } (0 = none) to change it for one call.
@@ -110,7 +111,9 @@ export class ApiError extends Error {
     const detail = (body && typeof body.detail === 'string' && body.detail.trim())
       ? body.detail.trim()
       : (res.statusText ? `HTTP ${res.status}: ${res.statusText}` : `Request failed (HTTP ${res.status})`);
-    return new ApiError(detail, { status: res.status, error: (body && body.error) || 'error', body });
+    const error = (body && body.error) || 'error';
+    // UX-14: what happened (the server's words) and what to do next
+    return new ApiError(explain(detail, error, body), { status: res.status, error, body });
   }
 }
 
@@ -181,7 +184,7 @@ async function request(endpoint, options = {}) {
     res = await window.fetch(url, config);
   } catch (netErr) {
     if (timedOut) {
-      throw new ApiError(`The server did not answer within ${Math.round(timeoutMs / 1000)} s.`, { status: 0, error: 'timeout' });
+      throw new ApiError(explain(`The server did not answer within ${Math.round(timeoutMs / 1000)} s.`, 'timeout'), { status: 0, error: 'timeout' });
     }
     if (netErr && netErr.name !== 'AbortError') reportOffline();
     throw netErr;

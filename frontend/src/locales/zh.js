@@ -3221,4 +3221,13 @@ export default {
   "gs.share_host": "在 {host} 中创建共享文件夹",
   "gs.share_host_desc": "共享文件夹由 {host} 创建；ZettNAS 会在“共享”中列出。",
   "ai.conversation_label": "对话",
+  "err.next_forbidden": "如需访问权限，请联系此服务器的所有者。",
+  "err.next_not_found": "请刷新页面：它可能已被移动或删除。",
+  "err.next_conflict": "请换一个名称，或刷新查看当前状态。",
+  "err.next_too_large": "请尝试更小的文件，或在文件管理器中上传（大文件会分块发送）。",
+  "err.next_rate_limited": "请稍等一分钟后再试。",
+  "err.next_unavailable": "服务器的这部分正在启动或已停止，请稍后再试。",
+  "err.next_timeout": "服务器可能正忙。请重试；如果持续出现，请检查服务器是否在运行。",
+  "err.next_internal_ref": "请重试。如果持续出现，请下载诊断包（设置 → 关于）并提供参考编号 {ref}。",
+  "err.next_internal": "请重试。如果持续出现，请下载诊断包（设置 → 关于）。",
 };

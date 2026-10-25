@@ -36,6 +36,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Everyday use
 
+- Error messages say what to do next ("Wait a minute, then try again", "Choose another name"), and a
+  server error shows the reference to quote when asking for help.
 - With reduced motion turned on in the system, the moving screensavers show the still clock.
 - The language picker shows each language's own name instead of a flag.
 - **The Overview says what needs attention** first: "Everything is fine", or a failing drive,

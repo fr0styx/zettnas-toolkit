@@ -3221,4 +3221,13 @@ export default {
   "gs.share_host": "Créer un dossier partagé dans {host}",
   "gs.share_host_desc": "{host} crée les dossiers partagés ; ZettNAS les affiche dans Partages.",
   "ai.conversation_label": "Conversation",
+  "err.next_forbidden": "Demandez au propriétaire de ce serveur si vous avez besoin d'accès.",
+  "err.next_not_found": "Actualisez la page : l'élément a peut-être été déplacé ou supprimé.",
+  "err.next_conflict": "Choisissez un autre nom, ou actualisez pour voir l'état actuel.",
+  "err.next_too_large": "Essayez un fichier plus petit, ou envoyez-le depuis l'Explorateur de fichiers, qui envoie les gros fichiers par morceaux.",
+  "err.next_rate_limited": "Patientez une minute, puis réessayez.",
+  "err.next_unavailable": "Cette partie du serveur démarre ou est arrêtée. Réessayez dans un instant.",
+  "err.next_timeout": "Le serveur est peut-être occupé. Réessayez ; si cela se reproduit, vérifiez qu'il fonctionne.",
+  "err.next_internal_ref": "Réessayez. Si cela se reproduit, téléchargez un paquet de diagnostic (Réglages → À propos) et indiquez la référence {ref}.",
+  "err.next_internal": "Réessayez. Si cela se reproduit, téléchargez un paquet de diagnostic (Réglages → À propos).",
 };

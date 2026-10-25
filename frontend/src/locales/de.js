@@ -3221,4 +3221,13 @@ export default {
   "gs.share_host": "Freigegebenen Ordner in {host} anlegen",
   "gs.share_host_desc": "{host} legt freigegebene Ordner an; ZettNAS zeigt sie unter Freigaben.",
   "ai.conversation_label": "Unterhaltung",
+  "err.next_forbidden": "Fragen Sie den Besitzer dieses Servers, wenn Sie Zugriff brauchen.",
+  "err.next_not_found": "Laden Sie die Seite neu: Es wurde vielleicht verschoben oder gelöscht.",
+  "err.next_conflict": "Wählen Sie einen anderen Namen oder laden Sie neu, um den aktuellen Stand zu sehen.",
+  "err.next_too_large": "Versuchen Sie eine kleinere Datei oder laden Sie im Datei-Explorer hoch, der große Dateien in Teilen sendet.",
+  "err.next_rate_limited": "Warten Sie eine Minute und versuchen Sie es dann erneut.",
+  "err.next_unavailable": "Dieser Teil des Servers startet gerade oder ist gestoppt. Versuchen Sie es gleich noch einmal.",
+  "err.next_timeout": "Der Server ist vielleicht ausgelastet. Versuchen Sie es erneut; wenn es wieder passiert, prüfen Sie, ob er läuft.",
+  "err.next_internal_ref": "Versuchen Sie es erneut. Wenn es wieder passiert, laden Sie ein Diagnosepaket herunter (Einstellungen → Info) und nennen Sie die Referenz {ref}.",
+  "err.next_internal": "Versuchen Sie es erneut. Wenn es wieder passiert, laden Sie ein Diagnosepaket herunter (Einstellungen → Info).",
 };
