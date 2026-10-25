@@ -36,6 +36,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Everyday use
 
+- With reduced motion turned on in the system, the moving screensavers show the still clock.
+- The language picker shows each language's own name instead of a flag.
 - **The Overview says what needs attention** first: "Everything is fine", or a failing drive,
   nearly full storage, an overdue backup and the like, each with a way to it.
 - **An Advanced switch** in Mission Control hides virtual machines, network, hardware, power and
@@ -77,6 +79,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Security
 
+- Diagnostics bundles no longer keep a `NAME_KEY=value` secret that appears in the middle of a log
+  line; a test plants fifteen kinds of secret in every source of the bundle and checks none survives.
 - The ransomware freeze also makes WebDAV and NFS read-only.
 - Guest and kid accounts can't read system details; security alerts go to admins only.
 - Folder downloads through share links stream as they're built; at most two run at once.

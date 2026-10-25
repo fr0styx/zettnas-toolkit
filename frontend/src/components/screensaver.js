@@ -9,6 +9,7 @@ import { state } from '../state.js';
 
 import { t } from '../i18n.js';
 import { formatDate, formatTime } from '../format.js';
+import { prefersReducedMotion } from '../motion.js';
 function isLcdMode() {
   return !!(state?.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')));
 }
@@ -130,8 +131,10 @@ export function activateScreensaver(isPreview = false) {
 
   const canvas = document.getElementById('screensaver-canvas');
   const clockEl = document.getElementById('screensaver-clock-display');
+  // UX-19: with reduced motion asked for, the moving screensavers show the still clock instead
+  const mode = prefersReducedMotion() ? 'retro_clock' : _mode;
 
-  if (_mode === 'retro_clock') {
+  if (mode === 'retro_clock') {
     if (canvas) canvas.style.display = 'none';
     if (clockEl) {
       clockEl.style.display = 'block';
@@ -141,9 +144,9 @@ export function activateScreensaver(isPreview = false) {
     if (clockEl) clockEl.style.display = 'none';
     if (canvas) {
       canvas.style.display = 'block';
-      if (_mode === 'matrix_rain') {
+      if (mode === 'matrix_rain') {
         startMatrixRain(canvas);
-      } else if (_mode === 'starfield') {
+      } else if (mode === 'starfield') {
         startStarfield(canvas);
       }
     }

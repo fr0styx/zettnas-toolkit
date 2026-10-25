@@ -6,11 +6,11 @@
 const STORAGE_KEY = 'zettnas_language';
 
 export const SUPPORTED_LANGUAGES = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'zh', name: '简体中文', flag: '🇨🇳' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' }
+  { code: 'en', name: 'English' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'zh', name: '简体中文' },
+  { code: 'fr', name: 'Français' },
+  { code: 'es', name: 'Español' }
 ];
 
 import en from './locales/en.js';

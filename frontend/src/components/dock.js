@@ -1,4 +1,5 @@
 import { onManagementDom } from '../management-dom.js';
+import { prefersReducedMotion } from '../motion.js';
 import { escapeHtml } from '../utils.js';
 import { state } from '../state.js';
 import { t } from '../i18n.js';
@@ -2865,7 +2866,7 @@ export function initParabolicDockMagnification(dockEl) {
 
   dockEl.addEventListener('pointermove', (e) => {
     if (!_magnificationEnabled) return;
-    if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (prefersReducedMotion()) return;
 
     const items = Array.from(dockEl.querySelectorAll('.dock-item'));
     if (!items.length) return;

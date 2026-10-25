@@ -60,7 +60,7 @@ ENV_VAR_PAIR_PATTERN = re.compile(
     re.IGNORECASE,
 )
 KEY_VALUE_IN_TEXT_PATTERN = re.compile(
-    r"((?:token|secret|pass(?:word|wd)?|api_key|private_key|psk)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)",
+    r"((?:token|secret|pass(?:word|wd)?|api_key|private_key|psk|[a-z0-9]+_key)\s*[:=]\s*['\"]?)[^'\",\s&]+(['\"]?)",
     re.IGNORECASE,
 )
 
