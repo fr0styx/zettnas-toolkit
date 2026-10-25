@@ -13,19 +13,19 @@ export const SUPPORTED_LANGUAGES = [
   { code: 'es', name: 'Español' }
 ];
 
-import en from './locales/en.js';
-
-// Only English ships in the main bundle (it is the fallback). Each other language is its
-// own file, loaded when that language is used (FE-03).
+// Every language is its own file, loaded when it is used (FE-03). English too: every t()
+// call carries its English text, so the first paint doesn't wait for the dictionary (B6
+// first-load budget); it arrives right after and fills in the few strings that differ.
 const LOADERS = {
+  en: () => import('./locales/en.js'),
   de: () => import('./locales/de.js'),
   zh: () => import('./locales/zh.js'),
   fr: () => import('./locales/fr.js'),
   es: () => import('./locales/es.js'),
 };
 
-// Languages loaded so far. English is always here.
-export const TRANSLATIONS = { en };
+// Languages loaded so far.
+export const TRANSLATIONS = {};
 
 const _loading = {};
 
@@ -49,7 +49,7 @@ export function loadLanguage(lang) {
 }
 
 export function isSupportedLanguage(lang) {
-  return lang === 'en' || Boolean(LOADERS[lang]);
+  return Boolean(LOADERS[lang]);
 }
 
 function _savedLanguage() {
@@ -62,6 +62,7 @@ function _savedLanguage() {
 
 // Start fetching the saved language while the rest of the app loads.
 (() => {
+  loadLanguage('en');
   const saved = _savedLanguage();
   if (saved && saved !== 'en' && LOADERS[saved]) loadLanguage(saved);
 })();

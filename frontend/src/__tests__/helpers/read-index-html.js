@@ -9,5 +9,8 @@ const FRONTEND = path.resolve(__dirname, '..', '..', '..');
 export function readIndexHtml() {
   const page = fs.readFileSync(path.join(FRONTEND, 'index.html'), 'utf8');
   const mc = fs.readFileSync(path.join(FRONTEND, 'src', 'windows', 'management-window.html'), 'utf8');
-  return page.replace(/<template id="management-window-slot">[\s\S]*?<\/template>/, mc);
+  const drawer = fs.readFileSync(path.join(FRONTEND, 'src', 'windows', 'drawer.html'), 'utf8');
+  return page
+    .replace(/<template id="management-window-slot">[\s\S]*?<\/template>/, mc)
+    .replace('<template id="led-drawer-slot"></template>', drawer);
 }

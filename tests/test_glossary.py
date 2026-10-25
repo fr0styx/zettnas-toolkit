@@ -6,6 +6,7 @@ import re
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RETIRED = [r"hyper[- ]?backup"]
 SOURCES = [
+    "frontend/index.html",
     "frontend/src/locales",
     "frontend/src/windows",
     "frontend/src/components",

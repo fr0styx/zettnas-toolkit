@@ -36,6 +36,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Everyday use
 
+- **The page opens faster**: the first download dropped from 358 kB to 229 kB; File Explorer, the
+  hardware settings and other windows load right after the first paint.
 - Error messages say what to do next ("Wait a minute, then try again", "Choose another name"), and a
   server error shows the reference to quote when asking for help.
 - With reduced motion turned on in the system, the moving screensavers show the still clock.

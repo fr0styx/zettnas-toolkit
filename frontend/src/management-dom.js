@@ -3,6 +3,7 @@
 // asks for it, or when the browser is idle a few seconds after start.
 import { applyTranslations } from './i18n.js';
 import { ZettEventBus } from './event-bus.js';
+import { ensureDrawerDom } from './drawer-dom.js';
 
 const waiters = [];
 let pending = null;
@@ -20,7 +21,8 @@ export function onManagementDom(fn) {
 export function ensureManagementDom() {
   if (isManagementDomReady()) return Promise.resolve();
   if (!pending) {
-    pending = import('./windows/management-window.html?raw').then(({ default: markup }) => {
+    // the drawer first: Mission Control's Hardware section borrows its tabs
+    pending = Promise.all([import('./windows/management-window.html?raw'), ensureDrawerDom()]).then(([{ default: markup }]) => {
       if (!isManagementDomReady()) {
         const slot = document.getElementById('management-window-slot');
         if (slot) slot.insertAdjacentHTML('beforebegin', markup);

@@ -8,7 +8,12 @@ import { escapeHtml } from '../utils.js';
 import { api } from '../api.js';
 import { state } from '../state.js';
 import { showToast, showConfirmToast } from '../toast.js';
-import { openContainerInspector } from './container-modal.js';
+// loaded when first used (B6 first-load budget)
+const openContainerInspector = (...args) =>
+  import('./container-modal.js').then((m) => {
+    m.initContainerModal();
+    return m.openContainerInspector(...args);
+  });
 
 import { t } from '../i18n.js';
 // Destructive actions always ask first (FE-07).

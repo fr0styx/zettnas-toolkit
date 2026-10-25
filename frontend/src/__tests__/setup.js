@@ -35,3 +35,7 @@ if (typeof HTMLCanvasElement !== 'undefined') {
     canvas: { width: 640, height: 172 },
   }));
 }
+
+// English strings load lazily in the app (first-load budget); tests read them right away
+const { loadLanguage } = await import("../i18n.js");
+await loadLanguage("en");

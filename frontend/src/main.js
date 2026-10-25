@@ -4,6 +4,7 @@
  */
 import { installHiddenPause, pageHidden } from './hidden-pause.js';
 import { ensureManagementDom, onManagementDom } from './management-dom.js';
+import { ensureDrawerDom } from './drawer-dom.js';
 import './style.css';
 import './lcd-direct.css';
 import './vm-console-direct.css';
@@ -31,19 +32,15 @@ import './modals.js';
 
 import { initDockSystem, DockManager, makeDraggable, bringToFront, restoreOpenWindowsState, setWindowRestorationComplete } from './components/dock.js';
 import { initAuth } from './components/auth.js';
-import { initUsersManagement } from './components/users.js';
 import { applyStats, applyTheme, applyDesktopTheme, applyLcdTheme, initDashboardClicks } from './components/dashboard.js';
 import { initFanControl } from './components/fan-control.js';
 import { initLedControl } from './components/led-control.js';
 import { applyDashboardLayout, fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
 import { initWallpapers, loadWallpapers } from './components/wallpapers.js';
 import { initEvents } from './components/events.js';
-import { initSettings, openDrawer, closeDrawer } from './components/settings.js';
-import { initMetricsChart, fetchAndRenderMetrics } from './components/metrics-chart.js';
 import { initSetupWizard } from './components/setup-wizard.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
-import { initFileManager } from './components/file-manager.js';
 import { lazyWindow } from './lazy-windows.js';
 import { initJobsCentre } from './components/jobs-centre.js';
 import { initGettingStarted } from './components/getting-started.js';
@@ -54,8 +51,6 @@ import './file-preview-loader.js'; // window.openFilePreviewModal before the vie
 import { installWindowFocus } from './window-focus.js';
 import { installStaleBuildGuard, watchServerBuild } from './stale-build.js';
 import { installDialogChrome } from './dialog-chrome.js';
-import { initContainerModal } from './components/container-modal.js';
-import { initStackModal } from './components/stack-modal.js';
 import { initDesktopContextMenu } from './components/desktop-context-menu.js';
 import { initDesktopDragAndDrop } from './components/desktop-drag-drop.js';
 import { initScreensaverSystem } from './components/screensaver.js';
@@ -64,6 +59,56 @@ import { initA11y } from './a11y.js';
 import { initGlassTimePickers } from './components/time-picker.js';
 
 import { t } from './i18n.js';
+
+// B6 first-load budget: the hardware-settings drawer and the users code are not needed for the
+// first paint. They load right after it, or at once when someone opens the drawer first.
+let _settingsMod = null;
+function loadSettings() {
+  _settingsMod ||= ensureDrawerDom()
+    .then(() => import('./components/settings.js'))
+    .then((m) => {
+      m.initSettings();
+      // the drawer's live screen preview follows the dashboard from now on
+      try {
+        applyDashboardLayout();
+        fitMiniPreviewScale();
+      } catch (err) {
+        console.warn('[ZettNAS] drawer preview', err);
+      }
+      return m;
+    });
+  return _settingsMod;
+}
+let _usersMod = null;
+function loadUsers() {
+  _usersMod ||= import('./components/users.js').then((m) => {
+    m.initUsersManagement();
+    return m;
+  });
+  return _usersMod;
+}
+window.openDrawer = (tab = null) => loadSettings().then((m) => m.openDrawer(tab));
+function loadLater() {
+  for (const id of ['drawer-toggle-btn', 'suite-toolkit-btn', 'toolkit-suite-btn']) {
+    const btn = document.getElementById(id);
+    if (!btn) continue;
+    const early = (e) => {
+      btn.removeEventListener('click', early, true);
+      if (_settingsMod) return; // already wired: its own listener opens the drawer
+      e.stopPropagation();
+      loadSettings().then((m) => m.openDrawer());
+    };
+    btn.addEventListener('click', early, true);
+  }
+  const later = (fn) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 800));
+  later(() => {
+    loadUsers();
+    loadSettings();
+    // the container and stack inspectors (opened from Apps, Spotlight and Mission Control)
+    import('./components/container-modal.js').then((m) => m.initContainerModal());
+    import('./components/stack-modal.js').then((m) => m.initStackModal());
+  });
+}
 
 installStaleBuildGuard(); // a page older than an update offers a reload instead of silent clicks
 let _sseRetryCount = 0;
@@ -303,14 +348,13 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   installWindowFocus(DockManager);
   initInviteLanding(); // the sign-up form for invite links, over the sign-in screen
   initAuth();
-  initUsersManagement();
   initDashboardClicks();
   initFanControl();
   initLedControl();
   initWallpapers();
   onManagementDom(initEvents);
-  initSettings();
-  onManagementDom(initMetricsChart);
+  loadLater(); // the settings drawer and the users code (B6 first-load budget)
+  onManagementDom(() => import('./components/metrics-chart.js').then((m) => m.initMetricsChart())); // with Mission Control
   initSetupWizard();
   // Mission Control's markup (FE-04) and code (FE-02) load on first use, or a few seconds
   // after start when the browser is idle
@@ -338,7 +382,16 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   initPhoneShell();
   if (!state.isLcdDirect && !state.isVmConsoleDirect) watchServerBuild(); // offer a reload after an update
   initWidgets();
-  initFileManager();
+  // File Explorer loads on first use, or right after the first paint (B6 first-load budget)
+  const ensureFiles = lazyWindow({
+    id: 'file-manager-window',
+    iconId: 'fm-desktop-icon',
+    load: () => import('./components/file-manager.js'),
+    init: 'initFileManager',
+    globals: ['openFileManager', 'openNewFileManagerWindow', 'navigateToPath', 'openRecycleBin'],
+    openGlobal: 'openFileManager',
+  });
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => ensureFiles(), { timeout: 3000 });
   // The VM manager (~220 kB) loads the first time it's opened (FE-02)
   lazyWindow({
     id: 'vm',
@@ -357,8 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
     globals: ['openContainersManager', 'openContainersWindow'],
     openGlobal: 'openContainersManager',
   });
-  initContainerModal();
-  initStackModal();
   initDesktopContextMenu();
   initDesktopDragAndDrop();
   initScreensaverSystem();
