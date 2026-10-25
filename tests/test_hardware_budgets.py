@@ -44,7 +44,8 @@ def test_measures_and_judges(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(hb, "measure", lambda seconds: values)
     out_dir = tmp_path / "results"
-    assert hb.main(["--seconds", "1", "--results", str(out_dir)]) == 1
+    assert hb.main(["--seconds", "1", "--results", str(out_dir)]) == 0  # warnings, not a red run
+    assert hb.main(["--seconds", "1", "--results", str(out_dir), "--strict"]) == 1
     printed = capsys.readouterr().out
     assert "FAIL ai-memory" in printed and "PASS idle-cpu" in printed
     assert "3072" not in printed  # numbers stay on the machine

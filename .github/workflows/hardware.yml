@@ -18,7 +18,7 @@ concurrency:
 jobs:
   budgets:
     if: github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, zettnas-hardware]
+    runs-on: [zettnas-hardware]  # the runner carries only this label (no default labels)
     timeout-minutes: 20
     steps:
       - name: Checkout

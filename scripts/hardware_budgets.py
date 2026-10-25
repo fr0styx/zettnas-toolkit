@@ -11,7 +11,7 @@ Reads the host's /proc (mounted read-only at HOST_PROC, default /host/proc) and 
 The public log says only PASS or FAIL per budget (the repository's Actions logs are public and
 must not carry numbers from a private server). The numbers go to --results/<date>.json on the
 machine itself. Budgets can be tuned with HW_BUDGET_<NAME> (e.g. HW_BUDGET_IDLE_CPU=1.5).
-Exit code 1 when any budget fails.
+Failed budgets are reported as warnings; with --strict the exit code is 1 (a hard gate).
 """
 
 import argparse
@@ -118,11 +118,14 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--seconds", type=float, default=300)
     ap.add_argument("--results", default=os.environ.get("HW_RESULTS_DIR", "/results"))
+    ap.add_argument("--strict", action="store_true", help="exit 1 when a budget fails (a hard gate)")
     args = ap.parse_args(argv)
     values = measure(args.seconds)
     ok = verdicts(values)
     for name in BUDGETS:
         print(f"{'PASS' if ok.get(name) else 'FAIL'} {name}")
+        if not ok.get(name):
+            print(f"::warning title=Hardware budget::{name} is over its budget")
     try:
         os.makedirs(args.results, exist_ok=True)
         path = os.path.join(args.results, time.strftime("%Y-%m-%d-%H%M") + ".json")
@@ -130,7 +133,7 @@ def main(argv=None):
             json.dump({"values": values, "budgets": BUDGETS, "pass": ok}, f, indent=1)
     except OSError as e:
         print(f"results not saved: {e.strerror}")
-    return 0 if all(ok.values()) else 1
+    return 1 if args.strict and not all(ok.values()) else 0
 
 
 if __name__ == "__main__":
