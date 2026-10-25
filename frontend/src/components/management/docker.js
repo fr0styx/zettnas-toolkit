@@ -1177,6 +1177,16 @@ function showDeployCredentials(successBox, data, hostPort) {
   successBox.insertAdjacentElement('afterend', box);
 }
 
+/** UX-18: the usual port is taken, so another is used; the Advanced section opens to show it. */
+export function portTakenHtml(defaultPort, suggestedPort, inUseBy) {
+  const advanced = document.getElementById('adm-advanced');
+  if (advanced) advanced.open = true;
+  const msg = inUseBy
+    ? t('catalog.install_port_taken_by', 'Port {port} is already used by {app}, so this app uses port {free}.', { port: defaultPort, app: inUseBy, free: suggestedPort })
+    : t('catalog.install_port_taken', 'Port {port} is already in use, so this app uses port {free}.', { port: defaultPort, free: suggestedPort });
+  return `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️</span> ${escapeHtml(msg)}`;
+}
+
 export async function openAppDeployModal(appId) {
   let modal = document.getElementById('app-deploy-modal-overlay');
   if (!modal) {
@@ -1219,30 +1229,35 @@ export async function openAppDeployModal(appId) {
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:10px;">
-              <div>
-                <label for="adm-name-input" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">CONTAINER NAME</label>
-                <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
-              </div>
-              <div>
-                <label for="adm-port-input" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">HOST PORT MAPPING</label>
-                <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
-              </div>
+            <div>
+              <label for="adm-name-input" class="adm-label">${t('catalog.install_name', 'Name')}</label>
+              <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:12px; padding:6px 8px;">
             </div>
             <div>
-              <label for="adm-storage-input" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px;">STORAGE ROOT DIRECTORY</label>
-              <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px;">
+              <label for="adm-storage-input" class="adm-label">${t('catalog.install_folder', 'Folder for its data')}</label>
+              <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:12px; padding:6px 8px;">
+              <div class="adm-hint">${t('catalog.install_folder_hint', 'Settings and files the app keeps are stored in a folder of its own here.')}</div>
             </div>
-            <div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <span style="font-size:11px; font-weight:700; color:var(--muted);">DOCKER COMPOSE DEFINITION</span>
-                <div style="display:flex; gap:6px;">
-                  <button class="btn-pill-toggle" id="adm-copy-btn">📋 Copy YAML</button>
-                  <button class="btn-pill-toggle" id="adm-download-btn">⬇️ Download</button>
+            <!-- UX-18: the technical part stays out of the way -->
+            <details id="adm-advanced" class="adm-advanced">
+              <summary>${t('catalog.install_advanced', 'Advanced: port and Docker Compose')}</summary>
+              <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                <div>
+                  <label for="adm-port-input" class="adm-label">${t('catalog.install_port', 'Port on this server')}</label>
+                  <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
+                </div>
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="adm-label" style="margin:0;">${t('catalog.install_compose', 'Docker Compose definition')}</span>
+                    <div style="display:flex; gap:6px;">
+                      <button class="btn-pill-toggle" id="adm-copy-btn">📋 Copy YAML</button>
+                      <button class="btn-pill-toggle" id="adm-download-btn">⬇️ Download</button>
+                    </div>
+                  </div>
+                  <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:11px; color:var(--lt-t-e2e8f0ff, #e2e8f0); line-height:1.45;"></pre>
                 </div>
               </div>
-              <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:11px; color:var(--lt-t-e2e8f0ff, #e2e8f0); line-height:1.45;"></pre>
-            </div>
+            </details>
           </div>
 
           <!-- View 2: Live Deployment Progress View -->
@@ -1287,7 +1302,7 @@ export async function openAppDeployModal(appId) {
           <div id="adm-footer-config" style="padding:10px 16px; border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:space-between; align-items:center; background:var(--lt-b-00000033, rgba(0,0,0,0.2));">
             <button class="btn-pill-toggle" id="adm-cancel-btn">Cancel</button>
             <button class="btn-pill-toggle is-primary" id="adm-deploy-confirm-btn">
-              🚀 Deploy & Launch Container
+              ${t('ui.deploy_launch_container', 'Install')}
             </button>
           </div>
 
@@ -1461,11 +1476,13 @@ export async function openAppDeployModal(appId) {
     deployConfirmBtn.disabled = false;
     deployConfirmBtn.style.opacity = '1';
     deployConfirmBtn.style.pointerEvents = 'auto';
-    deployConfirmBtn.textContent = t('ui.deploy_launch_container', '🚀 Deploy & Launch Container');
+    deployConfirmBtn.textContent = t('ui.deploy_launch_container', 'Install');
     setDeployButtonTone(deployConfirmBtn, 'brand');
   }
 
-  title.textContent = `Deploy ${appId.toUpperCase()}`;
+  title.textContent = t('catalog.install_title', 'Install {name}', { name: appId });
+  const advanced = document.getElementById('adm-advanced');
+  if (advanced) advanced.open = false;
   banner.innerHTML = '<span style="color:var(--muted);">Probing host ports and container state...</span>';
   banner.style.background = 'rgba(255,255,255,0.04)';
   banner.style.border = '1px solid rgba(255,255,255,0.08)';
@@ -1498,8 +1515,7 @@ export async function openAppDeployModal(appId) {
       if (resolveData.conflict_detected) {
         banner.style.background = 'rgba(245, 166, 35, 0.12)';
         banner.style.border = '1px solid var(--warn, #f5a623)';
-        const occupier = resolveData.in_use_by ? ` (in use by ${resolveData.in_use_by})` : '';
-        banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${defaultPort} is busy${occupier}. Automatically remapped to free port <strong>${suggestedPort}</strong>!`;
+        banner.innerHTML = portTakenHtml(defaultPort, suggestedPort, resolveData.in_use_by);
       } else {
         banner.style.background = 'rgba(37, 194, 160, 0.12)';
         banner.style.border = '1px solid var(--ok2, #25c2a0)';
@@ -1511,14 +1527,13 @@ export async function openAppDeployModal(appId) {
       if (portInput) portInput.value = suggestedPort;
       banner.style.background = 'rgba(245, 166, 35, 0.12)';
       banner.style.border = '1px solid var(--warn, #f5a623)';
-      const occupier = resolveData.in_use_by ? ` (in use by ${resolveData.in_use_by})` : '';
-      banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict Detected:</span> Default port ${defaultPort} is busy${occupier}. Automatically remapped to free port <strong>${suggestedPort}</strong>!`;
+      banner.innerHTML = portTakenHtml(defaultPort, suggestedPort, resolveData.in_use_by);
     } else {
       if (nameInput) nameInput.value = appId;
       if (portInput) portInput.value = suggestedPort;
       banner.style.background = 'rgba(37, 194, 160, 0.12)';
       banner.style.border = '1px solid var(--ok2, #25c2a0)';
-      banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${suggestedPort} and name <strong>${appId}</strong> are free.`;
+      banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ ${escapeHtml(t('catalog.install_ready', 'Ready to install'))}</span> ${escapeHtml(t('catalog.install_ready_detail', '{name} will open on port {port}.', { name: appId, port: suggestedPort }))}`;
     }
   } catch (e) {
     if (nameInput) nameInput.value = appId;

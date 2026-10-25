@@ -164,7 +164,8 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
     // Input automatically remapped to suggested free port 3002
     expect(portInput.value).toBe('3002');
     // Banner alerts user of the port conflict and existing container
-    expect(banner.innerHTML).toContain('Port Conflict Detected');
+    expect(banner.innerHTML).toContain('is already used by');
+    expect(document.getElementById('adm-advanced').open).toBe(true); // the port is shown when it changed (UX-18)
     expect(banner.innerHTML).toContain("container 'uptime-kuma'");
     expect(banner.innerHTML).toContain('3002');
 
