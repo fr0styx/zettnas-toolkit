@@ -103,3 +103,73 @@ def test_json_rpc_refuses_a_bad_key(monkeypatch):
     monkeypatch.setattr(truenas_api, "_open_ws", lambda u: _FakeWS({"auth.login_with_api_key": False}))
     with pytest.raises(truenas_api.TrueNASError, match="refused"):
         truenas_api._rpc("pool.query")
+
+
+def test_the_websocket_is_opened_with_tls_and_optional_self_signed(monkeypatch):
+    """wss:// gets a TLS context; TRUENAS_VERIFY_TLS=0 accepts the self-signed certificate."""
+    import websockets.sync.client as wsc
+
+    seen = {}
+    monkeypatch.setattr(wsc, "connect", lambda url, ssl=None, **kw: seen.update(url=url, ssl=ssl) or "conn")
+    monkeypatch.setenv("TRUENAS_VERIFY_TLS", "0")
+    assert truenas_api._open_ws("wss://nas/api/current") == "conn"
+    assert seen["ssl"] is not None and seen["ssl"].check_hostname is False
+    assert truenas_api._open_ws("ws://nas/api/current") == "conn" and seen["ssl"] is None
+
+
+def test_json_rpc_needs_a_web_address(monkeypatch):
+    monkeypatch.setenv("TRUENAS_URL", "truenas.local")
+    with pytest.raises(truenas_api.TrueNASError, match="must start"):
+        truenas_api._rpc("pool.query")
+
+
+class _ErrorWS(_FakeWS):
+    def recv(self, timeout=None):
+        req = self.sent[-1]
+        if req["method"] == "auth.login_with_api_key":
+            return json.dumps({"jsonrpc": "2.0", "id": req["id"], "result": True})
+        return json.dumps({"jsonrpc": "2.0", "id": req["id"], "error": {"message": "no such method"}})
+
+
+def test_json_rpc_errors_are_reported(monkeypatch):
+    monkeypatch.setenv("TRUENAS_URL", "http://truenas.local")
+    monkeypatch.setattr(truenas_api, "_open_ws", lambda u: _ErrorWS({}))
+    with pytest.raises(truenas_api.TrueNASError, match="no such method"):
+        truenas_api._rpc("pool.query")
+
+
+def test_datasets_and_shares_over_json_rpc(monkeypatch):
+    monkeypatch.setenv("TRUENAS_URL", "https://truenas.local")
+    monkeypatch.setenv("TRUENAS_API_KEY", "1-abc")
+    gone = httpx.MockTransport(lambda req: httpx.Response(410))
+    answers = {
+        "pool.dataset.query": [
+            {"id": "tank/media", "pool": "tank", "mountpoint": "/mnt/tank/media", "type": "FILESYSTEM"},
+            {"id": "tank/vm", "pool": "tank", "type": "VOLUME"},
+        ],
+        "sharing.smb.query": [{"name": "media", "path": "/mnt/tank/media"}],
+        "sharing.nfs.query": [{"paths": ["/mnt/tank/backup"], "enabled": False}],
+    }
+    monkeypatch.setattr(truenas_api, "_rpc", lambda method, params=None: answers[method])
+    assert truenas_api.datasets(transport=gone) == [
+        {"id": "tank/media", "pool": "tank", "mountpoint": "/mnt/tank/media"}
+    ]
+    out = truenas_api.shares(transport=gone)
+    assert [s["protocol"] for s in out] == ["smb", "nfs"] and out[1]["path"] == "/mnt/tank/backup"
+
+
+def test_snapshot_over_json_rpc_falls_back_to_the_old_method_name(monkeypatch):
+    monkeypatch.setenv("TRUENAS_URL", "https://truenas.local")
+    monkeypatch.setenv("TRUENAS_API_KEY", "1-abc")
+    gone = httpx.MockTransport(lambda req: httpx.Response(404))
+    calls = []
+
+    def fake_rpc(method, params=None):
+        calls.append(method)
+        if method == "pool.snapshot.create":
+            raise truenas_api.TrueNASError("method not found")
+        return {"id": "tank@x"}
+
+    monkeypatch.setattr(truenas_api, "_rpc", fake_rpc)
+    out = truenas_api.create_snapshot("tank", "x", transport=gone)
+    assert out["success"] and calls == ["pool.snapshot.create", "zfs.snapshot.create"]

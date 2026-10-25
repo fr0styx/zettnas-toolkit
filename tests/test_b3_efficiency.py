@@ -87,3 +87,14 @@ def test_idle_spinning_disks_are_read_less_often_when_enabled(monkeypatch, tmp_p
     assert disks._hdd_interval("sdb", 2000.0) == disks.SMART_POLL_INTERVAL_HDD  # active again
     monkeypatch.setattr(config, "SMART_IDLE_ADAPTIVE", False)
     assert disks._hdd_interval("sdb", 9000.0) == disks.SMART_POLL_INTERVAL_HDD  # off by default
+
+
+def test_unreadable_diskstats_count_as_busy(monkeypatch, tmp_path):
+    """No /proc/diskstats (or a garbled one): the disk is treated as active, never as idle."""
+    from backend.hardware import disks
+
+    monkeypatch.setattr(disks, "HOST_PROC", str(tmp_path / "missing"))
+    assert disks._idle_for("sda", 1000.0) == 0.0
+    (tmp_path / "diskstats").write_text("   8       0 sda x y z a b c d e f g h\n")
+    monkeypatch.setattr(disks, "HOST_PROC", str(tmp_path))
+    assert disks._idle_for("sda", 1000.0) == 0.0

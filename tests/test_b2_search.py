@@ -147,3 +147,75 @@ def test_the_benchmark_measures_an_openai_compatible_server():
     res = model_benchmark.benchmark_openai("http://ovms:8000/v1", "Qwen3-4B", stream=fake_stream)
     assert res["ok"] and res["tokens_per_s"] == 12.0 and res["first_token_s"] == 0.5
     assert res["doc_first_token_s"] == 12.0 and res["runtime"] == "openai_compatible"
+
+
+def test_the_benchmark_finds_the_openai_compatible_endpoint(monkeypatch):
+    from backend.services import model_benchmark, rag_engine
+
+    eng = rag_engine.get_rag_engine()
+    monkeypatch.setattr(eng, "get_config", lambda: {"llm_endpoint": "http://zettnas-ovms:8000/v1/"})
+    assert model_benchmark._openai_endpoint() == "http://zettnas-ovms:8000/v1"
+    monkeypatch.setattr(eng, "get_config", lambda: {"llm_endpoint": "http://ollama:11434"})
+    assert model_benchmark._openai_endpoint() == ""
+
+
+def test_a_streamed_answer_is_timed(monkeypatch):
+    from backend.services import model_benchmark
+
+    lines = [
+        b'data: {"choices":[{"delta":{"role":"assistant"}}]}\n',
+        b'data: {"choices":[{"delta":{"content":"Hel"}}]}\n',
+        b"data: not json\n",
+        b'data: {"choices":[{"delta":{"content":"lo"}}]}\n',
+        b"data: [DONE]\n",
+    ]
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def __iter__(self):
+            return iter(lines)
+
+    sent = []
+    monkeypatch.setattr(
+        model_benchmark.urllib.request, "urlopen", lambda req, timeout=None: sent.append(req) or _Resp()
+    )
+    first, pieces, total = model_benchmark._stream_chat("http://ovms:8000/v1", "Qwen3-4B", "hi", 96)
+    assert pieces == 2 and 0 <= first <= total
+    body = json.loads(sent[0].data)
+    assert body["stream"] is True and body["chat_template_kwargs"] == {"enable_thinking": False}
+
+
+def test_a_benchmark_run_includes_the_model_server(monkeypatch, tmp_path):
+    from backend.services import model_benchmark
+
+    monkeypatch.setattr(model_benchmark, "RESULTS_FILE", str(tmp_path / "bench.json"))
+    monkeypatch.setattr(model_benchmark, "_openai_endpoint", lambda: "http://ovms:8000/v1")
+    monkeypatch.setattr(model_benchmark, "chat_models", lambda host, http: [])
+    monkeypatch.setattr(
+        model_benchmark,
+        "benchmark_openai",
+        lambda ep, name: {"name": name, "ok": True, "tokens_per_s": 12.0, "size_bytes": 0},
+    )
+
+    def http(url, body=None, timeout=30.0):
+        assert url == "http://ovms:8000/v1/models"
+        return {"data": [{"id": "Qwen3-4B"}]}
+
+    out = model_benchmark.run(host="http://ollama:11434", http=http)
+    assert [r["name"] for r in out["results"]] == ["Qwen3-4B"] and out["recommended"]["fast"] == "Qwen3-4B"
+    assert model_benchmark.status()["job"]["state"] == "done"
+
+
+def test_a_failing_model_server_is_reported_not_raised():
+    from backend.services import model_benchmark
+
+    def boom(*a, **k):
+        raise OSError("refused")
+
+    res = model_benchmark.benchmark_openai("http://ovms:8000/v1", "Qwen3-4B", stream=boom)
+    assert res["ok"] is False and "refused" in res["error"]
