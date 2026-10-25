@@ -2429,6 +2429,7 @@ export default {
   "proto.on": "运行中",
   "proto.off": "已停止",
   "proto.unknown": "未知",
+  "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
   "webdav.auth_accounts": "ZettNAS 账户",
   "toast.backup_run_failed": "备份运行失败：{error}",
   "toast.backup_task_removed": "备份任务已删除。",

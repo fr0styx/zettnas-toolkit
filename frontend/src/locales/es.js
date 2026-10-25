@@ -2429,6 +2429,7 @@ export default {
   "proto.on": "activo",
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
+  "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
   "webdav.auth_accounts": "Cuentas de ZettNAS",
   "toast.backup_run_failed": "Falló la ejecución de la copia: {error}",
   "toast.backup_task_removed": "Tarea de copia eliminada.",

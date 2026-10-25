@@ -41,6 +41,27 @@ def _core():
     return rag_engine
 
 
+FRESH_RESCAN_SSD_SECS = 3600  # SSD and NVMe pools: hourly
+FRESH_RESCAN_HDD_SECS = 12 * 3600  # spinning disks that happen to be awake: twice a day
+
+
+def _is_solid_state(dev: str | None) -> bool:
+    """True for NVMe/SSD devices (sysfs rotational = 0); unknown counts as spinning."""
+    if not dev:
+        return False
+    import backend.config as config
+
+    base = str(getattr(config, "HOST_SYS", "/sys") or "/sys")
+    name = os.path.basename(str(dev))
+    for candidate in (name, name.rstrip("0123456789") if not name.startswith("nvme") else name.split("p")[0]):
+        try:
+            with open(os.path.join(base, "block", candidate, "queue", "rotational"), encoding="ascii") as f:
+                return f.read().strip() == "0"
+        except OSError:
+            continue
+    return name.startswith("nvme")
+
+
 class RagLearningMixin:
     """Standby-safe learning, the deferred queue, sync control and re-embedding for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -563,6 +584,26 @@ class RagLearningMixin:
                 rescanned.add(dev)
         for dev in rescanned:
             self._last_spinup_rescan[dev] = now_ts
+
+        # 3. Freshness: watched folders on disks that are awake anyway are re-read on a schedule,
+        # so SSD pools and disks that never sleep don't keep a stale index (AI-3). Unchanged files
+        # are skipped by their size and time, so a pass mostly reads folder listings.
+        fresh = getattr(self, "_last_fresh_rescan", None)
+        if fresh is None:
+            fresh = self._last_fresh_rescan = {"_started": now_ts}
+        for wp in cfg.get("watched_paths") or []:
+            norm_wp = os.path.normpath(wp)
+            if norm_wp in ready_paths or any(
+                norm_wp == ex or norm_wp.startswith(ex.rstrip("/") + "/") for ex in excluded_set
+            ):
+                continue
+            dev = rag_standby.resolve_path_backing_dev(norm_wp)
+            if rag_standby.is_backing_disk_in_standby(dev or norm_wp):
+                continue
+            interval = FRESH_RESCAN_SSD_SECS if _is_solid_state(dev) else FRESH_RESCAN_HDD_SECS
+            if now_ts - fresh.get(norm_wp, fresh["_started"]) >= interval:
+                ready_paths.append(norm_wp)
+                fresh[norm_wp] = now_ts
 
         if not ready_paths:
             return {

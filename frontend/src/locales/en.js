@@ -2429,6 +2429,7 @@ export default {
   "proto.on": "on",
   "proto.off": "off",
   "proto.unknown": "unknown",
+  "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
   "webdav.auth_accounts": "ZettNAS accounts",
   "toast.backup_run_failed": "Backup run failed: {error}",
   "toast.backup_task_removed": "Backup task removed.",

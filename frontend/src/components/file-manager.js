@@ -1508,6 +1508,9 @@ export class FileManagerWindow {
         this.isSearching = true;
         this.renderViewport();
         showToast(t('fm.search_results', `Found ${items.length} item(s)`).replace('{count}', items.length), 'success');
+        if (aiRes?.degraded) {
+          showToast(t('ai.search_degraded', "The AI search model didn't answer, so these results match words only. Try again in a moment."), 'warning');
+        }
         return;
       }
       showToast(t('fm.searching', `Searching for "${q}"...`), 'info');

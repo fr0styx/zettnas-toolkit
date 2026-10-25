@@ -806,3 +806,6 @@ body.theme-yak .mgmt-back-btn:hover {
 .proto-pill { font-size: var(--zn-fs-xs); border: 1px solid var(--border, var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12))); color: var(--muted, #94a3b8); background: transparent; }
 .proto-pill[data-state="on"] { color: var(--ok2, #25c2a0); border-color: color-mix(in srgb, var(--ok2, #25c2a0) 40%, transparent); }
 .proto-pill[data-state="off"] { color: var(--muted, #94a3b8); }
+
+/* AI search ran on keywords only (AI-4) */
+.ai-search-degraded { margin: 0 0 10px; padding: 8px 12px; border-radius: 8px; font-size: var(--zn-fs-sm); color: var(--warn, #f5a623); border: 1px solid color-mix(in srgb, var(--warn, #f5a623) 40%, transparent); }

@@ -2429,6 +2429,7 @@ export default {
   "proto.on": "an",
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
+  "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
   "webdav.auth_accounts": "ZettNAS-Konten",
   "toast.backup_run_failed": "Sicherungslauf fehlgeschlagen: {error}",
   "toast.backup_task_removed": "Sicherungsaufgabe entfernt.",

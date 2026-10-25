@@ -2548,6 +2548,22 @@ export async function runAiVisualSearch(rawQuery = null) {
       }
     }
 
+    // The AI search model didn't answer: say these results match words only (AI-4)
+    let degradedNote = document.getElementById('ai-search-degraded');
+    if (res?.degraded) {
+      if (!degradedNote) {
+        degradedNote = document.createElement('div');
+        degradedNote.id = 'ai-search-degraded';
+        degradedNote.className = 'ai-search-degraded';
+        degradedNote.setAttribute('role', 'status');
+        grid.parentNode?.insertBefore(degradedNote, grid);
+      }
+      degradedNote.textContent = t('ai.search_degraded', "The AI search model didn't answer, so these results match words only. Try again in a moment.");
+      degradedNote.hidden = false;
+    } else if (degradedNote) {
+      degradedNote.hidden = true;
+    }
+
     const results = res?.results || res?.photo_results || res?.items || [];
     _aiLastResultsList = results;
     const immichStrip = document.getElementById('ai-immich-strip') || (() => {

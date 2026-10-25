@@ -61,6 +61,24 @@ def _core():
 PHOTO_RECENT_CANDIDATES = 3000  # newest photos scored besides every keyword hit (AI-2)
 
 
+def _readable_share_names(username: str) -> set[str] | None:
+    """Lower-case names of the shared folders `username` may read; None when no shares are known
+    here (then the per-file check alone decides, as before)."""
+    try:
+        from backend.services.share_access import grants_for, known_shares
+
+        if not username or not known_shares():
+            return None
+        names = set()
+        for root, level in grants_for(username):
+            if level in ("read", "write") and "/homes/" not in root.rstrip("/") + "/":
+                names.add(os.path.basename(root.rstrip("/")).lower())
+        return names
+    except Exception:
+        logger.debug("rag search: share grants unavailable", exc_info=True)
+        return None
+
+
 class RagSearchMixin:
     """Search, ask and thumbnails for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -79,12 +97,25 @@ class RagSearchMixin:
 
         username = str(getattr(principal, "username", "") or "").lower().strip()
         pfx = f"{table_alias}." if table_alias else ""
+        # Shared folders this person may read, filtered here rather than after the search, so a
+        # person with a few shares gets a full result list (AI-10). The per-file check afterwards
+        # stays as the final word.
+        share_names = _readable_share_names(username)
+        if share_names is None:
+            public_sql, public_params = f"{pfx}visibility_tier = 'public_share'", []
+        elif share_names:
+            public_sql = (
+                f"({pfx}visibility_tier = 'public_share' AND {pfx}share_name IN ({','.join('?' * len(share_names))}))"
+            )
+            public_params = sorted(share_names)
+        else:
+            public_sql, public_params = "0", []
         sql = (
-            f"({pfx}visibility_tier = 'public_share' "
+            f"({public_sql} "
             f"OR ({pfx}visibility_tier = 'user_home' AND {pfx}owner_username = ?) "
             f"OR ({pfx}visibility_tier = 'restricted_share' AND instr(',' || {pfx}allowed_users_csv || ',', ',' || ? || ',') > 0))"
         )
-        return (sql, [username, username])
+        return (sql, [*public_params, username, username])
 
     @staticmethod
     def _build_subtree_clause(path_prefix: str | None, table_alias: str = "f") -> tuple[str, list[Any]]:
