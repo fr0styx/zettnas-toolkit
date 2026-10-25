@@ -10,6 +10,8 @@ from backend.config import BUTTON_CFG_FILE, HOST_DEV, logger
 from backend.services.copy_engine import _do_copy
 from backend.state import Z_STATE, add_event
 
+BUTTON_POLL_SECS = 0.25  # PERF-5: was 0.1; the register has no interrupt, so it is read
+
 
 def button_listener_daemon():
     import platform
@@ -162,4 +164,4 @@ def button_listener_daemon():
                 time.sleep(0.3)
         except Exception as e:
             logger.debug(f"Silenced exception: {e}")
-        time.sleep(0.1)
+        time.sleep(BUTTON_POLL_SECS)

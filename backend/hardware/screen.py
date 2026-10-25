@@ -199,8 +199,21 @@ def _apply_bl_power(bl_dir: str, power_on: bool):
             logger.debug("backend.hardware.screen._apply_bl_power: ignored error", exc_info=True)
 
 
-def set_screen_brightness(pct):
+_LAST_BRIGHTNESS = {"pct": None, "at": 0.0}
+BRIGHTNESS_REAPPLY_SECS = 60.0
+
+
+def set_screen_brightness(pct, now=None, cached=False):
+    """Sets the LCD backlight. With cached=True (the 2-second collector loop) the same value is
+    written again at most once a minute (PERF-5): each write wakes the framebuffer driver.
+    Explicit changes always write."""
+    import time as _time
+
     pct = max(0, min(100, int(pct)))
+    now = _time.monotonic() if now is None else now
+    if cached and _LAST_BRIGHTNESS["pct"] == pct and now - _LAST_BRIGHTNESS["at"] < BRIGHTNESS_REAPPLY_SECS:
+        return True
+    _LAST_BRIGHTNESS.update(pct=pct, at=now)
     set_fb_blank(pct > 0)
     backlight_dir = discover_backlight_dir()
     if not backlight_dir:

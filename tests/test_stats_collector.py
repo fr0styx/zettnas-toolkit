@@ -289,7 +289,7 @@ class TestLoop:
         monkeypatch.setattr(sc, "read_cpu_temp", lambda: None)
         monkeypatch.setattr(sc, "read_fans", lambda: [])
         monkeypatch.setattr(sc, "get_effective_brightness", lambda: 50)
-        monkeypatch.setattr(sc, "set_screen_brightness", lambda v: None)
+        monkeypatch.setattr(sc, "set_screen_brightness", lambda v, **kw: None)
         monkeypatch.setattr(sc, "_publish", lambda data, *a: published.append(data))
         monkeypatch.setattr(Z_STATE, "lcd_cycle_seconds", 1)
         monkeypatch.setattr(Z_STATE, "last_lcd_cycle_time", 0)

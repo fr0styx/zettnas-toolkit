@@ -928,7 +928,7 @@ def stats_collector_daemon():
 
             # Screen Backlight Management
             target_bl = get_effective_brightness()
-            set_screen_brightness(target_bl)
+            set_screen_brightness(target_bl, cached=True)  # written when it changes (PERF-5)
 
             _r = _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now)
             is_crit = _r["is_crit"]
@@ -1094,6 +1094,10 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
     return triggered_alerts
 
 
+SMART_POLL_TICK_SECS = 10.0
+SMART_VELOCITY_EVERY_SECS = 300.0
+
+
 def smart_poller_daemon():
     """
     Dedicated worker thread: decouples slow smartctl disk inspection and
@@ -1107,17 +1111,19 @@ def smart_poller_daemon():
     except Exception as e:
         logger.debug(f"[SMART/UPS Poller] Initial scan error: {e}")
 
+    last_velocity = time.monotonic()
     while not Z_STATE.shutting_down:
         try:
-            for _ in range(8):
-                if Z_STATE.shutting_down:
-                    break
-                time.sleep(0.5)
+            # one 10 s sleep, not twenty 0.5 s slices (PERF-5); per-disk SMART intervals and the
+            # UPS cache decide what is actually read
+            time.sleep(SMART_POLL_TICK_SECS)
             if Z_STATE.shutting_down:
                 break
             poll_all_disks_smart()
             read_ups_status()
-            evaluate_smart_velocity_alerts()
+            if time.monotonic() - last_velocity >= SMART_VELOCITY_EVERY_SECS:
+                evaluate_smart_velocity_alerts()  # SMART history changes slowly
+                last_velocity = time.monotonic()
             try:
                 from backend.hardware.disks import check_active_smart_tests
 

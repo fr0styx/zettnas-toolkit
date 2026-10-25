@@ -45,6 +45,10 @@ FRESH_RESCAN_SSD_SECS = 3600  # SSD and NVMe pools: hourly
 FRESH_RESCAN_HDD_SECS = 12 * 3600  # spinning disks that happen to be awake: twice a day
 
 
+# How often the watcher looks for disks that woke up and for deferred work (PERF-5)
+SPINUP_WATCH_SECS = 30.0
+
+
 def _is_solid_state(dev: str | None) -> bool:
     """True for NVMe/SSD devices (sysfs rotational = 0); unknown counts as spinning."""
     if not dev:
@@ -348,7 +352,7 @@ class RagLearningMixin:
 
             while True:
                 try:
-                    time.sleep(5.0)
+                    time.sleep(SPINUP_WATCH_SECS)  # PERF-5: was 5 s
                     if os.path.exists(_core().RAG_CONFIG_PATH):
                         self.sync_watched_deferred_queue()
                     self.check_and_trigger_spinup_auto_learn(background=True)
