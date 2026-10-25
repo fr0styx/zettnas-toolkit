@@ -1,0 +1,27 @@
+name: Hardware budgets
+
+# Runs on the self-hosted runner next to a real ZettNAS server (docs/HARDWARE_RUNNER.md).
+# Only on a schedule or by hand from main: never for pull requests, so code from a fork can
+# never reach that machine. The log says PASS/FAIL only; the numbers stay on the machine.
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hardware-budgets
+  cancel-in-progress: false
+
+jobs:
+  budgets:
+    if: github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, zettnas-hardware]
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Budgets (5-minute soak)
+        run: python3 scripts/hardware_budgets.py --seconds 300
