@@ -48,6 +48,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Backups
 
+- "Hyper-Backup" is now simply **Backups** (backup jobs, VM backups, notifications). A naming
+  glossary (docs/GLOSSARY.md) keeps one name per job.
 - **Hyper-Backup copies to the cloud instead of mirroring.** A file deleted at home (or
   encrypted away by ransomware) is no longer deleted from the backup. For versions of changed
   files, use **Offsite backup**, which keeps daily, weekly and monthly versions.

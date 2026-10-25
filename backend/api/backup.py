@@ -32,7 +32,7 @@ router = APIRouter(tags=["Backup"])
 
 
 # -------------------------------------------------------------------------
-# Pydantic Schemas for Hyper-Backup & Snapshots
+# Pydantic Schemas for backup & Snapshots
 # -------------------------------------------------------------------------
 
 
@@ -193,13 +193,13 @@ async def restore_backup(request: Request):
 
 
 # -------------------------------------------------------------------------
-# Hyper-Backup Jobs & 3-2-1 Pipelines
+# backup Jobs & 3-2-1 Pipelines
 # -------------------------------------------------------------------------
 
 
 @router.get("/backup/schedule", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])
 def list_backup_jobs():
-    """Lists all scheduled hyper-backup jobs."""
+    """Lists all scheduled backup jobs."""
     # Passphrases never leave the server
     jobs = [
         {**j, "encryption_password": None, "has_passphrase": bool(j.get("encryption_password"))}
@@ -212,7 +212,7 @@ def list_backup_jobs():
     "/backup/schedule", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))]
 )
 def create_or_update_backup_job(job: BackupJobModel):
-    """Creates or updates a scheduled hyper-backup job."""
+    """Creates or updates a scheduled backup job."""
     try:
         saved = save_backup_job(job.model_dump() if hasattr(job, "model_dump") else job.dict())
     except ValueError as e:
@@ -227,7 +227,7 @@ def create_or_update_backup_job(job: BackupJobModel):
     "/backup/schedule/{job_id}", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))]
 )
 def remove_backup_job(job_id: str):
-    """Deletes a scheduled hyper-backup job."""
+    """Deletes a scheduled backup job."""
     success = delete_backup_job(job_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
@@ -239,7 +239,7 @@ def remove_backup_job(job_id: str):
     dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))],
 )
 def trigger_backup_job(job_id: str):
-    """Starts a hyper-backup job in the background. The run reports its result through the job's
+    """Starts a backup job in the background. The run reports its result through the job's
     status, the history and a notification: an upload can take hours (ARC-1)."""
     import threading
 

@@ -1,7 +1,7 @@
 """
 ZettNAS Toolkit - Backup Engine Service
 Handles generation and safe restoration of configuration archives,
-plus Hyper-Backup 3-2-1 automated pipelines (snapshots + Rclone offsite sync)
+plus backup 3-2-1 automated pipelines (snapshots + Rclone offsite sync)
 and background scheduling.
 """
 
@@ -383,12 +383,12 @@ def restore_backup_archive(
 
 
 # =========================================================================
-# Hyper-Backup Orchestrator: Jobs, Snapshots & 3-2-1 Cloud Sync
+# backup Orchestrator: Jobs, Snapshots & 3-2-1 Cloud Sync
 # =========================================================================
 
 
 def get_backup_jobs() -> list[dict[str, Any]]:
-    """Retrieves all scheduled hyper-backup jobs."""
+    """Retrieves all scheduled backup jobs."""
     raw = read_json(BACKUP_JOBS_FILE, default=[])
     if isinstance(raw, list):
         return raw
@@ -483,7 +483,7 @@ def _wait_for_sync(rclone: Any, sync_id: str) -> dict[str, Any]:
 
 @json_locked(lambda *a, **k: BACKUP_JOBS_FILE)
 def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
-    """Creates or updates a scheduled hyper-backup job."""
+    """Creates or updates a scheduled backup job."""
     kind = "config" if job_data.get("kind") == "config" else "data"
     if kind == "data":
         job_data = {**job_data, "source_subvolume": checked_subvolume(job_data.get("source_subvolume", ""))}
@@ -540,7 +540,7 @@ def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
 
 @json_locked(lambda *a, **k: BACKUP_JOBS_FILE)
 def delete_backup_job(job_id: str) -> bool:
-    """Deletes a scheduled hyper-backup job."""
+    """Deletes a scheduled backup job."""
     jobs = get_backup_jobs()
     filtered = [j for j in jobs if j.get("id") != job_id]
     if len(filtered) != len(jobs):
@@ -642,7 +642,7 @@ def _export_settings(job: dict[str, Any], retention: int) -> str:
 
 
 def execute_backup_job(job_id: str) -> dict[str, Any]:
-    """Executes a hyper-backup pipeline: atomic snapshot + Rclone offsite sync + retention pruning.
+    """Executes a backup pipeline: atomic snapshot + Rclone offsite sync + retention pruning.
 
     One run per job at a time: a second start while it runs is refused (ARC-1)."""
     jobs = get_backup_jobs()
@@ -815,7 +815,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                 send_notification(
                     {
                         "type": "backup",
-                        "title": f"Hyper-Backup Succeeded: {job.get('name', job_id)}",
+                        "title": f"Backup succeeded: {job.get('name', job_id)}",
                         "message": f"Backup job '{job.get('name', job_id)}' completed successfully{dest_desc}."
                         + (f" Snapshot: {snap_name}" if snap_name else ""),
                         "level": "info",
@@ -846,7 +846,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                 send_notification(
                     {
                         "type": "backup",
-                        "title": f"Hyper-Backup Failed: {job.get('name', job_id)}",
+                        "title": f"Backup failed: {job.get('name', job_id)}",
                         "message": f"Backup job '{job.get('name', job_id)}' failed: {str(e)}",
                         "level": "error",
                         "meta": {"job_id": job_id, "error": str(e), "pool": pool_id},
@@ -918,7 +918,7 @@ def backup_scheduler_daemon() -> None:
 
 
 def start_backup_scheduler() -> None:
-    """Starts the background hyper-backup scheduler daemon if not already running."""
+    """Starts the background backup scheduler daemon if not already running."""
     global _SCHEDULER_RUNNING, _SCHEDULER_THREAD
     if _SCHEDULER_RUNNING:
         return
@@ -928,6 +928,6 @@ def start_backup_scheduler() -> None:
 
 
 def stop_backup_scheduler() -> None:
-    """Stops the background hyper-backup scheduler daemon."""
+    """Stops the background backup scheduler daemon."""
     global _SCHEDULER_RUNNING
     _SCHEDULER_RUNNING = False

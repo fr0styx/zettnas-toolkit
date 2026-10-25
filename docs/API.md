@@ -137,7 +137,7 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 
 ---
 
-### 7. Notifications, Hyper-Backup & Diagnostics
+### 7. Notifications, Backups & Diagnostics
 
 | Endpoint | Method | Auth / Scope | Description |
 | :--- | :---: | :---: | :--- |

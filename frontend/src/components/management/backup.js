@@ -12,7 +12,7 @@ import { openSnapshotBrowser, renderSnapshotSchedules } from '../snapshot-browse
 import { renderOffsite } from '../offsite-backup.js';
 
 // =========================================================================
-// Hyper-Backup Tasks & 3-2-1 Pipelines
+// Backup jobs (3-2-1)
 // =========================================================================
 
 export async function fetchAndRenderBackupJobs(mountEl) {

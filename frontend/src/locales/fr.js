@@ -417,7 +417,7 @@ export default {
   "ui.add_sync": "+ Ajouter et synchroniser",
   "ui.add_lissy93_790_apps": "+ Ajouter Lissy93 (790+ applis)",
   "ui.add_to_desktop": "+ Ajouter au bureau",
-  "ui.create_hyper_backup": "+ Créer un Hyper-Backup",
+  "ui.create_hyper_backup": "+ Sauvegarder maintenant",
   "ui.0_users": "0 utilisateur",
   "ui.0_peers": "0 pair",
   "ui.100_of_rag_photo_queries": "100 % des requêtes RAG et photos lisent SQLite sur NVMe sans réveiller les disques en veille",

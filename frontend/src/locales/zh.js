@@ -407,7 +407,7 @@ export default {
   "ui.add_sync": "+ 添加并同步",
   "ui.add_lissy93_790_apps": "+ 添加 Lissy93（790+ 应用）",
   "ui.add_to_desktop": "+ 添加到桌面",
-  "ui.create_hyper_backup": "+ 创建 Hyper-Backup",
+  "ui.create_hyper_backup": "+ 立即备份",
   "ui.0_users": "0 个用户",
   "ui.0_peers": "0 个节点",
   "ui.100_of_rag_photo_queries": "100% 的 RAG 和照片查询从 NVMe SQLite 读取，不会唤醒休眠硬盘",

@@ -6008,7 +6008,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         </button>
         <button type="button" id="tab-btn-backups" class="btn-pill-toggle">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span>Hyper-Backups (.tar.gz)</span>
+          <span>Backups (.tar.gz)</span>
         </button>
       </div>
 
@@ -6044,21 +6044,21 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
           </div>
         </div>
 
-        <!-- HYPER-BACKUPS PANE -->
+        <!-- BACKUPS PANE -->
         <div id="vm-pane-backups" style="display: none; flex-direction: column; gap: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Complete VM Hyper-Backups</div>
+              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Full VM backups</div>
               <div style="font-size: 11px; color: var(--muted);">Self-contained archives (.tar.gz) containing complete hardware specs and virtual disk images.</div>
             </div>
             <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: var(--lt-t-34d399ff, #34d399);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              <span>+ Create Hyper-Backup</span>
+              <span>+ Back up now</span>
             </button>
           </div>
 
           <div id="vm-backups-container" style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; overflow: hidden; min-height: 120px;">
-            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: 12px;">Loading hyper-backups...</div>
+            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: 12px;">Loading backups…</div>
           </div>
         </div>
       </div>
@@ -6249,7 +6249,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
     }
   }
 
-  // Hyper-Backups loader
+  // VM backups loader
   async function loadBackupsList() {
     const container = modal.querySelector('#vm-backups-container');
     if (!container) return;
@@ -6260,7 +6260,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         container.innerHTML = `
           <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <span style="font-size: 24px; opacity: 0.6;">💾</span>
-            <span>No hyper-backups created yet. Click "+ Create Hyper-Backup" above to generate a standalone archive.</span>
+            <span>No backups of this VM yet. "Back up now" saves its settings and disks in one archive.</span>
           </div>
         `;
         return;
@@ -6307,7 +6307,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         b.onclick = () => {
           const bId = b.dataset.id;
           showConfirmToast(
-            `Restore VM '${targetVm.name}' from hyper-backup archive '${bId}'? Existing virtual disks and settings will be restored.`,
+            `Restore VM '${targetVm.name}' from backup '${bId}'? Existing virtual disks and settings will be restored.`,
             async () => {
               try {
                 await api.post(`/api/vms/backups/${encodeURIComponent(bId)}/restore`);
@@ -6326,7 +6326,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         b.onclick = () => {
           const bId = b.dataset.id;
           showConfirmToast(
-            `Delete hyper-backup archive '${bId}'? This action cannot be undone.`,
+            `Delete backup '${bId}'? This can't be undone.`,
             async () => {
               try {
                 await api.delete(`/api/vms/backups/${encodeURIComponent(bId)}`, { confirmed: true });
@@ -6340,11 +6340,11 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         };
       });
     } catch (err) {
-      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: 11px;">Failed to load hyper-backups: ${escapeHtml(err.message || err.detail)}</div>`;
+      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: 11px;">Could not load backups: ${escapeHtml(err.message || err.detail)}</div>`;
     }
   }
 
-  // Create hyper-backup
+  // Back up a VM now
   const btnCreateBackup = modal.querySelector('#btn-create-hyper-backup');
   if (btnCreateBackup) {
     btnCreateBackup.onclick = async () => {
@@ -6352,13 +6352,13 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       btnCreateBackup.textContent = t('ui.archiving', 'Archiving...');
       try {
         await api.post(`/api/vms/${vmId}/backup`, { reason: 'on-demand' });
-        showToast(t('toast.hyper_backup_created_for_vm', 'Hyper-backup created for VM \'{name}\'.', { name: targetVm.name }), 'success');
+        showToast(t('toast.hyper_backup_created_for_vm', 'Backup of VM \'{name}\' saved.', { name: targetVm.name }), 'success');
         loadBackupsList();
       } catch (err) {
-        showToast(t('toast.failed_creating_hyper_backup', 'Failed creating hyper-backup: {error}', { error: err.message || err.detail }), 'error');
+        showToast(t('toast.failed_creating_hyper_backup', 'Backup failed: {error}', { error: err.message || err.detail }), 'error');
       } finally {
         btnCreateBackup.disabled = false;
-        btnCreateBackup.textContent = t('ui.create_hyper_backup', '+ Create Hyper-Backup');
+        btnCreateBackup.textContent = t('ui.create_hyper_backup', '+ Back up now');
       }
     };
   }

@@ -728,7 +728,7 @@ def get_host_iommu_groups():
     dependencies=[Depends(require_scope("system:view", "storage:read"))],
 )
 async def list_all_virtual_machine_backups():
-    """Lists all saved VM hyper-backup archives across all virtual machines."""
+    """Lists all saved VM backup archives across all virtual machines."""
     from backend.services.app_backup import list_vm_backups
 
     try:
@@ -744,7 +744,7 @@ async def list_all_virtual_machine_backups():
     dependencies=[Depends(require_scope("vms:manage", "system:config"))],
 )
 async def restore_virtual_machine_backup(backup_id: str):
-    """Restores VM configuration and disk images from hyper-backup archive."""
+    """Restores VM configuration and disk images from backup archive."""
     from backend.services.app_backup import restore_vm_backup
 
     try:
@@ -767,7 +767,7 @@ async def restore_virtual_machine_backup(backup_id: str):
     ],
 )
 async def delete_virtual_machine_backup(backup_id: str):
-    """Deletes a VM hyper-backup archive from disk and updates registry."""
+    """Deletes a VM backup archive from disk and updates registry."""
     from backend.services.app_backup import delete_vm_backup
 
     try:
@@ -1699,7 +1699,7 @@ class VmBackupRequest(BaseModel):
     dependencies=[Depends(require_scope("vms:manage", "system:config"))],
 )
 async def backup_virtual_machine(vm_id: str, req: VmBackupRequest | None = None):
-    """Takes a full hyper-backup of VM configuration and virtual disks."""
+    """Takes a full backup of VM configuration and virtual disks."""
     from backend.services.app_backup import create_vm_backup
 
     reason = req.reason if req else "on-demand"
@@ -1719,7 +1719,7 @@ async def backup_virtual_machine(vm_id: str, req: VmBackupRequest | None = None)
     dependencies=[Depends(require_scope("system:view", "storage:read"))],
 )
 async def list_virtual_machine_backups(vm_id: str):
-    """Lists saved hyper-backup archives for target VM."""
+    """Lists saved backup archives for target VM."""
     from backend.services.app_backup import list_vm_backups
 
     try:

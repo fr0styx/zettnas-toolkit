@@ -1911,7 +1911,7 @@ export function initManagement() {
     });
   }
 
-  // Hyper-Backup & Snapshots event bindings
+  // Backup jobs & snapshots event bindings
   const btnOpenBackupJob = document.getElementById('btn-open-create-backup-job');
   const modalBackupJob = document.getElementById('modal-create-backup-job');
   const btnCloseBackupJob = document.getElementById('modal-backup-job-close-btn');
@@ -1970,7 +1970,7 @@ export function initManagement() {
 
       try {
         await api.post('/api/backup/schedule', payload);
-        showToast(t('toast.hyper_backup_pipeline_saved_successfully', 'Hyper-backup pipeline saved successfully!'), 'success');
+        showToast(t('toast.hyper_backup_pipeline_saved_successfully', 'Backup job saved.'), 'success');
         closeBackupModal();
         formBackupJob.reset();
         fetchAndRenderBackupJobs();
