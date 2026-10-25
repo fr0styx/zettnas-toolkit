@@ -406,3 +406,20 @@ def test_a_half_finished_rotation_still_reads_old_secrets(tmp_path, monkeypatch)
     (tmp_path / "secret.key.previous").write_text(old)
     monkeypatch.setattr(config, "SECRET_KEY", "a-new-key-not-yet-used")
     assert secret_box.unseal(sealed) == "hello"
+
+
+def test_an_unused_session_ends_before_it_expires():
+    from backend.users_db import _SESSION_CACHE, create_user_session, users_db_session, validate_user_session
+
+    user = create_user(_name("idle"), "Idle", "GoodPass123!", role_id="share_user")
+    tok = create_user_session(user["id"], user["username"])
+    assert validate_user_session(tok)
+    _SESSION_CACHE.clear()
+    with users_db_session(None) as conn:
+        conn.execute("UPDATE sessions SET last_active_at = last_active_at - 4 * 86400 WHERE user_id = ?", (user["id"],))
+    assert validate_user_session(tok) is None
+    remembered = create_user_session(user["id"], user["username"], is_remembered=True)
+    _SESSION_CACHE.clear()
+    with users_db_session(None) as conn:
+        conn.execute("UPDATE sessions SET last_active_at = last_active_at - 4 * 86400 WHERE user_id = ?", (user["id"],))
+    assert validate_user_session(remembered)

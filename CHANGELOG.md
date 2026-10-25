@@ -26,6 +26,11 @@
 - Folder downloads through share links stream as they're built; at most two run at once.
 - Guessing one account's password from many addresses slows every address; IPv6 addresses
   count per /64. The VM console takes only single-use tickets in its address.
+- A sign-in without "remember me" lasts a week instead of 30 days, and any session ends after
+  three days unused (two weeks with "remember me").
+- A superadmin can replace the install's secret key (`POST /api/security/rotate-secret-key`)
+  if someone may have copied the data folder; two-factor secrets and backup passphrases are
+  re-encrypted.
 
 ## v1.10.2 (2026-10-25)
 ### 🔒 Security fixes from the October audit; OpenVINO chat

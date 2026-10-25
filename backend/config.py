@@ -156,7 +156,9 @@ def initial_password_hash(password: str) -> str:
 STORED_PASSWORD_HASH = initial_password_hash(WEB_PASSWORD)
 ZETTNAS_USERNAME = "admin"
 ZETTNAS_EMAIL = ""
-SESSION_TTL = 30 * 86400  # 30 days
+SESSION_TTL = 7 * 86400  # a sign-in without "remember me" lasts a week (SEC-12)
+SESSION_IDLE_SECS = 3 * 86400  # ... and ends after three days unused
+REMEMBERED_SESSION_IDLE_SECS = 14 * 86400  # "remember me": 30 days, ends after two weeks unused
 MIN_PASSWORD_LENGTH = 8
 
 # Reverse Proxy SSO (Sprint 3)

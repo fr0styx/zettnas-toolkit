@@ -853,6 +853,12 @@ def _update_session_activity_sync(token_hash: str, now: float, db_path: str | No
         logger.debug(f"Failed to update session last_active_at: {e}")
 
 
+def _idle_too_long(last_active: float, remembered: bool, now: float) -> bool:
+    """A session nobody used for days ends, even before it expires (SEC-12)."""
+    idle = config.REMEMBERED_SESSION_IDLE_SECS if remembered else config.SESSION_IDLE_SECS
+    return bool(last_active) and now - float(last_active) > idle
+
+
 def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[str, Any] | None:
     if not raw_token:
         return None
@@ -863,7 +869,9 @@ def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[st
     with _SESSION_CACHE_LOCK:
         if token_hash in _SESSION_CACHE:
             s = _SESSION_CACHE[token_hash]
-            if s["expires_at"] > now:
+            if s["expires_at"] > now and not _idle_too_long(
+                s.get("last_active_at", 0), s.get("is_remembered", False), now
+            ):
                 if now - s.get("last_active_at", 0) > 60:
                     s["last_active_at"] = now
                     threading.Thread(
@@ -892,7 +900,11 @@ def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[st
         if not row:
             return None
 
-        if row["status"] != "active" or row["expires_at"] <= now:
+        if (
+            row["status"] != "active"
+            or row["expires_at"] <= now
+            or _idle_too_long(row["last_active_at"], bool(row["is_remembered"]), now)
+        ):
             conn.execute("DELETE FROM sessions WHERE session_id_hash = ?", (token_hash,))
             return None
 
@@ -911,6 +923,7 @@ def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[st
             "ip_address": row["ip_address"],
             "user_agent": row["user_agent"],
             "must_change_password": bool(row["must_change_password"]),
+            "is_remembered": bool(row["is_remembered"]),
         }
 
         with _SESSION_CACHE_LOCK:
