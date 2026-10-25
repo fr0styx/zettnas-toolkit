@@ -69,3 +69,21 @@ def test_nothing_is_serialised_while_nobody_listens(monkeypatch):
     monkeypatch.setattr(bmod, "fast_dumps", lambda d: called.append(d) or "{}")
     b.broadcast({"cpu": 1}, full_data={"cpu": 1})
     assert called == [] and b._latest_full_data == {"cpu": 1}
+
+
+def test_idle_spinning_disks_are_read_less_often_when_enabled(monkeypatch, tmp_path):
+    from backend import config
+    from backend.hardware import disks
+
+    stats = tmp_path / "diskstats"
+    stats.write_text("   8      16 sdb 100 0 0 0 50 0 0 0 0 0 0 0 0 0\n")
+    monkeypatch.setattr(disks, "HOST_PROC", str(tmp_path))
+    disks._IO_SEEN.clear()
+    monkeypatch.setattr(config, "SMART_IDLE_ADAPTIVE", True)
+    monkeypatch.setattr(config, "SMART_IDLE_POLL", 1800)
+    assert disks._hdd_interval("sdb", 1000.0) == disks.SMART_POLL_INTERVAL_HDD  # first sight: busy
+    assert disks._hdd_interval("sdb", 1000.0 + 700) == 1800  # no I/O for 700 s
+    stats.write_text("   8      16 sdb 101 0 0 0 50 0 0 0 0 0 0 0 0 0\n")
+    assert disks._hdd_interval("sdb", 2000.0) == disks.SMART_POLL_INTERVAL_HDD  # active again
+    monkeypatch.setattr(config, "SMART_IDLE_ADAPTIVE", False)
+    assert disks._hdd_interval("sdb", 9000.0) == disks.SMART_POLL_INTERVAL_HDD  # off by default

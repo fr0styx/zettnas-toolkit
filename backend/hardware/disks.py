@@ -732,6 +732,37 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
         _handle_smart_failure(dev_name, now)
 
 
+IDLE_AFTER_SECS = 600
+_IO_SEEN: dict[str, tuple[int, float]] = {}  # dev -> (I/O count, when it last changed)
+
+
+def _idle_for(dev_name: str, now: float) -> float:
+    """Seconds since the disk last did any I/O, from /proc/diskstats (0 when unknown)."""
+    try:
+        with open(os.path.join(HOST_PROC, "diskstats")) as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 14 and parts[2] == dev_name:
+                    count = int(parts[3]) + int(parts[7])
+                    prev = _IO_SEEN.get(dev_name)
+                    if prev is None or prev[0] != count:
+                        _IO_SEEN[dev_name] = (count, now)
+                        return 0.0
+                    return now - prev[1]
+    except (OSError, ValueError):
+        logger.debug("disks: diskstats unreadable", exc_info=True)
+    return 0.0
+
+
+def _hdd_interval(dev_name: str, now: float) -> float:
+    """The SMART interval for a spinning disk: longer once it has been idle (PERF-2, opt-in)."""
+    from backend import config as _cfg
+
+    if getattr(_cfg, "SMART_IDLE_ADAPTIVE", False) and _idle_for(dev_name, now) >= IDLE_AFTER_SECS:
+        return float(getattr(_cfg, "SMART_IDLE_POLL", 1800))
+    return float(SMART_POLL_INTERVAL_HDD)
+
+
 def poll_all_disks_smart(force: bool = False):
     """Background worker method: polls SMART concurrently for all disks whose poll interval has elapsed."""
     now = time.time()
@@ -743,7 +774,7 @@ def poll_all_disks_smart(force: bool = False):
         if role == "os" and not show_os:
             continue
         is_nvme = dev_name.startswith("nvme")
-        poll_interval = SMART_POLL_INTERVAL_NVME if is_nvme else SMART_POLL_INTERVAL_HDD
+        poll_interval = SMART_POLL_INTERVAL_NVME if is_nvme else _hdd_interval(dev_name, now)
         last_scan = Z_STATE.last_smart_scan.get(dev_name, 0.0)
         if force or (now - last_scan) >= poll_interval or dev_name not in Z_STATE.cached_smart_data:
             targets.append((dev_name, is_nvme))

@@ -7,10 +7,15 @@ your user menu → API Keys). ZettNAS then lists pools, datasets and SMB/NFS sha
 through the API, and can take ZFS snapshots, which the ransomware guard uses. It
 never changes pools or shares. TRUENAS_VERIFY_TLS=0 accepts the self-signed
 certificate TrueNAS ships with.
+
+TrueNAS 25.04 added a JSON-RPC 2.0 API over a WebSocket (/api/current) and TrueNAS 26 removed
+the REST API; when REST answers 404, 405 or 410 the same calls go over JSON-RPC.
 """
 
+import json
 import os
 import re
+import ssl
 from typing import Any
 
 import httpx
@@ -39,13 +44,67 @@ def _client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
     )
 
 
+REST_GONE = (404, 405, 410)  # TrueNAS 26 has no /api/v2.0
+
+
+class _RestGone(Exception):
+    pass
+
+
 def _get(path: str, transport=None) -> Any:
     with _client(transport) as c:
         r = c.get(path)
     if r.status_code == 401:
         raise TrueNASError("TrueNAS refused the API key")
+    if r.status_code in REST_GONE:
+        raise _RestGone(path)
     r.raise_for_status()
     return r.json()
+
+
+def _open_ws(url: str):
+    """Opens TrueNAS's WebSocket API (tests replace this)."""
+    from websockets.sync.client import connect as ws_connect
+
+    ctx = None
+    if url.startswith("wss://"):
+        ctx = ssl.create_default_context()
+        if os.environ.get("TRUENAS_VERIFY_TLS", "1") == "0":
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+    return ws_connect(url, ssl=ctx, open_timeout=15, close_timeout=5)
+
+
+def _rpc(method: str, params: list | None = None) -> Any:
+    """One JSON-RPC 2.0 call over TrueNAS's WebSocket API, signed in with the API key."""
+    base = os.environ.get("TRUENAS_URL", "").rstrip("/")
+    if not base.startswith(("http://", "https://")):
+        raise TrueNASError("TRUENAS_URL must start with http:// or https://")
+    url = "wss://" + base[len("https://") :] if base.startswith("https://") else "ws://" + base[len("http://") :]
+    with _open_ws(f"{url}/api/current") as ws:
+        calls = [
+            ("auth.login_with_api_key", [os.environ.get("TRUENAS_API_KEY", "")]),
+            (method, params or []),
+        ]
+        result = None
+        for i, (name, args) in enumerate(calls, start=1):
+            ws.send(json.dumps({"jsonrpc": "2.0", "id": i, "method": name, "params": args}))
+            reply = json.loads(ws.recv(timeout=30))
+            if reply.get("error"):
+                raise TrueNASError(f"TrueNAS {name} failed: {reply['error'].get('message') or reply['error']}")
+            if name == "auth.login_with_api_key" and reply.get("result") is not True:
+                raise TrueNASError("TrueNAS refused the API key")
+            result = reply.get("result")
+        return result
+
+
+def _query(path: str, method: str, params: list | None = None, transport=None) -> Any:
+    """REST where it exists, JSON-RPC where it doesn't (TrueNAS 26)."""
+    try:
+        return _get(path, transport)
+    except _RestGone:
+        logger.debug(f"[TrueNAS] {path} not available over REST; using JSON-RPC {method}")
+        return _rpc(method, params)
 
 
 def pools(transport=None) -> list[dict[str, Any]]:
@@ -58,13 +117,13 @@ def pools(transport=None) -> list[dict[str, Any]]:
             "allocated": p.get("allocated"),
             "free": p.get("free"),
         }
-        for p in _get("/pool", transport)
+        for p in _query("/pool", "pool.query", transport=transport)
     ]
 
 
 def datasets(transport=None) -> list[dict[str, Any]]:
     out = []
-    for d in _get("/pool/dataset?limit=500", transport):
+    for d in _query("/pool/dataset?limit=500", "pool.dataset.query", [[], {"limit": 500}], transport=transport):
         if d.get("type") != "FILESYSTEM":
             continue
         out.append({"id": d.get("id"), "pool": d.get("pool"), "mountpoint": d.get("mountpoint")})
@@ -74,7 +133,7 @@ def datasets(transport=None) -> list[dict[str, Any]]:
 def shares(transport=None) -> list[dict[str, Any]]:
     out = [
         {"protocol": "smb", "name": s.get("name"), "path": s.get("path"), "enabled": s.get("enabled", True)}
-        for s in _get("/sharing/smb", transport)
+        for s in _query("/sharing/smb", "sharing.smb.query", transport=transport)
     ]
     out += [
         {
@@ -83,7 +142,7 @@ def shares(transport=None) -> list[dict[str, Any]]:
             "path": s.get("path") or (s.get("paths") or [""])[0],
             "enabled": s.get("enabled", True),
         }
-        for s in _get("/sharing/nfs", transport)
+        for s in _query("/sharing/nfs", "sharing.nfs.query", transport=transport)
     ]
     return out
 
@@ -93,7 +152,14 @@ def create_snapshot(dataset: str, name: str, recursive: bool = True, transport=N
         raise TrueNASError("Invalid snapshot name")
     with _client(transport) as c:
         r = c.post("/zfs/snapshot", json={"dataset": dataset, "name": name, "recursive": recursive})
-    if r.status_code not in (200, 201):
+    if r.status_code in REST_GONE:
+        # TrueNAS 26: JSON-RPC; the method moved from zfs.snapshot to pool.snapshot in 25.04
+        args = [{"dataset": dataset, "name": name, "recursive": recursive}]
+        try:
+            _rpc("pool.snapshot.create", args)
+        except TrueNASError:
+            _rpc("zfs.snapshot.create", args)
+    elif r.status_code not in (200, 201):
         raise TrueNASError(f"Snapshot failed ({r.status_code}): {r.text[:200]}")
     logger.info(f"[TrueNAS] Snapshot {dataset}@{name} created")
     return {"success": True, "snapshot": f"{dataset}@{name}"}

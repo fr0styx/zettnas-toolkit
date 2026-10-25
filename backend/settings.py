@@ -136,6 +136,15 @@ class Settings:
     smart_poll_nvme: int = _s(
         "SMART_POLL_NVME", 15, "Seconds between SMART reads of NVMe disks.", lo=5, hi=86400, group="Disks"
     )
+    smart_idle_adaptive: bool = _s(
+        "SMART_IDLE_ADAPTIVE",
+        False,
+        "Read SMART less often from spinning disks with no recent activity, so they can spin down.",
+        group="Disks",
+    )
+    smart_idle_poll: int = _s(
+        "SMART_IDLE_POLL", 1800, "Seconds between SMART reads of an idle spinning disk.", lo=60, hi=86400, group="Disks"
+    )
     hdd_warn_temp: int = _s(
         "HDD_WARN_TEMP", 50, "Hard disk temperature that raises a warning, °C.", lo=20, hi=100, group="Disks"
     )
