@@ -360,3 +360,49 @@ def test_a_restore_drill_brings_back_one_file(monkeypatch):
 
     monkeypatch.setattr(offsite_backup, "run_restic", fake_restic)
     assert offsite_backup.drill("cloud")["ok"] and calls[-1]["last_drill_result"] == "ok"
+
+
+# ------------------------------------------------------------------ secret key rotation
+def test_rotating_the_secret_key_keeps_secrets_readable(client, auth_headers, backup_job_file=None):
+    from backend import config, secret_box
+    from backend.services import backup_engine
+    from backend.users_db import enable_user_mfa, get_user_mfa
+
+    user = create_user(_name("rk"), "Two factor", "GoodPass123!", role_id="share_user")
+    enable_user_mfa(user["id"], "JBSWY3DPEHPK3PXP", [])
+    job = backup_engine.save_backup_job(
+        {
+            "name": "Rot",
+            "source_subvolume": "",
+            "destination_type": "remote",
+            "remote_name": "r",
+            "remote_path": "p",
+            "schedule": "manual",
+            "encrypted": True,
+            "encryption_password": "long passphrase!",
+        }
+    )
+    old_key = config.SECRET_KEY
+    try:
+        r = client.post("/api/security/rotate-secret-key", headers=auth_headers)
+        assert r.status_code == 200, r.text
+        assert old_key != config.SECRET_KEY and r.json()["mfa_secrets"] >= 1
+        assert get_user_mfa(user["id"])["mfa_secret"] == "JBSWY3DPEHPK3PXP"
+        stored = next(j for j in backup_engine.get_backup_jobs() if j["id"] == job["id"])
+        assert backup_engine.job_passphrase(stored) == "long passphrase!"
+        assert not os.path.exists(config.SECRET_KEY_FILE + ".previous")
+        with open(config.SECRET_KEY_FILE) as f:
+            assert f.read().strip() == config.SECRET_KEY
+    finally:
+        backup_engine.delete_backup_job(job["id"])
+
+
+def test_a_half_finished_rotation_still_reads_old_secrets(tmp_path, monkeypatch):
+    from backend import config, secret_box
+
+    sealed = secret_box.seal("hello")
+    old = config.SECRET_KEY
+    monkeypatch.setattr(config, "SECRET_KEY_FILE", str(tmp_path / "secret.key"))
+    (tmp_path / "secret.key.previous").write_text(old)
+    monkeypatch.setattr(config, "SECRET_KEY", "a-new-key-not-yet-used")
+    assert secret_box.unseal(sealed) == "hello"

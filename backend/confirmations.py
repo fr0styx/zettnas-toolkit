@@ -47,6 +47,7 @@ ACTIONS: dict[str, str] = {
     "updates.revert": "Revert ZettNAS to the previous version and its data",
     "ai.index.forget": "Delete what the AI index learned from a folder",
     "webdav.config": "Change who can reach files over WebDAV and which folder it shares",
+    "security.rotate_key": "Replace the install's secret key; everyone signs in to WebDAV and two-factor again",
     "docker.container.recreate.elevated": "Recreate container {target} with access to the host system",
 }
 

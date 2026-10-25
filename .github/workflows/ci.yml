@@ -353,19 +353,27 @@ jobs:
           exit-code: "0"
           format: table
 
-      # The real update path, end to end: the current Stable image on fresh data, updated to this
-      # build by its own update helper (data must survive), then to an image that can't start
-      # (must roll back). Blocking, and run before any tag is published, so a build that breaks
-      # updating or rolling back never reaches edge/main (OPS-9).
+      # The real update path, end to end: Stable and the two newest releases, each on fresh data
+      # with an account and a backup job made through its own API, updated to this build by its
+      # own update helper (data must survive), then to an image that can't start (must roll
+      # back). Blocking, and run before any tag is published, so a build that breaks updating or
+      # rolling back never reaches edge/main (OPS-9, audit batch 1).
       - name: Upgrade and rollback test
         if: matrix.variant == 'full'
         run: |
-          docker pull -q "ghcr.io/${{ github.repository }}:latest"
-          docker pull -q "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
-          if ! sh scripts/upgrade_rollback_test.sh "ghcr.io/${{ github.repository }}:latest" "ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"; then
-            echo "::error title=Upgrade and rollback test::failed, see the step log"
-            exit 1
-          fi
+          NEW="ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
+          docker pull -q "$NEW"
+          RECENT=$(git ls-remote --tags --refs "https://github.com/${{ github.repository }}" 'v*' \
+            | sed 's#.*refs/tags/v##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1n -k2,2n -k3,3n | tail -2)
+          for tag in latest $RECENT; do
+            OLD="ghcr.io/${{ github.repository }}:$tag"
+            docker pull -q "$OLD" || { echo "no image $OLD, skipped"; continue; }
+            echo "### from $tag"
+            if ! sh scripts/upgrade_rollback_test.sh "$OLD" "$NEW"; then
+              echo "::error title=Upgrade and rollback test::failed from $tag, see the step log"
+              exit 1
+            fi
+          done
 
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
 from backend.services import ip_block
 from backend.services.ransomware_guard import get_guard
 
@@ -63,3 +64,18 @@ def remove_ip_block(ip: str) -> dict[str, Any]:
     if not ip_block.unblock(ip):
         raise HTTPException(status_code=404, detail="Not blocked")
     return {"status": "ok"}
+
+
+@router.post(
+    "/rotate-secret-key",
+    dependencies=[Depends(require_scope("*")), Depends(require_confirmation("security.rotate_key"))],
+)
+def rotate_secret_key_route():
+    """Replaces the install's secret key and re-encrypts two-factor secrets and backup passphrases.
+    Use it when someone may have copied the data folder."""
+    from backend.services.key_rotation import rotate_secret_key
+
+    try:
+        return {"status": "ok", **rotate_secret_key()}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None

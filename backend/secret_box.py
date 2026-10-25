@@ -28,11 +28,20 @@ class SecretBoxError(ValueError):
     pass
 
 
-def _key() -> bytes:
-    secret = str(getattr(config, "SECRET_KEY", "") or "")
+def _key(secret: str | None = None) -> bytes:
+    secret = str(secret if secret is not None else (getattr(config, "SECRET_KEY", "") or ""))
     if not secret:
         raise SecretBoxError("SECRET_KEY is not set")
     return hashlib.sha256(b"zettnas-secret-box-v1:" + secret.encode("utf-8")).digest()
+
+
+def _previous_secret() -> str:
+    """The key before a rotation that hasn't finished (see services/key_rotation.py)."""
+    try:
+        with open(str(getattr(config, "SECRET_KEY_FILE", "")) + ".previous", encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return ""
 
 
 def is_sealed(value: str) -> bool:
@@ -52,9 +61,16 @@ def unseal(value: str) -> str:
         return value or ""
     try:
         raw = base64.urlsafe_b64decode(value[len(PREFIX) :].encode("ascii"))
-        return AESGCM(_key()).decrypt(raw[:12], raw[12:], _AAD).decode("utf-8")
-    except (InvalidTag, ValueError) as e:
-        raise SecretBoxError("Could not decrypt a stored secret (was SECRET_KEY changed?)") from e
+    except ValueError as e:
+        raise SecretBoxError("A stored secret is damaged") from e
+    for secret in (None, _previous_secret()):
+        if secret == "":
+            continue
+        try:
+            return AESGCM(_key(secret)).decrypt(raw[:12], raw[12:], _AAD).decode("utf-8")
+        except (InvalidTag, ValueError):
+            continue
+    raise SecretBoxError("Could not decrypt a stored secret (was SECRET_KEY changed?)")
 
 
 def migrate_plaintext_mfa_secrets(db_path: str = "") -> int:
