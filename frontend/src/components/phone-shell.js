@@ -134,8 +134,54 @@ function openTab(id) {
   schedule();
 }
 
+// UX-15: one history entry stands for "a page is open", so the phone's own Back closes it
+const DIALOGS = '#confirm-toast-modal, [role="dialog"][aria-modal="true"], [role="alertdialog"]';
+let backEntry = false;
+let ignorePop = false;
+
+function dialogOpen() {
+  // checkVisibility also sees a hidden ancestor (a dialog inside a closed overlay)
+  return Array.from(document.querySelectorAll(DIALOGS)).some((el) =>
+    typeof el.checkVisibility === 'function'
+      ? el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) && isOpen(el)
+      : isOpen(el),
+  );
+}
+
+function followBackEntry(page) {
+  if (page && !backEntry) {
+    history.pushState({ zettPhonePage: true }, '');
+    backEntry = true;
+  } else if (!page && backEntry) {
+    backEntry = false;
+    if (history.state?.zettPhonePage) {
+      ignorePop = true; // closed on screen: take our entry back off the history
+      history.back();
+    }
+  }
+}
+
+export function onPhoneBack() {
+  if (ignorePop) {
+    ignorePop = false;
+    return;
+  }
+  if (!document.body.classList.contains('phone-shell')) return;
+  backEntry = false; // the browser just used it
+  if (dialogOpen()) {
+    // Back closes the dialog first, as on any phone app
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  } else {
+    const page = topPage();
+    closePage(page);
+    if (page && topPage() === page) page.style.display = 'none';
+  }
+  schedule();
+}
+
 function sync() {
   const page = topPage();
+  followBackEntry(page);
   const back = document.getElementById('phone-back');
   // only real changes: rewriting the same value would wake the observer again
   if (back && back.hidden !== !page) back.hidden = !page;
@@ -189,9 +235,12 @@ export function enablePhoneShell(on) {
     observer?.disconnect();
     observer = null;
     document.body.classList.remove('phone-page-open');
+    window.removeEventListener('popstate', onPhoneBack);
+    backEntry = false;
     return;
   }
   if (shell) return;
+  window.addEventListener('popstate', onPhoneBack);
   shell = document.createElement('div');
   shell.id = 'phone-shell';
   shell.innerHTML = `<button type="button" id="phone-back" class="phone-back" hidden>‹ ${escapeHtml(t('setup.back', 'Back'))}</button>

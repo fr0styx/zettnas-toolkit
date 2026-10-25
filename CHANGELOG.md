@@ -39,6 +39,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 - Confirm dialogs take keyboard focus (and give it back), keep Tab inside, say what they do on
   the button ("Delete VM", "Move to Recycle Bin") and are red only for destructive actions.
 - Deleting a user, a share or a virtual machine asks you to type its name first.
+- On a phone, the system Back gesture closes the open dialog or page instead of leaving ZettNAS.
+- Text in windows, dialogs and messages can be selected and copied.
 
 #### Backups
 

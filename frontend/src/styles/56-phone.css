@@ -71,3 +71,15 @@ body.phone-shell #ai-chat-sidebar:not(.collapsed) { position: absolute; inset: 0
 /* AI chat: the message box gets its own full-width line, the buttons the line below */
 body.phone-shell .ai-chat-composer-row { flex-wrap: wrap; }
 body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-width: 0; }
+
+/* UX-16: words in windows, dialogs and messages can be selected and copied. Window chrome,
+   buttons, icons and the file grid (which drags a selection box) stay unselectable. */
+.os-window, .smart-modal-window, .mgmt-app-window, #confirm-toast-modal, .top-toast-item, #phone-shell {
+  -webkit-user-select: text;
+  user-select: text;
+}
+.os-window-header, .os-window-controls, .fm-viewport, .fm-list, .fm-header-row, .phone-tabs, .phone-tile,
+.os-window button, .os-window [role="button"], .os-window [draggable="true"], .os-window svg {
+  -webkit-user-select: none;
+  user-select: none;
+}
