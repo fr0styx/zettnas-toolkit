@@ -3141,7 +3141,7 @@ export class FileManagerWindow {
   /** UX-6: a toast with Undo that brings the items back from the Recycle Bin. */
   offerUndo(trashIds) {
     showActionToast(
-      t('fm.moved_to_bin', 'Moved {count} item(s) to the Recycle Bin', { count: trashIds.length }),
+      t('fm.moved_to_bin', '{count, plural, one {Moved # item to the Recycle Bin} other {Moved # items to the Recycle Bin}}', { count: trashIds.length }),
       t('fm.undo', 'Undo'),
       async () => {
         let restored = 0;
@@ -3153,7 +3153,7 @@ export class FileManagerWindow {
             showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');
           }
         }
-        if (restored) showToast(t('fm.restored_count', 'Restored {count} item(s)', { count: restored }), 'success');
+        if (restored) showToast(t('fm.restored_count', '{count, plural, one {Restored # item} other {Restored # items}}', { count: restored }), 'success');
         this.loadPath(this.currentPath);
       },
     );
@@ -3163,9 +3163,9 @@ export class FileManagerWindow {
     const count = this.selectedPaths.size;
     if (count === 0) return;
     const confirmMsg = isPermanent
-      ? t('fm.confirm_bulk_delete_permanent', "{count} item(s) will be deleted for good. This can't be undone.", { count })
+      ? t('fm.confirm_bulk_delete_permanent', "{count, plural, one {# item will be deleted for good. This can't be undone.} other {# items will be deleted for good. This can't be undone.}}", { count })
       : t('fm.confirm_bulk_delete', `Are you sure you want to delete ${count} selected item(s)?`).replace('{count}', count);
-    showConfirmToast(t('fm.delete_title', 'Delete {count} item(s)?', { count }), confirmMsg, async () => {
+    showConfirmToast(t('fm.delete_title', '{count, plural, one {Delete # item?} other {Delete # items?}}', { count }), confirmMsg, async () => {
       const targets = Array.from(this.selectedPaths);
       this.clearSelection();
       await this.deleteWithProgress(targets, { permanent: isPermanent });

@@ -38,15 +38,21 @@ function visible(text) {
 }
 const UI_ATTR = /\s(title|placeholder|aria-label)="([^"$<>{}]*)"/g;
 const UI_ASSIGN = /\.(?:textContent|innerText|title|placeholder)\s*=\s*(['"`])((?:(?!\1)[^\\$]|\\.)*)\1\s*;/g;
-function hardcodedUi(src) {
+const LIST = process.argv.includes('--list'); // print each hard-coded string
+
+function hardcodedUi(src, rel = '') {
   let n = 0;
+  const hit = (text) => {
+    n++;
+    if (LIST) console.log(`${rel}: ${text.trim().slice(0, 100)}`);
+  };
   for (const m of src.matchAll(UI_ATTR)) {
     const before = src.slice(Math.max(0, m.index - 400), m.index);
     const tag = before.slice(before.lastIndexOf('<')) + src.slice(m.index, src.indexOf('>', m.index));
     if (/\bt\(\s*['"]/.test(m[2])) continue; // a string that calls t() mid-way
-    if (!tag.includes(`data-i18n-${m[1]}`) && visible(m[2])) n++;
+    if (!tag.includes(`data-i18n-${m[1]}`) && visible(m[2])) hit(m[0]);
   }
-  for (const m of src.matchAll(UI_ASSIGN)) if (visible(m[2])) n++;
+  for (const m of src.matchAll(UI_ASSIGN)) if (visible(m[2])) hit(m[0]);
   return n;
 }
 
@@ -67,7 +73,7 @@ for (const file of files) {
     if (!(key in en)) errors.push(`${rel}: key "${key}" is not defined in locales/en.js`);
   }
   rawToasts += [...src.matchAll(/showToast\(\s*['"`]/g)].length;
-  rawUi += hardcodedUi(src);
+  rawUi += hardcodedUi(src, rel);
   if (!rel.endsWith('format.js')) {
     for (const m of src.matchAll(/\.toLocale(?:Date|Time)?String\(/g)) {
       const line = src.slice(0, m.index).split('\n').length;
@@ -76,7 +82,8 @@ for (const file of files) {
   }
 }
 
-const placeholders = (s) => [...String(s).matchAll(/\{([a-zA-Z0-9_]+)\}/g)].map((m) => m[1]).sort().join(',');
+// {name} and the ICU plural {name, plural, ...} both count as the placeholder "name"
+const placeholders = (s) => [...new Set([...String(s).matchAll(/\{([a-zA-Z0-9_]+)(?:\}|, plural,)/g)].map((m) => m[1]))].sort().join(',');
 for (const [lang, dict] of Object.entries(ALL_TRANSLATIONS)) {
   if (lang === 'en') continue;
   for (const key of Object.keys(en)) {

@@ -72,6 +72,57 @@ export function getLanguage() {
   return _currentLang;
 }
 
+/**
+ * ICU plurals (UX-12): "{count, plural, =0 {none} one {# item} other {# items}}" picks the form
+ * the language's plural rules ask for; # is the number.
+ */
+export function formatPlurals(str, params, lang = 'en') {
+  if (!params || str.indexOf(', plural,') < 0) return str;
+  let out = '';
+  let i = 0;
+  while (i < str.length) {
+    const m = /\{(\w+), plural,/.exec(str.slice(i));
+    if (!m) {
+      out += str.slice(i);
+      break;
+    }
+    const start = i + m.index;
+    out += str.slice(i, start);
+    // the whole {name, plural, ...} block, braces balanced
+    let depth = 0;
+    let end = start;
+    for (; end < str.length; end++) {
+      if (str[end] === '{') depth++;
+      else if (str[end] === '}' && --depth === 0) break;
+    }
+    const body = str.slice(start + m[0].length, end);
+    const n = Number(params[m[1]]);
+    const forms = {};
+    const re = /\s*(=\d+|zero|one|two|few|many|other)\s*\{/g;
+    let f;
+    while ((f = re.exec(body))) {
+      let d = 1;
+      let j = re.lastIndex;
+      for (; j < body.length && d; j++) {
+        if (body[j] === '{') d++;
+        else if (body[j] === '}') d--;
+      }
+      forms[f[1]] = body.slice(re.lastIndex, j - 1);
+      re.lastIndex = j;
+    }
+    let category;
+    try {
+      category = new Intl.PluralRules(lang).select(n);
+    } catch {
+      category = n === 1 ? 'one' : 'other';
+    }
+    const chosen = forms[`=${n}`] ?? forms[category] ?? forms.other ?? '';
+    out += chosen.replace(/#/g, Number.isFinite(n) ? String(n) : '');
+    i = end + 1;
+  }
+  return out;
+}
+
 export function t(key, fallback = '', params = null) {
   let str;
   const dict = TRANSLATIONS[_currentLang] || TRANSLATIONS.en;
@@ -87,6 +138,7 @@ export function t(key, fallback = '', params = null) {
   }
 
   if (params && typeof params === 'object') {
+    str = formatPlurals(str, params, _currentLang);
     for (const [pKey, pVal] of Object.entries(params)) {
       str = str.replace(new RegExp(`\\{${pKey}\\}`, 'g'), String(pVal));
     }

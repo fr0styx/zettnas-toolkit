@@ -174,9 +174,9 @@ export function diskTile(d) {
   const isParity = Boolean(d.is_parity || d.role === 'parity');
   const parityLbl = d.parity_label || 'P';
   const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
-  const t = d.temp;
+  const temp = d.temp;
   const meta = ROLE_META[d.role] || ROLE_META.data;
-  const w = isStandby ? 0 : (t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100)));
+  const w = isStandby ? 0 : (temp == null ? 0 : Math.max(8, Math.min(100, ((temp - 20) / 40) * 100)));
   const el = document.createElement('div');
   el.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '') + (isParity ? ' disk-is-parity' : '');
   el.dataset.dev = d.dev || d.name;
@@ -188,7 +188,7 @@ export function diskTile(d) {
 
   const tempHtml = isStandby
     ? `<div class="dt s-standby"><span class="standby-badge">STANDBY</span></div>`
-    : `<div class="dt ${'s-' + lvl}"><span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span></div>`;
+    : `<div class="dt ${'s-' + lvl}"><span class="dt-temp">${temp == null ? '--' : temp}<span class="u">°C</span></span></div>`;
 
   const displayName = formatDiskDisplayName(d.name);
 
@@ -196,7 +196,7 @@ export function diskTile(d) {
     `<div class="dh"><svg class="disk-ic"><use href="${meta.icon}"/></svg>` +
     `<span class="dn">${escapeHtml(displayName)}</span>` +
     `<div class="disk-indicators">` +
-      (isStandby ? `<span class="standby-zzz" title="Spun-down / Standby">zZz</span>` : `<span class="io-dot" title="Active I/O"></span>`) +
+      (isStandby ? `<span class="standby-zzz" title="${t('dash.disk_asleep', 'Asleep (spun down)')}">zZz</span>` : `<span class="io-dot" title="${t('dash.disk_busy', 'Reading or writing')}"></span>`) +
       `<span class="hdot ${'dot-' + lvl}"></span>` +
     `</div></div>` +
     tempHtml +
@@ -293,9 +293,9 @@ export function renderDisks(disks) {
       const isParity = Boolean(d.is_parity || d.role === 'parity');
       const parityLbl = d.parity_label || 'P';
       const lvl = isStandby ? 'standby' : (d.health || lvlDisk(d.temp));
-      const t = d.temp;
+      const temp = d.temp;
       const meta = ROLE_META[d.role] || ROLE_META.data;
-      const w = isStandby ? 0 : (t == null ? 0 : Math.max(8, Math.min(100, ((t - 20) / 40) * 100)));
+      const w = isStandby ? 0 : (temp == null ? 0 : Math.max(8, Math.min(100, ((temp - 20) / 40) * 100)));
 
       tile.className = 'disk ' + meta.cls + ' h-' + lvl + (d.active ? ' io-active' : '') + (isStandby ? ' disk-standby' : '') + (isParity ? ' disk-is-parity' : '');
       tile.title = isStandby
@@ -310,12 +310,12 @@ export function renderDisks(disks) {
         tempEl.className = 'dt ' + (isStandby ? 's-standby' : 's-' + lvl);
         tempEl.innerHTML = isStandby
           ? `<span class="standby-badge">STANDBY</span>`
-          : `<span class="dt-temp">${t == null ? '--' : t}<span class="u">°C</span></span>`;
+          : `<span class="dt-temp">${temp == null ? '--' : temp}<span class="u">°C</span></span>`;
       }
 
       const indEl = tile.querySelector('.disk-indicators');
       if (indEl) {
-        indEl.innerHTML = (isStandby ? `<span class="standby-zzz" title="Spun-down / Standby">zZz</span>` : `<span class="io-dot" title="Active I/O"></span>`) +
+        indEl.innerHTML = (isStandby ? `<span class="standby-zzz" title="${t('dash.disk_asleep', 'Asleep (spun down)')}">zZz</span>` : `<span class="io-dot" title="${t('dash.disk_busy', 'Reading or writing')}"></span>`) +
           `<span class="hdot dot-${lvl}"></span>`;
       }
 

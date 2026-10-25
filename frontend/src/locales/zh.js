@@ -3230,4 +3230,6 @@ export default {
   "err.next_timeout": "服务器可能正忙。请重试；如果持续出现，请检查服务器是否在运行。",
   "err.next_internal_ref": "请重试。如果持续出现，请下载诊断包（设置 → 关于）并提供参考编号 {ref}。",
   "err.next_internal": "请重试。如果持续出现，请下载诊断包（设置 → 关于）。",
+  "dash.disk_asleep": "休眠（已停转）",
+  "dash.disk_busy": "正在读写",
 };

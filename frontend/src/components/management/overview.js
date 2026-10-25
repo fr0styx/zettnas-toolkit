@@ -72,7 +72,7 @@ export function statusHtml(summary) {
       return `<li class="ov-item ov-${i.level === 'critical' ? 'crit' : 'warn'}"><span>${escapeHtml(text)}</span>${open}</li>`;
     })
     .join('');
-  return `<div class="ov-status ov-attention"><strong>${escapeHtml(t('overview.attention', '{n} thing(s) need your attention', { n: summary.items.length }))}</strong><ul>${rows}</ul></div>`;
+  return `<div class="ov-status ov-attention"><strong>${escapeHtml(t('overview.attention', '{n, plural, one {# thing needs your attention} other {# things need your attention}}', { n: summary.items.length }))}</strong><ul>${rows}</ul></div>`;
 }
 
 export async function renderStatusSummary(root = document) {
