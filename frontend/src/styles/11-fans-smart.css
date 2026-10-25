@@ -54,7 +54,7 @@
   margin-top: 2px;
 }
 .df-tach-box .df-label {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--muted);
@@ -70,7 +70,7 @@
   text-align: center;
 }
 .df-zone-box .zp-lbl {
-  font-size: 8px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.5px;
@@ -82,7 +82,7 @@
   font-variant-numeric: tabular-nums;
 }
 .df-zone-box .zp-pwm {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--ok2);
 }
@@ -153,13 +153,13 @@
 }
 
 .mgmt-hardware-tab-slot .curve-legend-row {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   padding: 4px 2px 0 2px;
   gap: 10px;
 }
 
 .mgmt-hardware-tab-slot .legend-item {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   gap: 6px;
   padding: 3px 6px;
 }
@@ -170,19 +170,19 @@
 }
 
 .mgmt-hardware-tab-slot #fan-curve-range-val {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   padding: 3px 10px;
 }
 
 .mgmt-hardware-tab-slot #curve-readout-text {
-  font-size: 11px !important;
+  font-size: var(--zn-fs-xs) !important;
 }
 
 .curve-legend-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.8px;
@@ -210,7 +210,7 @@
   background: var(--lt-b-1a2533ff, #1a2533);
   border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1));
   color: var(--lt-t-a4b4c4ff, #a4b4c4);
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 5px;
@@ -235,7 +235,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 .ti-row span {
   color: var(--muted);

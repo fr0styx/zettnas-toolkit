@@ -187,7 +187,7 @@
 
 .wallpaper-cat-pill {
   padding: 3px 10px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   border-radius: 12px;
   border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
@@ -295,7 +295,7 @@
   gap: 3px;
   background: var(--ok2, #00f0ff);
   color: #040910;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 0.5px;
   padding: 2px 7px;
@@ -357,7 +357,7 @@
 }
 
 .wallpaper-card-title {
-  font-size: 11.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   color: var(--lt-t-cbd5e1ff, #cbd5e1);
   white-space: nowrap;

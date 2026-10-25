@@ -51,6 +51,18 @@ export function labelWindow(win) {
   win.dataset.windowLabelled = '1';
 }
 
+/** A desktop window with no place of its own opens centred below the top bar, not under it. */
+export function placeIfUnplaced(win) {
+  if (!win || !win.classList || !win.classList.contains('os-window') || win.style.top) return;
+  if (document.body.classList.contains('mobile-mode') || document.body.classList.contains('phone-shell') || window.innerWidth <= 768) return;
+  const r = win.getBoundingClientRect();
+  if (r.top >= 52) return; // already clear of the top bar
+  const w = r.width || 900;
+  const h = r.height || 600;
+  win.style.left = `${Math.max(24, Math.round((window.innerWidth - w) / 2))}px`;
+  win.style.top = `${Math.max(56, Math.round((window.innerHeight - h) / 2) - 20)}px`;
+}
+
 export function focusWindow(win) {
   if (!win) return;
   const active = document.activeElement;
@@ -117,6 +129,7 @@ export function installWindowFocus(dock) {
     };
   };
   wrap('restore', (d, id) => later(() => {
+    placeIfUnplaced(winOf(d.windows?.[id]));
     labelWindow(winOf(d.windows?.[id]));
     focusWindow(winOf(d.windows?.[id]));
   }));

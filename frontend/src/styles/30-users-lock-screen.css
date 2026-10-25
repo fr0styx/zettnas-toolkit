@@ -51,7 +51,7 @@
   justify-content: center;
   font-weight: 800;
   color: #fff;
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   border: 1px solid var(--lt-r-ffffff40, rgba(255, 255, 255, 0.25));
   position: relative;
   flex-shrink: 0;
@@ -71,7 +71,7 @@
 }
 
 .topbar-user-name {
-  font-size: 11.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   color: var(--lt-t-e2e8f0ff, #e2e8f0);
   letter-spacing: 0.2px;
@@ -82,7 +82,7 @@
 }
 
 .topbar-user-caret {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #94a3b8);
   transition: transform 0.2s ease, color 0.2s ease;
   line-height: 1;

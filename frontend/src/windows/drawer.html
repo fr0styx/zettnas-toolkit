@@ -63,16 +63,16 @@
         </div>
         <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-size: 11px; color: var(--muted); font-weight: 600;" data-i18n="settings.lcd_custom_accent">Custom Accent:</span>
+            <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 600;" data-i18n="settings.lcd_custom_accent">Custom Accent:</span>
             <input type="color" id="lcd-custom-color-picker" aria-label="Custom LCD accent colour" data-i18n-aria-label="a11y.lcd_custom_color" value="#00f0ff" style="width: 22px; height: 22px; border: none; padding: 0; background: none; cursor: pointer; border-radius: 3px;">
-            <span id="lcd-custom-hex-val" style="font-size: 11px; font-family: monospace; color: var(--muted);">#00F0FF</span>
+            <span id="lcd-custom-hex-val" style="font-size: var(--zn-fs-xs); font-family: monospace; color: var(--muted);">#00F0FF</span>
           </div>
           <button id="lcd-reset-accent-btn" class="btn-pill-toggle is-small" data-i18n="settings.reset_accent">↺ Reset</button>
         </div>
         <div style="margin-top: 10px; padding: 8px 10px; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
           <div>
-            <div style="font-size: 11px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="settings.text_clarity_title">High-Contrast Text on Physical Screen</div>
-            <div style="font-size: 11px; color: var(--muted);" data-i18n="settings.text_clarity_desc">Keeps lettering crisp white to eliminate chromatic blur on 640x172 LCD while accenting gauges.</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="settings.text_clarity_title">High-Contrast Text on Physical Screen</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="settings.text_clarity_desc">Keeps lettering crisp white to eliminate chromatic blur on 640x172 LCD while accenting gauges.</div>
           </div>
           <label class="switch"><input type="checkbox" id="lcd-text-clarity-toggle" aria-label="Sharper LCD text" data-i18n-aria-label="a11y.lcd_text_clarity" checked><span class="toggle-slider"></span></label>
         </div>
@@ -129,20 +129,20 @@
         <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; gap:8px;">
             <label class="switch"><input type="checkbox" id="screen-night-toggle" aria-label="Night mode" data-i18n-aria-label="a11y.screen_night_mode"><span class="toggle-slider"></span></label>
-            <span style="font-size:11px; font-weight:700; color:var(--text);" data-i18n="settings.night_dimming">Night Dimming</span>
+            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text);" data-i18n="settings.night_dimming">Night Dimming</span>
           </div>
-          <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
+          <div style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs);">
             <input type="time" id="screen-night-start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-            <span style="color:var(--muted); font-size:11px;" data-i18n="settings.to">to</span>
+            <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="settings.to">to</span>
             <input type="time" id="screen-night-end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-            <span style="color:var(--muted); font-size:11px;">@</span>
+            <span style="color:var(--muted); font-size:var(--zn-fs-xs);">@</span>
             <input type="number" id="screen-night-bri" min="0" max="50" value="10" class="tz-text-input" style="width:48px; padding:3px 6px;" title="Night Brightness %" data-i18n-title="ui.night_brightness">
-            <span style="color:var(--muted); font-size:11px;">%</span>
+            <span style="color:var(--muted); font-size:var(--zn-fs-xs);">%</span>
           </div>
         </div>
         <div class="schedule-controls-row" style="margin-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:11px; font-weight:700; color:var(--text);" data-i18n="settings.autocycle">Auto-Cycle LCD Pages</span>
+            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text);" data-i18n="settings.autocycle">Auto-Cycle LCD Pages</span>
           </div>
           <select id="screen-carousel-select" aria-label="LCD page rotation" data-i18n-aria-label="a11y.lcd_page_rotation" class="tz-select-input" style="width:170px;">
             <option value="0" data-i18n="settings.autocycle_off">Off (Manual / Button)</option>
@@ -191,7 +191,7 @@
           </button>
         </div>
         <div class="preset-footer-row">
-          <span style="font-size:11px; color:var(--muted); font-weight:700;" data-i18n="settings.custom_preset_storage">Custom layout storage</span>
+          <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-weight:700;" data-i18n="settings.custom_preset_storage">Custom layout storage</span>
           <button id="btn-save-custom-preset" class="btn-save-preset" data-i18n="settings.btn_save_my_preset">💾 Save as My Preset</button>
         </div>
       </div>
@@ -330,10 +330,10 @@
           <label class="switch"><input type="checkbox" id="led-night-toggle"><span class="toggle-slider"></span></label>
         </div>
         <div class="card-instruction" data-i18n="settings.led_night_desc">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
-        <div class="schedule-controls-row" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:11px;">
-          <span style="color:var(--muted); font-size:11px; font-weight:700;" data-i18n="settings.blackout">BLACKOUT:</span>
+        <div class="schedule-controls-row" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs);">
+          <span style="color:var(--muted); font-size:var(--zn-fs-xs); font-weight:700;" data-i18n="settings.blackout">BLACKOUT:</span>
           <input type="time" id="led-night-start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
-          <span style="color:var(--muted); font-size:11px;" data-i18n="settings.to">to</span>
+          <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="settings.to">to</span>
           <input type="time" id="led-night-end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
         </div>
       </div>
@@ -546,7 +546,7 @@
             <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;">↺ Show All Zones</button>
             <div style="display:flex; align-items:center; gap:8px;">
               <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">Ramp: 37°C – 50°C</span>
-              <div id="curve-readout-text" style="font-size:11px; font-weight:800; color:var(--ok2);">Active Mapping</div>
+              <div id="curve-readout-text" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2);">Active Mapping</div>
             </div>
           </div>
         </div>
@@ -564,8 +564,8 @@
           When enabled, applies software thermal curve with a 30-second anti-flutter hold timer.
         </div>
         <div class="slider-row" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <label for="cpu-hold-slider" class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.cpu_hold_label">Anti-Flutter Hold Delay</label>
-          <span id="cpu-hold-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
+          <label for="cpu-hold-slider" class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.cpu_hold_label">Anti-Flutter Hold Delay</label>
+          <span id="cpu-hold-val-display" style="font-family: monospace; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--ok2);">30s</span>
         </div>
         <div class="slider-row" style="margin-top: 4px;">
           <input type="range" id="cpu-hold-slider" min="10" max="90" value="30" step="5" class="custom-slider" aria-label="Anti-Flutter Hold Delay" data-i18n-aria-label="settings.cpu_hold_label">
@@ -584,12 +584,12 @@
           Allows HDD bay fans to stop completely when all bay hard drives are spun down in standby and thermal conditions are safe. CPU fan is never stopped.
         </div>
         <div class="zero-rpm-status-row" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-          <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-weight:600;">Zone 1: Active</span>
-          <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:11px; padding:3px 8px; border-radius:4px; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-weight:600;">Zone 2: Active</span>
+          <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-weight:600;">Zone 1: Active</span>
+          <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-weight:600;">Zone 2: Active</span>
         </div>
         <div class="slider-row" style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <label for="zero-rpm-delay-slider" class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
-          <span id="zero-rpm-delay-val-display" style="font-family: monospace; font-size: 12px; font-weight: 700; color: var(--ok2);">30s</span>
+          <label for="zero-rpm-delay-slider" class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
+          <span id="zero-rpm-delay-val-display" style="font-family: monospace; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--ok2);">30s</span>
         </div>
         <div class="slider-row" style="margin-top: 4px;">
           <input type="range" id="zero-rpm-delay-slider" min="10" max="180" value="30" step="5" class="custom-slider" aria-label="Standby Cooldown Delay" data-i18n-aria-label="settings.zero_rpm_stop_delay_label">
@@ -660,18 +660,18 @@
         <div class="acoustic-calibration-cockpit" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; gap:8px; align-items:center;">
-              <button id="btn-start-acoustic-sweep" class="btn-fan-action btn-fan-apply" type="button" style="height:28px; padding:0 12px; font-size:11px;">
+              <button id="btn-start-acoustic-sweep" class="btn-fan-action btn-fan-apply" type="button" style="height:28px; padding:0 12px; font-size:var(--zn-fs-xs);">
                 <svg class="ic ic-xs"><use href="#i-bolt"/></svg>
                 <span data-i18n="settings.start_acoustic_sweep">Start Sweep</span>
               </button>
-              <button id="btn-stop-acoustic-sweep" class="btn-fan-action btn-fan-delete" type="button" style="height:28px; padding:0 12px; font-size:11px; display:none;">
+              <button id="btn-stop-acoustic-sweep" class="btn-fan-action btn-fan-delete" type="button" style="height:28px; padding:0 12px; font-size:var(--zn-fs-xs); display:none;">
                 <svg class="ic ic-xs"><use href="#i-cross"/></svg>
                 <span data-i18n="settings.stop_acoustic_sweep">Stop</span>
               </button>
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end;">
-              <span id="acoustic-sweep-status" style="font-size:11px; font-weight:700; color:var(--text-dim, var(--lt-t-94a3b8ff, #94a3b8));">Idle</span>
-              <span id="acoustic-current-step" style="font-size:11px; font-family:monospace; color:var(--accent, var(--lt-t-38bdf8ff, #38bdf8));">Step --/--</span>
+              <span id="acoustic-sweep-status" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text-dim, var(--lt-t-94a3b8ff, #94a3b8));">Idle</span>
+              <span id="acoustic-current-step" style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--accent, var(--lt-t-38bdf8ff, #38bdf8));">Step --/--</span>
             </div>
           </div>
 
@@ -697,7 +697,7 @@
               <path id="acoustic-rpm-path" d="" fill="none" stroke="var(--accent, #38bdf8)" stroke-width="2" stroke-linecap="round"/>
               <g id="acoustic-chart-points"></g>
             </svg>
-            <div id="acoustic-results-summary" style="font-size:11px; color:var(--text-dim, var(--lt-t-94a3b8ff, #94a3b8)); margin-top:4px; text-align:center;">
+            <div id="acoustic-results-summary" style="font-size:var(--zn-fs-xs); color:var(--text-dim, var(--lt-t-94a3b8ff, #94a3b8)); margin-top:4px; text-align:center;">
               Run test to plot RPM linearity and identify acoustic rattle zones.
             </div>
           </div>
@@ -717,7 +717,7 @@
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.copy_btn_title">Front-Panel COPY Button</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <div style="display:flex; align-items:center; gap:8px;">
-            <span id="btn-copy-status-text" style="font-size:11px; font-weight:700; text-transform:uppercase; opacity:0.8;">ENABLED</span>
+            <span id="btn-copy-status-text" style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; opacity:0.8;">ENABLED</span>
             <label class="switch">
             <input type="checkbox" id="btn-copy-toggle">
             <span class="toggle-slider"></span>
@@ -729,9 +729,9 @@
         <div id="btn-copy-options" style="margin-top: 15px; border-top: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); padding-top: 15px;">
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>
               <div style="display:flex; gap:6px; align-items:center;">
-                <span id="media-slot-info-badge" class="suite-badge" style="font-size:11px;">SLOTS EMPTY</span>
+                <span id="media-slot-info-badge" class="suite-badge" style="font-size:var(--zn-fs-xs);">SLOTS EMPTY</span>
                 <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted">🔄 Scan</button>
                 <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Start media ingest now from inserted card" data-i18n-title="ui.start_media_ingest_now_from">▶ Copy Now</button>
                 <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card">⏏ Eject</button>
@@ -744,7 +744,7 @@
           </div>
           
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
-            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Destination Path (Ingest Target)</span>
+            <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Destination Path (Ingest Target)</span>
             <div style="display: flex; gap: 8px; width: 100%;">
               <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;" aria-label="/mnt/user/">
               <button id="btn-browse-dst" class="btn-pill-toggle" style="text-transform: uppercase; margin: 0; height: auto;" data-i18n="settings.browse">📁 Browse</button>
@@ -754,30 +754,30 @@
 
           <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_sort_exif">Auto-Sort by EXIF Date</span>
-              <span style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_sort_exif_desc">Organize copied photos into YYYY:MM:DD subfolders automatically.</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_sort_exif">Auto-Sort by EXIF Date</span>
+              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_sort_exif_desc">Organize copied photos into YYYY:MM:DD subfolders automatically.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-exif" checked><span class="toggle-slider"></span></label>
           </div>
 
           <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_ingest">Automatic Slot Ingest</span>
-              <span style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_ingest_desc">Trigger ingest automatically upon inserting an SD/TF card.</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_ingest">Automatic Slot Ingest</span>
+              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_ingest_desc">Trigger ingest automatically upon inserting an SD/TF card.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-auto-ingest"><span class="toggle-slider"></span></label>
           </div>
 
           <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.ingest_prompt">Prompt Before Ingest</span>
-              <span style="font-size: 11px; color: var(--muted); margin-top: 3px;" data-i18n="settings.ingest_prompt_desc">Show confirmation dialog before starting card copy.</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.ingest_prompt">Prompt Before Ingest</span>
+              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.ingest_prompt_desc">Show confirmation dialog before starting card copy.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-require-confirm" checked><span class="toggle-slider"></span></label>
           </div>
 
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
-            <span class="slider-label" style="opacity: 0.8; font-size: 11px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.collision_rule">Existing File Collision Rule</span>
+            <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.collision_rule">Existing File Collision Rule</span>
             <select id="btn-copy-collision" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
               <option value="skip" selected data-i18n="settings.collision_skip">Skip Existing Files Automatically</option>
               <option value="overwrite" data-i18n="settings.collision_overwrite">Overwrite Existing Files</option>

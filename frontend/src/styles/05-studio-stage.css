@@ -40,7 +40,7 @@
   color: var(--lt-t-ffffffff, #fff);
 }
 .suite-badge {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   background: rgba(37, 194, 160, 0.15);
   color: var(--ok2);
@@ -58,7 +58,7 @@
   gap: 12px;
 }
 .suite-pill {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   background: var(--lt-b-0f1620ff, #0f1620);
   padding: 5px 12px;
@@ -86,7 +86,7 @@
   color: var(--lt-t-cbd5e1ff, #cbd5e1);
   padding: 6px 12px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 1px;
   cursor: pointer;
@@ -129,7 +129,7 @@ body.theme-yak .yak-egg-btn {
   color: var(--ok2);
   padding: 6px 14px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 1px;
   cursor: pointer;
@@ -305,7 +305,7 @@ body.drawer-is-open .chassis-workbench-stage {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   letter-spacing: 0.5px;
   color: var(--lt-t-eaf1f8ff, #eaf1f8);
@@ -626,17 +626,17 @@ body.drawer-is-open .chassis-workbench-stage {
 }
 
 .cards .card.card-compact { flex: 0.55 1 0; }
-.card.card-compact .card-title { font-size: 8px; letter-spacing: 0.5px; }
+.card.card-compact .card-title { font-size: var(--zn-fs-xs); letter-spacing: 0.5px; }
 .card.card-compact .arc { width: 40px; height: 40px; }
 .card.card-compact .donut { width: 36px; height: 36px; }
 .card.card-compact .donut::before { width: 26px; height: 26px; }
 .card.card-compact .arc::before { inset: 5px; }
 .card.card-compact .arc-val { font-size: 13px; }
-.card.card-compact .side .val { font-size: 11px; }
-.card.card-compact .storage-nums .val { font-size: 10.5px; }
+.card.card-compact .side .val { font-size: var(--zn-fs-xs); }
+.card.card-compact .storage-nums .val { font-size: var(--zn-fs-xs); }
 
 .card.card-hidden { display: none !important; }
-.card-title{font-size:9px;color:var(--lt-t-8fa0b2ff, #8fa0b2);font-weight:800;letter-spacing:0.8px;display:flex;align-items:center;gap:4px}
+.card-title{font-size:var(--zn-fs-xs);color:var(--lt-t-8fa0b2ff, #8fa0b2);font-weight:800;letter-spacing:0.8px;display:flex;align-items:center;gap:4px}
 
 /* Storage donut */
 .storage-body{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
@@ -646,11 +646,11 @@ body.drawer-is-open .chassis-workbench-stage {
   background:conic-gradient(var(--c) calc(var(--pct)*1%),var(--track) 0);
   display:flex;align-items:center;justify-content:center;position:relative;transition:--pct .6s}
 .donut::before{content:"";position:absolute;width:28px;height:28px;border-radius:50%;background:var(--card)}
-.donut span{position:relative;font-size:11px;font-weight:800}
+.donut span{position:relative;font-size:var(--zn-fs-xs);font-weight:800}
 .storage-nums{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;justify-content:center}
 .storage-nums div{display:flex;justify-content:space-between;align-items:baseline;gap:3px;min-width:0}
-.storage-nums .lbl{font-size:7.5px;color:var(--lt-t-8fa0b2ff, #8fa0b2);letter-spacing:.3px;font-weight:700;flex-shrink:0}
-.storage-nums .val{font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.storage-nums .lbl{font-size:var(--zn-fs-xs);color:var(--lt-t-8fa0b2ff, #8fa0b2);letter-spacing:.3px;font-weight:700;flex-shrink:0}
+.storage-nums .val{font-size:var(--zn-fs-xs);font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 
 /* Arc gauges */
 .gauge-body{display:flex;align-items:center;gap:6px;flex:1}
@@ -664,8 +664,8 @@ body.drawer-is-open .chassis-workbench-stage {
   font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
 .arc-val .u{font-size:8.5px;color:var(--muted);font-weight:600;margin-left:1px}
 .side{display:flex;flex-direction:column;gap:1px;line-height:1.1;flex:1;min-width:0}
-.side .lbl{font-size:7.5px;color:var(--lt-t-8fa0b2ff, #8fa0b2);letter-spacing:.5px;font-weight:700}
-.side .val{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.side .lbl{font-size:var(--zn-fs-xs);color:var(--lt-t-8fa0b2ff, #8fa0b2);letter-spacing:.5px;font-weight:700}
+.side .val{font-size:var(--zn-fs-xs);font-weight:800;font-variant-numeric:tabular-nums}
 
 /* Fans */
 .fans {
@@ -729,7 +729,7 @@ body.drawer-is-open .chassis-workbench-stage {
   letter-spacing: -0.5px;
 }
 .fan .fl {
-  font-size: 7.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.5px;
@@ -737,7 +737,7 @@ body.drawer-is-open .chassis-workbench-stage {
   text-transform: uppercase;
 }
 .uptime {
-  font-size: 8px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -757,7 +757,7 @@ body.drawer-is-open .chassis-workbench-stage {
   letter-spacing: -0.5px;
 }
 .card.card-compact.fans .fan .fl {
-  font-size: 6.5px;
+  font-size: var(--zn-fs-xs);
 }
 
 /* Network Card */
@@ -777,7 +777,7 @@ body.drawer-is-open .chassis-workbench-stage {
 }
 .card-net .net-row span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   letter-spacing: 0.5px;
 }
@@ -800,7 +800,7 @@ body.drawer-is-open .chassis-workbench-stage {
 #screen.no-cards .disk .dt { font-size: 22px; }
 
 .disk-group{display:flex;flex-direction:column;gap:2px;flex:var(--n,1) 1 0;min-width:0}
-.group-label{font-size:7px;font-weight:800;letter-spacing:1px;color:var(--muted);display:flex;align-items:center;gap:3px;height:9px;line-height:1}
+.group-label{font-size:var(--zn-fs-xs);font-weight:800;letter-spacing:1px;color:var(--muted);display:flex;align-items:center;gap:3px;height:9px;line-height:1}
 .group-label .grp-ic{width:8px;height:8px;color:currentColor}
 .group-tiles{display:grid;grid-template-columns:repeat(var(--n,1),1fr);gap:6px;flex:1}
 .group-div{width:1px;background:var(--lt-b-ffffff14, rgba(255,255,255,.08));align-self:stretch;margin:0 1px}
@@ -912,7 +912,7 @@ body.drawer-is-open .chassis-workbench-stage {
   animation: ioBlink 0.3s ease-in-out infinite alternate;
 }
 .disks.compact .standby-badge {
-  font-size: 7.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 0.1px;
   text-align: center;
@@ -938,7 +938,7 @@ body.drawer-is-open .chassis-workbench-stage {
   filter: none;
 }
 .standby-badge {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.8px;

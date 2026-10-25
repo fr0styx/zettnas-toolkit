@@ -58,7 +58,7 @@
 }
 
 .desktop-drop-subtitle {
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   font-weight: 500;
 }

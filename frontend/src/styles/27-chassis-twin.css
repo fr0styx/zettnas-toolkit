@@ -437,7 +437,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 0.06em;
   color: #fff;
@@ -448,7 +448,7 @@
 
 .topo-root-badge {
   margin-left: auto;
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   background: rgba(59, 245, 139, 0.15);
   border: 1px solid rgba(59, 245, 139, 0.4);
@@ -464,7 +464,7 @@
 }
 
 .topo-branch-label {
-  font-size: 9.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--muted, #78838f);
@@ -485,7 +485,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   padding: 4px 8px;
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
 }
 

@@ -13,12 +13,12 @@ function levelSelect(attrs, value, withInherit) {
   const opts = (withInherit ? ['inherit', ...LEVELS] : LEVELS)
     .map((l) => `<option value="${l}"${l === value ? ' selected' : ''}>${l}</option>`)
     .join('');
-  return `<select ${attrs} style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); color:var(--lt-t-ffffffff, #fff); border:1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius:4px; font-size:11px; padding:2px 4px;">${opts}</select>`;
+  return `<select ${attrs} style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); color:var(--lt-t-ffffffff, #fff); border:1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius:4px; font-size:var(--zn-fs-xs); padding:2px 4px;">${opts}</select>`;
 }
 
 export function buildShareAccessHtml(data, users) {
   const userNames = users.map((u) => String(u.username || '').toLowerCase()).filter(Boolean);
-  const head = userNames.map((u) => `<th style="padding:6px 8px; font-size:11px;">${escapeHtml(u)}</th>`).join('');
+  const head = userNames.map((u) => `<th style="padding:6px 8px; font-size:var(--zn-fs-xs);">${escapeHtml(u)}</th>`).join('');
   const rows = (data.shares || []).map((s) => {
     const cells = userNames
       .map((u) => `<td style="padding:4px 8px;">${levelSelect(`data-share="${escapeHtml(s.name)}" data-user="${escapeHtml(u)}"`, (s.users || {})[u] || 'inherit', true)}</td>`)
@@ -29,14 +29,14 @@ export function buildShareAccessHtml(data, users) {
       ${cells}</tr>`;
   }).join('');
   return `
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:12px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:var(--zn-fs-xs);">
       <span>Everyone else, on shares without a setting:</span>${levelSelect('id="share-access-global"', data.default_level || 'write', false)}
     </div>
-    <div style="overflow-x:auto;"><table style="border-collapse:collapse; min-width:420px; font-size:12px;">
+    <div style="overflow-x:auto;"><table style="border-collapse:collapse; min-width:420px; font-size:var(--zn-fs-xs);">
       <thead><tr style="color:var(--muted); text-transform:uppercase;"><th style="padding:6px 8px; text-align:left;">Share</th><th style="padding:6px 8px;">Default</th>${head}</tr></thead>
       <tbody>${rows || `<tr><td colspan="${2 + userNames.length}" style="padding:10px; color:var(--muted);">No shares found.</td></tr>`}</tbody>
     </table></div>
-    <div style="font-size:11px; color:var(--muted); margin-top:8px;">Admins always have full access. Users always have their own home folder. "inherit" uses the share's Samba user lists, then the share default, then the setting above.</div>`;
+    <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:8px;">Admins always have full access. Users always have their own home folder. "inherit" uses the share's Samba user lists, then the share default, then the setting above.</div>`;
 }
 
 export function collectShareAccess(root) {
@@ -84,7 +84,7 @@ export async function openShareAccessModal() {
         <div id="share-access-body">${buildShareAccessHtml(data, plain)}</div>
         <div style="display:flex; justify-content:flex-end; gap:8px;">
           <button type="button" id="share-access-cancel" class="btn-pill-toggle">Cancel</button>
-          <button type="button" id="share-access-save" class="btn-save-preset" style="padding:6px 14px; font-size:11.5px;">Save</button>
+          <button type="button" id="share-access-save" class="btn-save-preset" style="padding:6px 14px; font-size:var(--zn-fs-xs);">Save</button>
         </div>
       </div>
     </div>`;

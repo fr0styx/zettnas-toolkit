@@ -147,11 +147,11 @@ export async function fetchAndRenderUpsEvents() {
     }
     tbody.innerHTML = events.map(ev => {
       const dateStr = formatDateTime(ev.ts);
-      let typeBadge = `<span class="badge" style="background:var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); border:1px solid #00f0ff; color:var(--lt-t-00f0ffff, #00f0ff); padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+      let typeBadge = `<span class="badge" style="background:var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); border:1px solid #00f0ff; color:var(--lt-t-00f0ffff, #00f0ff); padding:2px 8px; border-radius:4px; font-size:var(--zn-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
       if (ev.event_type.includes('OUTAGE') || ev.event_type.includes('FAILSAFE')) {
-        typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:var(--lt-t-f5a623ff, #f5a623); padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+        typeBadge = `<span class="badge" style="background:rgba(245,166,35,0.15); border:1px solid #f5a623; color:var(--lt-t-f5a623ff, #f5a623); padding:2px 8px; border-radius:4px; font-size:var(--zn-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
       } else if (ev.event_type.includes('SELF_TEST')) {
-        typeBadge = `<span class="badge" style="background:rgba(37,194,160,0.15); border:1px solid #25c2a0; color:var(--lt-t-25c2a0ff, #25c2a0); padding:2px 8px; border-radius:4px; font-size:11px;">${escapeHtml(ev.event_type)}</span>`;
+        typeBadge = `<span class="badge" style="background:rgba(37,194,160,0.15); border:1px solid #25c2a0; color:var(--lt-t-25c2a0ff, #25c2a0); padding:2px 8px; border-radius:4px; font-size:var(--zn-fs-xs);">${escapeHtml(ev.event_type)}</span>`;
       }
       const durStr = ev.duration_sec ? `${ev.duration_sec}s` : '--';
       const battDelta = ev.start_battery_pct != null && ev.end_battery_pct != null
@@ -160,11 +160,11 @@ export async function fetchAndRenderUpsEvents() {
       const action = ev.action_taken || ev.status || '--';
 
       return `<tr>
-        <td style="font-size:12px; font-variant-numeric:tabular-nums;">${escapeHtml(dateStr)}</td>
+        <td style="font-size:var(--zn-fs-xs); font-variant-numeric:tabular-nums;">${escapeHtml(dateStr)}</td>
         <td>${typeBadge}</td>
-        <td style="font-size:12px;">${escapeHtml(durStr)}</td>
-        <td style="font-size:12px;">${escapeHtml(battDelta)}</td>
-        <td style="font-size:12px; color:var(--text);">${escapeHtml(action)}</td>
+        <td style="font-size:var(--zn-fs-xs);">${escapeHtml(durStr)}</td>
+        <td style="font-size:var(--zn-fs-xs);">${escapeHtml(battDelta)}</td>
+        <td style="font-size:var(--zn-fs-xs); color:var(--text);">${escapeHtml(action)}</td>
       </tr>`;
     }).join('');
   } catch (err) {
@@ -665,7 +665,7 @@ export function initUpsDrawerControls() {
       const candidates = res && Array.isArray(res.candidates) ? res.candidates : [];
       if (!discoverContainer) return;
       if (candidates.length === 0) {
-        discoverContainer.innerHTML = `<div style="font-size:11.5px; color:var(--muted); padding:6px 0;">No active UPS daemons or USB devices detected on local ports.</div>`;
+        discoverContainer.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:6px 0;">No active UPS daemons or USB devices detected on local ports.</div>`;
         return;
       }
       discoverContainer.innerHTML = candidates.map((cand, idx) => {
@@ -679,8 +679,8 @@ export function initUpsDrawerControls() {
         const displayTitle = cand.title || cand.label || typeLabel;
         return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 12px; border-radius:6px; cursor:pointer;">
           <div>
-            <div style="font-size:12px; font-weight:600; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(displayTitle)}</div>
-            <div style="font-size:11px; color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
+            <div style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(displayTitle)}</div>
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
           </div>
           <button type="button" class="btn-rect is-small">Apply</button>
         </div>`;

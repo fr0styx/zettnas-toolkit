@@ -68,7 +68,7 @@
 }
 
 .ups-card-label {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--muted, #8e8e93);
@@ -85,13 +85,13 @@
 }
 
 .ups-card-sub {
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   color: var(--ok2, #25c2a0);
   font-weight: 500;
 }
 
 .ups-card-meta {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #8e8e93);
   margin-top: 4px;
 }
@@ -129,7 +129,7 @@
 }
 
 .ups-flow-rate {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #8e8e93);
   margin-top: 2px;
   text-transform: uppercase;
@@ -244,7 +244,7 @@
 }
 
 .ups-eb-desc {
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   color: var(--text, var(--lt-t-ffffffff, #ffffff));
 }
 
@@ -285,13 +285,13 @@
 }
 
 .ups-mode-box strong {
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   color: var(--text, var(--lt-t-ffffffff, #ffffff));
   margin-bottom: 2px;
 }
 
 .ups-mode-box small {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #8e8e93);
 }
 
@@ -309,7 +309,7 @@
   display: inline-block;
   min-width: 60px;
   text-align: right;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   color: var(--ok2, #25c2a0);
   font-variant-numeric: tabular-nums;
@@ -317,7 +317,7 @@
 
 .drawer-field-label {
   display: block;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -378,7 +378,7 @@ body.theme-yak .input-modern:focus {
 }
 
 .ups-save-badge {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   color: var(--ok2, #25c2a0);
   background: rgba(37, 194, 160, 0.12);

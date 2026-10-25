@@ -65,7 +65,7 @@ function buildDiskRowInner(d) {
     <td style="font-weight:700; color:var(--lt-t-ffffffff, #fff);">/dev/${escapeHtml(devName)}</td>
     <td>
       <div style="font-weight:600; color:var(--lt-t-e2e8f0ff, #e2e8f0);">${escapeHtml(modelStr)}</div>
-      <div style="font-size:11px; color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
+      <div style="font-size:var(--zn-fs-xs); color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
     </td>
     <td>
       <span class="bay-sub-badge" style="background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>

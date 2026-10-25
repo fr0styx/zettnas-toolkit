@@ -83,7 +83,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--lt-t-ffffffff, #fff);
   letter-spacing: 0.3px;
@@ -112,7 +112,7 @@
 }
 
 .dock-tooltip-status {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   padding: 1.5px 7px;
   border-radius: 10px;
@@ -154,7 +154,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   line-height: 1;
   cursor: pointer;
   padding: 0;
@@ -239,7 +239,7 @@
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--lt-r-ffffff33, rgba(255, 255, 255, 0.2));
   color: var(--lt-t-ffffffff, #fff);
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 20px;
@@ -289,14 +289,14 @@
 }
 
 .dock-splash-title {
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--lt-t-ffffffff, #fff);
   letter-spacing: 0.2px;
 }
 
 .dock-splash-desc {
-  font-size: 9.5px;
+  font-size: var(--zn-fs-xs);
   color: var(--lt-t-94a3b8ff, #94a3b8);
   max-width: 220px;
   line-height: 1.35;
@@ -333,12 +333,12 @@
 }
 
 .dock-desktop-home-card strong {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--lt-t-ffffffff, #fff);
 }
 
 .dock-desktop-home-card span {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   color: var(--ok2, #25c2a0);
   font-weight: 600;
 }
@@ -366,7 +366,7 @@
 }
 
 .dock-notif-feed-item-title {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -374,7 +374,7 @@
 }
 
 .dock-notif-feed-item-msg {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--lt-t-94a3b8ff, #94a3b8);
   overflow: hidden;
   text-overflow: ellipsis;

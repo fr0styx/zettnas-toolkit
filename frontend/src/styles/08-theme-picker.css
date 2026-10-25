@@ -44,7 +44,7 @@
   overflow: hidden;
 }
 .theme-preset-name {
-  font-size: 11.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--lt-t-ffffffff, #fff);
   white-space: nowrap;
@@ -55,7 +55,7 @@
   color: var(--lt-ink-brand, var(--brand, #00f0ff));
 }
 .theme-preset-desc {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   font-weight: 600;
   white-space: nowrap;

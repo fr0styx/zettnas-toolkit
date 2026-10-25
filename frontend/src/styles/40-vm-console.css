@@ -22,7 +22,7 @@
 }
 
 .console-status-pill {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   padding: 1px 6px;
   border-radius: 4px;
@@ -49,7 +49,7 @@
 }
 
 .toolbar-stat {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   font-family: monospace;
   display: inline-flex;
@@ -76,7 +76,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 4px;
@@ -111,7 +111,7 @@
   background: none;
   border: none;
   color: #cbd5e1;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   padding: 6px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -184,7 +184,7 @@
   gap: 12px;
   padding: 8px 18px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -234,7 +234,7 @@
 .btn-banner-act {
   padding: 4px 10px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   cursor: pointer;
   border: 1px solid transparent;
@@ -265,7 +265,7 @@
 
 /* Boot Order Pill & Selector */
 .vm-boot-order-pill {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -302,7 +302,7 @@
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: #cbd5e1;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -325,7 +325,7 @@
 
 /* QEMU Process Indicator */
 .qemu-process-badge {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
@@ -375,7 +375,7 @@
 .vm-telemetry-item .vm-telemetry-header {
   display: flex;
   justify-content: space-between;
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
 }
 
@@ -438,7 +438,7 @@
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 4px;
@@ -468,7 +468,7 @@
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.05);
   color: #fff;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   cursor: pointer;
   transition: all 0.12s ease;
 }
@@ -533,7 +533,7 @@
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: #cbd5e1;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -555,7 +555,7 @@
 }
 
 .firmware-label-sub {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #94a3b8);
   font-weight: normal;
   margin-left: 20px;
@@ -571,7 +571,7 @@
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: #fff;
   transition: all 0.15s ease;
 }
@@ -583,7 +583,7 @@
 
 .usb-vidpid-badge {
   font-family: monospace;
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;
@@ -613,7 +613,7 @@
   background: #1e293b;
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #fff;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -624,7 +624,7 @@
   flex-shrink: 0;
   white-space: nowrap;
   padding: 6px 14px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   background: rgba(14, 165, 233, 0.2);
   border: 1px solid #38bdf8;

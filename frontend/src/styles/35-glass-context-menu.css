@@ -147,7 +147,7 @@ input[type="range"].tz-range-slider::-moz-range-thumb {
   padding: 8px 12px;
   border-radius: 7px;
   color: var(--lt-t-e2e8f0ff, #e2e8f0);
-  font-size: 12.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;

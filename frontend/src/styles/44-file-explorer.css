@@ -29,7 +29,7 @@
 }
 
 .fm-tree-group-title {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -44,7 +44,7 @@
   padding: 6px 10px;
   margin: 1px 4px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   color: var(--fg, #e2e8f0);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
@@ -108,7 +108,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   padding: 3px 0;
   color: var(--fg, #cbd5e1);
 }
@@ -120,7 +120,7 @@
 /* Compact View Mode */
 .file-manager-window.fm-mode-compact .fm-row {
   height: 28px !important;
-  font-size: 11px !important;
+  font-size: var(--zn-fs-xs) !important;
 }
 
 .file-manager-window.fm-mode-compact .fm-row svg {
@@ -175,7 +175,7 @@
   gap: 16px;
   white-space: nowrap; /* the menu widens to the longest row instead of wrapping it */
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   color: var(--fg, #e2e8f0);
   border-radius: 5px;
   cursor: pointer;
@@ -201,7 +201,7 @@
 
 .fm-ctx-key {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #64748b);
   font-family: monospace;
 }
@@ -221,7 +221,7 @@
   background: rgba(14, 165, 233, 0.95);
   color: #fff;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   display: flex;

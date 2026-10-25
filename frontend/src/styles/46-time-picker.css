@@ -17,7 +17,7 @@
   border: 1px solid rgba(56, 189, 248, 0.28);
   color: var(--text, var(--lt-t-f8fafcff, #f8fafc));
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease-out;
@@ -40,7 +40,7 @@
 }
 
 .glass-time-trigger .gt-icon {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   opacity: 0.75;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -106,7 +106,7 @@
 }
 
 .gtp-preview-period {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--lt-t-94a3b8ff, #94a3b8);
 }
@@ -118,7 +118,7 @@
 }
 
 .gtp-preset-btn {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 2px 5px;
   border-radius: 4px;
@@ -148,7 +148,7 @@
 }
 
 .gtp-col-label {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--lt-t-64748bff, #64748b);
   text-transform: uppercase;
@@ -189,7 +189,7 @@
   background: transparent;
   color: var(--lt-t-cbd5e1ff, #cbd5e1);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   border-radius: 4px;
   cursor: pointer;
@@ -224,7 +224,7 @@
   background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
   border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
   color: var(--lt-t-cbd5e1ff, #cbd5e1);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -252,7 +252,7 @@
 }
 
 .gtp-now-btn {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--lt-t-94a3b8ff, #94a3b8);
   background: transparent;
@@ -269,7 +269,7 @@
 }
 
 .gtp-done-btn {
-  font-size: 10.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 3px 12px;
   border-radius: 6px;

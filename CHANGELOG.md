@@ -36,6 +36,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Everyday use
 
+- **Easier to read**: no text in the interface is smaller than 13px (the LCD and its previews keep
+  their exact sizes). Windows without a saved place open below the top bar instead of under it.
 - **The page opens faster**: the first download dropped from 358 kB to 229 kB; File Explorer, the
   hardware settings and other windows load right after the first paint.
 - Error messages say what to do next ("Wait a minute, then try again", "Choose another name"), and a

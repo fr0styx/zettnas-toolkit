@@ -153,7 +153,7 @@ export function showDockToast(msg, targetId = null) {
 
   const toast = document.createElement('div');
   toast.className = 'dock-pin-toast';
-  toast.style.cssText = 'background:rgba(18,25,35,0.92); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); color:#fff; font-size:11.5px; font-weight:600; padding:6px 14px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2) inset; pointer-events:none; transition:opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(8px) scale(0.96); opacity:0; white-space:nowrap;';
+  toast.style.cssText = 'background:rgba(18,25,35,0.92); border:1px solid rgba(255,255,255,0.22); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); color:#fff; font-size:var(--zn-fs-xs); font-weight:600; padding:6px 14px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.2) inset; pointer-events:none; transition:opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1); transform:translateY(8px) scale(0.96); opacity:0; white-space:nowrap;';
   toast.textContent = msg;
   container.appendChild(toast);
 
@@ -1689,7 +1689,7 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, op
 
   let html = `
     <div class="ctx-item" id="dock-ctx-pin">
-      <span style="font-size:12px; margin-right:6px;">${pinIcon}</span>
+      <span style="font-size:var(--zn-fs-xs); margin-right:6px;">${pinIcon}</span>
       <span>${escapeHtml(pinLabel)}</span>
     </div>
   `;
@@ -1697,45 +1697,45 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, op
   if (isFmApp) {
     html += `
       <div class="ctx-item" id="dock-ctx-new-window">
-        <span style="font-size:11px; margin-right:6px;">🪟</span>
+        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🪟</span>
         <span>${escapeHtml(t('dock.new_fm_window', 'New Window (Ctrl+N)'))}</span>
       </div>
     `;
 
     if (openWindowsList && openWindowsList.length > 0) {
       html += `<div style="height:1px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); margin:4px 0;"></div>`;
-      html += `<div style="font-size:11px; color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase;">${escapeHtml(t('dock.open_windows', 'Open Windows'))}</div>`;
+      html += `<div style="font-size:var(--zn-fs-xs); color:var(--muted); padding:3px 10px; font-weight:700; text-transform:uppercase;">${escapeHtml(t('dock.open_windows', 'Open Windows'))}</div>`;
       openWindowsList.forEach((w) => {
         const wTitle = w.title || 'File Explorer';
         const isCurrentActive = DockManager.activeId === w.id;
         html += `
           <div class="ctx-item dock-ctx-fm-win" data-win-id="${escapeHtml(w.id)}" style="display:flex; align-items:center; justify-content:space-between;">
             <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-              <span style="font-size:12px;">📁</span>
+              <span style="font-size:var(--zn-fs-xs);">📁</span>
               <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(wTitle)}</span>
             </div>
-            ${isCurrentActive ? `<span style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:11px;">✓</span>` : ''}
+            ${isCurrentActive ? `<span style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs);">✓</span>` : ''}
           </div>
         `;
       });
       html += `<div style="height:1px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); margin:4px 0;"></div>`;
       html += `
         <div class="ctx-item" id="dock-ctx-close-all" style="color:var(--crit, #ff5c5c);">
-          <span style="font-size:11px; margin-right:6px;">✕</span>
+          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">✕</span>
           <span>${escapeHtml(t('dock.close_all_windows', 'Close All Windows'))}</span>
         </div>
       `;
     } else if (isRunning) {
       html += `
         <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
-          <span style="font-size:11px; margin-right:6px;">✕</span>
+          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">✕</span>
           <span>${escapeHtml(closeLabel)}</span>
         </div>
       `;
     } else {
       html += `
         <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
-          <span style="font-size:11px; margin-right:6px;">▶</span>
+          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">▶</span>
           <span>${escapeHtml(openLabel)}</span>
         </div>
       `;
@@ -1744,14 +1744,14 @@ export function showDockItemContextMenu(x, y, id, title, isPinned, isRunning, op
     if (isRunning) {
       html += `
         <div class="ctx-item" id="dock-ctx-close" style="color:var(--crit, #ff5c5c);">
-          <span style="font-size:11px; margin-right:6px;">✕</span>
+          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">✕</span>
           <span>${escapeHtml(closeLabel)}</span>
         </div>
       `;
     } else {
       html += `
         <div class="ctx-item" id="dock-ctx-open" style="color:var(--ok2, #25c2a0);">
-          <span style="font-size:11px; margin-right:6px;">▶</span>
+          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">▶</span>
           <span>${escapeHtml(openLabel)}</span>
         </div>
       `;
@@ -2299,8 +2299,8 @@ export const DockManager = {
           container.innerHTML = `
             <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:6px; text-align:center;">
               <span style="font-size:24px;">🔔</span>
-              <strong style="font-size:11px; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(t('dock.notifications', 'Notification Center'))}</strong>
-              <span style="font-size:11px; color:var(--lt-t-94a3b8ff, #94a3b8);">No recent system notifications</span>
+              <strong style="font-size:var(--zn-fs-xs); color:var(--lt-t-ffffffff, #fff);">${escapeHtml(t('dock.notifications', 'Notification Center'))}</strong>
+              <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-94a3b8ff, #94a3b8);">No recent system notifications</span>
             </div>
           `;
           return container;
@@ -2315,11 +2315,11 @@ export const DockManager = {
           const timeStr = formatTime(ev.ts, undefined, '');
           return `
             <div class="dock-notif-feed-item">
-              <span style="font-size:12px; line-height:1; flex-shrink:0;">${nIcon}</span>
+              <span style="font-size:var(--zn-fs-xs); line-height:1; flex-shrink:0;">${nIcon}</span>
               <div style="min-width:0; flex:1; overflow:hidden;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <strong class="dock-notif-feed-item-title" style="color:${col};">${escapeHtml(ev.title || 'Alert')}</strong>
-                  <span style="font-size:11px; color:var(--muted);">${timeStr}</span>
+                  <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${timeStr}</span>
                 </div>
                 <div class="dock-notif-feed-item-msg">${escapeHtml(ev.message || '')}</div>
               </div>
@@ -2329,8 +2329,8 @@ export const DockManager = {
 
         container.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding-bottom:3px;">
-            <span style="font-size:11px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">Recent Alerts</span>
-            <span style="font-size:11px; color:var(--lt-ink-brand, var(--accent-cyan)); font-weight:700;">${events.length} total</span>
+            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff);">Recent Alerts</span>
+            <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan)); font-weight:700;">${events.length} total</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden; flex:1;">
             ${itemsHtml}
@@ -2351,14 +2351,14 @@ export const DockManager = {
         const pct = escapeHtml(document.getElementById('copy-toast-pct')?.textContent || '0%');
         const file = escapeHtml(document.getElementById('copy-toast-file')?.textContent || 'Preparing...');
         container.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--zn-fs-xs);">
             <strong style="color:var(--lt-t-ffffffff, #fff);">${status}</strong>
             <strong style="color:var(--ok2);">${pct}</strong>
           </div>
           <div style="background:var(--lt-b-ffffff1f, rgba(255,255,255,0.12)); height:6px; border-radius:3px; overflow:hidden; margin:6px 0;">
             <div style="background:var(--ok2); height:100%; width:${pct};"></div>
           </div>
-          <div style="font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file}</div>
+          <div style="font-size:var(--zn-fs-xs); color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${file}</div>
         `;
         return container;
       }
@@ -2828,7 +2828,7 @@ export const DockManager = {
     notifItem.type = 'button';
     notifItem.className = 'dock-item dock-notif-btn';
     notifItem.setAttribute('aria-label', t('dock.notifications', 'Notification Center'));
-    notifItem.innerHTML = `<svg><use href="#i-bell"/></svg><span class="dock-badge" id="dock-notif-badge" aria-hidden="true" style="display:none; position:absolute; top:-2px; right:-2px; background:var(--crit); color:var(--lt-t-ffffffff, #fff); font-size:11px; font-weight:800; padding:1px 4px; border-radius:8px; border:1px solid var(--lt-r-000000ff, #000); box-shadow:0 1px 2px rgba(0,0,0,0.5); pointer-events:none;">0</span>`;
+    notifItem.innerHTML = `<svg><use href="#i-bell"/></svg><span class="dock-badge" id="dock-notif-badge" aria-hidden="true" style="display:none; position:absolute; top:-2px; right:-2px; background:var(--crit); color:var(--lt-t-ffffffff, #fff); font-size:var(--zn-fs-xs); font-weight:800; padding:1px 4px; border-radius:8px; border:1px solid var(--lt-r-000000ff, #000); box-shadow:0 1px 2px rgba(0,0,0,0.5); pointer-events:none;">0</span>`;
     notifItem.addEventListener('mouseenter', () => showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
     notifItem.addEventListener('focus', () => keyboardFocused(notifItem) && showDockTooltip(notifItem, 'notif', t('dock.notifications', 'Notification Center'), '#i-bell', false));
     notifItem.addEventListener('mouseleave', hideDockTooltip);
@@ -3120,14 +3120,14 @@ export function toggleUserProfileFlyout(anchorEl) {
         </div>
         <div style="flex:1; min-width:0;">
           <div id="user-flyout-name" style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Administrator</div>
-          <div id="user-flyout-username" style="font-size:11.5px; color:var(--muted);">@admin</div>
-          <span id="user-flyout-role" style="font-size:11px; font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">SuperAdmin 👑</span>
+          <div id="user-flyout-username" style="font-size:var(--zn-fs-xs); color:var(--muted);">@admin</div>
+          <span id="user-flyout-role" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">SuperAdmin 👑</span>
         </div>
       </div>
       <div class="user-flyout-actions" style="padding:8px;">
         <button class="user-flyout-btn" id="btn-flyout-lock" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--lt-t-ffffffff, #fff); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
           <span style="font-size:15px;">🔒</span> <span>Lock Screen</span>
-          <span style="margin-left:auto; font-size:11px; color:var(--muted); font-family:monospace;">Cmd+L</span>
+          <span style="margin-left:auto; font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace;">Cmd+L</span>
         </button>
         <button class="user-flyout-btn" id="btn-flyout-users" style="width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; background:transparent; border:none; border-radius:6px; color:var(--lt-t-ffffffff, #fff); font-size:13px; font-weight:600; cursor:pointer; text-align:left; transition:background 0.15s ease;">
           <span style="font-size:15px;">👥</span> <span>Users & Permissions</span>
@@ -3901,12 +3901,12 @@ export function initDraggableDesktopIcons() {
 
       ctxMenu.innerHTML = `
         <div class="ctx-item" id="ctx-open-app">
-          <span style="font-size:11px; margin-right:6px;">▶</span>
+          <span style="font-size:var(--zn-fs-xs); margin-right:6px;">▶</span>
           <span>${escapeHtml(openLabel)}${iconName ? ` ${escapeHtml(iconName)}` : ''}</span>
         </div>
         ${iconAppId === 'fm' ? `
           <div class="ctx-item" id="ctx-new-window">
-            <span style="font-size:11px; margin-right:6px;">🪟</span>
+            <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🪟</span>
             <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
           </div>
         ` : ''}
@@ -3916,7 +3916,7 @@ export function initDraggableDesktopIcons() {
         ${isCustom ? `
           <div style="height:1px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); margin:4px 0;"></div>
           <div class="ctx-item" id="ctx-remove-shortcut" style="color:var(--lt-t-f87171ff, #f87171);">
-            <span style="font-size:11px; margin-right:6px;">🗑️</span>
+            <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🗑️</span>
             <span>Remove from Desktop</span>
           </div>
         ` : ''}
@@ -3971,24 +3971,24 @@ export function initDraggableDesktopIcons() {
     e.preventDefault();
     ctxMenu.innerHTML = `
       <div class="ctx-item" id="ctx-spotlight">
-        <span style="font-size:11px; margin-right:6px;">⚡</span>
+        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">⚡</span>
         <span>Command Palette</span>
-        <kbd style="margin-left:auto; font-size:11px; opacity:0.6;">⌘K</kbd>
+        <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6;">⌘K</kbd>
       </div>
       <div class="ctx-item" id="ctx-open-mc">
-        <span style="font-size:11px; margin-right:6px;">🖥️</span>
+        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🖥️</span>
         <span>Mission Control</span>
       </div>
       <div class="ctx-item" id="ctx-open-fm">
-        <span style="font-size:11px; margin-right:6px;">📁</span>
+        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">📁</span>
         <span>File Explorer</span>
       </div>
       <div class="ctx-item" id="ctx-new-fm">
-        <span style="font-size:11px; margin-right:6px;">🪟</span>
+        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🪟</span>
         <span>${escapeHtml(t('dock.new_fm_window', 'New Window'))}</span>
       </div>
       <div class="ctx-item" id="ctx-add-widget">
-        <span style="font-size:11px; margin-right:6px;">🧩</span>
+        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🧩</span>
         <span>${escapeHtml(t('ctx.add_widget', 'Add Widget…'))}</span>
       </div>
       <div style="height:1px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); margin:4px 0;"></div>
@@ -3996,7 +3996,7 @@ export function initDraggableDesktopIcons() {
       <div class="ctx-item" id="ctx-sort-name">🔤 ${t('desktop.sort_name', 'Sort by Name')}</div>
       <div style="height:1px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); margin:4px 0;"></div>
       <div class="ctx-item" id="ctx-refresh-telemetry">
-        <span style="font-size:11px; margin-right:6px;">🔄</span>
+        <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🔄</span>
         <span>Refresh Desktop</span>
       </div>
     `;
@@ -4421,7 +4421,7 @@ export function renderNotificationCenter() {
     const emptySig = `empty_${currentNotifFilter}_${clearedEventsTs}`;
     if (list._lastRenderedSignature === emptySig) return;
     list._lastRenderedSignature = emptySig;
-    list.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--muted); font-size:11px;">${escapeHtml(emptyMsg)}</div>`;
+    list.innerHTML = `<div style="padding:28px 16px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">${escapeHtml(emptyMsg)}</div>`;
     return;
   }
   
@@ -4475,11 +4475,11 @@ export function renderNotificationCenter() {
       <span class="notif-center-icon" style="font-size: 14px; margin-top:2px; flex-shrink:0;">${icon}</span>
       <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div class="notif-center-title" style="font-size:11px; font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${isChecked ? 'opacity:0.75;' : ''}">${escapeHtml(e.title)}</div>
-          <span style="font-size:11px; color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
+          <div class="notif-center-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:${color}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${isChecked ? 'opacity:0.75;' : ''}">${escapeHtml(e.title)}</div>
+          <span style="font-size:var(--zn-fs-xs); color:var(--muted); opacity:0.8; margin-left:6px; flex-shrink:0;">🔍</span>
         </div>
-        <div class="notif-center-msg" style="font-size:11px; color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
-        <div style="font-size:11px; color:var(--muted); margin-top:2px;">${formatDateTime(dt)}</div>
+        <div class="notif-center-msg" style="font-size:var(--zn-fs-xs); color:${isChecked ? 'var(--muted)' : '#fff'}; line-height:1.4; word-break:break-word;">${escapeHtml(e.message)}</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${formatDateTime(dt)}</div>
       </div>
       ${!isChecked ? `<div class="notif-unread-dot" style="width:6px; height:6px; border-radius:50%; background:var(--brand, #0ea5e9); margin-left:auto; margin-top:6px; flex-shrink:0;"></div>` : ''}
     `;

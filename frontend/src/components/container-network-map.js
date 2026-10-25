@@ -147,13 +147,13 @@ function ensureOverlay() {
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:16px;">🕸️</span>
           <span style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13.5px;" data-i18n="cw.netmap_title">${escapeHtml(t('cw.netmap_title', 'Container Network Map'))}</span>
-          <span id="netmap-summary" style="font-size:11px; color:var(--muted);"></span>
+          <span id="netmap-summary" style="font-size:var(--zn-fs-xs); color:var(--muted);"></span>
         </div>
         <div class="os-window-controls">
           <button class="win-btn close-btn" id="netmap-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
-      <div style="padding:8px 16px; font-size:11px; color:var(--muted); border-bottom:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));" data-i18n="cw.netmap_hint">${escapeHtml(t('cw.netmap_hint', 'Click a network to highlight its containers.'))}</div>
+      <div style="padding:8px 16px; font-size:var(--zn-fs-xs); color:var(--muted); border-bottom:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));" data-i18n="cw.netmap_hint">${escapeHtml(t('cw.netmap_hint', 'Click a network to highlight its containers.'))}</div>
       <div id="netmap-body" style="flex:1; overflow:auto; padding:10px 12px;"></div>
     </div>`;
   document.body.appendChild(overlay);
@@ -183,7 +183,7 @@ function renderBody(overlay) {
   const summary = overlay.querySelector('#netmap-summary');
   const layout = layoutNetworkMap(_topology);
   if (!layout.networks.length && !layout.containers.length) {
-    body.innerHTML = `<div class="netmap-empty" style="padding:24px; text-align:center; color:var(--muted); font-size:12px;">${escapeHtml(t('cw.netmap_empty', 'No Docker networks found.'))}</div>`;
+    body.innerHTML = `<div class="netmap-empty" style="padding:24px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">${escapeHtml(t('cw.netmap_empty', 'No Docker networks found.'))}</div>`;
     summary.textContent = '';
     return;
   }
@@ -200,12 +200,12 @@ export async function openNetworkMap() {
   overlay.style.display = 'flex';
   overlay.classList.add('open');
   _highlight = null;
-  body.innerHTML = `<div style="padding:24px; text-align:center; color:var(--muted); font-size:12px;">${escapeHtml(t('cw.netmap_loading', 'Loading networks...'))}</div>`;
+  body.innerHTML = `<div style="padding:24px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">${escapeHtml(t('cw.netmap_loading', 'Loading networks...'))}</div>`;
   try {
     _topology = await api.get('/api/docker/networks/topology');
     renderBody(overlay);
   } catch {
     _topology = null;
-    body.innerHTML = `<div class="netmap-error" style="padding:24px; text-align:center; color:var(--lt-t-f87171ff, #f87171); font-size:12px;">${escapeHtml(t('cw.netmap_failed', 'Could not load Docker networks.'))}</div>`;
+    body.innerHTML = `<div class="netmap-error" style="padding:24px; text-align:center; color:var(--lt-t-f87171ff, #f87171); font-size:var(--zn-fs-xs);">${escapeHtml(t('cw.netmap_failed', 'Could not load Docker networks.'))}</div>`;
   }
 }

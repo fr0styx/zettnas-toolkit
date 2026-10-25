@@ -28,7 +28,7 @@
 }
 
 .wallpaper-count-badge {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   padding: 3px 9px;
   background: var(--lt-b-ffffff12, rgba(255, 255, 255, 0.07));

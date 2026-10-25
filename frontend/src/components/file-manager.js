@@ -194,7 +194,7 @@ export class FileManagerWindow {
               <div class="os-window-title">
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                 <span class="fm-title-main" data-i18n="fm.title">${t('fm.title', 'File Explorer')}</span>
-                <span class="fm-title-folder" style="margin-left: 6px; font-weight: normal; opacity: 0.75; font-size: 11px;"></span>
+                <span class="fm-title-folder" style="margin-left: 6px; font-weight: normal; opacity: 0.75; font-size: var(--zn-fs-xs);"></span>
               </div>
               <div class="os-window-controls">
                 <button class="win-btn min-btn" id="fm-min" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
@@ -230,9 +230,9 @@ export class FileManagerWindow {
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
               </button>
               <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
-                <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--fg); outline: none;" />
+                <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: var(--zn-fs-xs); padding: 3px 8px 3px 22px; border-radius: 6px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--fg); outline: none;" />
                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Toggle ZettAI Semantic & Visual RAG Search (Zero Disk Wake)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
+                <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Toggle ZettAI Semantic & Visual RAG Search (Zero Disk Wake)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}" style="font-size: var(--zn-fs-xs); padding: 2px 5px; border-radius: 5px;">✨ AI</button>
               </div>
               <button id="fm-new-folder-btn" class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -257,7 +257,7 @@ export class FileManagerWindow {
               <div class="fm-aux-tool-group" style="display: flex; align-items: center; gap: 3px; margin-left: 4px;">
                 <button type="button" id="fm-btn-transfers" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                  <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                  <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
                 </button>
                 <button type="button" id="fm-btn-inspector" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                   <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -287,7 +287,7 @@ export class FileManagerWindow {
                 </div>
                 <div class="fm-inspector-pane" style="display: none;">
                   <div class="fm-inspector-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
-                    <span style="font-size: 11px; font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">Inspector</span>
+                    <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">Inspector</span>
                     <button type="button" class="fm-inspector-close-btn" style="background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer;">✕</button>
                   </div>
                   <div class="fm-inspector-content" style="flex: 1; overflow-y: auto; padding: 12px;"></div>
@@ -310,7 +310,7 @@ export class FileManagerWindow {
             <div class="os-window-title">
               <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
               <span class="fm-title-main" data-i18n="fm.title">${t('fm.title', 'File Explorer')}</span>
-              <span class="fm-title-folder" style="margin-left: 6px; font-weight: normal; opacity: 0.75; font-size: 11px;"></span>
+              <span class="fm-title-folder" style="margin-left: 6px; font-weight: normal; opacity: 0.75; font-size: var(--zn-fs-xs);"></span>
             </div>
             <div class="os-window-controls">
               <button class="win-btn min-btn" title="${t('window.minimize', 'Minimize')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
@@ -346,9 +346,9 @@ export class FileManagerWindow {
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             </button>
             <div class="fm-search-wrap" style="position: relative; display: flex; align-items: center; gap: 3px; margin: 0 4px;">
-              <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: 11px; padding: 3px 8px 3px 22px; border-radius: 6px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--fg); outline: none;" />
+              <input type="text" class="fm-search-input" placeholder="${t('fm.search_placeholder', 'Search...')}" style="width: 105px; font-size: var(--zn-fs-xs); padding: 3px 8px 3px 22px; border-radius: 6px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--fg); outline: none;" />
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" style="position: absolute; left: 6px; color: var(--muted); pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Toggle ZettAI Semantic & Visual RAG Search (Zero Disk Wake)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}" style="font-size: 11px; padding: 2px 5px; border-radius: 5px;">✨ AI</button>
+              <button type="button" class="fm-tool-btn fm-ai-search-toggle" title="${t('ui.toggle_zettai_semantic_visual_rag', 'Toggle ZettAI Semantic & Visual RAG Search (Zero Disk Wake)')}" aria-label="${t('ui.ai_semantic_search', 'AI Semantic Search')}" style="font-size: var(--zn-fs-xs); padding: 2px 5px; border-radius: 5px;">✨ AI</button>
             </div>
             <button class="fm-tool-btn fm-new-folder-btn" title="${t('fm.new_folder', 'New Folder')}" data-i18n-title="fm.new_folder" aria-label="${t('fm.new_folder', 'New Folder')}">
               <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -373,7 +373,7 @@ export class FileManagerWindow {
             <div class="fm-aux-tool-group" style="display: flex; align-items: center; gap: 3px; margin-left: 4px;">
               <button type="button" class="fm-tool-btn fm-btn-transfers-toggle" title="${t('fm.transfers', 'Transfers')}" data-i18n-title="fm.transfers" aria-label="${t('transfers.title', 'Transfers')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
-                <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: 11px; font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
+                <span class="fm-transfers-count-badge" style="display: none; background: #0ea5e9; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; padding: 1px 4px; border-radius: 6px; margin-left: 2px;">0</span>
               </button>
               <button type="button" class="fm-tool-btn fm-btn-inspector-toggle" title="${t('fm.inspector_toggle', 'Toggle Inspector')}" data-i18n-title="fm.inspector_toggle" aria-label="${t('fm.inspector_toggle', 'Toggle Inspector')}">
                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -403,7 +403,7 @@ export class FileManagerWindow {
               </div>
               <div class="fm-inspector-pane" style="display: none;">
                 <div class="fm-inspector-header" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
-                  <span style="font-size: 11px; font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">Inspector</span>
+                  <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--fg); text-transform: uppercase; letter-spacing: 0.5px;">Inspector</span>
                   <button type="button" class="fm-inspector-close-btn" style="background: none; border: none; font-size: 14px; color: var(--muted); cursor: pointer;">✕</button>
                 </div>
                 <div class="fm-inspector-content" style="flex: 1; overflow-y: auto; padding: 12px;"></div>
@@ -535,6 +535,17 @@ export class FileManagerWindow {
     } else {
       this.transfersCockpit = new FmTransfersCockpit(this);
     }
+  }
+
+  /** A window with no saved place opens centred below the top bar, not under it. */
+  placeIfUnplaced() {
+    const el = this.windowEl;
+    if (!el || el.style.top || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    const r = el.getBoundingClientRect();
+    const w = r.width || 900;
+    const h = r.height || 600;
+    el.style.left = `${Math.max(24, Math.round((window.innerWidth - w) / 2))}px`;
+    el.style.top = `${Math.max(56, Math.round((window.innerHeight - h) / 2) - 20)}px`;
   }
 
   restoreSavedBounds() {
@@ -1319,6 +1330,7 @@ export class FileManagerWindow {
     this.windowEl.classList.add('active-window');
     this.windowEl.style.removeProperty('display');
     this.windowEl.style.setProperty('display', 'flex', 'important');
+    this.placeIfUnplaced();
     this.loadPath(targetPath || this.currentPath);
     if (this.sidebarTree) {
       this.sidebarTree.refresh();
@@ -1794,7 +1806,7 @@ export class FileManagerWindow {
             const ellipsis = document.createElement('span');
             ellipsis.textContent = '...';
             ellipsis.className = 'fm-breadcrumb-ellipsis';
-            ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: 11px; margin: 0 2px;';
+            ellipsis.style.cssText = 'padding: 1px 5px; border-radius: 4px; background: rgba(255,255,255,0.08); cursor: pointer; font-size: var(--zn-fs-xs); margin: 0 2px;';
             ellipsis.title = t('ui.show_intermediate_folders', 'Show intermediate folders');
             ellipsis.onclick = (e) => {
               e.stopPropagation();
@@ -1926,7 +1938,7 @@ export class FileManagerWindow {
     menu = document.createElement('div');
     menu.id = 'fm-breadcrumbs-dropdown';
     menu.className = 'os-context-menu';
-    menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(18,25,35,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: 11px; font-family: monospace; max-height: 200px; overflow-y: auto;';
+    menu.style.cssText = 'position: fixed; z-index: 10000; background: rgba(18,25,35,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(12px); font-size: var(--zn-fs-xs); font-family: monospace; max-height: 200px; overflow-y: auto;';
 
     for (let i = from; i < to; i++) {
       const segPath = '/' + parts.slice(0, i + 1).join('/');
@@ -3636,26 +3648,26 @@ export function showCollisionModal({ sources, destinationDir, action, conflicts,
         </h3>
         <button id="fm-collision-close" class="modal-close-btn" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px;" title="${escapeHtml(t('common.close', 'Close'))}">✕</button>
       </div>
-      <p style="font-size: 12px; color: var(--muted); margin: 0 0 12px 0;">
+      <p style="font-size: var(--zn-fs-xs); color: var(--muted); margin: 0 0 12px 0;">
         ${escapeHtml(t('fm.collision_desc', 'The following files or directories already exist at the destination:'))}
       </p>
       <div style="background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 8px; padding: 10px; max-height: 180px; overflow-y: auto; margin-bottom: 16px;">
         ${(conflicts || [])
           .map(
             (c) => `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); font-size: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); font-size: var(--zn-fs-xs);">
             <div style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               <span>${c.is_dir ? '📁' : '📄'}</span>
               <span style="font-weight: 600; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(c.name)}</span>
             </div>
-            <span style="font-size: 11px; color: var(--muted);">${c.is_dir ? 'Directory' : formatBytes(c.dest_size || 0)}</span>
+            <span style="font-size: var(--zn-fs-xs); color: var(--muted);">${c.is_dir ? 'Directory' : formatBytes(c.dest_size || 0)}</span>
           </div>
         `
           )
           .join('')}
       </div>
       <div style="margin-bottom: 18px;">
-        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer;">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer;">
           <input type="checkbox" id="fm-collision-apply-all" checked style="accent-color: var(--accent-cyan, #0ea5e9);" />
           <span>${escapeHtml(t('fm.apply_all', 'Apply to all conflicts'))}</span>
         </label>
@@ -3773,7 +3785,7 @@ export function openMediaOrganizerModal(initialPath = '') {
       btnPreview.innerHTML = '<span aria-hidden="true">⏳</span> <span>Analyzing...</span>';
       if (previewWrap) {
         previewWrap.innerHTML =
-          '<div style="text-align:center; padding:25px; color:var(--muted); font-size:12px;"><div class="loader-spinner" style="margin:0 auto 10px;"></div>Parsing media files via regex heuristics...</div>';
+          '<div style="text-align:center; padding:25px; color:var(--muted); font-size:var(--zn-fs-xs);"><div class="loader-spinner" style="margin:0 auto 10px;"></div>Parsing media files via regex heuristics...</div>';
       }
 
       try {
@@ -3783,7 +3795,7 @@ export function openMediaOrganizerModal(initialPath = '') {
 
         if (items.length === 0) {
           if (previewWrap) {
-            previewWrap.innerHTML = '<div style="text-align:center; padding:25px; color:var(--muted); font-size:12px;">No video files found in source folder.</div>';
+            previewWrap.innerHTML = '<div style="text-align:center; padding:25px; color:var(--muted); font-size:var(--zn-fs-xs);">No video files found in source folder.</div>';
           }
           if (btnApply) {
             btnApply.disabled = true;
@@ -3795,7 +3807,7 @@ export function openMediaOrganizerModal(initialPath = '') {
 
         if (previewWrap) {
           previewWrap.innerHTML = `
-            <div style="font-size:11px; padding:8px 12px; background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border-bottom:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); font-weight:700; color:var(--muted); display:flex; justify-content:space-between;">
+            <div style="font-size:var(--zn-fs-xs); padding:8px 12px; background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border-bottom:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); font-weight:700; color:var(--muted); display:flex; justify-content:space-between;">
               <span>Detected ${items.length} file(s) for reorganization:</span>
               <span>Plex / Jellyfin Schema</span>
             </div>
@@ -3804,17 +3816,17 @@ export function openMediaOrganizerModal(initialPath = '') {
                 .map((it) => {
                   const isTv = it.media_type === 'tv';
                   const typeBadge = isTv
-                    ? `<span class="ci-badge" style="font-size:11px; background:rgba(168,85,247,0.15); color:var(--lt-t-c084fcff, #c084fc); border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">TV Show · S${String(it.season || 1).padStart(2, '0')}E${String(it.episode || 1).padStart(2, '0')}</span>`
-                    : `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:var(--lt-t-38bdf8ff, #38bdf8); border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">Movie ${it.year ? `(${it.year})` : ''}</span>`;
-                  const qualBadge = `<span class="ci-badge" style="font-size:11px; background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color:var(--lt-t-cbd5e1ff, #cbd5e1); padding:1px 5px; border-radius:3px;">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
+                    ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.15); color:var(--lt-t-c084fcff, #c084fc); border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">TV Show · S${String(it.season || 1).padStart(2, '0')}E${String(it.episode || 1).padStart(2, '0')}</span>`
+                    : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(14,165,233,0.15); color:var(--lt-t-38bdf8ff, #38bdf8); border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">Movie ${it.year ? `(${it.year})` : ''}</span>`;
+                  const qualBadge = `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color:var(--lt-t-cbd5e1ff, #cbd5e1); padding:1px 5px; border-radius:3px;">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
 
                   return `
-                  <div style="padding:8px 12px; border-bottom:1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); display:flex; flex-direction:column; gap:4px; font-size:11px;">
+                  <div style="padding:8px 12px; border-bottom:1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); display:flex; flex-direction:column; gap:4px; font-size:var(--zn-fs-xs);">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff); word-break:break-all;">${escapeHtml(it.title || it.original_filename)}</div>
                       <div style="display:flex; gap:6px;">${typeBadge}${qualBadge}</div>
                     </div>
-                    <div style="color:var(--muted); font-size:11px; font-family:monospace; display:flex; align-items:center; gap:6px;">
+                    <div style="color:var(--muted); font-size:var(--zn-fs-xs); font-family:monospace; display:flex; align-items:center; gap:6px;">
                       <span style="color:var(--lt-t-f87171ff, #f87171); text-decoration:line-through;">${escapeHtml(it.original_filename)}</span>
                       <span aria-hidden="true">➔</span>
                       <span style="color:var(--lt-t-4ade80ff, #4ade80);">${escapeHtml(it.proposed_relative_path)}</span>
@@ -3835,7 +3847,7 @@ export function openMediaOrganizerModal(initialPath = '') {
       } catch (err) {
         showToast(t('toast.preview_failed', 'Preview failed: {error}', { error: err.message }), 'error');
         if (previewWrap) {
-          previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:12px;">Failed: ${escapeHtml(err.message)}</div>`;
+          previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--zn-fs-xs);">Failed: ${escapeHtml(err.message)}</div>`;
         }
       } finally {
         btnPreview.disabled = false;
@@ -3935,14 +3947,14 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
         </div>
       </div>
       <div class="smart-modal-body fm-share-body">
-      <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
+      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 16px;">
         Generate an instant, secure download link for <strong style="color: var(--lt-t-ffffffff, #fff);">${safeName}</strong> that can be shared with anyone.
       </div>
 
       <div id="fm-share-create-section">
         <div class="form-group" style="margin-bottom: 14px;">
-          <label for="fm-share-expires" style="display: block; font-size: 11px; font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 6px;">Link Expiration</label>
-          <select id="fm-share-expires" style="width: 100%; padding: 8px 12px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: 12px;">
+          <label for="fm-share-expires" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 6px;">Link Expiration</label>
+          <select id="fm-share-expires" style="width: 100%; padding: 8px 12px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
             <option value="1">1 Hour</option>
             <option value="24" selected>24 Hours (1 Day)</option>
             <option value="168">7 Days</option>
@@ -3952,13 +3964,13 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
-          <label for="fm-share-password" style="display: block; font-size: 11px; font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 6px;">Password Protection (Optional)</label>
-          <input type="password" id="fm-share-password" placeholder="${t('ui.leave_empty_for_public_access', 'Leave empty for public access')}" style="width: 100%; padding: 8px 12px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: 12px;" />
+          <label for="fm-share-password" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 6px;">Password Protection (Optional)</label>
+          <input type="password" id="fm-share-password" placeholder="${t('ui.leave_empty_for_public_access', 'Leave empty for public access')}" style="width: 100%; padding: 8px 12px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
         </div>
 
         <div class="form-group" style="margin-bottom: 18px;">
-          <label for="fm-share-max-dl" style="display: block; font-size: 11px; font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 6px;">Max Downloads (Optional)</label>
-          <input type="number" id="fm-share-max-dl" min="1" placeholder="${t('ui.unlimited', 'Unlimited')}" style="width: 100%; padding: 8px 12px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: 12px;" />
+          <label for="fm-share-max-dl" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 6px;">Max Downloads (Optional)</label>
+          <input type="number" id="fm-share-max-dl" min="1" placeholder="${t('ui.unlimited', 'Unlimited')}" style="width: 100%; padding: 8px 12px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
@@ -3969,13 +3981,13 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
 
       <div id="fm-share-result-section" style="display: none;">
         <div style="padding: 12px; border-radius: 8px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); margin-bottom: 16px;">
-          <div style="font-size: 11px; color: var(--lt-t-38bdf8ff, #38bdf8); font-weight: 600; margin-bottom: 6px;">Link Generated Successfully!</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8); font-weight: 600; margin-bottom: 6px;">Link Generated Successfully!</div>
           <div style="display: flex; gap: 8px;">
-            <input type="text" id="fm-share-url-output" readonly style="flex: 1; padding: 8px 10px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: 11.5px; font-family: monospace;" />
+            <input type="text" id="fm-share-url-output" readonly style="flex: 1; padding: 8px 10px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); font-family: monospace;" />
             <button id="fm-share-copy-btn" class="btn-pill-toggle active is-primary">📋 Copy</button>
           </div>
         </div>
-        <div id="fm-share-meta-info" style="font-size: 11px; color: var(--muted); margin-bottom: 16px;"></div>
+        <div id="fm-share-meta-info" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 16px;"></div>
         <div style="display: flex; justify-content: flex-end;">
           <button id="fm-share-done" class="btn-pill-toggle">Done</button>
         </div>

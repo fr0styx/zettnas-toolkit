@@ -61,7 +61,7 @@
   bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 11.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   color: rgba(255, 255, 255, 0.35);
   letter-spacing: 1px;

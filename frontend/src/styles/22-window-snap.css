@@ -21,7 +21,7 @@
   background: var(--lt-b-0a0e13d9, rgba(10, 14, 19, 0.85));
   border: 1px solid var(--focus-ring, rgba(0, 240, 255, 0.6));
   color: var(--lt-t-ffffffff, #ffffff);
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   padding: 8px 18px;
@@ -69,7 +69,7 @@
 }
 
 .snap-layout-title {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

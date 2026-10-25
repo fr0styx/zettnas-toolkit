@@ -53,13 +53,13 @@
   max-width: 420px; margin: auto; padding: 24px; text-align: center; color: #e2e8f0;
 }
 .quicklook-unplayable-title { font-size: 15px; font-weight: 700; }
-.quicklook-unplayable-text { font-size: 12.5px; color: #94a3b8; line-height: 1.5; }
+.quicklook-unplayable-text { font-size: var(--zn-fs-xs); color: #94a3b8; line-height: 1.5; }
 .quicklook-unplayable button { display: inline-flex; align-items: center; gap: 6px; }
 
 @media (max-width: 640px) {
   .quicklook-header { padding: 6px 8px; gap: 6px; min-height: 44px; }
   .quicklook-meta { display: none; }
-  .quicklook-title { font-size: 12.5px; }
+  .quicklook-title { font-size: var(--zn-fs-xs); }
   .quicklook-zoom-pill, #ql-actual-size, #ql-flip-h, #ql-rotate-ccw { display: none; }
   .quicklook-btn { min-width: 36px; min-height: 36px; padding: 4px; }
   .quicklook-nav-btn { opacity: 0.85; }

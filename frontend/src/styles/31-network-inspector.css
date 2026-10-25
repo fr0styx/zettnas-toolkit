@@ -26,7 +26,7 @@
 }
 
 .network-kpi-label {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -48,7 +48,7 @@
 }
 
 .network-kpi-sub {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--lt-t-94a3b8ff, #94a3b8);
   margin-top: 4px;
   white-space: nowrap;
@@ -65,7 +65,7 @@
 }
 
 .network-section-title {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -73,7 +73,7 @@
 }
 
 .network-section-badge {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   padding: 2px 8px;
   border-radius: 9999px;
   background: var(--lt-b-3bf58b1f, rgba(59, 245, 139, 0.12));
@@ -130,7 +130,7 @@
 }
 
 .switch-port-alias-tag {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   font-family: inherit;
   color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));
@@ -151,7 +151,7 @@
   cursor: pointer;
   border-radius: 4px;
   padding: 3px 6px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   line-height: 1;
   transition: all 0.15s ease;
 }
@@ -192,7 +192,7 @@
 }
 
 .switch-led-lbl {
-  font-size: 8px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--lt-t-64748bff, #64748b);
   text-transform: uppercase;
@@ -256,13 +256,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 
 .switch-speed-pill {
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   background: rgba(56, 189, 248, 0.12);
@@ -283,7 +283,7 @@
 }
 
 .switch-port-meta {
-  font-size: 10.5px;
+  font-size: var(--zn-fs-xs);
   color: var(--lt-t-64748bff, #64748b);
   font-family: var(--font-mono, monospace);
 }
@@ -323,7 +323,7 @@
 
 .network-card-title {
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: var(--zn-fs-xs);
   color: var(--lt-t-f1f5f9ff, #f1f5f9);
   display: flex;
   align-items: center;
@@ -352,7 +352,7 @@
 }
 
 .network-bridge-ip {
-  font-size: 11.5px;
+  font-size: var(--zn-fs-xs);
   color: var(--lt-t-38bdf8ff, #38bdf8);
   font-family: var(--font-mono, monospace);
 }
@@ -365,7 +365,7 @@
 }
 
 .network-member-pill {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-family: var(--font-mono, monospace);
   padding: 2px 6px;
   border-radius: 4px;
@@ -407,7 +407,7 @@
 }
 
 .network-docker-driver {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   padding: 2px 6px;
   border-radius: 4px;
   background: rgba(56, 189, 248, 0.1);
@@ -417,7 +417,7 @@
 }
 
 .network-docker-cidr {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-family: var(--font-mono, monospace);
   color: var(--lt-t-94a3b8ff, #94a3b8);
 }
@@ -436,7 +436,7 @@
   border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
   border-radius: 6px;
   padding: 4px 8px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 
 .network-chip-dot {
@@ -454,12 +454,12 @@
 .network-chip-ip {
   color: var(--lt-t-38bdf8ff, #38bdf8);
   font-family: var(--font-mono, monospace);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 
 .network-chip-ports {
   color: var(--lt-t-94a3b8ff, #94a3b8);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-family: var(--font-mono, monospace);
 }
 

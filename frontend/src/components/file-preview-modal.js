@@ -191,7 +191,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
       <div class="quicklook-body" id="quicklook-body">
         <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
           <div class="spinner" style="width:28px; height:28px; border:2px solid var(--lt-r-ffffff33, rgba(255,255,255,0.2)); border-top-color:var(--accent-cyan, #0ea5e9); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-          <span style="font-size:12px;">Loading preview...</span>
+          <span style="font-size:var(--zn-fs-xs);">Loading preview...</span>
         </div>
       </div>
       <div class="quicklook-inspector" id="quicklook-inspector">
@@ -483,13 +483,13 @@ async function loadCurrentItem() {
       : '';
     bodyEl.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; padding:14px;">
-        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:11.5px; color:var(--lt-t-6ee7b7ff, #6ee7b7);">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:var(--zn-fs-xs); color:var(--lt-t-6ee7b7ff, #6ee7b7);">
           <span>💤 <strong>Standby Guard Active:</strong> Showing cached NVMe index preview without spinning up physical array disks.</span>
           <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--lt-t-38bdf8ff, #38bdf8); border-color: rgba(56,189,248,0.4);">⚡ Load Full File from Disk</button>
         </div>
         ${thumbHtml}
         ${excerptHtml}
-        <div style="font-size:11px; color:var(--muted); font-family:monospace;">${escapeHtml(_currentPath || '')}</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace;">${escapeHtml(_currentPath || '')}</div>
       </div>
     `;
     const wakeBtn = bodyEl.querySelector('#btn-quicklook-wake-load');
@@ -600,7 +600,7 @@ async function loadCurrentItem() {
     bodyEl.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--crit, #ff5c5c);">
         <div style="font-size:32px;">⚠️</div>
-        <span style="font-size:12px; font-weight:600;">${escapeHtml(err.message || 'Unable to preview file')}</span>
+        <span style="font-size:var(--zn-fs-xs); font-weight:600;">${escapeHtml(err.message || 'Unable to preview file')}</span>
       </div>
     `;
   }

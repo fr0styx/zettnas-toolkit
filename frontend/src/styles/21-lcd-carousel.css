@@ -314,7 +314,7 @@ body.theme-yak .lcd-dot.active {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 8px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--ok2);
   margin-top: 2px;
@@ -349,7 +349,7 @@ body.theme-yak .lcd-dot.active {
   transition: width 0.3s ease;
 }
 .unraid-parity-txt {
-  font-size: 8px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   font-family: var(--font-mono, monospace);
 }
@@ -386,12 +386,12 @@ body.theme-yak .lcd-dot.active {
   box-shadow: 0 0 12px rgba(37, 194, 160, 0.25);
 }
 .profile-btn-title {
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 0.5px;
 }
 .profile-btn-desc {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
 }
 
@@ -412,13 +412,13 @@ body.theme-yak .lcd-dot.active {
   gap: 3px;
 }
 .udi-label {
-  font-size: 9.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
 }
 .udi-val {
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--text);
   font-family: var(--font-mono, monospace);
@@ -470,7 +470,7 @@ body.theme-yak .lcd-dot.active {
 }
 .gpu-driver-badge,
 .gpu-node-badge {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-family: var(--font-mono, monospace);
   padding: 2px 7px;
   border-radius: 4px;
@@ -484,7 +484,7 @@ body.theme-yak .lcd-dot.active {
   border-color: var(--lt-r-00f0ff33, rgba(0, 240, 255, 0.2));
 }
 .gpu-accel-desc {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--ok2, #25c2a0);
   font-weight: 600;
 }
@@ -497,7 +497,7 @@ body.theme-yak .lcd-dot.active {
   border-top: 1px solid var(--lt-r-ffffff0d, rgba(255, 255, 255, 0.05));
 }
 .gpu-codec-label {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--muted, #94a3b8);
   text-transform: uppercase;
@@ -509,7 +509,7 @@ body.theme-yak .lcd-dot.active {
   gap: 6px;
 }
 .gpu-codec-tag {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   padding: 2px 8px;
@@ -611,7 +611,7 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
 .copy-history-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   margin-top: 10px;
 }
 .copy-history-table th {
@@ -621,7 +621,7 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
   color: var(--muted);
   font-weight: 700;
   border-bottom: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
-  font-size: 9.5px;
+  font-size: var(--zn-fs-xs);
   text-transform: uppercase;
 }
 .copy-history-table th.sortable-th {
@@ -641,7 +641,7 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
 .docker-sort-indicator {
   display: inline-block;
   margin-left: 5px;
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   opacity: 0.35;
   transition: opacity 0.15s ease, color 0.15s ease;
   min-width: 8px;
@@ -668,7 +668,7 @@ body.theme-yak .docker-table-sticky-scroll::-webkit-scrollbar-thumb:hover {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
   border-radius: 4px;

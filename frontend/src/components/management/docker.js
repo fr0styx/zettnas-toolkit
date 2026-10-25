@@ -436,7 +436,7 @@ function _bindDockerEvents() {
       const count = _dockerUpdatesCache?.updates_available_count || 0;
       showConfirmToast(
         'Update All Containers',
-        `Update all <strong>${count} containers</strong> with available image updates?<br><br><span style="font-size:11.5px; color:var(--muted);">Each container will be repulled and recreated with automated rollback protection if startup fails.</span>`,
+        `Update all <strong>${count} containers</strong> with available image updates?<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">Each container will be repulled and recreated with automated rollback protection if startup fails.</span>`,
         async () => {
           btnUpdateAll.disabled = true;
           btnUpdateAll.innerHTML = '<span aria-hidden="true">⏳</span> <span>Updating all...</span>';
@@ -654,7 +654,7 @@ export function renderDockerContainersTable() {
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
         <div style="font-size:32px; opacity:0.8;">🐳</div>
         <div style="font-size:13.5px; font-weight:600; color:var(--text, var(--lt-t-ffffffff, #fff));">${t('mgmt.docker_none_title', 'No Docker Containers Deployed')}</div>
-        <div style="font-size:12px; color:var(--muted, #94a3b8); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted, #94a3b8); max-width:420px; line-height:1.5;">${t('mgmt.docker_none', 'No Docker containers detected or socket not connected.')}</div>
         <button id="btn-empty-deploy-app" class="btn-pill-toggle is-primary" style="margin-top: 6px;">
           🚀 ${t('mgmt.docker_open_catalog', 'Browse App Catalog')}
         </button>
@@ -869,7 +869,7 @@ function bindDockerTableEvents(tbody) {
       if (act === 'update-single') {
         showConfirmToast(
           `Update Container "${cname}"`,
-          `Pull the latest image and update <strong>${escapeHtml(cname)}</strong> to its newest release?<br><br><span style="font-size:11.5px; color:var(--muted);">All volumes, persistent paths, and environment settings will be preserved intact.</span>`,
+          `Pull the latest image and update <strong>${escapeHtml(cname)}</strong> to its newest release?<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">All volumes, persistent paths, and environment settings will be preserved intact.</span>`,
           async () => {
             actBtn.disabled = true;
             const originalContent = actBtn.innerHTML;
@@ -1206,17 +1206,17 @@ export async function openAppDeployModal(appId) {
 
           <!-- View 1: Configuration View -->
           <div id="adm-view-config" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px;">
-            <div id="adm-conflict-banner" style="padding:10px 12px; border-radius:6px; font-size:11px; line-height:1.4;"></div>
+            <div id="adm-conflict-banner" style="padding:10px 12px; border-radius:6px; font-size:var(--zn-fs-xs); line-height:1.4;"></div>
             
             <!-- Pre-existing Container Action Choice Box -->
             <div id="adm-existing-box" style="display:none; padding:11px 13px; border-radius:6px; background:rgba(245, 166, 35, 0.09); border:1px solid rgba(245, 166, 35, 0.35); flex-direction:column; gap:8px;">
               <div style="display:flex; align-items:center; justify-content:space-between;">
-                <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:11.5px;">
+                <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:var(--zn-fs-xs);">
                   <span aria-hidden="true">⚠️</span> <span id="adm-existing-title">Pre-existing Container Detected</span>
                 </div>
-                <span id="adm-existing-status-badge" style="font-size:11px; padding:2px 7px; border-radius:4px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
+                <span id="adm-existing-status-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
               </div>
-              <div id="adm-existing-desc" style="color:var(--lt-t-cbd5e1ff, #cbd5e1); font-size:11px; line-height:1.4;">
+              <div id="adm-existing-desc" style="color:var(--lt-t-cbd5e1ff, #cbd5e1); font-size:var(--zn-fs-xs); line-height:1.4;">
                 A container with this name or port already exists on your system. Choose an action:
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
@@ -1231,11 +1231,11 @@ export async function openAppDeployModal(appId) {
 
             <div>
               <label for="adm-name-input" class="adm-label">${t('catalog.install_name', 'Name')}</label>
-              <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:12px; padding:6px 8px;">
+              <input type="text" id="adm-name-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:6px 8px;">
             </div>
             <div>
               <label for="adm-storage-input" class="adm-label">${t('catalog.install_folder', 'Folder for its data')}</label>
-              <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:12px; padding:6px 8px;">
+              <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:6px 8px;">
               <div class="adm-hint">${t('catalog.install_folder_hint', 'Settings and files the app keeps are stored in a folder of its own here.')}</div>
             </div>
             <!-- UX-18: the technical part stays out of the way -->
@@ -1244,7 +1244,7 @@ export async function openAppDeployModal(appId) {
               <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
                 <div>
                   <label for="adm-port-input" class="adm-label">${t('catalog.install_port', 'Port on this server')}</label>
-                  <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11.5px; padding:6px 8px; font-family:var(--font-mono, monospace);">
+                  <input type="number" id="adm-port-input" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:6px 8px; font-family:var(--font-mono, monospace);">
                 </div>
                 <div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -1254,7 +1254,7 @@ export async function openAppDeployModal(appId) {
                       <button class="btn-pill-toggle" id="adm-download-btn">⬇️ Download</button>
                     </div>
                   </div>
-                  <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:11px; color:var(--lt-t-e2e8f0ff, #e2e8f0); line-height:1.45;"></pre>
+                  <pre id="adm-compose-pre" style="margin:0; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; padding:10px; max-height:200px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); line-height:1.45;"></pre>
                 </div>
               </div>
             </details>
@@ -1267,7 +1267,7 @@ export async function openAppDeployModal(appId) {
                 <span id="adm-progress-spinner" style="font-size:22px; display:inline-block;">⚙️</span>
                 <div>
                   <div id="adm-progress-title" style="font-size:13px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">Deploying Application...</div>
-                  <div id="adm-progress-status-text" style="font-size:11px; color:var(--muted); margin-top:2px;">Preparing environment and directories...</div>
+                  <div id="adm-progress-status-text" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Preparing environment and directories...</div>
                 </div>
               </div>
               <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff14, rgba(0,240,255,0.08)); padding:3px 9px; border-radius:6px; border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2));">0%</div>
@@ -1280,8 +1280,8 @@ export async function openAppDeployModal(appId) {
 
             <!-- Real-time Activity Log Terminal -->
             <div style="margin-top:2px;">
-              <div style="font-size:11px; font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Deployment Console Log</div>
-              <div id="adm-deploy-logs" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:11px; line-height:1.5; color:var(--lt-t-cbd5e1ff, #cbd5e1);">
+              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Deployment Console Log</div>
+              <div id="adm-deploy-logs" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.5; color:var(--lt-t-cbd5e1ff, #cbd5e1);">
                 <div style="color:var(--muted);">Waiting for deployment stream to begin...</div>
               </div>
             </div>
@@ -1289,10 +1289,10 @@ export async function openAppDeployModal(appId) {
             <!-- Success Callout -->
             <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(37,194,160,0.12); border:1px solid var(--ok2, #25c2a0); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
               <div>
-                <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:12px;">🚀 Container is Live & Running!</div>
-                <div id="adm-success-msg" style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); margin-top:2px;">Your application has been deployed and started successfully.</div>
+                <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:var(--zn-fs-xs);">🚀 Container is Live & Running!</div>
+                <div id="adm-success-msg" style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); margin-top:2px;">Your application has been deployed and started successfully.</div>
               </div>
-              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; font-size:11px; padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+              <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                 🌐 Open Web UI ↗
               </a>
             </div>
@@ -2078,65 +2078,65 @@ export async function openDockerPruneModal() {
             <button class="win-btn close-btn" id="dpm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;">
-            <div style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.4;">
+            <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.4;">
               Reclaim host storage space by pruning unused Docker resources. Safe for running containers.
             </div>
 
             <!-- Live Disk Usage Breakdown -->
             <div id="dpm-df-summary" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:8px;">
               <div style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Images</div>
-                <div id="dpm-df-images" style="font-size:12.5px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
+                <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Images</div>
+                <div id="dpm-df-images" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
               </div>
               <div style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Containers</div>
-                <div id="dpm-df-containers" style="font-size:12.5px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
+                <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Containers</div>
+                <div id="dpm-df-containers" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
               </div>
               <div style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Volumes</div>
-                <div id="dpm-df-volumes" style="font-size:12.5px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
+                <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Volumes</div>
+                <div id="dpm-df-volumes" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">Loading...</div>
               </div>
               <div style="background:var(--lt-b-00f0ff0f, rgba(0,240,255,0.06)); border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2)); padding:8px 10px; border-radius:6px; text-align:center;">
-                <div style="font-size:11px; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); text-transform:uppercase; font-weight:700;">Reclaimable</div>
-                <div id="dpm-df-reclaimable" style="font-size:12.5px; font-weight:800; color:var(--ok2, #25c2a0); margin-top:2px;">--</div>
+                <div style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); text-transform:uppercase; font-weight:700;">Reclaimable</div>
+                <div id="dpm-df-reclaimable" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2, #25c2a0); margin-top:2px;">--</div>
               </div>
             </div>
 
             <!-- Prune Options -->
             <div style="background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:12px; display:flex; flex-direction:column; gap:10px;">
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-containers" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Stopped Containers</strong>
-                  <div style="font-size:11px; color:var(--muted);">Deletes all exited, stopped, and dead containers.</div>
+                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Deletes all exited, stopped, and dead containers.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-images" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Dangling Images</strong>
-                  <div style="font-size:11px; color:var(--muted);">Removes untagged &lt;none&gt; build layers and intermediate images.</div>
+                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Removes untagged &lt;none&gt; build layers and intermediate images.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-all-images" style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune ALL Unused Images</strong>
-                  <div style="font-size:11px; color:var(--muted);">Removes images no container uses, running or stopped. Images of stopped containers (such as update rollbacks) are kept.</div>
+                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Removes images no container uses, running or stopped. Images of stopped containers (such as update rollbacks) are kept.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-volumes" style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Unused Local Volumes</strong>
-                  <div style="font-size:11px; color:var(--warn, #f5a623);">Caution: Removes local anonymous volumes not mounted by containers.</div>
+                  <div style="font-size:var(--zn-fs-xs); color:var(--warn, #f5a623);">Caution: Removes local anonymous volumes not mounted by containers.</div>
                 </div>
               </label>
-              <label style="display:flex; align-items:flex-start; gap:8px; font-size:11.5px; color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:flex-start; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
                 <input type="checkbox" id="dpm-opt-buildcache" checked style="margin-top:2px; cursor:pointer;">
                 <div>
                   <strong>Prune Build Cache & Unused Networks</strong>
-                  <div style="font-size:11px; color:var(--muted);">Frees temporary Docker build cache layers and disconnected bridge networks.</div>
+                  <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Frees temporary Docker build cache layers and disconnected bridge networks.</div>
                 </div>
               </label>
             </div>
@@ -2403,18 +2403,18 @@ export async function openAppSourcesModal() {
             <button class="win-btn close-btn" id="asm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:14px;">
-            <div style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.4;">
+            <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.4;">
               Expand your App Catalog with external Portainer v2/v3 or custom JSON template repositories.
             </div>
 
             <!-- Quick Add Preset Banner -->
             <div id="asm-preset-banner" style="background:linear-gradient(135deg, rgba(14,165,233,0.12), rgba(37,194,160,0.08)); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:12px 14px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
               <div>
-                <div style="font-size:12px; font-weight:700; color:var(--lt-t-ffffffff, #fff); display:flex; align-items:center; gap:6px;">
+                <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); display:flex; align-items:center; gap:6px;">
                   <span>⭐ Lissy93 Portainer Templates</span>
-                  <span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
+                  <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--accent);">790+ Apps</span>
                 </div>
-                <div style="font-size:11px; color:var(--lt-t-94a3b8ff, #94a3b8); margin-top:2px;">
+                <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-94a3b8ff, #94a3b8); margin-top:2px;">
                   Comprehensive community catalog of self-hosted homelab applications, web tools, and stacks.
                 </div>
               </div>
@@ -2425,15 +2425,15 @@ export async function openAppSourcesModal() {
 
             <!-- Add Custom Source Form -->
             <div style="background:var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:10px;">
-              <div style="font-size:11px; font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">Add Custom Template Source</div>
+              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">Add Custom Template Source</div>
               <div style="display:grid; grid-template-columns:1fr 2fr auto; gap:8px; align-items:end;">
                 <div>
-                  <label for="asm-input-name" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
-                  <input type="text" id="asm-input-name" placeholder="${t('ui.e_g_community_apps', 'e.g. Community Apps')}" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
+                  <label for="asm-input-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:3px;">SOURCE NAME</label>
+                  <input type="text" id="asm-input-name" placeholder="${t('ui.e_g_community_apps', 'e.g. Community Apps')}" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:5px 8px;">
                 </div>
                 <div>
-                  <label for="asm-input-url" style="display:block; font-size:11px; font-weight:700; color:var(--muted); margin-bottom:3px;">TEMPLATE URL (JSON)</label>
-                  <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:11px; padding:5px 8px;">
+                  <label for="asm-input-url" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:3px;">TEMPLATE URL (JSON)</label>
+                  <input type="url" id="asm-input-url" placeholder="https://example.com/templates.json" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:5px 8px;">
                 </div>
                 <div>
                   <button class="btn-pill-toggle is-primary" id="asm-btn-add-custom">
@@ -2441,12 +2441,12 @@ export async function openAppSourcesModal() {
                   </button>
                 </div>
               </div>
-              <div id="asm-form-status" style="font-size:11px; display:none; padding:4px 6px; border-radius:4px;"></div>
+              <div id="asm-form-status" style="font-size:var(--zn-fs-xs); display:none; padding:4px 6px; border-radius:4px;"></div>
             </div>
 
             <!-- Active Sources List -->
             <div>
-              <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">
+              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">
                 Configured Sources (<span id="asm-sources-count">0</span>)
               </div>
               <div id="asm-sources-list" style="display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto;">
@@ -2589,10 +2589,10 @@ async function refreshSourcesUI() {
       const isBuiltin = src.id === 'builtin';
       const isEnabled = src.enabled !== false;
       const statusBadge = src.status === 'ok'
-        ? `<span class="ci-badge" style="font-size:11px; background:rgba(37,194,160,0.15); color:var(--accent);">✓ Synced (${formatRelativeTime(src.last_synced)})</span>`
+        ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(37,194,160,0.15); color:var(--accent);">✓ Synced (${formatRelativeTime(src.last_synced)})</span>`
         : (src.status === 'error'
-          ? `<span class="ci-badge" style="font-size:11px; background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5);" title="${escapeHtml(src.error || 'Sync failed')}">⚠️ Error</span>`
-          : `<span class="ci-badge" style="font-size:11px; background:rgba(14,165,233,0.15); color:var(--lt-t-38bdf8ff, #38bdf8);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
+          ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(239,68,68,0.15); color:var(--lt-t-fca5a5ff, #fca5a5);" title="${escapeHtml(src.error || 'Sync failed')}">⚠️ Error</span>`
+          : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(14,165,233,0.15); color:var(--lt-t-38bdf8ff, #38bdf8);">🔄 ${escapeHtml(src.status || 'pending')}</span>`);
 
       const toggleBtnClass = isEnabled ? 'btn-pill-toggle active' : 'btn-pill-toggle';
       const toggleText = isEnabled ? 'Enabled' : 'Disabled';
@@ -2601,17 +2601,17 @@ async function refreshSourcesUI() {
         <div class="asm-source-card" data-sourceid="${escapeHtml(src.id)}" style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
           <div style="overflow:hidden; flex:1;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <strong style="font-size:12px; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(src.name)}</strong>
-              <span class="ci-badge" style="font-size:11px; background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color:var(--lt-t-cbd5e1ff, #cbd5e1);">${src.item_count || 0} apps</span>
+              <strong style="font-size:var(--zn-fs-xs); color:var(--lt-t-ffffffff, #fff);">${escapeHtml(src.name)}</strong>
+              <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color:var(--lt-t-cbd5e1ff, #cbd5e1);">${src.item_count || 0} apps</span>
               ${statusBadge}
             </div>
-            <div style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;">
               ${escapeHtml(src.url)}
             </div>
-            ${src.error ? `<div style="font-size:11px; color:var(--lt-t-fca5a5ff, #fca5a5); margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
+            ${src.error ? `<div style="font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); margin-top:3px;">${escapeHtml(src.error)}</div>` : ''}
           </div>
           <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-            <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:11px; padding:3px 8px; cursor:pointer;">
+            <button class="${toggleBtnClass} asm-btn-toggle" data-sourceid="${escapeHtml(src.id)}" data-enabled="${isEnabled ? 'true' : 'false'}" style="font-size:var(--zn-fs-xs); padding:3px 8px; cursor:pointer;">
               ${toggleText}
             </button>
             <button class="btn-pill-toggle asm-btn-sync is-small" data-sourceid="${escapeHtml(src.id)}" title="${t('ui.sync_now', 'Sync Now')}">
@@ -2771,7 +2771,7 @@ export function openSideloadAppModal() {
         showToast(t('toast.failed_to_inspect_manifest', 'Failed to inspect manifest: {error}', { error: err.message }), 'error');
         if (resultBox) {
           resultBox.style.display = 'block';
-          resultBox.innerHTML = `<div style="color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:12px;">Inspection Failed: ${escapeHtml(err.message)}</div>`;
+          resultBox.innerHTML = `<div style="color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--zn-fs-xs);">Inspection Failed: ${escapeHtml(err.message)}</div>`;
         }
       } finally {
         btnInspect.disabled = false;
@@ -2815,20 +2815,20 @@ function renderSideloadInspection(app, rating, flags, container) {
   }
 
   const flagsHtml = (flags && flags.length > 0)
-    ? `<div style="margin-top:8px; font-size:11px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border-radius:4px; padding:6px 10px;">
+    ? `<div style="margin-top:8px; font-size:var(--zn-fs-xs); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border-radius:4px; padding:6px 10px;">
         <div style="font-weight:700; color:${badgeColor}; margin-bottom:4px;">Security Audit Findings:</div>
         <ul style="margin:0; padding-left:16px; color:var(--lt-t-cbd5e1ff, #cbd5e1);">
           ${flags.map((f) => `<li>${escapeHtml(f)}</li>`).join('')}
         </ul>
       </div>`
-    : `<div style="margin-top:8px; font-size:11px; color:var(--lt-t-4ade80ff, #4ade80);">✓ Zero high-privilege risk flags detected. Standard isolated container sandbox.</div>`;
+    : `<div style="margin-top:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-4ade80ff, #4ade80);">✓ Zero high-privilege risk flags detected. Standard isolated container sandbox.</div>`;
 
   container.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
       <div style="font-weight:700; font-size:13px; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(app.name)}</div>
-      <span class="ci-badge" style="font-size:11px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
+      <span class="ci-badge" style="font-size:var(--zn-fs-xs); background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:4px;">${badgeText}</span>
     </div>
-    <div style="font-size:11px; color:var(--muted); line-height:1.4;">
+    <div style="font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.4;">
       <div><strong>Image:</strong> <code>${escapeHtml(app.image || 'compose-stack')}</code></div>
       <div><strong>Type:</strong> ${escapeHtml(app.type || 'standalone')} · <strong>Default Port:</strong> ${escapeHtml(String(app.default_port || 'N/A'))}</div>
     </div>

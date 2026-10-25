@@ -47,14 +47,14 @@
 }
 .btn-lock-toggle {
   background: var(--lt-b-1e2a38ff, #1e2a38); color: var(--lt-t-cbd5e1ff, #cbd5e1); border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
-  border-radius: 6px; font-size: 11px; font-weight: 700; padding: 4px 9px; cursor: pointer; transition: all 0.15s ease;
+  border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 9px; cursor: pointer; transition: all 0.15s ease;
 }
 .btn-lock-toggle:hover { background: var(--lt-b-283749ff, #283749); color: var(--lt-t-ffffffff, #fff); }
 .btn-lock-toggle.unlocked { background: rgba(37, 194, 160, 0.15); color: var(--ok2); border-color: var(--ok2); }
 
-.drawer-sub { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; color: var(--ok2); }
+.drawer-sub { font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.12em; color: var(--ok2); }
 .drawer-title { margin: 4px 0 2px 0; font-size: 21px; font-weight: 800; color: var(--lt-t-ffffffff, #fff); }
-.drawer-subdesc { font-size: 11px; color: var(--muted); }
+.drawer-subdesc { font-size: var(--zn-fs-xs); color: var(--muted); }
 .btn-icon { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px; }
 .btn-icon:hover { color: var(--lt-t-ffffffff, #fff); }
 
@@ -63,7 +63,7 @@
   border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06)); flex-shrink: 0;
 }
 .drawer-tab-btn {
-  flex: 1; background: transparent; border: none; color: var(--muted); font-size: 12px;
+  flex: 1; background: transparent; border: none; color: var(--muted); font-size: var(--zn-fs-xs);
   font-weight: 700; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
 }
 .drawer-tab-btn:hover { color: var(--lt-t-ffffffff, #fff); }
@@ -96,7 +96,7 @@
 }
 
 .tab-sub-header { display: flex; justify-content: space-between; align-items: center; padding: 2px 2px; }
-.tab-sub-header .sub-title { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+.tab-sub-header .sub-title { font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
 
 /* =========================================================================
    STATIC SCREEN MODULES
@@ -119,7 +119,7 @@
 .dash-item-title { font-size: 13px; font-weight: 800; color: var(--lt-t-ffffffff, #fff); white-space: nowrap; }
 
 .dash-live-badge {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--ok2);
   background: rgba(37, 194, 160, 0.12);
@@ -144,7 +144,7 @@
   background: transparent;
   border: none;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   padding: 4px 9px;
   border-radius: 5px;
@@ -192,8 +192,8 @@
 }
 .preset-icon { font-size: 16px; flex-shrink: 0; }
 .preset-info { display: flex; flex-direction: column; text-align: left; }
-.preset-name { font-size: 12px; font-weight: 800; color: var(--lt-t-ffffffff, #fff); }
-.preset-desc { font-size: 9px; color: var(--muted); font-weight: 600; }
+.preset-name { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--lt-t-ffffffff, #fff); }
+.preset-desc { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 600; }
 .preset-btn-card.active .preset-name { color: var(--ok2); }
 
 .preset-footer-row {
@@ -205,7 +205,7 @@
   border-top: 1px solid var(--lt-r-ffffff0d, rgba(255, 255, 255, 0.05));
 }
 .preset-state-badge {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 0.8px;
   color: var(--ok2);
@@ -218,7 +218,7 @@
   border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
   color: var(--lt-t-cbd5e1ff, #cbd5e1);
   border-radius: 6px;
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   padding: 4px 10px;
   cursor: pointer;

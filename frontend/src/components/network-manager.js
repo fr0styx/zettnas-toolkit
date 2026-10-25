@@ -48,25 +48,25 @@ export function renderListeningPortsTable(ports, filter = '') {
   tbody.innerHTML = filtered.map(p => {
     const isUdp = (p.protocol || '').toLowerCase() === 'udp';
     const protoBadge = isUdp
-      ? `<span class="ci-badge" style="background: rgba(245,158,11,0.15); color: var(--lt-t-f59e0bff, #f59e0b); border: 1px solid rgba(245,158,11,0.3); font-size: 11px; font-weight: 700;">UDP</span>`
-      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 11px; font-weight: 700;">TCP</span>`;
+      ? `<span class="ci-badge" style="background: rgba(245,158,11,0.15); color: var(--lt-t-f59e0bff, #f59e0b); border: 1px solid rgba(245,158,11,0.3); font-size: var(--zn-fs-xs); font-weight: 700;">UDP</span>`
+      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs); font-weight: 700;">TCP</span>`;
 
     const stateBadge = isUdp
-      ? `<span class="ci-badge" style="background: rgba(59,130,246,0.15); color: var(--lt-t-3b82f6ff, #3b82f6); border: 1px solid rgba(59,130,246,0.3); font-size: 11px;">ACTIVE</span>`
-      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: 11px;">LISTEN</span>`;
+      ? `<span class="ci-badge" style="background: rgba(59,130,246,0.15); color: var(--lt-t-3b82f6ff, #3b82f6); border: 1px solid rgba(59,130,246,0.3); font-size: var(--zn-fs-xs);">ACTIVE</span>`
+      : `<span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs);">LISTEN</span>`;
 
     const containerCol = p.container
       ? `<div style="display:flex; align-items:center; gap:6px;">
-           <span style="font-size: 12px;">🐳</span>
+           <span style="font-size: var(--zn-fs-xs);">🐳</span>
            <span style="color: var(--lt-t-60a5faff, #60a5fa); font-weight: 600;">${escapeHtml(p.container)}</span>
          </div>`
-      : `<span style="color: var(--muted); font-size: 11px;">Host System / Kernel</span>`;
+      : `<span style="color: var(--muted); font-size: var(--zn-fs-xs);">Host System / Kernel</span>`;
 
     return `
       <tr data-port="${escapeHtml(String(p.port))}" data-proto="${escapeHtml(String(p.protocol))}">
         <td><strong style="font-family: monospace; font-size: 13px; color: var(--lt-t-ffffffff, #fff);">:${escapeHtml(String(p.port))}</strong></td>
         <td>${protoBadge}</td>
-        <td><code style="font-size: 11px; color: var(--muted);">${escapeHtml(String(p.bind_address))}</code></td>
+        <td><code style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(String(p.bind_address))}</code></td>
         <td><span style="font-weight: 600; color: var(--lt-t-e2e8f0ff, #e2e8f0);">${escapeHtml(String(p.service || 'Unknown'))}</span></td>
         <td>${containerCol}</td>
         <td style="text-align: right;">${stateBadge}</td>

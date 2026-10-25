@@ -1408,7 +1408,7 @@ function initWeatherCityAutocomplete() {
     _currentSuggestions = items;
     _activeSuggestionIndex = -1;
     if (!items.length) {
-      dropdown.innerHTML = `<div style="padding: 10px 12px; font-size: 11.5px; color: var(--muted); text-align: center;">No matching cities found</div>`;
+      dropdown.innerHTML = `<div style="padding: 10px 12px; font-size: var(--zn-fs-xs); color: var(--muted); text-align: center;">No matching cities found</div>`;
       dropdown.style.display = 'block';
       return;
     }
@@ -2454,12 +2454,12 @@ export function renderTimezoneList() {
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 14px;">📍</span>
         <div>
-          <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Local System Timezone (Auto)</div>
-          <div style="font-size: 11px; color: var(--muted);">${escapeHtml(localIana)}</div>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Local System Timezone (Auto)</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(localIana)}</div>
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isAutoSelected ? '✓ Active' : ''}</span>
+        <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isAutoSelected ? '✓ Active' : ''}</span>
       </div>
     </div>
   `;
@@ -2482,21 +2482,21 @@ export function renderTimezoneList() {
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 14px;">🌐</span>
           <div>
-            <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(tz.name)}</div>
-            <div style="font-size: 11px; color: var(--muted);">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(tz.name)}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 11px; color: var(--lt-t-94a3b8ff, #94a3b8); font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
-          <span style="font-size: 12px; font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #00f0ff))' : 'var(--lt-t-e2e8f0ff, #e2e8f0)'};">${escapeHtml(timeStr)}</span>
-          <span style="font-size: 12px; color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isSelected ? '✓' : ''}</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
+          <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #00f0ff))' : 'var(--lt-t-e2e8f0ff, #e2e8f0)'};">${escapeHtml(timeStr)}</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isSelected ? '✓' : ''}</span>
         </div>
       </div>
     `;
   });
 
   if (!filtered.length && q) {
-    html = `<div style="text-align: center; color: var(--muted); padding: 25px; font-size: 12px;">No matching timezones found for "${escapeHtml(q)}". Try custom IANA below.</div>`;
+    html = `<div style="text-align: center; color: var(--muted); padding: 25px; font-size: var(--zn-fs-xs);">No matching timezones found for "${escapeHtml(q)}". Try custom IANA below.</div>`;
   }
 
   container.innerHTML = html;
@@ -2890,8 +2890,8 @@ export function renderDayAgenda(dateKey) {
       <div style="background: rgba(236,72,153,0.12); border: 1px solid rgba(236,72,153,0.3); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 16px;">🎉</span>
         <div>
-          <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-f472b6ff, #f472b6);">Official Holiday: ${escapeHtml(hNames)}</div>
-          <div style="font-size: 11px; color: var(--muted);">${escapeHtml(country)} Public Holiday</div>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-f472b6ff, #f472b6);">Official Holiday: ${escapeHtml(hNames)}</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(country)} Public Holiday</div>
         </div>
       </div>
     `;
@@ -2899,10 +2899,10 @@ export function renderDayAgenda(dateKey) {
 
   if (!items.length) {
     html += `
-      <div style="text-align: center; color: var(--muted); padding: 40px 20px; font-size: 12px;">
+      <div style="text-align: center; color: var(--muted); padding: 40px 20px; font-size: var(--zn-fs-xs);">
         <div style="font-size: 26px; margin-bottom: 8px;">📝</div>
         <div style="font-weight: 600; color: var(--lt-t-cbd5e1ff, #cbd5e1);">${t('cal.empty_agenda') || 'No notes or reminders for this day.'}</div>
-        <div style="font-size: 11px; margin-top: 4px;">Use the composer above to add a task, reminder, or note.</div>
+        <div style="font-size: var(--zn-fs-xs); margin-top: 4px;">Use the composer above to add a task, reminder, or note.</div>
       </div>
     `;
   } else {
@@ -2928,18 +2928,18 @@ export function renderDayAgenda(dateKey) {
           }
           <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <span class="cal-agenda-title" style="font-size: 12.5px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(item.title)}</span>
+              <span class="cal-agenda-title" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(item.title)}</span>
               <div style="display: flex; align-items: center; gap: 6px;">
-                ${timeStr ? `<span style="font-size: 11px; font-weight: 700; font-family: var(--font-mono, monospace); background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); padding: 2px 6px; border-radius: 4px; color: var(--lt-ink-brand, var(--brand, #00f0ff));">${escapeHtml(timeStr)}</span>` : ''}
-                ${isSynced ? `<span style="font-size: 11px; font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--lt-t-eab308ff, #eab308); padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: 11px; color: var(--muted); background: var(--lt-b-ffffff0d, rgba(255,255,255,0.05)); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
+                ${timeStr ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); padding: 2px 6px; border-radius: 4px; color: var(--lt-ink-brand, var(--brand, #00f0ff));">${escapeHtml(timeStr)}</span>` : ''}
+                ${isSynced ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--lt-t-eab308ff, #eab308); padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: var(--zn-fs-xs); color: var(--muted); background: var(--lt-b-ffffff0d, rgba(255,255,255,0.05)); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
                 ${
                   !isSynced
-                    ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px 4px;" title="${t('ui.delete_note', 'Delete Note')}">🗑️</button>`
+                    ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px 4px;" title="${t('ui.delete_note', 'Delete Note')}">🗑️</button>`
                     : ''
                 }
               </div>
             </div>
-            ${item.description ? `<div style="font-size: 11px; color: var(--muted); line-height: 1.3;">${escapeHtml(item.description)}</div>` : ''}
+            ${item.description ? `<div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.3;">${escapeHtml(item.description)}</div>` : ''}
           </div>
         </div>
       `;
@@ -2955,7 +2955,7 @@ export function renderFeedsList() {
 
   if (!_calendarFeeds.length) {
     container.innerHTML = `
-      <div style="font-size: 11px; color: var(--muted); text-align: center; padding: 10px;">
+      <div style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 10px;">
         No external calendar feeds synced. Click "+ Add Feed" to connect Google Calendar or Apple iCal.
       </div>
     `;
@@ -2969,11 +2969,11 @@ export function renderFeedsList() {
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
           <div>
-            <div style="font-size: 11.5px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(feed.name)}</div>
-            <div style="font-size: 11px; color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(feed.name)}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
           </div>
         </div>
-        <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: 11px; padding: 2px;" title="${t('ui.delete_feed', 'Delete Feed')}">🗑️</button>
+        <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px;" title="${t('ui.delete_feed', 'Delete Feed')}">🗑️</button>
       </div>
     `;
   });

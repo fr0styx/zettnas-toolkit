@@ -248,7 +248,7 @@ export async function renderLoginChooser(options = {}) {
           </div>
           <div style="text-align:left; flex:1; min-width:0;">
             <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(u.display_name || u.username)}</div>
-            <div style="font-size:11px; color:var(--muted);">@${escapeHtml(u.username)}</div>
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">@${escapeHtml(u.username)}</div>
           </div>
           <div style="color:var(--muted); font-size:14px;">➔</div>
         </div>

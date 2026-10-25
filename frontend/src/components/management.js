@@ -871,19 +871,19 @@ export function initManagement() {
 
         strip.innerHTML = `
           <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">HYPERVISOR ENGINE</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; text-transform: uppercase;">HYPERVISOR ENGINE</div>
             <div style="font-size: 13px; font-weight: 700; color: ${kvmColor}; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
               <span aria-hidden="true">⚡</span> <span>${escapeHtml(kvmBadge)}</span>
             </div>
           </div>
           <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">MEMORY CEILING</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; text-transform: uppercase;">MEMORY CEILING</div>
             <div style="font-size: 13px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); margin-top: 4px;">
               ${escapeHtml(headroom)}
             </div>
           </div>
           <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase;">vCPU OVERCOMMIT</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 700; text-transform: uppercase;">vCPU OVERCOMMIT</div>
             <div style="font-size: 13px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); margin-top: 4px;">
               ${escapeHtml(cpuRatio)}
             </div>
@@ -914,10 +914,10 @@ export function initManagement() {
                     <span style="font-size: 18px;">🖥️</span>
                     <div>
                       <div style="font-weight: 700; font-size: 13px; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(vm.name || vm.id)}</div>
-                      <div style="font-size: 11px; color: var(--muted);">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
+                      <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(osType)} • ${cores} vCPU • ${ramGb} RAM</div>
                     </div>
                   </div>
-                  <span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
+                  <span style="padding: 2px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; text-transform: uppercase; background: ${statusBg}; color: ${statusColor};">
                     ${escapeHtml(vm.state || 'stopped')}
                   </span>
                 </div>
@@ -998,24 +998,24 @@ export function initManagement() {
           <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div style="font-weight: 700; font-size: 13px; color: var(--lt-t-ffffffff, #fff);">Hardware Virtualization Extension</div>
-              <span style="padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
+              <span style="padding: 3px 8px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${tel.kvm.state === 'active' ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${tel.kvm.state === 'active' ? 'var(--ok2)' : 'var(--danger)'};">
                 ${escapeHtml(tel.kvm.badge || 'KVM')}
               </span>
             </div>
-            <div style="font-size: 11.5px; color: var(--muted); line-height: 1.5;">
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.5;">
               ${escapeHtml(tel.kvm.details || 'Linux KVM hypervisor acceleration provides near bare-metal guest performance.')}
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 6px;">
               <div style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: 11px; color: var(--muted);">CPU Host Threads</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">CPU Host Threads</div>
                 <div style="font-size: 14px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); margin-top: 2px;">${tel.cpu?.host_threads || 8} Threads</div>
               </div>
               <div style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: 11px; color: var(--muted);">vhost-net Acceleration</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">vhost-net Acceleration</div>
                 <div style="font-size: 14px; font-weight: 700; color: var(--ok2); margin-top: 2px;">Supported</div>
               </div>
               <div style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); padding: 8px 12px; border-radius: 6px;">
-                <div style="font-size: 11px; color: var(--muted);">Default Network Bridge</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Default Network Bridge</div>
                 <div style="font-size: 14px; font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan)); margin-top: 2px;">br0 / virbr0</div>
               </div>
             </div>

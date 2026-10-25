@@ -71,7 +71,7 @@ export function initVmManager() {
         <!-- Telemetry & Headroom Summary Header -->
         <div id="vm-telemetry-header" class="vm-telemetry-header" style="display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-            <div id="vm-kvm-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
+            <div id="vm-kvm-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
               <span aria-hidden="true">⚡</span> <span>Loading KVM Status...</span>
             </div>
             <div class="vm-action-btns-wrap" style="display: flex; gap: 8px;">
@@ -93,7 +93,7 @@ export function initVmManager() {
           <div class="vm-telemetry-budget-grid" style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px;">
             <!-- Memory Budget Card -->
             <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); border-radius: 8px; padding: 10px 14px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 6px;">
                 <span style="color: var(--muted); font-weight: 600;" data-i18n="vm.host_reserve">${t('vm.host_reserve', 'Host Memory Reserve')} (10% Dynamic)</span>
                 <span id="vm-headroom-text" style="color: var(--lt-t-38bdf8ff, #38bdf8); font-weight: 700;">--</span>
               </div>
@@ -102,7 +102,7 @@ export function initVmManager() {
                 <div id="vm-seg-reserve" style="width: 10%; background: #f59e0b; transition: width 0.3s;" title="${t('ui.host_reserve_protected', 'Host Reserve (Protected)')}"></div>
                 <div id="vm-seg-headroom" style="width: 0%; background: #10b981; transition: width 0.3s;" title="${t('ui.available_safe_headroom', 'Available Safe Headroom')}"></div>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 6px;">
                 <span>Total Host: <strong id="vm-total-ram" style="color:var(--lt-t-ffffffff, #fff);">--</strong></span>
                 <span>Safe Ceiling: <strong id="vm-safe-ceiling" style="color:var(--lt-t-34d399ff, #34d399);">--</strong></span>
               </div>
@@ -110,15 +110,15 @@ export function initVmManager() {
 
             <!-- CPU Thread Overcommit Card -->
             <div style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); border-radius: 8px; padding: 10px 14px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 6px;">
                 <span style="color: var(--muted); font-weight: 600;">vCPU Thread Allocation</span>
-                <span id="vm-cpu-ratio-badge" style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--lt-t-34d399ff, #34d399);">1:1 Physical</span>
+                <span id="vm-cpu-ratio-badge" style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--lt-t-34d399ff, #34d399);">1:1 Physical</span>
               </div>
               <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
                 <span style="font-size: 18px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" id="vm-cpu-allocated">0</span>
-                <span style="font-size: 11px; color: var(--muted);">/ <span id="vm-cpu-threads">8</span> Host Threads</span>
+                <span style="font-size: var(--zn-fs-xs); color: var(--muted);">/ <span id="vm-cpu-threads">8</span> Host Threads</span>
               </div>
-              <div style="font-size: 11px; color: var(--muted); margin-top: 6px;" id="vm-cpu-note">Optimal execution. Dedicated physical thread capacity per vCPU.</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 6px;" id="vm-cpu-note">Optimal execution. Dedicated physical thread capacity per vCPU.</div>
             </div>
           </div>
         </div>
@@ -248,9 +248,9 @@ export async function loadVmDashboard() {
 // vTPM needs the swtpm emulator on the host; warn instead of promising Windows 11 support.
 function vtpmBadgeHtml() {
   if (vmTelemetry?.kvm?.vtpm_available === false) {
-    return `<span class="vm-tpm-badge unavailable" title="${escapeHtml(t('vm.tpm_unavailable_hint', 'Install the swtpm package on the host (or update the container image) to use vTPM.'))}" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.3);">⚠️ ${escapeHtml(t('vm.tpm_unavailable', 'swtpm not installed'))}</span>`;
+    return `<span class="vm-tpm-badge unavailable" title="${escapeHtml(t('vm.tpm_unavailable_hint', 'Install the swtpm package on the host (or update the container image) to use vTPM.'))}" style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.3);">⚠️ ${escapeHtml(t('vm.tpm_unavailable', 'swtpm not installed'))}</span>`;
   }
-  return `<span class="vm-tpm-badge" style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border: 1px solid rgba(14,165,233,0.3);">🛡️ ${escapeHtml(t('vm.tpm_ready', 'Windows 11 Ready'))}</span>`;
+  return `<span class="vm-tpm-badge" style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border: 1px solid rgba(14,165,233,0.3);">🛡️ ${escapeHtml(t('vm.tpm_ready', 'Windows 11 Ready'))}</span>`;
 }
 
 function renderTelemetry(tel) {
@@ -268,7 +268,7 @@ function renderTelemetry(tel) {
     kvmBadge.style.color = '#fbbf24';
     kvmBadge.style.borderColor = 'rgba(245,158,11,0.3)';
   } else if (kvmBadge && tel.kvm) {
-    kvmBadge.innerHTML = `<span aria-hidden="true">⚡</span> <span>${escapeHtml(tel.kvm.badge || 'KVM Active')}</span> <span style="font-size: 11px; opacity: 0.8; margin-left: 2px;" title="${t('ui.view_kvm_diagnostics_fix', 'View KVM Diagnostics & Fix')}">ℹ️</span>`;
+    kvmBadge.innerHTML = `<span aria-hidden="true">⚡</span> <span>${escapeHtml(tel.kvm.badge || 'KVM Active')}</span> <span style="font-size: var(--zn-fs-xs); opacity: 0.8; margin-left: 2px;" title="${t('ui.view_kvm_diagnostics_fix', 'View KVM Diagnostics & Fix')}">ℹ️</span>`;
     kvmBadge.style.cursor = 'pointer';
     kvmBadge.onclick = () => openKvmDiagnosticsModal(tel.kvm);
     if (tel.kvm.state === 'active') {
@@ -440,7 +440,7 @@ function buildVmCardHtml(vm, vms) {
         ? 'rgba(245,158,11,0.15)'
         : 'rgba(255,255,255,0.06)';
 
-      const stateBadge = `<span style="padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; background: ${statusBg}; color: ${statusColor}; text-transform: uppercase;">${vm.state}</span>`;
+      const stateBadge = `<span style="padding: 2px 7px; border-radius: 4px; font-size: var(--zn-fs-xs); font-weight: 700; background: ${statusBg}; color: ${statusColor}; text-transform: uppercase;">${vm.state}</span>`;
 
       const vncPort = vm.vnc_port || (5901 + (vms.findIndex((v) => v.id === vm.id) % 10));
       const vncDisplay = Math.max(1, vncPort - 5900);
@@ -469,7 +469,7 @@ function buildVmCardHtml(vm, vms) {
               ${osIcon}
               <div>
                 <div style="font-weight: 700; color: var(--lt-t-ffffffff, #fff); font-size: 13px;">${escapeHtml(vm.name)}</div>
-                <div style="font-size: 11px; color: var(--muted);">${escapeHtml(vm.description || 'Virtual Appliance')}</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(vm.description || 'Virtual Appliance')}</div>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: flex-end;">
@@ -489,7 +489,7 @@ function buildVmCardHtml(vm, vms) {
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 11px; margin: 12px 0 8px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 8px; border-radius: 6px; border: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: var(--zn-fs-xs); margin: 12px 0 8px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 8px; border-radius: 6px; border: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
             <div><span style="color: var(--muted);">${t('vm.compute', 'Compute')}:</span> <strong style="color: var(--lt-t-ffffffff, #fff);">${vm.vcpus} vCPUs</strong></div>
             <div><span style="color: var(--muted);">${t('vm.memory', 'Memory')}:</span> <strong style="color: var(--lt-t-38bdf8ff, #38bdf8);">${vm.ram_gb} GB</strong></div>
             <div><span style="color: var(--muted);">${t('vm.disk', 'Disk')}:</span> <strong style="color: var(--lt-t-ffffffff, #fff);">${vm.disk_size_gb} GB (${vm.disk_format})</strong></div>
@@ -521,8 +521,8 @@ function buildVmCardHtml(vm, vms) {
           }
 
           <!-- Connection Info Bar with 1-Click Copy Buttons -->
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 4px 8px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; margin-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 6px; font-family: monospace; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 4px 8px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px; font-family: monospace; font-size: var(--zn-fs-xs); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               <span style="color: var(--lt-t-f59e0bff, #f59e0b); display: inline-flex; align-items: center; gap: 3px;">
                 <span>VNC :${vncDisplay}</span>
                 <button class="btn-copy-vnc" data-uri="${escapeHtml(vncUri)}" style="background: none; border: none; cursor: pointer; color: var(--muted); padding: 1px 3px; display: inline-flex; align-items: center;" title="Copy VNC URI (${vncUri})">
@@ -537,7 +537,7 @@ function buildVmCardHtml(vm, vms) {
                 </button>
               </span>
             </div>
-            <button class="btn-vm-join-toggle" data-id="${vm.id}" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); border-radius: 4px; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: 11px; font-weight: 700; padding: 2px 6px; cursor: pointer; flex-shrink: 0;" title="${t('ui.join_vm_connection_options', 'Join VM connection options')}">
+            <button class="btn-vm-join-toggle" data-id="${vm.id}" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3); border-radius: 4px; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer; flex-shrink: 0;" title="${t('ui.join_vm_connection_options', 'Join VM connection options')}">
               Join ▾
             </button>
           </div>
@@ -545,16 +545,16 @@ function buildVmCardHtml(vm, vms) {
           ${
             vm.iso_path
               ? `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 6px 10px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 4px; margin-bottom: 10px;">
               <span style="color: var(--lt-t-fbbf24ff, #fbbf24); font-weight: 600; display: flex; align-items: center; gap: 6px;">
                 <span aria-hidden="true">💿</span>
                 <span>ISO Attached (${escapeHtml(vm.iso_path.split('/').pop())})</span>
               </span>
               <div style="display: flex; gap: 4px;">
-                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--lt-t-fbbf24ff, #fbbf24); font-size: 11px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--lt-t-fbbf24ff, #fbbf24); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
                   Open Console 🖥️
                 </button>
-                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--lt-t-fbbf24ff, #fbbf24); font-size: 11px; font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
+                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4); border-radius: 4px; color: var(--lt-t-fbbf24ff, #fbbf24); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
                   ↗
                 </button>
               </div>
@@ -562,7 +562,7 @@ function buildVmCardHtml(vm, vms) {
           `
               : vm.ip_address
               ? `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 4px 8px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25); border-radius: 4px; margin-bottom: 10px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 4px 8px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.25); border-radius: 4px; margin-bottom: 10px; position: relative;">
               <span style="color: var(--lt-t-38bdf8ff, #38bdf8); font-family: monospace; display: flex; align-items: center; gap: 5px;">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 ${escapeHtml(vm.ip_address)}
@@ -575,38 +575,38 @@ function buildVmCardHtml(vm, vms) {
 
               <!-- Quick Connect Popover -->
               <div id="vm-join-popover-${vm.id}" class="vm-join-popover" style="display: none;">
-                <div style="font-size: 11px; font-weight: 800; color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); margin-bottom: 4px;">CONNECT TO ${escapeHtml(vm.name).toUpperCase()}</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); padding-bottom: 4px; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); margin-bottom: 4px;">CONNECT TO ${escapeHtml(vm.name).toUpperCase()}</div>
                 <div class="join-popover-item btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>🖥️ ${t('vm.open_gui', 'Open KVM GUI Desktop (Display :0)')}</span>
-                  <span style="font-size: 11px; color: var(--lt-t-38bdf8ff, #38bdf8);">noVNC</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8);">noVNC</span>
                 </div>
                 <div class="join-popover-item btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui">
                   <span>↗ ${t('vm.open_separate', 'Open in Separate Window')}</span>
-                  <span style="font-size: 11px; color: var(--lt-t-38bdf8ff, #38bdf8);">Pop Out</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8);">Pop Out</span>
                 </div>
                 <div class="join-popover-item btn-join-console" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}">
                   <span>📟 ${t('vm.open_serial', 'Open Serial Terminal (TTY)')}</span>
-                  <span style="font-size: 11px; color: var(--lt-t-34d399ff, #34d399);">TTY / CLI</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-34d399ff, #34d399);">TTY / CLI</span>
                 </div>
                 <div class="join-popover-item btn-join-web" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>🌐 ${t('vm.open_web', 'Open Web UI (HTTP)')}</span>
-                  <span style="font-size: 11px; color: var(--lt-t-a78bfaff, #a78bfa);">http://${escapeHtml(vm.ip_address)}</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-a78bfaff, #a78bfa);">http://${escapeHtml(vm.ip_address)}</span>
                 </div>
                 <div class="join-popover-item btn-join-vnc" data-id="${vm.id}">
                   <span>🔗 ${t('vm.native_vnc', 'Native VNC Client (vnc://)')}</span>
-                  <span style="font-size: 11px; color: var(--lt-t-f59e0bff, #f59e0b);">Port ${vncPort}</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-f59e0bff, #f59e0b);">Port ${vncPort}</span>
                 </div>
                 <div class="join-popover-item btn-join-rdp" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>🪟 ${t('vm.rdp', 'Remote Desktop (RDP)')}</span>
-                  <span style="font-size: 11px; color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(vm.ip_address)}:3389</span>
+                  <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(vm.ip_address)}:3389</span>
                 </div>
                 <div class="join-popover-item btn-join-ssh" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>💻 ${t('vm.copy_ssh', 'Copy SSH Command')}</span>
-                  <span style="font-size: 11px; font-family: monospace; color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(sshCmd)}</span>
+                  <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(sshCmd)}</span>
                 </div>
                 <div class="join-popover-item btn-join-ip" data-ip="${escapeHtml(vm.ip_address)}">
                   <span>📋 ${t('vm.copy_ip', 'Copy IP Address')}</span>
-                  <span style="font-size: 11px; font-family: monospace; color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(vm.ip_address)}</span>
+                  <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(vm.ip_address)}</span>
                 </div>
                 <div class="join-popover-item btn-join-details" data-id="${vm.id}" style="border-top: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); margin-top: 2px; color: var(--lt-t-38bdf8ff, #38bdf8);">
                   <span>⚡ Multi-Protocol Drawer...</span>
@@ -617,16 +617,16 @@ function buildVmCardHtml(vm, vms) {
           `
               : isRunning
               ? `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding: 6px 10px; background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); border-radius: 4px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); padding: 6px 10px; background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2); border-radius: 4px; margin-bottom: 10px;">
               <span style="color: var(--lt-t-38bdf8ff, #38bdf8); display: flex; align-items: center; gap: 6px;">
                 <span aria-hidden="true">🖥️</span>
                 <span>Console Display Active</span>
               </span>
               <div style="display: flex; gap: 4px;">
-                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: 11px; font-weight: 700; padding: 2px 8px; cursor: pointer;">
+                <button class="btn-join-gui" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; cursor: pointer;">
                   Open Console 🖥️
                 </button>
-                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: 11px; font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
+                <button class="btn-join-separate" data-id="${vm.id}" data-name="${escapeHtml(vm.name)}" data-mode="gui" style="background: rgba(14,165,233,0.2); border: 1px solid rgba(14,165,233,0.4); border-radius: 4px; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; cursor: pointer;" title="${t('vm.open_separate', 'Open in Separate Window')}">
                   ↗
                 </button>
               </div>
@@ -1033,8 +1033,8 @@ export function openQemuErrorModal(vmName, errorMsg, vmId = null) {
         <div style="font-size: 13px; color: var(--lt-t-ffffffff, #fff);">
           Failed to start virtual machine <strong>${escapeHtml(vmName)}</strong>. The hypervisor process encountered a critical error:
         </div>
-        <div class="qemu-error-box" style="background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 11px; color: var(--lt-t-fca5a5ff, #fca5a5); line-height: 1.5; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow-y: auto;">${escapeHtml(errorMsg || 'Process exited prematurely with non-zero exit code.')}</div>
-        <div style="font-size: 11px; color: var(--muted); line-height: 1.4;">
+        <div class="qemu-error-box" style="background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 12px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--lt-t-fca5a5ff, #fca5a5); line-height: 1.5; white-space: pre-wrap; word-break: break-all; max-height: 160px; overflow-y: auto;">${escapeHtml(errorMsg || 'Process exited prematurely with non-zero exit code.')}</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;">
           <strong>Recommended Troubleshooting:</strong>
           <ul style="margin: 6px 0 0 16px; padding: 0;">
             <li>Verify KVM kernel acceleration module (<code>/dev/kvm</code>) is accessible.</li>
@@ -1145,7 +1145,7 @@ export function openVmEditModal(vmId, vmObj = null) {
 
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
         ${isRunning ? `
-          <div style="background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.3); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--lt-t-38bdf8ff, #38bdf8); display: flex; align-items: center; gap: 8px;">
+          <div style="background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.3); border-radius: 6px; padding: 10px 14px; font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8); display: flex; align-items: center; gap: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <span>This VM is currently <strong>running</strong>. Hardware changes (vCPUs, RAM, boot order) will take full effect on next VM restart.</span>
           </div>
@@ -1153,25 +1153,25 @@ export function openVmEditModal(vmId, vmObj = null) {
 
         <!-- General Info -->
         <div>
-          <label for="vm-edit-name" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
-          <input type="text" id="vm-edit-name" value="${escapeHtml(targetVm.name || '')}" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;" />
+          <label for="vm-edit-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
+          <input type="text" id="vm-edit-name" value="${escapeHtml(targetVm.name || '')}" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;" />
         </div>
 
         <div>
-          <label for="vm-edit-desc" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Description</label>
-          <input type="text" id="vm-edit-desc" value="${escapeHtml(targetVm.description || '')}" placeholder="${t('ui.appliance_description', 'Appliance description')}" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;" />
+          <label for="vm-edit-desc" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Description</label>
+          <input type="text" id="vm-edit-desc" value="${escapeHtml(targetVm.description || '')}" placeholder="${t('ui.appliance_description', 'Appliance description')}" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;" />
         </div>
 
         <!-- Snapshots Quick Launcher -->
         <div style="display: flex; justify-content: space-between; align-items: center; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 8px; padding: 12px 14px;">
           <div>
-            <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); display: flex; align-items: center; gap: 6px;">
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff); display: flex; align-items: center; gap: 6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--accent, var(--lt-t-38bdf8ff, #38bdf8));"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <span>Snapshots & Rollback Checkpoints</span>
             </div>
-            <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Create point-in-time state backups or revert to previous checkpoints.</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;">Create point-in-time state backups or revert to previous checkpoints.</div>
           </div>
-          <button type="button" id="vm-edit-open-snapshots" class="btn-vm-action btn-vm-snapshots" style="padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <button type="button" id="vm-edit-open-snapshots" class="btn-vm-action btn-vm-snapshots" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span>${t('vm.manage_snapshots', 'Manage Snapshots')}</span>
           </button>
@@ -1180,20 +1180,20 @@ export function openVmEditModal(vmId, vmObj = null) {
         <!-- RAM Allocation & Dynamic Headroom -->
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">RAM Allocation (Dynamic Headroom)</span>
-            <span id="vm-edit-ram-display" style="font-size: 12px; font-weight: 700; color: var(--lt-t-38bdf8ff, #38bdf8);">${targetVm.ram_gb || 4.0} GB</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">RAM Allocation (Dynamic Headroom)</span>
+            <span id="vm-edit-ram-display" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-38bdf8ff, #38bdf8);">${targetVm.ram_gb || 4.0} GB</span>
           </div>
           <input type="range" id="vm-edit-ram-slider" min="0.5" max="${Math.max(budget.safe_slider_max_gb, targetVm.ram_gb || 4)}" step="0.5" value="${targetVm.ram_gb || 4.0}" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">
             <span>Min: 0.5 GB</span>
             <span id="vm-edit-slider-max-label">Safe Max: ${budget.safe_slider_max_gb} GB</span>
           </div>
           <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); display: flex; justify-content: space-between; align-items: center;">
-            <label style="font-size: 11px; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px;">
               <input type="checkbox" id="vm-edit-override-toggle" ${targetVm.override_active ? 'checked' : ''} style="accent-color: #f59e0b;" />
               <span>Advanced Override (Bypass Headroom)</span>
             </label>
-            <span id="vm-edit-override-pill" style="display: ${targetVm.override_active ? 'inline-block' : 'none'}; font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.2); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.4);">
+            <span id="vm-edit-override-pill" style="display: ${targetVm.override_active ? 'inline-block' : 'none'}; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.2); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.4);">
               ⚡ Host reserve bypassed
             </span>
           </div>
@@ -1202,15 +1202,15 @@ export function openVmEditModal(vmId, vmObj = null) {
         <!-- vCPUs Slider -->
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">vCPU Cores</span>
-            <span id="vm-edit-vcpu-display" style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${targetVm.vcpus || 2} vCPUs</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">vCPU Cores</span>
+            <span id="vm-edit-vcpu-display" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${targetVm.vcpus || 2} vCPUs</span>
           </div>
           <input type="range" id="vm-edit-vcpu-slider" min="1" max="${Math.max(hostThreads, targetVm.vcpus || 2)}" step="1" value="${targetVm.vcpus || 2}" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">
             <span>1 vCPU</span>
             <span>Physical Limit: ${hostThreads} Threads</span>
           </div>
-          <div id="vm-edit-overcommit-warning" style="display: ${(targetVm.vcpus || 2) > hostThreads ? 'block' : 'none'}; margin-top: 8px; font-size: 11px; padding: 6px 10px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.3);">
+          <div id="vm-edit-overcommit-warning" style="display: ${(targetVm.vcpus || 2) > hostThreads ? 'block' : 'none'}; margin-top: 8px; font-size: var(--zn-fs-xs); padding: 6px 10px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.3);">
             ⚠️ Soft warning: Exceeds physical host threads.
           </div>
         </div>
@@ -1219,17 +1219,17 @@ export function openVmEditModal(vmId, vmObj = null) {
         <div style="display: flex; flex-direction: column; gap: 10px; background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label for="vm-edit-iso" style="font-size: 11px; font-weight: 700; color: var(--muted);">Attached ISO Image (CD-ROM)</label>
-              ${targetVm.iso_path ? `<span style="font-size: 11px; color: var(--lt-t-fbbf24ff, #fbbf24);">💿 Currently Attached</span>` : ''}
+              <label for="vm-edit-iso" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);">Attached ISO Image (CD-ROM)</label>
+              ${targetVm.iso_path ? `<span style="font-size: var(--zn-fs-xs); color: var(--lt-t-fbbf24ff, #fbbf24);">💿 Currently Attached</span>` : ''}
             </div>
-            <select id="vm-edit-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;">
+            <select id="vm-edit-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;">
               <option value="">None (Detach ISO / Empty Tray)</option>
               ${vmIsos.map((iso) => `<option value="${escapeHtml(iso.path)}" ${iso.path === targetVm.iso_path ? 'selected' : ''}>${escapeHtml(iso.name)} (${iso.size_formatted})</option>`).join('')}
             </select>
           </div>
 
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Boot Priority Order</label>
+            <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Boot Priority Order</label>
             <div class="vm-boot-order-group">
               <label class="boot-order-label">
                 <input type="radio" name="vm-edit-boot-order" value="iso" ${currentBootOrder === 'iso' ? 'checked' : ''} />
@@ -1246,8 +1246,8 @@ export function openVmEditModal(vmId, vmObj = null) {
         <!-- Firmware & Boot Architecture -->
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="margin-bottom: 8px;">
-            <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.firmware_title">${t('vm.firmware_title', 'Firmware & Boot Architecture')}</div>
-            <div style="font-size: 11px; color: var(--muted);" data-i18n="vm.firmware_desc">${t('vm.firmware_desc', 'Select hypervisor firmware initialization and virtual hardware security.')}</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.firmware_title">${t('vm.firmware_title', 'Firmware & Boot Architecture')}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="vm.firmware_desc">${t('vm.firmware_desc', 'Select hypervisor firmware initialization and virtual hardware security.')}</div>
           </div>
           <div class="vm-firmware-group">
             <label class="firmware-label">
@@ -1268,7 +1268,7 @@ export function openVmEditModal(vmId, vmObj = null) {
 
           <!-- Virtual TPM 2.0 Toggle -->
           <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); display: flex; justify-content: space-between; align-items: center;">
-            <label style="font-size: 11px; color: var(--lt-t-ffffffff, #fff); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); cursor: pointer; display: flex; align-items: center; gap: 6px;">
               <input type="checkbox" id="vm-edit-tpm" ${targetVm.tpm_enabled ? 'checked' : ''} style="accent-color: var(--accent-cyan, #0ea5e9);" />
               <span data-i18n="vm.tpm_title">${t('vm.tpm_title', 'Enable Virtual TPM 2.0 (vTPM)')}</span>
             </label>
@@ -1280,14 +1280,14 @@ export function openVmEditModal(vmId, vmObj = null) {
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</div>
-              <div style="font-size: 11px; color: var(--muted);">Select virtual GPU hardware adapter or headless console mode</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Select virtual GPU hardware adapter or headless console mode</div>
             </div>
-            <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
+            <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
               GPU Accelerated
             </span>
           </div>
-          <select id="vm-edit-video-adapter" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;">
+          <select id="vm-edit-video-adapter" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;">
             <option value="virtio-gpu" ${targetVideo === 'virtio-gpu' ? 'selected' : ''}>VirtIO-GPU (Recommended / Linux 2D/3D Accel)</option>
             <option value="qxl" ${targetVideo === 'qxl' ? 'selected' : ''}>QXL (SPICE / Windows Drivers)</option>
             <option value="vga" ${targetVideo === 'vga' ? 'selected' : ''}>Standard VGA (Universal Compatibility)</option>
@@ -1299,8 +1299,8 @@ export function openVmEditModal(vmId, vmObj = null) {
         <div class="vm-config-card" style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px; flex-shrink: 0;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px;">
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
-              <div style="font-size: 11px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
             </div>
             <button type="button" id="btn-edit-toggle-custom-usb" class="btn-pill-toggle" data-i18n="vm.usb_custom_btn" style="flex-shrink: 0;">
               ${t('vm.usb_custom_btn', '+ Custom VID:PID')}
@@ -1319,10 +1319,10 @@ export function openVmEditModal(vmId, vmObj = null) {
 
           <!-- Custom USB inputs (hidden by default) -->
           <div id="vm-edit-custom-usb-wrap" class="usb-custom-row" style="display: none;">
-            <input type="text" id="vm-edit-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-            <input type="text" id="vm-edit-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-            <input type="text" id="vm-edit-custom-desc" class="usb-custom-desc" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" style="padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-            <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: var(--lt-t-34d399ff, #34d399); cursor: pointer;">
+            <input type="text" id="vm-edit-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+            <input type="text" id="vm-edit-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+            <input type="text" id="vm-edit-custom-desc" class="usb-custom-desc" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" style="padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+            <button type="button" id="btn-edit-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(16,185,129,0.2); border-color: #34d399; color: var(--lt-t-34d399ff, #34d399); cursor: pointer;">
               Add
             </button>
           </div>
@@ -1334,8 +1334,8 @@ export function openVmEditModal(vmId, vmObj = null) {
         <!-- Host PCI / GPU Passthrough (VFIO) -->
         <div class="vm-config-card vm-pci-card" style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px; flex-shrink: 0;">
           <div style="margin-bottom: 8px;">
-            <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.pci_title">${t('vm.pci_title', 'PCI / GPU Passthrough (VFIO)')}</div>
-            <div style="font-size: 11px; color: var(--muted);" data-i18n="vm.pci_desc">${t('vm.pci_desc', 'Give the VM exclusive use of a host PCI device such as a GPU. The device must be bound to the vfio-pci driver on the host.')}</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.pci_title">${t('vm.pci_title', 'PCI / GPU Passthrough (VFIO)')}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="vm.pci_desc">${t('vm.pci_desc', 'Give the VM exclusive use of a host PCI device such as a GPU. The device must be bound to the vfio-pci driver on the host.')}</div>
           </div>
           <div id="vm-edit-pci-list" style="display: flex; flex-direction: column; gap: 4px;"></div>
         </div>
@@ -1344,8 +1344,8 @@ export function openVmEditModal(vmId, vmObj = null) {
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Host Directory Passthrough (VirtIO-FS / 9p)</span>
-              <div style="font-size: 11px; color: var(--muted);">Map host folders (/mnt/user/appdata, /mnt/storage) into guest</div>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Host Directory Passthrough (VirtIO-FS / 9p)</span>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Map host folders (/mnt/user/appdata, /mnt/storage) into guest</div>
             </div>
             <button type="button" id="btn-edit-add-host-share" class="btn-pill-toggle is-small">
               + Add Folder
@@ -1358,8 +1358,8 @@ export function openVmEditModal(vmId, vmObj = null) {
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Secondary Virtual Disks</span>
-              <div style="font-size: 11px; color: var(--muted);">Attach additional block devices (data pools, databases)</div>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Secondary Virtual Disks</span>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Attach additional block devices (data pools, databases)</div>
             </div>
             <button type="button" id="btn-edit-add-secondary-disk" class="btn-pill-toggle is-small">
               + Add Disk
@@ -1369,7 +1369,7 @@ export function openVmEditModal(vmId, vmObj = null) {
         </div>
 
         <div>
-          <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--lt-t-ffffffff, #fff); cursor: pointer;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); cursor: pointer;">
             <input type="checkbox" id="vm-edit-autostart" ${targetVm.autostart ? 'checked' : ''} style="accent-color: var(--accent-cyan, #0ea5e9);" />
             <span>Autostart on Boot (Start with Host OS)</span>
           </label>
@@ -1591,13 +1591,13 @@ export function openVmEditModal(vmId, vmObj = null) {
     row.className = 'host-share-row';
     row.style.cssText = 'display: flex; gap: 6px; align-items: center;';
     row.innerHTML = `
-      <input type="text" class="share-host-path" placeholder="/mnt/user/appdata" value="${escapeHtml(share.host_path || '/mnt/user/appdata')}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-      <input type="text" class="share-mount-tag" placeholder="appdata" value="${escapeHtml(share.mount_tag || 'appdata')}" style="flex: 1.2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-      <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;">
+      <input type="text" class="share-host-path" placeholder="/mnt/user/appdata" value="${escapeHtml(share.host_path || '/mnt/user/appdata')}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+      <input type="text" class="share-mount-tag" placeholder="appdata" value="${escapeHtml(share.mount_tag || 'appdata')}" style="flex: 1.2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+      <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
         <option value="virtiofs" ${share.driver === 'virtiofs' ? 'selected' : ''}>VirtIO-FS</option>
         <option value="9p" ${share.driver === '9p' ? 'selected' : ''}>9p</option>
       </select>
-      <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;">
+      <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
         <option value="rw" ${!share.readonly ? 'selected' : ''}>RW</option>
         <option value="ro" ${share.readonly ? 'selected' : ''}>RO</option>
       </select>
@@ -1622,9 +1622,9 @@ export function openVmEditModal(vmId, vmObj = null) {
     row.className = 'secondary-disk-row';
     row.style.cssText = 'display: flex; gap: 6px; align-items: center;';
     row.innerHTML = `
-      <input type="text" class="disk-name" placeholder="${t('ui.disk_name', 'Disk Name')}" value="${escapeHtml(disk.name || `data-disk-${idx}`)}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-      <input type="number" class="disk-size" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="${disk.size_gb || 50}" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-      <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;">
+      <input type="text" class="disk-name" placeholder="${t('ui.disk_name', 'Disk Name')}" value="${escapeHtml(disk.name || `data-disk-${idx}`)}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+      <input type="number" class="disk-size" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="${disk.size_gb || 50}" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+      <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
         <option value="virtio" ${disk.bus === 'virtio' ? 'selected' : ''}>virtio</option>
         <option value="sata" ${disk.bus === 'sata' ? 'selected' : ''}>sata</option>
         <option value="nvme" ${disk.bus === 'nvme' ? 'selected' : ''}>nvme</option>
@@ -1651,7 +1651,7 @@ export function openVmEditModal(vmId, vmObj = null) {
   };
   const PCI_HIDDEN_CLASSES = new Set(['0600', '0601', '0604']); // host/ISA/PCI bridges
   const pciNote = (text, warn = false) =>
-    `<div class="vm-pci-note${warn ? ' warn' : ''}" style="font-size: 11px; padding: 6px 10px; border-radius: 4px; background: ${warn ? 'rgba(245,158,11,0.12)' : 'rgba(0,0,0,0.2)'}; color: ${warn ? '#fbbf24' : 'var(--muted)'};">${escapeHtml(text)}</div>`;
+    `<div class="vm-pci-note${warn ? ' warn' : ''}" style="font-size: var(--zn-fs-xs); padding: 6px 10px; border-radius: 4px; background: ${warn ? 'rgba(245,158,11,0.12)' : 'rgba(0,0,0,0.2)'}; color: ${warn ? '#fbbf24' : 'var(--muted)'};">${escapeHtml(text)}</div>`;
   const renderPciList = (data) => {
     if (!pciList) return;
     if (!data || !data.iommu_enabled) {
@@ -1667,7 +1667,7 @@ export function openVmEditModal(vmId, vmObj = null) {
       const devs = (group.devices || []).filter((d) => !PCI_HIDDEN_CLASSES.has(String(d.class_code || '').slice(0, 4)));
       if (devs.length === 0) continue;
       if (devs.length > 1) {
-        rows.push(`<div class="vm-pci-group-note" style="font-size: 11px; color: var(--muted); margin-top: 4px;">${escapeHtml(t('vm.pci_group_note', 'IOMMU group {group}: pass all of its devices together', { group: group.group_id }))}</div>`);
+        rows.push(`<div class="vm-pci-group-note" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${escapeHtml(t('vm.pci_group_note', 'IOMMU group {group}: pass all of its devices together', { group: group.group_id }))}</div>`);
       }
       for (const dev of devs) {
         const slot = String(dev.slot || '').replace(/^0000:/, '').toLowerCase();
@@ -1678,12 +1678,12 @@ export function openVmEditModal(vmId, vmObj = null) {
           ? 'vfio-pci'
           : t('vm.pci_needs_vfio', 'On {driver}; bind to vfio-pci first', { driver: dev.driver || t('vm.pci_no_driver', 'no driver') });
         rows.push(`
-          <label class="vm-pci-row${ready ? '' : ' disabled'}" style="display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 4px 8px; border-radius: 4px; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); cursor: ${ready || checked ? 'pointer' : 'not-allowed'}; opacity: ${ready || checked ? '1' : '0.6'};">
+          <label class="vm-pci-row${ready ? '' : ' disabled'}" style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); padding: 4px 8px; border-radius: 4px; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); cursor: ${ready || checked ? 'pointer' : 'not-allowed'}; opacity: ${ready || checked ? '1' : '0.6'};">
             <input type="checkbox" class="vm-pci-check" data-slot="${escapeHtml(slot)}" data-name="${escapeHtml(`${kind} ${dev.name || ''}`.trim())}" ${checked ? 'checked' : ''} ${ready || checked ? '' : 'disabled'} />
             <span style="font-weight: 700; color: var(--lt-t-ffffffff, #fff); min-width: 54px;">${escapeHtml(kind)}</span>
             <span style="font-family: monospace; color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(slot)}</span>
             <span style="color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${escapeHtml(dev.name || '')}</span>
-            <span class="vm-pci-driver" style="font-size: 11px; color: ${ready ? '#34d399' : '#fbbf24'}; white-space: nowrap;">${escapeHtml(driverText)}</span>
+            <span class="vm-pci-driver" style="font-size: var(--zn-fs-xs); color: ${ready ? '#34d399' : '#fbbf24'}; white-space: nowrap;">${escapeHtml(driverText)}</span>
           </label>
         `);
       }
@@ -1721,7 +1721,7 @@ export function openVmEditModal(vmId, vmObj = null) {
     usbList.innerHTML = '';
     if (currentUsbDevices.length === 0) {
       usbList.innerHTML = `
-        <div style="font-size: 11px; color: var(--muted); padding: 8px 10px; text-align: center; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 4px;" data-i18n="vm.usb_no_devices">
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted); padding: 8px 10px; text-align: center; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 4px;" data-i18n="vm.usb_no_devices">
           ${t('vm.usb_no_devices', 'No host USB devices attached to this VM.')}
         </div>
       `;
@@ -1734,17 +1734,17 @@ export function openVmEditModal(vmId, vmObj = null) {
         <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
           <span style="font-size: 14px;">🔌</span>
           <div style="min-width: 0;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
               ${escapeHtml(dev.description || dev.product || 'USB Device')}
             </div>
-            <div style="font-size: 11px; color: var(--muted);">
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">
               ${escapeHtml(dev.manufacturer || 'Generic')} ${dev.bus ? `· Bus ${dev.bus} Dev ${dev.dev}` : ''}
             </div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="usb-vidpid-badge">${escapeHtml(dev.vendor_id)}:${escapeHtml(dev.product_id)}</span>
-          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: var(--lt-t-f87171ff, #f87171); cursor: pointer; padding: 2px 6px; font-size: 12px;" title="${t('ui.remove_device', 'Remove device')}">✕</button>
+          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: var(--lt-t-f87171ff, #f87171); cursor: pointer; padding: 2px 6px; font-size: var(--zn-fs-xs);" title="${t('ui.remove_device', 'Remove device')}">✕</button>
         </div>
       `;
       card.querySelector('.btn-remove-usb').onclick = () => {
@@ -2019,9 +2019,9 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <span class="qemu-process-badge ${targetVm.state === 'running' ? 'active' : targetVm.state === 'paused' ? 'paused' : 'stopped'}">
               ● ${targetVm.state ? targetVm.state.toUpperCase() : 'UNKNOWN'}
             </span>
-            <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(name)}</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(name)}</span>
           </div>
-          <span style="font-size: 11px; font-family: monospace; color: ${ip ? '#38bdf8' : 'var(--muted)'};">
+          <span style="font-size: var(--zn-fs-xs); font-family: monospace; color: ${ip ? '#38bdf8' : 'var(--muted)'};">
             ${ip ? `IP: ${ip}` : 'No IP detected yet (DHCP pending)'}
           </span>
         </div>
@@ -2032,15 +2032,15 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🖥️</span>
               <div>
-                <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">In-Browser Web Console</div>
-                <div style="font-size: 11px; color: var(--muted);">Direct glassmorphic KVM GUI (VirtIO-GPU) or VT100 Serial TTY</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">In-Browser Web Console</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Direct glassmorphic KVM GUI (VirtIO-GPU) or VT100 Serial TTY</div>
               </div>
             </div>
             <div style="display: flex; gap: 6px;">
-              <button class="btn-console-act btn-connect-gui" style="padding: 4px 10px; font-size: 11px; background: #0ea5e9; color: #fff; border-color: #38bdf8;">
+              <button class="btn-console-act btn-connect-gui" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: #0ea5e9; color: #fff; border-color: #38bdf8;">
                 Launch KVM GUI
               </button>
-              <button class="btn-console-act btn-connect-tty" style="padding: 4px 10px; font-size: 11px; background: rgba(52,211,153,0.15); color: var(--lt-t-34d399ff, #34d399); border-color: rgba(52,211,153,0.4);">
+              <button class="btn-console-act btn-connect-tty" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(52,211,153,0.15); color: var(--lt-t-34d399ff, #34d399); border-color: rgba(52,211,153,0.4);">
                 Serial TTY
               </button>
             </div>
@@ -2053,17 +2053,17 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🌐</span>
               <div>
-                <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Native VNC Client (RFB)</div>
-                <div style="font-size: 11px; color: var(--muted);">TigerVNC, RealVNC, macOS Screen Sharing</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Native VNC Client (RFB)</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">TigerVNC, RealVNC, macOS Screen Sharing</div>
               </div>
             </div>
-            <button class="btn-console-act btn-connect-copy-vnc" style="padding: 4px 10px; font-size: 11px;">
+            <button class="btn-console-act btn-connect-copy-vnc" style="padding: 4px 10px; font-size: var(--zn-fs-xs);">
               📋 Copy VNC URI
             </button>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--lt-b-00000059, rgba(0,0,0,0.35)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 11px; color: var(--lt-t-38bdf8ff, #38bdf8);">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--lt-b-00000059, rgba(0,0,0,0.35)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8);">
             <span>${vncUri}</span>
-            <span style="color: var(--muted); font-size: 11px;">Port ${vncPort}</span>
+            <span style="color: var(--muted); font-size: var(--zn-fs-xs);">Port ${vncPort}</span>
           </div>
         </div>
 
@@ -2073,15 +2073,15 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🔒</span>
               <div>
-                <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Secure Shell (SSH)</div>
-                <div style="font-size: 11px; color: var(--muted);">Terminal command for OpenSSH / PuTTY</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Secure Shell (SSH)</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Terminal command for OpenSSH / PuTTY</div>
               </div>
             </div>
-            <button class="btn-console-act btn-connect-copy-ssh" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+            <button class="btn-console-act btn-connect-copy-ssh" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
               📋 Copy SSH Command
             </button>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--lt-b-00000059, rgba(0,0,0,0.35)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 11px; color: ${ip ? '#34d399' : 'var(--muted)'};">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--lt-b-00000059, rgba(0,0,0,0.35)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: ${ip ? '#34d399' : 'var(--muted)'};">
             <span>${ip ? sshCmd : 'Awaiting guest IP address assignment'}</span>
           </div>
         </div>
@@ -2092,22 +2092,22 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 14px;">🪟</span>
               <div>
-                <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Remote Desktop (RDP)</div>
-                <div style="font-size: 11px; color: var(--muted);">Microsoft Remote Desktop, Remmina, FreeRDP</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Remote Desktop (RDP)</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Microsoft Remote Desktop, Remmina, FreeRDP</div>
               </div>
             </div>
             <div style="display: flex; gap: 6px;">
-              <button class="btn-console-act btn-connect-copy-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+              <button class="btn-console-act btn-connect-copy-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
                 📋 Copy RDP URI
               </button>
-              <button class="btn-console-act btn-connect-dl-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: 11px; ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
+              <button class="btn-console-act btn-connect-dl-rdp" ${ip ? '' : `disabled title="${escapeHtml(t('vm.why_no_ip', 'Waiting for the VM to get a network address'))}"`} style="padding: 4px 10px; font-size: var(--zn-fs-xs); ${ip ? '' : 'opacity: 0.5; cursor: not-allowed;'}">
                 ⬇ .rdp File
               </button>
             </div>
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--lt-b-00000059, rgba(0,0,0,0.35)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 11px; color: ${ip ? '#eab308' : 'var(--muted)'};">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--lt-b-00000059, rgba(0,0,0,0.35)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs); color: ${ip ? '#eab308' : 'var(--muted)'};">
             <span>${ip ? rdpUri : 'Awaiting guest IP address assignment'}</span>
-            <span style="color: var(--muted); font-size: 11px;">Port 3389</span>
+            <span style="color: var(--muted); font-size: var(--zn-fs-xs);">Port 3389</span>
           </div>
         </div>
 
@@ -2117,15 +2117,15 @@ export function openVmConnectModal(vmId, vmObj = null) {
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <span style="font-size: 14px;">📂</span>
               <div>
-                <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">VirtIO-FS / 9p Mount Instructions</div>
-                <div style="font-size: 11px; color: var(--muted);">Run inside guest to access host shares</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">VirtIO-FS / 9p Mount Instructions</div>
+                <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Run inside guest to access host shares</div>
               </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px;">
               ${hostShares.map((s) => `
-                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 6px 10px; border-radius: 4px; font-family: monospace; font-size: var(--zn-fs-xs);">
                   <span style="color: var(--lt-t-cbd5e1ff, #cbd5e1);">sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}</span>
-                  <button class="btn-console-act btn-copy-mount-cmd" data-cmd="sudo mkdir -p /mnt/${escapeHtml(s.mount_tag)} && sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}" style="padding: 2px 8px; font-size: 11px;">Copy</button>
+                  <button class="btn-console-act btn-copy-mount-cmd" data-cmd="sudo mkdir -p /mnt/${escapeHtml(s.mount_tag)} && sudo mount -t virtiofs ${escapeHtml(s.mount_tag)} /mnt/${escapeHtml(s.mount_tag)}" style="padding: 2px 8px; font-size: var(--zn-fs-xs);">Copy</button>
                 </div>
               `).join('')}
             </div>
@@ -2266,31 +2266,31 @@ export function openKvmDiagnosticsModal(kvm = null) {
             <span>${k.state === 'active' ? '✓' : '⚠️'}</span>
             <span>${escapeHtml(k.badge || 'KVM Status')}</span>
           </div>
-          <div style="font-size: 11px; color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-top: 4px; line-height: 1.4;">
+          <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-top: 4px; line-height: 1.4;">
             ${escapeHtml(k.remediation || (k.state === 'active' ? 'Kernel-based Virtual Machine (KVM) hardware acceleration is fully active.' : 'Virtualization is partially restricted.'))}
           </div>
         </div>
 
         <!-- 4-Tier Diagnostics Grid -->
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Multi-Tier Diagnostics</div>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Multi-Tier Diagnostics</div>
           
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: 11px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: var(--zn-fs-xs);">
             <span>Tier 1: Host CPU Virtualization (VT-x / AMD-V)</span>
             <span style="font-weight: 700; color: ${hasVirt ? '#34d399' : '#f87171'};">${hasVirt ? '✓ Supported' : '✕ Disabled in BIOS'}</span>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: 11px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: var(--zn-fs-xs);">
             <span>Tier 2: Host Kernel Module (kvm_intel / kvm_amd)</span>
             <span style="font-weight: 700; color: ${isModuleLoaded ? '#34d399' : '#fbbf24'};">${isModuleLoaded ? '✓ Loaded' : '⚠️ Module Missing'}</span>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: 11px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: var(--zn-fs-xs);">
             <span>Tier 3: Device Character Node (/dev/kvm)</span>
             <span style="font-weight: 700; color: ${hasNode ? '#34d399' : '#f87171'};">${hasNode ? '✓ Present on Host' : '✕ Node Missing'}</span>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: 11px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; font-size: var(--zn-fs-xs);">
             <span>Tier 4: Container Device Cgroup Access</span>
             <span style="font-weight: 700; color: ${k.device_writable ? '#34d399' : isCgroupRestricted ? '#fbbf24' : '#f87171'};">
               ${k.device_writable ? '✓ Accessible' : isCgroupRestricted ? '⚠️ Cgroup Restricted (EPERM)' : '✕ Denied'}
@@ -2303,17 +2303,17 @@ export function openKvmDiagnosticsModal(kvm = null) {
             ? `
           <!-- Container Remediation Fix Snippet -->
           <div style="background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 8px; padding: 12px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); margin-bottom: 6px;">How to Fix (Docker / Unraid Container Configuration)</div>
-            <div style="font-size: 11px; color: var(--muted); margin-bottom: 8px;">
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff); margin-bottom: 6px;">How to Fix (Docker / Unraid Container Configuration)</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 8px;">
               Add the physical device mapping so the Linux kernel permits container access:
             </div>
             
             <div style="position: relative; margin-bottom: 8px;">
-              <pre style="margin: 0; padding: 8px 12px; background: var(--lt-b-0c121cff, #0c121c); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius: 4px; font-size: 11px; color: var(--lt-t-38bdf8ff, #38bdf8); font-family: monospace;">--device /dev/kvm</pre>
-              <button id="btn-copy-kvm-param" class="btn-pill-toggle" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 11px; padding: 2px 8px;">Copy</button>
+              <pre style="margin: 0; padding: 8px 12px; background: var(--lt-b-0c121cff, #0c121c); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius: 4px; font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8); font-family: monospace;">--device /dev/kvm</pre>
+              <button id="btn-copy-kvm-param" class="btn-pill-toggle" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: var(--zn-fs-xs); padding: 2px 8px;">Copy</button>
             </div>
 
-            <div style="font-size: 11px; color: var(--muted);">
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">
               <strong>Unraid:</strong> Edit container template → Click 'Advanced View' → Add <code>--device /dev/kvm</code> in <strong>Extra Parameters</strong>.
             </div>
           </div>
@@ -2400,14 +2400,14 @@ export function openVmCreateModal() {
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
         <!-- Step 1: General -->
         <div>
-          <label for="vm-create-name" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
-          <input type="text" id="vm-create-name" placeholder="e.g. ubuntu-dev-node" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;" />
+          <label for="vm-create-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
+          <input type="text" id="vm-create-name" placeholder="e.g. ubuntu-dev-node" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;" />
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label for="vm-create-os" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Family</label>
-            <select id="vm-create-os" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;">
+            <label for="vm-create-os" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Family</label>
+            <select id="vm-create-os" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;">
               <option value="linux">Linux (Ubuntu / Debian / Alpine)</option>
               <option value="windows">Microsoft Windows</option>
               <option value="bsd">BSD / TrueNAS</option>
@@ -2415,8 +2415,8 @@ export function openVmCreateModal() {
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Autostart on Boot</label>
-            <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--lt-t-ffffffff, #fff); cursor: pointer;">
+            <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Autostart on Boot</label>
+            <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); cursor: pointer;">
               <input type="checkbox" id="vm-create-autostart" style="accent-color: var(--accent-cyan, #0ea5e9);" />
               <span>Start with Host</span>
             </label>
@@ -2426,22 +2426,22 @@ export function openVmCreateModal() {
         <!-- Step 2: Compute & Elastic Headroom -->
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">RAM Allocation (Dynamic Headroom)</span>
-            <span id="vm-ram-display" style="font-size: 12px; font-weight: 700; color: var(--lt-t-38bdf8ff, #38bdf8);">4.0 GB</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">RAM Allocation (Dynamic Headroom)</span>
+            <span id="vm-ram-display" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-38bdf8ff, #38bdf8);">4.0 GB</span>
           </div>
           <input type="range" id="vm-create-ram-slider" min="0.5" max="${budget.safe_slider_max_gb}" step="0.5" value="4.0" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">
             <span>Min: 0.5 GB</span>
             <span id="vm-slider-max-label">Safe Max: ${budget.safe_slider_max_gb} GB</span>
           </div>
 
           <!-- Advanced Override Switch -->
           <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); display: flex; justify-content: space-between; align-items: center;">
-            <label style="font-size: 11px; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 6px;">
               <input type="checkbox" id="vm-override-toggle" style="accent-color: #f59e0b;" />
               <span data-i18n="vm.advanced_override">${t('vm.advanced_override', 'Advanced Override (Bypass Headroom)')}</span>
             </label>
-            <span id="vm-override-pill" style="display: none; font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.2); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.4);">
+            <span id="vm-override-pill" style="display: none; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.2); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.4);">
               ⚡ Host reserve bypassed
             </span>
           </div>
@@ -2450,15 +2450,15 @@ export function openVmCreateModal() {
         <!-- vCPU Slider & Overcommit Warning -->
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">vCPU Cores</span>
-            <span id="vm-vcpu-display" style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">2 vCPUs</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">vCPU Cores</span>
+            <span id="vm-vcpu-display" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">2 vCPUs</span>
           </div>
           <input type="range" id="vm-create-vcpu-slider" min="1" max="${hostThreads}" step="1" value="2" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px;">
+          <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">
             <span>1 vCPU</span>
             <span id="vm-vcpu-max-label">Physical Limit: ${hostThreads} Threads</span>
           </div>
-          <div id="vm-overcommit-soft-warning" style="display: none; margin-top: 8px; font-size: 11px; padding: 6px 10px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.3);">
+          <div id="vm-overcommit-soft-warning" style="display: none; margin-top: 8px; font-size: var(--zn-fs-xs); padding: 6px 10px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--lt-t-fbbf24ff, #fbbf24); border: 1px solid rgba(245,158,11,0.3);">
             ⚠️ Soft warning: Exceeds physical threads. Bursty workloads allowed, but concurrent CPU spikes may cause scheduling latency.
           </div>
         </div>
@@ -2467,23 +2467,23 @@ export function openVmCreateModal() {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label for="vm-create-iso" style="font-size: 11px; font-weight: 700; color: var(--muted);">Boot ISO Image</label>
-              <button type="button" id="btn-browse-iso-catalog" style="background: none; border: none; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: 11px; cursor: pointer; padding: 0;">🌐 ISO Catalog</button>
+              <label for="vm-create-iso" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);">Boot ISO Image</label>
+              <button type="button" id="btn-browse-iso-catalog" style="background: none; border: none; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); cursor: pointer; padding: 0;">🌐 ISO Catalog</button>
             </div>
-            <select id="vm-create-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;">
+            <select id="vm-create-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;">
               <option value="">None (Network PXE / Empty Disk)</option>
               ${vmIsos.map((iso) => `<option value="${escapeHtml(iso.path)}">${escapeHtml(iso.name)} (${iso.size_formatted})</option>`).join('')}
             </select>
           </div>
           <div>
-            <label for="vm-create-disk" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Virtual Disk (GB)</label>
-            <input type="number" id="vm-create-disk" min="10" max="2000" value="32" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;" />
+            <label for="vm-create-disk" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Virtual Disk (GB)</label>
+            <input type="number" id="vm-create-disk" min="10" max="2000" value="32" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;" />
           </div>
         </div>
 
         <!-- Boot Priority Order -->
         <div>
-          <label style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Boot Priority Order</label>
+          <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Boot Priority Order</label>
           <div class="vm-boot-order-group">
             <label class="boot-order-label">
               <input type="radio" name="vm-create-boot-order" value="iso" checked />
@@ -2499,8 +2499,8 @@ export function openVmCreateModal() {
         <!-- Firmware & Boot Architecture -->
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="margin-bottom: 8px;">
-            <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.firmware_title">${t('vm.firmware_title', 'Firmware & Boot Architecture')}</div>
-            <div style="font-size: 11px; color: var(--muted);" data-i18n="vm.firmware_desc">${t('vm.firmware_desc', 'Select hypervisor firmware initialization and virtual hardware security.')}</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.firmware_title">${t('vm.firmware_title', 'Firmware & Boot Architecture')}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="vm.firmware_desc">${t('vm.firmware_desc', 'Select hypervisor firmware initialization and virtual hardware security.')}</div>
           </div>
           <div class="vm-firmware-group">
             <label class="firmware-label">
@@ -2521,7 +2521,7 @@ export function openVmCreateModal() {
 
           <!-- Virtual TPM 2.0 Toggle -->
           <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); display: flex; justify-content: space-between; align-items: center;">
-            <label style="font-size: 11px; color: var(--lt-t-ffffffff, #fff); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); cursor: pointer; display: flex; align-items: center; gap: 6px;">
               <input type="checkbox" id="vm-create-tpm" style="accent-color: var(--accent-cyan, #0ea5e9);" />
               <span data-i18n="vm.tpm_title">${t('vm.tpm_title', 'Enable Virtual TPM 2.0 (vTPM)')}</span>
             </label>
@@ -2533,8 +2533,8 @@ export function openVmCreateModal() {
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Host Directory Passthrough (VirtIO-FS / 9p)</span>
-              <div style="font-size: 11px; color: var(--muted);">Map host folders (/mnt/user/appdata, /mnt/storage) into guest</div>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Host Directory Passthrough (VirtIO-FS / 9p)</span>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Map host folders (/mnt/user/appdata, /mnt/storage) into guest</div>
             </div>
             <button type="button" id="btn-add-host-share" class="btn-pill-toggle is-small">
               + Add Folder
@@ -2547,8 +2547,8 @@ export function openVmCreateModal() {
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Secondary Virtual Disks</span>
-              <div style="font-size: 11px; color: var(--muted);">Attach additional block devices (data pools, databases)</div>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Secondary Virtual Disks</span>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Attach additional block devices (data pools, databases)</div>
             </div>
             <button type="button" id="btn-add-secondary-disk" class="btn-pill-toggle is-small">
               + Add Disk
@@ -2559,8 +2559,8 @@ export function openVmCreateModal() {
 
         <!-- Step 6: Network Bridge -->
         <div>
-          <label for="vm-create-bridge" style="display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px;">Network Bridge</label>
-          <select id="vm-create-bridge" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: 12px; box-sizing: border-box;">
+          <label for="vm-create-bridge" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Network Bridge</label>
+          <select id="vm-create-bridge" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); box-sizing: border-box;">
             ${vmBridges.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(b)} (Host Bridge)</option>`).join('')}
           </select>
         </div>
@@ -2569,17 +2569,17 @@ export function openVmCreateModal() {
         <div style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</span>
-              <div style="font-size: 11px; color: var(--muted);">Virtual display adapter & video acceleration</div>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</span>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Virtual display adapter & video acceleration</div>
             </div>
-            <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
+            <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
               GPU Accelerated
             </span>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div>
-              <label for="vm-create-gpu-driver" style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Video Adapter</label>
-              <select id="vm-create-gpu-driver" class="tz-select" style="width: 100%; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;">
+              <label for="vm-create-gpu-driver" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Video Adapter</label>
+              <select id="vm-create-gpu-driver" class="tz-select" style="width: 100%; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
                 <option value="virtio-gpu" selected>VirtIO-GPU (Recommended / 3D Accel)</option>
                 <option value="qxl">QXL (SPICE / Standard)</option>
                 <option value="vga">Standard VGA (Compatible)</option>
@@ -2587,8 +2587,8 @@ export function openVmCreateModal() {
               </select>
             </div>
             <div>
-              <label style="display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px;">Display Mode</label>
-              <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; color: var(--lt-t-ffffffff, #fff); cursor: pointer;">
+              <label style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Display Mode</label>
+              <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); cursor: pointer;">
                 <input type="checkbox" id="vm-create-enable-gui" checked style="accent-color: var(--accent-cyan, #0ea5e9);" />
                 <span>Enable Graphical Desktop (Display :0)</span>
               </label>
@@ -2600,8 +2600,8 @@ export function openVmCreateModal() {
         <div class="vm-config-card" style="background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 12px; flex-shrink: 0;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px;">
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
-              <div style="font-size: 11px; color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="vm.usb_title">${t('vm.usb_title', 'Host USB Device Passthrough')}</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="vm.usb_desc">${t('vm.usb_desc', 'Attach physical host USB peripherals directly into the guest VM.')}</div>
             </div>
             <button type="button" id="btn-create-toggle-custom-usb" class="btn-pill-toggle" data-i18n="vm.usb_custom_btn" style="flex-shrink: 0;">
               ${t('vm.usb_custom_btn', '+ Custom VID:PID')}
@@ -2620,10 +2620,10 @@ export function openVmCreateModal() {
 
           <!-- Custom USB inputs (hidden by default) -->
           <div id="vm-create-custom-usb-wrap" class="usb-custom-row" style="display: none;">
-            <input type="text" id="vm-create-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-            <input type="text" id="vm-create-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-            <input type="text" id="vm-create-custom-desc" class="usb-custom-desc" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" style="padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-            <button type="button" id="btn-create-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: 11px; background: rgba(16,185,129,0.2); border-color: #34d399; color: var(--lt-t-34d399ff, #34d399); cursor: pointer;">
+            <input type="text" id="vm-create-custom-vid" placeholder="VID (10c4)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+            <input type="text" id="vm-create-custom-pid" placeholder="PID (ea60)" maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+            <input type="text" id="vm-create-custom-desc" class="usb-custom-desc" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" style="padding: 5px 8px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+            <button type="button" id="btn-create-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(16,185,129,0.2); border-color: #34d399; color: var(--lt-t-34d399ff, #34d399); cursor: pointer;">
               Add
             </button>
           </div>
@@ -2837,13 +2837,13 @@ export function openVmCreateModal() {
       row.className = 'host-share-row';
       row.style.cssText = 'display: flex; gap: 6px; align-items: center;';
       row.innerHTML = `
-        <input type="text" class="share-host-path" placeholder="/mnt/user/appdata" value="/mnt/user/appdata" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-        <input type="text" class="share-mount-tag" placeholder="appdata" value="appdata" style="flex: 1.2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-        <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;">
+        <input type="text" class="share-host-path" placeholder="/mnt/user/appdata" value="/mnt/user/appdata" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+        <input type="text" class="share-mount-tag" placeholder="appdata" value="appdata" style="flex: 1.2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+        <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
           <option value="virtiofs">VirtIO-FS</option>
           <option value="9p">9p</option>
         </select>
-        <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;">
+        <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
           <option value="rw">RW</option>
           <option value="ro">RO</option>
         </select>
@@ -2864,9 +2864,9 @@ export function openVmCreateModal() {
       row.className = 'secondary-disk-row';
       row.style.cssText = 'display: flex; gap: 6px; align-items: center;';
       row.innerHTML = `
-        <input type="text" class="disk-name" placeholder="${t('ui.disk_name', 'Disk Name')}" value="data-disk-${idx}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-        <input type="number" class="disk-size" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="50" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-        <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;">
+        <input type="text" class="disk-name" placeholder="${t('ui.disk_name', 'Disk Name')}" value="data-disk-${idx}" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+        <input type="number" class="disk-size" min="5" max="4000" placeholder="${t('ui.size_gb', 'Size (GB)')}" value="50" style="width: 80px; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+        <select class="disk-bus" style="width: 80px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);">
           <option value="virtio">virtio</option>
           <option value="sata">sata</option>
           <option value="nvme">nvme</option>
@@ -2892,7 +2892,7 @@ export function openVmCreateModal() {
     usbList.innerHTML = '';
     if (createUsbDevices.length === 0) {
       usbList.innerHTML = `
-        <div style="font-size: 11px; color: var(--muted); padding: 8px 10px; text-align: center; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 4px;" data-i18n="vm.usb_no_devices">
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted); padding: 8px 10px; text-align: center; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 4px;" data-i18n="vm.usb_no_devices">
           ${t('vm.usb_no_devices', 'No host USB devices attached to this VM.')}
         </div>
       `;
@@ -2905,17 +2905,17 @@ export function openVmCreateModal() {
         <div style="display: flex; align-items: center; gap: 8px; overflow: hidden;">
           <span style="font-size: 14px;">🔌</span>
           <div style="min-width: 0;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
               ${escapeHtml(dev.description || dev.product || 'USB Device')}
             </div>
-            <div style="font-size: 11px; color: var(--muted);">
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">
               ${escapeHtml(dev.manufacturer || 'Generic')} ${dev.bus ? `· Bus ${dev.bus} Dev ${dev.dev}` : ''}
             </div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
           <span class="usb-vidpid-badge">${escapeHtml(dev.vendor_id)}:${escapeHtml(dev.product_id)}</span>
-          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: var(--lt-t-f87171ff, #f87171); cursor: pointer; padding: 2px 6px; font-size: 12px;" title="${t('ui.remove_device', 'Remove device')}">✕</button>
+          <button type="button" class="btn-remove-usb" data-idx="${idx}" style="background: none; border: none; color: var(--lt-t-f87171ff, #f87171); cursor: pointer; padding: 2px 6px; font-size: var(--zn-fs-xs);" title="${t('ui.remove_device', 'Remove device')}">✕</button>
         </div>
       `;
       card.querySelector('.btn-remove-usb').onclick = () => {
@@ -5446,7 +5446,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
       <div class="os-window-body" style="flex: 1; overflow-y: auto; padding: 18px 22px;">
         <!-- Tab 1: Official Catalog -->
         <div id="tab-content-catalog">
-          <div style="font-size: 11px; color: var(--muted); margin-bottom: 14px;">
+          <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 14px;">
             Verified, turnkey operating system images ready for 1-click download directly to your storage pool (<code style="color: var(--lt-t-38bdf8ff, #38bdf8);">/mnt/user/isos</code>).
           </div>
           <div class="catalog-grid" id="catalog-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px;">
@@ -5460,14 +5460,14 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <div id="iso-dropzone" class="iso-dropzone" style="border: 2px dashed rgba(14,165,233,0.4); border-radius: 8px; padding: 24px; text-align: center; background: rgba(14,165,233,0.03); cursor: pointer; transition: all 0.2s;">
             <div style="font-size: 28px; margin-bottom: 8px;">💿</div>
             <div style="font-weight: 700; color: var(--lt-t-ffffffff, #fff); font-size: 13px;">Drag & Drop ISO files here to upload</div>
-            <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Destination: <code style="color: var(--lt-t-38bdf8ff, #38bdf8);">/mnt/user/isos</code> • Supports .iso, .img up to 50 GB</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">Destination: <code style="color: var(--lt-t-38bdf8ff, #38bdf8);">/mnt/user/isos</code> • Supports .iso, .img up to 50 GB</div>
             <input type="file" id="iso-file-input" accept=".iso,.img" style="display: none;" />
             <button id="btn-browse-iso" class="btn-pill-toggle" style="margin-top: 12px;">Select ISO File...</button>
           </div>
 
           <!-- Upload Progress Card -->
           <div id="iso-upload-progress-card" style="display: none; margin-top: 14px; padding: 12px 14px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 6px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 6px;">
               <span id="upload-filename" style="color: var(--lt-t-ffffffff, #fff); font-weight: 600;">uploading.iso</span>
               <span id="upload-rate" style="color: var(--lt-t-38bdf8ff, #38bdf8);">0 MB/s</span>
             </div>
@@ -5479,7 +5479,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           <!-- Existing Local Files Table -->
           <div style="margin-top: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Discovered Images in /mnt/user/isos</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Discovered Images in /mnt/user/isos</div>
               <button id="btn-refresh-local-isos" class="btn-pill-toggle is-small">↺ Refresh</button>
             </div>
             <div id="local-iso-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
@@ -5674,19 +5674,19 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
     if (!localList) return;
 
     if (!vmIsos || vmIsos.length === 0) {
-      localList.innerHTML = `<div style="font-size: 11px; color: var(--muted); padding: 12px 0;">No local ISO images discovered in /mnt/user/isos.</div>`;
+      localList.innerHTML = `<div style="font-size: var(--zn-fs-xs); color: var(--muted); padding: 12px 0;">No local ISO images discovered in /mnt/user/isos.</div>`;
     } else {
       localList.innerHTML = vmIsos.map((iso) => `
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px;">
           <div style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;">
             <span style="font-size: 18px;">💿</span>
             <div style="min-width: 0; flex: 1;">
-              <div style="font-size: 12.5px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${escapeHtml(iso.name)}</div>
-              <div style="font-size: 11px; color: var(--muted); font-family: monospace;">${escapeHtml(iso.path)}</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${escapeHtml(iso.name)}</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace;">${escapeHtml(iso.path)}</div>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 8px; margin-left: 12px; flex-shrink: 0;">
-            <span style="font-size: 11px; font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8);">${iso.size_formatted}</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--lt-t-94a3b8ff, #94a3b8);">${iso.size_formatted}</span>
             <button class="btn-pill-toggle btn-boot-iso" data-path="${escapeHtml(iso.path)}" style="background: rgba(14,165,233,0.18); color: var(--lt-t-38bdf8ff, #38bdf8); border-color: rgba(14,165,233,0.35);">▶ Boot VM</button>
             <button class="btn-pill-toggle btn-delete-iso is-danger" data-path="${escapeHtml(iso.path)}" data-name="${escapeHtml(iso.name)}" title="${t('ui.delete_iso_from_storage', 'Delete ISO from storage')}">🗑</button>
           </div>
@@ -5812,17 +5812,17 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
         <div class="catalog-card glassmorphic-card" style="padding: 14px; border-radius: 8px; border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background: var(--lt-b-121a2699, rgba(18,26,38,0.6));">
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
             <div>
-              <span style="font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8);">${item.badge}</span>
-              ${inStorage ? `<span style="font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--lt-t-34d399ff, #34d399); margin-left: 6px;">✓ In Storage</span>` : ''}
+              <span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8);">${item.badge}</span>
+              ${inStorage ? `<span style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--lt-t-34d399ff, #34d399); margin-left: 6px;">✓ In Storage</span>` : ''}
               <div style="font-weight: 700; color: var(--lt-t-ffffffff, #fff); font-size: 13px; margin-top: 4px;">${escapeHtml(item.name)}</div>
             </div>
-            <span style="font-size: 11px; font-weight: 700; color: var(--lt-t-94a3b8ff, #94a3b8);">${item.size_formatted}</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-94a3b8ff, #94a3b8);">${item.size_formatted}</span>
           </div>
-          <div style="font-size: 11px; color: var(--muted); margin: 6px 0 12px 0; line-height: 1.4;">${escapeHtml(item.desc || item.description || '')}</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin: 6px 0 12px 0; line-height: 1.4;">${escapeHtml(item.desc || item.description || '')}</div>
           
           <!-- Download Progress Bar (Hidden by default or shown if in-flight) -->
           <div id="prog-wrap-${item.id}" style="${inStorage ? 'display: block;' : 'display: none;'} margin-bottom: 10px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); margin-bottom: 4px;">
               <span id="prog-stat-${item.id}" style="color: ${inStorage ? '#34d399' : '#38bdf8'};">${inStorage ? 'Downloaded to /mnt/user/isos' : 'Ready'}</span>
               <span id="prog-pct-${item.id}" style="color: var(--lt-t-ffffffff, #fff); font-weight: 700;">${inStorage ? '100%' : '0%'}</span>
             </div>
@@ -5832,17 +5832,17 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-            <span style="font-size: 11px; color: var(--muted); font-family: monospace;">${item.arch || item.architecture || 'x86_64'} • ${item.kernel || 'Linux'}</span>
+            <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace;">${item.arch || item.architecture || 'x86_64'} • ${item.kernel || 'Linux'}</span>
             <div style="display: flex; gap: 6px;">
               ${inStorage ? `
                 <button class="btn-pill-toggle btn-boot-catalog-iso" data-filename="${escapeHtml(item.filename)}" style="background: rgba(14,165,233,0.18); color: var(--lt-t-38bdf8ff, #38bdf8); border-color: rgba(14,165,233,0.35);">
                   ▶ Boot VM
                 </button>
-                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.2); color: var(--lt-t-34d399ff, #34d399); border-color: #34d399;">
+                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" disabled style="padding: 5px 10px; font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(16,185,129,0.2); color: var(--lt-t-34d399ff, #34d399); border-color: #34d399;">
                   ✓ Ready
                 </button>
               ` : `
-                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: 11px; font-weight: 700; background: var(--accent-cyan, #0ea5e9); color: var(--lt-t-ffffffff, #fff);">
+                <button class="btn-save-preset btn-dl-catalog" data-id="${item.id}" style="padding: 5px 12px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--accent-cyan, #0ea5e9); color: var(--lt-t-ffffffff, #fff);">
                   <span>⬇ Download</span>
                 </button>
               `}
@@ -6017,8 +6017,8 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         <div id="vm-pane-snapshots" style="display: flex; flex-direction: column; gap: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">QCOW2 Checkpoints & State Snapshots</div>
-              <div style="font-size: 11px; color: var(--muted);">Live memory + disk snapshots while running; disk snapshots while offline.</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">QCOW2 Checkpoints & State Snapshots</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Live memory + disk snapshots while running; disk snapshots while offline.</div>
             </div>
             <button type="button" id="btn-take-snapshot" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.35); color: var(--lt-t-38bdf8ff, #38bdf8);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -6028,10 +6028,10 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
 
           <!-- Create Snapshot Form -->
           <div id="vm-snap-create-form" style="display: none; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid rgba(14,165,233,0.3); border-radius: 8px; padding: 12px; flex-direction: column; gap: 10px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--lt-t-38bdf8ff, #38bdf8);">Create New Checkpoint Snapshot</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-38bdf8ff, #38bdf8);">Create New Checkpoint Snapshot</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <input type="text" id="vm-snap-name-input" placeholder="${t('vm.snapshot_name', 'Snapshot Name')}" style="flex: 1; min-width: 160px; padding: 6px 10px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
-              <input type="text" id="vm-snap-desc-input" placeholder="${t('vm.snapshot_desc', 'Description (optional)')}" style="flex: 2; min-width: 200px; padding: 6px 10px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-ffffffff, #fff); font-size: 11px;" />
+              <input type="text" id="vm-snap-name-input" placeholder="${t('vm.snapshot_name', 'Snapshot Name')}" style="flex: 1; min-width: 160px; padding: 6px 10px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
+              <input type="text" id="vm-snap-desc-input" placeholder="${t('vm.snapshot_desc', 'Description (optional)')}" style="flex: 2; min-width: 200px; padding: 6px 10px; border-radius: 4px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs);" />
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
               <button type="button" id="btn-cancel-take-snapshot" class="btn-pill-toggle">Cancel</button>
@@ -6040,7 +6040,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
           </div>
 
           <div id="vm-snapshots-container" style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; overflow: hidden; min-height: 120px;">
-            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: 12px;">Loading snapshots...</div>
+            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">Loading snapshots...</div>
           </div>
         </div>
 
@@ -6048,8 +6048,8 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         <div id="vm-pane-backups" style="display: none; flex-direction: column; gap: 14px;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
             <div>
-              <div style="font-size: 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Full VM backups</div>
-              <div style="font-size: 11px; color: var(--muted);">Self-contained archives (.tar.gz) containing complete hardware specs and virtual disk images.</div>
+              <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Full VM backups</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Self-contained archives (.tar.gz) containing complete hardware specs and virtual disk images.</div>
             </div>
             <button type="button" id="btn-create-hyper-backup" class="btn-pill-toggle" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: var(--lt-t-34d399ff, #34d399);">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -6058,7 +6058,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
           </div>
 
           <div id="vm-backups-container" style="background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; overflow: hidden; min-height: 120px;">
-            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: 12px;">Loading backups…</div>
+            <div style="color: var(--muted); text-align: center; padding: 28px; font-size: var(--zn-fs-xs);">Loading backups…</div>
           </div>
         </div>
       </div>
@@ -6157,7 +6157,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       const snaps = data?.snapshots || [];
       if (snaps.length === 0) {
         container.innerHTML = `
-          <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span>${t('vm.no_snapshots', 'No snapshots recorded yet. Create a checkpoint before performing major updates.')}</span>
           </div>
@@ -6166,7 +6166,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       }
 
       container.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+        <table style="width: 100%; border-collapse: collapse; font-size: var(--zn-fs-xs); text-align: left;">
           <thead>
             <tr style="border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); color: var(--muted);">
               <th style="padding: 8px 12px;">Tag / Name</th>
@@ -6181,12 +6181,12 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
               <tr style="border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
                 <td style="padding: 8px 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">
                   <div>${escapeHtml(s.name)}</div>
-                  ${s.description ? `<div style="font-size: 11px; color: var(--muted); font-weight: normal;">${escapeHtml(s.description)}</div>` : ''}
+                  ${s.description ? `<div style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: normal;">${escapeHtml(s.description)}</div>` : ''}
                 </td>
                 <td style="padding: 8px 12px; color: var(--muted); font-family: var(--font-mono, monospace);">${escapeHtml(s.date || s.created_at || '—')}</td>
                 <td style="padding: 8px 12px; color: var(--muted);">${escapeHtml(s.size_formatted || s.vm_size || '—')}</td>
                 <td style="padding: 8px 12px;">
-                  <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8);">
+                  <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8);">
                     ${s.is_live ? 'Live Memory + Disk' : 'QCOW2 Disk'}
                   </span>
                 </td>
@@ -6245,7 +6245,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         };
       });
     } catch (err) {
-      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: 11px;">Failed to load snapshots: ${escapeHtml(err.message || err.detail)}</div>`;
+      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">Failed to load snapshots: ${escapeHtml(err.message || err.detail)}</div>`;
     }
   }
 
@@ -6258,7 +6258,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       const backups = data?.backups || [];
       if (backups.length === 0) {
         container.innerHTML = `
-          <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <span style="font-size: 24px; opacity: 0.6;">💾</span>
             <span>No backups of this VM yet. "Back up now" saves its settings and disks in one archive.</span>
           </div>
@@ -6267,7 +6267,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
       }
 
       container.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+        <table style="width: 100%; border-collapse: collapse; font-size: var(--zn-fs-xs); text-align: left;">
           <thead>
             <tr style="border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); color: var(--muted);">
               <th style="padding: 8px 12px;">Backup ID / File</th>
@@ -6281,7 +6281,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
               <tr style="border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04));">
                 <td style="padding: 8px 12px; font-weight: 700; color: var(--lt-t-ffffffff, #fff);">
                   <div>${escapeHtml(b.filename || b.id)}</div>
-                  <div style="font-size: 11px; color: var(--muted); font-family: var(--font-mono, monospace);">${escapeHtml(b.id)}</div>
+                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace);">${escapeHtml(b.id)}</div>
                 </td>
                 <td style="padding: 8px 12px; color: var(--muted); font-family: var(--font-mono, monospace);">${escapeHtml(b.created_at_iso || '—')}</td>
                 <td style="padding: 8px 12px; color: var(--muted);">${escapeHtml(b.size_formatted || '—')}</td>
@@ -6340,7 +6340,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         };
       });
     } catch (err) {
-      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: 11px;">Could not load backups: ${escapeHtml(err.message || err.detail)}</div>`;
+      container.innerHTML = `<div style="color: var(--crit); text-align: center; padding: 24px; font-size: var(--zn-fs-xs);">Could not load backups: ${escapeHtml(err.message || err.detail)}</div>`;
     }
   }
 

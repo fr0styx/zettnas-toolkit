@@ -30,14 +30,14 @@
 }
 
 .drive-temp-bay {
-  font-size: 9px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #94a3b8);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .drive-temp-val {
-  font-size: 11.5px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   margin-top: 1px;
 }
@@ -56,7 +56,7 @@
 
 .drive-temp-cell.temp-standby .drive-temp-val {
   color: var(--lt-t-38bdf8ff, #38bdf8);
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
 }
 
 .net-dial-svg-wrap {
@@ -80,7 +80,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   font-family: var(--font-mono, monospace);
   color: var(--lt-t-ffffffff, #fff);
@@ -112,7 +112,7 @@
 }
 
 .ai-gauge-chip-name {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -120,7 +120,7 @@
 }
 
 .ai-metric-pill {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 4px;
@@ -171,14 +171,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   font-family: var(--font-mono, monospace);
   color: var(--lt-t-ffffffff, #fff);
 }
 
 .ai-gauge-sub {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   font-family: var(--font-mono, monospace);
   color: var(--muted);
@@ -194,7 +194,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   border-top: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
   padding-top: 6px;

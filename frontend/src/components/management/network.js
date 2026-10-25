@@ -30,12 +30,12 @@ export async function fetchAndRenderCopyHistory() {
       const statusColor = isSuccess ? 'var(--ok2)' : item.status === 'aborted' ? 'var(--warn)' : 'var(--crit)';
       const checksumBadge = item.checksum_verified
         ? '<span class="checksum-badge">✓ SHA-256</span>'
-        : '<span style="color:var(--muted); font-size:11px;">None</span>';
+        : '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">None</span>';
       const destName = item.dest ? item.dest.split('/').filter(Boolean).pop() || item.dest : '/';
 
       return `
         <tr>
-          <td style="font-family:var(--font-mono, monospace); font-size:11px; color:var(--muted);">${timeStr}</td>
+          <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--muted);">${timeStr}</td>
           <td><strong>${(item.source || 'sd').toUpperCase()}</strong></td>
           <td title="${escapeHtml(item.dest)}" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(destName)}</td>
           <td>${item.files_count || 0}</td>
@@ -79,7 +79,7 @@ export async function fetchAndRenderReplication() {
             <td><strong>${escapeHtml(j.name || j.id)}</strong></td>
             <td><span class="badge" style="font-family:monospace;">${escapeHtml(j.source_pool)}/${escapeHtml(j.source_subvolume || '@')}</span></td>
             <td>${tgtDesc}</td>
-            <td><span class="mgmt-app-pill" style="font-size:11px;">${escapeHtml(j.schedule || 'manual')}</span></td>
+            <td><span class="mgmt-app-pill" style="font-size:var(--zn-fs-xs);">${escapeHtml(j.schedule || 'manual')}</span></td>
             <td>${j.bandwidth_limit_mbps ? `${j.bandwidth_limit_mbps} MB/s` : 'Unlimited'}</td>
             <td>${j.retention_count || 7} snaps</td>
             <td><span class="mgmt-app-pill ${j.enabled ? 'text-emerald' : 'text-muted'}">${j.enabled ? 'Active' : 'Disabled'}</span></td>
@@ -202,25 +202,25 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
           : '<span style="color:var(--muted);">--</span>';
 
       const statusPill = p.online
-        ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:11px; padding:2px 7px;">Online</span>'
-        : '<span class="mgmt-app-pill" style="color:var(--muted); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); font-size:11px; padding:2px 7px;">Offline</span>';
+        ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:var(--zn-fs-xs); padding:2px 7px;">Online</span>'
+        : '<span class="mgmt-app-pill" style="color:var(--muted); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); font-size:var(--zn-fs-xs); padding:2px 7px;">Offline</span>';
 
       const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
 
       return `
-      <tr style="border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:11.5px;">
+      <tr style="border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:var(--zn-fs-xs);">
         <td style="padding:8px 12px;">
           <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(p.name || p.hostname || 'Unnamed')}</div>
-          ${p.dns_name ? `<div style="font-size:11px; color:var(--muted);">${escapeHtml(p.dns_name)}</div>` : ''}
+          ${p.dns_name ? `<div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(p.dns_name)}</div>` : ''}
         </td>
         <td style="padding:8px 12px; color:var(--text-sub);">${osLabel}</td>
-        <td style="padding:8px 12px;"><code style="color:var(--lt-t-38bdf8ff, #38bdf8); font-size:11px;">${escapeHtml(p.ip || '--')}</code></td>
+        <td style="padding:8px 12px;"><code style="color:var(--lt-t-38bdf8ff, #38bdf8); font-size:var(--zn-fs-xs);">${escapeHtml(p.ip || '--')}</code></td>
         <td style="padding:8px 12px;">${routeBadge}</td>
         <td style="padding:8px 12px;">${statusPill}</td>
         <td style="padding:8px 12px; text-align:right;">
           <div style="display:inline-flex; align-items:center; gap:6px;">
-            <span id="latency-${safeIpId}" style="font-size:11px; font-weight:700;"></span>
-            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:11px; padding:2px 8px;" ${!p.ip ? `disabled title="${escapeHtml(t('net.why_no_peer_ip', 'This device has no address to ping yet'))}"` : ''}>⚡ Ping</button>
+            <span id="latency-${safeIpId}" style="font-size:var(--zn-fs-xs); font-weight:700;"></span>
+            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${!p.ip ? `disabled title="${escapeHtml(t('net.why_no_peer_ip', 'This device has no address to ping yet'))}"` : ''}>⚡ Ping</button>
           </div>
         </td>
       </tr>
@@ -481,14 +481,14 @@ export async function fetchAndRenderWireguard() {
         if (taildropList) {
           if (files.length === 0) {
             taildropList.innerHTML =
-              '<div style="color:var(--muted); font-size:11px; text-align:center; padding:12px 0;">No files in Taildrop inbox yet.</div>';
+              '<div style="color:var(--muted); font-size:var(--zn-fs-xs); text-align:center; padding:12px 0;">No files in Taildrop inbox yet.</div>';
           } else {
             taildropList.innerHTML = files
               .map(
                 f => `
-              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:11px; cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
+              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:var(--zn-fs-xs); cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
                 <span style="font-weight:600; color:var(--lt-t-ffffffff, #fff); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
-                <span style="color:var(--muted); font-size:11px;">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
+                <span style="color:var(--muted); font-size:var(--zn-fs-xs);">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
             `
               )
@@ -1331,7 +1331,7 @@ export async function fetchAndRenderNetworkTopology() {
     // 2. Render Hardware Switch Ports (Front-Panel Faceplate)
     if (switchFaceplate) {
       if (physical.length === 0) {
-        switchFaceplate.innerHTML = `<div style="color:var(--muted); font-size:12px; padding:12px;">No physical network interfaces detected.</div>`;
+        switchFaceplate.innerHTML = `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">No physical network interfaces detected.</div>`;
       } else {
         switchFaceplate.innerHTML = physical.map((nic) => {
           const isUp = Boolean(nic.is_up);
@@ -1367,7 +1367,7 @@ export async function fetchAndRenderNetworkTopology() {
               </div>
               <div class="switch-port-badge-row">
                 <span class="switch-speed-pill ${speedPillClass}">${escapeHtml(nic.speed_human || (isUp ? 'Connected' : 'Disconnected'))}</span>
-                <span style="font-size:11px; color:var(--muted);">${nic.duplex === 'full' ? 'Full Duplex' : nic.duplex}</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${nic.duplex === 'full' ? 'Full Duplex' : nic.duplex}</span>
               </div>
               <div class="switch-port-meta">
                 <div>MAC: ${escapeHtml(nic.mac || 'N/A')}</div>
@@ -1405,7 +1405,7 @@ export async function fetchAndRenderNetworkTopology() {
                 </div>
               </td>
               <td>
-                ${nic.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(nic.alias)}">${escapeHtml(nic.alias)}</span>` : '<span style="color:var(--muted); font-size:11px;">--</span>'}
+                ${nic.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(nic.alias)}">${escapeHtml(nic.alias)}</span>` : '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">--</span>'}
               </td>
               <td>
                 <span class="switch-speed-pill ${isUp ? 'speed-10g' : 'speed-down'}">
@@ -1414,20 +1414,20 @@ export async function fetchAndRenderNetworkTopology() {
               </td>
               <td>
                 <span style="font-weight:600; color:${isUp ? '#f8fafc' : 'var(--muted)'};">${escapeHtml(nic.speed_human)}</span>
-                <span style="font-size:11px; color:var(--muted); margin-left:4px;">(${escapeHtml(nic.duplex)})</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:4px;">(${escapeHtml(nic.duplex)})</span>
               </td>
-              <td style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.mac || '--')}</td>
+              <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">${escapeHtml(nic.mac || '--')}</td>
               <td style="font-family:var(--font-mono, monospace);">${escapeHtml(String(nic.mtu || 1500))}</td>
               <td>
                 ${nic.master ? `<span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan)); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : '<span style="color:var(--muted);">Standalone</span>'}
               </td>
-              <td style="font-family:var(--font-mono, monospace); font-size:11px;">
-                <div>↓ ${rxFmt} <span style="font-size:11px; color:var(--muted);">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
-                <div>↑ ${txFmt} <span style="font-size:11px; color:var(--muted);">(${formatNumber(nic.tx_packets || 0)} pkts)</span></div>
+              <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">
+                <div>↓ ${rxFmt} <span style="font-size:var(--zn-fs-xs); color:var(--muted);">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
+                <div>↑ ${txFmt} <span style="font-size:var(--zn-fs-xs); color:var(--muted);">(${formatNumber(nic.tx_packets || 0)} pkts)</span></div>
               </td>
-              <td style="font-size:11px; color:var(--muted);">
+              <td style="font-size:var(--zn-fs-xs); color:var(--muted);">
                 <div>${escapeHtml(nic.driver || 'Generic')}</div>
-                <div style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(nic.pci_slot || '--')}</div>
+                <div style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">${escapeHtml(nic.pci_slot || '--')}</div>
               </td>
               <td style="text-align: right;">
                 <button class="btn-pill-toggle btn-config-port is-small" data-iface="${escapeHtml(nic.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_port', 'Configure')}</button>
@@ -1456,17 +1456,17 @@ export async function fetchAndRenderNetworkTopology() {
             <div class="network-bridge-header">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span class="network-bridge-name">Bridge: ${escapeHtml(br.name)}</span>
-                <span class="switch-speed-pill ${br.stp ? 'speed-10g' : 'speed-down'}" style="font-size:11px; padding:2px 6px;">STP: ${br.stp ? 'ON' : 'OFF'}</span>
-                <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace);">FD: ${br.forward_delay || 0}s</span>
+                <span class="switch-speed-pill ${br.stp ? 'speed-10g' : 'speed-down'}" style="font-size:var(--zn-fs-xs); padding:2px 6px;">STP: ${br.stp ? 'ON' : 'OFF'}</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">FD: ${br.forward_delay || 0}s</span>
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
                 <button class="btn-pill-toggle btn-config-bridge is-small" data-bridge="${escapeHtml(br.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
               </div>
             </div>
-            <div style="font-size:11px; color:var(--muted);">Member Ports:</div>
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Member Ports:</div>
             <div class="network-bridge-members">
-              ${(br.interfaces || []).map((m) => `<span class="network-member-pill">${escapeHtml(m)}</span>`).join('') || '<span style="color:var(--muted); font-size:11px;">No members</span>'}
+              ${(br.interfaces || []).map((m) => `<span class="network-member-pill">${escapeHtml(m)}</span>`).join('') || '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">No members</span>'}
             </div>
           </div>
         `);
@@ -1480,11 +1480,11 @@ export async function fetchAndRenderNetworkTopology() {
               <div style="display:flex; align-items:center; gap:8px;">
                 <span class="network-bridge-name">Bond: ${escapeHtml(b.name)}</span>
                 <span class="switch-speed-pill speed-10g" title="${escapeHtml(b.mode_title || b.mode_name || b.mode)}">${escapeHtml(b.mode_title || b.mode_name || b.mode || 'Bonding')}</span>
-                <span style="font-size:11px; color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
               </div>
               <button class="btn-pill-toggle btn-config-bond is-small" data-bond="${escapeHtml(b.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
             </div>
-            <div style="font-size:11px; color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
             <div class="network-bridge-members">
               ${(b.slaves || []).map((s) => `<span class="network-member-pill ${s === b.active_slave ? 'active' : ''}">${escapeHtml(s)}</span>`).join('')}
             </div>
@@ -1492,7 +1492,7 @@ export async function fetchAndRenderNetworkTopology() {
         `);
       });
 
-      bridgesContainer.innerHTML = items.length > 0 ? items.join('') : `<div style="color:var(--muted); font-size:12px; padding:12px;">No virtual bridges or bonds configured.</div>`;
+      bridgesContainer.innerHTML = items.length > 0 ? items.join('') : `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">No virtual bridges or bonds configured.</div>`;
 
       bridgesContainer.querySelectorAll('.btn-config-bridge').forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -1539,15 +1539,15 @@ export async function fetchAndRenderNetworkTopology() {
                 <span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color:rgba(56,189,248,0.4); font-weight:700;">VID ${escapeHtml(String(v.vlan_id))}</span>
               </td>
               <td>
-                ${v.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(v.alias)}">${escapeHtml(v.alias)}</span>` : '<span style="color:var(--muted); font-size:11px;">--</span>'}
+                ${v.alias ? `<span class="switch-port-alias-tag" title="${escapeHtml(v.alias)}">${escapeHtml(v.alias)}</span>` : '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">--</span>'}
               </td>
               <td>
                 <span class="switch-speed-pill ${isUp ? 'speed-10g' : 'speed-down'}">
                   ${isUp ? 'UP' : 'DOWN'}
                 </span>
               </td>
-              <td style="font-family:var(--font-mono, monospace); font-size:11px;">${escapeHtml(v.ip_address || '--')}</td>
-              <td style="font-family:var(--font-mono, monospace); font-size:11px;">
+              <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">${escapeHtml(v.ip_address || '--')}</td>
+              <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">
                 <div>↓ ${rxFmt} / ↑ ${txFmt}</div>
               </td>
               <td style="text-align: right;">
@@ -1571,7 +1571,7 @@ export async function fetchAndRenderNetworkTopology() {
     // 5. Render Docker Networks & Containers
     if (dockerContainer) {
       if (dockerNets.length === 0) {
-        dockerContainer.innerHTML = `<div style="color:var(--muted); font-size:12px; padding:12px;">No active Docker bridge networks found.</div>`;
+        dockerContainer.innerHTML = `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">No active Docker bridge networks found.</div>`;
       } else {
         dockerContainer.innerHTML = dockerNets.map((net) => {
           const containers = net.containers || [];
@@ -1591,7 +1591,7 @@ export async function fetchAndRenderNetworkTopology() {
                 </div>
               </div>
               <div class="network-docker-containers">
-                ${containers.length === 0 ? '<span style="font-size:11px; color:var(--muted);">No containers attached</span>' : containers.map((c) => `
+                ${containers.length === 0 ? '<span style="font-size:var(--zn-fs-xs); color:var(--muted);">No containers attached</span>' : containers.map((c) => `
                   <div class="network-container-chip">
                     <span class="network-chip-dot"></span>
                     <span class="network-chip-name">${escapeHtml(c.name)}</span>
@@ -2116,17 +2116,17 @@ export async function openBondConfigModal(bondName) {
     if (slavesContainer) {
       const candidates = data.candidate_slaves || [];
       if (candidates.length === 0) {
-        slavesContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">No physical Ethernet adapters detected.</div>';
+        slavesContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">No physical Ethernet adapters detected.</div>';
       } else {
         slavesContainer.innerHTML = candidates
           .map((nic) => {
             const isChecked = Boolean(nic.is_slave);
             return `
-            <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; cursor:pointer; user-select:none;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); cursor:pointer; user-select:none;">
               <input type="checkbox" class="net-bond-slave-checkbox" value="${escapeHtml(nic.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
               <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc);">${escapeHtml(nic.name)}</span>
               ${nic.alias ? `<span class="switch-port-alias-tag">${escapeHtml(nic.alias)}</span>` : ''}
-              <span style="font-size:11px; color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? 'Connected' : 'Disconnected'))}</span>
+              <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? 'Connected' : 'Disconnected'))}</span>
             </label>
           `;
           })
@@ -2219,18 +2219,18 @@ export async function openBridgeConfigModal(brName) {
     if (membersContainer) {
       const candidates = data.candidate_members || [];
       if (candidates.length === 0) {
-        membersContainer.innerHTML = '<div style="color:var(--muted); font-size:11px;">No interfaces available to bridge.</div>';
+        membersContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">No interfaces available to bridge.</div>';
       } else {
         membersContainer.innerHTML = candidates
           .map((cand) => {
             const isChecked = Boolean(cand.is_member);
             return `
-            <label style="display:flex; align-items:center; gap:8px; font-size:11.5px; cursor:pointer; user-select:none;">
+            <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); cursor:pointer; user-select:none;">
               <input type="checkbox" class="net-bridge-member-checkbox" value="${escapeHtml(cand.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
               <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc);">${escapeHtml(cand.name)}</span>
-              <span class="network-member-pill" style="font-size:11px; padding:1px 5px;">${escapeHtml(cand.type || 'interface')}</span>
+              <span class="network-member-pill" style="font-size:var(--zn-fs-xs); padding:1px 5px;">${escapeHtml(cand.type || 'interface')}</span>
               ${cand.alias ? `<span class="switch-port-alias-tag">${escapeHtml(cand.alias)}</span>` : ''}
-              <span style="font-size:11px; color:var(--muted); margin-left:auto;">${escapeHtml(cand.speed_human || (cand.is_up ? 'Connected' : 'Disconnected'))}</span>
+              <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:auto;">${escapeHtml(cand.speed_human || (cand.is_up ? 'Connected' : 'Disconnected'))}</span>
             </label>
           `;
           })

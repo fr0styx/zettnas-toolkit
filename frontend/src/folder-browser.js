@@ -104,7 +104,7 @@ window.addEventListener('DOMContentLoaded', () => {
     displayDirs = displayDirs.concat(otherDirs);
 
     if (displayDirs.length === 0) {
-      fbList.innerHTML = `<div style="padding: 10px 14px; color: var(--muted); font-size: 11px;">No folders found.</div>`;
+      fbList.innerHTML = `<div style="padding: 10px 14px; color: var(--muted); font-size: var(--zn-fs-xs);">No folders found.</div>`;
       return;
     }
 
@@ -126,7 +126,7 @@ window.addEventListener('DOMContentLoaded', () => {
       
       const text = document.createElement("span");
       text.textContent = d.name;
-      text.style.fontSize = "12px";
+      text.style.fontSize = "var(--zn-fs-xs)";
       text.style.color = d.name === ".." ? "var(--muted)" : "#fff";
       
       div.appendChild(icon);

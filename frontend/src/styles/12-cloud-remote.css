@@ -80,7 +80,7 @@
 
 #cloud-remote-window .remote-section-label {
   display: block;
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--lt-t-94a3b8ff, #94a3b8);
   text-transform: uppercase;
@@ -110,7 +110,7 @@
   color: var(--lt-t-ffffffff, #fff) !important;
   border-radius: 6px !important;
   padding: 9px 12px !important;
-  font-size: 12.5px !important;
+  font-size: var(--zn-fs-xs) !important;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3) !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
@@ -131,7 +131,7 @@
 
 .btn-cloud-cancel {
   padding: 8px 16px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
   border: 1px solid var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14));
@@ -147,7 +147,7 @@
 
 .btn-cloud-test {
   padding: 8px 16px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   background: rgba(56, 189, 248, 0.14);
   border: 1px solid rgba(56, 189, 248, 0.35);
@@ -188,7 +188,7 @@
   margin: 0 20px 12px 20px !important;
   padding: 10px 14px !important;
   border-radius: 8px !important;
-  font-size: 12.5px !important;
+  font-size: var(--zn-fs-xs) !important;
   line-height: 1.45 !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   animation: fadeIn 0.2s ease !important;
@@ -199,7 +199,7 @@
   margin: 0 20px 12px 20px !important;
   padding: 10px 14px !important;
   border-radius: 8px !important;
-  font-size: 12.5px !important;
+  font-size: var(--zn-fs-xs) !important;
   line-height: 1.45 !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   animation: fadeIn 0.2s ease !important;
@@ -207,7 +207,7 @@
 
 .btn-cloud-submit {
   padding: 8px 20px;
-  font-size: 12px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   background: #0ea5e9;
   border: 1px solid #38bdf8;
@@ -374,7 +374,7 @@ body.theme-oled #cloud-remote-window select option {
 }
 .smart-modal-title { font-size: 15px; font-weight: 800; color: var(--lt-t-ffffffff, #fff); display: flex; align-items: center; gap: 8px; }
 .smart-modal-body {
-  padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; font-size: 12px;
+  padding: 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; font-size: var(--zn-fs-xs);
   flex: 1; min-height: 0;
 }
 .smart-meta-grid {
@@ -384,11 +384,11 @@ body.theme-oled #cloud-remote-window select option {
   background: var(--lt-b-151f2bff, #151f2b); border: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); padding: 8px 12px; border-radius: 8px;
   display: flex; flex-direction: column; gap: 2px;
 }
-.smart-meta-cell .lbl { font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: 0.5px; }
-.smart-meta-cell .val { font-size: 12px; font-weight: 700; color: var(--lt-t-e2e8f0ff, #e2e8f0); font-variant-numeric: tabular-nums; }
+.smart-meta-cell .lbl { font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 800; letter-spacing: 0.5px; }
+.smart-meta-cell .val { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-e2e8f0ff, #e2e8f0); font-variant-numeric: tabular-nums; }
 .smart-raw-pre {
   background: var(--lt-b-080c11ff, #080c11); border: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); border-radius: 8px;
-  padding: 12px; font-family: monospace; font-size: 11px; color: var(--lt-t-94a3b8ff, #94a3b8); overflow-x: auto; max-height: 220px;
+  padding: 12px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); overflow-x: auto; max-height: 220px;
 }
 
 /* SMART Modal Segmented Navigation */
@@ -401,7 +401,7 @@ body.theme-oled #cloud-remote-window select option {
   flex-shrink: 0;
 }
 .smart-tab-btn {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   padding: 6px 14px;
   border-radius: 6px;
   font-weight: 600;
@@ -464,7 +464,7 @@ body.theme-oled #cloud-remote-window select option {
   align-items: center;
 }
 .smart-report-badge-pill {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   letter-spacing: 0.5px;
   padding: 3px 10px;
@@ -484,7 +484,7 @@ body.theme-oled #cloud-remote-window select option {
   border-color: rgba(239, 68, 68, 0.4);
 }
 .smart-report-meta {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   font-weight: 600;
 }
@@ -498,18 +498,18 @@ body.theme-oled #cloud-remote-window select option {
   border: 1px solid var(--lt-r-ffffff0a, rgba(255, 255, 255, 0.04));
 }
 .smart-report-metric .lbl {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--muted);
   display: block;
 }
 .smart-report-metric .val {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   color: var(--lt-t-e2e8f0ff, #e2e8f0);
 }
 .smart-report-recommendation {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   line-height: 1.45;
   color: var(--lt-t-cbd5e1ff, #cbd5e1);
   padding: 8px 10px;
@@ -537,7 +537,7 @@ body.theme-oled #cloud-remote-window select option {
   color: var(--lt-t-f1f5f9ff, #f1f5f9);
 }
 .smart-empty-desc {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted);
   max-width: 360px;
   line-height: 1.4;
@@ -559,7 +559,7 @@ body.theme-oled #cloud-remote-window select option {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 .smart-progress-label-wrap {
   display: flex;
@@ -588,7 +588,7 @@ body.theme-oled #cloud-remote-window select option {
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono, monospace);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 .smart-progress-pct-label {
   font-weight: 800;
@@ -596,7 +596,7 @@ body.theme-oled #cloud-remote-window select option {
 }
 .smart-progress-eta {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 .smart-progress-track {
   width: 100%;
@@ -645,7 +645,7 @@ body.theme-oled #cloud-remote-window select option {
   align-items: center;
 }
 .smart-test-history-title {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 800;
   color: var(--muted);
   letter-spacing: 0.8px;
@@ -653,7 +653,7 @@ body.theme-oled #cloud-remote-window select option {
 .smart-test-count-badge {
   background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
   color: var(--lt-t-cbd5e1ff, #cbd5e1);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 10px;
@@ -662,7 +662,7 @@ body.theme-oled #cloud-remote-window select option {
   background: rgba(56, 189, 248, 0.12);
   border: 1px solid rgba(56, 189, 248, 0.3);
   color: var(--lt-t-38bdf8ff, #38bdf8);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 4px;
@@ -685,7 +685,7 @@ body.theme-oled #cloud-remote-window select option {
 .smart-test-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   text-align: left;
 }
 .smart-test-table th {
@@ -693,7 +693,7 @@ body.theme-oled #cloud-remote-window select option {
   top: 0;
   background: var(--lt-b-151f2bff, #151f2b);
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -705,7 +705,7 @@ body.theme-oled #cloud-remote-window select option {
   border-bottom: 1px solid var(--lt-r-ffffff0a, rgba(255, 255, 255, 0.04));
   color: var(--lt-t-e2e8f0ff, #e2e8f0);
   font-family: var(--font-mono, monospace);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 .smart-test-table tr:hover td {
   background: var(--lt-b-ffffff05, rgba(255, 255, 255, 0.02));
@@ -716,7 +716,7 @@ body.theme-oled #cloud-remote-window select option {
   gap: 4px;
   padding: 2px 6px;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
 }
 .smart-test-status-passed {
@@ -743,6 +743,6 @@ body.theme-oled #cloud-remote-window select option {
   padding: 18px;
   text-align: center;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
 }
 

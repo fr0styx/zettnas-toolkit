@@ -15,12 +15,15 @@
   --zn-space-6: 32px;
   --zn-radius: 8px;
   --zn-radius-sm: 6px;
-  /* Type scale (UX-8): 14 px body, 13 px secondary, 12 px the smallest */
-  --zn-fs-xs: 12px;
-  --zn-fs-sm: 13px;
+  /* Type scale (UX-9): six steps, 13 14 16 18 20 24 px. Nothing a person reads is smaller
+     than 13 px; the LCD and its scaled previews keep their own sizes. */
+  --zn-fs-xs: 13px;
+  --zn-fs-sm: 13px; /* the same step as xs; kept for existing markup */
   --zn-fs: 14px;
   --zn-fs-title: 16px;
+  --zn-fs-lg: 18px;
   --zn-fs-heading: 20px;
+  --zn-fs-display: 24px;
   /* Buttons (UX-6, UX-8): 32 px tall, 28 px in dense rows; both clear the 24 px target */
   --zn-btn-h: 32px;
   --zn-btn-h-sm: 28px;
@@ -101,7 +104,7 @@ body.theme-light {
 /* App catalog "Deploy / Stack": a tinted button, readable on every card (white on cyan was not) */
 button.catalog-deploy {
   padding: 4px 12px; border-radius: 6px; cursor: pointer;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.01em;
+  font-size: var(--zn-fs-xs); font-weight: 700; letter-spacing: 0.01em;
   color: var(--lt-t-bae6fdff, #bae6fd); background: rgba(14, 165, 233, 0.16); border: 1px solid rgba(56, 189, 248, 0.45);
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
@@ -119,7 +122,7 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
 /* App Catalog cards and chips (catalog-view.js) */
 .cat-chip { display: inline-flex; align-items: center; gap: 6px; }
 .cat-chip-count {
-  font-size: 10px; font-weight: 700; padding: 0 6px; border-radius: 999px;
+  font-size: var(--zn-fs-xs); font-weight: 700; padding: 0 6px; border-radius: 999px;
   background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)); color: var(--lt-t-94a3b8ff, #94a3b8); font-variant-numeric: tabular-nums;
 }
 .cat-chip.active .cat-chip-count { background: rgba(56, 189, 248, 0.25); color: var(--lt-t-e0f2feff, #e0f2fe); }
@@ -145,12 +148,12 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .cat-card-image {
-  display: block; font-size: 10.5px; color: var(--muted); font-family: var(--font-mono, monospace);
+  display: block; font-size: var(--zn-fs-xs); color: var(--muted); font-family: var(--font-mono, monospace);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .cat-card-badges { display: flex; flex-wrap: wrap; gap: 4px; }
 .cat-badge {
-  font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 999px; white-space: nowrap;
+  font-size: var(--zn-fs-xs); font-weight: 600; padding: 1px 7px; border-radius: 999px; white-space: nowrap;
   background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06)); color: var(--lt-t-cbd5e1ff, #cbd5e1); border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
 }
 .cat-badge-stack { background: rgba(168, 85, 247, 0.14); color: var(--lt-t-d8b4feff, #d8b4fe); border-color: rgba(168, 85, 247, 0.3); }
@@ -161,32 +164,32 @@ body.theme-light button.catalog-deploy:focus-visible { color: #fff; background: 
 .cat-badge-crit { background: rgba(239, 68, 68, 0.14); color: var(--lt-t-fca5a5ff, #fca5a5); border-color: rgba(239, 68, 68, 0.3); }
 .cat-badge-installed { background: rgba(34, 197, 94, 0.16); color: var(--lt-t-86efacff, #86efac); border-color: rgba(34, 197, 94, 0.35); }
 .cat-card-desc {
-  margin: 0; flex: 1; font-size: 11.5px; line-height: 1.45; color: var(--lt-t-94a3b8ff, #94a3b8);
+  margin: 0; flex: 1; font-size: var(--zn-fs-xs); line-height: 1.45; color: var(--lt-t-94a3b8ff, #94a3b8);
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .cat-card-foot {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding-top: 8px; border-top: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
 }
-.cat-card-port { font-size: 11px; font-family: var(--font-mono, monospace); color: var(--lt-t-7dd3fcff, #7dd3fc); }
+.cat-card-port { font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-t-7dd3fcff, #7dd3fc); }
 /* Sign-in details after a deploy */
 .adm-credentials {
   margin-top: 10px; padding: 10px 12px; border-radius: 8px;
   background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.3);
 }
-.adm-cred-title { font-size: 12px; font-weight: 700; color: var(--lt-t-e0f2feff, #e0f2fe); margin-bottom: 6px; }
+.adm-cred-title { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-e0f2feff, #e0f2fe); margin-bottom: 6px; }
 .adm-cred-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-.adm-cred-label { width: 72px; flex-shrink: 0; font-size: 11px; color: var(--lt-t-94a3b8ff, #94a3b8); }
+.adm-cred-label { width: 72px; flex-shrink: 0; font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); }
 .adm-cred-val {
-  flex: 1; min-width: 0; font-size: 11.5px; color: var(--lt-t-f8fafcff, #f8fafc); overflow-wrap: anywhere;
+  flex: 1; min-width: 0; font-size: var(--zn-fs-xs); color: var(--lt-t-f8fafcff, #f8fafc); overflow-wrap: anywhere;
   background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3)); padding: 3px 6px; border-radius: 4px;
 }
 .adm-cred-copy {
-  flex-shrink: 0; height: 26px; padding: 0 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+  flex-shrink: 0; height: 26px; padding: 0 10px; border-radius: 6px; cursor: pointer; font-size: var(--zn-fs-xs);
   border: 1px solid var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14)); background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06)); color: var(--lt-t-e2e8f0ff, #e2e8f0);
 }
 .adm-cred-copy:hover { background: var(--lt-b-ffffff1f, rgba(255, 255, 255, 0.12)); }
-.adm-cred-note { margin-top: 6px; font-size: 11px; color: var(--lt-t-94a3b8ff, #94a3b8); }
+.adm-cred-note { margin-top: 6px; font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); }
 
 
 /* Visible to screen readers only */

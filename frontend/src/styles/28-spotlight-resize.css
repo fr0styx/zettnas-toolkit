@@ -86,7 +86,7 @@
 }
 
 .spotlight-kbd-badge {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
@@ -146,13 +146,13 @@
 }
 
 .spotlight-item-sub {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #64748b);
   margin-left: 6px;
 }
 
 .spotlight-badge {
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 2px 6px;
@@ -191,7 +191,7 @@
   padding: 8px 14px;
   background: var(--lt-b-00000059, rgba(0, 0, 0, 0.35));
   border-top: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
-  font-size: 11px;
+  font-size: var(--zn-fs-xs);
   color: var(--muted, #64748b);
 }
 

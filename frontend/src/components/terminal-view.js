@@ -92,7 +92,7 @@ export class TerminalView {
     this.pre = document.createElement('pre');
     this.pre.className = 'zt-terminal-fallback';
     this.pre.style.cssText =
-      'margin:0; height:100%; overflow:auto; white-space:pre-wrap; word-break:break-word; font:12px/1.45 var(--font-mono, monospace); color:#e2e8f0;';
+      'margin:0; height:100%; overflow:auto; white-space:pre-wrap; word-break:break-word; font:var(--zn-fs-xs)/1.45 var(--font-mono, monospace); color:#e2e8f0;';
     host.appendChild(this.pre);
 
     this.ready = loadXterm()

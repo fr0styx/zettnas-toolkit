@@ -30,7 +30,7 @@
 }
 
 .sec-advisor-action-pill {
-  font-size: 10px;
+  font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 4px;

@@ -759,8 +759,8 @@ export function initSettings() {
               <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0;">
                 <span>${icon}</span>
                 <div style="min-width:0;">
-                  <span style="font-weight:600; color:var(--lt-t-ffffffff, #fff); font-size:11.5px;">${escapeHtml(chk.title)}: </span>
-                  <span style="color:${color}; font-size:11px;">${escapeHtml(chk.message)}</span>
+                  <span style="font-weight:600; color:var(--lt-t-ffffffff, #fff); font-size:var(--zn-fs-xs);">${escapeHtml(chk.title)}: </span>
+                  <span style="color:${color}; font-size:var(--zn-fs-xs);">${escapeHtml(chk.message)}</span>
                 </div>
               </div>
               <span class="sec-advisor-action-pill">${actionText}</span>
@@ -1185,7 +1185,7 @@ export async function sampleWallpaperPalette() {
   }
 
   try {
-    container.innerHTML = `<span style="font-size:11px; color:var(--lt-ink-brand, var(--brand)); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
+    container.innerHTML = `<span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--brand)); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -1944,7 +1944,7 @@ export async function renderApiTokens() {
     const tokens = await api.get('/api/tokens');
     
     if (tokens.length === 0) {
-      list.innerHTML = `<div style="font-size:11px; color:var(--muted); text-align:center;">No API tokens generated.</div>`;
+      list.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--muted); text-align:center;">No API tokens generated.</div>`;
       return;
     }
     
@@ -1954,8 +1954,8 @@ export async function renderApiTokens() {
       row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);';
       row.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:2px;">
-          <div style="font-size:11px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(t.name)}</div>
-          <div style="font-size:11px; color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
+          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(t.name)}</div>
+          <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
         </div>
         <button class="btn-rect danger" data-id="${escapeHtml(t.id)}">Revoke</button>
       `;
@@ -1973,7 +1973,7 @@ export async function renderApiTokens() {
       list.appendChild(row);
     });
   } catch (err) {
-    list.innerHTML = `<div style="font-size:11px; color:var(--crit); text-align:center;">Failed to load tokens</div>`;
+    list.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--crit); text-align:center;">Failed to load tokens</div>`;
   }
 }
 

@@ -596,7 +596,7 @@ function renderSpotlightResults() {
   if (!resultsContainer) return;
 
   if (_filteredItems.length === 0) {
-    resultsContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:12px;">No matching results found.</div>';
+    resultsContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">No matching results found.</div>';
     return;
   }
 

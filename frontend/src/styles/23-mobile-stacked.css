@@ -149,7 +149,7 @@
   }
 
   .desktop-icons-container .desktop-icon-label .icon-text {
-    font-size: 9.5px !important;
+    font-size: var(--zn-fs-xs) !important;
     font-weight: 600 !important;
     line-height: 1.15 !important;
     text-align: center !important;
@@ -205,7 +205,7 @@
   }
 
   #desktop-widgets-container .widget-title {
-    font-size: 9.5px !important;
+    font-size: var(--zn-fs-xs) !important;
     letter-spacing: 0.5px !important;
     gap: 4px !important;
   }
@@ -216,26 +216,26 @@
   }
 
   #desktop-widgets-container .widget-badge {
-    font-size: 8.5px !important;
+    font-size: var(--zn-fs-xs) !important;
     padding: 1px 5px !important;
     border-radius: 4px !important;
   }
 
   #desktop-widgets-container span[id^="w-"] {
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   #desktop-widgets-container #w-net-rx,
   #desktop-widgets-container #w-net-tx {
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   #desktop-widgets-container span[style*="font-size: 12px"] {
-    font-size: 10px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   #desktop-widgets-container span[style*="font-size: 10px"] {
-    font-size: 9px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   #desktop-widgets-container div[style*="height: 4px"] {
@@ -254,7 +254,7 @@
     font-size: 20px !important;
   }
   #desktop-widgets-container #w-clock-sec {
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
   #desktop-widgets-container #w-weather-temp {
     font-size: 16px !important;
@@ -263,11 +263,11 @@
     font-size: 20px !important;
   }
   #desktop-widgets-container .cal-weekday {
-    font-size: 8.5px !important;
+    font-size: var(--zn-fs-xs) !important;
     padding: 2px 0 !important;
   }
   #desktop-widgets-container .cal-day {
-    font-size: 10px !important;
+    font-size: var(--zn-fs-xs) !important;
     padding: 3px 0 !important;
   }
   #desktop-widgets-container .cal-day.cal-holiday::after {
@@ -276,7 +276,7 @@
     bottom: 1px !important;
   }
   #desktop-widgets-container .cal-glance-bar {
-    font-size: 9.5px !important;
+    font-size: var(--zn-fs-xs) !important;
     min-height: 18px !important;
     padding-top: 4px !important;
     margin-top: 6px !important;
@@ -525,12 +525,12 @@
   }
 
   .fm-path-input {
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
     padding: 4px 8px !important;
   }
 
   .fm-path-breadcrumbs {
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
     right: 8px !important;
     padding-left: 6px !important;
   }
@@ -554,20 +554,20 @@
     padding: 0 8px !important;
     gap: 4px !important;
     height: 34px !important;
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   .fm-row {
     padding: 0 8px !important;
     gap: 4px !important;
     height: 42px !important;
-    font-size: 11.5px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   .fm-col-name {
     flex: 1 !important;
     min-width: 0 !important;
-    font-size: 12px !important;
+    font-size: var(--zn-fs-xs) !important;
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -592,7 +592,7 @@
   .fm-col-size {
     flex: 0 0 54px !important;
     text-align: right !important;
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   .fm-col-actions {
@@ -1113,7 +1113,7 @@
 
   #management-modal-overlay .mgmt-sidebar-item {
     padding: 6px 10px !important;
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
     border-radius: 6px !important;
     gap: 5px !important;
     flex-shrink: 0 !important;
@@ -1130,7 +1130,7 @@
   }
 
   #management-modal-overlay .mgmt-sidebar-text {
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   #management-modal-overlay .mgmt-content-pane {
@@ -1160,7 +1160,7 @@
   }
 
   #management-modal-overlay .mgmt-app-desc {
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
     line-height: 1.4 !important;
   }
 
@@ -1194,7 +1194,7 @@
 
   #management-modal-overlay .mgmt-inner-tab {
     padding: 5px 10px !important;
-    font-size: 11px !important;
+    font-size: var(--zn-fs-xs) !important;
     flex-shrink: 0 !important;
   }
 
@@ -1298,7 +1298,7 @@
     max-width: 100% !important;
     box-sizing: border-box !important;
     padding: 9px 13px !important;
-    font-size: 12px !important;
+    font-size: var(--zn-fs-xs) !important;
   }
 
   /* Visible Custom Scrollbars for Mobile Windows & Panes */
@@ -1414,7 +1414,7 @@
     align-items: center !important;
     padding: 4px 0 !important;
     border-bottom: 1px solid var(--lt-r-ffffff0d, rgba(255, 255, 255, 0.05)) !important;
-    font-size: 11.5px !important;
+    font-size: var(--zn-fs-xs) !important;
     min-height: 26px !important;
     width: 100% !important;
     box-sizing: border-box !important;

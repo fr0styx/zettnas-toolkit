@@ -52,3 +52,23 @@ describe('opening a window moves focus into it (UX-8)', () => {
     expect(document.activeElement.id).toBe('a');
   });
 });
+
+describe('a window without a place opens below the top bar', () => {
+  it('centres an unplaced desktop window and leaves placed ones alone', async () => {
+    const { placeIfUnplaced } = await import('../window-focus.js');
+    document.body.className = '';
+    document.body.innerHTML = '<div id="a" class="os-window"></div><div id="b" class="os-window" style="top: 120px; left: 40px"></div><div id="c"></div>';
+    Object.defineProperty(window, 'innerWidth', { value: 1440, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 900, configurable: true });
+    placeIfUnplaced(document.getElementById('a'));
+    expect(parseInt(document.getElementById('a').style.top, 10)).toBeGreaterThanOrEqual(56);
+    placeIfUnplaced(document.getElementById('b'));
+    expect(document.getElementById('b').style.top).toBe('120px');
+    placeIfUnplaced(document.getElementById('c'));
+    expect(document.getElementById('c').style.top).toBe('');
+    document.body.classList.add('mobile-mode');
+    const d = document.createElement('div'); d.className = 'os-window'; document.body.appendChild(d);
+    placeIfUnplaced(d);
+    expect(d.style.top).toBe('');
+  });
+});

@@ -462,8 +462,8 @@ export function openDiagnosticsPreviewModal(data) {
           ${alerts
             .map(
               (a) => `
-            <div style="font-size: 11px; color: var(--lt-t-f1f5f9ff, #f1f5f9); display: flex; align-items: flex-start; gap: 6px;">
-              <span style="font-size: 11px; margin-top: 2px;">${a.level === 'critical' ? '🔴' : '🟡'}</span>
+            <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-f1f5f9ff, #f1f5f9); display: flex; align-items: flex-start; gap: 6px;">
+              <span style="font-size: var(--zn-fs-xs); margin-top: 2px;">${a.level === 'critical' ? '🔴' : '🟡'}</span>
               <span>${escapeHtml(a.message || '')}</span>
             </div>
           `
@@ -478,11 +478,11 @@ export function openDiagnosticsPreviewModal(data) {
         <div style="display: flex; align-items: center; justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 14px;">${icon}</span>
-            <span style="font-size: 12px; font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: ${badgeColor}; letter-spacing: 0.5px;">${escapeHtml(title)}</span>
           </div>
-          <span style="font-size: 11px; color: var(--muted); font-family: monospace;">ZettOS Kernel ${escapeHtml(data.platform || '')}</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace;">ZettOS Kernel ${escapeHtml(data.platform || '')}</span>
         </div>
-        <div style="font-size: 11px; color: var(--muted); margin-top: 3px;">${escapeHtml(desc)}</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;">${escapeHtml(desc)}</div>
         ${alertItemsHtml}
       </div>
     `;
@@ -501,29 +501,29 @@ export function openDiagnosticsPreviewModal(data) {
 
     grid.innerHTML = `
       <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
-        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Host & OS</div>
-        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
-        <div style="font-size:11px; color:var(--muted); margin-top:1px;">Uptime: ${data.uptime_hours || 0}h</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Host & OS</div>
+        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${escapeHtml(data.chassis || 'Appliance')}</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">Uptime: ${data.uptime_hours || 0}h</div>
       </div>
       <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
-        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
-        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${memPct}% Used</div>
-        <div style="font-size:11px; color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Memory</div>
+        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${memPct}% Used</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">${memUsedGb} / ${memTotalGb} GB RAM</div>
       </div>
       <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
-        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
-        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${storage.pools_count || 0} Pools</div>
-        <div style="font-size:11px; color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Storage</div>
+        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${storage.pools_count || 0} Pools</div>
+        <div style="font-size:var(--zn-fs-xs); color:${(storage.degraded_disks?.length || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${storage.disks_count || 0} Drives (${storage.standby_count || 0} standby)</div>
       </div>
       <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
-        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>
-        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
-        <div style="font-size:11px; color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Docker Fleet</div>
+        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${docker.running || 0} / ${docker.total || 0} Running</div>
+        <div style="font-size:var(--zn-fs-xs); color:${(docker.restarting || 0) > 0 ? 'var(--crit)' : 'var(--muted)'}; margin-top:1px;">${docker.restarting || 0} Restarting, ${docker.dead || 0} Dead</div>
       </div>
       <div style="background:var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:10px;">
-        <div style="font-size:11px; color:var(--muted); text-transform:uppercase; font-weight:700;">Virtual Machines</div>
-        <div style="font-size:12px; font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
-        <div style="font-size:11px; color:var(--muted); margin-top:1px;">Headroom: Safe</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Virtual Machines</div>
+        <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-ffffffff, #fff); margin-top:2px;">${vms.active_vm_count || 0} / ${vms.total_vm_count || 0} Active</div>
+        <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;">Headroom: Safe</div>
       </div>
     `;
   }

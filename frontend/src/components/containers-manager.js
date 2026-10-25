@@ -89,13 +89,13 @@ export function initContainersManager() {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <!-- Quick Status Badges -->
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <div class="cw-docker-status-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
+              <div class="cw-docker-status-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
                 <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399;"></span>
                 <span id="cw-stat-daemon">Docker Socket Active</span>
                 <span style="opacity:0.35;">•</span>
-                <span style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); font-weight:500;">Live Sync</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); font-weight:500;">Live Sync</span>
               </div>
-              <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted);">
+              <div style="display: inline-flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--muted);">
                 <span>Total: <strong id="cw-count-all" style="color: var(--lt-t-ffffffff, #fff);">0</strong></span>
                 <span>•</span>
                 <span style="color: var(--lt-t-34d399ff, #34d399);">Running: <strong id="cw-count-running">0</strong></span>
@@ -139,7 +139,7 @@ export function initContainersManager() {
               <button class="btn-pill-toggle cw-filter-btn" data-filter="standalone"><span data-i18n="mgmt.docker_filter_standalone">${t('mgmt.docker_filter_standalone', 'Standalone')}</span> <span id="cw-pill-standalone" class="docker-count-badge">0</span></button>
             </div>
             <div class="cw-docker-search-wrap" style="position: relative;">
-              <input type="text" id="cw-docker-search-input" placeholder="${t('mgmt.docker_search_placeholder', 'Search containers, images, ports...')}" class="tz-text-input" style="font-size: 11px; padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
+              <input type="text" id="cw-docker-search-input" placeholder="${t('mgmt.docker_search_placeholder', 'Search containers, images, ports...')}" class="tz-text-input" style="font-size: var(--zn-fs-xs); padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@ export function initContainersManager() {
                 <button class="btn-pill-toggle cw-cat-btn" data-cat="downloaders">Downloaders</button>
               </div>
               <div style="position: relative;">
-                <input type="text" id="cw-catalog-search-input" placeholder="${t('ui.search_templates_apps_images', 'Search templates, apps, images...')}" class="tz-text-input" style="font-size: 11px; padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
+                <input type="text" id="cw-catalog-search-input" placeholder="${t('ui.search_templates_apps_images', 'Search templates, apps, images...')}" class="tz-text-input" style="font-size: var(--zn-fs-xs); padding: 4px 10px; width: 220px; height: 26px; border-radius: 4px;">
               </div>
             </div>
             <div id="cw-catalog-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
@@ -1160,7 +1160,7 @@ function bindCwTableEvents(tbody) {
       if (act === 'update-single') {
         showConfirmToast(
           `Update Container "${cname}"`,
-          `Pull the latest image and update <strong>${escapeHtml(cname)}</strong> to its newest release?<br><br><span style="font-size:11.5px; color:var(--muted);">All volumes, persistent paths, and environment settings will be preserved intact.</span>`,
+          `Pull the latest image and update <strong>${escapeHtml(cname)}</strong> to its newest release?<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">All volumes, persistent paths, and environment settings will be preserved intact.</span>`,
           async () => {
             actBtn.disabled = true;
             const originalContent = actBtn.innerHTML;

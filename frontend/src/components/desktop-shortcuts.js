@@ -426,7 +426,7 @@ export function openAddDesktopShortcutModal() {
             <span style="font-size:18px;">➕</span>
             <div>
               <div style="font-size:14px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">Add Desktop Shortcut</div>
-              <div style="font-size:11px; color:var(--muted);">Place quick-access shortcuts on your desktop workspace</div>
+              <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Place quick-access shortcuts on your desktop workspace</div>
             </div>
           </div>
           <button class="win-btn close-btn" id="btn-close-add-shortcut" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}" style="width:16px; height:16px; border-radius:50%; background:#ff5f56; border:none; cursor:pointer;"></button>
@@ -446,22 +446,22 @@ export function openAddDesktopShortcutModal() {
         <!-- Body: Tab 2 Custom URL -->
         <div id="pane-custom-shortcut" style="padding:20px; display:none; flex-direction:column; gap:14px;">
           <div>
-            <label for="input-custom-shortcut-name" style="font-size:11px; font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:4px;">Shortcut Name</label>
-            <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}" style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff);">
+            <label for="input-custom-shortcut-name" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:4px;">Shortcut Name</label>
+            <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}" style="width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff);">
           </div>
           <div>
-            <label for="input-custom-shortcut-url" style="font-size:11px; font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:4px;">Target URL</label>
-            <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:12px; border-radius:6px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff); font-family:var(--font-mono, monospace);">
+            <label for="input-custom-shortcut-url" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:4px;">Target URL</label>
+            <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff); font-family:var(--font-mono, monospace);">
           </div>
           <div>
-            <label style="font-size:11px; font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:6px;">Select Icon / Emoji</label>
+            <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-cbd5e1ff, #cbd5e1); display:block; margin-bottom:6px;">Select Icon / Emoji</label>
             <div style="display:flex; flex-wrap:wrap; gap:6px;" id="custom-shortcut-emojis">
               ${['🌐', '🏠', '🎬', '🛡️', '📦', '⚡', '🔌', '🚀', '🎮', '🎵', '💾', '📊', '📡', '🛠️'].map((emoji, idx) => `
                 <button type="button" class="btn-emoji-chip ${idx === 0 ? 'active' : ''}" data-emoji="${emoji}" style="padding:6px 10px; font-size:16px; background:${idx === 0 ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${idx === 0 ? 'rgba(0,240,255,0.6)' : 'rgba(255,255,255,0.1)'}; border-radius:6px; cursor:pointer;">${emoji}</button>
               `).join('')}
             </div>
           </div>
-          <button id="btn-save-custom-shortcut" style="margin-top:6px; padding:10px 16px; border-radius:8px; font-size:12px; font-weight:700; background:linear-gradient(135deg, #0ea5e9, #25c2a0); color:#fff; border:1px solid #0ea5e9; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.3);">
+          <button id="btn-save-custom-shortcut" style="margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #0ea5e9, #25c2a0); color:#fff; border:1px solid #0ea5e9; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.3);">
             ✨ Add Shortcut to Desktop
           </button>
         </div>
@@ -572,13 +572,13 @@ function renderSystemShortcutsList(overlay) {
           <div style="min-width:0;">
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-size:13px; font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(s.name)}</span>
-              ${s.badge ? `<span style="font-size:11px; padding:1px 5px; border-radius:3px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
+              ${s.badge ? `<span style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); color:var(--muted); font-family:var(--font-mono, monospace); text-transform:uppercase;">${escapeHtml(s.badge)}</span>` : ''}
             </div>
-            <div style="font-size:11px; color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.desc)}</div>
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(s.desc)}</div>
           </div>
         </div>
 
-        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:11px; font-weight:700; cursor:pointer; ${isActive ? 'color:var(--lt-t-22c55eff, #22c55e); border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:var(--lt-t-38bdf8ff, #38bdf8); border-color:rgba(56,189,248,0.4); background:rgba(14,165,233,0.12);'}">
+        <button class="btn-pill-toggle shortcut-toggle-btn ${isActive ? 'active' : ''}" data-shortcut-id="${s.id}" style="flex-shrink:0; padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; ${isActive ? 'color:var(--lt-t-22c55eff, #22c55e); border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.14);' : 'color:var(--lt-t-38bdf8ff, #38bdf8); border-color:rgba(56,189,248,0.4); background:rgba(14,165,233,0.12);'}">
           ${isActive ? '✓ On Desktop' : '+ Add to Desktop'}
         </button>
       </div>
