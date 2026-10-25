@@ -232,7 +232,11 @@ def score_answer_grounding(
     nothing to score (no sources or no factual sentences).
     """
     texts = [
-        " ".join(str(src.get(k) or "") for k in ("name", "breadcrumb", "excerpt", "raw_chunk_text", "chunk_text"))
+        # everything the model was shown, not just the 320-character excerpt (AI-6)
+        " ".join(
+            str(src.get(k) or "")
+            for k in ("name", "breadcrumb", "full_parent_context", "excerpt", "raw_chunk_text", "chunk_text")
+        )
         for src in (sources or [])
     ]
     texts = [t for t in texts if t.strip()]

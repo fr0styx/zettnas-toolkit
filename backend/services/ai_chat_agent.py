@@ -1296,21 +1296,24 @@ def _run_agentic_chat_turn(
             f"You are ZettAI, an intelligent, articulate, conversational AI assistant running 100% locally on ZettNAS Toolkit "
             f"(Active Model: {active_model}, Hardware: {model_hw_dev}). "
             f"Think step-by-step and answer the user's question directly, conversationally, and thoroughly using your "
-            f"own internal knowledge and reasoning. Do not invent citations or mention search engines since you are reasoning directly."
+            f"own internal knowledge and reasoning. Do not invent citations or mention search engines since you are reasoning directly. "
+            f"You have not looked at the user's files for this answer: if the question is about their own documents, "
+            f"photos, accounts or other personal facts, don't guess; say you didn't find it in their indexed files and "
+            f"suggest checking that the folder is indexed."
         )
 
     if tool_results:
         system_prompt = f"{system_prompt}\n\n{UNTRUSTED_DATA_RULE}"
+        # The evidence sits in the system message, ahead of the conversation: a follow-up about
+        # the same files reuses the model server's cached prefix instead of re-reading thousands
+        # of tokens, and the question comes last, where models attend best (AI-8, AI-15)
+        system_prompt = f"{system_prompt}\n\nLive Context:\n{_build_structured_llm_context(tool_results)}"
     llm_messages: list[dict[str, str]] = [{"role": "system", "content": system_prompt}]
     for h in (history or [])[-6:]:
         if isinstance(h, dict) and h.get("role") in ("user", "assistant") and h.get("content"):
             llm_messages.append({"role": str(h["role"]), "content": str(h["content"])[:800]})
 
-    if tool_results:
-        context_blob = _build_structured_llm_context(tool_results)
-        user_turn_content = f"User question: {clean_msg}\n\nLive Context:\n{context_blob}"
-    else:
-        user_turn_content = clean_msg
+    user_turn_content = clean_msg
 
     llm_messages.append(
         {

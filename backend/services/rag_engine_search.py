@@ -58,6 +58,9 @@ def _core():
     return rag_engine
 
 
+PHOTO_RECENT_CANDIDATES = 3000  # newest photos scored besides every keyword hit (AI-2)
+
+
 class RagSearchMixin:
     """Search, ask and thumbnails for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -210,6 +213,8 @@ class RagSearchMixin:
         )
         fts_query = build_safe_fts5_query(query)
         target_hist = build_target_color_histogram(req_colors) if req_colors else []
+        # The embedder didn't answer: results come from keywords only, and the person is told (AI-4)
+        search_degraded = chosen_emb_model != "zett_lexical_384d" and effective_emb_model == "zett_lexical_384d"
 
         conn = self._get_conn(readonly=True)
         try:
@@ -390,6 +395,10 @@ class RagSearchMixin:
             return {
                 "status": "ok",
                 "query": query,
+                "degraded": search_degraded,
+                "degraded_reason": "The AI search model didn't answer; these results match words only."
+                if search_degraded
+                else "",
                 "mode": effective_mode,
                 "match_tab": eff_tab,
                 "sort_by": eff_sort,
@@ -444,6 +453,7 @@ class RagSearchMixin:
                     SELECT rowid AS file_id, -bm25(rag_photos_fts, 3.0, 5.0, 5.0, 4.0, 2.0, 4.0) AS raw_bm25
                     FROM rag_photos_fts
                     WHERE rag_photos_fts MATCH ?
+                    ORDER BY raw_bm25 DESC
                     LIMIT 250
                     """,
                     (fts_query,),
@@ -457,20 +467,38 @@ class RagSearchMixin:
         rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
         sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
 
-        rows = conn.execute(
-            f"""
-            SELECT
+        photo_cols = """
                 p.file_id, p.file_name, p.width, p.height, p.aspect_ratio, p.format,
                 p.taken_at, p.camera_make, p.camera_model, p.dominant_hex, p.palette_json,
                 p.object_colors_json, p.frame_colors_json, p.color_hist_f32, p.center_color_hist_f32,
                 p.scene_tags_json, p.auto_tags_text, p.caption_text, p.ocr_text, p.vision_embedding_f32,
-                f.canonical_path, f.size_bytes, f.mtime_ns, f.backing_dev, f.doc_type, f.doc_metadata_json
+                f.canonical_path, f.size_bytes, f.mtime_ns, f.backing_dev, f.doc_type, f.doc_metadata_json"""
+        # Candidates: every keyword hit (captions, OCR, tags), then the newest photos for the
+        # colour and scene scoring; before, 2,000 photos in no particular order (AI-2)
+        rows = []
+        if bm25_map:
+            hit_ids = list(bm25_map)
+            rows = conn.execute(
+                f"""
+                SELECT {photo_cols}
+                FROM photo_assets p
+                JOIN indexed_files f ON f.file_id = p.file_id
+                WHERE p.file_id IN ({",".join("?" * len(hit_ids))}) AND f.parse_status = 'ok' AND {rbac_sql} AND {sub_sql}
+                """,
+                hit_ids + rbac_params + sub_params,
+            ).fetchall()
+        seen_photo_ids = [int(r["file_id"]) for r in rows]
+        exclude_sql = f"AND p.file_id NOT IN ({','.join('?' * len(seen_photo_ids))})" if seen_photo_ids else ""
+        rows += conn.execute(
+            f"""
+            SELECT {photo_cols}
             FROM photo_assets p
             JOIN indexed_files f ON f.file_id = p.file_id
-            WHERE f.parse_status = 'ok' AND {rbac_sql} AND {sub_sql}
-            LIMIT 2000
+            WHERE f.parse_status = 'ok' AND {rbac_sql} AND {sub_sql} {exclude_sql}
+            ORDER BY f.mtime_ns DESC
+            LIMIT {PHOTO_RECENT_CANDIDATES}
             """,
-            rbac_params + sub_params,
+            rbac_params + sub_params + seen_photo_ids,
         ).fetchall()
 
         photo_query_vec = query_vec
@@ -638,6 +666,7 @@ class RagSearchMixin:
                     SELECT rowid AS chunk_id, -bm25(rag_chunks_fts, 5.0, 3.0, 1.0, 2.0) AS raw_bm25
                     FROM rag_chunks_fts
                     WHERE rag_chunks_fts MATCH ?
+                    ORDER BY raw_bm25 DESC
                     LIMIT 250
                     """,
                     (fts_query,),
@@ -770,6 +799,7 @@ class RagSearchMixin:
 
         # Score all candidate chunks
         scored_chunks: list[tuple[float, sqlite3.Row, float]] = []
+        mismatched_chunks: set[int] = set()
         for r in rows:
             emb = unpack_embedding(r["embedding_f32"])
             file_emb_model = r["embedding_model"] if "embedding_model" in r.keys() else "zett_lexical_384d"
@@ -782,6 +812,7 @@ class RagSearchMixin:
             )
             if query_embedding_model and not is_match:
                 s_vec = 0.0
+                mismatched_chunks.add(int(r["chunk_id"]))
             else:
                 s_vec = cosine_similarity_vec(query_vec, emb)
             scored_chunks.append((s_vec, r, bm25_map.get(int(r["chunk_id"]), 0.0)))
@@ -847,6 +878,10 @@ class RagSearchMixin:
                 score = min(1.0, prof["w_vec"] * s_vec + prof["w_bm25"] * s_bm25)
             else:
                 score = min(1.0, w_vec * s_vec + w_bm25 * s_bm25 + w_rrf * effective_rrf + lex_boost)
+            if cid in mismatched_chunks and has_lexical_hit:
+                # Embedded with another model (a fallback while the embedder was away): its vector
+                # can't be compared, so its keyword match decides, ranked below good vector hits (AI-5)
+                score = max(score, min(0.6, 0.18 + 0.45 * s_bm25 + lex_boost))
             if raw_query.strip():
                 if (
                     not has_lexical_hit
@@ -1024,7 +1059,9 @@ class RagSearchMixin:
             )
 
         # Apply Primacy-Recency Alternating Inversion to preserve top context at prompt attention peaks
-        citations = apply_primacy_recency_inversion(raw_citations)
+        # Best first: the prompt says the answer is usually in document 1, and trimming cuts from
+        # the end. Reordering only pays off for long lists (AI-8).
+        citations = raw_citations if len(raw_citations) <= 8 else apply_primacy_recency_inversion(raw_citations)
         for i, c in enumerate(citations, start=1):
             c["citation_index"] = i
             c["index"] = i

@@ -501,8 +501,14 @@ def _try_local_llm_completion(
             )
             # Streaming: at most 45 s between pieces. Without streaming nothing arrives until the
             # whole answer is written, which over a long document question takes minutes.
+            # The first token waits for the whole prompt to be read: about 50 tokens a second on a
+            # slow CPU, so a 6,000-token document question needs minutes there (AI-7)
+            prompt_tokens = len(json.dumps(messages)) / 4
+            first_token_wait = min(600.0, 45.0 + prompt_tokens / 50.0)
             try:
-                resp = urllib.request.urlopen(req, timeout=45.0 if streaming else 180.0)
+                resp = urllib.request.urlopen(
+                    req, timeout=first_token_wait if streaming else max(180.0, first_token_wait)
+                )
             except urllib.error.HTTPError as http_err:
                 # A model server without tool support refuses the tools: ask again without them
                 if (
@@ -518,7 +524,9 @@ def _try_local_llm_completion(
                         headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
                         method="POST",
                     )
-                    resp = urllib.request.urlopen(req, timeout=45.0 if streaming else 180.0)
+                    resp = urllib.request.urlopen(
+                        req, timeout=first_token_wait if streaming else max(180.0, first_token_wait)
+                    )
                 else:
                     raise
             with resp:

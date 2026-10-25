@@ -567,6 +567,11 @@ def compute_neural_embeddings_batch(
     return out
 
 
+QUERY_EMBED_TIMEOUT = 6.0
+QUERY_VEC_CACHE_SIZE = 256
+_QUERY_VEC_CACHE: dict[tuple, list[float]] = {}  # the same question twice costs one embedding
+
+
 def compute_multimodal_query_embedding(
     query: str,
     model: str = "embeddinggemma",
@@ -583,16 +588,30 @@ def compute_multimodal_query_embedding(
     Returns (effective_model_name, vector_list).
     """
     if model and model != "zett_lexical_384d":
-        res = compute_neural_embedding_via_ollama(
-            text=query,
-            model=model,
-            host=ollama_host,
-            target_dim=target_dim,
-            is_query=True,
-            task_prompt=task_prompt,
-        )
+        key = (model, target_dim, task_prompt or "", query)
+        cached = _QUERY_VEC_CACHE.get(key)
+        if cached is not None:
+            return model, cached
+        # A busy iGPU (chat or captioning running) can take seconds: wait longer and try once
+        # more before falling back to keyword vectors (AI-4)
+        res = None
+        for timeout in (QUERY_EMBED_TIMEOUT, QUERY_EMBED_TIMEOUT):
+            res = compute_neural_embedding_via_ollama(
+                text=query,
+                model=model,
+                host=ollama_host,
+                target_dim=target_dim,
+                is_query=True,
+                task_prompt=task_prompt,
+                timeout=timeout,
+            )
+            if res is not None:
+                break
         if res is not None:
             _, vec = res
+            if len(_QUERY_VEC_CACHE) >= QUERY_VEC_CACHE_SIZE:
+                _QUERY_VEC_CACHE.pop(next(iter(_QUERY_VEC_CACHE)))
+            _QUERY_VEC_CACHE[key] = vec
             return model, vec
 
     req_scenes = req_scenes or []
