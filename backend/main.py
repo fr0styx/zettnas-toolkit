@@ -93,6 +93,13 @@ def startup_system():
     if DATA_DIR:
         os.makedirs(DATA_DIR, exist_ok=True)
 
+    try:
+        from backend.services.identity import apply_saved_timezone
+
+        apply_saved_timezone()  # the time zone chosen in setup (UX-17)
+    except Exception as e:
+        logger.warning(f"[Main] Could not apply the saved time zone: {e}")
+
     # A settings restore staged before the restart goes into place first (REL-3)
     try:
         from backend.services.backup_engine import apply_staged_restore

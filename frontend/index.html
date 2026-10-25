@@ -1789,12 +1789,12 @@
       </div>
     </div>
     <div class="smart-modal-body" style="padding: 24px; gap: 18px;">
-      <div style="background: rgba(224, 122, 56, 0.08); border: 1px solid rgba(224, 122, 56, 0.2); border-radius: 8px; padding: 12px 14px;">
+      <div data-setup-step="1" style="background: rgba(224, 122, 56, 0.08); border: 1px solid rgba(224, 122, 56, 0.2); border-radius: 8px; padding: 12px 14px;">
         <div style="font-size: 13px; font-weight: 700; color: var(--lt-t-f8fafcff, #f8fafc); margin-bottom: 4px;" data-i18n="setup.welcome_title">Welcome to your ZettNAS Toolkit!</div>
         <div style="font-size: 11.5px; color: var(--lt-t-94a3b8ff, #94a3b8); line-height: 1.45;" data-i18n="setup.welcome_desc">Your NAS hardware environment has been initialized. Complete this initial setup to secure your console and review connected peripherals.</div>
       </div>
 
-      <div>
+      <div data-setup-step="1">
         <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">Your hardware</div>
         <div class="smart-meta-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
           <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val" id="setup-hw-chassis" style="font-size: 12px; color: var(--lt-t-38bdf8ff, #38bdf8);">Detecting...</span></div>
@@ -1804,7 +1804,13 @@
         </div>
       </div>
 
-      <div>
+      <div data-setup-step="1">
+        <label for="setup-server-name" class="setup-label" data-i18n="setup.server_name">Name this server</label>
+        <input id="setup-server-name" type="text" maxlength="40" placeholder="Home server" data-i18n-placeholder="setup.server_name_placeholder" class="input-text setup-input">
+        <div class="setup-hint" data-i18n="setup.server_name_hint">Shown in the browser tab, so you know which server you are on.</div>
+      </div>
+
+      <div data-setup-step="2">
         <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step2_title">Choose your password</div>
         <div style="font-size: 11.5px; color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom: 10px;" data-i18n="setup.step2_desc">The default or first-time password is still active. Replace it with your own password (minimum 8 characters).</div>
 
@@ -1825,7 +1831,7 @@
         <div id="setup-wizard-err" style="display: none; margin-top: 8px; font-size: 11.5px; color: var(--crit); font-weight: 600;"></div>
       </div>
 
-      <div>
+      <div data-setup-step="1">
         <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">Power protection</div>
         <div id="setup-hw-ups" style="padding: 10px 12px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius: 6px; font-size: 11.5px; color: var(--lt-t-94a3b8ff, #94a3b8);">
           <span id="setup-ups-badge" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 6px;"></span>
@@ -1833,8 +1839,45 @@
         </div>
       </div>
 
-      <div>
-        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">4. Notification Alerts (Optional)</div>
+      <div data-setup-step="3">
+        <div class="setup-head" data-i18n="setup.storage_title">Your storage</div>
+        <div id="setup-storage-info" class="setup-desc" data-i18n="setup.storage_loading">Looking at your drives…</div>
+      </div>
+
+      <div data-setup-step="4">
+        <div class="setup-head" data-i18n="setup.share_title">A folder for everyone</div>
+        <div id="setup-share-host" class="setup-desc" hidden></div>
+        <div id="setup-share-form">
+          <div class="setup-desc" data-i18n="setup.share_desc">A shared folder that computers and phones at home can open, for photos, documents and anything else you want in one place.</div>
+          <label class="setup-check"><input type="checkbox" id="setup-share-create" checked> <span data-i18n="setup.share_create">Create a shared folder</span></label>
+          <label for="setup-share-name" class="setup-label setup-gap" data-i18n="setup.share_name">Its name</label>
+          <input id="setup-share-name" type="text" maxlength="32" value="Family" class="input-text setup-input">
+        </div>
+      </div>
+
+      <div data-setup-step="5">
+        <div class="setup-head" data-i18n="setup.people_title">Who else uses it?</div>
+        <div class="setup-desc" data-i18n="setup.people_desc">Give someone their own sign-in and private folder. You can add more people later in Users.</div>
+        <label for="setup-person-name" class="setup-label" data-i18n="setup.person_name">Their user name (optional)</label>
+        <input id="setup-person-name" type="text" maxlength="32" autocomplete="off" class="input-text setup-input">
+        <label for="setup-person-pwd" class="setup-label setup-gap" data-i18n="setup.person_pwd">Their password</label>
+        <input id="setup-person-pwd" type="password" autocomplete="new-password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text setup-input">
+        <label for="setup-person-role" class="setup-label setup-gap" data-i18n="setup.person_role">They are</label>
+        <select id="setup-person-role" class="input-text setup-input">
+          <option value="share_user" data-i18n="setup.role_family">A family member</option>
+          <option value="kid" data-i18n="setup.role_kid">A child (no settings, no web search)</option>
+          <option value="guest" data-i18n="setup.role_guest">A guest (can only look)</option>
+        </select>
+      </div>
+
+      <div data-setup-step="6">
+        <label for="setup-timezone" class="setup-label" data-i18n="setup.timezone">Time zone</label>
+        <select id="setup-timezone" class="input-text setup-input"></select>
+        <div class="setup-hint" data-i18n="setup.timezone_hint">Schedules such as nightly backups run at this time of day.</div>
+      </div>
+
+      <div data-setup-step="6">
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">Alerts (optional)</div>
         <div style="font-size: 11.5px; color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom: 8px;" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
         <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: 12px; padding: 8px 10px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff);" aria-label="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-aria-label="setup.notif_placeholder">
       </div>

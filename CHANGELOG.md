@@ -22,6 +22,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Apps
 
+- **Installing an app asks only for a name and a folder.** The port and the Docker Compose
+  definition are under Advanced, which opens by itself when the usual port is taken.
 - **Built-in apps install the exact image that shipped with this ZettNAS version** (pinned by
   digest, so an app installed today is the one that was tested in the beta), including Ollama.
   Updates still follow the app's tag: the Updates page offers them as before and pins the new
@@ -34,6 +36,8 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
 
 #### Everyday use
 
+- **A six-step first setup**: name the server, choose a password, see your storage, create a
+  first shared folder, add someone else, and pick the time zone (schedules follow it) and alerts.
 - **Previous versions** in File Explorer (right-click a file): the copies kept in snapshots, to
   open, restore as a copy, or put back in place. Works with ZFS snapshots (TrueNAS, Unraid ZFS
   pools) and the btrfs share snapshots ZettNAS takes.

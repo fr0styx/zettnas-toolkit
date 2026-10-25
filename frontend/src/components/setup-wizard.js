@@ -14,11 +14,41 @@ import { t } from '../i18n.js';
 let _wizardInitialized = false;
 let _wizardShown = false;
 
-function setWizardError(msg) {
+function setWizardError(msg, step = 2) {
   const errEl = document.getElementById('setup-wizard-err');
   if (errEl) {
+    // the message sits under the step that has the problem
+    const home = step === 2
+      ? document.getElementById('setup-confirm-pwd')?.closest('[data-setup-step]')
+      : document.querySelector(`#setup-wizard-modal [data-setup-step="${step}"]`);
+    if (msg && home && !home.contains(errEl)) home.appendChild(errEl);
     errEl.textContent = msg;
     errEl.style.display = msg ? 'block' : 'none';
+  }
+}
+
+/** The server's name in the browser tab (UX-17). */
+export function applyServerName(name) {
+  const clean = String(name || '').trim();
+  document.title = clean ? `${clean} · ZettNAS` : 'ZettNAS';
+  const drawer = document.getElementById('drawer-nas-name');
+  if (drawer && clean) drawer.textContent = clean;
+}
+
+let _identityLoaded = false;
+async function loadIdentity() {
+  if (_identityLoaded) return null;
+  _identityLoaded = true;
+  try {
+    const id = await api.get('/api/system/identity');
+    applyServerName(id?.server_name);
+    const nameInput = document.getElementById('setup-server-name');
+    if (nameInput && id?.server_name && !nameInput.value) nameInput.value = id.server_name;
+    fillTimezones(document.getElementById('setup-timezone'), id?.timezone || '');
+    return id;
+  } catch {
+    _identityLoaded = false;
+    return null;
   }
 }
 
@@ -35,16 +65,89 @@ export function passwordStepProblem() {
   return '';
 }
 
+/** The people step's problem, or '' (UX-17: a person is optional, but needs a password). */
+export function personStepProblem() {
+  const name = (document.getElementById('setup-person-name')?.value || '').trim();
+  const pwd = document.getElementById('setup-person-pwd')?.value || '';
+  if (!name) return '';
+  if (!/^[a-zA-Z0-9_-][a-zA-Z0-9_.-]{1,31}$/.test(name)) return t('setup.err_person_name', 'Use 2 to 32 letters, numbers, dots, dashes or underscores for the user name.');
+  if (pwd.length < 8) return t('setup.err_person_pwd', 'Their password needs at least 8 characters.');
+  return '';
+}
+
+/** The time zones to choose from, the server's (or this browser's) first. */
+export function fillTimezones(select, current = '') {
+  if (!select || select.options.length) return;
+  let zones;
+  try {
+    zones = Intl.supportedValuesOf('timeZone');
+  } catch {
+    zones = ['UTC'];
+  }
+  const browser = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const chosen = current || browser;
+  if (!zones.includes(chosen)) zones = [chosen, ...zones];
+  select.innerHTML = zones.map((z) => `<option value="${z}"${z === chosen ? ' selected' : ''}>${z.replace(/_/g, ' ')}</option>`).join('');
+}
+
+/** Step 3 and 4: what the storage is, and whether ZettNAS or the host makes shares. */
+export async function loadStorageStep() {
+  const info = document.getElementById('setup-storage-info');
+  const shareHost = document.getElementById('setup-share-host');
+  const shareForm = document.getElementById('setup-share-form');
+  try {
+    const [platform, pools] = await Promise.all([api.get('/api/storage/platform'), api.get('/api/storage/pools').catch(() => ({}))]);
+    const host = String(platform?.platform || '').replace(/^\w/, (c) => c.toUpperCase());
+    const list = Array.isArray(pools?.pools) ? pools.pools : [];
+    const observer = Boolean(platform?.capabilities?.is_observer_mode);
+    if (info) {
+      const names = list.map((p) => p.name || p.id).filter(Boolean).slice(0, 4).join(', ');
+      info.textContent = observer
+        ? t('setup.storage_host', '{host} looks after the drives and storage; ZettNAS shows and uses what it sets up.', { host })
+        : list.length
+          ? t('setup.storage_pools', 'Storage ready: {names}.', { names })
+          : t('setup.storage_none', 'No storage pool yet. You can create one later in Storage.');
+    }
+    if (observer && shareHost && shareForm) {
+      shareHost.hidden = false;
+      shareHost.textContent = t('setup.share_host', 'Shared folders are made in {host} itself; ZettNAS lists them under Shares.', { host });
+      shareForm.hidden = true;
+    }
+    return { observer };
+  } catch {
+    if (info) info.textContent = t('setup.storage_none', 'No storage pool yet. You can create one later in Storage.');
+    return { observer: false };
+  }
+}
+
 /**
- * Shows the wizard one step at a time (UX-1): 1 welcome, hardware and power; 2 password;
- * 3 alerts. The body's blocks keep their markup; this groups them and adds Back/Next.
+ * Shows the wizard one step at a time (UX-17): 1 welcome and name; 2 password; 3 storage;
+ * 4 a first shared folder; 5 people; 6 time zone and alerts. Blocks say their step with
+ * data-setup-step; this groups them and adds Back/Next.
  */
 export function initWizardStepper(modal) {
   const body = modal.querySelector('.smart-modal-body');
   const blocks = body ? Array.from(body.children) : [];
   const footer = blocks[blocks.length - 1];
-  const groups = { 1: [blocks[0], blocks[1], blocks[3]], 2: [blocks[2]], 3: [blocks[4]] };
-  const names = [t('setup.step_welcome', 'Welcome'), t('setup.step_password', 'Password'), t('setup.step_alerts', 'Alerts')];
+  const tagged = blocks.filter((b) => b.dataset && b.dataset.setupStep);
+  const groups = {};
+  if (tagged.length) {
+    tagged.forEach((b) => {
+      (groups[b.dataset.setupStep] ||= []).push(b);
+    });
+  } else {
+    Object.assign(groups, { 1: [blocks[0], blocks[1], blocks[3]], 2: [blocks[2]], 3: [blocks[4]] });
+  }
+  const last = Math.max(...Object.keys(groups).map(Number));
+  const allNames = [
+    t('setup.step_welcome', 'Welcome'),
+    t('setup.step_password', 'Password'),
+    t('setup.step_storage', 'Storage'),
+    t('setup.step_share', 'Share'),
+    t('setup.step_people', 'People'),
+    t('setup.step_finish', 'Time & alerts'),
+  ];
+  const names = last === 3 ? [allNames[0], allNames[1], t('setup.step_alerts', 'Alerts')] : allNames.slice(0, last);
   let current = 1;
   const steps = document.createElement('ol');
   steps.className = 'setup-steps';
@@ -67,7 +170,8 @@ export function initWizardStepper(modal) {
     footer.insertBefore(next, submit);
   }
   function show(step) {
-    current = Math.max(1, Math.min(3, step));
+    current = Math.max(1, Math.min(last, step));
+    if (current === 3 && last > 3) loadStorageStep();
     for (const [n, els] of Object.entries(groups)) {
       els.forEach((el) => {
         if (el) el.hidden = Number(n) !== current;
@@ -81,16 +185,14 @@ export function initWizardStepper(modal) {
       else li.removeAttribute('aria-current');
     });
     back.hidden = current === 1;
-    next.hidden = current === 3;
-    if (submit) submit.hidden = current !== 3;
+    next.hidden = current === last;
+    if (submit) submit.hidden = current !== last;
   }
   back.addEventListener('click', () => show(current - 1));
   next.addEventListener('click', () => {
-    if (current === 2) {
-      const problem = passwordStepProblem();
-      setWizardError(problem);
-      if (problem) return;
-    }
+    const problem = current === 2 ? passwordStepProblem() : current === 5 && last > 3 ? personStepProblem() : '';
+    setWizardError(problem, current);
+    if (problem) return;
     show(current + 1);
   });
   show(1);
@@ -210,7 +312,10 @@ export function initSetupWizard() {
           console.warn('[SetupWizard] Re-auth failed after password change', authErr);
         }
 
-        // 3. Save Notification Webhook if provided (needs the new session)
+        // 3. The server's name and time zone, a first shared folder, another person (UX-17)
+        await saveSetupExtras();
+
+        // 4. Save Notification Webhook if provided (needs the new session)
         const notifUrl = (document.getElementById('setup-notif-url')?.value || '').trim();
         if (notifUrl) {
           try {
@@ -249,7 +354,43 @@ export function initSetupWizard() {
   }
 }
 
+/** Saves the optional steps; each one that fails says so and the rest still happen. */
+export async function saveSetupExtras() {
+  const name = document.getElementById('setup-server-name')?.value?.trim() || '';
+  const tz = document.getElementById('setup-timezone')?.value || '';
+  if (name || tz) {
+    try {
+      const id = await api.put('/api/system/identity', { server_name: name, timezone: tz || null });
+      applyServerName(id?.server_name ?? name);
+    } catch (err) {
+      showToast(t('setup.err_identity', 'The name and time zone were not saved: {error}', { error: err.message }), 'warning');
+    }
+  }
+  const shareForm = document.getElementById('setup-share-form');
+  const shareName = document.getElementById('setup-share-name')?.value?.trim() || '';
+  if (shareForm && !shareForm.hidden && document.getElementById('setup-share-create')?.checked && shareName) {
+    try {
+      await api.post('/api/storage/shares', { name: shareName });
+    } catch (err) {
+      showToast(t('setup.err_share', 'The shared folder was not created: {error}', { error: err.message }), 'warning');
+    }
+  }
+  const person = document.getElementById('setup-person-name')?.value?.trim() || '';
+  if (person && !personStepProblem()) {
+    try {
+      await api.post('/api/users', {
+        username: person,
+        password: document.getElementById('setup-person-pwd')?.value || '',
+        role_id: document.getElementById('setup-person-role')?.value || 'share_user',
+      });
+    } catch (err) {
+      showToast(t('setup.err_person', '{name} was not added: {error}', { name: person, error: err.message }), 'warning');
+    }
+  }
+}
+
 export function checkAndTriggerSetupWizard(stats) {
+  loadIdentity();
   if (_wizardShown) return;
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd'))) {
     return;
@@ -356,6 +497,7 @@ export function openSetupWizard(stats = null, forced = false) {
     }
   }
 
+  fillTimezones(document.getElementById('setup-timezone'));
   modal.classList.add('open');
   modal.style.zIndex = 'var(--z-modal, 9100)';
   const win = modal.querySelector('.smart-modal-window');

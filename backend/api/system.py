@@ -885,6 +885,29 @@ def _is_newer_version(latest_str: str, current_str: str) -> bool:
         return latest_str.strip() != current_str.strip()
 
 
+class IdentityIn(BaseModel):
+    server_name: str | None = Field(default=None, max_length=64)
+    timezone: str | None = Field(default=None, max_length=64)
+
+
+@router.get("/system/identity")
+def get_server_identity(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """The server's name and time zone (UX-17)."""
+    from backend.services.identity import get_identity
+
+    return get_identity()
+
+
+@router.put("/system/identity", dependencies=[Depends(require_scope("system:config"))])
+def put_server_identity(req: IdentityIn):
+    from backend.services.identity import set_identity
+
+    try:
+        return set_identity(req.server_name, req.timezone)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+
+
 @router.get("/system/about")
 def get_system_about():
     """Returns high-level system information, current version, chassis twin, and runtime stats."""
