@@ -1121,5 +1121,85 @@
   "answer_any": [
    "Ramipril"
   ]
+ },
+ {
+  "id": "qa-098",
+  "lang": "en",
+  "question": "What is the licence plate of my car?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-099",
+  "lang": "en",
+  "question": "Which hotel did we book for the Lisbon trip in 2024?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-100",
+  "lang": "de",
+  "question": "Wie lautet die Kundennummer meines Stromanbieters?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-101",
+  "lang": "de",
+  "question": "Wann läuft die Garantie meines Fernsehers ab?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-102",
+  "lang": "fr",
+  "question": "Quel est le numéro de mon passeport ?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-103",
+  "lang": "fr",
+  "question": "Combien coûte mon abonnement à la salle de sport ?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-104",
+  "lang": "es",
+  "question": "¿Cuál es el código del portal de casa de la abuela?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-105",
+  "lang": "es",
+  "question": "¿Qué día vence el seguro del coche?",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-106",
+  "lang": "zh",
+  "question": "我的护照号码是多少？",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
+ },
+ {
+  "id": "qa-107",
+  "lang": "zh",
+  "question": "我们家的无线网络密码是什么？",
+  "relevant": [],
+  "answer_any": [],
+  "unanswerable": true
  }
 ]

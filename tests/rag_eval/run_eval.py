@@ -197,6 +197,40 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", "", s)
 
 
+REFUSAL_MARKERS = (
+    "not in",
+    "couldn't find",
+    "could not find",
+    "can't find",
+    "cannot find",
+    "no information",
+    "isn't in",
+    "nicht in",
+    "nicht gefunden",
+    "keine information",
+    "finde ich nicht",
+    "pas dans",
+    "pas trouvé",
+    "aucune information",
+    "ne trouve pas",
+    "no está",
+    "no encontr",
+    "no hay información",
+    "no aparece",
+    "没有找到",
+    "未找到",
+    "没有相关",
+    "找不到",
+    "不在",
+)
+
+
+def says_not_found(answer: str) -> bool:
+    """An unanswerable question is answered correctly by saying the files don't say (AI-16)."""
+    low = (answer or "").lower()
+    return any(m in low for m in REFUSAL_MARKERS)
+
+
 def answer_matches(answer: str, accepted: list[str]) -> bool:
     a = _norm(answer)
     return any(_norm(x) and _norm(x) in a for x in accepted)
@@ -288,8 +322,14 @@ def evaluate(
                             {
                                 **item,
                                 "model_answered": float(bool(tel.get("llm_invoked"))),
-                                "correct": float(answer_matches(text, item["answer_any"])),
-                                "source_hit": float(any(p in item["relevant"] for p in sources)),
+                                "correct": float(
+                                    says_not_found(text)
+                                    if item.get("unanswerable")
+                                    else answer_matches(text, item["answer_any"])
+                                ),
+                                "source_hit": float(
+                                    item.get("unanswerable") or any(p in item["relevant"] for p in sources)
+                                ),
                                 "answer": text[:400],
                             }
                         )
@@ -316,9 +356,13 @@ def evaluate(
         ],
     }
     if qa_rows:
-        n = len(qa_rows)
+        refusals = [r for r in qa_rows if r.get("unanswerable")]
+        qa_rows = [r for r in qa_rows if not r.get("unanswerable")]
+        n = len(qa_rows) or 1
         out["answers"] = {
             "model": answers_model,
+            # unanswerable questions are scored apart, so the accuracy stays comparable
+            "says_not_found": round(sum(r["correct"] for r in refusals) / max(1, len(refusals)), 3),
             "accuracy": round(sum(r["correct"] for r in qa_rows) / n, 3),
             "source_hit": round(sum(r["source_hit"] for r in qa_rows) / n, 3),
             "model_answered": round(sum(r["model_answered"] for r in qa_rows) / n, 3),

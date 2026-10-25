@@ -834,13 +834,10 @@ class RagSearchMixin:
         for r in rows:
             emb = unpack_embedding(r["embedding_f32"])
             file_emb_model = r["embedding_model"] if "embedding_model" in r.keys() else "zett_lexical_384d"
-            q_norm = (query_embedding_model or "").lower()
-            f_norm = (file_emb_model or "").lower()
-            is_match = (
-                q_norm == f_norm
-                or ("embeddinggemma" in q_norm and "embeddinggemma" in f_norm)
-                or ("nomic" in q_norm and "nomic" in f_norm)
-            )
+            # the exact model: EmbeddingGemma 1 and 2 vectors live in different spaces (AI-17)
+            q_norm = (query_embedding_model or "").lower().removesuffix(":latest")
+            f_norm = (file_emb_model or "").lower().removesuffix(":latest")
+            is_match = q_norm == f_norm
             if query_embedding_model and not is_match:
                 s_vec = 0.0
                 mismatched_chunks.add(int(r["chunk_id"]))

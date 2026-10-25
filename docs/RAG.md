@@ -172,8 +172,9 @@ model is told not to follow instructions inside it.
   vectors, photo data, folder summaries) and adds it to the excluded folders.
 - **Delete chats not used for…** removes unpinned conversations after 7, 30, 90 or 365 days.
 - **Flush index** deletes the whole index.
-- The index and conversations are not encrypted at rest; protect the data folder like
-  any other private data.
+- The index and the conversations are encrypted at rest with the install's data key
+  (`ZETTNAS_DATA_KEY`); keep that key and the data folder private, and back the key up:
+  without it the index has to be rebuilt and old conversations can't be read.
 
 ## Chat models
 

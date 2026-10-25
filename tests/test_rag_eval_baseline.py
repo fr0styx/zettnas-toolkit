@@ -37,7 +37,11 @@ def test_extended_and_answer_sets_point_at_real_files():
         for rel in item["relevant"]:
             assert os.path.isfile(os.path.join(corpus, rel)), rel
     for item in qa:
+        if item.get("unanswerable"):  # the right answer is that the files don't say (AI-16)
+            assert not item["relevant"] and not item["answer_any"]
+            continue
         assert item["answer_any"] and all(str(a).strip() for a in item["answer_any"])
+    assert sum(1 for item in qa if item.get("unanswerable")) >= 10
 
 
 def test_answer_scoring_ignores_case_and_spacing():
