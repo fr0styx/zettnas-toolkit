@@ -20,6 +20,13 @@
 
 Integrity and hardening from the October audit. Nothing to do before upgrading.
 
+#### Apps
+
+- **Built-in apps install the exact image that shipped with this ZettNAS version** (pinned by
+  digest, so an app installed today is the one that was tested in the beta), including Ollama.
+  Updates still follow the app's tag: the Updates page offers them as before and pins the new
+  image. Images you pinned yourself are left alone.
+
 #### Backups
 
 - **Hyper-Backup copies to the cloud instead of mirroring.** A file deleted at home (or

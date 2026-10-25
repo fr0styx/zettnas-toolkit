@@ -116,24 +116,9 @@ def extract_registry_from_image(img: str) -> tuple[str, str, str]:
     - library/ubuntu:22.04 -> ('docker.io', 'library/ubuntu', '22.04')
     - nginx:alpine -> ('docker.io', 'library/nginx', 'alpine')
     """
-    img_clean = img.strip()
-    tag = "latest"
-    if ":" in img_clean and not img_clean.endswith(":"):
-        img_no_tag, tag = img_clean.rsplit(":", 1)
-        if "/" in tag:
-            img_no_tag = img_clean
-            tag = "latest"
-    else:
-        img_no_tag = img_clean
+    from backend.services.image_ref import split_ref
 
-    parts = img_no_tag.split("/", 1)
-    if len(parts) == 2 and ("." in parts[0] or ":" in parts[0] or parts[0] == "localhost"):
-        registry = parts[0]
-        repo = parts[1]
-    else:
-        registry = "docker.io"
-        repo = img_no_tag if "/" in img_no_tag else f"library/{img_no_tag}"
-
+    registry, repo, tag, _ = split_ref(img)
     return registry, repo, tag
 
 
@@ -198,6 +183,8 @@ def query_remote_registry_v2_manifest(img: str, timeout: float = 10.0) -> str | 
     req = urllib.request.Request(url, method="GET")
     req.add_header(
         "Accept",
+        # the multi-arch index first: its digest is the one tags and pins refer to
+        "application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, "
         "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json",
     )
 
@@ -253,10 +240,19 @@ def _check_container_image_update(c: dict) -> dict[str, Any]:
         res["status"] = "policy_off"
         return res
 
-    # Pinned digests (e.g. image@sha256:...) cannot be auto-checked against a tag
+    from backend.services.image_ref import FOLLOW_TAG_LABEL, name_and_tag, split_ref
+
+    pinned_digest = ""
     if "@sha256:" in img:
-        res["status"] = "pinned"
-        return res
+        name = name_and_tag(img)
+        follows = (c.get("Labels") or {}).get(FOLLOW_TAG_LABEL) == "1"
+        if not follows or ":" not in name.rsplit("/", 1)[-1]:
+            # pinned by its owner (or without a tag): nothing to compare against
+            res["status"] = "pinned"
+            return res
+        # a catalog app pinned at install ("repo:tag@sha256:..."): compare the tag with the pin
+        pinned_digest = split_ref(img)[3]
+        img = name
 
     try:
         auth_headers = get_registry_auth_header(img)
@@ -286,6 +282,9 @@ def _check_container_image_update(c: dict) -> dict[str, Any]:
             res["local_digest"] = repo_digests[0] if repo_digests else None
 
             # 3. If remote digest is known and none of local RepoDigests contain it, update is ready!
+            if pinned_digest:
+                res["local_digest"] = pinned_digest
+                repo_digests = [pinned_digest]
             if not any(remote_digest in rd for rd in repo_digests):
                 res["has_update"] = True
                 res["status"] = "update_available"
@@ -367,6 +366,35 @@ def check_all_container_updates(force: bool = False) -> dict[str, Any]:
         return dict(_update_cache)
 
 
+def _update_target(img: str) -> str:
+    """What to pull for an update: a pinned catalog app ("repo:tag@sha256:...") follows its tag."""
+    from backend.services.image_ref import name_and_tag
+
+    if "@" not in img:
+        return img
+    name = name_and_tag(img)
+    if ":" not in name.rsplit("/", 1)[-1]:
+        raise ValueError(
+            "This container is pinned to one image digest without a tag, so there is nothing to update to."
+        )
+    return name
+
+
+def _repin(img: str) -> str:
+    """After pulling a tag, the reference pinned to what was pulled (the tag alone when unknown)."""
+    from backend.services.image_ref import split_ref, with_digest
+
+    st, data = _docker_request("GET", f"/images/{img}/json", timeout=6.0)
+    if st != 200 or not isinstance(data, dict):
+        return img
+    registry, repo, _, _ = split_ref(img)
+    for rd in data.get("RepoDigests") or []:
+        r_reg, r_repo, _, digest = split_ref(rd)
+        if (r_reg, r_repo) == (registry, repo) and digest:
+            return with_digest(img, digest)
+    return img
+
+
 def update_single_container(cid: str) -> dict[str, Any]:
     """
     Pulls the latest image for a container and recreates it with automated rollback.
@@ -389,8 +417,15 @@ def update_single_container(cid: str) -> dict[str, Any]:
     if not img:
         raise ValueError(f"No image configured for container '{orig_name}'.")
 
+    from backend.services.image_ref import FOLLOW_TAG_LABEL
+
+    was_pinned = "@" in img and (inspect_data.get("Config", {}).get("Labels") or {}).get(FOLLOW_TAG_LABEL) == "1"
+    if was_pinned:
+        img = _update_target(img)
     logger.info(f"[Docker Updates] Pulling newest image for '{orig_name}' ({img})...")
     pull_container_image(img, timeout=240.0)
+    if was_pinned:
+        img = _repin(img)
 
     logger.info(f"[Docker Updates] Recreating container '{orig_name}' with new image layers...")
     res = recreate_container(cid, image=img, pull_image=False, keep_backup=False)

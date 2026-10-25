@@ -24,7 +24,8 @@ Each tag also exists with `-core` for the core image.
 
 ## Cutting a release
 
-1. Update `CHANGELOG.md` and the version, commit, and push a tag such as `v1.9.3`. Only
+1. Refresh the app catalog's image pins (`python scripts/pin_catalog_images.py`, which writes
+   `backend/services/catalog_digests.json`), then update `CHANGELOG.md` and the version, commit, and push a tag such as `v1.9.3`. Only
    repository admins can create `v*` tags, and tags can't be moved or deleted (GitHub
    rulesets).
 2. CI builds, scans and signs the images and publishes `:beta` and `:1.9.3`. The GitHub

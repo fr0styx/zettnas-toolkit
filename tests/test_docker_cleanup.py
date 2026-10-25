@@ -13,7 +13,9 @@ def test_uptime_kuma_uses_the_v2_tag():
     # Uptime Kuma 2 is the stable line now; :2 follows its releases (it used the :next beta tag)
     app = get_catalog_app("uptime-kuma")
     assert app is not None
-    assert app["image"] == "louislam/uptime-kuma:2"
+    from backend.services.image_ref import name_and_tag
+
+    assert name_and_tag(app["image"]) == "louislam/uptime-kuma:2"  # installed pinned to its digest
 
 
 def test_is_self_container():

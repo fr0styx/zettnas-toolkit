@@ -190,15 +190,9 @@ def pull_container_image(image: str, timeout: float = 180.0) -> bool:
     if not os.path.exists(sock_path):
         raise RuntimeError("Docker socket /var/run/docker.sock not found")
 
-    image_str = image.strip()
-    if ":" in image_str and not image_str.endswith(":"):
-        repo, tag = image_str.rsplit(":", 1)
-        if "/" in tag:
-            repo = image_str
-            tag = "latest"
-    else:
-        repo = image_str
-        tag = "latest"
+    from backend.services.image_ref import pull_params
+
+    repo, tag = pull_params(image)
 
     url_path = f"/images/create?fromImage={urllib.parse.quote(repo)}&tag={urllib.parse.quote(tag)}"
     conn = UnixHTTPConnection(sock_path, timeout=timeout)

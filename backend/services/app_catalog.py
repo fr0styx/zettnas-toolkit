@@ -3,6 +3,7 @@ import os
 import re
 import secrets
 import time
+import urllib.parse
 import urllib.request
 from collections.abc import Iterator
 from typing import Any, Optional
@@ -12,6 +13,7 @@ from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.docker_stats import UnixHTTPConnection
 from backend.services.catalog_templates import CURATED_APP_CATALOG
 from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
+from backend.services.image_ref import FOLLOW_TAG_LABEL
 from backend.state import add_event
 
 CATALOG_SOURCES_FILE = os.path.join(DATA_DIR, "catalog_sources.json")
@@ -659,9 +661,12 @@ def get_all_catalog_apps() -> list[dict[str, Any]]:
 
 def get_catalog_app(app_id: str) -> dict[str, Any] | None:
     """Finds an application template by ID across all sources."""
+    from backend.services.image_ref import pin_app
+
     for app in get_all_catalog_apps():
         if app["id"] == app_id:
-            return dict(app)
+            # built-in apps install the exact image that shipped with this version
+            return pin_app(app) if app.get("source_id") == "builtin" else dict(app)
     return None
 
 
@@ -970,10 +975,12 @@ def _pull_image_blocking(image: str) -> tuple[bool, str]:
     st, _ = _docker_request("GET", f"/images/{image}/json")
     if st == 200:
         return True, ""
-    repo, tag = image.rsplit(":", 1) if ":" in image.split("/")[-1] else (image, "latest")
+    from backend.services.image_ref import pull_params
+
+    repo, tag = pull_params(image)
     conn = UnixHTTPConnection(docker_sock(), timeout=900.0)
     try:
-        conn.request("POST", f"/images/create?fromImage={repo}&tag={tag}")
+        conn.request("POST", f"/images/create?fromImage={urllib.parse.quote(repo)}&tag={urllib.parse.quote(tag)}")
         res = conn.getresponse()
         body = res.read().decode("utf-8", errors="replace")
         if res.status != 200:
@@ -1182,6 +1189,8 @@ def _deploy_companions(
             "NetworkingConfig": {"EndpointsConfig": {network: {"Aliases": [s_name]}}},
             "Labels": {"com.docker.compose.project": service_name, "com.docker.compose.service": s_name},
         }
+        if "@" in image:
+            body["Labels"][FOLLOW_TAG_LABEL] = "1"
         if host_cfg_cmd:
             body["Cmd"] = host_cfg_cmd
         st, resp = _docker_request("POST", f"/containers/create?name={cname}", body=body)
@@ -1577,6 +1586,8 @@ def stream_deploy_catalog_app(
         },
     }
 
+    if "@" in image_name:
+        create_body["Labels"][FOLLOW_TAG_LABEL] = "1"
     if network_name:
         create_body["HostConfig"]["NetworkMode"] = network_name
     _apply_runtime_options(create_body, app)
