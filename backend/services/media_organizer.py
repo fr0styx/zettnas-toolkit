@@ -14,6 +14,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from backend.config import POOL_PATH, logger
+from backend.fsutil import prune_protected
 
 VIDEO_EXTENSIONS = {".mkv", ".mp4", ".avi", ".m4v", ".ts", ".mov", ".webm"}
 
@@ -244,7 +245,8 @@ def preview_organize(
 
     items: list[dict[str, Any]] = []
 
-    for root, _, files in os.walk(source_dir):
+    for root, sub_dirs, files in os.walk(source_dir):
+        prune_protected(root, sub_dirs)
         for f in sorted(files):
             _, ext = os.path.splitext(f)
             if ext.lower() not in VIDEO_EXTENSIONS:

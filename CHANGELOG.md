@@ -4,6 +4,35 @@
 
 #### Security
 
+This release closes weaknesses found in an October 2026 audit. Update soon; nothing to do
+before updating. After updating, read the security notice on the **Activity** page.
+
+- **ZettNAS's own data folder can't be reached through the file features.** On hosts that
+  show it inside a shared folder (Unraid's `appdata`), an account allowed to manage shares
+  could open the user database and the key that protects two-factor codes.
+- **WebDAV always asks for a ZettNAS account.** Its "no authentication" option is gone, its
+  shared folder must be inside the storage pool, and only a superadmin can change its
+  settings, with a confirmation. Older unsafe settings are fixed on the first start.
+- **Recreating a container can't add host access without a superadmin's confirmation.**
+  A token allowed only to manage containers could recreate one with the host's root folder
+  mounted. The Docker proxy now also checks `/var`, host networking, ZettNAS's data folder
+  and volumes that bind host folders.
+- **API tokens never do more than their owner's current role.** A token created by an
+  admin who was later demoted kept its old reach. Tokens now must name what they may do,
+  and an admin resetting someone's password revokes that person's tokens. On the first
+  start, "everything" tokens of accounts that are no longer superadmins are revoked.
+- Accounts allowed to manage users can only give roles whose permissions they hold.
+- **Encrypted backups never fall back to an unencrypted upload.** If encryption couldn't be
+  set up, the backup used to mirror plain files over the encrypted copy. Backup
+  passphrases are now stored encrypted.
+- **Backups never mirror an empty source**, such as a stopped array: the run stops and the
+  existing backup is kept. A run that would delete more than 1,000 files at the destination
+  stops too. A backup is reported as successful only when the upload finished, and the
+  same backup never runs twice at once.
+- Reading file contents through the MCP server needs the new `ai:knowledge:read`
+  permission; a monitoring token no longer can. Results are short excerpts marked as file
+  text, and requests from other websites are refused.
+
 - **Cloud remote passwords never appear on a command line.** They are handed to rclone on stdin; before, anyone who could list the host's processes could read them while a remote was saved.
 - Remote names can't start with a dot: a remote named `.` or `..` could unmount every cloud mount or mount over `/mnt`.
 

@@ -896,6 +896,8 @@ async def create_new_user(
     existing = get_user_by_username(data.username)
     if existing:
         return error_response(409, f"User '{data.username}' already exists.", error="user_exists")
+    if not _role_within(principal.scopes, data.role_id):
+        return error_response(403, "You can't give someone more permissions than you have.", error="forbidden")
 
     try:
         new_user = create_user(
@@ -949,6 +951,19 @@ def get_user_detail(user_id: str, request: Request):
     return _sanitize_user_dict(target)
 
 
+def _role_within(caller_scopes: list[str], role_id: str | None) -> bool:
+    """A caller may give a role only if they hold everything that role can do (SEC-4)."""
+    if not role_id:
+        return True
+    from backend.users_db import get_role
+
+    role = get_role(role_id)
+    if not role:
+        return True  # unknown roles are refused by create_user / update_user_profile
+    role_scopes = json.loads(role.get("scopes_json") or "[]")
+    return all(has_scope(caller_scopes or [], s) for s in role_scopes)
+
+
 @router.put("/users/{user_id}")
 def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request):
     current = _get_authenticated_user(request)
@@ -968,6 +983,11 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
         quota_to_set = None
 
     before = get_user_by_id(user_id) or {}
+    caller_scopes = current.get("scopes") or []
+    if role_to_set and not _role_within(caller_scopes, role_to_set):
+        return error_response(403, "You can't give someone more permissions than you have.", error="forbidden")
+    if (role_to_set or status_to_set) and not _role_within(caller_scopes, before.get("role_id")):
+        return error_response(403, "Only someone with the same permissions can change this account.", error="forbidden")
     ok = update_user_profile(
         user_id=user_id,
         display_name=data.display_name,
@@ -1040,7 +1060,10 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
 
     # Ends every other session of the target user; keeps the caller's own when changing their own.
     ok = update_user_password(
-        user_id, data.new_password, keep_token=getattr(request.state, "token", None) if is_self else None
+        user_id,
+        data.new_password,
+        keep_token=getattr(request.state, "token", None) if is_self else None,
+        revoke_tokens=not is_self,
     )
     if not ok:
         raise HTTPException(status_code=404, detail="User not found.")

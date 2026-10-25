@@ -395,11 +395,24 @@ class DockerContainerRecreateRequest(BaseModel):
     "/docker/containers/{container_id}/recreate",
     dependencies=[Depends(require_scope("containers:manage"))],
 )
-async def post_docker_container_recreate(container_id: str, req: DockerContainerRecreateRequest):
+async def post_docker_container_recreate(
+    container_id: str,
+    req: DockerContainerRecreateRequest,
+    request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),  # noqa: B008
+):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
         raise HTTPException(status_code=400, detail="Invalid container ID or name")
-    from backend.services.container_mutator import recreate_container
+    from backend import confirmations
+    from backend.services.container_mutator import ElevationNeeded, recreate_container
 
+    action = "docker.container.recreate.elevated"
+    confirm_token = request.headers.get("x-confirm-token")
+    approved = (
+        bool(confirm_token)
+        and principal.has_scope("*")
+        and confirmations.consume(confirm_token, principal, action, container_id)
+    )
     try:
         ports_dicts = [p.model_dump() for p in req.port_bindings] if req.port_bindings is not None else None
         res = await asyncio.to_thread(
@@ -415,8 +428,18 @@ async def post_docker_container_recreate(container_id: str, req: DockerContainer
             pull_image=req.pull_image,
             keep_backup=req.keep_backup,
             grace_period_seconds=req.grace_period_seconds,
+            approve_elevated=approved,
         )
         return res
+    except ElevationNeeded as e:
+        if not principal.has_scope("*"):
+            raise HTTPException(
+                status_code=403,
+                detail=f"This change gives the container access to the host ({e}). Only a superadmin can make it.",
+            ) from None
+        raise confirmations.ConfirmationRequired(
+            action, container_id, "invalid" if confirm_token else "missing"
+        ) from None
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:

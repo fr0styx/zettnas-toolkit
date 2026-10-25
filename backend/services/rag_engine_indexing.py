@@ -20,6 +20,7 @@ from backend.db_crypto import (  # noqa: F401
 )
 from backend.fsutil import (  # noqa: F401
     atomic_write_json,
+    is_protected,
 )
 from backend.logging_config import (  # noqa: F401
     sanitize_string,
@@ -652,7 +653,7 @@ class RagIndexingMixin:
                         continue
 
                     child_path = os.path.join(current_dir, name)
-                    if os.path.normpath(child_path) in excl_set:
+                    if os.path.normpath(child_path) in excl_set or is_protected(child_path):
                         continue
 
                     # Before touching a child share/directory, check if its backing disk is in standby

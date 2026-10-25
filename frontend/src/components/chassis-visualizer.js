@@ -1734,7 +1734,7 @@ export async function fetchAndRenderRemoteStorage(container) {
             <span>Line-Rate Port: <strong style="color:var(--lt-t-ffffffff, #fff);">${webdavStatus.port}</strong></span>
             <span>Root Path: <code style="color:var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(webdavStatus.root_path)}</code></span>
             <span>Mode: <strong style="color:var(--lt-t-ffffffff, #fff);">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
-            <span>Auth: <strong style="color:var(--lt-t-ffffffff, #fff);">${webdavStatus.auth_enabled ? 'Basic Auth (' + escapeHtml(webdavStatus.username) + ')' : 'Anonymous / None'}</strong></span>
+            <span>Auth: <strong style="color:var(--lt-t-ffffffff, #fff);">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
           </div>
 
           <!-- Quick Connect Grid -->
@@ -1957,14 +1957,12 @@ export function openWebdavConfigModal(currentConfig, onSuccess) {
   const rootInput = document.getElementById('webdav-cfg-root');
   const userInput = document.getElementById('webdav-cfg-user');
   const passInput = document.getElementById('webdav-cfg-pass');
-  const authToggle = document.getElementById('webdav-cfg-auth-toggle');
   const roToggle = document.getElementById('webdav-cfg-readonly-toggle');
 
   if (portInput) portInput.value = currentConfig?.port || 8084;
   if (rootInput) rootInput.value = currentConfig?.root_path || '/mnt/user';
   if (userInput) userInput.value = currentConfig?.username || 'admin';
   if (passInput) passInput.value = '';
-  if (authToggle) authToggle.checked = currentConfig?.auth_enabled ?? true;
   if (roToggle) roToggle.checked = currentConfig?.read_only ?? false;
 
   modal.classList.add('open');
@@ -1987,7 +1985,6 @@ export function openWebdavConfigModal(currentConfig, onSuccess) {
         port: Number(portInput.value),
         root_path: rootInput.value.trim(),
         username: userInput.value.trim(),
-        auth_enabled: authToggle.checked,
         read_only: roToggle.checked
       };
       if (passInput.value.trim()) {

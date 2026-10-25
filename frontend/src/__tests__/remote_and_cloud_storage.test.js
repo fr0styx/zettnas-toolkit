@@ -158,7 +158,6 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
           <input type="text" id="webdav-cfg-root" />
           <input type="text" id="webdav-cfg-user" />
           <input type="password" id="webdav-cfg-pass" />
-          <input type="checkbox" id="webdav-cfg-auth-toggle" />
           <input type="checkbox" id="webdav-cfg-readonly-toggle" />
           <button id="modal-webdav-close-btn" type="button"></button>
           <button id="modal-webdav-cancel-btn" type="button"></button>
@@ -202,6 +201,8 @@ describe('Sprint 4: Remote & Cloud Storage Subsystem (Frontend)', () => {
         username: 'admin',
       })
     );
+    // WebDAV always asks for a ZettNAS account: the form can't turn sign-in off (SEC-1)
+    expect(postSpy.mock.calls[0][1]).not.toHaveProperty('auth_enabled');
     expect(successCb).toHaveBeenCalled();
     expect(modal.style.display).toBe('none');
   });

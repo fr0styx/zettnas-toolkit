@@ -92,9 +92,11 @@ def test_elevated_settings_are_detected():
         "cap SYS_ADMIN",
     ]
     assert r("/containers/abc/exec", {"Privileged": True}) == ["privileged exec"]
+    # host networking counts as host access since Batch 0 (SEC-2)
+    assert r("/containers/create", {"HostConfig": {"NetworkMode": "host"}}) == ["NetworkMode=host"]
     ordinary = {
         "HostConfig": {
-            "NetworkMode": "host",
+            "NetworkMode": "bridge",
             "CapAdd": ["NET_ADMIN"],
             "Binds": [
                 "/mnt/user/media:/media",

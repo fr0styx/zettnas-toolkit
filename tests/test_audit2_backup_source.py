@@ -11,10 +11,13 @@ def engine(tmp_path, monkeypatch):
 
     pool = tmp_path / "pool"
     (pool / "photos").mkdir(parents=True)
+    (pool / "photos" / "a.jpg").write_text("x")  # an empty source is never mirrored
     calls = []
     pal = SimpleNamespace(create_snapshot=lambda **k: {}, get_pool_path=lambda p: str(pool))
     sync = SimpleNamespace(
-        start_sync_job=lambda **k: calls.append(k) or {"id": "j"}, create_crypt_remote=lambda **k: None
+        start_sync_job=lambda **k: calls.append(k) or {"id": "j"},
+        create_crypt_remote=lambda **k: None,
+        get_sync_job=lambda job_id: {"status": "success"},
     )
     monkeypatch.setattr(backup_engine, "get_storage_platform", lambda: pal)
     monkeypatch.setattr(backup_engine, "prune_job_snapshots", lambda *a: [])

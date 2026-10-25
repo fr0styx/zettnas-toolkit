@@ -40,7 +40,7 @@ def test_settings_jobs_need_a_passphrase_and_a_folder_in_the_pool(env, tmp_path)
     assert saved["kind"] == "config" and saved["encrypted"] and saved["source_subvolume"] == ""
     # editing without retyping the passphrase keeps it
     again = be.save_backup_job({**_job(env), "id": saved["id"], "encryption_password": None})
-    assert again["encryption_password"] == "correct-horse"
+    assert be.job_passphrase(again) == "correct-horse"  # stored encrypted
 
 
 def test_runs_write_encrypted_copies_and_keep_the_newest(env, monkeypatch):
@@ -82,4 +82,4 @@ def test_data_jobs_keep_their_encryption_settings(env):
             "encryption_password": "crypt-pass-1",
         }
     )
-    assert saved["encrypted"] and saved["encryption_password"] == "crypt-pass-1"
+    assert saved["encrypted"] and be.job_passphrase(saved) == "crypt-pass-1"

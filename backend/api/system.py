@@ -617,10 +617,12 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
     try:
         from backend.users_db import create_scoped_api_token
 
+        # No scopes chosen: the token gets what its creator holds, never more (SEC-4)
+        scopes = req.scopes or list(getattr(principal, "scopes", None) or [])
         raw_token, meta = create_scoped_api_token(
             user_id=user_id,
             name=req.name,
-            scopes=req.scopes,
+            scopes=scopes,
             expires_in_days=req.expires_in_days,
         )
         add_event("success", "Security", f"Generated new scoped API token: {req.name}")
@@ -645,6 +647,8 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
         }
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
     except Exception as e:
         logger.error(f"Could not create API token: {e}")
         raise HTTPException(status_code=500, detail="Could not create the API token.") from e

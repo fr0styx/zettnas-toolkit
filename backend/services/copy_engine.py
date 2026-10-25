@@ -14,7 +14,7 @@ import exifread
 
 from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.db import log_copy_event
-from backend.fsutil import resolve_within
+from backend.fsutil import prune_protected, resolve_within
 from backend.hardware.led import send_led_packet
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
@@ -434,6 +434,7 @@ def build_copy_plan(src_path, dst_path, use_exif, date_func=None):
     entries, collisions = [], []
     planned: set[str] = set()
     for dirpath, dirnames, filenames in os.walk(src_path):
+        prune_protected(dirpath, dirnames)
         dirnames.sort()  # the same card gives the same names on every import
         for name in sorted(filenames):
             src_file = os.path.join(dirpath, name)

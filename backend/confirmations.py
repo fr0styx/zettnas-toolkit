@@ -46,6 +46,8 @@ ACTIONS: dict[str, str] = {
     "updates.apply": "Update ZettNAS and restart it",
     "updates.revert": "Revert ZettNAS to the previous version and its data",
     "ai.index.forget": "Delete what the AI index learned from a folder",
+    "webdav.config": "Change who can reach files over WebDAV and which folder it shares",
+    "docker.container.recreate.elevated": "Recreate container {target} with access to the host system",
 }
 
 _pending: dict[str, dict[str, Any]] = {}

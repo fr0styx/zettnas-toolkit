@@ -127,6 +127,7 @@ def startup_system():
         from backend.services import security_upgrade
 
         security_upgrade.run_once()  # v1.9.2: revoke old credentials, disable unsafe WebDAV
+        security_upgrade.run_1_10_2_once()  # v1.10.2: token, role, backup and WebDAV cleanup
     except Exception as e:
         logger.error(f"[Main] Security upgrade step failed: {e}")
     try:

@@ -226,6 +226,36 @@ def pull_container_image(image: str, timeout: float = 180.0) -> bool:
             logger.debug("backend.services.container_mutator.pull_container_image: ignored error", exc_info=True)
 
 
+class ElevationNeeded(Exception):
+    """A recreate would give the container more access to the host than it has now (SEC-2)."""
+
+    def __init__(self, reasons: list[str]):
+        self.reasons = reasons
+        super().__init__(", ".join(reasons))
+
+
+def _image_repo(image: str) -> str:
+    """'registry:5000/team/app:1.2@sha256:..' -> 'registry:5000/team/app' (a tag change keeps the repo)."""
+    ref = (image or "").split("@", 1)[0]
+    head, _, tail = ref.rpartition(":")
+    return head if head and "/" not in tail else ref
+
+
+def recreate_elevation(
+    host_config: dict[str, Any], create_body: dict[str, Any], old_image: str, new_image: str
+) -> list[str]:
+    """What a recreate would add: host access the container doesn't have yet, or a different image
+    running with the host access it has (empty = nothing new, safe to apply)."""
+    from backend import docker_proxy
+
+    old = set(docker_proxy.elevated_reasons("/containers/create", {"HostConfig": host_config or {}}))
+    new = docker_proxy.elevated_reasons("/containers/create", create_body)
+    added = [r for r in new if r not in old]
+    if new and _image_repo(old_image) != _image_repo(new_image):
+        added.append(f"image {new_image} would run with host access")
+    return added
+
+
 def recreate_container(
     cid: str,
     name: str | None = None,
@@ -239,6 +269,7 @@ def recreate_container(
     keep_backup: bool = False,
     timeout: float = 45.0,
     grace_period_seconds: float = 0.0,
+    approve_elevated: bool = False,
 ) -> dict[str, Any]:
     """
     Safely reconfigures and mutates a container using the Atomic Clone-and-Recreate pattern.
@@ -367,6 +398,14 @@ def recreate_container(
         if networks:
             create_body["NetworkingConfig"] = {"EndpointsConfig": networks}
 
+    # Host access: what the container already had stays; anything new needs approval (SEC-2)
+    added = recreate_elevation(host_config, create_body, config.get("Image", ""), target_image)
+    if added and not approve_elevated:
+        raise ElevationNeeded(added)
+    from backend import docker_proxy
+
+    create_headers = ELEVATED if docker_proxy.elevated_reasons("/containers/create", create_body) else None
+
     ts_suffix = int(time.time())
     backup_name = f"{orig_name}.backup.{ts_suffix}"
     backup_id = inspect_data.get("Id", cid)
@@ -390,7 +429,7 @@ def recreate_container(
         # Step 8: Create new container with target name and updated configuration
         logger.info(f"[Container Recreate] Creating new container '{target_name}' with updated config...")
         status, create_resp = _docker_request(
-            "POST", f"/containers/create?name={target_name}", body=create_body, timeout=timeout, headers=ELEVATED
+            "POST", f"/containers/create?name={target_name}", body=create_body, timeout=timeout, headers=create_headers
         )
         if status != 201:
             raise RuntimeError(f"Failed to create new container: {create_resp}")

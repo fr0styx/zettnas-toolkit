@@ -39,7 +39,7 @@ except Exception:
     logger.debug("backend.api.fs.<module>: ignored error", exc_info=True)
 
 
-from backend.fsutil import atomic_write_json, read_json, resolve_within, root_for
+from backend.fsutil import atomic_write_json, is_protected, prune_protected, read_json, resolve_within, root_for
 from backend.logging_config import sanitize_string
 from backend.models.schemas import MkdirRequest
 from backend.services import media_info, thumbs, video_compat
@@ -181,6 +181,8 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
         remote_entries = _scan_remote_dir_isolated(real, dirs_only)
         remote_entries.sort(key=lambda x: x["name"])
         for item in remote_entries:
+            if is_protected(str(item.get("path") or "")):
+                continue
             if is_homes_dir and not is_admin and principal:
                 if item["name"].lower() != (principal.username or "").lower():
                     continue
@@ -226,6 +228,10 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
             except OSError as e:
                 logger.warning(f"[BROWSE] Failed to auto-provision home directory {user_home_path}: {e}")
 
+    # the app's own folders are never listed (SEC-3)
+    scanned_entries = [
+        e for e in scanned_entries if not is_protected(os.path.join(real, e.name if use_scandir else str(e)))
+    ]
     if use_scandir:
         scanned_entries.sort(key=lambda x: x.name.lower())
         for entry in scanned_entries:
@@ -1132,6 +1138,7 @@ async def fs_folder_size(
         f_count = 0
         d_count = 0
         for root, dirs, files in os.walk(target):
+            prune_protected(root, dirs)
             d_count += len(dirs)
             for f in files:
                 f_path = os.path.join(root, f)
@@ -1262,6 +1269,7 @@ async def fs_update_permissions(
         paths_to_update = [target]
         if req.recursive and os.path.isdir(target):
             for root, dirs, files in os.walk(target):
+                prune_protected(root, dirs)
                 for d in dirs:
                     paths_to_update.append(os.path.join(root, d))
                 for f in files:
@@ -1624,7 +1632,7 @@ async def fs_search(
                             scanned_count += 1
                             if scanned_count >= max_scanned:
                                 break
-                            if entry.name.startswith("."):
+                            if entry.name.startswith(".") or is_protected(entry.path):
                                 continue
                             if not user_can_access_path(entry.path, principal, allow_list=True):
                                 continue
@@ -2223,7 +2231,8 @@ def fs_download_zip(
                     real_target = _contained(p, must_exist=True)
                     base = os.path.basename(real_target)
                     if os.path.isdir(real_target):
-                        for root_dir, _, files in os.walk(real_target):
+                        for root_dir, sub_dirs, files in os.walk(real_target):
+                            prune_protected(root_dir, sub_dirs)
                             for f in files:
                                 fp = os.path.join(root_dir, f)
                                 # Ensure symlinks inside directories do not escape allowed roots or user bounds
@@ -2588,7 +2597,8 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
 
         # 5 GB safety check
         total_uncompressed = 0
-        for root_dir, _, files in os.walk(real_target):
+        for root_dir, sub_dirs, files in os.walk(real_target):
+            prune_protected(root_dir, sub_dirs)
             for f in files:
                 fp = os.path.join(root_dir, f)
                 try:
@@ -2605,7 +2615,8 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
             spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # noqa: SIM115
             try:
                 with zipfile.ZipFile(spool, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-                    for root_dir, _, files in os.walk(real_target):
+                    for root_dir, sub_dirs, files in os.walk(real_target):
+                        prune_protected(root_dir, sub_dirs)
                         for f in files:
                             fp = os.path.join(root_dir, f)
                             real_fp = os.path.realpath(fp)

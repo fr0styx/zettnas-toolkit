@@ -234,15 +234,25 @@ def remove_backup_job(job_id: str):
     dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))],
 )
 async def trigger_backup_job(job_id: str):
-    """Triggers immediate execution of a hyper-backup job in the background."""
-    try:
-        result = await asyncio.to_thread(execute_backup_job, job_id)
-        return {"status": "ok", "result": result}
-    except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve)) from ve
-    except Exception as e:
-        logger.error(f"[HYPER-BACKUP] Manual execution failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    """Starts a hyper-backup job in the background. The run reports its result through the job's
+    status, the history and a notification: an upload can take hours (ARC-1)."""
+    import threading
+
+    from backend.services.backup_engine import get_backup_jobs, is_job_running
+
+    if not any(j.get("id") == job_id for j in get_backup_jobs()):
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
+    if is_job_running(job_id):
+        raise HTTPException(status_code=409, detail="This backup is already running.")
+
+    def _run() -> None:
+        try:
+            execute_backup_job(job_id)
+        except Exception as e:
+            logger.error(f"[HYPER-BACKUP] Manual execution failed: {e}")
+
+    threading.Thread(target=_run, daemon=True, name=f"BackupJob-{job_id}").start()
+    return {"status": "started", "message": "The backup started. You'll get a notification when it finishes."}
 
 
 @router.get("/backup/history", dependencies=[Depends(require_scope("backup:read", "backup:manage", "system:config"))])

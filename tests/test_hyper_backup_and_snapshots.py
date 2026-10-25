@@ -196,11 +196,15 @@ def test_execute_backup_job_local_and_remote(monkeypatch):
             return {"status": "deleted"}
 
     class MockRclone:
-        def start_sync_job(self, src, dst, action):
+        def start_sync_job(self, src, dst, action, **kw):
             return {"id": "sync-1234", "status": "running"}
+
+        def get_sync_job(self, job_id):
+            return {"id": job_id, "status": "success"}
 
     monkeypatch.setattr("backend.services.backup_engine.get_storage_platform", lambda: MockPlatform())
     monkeypatch.setattr("backend.services.backup_engine.get_rclone_engine", lambda: MockRclone())
+    monkeypatch.setattr("backend.services.backup_engine._source_is_empty", lambda path: False)
 
     job = save_backup_job(
         {
@@ -273,7 +277,7 @@ def test_api_backup_schedule_endpoints(client, auth_headers, monkeypatch):
     )
     run_res = client.post(f"/api/backup/schedule/{job_id}/run", headers=auth_headers)
     assert run_res.status_code == 200
-    assert run_res.json()["result"]["status"] == "success"
+    assert run_res.json()["status"] == "started"  # runs in the background: uploads take hours
 
     # 4. History
     hist_res = client.get("/api/backup/history", headers=auth_headers)

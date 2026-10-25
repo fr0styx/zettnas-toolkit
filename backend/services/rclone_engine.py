@@ -981,8 +981,11 @@ class RcloneEngine:
         retries: int = 3,
         verbose: bool = False,
         notify: bool = True,
+        extra_flags: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Launches a background sync/copy/move operation between local and remote with real-time stats streaming."""
+        """Launches a background sync/copy/move operation between local and remote with real-time stats streaming.
+
+        `extra_flags` are fixed rclone options from our own code (e.g. --max-delete), never user text."""
         if action not in ["sync", "copy", "move"]:
             raise ValueError(f"Invalid sync action: '{action}'. Choose from sync, copy, or move.")
 
@@ -1034,6 +1037,7 @@ class RcloneEngine:
                     cmd.append("-v")
                 if dry_run:
                     cmd.append("--dry-run")
+                cmd += [str(f) for f in (extra_flags or [])]
                 cmd += ["--", src, dst]  # locations are never read as options
 
                 logger.info(f"[RCLONE] Starting async sync job {job_id}: {' '.join(cmd)}")

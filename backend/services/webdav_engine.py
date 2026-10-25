@@ -13,7 +13,7 @@ import time
 from typing import Any, Optional
 
 import backend.config as config
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, protected_rclone_excludes, read_json, resolve_within
 
 logger = logging.getLogger("ZettNAS.WebDAV")
 
@@ -53,8 +53,15 @@ class WebdavEngine:
             "read_only": False,
             "username": "admin",
             "password": "",  # dedicated password for the no-proxy fallback mode only
-            "auth_enabled": True,
+            "auth_enabled": True,  # always: WebDAV never serves files without a sign-in (SEC-1)
         }
+
+    @staticmethod
+    def safe_root(root: Any) -> str | None:
+        """The canonical folder if it is inside a browse root and not an app folder, else None."""
+        from backend.services.path_access import ALLOWED_BROWSE_ROOTS
+
+        return resolve_within(str(root or "").strip(), ALLOWED_BROWSE_ROOTS)
 
     def ensure_config_defaults(self):
         cfg_file = config.WEBDAV_CONFIG_FILE
@@ -65,6 +72,30 @@ class WebdavEngine:
                 atomic_write_json(cfg_file, cfg)
             except OSError as e:
                 logger.warning(f"Failed to initialize webdav config: {e}")
+            return
+        # Settings saved by older versions may turn sign-in off or serve any folder (SEC-1)
+        stored = read_json(cfg_file, {})
+        if not isinstance(stored, dict):
+            return
+        fixed = []
+        if stored.get("auth_enabled") is False:
+            fixed.append("sign-in turned back on")
+        if "root_path" in stored and not self.safe_root(stored.get("root_path")):
+            fixed.append("shared folder reset to the storage pool")
+        if fixed:
+            try:
+                atomic_write_json(cfg_file, self.load_config())
+            except OSError as e:
+                logger.warning(f"Failed to update webdav config: {e}")
+            logger.warning(f"[WEBDAV] Unsafe settings from an older version fixed: {', '.join(fixed)}")
+            try:
+                from backend.state import add_event
+
+                add_event(
+                    "warning", "WebDAV settings fixed", "WebDAV settings were made safe: " + "; ".join(fixed) + "."
+                )
+            except Exception:
+                logger.debug("webdav_engine: could not record the settings event", exc_info=True)
 
     def load_config(self) -> dict[str, Any]:
         defaults = self.get_default_config()
@@ -77,12 +108,21 @@ class WebdavEngine:
             merged["port"] = int(merged.get("port", config.WEBDAV_PORT))
         except (ValueError, TypeError):
             merged["port"] = config.WEBDAV_PORT
+        merged["auth_enabled"] = True
+        if not self.safe_root(merged.get("root_path")):
+            merged["root_path"] = defaults["root_path"]
         return merged
 
     def save_config(self, new_cfg: dict[str, Any]) -> dict[str, Any]:
+        """Saves settings. Raises ValueError for a shared folder outside the browse roots."""
+        if "root_path" in new_cfg:
+            real = self.safe_root(new_cfg.get("root_path"))
+            if not real:
+                raise ValueError("Choose a folder inside the storage pool for WebDAV.")
+            new_cfg = {**new_cfg, "root_path": real}
         with self._lock:
             current = self.load_config()
-            for k in ["enabled", "port", "root_path", "read_only", "username", "password", "auth_enabled"]:
+            for k in ["enabled", "port", "root_path", "read_only", "username", "password"]:
                 if k in new_cfg:
                     current[k] = new_cfg[k]
             try:
@@ -128,7 +168,7 @@ class WebdavEngine:
                     logger.warning(f"[WEBDAV] Could not create root path {root}: {e}")
 
             proxy_script = os.path.join(os.path.dirname(__file__), "rclone_auth_proxy.py")
-            if cfg.get("auth_enabled", True) and os.path.exists(proxy_script):
+            if os.path.exists(proxy_script):
                 cmd = [
                     rclone_bin,
                     "serve",
@@ -155,21 +195,20 @@ class WebdavEngine:
                     "--dir-cache-time",
                     "10s",
                 ]
-                if cfg.get("auth_enabled", True):
-                    username = cfg.get("username", "admin") or "admin"
-                    password = str(cfg.get("password") or "")
-                    if len(password) < 8 or password.lower() == "admin":
-                        self._last_error = "WebDAV needs a dedicated password of at least 8 characters."
-                        logger.error(f"[WEBDAV] Not starting: {self._last_error}")
-                        return self.get_status()
-                    cmd.extend(["--user", username, "--pass", password])
+                username = cfg.get("username", "admin") or "admin"
+                password = str(cfg.get("password") or "")
+                if len(password) < 8 or password.lower() == "admin":
+                    self._last_error = "WebDAV needs a dedicated password of at least 8 characters."
+                    logger.error(f"[WEBDAV] Not starting: {self._last_error}")
+                    return self.get_status()
+                cmd.extend(["--user", username, "--pass", password])
 
+            # the app's own folders stay hidden whatever a user's root is (SEC-3)
+            cmd += protected_rclone_excludes(config.POOL_PATH if os.path.exists(proxy_script) else root)
             if cfg.get("read_only"):
                 cmd.append("--read-only")
 
-            logger.info(
-                f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (auth={cfg.get('auth_enabled')}, proxy={os.path.exists(proxy_script)})"
-            )
+            logger.info(f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (proxy={os.path.exists(proxy_script)})")
             try:
                 self._proc = subprocess.Popen(
                     cmd,
@@ -245,7 +284,7 @@ class WebdavEngine:
             "root_path": cfg.get("root_path", config.POOL_PATH),
             "read_only": bool(cfg.get("read_only", False)),
             "username": username,
-            "auth_enabled": bool(cfg.get("auth_enabled", True)),
+            "auth_enabled": True,
             "direct_url": direct_url,
             "proxy_url": proxy_url,
             "last_error": self._last_error,

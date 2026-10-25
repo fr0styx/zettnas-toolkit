@@ -17,7 +17,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, protected_rclone_excludes, read_json
 
 SFTP_DIR = os.path.join(DATA_DIR, "sftp")
 SFTP_CONFIG_FILE = os.path.join(SFTP_DIR, "config.json")
@@ -318,6 +318,7 @@ Match Group sftpusers
                     "/app/data/sftp/cache",
                     "--auth-proxy",
                     "/app/backend/services/rclone_auth_proxy.py",
+                    *protected_rclone_excludes(POOL_PATH),
                 ],
                 "HostConfig": {
                     "NetworkMode": "host",
@@ -366,6 +367,7 @@ Match Group sftpusers
             cache_dir,
             "--auth-proxy",
             auth_proxy,
+            *protected_rclone_excludes(POOL_PATH),
         ]
         try:
             self._proc = subprocess.Popen(

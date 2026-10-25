@@ -105,12 +105,18 @@ like an SSH login to the host.
 **Docker API proxy.** The app doesn't use the Docker socket directly. A separate
 process (`backend/docker_proxy.py`) forwards only the Docker API calls the app needs
 and refuses everything else (swarm, plugins, secrets, image build/load/import,
-commit, export). Creating a container with host-level access (privileged, host PID or
-IPC namespace, dangerous capabilities, raw block devices, or bind mounts of `/`,
-`/etc`, `/boot`, `/dev` or the Docker socket) is allowed only from flows you confirm:
-installing an app after its security review, recreating an existing container, and
-the updater. Each one is logged to `data/docker-proxy-audit.log`. Set
-`ZETTNAS_DOCKER_PROXY=off` to bypass the proxy.
+commit, export). Creating a container with host-level access (privileged, host PID,
+IPC or network namespace, dangerous capabilities, raw block devices, bind mounts of
+`/`, `/etc`, `/boot`, `/dev`, `/var`, the Docker socket or ZettNAS's own data folder,
+or a volume that binds one of them) is allowed only from flows you confirm: installing
+a built-in app after its security review, and the updater. Recreating a container keeps
+the access it already had; a change that adds host access, or runs a different image
+with it, needs a superadmin and a confirmation. Each one is logged to
+`data/docker-proxy-audit.log`. Set `ZETTNAS_DOCKER_PROXY=off` to bypass the proxy.
+
+**ZettNAS's own data folder** (`users.db`, `secret.key`, backup settings) can't be
+opened, listed, copied, shared or served over WebDAV and SFTP by anyone, even when the
+host shows it inside a shared folder (on Unraid, `/mnt/user/appdata/zettnas-toolkit`).
 
 The proxy narrows what a bug in the web app can do through Docker. It is not a
 sandbox: the web process itself still runs as root.
@@ -125,9 +131,18 @@ host, so give them only to people you'd give the root password:
 | `vms:manage` | (custom) | Can pass disks and PCI/USB devices to a VM |
 | `storage:admin` | StorageAdmin | Raw disk access: format, mount and wipe |
 | `system:config` | (custom) | Network, services and updates |
+| `users:write` | (custom) | Creates and changes accounts, but only with roles whose permissions its holder has |
 
-StorageAdmin can also destroy data without gaining root. BackupOperator, ShareUser
-and Auditor aren't root-equivalent.
+StorageAdmin can also destroy data without gaining root. `shares:manage` reads and
+changes every file in the shared folders. BackupOperator, ShareUser and Auditor aren't
+root-equivalent.
+
+**API tokens** say what they may do when they're created, and never do more than their
+owner's current role allows: demoting someone shrinks their tokens at once. An admin
+resetting someone's password also revokes that person's tokens.
+
+**WebDAV** always asks for a ZettNAS account. Only a superadmin can change its
+settings, with a confirmation, and its shared folder must be inside the storage pool.
 
 ## Past advisories
 

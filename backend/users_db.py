@@ -83,28 +83,36 @@ DEFAULT_ROLES = [
         "id": "storage_admin",
         "name": "StorageAdmin",
         "description": "Manage disks, pools, SMART tests, scrubs, shares, and filesystem quotas",
-        "scopes": ["storage:*", "shares:*", "system:view", "hardware:read", "logs:read", "audit:read"],
+        "scopes": [
+            "storage:*",
+            "shares:*",
+            "system:view",
+            "hardware:read",
+            "logs:read",
+            "audit:read",
+            "ai:knowledge:read",
+        ],
         "is_system": 1,
     },
     {
         "id": "app_operator",
         "name": "AppOperator",
         "description": "Deploy, inspect, restart, and edit Docker containers and apps",
-        "scopes": ["containers:*", "system:view", "logs:read"],
+        "scopes": ["containers:*", "system:view", "logs:read", "ai:knowledge:read"],
         "is_system": 1,
     },
     {
         "id": "backup_operator",
         "name": "BackupOperator",
         "description": "Trigger, view, and schedule configuration and data backups",
-        "scopes": ["backup:*", "storage:read", "shares:read", "system:view", "logs:read"],
+        "scopes": ["backup:*", "storage:read", "shares:read", "system:view", "logs:read", "ai:knowledge:read"],
         "is_system": 1,
     },
     {
         "id": "share_user",
         "name": "ShareUser",
         "description": "Access permitted file shares, personal home directory, and media ingest",
-        "scopes": ["shares:read", "shares:user_write", "system:view"],
+        "scopes": ["shares:read", "shares:user_write", "system:view", "ai:knowledge:read"],
         "is_system": 1,
     },
     {
@@ -588,9 +596,16 @@ def create_user(
 
 
 def update_user_password(
-    user_id: str, new_password: str, db_path: str | None = None, keep_token: str | None = None
+    user_id: str,
+    new_password: str,
+    db_path: str | None = None,
+    keep_token: str | None = None,
+    revoke_tokens: bool = False,
 ) -> bool:
-    """Sets a new password and ends the user's sessions (except `keep_token`, the caller's own)."""
+    """Sets a new password and ends the user's sessions (except `keep_token`, the caller's own).
+
+    `revoke_tokens` also deletes the user's API tokens: an admin resetting someone's password
+    (often after a compromise) must not leave working tokens behind (SEC-4)."""
     new_hash = hash_password(new_password)
     now = time.time()
     keep_hash = hashlib.sha256(keep_token.encode("utf-8")).hexdigest() if keep_token else ""
@@ -602,9 +617,13 @@ def update_user_password(
             (new_hash, now, user_id),
         )
         conn.execute("DELETE FROM sessions WHERE user_id = ? AND session_id_hash != ?", (user_id, keep_hash))
+        if revoke_tokens:
+            conn.execute("DELETE FROM api_tokens WHERE user_id = ?", (user_id,))
     # Clear in-memory cache
     with _SESSION_CACHE_LOCK:
         _SESSION_CACHE.clear()
+    if revoke_tokens:
+        _evict_user_caches(user_id)
     if res.rowcount > 0 and user_id == "admin-00000000-0000-0000-0000-000000000001":
         _forget_first_time_password()
     if res.rowcount > 0:
@@ -971,7 +990,10 @@ def create_scoped_api_token(
     now = time.time()
     expires_at = (now + (expires_in_days * 86400)) if expires_in_days else None
 
-    granted_scopes = scopes or ["*"]
+    # A token says what it may do; it never silently becomes "everything" (SEC-4)
+    granted_scopes = [s for s in (scopes or []) if isinstance(s, str) and s.strip()]
+    if not granted_scopes:
+        raise ValueError("Choose what the token may do (at least one scope).")
 
     with users_db_session(db_path) as conn:
         conn.execute(
@@ -995,6 +1017,17 @@ def create_scoped_api_token(
     return raw_token, token_meta
 
 
+def cap_token_scopes(token_scopes: list[str], role_scopes: list[str]) -> list[str]:
+    """What a token may do today: its own scopes, but never more than its owner's current role (SEC-4)."""
+    from backend.auth import has_scope
+
+    if not role_scopes:
+        return []
+    if "*" in token_scopes:
+        return list(role_scopes)
+    return [s for s in token_scopes if has_scope(role_scopes, s)]
+
+
 def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dict[str, Any] | None:
     if not raw_token or not raw_token.startswith("zat_"):
         return None
@@ -1013,9 +1046,10 @@ def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dic
     with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             """
-            SELECT t.*, u.username, u.status, u.role_id
+            SELECT t.*, u.username, u.status, u.role_id, r.scopes_json AS role_scopes_json
             FROM api_tokens t
             JOIN users u ON t.user_id = u.id
+            LEFT JOIN roles r ON u.role_id = r.id
             WHERE t.token_hash = ?
         """,
             (token_hash,),
@@ -1032,7 +1066,9 @@ def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dic
             "user_id": row["user_id"],
             "username": row["username"],
             "role_id": row["role_id"],
-            "scopes": json.loads(row["scopes_json"] or "[]"),
+            "scopes": cap_token_scopes(
+                json.loads(row["scopes_json"] or "[]"), json.loads(row["role_scopes_json"] or "[]")
+            ),
             "name": row["name"],
             "expires_at": row["expires_at"],
             "is_api_token": True,

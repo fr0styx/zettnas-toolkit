@@ -116,7 +116,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
           btn.innerHTML = `<span class="spinner-inline" style="width:8px; height:8px;"></span>`;
           showToast(t('toast.triggering_backup_pipeline', 'Triggering backup pipeline {jobId}...', { jobId: jobId }), 'info');
           await api.post(`/api/backup/schedule/${jobId}/run`);
-          showToast(t('toast.backup_pipeline_completed_successfully', `Backup pipeline completed successfully!`), 'success');
+          showToast(t('toast.backup_started', 'The backup started. You will get a notification when it finishes.'), 'success');
           fetchAndRenderBackupJobs(mount);
         } catch (err) {
           showToast(t('toast.backup_run_failed', 'Backup run failed: {error}', { error: err.message }), 'error');

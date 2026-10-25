@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 import backend.config as config
 from backend.auth import require_scope
+from backend.confirmations import require_confirmation
 from backend.fsutil import resolve_within
 from backend.passwords import verify_password
 from backend.services.webdav_engine import get_webdav_engine
@@ -87,7 +88,7 @@ class WebdavConfigRequest(BaseModel):
     read_only: bool | None = None
     username: str | None = None
     password: str | None = None
-    auth_enabled: bool | None = None
+    auth_enabled: bool | None = None  # older clients send it; only True is accepted (SEC-1)
 
 
 class WebdavToggleRequest(BaseModel):
@@ -112,12 +113,24 @@ async def toggle_webdav(req: WebdavToggleRequest):
         return await asyncio.to_thread(engine.stop)
 
 
-@router.post("/webdav/config", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
+@router.post(
+    "/webdav/config",
+    dependencies=[Depends(require_scope("*")), Depends(require_confirmation("webdav.config"))],
+)
 async def update_webdav_config(req: WebdavConfigRequest):
-    """Updates WebDAV configuration and restarts the daemon if running."""
+    """Updates WebDAV configuration and restarts the daemon if running.
+
+    Who can reach which files over the network: superadmins only, with a confirmation (SEC-1)."""
     engine = get_webdav_engine()
     updates = req.model_dump(exclude_unset=True)
-    engine.save_config(updates)
+    if updates.pop("auth_enabled", True) is False:
+        raise HTTPException(
+            status_code=400, detail="WebDAV always asks for a ZettNAS account; sign-in can't be turned off."
+        )
+    try:
+        engine.save_config(updates)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
     if engine.is_running():
         return await asyncio.to_thread(engine.restart)
     return engine.get_status()
@@ -275,9 +288,7 @@ def _is_webdav_client(request: Request) -> bool:
 
 
 def _get_webdav_portal_user(request: Request, cfg: dict[str, Any]) -> dict[str, Any] | None:
-    if not cfg.get("auth_enabled", True):
-        return {"username": cfg.get("username", "admin") or "admin", "is_admin": True, "role_id": "superadmin"}
-
+    # Nobody is let in without a sign-in, whatever the settings file says (SEC-1).
     # 1. Check dedicated webdav_session cookie
     session_cookie = request.cookies.get("webdav_session")
     if session_cookie:

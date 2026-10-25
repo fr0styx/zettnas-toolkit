@@ -19,6 +19,7 @@ from enum import Enum, StrEnum
 from typing import Any, Optional
 
 from backend.config import logger
+from backend.fsutil import is_protected, prune_protected
 
 
 class CollisionPolicy(StrEnum):
@@ -128,6 +129,7 @@ def tree_totals(path: str) -> tuple[int, int]:
             return 1, 0
     files = size = 0
     for root, _dirs, names in os.walk(path):
+        prune_protected(root, _dirs)
         for name in names:
             files += 1
             full = os.path.join(root, name)
@@ -316,7 +318,7 @@ def merge_directory_tree(
         stats["merged_dirs"] += 1
 
     try:
-        entries = list(os.scandir(src_dir))
+        entries = [e for e in os.scandir(src_dir) if not is_protected(e.path)]
     except OSError as err:
         logger.error(f"[FS Transfer] Cannot scan directory {src_dir}: {err}")
         return stats
@@ -873,7 +875,8 @@ class TransferTaskManager:
                 continue
             base = os.path.basename(src.rstrip("/\\"))
             if os.path.isdir(src):
-                for root, _, files in os.walk(src):
+                for root, sub_dirs, files in os.walk(src):
+                    prune_protected(root, sub_dirs)
                     rel = os.path.relpath(root, src)
                     arc_prefix = base if rel == "." else os.path.join(base, rel)
                     for f in files:

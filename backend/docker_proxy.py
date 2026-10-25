@@ -97,7 +97,7 @@ HOST_PATHS = (
     "/proc",
     "/sys",
     "/dev",
-    "/var/lib/docker",
+    "/var",
     "/usr",
     "/bin",
     "/sbin",
@@ -140,6 +140,17 @@ def _bind_source(bind: str) -> str:
     return bind.split(":", 1)[0] if ":" in bind else bind
 
 
+def _app_folders() -> list[str]:
+    """ZettNAS's own data and install folders (users.db, secret.key): never mounted into apps."""
+    try:
+        from backend.fsutil import protected_dirs
+
+        return protected_dirs()
+    except Exception:
+        logger.debug("docker_proxy: app folders unknown", exc_info=True)
+        return []
+
+
 def _risky_host_path(src: str) -> str | None:
     src = os.path.normpath(src) if src.startswith("/") else src
     if not src.startswith("/"):
@@ -148,12 +159,26 @@ def _risky_host_path(src: str) -> str | None:
         return "/"
     if src.endswith(("docker.sock", "containerd.sock", "podman.sock")):
         return src
+    if any(src == d or src.startswith(d.rstrip("/") + "/") for d in _app_folders()):
+        return src
     if any(src == s or src.startswith(s + "/") for s in SAFE_HOST_PATHS):
         return None
     for p in HOST_PATHS:
         if src == p or src.startswith(p + "/"):
             return src
     return None
+
+
+def volume_reasons(body: dict[str, Any]) -> list[str]:
+    """A local volume with o=bind is a bind mount in disguise: check its device path too."""
+    opts = body.get("DriverOpts") or {}
+    if not isinstance(opts, dict):
+        return []
+    if "bind" not in str(opts.get("o") or "") and not opts.get("device"):
+        return []
+    device = str(opts.get("device") or "")
+    hit = _risky_host_path(device) if device else None
+    return [f"volume bind {hit}"] if hit else []
 
 
 def elevated_reasons(path: str, body: dict[str, Any]) -> list[str]:
@@ -168,7 +193,7 @@ def elevated_reasons(path: str, body: dict[str, Any]) -> list[str]:
     hc = body.get("HostConfig") or {}
     if hc.get("Privileged"):
         reasons.append("privileged")
-    for key in ("PidMode", "IpcMode", "UsernsMode", "UTSMode"):
+    for key in ("PidMode", "IpcMode", "UsernsMode", "UTSMode", "NetworkMode"):
         if str(hc.get(key) or "").lower() == "host":
             reasons.append(f"{key}=host")
     caps = {str(c).upper().removeprefix("CAP_") for c in hc.get("CapAdd") or []}
@@ -214,6 +239,15 @@ def check_request(method: str, target: str, headers: dict[str, str], body: bytes
         reasons = elevated_reasons(path, parsed)
         if reasons and headers.get(ELEVATED_HEADER) != "1":
             return False, "elevated container settings need confirmation: " + ", ".join(reasons), reasons
+        return True, "", reasons
+    if method.upper() == "POST" and path == "/volumes/create":
+        try:
+            parsed = json.loads(body or b"{}")
+        except ValueError:
+            return False, "request body is not JSON", []
+        reasons = volume_reasons(parsed if isinstance(parsed, dict) else {})
+        if reasons and headers.get(ELEVATED_HEADER) != "1":
+            return False, "elevated volume settings need confirmation: " + ", ".join(reasons), reasons
         return True, "", reasons
     return True, "", []
 

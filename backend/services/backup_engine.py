@@ -366,6 +366,61 @@ def _settings_job_checks(job_data: dict[str, Any], password: str) -> None:
         raise ValueError("A settings backup goes to a folder in the pool or to an rclone remote.")
 
 
+# A mirror deletes at the destination what is gone at the source. More deletions than this in one
+# run (a stopped array, a renamed top folder, ransomware) stop the run instead (REL-1).
+MAX_DELETE_PER_RUN = 1000
+SYNC_POLL_SECONDS = 5.0
+SYNC_MAX_WAIT_SECONDS = 48 * 3600
+
+_RUNNING_JOBS: set[str] = set()
+_RUNNING_LOCK = threading.Lock()
+
+
+def _seal_passphrase(value: str) -> str:
+    """Passphrases are stored encrypted with the install's secret key (SEC-5 follow-up)."""
+    from backend import secret_box
+
+    if not value or secret_box.is_sealed(value):
+        return value
+    return secret_box.seal(value)
+
+
+def job_passphrase(job: dict[str, Any]) -> str:
+    """The job's passphrase in clear text, for the moment it is used."""
+    from backend import secret_box
+
+    return secret_box.unseal(str(job.get("encryption_password") or ""))
+
+
+def _update_job_status(job_id: str, **fields: Any) -> None:
+    """Writes status fields onto the job as it is now, so edits made during a run are kept (ARC-1)."""
+    jobs = get_backup_jobs()
+    for j in jobs:
+        if j.get("id") == job_id:
+            j.update(fields)
+            atomic_write_json(BACKUP_JOBS_FILE, jobs)
+            return
+
+
+def _source_is_empty(path: str) -> bool:
+    try:
+        with os.scandir(path) as it:
+            return next(it, None) is None
+    except OSError:
+        return True
+
+
+def _wait_for_sync(rclone: Any, sync_id: str) -> dict[str, Any]:
+    """Waits for the upload to finish and returns its final state."""
+    deadline = time.time() + SYNC_MAX_WAIT_SECONDS
+    while time.time() < deadline:
+        state = rclone.get_sync_job(sync_id) or {}
+        if state.get("status") != "running":
+            return state
+        time.sleep(SYNC_POLL_SECONDS)
+    return {"status": "error", "error": "The upload did not finish within 48 hours."}
+
+
 def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
     """Creates or updates a scheduled hyper-backup job."""
     kind = "config" if job_data.get("kind") == "config" else "data"
@@ -380,7 +435,9 @@ def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
     # Editing a job without retyping its passphrase keeps the stored one
     password = str(job_data.get("encryption_password") or existing.get("encryption_password") or "")
     if kind == "config":
-        _settings_job_checks(job_data, password)
+        from backend import secret_box
+
+        _settings_job_checks(job_data, secret_box.unseal(password))
 
     normalized: dict[str, Any] = {
         "id": job_id,
@@ -395,7 +452,7 @@ def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
         "kind": kind,  # "data" (a pool folder) or "config" (ZettNAS settings, OPS-8)
         "local_path": str(job_data.get("local_path") or "").strip(),
         "encrypted": bool(job_data.get("encrypted", False)) or kind == "config",
-        "encryption_password": password,
+        "encryption_password": _seal_passphrase(password),
         "encryption_enabled": bool(job_data.get("encryption_enabled", False)),
         "encryption_mode": str(job_data.get("encryption_mode", "none")),  # "none", "rclone_crypt", "aes256"
         "bandwidth_limit_kbps": int(job_data.get("bandwidth_limit_kbps", 0)),
@@ -481,7 +538,7 @@ def _export_settings(job: dict[str, Any], retention: int) -> str:
     """Writes an encrypted ZettNAS settings backup to the job's folder or remote; returns where (OPS-8)."""
     from backend import config
 
-    password = str(job.get("encryption_password") or "")
+    password = job_passphrase(job)
     if len(password) < MIN_PASSPHRASE:
         raise ValueError("This settings backup has no passphrase; edit the job and set one.")
     ts = time.strftime("%Y%m%d_%H%M%S")
@@ -522,11 +579,31 @@ def _export_settings(job: dict[str, Any], retention: int) -> str:
 
 
 def execute_backup_job(job_id: str) -> dict[str, Any]:
-    """Executes a hyper-backup pipeline: atomic snapshot + Rclone offsite sync + retention pruning."""
+    """Executes a hyper-backup pipeline: atomic snapshot + Rclone offsite sync + retention pruning.
+
+    One run per job at a time: a second start while it runs is refused (ARC-1)."""
     jobs = get_backup_jobs()
     job = next((j for j in jobs if j.get("id") == job_id), None)
     if not job:
         raise ValueError(f"Job with ID '{job_id}' not found.")
+    with _RUNNING_LOCK:
+        if job_id in _RUNNING_JOBS:
+            raise ValueError("This backup is already running.")
+        _RUNNING_JOBS.add(job_id)
+    try:
+        return _execute_backup_job(job)
+    finally:
+        with _RUNNING_LOCK:
+            _RUNNING_JOBS.discard(job_id)
+
+
+def is_job_running(job_id: str) -> bool:
+    with _RUNNING_LOCK:
+        return job_id in _RUNNING_JOBS
+
+
+def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
+    job_id = str(job.get("id"))
 
     start_time = time.time()
     subvol = checked_subvolume(job.get("source_subvolume", ""))
@@ -536,9 +613,9 @@ def execute_backup_job(job_id: str) -> dict[str, Any]:
     remote_path = job.get("remote_path", "").strip()
     retention = job.get("retention_count", 7)
 
-    # Update job state to running
+    # Update job state to running; the start counts as the run for the schedule (ARC-1)
     job["last_status"] = "running"
-    save_backup_job(job)
+    _update_job_status(job_id, last_status="running", last_started_at=start_time)
 
     history_record: dict[str, Any] = {
         "id": str(uuid.uuid4())[:8],
@@ -598,40 +675,61 @@ def execute_backup_job(job_id: str) -> dict[str, Any]:
                     if resolve_within(source_dir, [pool_path]) is None:
                         raise ValueError("The backup source is outside the pool.")
 
+                # An empty or unmounted source would make the mirror delete the whole backup (REL-1)
+                if _source_is_empty(source_dir):
+                    raise ValueError(
+                        "The backup source is empty or not mounted (is the array started?). "
+                        "Nothing was changed at the destination."
+                    )
+
                 dest_target = f"{remote_name}:{remote_path}"
                 rclone = get_rclone_engine()
 
-                # Client-side rclone crypt encryption wrapper
+                # Client-side rclone crypt encryption wrapper. If it can't be set up the run stops:
+                # falling back would mirror plaintext over the encrypted copy (SEC-5).
                 if job.get("encrypted") and job.get("encryption_password"):
                     crypt_remote_name = f"crypt_{job_id[:8]}"
                     try:
                         rclone.create_crypt_remote(
                             name=crypt_remote_name,
                             base_remote_path=dest_target,
-                            password=job["encryption_password"],
+                            password=job_passphrase(job),
                         )
-                        dest_target = f"{crypt_remote_name}:"
-                        logger.info(f"[HYPER-BACKUP] Initialized client-side encrypted crypt overlay: {dest_target}")
                     except Exception as crypt_err:
-                        logger.warning(
-                            f"[HYPER-BACKUP] Failed creating crypt overlay, falling back to base remote: {crypt_err}"
-                        )
+                        raise ValueError(
+                            f"Encryption for this backup could not be set up ({crypt_err}). "
+                            "Nothing was uploaded and the existing backup is unchanged."
+                        ) from crypt_err
+                    dest_target = f"{crypt_remote_name}:"
+                    logger.info(f"[HYPER-BACKUP] Initialized client-side encrypted crypt overlay: {dest_target}")
 
                 sync_job = rclone.start_sync_job(
                     src=source_dir,
                     dst=dest_target,
                     action="sync",
+                    extra_flags=["--max-delete", str(MAX_DELETE_PER_RUN)],
                 )
                 history_record["rclone_job_id"] = sync_job.get("id")
                 logger.info(
                     f"[HYPER-BACKUP] Dispatched Rclone offsite sync to {dest_target} (Job: {sync_job.get('id')})"
                 )
+                # The run succeeds only when the upload does (ARC-1)
+                final = _wait_for_sync(rclone, str(sync_job.get("id")))
+                if final.get("status") != "success":
+                    detail = str(final.get("error") or "the upload failed")
+                    log_text = " ".join(str(e.get("message", "")) for e in final.get("transfer_log") or []).lower()
+                    if "max" in log_text and "delete" in log_text:
+                        detail = (
+                            f"more than {MAX_DELETE_PER_RUN} files would have been deleted from the backup; "
+                            "the run stopped to protect it. Check the source folder."
+                        )
+                    raise ValueError(f"Upload to {dest_target} did not finish: {detail}")
 
         # Mark job run success
         job["last_run_at"] = time.time()
         job["last_status"] = "success"
         job["last_error"] = None
-        save_backup_job(job)
+        _update_job_status(job_id, last_run_at=job["last_run_at"], last_status="success", last_error=None)
 
         history_record["completed_at"] = time.time()
         history_record["status"] = "success"
@@ -663,7 +761,7 @@ def execute_backup_job(job_id: str) -> dict[str, Any]:
         job["last_run_at"] = time.time()
         job["last_status"] = "error"
         job["last_error"] = str(e)
-        save_backup_job(job)
+        _update_job_status(job_id, last_run_at=job["last_run_at"], last_status="error", last_error=str(e))
 
         history_record["completed_at"] = time.time()
         history_record["status"] = "error"
@@ -717,7 +815,9 @@ def _backup_scheduler_loop() -> None:
                 interval = SCHEDULE_INTERVALS.get(sched)
                 if not interval:
                     continue  # manual or unsupported schedule
-                last_run = job.get("last_run_at") or 0
+                if is_job_running(str(job.get("id"))):
+                    continue  # still running: never start it twice (ARC-1)
+                last_run = max(job.get("last_run_at") or 0, job.get("last_started_at") or 0)
                 if now - last_run >= interval:
                     logger.info(f"[HYPER-BACKUP] Job '{job.get('name')}' is due (schedule: {sched}). Executing...")
                     # Run in separate thread to prevent scheduler loop blocking
