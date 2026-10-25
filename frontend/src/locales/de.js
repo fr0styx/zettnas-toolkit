@@ -3220,4 +3220,5 @@ export default {
   "overview.status_label": "Status",
   "gs.share_host": "Freigegebenen Ordner in {host} anlegen",
   "gs.share_host_desc": "{host} legt freigegebene Ordner an; ZettNAS zeigt sie unter Freigaben.",
+  "ai.conversation_label": "Unterhaltung",
 };

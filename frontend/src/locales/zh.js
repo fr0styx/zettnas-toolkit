@@ -3220,4 +3220,5 @@ export default {
   "overview.status_label": "状态",
   "gs.share_host": "在 {host} 中创建共享文件夹",
   "gs.share_host_desc": "共享文件夹由 {host} 创建；ZettNAS 会在“共享”中列出。",
+  "ai.conversation_label": "对话",
 };

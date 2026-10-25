@@ -30,6 +30,27 @@ function winOf(entry) {
     : el.querySelector('.os-window, .smart-modal-window, .file-manager-window, .mgmt-app-window, .chassis-front-panel') || el;
 }
 
+const TITLES = '.os-window-title, .smart-modal-title, .mgmt-window-title, [data-window-title]';
+
+/**
+ * UX-7: a desktop window is a region named by its title, and the title is a level-2 heading,
+ * so screen readers can list and jump between open windows.
+ */
+export function labelWindow(win) {
+  if (!win || win.dataset.windowLabelled === '1') return;
+  const title = win.querySelector(TITLES);
+  if (!win.getAttribute('role')) win.setAttribute('role', 'region');
+  if (title) {
+    if (!title.id) title.id = `${win.id || 'win'}-title-${Math.random().toString(36).slice(2, 7)}`;
+    if (!win.getAttribute('aria-labelledby') && !win.getAttribute('aria-label')) win.setAttribute('aria-labelledby', title.id);
+    if (!/^H[1-6]$/.test(title.tagName) && !title.getAttribute('role')) {
+      title.setAttribute('role', 'heading');
+      title.setAttribute('aria-level', '2');
+    }
+  }
+  win.dataset.windowLabelled = '1';
+}
+
 export function focusWindow(win) {
   if (!win) return;
   const active = document.activeElement;
@@ -95,8 +116,12 @@ export function installWindowFocus(dock) {
       return result;
     };
   };
-  wrap('restore', (d, id) => later(() => focusWindow(winOf(d.windows?.[id]))));
+  wrap('restore', (d, id) => later(() => {
+    labelWindow(winOf(d.windows?.[id]));
+    focusWindow(winOf(d.windows?.[id]));
+  }));
   wrap('register', (d, id, before, rest) => {
+    later(() => labelWindow(winOf(d.windows?.[id])));
     if (!rest[3]) later(() => focusWindow(winOf(d.windows?.[id])));
   });
   wrap('minimize', (d, id, before) => returnFocus(before, d));

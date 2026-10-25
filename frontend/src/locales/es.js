@@ -3220,4 +3220,5 @@ export default {
   "overview.status_label": "Estado",
   "gs.share_host": "Crear una carpeta compartida en {host}",
   "gs.share_host_desc": "{host} crea las carpetas compartidas; ZettNAS las muestra en Recursos compartidos.",
+  "ai.conversation_label": "Conversación",
 };
