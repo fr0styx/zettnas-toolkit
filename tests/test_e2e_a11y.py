@@ -27,6 +27,8 @@ UPDATE = os.environ.get("ZETTNAS_A11Y_UPDATE") == "1"
 BASELINE = os.path.join(ROOT, "tests", "a11y_baseline.json")
 MEDIA_DIR = os.environ.get("ZETTNAS_E2E_MEDIA_DIR", "")
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
+# UX-8: moderate issues count too (ZETTNAS_A11Y_IMPACTS narrows it for a quick look)
+IMPACTS = os.environ.get("ZETTNAS_A11Y_IMPACTS", "moderate,serious,critical").split(",")
 
 pytestmark = pytest.mark.skipif(
     not is_server_reachable(BASE) and os.environ.get("ZETTNAS_E2E_REQUIRED") != "1",
@@ -76,14 +78,14 @@ def _panes(page, results, prefix):
 
 def _axe(page, selector):
     return page.evaluate(
-        """async ([sel, tags]) => {
+        """async ([sel, tags, impacts]) => {
             const ctx = document.querySelector(sel) || document.body;
             const r = await axe.run(ctx, { runOnly: { type: 'tag', values: tags }, resultTypes: ['violations'] });
-            return r.violations.filter(v => v.impact === 'serious' || v.impact === 'critical')
+            return r.violations.filter(v => impacts.includes(v.impact))
                 .map(v => ({ id: v.id, impact: v.impact, count: v.nodes.length,
                              sample: v.nodes.slice(0, 3).map(n => n.target.join(' ') + ' :: ' + (n.failureSummary || '').split('\\n')[1]) }));
         }""",
-        [selector, TAGS],
+        [selector, TAGS, IMPACTS],
     )
 
 
@@ -214,9 +216,9 @@ def test_main_views_have_no_serious_accessibility_issues():
         try:
             page.wait_for_selector("#setup-wizard-modal", state="visible", timeout=6000)
             page.wait_for_timeout(600)
-            for step in (1, 2, 3):
+            for step in (1, 2, 3, 4, 5, 6):  # the six-step setup (UX-17)
                 results[f"wizard-step-{step}"] = _axe(page, "#setup-wizard-modal")
-                if step == 1:
+                if step in (1, 3, 4, 5):
                     page.click("#setup-wizard-next")
                 elif step == 2:
                     page.evaluate(
