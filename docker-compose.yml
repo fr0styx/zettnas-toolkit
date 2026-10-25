@@ -76,3 +76,21 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # Puts the fans in a safe state if the app is killed while it controls them (docs/FAN_WATCHDOG.md)
+  fan-watchdog:
+    image: ghcr.io/fr0styx/zettnas-toolkit:latest
+    container_name: zettnas-fan-watchdog
+    restart: unless-stopped
+    command: ["python3", "-m", "backend.fan_watchdog"]
+    network_mode: none
+    volumes:
+      - /sys:/host/sys:rw
+      - /dev:/host/dev:rw
+    environment:
+      - HOST_SYS=/host/sys
+      - HOST_DEV=/host/dev
+      - DATA_DIR=/tmp/zettnas-watchdog
+    device_cgroup_rules:
+      - 'c 1:1 rwm'     # /dev/mem: the appliance fan registers
+    mem_limit: 128m

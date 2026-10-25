@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>zettnas-fan-watchdog</Name>
+  <Repository>ghcr.io/fr0styx/zettnas-toolkit:latest</Repository>
+  <Registry>https://github.com/fr0styx/zettnas-toolkit/pkgs/container/zettnas-toolkit</Registry>
+  <Network>none</Network>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/FAN_WATCHDOG.md</Support>
+  <Project>https://github.com/fr0styx/zettnas-toolkit</Project>
+  <Overview>Puts the chassis fans in a safe state if the ZettNAS Toolkit app is killed while it controls them. Runs next to the app; needs no ports.</Overview>
+  <Category>Tools:</Category>
+  <Icon>https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png</Icon>
+  <ExtraParams>--restart unless-stopped --memory 128m --device-cgroup-rule='c 1:1 rwm'</ExtraParams>
+  <PostArgs>python3 -m backend.fan_watchdog</PostArgs>
+  <Config Name="Host sys" Target="/host/sys" Default="/sys" Mode="rw" Description="The host's /sys (fan controls)" Type="Path" Display="advanced" Required="true">/sys</Config>
+  <Config Name="Host dev" Target="/host/dev" Default="/dev" Mode="rw" Description="The host's /dev (the app's heartbeat in /dev/shm, and the fan registers)" Type="Path" Display="advanced" Required="true">/dev</Config>
+  <Config Name="HOST_SYS" Target="HOST_SYS" Default="/host/sys" Mode="" Description="" Type="Variable" Display="advanced" Required="true">/host/sys</Config>
+  <Config Name="HOST_DEV" Target="HOST_DEV" Default="/host/dev" Mode="" Description="" Type="Variable" Display="advanced" Required="true">/host/dev</Config>
+  <Config Name="DATA_DIR" Target="DATA_DIR" Default="/tmp/zettnas-watchdog" Mode="" Description="Scratch folder inside the container" Type="Variable" Display="advanced" Required="true">/tmp/zettnas-watchdog</Config>
+  <Config Name="Seconds without a heartbeat" Target="FAN_WATCHDOG_STALE_SECS" Default="30" Mode="" Description="How long the app may stay silent before the fans go to their safe state" Type="Variable" Display="always" Required="false">30</Config>
+</Container>

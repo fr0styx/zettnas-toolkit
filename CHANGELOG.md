@@ -29,6 +29,11 @@ Integrity and hardening from the October audit. Nothing to do before upgrading.
   Updates still follow the app's tag: the Updates page offers them as before and pins the new
   image. Images you pinned yourself are left alone.
 
+#### Hardware
+
+- **A fan watchdog**: a small second container puts the fans in a safe state if the app is killed
+  while it controls them (docs/FAN_WATCHDOG.md; in docker-compose.yml and as an Unraid template).
+
 #### Storage
 
 - A warning appears when the app keeps its data on a spinning disk, which then can never sleep

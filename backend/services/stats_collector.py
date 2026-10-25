@@ -855,8 +855,11 @@ def _publish(data, disks, fans, net, now):
 
 
 def stats_collector_daemon():
+    from backend.services.fan_heartbeat import beat
+
     while not Z_STATE.shutting_down:
         Z_STATE.collector_heartbeat = time.time()
+        beat(released=bool(getattr(Z_STATE, "fans_released", False)))  # for the host fan watchdog
         try:
             disks = read_disk_temps_and_io()
             net = read_network_rates()

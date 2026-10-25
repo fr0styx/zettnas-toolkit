@@ -786,6 +786,16 @@ def _is_writable(path):
         return False
 
 
+def _tell_watchdog_released():
+    """A clean release: the host fan watchdog has nothing to do."""
+    try:
+        from backend.services.fan_heartbeat import beat
+
+        beat(released=True, force=True)
+    except Exception:
+        logger.debug("fan heartbeat: release not written", exc_info=True)
+
+
 def failsafe_release_fans(reason="shutdown", lock=False):
     """Put every fan channel in a safe state.
 
@@ -811,6 +821,7 @@ def failsafe_release_fans(reason="shutdown", lock=False):
             else:
                 _write_sysfs(path, failsafe)
         Z_STATE.fans_released = True
+        _tell_watchdog_released()
         return True
 
     mmio = get_mmio_fan_controller()
@@ -823,6 +834,7 @@ def failsafe_release_fans(reason="shutdown", lock=False):
         mmio.write_pwm(2, failsafe)
         mmio.write_pwm(3, 0)
         Z_STATE.fans_released = True
+        _tell_watchdog_released()
         return True
 
     return False
