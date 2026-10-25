@@ -70,3 +70,107 @@ def test_container_inspections_share_one_pool():
     first = docker_stats._inspect_pool()
     assert docker_stats._inspect_pool() is first and first._max_workers == 4
     assert docker_stats._INSPECT_CACHE_TTL >= 600
+
+
+def test_docker_telemetry_waits_once_between_rounds(monkeypatch):
+    from backend.hardware import docker_stats as ds
+    from backend.state import Z_STATE
+
+    waits, sleeps = [], []
+    clock = {"t": 1000.0}
+    monkeypatch.setattr(ds.time, "time", lambda: clock["t"])
+    monkeypatch.setattr(ds, "docker_sock", lambda: "/nonexistent.sock")
+    monkeypatch.setattr(ds.os.path, "exists", lambda p: True)
+
+    class FakeConn:
+        def __init__(self, *a, **k):
+            pass
+
+        def request(self, *a):
+            pass
+
+        def getresponse(self):
+            import types
+
+            return types.SimpleNamespace(status=200, read=lambda: b'[{"Id": "abc123456789xyz"}]')
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(ds, "UnixHTTPConnection", FakeConn)
+    monkeypatch.setattr(ds, "_fetch_container_telemetry", lambda cid: {"cpu": 1.0})
+    monkeypatch.setattr(ds, "container_poll_interval", lambda: 30.0)
+
+    class FakeEvent:
+        def clear(self):
+            pass
+
+        def wait(self, timeout):
+            waits.append(timeout)
+            clock["t"] += timeout
+            monkeypatch.setattr(Z_STATE, "shutting_down", True)
+            return False
+
+    monkeypatch.setattr(ds, "_DEMAND_WAKE", FakeEvent())
+    monkeypatch.setattr(ds.time, "sleep", lambda s: sleeps.append(s))
+    monkeypatch.setattr(Z_STATE, "shutting_down", False)
+    ds._docker_telemetry_worker()
+    assert waits == [30.0]  # one wait for the whole interval
+    assert sleeps == []
+
+
+def test_docker_telemetry_backs_off_with_one_sleep(monkeypatch):
+    from backend.hardware import docker_stats as ds
+    from backend.state import Z_STATE
+
+    sleeps = []
+    monkeypatch.setattr(ds, "docker_sock", lambda: "/nonexistent.sock")
+    monkeypatch.setattr(ds.os.path, "exists", lambda p: False)
+
+    def sleep(s):
+        sleeps.append(s)
+        monkeypatch.setattr(Z_STATE, "shutting_down", True)
+
+    monkeypatch.setattr(ds.time, "sleep", sleep)
+    monkeypatch.setattr(Z_STATE, "shutting_down", False)
+    ds._docker_telemetry_worker()
+    assert sleeps == [ds.BACKOFF_SECS]
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize("answer", ["no containers", "error"])
+def test_docker_telemetry_backoff_when_idle_or_failing(monkeypatch, answer):
+    import types
+
+    from backend.hardware import docker_stats as ds
+    from backend.state import Z_STATE
+
+    sleeps = []
+    monkeypatch.setattr(ds, "docker_sock", lambda: "/nonexistent.sock")
+    monkeypatch.setattr(ds.os.path, "exists", lambda p: True)
+
+    class FakeConn:
+        def __init__(self, *a, **k):
+            if answer == "error":
+                raise OSError("socket gone")
+
+        def request(self, *a):
+            pass
+
+        def getresponse(self):
+            return types.SimpleNamespace(status=200, read=lambda: b"[]")
+
+        def close(self):
+            pass
+
+    def sleep(s):
+        sleeps.append(s)
+        monkeypatch.setattr(Z_STATE, "shutting_down", True)
+
+    monkeypatch.setattr(ds, "UnixHTTPConnection", FakeConn)
+    monkeypatch.setattr(ds.time, "sleep", sleep)
+    monkeypatch.setattr(Z_STATE, "shutting_down", False)
+    ds._docker_telemetry_worker()
+    assert sleeps == [ds.BACKOFF_SECS]

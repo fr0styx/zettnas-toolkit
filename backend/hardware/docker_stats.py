@@ -43,6 +43,7 @@ _VIEWERS = 0
 _LAST_DEMAND = 0.0
 _DEMAND_LOCK = threading.Lock()
 _DEMAND_WAKE = threading.Event()
+BACKOFF_SECS = 5.0  # no Docker socket, no running containers, or an error
 # container id -> (total CPU usage, system CPU usage) from the previous one-shot sample
 _PREV_CPU: dict[str, tuple[int, int]] = {}
 
@@ -399,10 +400,7 @@ def _docker_telemetry_worker():
         try:
             sock_path = docker_sock()
             if not os.path.exists(sock_path):
-                for _ in range(10):
-                    if Z_STATE.shutting_down:
-                        break
-                    time.sleep(0.5)
+                time.sleep(BACKOFF_SECS)  # one sleep, not ten slices (PERF-5)
                 continue
 
             conn = None
@@ -423,10 +421,7 @@ def _docker_telemetry_worker():
                         )
 
             if not running:
-                for _ in range(10):
-                    if Z_STATE.shutting_down:
-                        break
-                    time.sleep(0.5)
+                time.sleep(BACKOFF_SECS)  # one sleep, not ten slices (PERF-5)
                 continue
 
             # Dynamic worker querying all running containers with adaptive concurrency
@@ -451,14 +446,12 @@ def _docker_telemetry_worker():
             _DEMAND_WAKE.clear()
             deadline = time.time() + container_poll_interval()
             while not Z_STATE.shutting_down and time.time() < deadline:
-                if _DEMAND_WAKE.wait(min(0.5, max(0.0, deadline - time.time()))):
+                # one wait until the next round (PERF-5: it used to wake every 0.5 s)
+                if _DEMAND_WAKE.wait(max(0.0, deadline - time.time())):
                     break  # someone started looking: refresh now
         except Exception as e:
             logger.debug(f"[Docker] Telemetry worker error: {e}")
-            for _ in range(10):
-                if Z_STATE.shutting_down:
-                    break
-                time.sleep(0.5)
+            time.sleep(BACKOFF_SECS)  # one sleep, not ten slices (PERF-5)
 
 
 def start_docker_telemetry_collector():
