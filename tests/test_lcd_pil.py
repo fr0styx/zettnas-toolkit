@@ -210,3 +210,25 @@ def test_loop_sleeps_on_lcd_wake_until_the_minute_turns(monkeypatch):
 
     lcd_pil.run_loop(FB(), 30.0, lambda fb, blanked: False, state)
     assert waits == [12.5]
+
+
+def test_the_streamline_layout_is_drawn_when_chosen():
+    """Choosing "Streamline Big IP" changes the LCD itself, not only the web preview."""
+    from backend.services import lcd_pil
+
+    stats = {
+        "name": "nas",
+        "ip": "192.168.1.20",
+        "storage": {"pct": 63, "used": "15TB", "total": "23TB"},
+        "cpu": {"util": 12, "temp": 51},
+        "mem": {"pct": 31, "used_gb": 18.2},
+        "net": {"rx_bytes_sec": 2048, "tx_bytes_sec": 1024},
+        "disks": [{"name": "sda", "temp": 41}],
+    }
+    classic = lcd_pil.render_frame({**stats, "layout": {"style": "classic"}}, page=0).tobytes()
+    streamline = lcd_pil.render_frame({**stats, "layout": {"style": "streamline"}}, page=0).tobytes()
+    assert classic != streamline
+    # other pages are the same in both styles
+    assert lcd_pil.render_frame({**stats, "layout": {"style": "streamline"}}, page=1).tobytes() == (
+        lcd_pil.render_frame({**stats, "layout": {"style": "classic"}}, page=1).tobytes()
+    )

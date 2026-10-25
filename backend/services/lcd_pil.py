@@ -401,6 +401,75 @@ def _page_overview(draw, stats, c):
     _drive_strip(draw, stats.get("disks") or [], c, top=bottom + 6)
 
 
+def _page_streamline(draw, stats, c):
+    """The "Streamline Big IP" overview: storage, compute and the address in large type, then the
+    drive strip. Same data as the web layout (sl-* elements in index.html)."""
+    top, bottom, gap = 40, 120, 6
+    widths = (150, 170)
+    x_storage = 12
+    x_compute = x_storage + widths[0] + gap
+    x_ip = x_compute + widths[1] + gap
+    f_title = font("bold", 10)
+    f_small = font("regular", 10)
+
+    storage = stats.get("storage") or {}
+    pct = _num(storage.get("pct"))
+    _card(draw, (x_storage, top, x_storage + widths[0], bottom), c)
+    _text(draw, (x_storage + 8, top + 11), "STORAGE", f_title, c["fg"], anchor="lm")
+    _ring(draw, (x_storage + 32, top + 50), 21, pct, _level_color(pct, c), c, width=7)
+    draw.text((x_storage + 32, top + 50), f"{pct:.0f}%", font=font("bold", 12), fill=c["fg"], anchor="mm")
+    _text(
+        draw,
+        (x_storage + widths[0] - 8, top + 40),
+        str(storage.get("used", "")),
+        font("bold", 15),
+        c["fg"],
+        max_w=widths[0] - 66,
+        anchor="rm",
+    )
+    _text(
+        draw,
+        (x_storage + widths[0] - 8, top + 60),
+        "/ " + str(storage.get("total", "")),
+        f_small,
+        c["muted"],
+        max_w=widths[0] - 66,
+        anchor="rm",
+    )
+
+    cpu = stats.get("cpu") or {}
+    mem = stats.get("mem") or {}
+    _card(draw, (x_compute, top, x_compute + widths[1], bottom), c)
+    _text(draw, (x_compute + 8, top + 11), "COMPUTE", f_title, c["fg"], anchor="lm")
+    rows = (
+        ("CPU", _num(cpu.get("util")), f"{_num(cpu.get('temp')):.0f}°C" if cpu.get("temp") is not None else "--°C"),
+        (
+            "MEMORY",
+            _num(mem.get("pct")),
+            f"{_num(mem.get('used_gb')):.1f}G" if mem.get("used_gb") is not None else "--",
+        ),
+    )
+    for j, (label, value, sub_txt) in enumerate(rows):
+        y = top + 30 + j * 26
+        _text(draw, (x_compute + 8, y), label, f_small, c["muted"], anchor="lm")
+        _text(draw, (x_compute + widths[1] - 8, y), f"{value:.0f}%  {sub_txt}", font("bold", 10), c["fg"], anchor="rm")
+        _bar(draw, (x_compute + 8, y + 8, x_compute + widths[1] - 8, y + 13), value, _level_color(value, c), c)
+
+    net = stats.get("net") or {}
+    _card(draw, (x_ip, top, WIDTH - 12, bottom), c, outline=c["brand"])
+    _text(draw, (x_ip + 8, top + 11), "IP ADDRESS", f_title, c["fg"], anchor="lm")
+    ip_w = WIDTH - 12 - x_ip - 16
+    ip = str(stats.get("ip") or "0.0.0.0")
+    size = 30
+    while size > 14 and _w(draw, ip, font("bold", size)) > ip_w:
+        size -= 2
+    draw.text((x_ip + (WIDTH - 12 - x_ip) / 2, top + 44), ip, font=font("bold", size), fill=c["brand"], anchor="mm")
+    rates = f"TX: {_rate(_num(net.get('tx_bytes_sec')))}   RX: {_rate(_num(net.get('rx_bytes_sec')))}"
+    _text(draw, (x_ip + (WIDTH - 12 - x_ip) / 2, top + 68), rates, f_small, c["muted"], max_w=ip_w, anchor="mm")
+
+    _drive_strip(draw, stats.get("disks") or [], c, top=bottom + 6)
+
+
 def _disk_state(disk: dict, c: dict) -> tuple[str, str]:
     health = str(disk.get("health") or "").lower()
     if health in ("failing", "failed", "critical", "bad") or disk.get("risk") == "high":
@@ -593,8 +662,11 @@ def render_frame(
     img = Image.new("RGB", (WIDTH, HEIGHT), c["bg"])
     draw = ImageDraw.Draw(img)
     _header(draw, stats, page, c, now)
+    draw_page = _PAGES[page]
+    if page == 0 and str((stats.get("layout") or {}).get("style") or "classic") == "streamline":
+        draw_page = _page_streamline  # the layout chosen in Settings > Screen Dashboard Style
     try:
-        _PAGES[page](draw, stats, c)
+        draw_page(draw, stats, c)
     except Exception as exc:  # a bad value must not blank the screen
         _text(draw, (12, 90), f"Display error: {exc}", font("regular", 11), c["crit"], max_w=WIDTH - 24, anchor="lm")
     return img

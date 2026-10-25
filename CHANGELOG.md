@@ -18,6 +18,8 @@
 #### Fixes
 
 - Files over 16 MB upload again from the File Explorer.
+- **The LCD shows the Streamline (big IP) layout when you choose it.** The setting changed only the
+  web preview; the screen itself kept the classic cards.
 
 #### Security
 
