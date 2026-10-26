@@ -1,3 +1,4 @@
+import { znZoomPlugin } from './chart-zoom.js'; // replaces chartjs-plugin-zoom and hammerjs (ARC-15)
 import { escapeHtml } from '../utils.js';
 /**
  * ZettNAS Toolkit Historical Metrics Chart
@@ -33,10 +34,7 @@ const FAN_COLORS = [
 
 async function getChart() {
   if (!_ChartLib) {
-    const [chartMod, zoomPluginMod] = await Promise.all([
-      import('chart.js'),
-      import('chartjs-plugin-zoom')
-    ]);
+    const chartMod = await import('chart.js');
     const {
       Chart,
       LineController,
@@ -48,7 +46,6 @@ async function getChart() {
       Tooltip,
       Filler
     } = chartMod;
-    const zoomPlugin = zoomPluginMod.default || zoomPluginMod;
     Chart.register(
       LineController,
       LineElement,
@@ -58,7 +55,7 @@ async function getChart() {
       Legend,
       Tooltip,
       Filler,
-      zoomPlugin
+      znZoomPlugin
     );
     _ChartLib = Chart;
   }
@@ -467,29 +464,11 @@ export async function fetchAndRenderMetrics(skipFetch = false) {
             padding: 10,
             cornerRadius: 8
           },
-          zoom: {
-            pan: {
-              enabled: true,
-              mode: 'x',
-              threshold: 5,
-              onPanComplete: () => {
-                const resetBtn = document.getElementById('metrics-reset-zoom-btn');
-                if (resetBtn) resetBtn.style.display = 'inline-flex';
-              }
-            },
-            zoom: {
-              wheel: {
-                enabled: true,
-                speed: 0.08
-              },
-              pinch: {
-                enabled: true
-              },
-              mode: 'x',
-              onZoomComplete: () => {
-                const resetBtn = document.getElementById('metrics-reset-zoom-btn');
-                if (resetBtn) resetBtn.style.display = 'inline-flex';
-              }
+          znZoom: {
+            wheelSpeed: 0.08,
+            onChange: (_chart, zoomed) => {
+              const resetBtn = document.getElementById('metrics-reset-zoom-btn');
+              if (resetBtn) resetBtn.style.display = zoomed ? 'inline-flex' : 'none';
             }
           }
         },

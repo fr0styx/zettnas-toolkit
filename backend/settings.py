@@ -107,6 +107,14 @@ class Settings:
         choices=("full", "core"),
         group="Updates",
     )
+    # Logs
+    log_format: str = _s(
+        "LOG_FORMAT",
+        "text",
+        "Log lines as plain text, or as one JSON object per line (with a request id) for log collectors.",
+        choices=("text", "json"),
+        group="Logs",
+    )
     # Power
     ups_mode: str = _s("UPS_MODE", "auto", "How to reach the UPS (auto, nut, usb, ...).", group="Power")
     nut_host: str = _s("NUT_HOST", "127.0.0.1", "Network UPS Tools server.", group="Power")
