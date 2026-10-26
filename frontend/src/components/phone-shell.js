@@ -10,6 +10,7 @@ import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 import { ROUTES } from '../router.js';
 import { ZettEventBus } from '../event-bus.js';
+import { watchDom } from '../dom-watch.js';
 
 const PHONE_QUERY = '(max-width: 600px)';
 const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window';
@@ -225,15 +226,15 @@ export function updateStatus(stats, root = document) {
   if (stats.net) set('net', `↓ ${fmtRate(stats.net.rx_bytes_sec)} ↑ ${fmtRate(stats.net.tx_bytes_sec)}`);
 }
 
-let observer = null;
+let unwatch = null;
 
 export function enablePhoneShell(on) {
   document.body.classList.toggle('phone-shell', on);
   let shell = document.getElementById('phone-shell');
   if (!on) {
     shell?.remove();
-    observer?.disconnect();
-    observer = null;
+    unwatch?.();
+    unwatch = null;
     document.body.classList.remove('phone-page-open');
     window.removeEventListener('popstate', onPhoneBack);
     backEntry = false;
@@ -264,8 +265,7 @@ export function enablePhoneShell(on) {
     }
   });
   // pages open and close from many places: follow their style and class changes
-  observer = new MutationObserver(schedule);
-  observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class', 'hidden', 'aria-hidden'] });
+  unwatch = watchDom({ attributes: ['style', 'class', 'hidden', 'aria-hidden'], onRecords: schedule });
   sync();
 }
 

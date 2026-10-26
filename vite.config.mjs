@@ -1,7 +1,10 @@
 import { defineConfig } from 'vite';
+import { iconsAtBuildTime } from './frontend/scripts/icons-build.mjs';
 
 export default defineConfig({
   root: 'frontend',
+  // emoji in index.html and the window templates become icons at build time (PERF-8)
+  plugins: [iconsAtBuildTime()],
   build: {
     outDir: '../static',
     emptyOutDir: false,

@@ -8,6 +8,7 @@
  * prompts) gets the title bar and close button only, since a pending question should not
  * be tucked away in the dock.
  */
+import { watchDom } from './dom-watch.js';
 import { DockManager, makeDraggable } from './components/dock.js';
 import { t } from './i18n.js';
 
@@ -257,7 +258,7 @@ export function installDialogChrome() {
   document.addEventListener('click', onControlClick, true);
   scan();
   // Only schedules one cheap pass per frame; the pass looks at the pop-ups, not the whole page.
-  new MutationObserver(queueScan).observe(document.body, { childList: true, subtree: true });
+  watchDom({ onRecords: queueScan });
 }
 
 export const _test = { scan, forget, parked: _parked };

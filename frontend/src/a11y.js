@@ -5,6 +5,7 @@
  * - Names icon-only ones from their translated title; it never guesses from text and never
  *   hides an interactive element with aria-hidden (FE-10)
  */
+import { addedNodes, watchDom } from './dom-watch.js';
 
 export function enhanceInteractiveElements(root) {
   if (!root || !root.querySelectorAll) return;
@@ -131,16 +132,12 @@ export function initA11y() {
     initA11yAnnouncer();
     enhanceInteractiveElements(document.body);
 
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node instanceof HTMLElement) {
-            enhanceInteractiveElements(node);
-          }
+    watchDom({
+      onRecords: (records) => {
+        for (const node of addedNodes(records)) {
+          if (node instanceof HTMLElement) enhanceInteractiveElements(node);
         }
-      }
+      },
     });
-
-    observer.observe(document.body, { childList: true, subtree: true });
   }
 }

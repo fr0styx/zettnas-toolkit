@@ -8,52 +8,36 @@
 //
 // Left alone: what people wrote (AI chat, file names, editors, code, logs) and the LCD page.
 // The map lives in icons/emoji-icons.json; frontend/scripts/build-icons.mjs builds the sprite.
+// index.html and the window templates are converted when the app is built (PERF-8,
+// frontend/scripts/icons-build.mjs, same rules from icons-rules.js); that markup is marked and
+// not walked again here.
 
 import EMOJI_ICONS from './icons/emoji-icons.json';
+import { watchDom } from './dom-watch.js';
+import {
+  ATTR_SKIP, BUILT_ATTR, SKIP, TEXT_ATTRS, emojiMatchers, hrefFor as hrefIn, iconMarkup, iconOnlyLabel, selectorOf,
+} from './icons-rules.js';
 
 export const SPRITE_URL = '/zi-sprite.svg';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// Places whose text is content, not interface
-// (closest() also matches their descendants)
-const SKIP_SELECTOR = [
-  'script', 'style', 'textarea', 'input', 'select', 'option', 'pre', 'code', 'kbd', 'samp',
-  '[contenteditable]', '[data-no-icons]', '.ai-chat-msg', '.fm-name', '.xterm', '#screen', '#mini-lcd-canvas',
-].join(',');
-// Tooltips and placeholders are cleaned everywhere except in what people wrote
-const ATTR_SKIP_SELECTOR = '[data-no-icons], .ai-chat-msg, .fm-name, #screen, #mini-lcd-canvas';
+const SKIP_SELECTOR = selectorOf(SKIP); // closest() also matches their descendants
+const ATTR_SKIP_SELECTOR = selectorOf(ATTR_SKIP);
 const FLEX_OR_GRID = /flex|grid/;
-const TEXT_ATTRS = ['title', 'placeholder', 'aria-label'];
 
-// Readable names for icon-only buttons without a title
-const ICON_LABELS = {
-  'trash-2': 'Delete', x: 'Close', 'circle-x': 'Close', pencil: 'Edit', 'refresh-cw': 'Refresh',
-  'clipboard-list': 'Copy', search: 'Search', settings: 'Settings', eye: 'Show', 'eye-off': 'Hide',
-  download: 'Download', upload: 'Upload', plus: 'Add', check: 'Done', play: 'Start', pause: 'Pause',
-  square: 'Stop', 'arrow-right': 'Open', save: 'Save', link: 'Link', maximize: 'Full screen',
-  'folder-open': 'Open folder', 'corner-left-up': 'Up one level',
-};
-
-const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-// Variation selector (U+FE0F) after the emoji goes with it
-const KEYS = Object.keys(EMOJI_ICONS).sort((a, b) => b.length - a.length);
-const EMOJI_RE = new RegExp(`(?:${KEYS.map(escapeRe).join('|')})️?`, 'gu');
-const HAS_EMOJI = new RegExp(`(?:${KEYS.map(escapeRe).join('|')})`, 'u');
+const { all: EMOJI_RE, any: HAS_EMOJI } = emojiMatchers(EMOJI_ICONS);
 
 export function iconFor(emoji) {
   return EMOJI_ICONS[emoji.replace(/️/g, '')] || null;
 }
 
 function hrefFor(name) {
-  return name.startsWith('@') ? `#${name.slice(1)}` : `${SPRITE_URL}#zi-${name}`;
+  return hrefIn(name, SPRITE_URL);
 }
 
 /** An icon as markup, for templates that build HTML. */
 export function iconHtml(name, extraClass = '') {
-  if (name.startsWith('@dot-')) {
-    return `<span class="zi zi-dot zi-dot-${name.slice(5)}${extraClass ? ` ${extraClass}` : ''}" aria-hidden="true"></span>`;
-  }
-  return `<svg class="zi${extraClass ? ` ${extraClass}` : ''}" data-zi="${name}" aria-hidden="true" focusable="false"><use href="${hrefFor(name)}"></use></svg>`;
+  return iconMarkup(name, SPRITE_URL, extraClass);
 }
 
 /** An icon as an element. */
@@ -88,7 +72,7 @@ function nameIconOnly(parent, iconName) {
   const host = parent.closest('button, a, [role="button"]');
   if (!host || host.getAttribute('aria-label') || host.getAttribute('aria-labelledby')) return;
   if ((host.textContent || '').trim()) return;
-  const label = host.getAttribute('title') || ICON_LABELS[iconName] || iconName.replace(/-/g, ' ');
+  const label = iconOnlyLabel(host.getAttribute('title'), iconName);
   host.setAttribute('aria-label', label);
 }
 
@@ -144,11 +128,15 @@ export function iconizeTree(root) {
   }
   if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
   if (root.nodeType === Node.ELEMENT_NODE) {
+    if (root.hasAttribute(BUILT_ATTR)) return; // converted when the app was built
     cleanAttributes(root);
     if (skipped(root)) return;
   }
   const texts = [];
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  const notBuilt = {
+    acceptNode: (n) => (n.nodeType === Node.ELEMENT_NODE && n.hasAttribute(BUILT_ATTR) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+  };
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, notBuilt);
   for (let n = walker.nextNode(); n; n = walker.nextNode()) {
     if (n.nodeType === Node.TEXT_NODE) {
       if (HAS_EMOJI.test(n.nodeValue)) texts.push(n);
@@ -159,16 +147,19 @@ export function iconizeTree(root) {
   texts.forEach(convertTextNode);
 }
 
-let observer = null;
+let unwatch = null;
 
 /** Converts the page now and every change from here on. Not on the LCD page. */
 export function startIconizer(doc = document) {
-  if (observer || !doc.body) return observer;
+  if (unwatch || !doc.body) return unwatch;
   const params = new URLSearchParams(doc.location?.search || '');
   if (params.has('lcd_token') || params.get('mode') === 'lcd' || doc.body.classList.contains('lcd-direct')) return null;
   iconizeTree(doc.body);
-  observer = new MutationObserver((records) => {
-    for (const r of records) {
+  unwatch = watchDom({
+    characterData: true,
+    attributes: TEXT_ATTRS,
+    onRecords: (records) => {
+      for (const r of records) {
       if (r.type === 'childList') {
         r.addedNodes.forEach(iconizeTree);
       } else if (r.type === 'characterData') {
@@ -176,15 +167,13 @@ export function startIconizer(doc = document) {
       } else if (r.type === 'attributes') {
         cleanAttributes(r.target);
       }
-    }
+      }
+    },
   });
-  observer.observe(doc.body, {
-    childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: TEXT_ATTRS,
-  });
-  return observer;
+  return unwatch;
 }
 
 export function stopIconizer() {
-  observer?.disconnect();
-  observer = null;
+  unwatch?.();
+  unwatch = null;
 }
