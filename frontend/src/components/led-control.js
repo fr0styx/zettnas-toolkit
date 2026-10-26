@@ -22,11 +22,12 @@ export function initLedControl() {
   const ledNightEnd = $('led-night-end');
 
   const effectBtns = document.querySelectorAll('#tab-led .effect-btn, .led-effect-btn');
-  const colorChips1 = document.querySelectorAll('#tab-led .color-chip, .led-color-chip');
+  // the Custom swatch is a color-chip too, but a label around a colour input with no data-hex
+  const colorChips1 = document.querySelectorAll('#tab-led .color-chip:not(.custom-picker-chip), .led-color-chip');
   const customColorPicker1 = $('custom-color-picker');
   const customChip1Label = $('custom-chip-label') || $('custom-color-chip-label');
 
-  const colorChips2 = document.querySelectorAll('#tab-led .color-chip2, .led-sec-color-chip');
+  const colorChips2 = document.querySelectorAll('#tab-led .color-chip2:not(.custom-picker-chip), .led-sec-color-chip');
   const customColorPicker2 = $('custom-color-picker2') || $('custom-sec-color-picker');
   const customChip2Label = $('custom-chip2-label') || $('custom-sec-color-chip-label');
 

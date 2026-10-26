@@ -4,7 +4,7 @@
  */
 import { installHiddenPause, pageHidden } from './hidden-pause.js';
 import { ensureManagementDom, onManagementDom } from './management-dom.js';
-import { ensureDrawerDom } from './drawer-dom.js';
+import { ensureDrawerDom, whenDrawerDom } from './drawer-dom.js';
 import './style.css';
 import './lcd-direct.css';
 import './vm-console-direct.css';
@@ -349,8 +349,12 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   initInviteLanding(); // the sign-up form for invite links, over the sign-in screen
   initAuth();
   initDashboardClicks();
-  initFanControl();
-  initLedControl();
+  // the fan and LED controls are in the settings drawer, whose markup arrives after the first
+  // paint (B6): wiring them now would find no buttons
+  whenDrawerDom(() => {
+    initFanControl();
+    initLedControl();
+  });
   initWallpapers();
   onManagementDom(initEvents);
   loadLater(); // the settings drawer and the users code (B6 first-load budget)

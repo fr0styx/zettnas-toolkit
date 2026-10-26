@@ -10,6 +10,12 @@ export function isDrawerDomReady() {
   return !!document.getElementById('led-drawer');
 }
 
+/** Runs fn once the drawer's markup is in the page (now, if it already is). */
+export function whenDrawerDom(fn) {
+  if (isDrawerDomReady()) fn();
+  else ZettEventBus.once('dom:drawer-ready', fn);
+}
+
 export function ensureDrawerDom() {
   if (isDrawerDomReady()) return Promise.resolve();
   if (!pending) {
