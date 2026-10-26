@@ -19,7 +19,13 @@ def test_no_file_gains_inline_styles_or_unstyled_buttons():
 
 def test_the_counts():
     text = '<div style="x"></div><button>a</button><button class="btn-pill-toggle">b</button><b style=\'y\'>'
-    assert ui_ratchets.counts_for(text) == {"styles": 2, "buttons": 1}
+    assert ui_ratchets.counts_for(text) == {"styles": 2, "buttons": 1, "globals": 0, "templates": 0}
+    js = (
+        "window.openThing = f; if (window.x == 1) {}\nel.innerHTML = `<b>${x}</b>`; el.innerHTML = html`<b>${x}</b>`;\n"
+    )
+    js += "el.insertAdjacentHTML('beforeend', `<i>${y}</i>`); el.innerHTML = '';"
+    c = ui_ratchets.counts_for(js)
+    assert (c["globals"], c["templates"]) == (1, 2)
 
 
 def test_a_new_file_starts_at_zero():

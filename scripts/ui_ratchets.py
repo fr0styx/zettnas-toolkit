@@ -2,8 +2,11 @@
 
 For each frontend source file it counts
 
-    styles   style="..." attributes in markup (use a class or a primitive instead)
-    buttons  <button> elements without a class (use .btn-pill-toggle or uiButton)
+    styles     style="..." attributes in markup (use a class or a primitive instead)
+    buttons    <button> elements without a class (use .btn-pill-toggle or uiButton)
+    globals    window.name = ... assignments (export the function, or use the event bus; ARC-11)
+    templates  raw template literals written into innerHTML/outerHTML/insertAdjacentHTML
+               (use html`...` from frontend/src/html.js, which escapes every value; ARC-11)
 
 and compares them with tests/ui_ratchets.json. A file may never go above its recorded
 count; a new file starts at zero. After cleaning up, record the lower counts:
@@ -25,6 +28,8 @@ FRONTEND = os.path.join(ROOT, "frontend")
 BASELINE = os.path.join(ROOT, "tests", "ui_ratchets.json")
 STYLE_ATTR = re.compile(r"""\sstyle=["']""")
 BUTTON = re.compile(r"<button\b([^>]*)>")
+GLOBAL = re.compile(r"\bwindow\.[A-Za-z_$][\w$]*\s*=(?!=)")
+RAW_TEMPLATE = re.compile(r"(?:\.(?:innerHTML|outerHTML)\s*\+?=\s*|insertAdjacentHTML\(\s*[^,]+,\s*)`")
 
 
 def sources() -> list[str]:
@@ -36,7 +41,12 @@ def sources() -> list[str]:
 
 def counts_for(text: str) -> dict[str, int]:
     buttons = sum(1 for m in BUTTON.finditer(text) if not re.search(r"\sclass=", m.group(1)))
-    return {"styles": len(STYLE_ATTR.findall(text)), "buttons": buttons}
+    return {
+        "styles": len(STYLE_ATTR.findall(text)),
+        "buttons": buttons,
+        "globals": len(GLOBAL.findall(text)),
+        "templates": len(RAW_TEMPLATE.findall(text)),
+    }
 
 
 def current() -> dict[str, dict[str, int]]:
@@ -73,16 +83,17 @@ def main(argv) -> int:
         with open(BASELINE, "w", encoding="utf-8") as fh:
             json.dump(now, fh, indent=1, sort_keys=True)
             fh.write("\n")
-        total = {k: sum(c[k] for c in now.values()) for k in ("styles", "buttons")}
-        print(
-            f"wrote {os.path.relpath(BASELINE, ROOT)}: {total['styles']} inline styles, {total['buttons']} unstyled buttons"
-        )
+        total = {k: sum(c[k] for c in now.values()) for k in ("styles", "buttons", "globals", "templates")}
+        print(f"wrote {os.path.relpath(BASELINE, ROOT)}: " + ", ".join(f"{v} {k}" for k, v in total.items()))
         return 0
     problems = over(now, load_baseline())
     for p in problems:
         print(p)
     if problems:
-        print("Use a class, a --zn- token or a primitive (frontend/src/ui/primitives.js) instead.")
+        print(
+            "Use a class, a --zn- token, a primitive (frontend/src/ui/primitives.js), "
+            "html`` (frontend/src/html.js) or an export instead."
+        )
         return 1
     print("UI ratchets hold")
     return 0

@@ -7,8 +7,9 @@
 //   Card       .zn-card (+ zn-card--boxed | zn-card--divided), with an optional .zn-title
 //   PaneHeader .mgmt-card-intro: the icon, title and one-line description atop a pane
 //
-// Text arguments are escaped. `html` arguments (body, control) are trusted markup.
+// Text arguments are escaped (html``). body and control are markup: pass an html`` result.
 import { escapeHtml } from '../utils.js';
+import { html, raw } from '../html.js';
 
 const VARIANTS = new Set(['primary', 'danger', 'ghost']);
 
@@ -20,7 +21,7 @@ function attrs(extra) {
 }
 
 function icon(name) {
-  return name ? `<svg class="ic" aria-hidden="true"><use href="#i-${escapeHtml(name)}"/></svg>` : '';
+  return name ? html`<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>` : '';
 }
 
 export function uiButton({ label = '', variant = '', small = false, block = false, iconName = '', type = 'button', id, i18n, extra } = {}) {
@@ -29,26 +30,25 @@ export function uiButton({ label = '', variant = '', small = false, block = fals
   if (small) cls.push('is-small');
   if (block) cls.push('is-block');
   const a = attrs({ type, id, class: cls.join(' '), 'data-i18n': i18n, ...extra });
-  return `<button${a}>${icon(iconName)}${label ? `<span>${escapeHtml(label)}</span>` : ''}</button>`;
+  return String(html`<button${raw(a)}>${icon(iconName)}${label ? html`<span>${label}</span>` : ''}</button>`);
 }
 
 export function uiField({ label = '', control = '', hint = '', id } = {}) {
-  const forAttr = id ? ` for="${escapeHtml(id)}"` : '';
-  const hintHtml = hint ? `<span class="zn-muted">${escapeHtml(hint)}</span>` : '';
-  return `<label class="zn-field"${forAttr}><span>${escapeHtml(label)}</span>${control}${hintHtml}</label>`;
+  const forAttr = id ? html` for="${id}"` : '';
+  const hintHtml = hint ? html`<span class="zn-muted">${hint}</span>` : '';
+  return String(html`<label class="zn-field"${forAttr}><span>${label}</span>${raw(control)}${hintHtml}</label>`);
 }
 
 export function uiCard({ title = '', body = '', variant = '' } = {}) {
   const cls = ['zn-card'];
   if (variant === 'boxed' || variant === 'divided') cls.push(`zn-card--${variant}`);
-  const head = title ? `<div class="zn-title">${escapeHtml(title)}</div>` : '';
-  return `<div class="${cls.join(' ')}">${head}${body}</div>`;
+  const head = title ? html`<div class="zn-title">${title}</div>` : '';
+  return String(html`<div class="${cls.join(' ')}">${head}${raw(body)}</div>`);
 }
 
 export function uiPaneHeader({ title = '', desc = '', iconName = '' } = {}) {
-  const d = desc ? `<div class="mgmt-card-intro-desc">${escapeHtml(desc)}</div>` : '';
-  return (
-    `<div class="mgmt-card-intro"><div class="mgmt-card-intro-title">${icon(iconName)}` +
-    `<span>${escapeHtml(title)}</span></div>${d}</div>`
+  const d = desc ? html`<div class="mgmt-card-intro-desc">${desc}</div>` : '';
+  return String(
+    html`<div class="mgmt-card-intro"><div class="mgmt-card-intro-title">${icon(iconName)}<span>${title}</span></div>${d}</div>`
   );
 }
