@@ -106,18 +106,11 @@ python -m tests.rag_eval.run_eval --model embeddinggemma --set all
 
 Two more sets measure what lexical vectors can't do: 50 **cross-language** questions
 (asked in one language about a file in another) and 40 **paraphrases** that share few
-words with the file. Measured on a test NAS with EmbeddingGemma (OpenVINO, 768
-dimensions), before and after the ranking above:
-
-| Set | Right file in top 5, before | after | Right file first, after |
-|---|---|---|---|
-| Same language (200) | 0.88 | 1.00 | 0.96 |
-| Cross-language (50) | 0.28 | 0.98 | 0.86 |
-| Paraphrase (40) | 0.65 | 0.98 | 0.88 |
-
-With 2,000 extra distractor files (`--distractors 2000`) the right file is still in the
-top 5 for about 0.9 of the questions. Plain reciprocal-rank fusion and the title and word
-boosts were measured too and scored lower for neural models, so they are not used.
+words with the file. Lexical vectors score low on these by nature; the nightly run measures
+them with EmbeddingGemma (on GitHub's runners, with 2,000 extra distractor files, the right
+file is in the top 5 for 0.93 of the same-language questions, 0.83 of the paraphrases and
+0.56 of the cross-language ones). Plain reciprocal-rank fusion and the title and word boosts
+were measured too and scored lower for neural models, so they are not used.
 
 **Nightly.** `.github/workflows/ai-eval-nightly.yml` runs all sets with EmbeddingGemma
 served by Ollama and 2,000 distractors, and answers the 97 questions in `qa.json` with a
@@ -126,10 +119,9 @@ small chat model. An answer counts as right when it contains the fact
 model answered at all. Results are kept as workflow artifacts and compared with
 `tests/rag_eval/baseline_nightly*.json` once those are recorded.
 
-On the test NAS with Llama 3.2 3B on the iGPU, the answer set went from 0.74 to 0.89
-right answers after the prompt asked for the answer first, in the question's language,
-without a stock "could not find" sentence to copy (English 0.24 → 0.76; the right file
-was cited in every case). Most remaining misses are the small model misreading a number.
+Asking for the answer first, in the question's language, without a stock "could not find"
+sentence to copy, raised the share of right answers clearly with small models; most remaining
+misses are a small model misreading a number.
 
 ### Long, Office and scanned documents (AI-16)
 
@@ -164,11 +156,6 @@ python -m tests.rag_eval.run_eval --set documents --model embeddinggemma \
 
 A multi-hop answer counts as right only when it holds every fact it needs (`answer_all`),
 and its sources count only when both files are cited.
-
-On a test NAS with EmbeddingGemma and Llama 3.2 3B, the right file is in the top 5 for every
-question, both files for three of the five multi-hop ones, and 14 of the 17 answers are right
-(`tests/rag_eval/baseline_documents_nightly.json`). Two of the misses are multi-hop: the
-model got only one of the two files it needed.
 
 ### Held-out questions
 

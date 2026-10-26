@@ -73,7 +73,7 @@ jobs:
       # Coverage slows the search code far more than the yardstick it is measured against, so the
       # search speed gate (AI-16) runs on its own, without coverage
       - name: Search speed
-        run: pytest -p no:cov -q -rfE tests/test_rag_eval_baseline.py::test_search_stays_fast
+        run: pytest -p no:cov -q -s -rfE tests/test_rag_eval_baseline.py::test_search_stays_fast
 
       # The overall coverage can hide new untested code: the backend lines a push or pull request
       # changes must themselves be covered by tests (80 %). Pushes that add tests only pass trivially.

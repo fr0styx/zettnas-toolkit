@@ -177,6 +177,7 @@ def test_search_stays_fast():
     with open(os.path.join(HERE, "baseline_speed.json"), encoding="utf-8") as f:
         baseline = json.load(f)
     got = evaluate(distractors=SPEED_DISTRACTORS)["latency"]
+    print(f"search p95: {got['p95_units']} units")  # CI shows it; the baseline comes from GitHub's runners
     assert got["p95_units"] <= baseline["p95_units"] * SPEED_SLACK, (
         f"search p95 went from {baseline['p95_units']} to {got['p95_units']} units "
         f"({got['p95_ms']} ms here, a unit is {got['unit_ms']} ms)"
