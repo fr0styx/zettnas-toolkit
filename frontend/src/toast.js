@@ -253,8 +253,8 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
       <div style="padding: 16px 20px;">
         <div id="confirm-toast-msg" style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.55; word-break: break-word;"></div>
         <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
-          <button id="confirm-toast-eject" style="display: none; padding: 7px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer; margin-right: auto;" title="${t('ui.safely_unmount_and_eject_card', 'Safely unmount and eject card')}">⏏ Eject</button>
-          <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer;">Cancel</button>
+          <button id="confirm-toast-eject" class="btn-pill-toggle is-danger is-small" style="display: none; margin-right: auto;" title="${t('ui.safely_unmount_and_eject_card', 'Safely unmount and eject card')}">⏏ Eject</button>
+          <button id="confirm-toast-cancel" class="btn-pill-toggle is-small">Cancel</button>
           <button id="confirm-toast-ok" style="padding: 7px 18px; background: #0ea5e9; border: 1px solid #0284c7; border-radius: 6px; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">Confirm</button>
         </div>
       </div>
@@ -498,8 +498,8 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
       <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 12px; line-height: 1.5;">${safePromptMsg}</div>
       ${inputHtml}
       <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
-        <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer;">${escapeHtml(cancelText)}</button>
-        <button id="confirm-toast-ok" style="padding: 7px 18px; background: var(--brand, #00f0ff); border: 1px solid var(--brand, #00f0ff); border-radius: 6px; color: #050b14; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer;">${escapeHtml(okText)}</button>
+        <button id="confirm-toast-cancel" class="btn-pill-toggle is-small">${escapeHtml(cancelText)}</button>
+        <button id="confirm-toast-ok" class="btn-pill-toggle is-primary is-small">${escapeHtml(okText)}</button>
       </div>
     </div>
   `;

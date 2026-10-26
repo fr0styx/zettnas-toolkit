@@ -2218,7 +2218,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 <button type="button" id="tab-oauth-desktop" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
                   <span>💻 Desktop 1-Click</span>
                 </button>
-                <button type="button" id="tab-oauth-qr" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: transparent; color: var(--zn-text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
+                <button type="button" id="tab-oauth-qr" class="btn-pill-toggle is-ghost is-small" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
                   <span>📱 Mobile QR Code</span>
                 </button>
               </div>
@@ -2242,7 +2242,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   </div>
                   <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
                     <span>📱 Scan with your phone or tablet camera to sign in</span>
-                    <button type="button" id="btn-oauth-qr" style="background: var(--zn-glaze-8); border: 1px solid var(--zn-line-15); color: var(--zn-text-accent); font-size: var(--zn-fs-xs); padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">🔄 Refresh</button>
+                    <button type="button" id="btn-oauth-qr" class="btn-pill-toggle is-small" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">🔄 Refresh</button>
                   </div>
                 </div>
               </div>
@@ -2261,7 +2261,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 </div>
                 <div style="display: flex; gap: 6px;">
                   <input type="text" id="oauth-redirect-url" class="tz-select-input" placeholder="http://localhost:53682/?code=M.R3_... or full redirect URL" style="flex: 1; font-family: monospace; font-size: var(--zn-fs-xs);" />
-                  <button type="button" id="btn-oauth-paste" style="padding: 7px 12px; font-size: var(--zn-fs-xs); font-weight: 600; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); border-radius: 5px; cursor: pointer; white-space: nowrap;">
+                  <button type="button" id="btn-oauth-paste" class="btn-pill-toggle is-small" style="white-space: nowrap;">
                     📋 Paste
                   </button>
                 </div>

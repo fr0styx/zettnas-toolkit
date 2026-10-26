@@ -1,0 +1,182 @@
+{
+ "frontend/index.html": {
+  "buttons": 7,
+  "styles": 475
+ },
+ "frontend/src/components/auth.js": {
+  "buttons": 0,
+  "styles": 6
+ },
+ "frontend/src/components/catalog-view.js": {
+  "buttons": 0,
+  "styles": 1
+ },
+ "frontend/src/components/chassis-visualizer.js": {
+  "buttons": 3,
+  "styles": 159
+ },
+ "frontend/src/components/container-modal.js": {
+  "buttons": 0,
+  "styles": 261
+ },
+ "frontend/src/components/container-network-map.js": {
+  "buttons": 0,
+  "styles": 13
+ },
+ "frontend/src/components/containers-manager.js": {
+  "buttons": 0,
+  "styles": 42
+ },
+ "frontend/src/components/dashboard.js": {
+  "buttons": 0,
+  "styles": 17
+ },
+ "frontend/src/components/desktop-shortcuts.js": {
+  "buttons": 1,
+  "styles": 31
+ },
+ "frontend/src/components/dock.js": {
+  "buttons": 0,
+  "styles": 89
+ },
+ "frontend/src/components/docker-table.js": {
+  "buttons": 0,
+  "styles": 15
+ },
+ "frontend/src/components/events.js": {
+  "buttons": 0,
+  "styles": 10
+ },
+ "frontend/src/components/fan-control.js": {
+  "buttons": 0,
+  "styles": 2
+ },
+ "frontend/src/components/file-manager-helpers.js": {
+  "buttons": 0,
+  "styles": 56
+ },
+ "frontend/src/components/file-manager.js": {
+  "buttons": 0,
+  "styles": 109
+ },
+ "frontend/src/components/file-preview-modal.js": {
+  "buttons": 0,
+  "styles": 27
+ },
+ "frontend/src/components/jobs-centre.js": {
+  "buttons": 0,
+  "styles": 1
+ },
+ "frontend/src/components/management.js": {
+  "buttons": 0,
+  "styles": 38
+ },
+ "frontend/src/components/management/ai.js": {
+  "buttons": 0,
+  "styles": 223
+ },
+ "frontend/src/components/management/backup.js": {
+  "buttons": 0,
+  "styles": 69
+ },
+ "frontend/src/components/management/disks.js": {
+  "buttons": 0,
+  "styles": 11
+ },
+ "frontend/src/components/management/docker.js": {
+  "buttons": 0,
+  "styles": 160
+ },
+ "frontend/src/components/management/network.js": {
+  "buttons": 0,
+  "styles": 98
+ },
+ "frontend/src/components/management/notifications.js": {
+  "buttons": 0,
+  "styles": 44
+ },
+ "frontend/src/components/management/security.js": {
+  "buttons": 0,
+  "styles": 8
+ },
+ "frontend/src/components/management/system.js": {
+  "buttons": 0,
+  "styles": 33
+ },
+ "frontend/src/components/management/ups.js": {
+  "buttons": 0,
+  "styles": 12
+ },
+ "frontend/src/components/metrics-chart.js": {
+  "buttons": 0,
+  "styles": 2
+ },
+ "frontend/src/components/network-manager.js": {
+  "buttons": 0,
+  "styles": 14
+ },
+ "frontend/src/components/personalization.js": {
+  "buttons": 0,
+  "styles": 11
+ },
+ "frontend/src/components/settings.js": {
+  "buttons": 0,
+  "styles": 12
+ },
+ "frontend/src/components/share-access.js": {
+  "buttons": 0,
+  "styles": 17
+ },
+ "frontend/src/components/spotlight.js": {
+  "buttons": 0,
+  "styles": 3
+ },
+ "frontend/src/components/stack-modal.js": {
+  "buttons": 0,
+  "styles": 79
+ },
+ "frontend/src/components/transfer-center.js": {
+  "buttons": 0,
+  "styles": 2
+ },
+ "frontend/src/components/users.js": {
+  "buttons": 0,
+  "styles": 34
+ },
+ "frontend/src/components/vm-manager.js": {
+  "buttons": 1,
+  "styles": 538
+ },
+ "frontend/src/components/wallpapers.js": {
+  "buttons": 0,
+  "styles": 2
+ },
+ "frontend/src/components/widgets.js": {
+  "buttons": 0,
+  "styles": 46
+ },
+ "frontend/src/folder-browser.js": {
+  "buttons": 0,
+  "styles": 1
+ },
+ "frontend/src/modals.js": {
+  "buttons": 1,
+  "styles": 13
+ },
+ "frontend/src/toast.js": {
+  "buttons": 1,
+  "styles": 27
+ },
+ "frontend/src/ui/primitives.js": {
+  "buttons": 1,
+  "styles": 0
+ },
+ "frontend/src/windows/drawer.html": {
+  "buttons": 0,
+  "styles": 149
+ },
+ "frontend/src/windows/management-window.html": {
+  "buttons": 6,
+  "styles": 1798
+ }
+}

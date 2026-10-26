@@ -1370,7 +1370,7 @@
                         <option value="task">📋 Task</option>
                         <option value="event">📅 Event</option>
                       </select>
-                      <button type="button" id="btn-cal-save-note" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #00f0ff); color: #000; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">+ Add</button>
+                      <button type="button" id="btn-cal-save-note" class="btn-pill-toggle is-primary is-small" style="white-space: nowrap;">+ Add</button>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
                       <input type="text" id="cal-new-note-desc" placeholder="Optional details / description..." data-i18n-placeholder="ui.optional_details_description" style="flex: 1; border: 1px solid var(--zn-line-8); background: var(--zn-shade-20); padding: 5px 10px; color: var(--zn-text-soft); border-radius: 5px; font-size: var(--zn-fs-xs); outline: none;" aria-label="Optional details / description..." data-i18n-aria-label="ui.optional_details_description" />
@@ -1465,8 +1465,8 @@
 
                 <!-- Save Actions -->
                 <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--zn-line-8); padding-top: 14px;">
-                  <button type="button" id="modal-clock-tz-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Reset Changes</button>
-                  <button type="button" id="modal-clock-tz-save-btn" style="padding: 7px 20px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #00f0ff); color: #000; border: none; border-radius: 6px; cursor: pointer;">Apply & Save</button>
+                  <button type="button" id="modal-clock-tz-cancel-btn" class="btn-pill-toggle is-small">Reset Changes</button>
+                  <button type="button" id="modal-clock-tz-save-btn" class="btn-pill-toggle is-primary is-small">Apply & Save</button>
                 </div>
               </div>
 
@@ -5283,8 +5283,8 @@
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-webdav-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">Save & Restart Server</button>
+        <button type="button" id="modal-webdav-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="submit" class="btn-pill-toggle is-primary is-small">Save & Restart Server</button>
       </div>
     </form>
   </div>
@@ -5354,8 +5354,8 @@
       <div id="create-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-create-pool-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" id="create-pool-submit-btn" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">🚀 Provision Storage Pool</button>
+        <button type="button" id="modal-create-pool-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="submit" id="create-pool-submit-btn" class="btn-pill-toggle is-primary is-small">🚀 Provision Storage Pool</button>
       </div>
     </form>
   </div>
@@ -5396,8 +5396,8 @@
       <div id="rename-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-rename-pool-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" id="rename-pool-submit-btn" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">✏️ <span data-i18n="storage.apply_rename">Apply Rename</span></button>
+        <button type="button" id="modal-rename-pool-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="submit" id="rename-pool-submit-btn" class="btn-pill-toggle is-primary is-small">✏️ <span data-i18n="storage.apply_rename">Apply Rename</span></button>
       </div>
     </form>
   </div>
@@ -5521,8 +5521,8 @@
       <div id="create-share-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-create-share-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" id="create-share-submit-btn" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">📁 Provision Share</button>
+        <button type="button" id="modal-create-share-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small">📁 Provision Share</button>
       </div>
     </form>
   </div>
@@ -5546,7 +5546,7 @@
         <label for="snap-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">CREATE INSTANT SNAPSHOT</label>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <input type="text" id="snap-name-input" class="tz-select-input" placeholder="snapshot-name (e.g. backup-daily)" style="flex: 1; min-width: 200px; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
-          <button type="button" id="btn-take-snapshot-submit" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">📸 Take Snapshot</button>
+          <button type="button" id="btn-take-snapshot-submit" class="btn-pill-toggle is-primary is-small">📸 Take Snapshot</button>
         </div>
       </div>
 
@@ -5648,8 +5648,8 @@
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modal-backup-job-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">Save Pipeline</button>
+        <button type="button" id="modal-backup-job-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="submit" class="btn-pill-toggle is-primary is-small">Save Pipeline</button>
       </div>
     </form>
   </div>
@@ -5738,8 +5738,8 @@
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modal-repl-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" id="btn-submit-repl-pipeline" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">Save Pipeline</button>
+        <button type="button" id="modal-repl-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="submit" id="btn-submit-repl-pipeline" class="btn-pill-toggle is-primary is-small">Save Pipeline</button>
       </div>
     </form>
   </div>
@@ -5771,8 +5771,8 @@
         <label for="snapshot-readonly-input" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;">Read-only protection (prevents modification)</label>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modal-create-snapshot-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
-        <button type="submit" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer;">Create Snapshot</button>
+        <button type="button" id="modal-create-snapshot-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="submit" class="btn-pill-toggle is-primary is-small">Create Snapshot</button>
       </div>
     </form>
   </div>
@@ -5832,7 +5832,7 @@
       </form>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
-        <button type="button" id="modal-sftp-close-bottom-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Close</button>
+        <button type="button" id="modal-sftp-close-bottom-btn" class="btn-pill-toggle is-small">Close</button>
       </div>
     </div>
   </div>
