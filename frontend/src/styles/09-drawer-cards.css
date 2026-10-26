@@ -14,7 +14,7 @@
 .drawer-cards-flow.locked .drag-handle { display: none; }
 
 .preview-container {
-  background: var(--lt-b-080c10ff, #080c10); border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06)); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
+  background: var(--lt-b-080c10ff, #080c10); border: 1px solid var(--zn-line-6); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
 }
 .preview-label-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 1px; }
 .preview-housing { height: 14px; background: var(--lt-b-151d26ff, #151d26); border-radius: 7px; padding: 2px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.6); display: flex; align-items: center; }
@@ -22,9 +22,9 @@
 
 .profiles-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
 .profile-pill {
-  background: var(--lt-b-1e2a38ff, #1e2a38); color: var(--lt-t-94a3b8ff, #94a3b8); border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)); border-radius: 8px; height: 34px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+  background: var(--lt-b-1e2a38ff, #1e2a38); color: var(--zn-text-muted); border: 1px solid var(--zn-line-8); border-radius: 8px; height: 34px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
 }
-.profile-pill:hover { background: var(--lt-b-253547ff, #253547); color: var(--lt-t-ffffffff, #fff); }
+.profile-pill:hover { background: var(--lt-b-253547ff, #253547); color: var(--zn-text-strong); }
 
 .profile-pill.active {
   background: rgba(37, 194, 160, 0.15);
@@ -38,7 +38,7 @@
 .fan-presets-bar {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border-top: 1px solid var(--zn-line-8);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -82,9 +82,9 @@ select.fan-preset-select {
   width: 100%;
   height: 32px;
   background-color: var(--lt-b-111a26ff, #111a26);
-  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--zn-line-12);
   border-radius: 8px;
-  color: var(--lt-t-f1f5f9ff, #f1f5f9);
+  color: var(--zn-text-bright);
   font-size: var(--zn-fs-xs);
   font-weight: 600;
   padding: 0 28px 0 10px;
@@ -128,13 +128,13 @@ select.fan-preset-select:focus {
 
 .btn-fan-save {
   background: var(--lt-b-1e2a38ff, #1e2a38);
-  color: var(--lt-t-e2e8f0ff, #e2e8f0);
-  border: 1px solid var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14));
+  color: var(--zn-text);
+  border: 1px solid var(--zn-line-14);
 }
 
 .btn-fan-save:hover {
   background: var(--lt-b-27384cff, #27384c);
-  color: var(--lt-t-ffffffff, #ffffff);
+  color: var(--zn-text-strong);
   border-color: rgba(249, 115, 22, 0.5);
   box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
@@ -157,7 +157,7 @@ select.fan-preset-select:focus {
   background: rgba(37, 194, 160, 0.28);
   border-color: var(--ok2, #25c2a0);
   box-shadow: 0 0 10px rgba(37, 194, 160, 0.35);
-  color: var(--lt-t-ffffffff, #ffffff);
+  color: var(--zn-text-strong);
 }
 
 .btn-fan-apply:active:not(:disabled) {
@@ -167,8 +167,8 @@ select.fan-preset-select:focus {
 .btn-fan-apply:disabled {
   opacity: 0.38;
   cursor: not-allowed;
-  border-color: var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
-  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
+  border-color: var(--zn-line-8);
+  background: var(--zn-glaze-4);
   color: var(--lt-t-64748bff, #64748b);
   box-shadow: none;
 }
@@ -180,13 +180,13 @@ select.fan-preset-select:focus {
 .btn-fan-delete {
   padding: 0 10px;
   background: rgba(239, 68, 68, 0.12);
-  color: var(--lt-t-f87171ff, #f87171);
+  color: var(--zn-text-crit);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .btn-fan-delete:hover {
   background: rgba(239, 68, 68, 0.24);
-  color: var(--lt-t-ffffffff, #ffffff);
+  color: var(--zn-text-strong);
   border-color: #ef4444;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
 }
@@ -225,9 +225,9 @@ body.theme-yak select.fan-preset-select:focus {
 }
 
 
-.drawer-card { background: var(--lt-b-151f2bff, #151f2b); border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06)); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity 0.25s ease, filter 0.25s ease; width: 100%; }
+.drawer-card { background: var(--lt-b-151f2bff, #151f2b); border: 1px solid var(--zn-line-6); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: opacity 0.25s ease, filter 0.25s ease; width: 100%; }
 .card-headline { display: flex; justify-content: space-between; align-items: center; }
-.card-head-title { font-size: 13px; font-weight: 800; color: var(--lt-t-f1f5f9ff, #f1f5f9); display: flex; align-items: center; white-space: nowrap; }
+.card-head-title { font-size: 13px; font-weight: 800; color: var(--zn-text-bright); display: flex; align-items: center; white-space: nowrap; }
 .card-head-val { font-size: 14px; font-weight: 800; color: var(--ok2); }
 .card-instruction { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.35; }
 
@@ -244,9 +244,9 @@ body.theme-yak select.fan-preset-select:focus {
 
 .effects-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 4px; }
 .effect-btn {
-  background: var(--lt-b-1e2a38ff, #1e2a38); color: var(--lt-t-94a3b8ff, #94a3b8); border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)); border-radius: 8px; height: 34px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+  background: var(--lt-b-1e2a38ff, #1e2a38); color: var(--zn-text-muted); border: 1px solid var(--zn-line-8); border-radius: 8px; height: 34px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; transition: all 0.15s ease;
 }
-.effect-btn:hover { background: var(--lt-b-253547ff, #253547); color: var(--lt-t-ffffffff, #fff); }
+.effect-btn:hover { background: var(--lt-b-253547ff, #253547); color: var(--zn-text-strong); }
 .effect-btn.active { background: rgba(37, 194, 160, 0.15); color: var(--ok2); border-color: var(--ok2); box-shadow: 0 0 8px rgba(37, 194, 160, 0.25); }
 
 /* The system button (UX-6): secondary by default; .is-primary, .is-danger, .is-ghost;
@@ -254,7 +254,7 @@ body.theme-yak select.fan-preset-select:focus {
 .btn-pill-toggle {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   min-height: var(--zn-btn-h, 32px); padding: 0 var(--zn-btn-px, 12px); line-height: 1.2; white-space: nowrap;
-  background: var(--lt-b-233142ff, #233142); color: var(--lt-t-e2e8f0ff, #e2e8f0); border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)); border-radius: 6px;
+  background: var(--lt-b-233142ff, #233142); color: var(--zn-text); border: 1px solid var(--zn-line-8); border-radius: 6px;
   font-size: var(--zn-fs-sm, 13px); font-weight: 600; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .btn-pill-toggle:hover { background: var(--lt-b-2d3e54ff, #2d3e54); }
@@ -279,10 +279,10 @@ body.theme-yak select.fan-preset-select:focus {
 #update-channel-chooser {
   display: inline-flex;
   align-items: center;
-  background: var(--lt-b-00000059, rgba(0, 0, 0, 0.35));
+  background: var(--zn-shade-35);
   padding: 2px;
   border-radius: 6px;
-  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--zn-line-10);
   font-size: var(--zn-fs-xs);
   flex-shrink: 0;
   white-space: nowrap;
@@ -312,7 +312,7 @@ body.theme-yak select.fan-preset-select:focus {
 .switch { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .toggle-slider {
-  position: absolute; cursor: pointer; inset: 0; background-color: var(--lt-b-233142ff, #233142); transition: .25s; border-radius: 20px; border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
+  position: absolute; cursor: pointer; inset: 0; background-color: var(--lt-b-233142ff, #233142); transition: .25s; border-radius: 20px; border: 1px solid var(--zn-line-10);
 }
 .toggle-slider:before {
   position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: #94a3b8; transition: .25s; border-radius: 50%;

@@ -15,7 +15,13 @@ still gets the original colour (the var() fallback), so nothing changes there.
 Left alone: the front LCD and its preview, the VM console, the desktop and wallpaper
 previews, the photo viewer, the yak theme and the theme definitions themselves.
 
+Semantic colour tokens (UX-10): the colours used most, by role, have names (SEMANTIC below,
+defined in 50-components.css). Their dark value is the colour itself and their light value is
+what this tool computes for it, so swapping var(--lt-...) for the token changes nothing on
+screen. convert writes the token for those colours; new code should use the names directly.
+
     python scripts/light_theme.py convert   # rewrite sources, then write the palette
+    python scripts/light_theme.py tokens    # swap var(--lt-...) for the semantic tokens, then the palette
     python scripts/light_theme.py palette   # regenerate the palette from the sources
     python scripts/light_theme.py check     # exit 1 when the palette is out of date
 """
@@ -70,6 +76,61 @@ DARKEST_SURFACE = (214, 218, 224)
 # Text set in the brand colour gets a dark shade in the light theme (the brand stays for fills)
 BRAND_VARS = ("brand", "accent-cyan")
 BRAND_INK = "#075985"
+
+# Semantic colour tokens (UX-10): (kind, rrggbbaa) -> token. t = text, r = border, b = background.
+# Lines, glazes (white over a surface) and shades (black over it) are named by their opacity
+# in percent: --zn-line-8 is a white line at 8 %.
+SEMANTIC = {
+    ("t", "ffffffff"): "zn-text-strong",
+    ("t", "f1f5f9ff"): "zn-text-bright",
+    ("t", "e2e8f0ff"): "zn-text",
+    ("t", "cbd5e1ff"): "zn-text-soft",
+    ("t", "94a3b8ff"): "zn-text-muted",
+    ("t", "38bdf8ff"): "zn-text-accent",
+    ("t", "34d399ff"): "zn-text-ok",
+    ("t", "fbbf24ff"): "zn-text-warn",
+    ("t", "f87171ff"): "zn-text-crit",
+    ("t", "c084fcff"): "zn-text-ai",
+    ("r", "ffffff0d"): "zn-line-5",
+    ("r", "ffffff0f"): "zn-line-6",
+    ("r", "ffffff12"): "zn-line-7",
+    ("r", "ffffff14"): "zn-line-8",
+    ("r", "ffffff1a"): "zn-line-10",
+    ("r", "ffffff1f"): "zn-line-12",
+    ("r", "ffffff24"): "zn-line-14",
+    ("r", "ffffff26"): "zn-line-15",
+    ("r", "ffffff2e"): "zn-line-18",
+    ("r", "ffffff33"): "zn-line-20",
+    ("b", "ffffff05"): "zn-glaze-2",
+    ("b", "ffffff08"): "zn-glaze-3",
+    ("b", "ffffff0a"): "zn-glaze-4",
+    ("b", "ffffff0d"): "zn-glaze-5",
+    ("b", "ffffff0f"): "zn-glaze-6",
+    ("b", "ffffff14"): "zn-glaze-8",
+    ("b", "ffffff1a"): "zn-glaze-10",
+    ("b", "ffffff1f"): "zn-glaze-12",
+    ("b", "ffffff26"): "zn-glaze-15",
+    ("b", "00000033"): "zn-shade-20",
+    ("b", "00000040"): "zn-shade-25",
+    ("b", "0000004c"): "zn-shade-30",
+    ("b", "00000059"): "zn-shade-35",
+    ("b", "00000066"): "zn-shade-40",
+}
+# Tokens whose light value 50-components.css sets by hand (they predate the tool)
+LIGHT_BY_HAND = {"zn-text-strong", "zn-text", "zn-text-soft", "zn-text-muted"}
+TOKEN_FILE = os.path.join(FRONTEND, "src", "styles", "50-components.css")
+
+
+def token_value(name: str) -> str:
+    """The dark value of a semantic token: the colour it stands for."""
+    (k, h) = next(pair for pair, n in SEMANTIC.items() if n == name)
+    r, g, b, a = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), int(h[6:8], 16) / 255
+    return css((r, g, b), round(a, 2))
+
+
+def token_light(name: str) -> str | None:
+    (k, h) = next(pair for pair, n in SEMANTIC.items() if n == name)
+    return LIGHT[k](parse(token_value(name)))
 
 
 # ---------------------------------------------------------------------------
@@ -289,6 +350,8 @@ def rewrite_block(block: str) -> str:
             p = parse(cm.group(0))
             if not p or LIGHT[k](p) is None:
                 return cm.group(0)
+            if (k, key(p)) in SEMANTIC:
+                return f"var(--{SEMANTIC[(k, key(p))]})"
             return f"var(--lt-{k}-{key(p)}, {cm.group(0)})"
 
         return prop + sep + COLOR.sub(col, value)
@@ -351,12 +414,38 @@ def sources() -> list[str]:
     )
 
 
+def tokenize(text: str) -> str:
+    """var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)) -> var(--zn-line-8)"""
+
+    def swap(m):
+        name = SEMANTIC.get((m.group(1), m.group(2)))
+        p = parse(m.group(3))
+        if not name or not p or key(p) != m.group(2):
+            return m.group(0)
+        return f"var(--{name})"
+
+    return VAR_USE.sub(swap, text)
+
+
+def tokens() -> int:
+    changed = 0
+    for f in sources():
+        with open(f, encoding="utf-8") as fh:
+            old = fh.read()
+        new = tokenize(old)
+        if new != old:
+            with open(f, "w", encoding="utf-8") as fh:
+                fh.write(new)
+            changed += 1
+    return changed
+
+
 def convert() -> int:
     changed = 0
     for f in sources():
         with open(f, encoding="utf-8") as fh:
             old = fh.read()
-        new = rewrite_css(old) if f.endswith(".css") else rewrite_markup(old)
+        new = tokenize(rewrite_css(old) if f.endswith(".css") else rewrite_markup(old))
         if new != old:
             with open(f, "w", encoding="utf-8") as fh:
                 fh.write(new)
@@ -383,6 +472,12 @@ def palette_text() -> str:
         f"  --lt-ink-brand: {BRAND_INK};",
         "  --lt-text-shadow: none;",
         *(f"  {k}: {v};" for k, v in sorted(found.items())),
+        "  /* the semantic tokens (UX-10) */",
+        *(
+            f"  --{name}: {token_light(name)};"
+            for name in sorted(SEMANTIC.values())
+            if name not in LIGHT_BY_HAND and token_light(name)
+        ),
         "}",
         "",
     ]
@@ -393,7 +488,9 @@ def main(argv) -> int:
     cmd = argv[1] if len(argv) > 1 else "check"
     if cmd == "convert":
         print(f"rewrote {convert()} files")
-    if cmd in ("convert", "palette"):
+    if cmd == "tokens":
+        print(f"tokenised {tokens()} files")
+    if cmd in ("convert", "tokens", "palette"):
         with open(PALETTE, "w", encoding="utf-8") as fh:
             fh.write(palette_text())
         print(f"wrote {os.path.relpath(PALETTE, ROOT)}")

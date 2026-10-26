@@ -28,7 +28,7 @@
   background: var(--lt-b-0d141ef5, rgba(13, 20, 30, 0.96));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15));
+  border: 1px solid var(--zn-line-15);
   border-radius: 10px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.2);
   padding: 10px 16px;

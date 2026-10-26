@@ -27,7 +27,7 @@ export function initStackModal() {
         <div id="stack-inspector-header" class="smart-modal-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px; min-width:0;">
             <span style="font-size:16px;">📁</span>
-            <span id="stack-header-title" style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Stack Inspector</span>
+            <span id="stack-header-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Stack Inspector</span>
             <span id="stack-header-origin" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">Compose Stack</span>
             <span id="stack-header-status" class="ci-state-pill" style="display:none;"></span>
           </div>
@@ -39,7 +39,7 @@ export function initStackModal() {
         </div>
 
         <!-- Quick Actions Bar & Path Info -->
-        <div style="padding:8px 14px; background:var(--lt-b-00000073, rgba(0,0,0,0.45)); border-bottom:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="padding:8px 14px; background:var(--lt-b-00000073, rgba(0,0,0,0.45)); border-bottom:1px solid var(--zn-line-6); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--muted); min-width:0; overflow:hidden;">
             <span aria-hidden="true">📂</span>
             <span id="stack-path-label" style="font-family:var(--font-mono, monospace); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:420px;"></span>
@@ -48,12 +48,12 @@ export function initStackModal() {
             <button class="btn-pill-toggle is-small" id="stack-action-start" style="color: var(--ok2, #10b981);">▶ Start</button>
             <button class="btn-pill-toggle is-danger is-small" id="stack-action-stop">⏹ Stop</button>
             <button class="btn-pill-toggle is-small" id="stack-action-restart">↻ Restart</button>
-            <button class="btn-pill-toggle is-small" id="stack-action-redeploy" style="background: rgba(14,165,233,0.2); border-color: rgba(56,189,248,0.4); color: var(--lt-t-38bdf8ff, #38bdf8);">⬆️ Redeploy / Up</button>
+            <button class="btn-pill-toggle is-small" id="stack-action-redeploy" style="background: rgba(14,165,233,0.2); border-color: rgba(56,189,248,0.4); color: var(--zn-text-accent);">⬆️ Redeploy / Up</button>
           </div>
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="ci-nav-tabs" style="display:flex; gap:4px; padding:8px 14px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border-bottom:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
+        <div class="ci-nav-tabs" style="display:flex; gap:4px; padding:8px 14px; background:var(--zn-shade-30); border-bottom:1px solid var(--zn-line-8);">
           <button class="btn-pill-toggle stack-tab-btn active" data-tab="compose">📄 Compose Setup (compose.yaml)</button>
           <button class="btn-pill-toggle stack-tab-btn" data-tab="env">⚙️ Environment (.env)</button>
           <button class="btn-pill-toggle stack-tab-btn" data-tab="services">📦 Services & Containers (<span id="stack-tab-services-count">0</span>)</button>
@@ -71,8 +71,8 @@ export function initStackModal() {
                 <button class="btn-pill-toggle" id="stack-compose-reset-btn">↺ Reload</button>
               </div>
             </div>
-            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius:6px; display:flex;">
-              <textarea id="stack-compose-editor" spellcheck="false" style="flex:1; width:100%; height:100%; min-height:280px; background:transparent; border:none; outline:none; resize:none; padding:12px; color:var(--lt-t-f1f5f9ff, #f1f5f9); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.55; box-sizing:border-box; tab-size:2;"></textarea>
+            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
+              <textarea id="stack-compose-editor" spellcheck="false" style="flex:1; width:100%; height:100%; min-height:280px; background:transparent; border:none; outline:none; resize:none; padding:12px; color:var(--zn-text-bright); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.55; box-sizing:border-box; tab-size:2;"></textarea>
             </div>
           </div>
 
@@ -82,8 +82,8 @@ export function initStackModal() {
               <span style="font-size:var(--zn-fs-xs); color:var(--muted);">Environment variables (.env) passed into this compose stack during runtime.</span>
               <button class="btn-pill-toggle" id="stack-env-copy-btn">📋 Copy .env</button>
             </div>
-            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius:6px; display:flex;">
-              <textarea id="stack-env-editor" spellcheck="false" placeholder="# KEY=VALUE" style="flex:1; width:100%; height:100%; min-height:280px; background:transparent; border:none; outline:none; resize:none; padding:12px; color:var(--lt-t-f1f5f9ff, #f1f5f9); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.55; box-sizing:border-box;"></textarea>
+            <div style="flex:1; min-height:280px; position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-12); border-radius:6px; display:flex;">
+              <textarea id="stack-env-editor" spellcheck="false" placeholder="# KEY=VALUE" style="flex:1; width:100%; height:100%; min-height:280px; background:transparent; border:none; outline:none; resize:none; padding:12px; color:var(--zn-text-bright); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.55; box-sizing:border-box;"></textarea>
             </div>
           </div>
 
@@ -95,11 +95,11 @@ export function initStackModal() {
         </div>
 
         <!-- Footer Controls -->
-        <div style="padding:10px 14px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:space-between; align-items:center;">
+        <div style="padding:10px 14px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center;">
           <div id="stack-modal-msg" style="font-size:var(--zn-fs-xs); color:var(--muted);"></div>
           <div style="display:flex; gap:8px;">
             <button class="btn-pill-toggle" id="stack-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle" id="stack-save-btn" style="background: var(--lt-b-ffffff1a, rgba(255,255,255,0.1));">Save Configuration</button>
+            <button class="btn-pill-toggle" id="stack-save-btn" style="background: var(--zn-glaze-10);">Save Configuration</button>
             <button class="btn-pill-toggle is-primary" id="stack-save-redeploy-btn">Save & Redeploy Stack</button>
           </div>
         </div>
@@ -394,13 +394,13 @@ function renderServicesList(containers) {
 
     const portsHtml = (c.ports || []).map((p) => {
       const hp = p.host_port ? `${p.host_port}➔` : '';
-      return `<code style="font-size:var(--zn-fs-xs); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); padding:1px 4px; border-radius:3px;">${hp}${p.container_port}/${p.proto}</code>`;
+      return `<code style="font-size:var(--zn-fs-xs); background:var(--zn-glaze-6); padding:1px 4px; border-radius:3px;">${hp}${p.container_port}/${p.proto}</code>`;
     }).join(' ') || '<span style="font-size:var(--zn-fs-xs); color:var(--muted);">Host Network / None</span>';
 
     html += `
-      <div class="drawer-card" style="padding:12px; background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:8px; display:flex; flex-direction:column; gap:8px;">
+      <div class="drawer-card" style="padding:12px; background:var(--zn-glaze-3); border:1px solid var(--zn-line-8); border-radius:8px; display:flex; flex-direction:column; gap:8px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:var(--zn-fs-xs); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          <div style="font-weight:700; color:var(--zn-text-strong); font-size:var(--zn-fs-xs); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
             ${escapeHtml(c.service || c.name)}
           </div>
           <div>${stateBadge}</div>
@@ -533,7 +533,7 @@ export async function openStackPickerModal(stacksInput = null) {
         <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; user-select:none; cursor:move;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:16px;">📁</span>
-            <span style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13.5px;">Docker Compose Stacks</span>
+            <span style="font-weight:700; color:var(--zn-text-strong); font-size:13.5px;">Docker Compose Stacks</span>
             <span id="stack-picker-badge" class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; font-weight:700; background:rgba(14,165,233,0.15); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.3);">0 Stacks</span>
           </div>
           <div class="os-window-controls">
@@ -542,11 +542,11 @@ export async function openStackPickerModal(stacksInput = null) {
         </div>
 
         <!-- Toolbar & Filter -->
-        <div style="padding:12px 16px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border-bottom:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); display:flex; flex-direction:column; gap:8px;">
+        <div style="padding:12px 16px; background:var(--zn-shade-35); border-bottom:1px solid var(--zn-line-6); display:flex; flex-direction:column; gap:8px;">
           <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Select a Docker Compose stack to inspect services, modify setup YAML, or manage lifecycle:</div>
           <div style="position:relative; display:flex; align-items:center;">
             <span style="position:absolute; left:10px; font-size:var(--zn-fs-xs); color:var(--muted); pointer-events:none;">🔍</span>
-            <input type="text" id="stack-picker-search" placeholder="${t('ui.filter_stacks_by_name_service', 'Filter stacks by name, service, or path...')}" class="tz-text-input" style="width:100%; padding:7px 10px 7px 30px; font-size:var(--zn-fs-xs); background:var(--lt-b-00000066, rgba(0,0,0,0.4)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius:6px; color:var(--lt-t-ffffffff, #fff); outline:none; box-sizing:border-box;">
+            <input type="text" id="stack-picker-search" placeholder="${t('ui.filter_stacks_by_name_service', 'Filter stacks by name, service, or path...')}" class="tz-text-input" style="width:100%; padding:7px 10px 7px 30px; font-size:var(--zn-fs-xs); background:var(--zn-shade-40); border:1px solid var(--zn-line-12); border-radius:6px; color:var(--zn-text-strong); outline:none; box-sizing:border-box;">
           </div>
         </div>
 
@@ -555,7 +555,7 @@ export async function openStackPickerModal(stacksInput = null) {
         </div>
 
         <!-- Footer -->
-        <div style="padding:10px 16px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:space-between; align-items:center;">
+        <div style="padding:10px 16px; background:var(--lt-b-00000080, rgba(0,0,0,0.5)); border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center;">
           <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-style:italic;">Click any stack card to open setup editor</span>
           <button class="btn-pill-toggle" id="stack-picker-cancel-btn">Cancel</button>
         </div>
@@ -614,13 +614,13 @@ export async function openStackPickerModal(stacksInput = null) {
       if (isAllRunning) {
         statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--ok2, #10b981); background:rgba(16,185,129,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--ok2, #10b981); box-shadow:0 0 6px var(--ok2, #10b981);"></span> ${s.running_count}/${s.total_count} Running</span>`;
       } else if (isNoneRunning) {
-        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--muted); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); padding:2px 8px; border-radius:12px; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1));"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> Stopped (${s.total_count})</span>`;
+        statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--muted); background:var(--zn-glaze-6); padding:2px 8px; border-radius:12px; border:1px solid var(--zn-line-10);"><span style="width:6px; height:6px; border-radius:50%; background:var(--muted);"></span> Stopped (${s.total_count})</span>`;
       } else {
         statusPill = `<span style="display:inline-flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--warn, #f5a623); background:rgba(245,166,35,0.12); padding:2px 8px; border-radius:12px; border:1px solid rgba(245,166,35,0.3); font-weight:600;"><span style="width:6px; height:6px; border-radius:50%; background:var(--warn, #f5a623); box-shadow:0 0 6px var(--warn, #f5a623);"></span> ${s.running_count}/${s.total_count} Running</span>`;
       }
 
       const servicesHtml = (s.services || []).slice(0, 6).map((svc) => `
-        <span class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color:var(--lt-t-cbd5e1ff, #cbd5e1); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-family:var(--font-mono, monospace);">${escapeHtml(svc)}</span>
+        <span class="ci-badge" style="font-size:var(--zn-fs-xs); padding:2px 6px; border-radius:4px; background:var(--zn-glaze-6); color:var(--zn-text-soft); border:1px solid var(--zn-line-10); font-family:var(--font-mono, monospace);">${escapeHtml(svc)}</span>
       `).join('');
 
       const moreCount = (s.services || []).length > 6 ? ` <span style="font-size:var(--zn-fs-xs); color:var(--muted);">+${s.services.length - 6} more</span>` : '';
@@ -628,11 +628,11 @@ export async function openStackPickerModal(stacksInput = null) {
       const pathStr = s.working_dir || s.config_files || 'Managed by Docker daemon';
 
       return `
-        <div class="stack-picker-card" data-stack="${escapeHtml(s.name)}" style="background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border:1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius:8px; padding:10px 14px; cursor:pointer; transition:all 0.16s cubic-bezier(0.16, 1, 0.3, 1); display:flex; flex-direction:column; gap:6px;">
+        <div class="stack-picker-card" data-stack="${escapeHtml(s.name)}" style="background:var(--zn-glaze-3); border:1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius:8px; padding:10px 14px; cursor:pointer; transition:all 0.16s cubic-bezier(0.16, 1, 0.3, 1); display:flex; flex-direction:column; gap:6px;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
             <div style="display:flex; align-items:center; gap:8px; min-width:0;">
               <span style="font-size:14px;">📁</span>
-              <strong style="font-size:13.5px; color:var(--lt-t-ffffffff, #fff); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.name)}</strong>
+              <strong style="font-size:13.5px; color:var(--zn-text-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(s.name)}</strong>
               <span class="ci-badge" style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:rgba(14,165,233,0.12); color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border:1px solid rgba(56,189,248,0.25); text-transform:uppercase;">${escapeHtml(s.origin || 'Compose')}</span>
             </div>
             ${statusPill}

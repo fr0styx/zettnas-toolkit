@@ -552,7 +552,7 @@ export class FmInspector {
     const dateModified = formatDateTime(item.mtime);
 
     const tabsHeaderHtml = `
-      <div class="fm-inspector-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding-bottom: 6px;">
+      <div class="fm-inspector-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 6px;">
         <button type="button" class="btn-pill-toggle ${this.activeTab === 'details' ? 'active' : ''}" id="fm-insp-tab-details" style="flex: 1;">ℹ️ Info</button>
         <button type="button" class="btn-pill-toggle ${this.activeTab === 'permissions' ? 'active' : ''}" id="fm-insp-tab-perms" style="flex: 1;">🔒 Permissions</button>
       </div>
@@ -562,9 +562,9 @@ export class FmInspector {
       content.innerHTML = `
         ${tabsHeaderHtml}
         <div class="fm-inspector-perms-pane" style="font-size: var(--zn-fs-xs);">
-          <div style="font-weight: 700; color: var(--lt-t-ffffffff, #fff); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-weight: 700; color: var(--zn-text-strong); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
             <span>POSIX Access Control</span>
-            <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--lt-t-38bdf8ff, #38bdf8);">--</span>
+            <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--zn-text-accent);">--</span>
           </div>
 
           ${isGuarded ? `
@@ -576,8 +576,8 @@ export class FmInspector {
           <div style="margin-bottom: 10px;">
             <label for="fm-insp-octal-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Octal Mode (e.g. 0755, 0644)</label>
             <div style="display: flex; gap: 6px;">
-              <input type="text" id="fm-insp-octal-input" maxlength="4" placeholder="0755" value="${escapeHtml(item.mode || '0755')}" ${isGuarded ? 'disabled' : ''} style="flex: 1; padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--lt-t-ffffffff, #fff);" />
-              <span id="fm-insp-human-mode" style="padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border-radius: 5px;">-rwxr-xr-x</span>
+              <input type="text" id="fm-insp-octal-input" maxlength="4" placeholder="0755" value="${escapeHtml(item.mode || '0755')}" ${isGuarded ? 'disabled' : ''} style="flex: 1; padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
+              <span id="fm-insp-human-mode" style="padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-muted); background: var(--zn-shade-20); border-radius: 5px;">-rwxr-xr-x</span>
             </div>
           </div>
 
@@ -587,17 +587,17 @@ export class FmInspector {
             <div style="color: var(--muted); font-weight: 700;">W</div>
             <div style="color: var(--muted); font-weight: 700;">X</div>
 
-            <div style="text-align: left; font-weight: 600; color: var(--lt-t-cbd5e1ff, #cbd5e1);">Owner</div>
+            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">Owner</div>
             <input type="checkbox" id="fm-perm-ur" data-perm="256" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-uw" data-perm="128" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ux" data-perm="64" ${isGuarded ? 'disabled' : ''} />
 
-            <div style="text-align: left; font-weight: 600; color: var(--lt-t-cbd5e1ff, #cbd5e1);">Group</div>
+            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">Group</div>
             <input type="checkbox" id="fm-perm-gr" data-perm="32" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-gw" data-perm="16" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-gx" data-perm="8" ${isGuarded ? 'disabled' : ''} />
 
-            <div style="text-align: left; font-weight: 600; color: var(--lt-t-cbd5e1ff, #cbd5e1);">Others</div>
+            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">Others</div>
             <input type="checkbox" id="fm-perm-or" data-perm="4" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ow" data-perm="2" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ox" data-perm="1" ${isGuarded ? 'disabled' : ''} />
@@ -606,17 +606,17 @@ export class FmInspector {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
             <div>
               <label for="fm-insp-owner-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">User (Owner)</label>
-              <input type="text" id="fm-insp-owner-input" placeholder="e.g. root" value="root" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--lt-t-ffffffff, #fff);" />
+              <input type="text" id="fm-insp-owner-input" placeholder="e.g. root" value="root" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
             </div>
             <div>
               <label for="fm-insp-group-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Group</label>
-              <input type="text" id="fm-insp-group-input" placeholder="e.g. users" value="users" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 5px; color: var(--lt-t-ffffffff, #fff);" />
+              <input type="text" id="fm-insp-group-input" placeholder="e.g. users" value="users" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
             </div>
           </div>
 
           ${item.is_dir ? `
             <div style="margin-bottom: 14px;">
-              <label style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); cursor: pointer;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); cursor: pointer;">
                 <input type="checkbox" id="fm-insp-recursive-chk" ${isGuarded ? 'disabled' : ''} />
                 <span>Apply recursively to all subfolders & files</span>
               </label>

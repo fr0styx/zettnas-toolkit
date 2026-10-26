@@ -58,11 +58,13 @@ def test_coloured_fills_keep_their_colour():
 
 
 def test_other_themes_get_the_original_colour():
-    css = ".x { color: #e2e8f0; background: #0d141e; border: 1px solid rgba(255,255,255,0.08); }"
+    css = ".x { color: #e5e7eb; background: #0d141e; border: 1px solid rgba(255,255,255,0.09); }"
     out = lt.rewrite_css(css)
-    assert "var(--lt-t-e2e8f0ff, #e2e8f0)" in out
+    assert "var(--lt-t-e5e7ebff, #e5e7eb)" in out
     assert "var(--lt-b-0d141eff, #0d141e)" in out
-    assert "var(--lt-r-ffffff14, rgba(255,255,255,0.08))" in out
+    assert "var(--lt-r-ffffff17, rgba(255,255,255,0.09))" in out
+    # colours with a semantic token (UX-10) get the token, whose dark value is that colour
+    assert lt.rewrite_css(".y { color: #e2e8f0; }") == ".y { color: var(--zn-text); }"
     # every fallback is exactly the original literal
     for _k, key, fallback in re.findall(r"var\(--lt-([tbr])-([0-9a-f]{8}), ([^()]*(?:\([^()]*\))?)\)", out):
         assert lt.key(lt.parse(fallback)) == key
@@ -73,7 +75,7 @@ def test_lcd_and_previews_are_left_alone():
     assert lt.rewrite_css(css) == css
     html = '<div id="console-window"><div id="screen"><span style="color:#e2e8f0">x</span></div></div><b style="color:#e2e8f0">y</b>'
     out = lt.rewrite_markup(html)
-    assert '<span style="color:#e2e8f0">' in out and "var(--lt-t-e2e8f0ff" in out
+    assert '<span style="color:#e2e8f0">' in out and "var(--zn-text)" in out
 
 
 def test_white_text_on_a_coloured_fill_stays_white():
@@ -103,3 +105,57 @@ def test_palette_applies_to_the_light_theme_only():
     text = lt.palette_text()
     assert "body.theme-light:not(.lcd-direct) {" in text
     assert text.count("{") == 1
+
+
+# --- UX-10: semantic colour tokens --------------------------------------------------------
+
+# var(--lt-...) colours left in the sources; lower it when you replace some, never raise it
+HARD_CODED_BASELINE = 811
+
+
+def _sources_text():
+    for f in lt.sources():
+        with open(f, encoding="utf-8") as fh:
+            yield f, fh.read()
+
+
+def test_every_semantic_token_is_defined_with_its_colour():
+    with open(lt.TOKEN_FILE, encoding="utf-8") as f:
+        text = f.read()
+    for (_k, h), name in lt.SEMANTIC.items():
+        assert lt.key(lt.parse(lt.token_value(name))) == h, name
+        if name in lt.LIGHT_BY_HAND:
+            continue
+        assert f"--{name}: {lt.token_value(name)};" in text, f"{name} is not defined in 50-components.css"
+
+
+def test_mapped_colours_use_their_token():
+    left = []
+    for f, text in _sources_text():
+        for m in lt.VAR_USE.finditer(text):
+            if (m.group(1), m.group(2)) in lt.SEMANTIC:
+                left.append(f"{os.path.relpath(f, ROOT)}: {m.group(0)}")
+    assert not left, "run: python scripts/light_theme.py tokens\n" + "\n".join(left[:10])
+
+
+def test_hard_coded_colours_do_not_grow():
+    n = sum(len(lt.VAR_USE.findall(text)) for _, text in _sources_text())
+    assert n <= HARD_CODED_BASELINE, f"{n} hard-coded colours (baseline {HARD_CODED_BASELINE}): use a --zn- token"
+
+
+def test_new_colours_get_the_token_directly():
+    assert lt.rewrite_block("color: #fff; border: 1px solid rgba(255,255,255,0.08)") == (
+        "color: var(--zn-text-strong); border: 1px solid var(--zn-line-8)"
+    )
+    assert lt.tokenize("background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3))") == "background: var(--zn-shade-30)"
+    # a mismatched fallback is not swapped
+    assert lt.tokenize("color: var(--lt-t-ffffffff, #eee)") == "color: var(--lt-t-ffffffff, #eee)"
+
+
+def test_token_light_values_match_what_they_replaced():
+    for name in lt.SEMANTIC.values():
+        if name not in lt.LIGHT_BY_HAND:
+            assert lt.token_light(name) is not None, name
+    with open(lt.PALETTE, encoding="utf-8") as f:
+        palette = f.read()
+    assert f"--zn-shade-30: {lt.token_light('zn-shade-30')};" in palette

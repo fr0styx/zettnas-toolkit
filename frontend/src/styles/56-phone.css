@@ -113,7 +113,7 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 #setup-wizard-modal .setup-gap { margin-top: 8px; }
 #setup-wizard-modal .setup-head { font-size: 13px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
 #setup-wizard-modal .setup-desc { font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
-#setup-wizard-modal .setup-input { width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15)); border-radius: 6px; color: var(--fg); }
+#setup-wizard-modal .setup-input { width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--fg); }
 
 /* UX-1, UX-2: the Overview's status line and the Advanced switch */
 .mgmt-status-summary { grid-column: 1 / -1; }

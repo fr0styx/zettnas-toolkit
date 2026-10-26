@@ -43,11 +43,11 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
   toast.innerHTML = `
     <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">↺</div>
     <div style="flex: 1; min-width: 0;">
-      <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: var(--lt-t-38bdf8ff, #38bdf8);">NOTIFICATION</div>
-      <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-f1f5f9ff, #f1f5f9); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
+      <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: var(--zn-text-accent);">NOTIFICATION</div>
+      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
     </div>
-    <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;">${escapeHtml(actionText)}</button>
-    <button class="top-toast-close" style="background: transparent; border: none; color: var(--lt-t-94a3b8ff, #94a3b8); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
+    <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;">${escapeHtml(actionText)}</button>
+    <button class="top-toast-close" style="background: transparent; border: none; color: var(--zn-text-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
 
   container.appendChild(toast);
@@ -179,9 +179,9 @@ function _showTopNotification(msg, type = "error") {
     <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">${icon}</div>
     <div style="flex: 1; min-width: 0;">
       <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
-      <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-f1f5f9ff, #f1f5f9); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
+      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
     </div>
-    <button class="top-toast-close" style="background: transparent; border: none; color: var(--lt-t-94a3b8ff, #94a3b8); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
+    <button class="top-toast-close" style="background: transparent; border: none; color: var(--zn-text-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
 
   container.appendChild(toast);
@@ -244,17 +244,17 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     card.setAttribute("aria-labelledby", "confirm-toast-title");
     card.setAttribute("aria-describedby", "confirm-toast-msg");
     card.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background: rgba(14, 165, 233, 0.1);" id="confirm-toast-header-bg" data-dialog-header>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--zn-line-8); background: rgba(14, 165, 233, 0.1);" id="confirm-toast-header-bg" data-dialog-header>
         <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--lt-t-0ea5e9ff, #0ea5e9);" id="confirm-toast-title">
           Confirm Action
         </div>
         <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="${t('jobs.cancel', 'Cancel')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
       </div>
       <div style="padding: 16px 20px;">
-        <div id="confirm-toast-msg" style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); line-height: 1.55; word-break: break-word;"></div>
+        <div id="confirm-toast-msg" style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.55; word-break: break-word;"></div>
         <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
-          <button id="confirm-toast-eject" style="display: none; padding: 7px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--lt-t-f87171ff, #f87171); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer; margin-right: auto;" title="${t('ui.safely_unmount_and_eject_card', 'Safely unmount and eject card')}">⏏ Eject</button>
-          <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer;">Cancel</button>
+          <button id="confirm-toast-eject" style="display: none; padding: 7px 14px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer; margin-right: auto;" title="${t('ui.safely_unmount_and_eject_card', 'Safely unmount and eject card')}">⏏ Eject</button>
+          <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer;">Cancel</button>
           <button id="confirm-toast-ok" style="padding: 7px 18px; background: #0ea5e9; border: 1px solid #0284c7; border-radius: 6px; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">Confirm</button>
         </div>
       </div>
@@ -345,8 +345,8 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     const wrap = document.createElement('div');
     wrap.id = 'confirm-toast-type';
     wrap.style.marginTop = '12px';
-    wrap.innerHTML = `<label for="confirm-toast-type-input" style="display:block; font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom: 6px;"></label>
-      <input id="confirm-toast-type-input" type="text" autocomplete="off" spellcheck="false" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); padding: 8px 10px; color: var(--lt-t-ffffffff, white); border-radius: 6px; font-size: 13px; outline: none;" />`;
+    wrap.innerHTML = `<label for="confirm-toast-type-input" style="display:block; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 6px;"></label>
+      <input id="confirm-toast-type-input" type="text" autocomplete="off" spellcheck="false" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--zn-line-15); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: 13px; outline: none;" />`;
     wrap.querySelector('label').textContent = t('confirm.type_to_confirm', 'Type {name} to confirm', { name: expected });
     msgEl.after(wrap);
     typeInput = wrap.querySelector('input');
@@ -478,8 +478,8 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
 
   const isTextarea = inputType === "textarea";
   const inputHtml = isTextarea
-    ? `<textarea id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4)); padding: 9px 12px; color: var(--lt-t-ffffffff, white); border-radius: 6px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; outline: none; min-height: 96px; resize: vertical; line-height: 1.45;">${escapeHtml(defaultVal || '')}</textarea>`
-    : `<input type="${inputType}" id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4)); padding: 9px 12px; color: var(--lt-t-ffffffff, white); border-radius: 6px; font-size: 13px; outline: none;" value="${escapeHtml(defaultVal || '')}" />`;
+    ? `<textarea id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4)); padding: 9px 12px; color: var(--zn-text-strong); border-radius: 6px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; outline: none; min-height: 96px; resize: vertical; line-height: 1.45;">${escapeHtml(defaultVal || '')}</textarea>`
+    : `<input type="${inputType}" id="prompt-toast-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); border: 1px solid var(--lt-r-00f0ff66, rgba(0, 240, 255, 0.4)); padding: 9px 12px; color: var(--zn-text-strong); border-radius: 6px; font-size: 13px; outline: none;" value="${escapeHtml(defaultVal || '')}" />`;
 
   const safePromptMsg = options.allowHtml === false
     ? escapeHtml(msg || "")
@@ -488,17 +488,17 @@ export function showPromptToast(title, msg, defaultVal, onConfirm, onCancel = nu
       : escapeHtml(msg || "");
 
   card.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08));" id="confirm-toast-header-bg" data-dialog-header>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--zn-line-8); background: var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08));" id="confirm-toast-header-bg" data-dialog-header>
       <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--lt-ink-brand, var(--brand, #00f0ff));" id="confirm-toast-title">
         <span>${icon}</span> ${escapeHtml(title || "Rename")}
       </div>
       <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="${t('jobs.cancel', 'Cancel')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
     </div>
     <div style="padding: 16px 20px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom: 12px; line-height: 1.5;">${safePromptMsg}</div>
+      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 12px; line-height: 1.5;">${safePromptMsg}</div>
       ${inputHtml}
       <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
-        <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer;">${escapeHtml(cancelText)}</button>
+        <button id="confirm-toast-cancel" style="padding: 7px 16px; background: transparent; border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; cursor: pointer;">${escapeHtml(cancelText)}</button>
         <button id="confirm-toast-ok" style="padding: 7px 18px; background: var(--brand, #00f0ff); border: 1px solid var(--brand, #00f0ff); border-radius: 6px; color: #050b14; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer;">${escapeHtml(okText)}</button>
       </div>
     </div>

@@ -9,7 +9,7 @@
 }
 .theme-preset-card {
   background: var(--lt-b-141f2dff, #141f2d);
-  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--zn-line-8);
   border-radius: 9px;
   padding: 8px 10px;
   display: flex;
@@ -46,7 +46,7 @@
 .theme-preset-name {
   font-size: var(--zn-fs-xs);
   font-weight: 800;
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

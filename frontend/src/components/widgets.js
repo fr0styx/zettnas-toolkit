@@ -2126,7 +2126,7 @@ export function initWidgets() {
         if (nUtil > 0 || (stats.ai_active && stats.ai_accelerator === 'npu')) {
           aiEngineStatus.innerHTML = '<span class="ai-status-dot active"></span> <strong style="color:var(--lt-ink-brand, var(--brand, #00f0ff));">Intel AI Boost NPU Active</strong>';
         } else if (gUtil > 0 || (stats.ai_active && (stats.ai_accelerator === 'gpu' || stats.ai_accelerator === 'arc'))) {
-          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:var(--lt-t-c084fcff, #c084fc);">Intel Arc GPU Active</strong>';
+          aiEngineStatus.innerHTML = '<span class="ai-status-dot active-gpu"></span> <strong style="color:var(--zn-text-ai);">Intel Arc GPU Active</strong>';
         } else if (npu.present && gpu.present) {
           aiEngineStatus.innerHTML = '<span class="ai-status-dot standby"></span> <span>Hybrid Dual Silicon</span> <span style="opacity:0.65;">(NPU + GPU Ready)</span>';
         } else {
@@ -2418,9 +2418,9 @@ export function updateTzModalPreview() {
   const btn24 = document.getElementById('btn-tz-fmt-24');
   if (btn12 && btn24) {
     btn12.style.background = fmt12 ? 'var(--brand, #00f0ff)' : 'transparent';
-    btn12.style.color = fmt12 ? '#000' : 'var(--lt-t-94a3b8ff, #94a3b8)';
+    btn12.style.color = fmt12 ? '#000' : 'var(--zn-text-muted)';
     btn24.style.background = !fmt12 ? 'var(--brand, #00f0ff)' : 'transparent';
-    btn24.style.color = !fmt12 ? '#000' : 'var(--lt-t-94a3b8ff, #94a3b8)';
+    btn24.style.color = !fmt12 ? '#000' : 'var(--zn-text-muted)';
   }
 }
 
@@ -2454,7 +2454,7 @@ export function renderTimezoneList() {
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 14px;">📍</span>
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">Local System Timezone (Auto)</div>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Local System Timezone (Auto)</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(localIana)}</div>
         </div>
       </div>
@@ -2482,13 +2482,13 @@ export function renderTimezoneList() {
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 14px;">🌐</span>
           <div>
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(tz.name)}</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(tz.name)}</div>
             <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(tz.id)} • ${escapeHtml(tz.country)}</div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
-          <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #00f0ff))' : 'var(--lt-t-e2e8f0ff, #e2e8f0)'};">${escapeHtml(timeStr)}</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: var(--font-mono, monospace);">${escapeHtml(tzAbbr)}</span>
+          <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: ${isSelected ? 'var(--lt-ink-brand, var(--brand, #00f0ff))' : 'var(--zn-text)'};">${escapeHtml(timeStr)}</span>
           <span style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isSelected ? '✓' : ''}</span>
         </div>
       </div>
@@ -2901,7 +2901,7 @@ export function renderDayAgenda(dateKey) {
     html += `
       <div style="text-align: center; color: var(--muted); padding: 40px 20px; font-size: var(--zn-fs-xs);">
         <div style="font-size: 26px; margin-bottom: 8px;">📝</div>
-        <div style="font-weight: 600; color: var(--lt-t-cbd5e1ff, #cbd5e1);">${t('cal.empty_agenda') || 'No notes or reminders for this day.'}</div>
+        <div style="font-weight: 600; color: var(--zn-text-soft);">${t('cal.empty_agenda') || 'No notes or reminders for this day.'}</div>
         <div style="font-size: var(--zn-fs-xs); margin-top: 4px;">Use the composer above to add a task, reminder, or note.</div>
       </div>
     `;
@@ -2928,10 +2928,10 @@ export function renderDayAgenda(dateKey) {
           }
           <div style="flex: 1; display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <span class="cal-agenda-title" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(item.title)}</span>
+              <span class="cal-agenda-title" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(item.title)}</span>
               <div style="display: flex; align-items: center; gap: 6px;">
-                ${timeStr ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); padding: 2px 6px; border-radius: 4px; color: var(--lt-ink-brand, var(--brand, #00f0ff));">${escapeHtml(timeStr)}</span>` : ''}
-                ${isSynced ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--lt-t-eab308ff, #eab308); padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: var(--zn-fs-xs); color: var(--muted); background: var(--lt-b-ffffff0d, rgba(255,255,255,0.05)); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
+                ${timeStr ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); background: var(--zn-glaze-8); padding: 2px 6px; border-radius: 4px; color: var(--lt-ink-brand, var(--brand, #00f0ff));">${escapeHtml(timeStr)}</span>` : ''}
+                ${isSynced ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.3); color: var(--lt-t-eab308ff, #eab308); padding: 2px 6px; border-radius: 4px;">${escapeHtml(item.feed_name || 'Synced')}</span>` : `<span style="font-size: var(--zn-fs-xs); color: var(--muted); background: var(--zn-glaze-5); padding: 2px 6px; border-radius: 4px;">${escapeHtml(category)}</span>`}
                 ${
                   !isSynced
                     ? `<button type="button" class="btn-cal-delete-note btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px 4px;" title="${t('ui.delete_note', 'Delete Note')}">🗑️</button>`
@@ -2965,11 +2965,11 @@ export function renderFeedsList() {
   let html = '';
   _calendarFeeds.forEach((feed) => {
     html += `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 6px;" data-feed-id="${escapeHtml(feed.id)}">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px;" data-feed-id="${escapeHtml(feed.id)}">
         <div style="display: flex; align-items: center; gap: 8px;">
           <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
           <div>
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(feed.name)}</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(feed.name)}</div>
             <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
           </div>
         </div>

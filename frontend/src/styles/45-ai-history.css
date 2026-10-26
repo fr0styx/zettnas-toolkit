@@ -56,7 +56,7 @@
   font-weight: 700;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(14, 165, 233, 0.25)) !important;
   border: 1px solid var(--border, rgba(99, 102, 241, 0.5)) !important;
-  color: var(--lt-t-ffffffff, #fff) !important;
+  color: var(--zn-text-strong) !important;
   border-radius: 6px;
   cursor: pointer;
   display: flex;
@@ -77,10 +77,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--border, var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1)));
+  background: var(--zn-glaze-5);
+  border: 1px solid var(--border, var(--zn-line-10));
   border-radius: 6px;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   cursor: pointer;
   font-size: var(--zn-fs-xs);
   transition: all 0.15s ease;
@@ -88,8 +88,8 @@
 }
 
 .btn-ai-icon-toggle:hover {
-  background: var(--lt-b-ffffff1f, rgba(255, 255, 255, 0.12));
-  color: var(--lt-t-ffffffff, #fff);
+  background: var(--zn-glaze-12);
+  color: var(--zn-text-strong);
 }
 
 .ai-sidebar-search-bar {
@@ -103,9 +103,9 @@
   padding: 0 8px;
   font-size: var(--zn-fs-xs);
   background: var(--lt-b-02061766, rgba(2, 6, 23, 0.4));
-  border: 1px solid var(--border, var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)));
+  border: 1px solid var(--border, var(--zn-line-8));
   border-radius: 6px;
-  color: var(--lt-t-f1f5f9ff, #f1f5f9);
+  color: var(--zn-text-bright);
   box-sizing: border-box;
   outline: none;
   transition: border-color 0.15s ease;
@@ -131,7 +131,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   padding: 8px 6px 3px;
   user-select: none;
   display: flex;
@@ -146,7 +146,7 @@
   padding: 6px 8px;
   border-radius: 6px;
   font-size: var(--zn-fs-xs);
-  color: var(--lt-t-cbd5e1ff, #cbd5e1);
+  color: var(--zn-text-soft);
   cursor: pointer;
   transition: background 0.12s ease, color 0.12s ease;
   user-select: none;
@@ -155,14 +155,14 @@
 }
 
 .ai-thread-item:hover {
-  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
-  color: var(--lt-t-ffffffff, #fff);
+  background: var(--zn-glaze-6);
+  color: var(--zn-text-strong);
 }
 
 .ai-thread-item.active {
   background: rgba(99, 102, 241, 0.18);
   border-color: var(--accent, rgba(99, 102, 241, 0.45));
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   font-weight: 600;
 }
 
@@ -207,14 +207,14 @@
   align-items: center;
   justify-content: space-between;
   padding-top: 8px;
-  border-top: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border-top: 1px solid var(--zn-line-8);
   margin-top: 6px;
   flex-shrink: 0;
 }
 
 .ai-thread-count-badge {
   font-size: var(--zn-fs-xs);
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   font-weight: 600;
 }
 
@@ -253,7 +253,7 @@
 .ai-chat-active-title {
   font-size: 13px;
   font-weight: 800;
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -274,14 +274,14 @@
 }
 
 .ai-menu-item:hover {
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)) !important;
+  background: var(--zn-glaze-8) !important;
 }
 
 .ai-empty-threads {
   padding: 20px 10px;
   text-align: center;
   font-size: var(--zn-fs-xs);
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   font-style: italic;
 }
 

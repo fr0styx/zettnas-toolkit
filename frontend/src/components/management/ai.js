@@ -59,7 +59,7 @@ export function renderAiSearchHistory() {
   }
   bar.style.display = 'flex';
   chipsContainer.innerHTML = _aiSearchHistory.map((q) => `
-    <button type="button" class="btn-pill-toggle ai-history-chip is-small" data-query="${escapeHtml(q)}" style="background: var(--lt-b-ffffff0a, rgba(255,255,255,0.04)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-cbd5e1ff, #cbd5e1);">
+    <button type="button" class="btn-pill-toggle ai-history-chip is-small" data-query="${escapeHtml(q)}" style="background: var(--zn-glaze-4); border: 1px solid var(--zn-line-12); color: var(--zn-text-soft);">
       ${escapeHtml(q)}
     </button>
   `).join('');
@@ -256,7 +256,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   const filteredModels = allModels;
 
   if (filteredModels.length === 0) {
-    gridEl.innerHTML = `<div style="grid-column:1 / -1; padding:14px; text-align:center; color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs); border:1px dashed var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius:8px;">No models match the selected hardware filter.</div>`;
+    gridEl.innerHTML = `<div style="grid-column:1 / -1; padding:14px; text-align:center; color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs); border:1px dashed var(--zn-line-12); border-radius:8px;">No models match the selected hardware filter.</div>`;
     return;
   }
 
@@ -299,7 +299,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
     return `
       <div class="ai-llm-rec-card ${hasWarn ? 'ai-llm-hw-warning' : 'ai-llm-hw-ok'}" data-model-id="${escapeHtml(m.id)}" data-hf-repo="${escapeHtml(hfRepo)}" data-recommended="${isRec ? '1' : '0'}" data-active="${isAct ? '1' : '0'}" data-fits-hardware="${hasWarn ? '0' : '1'}" data-hardware-warning="${hasWarn ? '1' : '0'}" style="background:${bgCol}; border:1px solid ${borderCol}; border-radius:9px; padding:10px 12px; display:flex; flex-direction:column; gap:6px;">
         <div style="display:flex; flex-direction:column; gap:4px;">
-          <div style="font-weight:800; font-size:var(--zn-fs-xs); color:var(--lt-t-ffffffff, #fff); word-break:break-word; line-height:1.35;" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
+          <div style="font-weight:800; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); word-break:break-word; line-height:1.35;" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
           <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
             <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
               <span>${escapeHtml(m.family || m.category || 'Hugging Face')} • ${escapeHtml(m.params || '')} • ${escapeHtml(m.quantization || '')}</span>
@@ -311,10 +311,10 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
           </div>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:5px; font-size:var(--zn-fs-xs);">
-          <span style="padding:1px 6px; border-radius:4px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device || 'NPU / GPU')}</span>
-          <span style="padding:1px 6px; border-radius:4px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); color:${hasWarn ? '#fdba74' : '#bae6fd'};">💾 ~${m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0} GB Model${m.min_ram_gb ? ` (${m.min_ram_gb}GB+ Host)` : ''}</span>
-          <span style="padding:1px 6px; border-radius:4px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); color:var(--lt-t-f8fafcff, #f8fafc);" title="Hugging Face Release Date: ${escapeHtml(releaseDateText)}">📅 ${escapeHtml(releaseDateText)}</span>
-          <span style="padding:1px 6px; border-radius:4px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); color:var(--lt-t-fde68aff, #fde68a);">🚀 ${escapeHtml(m.estimated_speed || '')}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device || 'NPU / GPU')}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#bae6fd'};">💾 ~${m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0} GB Model${m.min_ram_gb ? ` (${m.min_ram_gb}GB+ Host)` : ''}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f8fafcff, #f8fafc);" title="Hugging Face Release Date: ${escapeHtml(releaseDateText)}">📅 ${escapeHtml(releaseDateText)}</span>
+          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-fde68aff, #fde68a);">🚀 ${escapeHtml(m.estimated_speed || '')}</span>
         </div>
         ${hasWarn ? `
           <div class="ai-model-hw-warning-banner" style="padding:6px 8px; border-radius:6px; background:${isCritical ? 'rgba(239,68,68,0.16)' : 'rgba(245,158,11,0.15)'}; border:1px solid ${isCritical ? 'rgba(248,113,113,0.45)' : 'rgba(251,191,36,0.45)'}; color:${isCritical ? '#fecaca' : '#fef08a'}; font-size:var(--zn-fs-xs); line-height:1.35; display:flex; align-items:flex-start; gap:6px;">
@@ -322,12 +322,12 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
             <span>${escapeHtml(warningText)}</span>
           </div>
         ` : `
-          <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${escapeHtml(m.why_recommended || m.use_case || '')}">
+          <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;" title="${escapeHtml(m.why_recommended || m.use_case || '')}">
             ${escapeHtml(m.use_case || '')}${m.why_recommended ? ` — ${escapeHtml(m.why_recommended)}` : ''}
           </div>
         `}
-        <div style="margin-top:auto; padding-top:5px; border-top:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); display:flex; justify-content:space-between; align-items:center; gap:6px;">
-          <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-94a3b8ff, #94a3b8);">🔋 ${escapeHtml(m.power_profile || 'Low Power')} • 📅 ${escapeHtml(releaseDateText)}</span>
+        <div style="margin-top:auto; padding-top:5px; border-top:1px solid var(--zn-line-6); display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);">🔋 ${escapeHtml(m.power_profile || 'Low Power')} • 📅 ${escapeHtml(releaseDateText)}</span>
           <div style="display:flex; align-items:center; gap:5px;">
             ${isAct
               ? `<span style="font-size:var(--zn-fs-xs); font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
@@ -596,9 +596,9 @@ export function renderAiLearningResultsData(data = {}) {
       listEl.innerHTML = `<div style="padding:8px 10px; border-radius:6px; background:rgba(34,197,94,0.08); color:var(--lt-t-86efacff, #86efac);">✓ All learned files succeeded with 0 errors.</div>`;
     } else {
       listEl.innerHTML = failedFiles.map((f) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border-bottom:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 8px; border-bottom:1px solid var(--zn-line-6);">
           <span style="font-family:monospace; color:var(--lt-t-fca5a5ff, #fca5a5);">${escapeHtml(f.file_path || f.file_name || '')}</span>
-          <span style="color:var(--lt-t-94a3b8ff, #94a3b8); font-size:var(--zn-fs-xs);">${escapeHtml(f.error || 'Failed to parse')}</span>
+          <span style="color:var(--zn-text-muted); font-size:var(--zn-fs-xs);">${escapeHtml(f.error || 'Failed to parse')}</span>
         </div>
       `).join('');
     }
@@ -837,8 +837,8 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
           <span style="font-size:var(--zn-fs-xs); padding:1px 6px; border-radius:999px; background:${inStandby ? 'rgba(245,158,11,0.18)' : 'rgba(37,194,160,0.18)'}; color:${inStandby ? '#fbbf24' : '#34d399'};">
             ${inStandby ? `💤 Standby${dev ? ` (${escapeHtml(dev)})` : ''}` : `🟢 Running${dev ? ` (${escapeHtml(dev)})` : ''}`}
           </span>
-          <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.sync_this_folder_now_standby', 'Sync this folder now (Standby Safe)')}" style="background:transparent; border:none; color:var(--lt-t-38bdf8ff, #38bdf8); cursor:pointer; font-size:var(--zn-fs-xs); padding:0 2px;">🔄</button>
-          <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.uncheck_folder_from_rag_watched', 'Uncheck folder from RAG watched list')}" style="background:transparent; border:none; color:var(--lt-t-f87171ff, #f87171); cursor:pointer; font-size:var(--zn-fs-xs); font-weight:800; padding:0 2px;">✕</button>
+          <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.sync_this_folder_now_standby', 'Sync this folder now (Standby Safe)')}" style="background:transparent; border:none; color:var(--zn-text-accent); cursor:pointer; font-size:var(--zn-fs-xs); padding:0 2px;">🔄</button>
+          <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.uncheck_folder_from_rag_watched', 'Uncheck folder from RAG watched list')}" style="background:transparent; border:none; color:var(--zn-text-crit); cursor:pointer; font-size:var(--zn-fs-xs); font-weight:800; padding:0 2px;">✕</button>
           <button type="button" class="btn-ai-forget-folder" data-folder-path="${escapeHtml(fp)}" title="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" aria-label="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" style="background:transparent; border:none; color:var(--lt-t-fca5a5ff, #fca5a5); cursor:pointer; font-size:var(--zn-fs-xs); padding:0 2px;">🗑</button>
         </div>
       `;
@@ -1972,7 +1972,7 @@ export async function fetchAndRenderAiStatus() {
       const defItems = res.standby_guard?.deferred_queue || res.sync_progress?.deferred_queue || [];
       const defCount = stats.deferred_queue_count ?? defItems.length ?? 0;
       const defDetail = defItems.length > 0
-        ? ` <span style="color:var(--lt-t-fbbf24ff, #fbbf24);">(${defItems.map((d) => `${escapeHtml(d.path)}${d.backing_dev ? ` [${escapeHtml(d.backing_dev)}]` : ''}`).join(', ')} — ⚡ auto-learns on spin-up)</span>`
+        ? ` <span style="color:var(--zn-text-warn);">(${defItems.map((d) => `${escapeHtml(d.path)}${d.backing_dev ? ` [${escapeHtml(d.backing_dev)}]` : ''}`).join(', ')} — ⚡ auto-learns on spin-up)</span>`
         : (defCount > 0 ? ' <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">(⚡ auto-learns on spin-up)</span>' : '');
       const dimLabel = stats.actual_embedding_dim || stats.embedding_dim || 768;
       const modelRaw = stats.actual_embedding_model || stats.embedding_model || 'EmbeddingGemma 2';
@@ -2025,17 +2025,17 @@ function renderStructuredCardHtml(card) {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 18px;">🍳</span>
-            <span style="font-weight: 800; font-size: 13.5px; color: var(--lt-t-ffffffff, #fff);">${escapeHtml(card.title || 'Structured Recipe Card')}</span>
+            <span style="font-weight: 800; font-size: 13.5px; color: var(--zn-text-strong);">${escapeHtml(card.title || 'Structured Recipe Card')}</span>
           </div>
           <div style="display: flex; gap: 6px; font-size: var(--zn-fs-xs);">
-            ${card.prep_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); color: var(--lt-t-6ee7b7ff, #6ee7b7);">⏱ Prep: ${escapeHtml(card.prep_time)}</span>` : ''}
-            ${card.cook_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); color: var(--lt-t-fde68aff, #fde68a);">🔥 Cook: ${escapeHtml(card.cook_time)}</span>` : ''}
-            ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); color: var(--lt-t-bae6fdff, #bae6fd);">🍽 Serves: ${escapeHtml(card.servings)}</span>` : ''}
+            ${card.prep_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-6ee7b7ff, #6ee7b7);">⏱ Prep: ${escapeHtml(card.prep_time)}</span>` : ''}
+            ${card.cook_time ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-fde68aff, #fde68a);">🔥 Cook: ${escapeHtml(card.cook_time)}</span>` : ''}
+            ${card.servings ? `<span style="padding: 2px 8px; border-radius: 999px; background: var(--zn-shade-30); color: var(--lt-t-bae6fdff, #bae6fd);">🍽 Serves: ${escapeHtml(card.servings)}</span>` : ''}
           </div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: var(--zn-fs-xs);">
-          ${ings ? `<div><div style="font-weight: 700; color: var(--lt-t-6ee7b7ff, #6ee7b7); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">Ingredients</div><ul style="margin: 0; padding-left: 16px; color: var(--lt-t-e2e8f0ff, #e2e8f0); line-height: 1.5;">${ings}</ul></div>` : ''}
-          ${steps ? `<div><div style="font-weight: 700; color: var(--lt-t-93c5fdff, #93c5fd); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">Instructions</div><ol style="margin: 0; padding-left: 16px; color: var(--lt-t-e2e8f0ff, #e2e8f0); line-height: 1.5;">${steps}</ol></div>` : ''}
+          ${ings ? `<div><div style="font-weight: 700; color: var(--lt-t-6ee7b7ff, #6ee7b7); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">Ingredients</div><ul style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${ings}</ul></div>` : ''}
+          ${steps ? `<div><div style="font-weight: 700; color: var(--lt-t-93c5fdff, #93c5fd); margin-bottom: 4px; text-transform: uppercase; font-size: var(--zn-fs-xs);">Instructions</div><ol style="margin: 0; padding-left: 16px; color: var(--zn-text); line-height: 1.5;">${steps}</ol></div>` : ''}
         </div>
       </div>
     `;
@@ -2099,13 +2099,13 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       const secTitle = c.section_title || c.breadcrumb || fPath;
       const cleanExcerpt = String(c.excerpt || '').replace(/\s+/g, ' ').trim();
       return `
-        <div class="ai-citation-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${c.file_id}" data-excerpt="${escapeHtml(cleanExcerpt)}" style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: border-color 0.2s;">
+        <div class="ai-citation-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${c.file_id}" data-excerpt="${escapeHtml(cleanExcerpt)}" style="background: var(--zn-glaze-3); border: 1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: border-color 0.2s;">
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-            <span style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8);">[${cIdx}] 📄 ${escapeHtml(fName)}</span>
+            <span style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">[${cIdx}] 📄 ${escapeHtml(fName)}</span>
             <span style="font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 4px; background: rgba(16,185,129,0.12); color: var(--lt-t-6ee7b7ff, #6ee7b7);">💤 Cached</span>
           </div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted); font-family: monospace; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(secTitle)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-top: 6px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-top: 6px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
             ${escapeHtml(cleanExcerpt)}
           </div>
         </div>
@@ -2143,9 +2143,9 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
       .map((line) => line.replace(/\s+/g, ' ').trim())
       .filter(Boolean);
     const answerFormatted = escapeHtml(rawAnswerLines.join('\n'))
-      .replace(/\[\^(\d+):\s*([^\]]+)\]/g, '<span style="color:var(--lt-t-38bdf8ff, #38bdf8); font-weight:700;">[$1]</span> <strong>$2</strong> —')
+      .replace(/\[\^(\d+):\s*([^\]]+)\]/g, '<span style="color:var(--zn-text-accent); font-weight:700;">[$1]</span> <strong>$2</strong> —')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\[(\d+)\]/g, '<span style="color:var(--lt-t-38bdf8ff, #38bdf8); font-weight:700;">[$1]</span>')
+      .replace(/\[(\d+)\]/g, '<span style="color:var(--zn-text-accent); font-weight:700;">[$1]</span>')
       .replace(/\n/g, '<br/>');
 
     const hwTierLabel = res.hardware?.tier_code || res.hardware?.tier || res.hardware?.active_tier_name || '—';
@@ -2157,7 +2157,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 15px;">🧠</span>
-            <span style="font-weight: 800; font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff);">ZettAI Grounded Synthesis</span>
+            <span style="font-weight: 800; font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">ZettAI Grounded Synthesis</span>
             <span class="ai-llm-proof-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(168,85,247,0.16); border: 1px solid rgba(192,132,252,0.45); color: var(--lt-t-e9d5ffff, #e9d5ff);" title="${escapeHtml(llmTel.runtime_mode || 'No AI model (built-in tools only)')}">🤖 ${escapeHtml(activeLlmId)}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 7px; font-size: var(--zn-fs-xs); color: var(--muted);">
@@ -2171,7 +2171,7 @@ export async function runAiRagAsk(rawQuestion, options = {}) {
             <button type="button" class="btn-ai-dismiss-synthesis btn-pill-toggle is-small" style="margin-left: 4px;" title="${t('ui.hide_synthesis_card', 'Hide synthesis card')}">✕</button>
           </div>
         </div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-f1f5f9ff, #f1f5f9); line-height: 1.55; max-height: 150px; overflow-y: auto;">
+        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.55; max-height: 150px; overflow-y: auto;">
           ${answerFormatted}
         </div>
         ${cardsHtml}
@@ -2240,24 +2240,24 @@ function buildVisualPhotoCardHtml(item) {
   const isFav = Boolean(item.is_favorite);
 
   return `
-    <div class="ai-visual-photo-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${fId}" data-category="${escapeHtml(fCat)}" data-favorite="${isFav ? '1' : '0'}" data-excerpt="${escapeHtml(item.excerpt || '')}" style="background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius: 9px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;">
-      <div style="height: 125px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+    <div class="ai-visual-photo-card" data-path="${escapeHtml(fPath)}" data-name="${escapeHtml(fName)}" data-file-id="${fId}" data-category="${escapeHtml(fCat)}" data-favorite="${isFav ? '1' : '0'}" data-excerpt="${escapeHtml(item.excerpt || '')}" style="background: var(--zn-glaze-3); border: 1px solid var(--lt-r-ffffff17, rgba(255,255,255,0.09)); border-radius: 9px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; transition: transform 0.15s, border-color 0.15s;">
+      <div style="height: 125px; background: var(--zn-shade-40); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
         ${isPhoto
           ? `<img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(fName)}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;" data-img-fallback="hide" />`
           : `<div style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px; text-align:center;">
                <span style="font-size:30px;">${catIcon}</span>
-               <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-94a3b8ff, #94a3b8); max-height:42px; overflow:hidden;">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
+               <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted); max-height:42px; overflow:hidden;">${escapeHtml((item.excerpt || fPath).slice(0, 75))}</span>
              </div>`
         }
-        <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); color: var(--lt-t-38bdf8ff, #38bdf8);">${catIcon} ${escapeHtml(matchReason)}</span>
+        <span title="${escapeHtml(matchReason)}" style="position: absolute; top: 6px; left: 6px; max-width: calc(100% - 82px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); color: var(--zn-text-accent);">${catIcon} ${escapeHtml(matchReason)}</span>
         <span style="position: absolute; top: 6px; right: 6px; font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: var(--lt-b-000000b8, rgba(0,0,0,0.72)); color: var(--lt-t-6ee7b7ff, #6ee7b7); white-space: nowrap;">${isFav ? '⭐ ' : ''}💤 Cached</span>
       </div>
       <div style="padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;">
-        <div style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
+        <div style="font-weight: 700; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(fName)}">${escapeHtml(fName)}</div>
         <div style="font-size: var(--zn-fs-xs); color: var(--muted,#94a3b8); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(fPath)}</div>
         <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-          ${colors.map((c) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.14); color: var(--lt-t-38bdf8ff, #38bdf8); font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
-          ${scenes.map((s) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: var(--lt-b-ffffff12, rgba(255,255,255,0.07)); color: var(--lt-t-cbd5e1ff, #cbd5e1);">#${escapeHtml(s)}</span>`).join('')}
+          ${colors.map((c) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: rgba(56,189,248,0.14); color: var(--zn-text-accent); font-weight: 700; text-transform: capitalize;">🎨 ${escapeHtml(c)}</span>`).join('')}
+          ${scenes.map((s) => `<span style="font-size: var(--zn-fs-xs); padding: 1px 5px; border-radius: 4px; background: var(--lt-b-ffffff12, rgba(255,255,255,0.07)); color: var(--zn-text-soft);">#${escapeHtml(s)}</span>`).join('')}
         </div>
       </div>
     </div>
@@ -2285,7 +2285,7 @@ export function renderAiPreviewInspector(item) {
 
   pane.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px;">
-      <div style="font-weight:800; font-size:var(--zn-fs-xs); color:var(--lt-t-ffffffff, #fff); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(fName)}">
+      <div style="font-weight:800; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(fName)}">
         ${escapeHtml(fName)}
       </div>
       <button type="button" id="btn-ai-inspector-close" class="btn-pill-toggle is-small">✕</button>
@@ -2296,14 +2296,14 @@ export function renderAiPreviewInspector(item) {
          </div>`
       : ''
     }
-    <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom:10px; display:flex; flex-direction:column; gap:4px;">
-      <div><strong style="color:var(--lt-t-94a3b8ff, #94a3b8);">Location:</strong> <code style="font-size:var(--zn-fs-xs); color:var(--lt-t-38bdf8ff, #38bdf8); word-break:break-all;">${escapeHtml(fPath)}</code></div>
-      <div><strong style="color:var(--lt-t-94a3b8ff, #94a3b8);">Match Mode:</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || 'Semantic Vector')}</span></div>
-      ${item.excerpt ? `<div style="margin-top:4px; padding:8px; border-radius:6px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); max-height:90px; overflow-y:auto;">${escapeHtml(item.excerpt)}</div>` : ''}
+    <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:10px; display:flex; flex-direction:column; gap:4px;">
+      <div><strong style="color:var(--zn-text-muted);">Location:</strong> <code style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent); word-break:break-all;">${escapeHtml(fPath)}</code></div>
+      <div><strong style="color:var(--zn-text-muted);">Match Mode:</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || 'Semantic Vector')}</span></div>
+      ${item.excerpt ? `<div style="margin-top:4px; padding:8px; border-radius:6px; background:var(--zn-shade-30); font-size:var(--zn-fs-xs); color:var(--zn-text); max-height:90px; overflow-y:auto;">${escapeHtml(item.excerpt)}</div>` : ''}
     </div>
     <!-- 5 Official ZettAI File Actions (#apps/zettai/search) -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-      <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: var(--lt-t-ffffffff, #fff);">
+      <button type="button" id="btn-ai-inspector-open" class="btn-pill-toggle" style="background: rgba(14,165,233,0.22); border: 1px solid rgba(14,165,233,0.5); color: var(--zn-text-strong);">
         👁️ Open File
       </button>
       <button type="button" id="btn-ai-inspector-location" class="btn-pill-toggle" style="background: rgba(37,194,160,0.18); border: 1px solid rgba(37,194,160,0.45); color: var(--lt-t-6ee7b7ff, #6ee7b7);" title="${t('ui.open_parent_folder_in_file', 'Open parent folder in File Manager')}">
@@ -2474,7 +2474,7 @@ export function renderAiRagInitialEmptyState() {
     grid.innerHTML = `
       <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #94a3b8);">
         <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.85;">🔍</div>
-        <div style="font-size: 14px; font-weight: 600; color: var(--lt-t-e2e8f0ff, #e2e8f0); margin-bottom: 6px;" data-i18n="ai.search_placeholder_prompt">${escapeHtml(t('ai.search_placeholder_prompt', 'Search Your NAS Knowledge & Media'))}</div>
+        <div style="font-size: 14px; font-weight: 600; color: var(--zn-text); margin-bottom: 6px;" data-i18n="ai.search_placeholder_prompt">${escapeHtml(t('ai.search_placeholder_prompt', 'Search Your NAS Knowledge & Media'))}</div>
         <div style="font-size: var(--zn-fs-xs); color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">${escapeHtml(t('ai.search_placeholder_sub', 'Type a query above to search documents, recipes, photos, or audio, or ask Zetty a question. Results will appear here once you search.'))}</div>
       </div>
     `;
@@ -2538,7 +2538,7 @@ export async function runAiVisualSearch(rawQuery = null) {
         intentBanner.style.display = 'block';
         intentBanner.innerHTML = `
           <strong>🧠 Parsed Visual Intent:</strong>
-          ${autoColors.length ? `<span style="margin-left:6px; color:var(--lt-t-38bdf8ff, #38bdf8);">🎨 Color: <b>${escapeHtml(autoColors.join(', '))}</b></span>` : ''}
+          ${autoColors.length ? `<span style="margin-left:6px; color:var(--zn-text-accent);">🎨 Color: <b>${escapeHtml(autoColors.join(', '))}</b></span>` : ''}
           ${autoScenes.length ? `<span style="margin-left:8px; color:var(--lt-t-6ee7b7ff, #6ee7b7);">🏷️ Scene: <b>${escapeHtml(autoScenes.join(', '))}</b></span>` : ''}
           <span style="margin-left:8px; color:var(--lt-t-c7d2feff, #c7d2fe);">⚡ Mode: <b>${escapeHtml((_aiSelectedMatchTab || 'semantic').toUpperCase())}</b></span>
           <span style="margin-left:8px; color:var(--muted);">• 🛡️💤 Zero Disk Wakeups</span>
@@ -2689,14 +2689,14 @@ function _buildAiActionProposalsHtml(toolsCalled) {
         <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fde68aff, #fde68a);">⏸️ ${escapeHtml(tc.action_summary || tc.tool)}</span>
         <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="confirm" style="font-size:var(--zn-fs-xs); padding:3px 10px;">Confirm</button>
         <button type="button" class="btn ai-chat-confirm-action" data-action-id="${escapeHtml(tc.action_id)}" data-decision="cancel" style="font-size:var(--zn-fs-xs); padding:3px 10px; opacity:0.8;">Cancel</button>
-        <span class="ai-chat-action-status" style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1);"></span>
+        <span class="ai-chat-action-status" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft);"></span>
       </div>`).join('');
 }
 
 function _buildAiExternalNoteHtml(res) {
   const ext = Array.isArray(res?.external_services) ? res.external_services : [];
   if (!ext.length) return '';
-  return `<div class="ai-chat-external-note" style="font-size:var(--zn-fs-xs); color:var(--lt-t-fbbf24ff, #fbbf24); padding-top:2px;" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
+  return `<div class="ai-chat-external-note" style="font-size:var(--zn-fs-xs); color:var(--zn-text-warn); padding-top:2px;" title="${t('ui.this_answer_used_services_outside', 'This answer used services outside your NAS')}">🌐 Data left this device: ${escapeHtml(ext.join(', '))}</div>`;
 }
 
 // Remember the Web toggle per browser (a convenience; the server default is off).
@@ -2761,12 +2761,12 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
         <div style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs);">
           <span aria-hidden="true">📁</span>
           <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">Folder Scope:</span>
-          <code style="color: var(--lt-t-e0f2feff, #e0f2fe); font-size: var(--zn-fs-xs); background: var(--lt-b-00000040, rgba(0,0,0,0.25)); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
-          ${folderManifest && folderManifest.total_files ? `<span style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8);">(${folderManifest.total_files} files)</span>` : ''}
+          <code style="color: var(--lt-t-e0f2feff, #e0f2fe); font-size: var(--zn-fs-xs); background: var(--zn-shade-25); padding: 1px 5px; border-radius: 4px;">${escapeHtml(folderPath)}</code>
+          ${folderManifest && folderManifest.total_files ? `<span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">(${folderManifest.total_files} files)</span>` : ''}
         </div>
         ${groundingScore === null ? `
           <div style="display: flex; align-items: center; gap: 5px;">
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-cbd5e1ff, #cbd5e1); background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">Unverified</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-soft); background: rgba(148,163,184,0.14); border: 1px solid rgba(148,163,184,0.35); padding: 1px 7px; border-radius: 999px;" title="${t('ui.this_answer_s_support_in', 'This answer\'s support in the sources wasn\'t measured.')}">Unverified</span>
           </div>
         ` : ''}
         ${groundingScore !== null ? `
@@ -2786,7 +2786,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
   const docCitationsHtml = citations.length > 0
     ? `
       <details class="ai-chat-doc-citations" style="margin-top: 4px; font-size: var(--zn-fs-xs);">
-        <summary style="cursor: pointer; color: var(--lt-t-38bdf8ff, #38bdf8); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); width: fit-content; user-select: none;">
+        <summary style="cursor: pointer; color: var(--zn-text-accent); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); width: fit-content; user-select: none;">
           <span>📚 Verified Citations (${citations.length})</span>
         </summary>
         <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
@@ -2799,12 +2799,12 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
             return `
               <div class="ai-citation-card" style="padding: 7px 10px; border-radius: 7px; background: var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); border: 1px solid rgba(56,189,248,0.22); font-size: var(--zn-fs-xs);">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 3px;">
-                  <button type="button" class="btn-preview-citation" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}" style="background: none; border: none; padding: 0; color: var(--lt-t-38bdf8ff, #38bdf8); font-weight: 700; cursor: pointer; text-decoration: underline; text-align: left; font-size: var(--zn-fs-xs);">
-                    📄 [${idx + 1}] ${escName}<span style="color: var(--lt-t-94a3b8ff, #94a3b8); font-weight: 400; text-decoration: none;">${escapeHtml(bcrumb)}</span> 👁️
+                  <button type="button" class="btn-preview-citation" data-action="open-file-preview" data-path="${escPath}" data-name="${escName}" style="background: none; border: none; padding: 0; color: var(--zn-text-accent); font-weight: 700; cursor: pointer; text-decoration: underline; text-align: left; font-size: var(--zn-fs-xs);">
+                    📄 [${idx + 1}] ${escName}<span style="color: var(--zn-text-muted); font-weight: 400; text-decoration: none;">${escapeHtml(bcrumb)}</span> 👁️
                   </button>
                   <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-a7f3d0ff, #a7f3d0); background: rgba(16,185,129,0.14); padding: 1px 6px; border-radius: 999px;">${scorePct}% match</span>
                 </div>
-                ${c.excerpt ? `<div style="color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); line-height: 1.45; font-style: italic; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); padding: 5px 8px; border-radius: 5px; border-left: 2px solid #38bdf8;">"${escapeHtml(c.excerpt)}"</div>` : ''}
+                ${c.excerpt ? `<div style="color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.45; font-style: italic; background: var(--zn-shade-25); padding: 5px 8px; border-radius: 5px; border-left: 2px solid #38bdf8;">"${escapeHtml(c.excerpt)}"</div>` : ''}
               </div>
             `;
           }).join('')}
@@ -2821,9 +2821,9 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
           const escN = escapeHtml(p.name || 'Photo');
           const thumb = p.thumbnail_url || (p.file_id ? `/api/media/thumbnail/${p.file_id}` : '');
           return `
-            <div class="ai-chat-photo-card" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="cursor: pointer; width: 85px; border-radius: 6px; overflow: hidden; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); transition: transform 0.15s ease;" title="${escN}">
+            <div class="ai-chat-photo-card" data-action="open-file-preview" data-path="${escP}" data-name="${escN}" style="cursor: pointer; width: 85px; border-radius: 6px; overflow: hidden; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); transition: transform 0.15s ease;" title="${escN}">
               ${thumb ? `<img src="${escapeHtml(thumb)}" alt="${escN}" style="width: 100%; height: 60px; object-fit: cover;" />` : `<div style="height: 60px; display: flex; align-items: center; justify-content: center; font-size: 20px;">🖼️</div>`}
-              <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escN}</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escN}</div>
             </div>
           `;
         }).join('')}
@@ -2834,25 +2834,25 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
   const webSourcesHtml = webSources.length > 0
     ? `
       <details class="ai-chat-web-sources" style="margin-top: 2px; font-size: var(--zn-fs-xs);">
-        <summary style="cursor: pointer; color: var(--lt-t-94a3b8ff, #94a3b8); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); width: fit-content; user-select: none;">
+        <summary style="cursor: pointer; color: var(--zn-text-muted); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-8); width: fit-content; user-select: none;">
           <span>🌐 Sources (${webSources.length})</span>
         </summary>
         <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; padding-left: 2px;">
-          ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: var(--lt-t-38bdf8ff, #38bdf8); text-decoration: none; font-weight: 600; font-size: var(--zn-fs-xs);">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
+          ${webSources.slice(0, 5).map((ws) => `<a href="${escapeHtml(ws.url)}" target="_blank" rel="noopener noreferrer" style="padding: 2px 8px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); color: var(--zn-text-accent); text-decoration: none; font-weight: 600; font-size: var(--zn-fs-xs);">${escapeHtml(ws.title || ws.source || 'Source')} ↗</a>`).join('')}
         </div>
       </details>
     `
     : '';
 
   return `
-    <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); padding-bottom: 5px;">
+    <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 5px;">
       <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
         <span class="ai-chat-model-pill" style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--lt-t-e9d5ffff, #e9d5ff); padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(usedModel)}</span>
         <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-3bf58bff, #3bf58b);">⚡ ${escapeHtml(accelLabel)}</span>
-        <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8);">(${escapeHtml(runtimeMode)})</span>
+        <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">(${escapeHtml(runtimeMode)})</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8);">
-        ${!folderPath && groundingScore !== null ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-34d399ff, #34d399); padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${groundingScore}% Grounded</span><span>•</span>` : ''}
+      <div style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">
+        ${!folderPath && groundingScore !== null ? `<span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-ok); padding: 0 5px; border-radius: 999px; background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3);">🎯 ${groundingScore}% Grounded</span><span>•</span>` : ''}
         ${tokSec ? `<span style="color: var(--lt-t-fde68aff, #fde68a);">🚀 ${tokSec} tok/s</span>` : ''}
         <span>•</span>
         <span>${elapsedMs} ms</span>
@@ -2862,7 +2862,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     ${_buildAiExternalNoteHtml(res)}
     ${_buildAiActionProposalsHtml(toolsCalled)}
     ${folderBannerHtml}
-    <div class="ai-chat-reply-body" style="font-size: var(--zn-fs-xs); color: var(--lt-t-f1f5f9ff, #f1f5f9); line-height: 1.55;">
+    <div class="ai-chat-reply-body" style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.55;">
       ${_formatChatMarkdown(replyMd, { citations, webSources })}
     </div>
     ${docCitationsHtml}
@@ -3400,11 +3400,11 @@ export function _formatChatMarkdown(rawText, sources = null) {
     text = text.replace(/<think>[\s\S]*?<\/think>/i, '').trim();
     thoughtHtml = `
       <details class="ai-thought-disclosure" style="margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: var(--zn-fs-xs);">
-        <summary style="cursor: pointer; font-weight: 700; color: var(--lt-t-c084fcff, #c084fc); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+        <summary style="cursor: pointer; font-weight: 700; color: var(--zn-text-ai); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
           <span>🧠 Thought Process</span>
-          <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); font-weight: 400;">(click to view chain of thought)</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">(click to view chain of thought)</span>
         </summary>
-        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;">
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;">
           ${thoughtContent.replace(/\n/g, '<br/>')}
         </div>
       </details>
@@ -3445,26 +3445,26 @@ export function _formatChatMarkdown(rawText, sources = null) {
       : '';
 
     return `<div class="ai-chat-code-block" style="margin: 8px 0; border-radius: 8px; background: var(--lt-b-020617e0, rgba(2, 6, 23, 0.88)); border: 1px solid rgba(56, 189, 248, 0.3); overflow: hidden;">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: var(--lt-b-0f172af2, rgba(15, 23, 42, 0.95)); border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)); font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); font-family: monospace;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 10px; background: var(--lt-b-0f172af2, rgba(15, 23, 42, 0.95)); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-family: monospace;">
         <span style="font-weight: 700; color: var(--lt-t-7dd3fcff, #7dd3fc);">${escapeHtml(item.lang)}</span>
         <div style="display: flex; align-items: center;">
           ${deployBtnHtml}
-          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); border: 1px solid var(--lt-r-ffffff2e, rgba(255,255,255,0.18)); border-radius: 4px; color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); padding: 2px 7px; cursor: pointer;">Copy</button>
+          <button type="button" class="btn-copy-code" data-action="copy-code" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-18); border-radius: 4px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); padding: 2px 7px; cursor: pointer;">Copy</button>
         </div>
       </div>
-      <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: var(--zn-fs-xs); line-height: 1.5; color: var(--lt-t-e2e8f0ff, #e2e8f0);"><code>${escapedCode}</code></pre>
+      <pre style="margin: 0; padding: 10px 12px; overflow-x: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: var(--zn-fs-xs); line-height: 1.5; color: var(--zn-text);"><code>${escapedCode}</code></pre>
     </div>`;
   });
 
   const formatted = escaped
     .replace(/^####\s+(.+)$/gm, '<div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-7dd3fcff, #7dd3fc); margin:8px 0 3px;">$1</div>')
-    .replace(/^###\s+(.+)$/gm, '<div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-38bdf8ff, #38bdf8); margin:8px 0 4px;">$1</div>')
-    .replace(/^&gt;\s?(.*)$/gm, '<div style="border-left:2px solid rgba(168,85,247,0.55); padding-left:8px; margin:3px 0; color:var(--lt-t-cbd5e1ff, #cbd5e1); font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.07); border-radius:0 4px 4px 0;">$1</div>')
-    .replace(/^[-*]\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:var(--lt-t-38bdf8ff, #38bdf8); font-size:var(--zn-fs-xs); line-height:1.5;">•</span><div style="flex:1;">$1</div></div>')
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:var(--lt-t-c084fcff, #c084fc); font-weight:700; font-size:var(--zn-fs-xs); line-height:1.5;">$1.</span><div style="flex:1;">$2</div></div>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--lt-t-ffffffff, #fff);">$1</strong>')
+    .replace(/^###\s+(.+)$/gm, '<div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-accent); margin:8px 0 4px;">$1</div>')
+    .replace(/^&gt;\s?(.*)$/gm, '<div style="border-left:2px solid rgba(168,85,247,0.55); padding-left:8px; margin:3px 0; color:var(--zn-text-soft); font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.07); border-radius:0 4px 4px 0;">$1</div>')
+    .replace(/^[-*]\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:var(--zn-text-accent); font-size:var(--zn-fs-xs); line-height:1.5;">•</span><div style="flex:1;">$1</div></div>')
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<div style="display:flex; align-items:flex-start; gap:6px; margin:3px 0 3px 4px;"><span style="color:var(--zn-text-ai); font-weight:700; font-size:var(--zn-fs-xs); line-height:1.5;">$1.</span><div style="flex:1;">$2</div></div>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--zn-text-strong);">$1</strong>')
     .replace(/`([^`]+)`/g, '<code style="background:var(--lt-b-00000061, rgba(0,0,0,0.38)); padding:1px 5px; border-radius:4px; color:var(--lt-t-bae6fdff, #bae6fd); font-family:monospace; font-size:var(--zn-fs-xs);">$1</code>')
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8); text-decoration:underline;">$1 ↗</a>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline;">$1 ↗</a>')
     .replace(/\[\^(\d+):\s*([^#\]]+)(?:#L?(\d+))?\]/g, (match, idx, path, line) => {
       const escP = escapeHtml(path.trim());
       const escN = escapeHtml(path.trim().split('/').pop() || 'File');
@@ -3589,7 +3589,7 @@ export async function sendAiChatMessage(rawMessage = null) {
       pendingEl.innerHTML = `
         <span class="ai-thinking-brain" style="font-size: 15px;">🧠</span>
         <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-e9d5ffff, #e9d5ff);">Thinking</span>
-        <span class="ai-thinking-dots" style="color: var(--lt-t-c084fcff, #c084fc); font-weight: 800; letter-spacing: 2px;">
+        <span class="ai-thinking-dots" style="color: var(--zn-text-ai); font-weight: 800; letter-spacing: 2px;">
           <span class="ai-dot-1">.</span><span class="ai-dot-2">.</span><span class="ai-dot-3">.</span>
         </span>
         <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-d8b4feff, #d8b4fe); margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">${escapeHtml(activeModel)}</span>
@@ -3602,7 +3602,7 @@ export async function sendAiChatMessage(rawMessage = null) {
           <span class="ai-typing-dot"></span>
           <span class="ai-typing-dot"></span>
         </div>
-        <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1);">Processing with <strong style="color: var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(activeModel)}</strong>...</span>
+        <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft);">Processing with <strong style="color: var(--zn-text-accent);">${escapeHtml(activeModel)}</strong>...</span>
       `;
     }
     listEl.appendChild(pendingEl);
@@ -3704,16 +3704,16 @@ export async function sendAiChatMessage(rawMessage = null) {
           streamBotMsgEl.style.cssText = 'display: flex; flex-direction: column; gap: 7px; padding: 11px 14px; border-radius: 10px; background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(56, 189, 248, 0.28);';
 
           streamBotMsgEl.innerHTML = `
-            <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); padding-bottom: 5px;">
+            <div class="ai-chat-llm-proof-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 5px;">
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span class="ai-chat-model-pill" style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--lt-t-e9d5ffff, #e9d5ff); padding: 1px 8px; border-radius: 999px; background: rgba(168,85,247,0.18); border: 1px solid rgba(192,132,252,0.45);">🤖 ${escapeHtml(activeModel)}</span>
-                <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-38bdf8ff, #38bdf8); display: inline-flex; align-items: center; gap: 4px;">
+                <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent); display: inline-flex; align-items: center; gap: 4px;">
                   <span class="ai-typing-dot" style="width: 5px; height: 5px;"></span> Streaming
                 </span>
               </div>
             </div>
             <div class="ai-chat-tools-trace" style="display: flex; flex-wrap: wrap; gap: 5px; padding-top: 2px;"></div>
-            <div class="ai-chat-reply-body" style="font-size: var(--zn-fs-xs); color: var(--lt-t-f1f5f9ff, #f1f5f9); line-height: 1.55;"></div>
+            <div class="ai-chat-reply-body" style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.55;"></div>
           `;
           listEl.appendChild(streamBotMsgEl);
           toolsTraceEl = streamBotMsgEl.querySelector('.ai-chat-tools-trace');
@@ -3809,11 +3809,11 @@ export async function sendAiChatMessage(rawMessage = null) {
                   thoughtDetailsEl.open = true;
                   thoughtDetailsEl.style.cssText = 'margin: 4px 0 10px; border-radius: 8px; background: rgba(147, 51, 234, 0.08); border: 1px solid rgba(168, 85, 247, 0.28); padding: 7px 10px; font-size: var(--zn-fs-xs);';
                   thoughtDetailsEl.innerHTML = `
-                    <summary style="cursor: pointer; font-weight: 700; color: var(--lt-t-c084fcff, #c084fc); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
+                    <summary style="cursor: pointer; font-weight: 700; color: var(--zn-text-ai); display: inline-flex; align-items: center; gap: 6px; user-select: none;">
                       <span>🧠 Thought Process</span>
-                      <span style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); font-weight: 400;">(reasoning in real time...)</span>
+                      <span style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); font-weight: 400;">(reasoning in real time...)</span>
                     </summary>
-                    <div class="ai-thought-content" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;"></div>
+                    <div class="ai-thought-content" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(168, 85, 247, 0.2); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); line-height: 1.5; font-style: italic;"></div>
                   `;
                   if (replyBodyEl) streamBotMsgEl.insertBefore(thoughtDetailsEl, replyBodyEl);
                   thoughtBodyEl = thoughtDetailsEl.querySelector('.ai-thought-content');
@@ -4116,7 +4116,7 @@ export async function showServeLink(url, funnel = false) {
     : t('ts.serve_how', 'On your phone, install the Tailscale app and sign in to the same tailnet. Then open this address, on Wi-Fi or mobile data. Add it to your home screen to use ZettNAS like an app.');
   showConfirmToast(
     t('ts.serve_ready', 'ZettNAS is reachable through Tailscale'),
-    `${qr ? `<img src="${qr}" alt="${escapeHtml(t('ts.serve_qr_alt', 'QR code for {url}', { url }))}" width="180" height="180" style="display:block;margin:0 auto 10px;border-radius:8px;background:#fff;">` : ''}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8);font-weight:700;word-break:break-all;">${escapeHtml(url)}</a><br><br>${escapeHtml(how)}`,
+    `${qr ? `<img src="${qr}" alt="${escapeHtml(t('ts.serve_qr_alt', 'QR code for {url}', { url }))}" width="180" height="180" style="display:block;margin:0 auto 10px;border-radius:8px;background:#fff;">` : ''}<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent);font-weight:700;word-break:break-all;">${escapeHtml(url)}</a><br><br>${escapeHtml(how)}`,
     () => {
       copyText(url).catch(() => {});
     },

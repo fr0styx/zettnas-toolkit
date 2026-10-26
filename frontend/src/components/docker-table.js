@@ -121,7 +121,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   const statusHtml = `
     <div style="display:flex; align-items:center; gap:6px;">
       <span class="docker-state-badge" style="display:inline-block; padding:2px 6px; border-radius:4px; font-size:var(--zn-fs-xs); font-weight:700; background:${badgeBg}; color:${badgeColor}; text-transform:uppercase;">${escapeHtml(c.state)}</span>
-      <span class="docker-status-text" style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
+      <span class="docker-status-text" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(c.status)}">${escapeHtml(c.status)}</span>
     </div>
   `;
 
@@ -169,7 +169,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     <td class="docker-name-cell">
       <div style="display:flex; align-items:center; gap:6px;">
         <input type="checkbox" class="docker-row-select" data-id="${escapeHtml(c.id)}" ${checkedAttr} title="Select ${escapeHtml(c.name)}" style="margin:0; cursor:pointer; accent-color:var(--brand, #0ea5e9); flex-shrink:0;">
-        <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:var(--lt-t-ffffffff, #fff); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
+        <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:var(--zn-text-strong); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
         <code style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
         ${updateBadge}
       </div>

@@ -64,10 +64,10 @@ export function renderListeningPortsTable(ports, filter = '') {
 
     return `
       <tr data-port="${escapeHtml(String(p.port))}" data-proto="${escapeHtml(String(p.protocol))}">
-        <td><strong style="font-family: monospace; font-size: 13px; color: var(--lt-t-ffffffff, #fff);">:${escapeHtml(String(p.port))}</strong></td>
+        <td><strong style="font-family: monospace; font-size: 13px; color: var(--zn-text-strong);">:${escapeHtml(String(p.port))}</strong></td>
         <td>${protoBadge}</td>
         <td><code style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(String(p.bind_address))}</code></td>
-        <td><span style="font-weight: 600; color: var(--lt-t-e2e8f0ff, #e2e8f0);">${escapeHtml(String(p.service || 'Unknown'))}</span></td>
+        <td><span style="font-weight: 600; color: var(--zn-text);">${escapeHtml(String(p.service || 'Unknown'))}</span></td>
         <td>${containerCol}</td>
         <td style="text-align: right;">${stateBadge}</td>
       </tr>

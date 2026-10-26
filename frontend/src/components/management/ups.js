@@ -677,9 +677,9 @@ export function initUpsDrawerControls() {
           ? (cand.description || `USB ${cand.vendor_id || ''}:${cand.product_id || ''}`)
           : (cand.port ? `${cand.host}:${cand.port}` : (cand.path || cand.host || 'local'));
         const displayTitle = cand.title || cand.label || typeLabel;
-        return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:8px 12px; border-radius:6px; cursor:pointer;">
+        return `<div class="ups-discover-item" data-idx="${idx}" style="display:flex; justify-content:space-between; align-items:center; background:var(--zn-shade-30); border:1px solid var(--zn-line-8); padding:8px 12px; border-radius:6px; cursor:pointer;">
           <div>
-            <div style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(displayTitle)}</div>
+            <div style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-strong);">${escapeHtml(displayTitle)}</div>
             <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(typeLabel)} • <code>${escapeHtml(hostPort)}</code></div>
           </div>
           <button type="button" class="btn-rect is-small">Apply</button>

@@ -398,7 +398,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
             <label for="chassis-profile-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">ENCLOSURE PROFILE</label>
-            <select id="chassis-profile-select" class="tz-select-input" style="width:100%; padding:8px; border-radius:6px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff); font-size:var(--zn-fs-xs);">
+            <select id="chassis-profile-select" class="tz-select-input" style="width:100%; padding:8px; border-radius:6px; background:var(--zn-shade-30); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">
               <option value="auto" ${profile === 'auto' ? 'selected' : ''}>Auto Dynamic (Auto-Detect)</option>
               <option value="compact_dual" ${profile === 'compact_dual' ? 'selected' : ''}>Compact Dual (1–2 Bays)</option>
               <option value="tower_desktop" ${profile === 'tower_desktop' ? 'selected' : ''}>Desktop Tower (3–6 Bays)</option>
@@ -408,7 +408,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
           </div>
           <div>
             <label for="chassis-total-bays-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px;">TOTAL PHYSICAL BAYS</label>
-            <input type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}" style="width:100%; padding:8px; border-radius:6px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color:var(--lt-t-ffffffff, #fff); font-size:var(--zn-fs-xs);">
+            <input type="number" id="chassis-total-bays-input" min="1" max="48" value="${totalBays}" style="width:100%; padding:8px; border-radius:6px; background:var(--zn-shade-30); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">
           </div>
         </div>
 
@@ -417,7 +417,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
             <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;">PHYSICAL BAY ALLOCATION & LABELS</label>
             <button id="chassis-auto-assign-btn" class="btn-pill-toggle">⚡ Auto-Assign Sequentially</button>
           </div>
-          <div style="max-height: 320px; overflow-y: auto; border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 6px; background: var(--lt-b-00000033, rgba(0,0,0,0.2));">
+          <div style="max-height: 320px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; background: var(--zn-shade-20);">
             <table class="copy-history-table chassis-slots-table" style="width:100%;">
               <thead>
                 <tr>
@@ -432,7 +432,7 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
           </div>
         </div>
       </div>
-      <div class="smart-modal-footer" style="padding: 12px 16px; border-top: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:flex-end; gap: 8px;">
+      <div class="smart-modal-footer" style="padding: 12px 16px; border-top: 1px solid var(--zn-line-8); display:flex; justify-content:flex-end; gap: 8px;">
         <button id="chassis-config-cancel-btn" class="btn-pill-toggle">Cancel</button>
         <button id="chassis-config-save-btn" class="btn-save-preset" style="padding: 8px 20px;">Save Bay Mapping</button>
       </div>
@@ -461,12 +461,12 @@ export function openChassisConfigModal(currentConfig = {}, onSaved = null) {
         <tr data-slot="${slot}">
           <td style="font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">BAY ${slot}</td>
           <td>
-            <select class="slot-drive-select tz-select-input" style="width:100%; padding:6px; font-size:var(--zn-fs-xs); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color:var(--lt-t-ffffffff, #fff); border-radius:4px;">
+            <select class="slot-drive-select tz-select-input" style="width:100%; padding:6px; font-size:var(--zn-fs-xs); background:var(--zn-shade-30); border:1px solid var(--zn-line-10); color:var(--zn-text-strong); border-radius:4px;">
               ${optionsHtml}
             </select>
           </td>
           <td>
-            <input type="text" class="slot-label-input tz-text-input" maxlength="64" value="${escapeHtml(currentLabel)}" placeholder="${t('ui.e_g_parity_1_pool', 'e.g. Parity 1, Pool A')}" style="width:100%; padding:6px; font-size:var(--zn-fs-xs); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); color:var(--lt-t-ffffffff, #fff); border-radius:4px;">
+            <input type="text" class="slot-label-input tz-text-input" maxlength="64" value="${escapeHtml(currentLabel)}" placeholder="${t('ui.e_g_parity_1_pool', 'e.g. Parity 1, Pool A')}" style="width:100%; padding:6px; font-size:var(--zn-fs-xs); background:var(--zn-shade-30); border:1px solid var(--zn-line-10); color:var(--zn-text-strong); border-radius:4px;">
           </td>
         </tr>
       `;
@@ -751,8 +751,8 @@ function buildPoolBlockInner(pool, isObserver) {
     <div class="topo-pool-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
       <button class="btn-pool-scrub btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.trigger_filesystem_scrub_or_parity', 'Trigger filesystem scrub or parity check')}">⚡ Scrub Pool</button>
       ${!isObserver ? `<button class="btn-pool-rename btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" data-pool-name="${escapeHtml(pool.name)}" title="${t('ui.rename_storage_pool', 'Rename storage pool')}">✏️ Rename</button>` : ''}
-      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: var(--lt-t-38bdf8ff, #38bdf8);" title="${t('ui.manage_subvolume_snapshots', 'Manage Subvolume Snapshots')}">📸 Snapshots</button>` : ''}
-      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--lt-t-fbbf24ff, #fbbf24);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">⏏️ Safely Eject</button>` : ''}
+      ${pool.fs_type === 'btrfs' ? `<button class="btn-pool-snaps btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3); color: var(--zn-text-accent);" title="${t('ui.manage_subvolume_snapshots', 'Manage Subvolume Snapshots')}">📸 Snapshots</button>` : ''}
+      ${(!isObserver || pool.fs_type === 'zfs') && pool.id !== 'unraid_array' && pool.id !== 'default_pool' ? `<button class="btn-pool-export btn-pill-toggle" data-pool-id="${escapeHtml(pool.id)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);" title="${t('ui.safely_flush_dirty_cache_and', 'Safely flush dirty cache and detach pool')}">⏏️ Safely Eject</button>` : ''}
       ${!isObserver && pool.id !== 'default_pool' ? `<button class="btn-pool-destroy btn-pill-toggle is-danger" data-pool-id="${escapeHtml(pool.id)}" title="${t('ui.destroy_storage_pool', 'Destroy storage pool')}">🗑️ Destroy</button>` : ''}
     </div>
   `;
@@ -929,8 +929,8 @@ export async function fetchAndRenderStorageTopology(container) {
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:20px;">🔌</span>
             <div>
-              <strong style="color:var(--lt-t-38bdf8ff, #38bdf8);">External Storage Pool Detected:</strong>
-              <span style="color:var(--lt-t-ffffffff, #fff); margin-left:6px; font-weight:600;">${escapeHtml(p.pool_id)}</span>
+              <strong style="color:var(--zn-text-accent);">External Storage Pool Detected:</strong>
+              <span style="color:var(--zn-text-strong); margin-left:6px; font-weight:600;">${escapeHtml(p.pool_id)}</span>
               <span style="color:var(--muted); font-size:var(--zn-fs-xs); margin-left:8px;">(${escapeHtml((p.fs_type || 'zfs').toUpperCase())}${p.status ? ` · ${escapeHtml(p.status)}` : ''})</span>
             </div>
           </div>
@@ -1003,19 +1003,19 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
           <span class="webdav-status-pill ${sftpPillClass}">${sftpPillText}</span>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:var(--lt-t-f87171ff, #f87171); border-color:rgba(239,68,68,0.3);' : ''}">
+          <button class="btn-pill-toggle btn-sftp-toggle-action" id="btn-sftp-header-toggle" style="padding:5px 12px; font-size:var(--zn-fs-xs); font-weight:700; ${isRunning ? 'background:rgba(239,68,68,0.15); color:var(--zn-text-crit); border-color:rgba(239,68,68,0.3);' : ''}">
             ${isRunning ? '⏹ Stop SFTP' : '▶ Start SFTP'}
           </button>
-          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border-color: rgba(14,165,233,0.3);" title="${t('ui.manage_sftp_users_and_permissions', 'Manage SFTP users and permissions')}">
+          <button class="btn-pill-toggle btn-sftp-users-action" id="btn-sftp-header-users" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);" title="${t('ui.manage_sftp_users_and_permissions', 'Manage SFTP users and permissions')}">
             👥 Manage Users (${usersCount})
           </button>
         </div>
       </div>
 
       <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:var(--zn-fs-xs); color:var(--muted); align-items:center;">
-        <span>Line-Rate Port: <strong style="color:var(--lt-t-ffffffff, #fff);">${port}</strong></span>
-        <span>Subsystem: <code style="color:var(--lt-t-38bdf8ff, #38bdf8);">internal-sftp</code></span>
-        <span>Isolation: <strong style="color:var(--lt-t-ffffffff, #fff);">Chroot Jail (/home/%u)</strong></span>
+        <span>Line-Rate Port: <strong style="color:var(--zn-text-strong);">${port}</strong></span>
+        <span>Subsystem: <code style="color:var(--zn-text-accent);">internal-sftp</code></span>
+        <span>Isolation: <strong style="color:var(--zn-text-strong);">Chroot Jail (/home/%u)</strong></span>
         <span>Host Shell: <strong style="color:var(--ok2, #22c55e); background:rgba(34,197,94,0.12); padding:1px 6px; border-radius:4px; font-size:var(--zn-fs-xs);">Prohibited (No PTY)</strong></span>
       </div>
 
@@ -1466,10 +1466,10 @@ export async function openSftpUsersModal(onSuccess) {
           usersList.innerHTML = `<div style="text-align:center; padding:16px; color:var(--muted); font-size:var(--zn-fs-xs);">No SFTP users configured yet. Create one below.</div>`;
         } else {
           usersList.innerHTML = users.map((u) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:var(--zn-fs-xs);">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid var(--zn-line-5); font-size:var(--zn-fs-xs);">
               <div>
-                <span style="font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(u.username)}</span>
-                <span class="ci-badge" style="margin-left:6px; font-size:var(--zn-fs-xs); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); color:var(--muted); padding:1px 5px; border-radius:3px;">
+                <span style="font-weight:700; color:var(--zn-text-strong);">${escapeHtml(u.username)}</span>
+                <span class="ci-badge" style="margin-left:6px; font-size:var(--zn-fs-xs); background:var(--zn-glaze-6); color:var(--muted); padding:1px 5px; border-radius:3px;">
                   ${u.read_only ? 'Read-Only' : 'Read/Write'}
                 </span>
                 <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace; margin-top:2px;">
@@ -1654,9 +1654,9 @@ export async function fetchAndRenderRemoteStorage(container) {
     let remotesHtml = '';
     if (!remotes || remotes.length === 0) {
       remotesHtml = `
-        <div style="text-align:center; padding:36px 20px; background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px dashed var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius:10px;">
+        <div style="text-align:center; padding:36px 20px; background:var(--zn-shade-25); border:1px dashed var(--zn-line-12); border-radius:10px;">
           <div style="font-size:32px; margin-bottom:8px;">☁️</div>
-          <div style="font-size:14px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-bottom:4px;">No Cloud Remotes Connected</div>
+          <div style="font-size:14px; font-weight:700; color:var(--zn-text-strong); margin-bottom:4px;">No Cloud Remotes Connected</div>
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); max-width:440px; margin:0 auto 16px auto; line-height:1.45;">
             Connect your cloud storage buckets (Amazon S3, Backblaze B2, Google Drive, OneDrive, SFTP) to mount them directly into the ZettNAS File Explorer (/mnt/remotes).
           </div>
@@ -1685,14 +1685,14 @@ export async function fetchAndRenderRemoteStorage(container) {
               <span class="remote-type-tag">${escapeHtml(r.type)}</span>
             </div>
 
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:6px 8px; border-radius:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace; background:var(--zn-shade-30); padding:6px 8px; border-radius:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
               /mnt/remotes/${escapeHtml(r.name)}
             </div>
 
             <div class="remote-card-actions">
               <div>
                 ${isMounted ? `
-                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="${t('ui.open_in_file_explorer', 'Open in File Explorer')}" style="background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border-color: rgba(14,165,233,0.3);">
+                  <button class="btn-remote-reveal btn-pill-toggle" data-path="${escapeHtml(r.mount_path)}" title="${t('ui.open_in_file_explorer', 'Open in File Explorer')}" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);">
                     📂 Open in File Explorer
                   </button>
                 ` : `
@@ -1747,10 +1747,10 @@ export async function fetchAndRenderRemoteStorage(container) {
           </div>
 
           <div style="display:flex; gap:16px; flex-wrap:wrap; font-size:var(--zn-fs-xs); color:var(--muted); align-items:center;">
-            <span>Line-Rate Port: <strong style="color:var(--lt-t-ffffffff, #fff);">${webdavStatus.port}</strong></span>
-            <span>Root Path: <code style="color:var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(webdavStatus.root_path)}</code></span>
-            <span>Mode: <strong style="color:var(--lt-t-ffffffff, #fff);">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
-            <span>Auth: <strong style="color:var(--lt-t-ffffffff, #fff);">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
+            <span>Line-Rate Port: <strong style="color:var(--zn-text-strong);">${webdavStatus.port}</strong></span>
+            <span>Root Path: <code style="color:var(--zn-text-accent);">${escapeHtml(webdavStatus.root_path)}</code></span>
+            <span>Mode: <strong style="color:var(--zn-text-strong);">${webdavStatus.read_only ? 'Read-Only' : 'Read/Write'}</strong></span>
+            <span>Auth: <strong style="color:var(--zn-text-strong);">${escapeHtml(t('webdav.auth_accounts', 'ZettNAS accounts'))}</strong></span>
           </div>
 
           <!-- Quick Connect Grid -->
@@ -1803,10 +1803,10 @@ export async function fetchAndRenderRemoteStorage(container) {
         <!-- Section 3: Connected Cloud & Remote Drives -->
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-size:13px; font-weight:800; color:var(--lt-t-ffffffff, #fff); letter-spacing:0.5px; text-transform:uppercase;">
+            <div style="font-size:13px; font-weight:800; color:var(--zn-text-strong); letter-spacing:0.5px; text-transform:uppercase;">
               Connected Cloud Drives & Buckets (${remotes ? remotes.length : 0})
             </div>
-            <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border-color: rgba(14,165,233,0.3);" title="${t('ui.connect_new_cloud_remote', 'Connect New Cloud Remote')}">
+            <button class="btn-pill-toggle btn-trigger-new-remote" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border-color: rgba(14,165,233,0.3);" title="${t('ui.connect_new_cloud_remote', 'Connect New Cloud Remote')}">
               ☁️ + Add Remote
             </button>
           </div>
@@ -2203,10 +2203,10 @@ export async function openNewCloudRemoteModal(onSuccess) {
 
           const oauthAssistantHtml = isOAuthProv ? `
             <div class="oauth-assistant-card" style="margin-bottom: 16px; padding: 14px 16px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.28); border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); padding-bottom: 8px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--zn-line-6); padding-bottom: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="font-size: 18px;">🔑</span>
-                  <span style="font-size: 13px; font-weight: 700; color: var(--lt-t-ffffffff, #fff); letter-spacing: 0.3px;">Connect ${escapeHtml(provTitle)}</span>
+                  <span style="font-size: 13px; font-weight: 700; color: var(--zn-text-strong); letter-spacing: 0.3px;">Connect ${escapeHtml(provTitle)}</span>
                 </div>
                 <span style="font-size: var(--zn-fs-xs); padding: 2px 8px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-4ade80ff, #4ade80); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; font-weight: 600;">
                   No Terminal Required · In-App OAuth
@@ -2214,35 +2214,35 @@ export async function openNewCloudRemoteModal(onSuccess) {
               </div>
 
               <!-- Auth Mode Switcher (Tabs) -->
-              <div style="display: flex; gap: 6px; margin-bottom: 12px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 3px; border-radius: 6px; border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
+              <div style="display: flex; gap: 6px; margin-bottom: 12px; background: var(--zn-shade-30); padding: 3px; border-radius: 6px; border: 1px solid var(--zn-line-6);">
                 <button type="button" id="tab-oauth-desktop" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
                   <span>💻 Desktop 1-Click</span>
                 </button>
-                <button type="button" id="tab-oauth-qr" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: transparent; color: var(--lt-t-94a3b8ff, #94a3b8); display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
+                <button type="button" id="tab-oauth-qr" style="flex: 1; padding: 6px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border-radius: 4px; border: none; cursor: pointer; background: transparent; color: var(--zn-text-muted); display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s;">
                   <span>📱 Mobile QR Code</span>
                 </button>
               </div>
 
               <!-- Step 1: Desktop Panel -->
               <div id="oauth-desktop-panel">
-                <button type="button" id="btn-oauth-browser" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid var(--lt-r-ffffff33, rgba(255,255,255,0.2)); color: #fff; border-radius: 7px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35); transition: all 0.2s;">
+                <button type="button" id="btn-oauth-browser" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: 1px solid var(--zn-line-20); color: #fff; border-radius: 7px; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35); transition: all 0.2s;">
                   <span>🌐 ${escapeHtml(brandBtnLabel)}</span>
                 </button>
 
-                <div style="margin-top: 8px; margin-bottom: 12px; padding: 8px 10px; background: rgba(14, 165, 233, 0.07); border: 1px dashed rgba(14, 165, 233, 0.28); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); line-height: 1.45;">
-                  <strong style="color: var(--lt-t-38bdf8ff, #38bdf8);">📌 What to expect:</strong> After approving login in Microsoft, the new tab will show <code style="color:var(--lt-t-f87171ff, #f87171); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>This is completely normal!</strong> Simply copy the address bar from that tab and paste it in Step 2 below.
+                <div style="margin-top: 8px; margin-bottom: 12px; padding: 8px 10px; background: rgba(14, 165, 233, 0.07); border: 1px dashed rgba(14, 165, 233, 0.28); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.45;">
+                  <strong style="color: var(--zn-text-accent);">📌 What to expect:</strong> After approving login in Microsoft, the new tab will show <code style="color:var(--zn-text-crit); background:rgba(239,68,68,0.15); padding:1px 4px; border-radius:3px;">This site can't be reached (localhost:53682)</code>. <strong>This is completely normal!</strong> Simply copy the address bar from that tab and paste it in Step 2 below.
                 </div>
               </div>
 
               <!-- Step 1: Mobile QR Code Panel -->
               <div id="oauth-qr-panel" style="display: none; margin-bottom: 12px;">
-                <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: var(--lt-b-00000059, rgba(0, 0, 0, 0.35)); border: 1px dashed rgba(14, 165, 233, 0.35); border-radius: 8px;">
+                <div id="oauth-qr-box" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; background: var(--zn-shade-35); border: 1px dashed rgba(14, 165, 233, 0.35); border-radius: 8px;">
                   <div id="oauth-qr-target" style="display: inline-flex; align-items: center; justify-content: center; padding: 8px; background: #ffffff; border-radius: 8px; min-width: 140px; min-height: 140px; box-shadow: 0 4px 14px rgba(0,0,0,0.6);">
                     <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-0284c7ff, #0284c7); font-weight: 600;">⏳ Initializing QR code...</div>
                   </div>
-                  <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--lt-t-e2e8f0ff, #e2e8f0); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
+                  <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text); margin-top: 8px; display: flex; align-items: center; gap: 6px;">
                     <span>📱 Scan with your phone or tablet camera to sign in</span>
-                    <button type="button" id="btn-oauth-qr" style="background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">🔄 Refresh</button>
+                    <button type="button" id="btn-oauth-qr" style="background: var(--zn-glaze-8); border: 1px solid var(--zn-line-15); color: var(--zn-text-accent); font-size: var(--zn-fs-xs); padding: 2px 7px; border-radius: 4px; cursor: pointer;" title="${t('ui.refresh_qr_code', 'Refresh QR Code')}">🔄 Refresh</button>
                   </div>
                 </div>
               </div>
@@ -2251,21 +2251,21 @@ export async function openNewCloudRemoteModal(onSuccess) {
               <div id="oauth-assistant-status" style="display: none; margin-bottom: 12px; padding: 8px 12px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.45;"></div>
 
               <!-- Step 2: Code Relay Input & Complete button -->
-              <div id="oauth-step2-box" style="padding-top: 12px; border-top: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));">
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-e2e8f0ff, #e2e8f0); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                  <span style="color: var(--lt-t-38bdf8ff, #38bdf8);">Step 2:</span>
+              <div id="oauth-step2-box" style="padding-top: 12px; border-top: 1px solid var(--zn-line-8);">
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span style="color: var(--zn-text-accent);">Step 2:</span>
                   <span>If browser says "This site can't be reached", paste the resulting URL from your address bar here:</span>
                 </div>
-                <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); line-height: 1.45; margin-bottom: 8px;">
+                <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); line-height: 1.45; margin-bottom: 8px;">
                   When Microsoft/Google finishes logging in, copy the full address from your browser address bar and paste it below:
                 </div>
                 <div style="display: flex; gap: 6px;">
                   <input type="text" id="oauth-redirect-url" class="tz-select-input" placeholder="http://localhost:53682/?code=M.R3_... or full redirect URL" style="flex: 1; font-family: monospace; font-size: var(--zn-fs-xs);" />
-                  <button type="button" id="btn-oauth-paste" style="padding: 7px 12px; font-size: var(--zn-fs-xs); font-weight: 600; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-ffffffff, #fff); border-radius: 5px; cursor: pointer; white-space: nowrap;">
+                  <button type="button" id="btn-oauth-paste" style="padding: 7px 12px; font-size: var(--zn-fs-xs); font-weight: 600; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); border-radius: 5px; cursor: pointer; white-space: nowrap;">
                     📋 Paste
                   </button>
                 </div>
-                <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
+                <button type="button" id="btn-oauth-exchange" style="margin-top: 10px; width: 100%; padding: 10px 14px; background: var(--ok2, #22c55e); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); font-weight: 700; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);">
                   <span>✓ Complete & Populate Token</span>
                 </button>
               </div>
@@ -2277,7 +2277,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
               const opts = (f.options || []).map((o) => `<option value="${o}" ${o === f.default ? 'selected' : ''}>${o}</option>`).join('');
               return `
                 <div>
-                  <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-94a3b8ff, #94a3b8); margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
+                  <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-muted); margin-bottom:4px; letter-spacing:0.5px;">${escapeHtml(f.label.toUpperCase())}</label>
                   <select name="${escapeHtml(f.name)}" class="tz-select-input" style="width:100%;">
                     ${opts}
                   </select>
@@ -2287,11 +2287,11 @@ export async function openNewCloudRemoteModal(onSuccess) {
               return `
                 <div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-94a3b8ff, #94a3b8); letter-spacing:0.5px;">
+                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-muted); letter-spacing:0.5px;">
                       ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                     </label>
                     ${prov.authorize_cmd ? `
-                      <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(14,165,233,0.15); border:1px solid rgba(14,165,233,0.3); color:var(--lt-t-38bdf8ff, #38bdf8); font-size:var(--zn-fs-xs); font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
+                      <button type="button" class="remote-copy-cmd-btn" data-cmd="${escapeHtml(prov.authorize_cmd)}" style="background:rgba(14,165,233,0.15); border:1px solid rgba(14,165,233,0.3); color:var(--zn-text-accent); font-size:var(--zn-fs-xs); font-weight:600; padding:2px 8px; border-radius:4px; cursor:pointer;">
                         📋 Copy: ${escapeHtml(prov.authorize_cmd)}
                       </button>
                     ` : ''}
@@ -2303,13 +2303,13 @@ export async function openNewCloudRemoteModal(onSuccess) {
                     rows="4"
                     style="width:100%; font-family:monospace; resize:vertical;"
                     ${f.required ? 'required' : ''}>${escapeHtml(f.default != null ? String(f.default) : '')}</textarea>
-                  ${f.help ? `<div style="font-size:var(--zn-fs-xs); color:var(--lt-t-94a3b8ff, #94a3b8); margin-top:4px; line-height:1.4;">${escapeHtml(f.help)}</div>` : ''}
+                  ${f.help ? `<div style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted); margin-top:4px; line-height:1.4;">${escapeHtml(f.help)}</div>` : ''}
                 </div>
               `;
             } else {
               return `
                 <div>
-                  <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-94a3b8ff, #94a3b8); margin-bottom:4px; letter-spacing:0.5px;">
+                  <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-muted); margin-bottom:4px; letter-spacing:0.5px;">
                     ${escapeHtml(f.label.toUpperCase())} ${f.required ? '<span style="color:var(--crit,#ef4444);">*</span>' : ''}
                   </label>
                   <input type="${f.type === 'password' ? 'password' : 'text'}"
@@ -2423,8 +2423,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
                 }
                 if (directLink) {
                   directLink.innerHTML = `
-                    <div style="color: var(--lt-t-94a3b8ff, #94a3b8); font-size: var(--zn-fs-xs); margin-bottom: 2px;">Can't scan QR code?</div>
-                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--lt-t-38bdf8ff, #38bdf8); text-decoration: underline; font-weight: 600;">
+                    <div style="color: var(--zn-text-muted); font-size: var(--zn-fs-xs); margin-bottom: 2px;">Can't scan QR code?</div>
+                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--zn-text-accent); text-decoration: underline; font-weight: 600;">
                       🔗 Open Direct Login Page
                     </a>
                   `;
@@ -2432,8 +2432,8 @@ export async function openNewCloudRemoteModal(onSuccess) {
               } catch (qErr) {
                 qrTarget.innerHTML = `
                   <div style="padding: 12px; text-align: center;">
-                    <div style="color: var(--lt-t-f87171ff, #f87171); font-size: var(--zn-fs-xs); margin-bottom: 6px;">Could not display QR code</div>
-                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--lt-t-38bdf8ff, #38bdf8); text-decoration: underline; font-size: var(--zn-fs-xs); font-weight: 600;">Click here to log in directly</a>
+                    <div style="color: var(--zn-text-crit); font-size: var(--zn-fs-xs); margin-bottom: 6px;">Could not display QR code</div>
+                    <a href="${escapeHtml(session.auth_url)}" target="_blank" rel="noopener noreferrer" style="color: var(--zn-text-accent); text-decoration: underline; font-size: var(--zn-fs-xs); font-weight: 600;">Click here to log in directly</a>
                   </div>
                 `;
               }
@@ -2552,7 +2552,7 @@ export async function openNewCloudRemoteModal(onSuccess) {
                   qrTarget.innerHTML = `
                     <div style="padding: 12px; text-align: center; color: var(--lt-t-ef4444ff, #ef4444); font-size: var(--zn-fs-xs);">
                       <div>❌ ${escapeHtml(err.message || 'Failed to start authorization')}</div>
-                      <button type="button" class="btn-retry-qr" style="margin-top: 8px; padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: var(--lt-t-ffffffff, #fff); border-radius: 4px; cursor: pointer;">🔄 Retry</button>
+                      <button type="button" class="btn-retry-qr" style="margin-top: 8px; padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: var(--zn-text-strong); border-radius: 4px; cursor: pointer;">🔄 Retry</button>
                     </div>
                   `;
                   const retryBtn = qrTarget.querySelector('.btn-retry-qr');
@@ -2985,7 +2985,7 @@ export async function openCreateStoragePoolModal(onSuccess) {
         disksContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">No unassigned disks available.</div>';
       } else {
         disksContainer.innerHTML = filtered.map((d) => `
-          <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-ffffffff, #fff); cursor:pointer;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text-strong); cursor:pointer;">
             <input type="checkbox" name="pool-disk" value="${escapeHtml(d.dev || d.name)}" style="accent-color:var(--ok2);" />
             <span><strong>/dev/${escapeHtml(d.dev || d.name)}</strong> (${d.size || formatBytes(d.size_bytes)}) · ${escapeHtml(d.model || '')}</span>
           </label>
@@ -3136,19 +3136,19 @@ export function openCreateNetworkShareModal(onSuccess) {
         const uname = u.username || u.name || 'user';
         const role = u.role || 'user';
         return `
-          <div class="user-perm-row" data-username="${uname}" style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px; background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border-radius:4px; font-size:var(--zn-fs-xs);">
+          <div class="user-perm-row" data-username="${uname}" style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px; background:var(--zn-glaze-3); border-radius:4px; font-size:var(--zn-fs-xs);">
             <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-weight:600; color:var(--lt-t-ffffffff, #fff);">👤 ${uname}</span>
-              <span style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); color:var(--muted);">${role}</span>
+              <span style="font-weight:600; color:var(--zn-text-strong);">👤 ${uname}</span>
+              <span style="font-size:var(--zn-fs-xs); padding:1px 5px; border-radius:3px; background:var(--zn-glaze-8); color:var(--muted);">${role}</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
               <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--lt-t-3bf58bff, #3bf58b);">
                 <input type="radio" name="perm-${uname}" value="rw" checked style="accent-color:#3bf58b; width:12px; height:12px;" /> RW
               </label>
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--lt-t-38bdf8ff, #38bdf8);">
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--zn-text-accent);">
                 <input type="radio" name="perm-${uname}" value="ro" style="accent-color:#38bdf8; width:12px; height:12px;" /> RO
               </label>
-              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--lt-t-f87171ff, #f87171);">
+              <label style="display:flex; align-items:center; gap:3px; cursor:pointer; font-size:var(--zn-fs-xs); color:var(--zn-text-crit);">
                 <input type="radio" name="perm-${uname}" value="deny" style="accent-color:#f87171; width:12px; height:12px;" /> Deny
               </label>
             </div>
@@ -3316,11 +3316,11 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
           tr.dataset.key = s.name;
           tr.innerHTML = `
             <td><strong>${escapeHtml(s.name)}</strong></td>
-            <td style="font-family:monospace; font-size:var(--zn-fs-xs); color:var(--lt-t-38bdf8ff, #38bdf8);">${escapeHtml(s.path)}</td>
+            <td style="font-family:monospace; font-size:var(--zn-fs-xs); color:var(--zn-text-accent);">${escapeHtml(s.path)}</td>
             <td style="color:var(--muted); font-size:var(--zn-fs-xs);">${dt}</td>
             <td>
               <div style="display:flex; gap:6px; align-items:center;">
-                <button class="btn-snap-restore btn-pill-toggle is-small" data-snap="${escapeHtml(s.name)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--lt-t-fbbf24ff, #fbbf24);">
+                <button class="btn-snap-restore btn-pill-toggle is-small" data-snap="${escapeHtml(s.name)}" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: var(--zn-text-warn);">
                   ⏪ Revert
                 </button>
                 <button class="btn-snap-del btn-pill-toggle is-danger is-small" data-snap="${escapeHtml(s.name)}">
@@ -3340,7 +3340,7 @@ export async function openSnapshotsModal(poolId = 'default_pool') {
         }
       );
     } catch (err) {
-      listMount.innerHTML = `<div style="padding:15px; color:var(--lt-t-f87171ff, #f87171); font-size:var(--zn-fs-xs);">Error loading snapshots: ${escapeHtml(err.message || '')}</div>`;
+      listMount.innerHTML = `<div style="padding:15px; color:var(--zn-text-crit); font-size:var(--zn-fs-xs);">Error loading snapshots: ${escapeHtml(err.message || '')}</div>`;
     }
   }
 

@@ -17,8 +17,8 @@
   justify-content: center;
   padding: 6px 4px;
   border-radius: 6px;
-  background: var(--lt-b-ffffff08, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
+  background: var(--zn-glaze-3);
+  border: 1px solid var(--zn-line-6);
   font-family: var(--font-mono, monospace);
   transition: all 0.2s ease;
   cursor: pointer;
@@ -26,7 +26,7 @@
 
 .drive-temp-cell:hover {
   transform: translateY(-1px);
-  border-color: var(--lt-r-ffffff2e, rgba(255, 255, 255, 0.18));
+  border-color: var(--zn-line-18);
 }
 
 .drive-temp-bay {
@@ -55,7 +55,7 @@
 }
 
 .drive-temp-cell.temp-standby .drive-temp-val {
-  color: var(--lt-t-38bdf8ff, #38bdf8);
+  color: var(--zn-text-accent);
   font-size: var(--zn-fs-xs);
 }
 
@@ -83,7 +83,7 @@
   font-size: var(--zn-fs-xs);
   font-weight: 800;
   font-family: var(--font-mono, monospace);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
 }
 
 /* AI Accelerator Dual Gauge Widget */
@@ -116,7 +116,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--lt-t-e2e8f0ff, #e2e8f0);
+  color: var(--zn-text);
 }
 
 .ai-metric-pill {
@@ -124,15 +124,15 @@
   font-weight: 700;
   padding: 1px 5px;
   border-radius: 4px;
-  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
+  background: var(--zn-glaze-6);
   color: var(--muted);
-  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
+  border: 1px solid var(--zn-line-10);
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
 
 .ai-metric-pill.sleep {
-  color: var(--lt-t-38bdf8ff, #38bdf8);
+  color: var(--zn-text-accent);
   background: rgba(56, 189, 248, 0.1);
   border-color: rgba(56, 189, 248, 0.25);
 }
@@ -145,7 +145,7 @@
 }
 
 .ai-metric-pill.active-gpu {
-  color: var(--lt-t-c084fcff, #c084fc);
+  color: var(--zn-text-ai);
   background: rgba(168, 85, 247, 0.15);
   border-color: rgba(168, 85, 247, 0.35);
   animation: pulse-ai-glow 1.5s infinite alternate;
@@ -174,7 +174,7 @@
   font-size: var(--zn-fs-xs);
   font-weight: 800;
   font-family: var(--font-mono, monospace);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
 }
 
 .ai-gauge-sub {
@@ -187,7 +187,7 @@
 .ai-gauge-divider {
   width: 1px;
   height: 48px;
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-glaze-8);
 }
 
 .ai-engine-footer {
@@ -196,7 +196,7 @@
   gap: 6px;
   font-size: var(--zn-fs-xs);
   color: var(--muted);
-  border-top: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
+  border-top: 1px solid var(--zn-line-6);
   padding-top: 6px;
   margin-top: 2px;
   white-space: nowrap;

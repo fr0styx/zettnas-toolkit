@@ -10,9 +10,9 @@
   height: 26px;
   padding: 2px 9px 2px 4px;
   border-radius: 14px;
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
-  color: var(--lt-t-e2e8f0ff, #e2e8f0);
+  background: var(--zn-glaze-5);
+  border: 1px solid var(--zn-line-12);
+  color: var(--zn-text);
   cursor: pointer;
   user-select: none;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
@@ -22,7 +22,7 @@
 
 .topbar-user-pill:hover,
 .topbar-user-pill:focus-visible {
-  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
+  background: var(--zn-glaze-10);
   border-color: rgba(56, 189, 248, 0.4);
   box-shadow: 0 0 12px rgba(56, 189, 248, 0.18);
   outline: none;
@@ -73,7 +73,7 @@
 .topbar-user-name {
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  color: var(--lt-t-e2e8f0ff, #e2e8f0);
+  color: var(--zn-text);
   letter-spacing: 0.2px;
   max-width: 130px;
   overflow: hidden;
@@ -103,7 +103,7 @@
   background: var(--lt-b-0f172ae0, rgba(15, 23, 42, 0.88));
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--zn-line-12);
   border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
   overflow: hidden;
@@ -133,7 +133,7 @@
 }
 
 .user-flyout-btn:hover {
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)) !important;
+  background: var(--zn-glaze-8) !important;
 }
 
 /* Login Screen User Cards */
@@ -176,7 +176,7 @@ body.desktop-locked #os-dock-container {
 
 .users-nav-bar .btn-pill-toggle.active {
   background: var(--accent-cyan, #0ea5e9);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   border-color: rgba(14, 165, 233, 0.4);
 }
 

@@ -6,10 +6,10 @@
 
 /* Panels that used inline styles (moved here so themes can restyle them) */
 .containers-telemetry-header {
-  padding: 14px 16px; background: var(--lt-b-00000040, rgba(0, 0, 0, 0.25)); border-bottom: 1px solid var(--lt-r-ffffff0f, rgba(255, 255, 255, 0.06));
+  padding: 14px 16px; background: var(--zn-shade-25); border-bottom: 1px solid var(--zn-line-6);
 }
 .sec-advisor-card {
-  margin: 12px 0; padding: 14px; background: var(--lt-b-0f172aa6, rgba(15, 23, 42, 0.65)); border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+  margin: 12px 0; padding: 14px; background: var(--lt-b-0f172aa6, rgba(15, 23, 42, 0.65)); border: 1px solid var(--zn-line-12);
   border-radius: 8px; display: flex; flex-direction: column; gap: 10px;
 }
 

@@ -86,7 +86,7 @@ export function renderFans(fans) {
         const fc = state.latestStats?.fan_control || {};
         const isPassive = (i === 0 && fc.zone1_zero_rpm) || (i === 1 && fc.zone2_zero_rpm);
         const displayTxt = (rpm === 0 && isPassive) ? '0' : String(rpm);
-        const passiveStyle = (rpm === 0 && isPassive) ? ' style="color:var(--lt-t-38bdf8ff, #38bdf8)"' : '';
+        const passiveStyle = (rpm === 0 && isPassive) ? ' style="color:var(--zn-text-accent)"' : '';
         const passiveClass = (rpm === 0 && isPassive) ? ' fan-passive' : '';
         return (
           `<div class="fan${passiveClass}">` +
@@ -1631,7 +1631,7 @@ function initCopyToastControls() {
         abortDiv.id = 'copy-toast-abort-actions';
         abortDiv.style.cssText = 'margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);';
         abortDiv.innerHTML = `
-          <div style="font-size:11px; color:var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom:8px; font-weight:500;">Are you sure you want to completely abort the transfer? All incomplete files will be deleted.</div>
+          <div style="font-size:11px; color:var(--zn-text-soft); margin-bottom:8px; font-weight:500;">Are you sure you want to completely abort the transfer? All incomplete files will be deleted.</div>
           <div style="display:flex; gap:8px;">
             <button id="copy-abort-btn-yes" class="btn-save-preset" style="flex:1; padding:6px; border-color:rgba(240,85,59,0.5); color:var(--crit);">Yes, Abort</button>
             <button id="copy-abort-btn-no" class="btn-save-preset" style="flex:1; padding:6px;">Resume</button>

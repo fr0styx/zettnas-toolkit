@@ -17,7 +17,7 @@
   max-width: 260px;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border-right: 1px solid var(--zn-line-8);
   background: var(--lt-b-0a101af2, rgba(10, 16, 26, 0.95));
   user-select: none;
   overflow: hidden;
@@ -51,12 +51,12 @@
 }
 
 .fm-tree-item:hover {
-  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
+  background: var(--zn-glaze-6);
 }
 
 .fm-tree-item.active {
   background: rgba(14, 165, 233, 0.18);
-  color: var(--accent, var(--lt-t-38bdf8ff, #38bdf8));
+  color: var(--accent, var(--zn-text-accent));
   font-weight: 600;
 }
 
@@ -86,7 +86,7 @@
   width: 260px;
   min-width: 220px;
   max-width: 320px;
-  border-left: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border-left: 1px solid var(--zn-line-8);
   background: var(--lt-b-0a101af2, rgba(10, 16, 26, 0.95));
   display: flex;
   flex-direction: column;
@@ -97,8 +97,8 @@
 }
 
 .fm-inspector-section {
-  background: var(--lt-b-ffffff05, rgba(255, 255, 255, 0.02));
-  border: 1px solid var(--lt-r-ffffff0d, rgba(255, 255, 255, 0.05));
+  background: var(--zn-glaze-2);
+  border: 1px solid var(--zn-line-5);
   border-radius: 6px;
   padding: 8px 10px;
   margin-bottom: 8px;
@@ -155,7 +155,7 @@
   background: var(--lt-b-0f172af5, rgba(15, 23, 42, 0.96)) !important;
   backdrop-filter: blur(24px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(140%) !important;
-  border: 1px solid var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14)) !important;
+  border: 1px solid var(--zn-line-14) !important;
   border-radius: 8px !important;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75) !important;
   padding: 5px !important;
@@ -184,7 +184,7 @@
 
 .fm-ctx-item:hover {
   background: rgba(56, 189, 248, 0.2);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
 }
 
 .fm-ctx-item.text-danger:hover {
@@ -208,7 +208,7 @@
 
 .fm-ctx-divider {
   height: 1px;
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-glaze-8);
   margin: 4px 6px;
 }
 

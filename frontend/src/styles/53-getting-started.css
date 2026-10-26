@@ -9,7 +9,7 @@
   padding: 16px;
   border-radius: 12px;
   background: var(--lt-b-0f172af0, rgba(15, 23, 42, 0.94));
-  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--zn-line-12);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
   color: var(--fg);
   font-size: 14px;
@@ -19,14 +19,14 @@
 .gs-heading { flex: 1; margin: 0; font-size: 16px; font-weight: 700; }
 .gs-progress { font-size: 13px; color: var(--muted); }
 .gs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.gs-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04)); }
+.gs-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--zn-glaze-4); }
 .gs-item.is-done { opacity: 0.6; }
 .gs-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .gs-title { font-weight: 600; }
 .gs-desc { font-size: 13px; color: var(--muted); }
 .gs-done { color: var(--ok); font-size: 18px; font-weight: 700; padding: 0 8px; }
 .setup-steps { display: flex; gap: 8px; margin: 0 0 4px; padding: 0; list-style: none; font-size: 13px; color: var(--muted); }
-.setup-steps li { flex: 1; padding-top: 6px; border-top: 3px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12)); }
+.setup-steps li { flex: 1; padding-top: 6px; border-top: 3px solid var(--zn-line-12); }
 .setup-steps li.is-current { color: var(--fg); border-top-color: var(--brand); font-weight: 700; }
 .setup-steps li.is-done { border-top-color: rgba(var(--brand-rgb), 0.5); }
 @media (max-width: 720px) {

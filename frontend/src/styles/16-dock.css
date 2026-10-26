@@ -94,7 +94,7 @@
   background: var(--lt-b-121923a6, rgba(18, 25, 35, 0.65));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--zn-line-12);
   border-radius: 18px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
   pointer-events: auto;
@@ -186,8 +186,8 @@
   width: var(--dock-icon-size, 48px);
   height: var(--dock-icon-size, 48px);
   border-radius: 12px;
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-glaze-5);
+  border: 1px solid var(--zn-line-8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,8 +205,8 @@
 
 .os-dock:not(.dock-magnify-enabled) .dock-item:hover {
   transform: scale(1.15) translateY(-6px);
-  background: var(--lt-b-ffffff1f, rgba(255, 255, 255, 0.12));
-  border-color: var(--lt-r-ffffff33, rgba(255, 255, 255, 0.2));
+  background: var(--zn-glaze-12);
+  border-color: var(--zn-line-20);
   z-index: 10;
 }
 
@@ -224,8 +224,8 @@
 }
 
 .os-dock.dock-magnify-enabled .dock-item:hover {
-  background: var(--lt-b-ffffff1f, rgba(255, 255, 255, 0.12));
-  border-color: var(--lt-r-ffffff33, rgba(255, 255, 255, 0.2));
+  background: var(--zn-glaze-12);
+  border-color: var(--zn-line-20);
   z-index: 10;
 }
 
@@ -256,7 +256,7 @@
 .dock-item svg {
   width: 24px;
   height: 24px;
-  color: var(--lt-t-ffffffff, white);
+  color: var(--zn-text-strong);
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 

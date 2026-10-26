@@ -42,7 +42,7 @@ export function initContainerModal() {
         <div id="container-inspector-header" class="smart-modal-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:16px;">📦</span>
-            <span id="ci-header-title" style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:13px;">Container Inspector</span>
+            <span id="ci-header-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13px;">Container Inspector</span>
             <code id="ci-header-id" style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);"></code>
             <span id="ci-header-state" class="ci-state-pill" style="display:none;"></span>
           </div>
@@ -54,7 +54,7 @@ export function initContainerModal() {
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="ci-nav-tabs" style="display:flex; gap:4px; padding:8px 14px; background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border-bottom:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); overflow-x:auto;">
+        <div class="ci-nav-tabs" style="display:flex; gap:4px; padding:8px 14px; background:var(--zn-shade-30); border-bottom:1px solid var(--zn-line-8); overflow-x:auto;">
           <button class="btn-pill-toggle ci-tab-btn active" data-tab="overview">📊 Overview</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="ports">🌐 Ports & Web</button>
           <button class="btn-pill-toggle ci-tab-btn" data-tab="mounts">📁 Mounts & Storage</button>
@@ -107,8 +107,8 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-compose-download-btn">⬇️ Download .yml</button>
               </div>
             </div>
-            <div style="position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; overflow:hidden;">
-              <pre style="margin:0; padding:12px; max-height:360px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); line-height:1.5;"><code id="ci-compose-code">Generating Docker Compose definition...</code></pre>
+            <div style="position:relative; background:var(--lt-b-080c14ff, #080c14); border:1px solid var(--zn-line-10); border-radius:6px; overflow:hidden;">
+              <pre style="margin:0; padding:12px; max-height:360px; overflow:auto; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text); line-height:1.5;"><code id="ci-compose-code">Generating Docker Compose definition...</code></pre>
             </div>
           </div>
 
@@ -136,7 +136,7 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-logs-copy-btn">📋 Copy Logs</button>
               </div>
             </div>
-            <div id="ci-logs-terminal" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.45; color:var(--lt-t-cbd5e1ff, #cbd5e1);">
+            <div id="ci-logs-terminal" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--zn-line-10); border-radius:6px; height:340px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.45; color:var(--zn-text-soft);">
               <div style="color:var(--muted); text-align:center; padding:20px;">Fetching logs...</div>
             </div>
           </div>
@@ -152,8 +152,8 @@ export function initContainerModal() {
                 <button class="btn-pill-toggle" id="ci-term-clear-btn">🧹 Clear</button>
               </div>
             </div>
-            <div id="ci-term-output" style="background:var(--lt-b-030712ff, #030712); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
-            <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:var(--lt-b-0b1120ff, #0b1120); border-left:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-right:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); padding:5px 8px; scrollbar-width:none;">
+            <div id="ci-term-output" style="background:var(--lt-b-030712ff, #030712); border:1px solid var(--zn-line-12); border-radius:6px 6px 0 0; height:310px; padding:6px 4px 6px 8px; box-sizing:border-box; overflow:hidden;"></div>
+            <div class="ci-term-mobile-keybar" style="display:flex; gap:6px; overflow-x:auto; background:var(--lt-b-0b1120ff, #0b1120); border-left:1px solid var(--zn-line-12); border-right:1px solid var(--zn-line-12); padding:5px 8px; scrollbar-width:none;">
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-cmd="ls -la" style="flex-shrink: 0;">ls -la</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-cmd="ps aux" style="flex-shrink: 0;">ps aux</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-cmd="df -h" style="flex-shrink: 0;">df -h</button>
@@ -161,7 +161,7 @@ export function initContainerModal() {
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="ArrowDown" style="flex-shrink: 0;">↓ Next</button>
               <button type="button" class="btn-pill-toggle ci-term-key-btn is-small" data-key="clear" style="flex-shrink: 0;">🧹 Clear</button>
             </div>
-            <div style="display:flex; background:var(--lt-b-0f172aff, #0f172a); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
+            <div style="display:flex; background:var(--lt-b-0f172aff, #0f172a); border:1px solid var(--zn-line-12); border-top:none; border-radius:0 0 6px 6px; padding:6px 10px; gap:8px; align-items:center;">
               <span style="color:var(--lt-t-10b981ff, #10b981); font-family:var(--font-mono, monospace); font-weight:bold; font-size:var(--zn-fs-xs);">$</span>
               <input type="text" id="ci-term-input" placeholder="${t('ui.type_a_command_and_press', 'Type a command and press Enter...')}" style="flex:1; background:transparent; border:none; outline:none; color:var(--lt-t-f8fafcff, #f8fafc); font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);" autocomplete="off" spellcheck="false">
               <button class="btn-pill-toggle is-small" id="ci-term-send-btn">Run</button>
@@ -653,40 +653,40 @@ async function loadContainerDetails(cid) {
     // Overview Tab Content
     contentEl.innerHTML = `
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-bottom:16px;">
-        <div class="ci-metric-card" style="background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); padding:10px; border-radius:6px;">
+        <div class="ci-metric-card" style="background:var(--zn-shade-30); border:1px solid var(--zn-line-6); padding:10px; border-radius:6px;">
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">State & Uptime</div>
-          <div style="font-size:13px; font-weight:700; color:var(--lt-t-ffffffff, #fff); margin-top:3px;">${escapeHtml(ov.state || 'unknown')}</div>
+          <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-top:3px;">${escapeHtml(ov.state || 'unknown')}</div>
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Started: ${escapeHtml(formatDateTime(ov.started_at, undefined, 'N/A'))}</div>
         </div>
-        <div class="ci-metric-card" style="background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); padding:10px; border-radius:6px;">
+        <div class="ci-metric-card" style="background:var(--zn-shade-30); border:1px solid var(--zn-line-6); padding:10px; border-radius:6px;">
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Network IP</div>
           <div style="font-size:13px; font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); margin-top:3px;">${escapeHtml(ov.ip_address || 'Host Network')}</div>
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Mode: ${escapeHtml(ov.network_mode || 'bridge')}</div>
         </div>
-        <div class="ci-metric-card" style="background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); padding:10px; border-radius:6px;">
+        <div class="ci-metric-card" style="background:var(--zn-shade-30); border:1px solid var(--zn-line-6); padding:10px; border-radius:6px;">
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-transform:uppercase; font-weight:700;">Hardware & Stack</div>
           <div style="margin-top:4px;">${hwBadges}</div>
           <div style="margin-top:4px;">${stackHtml}</div>
         </div>
       </div>
 
-      <div style="background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius:6px; overflow:hidden; margin-bottom:14px;">
+      <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden; margin-bottom:14px;">
         <table class="copy-history-table" style="margin:0;">
           <tbody>
-            <tr><td style="width:140px; color:var(--muted); font-weight:600;">Image</td><td style="font-family:var(--font-mono, monospace); color:var(--lt-t-ffffffff, #fff);">${escapeHtml(ov.image)}</td></tr>
+            <tr><td style="width:140px; color:var(--muted); font-weight:600;">Image</td><td style="font-family:var(--font-mono, monospace); color:var(--zn-text-strong);">${escapeHtml(ov.image)}</td></tr>
             <tr><td style="color:var(--muted); font-weight:600;">Full Container ID</td><td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--muted); word-break:break-all;">${escapeHtml(ov.full_id)}</td></tr>
             <tr><td style="color:var(--muted); font-weight:600;">Restart Policy</td><td><code>${escapeHtml(ov.restart_policy)}</code></td></tr>
             <tr><td style="color:var(--muted); font-weight:600;">Platform / OS</td><td>${escapeHtml(ov.platform)}</td></tr>
             <tr><td style="color:var(--muted); font-weight:600;">Memory Limit</td><td>${res.memory_limit ? (res.memory_limit / (1024 * 1024)).toFixed(0) + ' MB' : 'Unlimited'}</td></tr>
-            <tr><td style="color:var(--muted); font-weight:600;">Startup Command</td><td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); word-break:break-all;">${escapeHtml(ov.command)}</td></tr>
+            <tr><td style="color:var(--muted); font-weight:600;">Startup Command</td><td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text-soft); word-break:break-all;">${escapeHtml(ov.command)}</td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- Live Resource Tuning Section (Phase 3) -->
-      <div class="ci-metric-card" style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:12px; border-radius:8px;">
+      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">⚡ Live Resource Tuning (Zero-Downtime)</div>
+          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">⚡ Live Resource Tuning (Zero-Downtime)</div>
           <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff1a, rgba(0,240,255,0.1)); padding:2px 6px; border-radius:4px;">Hot-Reloadable</span>
         </div>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; align-items:end;">
@@ -744,7 +744,7 @@ async function loadContainerDetails(cid) {
           </div>
           <div style="display:flex; gap:6px;">
             <button class="btn-pill-toggle" id="ci-btn-restart-action">🔄 Restart</button>
-            <button class="btn-pill-toggle is-danger" id="ci-btn-destroy-action" style="color: var(--lt-t-ffffffff, #fff);">🗑️ Destroy Container</button>
+            <button class="btn-pill-toggle is-danger" id="ci-btn-destroy-action" style="color: var(--zn-text-strong);">🗑️ Destroy Container</button>
           </div>
         </div>
       </div>
@@ -865,8 +865,8 @@ function renderPortsTab(details) {
       <div style="margin-bottom:14px; padding:12px; background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.25); border-radius:6px; display:flex; align-items:flex-start; gap:10px;">
         <span style="font-size:16px; line-height:1.2;">⚡</span>
         <div>
-          <div style="font-weight:700; color:var(--lt-t-38bdf8ff, #38bdf8); font-size:var(--zn-fs-xs);">Host Networking Mode Active</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); margin-top:2px; line-height:1.4;">
+          <div style="font-weight:700; color:var(--zn-text-accent); font-size:var(--zn-fs-xs);">Host Networking Mode Active</div>
+          <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-top:2px; line-height:1.4;">
             This container uses the host OS network stack directly (bypassing Docker's virtual bridge/NAT). Container services bind directly to host IP addresses without virtual port-forwarding rules.
           </div>
         </div>
@@ -878,7 +878,7 @@ function renderPortsTab(details) {
     ? `
       <div style="margin-bottom:14px; padding:12px; background:var(--lt-b-00f0ff14, rgba(0, 240, 255, 0.08)); border:1px solid var(--lt-r-00f0ff40, rgba(0, 240, 255, 0.25)); border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff); font-size:var(--zn-fs-xs);">Web Interface Detected</div>
+          <div style="font-weight:700; color:var(--zn-text-strong); font-size:var(--zn-fs-xs);">Web Interface Detected</div>
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Service exposed on port ${details.primary_port}${isHostNet ? ' (Host Direct)' : ''}</div>
         </div>
         <a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" style="font-size:var(--zn-fs-xs); padding:4px 10px;">
@@ -894,7 +894,7 @@ function renderPortsTab(details) {
     tableHtml = `<div style="text-align:center; padding:20px; color:var(--muted);">${isHostNet ? 'No exposed ports declared in image metadata. Container listens directly on host interfaces.' : 'No published port mappings configured for this container.'}</div>`;
   } else {
     tableHtml = `
-      <div style="background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius:6px; overflow:hidden;">
+      <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden;">
         <table class="copy-history-table" style="margin:0;">
           <thead>
             <tr>
@@ -909,7 +909,7 @@ function renderPortsTab(details) {
               const isWeb = p.public_port === details.primary_port;
               const isHost = p.ip === 'host' || p.is_host_network;
               const hostLabel = isHost
-                ? `<span style="color:var(--lt-t-38bdf8ff, #38bdf8); font-weight:700;">Host Direct (:${p.public_port})</span>`
+                ? `<span style="color:var(--zn-text-accent); font-weight:700;">Host Direct (:${p.public_port})</span>`
                 : (p.public_port ? `${escapeHtml(p.ip || '0.0.0.0')}:${p.public_port}` : '<span style="color:var(--muted);">None</span>');
               const directLink = p.public_port
                 ? `<a href="http://${currentHost}:${p.public_port}/" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); font-size:var(--zn-fs-xs);">http://${currentHost}:${p.public_port} ↗</a>`
@@ -918,7 +918,7 @@ function renderPortsTab(details) {
                 <tr>
                   <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">${hostLabel}</td>
                   <td style="font-family:var(--font-mono, monospace);">${p.private_port || '—'}</td>
-                  <td><span class="ci-proto-tag" style="padding:1px 5px; border-radius:3px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); font-size:var(--zn-fs-xs); text-transform:uppercase;">${escapeHtml(p.type || 'tcp')}</span></td>
+                  <td><span class="ci-proto-tag" style="padding:1px 5px; border-radius:3px; background:var(--zn-glaze-8); font-size:var(--zn-fs-xs); text-transform:uppercase;">${escapeHtml(p.type || 'tcp')}</span></td>
                   <td>${isWeb ? '<span style="color:var(--ok2); font-weight:700; font-size:var(--zn-fs-xs);">✓ Primary Web UI</span>' : directLink}</td>
                 </tr>
               `;
@@ -929,16 +929,16 @@ function renderPortsTab(details) {
 
       ${isHostNet ? `
         <div class="ci-metric-card" style="margin-top:14px; background:rgba(56,189,248,0.04); border:1px solid rgba(56,189,248,0.2); padding:12px; border-radius:8px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-38bdf8ff, #38bdf8); text-transform:uppercase; letter-spacing:0.5px;">⚡ Host Networking Active</div>
-          <p style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); margin:4px 0 0 0; line-height:1.4;">
+          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-accent); text-transform:uppercase; letter-spacing:0.5px;">⚡ Host Networking Active</div>
+          <p style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin:4px 0 0 0; line-height:1.4;">
             Port forwarding is bypassed in host mode. If you wish to map custom host ports (e.g. <code>8085:8080</code>), change <code>network_mode: host</code> to bridge mode in your compose file or container configuration.
           </p>
         </div>
       ` : `
         <!-- Port Reconfiguration Section (Phase 3) -->
-        <div class="ci-metric-card" style="margin-top:14px; background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:12px; border-radius:8px;">
+        <div class="ci-metric-card" style="margin-top:14px; background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">🔄 Reconfigure Ports (Atomic Clone & Recreate)</div>
+            <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">🔄 Reconfigure Ports (Atomic Clone & Recreate)</div>
             <span style="font-size:var(--zn-fs-xs); color:var(--warn); background:rgba(245,158,11,0.12); padding:2px 6px; border-radius:4px;">Rollback Protected</span>
           </div>
           <p style="font-size:var(--zn-fs-xs); color:var(--muted); margin:0 0 10px 0;">
@@ -946,8 +946,8 @@ function renderPortsTab(details) {
           </p>
           <div style="display:flex; flex-direction:column; gap:8px;">
             ${portsList.map((p, idx) => `
-              <div style="display:flex; align-items:center; gap:8px; background:var(--lt-b-ffffff08, rgba(255,255,255,0.03)); padding:6px 10px; border-radius:6px;">
-                <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-ffffffff, #fff); font-family:var(--font-mono, monospace); width:130px;">Container :${p.private_port}/${p.type || 'tcp'}</span>
+              <div style="display:flex; align-items:center; gap:8px; background:var(--zn-glaze-3); padding:6px 10px; border-radius:6px;">
+                <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-strong); font-family:var(--font-mono, monospace); width:130px;">Container :${p.private_port}/${p.type || 'tcp'}</span>
                 <span style="color:var(--muted);">➔</span>
                 <label style="font-size:var(--zn-fs-xs); color:var(--muted);">Host Port:</label>
                 <input type="number" class="tz-text-input ci-port-input" data-idx="${idx}" data-cp="${p.private_port}" data-proto="${p.type || 'tcp'}" value="${p.public_port || ''}" style="width:90px; font-size:var(--zn-fs-xs); padding:3px 6px;">
@@ -1064,7 +1064,7 @@ function renderMountsTab(details) {
   }
 
   container.innerHTML = `
-    <div style="background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius:6px; overflow:hidden;">
+    <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden;">
       <table class="copy-history-table" style="margin:0;">
         <thead>
           <tr>
@@ -1087,7 +1087,7 @@ function renderMountsTab(details) {
 
             return `
               <tr>
-                <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-t-ffffffff, #fff); word-break:break-all;">
+                <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text-strong); word-break:break-all;">
                   ${escapeHtml(m.source)} ${appdataBadge}
                 </td>
                 <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(m.destination)}</td>
@@ -1138,7 +1138,7 @@ function renderEnvTab(details) {
   });
 
   container.innerHTML = `
-    <div style="background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius:6px; overflow:hidden;">
+    <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:6px; overflow:hidden;">
       <table class="copy-history-table" style="margin:0;">
         <thead>
           <tr>
@@ -1150,10 +1150,10 @@ function renderEnvTab(details) {
         <tbody>
           ${envs.map((e, idx) => {
             const isSec = e.is_secret;
-            const secBadge = isSec ? '<span style="font-size:var(--zn-fs-xs); padding:1px 4px; border-radius:3px; background:rgba(239, 68, 68, 0.15); color:var(--lt-t-f87171ff, #f87171); margin-left:4px;">SECRET</span>' : '';
+            const secBadge = isSec ? '<span style="font-size:var(--zn-fs-xs); padding:1px 4px; border-radius:3px; background:rgba(239, 68, 68, 0.15); color:var(--zn-text-crit); margin-left:4px;">SECRET</span>' : '';
             return `
               <tr>
-                <td style="font-family:var(--font-mono, monospace); font-weight:700; color:var(--lt-t-ffffffff, #fff);">
+                <td style="font-family:var(--font-mono, monospace); font-weight:700; color:var(--zn-text-strong);">
                   ${escapeHtml(e.key)} ${secBadge}
                 </td>
                 <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); word-break:break-all;">
@@ -1372,34 +1372,34 @@ export function openContainerDeleteModal(cid, cname, imageRef = '', onDeleted = 
             <button class="win-btn close-btn" id="cdm-close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
           </div>
           <div style="padding:16px; display:flex; flex-direction:column; gap:14px;">
-            <div style="font-size:var(--zn-fs-xs); line-height:1.5; color:var(--lt-t-cbd5e1ff, #cbd5e1);">
-              Are you sure you want to permanently delete container <strong id="cdm-cname" style="color:var(--lt-t-ffffffff, #fff);"></strong> (<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));"></code>)?
+            <div style="font-size:var(--zn-fs-xs); line-height:1.5; color:var(--zn-text-soft);">
+              Are you sure you want to permanently delete container <strong id="cdm-cname" style="color:var(--zn-text-strong);"></strong> (<code id="cdm-cid" style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));"></code>)?
             </div>
             <div style="background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.25); border-radius:6px; padding:10px 12px; font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); line-height:1.4;">
               ⚠️ <strong>Warning:</strong> This container will be stopped and removed from the host Docker daemon. Any unsaved data inside the container layer will be lost.
             </div>
-            <div style="display:flex; flex-direction:column; gap:8px; background:var(--lt-b-00000033, rgba(0,0,0,0.2)); padding:10px; border-radius:6px; border:1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06));">
+            <div style="display:flex; flex-direction:column; gap:8px; background:var(--zn-shade-20); padding:10px; border-radius:6px; border:1px solid var(--zn-line-6);">
               <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-fb923cff, #fb923c); font-weight:600; cursor:pointer;">
                 <input type="checkbox" id="cdm-archive" checked style="cursor:pointer;">
                 <span>Archive app data & config (never delete, save to backup library)</span>
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
                 <input type="checkbox" id="cdm-force" checked style="cursor:pointer;">
                 <span>Force stop container if currently running</span>
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
                 <input type="checkbox" id="cdm-volumes" checked style="cursor:pointer;">
                 <span>Delete associated anonymous volumes (reclaim storage)</span>
               </label>
-              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--lt-t-e2e8f0ff, #e2e8f0); cursor:pointer;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs); color:var(--zn-text); cursor:pointer;">
                 <input type="checkbox" id="cdm-image" style="cursor:pointer;">
                 <span>Also delete container image <code id="cdm-image-tag" style="color:var(--muted); font-size:var(--zn-fs-xs);"></code></span>
               </label>
             </div>
           </div>
-          <div style="padding:10px 16px; border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:space-between; align-items:center; background:var(--lt-b-00000033, rgba(0,0,0,0.2));">
+          <div style="padding:10px 16px; border-top:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center; background:var(--zn-shade-20);">
             <button class="btn-pill-toggle" id="cdm-cancel-btn">Cancel</button>
-            <button class="btn-pill-toggle is-danger" id="cdm-confirm-btn" style="color: var(--lt-t-ffffffff, #fff); border: none;">
+            <button class="btn-pill-toggle is-danger" id="cdm-confirm-btn" style="color: var(--zn-text-strong); border: none;">
               💥 Destroy Container
             </button>
           </div>
@@ -1518,7 +1518,7 @@ async function renderContainerEditTab(cid) {
       <!-- Guidance Notice -->
       <div style="background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.25); border-radius:6px; padding:10px 12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <div style="font-weight:700; color:var(--lt-t-38bdf8ff, #38bdf8); font-size:var(--zn-fs-xs);">✏️ Container Configuration Editor</div>
+          <div style="font-weight:700; color:var(--zn-text-accent); font-size:var(--zn-fs-xs);">✏️ Container Configuration Editor</div>
           <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">
             Zero-downtime atomic clone-and-recreate with automated rollback. All settings are validated before touching the container.
           </div>
@@ -1533,8 +1533,8 @@ async function renderContainerEditTab(cid) {
       ` : ''}
 
       <!-- Section 1: General Settings -->
-      <div class="ci-metric-card" style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:12px; border-radius:8px; margin-bottom:14px;">
-        <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">General Settings</div>
+      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
+        <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">General Settings</div>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
           <div>
             <label for="cie-input-name" style="font-size:var(--zn-fs-xs); color:var(--muted); display:block; margin-bottom:4px; font-weight:600;">CONTAINER NAME</label>
@@ -1564,7 +1564,7 @@ async function renderContainerEditTab(cid) {
           </div>
         </div>
         <div style="margin-top:10px;">
-          <label style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); cursor:pointer;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs); color:var(--zn-text-soft); cursor:pointer;">
             <input type="checkbox" id="cie-cb-pull" style="cursor:pointer;" ${isToolkit ? 'disabled' : ''}>
             <span>Pull latest image layers from registry before recreate</span>
           </label>
@@ -1572,27 +1572,27 @@ async function renderContainerEditTab(cid) {
       </div>
 
       <!-- Section 2: Port Mappings -->
-      <div class="ci-metric-card" style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:12px; border-radius:8px; margin-bottom:14px;">
+      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">Port Bindings</div>
+          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">Port Bindings</div>
           <button class="btn-pill-toggle" id="cie-btn-add-port" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ Add Port</button>
         </div>
         <div id="cie-ports-container" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
 
       <!-- Section 3: Volume Mounts & Paths -->
-      <div class="ci-metric-card" style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:12px; border-radius:8px; margin-bottom:14px;">
+      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">Storage Mounts & Paths (Binds)</div>
+          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">Storage Mounts & Paths (Binds)</div>
           <button class="btn-pill-toggle" id="cie-btn-add-mount" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ Add Mount</button>
         </div>
         <div id="cie-mounts-container" style="display:flex; flex-direction:column; gap:6px;"></div>
       </div>
 
       <!-- Section 4: Environment Variables -->
-      <div class="ci-metric-card" style="background:var(--lt-b-00000059, rgba(0,0,0,0.35)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding:12px; border-radius:8px; margin-bottom:14px;">
+      <div class="ci-metric-card" style="background:var(--zn-shade-35); border:1px solid var(--zn-line-8); padding:12px; border-radius:8px; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-ffffffff, #fff); text-transform:uppercase; letter-spacing:0.5px;">Environment Variables</div>
+          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); text-transform:uppercase; letter-spacing:0.5px;">Environment Variables</div>
           <div style="display:flex; gap:6px; align-items:center;">
             <input type="text" id="cie-env-filter" placeholder="${t('ui.filter_variables', 'Filter variables...')}" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:2px 6px; width:130px;">
             <button class="btn-pill-toggle" id="cie-btn-add-env" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${isToolkit ? `disabled title="${escapeHtml(t('container.why_self', 'ZettNAS cannot rebuild its own container; change it in Docker Compose'))}"` : ''}>+ Add Variable</button>
@@ -1602,7 +1602,7 @@ async function renderContainerEditTab(cid) {
       </div>
 
       <!-- Footer Actions -->
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:10px; border-top:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:10px; border-top:1px solid var(--zn-line-8);">
         <label style="display:flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs); color:var(--muted); cursor:pointer;">
           <input type="checkbox" id="cie-cb-backup" style="cursor:pointer;" ${isToolkit ? 'disabled' : ''}>
           <span>Keep backup container (retains previous state as {name}.backup)</span>

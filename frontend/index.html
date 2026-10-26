@@ -269,12 +269,12 @@
 <div id="desktop-wallpaper-dimmer" class="desktop-wallpaper-dimmer" aria-hidden="true"></div>
 
 <div id="login-overlay" style="position: fixed; inset: 0; z-index: 999999; background: var(--lt-b-080c10ff, #080c10); align-items: center; justify-content: center;">
-  <div style="background: var(--card, #141b24); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative;">
+  <div style="background: var(--card, #141b24); padding: 36px 32px; border-radius: 14px; text-align: center; border: 1px solid var(--zn-line-12); width: 340px; box-shadow: 0 25px 60px rgba(0,0,0,0.85); position: relative;">
     
     <!-- Step 1: Credentials (Dual Mode: Chooser vs Classic) -->
     <form id="login-step-credentials" novalidate>
       <svg class="ic" style="width: 44px; height: 44px; color: var(--ok2); margin-bottom: 16px;"><use href="#i-chip"/></svg>
-      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 2px; color: var(--lt-t-ffffffff, #fff);" data-i18n="login.title">ZETTNAS WORKBENCH</h2>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 2px; color: var(--zn-text-strong);" data-i18n="login.title">ZETTNAS WORKBENCH</h2>
       <p id="login-identity-txt" style="margin: 0 0 20px 0; font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="login.auth_required">Select an account or enter credentials</p>
 
       <!-- Mode A: Account Chooser Grid -->
@@ -286,23 +286,23 @@
       <div id="login-user-selected-card" role="button" tabindex="0" title="Click to change account" data-i18n-title="ui.click_to_change_account" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none;">
         <div id="login-selected-initial" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px;">A</div>
         <div style="text-align: left; flex: 1; min-width: 0;">
-          <div id="login-selected-name" style="font-weight: 700; color: var(--lt-t-ffffffff, #fff); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+          <div id="login-selected-name" style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); display: flex; align-items: center; gap: 4px;">
             <span>Change user</span> <span style="font-size: var(--zn-fs-xs);">▼</span>
           </div>
         </div>
-        <button type="button" id="login-change-user-btn" style="background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff2e, rgba(255,255,255,0.18)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-size: var(--zn-fs-xs); padding: 4px 8px; cursor: pointer; transition: background 0.15s ease;">Switch</button>
+        <button type="button" id="login-change-user-btn" style="background: var(--zn-glaze-8); border: 1px solid var(--zn-line-18); border-radius: 6px; color: var(--zn-text-strong); font-size: var(--zn-fs-xs); padding: 4px 8px; cursor: pointer; transition: background 0.15s ease;">Switch</button>
       </div>
 
       <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->
       <div id="login-manual-fields" style="display: none; margin-bottom: 12px;">
         <label for="login-username" class="sr-only" data-i18n="login.username_label">Username</label>
-        <input type="text" id="login-username" placeholder="Username" data-i18n-placeholder="mgmt.ups_field_user" autocomplete="username" style="width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px;">
+        <input type="text" id="login-username" placeholder="Username" data-i18n-placeholder="mgmt.ups_field_user" autocomplete="username" style="width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong); border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 14px; outline: none; margin-bottom: 10px;">
       </div>
 
       <!-- Password Input -->
       <label for="login-password" class="sr-only" data-i18n="login.password_label">Password</label>
-      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" data-i18n-placeholder="login.placeholder" style="width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--lt-r-ffffff2e, rgba(255,255,255,0.18)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 15px; outline: none;">
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" data-i18n-placeholder="login.placeholder" style="width: 100%; padding: 11px 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-18); color: var(--zn-text-strong); border-radius: 6px; margin-bottom: 12px; box-sizing: border-box; text-align: center; font-size: 15px; outline: none;">
 
       <!-- Remember Me -->
       <div style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-bottom: 18px; font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer;">
@@ -327,16 +327,16 @@
       <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.35); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">
         🛡️
       </div>
-      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 1px; color: var(--lt-t-ffffffff, #fff);">TWO-FACTOR AUTH</h2>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 1px; color: var(--zn-text-strong);">TWO-FACTOR AUTH</h2>
       <p id="mfa-user-target" style="margin: 0 0 20px 0; font-size: var(--zn-fs-xs); color: var(--muted);">Enter verification code from your authenticator app</p>
 
       <form id="form-mfa-challenge">
-        <input type="text" id="mfa-challenge-code" placeholder="6-Digit Code" data-i18n-placeholder="ui.6_digit_code" maxlength="6" autocomplete="one-time-code" style="width: 100%; padding: 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(56,189,248,0.4); color: var(--lt-t-38bdf8ff, #38bdf8); border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace;" aria-label="6-Digit Code" data-i18n-aria-label="ui.6_digit_code">
+        <input type="text" id="mfa-challenge-code" placeholder="6-Digit Code" data-i18n-placeholder="ui.6_digit_code" maxlength="6" autocomplete="one-time-code" style="width: 100%; padding: 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(56,189,248,0.4); color: var(--zn-text-accent); border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace;" aria-label="6-Digit Code" data-i18n-aria-label="ui.6_digit_code">
         <button type="submit" id="btn-submit-mfa" class="suite-toolkit-btn ok" style="width: 100%; padding: 12px; font-size: 13.5px; font-weight: 700;">VERIFY & SIGN IN</button>
       </form>
 
       <div style="margin-top: 16px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; gap: 8px;">
-        <a href="#" id="mfa-toggle-recovery" style="color: var(--lt-t-38bdf8ff, #38bdf8); text-decoration: none;">Use 8-character recovery code</a>
+        <a href="#" id="mfa-toggle-recovery" style="color: var(--zn-text-accent); text-decoration: none;">Use 8-character recovery code</a>
         <a href="#" id="mfa-back-btn" style="color: var(--muted); text-decoration: none;">← Back to credentials</a>
       </div>
     </div>
@@ -346,21 +346,21 @@
 
 <!-- Inactivity Auto-Lock & Manual Lock Screen Overlay -->
 <div id="lock-overlay" style="display: none; position: fixed; inset: 0; z-index: 999990; background: var(--lt-b-080c10bf, rgba(8,12,16,0.75)); backdrop-filter: blur(28px) saturate(180%) brightness(0.65); align-items: center; justify-content: center;">
-  <div style="background: var(--lt-b-141b24d9, rgba(20,27,36,0.85)); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid var(--lt-r-ffffff24, rgba(255,255,255,0.14)); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9);">
-    <div id="lock-clock" style="font-size: 42px; font-weight: 800; color: var(--lt-t-ffffffff, #fff); letter-spacing: -1px; font-family: var(--font-mono, monospace);">12:00</div>
+  <div style="background: var(--lt-b-141b24d9, rgba(20,27,36,0.85)); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid var(--zn-line-14); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9);">
+    <div id="lock-clock" style="font-size: 42px; font-weight: 800; color: var(--zn-text-strong); letter-spacing: -1px; font-family: var(--font-mono, monospace);">12:00</div>
     <div id="lock-date" style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px;">Monday, October 9</div>
 
-    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; background: var(--lt-b-ffffff0d, rgba(255,255,255,0.05)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius: 10px; padding: 12px; margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; background: var(--zn-glaze-5); border: 1px solid var(--zn-line-10); border-radius: 10px; padding: 12px; margin-bottom: 20px;">
       <div id="lock-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25));">A</div>
       <div style="text-align: left; min-width: 0; flex: 1;">
-        <div id="lock-display-name" style="font-weight: 700; color: var(--lt-t-ffffffff, #fff); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+        <div id="lock-display-name" style="font-weight: 700; color: var(--zn-text-strong); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
         <div id="lock-role-badge" style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-weight: 600;">SuperAdmin 👑</div>
       </div>
     </div>
 
     <div style="position: relative; margin-bottom: 12px;">
-      <input type="password" id="lock-password" placeholder="Enter password to unlock" data-i18n-placeholder="ui.enter_password_to_unlock" autocomplete="current-password" style="width: 100%; padding: 12px 42px 12px 14px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--lt-r-ffffff33, rgba(255,255,255,0.2)); color: var(--lt-t-ffffffff, #fff); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;" aria-label="Enter password to unlock" data-i18n-aria-label="ui.enter_password_to_unlock">
-      <button id="lock-unlock-btn" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: var(--lt-t-ffffffff, #fff); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
+      <input type="password" id="lock-password" placeholder="Enter password to unlock" data-i18n-placeholder="ui.enter_password_to_unlock" autocomplete="current-password" style="width: 100%; padding: 12px 42px 12px 14px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-20); color: var(--zn-text-strong); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;" aria-label="Enter password to unlock" data-i18n-aria-label="ui.enter_password_to_unlock">
+      <button id="lock-unlock-btn" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: var(--zn-text-strong); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
     </div>
 
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: var(--zn-fs-xs); color: var(--muted); padding: 0 2px;">
@@ -368,7 +368,7 @@
         <span aria-hidden="true">⏱️</span>
         <span data-i18n="lock.stay_unlocked">Auto-lock after:</span>
       </label>
-      <select id="lock-timeout-select" class="tz-select-input" style="background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--lt-r-ffffff2e, rgba(255,255,255,0.18)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; padding: 4px 8px; font-size: var(--zn-fs-xs); cursor: pointer; outline: none;">
+      <select id="lock-timeout-select" class="tz-select-input" style="background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-18); color: var(--zn-text-strong); border-radius: 6px; padding: 4px 8px; font-size: var(--zn-fs-xs); cursor: pointer; outline: none;">
         <option value="900000" data-i18n="lock.timeout_15m">15 minutes</option>
         <option value="3600000" data-i18n="lock.timeout_1h">1 hour</option>
         <option value="14400000" selected data-i18n="lock.timeout_4h">4 hours (Standard)</option>
@@ -610,7 +610,7 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 4px;">
           <div style="display: flex; align-items: baseline; justify-content: space-between;">
-            <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: 0.5px; color: var(--lt-t-ffffffff, #fff); line-height: 1;" id="w-clock-time">
+            <div style="font-size: 24px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: 0.5px; color: var(--zn-text-strong); line-height: 1;" id="w-clock-time">
               --:--<span style="font-size: 14px; opacity: 0.65; margin-left: 1px;" id="w-clock-sec">:--</span>
             </div>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-ink-brand, var(--brand, #00f0ff));" id="w-clock-ampm"></span>
@@ -659,7 +659,7 @@
                 <path class="circle-bg" stroke="rgba(255,255,255,0.08)" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                 <path id="w-ai-gpu-arc" class="circle" stroke="#a855f7" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
               </svg>
-              <div class="ai-dial-val" id="w-ai-gpu-val" style="color: var(--lt-t-c084fcff, #c084fc);">0%</div>
+              <div class="ai-dial-val" id="w-ai-gpu-val" style="color: var(--zn-text-ai);">0%</div>
             </div>
             <div class="ai-gauge-sub" id="w-ai-gpu-freq">0 MHz</div>
           </div>
@@ -670,15 +670,15 @@
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--zn-fs-xs); margin-bottom:4px;">
             <div style="display:flex; align-items:center; gap:5px;">
               <span class="pulsing-dot" style="width:6px; height:6px; border-radius:50%; background:#00f0ff; display:inline-block;"></span>
-              <strong style="color:var(--lt-t-ffffffff, #fff);" data-i18n="ai.reindex_label">Re-indexing</strong>
-              <span id="w-ai-reindex-chunks" style="color:var(--lt-t-94a3b8ff, #94a3b8); font-family:monospace; font-size:var(--zn-fs-xs);">0 / 0</span>
+              <strong style="color:var(--zn-text-strong);" data-i18n="ai.reindex_label">Re-indexing</strong>
+              <span id="w-ai-reindex-chunks" style="color:var(--zn-text-muted); font-family:monospace; font-size:var(--zn-fs-xs);">0 / 0</span>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <span id="w-ai-reindex-eta" style="color:var(--lt-t-fbbf24ff, #fbbf24); font-size:var(--zn-fs-xs);">ETA: --</span>
+              <span id="w-ai-reindex-eta" style="color:var(--zn-text-warn); font-size:var(--zn-fs-xs);">ETA: --</span>
               <strong id="w-ai-reindex-pct" style="color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); font-size:var(--zn-fs-xs);">0%</strong>
             </div>
           </div>
-          <div style="height:4px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border-radius:999px; overflow:hidden;">
+          <div style="height:4px; background:var(--zn-glaze-8); border-radius:999px; overflow:hidden;">
             <div id="w-ai-reindex-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #0ea5e9, #00f0ff); transition:width 0.3s ease;"></div>
           </div>
         </div>
@@ -705,7 +705,7 @@
             </div>
           </div>
           <div style="display: flex; flex-direction: column; text-align: right; gap: 2px;">
-            <span id="w-weather-range" style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--lt-t-cbd5e1ff, #cbd5e1); font-family: var(--font-mono, monospace);">H: --° L: --°</span>
+            <span id="w-weather-range" style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-soft); font-family: var(--font-mono, monospace);">H: --° L: --°</span>
             <span id="w-weather-details" style="font-size: var(--zn-fs-xs); color: var(--muted);">💧 --% • 💨 --</span>
           </div>
         </div>
@@ -720,9 +720,9 @@
             <span class="widget-badge" id="w-cal-country-badge" style="margin-left: 5px; font-size: var(--zn-fs-xs); opacity: 0.85; cursor: pointer;" title="Official Holidays Country" data-i18n-title="ui.official_holidays_country">US</span>
           </span>
           <div style="display: flex; align-items: center; gap: 4px;">
-            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: var(--zn-fs-xs); background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: none; border-radius: 3px; color: var(--lt-t-cbd5e1ff, #cbd5e1); cursor: pointer;" title="Previous Month" data-i18n-title="ui.previous_month">◀</button>
+            <button id="w-cal-prev" class="btn-icon" style="padding: 1px 5px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: none; border-radius: 3px; color: var(--zn-text-soft); cursor: pointer;" title="Previous Month" data-i18n-title="ui.previous_month">◀</button>
             <span class="widget-badge" id="w-cal-month" style="font-size: var(--zn-fs-xs); cursor: pointer;" title="Click to jump to current month" data-i18n-title="ui.click_to_jump_to_current">OCT 2026</span>
-            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: var(--zn-fs-xs); background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: none; border-radius: 3px; color: var(--lt-t-cbd5e1ff, #cbd5e1); cursor: pointer;" title="Next Month" data-i18n-title="ui.next_month">▶</button>
+            <button id="w-cal-next" class="btn-icon" style="padding: 1px 5px; font-size: var(--zn-fs-xs); background: var(--zn-glaze-8); border: none; border-radius: 3px; color: var(--zn-text-soft); cursor: pointer;" title="Next Month" data-i18n-title="ui.next_month">▶</button>
           </div>
         </div>
         <div id="w-calendar-grid" class="widget-calendar-grid"></div>
@@ -739,7 +739,7 @@
             <span style="font-size: var(--zn-fs-xs); color: var(--muted);">CPU</span>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace);" id="w-cpu-val">0%</span>
           </div>
-          <div style="width: 100%; height: 4px; background: var(--lt-b-ffffff1a, rgba(255,255,255,0.1)); border-radius: 2px; overflow: hidden;">
+          <div style="width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden;">
             <div id="w-cpu-bar" style="height: 100%; background: var(--brand, #00f0ff); width: 0%; transition: width 0.3s ease;"></div>
           </div>
           
@@ -747,7 +747,7 @@
             <span style="font-size: var(--zn-fs-xs); color: var(--muted);">RAM</span>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace);" id="w-ram-val">0%</span>
           </div>
-          <div style="width: 100%; height: 4px; background: var(--lt-b-ffffff1a, rgba(255,255,255,0.1)); border-radius: 2px; overflow: hidden;">
+          <div style="width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden;">
             <div id="w-ram-bar" style="height: 100%; background: var(--ok2, #25c2a0); width: 0%; transition: width 0.3s ease;"></div>
           </div>
         </div>
@@ -782,7 +782,7 @@
             <span style="font-size: var(--zn-fs-xs); color: var(--muted);">Capacity</span>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace);" id="w-storage-val">-- / --</span>
           </div>
-          <div style="width: 100%; height: 4px; background: var(--lt-b-ffffff1a, rgba(255,255,255,0.1)); border-radius: 2px; overflow: hidden; margin-top: 2px;">
+          <div style="width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden; margin-top: 2px;">
             <div id="w-storage-bar" style="height: 100%; background: linear-gradient(90deg, var(--ok2, #25c2a0), var(--brand, #00f0ff)); width: 0%; transition: width 0.3s ease;"></div>
           </div>
         </div>
@@ -799,7 +799,7 @@
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: var(--zn-fs-xs); color: var(--muted);">Uptime</span>
-          <span style="font-size: var(--zn-fs-xs); font-weight: 600; font-family: var(--font-mono, monospace); color: var(--lt-t-cbd5e1ff, #cbd5e1);" id="w-host-uptime">--</span>
+          <span style="font-size: var(--zn-fs-xs); font-weight: 600; font-family: var(--font-mono, monospace); color: var(--zn-text-soft);" id="w-host-uptime">--</span>
         </div>
       </div>
 
@@ -852,12 +852,12 @@
             <span style="font-size: var(--zn-fs-xs); color: var(--muted);">Battery Charge</span>
             <span style="font-size: 14px; font-weight: 800; font-family: var(--font-mono, monospace); color: var(--ok2, #25c2a0);" id="w-ups-battery">100%</span>
           </div>
-          <div style="width: 100%; height: 5px; background: var(--lt-b-ffffff1a, rgba(255,255,255,0.1)); border-radius: 3px; overflow: hidden;">
+          <div style="width: 100%; height: 5px; background: var(--zn-glaze-10); border-radius: 3px; overflow: hidden;">
             <div id="w-ups-bar" style="height: 100%; width: 100%; background: var(--ok2, #25c2a0); transition: width 0.3s ease;"></div>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px; font-size: var(--zn-fs-xs);">
-            <span style="color: var(--muted);">Load: <strong style="color: var(--lt-t-cbd5e1ff, #cbd5e1); font-family: var(--font-mono, monospace);" id="w-ups-load">-- W</strong></span>
-            <span style="color: var(--muted);">Runtime: <strong style="color: var(--lt-t-cbd5e1ff, #cbd5e1); font-family: var(--font-mono, monospace);" id="w-ups-runtime">-- min</strong></span>
+            <span style="color: var(--muted);">Load: <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-load">-- W</strong></span>
+            <span style="color: var(--muted);">Runtime: <strong style="color: var(--zn-text-soft); font-family: var(--font-mono, monospace);" id="w-ups-runtime">-- min</strong></span>
           </div>
         </div>
       </div>
@@ -975,15 +975,15 @@
           <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
           <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
         </div>
-        <div id="smart-degradation-banner" style="display: none; margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.4; border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background: var(--lt-b-00000040, rgba(0,0,0,0.25));"></div>
+        <div id="smart-degradation-banner" style="display: none; margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.4; border: 1px solid var(--zn-line-8); background: var(--zn-shade-25);"></div>
       </div>
 
       <!-- PANE 2: Self-Test & Reports -->
       <div id="smart-pane-selftest" class="smart-pane">
-        <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--lt-b-ffffff08, rgba(255,255,255,0.03)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px;">
+        <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px;">
           <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">SELF-TESTS:</span>
           <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
-          <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
+          <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
           <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
           <span id="smart-test-status" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-left: auto;"></span>
         </div>
@@ -1075,8 +1075,8 @@
       <!-- PANE 3: Raw SMART Telemetry -->
       <div id="smart-pane-raw" class="smart-pane">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-          <input type="text" id="smart-raw-filter" class="smart-raw-search-input" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-placeholder="ui.filter_attributes_e_g_realloc" style="flex: 1; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 6px; padding: 6px 10px; font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); font-family: monospace;" aria-label="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-aria-label="ui.filter_attributes_e_g_realloc" />
-          <button id="smart-btn-copy-raw" class="smart-test-action-btn" style="background: var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-cbd5e1ff, #cbd5e1); font-size: var(--zn-fs-xs); font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer;">📋 Copy Raw</button>
+          <input type="text" id="smart-raw-filter" class="smart-raw-search-input" placeholder="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-placeholder="ui.filter_attributes_e_g_realloc" style="flex: 1; background: var(--zn-shade-30); border: 1px solid var(--zn-line-8); border-radius: 6px; padding: 6px 10px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-family: monospace;" aria-label="Filter attributes (e.g. realloc, temp, pending, crc)..." data-i18n-aria-label="ui.filter_attributes_e_g_realloc" />
+          <button id="smart-btn-copy-raw" class="smart-test-action-btn" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-12); color: var(--zn-text-soft); font-size: var(--zn-fs-xs); font-weight: 600; padding: 5px 10px; border-radius: 4px; cursor: pointer;">📋 Copy Raw</button>
         </div>
         <pre class="smart-raw-pre" id="smart-raw-output" style="max-height: none; flex: 1; margin: 0;">Querying telemetry...</pre>
       </div>
@@ -1111,15 +1111,15 @@
       <!-- Raw Markdown Box -->
       <div>
         <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;">SUPPORT MARKDOWN PREVIEW</div>
-        <pre id="diagnostics-preview-md" style="margin: 0; padding: 12px 14px; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8); max-height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;"></pre>
+        <pre id="diagnostics-preview-md" style="margin: 0; padding: 12px 14px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-8); border-radius: 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); max-height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;"></pre>
       </div>
 
       <!-- Action Buttons -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
-        <button id="btn-diag-preview-copy" type="button" class="btn-pill-toggle" style="background: rgba(37,194,160,0.2); border-color: rgba(37,194,160,0.4); color: var(--lt-t-ffffffff, #fff);">
+      <div style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px; border-top: 1px solid var(--zn-line-8);">
+        <button id="btn-diag-preview-copy" type="button" class="btn-pill-toggle" style="background: rgba(37,194,160,0.2); border-color: rgba(37,194,160,0.4); color: var(--zn-text-strong);">
           📋 <span data-i18n="diagnostics.copy_btn">Copy Markdown to Clipboard</span>
         </button>
-        <button id="btn-diag-preview-close" type="button" class="btn-pill-toggle" style="background: var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); border-color: var(--lt-r-ffffff26, rgba(255,255,255,0.15)); color: var(--lt-t-cbd5e1ff, #cbd5e1);" data-i18n="diagnostics.close_btn">
+        <button id="btn-diag-preview-close" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border-color: var(--zn-line-15); color: var(--zn-text-soft);" data-i18n="diagnostics.close_btn">
           Close
         </button>
       </div>
@@ -1141,13 +1141,13 @@
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
       
       <!-- Top meta pills: Level badge, Subsystem badge, Relative time -->
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--zn-line-8);">
         <div style="display: flex; gap: 8px; align-items: center;">
           <span id="event-detail-badge" style="font-size: var(--zn-fs-xs); font-weight: 800; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.6px; display: inline-flex; align-items: center; gap: 4px;">
             <span id="event-detail-badge-icon">ℹ️</span>
             <span id="event-detail-badge-text">INFO</span>
           </span>
-          <span id="event-detail-subsystem" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); background: var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">SYSTEM</span>
+          <span id="event-detail-subsystem" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); background: var(--zn-glaze-6); border: 1px solid var(--zn-line-8); padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px;">SYSTEM</span>
         </div>
         <div id="event-detail-reltime" style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 600;">--</div>
       </div>
@@ -1155,16 +1155,16 @@
       <!-- Main Event Title & Description Box -->
       <div>
         <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;" data-i18n="event_detail.headline">EVENT HEADLINE</div>
-        <div id="event-detail-event-title" style="font-size: 13.5px; font-weight: 800; color: var(--lt-t-ffffffff, #fff); margin-bottom: 8px; word-break: break-word;"></div>
+        <div id="event-detail-event-title" style="font-size: 13.5px; font-weight: 800; color: var(--zn-text-strong); margin-bottom: 8px; word-break: break-word;"></div>
         <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;" data-i18n="event_detail.message">MESSAGE</div>
-        <div id="event-detail-event-message" style="font-size: var(--zn-fs-xs); color: var(--lt-t-e2e8f0ff, #e2e8f0); line-height: 1.5; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff12, rgba(255,255,255,0.07)); border-radius: 8px; padding: 12px 14px; word-break: break-word;"></div>
+        <div id="event-detail-event-message" style="font-size: var(--zn-fs-xs); color: var(--zn-text); line-height: 1.5; background: var(--zn-shade-30); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 12px 14px; word-break: break-word;"></div>
       </div>
 
       <!-- Time breakdown: Local time & Epoch -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--lt-b-ffffff05, rgba(255,255,255,0.02)); border: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); border-radius: 8px; padding: 10px 14px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--zn-glaze-2); border: 1px solid var(--zn-line-5); border-radius: 8px; padding: 10px 14px;">
         <div>
           <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;" data-i18n="event_detail.timestamp">LOCAL TIME</div>
-          <div id="event-detail-localtime" style="font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff); font-weight: 600; margin-top: 3px;">--</div>
+          <div id="event-detail-localtime" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-weight: 600; margin-top: 3px;">--</div>
         </div>
         <div>
           <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px;" data-i18n="event_detail.epoch">UNIX EPOCH</div>
@@ -1176,20 +1176,20 @@
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="event_detail.technical">DIAGNOSTICS & RAW PAYLOAD</span>
-          <button id="event-detail-copy-btn" type="button" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff24, rgba(255,255,255,0.14)); color: var(--lt-t-ffffffff, #fff); border-radius: 5px; cursor: pointer; transition: all 0.15s ease;">
+          <button id="event-detail-copy-btn" type="button" style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-14); color: var(--zn-text-strong); border-radius: 5px; cursor: pointer; transition: all 0.15s ease;">
             <span id="event-detail-copy-icon">📋</span>
             <span id="event-detail-copy-text" data-i18n="event_detail.copy">Copy Details</span>
           </button>
         </div>
-        <pre id="event-detail-raw" class="smart-raw-pre" style="margin: 0; padding: 10px 12px; max-height: 140px; overflow-y: auto; font-size: var(--zn-fs-xs); border-radius: 6px; background: var(--lt-b-00000073, rgba(0,0,0,0.45)); border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); font-family: monospace; color: var(--lt-t-94a3b8ff, #94a3b8); white-space: pre-wrap; word-break: break-all;"></pre>
+        <pre id="event-detail-raw" class="smart-raw-pre" style="margin: 0; padding: 10px 12px; max-height: 140px; overflow-y: auto; font-size: var(--zn-fs-xs); border-radius: 6px; background: var(--lt-b-00000073, rgba(0,0,0,0.45)); border: 1px solid var(--zn-line-8); font-family: monospace; color: var(--zn-text-muted); white-space: pre-wrap; word-break: break-all;"></pre>
       </div>
 
       <!-- Footer Action Buttons -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--zn-line-8);">
         <div id="event-detail-actions-left" style="display: flex; gap: 8px;">
           <button id="event-detail-context-btn" type="button" style="display: none; padding: 6px 14px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer; transition: opacity 0.15s;"></button>
         </div>
-        <button id="event-detail-close-btn" type="button" style="padding: 6px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; cursor: pointer;" data-i18n="event_detail.close">Close</button>
+        <button id="event-detail-close-btn" type="button" style="padding: 6px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;" data-i18n="event_detail.close">Close</button>
       </div>
 
     </div>
@@ -1198,7 +1198,7 @@
 
 <!-- Fan Curve Preset Save Modal -->
 <div id="fan-preset-modal-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fan-preset-title" style="display: none;">
-  <div class="smart-modal-window fan-preset-modal-window" style="max-width: 440px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));">
+  <div class="smart-modal-window fan-preset-modal-window" style="max-width: 440px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
     <div class="smart-modal-header" id="fan-preset-modal-header" style="cursor: default;">
       <span class="smart-modal-title" id="fan-preset-title" style="display: flex; align-items: center; gap: 8px;">
         <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-save"/></svg>
@@ -1211,13 +1211,13 @@
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div>
         <label for="fan-preset-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="fan.preset_name_label">Preset Name</label>
-        <input type="text" id="fan-preset-name-input" class="fan-preset-input" placeholder="e.g. Silent Curve, Heavy Load, Render Rig" data-i18n-placeholder="ui.e_g_silent_curve_heavy" maxlength="40" style="width: 100%; box-sizing: border-box; background: var(--lt-b-00000066, rgba(0,0,0,0.4)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: var(--lt-t-ffffffff, #fff); outline: none; transition: border-color 0.2s;" autocomplete="off" />
+        <input type="text" id="fan-preset-name-input" class="fan-preset-input" placeholder="e.g. Silent Curve, Heavy Load, Render Rig" data-i18n-placeholder="ui.e_g_silent_curve_heavy" maxlength="40" style="width: 100%; box-sizing: border-box; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); border-radius: 6px; padding: 9px 12px; font-size: 13px; color: var(--zn-text-strong); outline: none; transition: border-color 0.2s;" autocomplete="off" />
       </div>
       <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.45;" data-i18n="fan.save_preset_hint">
         Saves current 5-point fan curve to your system presets.
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
-        <button id="fan-preset-cancel-btn" type="button" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; cursor: pointer; transition: background 0.15s;" data-i18n="fan.cancel">Cancel</button>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+        <button id="fan-preset-cancel-btn" type="button" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer; transition: background 0.15s;" data-i18n="fan.cancel">Cancel</button>
         <button id="fan-preset-submit-btn" type="button" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: pointer; transition: filter 0.15s; display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.save_preset_btn">
           <svg class="ic" style="width: 13px; height: 13px; fill: currentColor;"><use href="#i-save"/></svg>
           <span data-i18n="fan.save_preset_btn">Save Preset</span>
@@ -1229,7 +1229,7 @@
 
 <!-- Fan Curve Preset Delete Confirmation Modal -->
 <div id="fan-preset-delete-overlay" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="fan-delete-title" style="display: none;">
-  <div class="smart-modal-window fan-preset-modal-window" style="max-width: 420px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(239, 68, 68, 0.15); border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));">
+  <div class="smart-modal-window fan-preset-modal-window" style="max-width: 420px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(239, 68, 68, 0.15); border: 1px solid var(--zn-line-12);">
     <div class="smart-modal-header" id="fan-preset-delete-header" style="cursor: default;">
       <span class="smart-modal-title" id="fan-delete-title" style="display: flex; align-items: center; gap: 8px;">
         <svg class="ic" style="width: 15px; height: 15px; fill: currentColor; color: var(--crit, #ff5c5c);"><use href="#i-trash"/></svg>
@@ -1240,13 +1240,13 @@
       </div>
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
-      <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-e2e8f0ff, #e2e8f0); line-height: 1.5;">
-        <span data-i18n="fan.delete_confirm_msg">Are you sure you want to delete fan preset</span> <strong id="fan-delete-preset-target" style="color: var(--lt-t-ffffffff, #fff); font-weight: 700;"></strong>?
+      <div style="font-size: var(--zn-fs-xs); color: var(--zn-text); line-height: 1.5;">
+        <span data-i18n="fan.delete_confirm_msg">Are you sure you want to delete fan preset</span> <strong id="fan-delete-preset-target" style="color: var(--zn-text-strong); font-weight: 700;"></strong>?
       </div>
       <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="fan.delete_preset_warning">This action cannot be undone.</div>
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08));">
-        <button id="fan-delete-cancel-btn" type="button" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; cursor: pointer; transition: background 0.15s;" data-i18n="fan.cancel">Cancel</button>
-        <button id="fan-delete-confirm-btn" type="button" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--crit, #ef4444); border: none; color: var(--lt-t-ffffffff, #fff); border-radius: 6px; cursor: pointer; transition: filter 0.15s; display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.delete_preset_btn">
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
+        <button id="fan-delete-cancel-btn" type="button" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer; transition: background 0.15s;" data-i18n="fan.cancel">Cancel</button>
+        <button id="fan-delete-confirm-btn" type="button" style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--crit, #ef4444); border: none; color: var(--zn-text-strong); border-radius: 6px; cursor: pointer; transition: filter 0.15s; display: inline-flex; align-items: center; gap: 6px;" data-i18n="fan.delete_preset_btn">
           <svg class="ic" style="width: 13px; height: 13px; fill: currentColor;"><use href="#i-trash"/></svg>
           <span data-i18n="fan.delete_preset_btn">Delete Preset</span>
         </button>
@@ -1258,7 +1258,7 @@
 <div id="setup-wizard-modal" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="setup-wizard-title">
   <div class="smart-modal-window" style="width: 540px; border-color: rgba(224, 122, 56, 0.4); box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(224, 122, 56, 0.15);">
     <div class="smart-modal-header" style="background: linear-gradient(90deg, var(--lt-b-182332ff, #182332) 0%, var(--lt-b-1a1e29ff, #1a1e29) 100%); border-bottom: 1px solid rgba(224, 122, 56, 0.25);">
-      <span class="smart-modal-title" id="setup-wizard-title" style="color: var(--lt-t-f1f5f9ff, #f1f5f9);">
+      <span class="smart-modal-title" id="setup-wizard-title" style="color: var(--zn-text-bright);">
         <span style="font-size: 18px;">⚡</span> <span data-i18n="setup.title">ZettNAS Setup Wizard</span>
       </span>
       <div class="os-window-controls">
@@ -1270,13 +1270,13 @@
     <div class="smart-modal-body" style="padding: 24px; gap: 18px;">
       <div data-setup-step="1" style="background: rgba(224, 122, 56, 0.08); border: 1px solid rgba(224, 122, 56, 0.2); border-radius: 8px; padding: 12px 14px;">
         <div style="font-size: 13px; font-weight: 700; color: var(--lt-t-f8fafcff, #f8fafc); margin-bottom: 4px;" data-i18n="setup.welcome_title">Welcome to your ZettNAS Toolkit!</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); line-height: 1.45;" data-i18n="setup.welcome_desc">Your NAS hardware environment has been initialized. Complete this initial setup to secure your console and review connected peripherals.</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); line-height: 1.45;" data-i18n="setup.welcome_desc">Your NAS hardware environment has been initialized. Complete this initial setup to secure your console and review connected peripherals.</div>
       </div>
 
       <div data-setup-step="1">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">Your hardware</div>
+        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">Your hardware</div>
         <div class="smart-meta-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val" id="setup-hw-chassis" style="font-size: var(--zn-fs-xs); color: var(--lt-t-38bdf8ff, #38bdf8);">Detecting...</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val" id="setup-hw-chassis" style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">Detecting...</span></div>
           <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.lcd_screen">Front screen</span><span class="val" id="setup-hw-fb" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
           <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.fans_controller">Fans</span><span class="val" id="setup-hw-fans" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
           <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.argb_lightbar">Light bar</span><span class="val" id="setup-hw-leds" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
@@ -1290,29 +1290,29 @@
       </div>
 
       <div data-setup-step="2">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step2_title">Choose your password</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom: 10px;" data-i18n="setup.step2_desc">The default or first-time password is still active. Replace it with your own password (minimum 8 characters).</div>
+        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step2_title">Choose your password</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 10px;" data-i18n="setup.step2_desc">The default or first-time password is still active. Replace it with your own password (minimum 8 characters).</div>
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div>
-            <label for="setup-current-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 4px;" data-i18n="setup.cur_pwd">CURRENT PASSWORD</label>
-            <input id="setup-current-pwd" aria-label="Current password" data-i18n-aria-label="setup.current_password" type="password" value="" autocomplete="current-password" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff);">
+            <label for="setup-current-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.cur_pwd">CURRENT PASSWORD</label>
+            <input id="setup-current-pwd" aria-label="Current password" data-i18n-aria-label="setup.current_password" type="password" value="" autocomplete="current-password" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
           </div>
           <div>
-            <label for="setup-new-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 4px;" data-i18n="setup.new_pwd">NEW PASSWORD</label>
-            <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff);">
+            <label for="setup-new-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.new_pwd">NEW PASSWORD</label>
+            <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
           </div>
           <div>
-            <label for="setup-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-94a3b8ff, #94a3b8); margin-bottom: 4px;" data-i18n="setup.confirm_pwd">CONFIRM NEW PASSWORD</label>
-            <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." data-i18n-placeholder="setup.confirm_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff);">
+            <label for="setup-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.confirm_pwd">CONFIRM NEW PASSWORD</label>
+            <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." data-i18n-placeholder="setup.confirm_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
           </div>
         </div>
         <div id="setup-wizard-err" style="display: none; margin-top: 8px; font-size: var(--zn-fs-xs); color: var(--crit); font-weight: 600;"></div>
       </div>
 
       <div data-setup-step="1">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">Power protection</div>
-        <div id="setup-hw-ups" style="padding: 10px 12px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8);">
+        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step4_title">Power protection</div>
+        <div id="setup-hw-ups" style="padding: 10px 12px; background: var(--zn-shade-25); border: 1px solid var(--zn-line-10); border-radius: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-muted);">
           <span id="setup-ups-badge" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 6px;"></span>
           <span id="setup-ups-text" data-i18n="setup.ups_none">Checking UPS status...</span>
         </div>
@@ -1356,12 +1356,12 @@
       </div>
 
       <div data-setup-step="6">
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--lt-t-94a3b8ff, #94a3b8); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">Alerts (optional)</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom: 8px;" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
-        <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); border-radius: 6px; color: var(--lt-t-ffffffff, #fff);" aria-label="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-aria-label="setup.notif_placeholder">
+        <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step5_title">Alerts (optional)</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-soft); margin-bottom: 8px;" data-i18n="setup.notif_desc">Receive instant alerts for power outages, failing drives, and emergency thermal clamps.</div>
+        <input id="setup-notif-url" type="text" placeholder="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-placeholder="setup.notif_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);" aria-label="e.g., discord://webhook_id/token or tgram://bot_token/chat_id" data-i18n-aria-label="setup.notif_placeholder">
       </div>
 
-      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; border-top: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); padding-top: 16px;">
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; border-top: 1px solid var(--zn-line-6); padding-top: 16px;">
         <button id="setup-wizard-skip" class="btn-cancel" style="padding: 8px 16px; font-size: var(--zn-fs-xs);" data-i18n="setup.remind_later">Remind Me Later</button>
         <button id="setup-wizard-submit" class="btn-pill-toggle is-primary" data-i18n="setup.submit">Complete Setup & Save</button>
       </div>
@@ -1391,7 +1391,7 @@
       </div>
     </div>
     <div class="smart-modal-body" style="padding-bottom: 20px;">
-      <div id="fb-current-path" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 10px; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
+      <div id="fb-current-path" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-5); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
       
       <div style="display: flex; gap: 8px; margin-top: 5px;">
         <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: var(--zn-fs-xs);" aria-label="🔍 Filter folders..." data-i18n-aria-label="modal.fb_search">
@@ -1403,7 +1403,7 @@
         <button id="fb-create-folder" class="btn-pill-toggle" data-i18n="modal.fb_create">+ Create</button>
       </div>
 
-      <div id="fb-list" style="max-height: 250px; overflow-y: auto; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); border-radius: 6px; margin-top: 10px; margin-bottom: 10px;">
+      <div id="fb-list" style="max-height: 250px; overflow-y: auto; background: var(--zn-shade-20); border: 1px solid var(--zn-line-5); border-radius: 6px; margin-top: 10px; margin-bottom: 10px;">
         <!-- populated via js -->
       </div>
       
@@ -1427,23 +1427,23 @@
     <form id="form-add-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <div>
         <label for="add-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME (REQUIRED)</label>
-        <input type="text" id="add-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="e.g. john" pattern="^[a-zA-Z0-9_\.-]{3,32}$" required>
+        <input type="text" id="add-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. john" pattern="^[a-zA-Z0-9_\.-]{3,32}$" required>
       </div>
       <div>
         <label for="add-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
-        <input type="text" id="add-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
+        <input type="text" id="add-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
         <label for="add-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
-        <input type="email" id="add-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="john@example.com">
+        <input type="email" id="add-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="john@example.com">
       </div>
       <div>
         <label for="add-user-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">PASSWORD (REQUIRED)</label>
-        <input type="password" id="add-user-password" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
+        <input type="password" id="add-user-password" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
         <label for="add-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
-        <select id="add-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);">
+        <select id="add-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
           <option value="share_user" selected>Family & Share User 👤 (Files & WebDAV only)</option>
           <option value="app_operator">App Operator 📦 (Docker & App management)</option>
           <option value="storage_admin">Storage Administrator 💾 (Disks & Pools)</option>
@@ -1454,7 +1454,7 @@
       </div>
       <div>
         <label for="add-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
-        <input type="number" id="add-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="0" min="0">
+        <input type="number" id="add-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
         <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
@@ -1477,19 +1477,19 @@
       <input type="hidden" id="edit-user-id">
       <div>
         <label for="edit-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
-        <input type="text" id="edit-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); background:var(--lt-b-ffffff0d, rgba(255,255,255,0.05)); padding:8px 10px; color:var(--muted); cursor:not-allowed;" disabled>
+        <input type="text" id="edit-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-8); background:var(--zn-glaze-5); padding:8px 10px; color:var(--muted); cursor:not-allowed;" disabled>
       </div>
       <div>
         <label for="edit-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
-        <input type="text" id="edit-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
+        <input type="text" id="edit-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
         <label for="edit-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
-        <input type="email" id="edit-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="john@example.com">
+        <input type="email" id="edit-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="john@example.com">
       </div>
       <div>
         <label for="edit-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
-        <select id="edit-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);">
+        <select id="edit-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
           <option value="share_user">Family & Share User 👤 (Files & WebDAV only)</option>
           <option value="app_operator">App Operator 📦 (Docker & App management)</option>
           <option value="storage_admin">Storage Administrator 💾 (Disks & Pools)</option>
@@ -1500,7 +1500,7 @@
       </div>
       <div>
         <label for="edit-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
-        <input type="number" id="edit-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="0" min="0">
+        <input type="number" id="edit-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
         <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
@@ -1522,15 +1522,15 @@
     <form id="form-reset-password" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <div id="reset-pwd-current-wrap" style="display:none;">
         <label for="reset-pwd-current" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CURRENT PASSWORD</label>
-        <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="Your current password" data-i18n-placeholder="ui.your_current_password" autocomplete="current-password">
+        <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Your current password" data-i18n-placeholder="ui.your_current_password" autocomplete="current-password">
       </div>
       <div>
         <label for="reset-pwd-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
-        <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
+        <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
         <label for="reset-pwd-confirm" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CONFIRM NEW PASSWORD</label>
-        <input type="password" id="reset-pwd-confirm" class="tz-select-input" style="width:100%; border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:8px 10px; color:var(--lt-t-ffffffff, #fff);" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" required autocomplete="new-password">
+        <input type="password" id="reset-pwd-confirm" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" required autocomplete="new-password">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
         <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
@@ -1552,23 +1552,23 @@
     <div class="smart-modal-body" style="padding: 18px;">
       <!-- Step 1: Scan & Verify -->
       <div id="mfa-step-verify">
-        <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); margin-bottom:12px; line-height:1.45;">
+        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:12px; line-height:1.45;">
           Scan the QR code below using your authenticator app (such as Google Authenticator, Aegis, 1Password, or Bitwarden):
         </div>
         <div id="mfa-qr-container" style="background:#fff; border-radius:8px; padding:12px; display:flex; justify-content:center; align-items:center; margin:0 auto 14px; width:220px; height:220px; box-shadow:0 4px 14px rgba(0,0,0,0.4);">
           <!-- QR SVG injected here -->
         </div>
         <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-align:center; margin-bottom:14px;">
-          Or enter this key manually: <code id="mfa-secret-key" style="font-weight:700; color:var(--lt-t-38bdf8ff, #38bdf8); background:var(--lt-b-00000066, rgba(0,0,0,0.4)); padding:2px 6px; border-radius:4px; letter-spacing:1px; user-select:all;">--</code>
+          Or enter this key manually: <code id="mfa-secret-key" style="font-weight:700; color:var(--zn-text-accent); background:var(--zn-shade-40); padding:2px 6px; border-radius:4px; letter-spacing:1px; user-select:all;">--</code>
         </div>
         <form id="form-verify-2fa" style="display:flex; flex-direction:column; gap:10px;">
           <div>
             <label for="mfa-current-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">CURRENT PASSWORD</label>
-            <input type="password" id="mfa-current-password" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:10px; color:var(--lt-t-ffffffff, #fff);" required autocomplete="current-password">
+            <input type="password" id="mfa-current-password" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--zn-shade-30); padding:10px; color:var(--zn-text-strong);" required autocomplete="current-password">
           </div>
           <div>
             <label for="mfa-verify-code" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">6-DIGIT VERIFICATION CODE</label>
-            <input type="text" id="mfa-verify-code" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding:10px; color:var(--lt-t-ffffffff, #fff); font-size:18px; font-family:monospace; text-align:center; letter-spacing:4px;" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
+            <input type="text" id="mfa-verify-code" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--zn-shade-30); padding:10px; color:var(--zn-text-strong); font-size:18px; font-family:monospace; text-align:center; letter-spacing:4px;" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
           </div>
           <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
             <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
@@ -1583,14 +1583,14 @@
           <span style="font-size:20px;">✅</span>
           <strong style="font-size:14px;">Two-Factor Authentication Activated!</strong>
         </div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); line-height:1.45; margin-bottom:12px;">
+        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.45; margin-bottom:12px;">
           Save these <strong>Emergency Recovery Codes</strong> in a secure password manager. Each single-use code can be used to sign in if you lose access to your authenticator device:
         </div>
         <div id="mfa-recovery-codes-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
           <!-- Populated via users.js -->
         </div>
         <div style="display:flex; justify-content:space-between; gap:10px;">
-          <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.35); color: var(--lt-t-38bdf8ff, #38bdf8);">
+          <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.35); color: var(--zn-text-accent);">
             📋 COPY ALL CODES
           </button>
           <button type="button" class="btn-save-preset modal-close-btn" style="padding:8px 18px;">
@@ -1610,7 +1610,7 @@
   <script type="module" src="/src/main.js"></script>
 <div id="copy-toast-backdrop" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--lt-b-00000099, rgba(0,0,0,0.6)); backdrop-filter: blur(4px); z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;"></div>
 
-<div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: 90vw; height: auto; min-height: 0; resize: none; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: var(--lt-r-ffffff1a, rgba(255,255,255,0.1));" role="alertdialog" aria-modal="true">
+<div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: 90vw; height: auto; min-height: 0; resize: none; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: var(--zn-line-10);" role="alertdialog" aria-modal="true">
   <div class="smart-modal-header" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
     <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Media card ingest</span></div>
     <div style="display:flex; gap:10px; align-items:center;">
@@ -1624,10 +1624,10 @@
   </div>
   <div class="smart-modal-body" style="padding: 12px 14px; gap: 8px;">
     <div style="display:flex; justify-content: space-between;">
-      <span id="copy-toast-status" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff); text-transform: uppercase;" data-i18n="modal.copying">Copying...</span>
+      <span id="copy-toast-status" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); text-transform: uppercase;" data-i18n="modal.copying">Copying...</span>
       <span id="copy-toast-pct" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--ok2);">0%</span>
     </div>
-    <div style="background: var(--lt-b-ffffff1a, rgba(255,255,255,0.1)); height: 6px; border-radius: 3px; overflow: hidden;">
+    <div style="background: var(--zn-glaze-10); height: 6px; border-radius: 3px; overflow: hidden;">
       <div id="copy-toast-bar" style="background: var(--ok2); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
     </div>
     <div id="copy-toast-file" style="font-size: var(--zn-fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Preparing files...</div>
@@ -1911,11 +1911,11 @@
     </div>
 </div>
 
-<div id="notif-center-panel" class="notif-center-window" style="display:none; position:fixed; width:380px; min-width:320px; min-height:240px; max-width:calc(100vw - 24px); max-height:calc(100vh - 90px); background:var(--lt-b-141820f5, rgba(20,24,32,0.96)); backdrop-filter:blur(24px); border:1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); border-radius:12px; z-index:9999; flex-direction:column; box-shadow:0 14px 40px rgba(0,0,0,0.85); overflow:hidden; user-select:none;">
-  <div id="notif-center-header" style="padding:10px 14px; border-bottom:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); display:flex; justify-content:space-between; align-items:center; cursor:move; user-select:none; background:var(--lt-b-ffffff08, rgba(255,255,255,0.03));">
+<div id="notif-center-panel" class="notif-center-window" style="display:none; position:fixed; width:380px; min-width:320px; min-height:240px; max-width:calc(100vw - 24px); max-height:calc(100vh - 90px); background:var(--lt-b-141820f5, rgba(20,24,32,0.96)); backdrop-filter:blur(24px); border:1px solid var(--zn-line-12); border-radius:12px; z-index:9999; flex-direction:column; box-shadow:0 14px 40px rgba(0,0,0,0.85); overflow:hidden; user-select:none;">
+  <div id="notif-center-header" style="padding:10px 14px; border-bottom:1px solid var(--zn-line-8); display:flex; justify-content:space-between; align-items:center; cursor:move; user-select:none; background:var(--zn-glaze-3);">
     <div style="display:flex; align-items:center; gap:8px;">
       <svg class="ic" style="width:14px; height:14px; fill:currentColor; color:var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-bell"/></svg>
-      <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-t-ffffffff, #fff); letter-spacing:0.3px;" data-i18n="notif.title">Notification Center</div>
+      <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-strong); letter-spacing:0.3px;" data-i18n="notif.title">Notification Center</div>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
       <button id="notif-settings-btn" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:var(--zn-fs-xs); padding:2px 4px; display:inline-flex; align-items:center;" title="Configure Alert Channels" data-i18n-title="notif.configure_channels" aria-label="Configure Alert Channels" data-i18n-aria-label="notif.configure_channels">⚙️</button>
@@ -1926,8 +1926,8 @@
       </div>
     </div>
   </div>
-  <div id="notif-filter-bar" style="display:flex; gap:6px; padding:8px 14px; background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); flex-shrink:0;">
-    <button class="notif-filter-btn active" data-filter="all" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid var(--lt-r-ffffff26, rgba(255,255,255,0.15)); background:var(--lt-b-ffffff1a, rgba(255,255,255,0.1)); color:var(--lt-t-ffffffff, #fff); cursor:pointer;" data-i18n="notif.filter_all">All</button>
+  <div id="notif-filter-bar" style="display:flex; gap:6px; padding:8px 14px; background:var(--zn-shade-25); border-bottom:1px solid var(--zn-line-5); flex-shrink:0;">
+    <button class="notif-filter-btn active" data-filter="all" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid var(--zn-line-15); background:var(--zn-glaze-10); color:var(--zn-text-strong); cursor:pointer;" data-i18n="notif.filter_all">All</button>
     <button class="notif-filter-btn" data-filter="error" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--crit, #ff5c5c); cursor:pointer;" data-i18n="notif.filter_errors">Errors</button>
     <button class="notif-filter-btn" data-filter="warning" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--warn, #f5a623); cursor:pointer;" data-i18n="notif.filter_warnings">Warnings</button>
     <button class="notif-filter-btn" data-filter="info" style="padding:2px 10px; font-size:var(--zn-fs-xs); font-weight:700; border-radius:12px; border:1px solid transparent; background:transparent; color:var(--lt-t-93c5fdff, #93c5fd); cursor:pointer;" data-i18n="notif.filter_info">Info</button>
@@ -1959,13 +1959,13 @@
           <select id="new-remote-provider-select" class="tz-select-input" style="width: 100%;">
             <!-- Dynamically populated from /api/remotes/providers -->
           </select>
-          <div id="new-remote-provider-desc" style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); margin-top: 6px; line-height: 1.45;"></div>
+          <div id="new-remote-provider-desc" style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 6px; line-height: 1.45;"></div>
         </div>
 
         <div class="remote-form-section">
           <label for="new-remote-name" class="remote-section-label">2. REMOTE NAME (Local Identifier)</label>
           <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" style="width: 100%;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
-          <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-94a3b8ff, #94a3b8); margin-top: 4px;">Will be mounted to: <code style="color: var(--lt-t-38bdf8ff, #38bdf8); font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 4px;">Will be mounted to: <code style="color: var(--zn-text-accent); font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
         </div>
 
         <div class="remote-form-section">
@@ -1976,15 +1976,15 @@
         </div>
 
         <div class="remote-form-section" style="padding-top: 4px;">
-          <label for="new-remote-auto-mount" style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--lt-t-e2e8f0ff, #e2e8f0); cursor: pointer;">
+          <label for="new-remote-auto-mount" style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text); cursor: pointer;">
             <input type="checkbox" id="new-remote-auto-mount" checked style="width: 16px; height: 16px; accent-color: var(--ok2, #22c55e);" />
-            <span>Mount immediately to <code style="color: var(--lt-t-38bdf8ff, #38bdf8);">/mnt/remotes</code> via FUSE</span>
+            <span>Mount immediately to <code style="color: var(--zn-text-accent);">/mnt/remotes</code> via FUSE</span>
           </label>
         </div>
       </div>
 
       <div id="new-remote-test-result" style="display: none; padding: 10px 14px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.45;"></div>
-      <div id="new-remote-error-box" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: var(--lt-t-f87171ff, #f87171); font-size: var(--zn-fs-xs); line-height: 1.45;"></div>
+      <div id="new-remote-error-box" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs); line-height: 1.45;"></div>
 
       <div class="cloud-remote-footer">
         <button type="button" id="modal-remote-cancel-btn" class="btn-cloud-cancel">Cancel</button>
@@ -1999,7 +1999,7 @@
 
 <!-- Sideload App Package Modal -->
 <div id="modal-sideload-app" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-sideload-title" style="display: none;">
-  <div class="smart-modal-window" style="max-width: 580px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));">
+  <div class="smart-modal-window" style="max-width: 580px; width: 92%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
     <div class="smart-modal-header" style="cursor: move;">
       <span class="smart-modal-title" id="modal-sideload-title" style="display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 15px;">📥</span>
@@ -2014,30 +2014,30 @@
         Import container templates or Compose stacks directly from a GitHub/raw URL or paste raw manifest.
       </div>
 
-      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); padding-bottom: 8px;">
+      <div style="display: flex; gap: 8px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 8px;">
         <button type="button" class="btn-pill-toggle active" id="sideload-tab-url">URL</button>
         <button type="button" class="btn-pill-toggle" id="sideload-tab-paste">YAML / JSON</button>
       </div>
 
       <div id="sideload-input-url-wrap">
         <label for="sideload-url-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="catalog.sideload_url_label">Manifest or Compose URL</label>
-        <input type="url" id="sideload-url-input" class="tz-select-input" placeholder="https://raw.githubusercontent.com/.../docker-compose.yml" style="width: 100%; border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 8px 10px; color: var(--lt-t-ffffffff, #fff); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+        <input type="url" id="sideload-url-input" class="tz-select-input" placeholder="https://raw.githubusercontent.com/.../docker-compose.yml" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
       </div>
 
       <div id="sideload-input-paste-wrap" style="display: none;">
         <label for="sideload-content-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="catalog.sideload_yaml_label">Or Paste YAML / JSON</label>
-        <textarea id="sideload-content-input" rows="7" class="tz-select-input" placeholder="services:&#10;  app:&#10;    image: alpine:latest&#10;    ports:&#10;      - '8080:80'" style="width: 100%; border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 8px 10px; color: var(--lt-t-ffffffff, #fff); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: monospace; resize: vertical;"></textarea>
+        <textarea id="sideload-content-input" rows="7" class="tz-select-input" placeholder="services:&#10;  app:&#10;    image: alpine:latest&#10;    ports:&#10;      - '8080:80'" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: monospace; resize: vertical;"></textarea>
       </div>
 
-      <button type="button" id="btn-sideload-inspect" class="btn-pill-toggle" style="align-self: flex-start; background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border: 1px solid rgba(14,165,233,0.3);">
+      <button type="button" id="btn-sideload-inspect" class="btn-pill-toggle" style="align-self: flex-start; background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border: 1px solid rgba(14,165,233,0.3);">
         🔍 <span data-i18n="catalog.sideload_inspect_btn">Inspect & Validate</span>
       </button>
 
       <!-- Inspection Security & Summary Box -->
-      <div id="sideload-inspect-result" style="display: none; background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); border: 1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); border-radius: 6px; padding: 12px;"></div>
+      <div id="sideload-inspect-result" style="display: none; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 12px;"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
-        <button type="button" id="modal-sideload-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="button" id="modal-sideload-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
         <button type="button" id="btn-sideload-confirm" disabled style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--brand, #0ea5e9); opacity: 0.5; border: none; color:var(--accent-contrast-fg, #0b1118); border-radius: 6px; cursor: not-allowed;" data-i18n="catalog.sideload_install_btn">Sideload & Save App</button>
       </div>
     </div>
@@ -2046,7 +2046,7 @@
 
 <!-- Media Organizer & Renamer Modal -->
 <div id="modal-media-organizer" class="smart-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-media-org-title" style="display: none;">
-  <div class="smart-modal-window" style="max-width: 780px; width: 94%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));">
+  <div class="smart-modal-window" style="max-width: 780px; width: 94%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 30px rgba(14, 165, 233, 0.15); border: 1px solid var(--zn-line-12);">
     <div class="smart-modal-header" style="cursor: move;">
       <span class="smart-modal-title" id="modal-media-org-title" style="display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 15px;">🎬</span>
@@ -2064,35 +2064,35 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
           <label for="media-org-source-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="media.source_dir">Source Folder (Downloads)</label>
-          <input type="text" id="media-org-source-input" class="tz-select-input" placeholder="/mnt/user/downloads" style="width: 100%; border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 7px 10px; color: var(--lt-t-ffffffff, #fff); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <input type="text" id="media-org-source-input" class="tz-select-input" placeholder="/mnt/user/downloads" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
         <div>
           <label for="media-org-dest-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="media.dest_dir">Destination Folder (Media)</label>
-          <input type="text" id="media-org-dest-input" class="tz-select-input" placeholder="/mnt/user/media" style="width: 100%; border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background: var(--lt-b-0000004c, rgba(0,0,0,0.3)); padding: 7px 10px; color: var(--lt-t-ffffffff, #fff); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <input type="text" id="media-org-dest-input" class="tz-select-input" placeholder="/mnt/user/media" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
       </div>
 
       <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <label for="media-org-mode-select" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);">Operation Mode:</label>
-          <select id="media-org-mode-select" class="tz-select-input" style="border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); background: var(--lt-b-00000066, rgba(0,0,0,0.4)); padding: 5px 10px; color: var(--lt-t-ffffffff, #fff); border-radius: 6px; font-size: var(--zn-fs-xs);">
+          <select id="media-org-mode-select" class="tz-select-input" style="border: 1px solid var(--zn-line-12); background: var(--zn-shade-40); padding: 5px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
             <option value="hardlink" selected data-i18n="media.mode_hardlink">Hardlink (Fastest, 0 MB Disk Used)</option>
             <option value="move" data-i18n="media.mode_move">Move Files</option>
             <option value="copy" data-i18n="media.mode_copy">Copy Files</option>
           </select>
         </div>
-        <button type="button" id="btn-media-org-preview" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); color: var(--lt-t-38bdf8ff, #38bdf8); border: 1px solid rgba(14,165,233,0.3);">
+        <button type="button" id="btn-media-org-preview" class="btn-pill-toggle" style="background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border: 1px solid rgba(14,165,233,0.3);">
           🔍 <span data-i18n="media.preview_btn">Scan & Preview Diff</span>
         </button>
       </div>
 
       <!-- Preview Diff Table -->
-      <div id="media-org-preview-wrap" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius: 6px; background: var(--lt-b-00000040, rgba(0,0,0,0.25));">
+      <div id="media-org-preview-wrap" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; background: var(--zn-shade-25);">
         <div style="color: var(--muted); text-align: center; padding: 25px; font-size: var(--zn-fs-xs);">Click "Scan & Preview Diff" to analyze files.</div>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
-        <button type="button" id="modal-media-org-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border: 1px solid var(--lt-r-ffffff1f, rgba(255,255,255,0.12)); color: var(--lt-t-ffffffff, #fff); border-radius: 6px; cursor: pointer;">Cancel</button>
+        <button type="button" id="modal-media-org-cancel-btn" style="padding: 7px 16px; font-size: var(--zn-fs-xs); font-weight: 700; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); border-radius: 6px; cursor: pointer;">Cancel</button>
         <button type="button" id="btn-media-org-apply" disabled style="padding: 7px 18px; font-size: var(--zn-fs-xs); font-weight: 700; background: #10b981; opacity: 0.5; border: none; color: #fff; border-radius: 6px; cursor: not-allowed;" data-i18n="media.apply_btn">Execute Reorganization</button>
       </div>
     </div>
@@ -2153,7 +2153,7 @@
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
     <span class="context-menu-icon">⚡</span>
     <span class="context-menu-label">Command Palette</span>
-    <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border-radius:3px;">⌘K</kbd>
+    <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--zn-glaze-8); border-radius:3px;">⌘K</kbd>
   </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="fullscreen">
     <span class="context-menu-icon">⛶</span>
@@ -2198,7 +2198,7 @@
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
     <span class="context-menu-icon">⚡</span>
     <span class="context-menu-label">Command Palette</span>
-    <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--lt-b-ffffff14, rgba(255,255,255,0.08)); border-radius:3px;">⌘K</kbd>
+    <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--zn-glaze-8); border-radius:3px;">⌘K</kbd>
   </div>
 </div>
 

@@ -203,18 +203,18 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
 
       const statusPill = p.online
         ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:var(--zn-fs-xs); padding:2px 7px;">Online</span>'
-        : '<span class="mgmt-app-pill" style="color:var(--muted); background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); font-size:var(--zn-fs-xs); padding:2px 7px;">Offline</span>';
+        : '<span class="mgmt-app-pill" style="color:var(--muted); background:var(--zn-glaze-6); font-size:var(--zn-fs-xs); padding:2px 7px;">Offline</span>';
 
       const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
 
       return `
-      <tr style="border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:var(--zn-fs-xs);">
+      <tr style="border-bottom:1px solid var(--zn-line-5); font-size:var(--zn-fs-xs);">
         <td style="padding:8px 12px;">
-          <div style="font-weight:700; color:var(--lt-t-ffffffff, #fff);">${escapeHtml(p.name || p.hostname || 'Unnamed')}</div>
+          <div style="font-weight:700; color:var(--zn-text-strong);">${escapeHtml(p.name || p.hostname || 'Unnamed')}</div>
           ${p.dns_name ? `<div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(p.dns_name)}</div>` : ''}
         </td>
         <td style="padding:8px 12px; color:var(--text-sub);">${osLabel}</td>
-        <td style="padding:8px 12px;"><code style="color:var(--lt-t-38bdf8ff, #38bdf8); font-size:var(--zn-fs-xs);">${escapeHtml(p.ip || '--')}</code></td>
+        <td style="padding:8px 12px;"><code style="color:var(--zn-text-accent); font-size:var(--zn-fs-xs);">${escapeHtml(p.ip || '--')}</code></td>
         <td style="padding:8px 12px;">${routeBadge}</td>
         <td style="padding:8px 12px;">${statusPill}</td>
         <td style="padding:8px 12px; text-align:right;">
@@ -408,12 +408,12 @@ export async function fetchAndRenderWireguard() {
               exitNodeHint.style.borderColor = 'rgba(59,245,139,0.25)';
             }
           } else if (ts.advertise_exit_node) {
-            exitNodePill.innerHTML = '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8); text-decoration:underline;">Pending Admin Approval ↗</a>';
+            exitNodePill.innerHTML = '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline;">Pending Admin Approval ↗</a>';
             exitNodePill.style.color = '#38bdf8';
             exitNodePill.style.background = 'rgba(56,189,248,0.15)';
             if (exitNodeHint) {
               exitNodeHint.style.display = 'block';
-              exitNodeHint.innerHTML = '⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8); text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).';
+              exitNodeHint.innerHTML = '⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).';
               exitNodeHint.style.color = '#fbbf24';
               exitNodeHint.style.background = 'rgba(245,158,11,0.08)';
               exitNodeHint.style.borderColor = 'rgba(245,158,11,0.25)';
@@ -486,8 +486,8 @@ export async function fetchAndRenderWireguard() {
             taildropList.innerHTML = files
               .map(
                 f => `
-              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); font-size:var(--zn-fs-xs); cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
-                <span style="font-weight:600; color:var(--lt-t-ffffffff, #fff); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
+              <div class="taildrop-file-item" data-path="${escapeHtml(f.path || '')}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-bottom:1px solid var(--zn-line-5); font-size:var(--zn-fs-xs); cursor:pointer; border-radius:4px; transition:background 0.2s;" data-hover-bg title="${t('ui.click_to_view_folder_in', 'Click to view folder in Files')}">
+                <span style="font-weight:600; color:var(--zn-text-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;" title="${escapeHtml(f.name)}">📄 ${escapeHtml(f.name)}</span>
                 <span style="color:var(--muted); font-size:var(--zn-fs-xs);">${escapeHtml(f.size_formatted)} · ${escapeHtml(f.modified_at)}</span>
               </div>
             `
@@ -893,7 +893,7 @@ export async function fetchAndRenderWireguard() {
         const featName = res.feature === 'funnel' ? 'Funnel' : 'Serve';
         showConfirmToast(
           `Tailscale ${featName} Approval Required`,
-          `Tailscale ${featName} is not yet authorized on your Tailnet. Please approve this node in the Tailscale Admin Console:<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--lt-t-38bdf8ff, #38bdf8); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>After clicking Approve in Tailscale, re-enable this toggle to activate.`,
+          `Tailscale ${featName} is not yet authorized on your Tailnet. Please approve this node in the Tailscale Admin Console:<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>After clicking Approve in Tailscale, re-enable this toggle to activate.`,
           () => {
             window.open(res.approval_url, '_blank', 'noopener,noreferrer');
           },

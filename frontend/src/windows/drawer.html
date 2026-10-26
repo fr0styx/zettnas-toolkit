@@ -69,9 +69,9 @@
           </div>
           <button id="lcd-reset-accent-btn" class="btn-pill-toggle is-small" data-i18n="settings.reset_accent">↺ Reset</button>
         </div>
-        <div style="margin-top: 10px; padding: 8px 10px; background: var(--lt-b-00000033, rgba(0,0,0,0.2)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+        <div style="margin-top: 10px; padding: 8px 10px; background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
           <div>
-            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-ffffffff, #fff);" data-i18n="settings.text_clarity_title">High-Contrast Text on Physical Screen</div>
+            <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="settings.text_clarity_title">High-Contrast Text on Physical Screen</div>
             <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="settings.text_clarity_desc">Keeps lettering crisp white to eliminate chromatic blur on 640x172 LCD while accenting gauges.</div>
           </div>
           <label class="switch"><input type="checkbox" id="lcd-text-clarity-toggle" aria-label="Sharper LCD text" data-i18n-aria-label="a11y.lcd_text_clarity" checked><span class="toggle-slider"></span></label>
@@ -406,7 +406,7 @@
           <button class="color-chip2" data-hex="33d17a" style="background:#33d17a; color:#111;">Green</button>
           <button class="color-chip2" data-hex="c08cff" style="background:#c08cff; color:#111;">Purple</button>
           <button class="color-chip2" data-hex="ff0000" style="background:#ff0000; color:#fff;">Red</button>
-          <button class="color-chip2" data-hex="001428" style="background:var(--lt-b-001428ff, #001428); color:var(--lt-t-ffffffff, #fff);">Deep</button>
+          <button class="color-chip2" data-hex="001428" style="background:var(--lt-b-001428ff, #001428); color:var(--zn-text-strong);">Deep</button>
           <button class="color-chip2" data-hex="ffffff" style="background:#ffffff; color:#111;">White</button>
           <label class="color-chip2 custom-picker-chip" id="custom-chip2-label" title="Choose custom secondary color" data-i18n-title="ui.choose_custom_secondary_color">
             <span>Custom</span>
@@ -584,8 +584,8 @@
           Allows HDD bay fans to stop completely when all bay hard drives are spun down in standby and thermal conditions are safe. CPU fan is never stopped.
         </div>
         <div class="zero-rpm-status-row" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-          <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-weight:600;">Zone 1: Active</span>
-          <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--lt-r-ffffff1a, rgba(255,255,255,0.1)); font-weight:600;">Zone 2: Active</span>
+          <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;">Zone 1: Active</span>
+          <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;">Zone 2: Active</span>
         </div>
         <div class="slider-row" style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
           <label for="zero-rpm-delay-slider" class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
@@ -651,7 +651,7 @@
       <div class="draggable-card drawer-card" id="fan-card-acoustic" data-fan-card-id="fan-card-acoustic">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.acoustic_calibration_title">Acoustic Resonance Calibration</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="acoustic-sweep-badge" class="suite-badge" style="background:rgba(56,189,248,0.15); color:var(--accent, var(--lt-t-38bdf8ff, #38bdf8)); border-color:rgba(56,189,248,0.35);">READY</span>
+          <span id="acoustic-sweep-badge" class="suite-badge" style="background:rgba(56,189,248,0.15); color:var(--accent, var(--zn-text-accent)); border-color:rgba(56,189,248,0.35);">READY</span>
         </div>
         <div class="card-instruction" data-i18n="settings.acoustic_calibration_desc">
           Automated PWM step test from 58 to 183 to detect chassis resonance frequencies and map acoustic RPM stability.
@@ -670,18 +670,18 @@
               </button>
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end;">
-              <span id="acoustic-sweep-status" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text-dim, var(--lt-t-94a3b8ff, #94a3b8));">Idle</span>
-              <span id="acoustic-current-step" style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--accent, var(--lt-t-38bdf8ff, #38bdf8));">Step --/--</span>
+              <span id="acoustic-sweep-status" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text-dim, var(--zn-text-muted));">Idle</span>
+              <span id="acoustic-current-step" style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--accent, var(--zn-text-accent));">Step --/--</span>
             </div>
           </div>
 
           <!-- Progress bar -->
-          <div id="acoustic-progress-bar-wrap" style="height:4px; width:100%; background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); border-radius:2px; overflow:hidden; display:none;">
+          <div id="acoustic-progress-bar-wrap" style="height:4px; width:100%; background:var(--zn-glaze-6); border-radius:2px; overflow:hidden; display:none;">
             <div id="acoustic-progress-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #38bdf8, #25c2a0); transition:width 0.3s ease;"></div>
           </div>
 
           <!-- Visualizer chart -->
-          <div class="acoustic-chart-box" style="background:var(--lt-b-00000040, rgba(0,0,0,0.25)); border:1px solid var(--lt-r-ffffff14, rgba(255,255,255,0.08)); border-radius:6px; padding:8px; min-height:80px;">
+          <div class="acoustic-chart-box" style="background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:6px; padding:8px; min-height:80px;">
             <svg id="acoustic-chart-svg" viewBox="0 0 280 80" style="width:100%; height:80px; display:block;">
               <!-- Grid lines -->
               <line x1="25" y1="15" x2="275" y2="15" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
@@ -697,7 +697,7 @@
               <path id="acoustic-rpm-path" d="" fill="none" stroke="var(--accent, #38bdf8)" stroke-width="2" stroke-linecap="round"/>
               <g id="acoustic-chart-points"></g>
             </svg>
-            <div id="acoustic-results-summary" style="font-size:var(--zn-fs-xs); color:var(--text-dim, var(--lt-t-94a3b8ff, #94a3b8)); margin-top:4px; text-align:center;">
+            <div id="acoustic-results-summary" style="font-size:var(--zn-fs-xs); color:var(--text-dim, var(--zn-text-muted)); margin-top:4px; text-align:center;">
               Run test to plot RPM linearity and identify acoustic rattle zones.
             </div>
           </div>
@@ -726,7 +726,7 @@
         </div>
         <div class="card-instruction" data-i18n="settings.copy_btn_desc">Bind the physical COPY button on the chassis front to automatically ingest media from an inserted SD card.</div>
         
-        <div id="btn-copy-options" style="margin-top: 15px; border-top: 1px solid var(--lt-r-ffffff0d, rgba(255,255,255,0.05)); padding-top: 15px;">
+        <div id="btn-copy-options" style="margin-top: 15px; border-top: 1px solid var(--zn-line-5); padding-top: 15px;">
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
               <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>

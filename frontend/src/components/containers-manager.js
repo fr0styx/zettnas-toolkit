@@ -89,19 +89,19 @@ export function initContainersManager() {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
             <!-- Quick Status Badges -->
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <div class="cw-docker-status-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--lt-t-34d399ff, #34d399); border: 1px solid rgba(16,185,129,0.3);">
+              <div class="cw-docker-status-chip" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); font-weight: 600; background: rgba(16,185,129,0.15); color: var(--zn-text-ok); border: 1px solid rgba(16,185,129,0.3);">
                 <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#34d399; box-shadow:0 0 6px #34d399;"></span>
                 <span id="cw-stat-daemon">Docker Socket Active</span>
                 <span style="opacity:0.35;">•</span>
-                <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-cbd5e1ff, #cbd5e1); font-weight:500;">Live Sync</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); font-weight:500;">Live Sync</span>
               </div>
               <div style="display: inline-flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--muted);">
-                <span>Total: <strong id="cw-count-all" style="color: var(--lt-t-ffffffff, #fff);">0</strong></span>
+                <span>Total: <strong id="cw-count-all" style="color: var(--zn-text-strong);">0</strong></span>
                 <span>•</span>
-                <span style="color: var(--lt-t-34d399ff, #34d399);">Running: <strong id="cw-count-running">0</strong></span>
+                <span style="color: var(--zn-text-ok);">Running: <strong id="cw-count-running">0</strong></span>
                 <span>•</span>
-                <span style="color: var(--lt-t-94a3b8ff, #94a3b8);">Stopped: <strong id="cw-count-stopped">0</strong></span>
-                <span id="cw-count-updates-wrap" style="display: none;">• <span style="color: var(--lt-t-fbbf24ff, #fbbf24);">Updates: <strong id="cw-count-updates">0</strong></span></span>
+                <span style="color: var(--zn-text-muted);">Stopped: <strong id="cw-count-stopped">0</strong></span>
+                <span id="cw-count-updates-wrap" style="display: none;">• <span style="color: var(--zn-text-warn);">Updates: <strong id="cw-count-updates">0</strong></span></span>
               </div>
             </div>
 
@@ -110,7 +110,7 @@ export function initContainersManager() {
               <button id="btn-cw-check-updates" class="btn-pill-toggle" title="${t('ui.check_remote_registries_for_container', 'Check remote registries for container image updates')}">
                 <span style="color: var(--ok2, #25c2a0);">✓</span> <span>Check Updates</span>
               </button>
-              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--lt-t-fbbf24ff, #fbbf24); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
+              <button id="btn-cw-update-all" class="btn-pill-toggle" style="display: none; color: var(--zn-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="${t('ui.update_all_containers_with_available', 'Update all containers with available image updates')}">
                 <span aria-hidden="true">↑</span> <span>Update All (<span id="cw-updates-count-badge">0</span>)</span>
               </button>
               <button id="btn-cw-stacks" class="btn-pill-toggle" title="${t('ui.manage_docker_compose_stacks', 'Manage Docker Compose Stacks')}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8));">
@@ -146,7 +146,7 @@ export function initContainersManager() {
 
         <!-- Table Body -->
         <div class="containers-content-body" data-scrollable="true" style="flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 14px 16px;">
-          <div class="cw-docker-table-wrap" style="overflow-x: auto; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px;">
+          <div class="cw-docker-table-wrap" style="overflow-x: auto; background: var(--zn-shade-25); border: 1px solid var(--zn-line-6); border-radius: 8px;">
             <table class="copy-history-table docker-table responsive-cards">
               <thead>
                 <tr>
@@ -197,7 +197,7 @@ export function initContainersManager() {
             </div>
           </div>
           <div id="cw-docker-catalog-wrap" style="display: none; flex-direction: column; gap: 14px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: var(--lt-b-00000040, rgba(0,0,0,0.25)); border: 1px solid var(--lt-r-ffffff0f, rgba(255,255,255,0.06)); border-radius: 8px; padding: 10px 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: var(--zn-shade-25); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 10px 14px;">
               <div class="cw-catalog-filter-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
                 <button class="btn-pill-toggle cw-cat-btn active" data-cat="all">All</button>
                 <button class="btn-pill-toggle cw-cat-btn" data-cat="media">Media</button>

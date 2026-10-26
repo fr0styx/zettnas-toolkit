@@ -86,7 +86,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border-bottom: 1px solid var(--zn-line-8);
   padding-bottom: 8px;
 }
 
@@ -108,7 +108,7 @@
 .gtp-preview-period {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
 }
 
 .gtp-presets-row {
@@ -122,9 +122,9 @@
   font-weight: 700;
   padding: 2px 5px;
   border-radius: 4px;
-  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
-  color: var(--lt-t-cbd5e1ff, #cbd5e1);
+  background: var(--zn-glaze-6);
+  border: 1px solid var(--zn-line-10);
+  color: var(--zn-text-soft);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -132,7 +132,7 @@
 .gtp-preset-btn:hover {
   background: rgba(var(--brand-rgb, 0, 240, 255), 0.18);
   border-color: var(--brand, #00f0ff);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
 }
 
 .gtp-columns-grid {
@@ -166,9 +166,9 @@
   flex-direction: column;
   gap: 2px;
   padding: 2px;
-  background: var(--lt-b-00000040, rgba(0, 0, 0, 0.25));
+  background: var(--zn-shade-25);
   border-radius: 6px;
-  border: 1px solid var(--lt-r-ffffff0d, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--zn-line-5);
 }
 
 .gtp-scroll-list::-webkit-scrollbar {
@@ -187,7 +187,7 @@
   justify-content: center;
   border: none;
   background: transparent;
-  color: var(--lt-t-cbd5e1ff, #cbd5e1);
+  color: var(--zn-text-soft);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: var(--zn-fs-xs);
   font-weight: 600;
@@ -197,8 +197,8 @@
 }
 
 .gtp-item-btn:hover {
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
-  color: var(--lt-t-ffffffff, #fff);
+  background: var(--zn-glaze-8);
+  color: var(--zn-text-strong);
 }
 
 .gtp-item-btn.active {
@@ -221,9 +221,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
-  color: var(--lt-t-cbd5e1ff, #cbd5e1);
+  background: var(--zn-glaze-6);
+  border: 1px solid var(--zn-line-10);
+  color: var(--zn-text-soft);
   font-size: var(--zn-fs-xs);
   font-weight: 700;
   cursor: pointer;
@@ -231,8 +231,8 @@
 }
 
 .gtp-period-btn:hover {
-  background: var(--lt-b-ffffff1f, rgba(255, 255, 255, 0.12));
-  color: var(--lt-t-ffffffff, #fff);
+  background: var(--zn-glaze-12);
+  color: var(--zn-text-strong);
 }
 
 .gtp-period-btn.active {
@@ -247,14 +247,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border-top: 1px solid var(--zn-line-8);
   padding-top: 8px;
 }
 
 .gtp-now-btn {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -265,7 +265,7 @@
 
 .gtp-now-btn:hover {
   color: var(--lt-ink-brand, var(--brand, #00f0ff));
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
+  background: var(--zn-glaze-5);
 }
 
 .gtp-done-btn {

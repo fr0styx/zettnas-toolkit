@@ -42,7 +42,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: var(--lt-b-00000066, rgba(0, 0, 0, 0.4));
+  background: var(--zn-shade-40);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -56,11 +56,11 @@
   font-weight: 800;
   font-family: var(--font-mono, monospace);
   line-height: 1;
-  color: var(--lt-t-fbbf24ff, #fbbf24);
+  color: var(--zn-text-warn);
 }
 
 .canary-timer-circle.danger .canary-digits {
-  color: var(--lt-t-f87171ff, #f87171);
+  color: var(--zn-text-crit);
 }
 
 .canary-unit {
@@ -73,14 +73,14 @@
 
 .net-proto-btn.active {
   background: var(--accent-cyan, #0ea5e9);
-  color: var(--lt-t-ffffffff, #ffffff);
+  color: var(--zn-text-strong);
   border-color: var(--accent-cyan, #0ea5e9);
 }
 
 .net-cidr-preset.active,
 .net-dns-preset.active {
   background: rgba(56, 189, 248, 0.2);
-  color: var(--lt-t-38bdf8ff, #38bdf8);
+  color: var(--zn-text-accent);
   border-color: rgba(56, 189, 248, 0.5);
 }
 
@@ -94,8 +94,8 @@
   gap: 6px;
   max-height: 150px;
   overflow-y: auto;
-  background: var(--lt-b-0000004c, rgba(0, 0, 0, 0.3));
-  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-shade-30);
+  border: 1px solid var(--zn-line-8);
   border-radius: 6px;
   padding: 8px 10px;
 }
@@ -105,7 +105,7 @@
 }
 
 .network-member-checkbox-list::-webkit-scrollbar-thumb {
-  background: var(--lt-b-ffffff26, rgba(255, 255, 255, 0.15));
+  background: var(--zn-glaze-15);
   border-radius: 3px;
 }
 
@@ -122,7 +122,7 @@
 }
 
 .network-member-checkbox-list label:hover {
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
+  background: var(--zn-glaze-5);
 }
 
 .network-member-checkbox-list input[type="checkbox"] {
@@ -134,7 +134,7 @@
 
 .net-stp-toggle-btn.active {
   background: var(--accent-cyan, #0ea5e9);
-  color: var(--lt-t-ffffffff, #ffffff);
+  color: var(--zn-text-strong);
   border-color: var(--accent-cyan, #0ea5e9);
 }
 

@@ -7,8 +7,8 @@
   min-width: 32px;
   padding: 0 8px;
   border-radius: 6px;
-  border: 1px solid var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14));
-  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--zn-line-14);
+  background: var(--zn-glaze-6);
   color: var(--fg);
   font-size: 13px;
   cursor: pointer;
@@ -27,7 +27,7 @@
 /* Solid like the file manager: on the glass surface the wallpaper showed through the list */
 .os-window.jobs-centre-window {
   background: var(--lt-b-0f172afa, rgba(15, 23, 42, 0.98));
-  border-color: var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+  border-color: var(--zn-line-12);
 }
 .jobs-centre-window {
   position: fixed;
@@ -44,7 +44,7 @@
 .jobs-body { padding: 12px 16px 16px; overflow-y: auto; font-size: 14px; }
 .jobs-heading { margin: 8px 0 6px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .jobs-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.jobs-row { padding: 10px 12px; border-radius: 8px; background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04)); border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08)); }
+.jobs-row { padding: 10px 12px; border-radius: 8px; background: var(--zn-glaze-4); border: 1px solid var(--zn-line-8); }
 .jobs-row-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .jobs-kind { font-size: var(--zn-fs-xs); color: var(--muted); }
 .jobs-title { flex: 1; min-width: 160px; color: var(--fg); font-weight: 600; overflow-wrap: anywhere; }
@@ -62,7 +62,7 @@
   font-size: 13px;
   cursor: pointer;
 }
-.jobs-bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)); overflow: hidden; }
+.jobs-bar { margin-top: 8px; height: 6px; border-radius: 3px; background: var(--zn-glaze-8); overflow: hidden; }
 .jobs-bar-fill { display: block; height: 100%; background: var(--brand); transition: width 0.3s; }
 .jobs-bar-fill.is-indeterminate { animation: jobs-slide 1.4s ease-in-out infinite alternate; }
 @keyframes jobs-slide { from { margin-left: 0; } to { margin-left: 60%; } }

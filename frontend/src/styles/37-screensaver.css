@@ -117,7 +117,7 @@
 .shortcut-system-card:hover {
   transform: translateY(-1.5px);
   border-color: var(--lt-r-ffffff38, rgba(255, 255, 255, 0.22)) !important;
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05)) !important;
+  background: var(--zn-glaze-5) !important;
 }
 
 .btn-emoji-chip {

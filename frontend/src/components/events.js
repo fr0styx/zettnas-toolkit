@@ -45,7 +45,7 @@ export function renderEventLog(events) {
   filtered.forEach((e) => {
     const dt = new Date(e.ts * 1000);
     const timeStr = formatDateTime(dt);
-    let color = 'var(--lt-t-e2e8f0ff, #e2e8f0)';
+    let color = 'var(--zn-text)';
     let icon = 'ℹ️';
     if (e.level === 'error') { color = 'var(--crit)'; icon = '❌'; }
     else if (e.level === 'warning') { color = 'var(--warn)'; icon = '⚠️'; }
@@ -62,11 +62,11 @@ export function renderEventLog(events) {
         <span style="font-size: 14px; margin-top: 2px;">${icon}</span>
         <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
           <div style="font-size: var(--zn-fs-xs); color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${escapeHtml(e.title)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-ffffffff, #fff);">${escapeHtml(e.message)}</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">${escapeHtml(e.message)}</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(timeStr)}</div>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; padding-top: 2px;">
-          <button class="event-inspect-btn" type="button" title="${t('ui.view_full_event_details', 'View full event details')}" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: var(--lt-t-38bdf8ff, #38bdf8); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+          <button class="event-inspect-btn" type="button" title="${t('ui.view_full_event_details', 'View full event details')}" style="background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.35); color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
             <span aria-hidden="true">🔍</span> <span>More Info</span>
           </button>
           <span style="font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer; padding: 2px 4px;">▼ Details</span>

@@ -100,10 +100,10 @@
   background: var(--lt-b-0d141ea6, rgba(13, 20, 30, 0.65));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--zn-line-8);
   border-radius: 14px;
   padding: 14px 16px;
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
@@ -174,7 +174,7 @@ body.theme-yak .desktop-widget.clickable:hover {
 .widget-title {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   display: flex;
@@ -216,12 +216,12 @@ body.theme-yak .desktop-widget.clickable:hover {
   font-weight: 600;
   padding: 3px 0;
   border-radius: 4px;
-  color: var(--lt-t-e2e8f0ff, #e2e8f0);
+  color: var(--zn-text);
   user-select: none;
   transition: all 0.15s ease;
 }
 .cal-day:hover {
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-glaze-8);
 }
 .cal-day.cal-other-month {
   color: var(--lt-t-ffffff33, rgba(255, 255, 255, 0.2));
@@ -260,7 +260,7 @@ body.theme-yak .cal-day.cal-today {
 }
 .cal-day.cal-holiday:hover {
   background: rgba(246, 173, 85, 0.22);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   box-shadow: 0 0 10px rgba(246, 173, 85, 0.4);
   transform: scale(1.08);
   z-index: 3;
@@ -308,7 +308,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
   border-radius: 7px;
   padding: 6px 10px;
   font-size: var(--zn-fs-xs);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 14px rgba(246, 173, 85, 0.25);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -341,7 +341,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
   letter-spacing: 0.2px;
 }
 .cal-holiday-tooltip-sub {
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   font-size: var(--zn-fs-xs);
   margin-top: 1px;
 }
@@ -350,7 +350,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .cal-glance-bar {
   margin-top: 6px;
   padding-top: 5px;
-  border-top: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  border-top: 1px solid var(--zn-line-8);
   font-size: var(--zn-fs-xs);
   font-weight: 600;
   color: var(--lt-t-fbd38dff, #fbd38d);
@@ -409,7 +409,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .modal-calendar-grid .cal-weekday {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   padding: 4px 0;
   text-transform: uppercase;
 }
@@ -418,16 +418,16 @@ body.theme-yak .cal-day.cal-holiday:hover {
   font-weight: 600;
   padding: 8px 0;
   border-radius: 6px;
-  color: var(--lt-t-e2e8f0ff, #e2e8f0);
+  color: var(--zn-text);
   cursor: pointer;
   position: relative;
   transition: all 0.15s ease;
-  background: var(--lt-b-ffffff08, rgba(255, 255, 255, 0.03));
+  background: var(--zn-glaze-3);
   border: 1px solid transparent;
 }
 .modal-calendar-grid .cal-day:hover {
-  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
-  border-color: var(--lt-r-ffffff26, rgba(255, 255, 255, 0.15));
+  background: var(--zn-glaze-10);
+  border-color: var(--zn-line-15);
 }
 .modal-calendar-grid .cal-day.cal-other-month {
   color: var(--lt-t-ffffff40, rgba(255, 255, 255, 0.25));
@@ -457,15 +457,15 @@ body.theme-yak .cal-day.cal-holiday:hover {
   font-size: var(--zn-fs-xs);
   font-weight: 600;
   border-radius: 6px;
-  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  border: 1px solid var(--zn-line-10);
+  background: var(--zn-glaze-5);
+  color: var(--zn-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .tz-region-pill:hover {
-  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
-  color: var(--lt-t-ffffffff, #fff);
+  background: var(--zn-glaze-10);
+  color: var(--zn-text-strong);
 }
 .tz-region-pill.active {
   background: var(--brand, #00f0ff);
@@ -484,8 +484,8 @@ body.theme-yak .cal-day.cal-holiday:hover {
   border: 1px solid transparent;
 }
 .tz-item-row:hover {
-  background: var(--lt-b-ffffff0f, rgba(255, 255, 255, 0.06));
-  border-color: var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-glaze-6);
+  border-color: var(--zn-line-8);
 }
 .tz-item-row.selected {
   background: var(--lt-b-00f0ff1f, rgba(0, 240, 255, 0.12));
@@ -498,15 +498,15 @@ body.theme-yak .cal-day.cal-holiday:hover {
   font-size: var(--zn-fs-xs);
   font-weight: 600;
   border-radius: 5px;
-  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
-  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  border: 1px solid var(--zn-line-10);
+  background: var(--zn-glaze-4);
+  color: var(--zn-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 .cal-filter-pill:hover {
-  color: var(--lt-t-ffffffff, #fff);
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  color: var(--zn-text-strong);
+  background: var(--zn-glaze-8);
 }
 .cal-filter-pill.active {
   background: var(--brand, #00f0ff);
@@ -521,21 +521,21 @@ body.theme-yak .cal-day.cal-holiday:hover {
   align-items: flex-start;
   gap: 12px;
   padding: 10px 14px;
-  background: var(--lt-b-00000040, rgba(0, 0, 0, 0.25));
-  border: 1px solid var(--lt-r-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-shade-25);
+  border: 1px solid var(--zn-line-8);
   border-radius: 8px;
   transition: all 0.15s ease;
 }
 .cal-agenda-card:hover {
-  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
-  border-color: var(--lt-r-ffffff24, rgba(255, 255, 255, 0.14));
+  background: var(--zn-glaze-4);
+  border-color: var(--zn-line-14);
 }
 .cal-agenda-card.completed {
   opacity: 0.55;
 }
 .cal-agenda-card.completed .cal-agenda-title {
   text-decoration: line-through;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
 }
 
 /* Weather City Autocomplete Dropdown */
@@ -568,7 +568,7 @@ body.theme-yak .cal-day.cal-holiday:hover {
 .weather-city-item:hover,
 .weather-city-item.active {
   background: var(--lt-b-00f0ff26, rgba(0, 240, 255, 0.15));
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
 }
 body.theme-yak .weather-city-item:hover,
 body.theme-yak .weather-city-item.active {
@@ -577,20 +577,20 @@ body.theme-yak .weather-city-item.active {
 .weather-city-name {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
 }
 .weather-city-sub {
   font-size: var(--zn-fs-xs);
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
   margin-top: 1px;
 }
 .weather-city-badge {
   font-size: var(--zn-fs-xs);
   font-weight: 700;
   padding: 2px 6px;
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-glaze-8);
   border-radius: 4px;
-  color: var(--lt-t-cbd5e1ff, #cbd5e1);
+  color: var(--zn-text-soft);
 }
 
 /* Toggle Switch Component */
@@ -620,7 +620,7 @@ body.theme-yak .weather-city-item.active {
   justify-content: space-between;
   padding: 10px 14px;
   background: var(--lt-b-00000047, rgba(0, 0, 0, 0.28));
-  border: 1px solid var(--lt-r-ffffff12, rgba(255, 255, 255, 0.07));
+  border: 1px solid var(--zn-line-7);
   border-radius: 8px;
   cursor: grab;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
@@ -632,8 +632,8 @@ body.theme-yak .weather-city-item.active {
 }
 
 .widget-sortable-item:hover {
-  background: var(--lt-b-ffffff0a, rgba(255, 255, 255, 0.04));
-  border-color: var(--lt-r-ffffff2e, rgba(255, 255, 255, 0.18));
+  background: var(--zn-glaze-4);
+  border-color: var(--zn-line-18);
 }
 
 .widget-sortable-left {
@@ -654,11 +654,11 @@ body.theme-yak .weather-city-item.active {
 }
 
 .widget-sortable-item:hover .widget-drag-handle {
-  color: var(--lt-t-cbd5e1ff, #cbd5e1);
+  color: var(--zn-text-soft);
 }
 
 .widget-drag-handle:hover {
-  background: var(--lt-b-ffffff1a, rgba(255, 255, 255, 0.1));
+  background: var(--zn-glaze-10);
   color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));
 }
 
@@ -735,7 +735,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 #notif-center-panel .notif-center-item:hover {
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)) !important;
+  background: var(--zn-glaze-8) !important;
 }
 
 #notif-center-panel .notif-filter-btn {
@@ -760,7 +760,7 @@ body.theme-yak #notif-center-resizer:hover {
 }
 
 #event-detail-close-btn:hover {
-  background: var(--lt-b-ffffff26, rgba(255, 255, 255, 0.15)) !important;
+  background: var(--zn-glaze-15) !important;
 }
 
 /* Checked (read) notification events - Dimmed Effect */
@@ -785,7 +785,7 @@ body.theme-yak #notif-center-resizer:hover {
 
 .notif-center-item:not(.notif-event-checked) {
   opacity: 1 !important;
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05));
+  background: var(--zn-glaze-5);
   border-left: 2.5px solid var(--brand, #0ea5e9);
 }
 
@@ -806,7 +806,7 @@ body.theme-yak #notif-center-resizer:hover {
 .dock-context-menu {
   background: var(--lt-b-141820f5, rgba(20, 24, 32, 0.96)) !important;
   backdrop-filter: blur(20px) !important;
-  border: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12)) !important;
+  border: 1px solid var(--zn-line-12) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
   border-radius: 8px !important;
   padding: 6px !important;

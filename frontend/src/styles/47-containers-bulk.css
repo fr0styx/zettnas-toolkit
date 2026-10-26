@@ -39,9 +39,9 @@ tr.docker-row-selected {
   gap: 6px;
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  color: var(--lt-t-f1f5f9ff, #f1f5f9);
+  color: var(--zn-text-bright);
   padding-right: 10px;
-  border-right: 1px solid var(--lt-r-ffffff1f, rgba(255, 255, 255, 0.12));
+  border-right: 1px solid var(--zn-line-12);
 }
 
 .docker-floating-bulk-bar .bulk-bar-count {
@@ -53,7 +53,7 @@ tr.docker-row-selected {
   padding: 0 6px;
   border-radius: 10px;
   background: var(--brand, #0ea5e9);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   font-size: var(--zn-fs-xs);
   font-weight: 700;
 }
@@ -72,9 +72,9 @@ tr.docker-row-selected {
   padding: 4px 10px;
   font-size: var(--zn-fs-xs);
   font-weight: 600;
-  color: var(--lt-t-e2e8f0ff, #e2e8f0);
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
-  border: 1px solid var(--lt-r-ffffff1a, rgba(255, 255, 255, 0.1));
+  color: var(--zn-text);
+  background: var(--zn-glaze-8);
+  border: 1px solid var(--zn-line-10);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -82,7 +82,7 @@ tr.docker-row-selected {
 
 .docker-floating-bulk-bar .btn-bulk-action:hover {
   background: var(--lt-b-ffffff29, rgba(255, 255, 255, 0.16));
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   transform: translateY(-1px);
 }
 
@@ -94,7 +94,7 @@ tr.docker-row-selected {
 
 .docker-floating-bulk-bar .btn-bulk-cancel {
   padding: 4px 8px;
-  color: var(--lt-t-94a3b8ff, #94a3b8);
+  color: var(--zn-text-muted);
 }
 
 
@@ -219,7 +219,7 @@ tr.docker-row-selected {
 
 /* replaces inline onmouseover handlers (FE-06) */
 [data-hover-bg]:hover {
-  background: var(--lt-b-ffffff0d, rgba(255, 255, 255, 0.05)) !important;
+  background: var(--zn-glaze-5) !important;
 }
 
 /* "Can't reach ZettNAS" banner (FE-16) */
@@ -232,7 +232,7 @@ tr.docker-row-selected {
   padding: 8px 16px;
   border-radius: 999px;
   background: var(--lt-b-7f1d1dff, #7f1d1d);
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   font-size: 13px;
   font-weight: 600;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
@@ -247,7 +247,7 @@ tr.docker-row-selected {
 .login-sso-error { margin: 10px 0 0; font-size: var(--zn-fs-xs); color: var(--lt-t-fca5a5ff, #fca5a5); }
 
 /* Docker cleanup progress */
-.dpm-bar { height: 8px; border-radius: 999px; background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08)); overflow: hidden; }
+.dpm-bar { height: 8px; border-radius: 999px; background: var(--zn-glaze-8); overflow: hidden; }
 .dpm-bar-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--brand, #0ea5e9), var(--ok2, #25c2a0)); transition: width 0.4s ease; }
 .dpm-progress-pct { font-size: var(--zn-fs-xs); color: var(--zn-text-strong); font-variant-numeric: tabular-nums; }
 .dpm-step-icon { width: 14px; text-align: center; color: var(--zn-text-muted); }

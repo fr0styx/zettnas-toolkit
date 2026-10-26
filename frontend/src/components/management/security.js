@@ -222,7 +222,7 @@ export async function fetchAndRenderSecurityPosture() {
         badge.style.borderColor = 'rgba(37,194,160,0.3)';
       } else if (data.score >= 75) {
         badge.style.background = 'rgba(56,189,248,0.15)';
-        badge.style.color = 'var(--lt-t-38bdf8ff, #38bdf8)';
+        badge.style.color = 'var(--zn-text-accent)';
         badge.style.borderColor = 'rgba(56,189,248,0.3)';
       } else if (data.score >= 50) {
         badge.style.background = 'rgba(234,179,8,0.15)';
@@ -247,7 +247,7 @@ export async function fetchAndRenderSecurityPosture() {
               <span class="sec-advisor-item-icon" style="color:${passColor}; font-weight:800; font-size: var(--zn-fs-sm); line-height:1;">${passIcon}</span>
               <div style="min-width:0;">
                 <div style="font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc); font-size: var(--zn-fs-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.name)}</div>
-                <div style="font-size: var(--zn-fs-xs); color:${c.passed ? 'var(--lt-t-94a3b8ff, #94a3b8)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
+                <div style="font-size: var(--zn-fs-xs); color:${c.passed ? 'var(--zn-text-muted)' : 'var(--lt-t-fca5a5ff, #fca5a5)'}; margin-top:2px;">${escapeHtml(c.details || '')}</div>
               </div>
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">

@@ -52,7 +52,7 @@
 .desktop-drop-title {
   font-size: 18px;
   font-weight: 800;
-  color: var(--lt-t-ffffffff, #fff);
+  color: var(--zn-text-strong);
   letter-spacing: 0.3px;
   margin-bottom: 6px;
 }

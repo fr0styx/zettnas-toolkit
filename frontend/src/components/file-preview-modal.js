@@ -190,7 +190,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
       </div>
       <div class="quicklook-body" id="quicklook-body">
         <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
-          <div class="spinner" style="width:28px; height:28px; border:2px solid var(--lt-r-ffffff33, rgba(255,255,255,0.2)); border-top-color:var(--accent-cyan, #0ea5e9); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+          <div class="spinner" style="width:28px; height:28px; border:2px solid var(--zn-line-20); border-top-color:var(--accent-cyan, #0ea5e9); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
           <span style="font-size:var(--zn-fs-xs);">Loading preview...</span>
         </div>
       </div>
@@ -485,7 +485,7 @@ async function loadCurrentItem() {
       <div style="display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; padding:14px;">
         <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:var(--zn-fs-xs); color:var(--lt-t-6ee7b7ff, #6ee7b7);">
           <span>💤 <strong>Standby Guard Active:</strong> Showing cached NVMe index preview without spinning up physical array disks.</span>
-          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--lt-t-38bdf8ff, #38bdf8); border-color: rgba(56,189,248,0.4);">⚡ Load Full File from Disk</button>
+          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4);">⚡ Load Full File from Disk</button>
         </div>
         ${thumbHtml}
         ${excerptHtml}

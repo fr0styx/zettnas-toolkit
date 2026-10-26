@@ -34,9 +34,9 @@
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 4px;
-  background: var(--lt-b-ffffff14, rgba(255, 255, 255, 0.08));
+  background: var(--zn-glaze-8);
   border: 1px solid var(--lt-r-ffffff29, rgba(255, 255, 255, 0.16));
-  color: var(--lt-t-f1f5f9ff, #f1f5f9);
+  color: var(--zn-text-bright);
   letter-spacing: 0.3px;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;

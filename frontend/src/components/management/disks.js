@@ -62,13 +62,13 @@ function buildDiskRowInner(d) {
   const healthStr = isStandby ? 'STANDBY' : (d.health ? String(d.health).toUpperCase() : 'OK');
 
   return `
-    <td style="font-weight:700; color:var(--lt-t-ffffffff, #fff);">/dev/${escapeHtml(devName)}</td>
+    <td style="font-weight:700; color:var(--zn-text-strong);">/dev/${escapeHtml(devName)}</td>
     <td>
-      <div style="font-weight:600; color:var(--lt-t-e2e8f0ff, #e2e8f0);">${escapeHtml(modelStr)}</div>
+      <div style="font-weight:600; color:var(--zn-text);">${escapeHtml(modelStr)}</div>
       <div style="font-size:var(--zn-fs-xs); color:var(--muted);">SN: ${escapeHtml(serialStr)}</div>
     </td>
     <td>
-      <span class="bay-sub-badge" style="background:var(--lt-b-ffffff0f, rgba(255,255,255,0.06)); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>
+      <span class="bay-sub-badge" style="background:var(--zn-glaze-6); padding:2px 6px; border-radius:4px;">${escapeHtml(transportStr)} • ${escapeHtml(driverStr)}</span>
     </td>
     <td class="disk-size-cell" style="font-weight:600; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">${escapeHtml(sizeStr)}</td>
     <td>
