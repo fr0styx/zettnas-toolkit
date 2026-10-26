@@ -1,0 +1,10217 @@
+{
+ "d4|all_asleep|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_asleep|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_asleep|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_asleep|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_asleep|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_asleep|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_cold|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_cold|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_cold|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_cold|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_cold|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_cold|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_hot|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_hot|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_hot|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": true,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_hot|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_hot|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|all_flash_hot|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": true,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|bays_critical|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 58,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|bays_critical|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 58,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|bays_critical|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 58,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|bays_critical|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 58,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|bays_critical|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 58,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|bays_critical|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 58,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|mixed_active|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 47,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|mixed_active|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 47,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|mixed_active|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 41,
+   "t_zone1": 47,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|mixed_active|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 47,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|mixed_active|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 47,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|mixed_active|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 41,
+   "t_zone1": 47,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|zone1_asleep|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 43,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|zone1_asleep|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 43,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|zone1_asleep|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 43,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|zone1_asleep|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 43,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|zone1_asleep|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 43,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d4|zone1_asleep|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 43,
+   "t_zone2": 30,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_asleep|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_asleep|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_asleep|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_asleep|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_asleep|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_asleep|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_cold|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_cold|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_cold|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_cold|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_cold|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_cold|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_hot|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_hot|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_hot|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": true,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_hot|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_hot|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|all_flash_hot|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": true,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|bays_critical|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|bays_critical|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|bays_critical|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|bays_critical|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|bays_critical|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|bays_critical|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|mixed_active|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|mixed_active|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|mixed_active|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|mixed_active|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|mixed_active|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|mixed_active|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|zone1_asleep|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|zone1_asleep|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|zone1_asleep|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|zone1_asleep|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|zone1_asleep|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d6u|zone1_asleep|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_asleep|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_asleep|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_asleep|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_asleep|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_asleep|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_asleep|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 40,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_cold|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_cold|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_cold|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_cold|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_cold|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_cold|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 38,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_hot|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_hot|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_hot|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": true,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_hot|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_hot|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": false,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|all_flash_hot|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": true,
+   "storage_busy": true,
+   "t_nvme": 61,
+   "t_zone1": 30,
+   "t_zone2": 30,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": true,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|bays_critical|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|bays_critical|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|bays_critical|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|bays_critical|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|bays_critical|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|bays_critical|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 41,
+   "t_zone2": 58,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|mixed_active|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|mixed_active|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|mixed_active|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|mixed_active|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|mixed_active|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|mixed_active|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": 41,
+   "t_zone1": 44,
+   "t_zone2": 47,
+   "z1_all_standby": false,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|zone1_asleep|cpu45|zero0|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|zone1_asleep|cpu45|zero1|busy0": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|zone1_asleep|cpu45|zero1|busy1": {
+  "calls": [
+   [
+    "zone",
+    1,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    120,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "balanced"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 120,
+       "pwm2": 120,
+       "pwm3": 120
+      }
+     ],
+     [
+      "manual_pct",
+      60
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 120,
+   "active_pwm2": 120,
+   "active_pwm3": 120,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|zone1_asleep|cpu88|zero0|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|zone1_asleep|cpu88|zero1|busy0": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": false,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ },
+ "d8u|zone1_asleep|cpu88|zero1|busy1": {
+  "calls": [
+   [
+    "event",
+    "error",
+    "Critical Temperature Threshold Reached"
+   ],
+   [
+    "zone",
+    1,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    2,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      60
+     ]
+    ]
+   ],
+   [
+    "zone",
+    3,
+    183,
+    [
+     [
+      "allow_zero",
+      false
+     ],
+     [
+      "hold_secs",
+      30
+     ]
+    ]
+   ],
+   [
+    "set",
+    [
+     "auto"
+    ],
+    [
+     [
+      "ctrl_cpu_fan",
+      true
+     ],
+     [
+      "custom_pwms",
+      {
+       "pwm1": 183,
+       "pwm2": 183,
+       "pwm3": 183
+      }
+     ],
+     [
+      "zero_rpm_allowed",
+      false
+     ]
+    ]
+   ]
+  ],
+  "result": {
+   "active_pwm1": 183,
+   "active_pwm2": 183,
+   "active_pwm3": 183,
+   "now": 1790000000.0,
+   "nvme_over_ceiling": false,
+   "storage_busy": true,
+   "t_nvme": null,
+   "t_zone1": 30,
+   "t_zone2": 43,
+   "z1_all_standby": true,
+   "z1_eligible": false,
+   "z1_rem": 0,
+   "z2_all_standby": false,
+   "z2_eligible": false,
+   "z2_rem": 0
+  }
+ }
+}

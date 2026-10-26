@@ -4,27 +4,33 @@ import time
 
 import pytest
 
+from backend.services import fan_control as fc
 from backend.services import stats_collector as sc
 from backend.state import Z_STATE
+
+
+def _both(monkeypatch, name, value):
+    """Fan control lives in fan_control (ARC-5); the loop keeps some of the same names."""
+    monkeypatch.setattr(fc, name, value)
+    if hasattr(sc, name):
+        monkeypatch.setattr(sc, name, value)
 
 
 @pytest.fixture
 def hw(monkeypatch):
     """Records what the loop would do to the hardware."""
     calls = {"zone": [], "set": [], "events": [], "notify": [], "led": [], "led_state": []}
-    monkeypatch.setattr(sc, "detect_chassis_model", lambda: "d6u")
-    monkeypatch.setattr(
-        sc, "read_unraid_status", lambda: {"mover": {"active": False}, "parity_check": {"active": False}}
-    )
-    monkeypatch.setattr(
-        sc,
+    _both(monkeypatch, "detect_chassis_model", lambda: "d6u")
+    _both(monkeypatch, "read_unraid_status", lambda: {"mover": {"active": False}, "parity_check": {"active": False}})
+    _both(
+        monkeypatch,
         "apply_zone_pwm",
         lambda zone, pwm, hold_secs=0, allow_zero=False: (
             calls["zone"].append((zone, pwm, hold_secs, allow_zero)) or pwm
         ),
     )
-    monkeypatch.setattr(sc, "set_fan_pwm", lambda profile, **kw: calls["set"].append((profile, kw)))
-    monkeypatch.setattr(sc, "add_event", lambda level, title, msg, details=None: calls["events"].append((level, title)))
+    _both(monkeypatch, "set_fan_pwm", lambda profile, **kw: calls["set"].append((profile, kw)))
+    _both(monkeypatch, "add_event", lambda level, title, msg, details=None: calls["events"].append((level, title)))
     monkeypatch.setattr(sc, "_async_notify", lambda **kw: calls["notify"].append(kw))
     monkeypatch.setattr(sc, "send_led_packet", lambda *a, **k: calls["led"].append(a))
     monkeypatch.setattr(sc, "apply_led_state", lambda cfg: calls["led_state"].append(cfg))
@@ -64,13 +70,13 @@ def nvme(dev, temp):
 
 class TestFanSettings:
     def test_defaults(self, monkeypatch):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: {})
+        _both(monkeypatch, "read_json_cached", lambda path, default, **kw: {})
         s = sc._fan_settings()
         assert s["profile"] == "auto" and s["temp_min"] == 37 and s["temp_max"] == 50
 
     def test_saved_values_win(self, monkeypatch):
-        monkeypatch.setattr(
-            sc,
+        _both(
+            monkeypatch,
             "read_json_cached",
             lambda path, default, **kw: {"profile": "quiet", "temp_max": 55, "cpu_hold_secs": "7"},
         )
@@ -78,7 +84,7 @@ class TestFanSettings:
         assert s["profile"] == "quiet" and s["temp_max"] == 55 and s["cpu_hold_secs"] == 7
 
     def test_a_broken_file_falls_back(self, monkeypatch):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: ["not", "a", "dict"])
+        _both(monkeypatch, "read_json_cached", lambda path, default, **kw: ["not", "a", "dict"])
         assert sc._fan_settings()["profile"] == "auto"
 
 
@@ -98,7 +104,7 @@ class TestFanControl:
         assert r["t_zone1"] == 31 and r["t_zone2"] == 45
 
     def test_d4_has_one_zone(self, hw, monkeypatch):
-        monkeypatch.setattr(sc, "detect_chassis_model", lambda: "d4")
+        _both(monkeypatch, "detect_chassis_model", lambda: "d4")
         r = run([hdd("sda", 30), hdd("sdb", 44)])
         assert r["t_zone1"] == 44 and r["t_zone2"] == 30  # zone 2 has no disks: default
 
@@ -153,7 +159,7 @@ class TestFanControl:
         assert (1, 0, 0, True) in hw["zone"] and (2, 0, 0, True) in hw["zone"]
 
     def test_storage_work_blocks_zero_rpm(self, hw, monkeypatch):
-        monkeypatch.setattr(sc, "read_unraid_status", lambda: {"mover": {"active": True}, "parity_check": {}})
+        _both(monkeypatch, "read_unraid_status", lambda: {"mover": {"active": True}, "parity_check": {}})
         r = run([hdd("sda", 28, bay=1, standby=True)], zero_rpm_enabled=True)
         assert r["storage_busy"] and not r["z1_eligible"]
 
@@ -174,7 +180,7 @@ class TestFanControl:
 class TestHealth:
     @pytest.fixture(autouse=True)
     def _cfg(self, monkeypatch):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: {"cpu_temp_threshold": 85})
+        _both(monkeypatch, "read_json_cached", lambda path, default, **kw: {"cpu_temp_threshold": 85})
         monkeypatch.setattr(Z_STATE, "known_active_fans", {0, 1, 2})
 
     def test_quiet_when_all_is_well(self, hw):
@@ -220,7 +226,7 @@ class TestLeds:
         monkeypatch.setattr(Z_STATE, "copy_active", False)
 
     def cfg(self, monkeypatch, **cfg):
-        monkeypatch.setattr(sc, "read_json_cached", lambda path, default, **kw: cfg)
+        _both(monkeypatch, "read_json_cached", lambda path, default, **kw: cfg)
 
     def test_critical_is_red(self, hw, monkeypatch):
         self.cfg(monkeypatch)
@@ -309,13 +315,13 @@ class TestLoop:
 class TestCollect:
     def test_before_the_first_cycle(self, monkeypatch):
         monkeypatch.setattr(Z_STATE, "cached_stats", None)
-        monkeypatch.setattr(sc, "read_unraid_status", lambda: {"available": False})
+        _both(monkeypatch, "read_unraid_status", lambda: {"available": False})
         data = sc.collect()
         assert data["status"] == "-- OK" and "events" in data and "lcd" in data
 
     def test_after_a_cycle(self, monkeypatch):
         monkeypatch.setattr(Z_STATE, "cached_stats", {"status": "3 OK"})
-        monkeypatch.setattr(sc, "read_unraid_status", lambda: {"available": False})
+        _both(monkeypatch, "read_unraid_status", lambda: {"available": False})
         data = sc.collect()
         assert data["status"] == "3 OK" and data["unraid"] == {"available": False}
 
