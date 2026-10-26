@@ -7,6 +7,8 @@ migration from legacy scrypt and unsalted SHA-256 formats.
 Target format: $argon2id$v=19$m=65536,t=3,p=4$...
 Legacy format 1: scrypt$<n>$<r>$<p>$<salt_hex>$<hash_hex>
 Legacy format 2: <64 hex chars> (sha256(password))
+Wrapped legacy:  $zn-sha256-argon2id$<argon2id of the old sha256 hex digest> (ARC-9): the
+                 weak hash is never stored as is; the next sign-in replaces it with Argon2id.
 """
 
 import hashlib
@@ -51,6 +53,20 @@ def hash_password(password: str) -> str:
     return f"scrypt${_N}${_R}${_P}${salt.hex()}${dk.hex()}"
 
 
+WRAPPED_SHA256 = "$zn-sha256-argon2id$"
+
+
+def is_unsalted_sha256(stored: str) -> bool:
+    return len(stored or "") == 64 and all(c in "0123456789abcdef" for c in stored.lower())
+
+
+def wrap_unsalted_sha256(stored: str) -> str:
+    """Argon2id over an old unsalted SHA-256 hash, so it no longer sits on disk as is (ARC-9)."""
+    if not is_unsalted_sha256(stored):
+        raise ValueError("not an unsalted SHA-256 hash")
+    return WRAPPED_SHA256 + hash_password(stored.lower())
+
+
 def is_legacy_hash(stored: str) -> bool:
     """True if stored is a legacy SHA-256 or scrypt hash (i.e. not Argon2id)."""
     if not stored:
@@ -74,6 +90,11 @@ def verify_password(password: str, stored: str) -> bool:
     """Constant-time verification against Argon2id, scrypt, or legacy SHA-256 hashes."""
     if not stored or password is None:
         return False
+
+    # 0. An old SHA-256 hash wrapped in Argon2id
+    if stored.startswith(WRAPPED_SHA256):
+        digest = hashlib.sha256(password.encode()).hexdigest()
+        return verify_password(digest, stored[len(WRAPPED_SHA256) :])
 
     # 1. Argon2id (RFC 9106)
     if stored.startswith("$argon2"):

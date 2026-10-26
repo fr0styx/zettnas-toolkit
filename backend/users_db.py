@@ -1389,3 +1389,28 @@ def accept_invite(
 def delete_invite(invite_id: str, db_path: str | None = None) -> bool:
     with users_db_session(db_path) as conn:
         return conn.execute("DELETE FROM invites WHERE id = ?", (invite_id,)).rowcount == 1
+
+
+def retire_weak_hashes(db_path: str | None = None) -> int:
+    """Accounts still on an unsalted SHA-256 hash get it wrapped in Argon2id and are asked to
+    choose a new password at their next sign-in (ARC-9). Directory accounts are left alone.
+    Returns how many accounts changed."""
+    from backend.passwords import is_unsalted_sha256, wrap_unsalted_sha256
+
+    changed = 0
+    with users_db_session(db_path) as conn:
+        rows = conn.execute("SELECT id, username, password_hash, idp_type FROM users").fetchall()
+        for row in rows:
+            if (row["idp_type"] or "local") != "local" or not is_unsalted_sha256(row["password_hash"] or ""):
+                continue
+            conn.execute(
+                "UPDATE users SET password_hash = ?, must_change_password = 1, updated_at = ? WHERE id = ?",
+                (wrap_unsalted_sha256(row["password_hash"]), time.time(), row["id"]),
+            )
+            changed += 1
+    if changed:
+        logger.warning(
+            f"[Auth] {changed} account(s) still had an unsalted SHA-256 password hash; it is now wrapped in "
+            "Argon2id and they will be asked to choose a new password at their next sign-in."
+        )
+    return changed

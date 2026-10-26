@@ -161,11 +161,11 @@ def startup_system():
     except Exception as e:
         logger.error(f"[Main] Security upgrade step failed: {e}")
     try:
-        from backend.api.auth import align_admin_password_mirror
+        from backend.api.auth import retire_admin_password_copy
 
-        align_admin_password_mirror()
+        retire_admin_password_copy()  # ARC-9: one copy of the admin password, no SHA-256 hashes
     except Exception as e:
-        logger.error(f"[Main] Could not align the admin password copy: {e}")
+        logger.error(f"[Main] Could not retire the old admin password copy: {e}")
     stamp_versions()
     try:
         from backend.services.self_updater import report_last_update_result

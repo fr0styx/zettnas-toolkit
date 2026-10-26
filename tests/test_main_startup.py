@@ -23,7 +23,7 @@ def quiet(monkeypatch):
         "backend.db_crypto.prepare",
         "backend.db_crypto.prepare_in_background",
         "backend.services.security_upgrade.run_once",
-        "backend.api.auth.align_admin_password_mirror",
+        "backend.api.auth.retire_admin_password_copy",
         "backend.services.self_updater.report_last_update_result",
         "backend.secret_box.migrate_plaintext_mfa_secrets",
         "backend.services.data_permissions.harden_data_permissions",

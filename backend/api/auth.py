@@ -203,14 +203,8 @@ def _rate_limited(remaining: int):
 
 
 def _persist_security() -> None:
-    atomic_write_json(
-        SECURITY_FILE,
-        {
-            "password_hash": config.STORED_PASSWORD_HASH,
-            "username": config.ZETTNAS_USERNAME,
-            "email": config.ZETTNAS_EMAIL,
-        },
-    )
+    # No password hash here any more (ARC-9): the admin account in users.db is the only copy.
+    atomic_write_json(config.SECURITY_FILE, {"username": config.ZETTNAS_USERNAME, "email": config.ZETTNAS_EMAIL})
 
 
 ADMIN_USER_ID = "admin-00000000-0000-0000-0000-000000000001"
@@ -297,21 +291,40 @@ async def _verify_current_password(user: dict[str, Any], password: str) -> bool:
     return bool(stored) and await run_in_threadpool(verify_password, password, stored)
 
 
-def align_admin_password_mirror() -> None:
-    """Makes security.json's admin hash follow the built-in admin account's own hash.
+def retire_admin_password_copy() -> None:
+    """Retires the admin password hash kept in security.json (ARC-9).
 
-    Older versions also copied other superadmins' passwords into it. Sign-in now
-    checks only the account's own hash, and the copy is used for the default-password
-    warning, so it is reset to the account's hash at startup.
+    Older versions kept a second copy of the admin hash there and fell back to it at sign-in.
+    At startup it is moved into the admin account if that has none, then removed from the
+    file, and unsalted SHA-256 account hashes are wrapped (users_db.retire_weak_hashes).
+    config.STORED_PASSWORD_HASH stays only as an in-memory mirror of the admin account's
+    hash, for the default-password warning.
     """
+    from backend.users_db import retire_weak_hashes, users_db_session
+
     admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME or "admin")
-    if not admin or admin.get("idp_type") == "ldap":
-        return
-    own = admin.get("password_hash") or ""
-    if own and own != config.STORED_PASSWORD_HASH:
-        config.STORED_PASSWORD_HASH = own
+    if admin and admin.get("idp_type") != "ldap":
+        copy = config.STORED_PASSWORD_HASH or ""
+        if not admin.get("password_hash") and copy:
+            with users_db_session(None) as conn:
+                conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (copy, admin["id"]))
+            logger.info("[Auth] Moved the admin password from security.json into the admin account.")
+    retire_weak_hashes()
+    admin = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME or "admin")
+    if admin and admin.get("password_hash"):
+        config.STORED_PASSWORD_HASH = admin["password_hash"]
+    try:
+        with open(config.SECURITY_FILE, encoding="utf-8") as fh:
+            has_copy = "password_hash" in json.load(fh)
+    except (OSError, ValueError):
+        has_copy = False
+    if has_copy:
         _persist_security()
-        logger.info("[Auth] Admin password copy in security.json now matches the admin account.")
+        logger.info("[Auth] Removed the old admin password copy from security.json.")
+
+
+def align_admin_password_mirror() -> None:  # the old name, kept for callers
+    retire_admin_password_copy()
 
 
 def create_mfa_token(user_id: str, username: str, remember_me: bool) -> str:
@@ -473,28 +486,6 @@ async def login(req: LoginRequest, request: Request):
         # Same work as a real check, so the response time doesn't tell which names exist.
         await run_in_threadpool(verify_password, req.password, _dummy_hash())
 
-    if (
-        not ok
-        and not is_ldap_user
-        and not (user and user.get("password_hash"))
-        and target_username in ("admin", getattr(config, "ZETTNAS_USERNAME", "admin"))
-    ):
-        if await run_in_threadpool(verify_password, req.password, config.STORED_PASSWORD_HASH):
-            ok = True
-            if not user:
-                try:
-                    user = create_user(
-                        username=target_username,
-                        password=req.password,
-                        display_name=getattr(config, "NAS_NAME", None) or "Administrator",
-                        role_id="superadmin",
-                    )
-                except Exception:
-                    user = get_user_by_username(target_username)
-            else:
-                update_user_password(user["id"], req.password)
-                user = get_user_by_id(user["id"])
-
     if not ok or not user:
         _register_failure(ip, is_ip=True)
         _register_failure(f"user:{target_username}@{ip}", is_ip=False)
@@ -528,17 +519,12 @@ async def login(req: LoginRequest, request: Request):
     # 4. Transparent zero-downtime hash upgrade to modern Argon2id (never for directory accounts:
     # their password must not be stored here)
     admin_login = _is_builtin_admin(user)
-    if user.get("idp_type") != "ldap" and (
-        needs_rehash(user.get("password_hash", "")) or (admin_login and needs_rehash(config.STORED_PASSWORD_HASH))
-    ):
+    if user.get("idp_type") != "ldap" and needs_rehash(user.get("password_hash", "")):
         try:
             update_user_password(user["id"], req.password)
             if admin_login:
                 refreshed = get_user_by_id(user["id"]) or {}
-                config.STORED_PASSWORD_HASH = refreshed.get("password_hash") or await run_in_threadpool(
-                    hash_password, req.password
-                )
-                _persist_security()
+                config.STORED_PASSWORD_HASH = refreshed.get("password_hash") or config.STORED_PASSWORD_HASH
             logger.info(f"Transparently upgraded password hash for '{target_username}' to modern Argon2id.")
         except Exception as e:
             logger.warning(f"Failed to upgrade password hash for '{target_username}': {e}")
@@ -1333,7 +1319,10 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
 
     caller = _get_authenticated_user(request)
     if caller and caller.get("is_system"):
-        current_ok = await run_in_threadpool(verify_password, data.current_password or "", config.STORED_PASSWORD_HASH)
+        admin_row = get_user_by_id(ADMIN_USER_ID) or get_user_by_username(config.ZETTNAS_USERNAME) or {}
+        current_ok = await run_in_threadpool(
+            verify_password, data.current_password or "", admin_row.get("password_hash") or ""
+        )
     else:
         current_ok = bool(caller) and await _verify_current_password(caller, data.current_password or "")
     if not current_ok:
