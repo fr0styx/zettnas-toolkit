@@ -1,0 +1,119 @@
+{
+ "ansi": [
+  "<span style=\"color: #ef4444\">red</span> plain <span style=\"color: #22c55e; font-weight: bold\">bold green</span>",
+  "tab\there &lt;tag&gt; &amp; &quot;quotes&quot;",
+  "<span style=\"color: rgb(255, 102, 0)\">orange</span> <span style=\"text-decoration: underline\">underline</span>",
+  "line1\r\nline2\rover"
+ ],
+ "stream": [
+  "hello ",
+  "hello world\r\n",
+  "hello world\r\ncleared",
+  "hello world\r\nclearedbacspace",
+  "hello world\r\nclearedbacspacebell"
+ ],
+ "keys": [
+  "a",
+  "\r",
+  "",
+  "\t",
+  "\u001b[A",
+  "\u0003",
+  "\u001b",
+  null,
+  "\u001b[3~"
+ ],
+ "catalog": [
+  {
+   "id": "ubuntu-2404",
+   "name": "Ubuntu Server 24.04.1 LTS",
+   "family": "linux",
+   "badge": "Official Canonical",
+   "edition": "Noble Numbat",
+   "size_formatted": "2.6 GB",
+   "arch": "x86_64",
+   "kernel": "Linux 6.8",
+   "url": "https://releases.ubuntu.com/24.04.1/ubuntu-24.04.1-live-server-amd64.iso",
+   "filename": "ubuntu-24.04.1-live-server-amd64.iso",
+   "desc": "Enterprise grade cloud & container host. Pre-configured with cloud-init and OpenSSH."
+  },
+  {
+   "id": "debian-12",
+   "name": "Debian 12.7.0 (Bookworm) Netinst",
+   "family": "linux",
+   "badge": "Stable Minimal",
+   "edition": "Netinst Minimal",
+   "size_formatted": "630 MB",
+   "arch": "x86_64",
+   "kernel": "Linux 6.1 LTS",
+   "url": "https://cdimage.debian.org/cdimage/archive/12.7.0/amd64/iso-cd/debian-12.7.0-amd64-netinst.iso",
+   "filename": "debian-12.7.0-amd64-netinst.iso",
+   "desc": "The universal operating system. Ultra-light memory footprint, rock solid package ecosystem."
+  },
+  {
+   "id": "alpine-320",
+   "name": "Alpine Linux 3.20.3",
+   "family": "linux",
+   "badge": "Micro Hypervisor",
+   "edition": "Standard Edition",
+   "size_formatted": "209 MB",
+   "arch": "x86_64",
+   "kernel": "Linux 6.6 LTS",
+   "url": "https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-standard-3.20.3-x86_64.iso",
+   "filename": "alpine-standard-3.20.3-x86_64.iso",
+   "desc": "Musl libc and BusyBox based ultra-lean OS. Boots in 400ms, uses under 32MB host RAM."
+  },
+  {
+   "id": "fedora-40",
+   "name": "Fedora Server 40",
+   "family": "linux",
+   "badge": "Modern Enterprise",
+   "edition": "Server Netinstall",
+   "size_formatted": "2.5 GB",
+   "arch": "x86_64",
+   "kernel": "Linux 6.8",
+   "url": "https://download.fedoraproject.org/pub/fedora/linux/releases/40/Server/x86_64/iso/Fedora-Server-dvd-x86_64-40-1.14.iso",
+   "filename": "Fedora-Server-dvd-x86_64-40-1.14.iso",
+   "desc": "Leading-edge Linux platform with native systemd-nspawn, Podman, and Cockpit integration."
+  },
+  {
+   "id": "truenas-scale",
+   "name": "TrueNAS SCALE 24.04.2",
+   "family": "storage",
+   "badge": "Scale-Out NAS",
+   "edition": "Dragonfish",
+   "size_formatted": "1.7 GB",
+   "arch": "x86_64",
+   "kernel": "Linux 6.6 LTS",
+   "url": "https://download.sys.truenas.net/TrueNAS-SCALE-Dragonfish/24.04.2/TrueNAS-SCALE-24.04.2.iso",
+   "filename": "TrueNAS-SCALE-24.04.2.iso",
+   "desc": "Debian-based open hyper-converged scale-out storage, ZFS pools, and containerized apps."
+  },
+  {
+   "id": "virtio-win",
+   "name": "VirtIO Windows Guest Tools",
+   "family": "windows",
+   "badge": "KVM Drivers",
+   "edition": "Stable 0.1.262",
+   "size_formatted": "650 MB",
+   "arch": "x86_64 / x86",
+   "kernel": "WHQL Signed",
+   "url": "https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso",
+   "filename": "virtio-win-stable.iso",
+   "desc": "Essential Red Hat signed VirtIO storage (viostor), network (NetKVM), and memory balloon drivers."
+  },
+  {
+   "id": "win-server-2022",
+   "name": "Windows Server 2022 Eval",
+   "family": "windows",
+   "badge": "Microsoft Eval",
+   "edition": "Standard / Datacenter",
+   "size_formatted": "4.7 GB",
+   "arch": "x86_64",
+   "kernel": "NT 10.0",
+   "url": "https://software-download.microsoft.com/download/pr/SERVER_EVAL_x64FRE_en-us.iso",
+   "filename": "Windows_Server_2022_Eval_x64.iso",
+   "desc": "Official Microsoft 180-day evaluation image for Active Directory and Windows workloads."
+  }
+ ]
+}

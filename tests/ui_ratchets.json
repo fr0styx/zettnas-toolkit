@@ -300,10 +300,58 @@
   "templates": 3
  },
  "frontend/src/components/vm-manager.js": {
+  "buttons": 0,
+  "globals": 3,
+  "styles": 97,
+  "templates": 1
+ },
+ "frontend/src/components/vm/connect-modal.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 83,
+  "templates": 2
+ },
+ "frontend/src/components/vm/console-ansi.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 1,
+  "templates": 0
+ },
+ "frontend/src/components/vm/console.js": {
+  "buttons": 0,
+  "globals": 2,
+  "styles": 14,
+  "templates": 1
+ },
+ "frontend/src/components/vm/create-modal.js": {
   "buttons": 1,
-  "globals": 8,
-  "styles": 538,
-  "templates": 24
+  "globals": 0,
+  "styles": 100,
+  "templates": 5
+ },
+ "frontend/src/components/vm/edit-modal.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 121,
+  "templates": 6
+ },
+ "frontend/src/components/vm/iso-manager.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 56,
+  "templates": 2
+ },
+ "frontend/src/components/vm/shared.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 2,
+  "templates": 0
+ },
+ "frontend/src/components/vm/snapshots.js": {
+  "buttons": 0,
+  "globals": 3,
+  "styles": 64,
+  "templates": 7
  },
  "frontend/src/components/wallpapers.js": {
   "buttons": 0,
