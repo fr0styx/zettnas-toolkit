@@ -22,6 +22,7 @@ import { applySystemUpdate, closeDiagnosticsPreviewModal, copySupportMarkdown, d
 import { fetchAndRenderNotificationConfig, openChannelConfigModal, saveCurrentChannelModal, saveNotificationsConfig, testAllNotificationChannels, testSingleChannel } from './management/notifications.js';
 import { fetchAndRenderAppBackups, fetchAndRenderBackupJobs, fetchAndRenderSystemSnapshots } from './management/backup.js';
 import { installAdvancedSwitch, renderStatusSummary } from './management/overview.js';
+import { installHealthSignal } from './management/health-signal.js';
 import { _aiSelectedColor, _aiSelectedScene, _getActiveAiSearchQuery, _renderAiRagInitialEmptyState, fetchAndRenderAiStatus, initAiKnowledgeEngine, runAiVisualSearch, setAiVisualFiltersDrawerOpen } from './management/ai.js';
 
 export * from './management/docker.js';
@@ -1247,6 +1248,7 @@ export function initManagement() {
   });
 
   installAdvancedSwitch(); // UX-2: the everyday places, with the rest behind Advanced
+  installHealthSignal(); // the opt-in anonymous weekly report, under Software Updates
 
   // Hub cards click listener
   document.querySelectorAll('.mgmt-app-card').forEach((card) => {

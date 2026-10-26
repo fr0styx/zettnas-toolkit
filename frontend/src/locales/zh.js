@@ -3234,4 +3234,11 @@ export default {
   "dash.disk_busy": "正在读写",
   "a11y.night_start": "夜间开始时间",
   "a11y.night_end": "夜间结束时间",
+  "health.title": "帮助改进 ZettNAS",
+  "health.desc": "每周发送一次应用版本、平台、处理器类型、硬盘数量范围以及正在使用的功能。不包含名称、地址、文件或序列号。关闭后会忘记随机标识。",
+  "health.switch": "发送匿名周报",
+  "health.unavailable": "此版本暂不可用。",
+  "health.preview": "查看发送的确切内容",
+  "health.never": "尚未发送。",
+  "health.last_sent": "上次发送：{when}",
 };

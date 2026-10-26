@@ -3234,4 +3234,11 @@ export default {
   "dash.disk_busy": "Liest oder schreibt",
   "a11y.night_start": "Nacht beginnt um",
   "a11y.night_end": "Nacht endet um",
+  "health.title": "ZettNAS verbessern helfen",
+  "health.desc": "Einmal pro Woche App-Version, Plattform, Prozessortyp, einen Bereich für die Anzahl der Laufwerke und die genutzten Funktionen senden. Keine Namen, Adressen, Dateien oder Seriennummern. Beim Ausschalten wird die zufällige Kennung vergessen.",
+  "health.switch": "Anonymen Wochenbericht senden",
+  "health.unavailable": "In dieser Version noch nicht verfügbar.",
+  "health.preview": "Genau ansehen, was gesendet wird",
+  "health.never": "Noch nicht gesendet.",
+  "health.last_sent": "Zuletzt gesendet: {when}",
 };

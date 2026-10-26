@@ -908,6 +908,28 @@ def put_server_identity(req: IdentityIn):
         raise HTTPException(status_code=400, detail=str(e)) from None
 
 
+class HealthSignalIn(BaseModel):
+    enabled: bool
+
+
+@router.get("/system/health-signal", dependencies=[Depends(require_scope("system:view"))])
+def get_health_signal():
+    """The opt-in anonymous weekly report: whether it is on, and exactly what it sends."""
+    from backend.services.health_signal import status
+
+    return status()
+
+
+@router.put("/system/health-signal", dependencies=[Depends(require_scope("system:config"))])
+def put_health_signal(req: HealthSignalIn):
+    from backend.services.health_signal import endpoint, set_enabled, status
+
+    if req.enabled and not endpoint():
+        raise HTTPException(status_code=409, detail="The health report is not available in this version.")
+    set_enabled(req.enabled)
+    return status()
+
+
 @router.get("/system/status-summary", dependencies=[Depends(require_scope("system:view"))])
 def get_status_summary():
     """What needs attention, for the Overview (UX-1)."""

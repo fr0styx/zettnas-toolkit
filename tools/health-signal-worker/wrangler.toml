@@ -1,0 +1,17 @@
+# Deploy steps: docs/HEALTH_SIGNAL.md
+name = "zettnas-health"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Logs stay off: the Worker stores no IP addresses, and request logs would.
+[observability]
+enabled = false
+
+# Weekly clean-up of rows older than 26 weeks (Mondays 04:00 UTC)
+[triggers]
+crons = ["0 4 * * 1"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "zettnas-health"
+database_id = "REPLACE_WITH_THE_ID_FROM_wrangler_d1_create"

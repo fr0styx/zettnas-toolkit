@@ -14,7 +14,8 @@ If something here is wrong, please open an issue.
   at most 896 pixels on the long side, and nowhere else.
 - Hardware readings, logs and settings.
 
-ZettNAS has no analytics or telemetry and does not phone home.
+ZettNAS has no analytics and does not phone home. The one exception is the anonymous weekly
+health report below, which is off unless you turn it on.
 
 ## Leaves the NAS only when you use the feature
 
@@ -32,6 +33,7 @@ ZettNAS has no analytics or telemetry and does not phone home.
 | Notifications | the services you set up (ntfy, Slack, Discord, email, Telegram) | the alert text | when an alert fires |
 | Cloud remotes and backups | the providers you connect (S3, B2, OneDrive, Google Drive, …) | the files you choose to sync | as you configure |
 | Remote access | Tailscale | what Tailscale needs to connect your devices | if you turn it on |
+| Anonymous health report | the ZettNAS project's receiver (a Cloudflare Worker) | app version, platform, processor type, image variant, a drive-count range, features in use, a random id ([details](HEALTH_SIGNAL.md)) | weekly, only if you turn on **Help improve ZettNAS** (off by default) |
 
 Your browser also loads ZettNAS itself from the NAS; the desktop does not load fonts,
 scripts or images from outside services.
@@ -39,6 +41,8 @@ scripts or images from outside services.
 ## Your controls
 
 - The **Web** toggle in each chat, off by default.
+- **Help improve ZettNAS** (Mission Control, under Software Updates), off by default; it shows the
+  exact report before you turn it on, and turning it off forgets the random id.
 - **Watched** and **Excluded** folders decide what the index may read; **Forget** removes a
   folder from it.
 - **Delete chats not used for…** sets conversation retention.

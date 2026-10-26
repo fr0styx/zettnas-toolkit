@@ -3234,4 +3234,11 @@ export default {
   "dash.disk_busy": "Reading or writing",
   "a11y.night_start": "Night starts at",
   "a11y.night_end": "Night ends at",
+  "health.title": "Help improve ZettNAS",
+  "health.desc": "Once a week, send the app version, platform, processor type, a range for the number of drives and which features are in use. No names, addresses, files or serial numbers. Turning it off forgets the random id.",
+  "health.switch": "Send an anonymous weekly report",
+  "health.unavailable": "Not available in this version yet.",
+  "health.preview": "See exactly what is sent",
+  "health.never": "Not sent yet.",
+  "health.last_sent": "Last sent: {when}",
 };

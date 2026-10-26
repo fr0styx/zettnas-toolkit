@@ -3234,4 +3234,11 @@ export default {
   "dash.disk_busy": "Leyendo o escribiendo",
   "a11y.night_start": "La noche empieza a las",
   "a11y.night_end": "La noche termina a las",
+  "health.title": "Ayudar a mejorar ZettNAS",
+  "health.desc": "Una vez por semana, enviar la versión de la app, la plataforma, el tipo de procesador, un rango del número de discos y las funciones en uso. Sin nombres, direcciones, archivos ni números de serie. Al desactivarlo se olvida el identificador aleatorio.",
+  "health.switch": "Enviar un informe semanal anónimo",
+  "health.unavailable": "Aún no disponible en esta versión.",
+  "health.preview": "Ver exactamente qué se envía",
+  "health.never": "Aún no enviado.",
+  "health.last_sent": "Último envío: {when}",
 };

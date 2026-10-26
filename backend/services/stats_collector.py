@@ -1130,5 +1130,11 @@ def smart_poller_daemon():
                 check_active_smart_tests()
             except Exception as st_e:
                 logger.debug(f"[SMART Poller] check_active_smart_tests threw: {st_e}")
+            try:
+                from backend.services.health_signal import maybe_send
+
+                maybe_send()  # opt-in weekly report; reads its file at most hourly
+            except Exception as hs_e:
+                logger.debug(f"[SMART Poller] health signal threw: {hs_e}")
         except Exception as e:
             logger.error(f"[SMART/UPS Poller] Polling cycle error: {e}")
