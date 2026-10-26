@@ -34,9 +34,9 @@ function emptyTrash() {
   return confirmThen('Empty Trash', 'Permanently delete everything in the trash? This cannot be undone.', async () => {
     try {
       await api.delete('/api/fs/trash/empty', { confirmed: true });
-      showToast(t('toast.trash_emptied_storage_reclaimed', 'Trash emptied. Storage reclaimed.'), 'success');
+      showToast(t('toast.trash_emptied_storage_reclaimed', 'Recycle Bin emptied. The space is free again.'), 'success');
     } catch (e) {
-      showToast(t('toast.failed_to_empty_trash', 'Failed to empty trash: {message}', { message: e.message }), 'error');
+      showToast(t('toast.failed_to_empty_trash', 'Could not empty the Recycle Bin: {message}', { message: e.message }), 'error');
     }
   });
 }
@@ -142,7 +142,7 @@ function _buildDefaultSpotlightItems() {
     {
       id: 'app-screen',
       title: 'ZettNAS IPS Display',
-      subtitle: 'Front-panel digital twin screen preview',
+      subtitle: 'Preview of the front screen',
       icon: '📟',
       category: 'app',
       keywords: ['lcd', 'display', 'screen', 'twin', 'front'],
@@ -336,7 +336,7 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-trash-empty',
-      title: 'Empty System Trash (>trash empty)',
+      title: 'Empty the Recycle Bin (>trash empty)',
       subtitle: 'Purge all recycled files and reclaim physical disk space',
       icon: '🗑️',
       category: 'action',
@@ -458,7 +458,7 @@ export function parseNaturalLanguageAction(rawQuery) {
   if (/^(?:trash\s+empty|empty\s+trash)/i.test(clean)) {
     return {
       id: 'dyn-trash-empty',
-      title: 'Empty System Trash',
+      title: 'Empty the Recycle Bin',
       subtitle: 'Permanently purge all recycled files and reclaim storage',
       icon: '🗑️',
       category: 'action',

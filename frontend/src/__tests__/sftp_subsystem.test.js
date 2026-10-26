@@ -7,7 +7,7 @@ import {
 } from '../components/chassis-visualizer.js';
 import { api } from '../api.js';
 
-describe('Feature 4: Inbound SFTP Subsystem Card & User Management', () => {
+describe('Feature 4: SFTP file access Card & User Management', () => {
   let container;
 
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('Feature 4: Inbound SFTP Subsystem Card & User Management', () => {
       'alice'
     );
 
-    expect(html).toContain('Inbound SFTP Subsystem');
+    expect(html).toContain('SFTP file access');
     expect(html).toContain('RUNNING (Port 2222)');
     expect(html).toContain('Stop SFTP');
     expect(html).toContain('Manage Users (2)');
@@ -77,7 +77,7 @@ describe('Feature 4: Inbound SFTP Subsystem Card & User Management', () => {
 
     const sftpCard = container.querySelector('#mgmt-sftp-subsystem-card');
     expect(sftpCard).not.toBeNull();
-    expect(sftpCard.textContent).toContain('Inbound SFTP Subsystem');
+    expect(sftpCard.textContent).toContain('SFTP file access');
     expect(sftpCard.textContent).toContain('RUNNING (Port 2222)');
     expect(sftpCard.textContent).toContain('Manage Users (1)');
     expect(sftpCard.textContent).toContain('sftp://backups@');
@@ -127,7 +127,7 @@ describe('Feature 4: Inbound SFTP Subsystem Card & User Management', () => {
 
     const sftpCard = container.querySelector('#mgmt-sftp-subsystem-card');
     expect(sftpCard).not.toBeNull();
-    expect(sftpCard.textContent).toContain('Inbound SFTP Subsystem');
+    expect(sftpCard.textContent).toContain('SFTP file access');
     expect(sftpCard.textContent).toContain('STOPPED');
     expect(sftpCard.textContent).toContain('Start SFTP');
     expect(sftpCard.textContent).toContain('Manage Users (0)');

@@ -343,7 +343,7 @@ export function applyWidgetConfig() {
     if (!wSystem.dataset.boundClick) {
       wSystem.dataset.boundClick = '1';
       wSystem.style.cursor = 'pointer';
-      wSystem.title = t('ui.click_to_open_dashboard_telemetry', 'Click to open Dashboard & Telemetry');
+      wSystem.title = t('ui.click_to_open_dashboard_telemetry', 'Open the dashboard');
       wSystem.setAttribute('role', 'button');
       wSystem.setAttribute('tabindex', '0');
       wSystem.addEventListener('click', (e) => {
@@ -421,7 +421,7 @@ export function applyWidgetConfig() {
     if (!wUptime.dataset.boundClick) {
       wUptime.dataset.boundClick = '1';
       wUptime.style.cursor = 'pointer';
-      wUptime.title = t('ui.click_to_open_dashboard_telemetry', 'Click to open Dashboard & Telemetry');
+      wUptime.title = t('ui.click_to_open_dashboard_telemetry', 'Open the dashboard');
       wUptime.setAttribute('role', 'button');
       wUptime.setAttribute('tabindex', '0');
       wUptime.addEventListener('click', (e) => {

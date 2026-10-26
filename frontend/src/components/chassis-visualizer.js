@@ -999,7 +999,7 @@ export function buildSftpCardHtml(sftpStatus, usersCount = 0, sampleUser = 'admi
       <div class="webdav-card-header">
         <div class="webdav-header-title">
           <svg class="ic" style="width:18px; height:18px; fill:currentColor; color:var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-storage"/></svg>
-          <span data-i18n="sftp.title">Inbound SFTP Subsystem</span>
+          <span data-i18n="sftp.title">SFTP file access</span>
           <span class="webdav-status-pill ${sftpPillClass}">${sftpPillText}</span>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">

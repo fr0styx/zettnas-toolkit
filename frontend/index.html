@@ -274,7 +274,7 @@
     <!-- Step 1: Credentials (Dual Mode: Chooser vs Classic) -->
     <form id="login-step-credentials" novalidate>
       <svg class="ic" style="width: 44px; height: 44px; color: var(--ok2); margin-bottom: 16px;"><use href="#i-chip"/></svg>
-      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 2px; color: var(--zn-text-strong);" data-i18n="login.title">ZETTNAS WORKBENCH</h2>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 2px; color: var(--zn-text-strong);" data-i18n="login.title">ZettNAS Toolkit</h2>
       <p id="login-identity-txt" style="margin: 0 0 20px 0; font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="login.auth_required">Select an account or enter credentials</p>
 
       <!-- Mode A: Account Chooser Grid -->
@@ -310,7 +310,7 @@
         <label for="login-remember-me" style="cursor: pointer; user-select: none;">Keep me signed in</label>
       </div>
 
-      <button type="button" id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">SECURE LOGIN</button>
+      <button type="button" id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">Sign in</button>
       <button type="button" id="login-sso-btn" class="suite-toolkit-btn login-sso-btn" hidden>Sign in with SSO</button>
       <p id="login-error" class="login-sso-error" role="alert" hidden></p>
       <p id="login-sso-error" class="login-sso-error" role="alert" hidden></p>
@@ -565,7 +565,7 @@
     <div class="suite-brand">
       <svg class="ic" id="suite-brand-icon" style="width:16px;height:16px;"><use href="#i-chip"/></svg>
       <span class="suite-title" id="suite-brand-title">ZETTNAS</span>
-      <span class="suite-badge" id="suite-brand-badge" data-i18n="nav.toolkit">NAS WORKBENCH</span>
+      <span class="suite-badge" id="suite-brand-badge" data-i18n="nav.toolkit">NAS Workbench</span>
       <div id="topbar-user-pill" class="topbar-user-pill" title="User Account & Security" data-i18n-title="ui.user_account_security" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
         <div id="topbar-user-avatar" class="topbar-user-avatar">
           <span id="topbar-user-avatar-initial">A</span>
@@ -592,7 +592,7 @@
       <button id="mobile-view-toggle-btn" class="yak-egg-btn" title="Toggle Mobile / Stacked Mode" aria-label="Toggle Mobile Layout" data-i18n-aria-label="ui.toggle_mobile_layout" data-i18n-title="nav.mobile_toggle">📱</button>
       <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]" data-i18n-title="nav.yak_egg">🐂</button>
       <button id="drawer-toggle-btn" class="suite-toolkit-btn hidden" title="Open Hardware Settings [Hot-key: T]" data-i18n-title="nav.settings_title">
-        <span class="btn-ic">⚙</span><span class="btn-txt" data-i18n="nav.settings"> HARDWARE SETTINGS</span>
+        <span class="btn-ic">⚙</span><span class="btn-txt" data-i18n="nav.settings"> Hardware settings</span>
       </button>
     </div>
   </header>
@@ -666,7 +666,7 @@
         </div>
 
         <!-- Live Re-indexing Progress Box inside Widget -->
-        <div id="w-ai-reindex-strip" style="display:none; margin:8px 0 6px 0; padding:6px 10px; border-radius:6px; background:var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); border:1px solid rgba(14,165,233,0.35); cursor:pointer;" title="Click to view Knowledge Base &amp; RAG Indexing" data-i18n-title="ui.click_to_view_knowledge_base">
+        <div id="w-ai-reindex-strip" style="display:none; margin:8px 0 6px 0; padding:6px 10px; border-radius:6px; background:var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); border:1px solid rgba(14,165,233,0.35); cursor:pointer;" title="Open AI search" data-i18n-title="ui.click_to_view_knowledge_base">
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:var(--zn-fs-xs); margin-bottom:4px;">
             <div style="display:flex; align-items:center; gap:5px;">
               <span class="pulsing-dot" style="width:6px; height:6px; border-radius:50%; background:#00f0ff; display:inline-block;"></span>
@@ -730,7 +730,7 @@
       </div>
 
       <!-- 4. System Widget -->
-      <div class="desktop-widget" id="widget-system" role="button" tabindex="0" title="Click to open Dashboard & Telemetry" data-i18n-title="ui.click_to_open_dashboard_telemetry">
+      <div class="desktop-widget" id="widget-system" role="button" tabindex="0" title="Open the dashboard" data-i18n-title="ui.click_to_open_dashboard_telemetry">
         <div class="widget-header">
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-cpu"/></svg> <span data-i18n="widget.system">System Status</span></span>
         </div>
@@ -943,13 +943,13 @@
     <!-- Segmented Navigation Tabs -->
     <div class="smart-nav-tabs" id="smart-nav-tabs">
       <button type="button" class="smart-tab-btn active" data-tab="health" id="smart-tab-btn-health">
-        <span class="tab-icon">🛡️</span> <span data-i18n="modal.smart_tab_health">Health & Velocity</span>
+        <span class="tab-icon">🛡️</span> <span data-i18n="modal.smart_tab_health">🏥 Health</span>
       </button>
       <button type="button" class="smart-tab-btn" data-tab="selftest" id="smart-tab-btn-selftest">
         <span class="tab-icon">⚡</span> <span data-i18n="modal.smart_tab_selftest">Self-Test & Reports</span>
       </button>
       <button type="button" class="smart-tab-btn" data-tab="raw" id="smart-tab-btn-raw">
-        <span class="tab-icon">📜</span> <span data-i18n="modal.smart_tab_raw">Raw SMART Data</span>
+        <span class="tab-icon">📜</span> <span data-i18n="modal.smart_tab_raw">📜 All readings</span>
       </button>
     </div>
 
@@ -962,7 +962,7 @@
               <span aria-hidden="true">💤</span> <span data-i18n="modal.smart_standby_title">Drive Platters in Low-Power Standby</span>
             </div>
             <div style="color: var(--muted); font-size: var(--zn-fs-xs); margin-top: 2px;" data-i18n="modal.smart_standby_desc">
-              Platters are spun down to save power and eliminate mechanical wear. S.M.A.R.T. telemetry is paused.
+              This drive is asleep to save power and wear. Health readings resume when it wakes.
             </div>
           </div>
           <button id="smart-btn-wake-modal" type="button" class="btn-primary" style="background: #eab308; color: #000; font-weight: 700; font-size: var(--zn-fs-xs); padding: 6px 14px; border-radius: 6px; cursor: pointer; border: none; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
@@ -970,10 +970,10 @@
           </button>
         </div>
         <div class="smart-meta-grid" id="smart-modal-grid">
-          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1" data-i18n="modal.smart_device_model">DEVICE & MODEL</span><span class="val" id="smart-meta-model">--</span></div>
-          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2" data-i18n="modal.smart_serial_metric">SERIAL / METRIC</span><span class="val" id="smart-meta-serial">--</span></div>
-          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">HEALTH / STATUS</span><span class="val" id="smart-meta-health">--</span></div>
-          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">HOURS / READOUT</span><span class="val" id="smart-meta-hours">--</span></div>
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-1" data-i18n="modal.smart_device_model">Drive and model</span><span class="val" id="smart-meta-model">--</span></div>
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-2" data-i18n="modal.smart_serial_metric">Serial number</span><span class="val" id="smart-meta-serial">--</span></div>
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-3" data-i18n="modal.smart_health_status">Health</span><span class="val" id="smart-meta-health">--</span></div>
+          <div class="smart-meta-cell"><span class="lbl" id="smart-lbl-4" data-i18n="modal.smart_hours_readout">Hours in use</span><span class="val" id="smart-meta-hours">--</span></div>
         </div>
         <div id="smart-degradation-banner" style="display: none; margin: 8px 0; padding: 8px 10px; border-radius: 6px; font-size: var(--zn-fs-xs); line-height: 1.4; border: 1px solid var(--zn-line-8); background: var(--zn-shade-25);"></div>
       </div>
@@ -981,7 +981,7 @@
       <!-- PANE 2: Self-Test & Reports -->
       <div id="smart-pane-selftest" class="smart-pane">
         <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px;">
-          <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">SELF-TESTS:</span>
+          <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">Self-tests:</span>
           <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
           <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
           <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
@@ -1042,7 +1042,7 @@
         <div id="smart-test-history-card" class="smart-test-history-card">
           <div class="smart-test-history-header">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="smart-test-history-title" data-i18n="modal.smart_test_history_title">SELF-TEST LOG & RESULTS</span>
+              <span class="smart-test-history-title" data-i18n="modal.smart_test_history_title">Self-test results</span>
               <span class="smart-test-count-badge" id="smart-test-count-badge">0</span>
             </div>
           </div>
@@ -1097,7 +1097,7 @@
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px;">
       <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="diagnostics.modal_desc">
-        Sanitized summary of host telemetry, storage pools, container fleet, and hypervisor state.
+        A summary of this server's hardware, storage, apps and virtual machines, with personal details removed.
       </div>
       
       <!-- Executive Health Status Banner -->
@@ -1175,7 +1175,7 @@
       <!-- Technical JSON Diagnostics -->
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="event_detail.technical">DIAGNOSTICS & RAW PAYLOAD</span>
+          <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="event_detail.technical">Technical details</span>
           <button id="event-detail-copy-btn" type="button" class="btn-pill-toggle is-small" style="display: inline-flex; align-items: center; gap: 5px;">
             <span id="event-detail-copy-icon">📋</span>
             <span id="event-detail-copy-text" data-i18n="event_detail.copy">Copy Details</span>
@@ -1295,15 +1295,15 @@
 
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <div>
-            <label for="setup-current-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.cur_pwd">CURRENT PASSWORD</label>
+            <label for="setup-current-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.cur_pwd">Current password</label>
             <input id="setup-current-pwd" aria-label="Current password" data-i18n-aria-label="setup.current_password" type="password" value="" autocomplete="current-password" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
           </div>
           <div>
-            <label for="setup-new-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.new_pwd">NEW PASSWORD</label>
+            <label for="setup-new-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.new_pwd">New password</label>
             <input id="setup-new-pwd" type="password" placeholder="At least 8 characters..." data-i18n-placeholder="setup.new_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
           </div>
           <div>
-            <label for="setup-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.confirm_pwd">CONFIRM NEW PASSWORD</label>
+            <label for="setup-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); margin-bottom: 4px;" data-i18n="setup.confirm_pwd">Confirm new password</label>
             <input id="setup-confirm-pwd" type="password" placeholder="Repeat new password..." data-i18n-placeholder="setup.confirm_pwd_placeholder" class="input-text" style="width: 100%; font-size: var(--zn-fs-xs); padding: 8px 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong);">
           </div>
         </div>
@@ -1612,7 +1612,7 @@
 
 <div id="copy-toast" class="smart-modal-window" style="position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: 90vw; height: auto; min-height: 0; resize: none; z-index: 10001; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease; transform: translateY(20px); border-color: var(--zn-line-10);" role="alertdialog" aria-modal="true">
   <div class="smart-modal-header" style="padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-    <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Media card ingest</span></div>
+    <div class="smart-modal-title" style="display:flex; align-items:center;"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-storage"/></svg> <span data-i18n="modal.copy_title">Copy from card</span></div>
     <div style="display:flex; gap:10px; align-items:center;">
       <button id="copy-toast-pause" class="btn-icon" style="opacity: 0.8; cursor: pointer; border:none; background:none; color:var(--warn); font-weight:bold; font-size: 14px; margin-right: 2px;" aria-label="Pause copy" data-i18n-aria-label="ui.pause_copy">⏸</button>
       <div class="os-window-controls">
@@ -1710,7 +1710,7 @@
                 </div>
               </div>
 
-              <div class="card fans card-fans" data-metric-id="metric-fans" title="Click to view Fans & Telemetry" data-i18n-title="ui.click_to_view_fans_telemetry">
+              <div class="card fans card-fans" data-metric-id="metric-fans" title="Open fans" data-i18n-title="ui.click_to_view_fans_telemetry">
                 <div class="card-title"><svg class="ic"><use href="#i-fan"/></svg><span class="card-title-txt" data-i18n="console.fans">FANS</span></div>
                 <div class="fan-row" id="fanRow"></div>
                 <div class="uptime"><svg class="ic ic-sm"><use href="#i-clock"/></svg><span id="uptime">up --</span></div>
@@ -2058,7 +2058,7 @@
     </div>
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="media.desc">
-        Heuristic regex parser that reorganizes downloads into clean Plex / Jellyfin standard folder structures.
+        Sorts downloaded films and series into the folder layout Plex and Jellyfin expect.
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -2161,7 +2161,7 @@
   </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="activity">
     <span class="context-menu-icon">📈</span>
-    <span class="context-menu-label" data-i18n="ctx.activity">System Activity & Telemetry</span>
+    <span class="context-menu-label" data-i18n="ctx.activity">Activity</span>
   </div>
   <div class="context-menu-divider" role="separator"></div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="lock">

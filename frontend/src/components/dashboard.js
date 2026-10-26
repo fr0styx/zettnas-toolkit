@@ -539,8 +539,8 @@ export function applyDesktopTheme(themeName, customAccent = null) {
   const icon = $('suite-brand-icon');
 
   if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'ZETTNAS';
-  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'NAS WORKBENCH');
-  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'NAS WORKBENCH');
+  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'NAS Workbench');
+  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'NAS Workbench');
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
 
   updateChassisImageForTheme();
@@ -1710,7 +1710,7 @@ export function handlePendingIngest(pendingIngest) {
   const devStr = pendingIngest.dev ? `/dev/${pendingIngest.dev}` : pendingIngest.slot.toUpperCase();
   const destPath = pendingIngest.dest || '/mnt/user/';
 
-  const title = t('media.ingest_prompt_title', 'Media Card Ingest');
+  const title = t('media.ingest_prompt_title', 'Copy this card?');
   const sizeBadge = sizeGb ? ` (${sizeGb})` : '';
   const msg = `<div style="display:flex; flex-direction:column; gap:10px;">
     <div>${t('media.ingest_prompt_detected', 'Detected')} <strong>${escapeHtml(slotName)}</strong>${escapeHtml(sizeBadge)} on <code>${escapeHtml(devStr)}</code>.</div>
@@ -1727,7 +1727,7 @@ export function handlePendingIngest(pendingIngest) {
         await api.post('/api/copy/start', { source: pendingIngest.slot, dest: destPath });
         showToast(t('media.ingest_started', `Importing media from ${slotName}...`), 'info');
       } catch (err) {
-        showToast(t('toast.failed_to_start_ingest', 'Failed to start ingest: {error}', { error: err.message || err }), 'error');
+        showToast(t('toast.failed_to_start_ingest', 'Could not start copying: {error}', { error: err.message || err }), 'error');
       }
     },
     async () => {
@@ -1741,7 +1741,7 @@ export function handlePendingIngest(pendingIngest) {
     },
     {
       isMedia: true,
-      okText: t('media.btn_start_ingest', '📥 Start Ingest'),
+      okText: t('media.btn_start_ingest', '📥 Start copying'),
       cancelText: t('media.btn_dismiss', 'Dismiss'),
       ejectText: t('media.btn_eject', '⏏ Eject'),
       onEject: async () => {

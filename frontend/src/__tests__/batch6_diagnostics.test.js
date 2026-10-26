@@ -175,7 +175,7 @@ describe('Batch 6: Observability, Structured Logging & Diagnostics Export', () =
     expect(overlay.style.display).toBe('flex');
     expect(overlay.classList.contains('open')).toBe(true);
     expect(banner.style.display).toBe('block');
-    expect(banner.textContent).toContain('ATTENTION REQUIRED');
+    expect(banner.textContent).toContain('Needs attention');
     expect(banner.textContent).toContain('zettnas-samba');
     expect(grid.innerHTML).toContain('12% Used');
     expect(grid.innerHTML).toContain('7.2 / 58.4 GB RAM');

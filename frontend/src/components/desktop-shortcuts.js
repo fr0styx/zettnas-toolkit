@@ -30,7 +30,7 @@ export const SYSTEM_SHORTCUTS = [
     id: 'storage-desktop-icon',
     name: 'Storage & Pools',
     title: 'Storage & Chassis',
-    desc: 'Chassis digital twin, ZFS/Btrfs pools, SMB/NFS network shares, and cloud remotes.',
+    desc: 'Drive bays, storage pools, shares and cloud storage.',
     icon: '#i-storage',
     svg: true,
     color: '#38bdf8',

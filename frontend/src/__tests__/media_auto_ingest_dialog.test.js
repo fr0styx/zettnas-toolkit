@@ -35,7 +35,7 @@ describe('Media Slot Auto-Ingest Confirmation Dialog', () => {
     expect(backdrop.style.display).toBe('block');
 
     const titleEl = document.getElementById('confirm-toast-title');
-    expect(titleEl.textContent).toContain('Media Card Ingest');
+    expect(titleEl.textContent).toContain('Copy this card?');
 
     const msgEl = document.getElementById('confirm-toast-msg');
     expect(msgEl.textContent).toContain('SD Card');
@@ -43,7 +43,7 @@ describe('Media Slot Auto-Ingest Confirmation Dialog', () => {
     expect(msgEl.textContent).toContain('/mnt/user/Photos');
 
     const okBtn = document.getElementById('confirm-toast-ok');
-    expect(okBtn.textContent).toContain('Start Ingest');
+    expect(okBtn.textContent).toContain('Start copying');
 
     // Click confirm button
     okBtn.click();

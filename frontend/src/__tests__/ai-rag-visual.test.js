@@ -833,8 +833,8 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
     await flushAiIndex();
 
     expect(confirmSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Flush RAG Index'),
-      expect.stringContaining('wipe all indexed documents'),
+      expect.stringContaining('Rebuild the AI search index'),
+      expect.stringContaining('deletes everything AI search has learned'),
       expect.any(Function),
       null,
       expect.objectContaining({ isDanger: true })
@@ -847,7 +847,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
 
     expect(postSpy).toHaveBeenCalledWith('/api/ai/index/flush');
     const feedbackEl = document.getElementById('ai-index-run-feedback');
-    expect(feedbackEl.textContent).toContain('flushed clean');
+    expect(feedbackEl.textContent).toContain('index is empty');
 
     // 5. Test controlAiSync('flush') and controlAiSync('clear')
     confirmSpy.mockClear();

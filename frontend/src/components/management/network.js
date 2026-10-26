@@ -276,7 +276,7 @@ export async function fetchAndRenderWireguard() {
           tsBadgeEl.style.borderColor = 'rgba(255,255,255,0.1)';
         }
         if (tsPillEl) {
-          tsPillEl.textContent = t('ui.daemon_not_found', 'Daemon Not Found');
+          tsPillEl.textContent = t('ui.daemon_not_found', 'App service not found');
           tsPillEl.style.color = 'var(--muted, #94a3b8)';
           tsPillEl.style.background = 'rgba(255,255,255,0.06)';
         }
@@ -1117,7 +1117,7 @@ export async function fetchAndRenderWireguard() {
     refreshBtn._bound = true;
     refreshBtn.addEventListener('click', () => {
       fetchAndRenderWireguard();
-      showToast(t('toast.mesh_vpn_telemetry_refreshed', 'Mesh VPN telemetry refreshed.'), 'info');
+      showToast(t('toast.mesh_vpn_telemetry_refreshed', 'Remote access status refreshed.'), 'info');
     });
   }
 

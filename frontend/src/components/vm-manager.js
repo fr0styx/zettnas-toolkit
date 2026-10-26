@@ -482,7 +482,7 @@ function buildVmCardHtml(vm, vms) {
               }
               ${
                 isRunning
-                  ? `<span class="qemu-process-badge active" title="${t('ui.qemu_kvm_hypervisor_process_active', 'QEMU KVM hypervisor process active')}">● QEMU ${qemuPid ? `(${qemuPid})` : 'Active'}</span>`
+                  ? `<span class="qemu-process-badge active" title="${t('ui.qemu_kvm_hypervisor_process_active', 'Virtual machine service running')}">● QEMU ${qemuPid ? `(${qemuPid})` : 'Active'}</span>`
                   : isPaused
                   ? `<span class="qemu-process-badge paused" title="${t('ui.qemu_process_paused', 'QEMU process paused')}">⏸ QEMU Paused</span>`
                   : `<span class="qemu-process-badge stopped" title="${t('ui.qemu_process_inactive', 'QEMU process inactive')}">○ QEMU Stopped</span>`

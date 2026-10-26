@@ -313,13 +313,13 @@ export function renderSmartLatestReport(data) {
   if (badge) {
     badge.className = "smart-report-badge-pill";
     if (passed) {
-      badge.textContent = `✓ ${t("modal.smart_verdict_passed", "PASSED")}`;
+      badge.textContent = `✓ ${t("modal.smart_verdict_passed", "Passed")}`;
     } else if (statusStr.toLowerCase().includes("abort") || statusStr.toLowerCase().includes("cancel")) {
       badge.classList.add("smart-report-badge-warn");
-      badge.textContent = `⏹ ${t("modal.smart_verdict_aborted", "ABORTED")}`;
+      badge.textContent = `⏹ ${t("modal.smart_verdict_aborted", "Stopped")}`;
     } else {
       badge.classList.add("smart-report-badge-crit");
-      badge.textContent = `✗ ${t("modal.smart_verdict_failed", "FAILED")}`;
+      badge.textContent = `✗ ${t("modal.smart_verdict_failed", "Failed")}`;
     }
   }
 
@@ -663,11 +663,11 @@ async function openSmartModal(devName, forceWake = false) {
   if (rawFilterInput) rawFilterInput.value = "";
 
   if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${escapeHtml(devName)}`;
-  if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "DEVICE & MODEL");
-  if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "SERIAL NUMBER");
-  if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "HEALTH STATUS");
-  if (smartLbl4) smartLbl4.textContent = t('modal.smart_hours_readout', "POWER-ON HOURS");
-  if (smartRawTitle) smartRawTitle.textContent = t('modal.smart_raw_telemetry', "RAW SMART ATTRIBUTES");
+  if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "Drive and model");
+  if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "Serial number");
+  if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "Health");
+  if (smartLbl4) smartLbl4.textContent = t('modal.smart_hours_readout', "Hours in use");
+  if (smartRawTitle) smartRawTitle.textContent = t('modal.smart_raw_telemetry', "All drive readings");
 
   if (smartModel) smartModel.textContent = t('common.loading', "Loading...");
   if (smartSerial) smartSerial.textContent = t('common.loading', "Loading...");
@@ -885,41 +885,41 @@ function openMetricModal(type) {
 
   if (type === "storage") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.storage_diag', 'Storage Array Diagnostics')}`;
-    smartLbl1.textContent = t('modal.used_space', "USED SPACE");
-    smartLbl2.textContent = t('modal.total_cap', "TOTAL CAPACITY");
-    smartLbl3.textContent = t('modal.utilization', "UTILIZATION");
-    smartLbl4.textContent = t('modal.target_pool', "TARGET POOL");
+    smartLbl1.textContent = t('modal.used_space', "Used");
+    smartLbl2.textContent = t('modal.total_cap', "Total");
+    smartLbl3.textContent = t('modal.utilization', "In use");
+    smartLbl4.textContent = t('modal.target_pool', "Pool");
     smartHours.textContent = "/mnt/user";
     smartRawTitle.textContent = "ACTIVE DISK INVENTORY";
   } else if (type === "cpu") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-cpu"/></svg> ${t('modal.cpu_diag', 'Processor Diagnostics')}`;
-    smartLbl1.textContent = t('modal.core_temp', "CORE TEMP");
-    smartLbl2.textContent = t('modal.active_util', "ACTIVE UTILIZATION");
-    smartLbl3.textContent = t('modal.thermal_state', "THERMAL STATE");
-    smartLbl4.textContent = t('modal.system_uptime', "SYSTEM UPTIME");
+    smartLbl1.textContent = t('modal.core_temp', "Temperature");
+    smartLbl2.textContent = t('modal.active_util', "Busy");
+    smartLbl3.textContent = t('modal.thermal_state', "Heat");
+    smartLbl4.textContent = t('modal.system_uptime', "Running for");
     smartRawTitle.textContent = "CPU TOPOLOGY & DELTAS";
   } else if (type === "mem") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-mem"/></svg> ${t('modal.mem_diag', 'Memory Distribution')}`;
-    smartLbl1.textContent = t('modal.ram_used', "RAM USED");
-    smartLbl2.textContent = t('modal.ram_total', "RAM TOTAL");
-    smartLbl3.textContent = t('modal.usage', "USAGE");
-    smartLbl4.textContent = t('modal.free_mem', "FREE MEMORY");
+    smartLbl1.textContent = t('modal.ram_used', "Memory used");
+    smartLbl2.textContent = t('modal.ram_total', "Memory total");
+    smartLbl3.textContent = t('modal.usage', "Usage");
+    smartLbl4.textContent = t('modal.free_mem', "Free memory");
     smartRawTitle.textContent = "HOST MEMINFO SNAPSHOT";
   } else if (type === "fans") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-fan"/></svg> ${t('modal.fans_diag', 'Cooling & Fan Tachometers')}`;
-    smartLbl1.textContent = t('modal.rear_fan_1', "REAR FAN 1 (D1)");
-    smartLbl2.textContent = t('modal.rear_fan_2', "REAR FAN 2 (D2)");
-    smartLbl3.textContent = t('modal.cpu_fan', "CPU FAN");
+    smartLbl1.textContent = t('modal.rear_fan_1', "Rear fan 1");
+    smartLbl2.textContent = t('modal.rear_fan_2', "Rear fan 2");
+    smartLbl3.textContent = t('modal.cpu_fan', "Processor fan");
     smartHealth.style.color = "var(--ok2)";
-    smartLbl4.textContent = t('modal.hwmon_chip', "HWMON CHIP");
+    smartLbl4.textContent = t('modal.hwmon_chip', "Sensor chip");
     smartHours.textContent = "zettlab_d8_fans";
     smartRawTitle.textContent = "LIVE FAN SENSOR TELEMETRY";
   } else if (type === "net") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-net"/></svg> ${t('modal.net_diag', 'Network Throughput Diagnostics')}`;
-    smartLbl1.textContent = t('modal.current_tx', "CURRENT TX");
-    smartLbl2.textContent = t('modal.current_rx', "CURRENT RX");
-    smartLbl3.textContent = t('modal.link_state', "LINK STATE");
-    smartLbl4.textContent = t('modal.primary_ip', "PRIMARY IP");
+    smartLbl1.textContent = t('modal.current_tx', "Sending now");
+    smartLbl2.textContent = t('modal.current_rx', "Receiving now");
+    smartLbl3.textContent = t('modal.link_state', "Connection");
+    smartLbl4.textContent = t('modal.primary_ip', "IP address");
     smartRawTitle.textContent = "NETWORK INTERFACE TELEMETRY";
   }
   updateMetricModalLive();
@@ -1158,7 +1158,7 @@ export function openEventDetailModal(ev) {
   // 8. Docker Containers
   else if (/\bdocker\b|\bcontainers?\b|compose|cgroup/.test(searchStr)) {
     subsystem = "DOCKER CONTAINERS";
-    actionLabel = t("event_detail.action_docker", "Open Container Telemetry");
+    actionLabel = t("event_detail.action_docker", "Open the app");
     actionFn = () => {
       closeEventDetailModal();
       if (typeof window.openManagementWindow === "function") {
@@ -1298,11 +1298,11 @@ window.addEventListener('zettnas:lang-changed', () => {
     if (activeModalType.startsWith('disk_')) {
         const devName = activeModalType.replace('disk_', '');
         if (smartTitle) smartTitle.innerHTML = `<svg class="ic"><use href="#i-disk"/></svg> ${t('modal.diag_title', 'S.M.A.R.T. Diagnostics')} • /dev/${escapeHtml(devName)}`;
-        if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "DEVICE & MODEL");
-        if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "SERIAL NUMBER");
-        if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "HEALTH STATUS");
-        if (smartLbl4) smartLbl4.textContent = t('modal.smart_hours_readout', "POWER-ON HOURS");
-        if (smartRawTitle) smartRawTitle.textContent = t('modal.smart_raw_telemetry', "RAW SMART ATTRIBUTES");
+        if (smartLbl1) smartLbl1.textContent = t('modal.smart_device_model', "Drive and model");
+        if (smartLbl2) smartLbl2.textContent = t('modal.smart_serial_metric', "Serial number");
+        if (smartLbl3) smartLbl3.textContent = t('modal.smart_health_status', "Health");
+        if (smartLbl4) smartLbl4.textContent = t('modal.smart_hours_readout', "Hours in use");
+        if (smartRawTitle) smartRawTitle.textContent = t('modal.smart_raw_telemetry', "All drive readings");
         const copyReportLabel = document.getElementById("smart-copy-report-label");
         if (copyReportLabel) copyReportLabel.textContent = t('modal.smart_copy_report', "Copy Report");
         if (_currentSmartData) {

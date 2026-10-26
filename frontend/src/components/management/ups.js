@@ -494,7 +494,7 @@ export function initUpsDrawerControls() {
       btnRefresh.textContent = t('ui.refreshing', 'Refreshing...');
       await fetchAndRenderUpsTelemetry();
       await loadUpsConfigToDrawer();
-      showToast(t('toast.ups_telemetry_parameters_updated', 'UPS telemetry & parameters updated'), 'info');
+      showToast(t('toast.ups_telemetry_parameters_updated', 'UPS settings saved'), 'info');
     } catch (err) {
       console.debug('Failed to refresh UPS telemetry:', err);
     } finally {
@@ -805,7 +805,7 @@ export function initUpsDrawerControls() {
   btnSimulate?.addEventListener('click', () => {
     showConfirmToast(
       'Simulate Power Outage Drill?',
-      'This simulates a 15-second utility power failure drill to verify digital twin electron animations, emergency countdown banner, and event ledger logging. <strong>Host will NOT shut down.</strong>',
+      'This pretends the power fails for 15 seconds, so you can see the power diagram, the countdown banner and the event log react. <strong>The server will not shut down.</strong>',
       async () => {
         try {
           showToast(t('toast.outage_drill_started_15s', 'Outage drill started (15s)...'), 'warn');

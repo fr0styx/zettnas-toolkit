@@ -431,7 +431,7 @@ export function showEditUserModal(user) {
 
       const submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      submitBtn.textContent = t('setup.saving', 'SAVING...');
+      submitBtn.textContent = t('setup.saving', 'Saving...');
 
       try {
         const res = await apiFetch(`/api/users/${user.id}`, {

@@ -915,7 +915,7 @@ export function initSettings() {
         email: $('sec-email') ? $('sec-email').value : ''
       };
 
-      secSaveBtn.textContent = t('setup.saving', 'SAVING...');
+      secSaveBtn.textContent = t('setup.saving', 'Saving...');
       try {
         await api.post('/api/security', payload);
         showToast(t('mgmt.sec_saved', 'Security settings updated successfully.'), 'success');

@@ -1,7 +1,7 @@
 <aside id="led-drawer" class="slide-drawer">
   <div class="drawer-header">
     <div>
-      <div class="drawer-sub"><span id="drawer-nas-name">NAS</span> • <span id="drawer-sub-badge" data-i18n="settings.drawer_badge">NAS WORKBENCH</span></div>
+      <div class="drawer-sub"><span id="drawer-nas-name">NAS</span> • <span id="drawer-sub-badge" data-i18n="settings.drawer_badge">NAS Workbench</span></div>
       <h2 class="drawer-title" id="drawer-dynamic-title" data-i18n="settings.tab_layout_title">Dashboard Layout</h2>
       <p class="drawer-subdesc" id="drawer-dynamic-desc" data-i18n="settings.tab_layout_desc">Configure dashboard sizes, visibility, and layout presets.</p>
     </div>
@@ -38,7 +38,7 @@
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.lcd_layout_style_title">Screen Dashboard Style</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span id="lcd-style-active-badge" class="preset-state-badge" style="color:var(--lt-ink-brand, var(--brand, #00f0ff)); border-color:var(--brand, #00f0ff);">CLASSIC CARDS</span>
         </div>
-        <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Choose between the multi-card telemetry overview or the high-contrast streamline minimalist layout with hero IP display.</div>
+        <div class="card-instruction" data-i18n="settings.lcd_layout_style_desc">Show several cards with live readings, or one large, high-contrast view with the IP address.</div>
         <div class="lcd-style-picker-row" role="radiogroup" aria-label="Screen Dashboard Style" data-i18n-aria-label="settings.lcd_layout_style_title">
           <button type="button" class="lcd-style-chip active" data-screen-style="classic" title="Classic Cards" data-i18n-title="settings.style_classic"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-apps"/></svg><span data-i18n="settings.style_classic">Classic Cards</span></button>
           <button type="button" class="lcd-style-chip" data-screen-style="streamline" title="Streamline Big IP" data-i18n-title="settings.style_streamline"><svg class="ic ic-sm" style="margin-right:4px;"><use href="#i-globe"/></svg><span data-i18n="settings.style_streamline">Streamline Big IP</span></button>
@@ -301,7 +301,7 @@
     <div id="drawer-cards-container" class="drawer-cards-flow locked">
       <div class="draggable-card preview-container" data-card-id="card-preview">
         <div class="preview-label-row">
-          <span class="drag-handle-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.live_bar_preview">LIVE BAR PREVIEW</span></span>
+          <span class="drag-handle-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.live_bar_preview">Light bar preview</span></span>
           <span id="preview-state-txt">ON • SOLID</span>
         </div>
         <div class="preview-housing"><div id="preview-bar" class="preview-bar-element"></div></div>
@@ -331,7 +331,7 @@
         </div>
         <div class="card-instruction" data-i18n="settings.led_night_desc">Automatically extinguish the ARGB light bar during nighttime hours to prevent room glare.</div>
         <div class="schedule-controls-row" style="margin-top:6px; display:flex; align-items:center; gap:8px; font-size:var(--zn-fs-xs);">
-          <span style="color:var(--muted); font-size:var(--zn-fs-xs); font-weight:700;" data-i18n="settings.blackout">BLACKOUT:</span>
+          <span style="color:var(--muted); font-size:var(--zn-fs-xs); font-weight:700;" data-i18n="settings.blackout">Off between:</span>
           <input type="time" id="led-night-start" aria-label="Night starts at" data-i18n-aria-label="a11y.night_start" value="23:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
           <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="settings.to">to</span>
           <input type="time" id="led-night-end" aria-label="Night ends at" data-i18n-aria-label="a11y.night_end" value="07:00" class="tz-text-input" style="width:96px; padding:3px 6px;">
@@ -724,7 +724,7 @@
             </label>
           </div>
         </div>
-        <div class="card-instruction" data-i18n="settings.copy_btn_desc">Bind the physical COPY button on the chassis front to automatically ingest media from an inserted SD card.</div>
+        <div class="card-instruction" data-i18n="settings.copy_btn_desc">Press the COPY button on the front of the server to copy photos and videos from an inserted SD card.</div>
         
         <div id="btn-copy-options" style="margin-top: 15px; border-top: 1px solid var(--zn-line-5); padding-top: 15px;">
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
@@ -733,7 +733,7 @@
               <div style="display:flex; gap:6px; align-items:center;">
                 <span id="media-slot-info-badge" class="suite-badge" style="font-size:var(--zn-fs-xs);">SLOTS EMPTY</span>
                 <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted">🔄 Scan</button>
-                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Start media ingest now from inserted card" data-i18n-title="ui.start_media_ingest_now_from">▶ Copy Now</button>
+                <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Copy the inserted card now" data-i18n-title="ui.start_media_ingest_now_from">▶ Copy Now</button>
                 <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card">⏏ Eject</button>
               </div>
             </div>
@@ -744,7 +744,7 @@
           </div>
           
           <div class="slider-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 12px;">
-            <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Destination Path (Ingest Target)</span>
+            <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.dest_path">Copy to this folder</span>
             <div style="display: flex; gap: 8px; width: 100%;">
               <input type="text" id="btn-copy-dst" class="tz-text-input" placeholder="/mnt/user/" style="width: 100%; box-sizing: border-box; font-family: monospace;" aria-label="/mnt/user/">
               <button id="btn-browse-dst" class="btn-pill-toggle" style="text-transform: uppercase; margin: 0; height: auto;" data-i18n="settings.browse">📁 Browse</button>
@@ -762,15 +762,15 @@
 
           <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_ingest">Automatic Slot Ingest</span>
-              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_ingest_desc">Trigger ingest automatically upon inserting an SD/TF card.</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.auto_ingest">Copy automatically</span>
+              <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.auto_ingest_desc">Start copying as soon as an SD or microSD card is inserted.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-auto-ingest"><span class="toggle-slider"></span></label>
           </div>
 
           <div class="slider-row" style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <div style="display:flex; flex-direction: column;">
-              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.ingest_prompt">Prompt Before Ingest</span>
+              <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.ingest_prompt">Ask before copying</span>
               <span style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 3px;" data-i18n="settings.ingest_prompt_desc">Show confirmation dialog before starting card copy.</span>
             </div>
             <label class="switch"><input type="checkbox" id="btn-copy-require-confirm" checked><span class="toggle-slider"></span></label>

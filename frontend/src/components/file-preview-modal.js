@@ -473,7 +473,7 @@ async function loadCurrentItem() {
     if (infoBtn) infoBtn.style.display = 'none';
     if (filmstripBtn) filmstripBtn.style.display = 'none';
 
-    metaEl.textContent = t('ui.nvme_rag_cache_zero_disk', '💤 NVMe RAG Cache (Zero Disk Wake)');
+    metaEl.textContent = t('ui.nvme_rag_cache_zero_disk', '💤 Search without waking drives');
     const isPhoto = isImageFile(_currentName);
     const thumbHtml = isPhoto && _currentAiMeta.thumbnailUrl
       ? `<img src="${escapeHtml(_currentAiMeta.thumbnailUrl)}" class="quicklook-img" alt="${escapeHtml(_currentName)}" style="max-height:360px; border-radius:8px; object-fit:contain;" />`

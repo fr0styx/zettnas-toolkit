@@ -109,9 +109,9 @@
             <div class="mgmt-app-info">
               <div class="mgmt-app-title-row">
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_activity_title">Dashboard & Telemetry</span>
-                <span class="mgmt-app-pill" data-i18n="mgmt.hub_activity_pill">Telemetry</span>
+                <span class="mgmt-app-pill" data-i18n="mgmt.hub_activity_pill">Live</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_activity_desc">Real-time CPU, RAM, network bandwidth, storage IOPS, and historical load velocity.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_activity_desc">Live hardware readings and the history of SD card copies.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_activity_action">View Telemetry ➔</span>
@@ -128,7 +128,7 @@
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_storage_title">Storage & Disks</span>
                 <span class="mgmt-app-pill" style="background:var(--lt-b-3bf58b26, rgba(59,245,139,0.15)); color:var(--lt-t-3bf58bff, #3bf58b);" id="mgmt-hub-storage-pill" data-i18n="mgmt.hub_storage_pill">Hardware</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_storage_desc">Interactive physical chassis digital twin, custom bay slot mapping, pool topology, and drive diagnostics.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_storage_desc">Your drives in their bays, the storage pool, and drive health checks.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_storage_action">Inspect Storage ➔</span>
@@ -196,7 +196,7 @@
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_hardware_title">Hardware & Profiles</span>
                 <span class="mgmt-app-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);" data-i18n="mgmt.hub_hardware_pill">Acoustics & Host</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_hardware_desc">Acoustic fan curves, hardware performance profiles, host subsystem monitoring, and chassis thermal tuning.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_hardware_desc">Fan curves, performance profiles and hardware health.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_hardware_action">Tune Hardware ➔</span>
@@ -213,7 +213,7 @@
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_ups_title">Power & Battery</span>
                 <span class="mgmt-app-pill" style="background:rgba(245,166,35,0.15); color:var(--warn,#f5a623);" id="mgmt-hub-ups-pill">…</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Real-time 2.5D power flow digital twin, battery runtime reserve, safe shutdown automation, and outage ledger.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_ups_desc">Battery health, runtime left, and a safe shutdown when the power fails.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_ups_action">Inspect Power ➔</span>
@@ -230,7 +230,7 @@
                 <span class="mgmt-app-title" data-i18n="mgmt.hub_ai_title">AI Knowledge & Search</span>
                 <span class="mgmt-app-pill" style="background:rgba(14,165,233,0.18); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));" id="mgmt-hub-ai-pill" data-i18n="mgmt.hub_ai_pill">NPU ➔ GPU</span>
               </div>
-              <p class="mgmt-app-desc" data-i18n="mgmt.hub_ai_desc">Local Multi-Modal RAG over recipes & documents, 12-color + scene photo discovery, and 100% spindown-safe NVMe indexing.</p>
+              <p class="mgmt-app-desc" data-i18n="mgmt.hub_ai_desc">Search your documents, PDFs, recipes and photos by what is in them, and ask questions about them. Runs on this server and never wakes sleeping drives.</p>
             </div>
             <div class="mgmt-app-footer">
               <span class="mgmt-app-action" data-i18n="mgmt.hub_ai_action">Ask & Discover ➔</span>
@@ -320,7 +320,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
               <div style="display:flex; align-items:center; gap: 8px;">
                 <svg class="ic" style="width:14px; height:14px; color:var(--lt-ink-brand, var(--brand, #00f0ff));"><use href="#i-screen"/></svg>
-                <span style="font-size: var(--zn-fs-xs); font-weight: 700; letter-spacing: 0.5px; color: var(--zn-text-strong);" data-i18n="mgmt.preview_title">LIVE DESKTOP PREVIEW</span>
+                <span style="font-size: var(--zn-fs-xs); font-weight: 700; letter-spacing: 0.5px; color: var(--zn-text-strong);" data-i18n="mgmt.preview_title">Desktop preview</span>
               </div>
               <div style="display:flex; align-items:center; gap: 6px;">
                 <span id="dt-theme-badge" class="desktop-twin-badge" style="font-size: var(--zn-fs-xs); font-weight: 600; padding: 2px 8px; border-radius: 12px; background: var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); color: var(--lt-ink-brand, var(--brand, #00f0ff)); border: 1px solid var(--lt-r-00f0ff4c, rgba(0,240,255,0.3));">CYBER TEAL</span>
@@ -422,7 +422,7 @@
                     <!-- 1. Dimming Slider -->
                     <div>
                       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="wallpaper-dim-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_dim_label">WALLPAPER DIMMING</label>
+                        <label for="wallpaper-dim-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_dim_label">Wallpaper dimming</label>
                         <span id="wallpaper-dim-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">15%</span>
                       </div>
                       <input type="range" id="wallpaper-dim-slider" min="0" max="70" value="15" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Wallpaper Dimming Percentage" data-i18n-aria-label="ui.wallpaper_dimming_percentage">
@@ -436,7 +436,7 @@
                     <!-- 2. Desktop Blur Slider -->
                     <div>
                       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="wallpaper-blur-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_blur_label">BACKGROUND BLUR</label>
+                        <label for="wallpaper-blur-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_blur_label">Background blur</label>
                         <span id="wallpaper-blur-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">0px</span>
                       </div>
                       <input type="range" id="wallpaper-blur-slider" min="0" max="30" value="0" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Desktop Blur Radius" data-i18n-aria-label="ui.desktop_blur_radius">
@@ -469,7 +469,7 @@
             </div>
             <div class="mgmt-detail-body">
               <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.5px;" data-i18n="mgmt.theme_presets_label">SELECT DESKTOP THEME PRESET</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.5px;" data-i18n="mgmt.theme_presets_label">Color presets</div>
                 <div class="theme-palette-grid" role="radiogroup" aria-label="Desktop Theme Presets" data-i18n-aria-label="ui.desktop_theme_presets">
                   <button class="desktop-theme-preset theme-preset-card active" data-theme-id="cyber" role="radio" aria-checked="true" aria-label="Cyber Teal: Signature Cyan & Obsidian" data-i18n-aria-label="ui.cyber_teal_signature_cyan_obsidian">
                     <div class="theme-swatch-circle" style="background: linear-gradient(135deg, #00f0ff 50%, #25c2a0 50%); border: 2px solid #00f0ff;"></div>
@@ -547,7 +547,7 @@
                 <!-- Custom Desktop Accent Color -->
                 <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--zn-line-6);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.custom_accent_label">CUSTOM ACCENT COLOR</label>
+                    <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.custom_accent_label">Custom accent color</label>
                     <button id="desktop-theme-reset-accent-btn" class="btn-pill-toggle is-small" data-i18n="settings.reset_accent">↺ Reset to Theme Color</button>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -572,7 +572,7 @@
                 <div class="wallpaper-palette-extractor-wrap" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--zn-line-6);">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <div>
-                      <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.wallpaper_harmony_label">WALLPAPER HARMONY PALETTE (WCAG 2.2 AA)</div>
+                      <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.wallpaper_harmony_label">Colors from the wallpaper</div>
                       <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;" data-i18n="settings.wallpaper_harmony_desc">Extracts harmonious accents directly from active wallpaper.</div>
                     </div>
                     <button id="extract-palette-btn" class="btn-pill-toggle is-small">
@@ -588,7 +588,7 @@
                 <!-- Theme Backup, Sharing & Reset -->
                 <div class="theme-backup-share-wrap" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--zn-line-6); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                   <div>
-                    <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.theme_backup_label">THEME BUNDLE & PRESETS</div>
+                    <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="settings.theme_backup_label">Save and load themes</div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;" data-i18n="settings.theme_backup_desc">Export your custom appearance style to share or restore defaults.</div>
                   </div>
                   <div style="display:flex; gap:6px; align-items:center;">
@@ -631,7 +631,7 @@
                     <!-- Acrylic Blur Radius -->
                     <div>
                       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="glass-blur-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_blur_label">ACRYLIC BLUR RADIUS</label>
+                        <label for="glass-blur-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_blur_label">Glass blur</label>
                         <span id="glass-blur-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">24px</span>
                       </div>
                       <input type="range" id="glass-blur-slider" min="0" max="40" value="24" step="2" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Acrylic Blur Radius" data-i18n-aria-label="ui.acrylic_blur_radius">
@@ -645,7 +645,7 @@
                     <!-- Glass Opacity -->
                     <div>
                       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="glass-opacity-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_opacity_label">GLASS SURFACE OPACITY</label>
+                        <label for="glass-opacity-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.glass_opacity_label">Glass opacity</label>
                         <span id="glass-opacity-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">72%</span>
                       </div>
                       <input type="range" id="glass-opacity-slider" min="30" max="95" value="72" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Glass Surface Opacity" data-i18n-aria-label="ui.glass_surface_opacity">
@@ -665,7 +665,7 @@
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <!-- Window Corner Curvature -->
                     <div>
-                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.window_radius_label">WINDOW CORNER CURVATURE</label>
+                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.window_radius_label">Window corners</label>
                       <div class="window-radius-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Window Corner Curvature" data-i18n-aria-label="ui.window_corner_curvature">
                         <button type="button" class="btn-pill-toggle window-radius-btn" data-radius="6px" role="radio" aria-checked="false" style="flex: 1;">Sharp (6px)</button>
                         <button type="button" class="btn-pill-toggle window-radius-btn active" data-radius="12px" role="radio" aria-checked="true" style="flex: 1;">Modern (12px)</button>
@@ -676,7 +676,7 @@
                     <!-- Specular Border Glow -->
                     <div>
                       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="window-glow-toggle" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.window_glow_label">SPECULAR BORDER HIGHLIGHT</label>
+                        <label for="window-glow-toggle" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.window_glow_label">Window edge glow</label>
                         <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
                           <input type="checkbox" id="window-glow-toggle" style="opacity:0; width:0; height:0;" aria-label="Toggle Specular Border Highlight" data-i18n-aria-label="ui.toggle_specular_border_highlight">
                           <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:20px; transition:0.3s;"></span>
@@ -740,7 +740,7 @@
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid var(--zn-line-6); padding-top: 14px;">
                     <!-- Dock Screen Position -->
                     <div>
-                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_placement_label">SCREEN POSITION</label>
+                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_placement_label">Position</label>
                       <div class="dock-position-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Dock Screen Position" data-i18n-aria-label="ui.dock_screen_position">
                         <button type="button" class="btn-pill-toggle dock-pos-btn active" data-pos="bottom" role="radio" aria-checked="true" style="flex: 1;" data-i18n="mgmt.dock_pos_bottom">Bottom (Default)</button>
                         <button type="button" class="btn-pill-toggle dock-pos-btn" data-pos="left" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_pos_left">Left (Widescreen)</button>
@@ -750,7 +750,7 @@
 
                     <!-- Dock Icon Size -->
                     <div>
-                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_size_label">ICON FOOTPRINT</label>
+                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_size_label">Icon size</label>
                       <div class="dock-size-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Dock Icon Size" data-i18n-aria-label="ui.dock_icon_size">
                         <button type="button" class="btn-pill-toggle dock-size-btn" data-size="small" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_size_small">Small (42px)</button>
                         <button type="button" class="btn-pill-toggle dock-size-btn active" data-size="medium" role="radio" aria-checked="true" style="flex: 1;" data-i18n="mgmt.dock_size_medium">Medium (52px)</button>
@@ -775,7 +775,7 @@
 
                   <div id="dock-magnification-slider-wrap" style="border-top: 1px solid var(--zn-line-6); padding-top: 14px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                      <label for="dock-magnification-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.dock_scale_label">MAGNIFICATION PEAK SCALE</label>
+                      <label for="dock-magnification-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.dock_scale_label">Magnification</label>
                       <span id="dock-magnification-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">1.45x</span>
                     </div>
                     <input type="range" id="dock-magnification-slider" min="1.1" max="1.8" value="1.45" step="0.05" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Magnification Scale" data-i18n-aria-label="ui.magnification_scale">
@@ -835,7 +835,7 @@
 
                   <div style="padding-top: 12px; border-top: 1px solid var(--zn-line-6);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                      <label for="screensaver-timeout-select" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.screensaver_timeout_label">IDLE INACTIVITY TIMEOUT</label>
+                      <label for="screensaver-timeout-select" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.screensaver_timeout_label">Start after</label>
                     </div>
                     <select id="screensaver-timeout-select" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
                       <option value="1" data-i18n="mgmt.screensaver_timeout_1m">1 Minute (Testing)</option>
@@ -850,7 +850,7 @@
 
                 <!-- Card 2: Animation Style / Mode Selector -->
                 <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 10px;" data-i18n="mgmt.screensaver_style_label">SCREENSAVER ANIMATION STYLE</div>
+                  <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 10px;" data-i18n="mgmt.screensaver_style_label">Screen saver style</div>
                   
                   <div class="screensaver-styles-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;" role="radiogroup" aria-label="Screensaver Style" data-i18n-aria-label="ui.screensaver_style">
                     <!-- Matrix Rain -->
@@ -915,10 +915,10 @@
             <div class="mgmt-card-intro">
               <div class="mgmt-card-intro-title">
                 <svg class="ic"><use href="#i-grid"/></svg>
-                <span data-i18n="mgmt.widgets_sec_title">Desktop Telemetry Widgets</span>
+                <span data-i18n="mgmt.widgets_sec_title">Desktop widgets</span>
               </div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.widgets_sec_desc">
-                Configure which live telemetry tiles appear on the desktop background, their screen position, and glass styling.
+                Choose which widgets appear on your desktop, where they sit and how they look.
               </div>
             </div>
 
@@ -1191,7 +1191,7 @@
                   <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong); margin-bottom: 4px;" data-i18n="widget.weather_cfg_title">Weather Settings</div>
                   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
                     <div style="position: relative;">
-                      <label for="widget-weather-city-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_city_label">CITY / LOCATION</label>
+                      <label for="widget-weather-city-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_city_label">City</label>
                       <div style="position: relative;">
                         <input type="text" id="widget-weather-city-input" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 28px 8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" placeholder="Auto-detect (Local IP / Timezone)" data-i18n-placeholder="widget.weather_city_placeholder" autocomplete="off">
                         <span id="widget-weather-city-spinner" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: none; font-size: var(--zn-fs-xs); opacity: 0.8;" title="Searching cities..." data-i18n-title="ui.searching_cities">⏳</span>
@@ -1199,7 +1199,7 @@
                       <div id="widget-weather-city-dropdown" class="weather-city-dropdown" style="display: none;"></div>
                     </div>
                     <div>
-                      <label for="widget-weather-unit-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_unit_label">TEMPERATURE UNIT</label>
+                      <label for="widget-weather-unit-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.weather_unit_label">Temperature unit</label>
                       <select id="widget-weather-unit-select" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
                         <option value="c">Celsius (°C)</option>
                         <option value="f">Fahrenheit (°F)</option>
@@ -1213,7 +1213,7 @@
                   <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong); margin-bottom: 4px;" data-i18n="widget.cal_cfg_title">Calendar & Holiday Settings</div>
                   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 10px;">
                     <div>
-                      <label for="widget-calendar-country-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.cal_country_label">OFFICIAL HOLIDAYS COUNTRY</label>
+                      <label for="widget-calendar-country-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="widget.cal_country_label">Public holidays for</label>
                       <select id="widget-calendar-country-select" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
                         <option value="auto" data-i18n="widget.cal_country_auto">Auto-detect (from Location / Locale)</option>
                         <option value="US">United States (US)</option>
@@ -1479,7 +1479,7 @@
                   Select your preferred language for the Web Studio desktop and hardware management controls.
                 </div>
                 <div style="margin-top: 10px;">
-                  <label for="mgmt-lang-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">SYSTEM INTERFACE LANGUAGE</label>
+                  <label for="mgmt-lang-select" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="settings.select_language">Language</label>
                   <select id="mgmt-lang-select" class="language-picker-select tz-select-input" style="width: 100%; padding: 10px 14px; font-size: 13px; cursor: pointer; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); border-radius: 6px; color: var(--zn-text-strong);">
                     <option value="en" lang="en">English</option>
                     <option value="de" lang="de">Deutsch</option>
@@ -1499,8 +1499,8 @@
             <div id="mgmt-pane-metrics" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.telemetry_title">Historical System Telemetry</span></div>
-                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.telemetry_desc">Aggregated hardware telemetry and per-device resource utilization history.</div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.telemetry_title">Hardware history</span></div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.telemetry_desc">How busy the processor, memory, drives and network have been over time.</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                   <span class="chart-zoom-hint" style="font-size: var(--zn-fs-xs); color: var(--muted); display: inline-flex; align-items: center; gap: 4px;">
@@ -1520,7 +1520,7 @@
               <div class="mgmt-detail-body">
                 <div class="metrics-device-filter-row">
                   <button class="metrics-device-btn active" data-metric-group="all" data-i18n="mgmt.all_devices">⚡ All Devices</button>
-                  <button class="metrics-device-btn" data-metric-group="system" data-i18n="mgmt.cpu_ram">🧠 CPU & RAM</button>
+                  <button class="metrics-device-btn" data-metric-group="system" data-i18n="mgmt.cpu_ram">🧠 Processor and memory</button>
                   <button class="metrics-device-btn" data-metric-group="disks" data-i18n="mgmt.storage_disks">💾 Storage Disks</button>
                   <button class="metrics-device-btn" data-metric-group="network" data-i18n="mgmt.network_bandwidth">🌐 Network Bandwidth</button>
                   <button class="metrics-device-btn" data-metric-group="fans" data-i18n="mgmt.cooling_fans">🌀 Cooling Fans</button>
@@ -1760,7 +1760,7 @@
                           <span data-i18n="net.tailscale_1click_title">⚡ 1-Click Tailscale Container Deployment</span>
                         </div>
                         <div style="font-size:var(--zn-fs-xs); color:var(--text-sub); margin-top:3px; line-height:1.4;" data-i18n="net.tailscale_1click_desc">
-                          Instantly provision the official Tailscale daemon in Docker with host networking, /dev/net/tun, and persistent state. Click Deploy below to begin.
+                          Installs Tailscale as an app, so you can reach this server from anywhere. Settings and sign-in are kept.
                         </div>
                       </div>
 
@@ -1930,7 +1930,7 @@
                 <!-- Extended Capabilities Row 3: Interactive Mesh Peer Directory (Capability 6) -->
                 <div class="network-card" id="tailscale-peers-card" style="margin-bottom: 24px; display: none;">
                   <div class="network-card-header" style="flex-wrap:wrap; gap:8px;">
-                    <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-server"/></svg> <span data-i18n="net.tailscale_peers_title">Interactive Mesh Peer Directory & Latency Ping</span></div>
+                    <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-server"/></svg> <span data-i18n="net.tailscale_peers_title">Devices on your tailnet</span></div>
                     <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
                       <input type="text" id="ts-peer-search" placeholder="Search peers by name, IP, or OS..." data-i18n-placeholder="ui.search_peers_by_name_ip" class="tz-select-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:220px; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); color:var(--zn-text-strong); border-radius:5px;" aria-label="Search peers by name, IP, or OS..." data-i18n-aria-label="ui.search_peers_by_name_ip" />
                       <span class="mgmt-app-pill" id="ts-peer-count-pill" style="font-size:var(--zn-fs-xs); padding:3px 10px; background:rgba(56,189,248,0.12); color:var(--zn-text-accent);">0 peers</span>
@@ -2157,7 +2157,7 @@
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.docker_sec_title">Docker Containers & App Catalog</span></div>
-                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">Manage running containers or deploy curated homelab applications in 1-click.</div>
+                  <div class="mgmt-card-intro-desc" data-i18n="mgmt.docker_sec_desc">See which apps are running, whether they are healthy and how long they have been up.</div>
                 </div>
                 <div style="display:flex; gap:6px; align-items:center;">
                   <button class="btn-pill-toggle" id="btn-mgmt-docker-launch-window" title="Open Dedicated Window" data-i18n-title="ui.open_dedicated_window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
@@ -2283,7 +2283,7 @@
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-kvm">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-cpu"/></svg>
-                  <span data-i18n="mgmt.subtab_vms_kvm">KVM & Host Telemetry</span>
+                  <span data-i18n="mgmt.subtab_vms_kvm">Virtual machine host</span>
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-vms-create" style="display:none;">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-plus"/></svg>
@@ -2340,7 +2340,7 @@
             <!-- Subpane 3: KVM Host Telemetry & Diagnostics -->
             <div id="mgmt-pane-vms-kvm" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro">
-                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.subtab_vms_kvm">KVM & Host Hypervisor Telemetry</span></div>
+                <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-cpu"/></svg> <span data-i18n="mgmt.subtab_vms_kvm">Virtual machine host</span></div>
                 <div class="mgmt-card-intro-desc">Hardware-assisted virtualization status, vhost-net acceleration, and host memory reservation safety.</div>
               </div>
               <div class="mgmt-detail-body" id="mgmt-vms-kvm-body">
@@ -2382,34 +2382,34 @@
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.hardware_sec_title">Hardware & Acoustic Profiles</span></div>
                   <span class="mgmt-app-pill" id="unraid-profile-current-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);">ACTIVE: AUTO DYNAMIC</span>
                 </div>
-                <div class="mgmt-card-intro-desc" data-i18n="mgmt.hardware_sec_desc">Apply unified hardware cooling profiles, monitor host subsystem health, and tune thermal performance.</div>
+                <div class="mgmt-card-intro-desc" data-i18n="mgmt.hardware_sec_desc">Choose a cooling profile, watch hardware health and tune temperatures.</div>
               </div>
               <div class="mgmt-detail-body">
                 <div style="display:flex; flex-direction:column; gap: 14px;">
                   <div>
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">SYSTEM ACOUSTIC & PERFORMANCE PROFILE</label>
+                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">Noise and performance</label>
                     <div class="profile-switcher-row" role="radiogroup" aria-label="System Acoustic & Performance Profile" data-i18n-aria-label="ui.system_acoustic_performance_profile">
                       <button class="profile-btn active" role="radio" aria-checked="true" data-profile="auto">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_auto_title">⚡ AUTO DYNAMIC</span>
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_auto_title">⚡ Automatic</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_auto_desc">Dynamic curve based on thermals • Synced RGB</span>
                       </button>
                       <button class="profile-btn" role="radio" aria-checked="false" data-profile="quiet">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_quiet_title">🤫 QUIET</span>
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_quiet_title">🤫 Quiet</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_quiet_desc">Silent fans (37%) • 20% RGB</span>
                       </button>
                       <button class="profile-btn" role="radio" aria-checked="false" data-profile="balanced">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_balanced_title">⚖️ BALANCED</span>
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_balanced_title">⚖️ Balanced</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_balanced_desc">Standard cooling (60%) • 50% RGB</span>
                       </button>
                       <button class="profile-btn" role="radio" aria-checked="false" data-profile="performance">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_performance_title">🚀 PERFORMANCE</span>
+                        <span class="profile-btn-title" data-i18n="mgmt.profile_performance_title">🚀 Performance</span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_performance_desc">Aggressive cooling (85%) • 100% RGB</span>
                       </button>
                     </div>
                   </div>
 
                   <div>
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" id="mgmt-host-status-label" data-i18n="mgmt.unraid_status_label">UNRAID STORAGE SUBSYSTEM STATUS</label>
+                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" id="mgmt-host-status-label" data-i18n="mgmt.unraid_status_label">Unraid array status</label>
                     
                     <!-- Unraid Host Details Grid -->
                     <div class="unraid-details-grid">
@@ -2470,7 +2470,7 @@
 
                   <!-- System Board & Hardware Infrastructure (DMI / BIOS / Governor) -->
                   <div>
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.sys_board_label">SYSTEM BOARD & HARDWARE INFRASTRUCTURE</label>
+                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.sys_board_label">Mainboard and hardware</label>
                     <div class="unraid-details-grid" id="mgmt-board-details-grid">
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.board_vendor">Motherboard & Vendor</span>
@@ -2494,7 +2494,7 @@
                   <!-- GPU Hardware Transcode Acceleration Engine -->
                   <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                      <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.gpu_transcode_label">GPU HARDWARE TRANSCODE ENGINE</label>
+                      <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.gpu_transcode_label">Graphics (video transcoding)</label>
                       <span class="suite-badge" id="mgmt-gpu-status-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">ACCELERATION ACTIVE</span>
                     </div>
                     <div class="gpu-transcode-card">
@@ -2526,7 +2526,7 @@
                   <!-- NPU Neural Acceleration Engine -->
                   <div id="mgmt-npu-container" style="margin-top: 14px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                      <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.npu_engine_label">NPU NEURAL ACCELERATION ENGINE</label>
+                      <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.npu_engine_label">AI accelerator (NPU)</label>
                       <span class="suite-badge" id="mgmt-npu-status-badge" style="background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border-color:rgba(168,85,247,0.35);">NPU ACTIVE</span>
                     </div>
                     <div class="gpu-transcode-card npu-card" style="border-left: 3px solid #a855f7;">
@@ -2651,17 +2651,17 @@
               <div>
                 <div class="mgmt-card-intro-title">
                   <svg class="ic"><use href="#i-bolt"/></svg>
-                  <span data-i18n="mgmt.ups_sec_title">Power & Battery Integrity Cockpit</span>
+                  <span data-i18n="mgmt.ups_sec_title">UPS and power</span>
                 </div>
                 <div class="mgmt-card-intro-desc" data-i18n="mgmt.ups_sec_desc">
-                  Universal power orchestration suite with real-time digital twin, multi-protocol HAL, and atomic safe shutdown.
+                  Battery level, power use and a safe shutdown when the power fails.
                 </div>
               </div>
               <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
                 <button class="btn-pill-toggle" id="btn-ups-discover" title="Scan local USB ports and host gateway for power daemons" data-i18n-title="ui.scan_local_usb_ports_and" data-i18n="mgmt.ups_btn_scan">🔍 Scan Hardware</button>
                 <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n-title="ui.trigger_10s_diagnostic_battery_self" data-i18n="mgmt.ups_btn_selftest">🔋 Self-Test</button>
                 <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n-title="ui.simulate_15s_power_outage_drill" data-i18n="mgmt.ups_btn_simulate">⚠️ Simulate Drill</button>
-                <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS Telemetry" data-i18n-title="ui.refresh_ups_telemetry" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS readings" data-i18n-title="ui.refresh_ups_telemetry" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 <button id="btn-open-ups-config" style="display:none;" aria-hidden="true"></button>
               </div>
             </div>
@@ -2670,7 +2670,7 @@
             <div id="ups-emergency-banner" class="ups-emergency-banner" style="display:none;">
               <div class="ups-eb-icon">⚠️</div>
               <div class="ups-eb-content">
-                <div class="ups-eb-title" data-i18n="mgmt.ups_emergency_title">UTILITY POWER FAILURE DETECTED</div>
+                <div class="ups-eb-title" data-i18n="mgmt.ups_emergency_title">The power is out</div>
                 <div class="ups-eb-desc" id="ups-emergency-desc" data-i18n="mgmt.ups_emergency_desc">System running on battery reserve. Automated powerdown policy is active.</div>
               </div>
               <div class="ups-eb-action">
@@ -2682,7 +2682,7 @@
             <div id="ups-permission-banner" class="ups-permission-banner" style="display:none; margin-bottom:16px; background:rgba(235,87,87,0.12); border:1px solid rgba(235,87,87,0.3); border-radius:8px; padding:12px 16px; align-items:flex-start; gap:12px;">
               <div style="font-size:20px; line-height:1;">⚠️</div>
               <div style="flex:1;">
-                <div style="font-size:13px; font-weight:700; color:var(--err, var(--lt-t-eb5757ff, #eb5757)); margin-bottom:4px;" data-i18n="mgmt.ups_perm_title">USB DEVICE PERMISSION REQUIRED</div>
+                <div style="font-size:13px; font-weight:700; color:var(--err, var(--lt-t-eb5757ff, #eb5757)); margin-bottom:4px;" data-i18n="mgmt.ups_perm_title">The UPS needs USB access</div>
                 <div style="font-size:var(--zn-fs-xs); color:var(--text); line-height:1.4;" id="ups-permission-msg" data-i18n="mgmt.ups_perm_desc">A direct USB UPS device was detected, but the container lacks permissions to open the HID character device. Please add device_cgroup_rules for hidraw (c 240:*..245:* rwm) or set privileged: true in your Docker configuration.</div>
               </div>
             </div>
@@ -2714,7 +2714,7 @@
                   </svg>
                   <div class="ups-radial-label" id="mgmt-ups-charge">--%</div>
                 </div>
-                <div class="ups-card-label" data-i18n="mgmt.ups_twin_battery">Battery Subsystem</div>
+                <div class="ups-card-label" data-i18n="mgmt.ups_twin_battery">Battery</div>
                 <div class="ups-card-sub" id="mgmt-ups-runtime">-- min remaining</div>
                 <div class="ups-card-meta" id="ups-twin-batt-volts">-- V • --°C</div>
               </div>
@@ -2754,7 +2754,7 @@
                 <!-- Detailed Inverter Telemetry Grid -->
                 <div class="unraid-details-grid">
                   <div class="unraid-detail-item">
-                    <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power Daemon Status</span>
+                    <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power monitor</span>
                     <span class="udi-val" id="mgmt-ups-status" style="color:var(--ok2);">ONLINE</span>
                   </div>
                   <div class="unraid-detail-item">
@@ -2990,7 +2990,7 @@
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-copy">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
-                  <span data-i18n="mgmt.subtab_copy">Media Ingest</span>
+                  <span data-i18n="mgmt.subtab_copy">Card copies</span>
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-storage-disks" style="display:none;">
                   <span data-i18n="mgmt.subtab_disks">Physical Disks Inventory</span>
@@ -3005,7 +3005,7 @@
             <div id="mgmt-pane-chassis-twin" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="mgmt.chassis_title">Parametric Chassis Digital Twin</span></div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="mgmt.chassis_title">Drive bays</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.chassis_desc">Live thermal heatmap, multi-tier physical drive locator strobe, and motherboard M.2 NVMe twin.</div>
                 </div>
                 <button class="btn-pill-toggle" id="btn-refresh-chassis" title="Refresh Chassis State" data-i18n-title="ui.refresh_chassis_state" data-i18n="mgmt.refresh">🔄 Refresh</button>
@@ -3067,7 +3067,7 @@
             <div id="mgmt-pane-storage-remotes" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
                 <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="mgmt.remotes_title">Remote & Cloud Storage Subsystem</span></div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-globe"/></svg> <span data-i18n="mgmt.remotes_title">Remote and cloud storage</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.remotes_desc">Embedded Universal WebDAV server, FUSE cloud bucket mounting (/mnt/remotes), and automated offsite sync.</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
@@ -3116,12 +3116,12 @@
             <div id="mgmt-pane-copy" class="mgmt-tab-pane" style="display: none;">
               <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.copy_sec_title">Media Ingest & Checksum History</span></div>
+                  <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.copy_sec_title">SD card copies</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.copy_sec_desc">Persistent audit logs of card reader imports with SHA-256 integrity verification.</div>
                 </div>
                 <div style="display:flex; gap:8px;">
                   <button class="btn-pill-toggle" id="btn-open-copy-drawer" title="Configure Front-Panel Copy Button" data-i18n-title="ui.configure_front_panel_copy_button">⚙️ <span data-i18n="settings.tab_buttons">Configure Button</span></button>
-                  <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh Ingest History" data-i18n-title="ui.refresh_ingest_history" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh card copies" data-i18n-title="ui.refresh_ingest_history" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
@@ -3268,11 +3268,11 @@
             <div style="display:flex; flex-direction:column; gap: 14px;">
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                 <div>
-                  <label for="sec-username" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">ADMIN USERNAME</label>
+                  <label for="sec-username" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_admin_user">Admin username</label>
                   <input type="text" id="sec-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="admin">
                 </div>
                 <div>
-                  <label for="sec-email" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">NOTIFICATION EMAIL</label>
+                  <label for="sec-email" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_email">Email for notifications</label>
                   <input type="email" id="sec-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="admin@zettnas.local">
                 </div>
               </div>
@@ -3284,7 +3284,7 @@
                     <input type="password" id="sec-new-pwd" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="New password (min. 8 characters)" data-i18n-placeholder="ui.new_password_min_8_characters" minlength="8" autocomplete="new-password">
                   </div>
                   <div>
-                    <label for="sec-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">CONFIRM NEW PASSWORD</label>
+                    <label for="sec-confirm-pwd" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="mgmt.sec_confirm_pwd">Confirm new password</label>
                     <input type="password" id="sec-confirm-pwd" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" autocomplete="new-password">
                   </div>
                 </div>
@@ -3299,8 +3299,8 @@
               </div>
 
               <div style="display:flex; gap: 10px; margin-top: 6px;">
-                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;" data-i18n="mgmt.sec_save">💾 SAVE CREDENTIALS</button>
-                <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">LOG OUT</button>
+                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;" data-i18n="mgmt.sec_save">💾 Save</button>
+                <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">Sign out</button>
               </div>
 
               <div style="border-top: 1px solid var(--zn-line-6); margin-top: 4px; padding-top: 14px;">
@@ -3522,7 +3522,7 @@
                 </div>
 
                 <!-- Alert Channels Header -->
-                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 16px 0 10px;" data-i18n="mgmt.notif_channels_title">ALERT DISPATCH CHANNELS</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 16px 0 10px;" data-i18n="mgmt.notif_channels_title">Where alerts go</div>
 
                 <!-- Channels Grid -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px;">
@@ -3626,7 +3626,7 @@
                 </div>
 
                 <!-- Subsystem Event Triggers & Sensitivity -->
-                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 20px 0 10px;" data-i18n="mgmt.notif_rules_title">SUBSYSTEM EVENT TRIGGERS & SENSITIVITY</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight:800; color:var(--muted); letter-spacing:0.8px; margin: 20px 0 10px;" data-i18n="mgmt.notif_rules_title">What you are alerted about</div>
                 
                 <div style="background:var(--zn-shade-25); border:1px solid var(--zn-line-8); border-radius:10px; padding:16px;">
                   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
@@ -3841,7 +3841,7 @@
               <span data-i18n="mgmt.about_title">About ZettNAS Workbench & Updates</span>
             </div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.about_desc">
-              Universal hardware orchestration suite & Web Desktop OS for any NAS and homelab system.
+              A web desktop for your home server: files, apps, backups and hardware in one place.
             </div>
           </div>
 
@@ -3867,7 +3867,7 @@
 
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; border-top:1px solid var(--zn-line-6); padding-top:14px;">
                 <div>
-                  <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px; margin-bottom:2px;">CHASSIS DIGITAL TWIN</div>
+                  <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px; margin-bottom:2px;">Drive bays</div>
                   <div id="about-chassis-model" style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-strong);">Detecting...</div>
                 </div>
                 <div>
@@ -3977,7 +3977,7 @@
                   </div>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                  <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong);" title="Preview collected system telemetry before downloading" data-i18n-title="ui.preview_collected_system_telemetry_before">
+                  <button id="btn-preview-diagnostics" type="button" class="btn-pill-toggle" style="background: var(--zn-glaze-6); border: 1px solid var(--zn-line-15); color: var(--zn-text-strong);" title="See what the report contains before you download it" data-i18n-title="ui.preview_collected_system_telemetry_before">
                     <span aria-hidden="true">👁️</span>
                     <span data-i18n="diagnostics.preview_btn">Preview Summary</span>
                   </button>
@@ -4022,11 +4022,11 @@
               <div class="mgmt-inner-tabs" role="tablist">
                 <button class="mgmt-inner-tab active" role="tab" aria-selected="true" data-tab-target="mgmt-pane-ai-chat" id="mgmt-tab-ai-chat">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-chat"/></svg>
-                  <span data-i18n="ai.tab_chat">Chatbot</span>
+                  <span data-i18n="ai.tab_chat">Ask Zetty</span>
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-ai-rag" id="mgmt-tab-ai-rag">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-search"/></svg>
-                  <span data-i18n="ai.tab_rag">RAG</span>
+                  <span data-i18n="ai.tab_rag">AI search</span>
                 </button>
                 <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-ai-index" id="mgmt-tab-ai-index">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-sliders"/></svg>
@@ -4243,11 +4243,11 @@
                     <span style="font-size:var(--zn-fs-xs);">⚡</span>
                     <span id="ai-accel-active-label">Tier 1: NPU ➔ GPU ➔ CPU</span>
                   </span>
-                  <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(99,102,241,0.18); color:var(--lt-t-c7d2feff, #c7d2fe); border:1px solid rgba(99,102,241,0.4); flex-shrink:0;" title="Active LLM leveraged for RAG synthesis, NAS Hardware Copilot tools &amp; Web Chatbot" data-i18n-title="ui.active_llm_leveraged_for_rag">
+                  <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(99,102,241,0.18); color:var(--lt-t-c7d2feff, #c7d2fe); border:1px solid rgba(99,102,241,0.4); flex-shrink:0;" title="This model answers in Ask Zetty and writes the answers for AI search." data-i18n-title="ui.active_llm_leveraged_for_rag">
                     <span style="font-size:var(--zn-fs-xs);">🤖</span>
                     <span id="ai-active-llm-label">qwen2.5:3b</span>
                   </span>
-                  <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.32); flex-shrink:0;" title="100% of RAG &amp; Photo queries read from NVMe SQLite WAL without spinning up sleeping HDDs" data-i18n-title="ui.100_of_rag_photo_queries">
+                  <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.32); flex-shrink:0;" title="Searches are answered from the fast drive, so sleeping hard drives stay asleep." data-i18n-title="ui.100_of_rag_photo_queries">
                     <span style="font-size:var(--zn-fs-xs);">🛡️💤</span>
                     <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active</span>
                   </span>
@@ -4275,19 +4275,19 @@
                 </div>
               </div>
               <div class="ai-config-group" role="group" aria-labelledby="ai-config_group_chat">
-                <h3 class="ai-config-group-title" id="ai-config_group_chat" data-i18n="ai.config_group_chat">Chatbot (Ask Zetty)</h3>
+                <h3 class="ai-config-group-title" id="ai-config_group_chat" data-i18n="ai.config_group_chat">Ask Zetty</h3>
                 <p class="ai-config-group-desc" data-i18n="ai.config_group_chat_desc">The model that answers, where it runs, and how long chats are kept.</p>
               </div>
               <!-- How Your Selected LLM Is Leveraged (Moved from Chatbot to AI Configuration) -->
               <div class="ai-chat-welcome-card" style="padding:12px 14px; border-radius:10px; background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.28); font-size:var(--zn-fs-xs); color:var(--zn-text); line-height:1.5; margin-bottom:12px;">
                 <div style="font-weight:800; color:var(--zn-text-strong); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
                   <span aria-hidden="true">🤖</span>
-                  <span data-i18n="ai.how_llm_leveraged_title">How Your Selected LLM Is Leveraged:</span>
+                  <span data-i18n="ai.how_llm_leveraged_title">What this model is used for:</span>
                 </div>
                 <ul style="margin:4px 0 0 18px; padding:0; color:var(--zn-text-soft); font-size:var(--zn-fs-xs); line-height:1.6;">
-                  <li><strong>Live Execution Telemetry Badge:</strong> Every reply in both <em>AI Search &amp; Ask</em> and <em>AI Chatbot</em> displays the exact model, NPU/GPU accelerator tier, runtime mode, token speed, and executed tools.</li>
-                  <li><strong>🛠️ 8 Built-in NAS Hardware Tools:</strong> Ask me to inspect CPU/RAM/NPU telemetry, check sleeping vs active disks (0 wakeups), read or change fan profiles (<code>quiet</code>, <code>balanced</code>, <code>performance</code>), list or restart Docker containers, or search your local NAS files.</li>
-                  <li><strong>🌐 Live Internet Verification:</strong> Ask any general question or paste a URL — I can search Wikipedia &amp; DuckDuckGo in real time and cite clickable web sources.</li>
+                  <li><strong>Each answer says how it was made:</strong> in <em>AI search</em> and <em>Ask Zetty</em>, every reply shows the model, whether the NPU or the GPU ran it, how fast it was, and which tools it used.</li>
+                  <li><strong>🛠️ It can check this server for you:</strong> ask how busy the processor and memory are, which drives are asleep (it never wakes them), change the fan profile (<code>quiet</code>, <code>balanced</code>, <code>performance</code>), list or restart apps, or find files.</li>
+                  <li><strong>🌐 It can look things up on the web:</strong> ask a general question or paste a link, and it searches Wikipedia and DuckDuckGo and links its sources.</li>
                 </ul>
               </div>
 
@@ -4424,7 +4424,7 @@
 
               </div>
               <div class="ai-config-group" role="group" aria-labelledby="ai-config_group_rag">
-                <h3 class="ai-config-group-title" id="ai-config_group_rag" data-i18n="ai.config_group_rag">Search &amp; knowledge (RAG)</h3>
+                <h3 class="ai-config-group-title" id="ai-config_group_rag" data-i18n="ai.config_group_rag">AI search</h3>
                 <p class="ai-config-group-desc" data-i18n="ai.config_group_rag_desc">Which folders ZettAI learns from and when, how it reads them, and your photos in Immich.</p>
               </div>
               <!-- Section 1 (Top Priority): Service Switch, Learning Scope, Schedule & Standby/Spin-Up Rules -->
@@ -4518,7 +4518,7 @@
                     <button type="button" id="btn-ai-in-place-reindex" class="btn-pill-toggle" style="background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.45); color: var(--lt-t-4ade80ff, #4ade80);" title="Re-embed all existing document chunks on SSD in-place with zero disk wakeups" data-i18n-title="ui.re_embed_all_existing_document">
                       <span aria-hidden="true">🔄</span> <span data-i18n="ai.btn_reindex">In-Place Re-index</span>
                     </button>
-                    <button type="button" id="btn-ai-flush-index" class="btn-pill-toggle is-danger" title="Flush existing RAG index, vector embeddings, and search catalog to start fresh" data-i18n-title="ui.flush_existing_rag_index_vector">
+                    <button type="button" id="btn-ai-flush-index" class="btn-pill-toggle is-danger" title="Delete what AI search has learned and start again" data-i18n-title="ui.flush_existing_rag_index_vector">
                       <span aria-hidden="true">🗑️</span> <span data-i18n="ai.flush_index_btn">Flush Index</span>
                     </button>
                   </div>
@@ -4567,7 +4567,7 @@
                 <div id="ai-watched-folders-section" style="display:flex; flex-direction:column; gap:8px;">
                   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
                     <span style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--zn-text-accent);" data-i18n="ai.watched_folders_label">Watched Folders (Click Dropdown to Check/Uncheck Shares for RAG)</span>
-                    <span style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8);" data-i18n="ai.watched_folders_hint">Checked folders are synced for RAG (Sleeping drives protected)</span>
+                    <span style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8);" data-i18n="ai.watched_folders_hint">Tick a folder to let AI search read it; untick it to stop.</span>
                   </div>
 
                   <div style="display:flex; gap:8px; align-items:center; width:100%; flex-wrap:wrap;">
@@ -4606,8 +4606,8 @@
               <div style="background:var(--card); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:14px; margin-top:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--zn-line-7);">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong);">🧬 Embedding Model &amp; Matryoshka Vector Scaling (MRL)</div>
-                    <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin-top:2px;">Select embedding architectures, scale Matryoshka vector dimensions, and benchmark edge inference latency without disk platters spinning up.</div>
+                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong);">🧬 Search index: model and size</div>
+                    <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin-top:2px;">Choose the model that reads your files for AI search and how large its index is, and measure how fast it is. Sleeping drives stay asleep.</div>
                   </div>
                   <div style="display:flex; align-items:center; gap:8px;">
                     <button type="button" id="btn-ai-run-benchmark" class="btn-pill-toggle" style="background: rgba(14,165,233,0.18); border: 1px solid rgba(14,165,233,0.45); color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">
@@ -4632,7 +4632,7 @@
 
                   <!-- MRL Dimension Selector -->
                   <div style="display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--card-hi); border:1px solid var(--zn-line-7);">
-                    <label for="ai-mrl-dimension-select" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text);" data-i18n="ai.mrl_dimension_label">Matryoshka Truncation (MRL):</label>
+                    <label for="ai-mrl-dimension-select" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text);" data-i18n="ai.mrl_dimension_label">Search index size</label>
                     <select id="ai-mrl-dimension-select" class="tz-select-input" style="height:32px; padding:0 10px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--lt-b-0f172af2, rgba(15,23,42,0.95)); color:var(--zn-text-strong); border:1px solid var(--zn-line-15);">
                       <option value="768" data-i18n="ai.mrl_768_desc">768d — Full DeepMind Fidelity (100% Recall)</option>
                       <option value="512" data-i18n="ai.mrl_512_desc">512d — Balanced (33% RAM Saving, 99.4% Recall)</option>
@@ -4892,7 +4892,7 @@
         <input type="text" id="net-docker-gateway-input" class="tz-text-input" placeholder="e.g. 172.28.0.1" maxlength="32" style="width: 100%; box-sizing: border-box; font-family: var(--font-mono, monospace);" autocomplete="off" />
       </div>
       <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.45;" data-i18n="net.docker_create_hint">
-        Creates a custom virtual bridge network on the Docker daemon for container interconnectivity.
+        Creates a network that apps can use to talk to each other.
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
         <button id="net-docker-create-cancel-btn" type="button" class="btn-pill-toggle" data-i18n="net.cancel">Cancel</button>
@@ -5784,7 +5784,7 @@
     <div class="smart-modal-header" style="cursor: move;">
       <span class="smart-modal-title" id="modal-sftp-title" style="display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 15px;">🔒</span>
-        <span data-i18n="sftp.title">Inbound SFTP Subsystem</span>
+        <span data-i18n="sftp.title">SFTP file access</span>
       </span>
       <div class="os-window-controls">
         <button class="win-btn close-btn" id="modal-sftp-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>

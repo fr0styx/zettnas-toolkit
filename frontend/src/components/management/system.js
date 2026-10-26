@@ -436,7 +436,7 @@ export function openDiagnosticsPreviewModal(data) {
     let bgColor = 'rgba(37, 194, 160, 0.08)';
     let badgeColor = 'var(--accent, #25c2a0)';
     let icon = '🟢';
-    let title = t('diagnostics.status_healthy', 'SYSTEM HEALTHY');
+    let title = t('diagnostics.status_healthy', 'Everything is healthy');
     let desc = t('diagnostics.status_healthy_desc', 'All hardware parameters, storage arrays, and containers are operating normally.');
 
     if (status === 'CRITICAL') {
@@ -444,14 +444,14 @@ export function openDiagnosticsPreviewModal(data) {
       bgColor = 'rgba(239, 68, 68, 0.12)';
       badgeColor = '#ef4444';
       icon = '🚨';
-      title = t('diagnostics.status_critical', 'CRITICAL ISSUES DETECTED');
+      title = t('diagnostics.status_critical', 'Problems need attention now');
       desc = t('diagnostics.status_critical_desc', 'Hardware failure, degraded drive arrays, or thermal clamp thresholds reached.');
     } else if (status === 'ATTENTION_REQUIRED') {
       borderColor = 'rgba(245, 158, 11, 0.4)';
       bgColor = 'rgba(245, 158, 11, 0.1)';
       badgeColor = '#f59e0b';
       icon = '⚠️';
-      title = t('diagnostics.status_attention', 'ATTENTION REQUIRED');
+      title = t('diagnostics.status_attention', 'Needs attention');
       desc = t('diagnostics.status_attention_desc', 'Non-critical system warnings, restarting containers, or hardware bus notices.');
     }
 

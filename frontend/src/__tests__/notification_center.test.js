@@ -433,7 +433,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(overlay.classList.contains('open')).toBe(true);
 
     const contextBtn = document.getElementById('event-detail-context-btn');
-    expect(contextBtn.textContent).toBe('Open Container Telemetry');
+    expect(contextBtn.textContent).toBe('Open the app');
 
     contextBtn.click();
     expect(window.openManagementWindow).toHaveBeenCalledWith('mgmt-pane-docker');

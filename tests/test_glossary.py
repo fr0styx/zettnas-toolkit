@@ -4,7 +4,14 @@ import os
 import re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RETIRED = [r"hyper[- ]?backup"]
+RETIRED = [
+    r"hyper[- ]?backup",
+    r"\bchatbot\b",
+    r"\bzettai studio\b",
+    r"\bnas[- ](hardware[- ])?copilot\b",
+    r"\bdigital twin\b",
+    r"\bsystem trash\b",
+]
 SOURCES = [
     "frontend/index.html",
     "frontend/src/locales",
@@ -33,6 +40,7 @@ def _shown_text(line: str) -> str:
     """The part of a source line people can read: strings and markup text, not ids or code names."""
     line = re.sub(r"\b(id|class|data-[\w-]+|for|href)=\"[^\"]*\"", "", line)
     line = re.sub(r"#[\w-]+", "", line)  # selectors like '#btn-create-hyper-backup'
+    line = re.sub(r"['\"][\w-]+['\"]\s*:", "", line)  # object keys in code (search aliases like 'chatbot')
     line = re.sub(r"\b[\w.]+_hyper_backup[\w]*\b|\bhyper_backup[\w.]*", "", line)  # translation keys
     return re.sub(r"^\s*(//|<!--|\*).*$", "", line)  # comments
 
@@ -53,3 +61,5 @@ def test_the_glossary_lists_what_the_test_enforces():
     with open(os.path.join(ROOT, "docs", "GLOSSARY.md"), encoding="utf-8") as f:
         glossary = f.read()
     assert "Hyper-Backup" in glossary and "test_glossary.py" in glossary
+    for name in ("Chatbot", "ZettAI Studio", "NAS Copilot", "digital twin", "System Trash"):
+        assert name in glossary, name

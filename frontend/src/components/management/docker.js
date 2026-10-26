@@ -1967,7 +1967,7 @@ export async function openAppDeployModal(appId) {
     }
     if (progressTitle) progressTitle.textContent = `Deploying ${cName} Stack...`;
     if (progressStatus) {
-      progressStatus.textContent = t('ui.connecting_to_docker_daemon', 'Connecting to Docker daemon...');
+      progressStatus.textContent = t('ui.connecting_to_docker_daemon', 'Connecting to the app service...');
       progressStatus.style.color = 'var(--muted)';
     }
     if (progressSpinner) {

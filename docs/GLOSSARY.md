@@ -14,11 +14,16 @@ back in text people read.
 | **Ask Zetty** | Chatbot, ZettAI Studio, NAS Copilot | The chat that answers questions about your files and your server |
 | **AI search** | RAG, knowledge engine (in everyday text) | Finding files by what is in them |
 | **Settings** | Mission Control (in new text) | The window where the server is set up |
-| **Drives** | disks, devices (in everyday text) | The physical drives in or attached to the server |
+| **Drives** | disks, devices (in everyday text) |
+| **Drive bays** | chassis digital twin | The picture of the server with a drive in each bay | The physical drives in or attached to the server |
 | **Shares** | network shares, SMB shares (in everyday text) | Folders other computers and phones can open |
 
 Technical words (SMB, NFS, RAID, Docker, ports) belong in help text and Advanced sections, not in
 titles, buttons or the first sentence of a message.
 
-Retired names that the test enforces today: `Hyper-Backup`. The others in the "Not" column move
-to the enforced list as the copy pass reaches them.
+Retired names that the test enforces today: `Hyper-Backup`, `Chatbot`, `ZettAI Studio`, `NAS Copilot`,
+`digital twin` and `System Trash`, in every language. The others in the "Not" column move to the
+enforced list as the copy pass reaches them.
+
+Text people read is in sentence case ("Sign in", not "SECURE LOGIN"). Where a design wants capitals,
+CSS draws them (`text-transform`), so screen readers and translations get normal words.

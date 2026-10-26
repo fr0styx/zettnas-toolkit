@@ -90,7 +90,7 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
 
     expect(unraidGrid.style.display).toBe('grid');
     expect(genericGrid.style.display).toBe('none');
-    expect(hostLabel.textContent).toContain('UNRAID');
+    expect(hostLabel.textContent).toContain('Unraid');
     expect(stateEl.textContent).toContain('STARTED');
     expect(srvEl.textContent).toContain('HomeNAS (D6U)');
     expect(verEl.textContent).toBe('Unraid 7.3.2');
@@ -128,7 +128,7 @@ describe('Hardware Subsystem & GPU Transcode Cockpit (Option C & D)', () => {
 
     expect(unraidGrid.style.display).toBe('none');
     expect(genericGrid.style.display).toBe('grid');
-    expect(hostLabel.textContent).toBe('HOST SYSTEM & KERNEL TOPOLOGY');
+    expect(hostLabel.textContent).toBe('Host system');
     expect(osEl.textContent).toBe('Debian GNU/Linux 13 (trixie)');
     expect(cpuEl.textContent).toBe('Intel Core Ultra 5 125H (18T)');
     expect(loadEl.textContent).toBe('0.15, 0.25, 0.35');

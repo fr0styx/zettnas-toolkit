@@ -168,7 +168,7 @@ export const KNOWN_APPS = {
   zettai: {
     id: 'zettai',
     icon: '#i-search',
-    getTitle: () => t('dock.zettai', 'ZettAI Studio'),
+    getTitle: () => t('dock.zettai', 'Ask Zetty'),
     launch: () => {
       if (typeof window.openManagementWindow === 'function') {
         window.openManagementWindow('mgmt-sec-ai-rag', 'mgmt-pane-ai-rag');

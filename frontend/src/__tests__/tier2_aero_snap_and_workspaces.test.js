@@ -298,7 +298,7 @@ describe('Tier 2: Aero Snap 2.0, Single Desktop Invariant, Spotlight Actions & M
 
       const trashAction = parseNaturalLanguageAction('>trash empty');
       expect(trashAction).not.toBeNull();
-      expect(trashAction.title).toBe('Empty System Trash');
+      expect(trashAction.title).toBe('Empty the Recycle Bin');
 
       const isolateAction = parseNaturalLanguageAction('>isolate container jellyfin');
       expect(isolateAction).not.toBeNull();

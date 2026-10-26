@@ -324,7 +324,7 @@ export function deployComposeStackSnippet(yamlCode) {
     }
   }
   openStackModal(deducedName, yamlCode);
-  showToast(t('toast.copilot_compose_stack_loaded_ready_to', 'Copilot Compose stack loaded. Ready to deploy!'), 'success');
+  showToast(t('toast.copilot_compose_stack_loaded_ready_to', 'The stack from Zetty\'s answer is loaded. Check it, then deploy.'), 'success');
 }
 
 if (typeof window !== 'undefined') {

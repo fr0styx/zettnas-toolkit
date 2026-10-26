@@ -77,7 +77,7 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | :--- | :---: | :---: | :--- |
 | `/api/storage/pools` | `GET` | `storage:read` | Unified storage pools across Btrfs RAID, Unraid array, and ZFS datasets. |
 | `/api/storage/disks` | `GET` | `storage:read` | Physical disk inventory (SATA, NVMe, SAS, USB) with standby states and SMART health. |
-| `/api/storage/bay-slots` | `GET` | `storage:read` | Dynamic chassis bay slot mapping for 2.5D visualizer digital twin. |
+| `/api/storage/bay-slots` | `GET` | `storage:read` | Which drive sits in which bay, for the drive bays picture. |
 | `/api/storage/bay-slots` | `POST` | `storage:admin` | Save custom disk-to-bay assignment mappings. |
 | `/api/storage/locate` | `POST` | `hardware:write` | Trigger quad-action locate strobe (disk activity pulse, ARGB beacon, audio chirp). |
 | `/api/disk_detail` | `GET` | `storage:read` | Query comprehensive SMART attributes, NVMe wear %, and health log (`?dev=sda`). |

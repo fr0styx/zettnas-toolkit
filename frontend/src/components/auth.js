@@ -376,7 +376,7 @@ async function doLogin() {
   const isRemembered = rememberMe ? rememberMe.checked : true;
 
   _showLoginError('');
-  if (loginBtn) loginBtn.textContent = t('login.authenticating', 'AUTHENTICATING...');
+  if (loginBtn) loginBtn.textContent = t('login.authenticating', 'Signing in...');
 
   try {
     const res = await window.fetch('/api/auth/login', {
@@ -396,7 +396,7 @@ async function doLogin() {
     if (res.ok && data.status === 'mfa_required' && data.mfa_token) {
       _pendingMfaToken = data.mfa_token;
       showMfaChallengeView(username);
-      if (loginBtn) loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
+      if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
       return;
     }
 
@@ -417,7 +417,7 @@ async function doLogin() {
         }, 250);
       }
 
-      if (loginBtn) loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
+      if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
       loginPwd.value = '';
       ZettEventBus.emit('auth:login');
 
@@ -436,11 +436,11 @@ async function doLogin() {
         msg = t('login.too_many', 'Too many attempts. Try again in {seconds} s.', { seconds: Math.max(retry, 1) });
       }
       _showLoginError(msg);
-      if (loginBtn) loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
+      if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
     }
   } catch (e) {
     _showLoginError(t('login.error_network', "Couldn't reach ZettNAS. Check the connection and try again."));
-    if (loginBtn) loginBtn.textContent = t('login.btn', 'SECURE LOGIN');
+    if (loginBtn) loginBtn.textContent = t('login.btn', 'Sign in');
   }
 }
 

@@ -278,7 +278,7 @@ export function initSetupWizard() {
 
       setErr('');
       const firstRun = isPasswordDefault();
-      btnSubmit.textContent = t('setup.saving', 'SAVING...');
+      btnSubmit.textContent = t('setup.saving', 'Saving...');
       btnSubmit.disabled = true;
 
       try {

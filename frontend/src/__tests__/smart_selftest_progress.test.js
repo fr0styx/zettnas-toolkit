@@ -442,7 +442,7 @@ describe('S.M.A.R.T. Self-Test Progress & Historical Report Suite', () => {
 
       expect(card.style.display).toBe('flex');
       expect(emptyHero.style.display).toBe('none');
-      expect(badge.textContent).toContain('PASSED');
+      expect(badge.textContent).toContain('Passed');
       expect(meta.textContent).toContain('SHORT');
       expect(meta.textContent).toContain('Completed without error');
       expect(lbaEl.textContent).toContain('0 Defects Detected');
@@ -475,7 +475,7 @@ describe('S.M.A.R.T. Self-Test Progress & Historical Report Suite', () => {
       const lbaEl = document.getElementById('smart-report-lba');
       const recEl = document.getElementById('smart-report-recommendation');
 
-      expect(badge.textContent).toContain('FAILED');
+      expect(badge.textContent).toContain('Failed');
       expect(badge.classList.contains('smart-report-badge-crit')).toBe(true);
       expect(lbaEl.textContent).toBe('Error at LBA 12498744');
       expect(recEl.textContent).toContain('Replace drive immediately.');

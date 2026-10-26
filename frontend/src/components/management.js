@@ -1422,7 +1422,7 @@ export function initManagement() {
   if (refreshHistoryBtn) {
     refreshHistoryBtn.addEventListener('click', () => {
       fetchAndRenderCopyHistory();
-      showToast(t('toast.ingest_history_refreshed', 'Ingest history refreshed.'), 'info');
+      showToast(t('toast.ingest_history_refreshed', 'Card copies refreshed.'), 'info');
     });
   }
 
@@ -1450,7 +1450,7 @@ export function initManagement() {
   if (refreshUpsBtn) {
     refreshUpsBtn.addEventListener('click', () => {
       fetchAndRenderUpsTelemetry();
-      showToast(t('toast.ups_telemetry_refreshed', 'UPS telemetry refreshed.'), 'info');
+      showToast(t('toast.ups_telemetry_refreshed', 'UPS readings refreshed.'), 'info');
     });
   }
   initUpsDrawerControls();
@@ -1556,7 +1556,7 @@ export function initManagement() {
     refreshChassisBtn.addEventListener('click', () => {
       const mount = document.getElementById('mgmt-chassis-twin-mount');
       if (mount) fetchAndRenderChassisTwin(mount);
-      showToast(t('toast.chassis_digital_twin_refreshed', 'Chassis digital twin refreshed.'), 'info');
+      showToast(t('toast.chassis_digital_twin_refreshed', 'Drive bays refreshed.'), 'info');
     });
   }
 

@@ -196,7 +196,7 @@ export async function openVmSnapshotsModal(vmId, vmObj = null) {
         container.innerHTML = `
           <div style="color: var(--muted); text-align: center; padding: 32px 20px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; align-items: center; gap: 8px;">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            <span>${t('vm.no_snapshots', 'No snapshots recorded yet. Create a checkpoint before performing major updates.')}</span>
+            <span>${t('vm.no_snapshots', 'No snapshots yet. Take one before a big update, so you can go back.')}</span>
           </div>
         `;
         return;

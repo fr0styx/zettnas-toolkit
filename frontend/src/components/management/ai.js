@@ -214,7 +214,7 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
     activeLlmLabel.textContent = currentActive;
   }
   if (activeLlmPill) {
-    activeLlmPill.title = `Active Local LLM: ${currentActive} — Leveraged by RAG Synthesis & NAS Copilot Chatbot`;
+    activeLlmPill.title = `Model in use: ${currentActive}. It answers in Ask Zetty and AI search.`;
   }
   const chatModelBadge = document.getElementById('ai-chat-active-model-badge');
   if (chatModelBadge) {
@@ -838,7 +838,7 @@ export function renderAiWatchedFoldersAndShares(watchedPaths = null, availableFo
             ${inStandby ? `💤 Standby${dev ? ` (${escapeHtml(dev)})` : ''}` : `🟢 Running${dev ? ` (${escapeHtml(dev)})` : ''}`}
           </span>
           <button type="button" class="btn-ai-sync-single-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.sync_this_folder_now_standby', 'Sync this folder now (Standby Safe)')}" style="background:transparent; border:none; color:var(--zn-text-accent); cursor:pointer; font-size:var(--zn-fs-xs); padding:0 2px;">🔄</button>
-          <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.uncheck_folder_from_rag_watched', 'Uncheck folder from RAG watched list')}" style="background:transparent; border:none; color:var(--zn-text-crit); cursor:pointer; font-size:var(--zn-fs-xs); font-weight:800; padding:0 2px;">✕</button>
+          <button type="button" class="btn-ai-remove-watched-folder" data-folder-path="${escapeHtml(fp)}" title="${t('ui.uncheck_folder_from_rag_watched', 'Stop AI search reading this folder')}" style="background:transparent; border:none; color:var(--zn-text-crit); cursor:pointer; font-size:var(--zn-fs-xs); font-weight:800; padding:0 2px;">✕</button>
           <button type="button" class="btn-ai-forget-folder" data-folder-path="${escapeHtml(fp)}" title="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" aria-label="${escapeHtml(t('ai.forget_folder_title', 'Forget: delete everything the AI learned from this folder'))}" style="background:transparent; border:none; color:var(--lt-t-fca5a5ff, #fca5a5); cursor:pointer; font-size:var(--zn-fs-xs); padding:0 2px;">🗑</button>
         </div>
       `;
@@ -949,27 +949,27 @@ export async function controlAiSync(action) {
 
 export async function flushAiIndex() {
   showConfirmToast(
-    t('ai.flush_index_confirm_title', 'Flush RAG Index & Start Fresh?'),
+    t('ai.flush_index_confirm_title', 'Rebuild the AI search index?'),
     t(
       'ai.flush_index_confirm_desc',
-      'Are you sure you want to flush the existing RAG knowledge base? This will wipe all indexed documents, code files, recipes, photos, vector embeddings, and cached search manifests from rag_index.db so you can perform a clean fresh sync.'
+      'This deletes everything AI search has learned about your files (documents, photos, recipes and code). Your files are not touched. AI search then reads your folders again from the start.'
     ),
     async () => {
       const feedbackEl = document.getElementById('ai-index-run-feedback');
-      if (feedbackEl) feedbackEl.textContent = t('ui.flushing_rag_index_database', '⏳ Flushing RAG index database...');
-      showToast(t('toast.flushing_rag_index_database', 'Flushing RAG index database...'), 'info');
+      if (feedbackEl) feedbackEl.textContent = t('ui.flushing_rag_index_database', '⏳ Emptying the AI search index...');
+      showToast(t('toast.flushing_rag_index_database', 'Emptying the AI search index...'), 'info');
       try {
         const res = await api.post('/api/ai/index/flush');
         await fetchAndRenderAiStatus();
-        if (feedbackEl) feedbackEl.textContent = t('ui.rag_database_flushed_clean_ready', '✓ RAG database flushed clean. Ready for fresh sync.');
+        if (feedbackEl) feedbackEl.textContent = t('ui.rag_database_flushed_clean_ready', '✓ The AI search index is empty and will be rebuilt.');
         showToast(
-          t('ai.flush_index_success_toast', 'RAG index database successfully flushed clean. Ready for fresh sync.'),
+          t('ai.flush_index_success_toast', 'The AI search index is empty and will be rebuilt.'),
           'success'
         );
         return res;
       } catch (err) {
         if (feedbackEl) feedbackEl.textContent = `✕ Flush failed: ${err.message}`;
-        showToast(t('toast.failed_to_flush_rag_index', 'Failed to flush RAG index: {error}', { error: err.message }), 'error');
+        showToast(t('toast.failed_to_flush_rag_index', 'Could not empty the AI search index: {error}', { error: err.message }), 'error');
         return null;
       }
     },
@@ -1246,7 +1246,7 @@ export function initAiKnowledgeEngine() {
     refreshBtn.dataset.bound = '1';
     refreshBtn.addEventListener('click', () => {
       fetchAndRenderAiStatus();
-      showToast(t('ai.status_refreshed', 'AI engine telemetry refreshed.'), 'info');
+      showToast(t('ai.status_refreshed', 'AI status refreshed.'), 'info');
     });
   }
 
@@ -1855,7 +1855,7 @@ export async function fetchAndRenderAiStatus() {
       activeLlmLabel.textContent = activeModelId || '—';
     }
     if (activeLlmPill) {
-      activeLlmPill.title = `Active Local LLM: ${activeModelId} on ${hwName} — Leveraged by RAG Synthesis & NAS Copilot Chatbot`;
+      activeLlmPill.title = `Model in use: ${activeModelId} on ${hwName}. It answers in Ask Zetty and AI search.`;
     }
     const chatModelBadge = document.getElementById('ai-chat-active-model-badge');
     if (chatModelBadge) {
@@ -1985,7 +1985,7 @@ export async function fetchAndRenderAiStatus() {
         <div>• <strong>Deferred Standby Queue:</strong> ${defCount} path(s) waiting for drive wake${defDetail}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <span>• <strong>NVMe Index Footprint:</strong> ${sizeKb} KB (<code>${escapeHtml(stats.db_path || '/app/data/rag_index.db')}</code>)</span>
-          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Flush existing RAG index, vector embeddings, and search catalog to start fresh')}"><span aria-hidden="true">🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
+          ${totalFiles > 0 || totalChunks > 0 ? `<button type="button" id="btn-ai-flush-index-link" class="btn-pill-toggle is-danger is-small" title="${t('ui.flush_existing_rag_index_vector', 'Delete what AI search has learned and start again')}"><span aria-hidden="true">🗑️</span> <span>Flush &amp; Start Fresh</span></button>` : ''}
         </div>
       `;
       const flushLink = dbSummary.querySelector('#btn-ai-flush-index-link');
@@ -3557,7 +3557,7 @@ export async function sendAiChatMessage(rawMessage = null) {
 
   const msg = (rawMessage !== null && rawMessage !== undefined ? String(rawMessage) : (inputEl ? inputEl.value : '')).trim();
   if (!msg) {
-    showToast(t('ai.enter_question', 'Please enter a question or command for the NAS Copilot.'), 'warn');
+    showToast(t('ai.enter_question', 'Type a question first.'), 'warn');
     return null;
   }
 
@@ -3935,7 +3935,7 @@ export async function sendAiChatMessage(rawMessage = null) {
       const errEl = document.createElement('div');
       errEl.className = 'ai-chat-msg ai-chat-msg-error';
       errEl.style.cssText = 'padding: 10px 14px; border-radius: 10px; background: rgba(239, 68, 68, 0.14); border: 1px solid rgba(248, 113, 113, 0.45); color: #fecaca; font-size: var(--zn-fs-xs);';
-      errEl.textContent = `⚠️ Chatbot error: ${err.message || String(err)}`;
+      errEl.textContent = `⚠️ Zetty could not answer: ${err.message || String(err)}`;
       listEl.appendChild(errEl);
       listEl.scrollTop = listEl.scrollHeight;
     }
