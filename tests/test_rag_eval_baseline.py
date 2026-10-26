@@ -7,6 +7,9 @@ commit; if a change lowers any of them by more than 0.01, this test fails.
 
 import json
 import os
+import sys
+
+import pytest
 
 from tests.rag_eval import documents
 from tests.rag_eval.run_eval import (
@@ -152,3 +155,29 @@ def test_one_question_in_five_is_held_out_and_stays_so():
         assert {q["split"] for q in load_queries(name)} == {"dev", "heldout"}, name
     # fixed by the id alone: adding or reordering questions moves nobody between splits
     assert split_of("doc-030") == "heldout" and split_of("doc-031") == "dev"
+
+
+SPEED_DISTRACTORS = 500
+SPEED_SLACK = 1.5  # machines differ in more than raw speed; a real slowdown is far larger
+
+
+def _traced() -> bool:
+    """Coverage (or a debugger) is watching: it slows the search far more than the yardstick."""
+    if sys.gettrace() is not None:
+        return True
+    mon = getattr(sys, "monitoring", None)
+    return bool(mon and mon.get_tool(mon.COVERAGE_ID))
+
+
+@pytest.mark.skipif(_traced(), reason="timed without coverage, in its own CI step")
+def test_search_stays_fast():
+    """Search time over 540 files, in units of a fixed piece of work timed on the same machine
+    (AI-16): it may not grow by half. Re-record baseline_speed.json only for an intended change.
+    CI runs it on its own, without coverage (.github/workflows/ci.yml, "Search speed")."""
+    with open(os.path.join(HERE, "baseline_speed.json"), encoding="utf-8") as f:
+        baseline = json.load(f)
+    got = evaluate(distractors=SPEED_DISTRACTORS)["latency"]
+    assert got["p95_units"] <= baseline["p95_units"] * SPEED_SLACK, (
+        f"search p95 went from {baseline['p95_units']} to {got['p95_units']} units "
+        f"({got['p95_ms']} ms here, a unit is {got['unit_ms']} ms)"
+    )

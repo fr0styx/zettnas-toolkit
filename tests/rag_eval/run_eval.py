@@ -14,6 +14,10 @@ tuned to the engine.
   with the corpus; scanned ones are read by the vision model (--ocr vision) or, per commit, by a
   stand-in that returns each page's known text, which checks everything but the model itself.
 
+Speed (AI-16): every result has the search times (latency: p50, p95, slowest) and the p95 in
+units of a fixed piece of work timed on the same machine, so runs on different machines
+compare; CI fails when that grows by half (tests/rag_eval/baseline_speed.json).
+
 Held-out split (AI-16): one query or question in five, chosen by a hash of its id, is held out.
 Tune and look at misses on the rest ("dev"); the held-out scores only say whether a change
 generalises. --misses lists dev misses only (--show-heldout to see all, e.g. for a release).
@@ -35,6 +39,7 @@ import os
 import random
 import re
 import tempfile
+import time
 from unittest.mock import patch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -290,6 +295,40 @@ def read_scanned(engine, ocr: str = "standin", host: str | None = None) -> dict:
     return seen
 
 
+def calibrate(rounds: int = 7) -> float:
+    """Milliseconds this machine takes for a fixed piece of work (sorting and hashing), the
+    fastest of a few rounds (the least disturbed): search times divided by it compare across
+    machines."""
+
+    def work() -> str:
+        h = hashlib.sha256()
+        for item in sorted(str(i * 7919 % 100003) for i in range(60000)):
+            h.update(item.encode())
+        return h.hexdigest()
+
+    times = []
+    for _ in range(rounds):
+        t = time.perf_counter()
+        work()
+        times.append((time.perf_counter() - t) * 1000)
+    return min(times)
+
+
+def latency_summary(times_ms: list[float], unit_ms: float) -> dict:
+    s = sorted(times_ms) or [0.0]
+
+    def pct(q: float) -> float:
+        return s[min(len(s) - 1, int(q * len(s)))]
+
+    return {
+        "p50_ms": round(pct(0.5), 1),
+        "p95_ms": round(pct(0.95), 1),
+        "max_ms": round(s[-1], 1),
+        "unit_ms": round(unit_ms, 1),
+        "p95_units": round(pct(0.95) / unit_ms, 3) if unit_ms else None,
+    }
+
+
 def _index_tree(engine, root: str) -> None:
     for dirpath, dirs, files in os.walk(root):
         dirs.sort()
@@ -342,6 +381,8 @@ def evaluate(
 
     per_query = []
     qa_rows = []
+    search_ms = []
+    unit_ms = calibrate()
     try:
         with (
             patch.object(engine, "get_config", return_value=cfg),
@@ -360,7 +401,9 @@ def evaluate(
                 write_distractors(noise, distractors)
                 _index_tree(engine, noise)
             for q in load_queries(which):
+                t0 = time.perf_counter()
                 res = engine.search(q["query"], limit=10)
+                search_ms.append((time.perf_counter() - t0) * 1000)
                 ranked = []
                 for item in res.get("results") or []:
                     p = rel(item.get("canonical_path") or item.get("path") or "")
@@ -419,6 +462,7 @@ def evaluate(
         "by_language": {lang: summary([r for r in per_query if r["lang"] == lang]) for lang in langs},
         "by_kind": {k: summary([r for r in per_query if r["kind"] == k]) for k in kinds},
         "by_split": {s: summary([r for r in per_query if r["split"] == s]) for s in ("dev", "heldout")},
+        "latency": latency_summary(search_ms, min(unit_ms, calibrate())),
         "misses": [
             {"id": r["id"], "split": r["split"], "query": r["query"], "top": r["ranked"][:3]}
             for r in per_query
