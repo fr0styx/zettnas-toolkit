@@ -2,7 +2,9 @@ name: Hardware budgets
 
 # Runs on the self-hosted runner next to a real ZettNAS server (docs/HARDWARE_RUNNER.md).
 # Only on a schedule or by hand from main: never for pull requests, so code from a fork can
-# never reach that machine. The log says PASS/FAIL only; the numbers stay on the machine.
+# never reach that machine. The log says PASS/FAIL/SKIP only; the numbers stay on the machine.
+# Order: the idle budgets and the spin-down watch first (they need a quiet machine), the AI
+# check last (it wakes the model servers).
 on:
   schedule:
     - cron: "41 2 * * *"
@@ -25,3 +27,27 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Budgets (5-minute soak)
         run: python3 scripts/hardware_budgets.py --seconds 300
+
+  spindown:
+    # Read-only: kernel counters only, never a command to a drive (PERF-2)
+    needs: budgets
+    if: always() && github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    runs-on: [zettnas-hardware]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Spin-down (30-minute watch)
+        run: python3 scripts/hardware_spindown.py --minutes 30
+
+  ai-eval:
+    # Search and answers on the model servers this install uses, read-only (AI-16)
+    needs: spindown
+    if: always() && github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    runs-on: [zettnas-hardware]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: AI eval on the production model servers
+        run: /opt/zn-eval/bin/python scripts/hardware_ai_eval.py

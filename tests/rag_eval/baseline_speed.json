@@ -1,5 +1,5 @@
 {
- "about": "p95 search time over the 40 eval files and 500 distractors, in units of tests/rag_eval/run_eval.calibrate() on the same machine (the highest of four runs). CI fails above 1.5 times this.",
+ "about": "p95 search time over the 40 eval files and 500 distractors, in units of tests/rag_eval/run_eval.calibrate() on the same machine, measured on GitHub-hosted runners (the Search speed step of ci.yml prints it). CI fails above 1.5 times this.",
  "distractors": 500,
- "p95_units": 2.37
+ "p95_units": 3.32
 }
