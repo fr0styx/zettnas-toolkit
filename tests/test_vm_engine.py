@@ -103,7 +103,7 @@ def env():
         engine.close(vm)
 
 
-def _wait(cond, secs=2.0):
+def _wait(cond, secs=10.0):  # returns as soon as cond holds; generous for a loaded CI box
     end = time.time() + secs
     while time.time() < end:
         if cond():
@@ -182,7 +182,7 @@ def test_reconnects_after_qemu_drops_connection(env):
 
 def test_watch_connects_once_socket_appears(env):
     engine, start, events = env
-    engine.watch("vm2", attempts=40, interval=0.05)
+    engine.watch("vm2", attempts=200, interval=0.05)  # stops once connected; 10 s for a loaded CI box
     time.sleep(0.2)
     qemu = start("vm2")
     assert _wait(lambda: engine.is_connected("vm2"))

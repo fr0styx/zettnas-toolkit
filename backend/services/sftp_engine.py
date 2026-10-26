@@ -53,7 +53,7 @@ class SFTPStatus(BaseModel):
     users_count: int
     sidecar_detected: bool = False
     sidecar_status: str = "not_found"
-    config_path: str = SFTP_CONFIG_FILE
+    config_path: str = Field(default_factory=lambda: SFTP_CONFIG_FILE)  # not in the API schema: it depends on DATA_DIR
     quick_connect: str = ""
 
 

@@ -128,7 +128,7 @@ class SambaStatus(BaseModel):
     shares_count: int
     sidecar_detected: bool = False
     sidecar_status: str = "not_found"
-    config_path: str = SAMBA_CONF_FILE
+    config_path: str = Field(default_factory=lambda: SAMBA_CONF_FILE)  # not in the API schema: it depends on the host
     native_samba_active: bool = False
 
 
