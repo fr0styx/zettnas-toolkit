@@ -3,7 +3,7 @@ apprise>=2.0.1
 argon2-cffi>=25.1.0
 cryptography>=50.0.2
 exifread==3.5.1
-fastapi>=0.149.0
+fastapi>=0.161.1
 http-ece>=1.2.1
 httpx>=0.28.1
 ldap3>=2.9.1
@@ -11,8 +11,8 @@ orjson>=3.13.0
 Pillow==13.0.0
 pillow-heif>=1.8.1
 # Video thumbnails: the ffmpeg libraries (HEVC, H.264, VP9, AV1, ProRes), amd64 and arm64 wheels
-av>=19.0.1
-playwright==1.64.0
+av>=19.0.2
+playwright==1.64.1
 PyYAML>=6.0.3
 sigstore==4.5.1
 sqlcipher3==0.6.4
