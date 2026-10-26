@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from backend.config import EVENTS_FILE, logger
-from backend.fsutil import atomic_write_json
+from backend.fsutil import CORRUPT_LISTENERS, atomic_write_json
 
 
 def _fan_tracker(now: float) -> dict[str, dict[str, float]]:
@@ -234,3 +234,15 @@ def add_event(level, title, message, details=None):
             atomic_write_json(EVENTS_FILE, events_to_persist)
         except OSError as e:
             logger.warning(f"Failed to save events: {e}")
+
+
+def _record_damaged_file(path: str, dest: str) -> None:
+    add_event(
+        "error",
+        "Damaged settings file",
+        f"{os.path.basename(path)} could not be read and was set aside as {os.path.basename(dest)}; "
+        "its defaults are used until you restore it from a backup.",
+    )
+
+
+CORRUPT_LISTENERS.append(_record_damaged_file)

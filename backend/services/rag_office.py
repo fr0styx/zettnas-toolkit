@@ -7,6 +7,7 @@ cannot expand into gigabytes.
 
 import email
 import email.policy
+import html.parser
 import mailbox
 import posixpath
 import re
@@ -16,6 +17,31 @@ from typing import Any
 
 from backend.config import logger
 from backend.logging_config import sanitize_string
+
+
+class _HTMLTextExtractor(html.parser.HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self._Parts: list[str] = []
+        self._skip = False
+
+    def handle_starttag(self, tag: str, attrs: Any) -> None:
+        if tag.lower() in ("script", "style", "noscript"):
+            self._skip = True
+        elif tag.lower() in ("p", "div", "br", "li", "h1", "h2", "h3", "h4", "tr"):
+            self._Parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in ("script", "style", "noscript"):
+            self._skip = False
+
+    def handle_data(self, data: str) -> None:
+        if not self._skip and data:
+            self._Parts.append(data)
+
+    def get_text(self) -> str:
+        return "".join(self._Parts)
+
 
 MAX_MEMBER_BYTES = 64 * 1024 * 1024  # one XML part, uncompressed
 MAX_TOTAL_BYTES = 128 * 1024 * 1024  # all parts of one file, uncompressed
@@ -139,8 +165,6 @@ def _odf(zf: zipfile.ZipFile, b: _Budget) -> str:
 
 
 def _epub(zf: zipfile.ZipFile, b: _Budget) -> str:
-    from backend.services.rag_documents import _HTMLTextExtractor
-
     container = _xml(b.read(zf, "META-INF/container.xml"))
     opf_path = None
     if container is not None:
@@ -178,8 +202,6 @@ def _epub(zf: zipfile.ZipFile, b: _Budget) -> str:
 
 
 def _message_text(msg: Any) -> str:
-    from backend.services.rag_documents import _HTMLTextExtractor
-
     head = []
     for h in ("Subject", "From", "To", "Cc", "Date"):
         v = msg.get(h)

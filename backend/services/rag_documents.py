@@ -17,7 +17,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.logging_config import sanitize_string
-from backend.services.rag_office import OFFICE_EXTENSIONS, extract_office_text
+from backend.services.rag_office import OFFICE_EXTENSIONS, _HTMLTextExtractor, extract_office_text  # noqa: F401
 from backend.services.rag_text import (
     _STOPWORDS,
     AUDIO_EXTENSIONS,
@@ -27,30 +27,6 @@ from backend.services.rag_text import (
     binary_ratio,
     looks_like_binary,
 )
-
-
-class _HTMLTextExtractor(html.parser.HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self._Parts: list[str] = []
-        self._skip = False
-
-    def handle_starttag(self, tag: str, attrs: Any) -> None:
-        if tag.lower() in ("script", "style", "noscript"):
-            self._skip = True
-        elif tag.lower() in ("p", "div", "br", "li", "h1", "h2", "h3", "h4", "tr"):
-            self._Parts.append("\n")
-
-    def handle_endtag(self, tag: str) -> None:
-        if tag.lower() in ("script", "style", "noscript"):
-            self._skip = False
-
-    def handle_data(self, data: str) -> None:
-        if not self._skip and data:
-            self._Parts.append(data)
-
-    def get_text(self) -> str:
-        return "".join(self._Parts)
 
 
 def extract_document_text(file_path: str, file_ext: str) -> str:

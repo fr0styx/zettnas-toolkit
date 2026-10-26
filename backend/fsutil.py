@@ -99,6 +99,11 @@ def read_json(path: str, default: Any = None) -> Any:
         return default
 
 
+# Called with (path, dest) when a damaged settings file is set aside. backend.state adds the
+# event; fsutil sits below it and must not import it (ARC-6).
+CORRUPT_LISTENERS: list = []
+
+
 def quarantine_corrupt(path: str) -> str | None:
     """Moves an unreadable settings file aside and records it; returns the new name."""
     dest = f"{path}.corrupt-{time.strftime('%Y%m%d-%H%M%S')}"
@@ -108,17 +113,11 @@ def quarantine_corrupt(path: str) -> str | None:
         logger.warning(f"[fsutil] {path} is unreadable and could not be moved aside", exc_info=True)
         return None
     logger.error(f"[fsutil] {os.path.basename(path)} was not valid JSON; kept as {os.path.basename(dest)}")
-    try:
-        from backend.state import add_event
-
-        add_event(
-            "error",
-            "Damaged settings file",
-            f"{os.path.basename(path)} could not be read and was set aside as {os.path.basename(dest)}; "
-            "its defaults are used until you restore it from a backup.",
-        )
-    except Exception:
-        logger.debug("fsutil: could not record the damaged-file event", exc_info=True)
+    for listener in list(CORRUPT_LISTENERS):
+        try:
+            listener(path, dest)
+        except Exception:
+            logger.debug("fsutil: could not record the damaged-file event", exc_info=True)
     return dest
 
 
