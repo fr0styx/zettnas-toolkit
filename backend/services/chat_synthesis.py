@@ -10,6 +10,7 @@ from typing import (  # noqa: F401
 from backend.services.chat_context import (  # noqa: F401
     _grounding_label,
     _grounding_or_none,
+    estimate_tokens,
 )
 from backend.services.chat_web_tools import (  # noqa: F401
     _clean_complete_snippet,
@@ -920,6 +921,79 @@ def _pct(v: Any) -> str:
     return "unknown" if v is None else f"{v}%"
 
 
+# How much of a person's files a question may put in front of the model (AI-7). Small local
+# models answer better from less, better-chosen text, and the prompt starts sooner.
+EVIDENCE_TOKENS = 2000
+
+
+def cut_to_tokens(text: str, tokens: int) -> str:
+    """The start of text within about `tokens`, ending at a sentence or line where possible."""
+    text = str(text or "").strip()
+    if estimate_tokens(text) <= tokens:
+        return text
+    ratio = len(text) / max(1, estimate_tokens(text))
+    cut = text[: max(1, int(tokens * ratio))]
+    end = max(cut.rfind(". "), cut.rfind("\n"), cut.rfind("。"))
+    if end > len(cut) // 2:
+        cut = cut[: end + 1]
+    return cut.rstrip() + " …"
+
+
+def _document_xml(idx: int, c: dict[str, Any], body: str) -> str:
+    """One retrieved passage as the model sees it, with where it comes from."""
+    doc_title = (c.get("doc_title") or c.get("name") or "Document").strip()
+    file_name = (c.get("name") or c.get("file_name") or "file").strip()
+    canon_path = c.get("path") or c.get("file_path") or ""
+    raw_sc = c.get("score")
+    rel_pct = 90
+    if raw_sc is not None:
+        try:
+            f_sc = float(raw_sc)
+            rel_pct = int(round(f_sc * 100)) if f_sc <= 1.0 else int(f_sc)
+        except (TypeError, ValueError):
+            rel_pct = 90
+    modality = c.get("doc_type") or c.get("source_modality") or "document"
+    line_start = c.get("line_start", 1)
+    line_end = c.get("line_end", line_start)
+    breadcrumb = c.get("breadcrumb") or "General"
+    return (
+        f'<document index="{idx}" title="{_attr(doc_title)}" file="{_attr(file_name)}" path="{_attr(canon_path)}" relevance="{rel_pct}%" modality="{_attr(modality)}" lines="{line_start}-{line_end}">\n'
+        f"[Section: {_as_data(breadcrumb)}]\n"
+        f"{_as_data(body)}\n"
+        f"</document>"
+    )
+
+
+def fit_evidence(citations: list[dict[str, Any]], budget: int = EVIDENCE_TOKENS) -> list[tuple[dict[str, Any], str]]:
+    """The passages for the prompt, best first, within `budget` tokens in all, each counted as it
+    is written (with its title, file, path and section; AI-7).
+
+    Each document keeps its whole section when that fits in what is left, else the passage that
+    matched, else as much of it as fits; documents further down get what remains, and the list
+    stops when there is too little left to be useful.
+    """
+    out: list[tuple[dict[str, Any], str]] = []
+    left = budget
+    for c in citations[:8]:
+        wrapper = estimate_tokens(_document_xml(len(out) + 1, c, ""))
+        if left - wrapper < 80:
+            break
+        full = (
+            c.get("full_parent_context") or c.get("chunk_text") or c.get("parent_text") or c.get("excerpt") or ""
+        ).strip()
+        hit = (c.get("excerpt") or c.get("chunk_text") or "").strip()
+        room = left - wrapper
+        if estimate_tokens(full) <= room:
+            body = full
+        elif hit and estimate_tokens(hit) <= room:
+            body = hit
+        else:
+            body = cut_to_tokens(hit or full, room)
+        out.append((c, body))  # a file with no text is still listed: the model sees that it matched
+        left -= estimate_tokens(body) + wrapper
+    return out
+
+
 def _build_structured_llm_context(tool_results: list[dict[str, Any]]) -> str:
     """
     Builds a compact, human-readable Markdown context block from tool results.
@@ -1039,43 +1113,15 @@ def _build_structured_llm_context(tool_results: list[dict[str, Any]]) -> str:
                 if manifest and manifest.get("outline"):
                     rag_lines.append(f"Folder Structure:\n{_as_data(manifest.get('outline'))}")
 
-                doc_lines: list[str] = [f'<retrieved_documents count="{len(citations)}">']
+                passages = fit_evidence(citations)
+                doc_lines: list[str] = [f'<retrieved_documents count="{len(passages) if citations else 0}">']
                 if citations:
-                    for idx, c in enumerate(citations[:8], start=1):
-                        doc_title = (c.get("doc_title") or c.get("name") or "Document").strip()
-                        file_name = (c.get("name") or c.get("file_name") or "file").strip()
-                        canon_path = c.get("path") or c.get("file_path") or ""
-                        raw_sc = c.get("score")
-                        if raw_sc is not None:
-                            try:
-                                f_sc = float(raw_sc)
-                                rel_pct = int(round(f_sc * 100)) if f_sc <= 1.0 else int(f_sc)
-                            except Exception:
-                                rel_pct = 90
-                        else:
-                            rel_pct = 90
-                        modality = c.get("doc_type") or c.get("source_modality") or "document"
-                        line_start = c.get("line_start", 1)
-                        line_end = c.get("line_end", line_start)
-                        breadcrumb = c.get("breadcrumb") or "General"
-                        body = (
-                            c.get("full_parent_context")
-                            or c.get("chunk_text")
-                            or c.get("parent_text")
-                            or c.get("excerpt")
-                            or ""
-                        ).strip()
-
-                        doc_lines.append(
-                            f'<document index="{idx}" title="{_attr(doc_title)}" file="{_attr(file_name)}" path="{_attr(canon_path)}" relevance="{rel_pct}%" modality="{_attr(modality)}" lines="{line_start}-{line_end}">\n'
-                            f"[Section: {_as_data(breadcrumb)}]\n"
-                            f"{_as_data(body)}\n"
-                            f"</document>"
-                        )
+                    for idx, (c, body) in enumerate(passages, start=1):
+                        doc_lines.append(_document_xml(idx, c, body))
                 elif ctx_text:
                     doc_lines.append(
                         f'<document index="1" title="Aggregated Folder Context" file="folder" path="{_attr(fpath or "")}" relevance="{score}%" modality="folder">\n'
-                        f"{_as_data(ctx_text[:3000])}\n"
+                        f"{_as_data(cut_to_tokens(ctx_text, EVIDENCE_TOKENS))}\n"
                         f"</document>"
                     )
                 doc_lines.append("</retrieved_documents>")

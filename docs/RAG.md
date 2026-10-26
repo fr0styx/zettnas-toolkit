@@ -165,6 +165,11 @@ python -m tests.rag_eval.run_eval --set documents --model embeddinggemma \
 A multi-hop answer counts as right only when it holds every fact it needs (`answer_all`),
 and its sources count only when both files are cited.
 
+On a test NAS with EmbeddingGemma and Llama 3.2 3B, the right file is in the top 5 for every
+question, both files for three of the five multi-hop ones, and 14 of the 17 answers are right
+(`tests/rag_eval/baseline_documents_nightly.json`). Two of the misses are multi-hop: the
+model got only one of the two files it needed.
+
 ### Held-out questions
 
 One query or question in five is held out, fixed by a hash of its id, so adding or
@@ -201,6 +206,15 @@ search the model asks for is refused when it repeats text from your files. When 
 answer contains a Compose file with risky settings (privileged mode, the Docker socket,
 host networking, system folders, raw disks, default passwords) it ends with a note
 listing them.
+
+
+**How much of your files a question uses (AI-7).** At most about 2,000 tokens of passages go
+into the prompt, counted as the model sees them (with each file's title, path and section).
+They are spent best source first: a document keeps its whole section when it fits, else the
+passage that matched, and lower-ranked documents get what is left. Small local models answer
+better from less, better-chosen text, and the answer starts sooner. On the eval files the
+passages stay under this (at most about 1,850 tokens), so it matters for long documents with
+large sections; `tests/test_ai7_evidence_budget.py` checks it on those.
 
 ## Who sees what
 

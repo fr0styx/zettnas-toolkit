@@ -115,7 +115,7 @@
   "id": "docqa-010",
   "kind": "office",
   "lang": "zh",
-  "question": "第三季度的目标是什么？",
+  "question": "年度计划表里第三季度的目标是什么？",
   "relevant": [
    "zh/工作/年度计划.xlsx"
   ],
