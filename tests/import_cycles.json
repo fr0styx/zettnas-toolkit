@@ -47,7 +47,6 @@
  ],
  [
   "backend.api.docker",
-  "backend.api.fs",
   "backend.api.system"
  ],
  [

@@ -1,0 +1,2347 @@
+{
+ "routes": [
+  {
+   "deps": [],
+   "endpoint": "browse",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "dirs_only",
+    "path",
+    "principal"
+   ],
+   "path": "/browse",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_roots",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/roots",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "mkdir",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/mkdir",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_rename",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/rename",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_delete",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/delete",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_conflict_check",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/conflict-check",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_transfer",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/transfer",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_transfer_async",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/transfer/async",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_archive_create",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/archive/create",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope",
+    "rate_limit"
+   ],
+   "endpoint": "fs_archive_extract",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/archive/extract",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_list_transfers",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/transfers",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "fs_transfers_stream",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal",
+    "request"
+   ],
+   "path": "/fs/transfers/stream",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_pause_transfer",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "task_id"
+   ],
+   "path": "/fs/transfers/{task_id}/pause",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_resume_transfer",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "task_id"
+   ],
+   "path": "/fs/transfers/{task_id}/resume",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_cancel_transfer",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "task_id"
+   ],
+   "path": "/fs/transfers/{task_id}/cancel",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_clear_completed_transfers",
+   "methods": [
+    "DELETE"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/transfers/completed",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_checksum",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/checksum",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_folder_size",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/folder-size",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_get_permissions",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "path",
+    "principal"
+   ],
+   "path": "/fs/permissions",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_update_permissions",
+   "methods": [
+    "PUT"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/permissions",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "fs_download",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "path",
+    "principal"
+   ],
+   "path": "/fs/download",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_inbox",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/inbox",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_inbox_upload",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "filename",
+    "principal",
+    "request"
+   ],
+   "path": "/fs/inbox",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_upload",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "filename",
+    "path",
+    "principal",
+    "request"
+   ],
+   "path": "/fs/upload",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_upload_init",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/upload/init",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_upload_chunk",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "chunk_index",
+    "principal",
+    "request",
+    "upload_id"
+   ],
+   "path": "/fs/upload/chunk",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_upload_complete",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/upload/complete",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_search",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "limit",
+    "offset",
+    "path",
+    "principal",
+    "q",
+    "recursive"
+   ],
+   "path": "/fs/search",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_trash_list",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/trash",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_trash_restore",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/trash/restore",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope",
+    "require_confirmation"
+   ],
+   "endpoint": "fs_trash_empty",
+   "methods": [
+    "DELETE"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/trash/empty",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_preview",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "path",
+    "principal"
+   ],
+   "path": "/fs/preview",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_preview_image",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "max_dim",
+    "path",
+    "principal",
+    "thumb"
+   ],
+   "path": "/fs/preview/image",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_media_info",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "path",
+    "principal"
+   ],
+   "path": "/fs/media/info",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_stream_compat",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "path",
+    "principal",
+    "start"
+   ],
+   "path": "/fs/stream/compat",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "fs_stream",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "path",
+    "principal",
+    "request"
+   ],
+   "path": "/fs/stream",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "fs_download_zip",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "paths",
+    "principal"
+   ],
+   "path": "/fs/download-zip",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope",
+    "rate_limit"
+   ],
+   "endpoint": "create_share_link",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/share-links",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope",
+    "rate_limit"
+   ],
+   "endpoint": "create_share_link",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/share-links",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "list_share_links",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/share-links",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "list_share_links",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/share-links",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "revoke_share_link",
+   "methods": [
+    "DELETE"
+   ],
+   "params": [
+    "principal",
+    "token"
+   ],
+   "path": "/share-links/{token}",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "revoke_share_link",
+   "methods": [
+    "DELETE"
+   ],
+   "params": [
+    "principal",
+    "token"
+   ],
+   "path": "/fs/share-links/{token}",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "access_shared_file_with_password",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "info",
+    "request",
+    "token"
+   ],
+   "path": "/shared/{token}",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "access_shared_file_with_password",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "info",
+    "request",
+    "token"
+   ],
+   "path": "/fs/shared/{token}",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "access_shared_file",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "info",
+    "request",
+    "token"
+   ],
+   "path": "/shared/{token}",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [],
+   "endpoint": "access_shared_file",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "info",
+    "request",
+    "token"
+   ],
+   "path": "/fs/shared/{token}",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_list_favorites",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "principal"
+   ],
+   "path": "/fs/favorites",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_add_favorite",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "req"
+   ],
+   "path": "/fs/favorites",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_remove_favorite",
+   "methods": [
+    "DELETE"
+   ],
+   "params": [
+    "path",
+    "principal"
+   ],
+   "path": "/fs/favorites",
+   "response_model": null,
+   "status": null
+  }
+ ],
+ "session": [
+  {
+   "body": {
+    "array": {
+     "available": true,
+     "name": "Main Pool",
+     "path": "<pool>"
+    },
+    "pools": [],
+    "remotes": [],
+    "roots": [
+     "<pool>",
+     "/mnt",
+     "/boot"
+    ],
+    "special": [
+     {
+      "available": true,
+      "icon": "media",
+      "name": "Media",
+      "path": "<pool>/media"
+     },
+     {
+      "available": true,
+      "icon": "trash",
+      "name": "Recycle Bin",
+      "path": "<pool>/.RecycleBin"
+     }
+    ],
+    "status": "ok",
+    "system": [
+     {
+      "accessible": true,
+      "admin_only": true,
+      "name": "Flash Boot (/boot)",
+      "path": "/boot"
+     }
+    ]
+   },
+   "label": "roots",
+   "status": 200
+  },
+  {
+   "body": {
+    "current": "<work>",
+    "dirs": [
+     {
+      "ext": "",
+      "is_dir": true,
+      "is_symlink": false,
+      "mode": "0755",
+      "mtime": "<float>",
+      "name": "..",
+      "path": "<pool>",
+      "size": 0
+     },
+     {
+      "ext": ".txt",
+      "is_dir": false,
+      "is_symlink": false,
+      "mode": "0644",
+      "mtime": "<float>",
+      "name": "a.txt",
+      "path": "<work>/a.txt",
+      "size": 5
+     },
+     {
+      "ext": "",
+      "is_dir": true,
+      "is_symlink": false,
+      "mode": "0755",
+      "mtime": "<float>",
+      "name": "sub",
+      "path": "<work>/sub",
+      "size": 0
+     }
+    ],
+    "roots": [
+     "<pool>",
+     "/mnt",
+     "/boot"
+    ]
+   },
+   "label": "browse",
+   "status": 200
+  },
+  {
+   "body": {
+    "current": "<work>",
+    "dirs": [
+     {
+      "ext": "",
+      "is_dir": true,
+      "is_symlink": false,
+      "mode": "0755",
+      "mtime": "<float>",
+      "name": "..",
+      "path": "<pool>",
+      "size": 0
+     },
+     {
+      "ext": "",
+      "is_dir": true,
+      "is_symlink": false,
+      "mode": "0755",
+      "mtime": "<float>",
+      "name": "sub",
+      "path": "<work>/sub",
+      "size": 0
+     }
+    ],
+    "roots": [
+     "<pool>",
+     "/mnt",
+     "/boot"
+    ]
+   },
+   "label": "browse dirs only",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 403,
+    "detail": "Path is outside the allowed folders.",
+    "error": "forbidden"
+   },
+   "label": "browse outside",
+   "status": 403
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Path does not exist.",
+    "error": "not_found"
+   },
+   "label": "browse missing",
+   "status": 404
+  },
+  {
+   "body": {
+    "path": "<work>/new folder",
+    "status": "ok"
+   },
+   "label": "mkdir",
+   "status": 200
+  },
+  {
+   "body": {
+    "path": "<work>/new folder",
+    "status": "ok"
+   },
+   "label": "mkdir again",
+   "status": 200
+  },
+  {
+   "body": {
+    "status": "ok"
+   },
+   "label": "rename",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Invalid new name",
+    "error": "bad_request"
+   },
+   "label": "rename bad",
+   "status": 400
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Destination already exists",
+    "error": "bad_request"
+   },
+   "label": "rename clash",
+   "status": 400
+  },
+  {
+   "body": {
+    "conflict_count": 0,
+    "conflicts": [],
+    "has_conflict": false
+   },
+   "label": "conflict check",
+   "status": 200
+  },
+  {
+   "body": {
+    "action": "copy",
+    "errors": [],
+    "merged_dirs": 0,
+    "policy": "keep_both",
+    "skipped": 0,
+    "status": "ok",
+    "transferred": 1
+   },
+   "label": "copy keep_both",
+   "status": 200
+  },
+  {
+   "body": {
+    "action": "copy",
+    "errors": [],
+    "merged_dirs": 0,
+    "policy": "overwrite",
+    "skipped": 0,
+    "status": "ok",
+    "transferred": 1
+   },
+   "label": "copy overwrite",
+   "status": 200
+  },
+  {
+   "body": {
+    "action": "copy",
+    "errors": [],
+    "merged_dirs": 0,
+    "policy": "skip",
+    "skipped": 1,
+    "status": "ok",
+    "transferred": 0
+   },
+   "label": "copy skip",
+   "status": 200
+  },
+  {
+   "body": {
+    "action": "copy",
+    "errors": [],
+    "merged_dirs": 0,
+    "policy": "merge",
+    "skipped": 0,
+    "status": "ok",
+    "transferred": 1
+   },
+   "label": "copy merge",
+   "status": 200
+  },
+  {
+   "body": {
+    "action": "move",
+    "errors": [],
+    "merged_dirs": 0,
+    "policy": "merge",
+    "skipped": 0,
+    "status": "ok",
+    "transferred": 1
+   },
+   "label": "move",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 403,
+    "detail": "Destination directory is outside allowed folders.",
+    "error": "forbidden"
+   },
+   "label": "transfer outside",
+   "status": 403
+  },
+  {
+   "body": {
+    "status": "ok",
+    "task": {
+     "action": "copy",
+     "keys": [
+      "action",
+      "collision_policy",
+      "completed_at",
+      "created_at",
+      "current_file",
+      "destination",
+      "error",
+      "eta_seconds",
+      "id",
+      "kind",
+      "owner",
+      "percent",
+      "processed_bytes",
+      "processed_files",
+      "result",
+      "sources",
+      "speed_bps",
+      "started_at",
+      "status",
+      "total_bytes",
+      "total_files"
+     ],
+     "kind": "duplicate"
+    },
+    "task_id": "<id0>"
+   },
+   "label": "async duplicate",
+   "status": 200
+  },
+  {
+   "body": [
+    "status",
+    "tasks"
+   ],
+   "label": "transfers after"
+  },
+  {
+   "body": {
+    "cleared_count": 0,
+    "status": "ok"
+   },
+   "label": "clear transfers",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Task not found or cannot be paused",
+    "error": "not_found"
+   },
+   "label": "pause unknown",
+   "status": 404
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Task not found or cannot be cancelled",
+    "error": "not_found"
+   },
+   "label": "cancel unknown",
+   "status": 404
+  },
+  {
+   "body": {
+    "status": "ok",
+    "task": {
+     "action": "archive_create",
+     "keys": [
+      "action",
+      "collision_policy",
+      "completed_at",
+      "created_at",
+      "current_file",
+      "destination",
+      "error",
+      "eta_seconds",
+      "id",
+      "kind",
+      "owner",
+      "percent",
+      "processed_bytes",
+      "processed_files",
+      "result",
+      "sources",
+      "speed_bps",
+      "started_at",
+      "status",
+      "total_bytes",
+      "total_files"
+     ],
+     "kind": "archive_create"
+    },
+    "task_id": "<id1>"
+   },
+   "label": "archive zip",
+   "status": 200
+  },
+  {
+   "body": {
+    "status": "ok",
+    "task": {
+     "action": "archive_create",
+     "keys": [
+      "action",
+      "collision_policy",
+      "completed_at",
+      "created_at",
+      "current_file",
+      "destination",
+      "error",
+      "eta_seconds",
+      "id",
+      "kind",
+      "owner",
+      "percent",
+      "processed_bytes",
+      "processed_files",
+      "result",
+      "sources",
+      "speed_bps",
+      "started_at",
+      "status",
+      "total_bytes",
+      "total_files"
+     ],
+     "kind": "archive_create"
+    },
+    "task_id": "<id2>"
+   },
+   "label": "archive tar.gz",
+   "status": 200
+  },
+  {
+   "body": {
+    "status": "ok",
+    "task": {
+     "action": "archive_extract",
+     "keys": [
+      "action",
+      "collision_policy",
+      "completed_at",
+      "created_at",
+      "current_file",
+      "destination",
+      "error",
+      "eta_seconds",
+      "id",
+      "kind",
+      "owner",
+      "percent",
+      "processed_bytes",
+      "processed_files",
+      "result",
+      "sources",
+      "speed_bps",
+      "started_at",
+      "status",
+      "total_bytes",
+      "total_files"
+     ],
+     "kind": "archive_extract"
+    },
+    "task_id": "<id3>"
+   },
+   "label": "extract",
+   "status": 200
+  },
+  {
+   "body": {
+    "ext": "",
+    "hex_dump": [
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>",
+     "<str>"
+    ],
+    "name": "pack",
+    "path": "<work>/pack",
+    "size": 317,
+    "status": "ok",
+    "type": "hex"
+   },
+   "label": "preview zip",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Archive file not found or outside allowed folders.",
+    "error": "not_found"
+   },
+   "label": "extract missing",
+   "status": 404
+  },
+  {
+   "body": {
+    "algorithm": "sha256",
+    "checksum": "<id4>",
+    "path": "<work>/a.txt",
+    "size": 5,
+    "status": "ok"
+   },
+   "label": "checksum sha256",
+   "status": 200
+  },
+  {
+   "body": {
+    "algorithm": "md5",
+    "checksum": "<id5>",
+    "path": "<work>/a.txt",
+    "size": 5,
+    "status": "ok"
+   },
+   "label": "checksum md5",
+   "status": 200
+  },
+  {
+   "body": {
+    "algorithm": "sha1",
+    "checksum": "<id6>",
+    "path": "<work>/a.txt",
+    "size": 5,
+    "status": "ok"
+   },
+   "label": "checksum sha1",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Cannot compute checksum of a directory",
+    "error": "bad_request"
+   },
+   "label": "checksum of a folder",
+   "status": 400
+  },
+  {
+   "body": {
+    "cached": false,
+    "dirs_count": 4,
+    "files_count": 7,
+    "is_standby": false,
+    "path": "<work>",
+    "size": 35,
+    "status": "ok"
+   },
+   "label": "folder size",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Path is not a directory",
+    "error": "bad_request"
+   },
+   "label": "folder size of a file",
+   "status": 400
+  },
+  {
+   "body": {
+    "gid": "<int>",
+    "group": "<str>",
+    "is_dir": false,
+    "mode_human": "-rw-r--r--",
+    "mode_octal": "0644",
+    "owner": "<str>",
+    "path": "<work>/a.txt",
+    "status": "ok",
+    "uid": "<int>"
+   },
+   "label": "permissions",
+   "status": 200
+  },
+  {
+   "body": {
+    "path": "<work>/a.txt",
+    "recursive": false,
+    "status": "ok"
+   },
+   "label": "chmod",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Invalid octal mode string",
+    "error": "bad_request"
+   },
+   "label": "chmod bad",
+   "status": 400
+  },
+  {
+   "body": {
+    "gid": "<int>",
+    "group": "<str>",
+    "is_dir": false,
+    "mode_human": "-rw-r-----",
+    "mode_octal": "0640",
+    "owner": "<str>",
+    "path": "<work>/a.txt",
+    "status": "ok",
+    "uid": "<int>"
+   },
+   "label": "permissions after",
+   "status": 200
+  },
+  {
+   "body": {
+    "text": "alpha"
+   },
+   "disposition": "attachment; filename=\"a.txt\"",
+   "label": "download",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Cannot download a directory",
+    "error": "bad_request"
+   },
+   "label": "download a folder",
+   "status": 400
+  },
+  {
+   "body": {
+    "zip": [
+     "a.txt",
+     "sub/a.txt",
+     "sub/b.txt"
+    ]
+   },
+   "disposition": "attachment; filename=\"download_<ts>.zip\"",
+   "label": "download zip",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "No paths specified",
+    "error": "bad_request"
+   },
+   "label": "download zip empty",
+   "status": 400
+  },
+  {
+   "body": {
+    "message": "File uploaded",
+    "status": "ok"
+   },
+   "label": "upload",
+   "status": 200
+  },
+  {
+   "body": {
+    "chunk_size": 16777216,
+    "status": "ok",
+    "total_chunks": 1,
+    "upload_id": "<id7>"
+   },
+   "label": "upload init",
+   "status": 200
+  },
+  {
+   "body": {
+    "chunk_index": 0,
+    "status": "ok"
+   },
+   "label": "chunk 0",
+   "status": 200
+  },
+  {
+   "body": {
+    "filename": "big.bin",
+    "sha256": "<id8>",
+    "size_bytes": 10,
+    "status": "ok"
+   },
+   "label": "complete",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Upload session not found or expired",
+    "error": "not_found"
+   },
+   "label": "chunk unknown",
+   "status": 404
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Upload session not found or expired",
+    "error": "not_found"
+   },
+   "label": "complete unknown",
+   "status": 404
+  },
+  {
+   "body": {
+    "items": [
+     {
+      "is_dir": false,
+      "mtime": "<float>",
+      "name": "b.txt",
+      "path": "<work>/sub/b.txt",
+      "size": 5
+     },
+     {
+      "is_dir": false,
+      "mtime": "<float>",
+      "name": "b.txt",
+      "path": "<work>/unpacked/sub/b.txt",
+      "size": 5
+     }
+    ],
+    "limit": 50,
+    "offset": 0,
+    "query": "b.txt",
+    "total": "<int>"
+   },
+   "label": "search",
+   "status": 200
+  },
+  {
+   "body": {
+    "items": [],
+    "limit": 50,
+    "offset": 0,
+    "query": "zzzz-nothing",
+    "total": "<int>"
+   },
+   "label": "search none",
+   "status": 200
+  },
+  {
+   "body": {
+    "content": "alpha",
+    "ext": ".txt",
+    "lines_count": 1,
+    "name": "a.txt",
+    "path": "<work>/a.txt",
+    "size": 5,
+    "status": "ok",
+    "truncated": false,
+    "type": "text"
+   },
+   "label": "preview text",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Cannot preview a directory",
+    "error": "bad_request"
+   },
+   "label": "preview folder",
+   "status": 400
+  },
+  {
+   "body": {
+    "text": "alpha"
+   },
+   "label": "preview image of text",
+   "status": 200
+  },
+  {
+   "body": {
+    "text": "alpha"
+   },
+   "label": "stream",
+   "status": 200
+  },
+  {
+   "body": {
+    "text": "lph"
+   },
+   "label": "stream range",
+   "status": 206
+  },
+  {
+   "body": {
+    "code": 415,
+    "detail": "Not a video file",
+    "error": "unsupported_media_type"
+   },
+   "label": "stream compat",
+   "status": 415
+  },
+  {
+   "body": {
+    "message": "Item moved to Recycle Bin",
+    "status": "ok",
+    "trash_id": "<ts>_up.txt"
+   },
+   "label": "delete to trash",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 403,
+    "detail": "Path is outside allowed folders.",
+    "error": "forbidden"
+   },
+   "label": "delete outside",
+   "status": 403
+  },
+  {
+   "body": {
+    "items": [
+     {
+      "deleted_at": "<int>",
+      "id": "<ts>_up.txt",
+      "is_dir": false,
+      "name": "up.txt",
+      "original_path": "<work>/up.txt",
+      "path": "<pool>/.RecycleBin/files/<ts>_up.txt",
+      "root_path": "<pool>",
+      "size": 8
+     }
+    ],
+    "total": "<int>"
+   },
+   "label": "trash",
+   "status": 200
+  },
+  {
+   "body": {
+    "message": "Restored up.txt",
+    "path": "<work>/up.txt",
+    "status": "ok"
+   },
+   "label": "restore",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Item not found in Recycle Bin",
+    "error": "not_found"
+   },
+   "label": "restore unknown",
+   "status": 404
+  },
+  {
+   "body": {
+    "created_at": "<float>",
+    "created_by": "admin",
+    "download_count": 0,
+    "expires_at": null,
+    "filename": "a.txt",
+    "has_password": false,
+    "is_dir": false,
+    "label": "golden",
+    "max_downloads": null,
+    "path": "<work>/a.txt",
+    "token": "<token1>",
+    "url": "/api/fs/shared/<token1>"
+   },
+   "label": "share",
+   "status": 200
+  },
+  {
+   "body": {
+    "created_at": "<float>",
+    "created_by": "admin",
+    "download_count": 0,
+    "expires_at": null,
+    "filename": "sub",
+    "has_password": true,
+    "is_dir": true,
+    "label": "sub",
+    "max_downloads": null,
+    "path": "<work>/sub",
+    "token": "<token2>",
+    "url": "/api/fs/shared/<token2>"
+   },
+   "label": "share folder with password",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 403,
+    "detail": "Path is outside the allowed folders.",
+    "error": "forbidden"
+   },
+   "label": "share outside",
+   "status": 403
+  },
+  {
+   "body": 2,
+   "label": "share links",
+   "status": 200
+  },
+  {
+   "body": {
+    "download_count": 0,
+    "expires_at": null,
+    "filename": "a.txt",
+    "has_password": false,
+    "is_dir": false,
+    "label": "golden",
+    "max_downloads": null,
+    "size_bytes": 5,
+    "token": "<token1>"
+   },
+   "label": "shared info",
+   "status": 200
+  },
+  {
+   "body": {
+    "text": "alpha"
+   },
+   "disposition": "inline; filename=\"a.txt\"",
+   "label": "shared file",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 401,
+    "detail": "Password required to access this share",
+    "error": "unauthorized"
+   },
+   "label": "shared needs password",
+   "status": 401
+  },
+  {
+   "body": {
+    "code": 401,
+    "detail": "Incorrect password for this share link",
+    "error": "unauthorized"
+   },
+   "label": "shared wrong password",
+   "status": 401
+  },
+  {
+   "body": {
+    "zip": [
+     "sub/a.txt",
+     "sub/b.txt"
+    ]
+   },
+   "disposition": "attachment; filename=\"sub.zip\"",
+   "label": "shared zip",
+   "status": 200
+  },
+  {
+   "body": {
+    "download_count": 1,
+    "expires_at": null,
+    "filename": "sub",
+    "has_password": true,
+    "is_dir": true,
+    "label": "sub",
+    "max_downloads": null,
+    "size_bytes": 0,
+    "token": "<token2>"
+   },
+   "label": "shared header password",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Share link not found or revoked",
+    "error": "not_found"
+   },
+   "label": "shared unknown",
+   "status": 404
+  },
+  {
+   "body": {
+    "revoked": "<token1>",
+    "status": "ok"
+   },
+   "label": "revoke",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Share link not found or revoked",
+    "error": "not_found"
+   },
+   "label": "shared revoked",
+   "status": 404
+  },
+  {
+   "body": {
+    "code": 404,
+    "detail": "Share link not found",
+    "error": "not_found"
+   },
+   "label": "revoke unknown",
+   "status": 404
+  },
+  {
+   "body": {
+    "favorites": [
+     {
+      "name": "<wf>",
+      "path": "<work>"
+     }
+    ],
+    "status": "ok"
+   },
+   "label": "favorite",
+   "status": 200
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Only folders inside the browsable locations can be favorites.",
+    "error": "bad_request"
+   },
+   "label": "favorite file",
+   "status": 400
+  },
+  {
+   "body": {
+    "code": 400,
+    "detail": "Only folders inside the browsable locations can be favorites.",
+    "error": "bad_request"
+   },
+   "label": "favorite outside",
+   "status": 400
+  },
+  {
+   "body": {
+    "favorites": [
+     {
+      "available": true,
+      "name": "<wf>",
+      "path": "<work>"
+     }
+    ]
+   },
+   "label": "favorites",
+   "status": 200
+  },
+  {
+   "body": {
+    "favorites": [],
+    "status": "ok"
+   },
+   "label": "unfavorite",
+   "status": 200
+  },
+  {
+   "body": {
+    "path": "<inbox>"
+   },
+   "label": "inbox",
+   "status": 200
+  },
+  {
+   "body": {
+    "name": "photo.jpg",
+    "path": "<inbox>/photo.jpg",
+    "status": "ok"
+   },
+   "label": "inbox upload",
+   "status": 200
+  },
+  {
+   "body": {
+    "name": "passwd",
+    "path": "<inbox>/passwd",
+    "status": "ok"
+   },
+   "label": "inbox escape",
+   "status": 200
+  },
+  {
+   "body": {
+    "purged_count": 0,
+    "status": "ok"
+   },
+   "label": "trash empty",
+   "status": 200
+  },
+  {
+   "body": {
+    "current": "<work>",
+    "dirs": [
+     {
+      "ext": "",
+      "is_dir": true,
+      "is_symlink": false,
+      "mode": "0755",
+      "mtime": "<float>",
+      "name": "..",
+      "path": "<pool>",
+      "size": 0
+     },
+     {
+      "ext": ".txt",
+      "is_dir": false,
+      "is_symlink": false,
+      "mode": "0644",
+      "mtime": "<float>",
+      "name": "a copy.txt",
+      "path": "<work>/a copy.txt",
+      "size": 5
+     },
+     {
+      "ext": ".txt",
+      "is_dir": false,
+      "is_symlink": false,
+      "mode": "0644",
+      "mtime": "<float>",
+      "name": "a.txt",
+      "path": "<work>/a.txt",
+      "size": 5
+     },
+     {
+      "ext": ".bin",
+      "is_dir": false,
+      "is_symlink": false,
+      "mode": "0644",
+      "mtime": "<float>",
+      "name": "big.bin",
+      "path": "<work>/big.bin",
+      "size": 10
+     },
+     {
+      "ext": "",
+      "is_dir": true,
+      "is_symlink": false,
+      "mode": "0755",
+      "mtime": "<float>",
+      "name": "sub",
+      "path": "<work>/sub",
+      "size": 0
+     },
+     {
+      "ext": "",
+      "is_dir": true,
+      "is_symlink": false,
+      "mode": "0755",
+      "mtime": "<float>",
+      "name": "unpacked",
+      "path": "<work>/unpacked",
+      "size": 0
+     },
+     {
+      "ext": ".txt",
+      "is_dir": false,
+      "is_symlink": false,
+      "mode": "0644",
+      "mtime": "<float>",
+      "name": "up.txt",
+      "path": "<work>/up.txt",
+      "size": 8
+     }
+    ],
+    "roots": [
+     "<pool>",
+     "/mnt",
+     "/boot"
+    ]
+   },
+   "label": "browse at the end",
+   "status": 200
+  },
+  {
+   "body": [
+    [
+     "a copy.txt",
+     5
+    ],
+    [
+     "a.txt",
+     5
+    ],
+    [
+     "big.bin",
+     10
+    ],
+    [
+     "up.txt",
+     8
+    ],
+    [
+     "sub/a.txt",
+     5
+    ],
+    [
+     "sub/b.txt",
+     5
+    ],
+    [
+     "unpacked/a.txt",
+     5
+    ],
+    [
+     "unpacked/sub/a.txt",
+     5
+    ],
+    [
+     "unpacked/sub/b.txt",
+     5
+    ]
+   ],
+   "label": "files at the end"
+  }
+ ],
+ "surface": {
+  "ArchiveCreateRequest": {
+   "class": [
+    "archive_name",
+    "destination_dir",
+    "format",
+    "sources"
+   ]
+  },
+  "ArchiveExtractRequest": {
+   "class": [
+    "archive_path",
+    "destination_dir"
+   ]
+  },
+  "ChecksumRequest": {
+   "class": [
+    "algorithm",
+    "path"
+   ]
+  },
+  "CreateShareLinkRequest": {
+   "class": [
+    "expires_hours",
+    "label",
+    "max_downloads",
+    "password",
+    "path"
+   ]
+  },
+  "DeleteRequest": {
+   "class": [
+    "path"
+   ]
+  },
+  "FavoriteRequest": {
+   "class": [
+    "name",
+    "path"
+   ]
+  },
+  "FolderSizeRequest": {
+   "class": [
+    "force_wake",
+    "path"
+   ]
+  },
+  "FsAsyncTransferRequest": {
+   "class": [
+    "action",
+    "collision_policy",
+    "destination_dir",
+    "kind",
+    "sources",
+    "target_names"
+   ]
+  },
+  "FsConflictCheckRequest": {
+   "class": [
+    "destination_dir",
+    "sources"
+   ]
+  },
+  "FsTransferRequest": {
+   "class": [
+    "action",
+    "collision_policy",
+    "destination_dir",
+    "sources"
+   ]
+  },
+  "PermissionsUpdateRequest": {
+   "class": [
+    "group",
+    "mode_octal",
+    "owner",
+    "path",
+    "recursive"
+   ]
+  },
+  "RenameRequest": {
+   "class": [
+    "new_name",
+    "path"
+   ]
+  },
+  "SHARE_ZIP_LIMIT": {
+   "value": 5368709120
+  },
+  "SHARE_ZIP_MAX_RUNNING": {
+   "value": 2
+  },
+  "SHARE_ZIP_SLOT_TTL": {
+   "value": 21600
+  },
+  "TrashRestoreRequest": {
+   "class": [
+    "item_id",
+    "target_path"
+   ]
+  },
+  "UPLOAD_CHUNK_SIZE": {
+   "value": 16777216
+  },
+  "UPLOAD_FREE_FLOOR": {
+   "value": 1073741824
+  },
+  "UPLOAD_SESSION_TTL": {
+   "value": 86400
+  },
+  "UploadCompleteRequest": {
+   "class": [
+    "expected_sha256",
+    "upload_id"
+   ]
+  },
+  "UploadInitRequest": {
+   "class": [
+    "chunk_size",
+    "destination_dir",
+    "filename",
+    "path",
+    "total_chunks",
+    "total_size"
+   ]
+  },
+  "_MAX_FAVORITES": {
+   "value": 50
+  },
+  "_ZipSink": {
+   "class": [
+    "flush",
+    "take",
+    "tell",
+    "write"
+   ]
+  },
+  "_assert_task_owner": {
+   "function": "(task_id: str, principal: backend.auth.AuthenticatedPrincipal | None) -> None"
+  },
+  "_check_share_rate_limit": {
+   "async": "(ip: str)"
+  },
+  "_contained": {
+   "function": "(path, must_exist=True)"
+  },
+  "_do_mkdir": {
+   "function": "(path: str)"
+  },
+  "_expire_uploads": {
+   "async": "() -> None"
+  },
+  "_extract_image_metadata": {
+   "function": "(file_path: str) -> dict"
+  },
+  "_favorites_file": {
+   "function": "() -> str"
+  },
+  "_favorites_key": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal | None) -> str"
+  },
+  "_folder_size_capped": {
+   "function": "(folder: str, limit: int) -> int"
+  },
+  "_get_client_ip": {
+   "function": "(request: starlette.requests.Request) -> str"
+  },
+  "_handle_browse_logic": {
+   "function": "(path: str, dirs_only: bool, principal: backend.auth.AuthenticatedPrincipal | None = None)"
+  },
+  "_handle_browse_logic_unfiltered": {
+   "function": "(path: str, dirs_only: bool, principal: backend.auth.AuthenticatedPrincipal | None = None)"
+  },
+  "_load_favorites": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal | None) -> list[dict[str, str]]"
+  },
+  "_load_share_links": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "_observe": {
+   "function": "(kind: str, path: str, principal: Any, new_path: str = '') -> None"
+  },
+  "_record_failed_share_attempt": {
+   "async": "(ip: str)"
+  },
+  "_release_share_zip_slot": {
+   "function": "(slot: str) -> None"
+  },
+  "_reset_share_rate_limit": {
+   "async": "(ip: str)"
+  },
+  "_safe_fs_target": {
+   "function": "(req_path: str)"
+  },
+  "_save_favorites": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal | None, items: list[dict[str, str]]) -> None"
+  },
+  "_save_share_links": {
+   "function": "(links: dict[str, typing.Any]) -> None"
+  },
+  "_scan_remote_dir_isolated": {
+   "function": "(real: str, dirs_only: bool) -> list[dict[str, typing.Any]]"
+  },
+  "_serve_shared_item": {
+   "async": "(token: str, request: starlette.requests.Request, info: bool, provided_pwd: str)"
+  },
+  "_share_creator_can_read": {
+   "function": "(created_by: str | None, real_target: str) -> bool"
+  },
+  "_share_zip_slot": {
+   "function": "() -> str | None"
+  },
+  "_stream_folder_zip": {
+   "function": "(folder: str, slot: str = '')"
+  },
+  "_task_owner_filter": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal | None) -> str | None"
+  },
+  "_user_file_headers": {
+   "function": "(media_type: str | None) -> dict[str, str]"
+  },
+  "access_shared_file": {
+   "async": "(token: str, request: starlette.requests.Request, info: bool = False)"
+  },
+  "access_shared_file_with_password": {
+   "async": "(token: str, request: starlette.requests.Request, info: bool = False)"
+  },
+  "browse": {
+   "async": "(path: str = '', dirs_only: str = '0', principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "create_share_link": {
+   "async": "(req: CreateShareLinkRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_add_favorite": {
+   "function": "(req: FavoriteRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_archive_create": {
+   "async": "(req: ArchiveCreateRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_archive_extract": {
+   "async": "(req: ArchiveExtractRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_cancel_transfer": {
+   "function": "(task_id: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_checksum": {
+   "async": "(req: ChecksumRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_clear_completed_transfers": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_conflict_check": {
+   "async": "(req: FsConflictCheckRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_delete": {
+   "async": "(req: DeleteRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_download": {
+   "function": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_download_zip": {
+   "function": "(paths: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_folder_size": {
+   "async": "(req: FolderSizeRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_get_permissions": {
+   "function": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_inbox": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_inbox_upload": {
+   "async": "(request: starlette.requests.Request, filename: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_list_favorites": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_list_transfers": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_media_info": {
+   "async": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_pause_transfer": {
+   "function": "(task_id: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_preview": {
+   "async": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_preview_image": {
+   "async": "(path: str, thumb: int | None = None, max_dim: int | None = None, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_remove_favorite": {
+   "function": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_rename": {
+   "async": "(req: RenameRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_resume_transfer": {
+   "function": "(task_id: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_roots": {
+   "async": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_search": {
+   "async": "(q: str, path: str | None = None, limit: int = 50, offset: int = 0, recursive: bool = True, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_stream": {
+   "function": "(path: str, request: starlette.requests.Request, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_stream_compat": {
+   "function": "(path: str, start: float = 0.0, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_transfer": {
+   "async": "(req: FsTransferRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_transfer_async": {
+   "async": "(req: FsAsyncTransferRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_transfers_stream": {
+   "async": "(request: starlette.requests.Request, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_trash_empty": {
+   "async": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_trash_list": {
+   "async": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_trash_restore": {
+   "async": "(req: TrashRestoreRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_update_permissions": {
+   "async": "(req: PermissionsUpdateRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_upload": {
+   "async": "(request: starlette.requests.Request, path: str, filename: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_upload_chunk": {
+   "async": "(request: starlette.requests.Request, upload_id: str, chunk_index: int, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_upload_complete": {
+   "async": "(req: UploadCompleteRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "fs_upload_init": {
+   "async": "(req: UploadInitRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "list_share_links": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "mkdir": {
+   "function": "(req: backend.models.schemas.MkdirRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  },
+  "revoke_share_link": {
+   "async": "(token: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+  }
+ }
+}

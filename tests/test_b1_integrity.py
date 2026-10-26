@@ -117,7 +117,7 @@ def test_folder_downloads_are_limited_to_two_at_once(client, auth_headers, updir
     with open(os.path.join(updir, "a.txt"), "w") as f:
         f.write("a")
     token = client.post("/api/fs/share-links", json={"path": updir}, headers=auth_headers).json()["token"]
-    monkeypatch.setattr(fs_api, "_SHARE_ZIP_ACTIVE", {"x": 9e18, "y": 9e18})
+    monkeypatch.setattr(fs_api.share_links, "_SHARE_ZIP_ACTIVE", {"x": 9e18, "y": 9e18})
     r = client.get(f"/api/fs/shared/{token}")
     assert r.status_code == 429
 
@@ -130,7 +130,7 @@ def test_a_failed_revoke_is_reported(client, auth_headers, updir, monkeypatch):
     def broken(*a, **k):
         raise OSError("disk full")
 
-    monkeypatch.setattr(fs_api, "atomic_write_json", broken)
+    monkeypatch.setattr(fs_api.share_links, "atomic_write_json", broken)
     r = client.delete(f"/api/fs/share-links/{token}", headers=auth_headers)
     assert r.status_code == 500
 

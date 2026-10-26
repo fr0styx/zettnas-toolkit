@@ -4,7 +4,7 @@ import os
 
 
 def test_inbox_upload_never_overwrites(client, auth_headers, paths, monkeypatch):
-    from backend.api import fs
+    from backend.api.files import uploads as fs  # the inbox lives here since ARC-5
 
     inbox = os.path.join(paths["pool"], "homes", "admin", "Inbox")
     monkeypatch.setattr(fs, "_inbox_dir", lambda principal: inbox)

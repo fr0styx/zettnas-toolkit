@@ -149,7 +149,7 @@ def test_share_user_permissions_and_restrictions(client: TestClient):
     share_headers = {"Authorization": f"Bearer {share_token}"}
 
     # 1. Allowed: Folder creation in share (shares:user_write)
-    with patch("backend.api.system._do_mkdir", return_value={"status": "ok"}):
+    with patch("backend.api.files.browse._do_mkdir", return_value={"status": "ok"}):
         res = client.post("/api/mkdir", headers=share_headers, json={"path": "photos"})
         assert res.status_code == 200
 

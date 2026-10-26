@@ -12,7 +12,8 @@ def test_link_ends_when_its_creator_is_disabled(client, monkeypatch, tmp_path):
     home = tmp_path / "pool" / "homes" / name
     home.mkdir(parents=True)
     (home / "doc.txt").write_text("dummy")
-    monkeypatch.setattr(fs_api, "ALLOWED_BROWSE_ROOTS", [str(tmp_path / "pool")])
+    for mod in (fs_api, fs_api.common, fs_api.share_links):  # each module of the file API reads it (ARC-5)
+        monkeypatch.setattr(mod, "ALLOWED_BROWSE_ROOTS", [str(tmp_path / "pool")])
     monkeypatch.setattr("backend.config.POOL_PATH", str(tmp_path / "pool"))
     user = create_user(name, name, "GoodPass123!", role_id="storage_admin")
     tok = client.post("/api/auth/login", json={"username": name, "password": "GoodPass123!"}).json()["token"]
