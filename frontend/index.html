@@ -1964,7 +1964,7 @@
 
         <div class="remote-form-section">
           <label for="new-remote-name" class="remote-section-label">2. REMOTE NAME (Local Identifier)</label>
-          <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" style="width: 100%;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
+          <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" data-i18n-placeholder="ph.remote_name" style="width: 100%;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
           <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 4px;">Will be mounted to: <code style="color: var(--zn-text-accent); font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
         </div>
 
@@ -2026,7 +2026,7 @@
 
       <div id="sideload-input-paste-wrap" style="display: none;">
         <label for="sideload-content-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="catalog.sideload_yaml_label">Or Paste YAML / JSON</label>
-        <textarea id="sideload-content-input" rows="7" class="tz-select-input" placeholder="services:&#10;  app:&#10;    image: alpine:latest&#10;    ports:&#10;      - '8080:80'" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: monospace; resize: vertical;"></textarea>
+        <textarea id="sideload-content-input" rows="7" class="tz-select-input" placeholder="services:&#10;  app:&#10;    image: alpine:latest&#10;    ports:&#10;      - '8080:80'" data-sample style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs); font-family: monospace; resize: vertical;"></textarea>
       </div>
 
       <button type="button" id="btn-sideload-inspect" class="btn-pill-toggle" style="align-self: flex-start; background: rgba(14,165,233,0.15); color: var(--zn-text-accent); border: 1px solid rgba(14,165,233,0.3);">

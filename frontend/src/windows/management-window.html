@@ -1459,7 +1459,7 @@
                 <!-- Custom IANA Input -->
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                   <label for="tz-custom-input" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); white-space: nowrap;">Custom IANA Timezone:</label>
-                  <input type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" style="flex: 1; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+                  <input type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" data-i18n-placeholder="ph.timezone" style="flex: 1; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
                   <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="margin: 0;">Apply</button>
                 </div>
 
@@ -4873,7 +4873,7 @@
     <div class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div>
         <label for="net-docker-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_name_label">Network Name</label>
-        <input type="text" id="net-docker-name-input" class="tz-text-input" placeholder="e.g. homelab_isolated, iot_net" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
+        <input type="text" id="net-docker-name-input" class="tz-text-input" placeholder="e.g. homelab_isolated, iot_net" data-i18n-placeholder="ph.docker_network_name" maxlength="64" style="width: 100%; box-sizing: border-box;" autocomplete="off" />
       </div>
       <div>
         <label for="net-docker-driver-select" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="net.docker_driver_label">Driver</label>
@@ -5306,7 +5306,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
           <label for="create-pool-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">POOL NAME</label>
-          <input type="text" id="create-pool-name" class="tz-select-input" placeholder="e.g. vault, ark, data" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+          <input type="text" id="create-pool-name" class="tz-select-input" placeholder="e.g. vault, archive, data" data-i18n-placeholder="ph.pool_name" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
         </div>
         <div>
           <label for="create-pool-fs" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">FILESYSTEM</label>
@@ -5381,7 +5381,7 @@
 
       <div>
         <label for="rename-pool-new-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;" data-i18n="storage.new_pool_name">NEW POOL NAME</label>
-        <input type="text" id="rename-pool-new-name" class="tz-select-input" placeholder="e.g. storage2, vault_fast" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+        <input type="text" id="rename-pool-new-name" class="tz-select-input" placeholder="e.g. storage2, vault_fast" data-i18n-placeholder="ph.new_pool_name" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
       </div>
 
       <!-- Docker Bindings Compatibility Safety Alert -->
@@ -5419,7 +5419,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
           <label for="create-share-name" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SHARE NAME</label>
-          <input type="text" id="create-share-name" class="tz-select-input" placeholder="e.g. vault, media, photos" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
+          <input type="text" id="create-share-name" class="tz-select-input" placeholder="e.g. vault, media, photos" data-i18n-placeholder="ph.dataset_name" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" required pattern="^[a-zA-Z0-9_\-\.]{1,32}$" />
         </div>
         <div>
           <label for="create-share-security" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SECURITY ACCESS</label>
@@ -5514,7 +5514,7 @@
 
         <div>
           <label for="create-share-nfs-clients" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_clients_label">Allowed Clients (CIDR / Host)</label>
-          <input type="text" id="create-share-nfs-clients" value="*" placeholder="* or 10.244.0.0/16, 192.168.1.0/24" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+          <input type="text" id="create-share-nfs-clients" value="*" placeholder="* or 10.244.0.0/16, 192.168.1.0/24" data-i18n-placeholder="ph.nfs_clients" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
         </div>
       </div>
 
@@ -5545,7 +5545,7 @@
       <div style="background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; padding: 14px;">
         <label for="snap-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 8px;">CREATE INSTANT SNAPSHOT</label>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <input type="text" id="snap-name-input" class="tz-select-input" placeholder="snapshot-name (e.g. backup-daily)" style="flex: 1; min-width: 200px; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <input type="text" id="snap-name-input" class="tz-select-input" placeholder="snapshot-name (e.g. backup-daily)" data-i18n-placeholder="ph.snapshot_name" style="flex: 1; min-width: 200px; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 7px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
           <button type="button" id="btn-take-snapshot-submit" class="btn-pill-toggle is-primary is-small">📸 Take Snapshot</button>
         </div>
       </div>
@@ -5596,7 +5596,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div id="backup-subvolume-wrap">
           <label for="backup-job-subvolume" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Source Share / Subvolume</label>
-          <input type="text" id="backup-job-subvolume" class="tz-select-input" placeholder="e.g. shares, documents" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <input type="text" id="backup-job-subvolume" class="tz-select-input" placeholder="e.g. shares, documents" data-i18n-placeholder="ph.share_folder" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
         <div>
           <label for="backup-job-dest-type" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Destination Pipeline</label>
@@ -5617,7 +5617,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
             <label for="backup-job-remote-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Rclone Remote</label>
-            <input type="text" id="backup-job-remote-name" class="tz-select-input" placeholder="e.g. b2-backup, gdrive" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <input type="text" id="backup-job-remote-name" class="tz-select-input" placeholder="e.g. b2-backup, gdrive" data-i18n-placeholder="ph.cloud_remote" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
           </div>
           <div>
             <label for="backup-job-remote-path" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Remote Bucket / Folder</label>
@@ -5676,11 +5676,11 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
           <label for="repl-source-pool" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Source Pool</label>
-          <input type="text" id="repl-source-pool" class="tz-select-input" placeholder="e.g. data or pool1" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <input type="text" id="repl-source-pool" class="tz-select-input" placeholder="e.g. data or pool1" data-i18n-placeholder="ph.source_pool" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
         <div>
           <label for="repl-source-dataset" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Source Dataset / Subvol</label>
-          <input type="text" id="repl-source-dataset" class="tz-select-input" placeholder="e.g. @ or shares" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <input type="text" id="repl-source-dataset" class="tz-select-input" placeholder="e.g. @ or shares" data-i18n-placeholder="ph.subvolume" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
       </div>
 
@@ -5697,7 +5697,7 @@
         <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
           <div>
             <label for="repl-target-host" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Remote Host / IP</label>
-            <input type="text" id="repl-target-host" class="tz-select-input" placeholder="e.g. 10.100.0.1 or remote.nas" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+            <input type="text" id="repl-target-host" class="tz-select-input" placeholder="e.g. 10.100.0.1 or remote.nas" data-i18n-placeholder="ph.remote_host" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
           </div>
           <div>
             <label for="repl-target-port" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Port</label>
@@ -5713,7 +5713,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
           <label for="repl-target-pool" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Target Pool</label>
-          <input type="text" id="repl-target-pool" class="tz-select-input" placeholder="e.g. backup or zfs-backup" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+          <input type="text" id="repl-target-pool" class="tz-select-input" placeholder="e.g. backup or zfs-backup" data-i18n-placeholder="ph.target_dataset" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
         <div>
           <label for="repl-target-dataset" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Target Dataset</label>
@@ -5760,7 +5760,7 @@
     <form id="create-snapshot-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div>
         <label for="snapshot-subvol-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Target Subvolume / Share</label>
-        <input type="text" id="snapshot-subvol-input" class="tz-select-input" placeholder="e.g. shares, data, media" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
+        <input type="text" id="snapshot-subvol-input" class="tz-select-input" placeholder="e.g. shares, data, media" data-i18n-placeholder="ph.datasets" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
       </div>
       <div>
         <label for="snapshot-custom-name-input" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Custom Snapshot Tag (Optional)</label>

@@ -201,7 +201,7 @@ export function openChannelConfigModal(channel) {
     formHtml = `
       <div style="margin-bottom:12px;">
         <label for="cfg-telegram-token" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">TELEGRAM BOT TOKEN</label>
-        <input type="password" id="cfg-telegram-token" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="123456789:ABCDefgh..." value="${escapeHtml(cfg.telegram_bot_token || '')}">
+        <input type="password" id="cfg-telegram-token" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="123456789:ABCDefgh..." data-sample value="${escapeHtml(cfg.telegram_bot_token || '')}">
       </div>
       <div style="margin-bottom:12px;">
         <label for="cfg-telegram-chat" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">TELEGRAM CHAT ID</label>
@@ -259,7 +259,7 @@ export function openChannelConfigModal(channel) {
       </div>
       <div style="margin-bottom:12px;">
         <label for="cfg-ntfy-token" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">ACCESS TOKEN (Optional)</label>
-        <input type="password" id="cfg-ntfy-token" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="tk_••••••••" value="${escapeHtml(cfg.ntfy_token || '')}">
+        <input type="password" id="cfg-ntfy-token" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="tk_••••••••" data-sample value="${escapeHtml(cfg.ntfy_token || '')}">
       </div>
     `;
   } else if (channel === 'webhook') {

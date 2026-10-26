@@ -1478,7 +1478,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
       if (btnCli) btnCli.classList.remove('active');
       if (resStat) resStat.textContent = '1920 × 1080';
       if (adpStat) {
-        adpStat.textContent = 'VirtIO-GPU';
+        adpStat.textContent = t('vm.display_virtio_gpu', 'VirtIO-GPU');
         adpStat.style.color = '#38bdf8';
       }
       if (titleTxt) titleTxt.textContent = `VM Console: ${consoleWin._vmName || vmName} (KVM GUI)`;

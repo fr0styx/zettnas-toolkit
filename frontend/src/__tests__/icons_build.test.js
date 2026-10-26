@@ -41,6 +41,7 @@ describe('icons at build time', () => {
       expect(built.querySelectorAll('svg.zi, span.zi-dot').length).toBeGreaterThan(5);
       expect(normalise(built)).toBe(normalise(inPage));
     },
+    20000, // the management window is 500 kB, converted twice: slow when the whole suite runs in parallel
   );
 
   it('index.html converts the same as in the page', () => {

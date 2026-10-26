@@ -50,6 +50,7 @@ function hardcodedUi(src, rel = '') {
     const before = src.slice(Math.max(0, m.index - 400), m.index);
     const tag = before.slice(before.lastIndexOf('<')) + src.slice(m.index, src.indexOf('>', m.index));
     if (/\bt\(\s*['"]/.test(m[2])) continue; // a string that calls t() mid-way
+    if (/\sdata-sample\b/.test(tag)) continue; // a sample value, the same in every language
     if (!tag.includes(`data-i18n-${m[1]}`) && visible(m[2])) hit(m[0]);
   }
   for (const m of src.matchAll(UI_ASSIGN)) if (visible(m[2])) hit(m[0]);
