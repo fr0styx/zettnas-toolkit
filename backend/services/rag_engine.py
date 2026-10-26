@@ -172,7 +172,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
 
         # 2. Compute 8x8 luminance perceptual hash (64-bit hex)
         small_gray = rgb_img.resize((8, 8), Image.Resampling.BILINEAR).convert("L")
-        gray_pixels = list(getattr(small_gray, "get_flattened_data", small_gray.getdata)())
+        gray_pixels = list(getattr(small_gray, "get_flattened_data", small_gray.getdata)())  # pyright: ignore[reportArgumentType]
         avg_lum = sum(gray_pixels) / 64.0
         bits = 0
         for px in gray_pixels:
@@ -182,7 +182,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
         # 3. Resize to 64x64 working grid for fast spatial color & scene analysis
         grid_size = 64
         work_img = rgb_img.resize((grid_size, grid_size), Image.Resampling.BILINEAR)
-        pixels = list(getattr(work_img, "get_flattened_data", work_img.getdata)())
+        pixels = list(getattr(work_img, "get_flattened_data", work_img.getdata)())  # pyright: ignore[reportArgumentType]
 
     frame_counts: dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
     center_counts: dict[str, int] = {c: 0 for c in CANONICAL_COLORS}
@@ -373,7 +373,8 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
     # Check PNG/WebP info text chunks (e.g. Title, Description, Comment, OCR, Recipe)
     for k, v in info_dict.items():
         if (
-            isinstance(v, str)
+            isinstance(k, str)
+            and isinstance(v, str)
             and len(v.strip()) >= 3
             and k.lower()
             in (

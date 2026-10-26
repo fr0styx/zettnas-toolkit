@@ -320,6 +320,8 @@ async def start_oauth_session(req: OAuthStartRequest):
             _, err = await asyncio.to_thread(proc.communicate)
             raise HTTPException(status_code=500, detail=f"rclone authorize exited prematurely: {err}")
         try:
+            if proc.stderr is None:
+                break
             line = await asyncio.to_thread(proc.stderr.readline)
             if line:
                 raw_stderr += line

@@ -80,9 +80,8 @@ def installed_models() -> dict[str, Any]:
 
 
 def is_installed(name: str, models: list[dict[str, Any]] | None = None) -> bool:
-    if models is None:
-        models = installed_models().get("models") or []
-    return any(_same(str(m.get("name") or ""), name) for m in models)
+    found = models if models is not None else (installed_models().get("models") or [])
+    return any(_same(str(m.get("name") or ""), name) for m in found)
 
 
 def get_job(job_id: str) -> dict[str, Any] | None:

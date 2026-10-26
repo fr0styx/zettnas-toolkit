@@ -304,11 +304,14 @@ class ZettlabMmioFanController:
         if not self._ensure_mapped():
             return []
         with self._lock:
+            mm = self._mm
+            if mm is None:
+                return []
             try:
                 base = self._page_offset
-                rpm1 = (self._mm[base + self.OFF_FAN1_RPM] << 8) | self._mm[base + self.OFF_FAN1_RPM + 1]
-                rpm2 = (self._mm[base + self.OFF_FAN2_RPM] << 8) | self._mm[base + self.OFF_FAN2_RPM + 1]
-                rpm3 = (self._mm[base + self.OFF_FAN3_RPM] << 8) | self._mm[base + self.OFF_FAN3_RPM + 1]
+                rpm1 = (mm[base + self.OFF_FAN1_RPM] << 8) | mm[base + self.OFF_FAN1_RPM + 1]
+                rpm2 = (mm[base + self.OFF_FAN2_RPM] << 8) | mm[base + self.OFF_FAN2_RPM + 1]
+                rpm3 = (mm[base + self.OFF_FAN3_RPM] << 8) | mm[base + self.OFF_FAN3_RPM + 1]
                 return [rpm1, rpm2, rpm3]
             except Exception as e:
                 logger.warning(f"[FANS-MMIO] Error reading RPM registers: {e}")
@@ -318,15 +321,18 @@ class ZettlabMmioFanController:
         if not self._ensure_mapped():
             return False
         with self._lock:
+            mm = self._mm
+            if mm is None:
+                return False
             try:
                 base = self._page_offset
                 clamped = max(0, min(FAN_MAX_PWM, int(pwm_val)))
                 if channel == 1:
-                    self._mm[base + self.OFF_FAN1_PWM] = clamped
+                    mm[base + self.OFF_FAN1_PWM] = clamped
                 elif channel == 2:
-                    self._mm[base + self.OFF_FAN2_PWM] = clamped
+                    mm[base + self.OFF_FAN2_PWM] = clamped
                 elif channel == 3:
-                    self._mm[base + self.OFF_FAN3_PWM] = clamped
+                    mm[base + self.OFF_FAN3_PWM] = clamped
                 else:
                     return False
                 return True
@@ -356,8 +362,11 @@ class ZettlabMmioFanController:
             if not self._ensure_mapped():
                 return None
             with self._lock:
+                mm = self._mm
+                if mm is None:
+                    return None
                 base = self._page_offset
-                raw_bytes = bytes(self._mm[base : base + 16])
+                raw_bytes = bytes(mm[base : base + 16])
                 rpm1 = (raw_bytes[0] << 8) | raw_bytes[1]
                 pwm1 = raw_bytes[2]
                 rpm2 = (raw_bytes[3] << 8) | raw_bytes[4]

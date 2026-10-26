@@ -286,7 +286,7 @@ class ReplicationEngine:
                 nonlocal total_bytes
                 try:
                     while True:
-                        chunk = p1.stdout.read(65536)
+                        chunk = p1.stdout.read(65536) if p1.stdout else b""
                         if not chunk:
                             break
                         total_bytes += len(chunk)

@@ -344,7 +344,7 @@ def collect_vm_diagnostics() -> dict[str, Any]:
                 try:
                     with open(err_log, encoding="utf-8", errors="replace") as f:
                         lines = f.readlines()
-                        if lines:
+                        if lines and vm_id:
                             recent_errors[vm_id] = [line.strip() for line in lines[-50:]]
                 except Exception:
                     logger.debug("backend.api.vms.collect_vm_diagnostics: ignored error", exc_info=True)

@@ -1062,7 +1062,7 @@ async def audit_folder_endpoint(
     res = await asyncio.to_thread(
         rag.aggregate_folder_context,
         folder_path=validated_path,
-        query=req.query,
+        query=req.query or "",
         mode=req.mode,
         max_tokens=int(req.max_tokens or 4000),
         principal=principal,

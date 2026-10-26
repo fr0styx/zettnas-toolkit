@@ -205,7 +205,7 @@ def topological_sort_stack_containers(
     # Group containers by service
     svc_to_containers: dict[str, list[dict[str, Any]]] = {}
     for c in containers:
-        svc = c.get("service") or c.get("name")
+        svc = str(c.get("service") or c.get("name") or "")
         svc_to_containers.setdefault(svc, []).append(c)
 
     ordered_containers: list[dict[str, Any]] = []

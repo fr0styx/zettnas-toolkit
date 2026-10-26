@@ -677,7 +677,7 @@ VELOCITY_RECHECK_SECS = 600  # temperature/power-on-hours-only changes refresh a
 SPARKLINE_BUCKET_SECS = 7200  # 30 days -> at most 360 sparkline points
 
 
-def query_smart_velocity(dev: str, conn: sqlite3.Connection = None) -> dict:
+def query_smart_velocity(dev: str, conn: sqlite3.Connection | None = None) -> dict:
     """
     Predictive SMART degradation engine:
     Computes rate-of-change velocity over 7-day and 30-day sliding windows,

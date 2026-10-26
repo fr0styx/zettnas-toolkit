@@ -646,6 +646,8 @@ def _read_hid_reports(fd: int, mapping: dict, vid: str, pid: str, hid_name: str)
             buf[0] = rid
             try:
                 # _IOC(3, ord('H'), 0x07, 64) = 0xc0404807
+                if fcntl is None:  # not on Linux: no USB HID reports
+                    return None
                 fcntl.ioctl(fd, 0xC0404807, buf)
                 reports_cache[rid] = buf
             except Exception:

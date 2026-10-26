@@ -190,10 +190,15 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
 
     # 11. Executive Health Assessment
     degraded_disks = [
-        d.get("name") or d.get("device")
+        str(d.get("name") or d.get("device") or "unnamed drive")
         for d in storage_and_smart.get("live_disk_telemetry", [])
-        if d.get("smart_status") in ("degraded", "failing", "error")
-        or (isinstance(d.get("smart"), dict) and d.get("smart", {}).get("status") in ("degraded", "failing", "error"))
+        if isinstance(d, dict)
+        and d.get("smart_status") in ("degraded", "failing", "error")
+        or (
+            isinstance(d, dict)
+            and isinstance(d.get("smart"), dict)
+            and d["smart"].get("status") in ("degraded", "failing", "error")
+        )
     ]
     troubled_containers = docker_diagnostics.get("containers_summary", {}).get("troubled_names", [])
     has_cpu_throttle = kernel_telemetry.get("cpu_telemetry", {}).get("thermal_throttling_detected", False)
@@ -362,10 +367,14 @@ def _build_summary_sync() -> dict[str, Any]:
     standby_count = sum(1 for d in disks if d.get("standby"))
     pools = st.get("pal_storage", {}).get("pools", [])
     degraded_disks = [
-        d.get("name") or d.get("device")
+        str(d.get("name") or d.get("device") or "unnamed drive")
         for d in disks
         if d.get("smart_status") in ("degraded", "failing", "error")
-        or (isinstance(d.get("smart"), dict) and d.get("smart", {}).get("status") in ("degraded", "failing", "error"))
+        or (
+            isinstance(d, dict)
+            and isinstance(d.get("smart"), dict)
+            and d["smart"].get("status") in ("degraded", "failing", "error")
+        )
     ]
 
     # Docker summary

@@ -200,7 +200,7 @@ async def webdav_portal_login(request: Request):
             authenticated = True
             is_admin = user.get("role_id") in ("superadmin", "storage_admin")
 
-    if authenticated:
+    if authenticated and user:
         login_lockout.clear(lock_key)
         role_label = "admin" if is_admin else "user"
         resp = RedirectResponse(url="/webdav/", status_code=303)

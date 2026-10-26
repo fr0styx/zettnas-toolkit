@@ -197,7 +197,7 @@ def _parse_ports_and_webui(
                     break
         webui_url = unraid_webui.replace("[IP]", "[HOST]")
         if target_pub:
-            webui_url = re.sub(r"\[PORT:\d+\]", str(target_pub), webui_url)
+            webui_url = re.sub(r"\[PORT:\d+\]", str(target_pub), webui_url or "")
             primary_port = target_pub
 
     # Heuristic 2: Traefik / Ingress labels (e.g. Host(`example.com`))

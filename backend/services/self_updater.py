@@ -397,12 +397,13 @@ def apply_update_from_helper(
         try:
             from backend.services.data_snapshot import restore_snapshot
 
-            restore_snapshot(restore_from, data_dir)
+            restore_snapshot(restore_from, data_dir or "")
         except Exception as e:
             logger.error(f"[SelfUpdater Helper] Could not restore {restore_from} ({e}); not reverting.")
             from backend.services.data_snapshot import restore_snapshot as _undo
 
-            _undo(snapshot, data_dir)
+            if snapshot and data_dir:
+                _undo(snapshot, data_dir)
             _docker_request("POST", f"/containers/{target}/start")
             write_update_result(data_dir, "not_applied", f"could not restore the earlier data: {e}", to_image=image)
             sys.exit(1)

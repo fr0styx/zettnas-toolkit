@@ -42,9 +42,9 @@ def _safe_name(name):
     return name
 
 
-def _path_for(name):
+def _path_for(name) -> tuple[str | None, str]:
     safe = _safe_name(name)
-    return (safe, os.path.join(WALLPAPERS_DIR, safe)) if safe else (None, None)
+    return (safe, os.path.join(WALLPAPERS_DIR, safe)) if safe else (None, "")
 
 
 def _fail(status, detail):
@@ -68,7 +68,7 @@ def _detect_image_format(data: bytes):
             img.verify()
     except Exception:
         return None
-    return FORMAT_EXT.get(fmt)
+    return FORMAT_EXT.get(fmt or "")
 
 
 def _clean_cache_for(safe: str):

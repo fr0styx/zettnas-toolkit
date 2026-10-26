@@ -297,6 +297,8 @@ def startup_system():
             for vm in vms:
                 if vm.get("autostart") and vm.get("state") != "running":
                     vm_id = vm.get("id")
+                    if not vm_id:
+                        continue
                     if not _is_qemu_process_alive(vm_id):
                         vnc_port = _get_qemu_vnc_port(vms, vm_id)
                         logger.info(f"[VM Autostart] Starting VM '{vm.get('name')}' (ID: {vm_id})...")

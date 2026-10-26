@@ -57,7 +57,7 @@ def resolve_checked(host: str, port: int, context: str = "public") -> tuple[str,
         raise UnsafeURLError(f"Could not resolve {host}") from e
     addrs = []
     for family, _, _, _, sockaddr in infos:
-        ip = ipaddress.ip_address(sockaddr[0].split("%")[0])
+        ip = ipaddress.ip_address(str(sockaddr[0]).split("%")[0])
         if not _ip_allowed(ip, context):
             raise UnsafeURLError(f"{host} resolves to a blocked address ({ip})")
         addrs.append((family, sockaddr[0]))
@@ -82,7 +82,7 @@ class _PinnedHTTPSConnection(http.client.HTTPSConnection):
 
     def connect(self):
         sock = socket.create_connection((self._pinned_ip, self.port), self.timeout)
-        self.sock = self._context.wrap_socket(sock, server_hostname=self.host)
+        self.sock = self._context.wrap_socket(sock, server_hostname=self.host)  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def safe_open(

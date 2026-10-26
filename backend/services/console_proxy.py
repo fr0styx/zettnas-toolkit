@@ -41,6 +41,9 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
                     )
                 return
 
+    if reader is None or writer is None:
+        return
+
     async def forward_tcp_to_ws():
         try:
             while True:
@@ -131,6 +134,9 @@ async def stream_unix_socket_to_websocket(ws: WebSocket, socket_path: str, timeo
                         "backend.services.console_proxy.stream_unix_socket_to_websocket: ignored error", exc_info=True
                     )
                 return
+
+    if reader is None or writer is None:
+        return
 
     async def forward_sock_to_ws():
         try:

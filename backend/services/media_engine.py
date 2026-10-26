@@ -1220,8 +1220,8 @@ def _format_hf_api_item(
     """Converts a raw Hugging Face Hub `/api/models` item into a ZettAI hardware-evaluated model dict."""
     repo_id = str(item.get("id") or item.get("modelId") or "").strip()
     tags = item.get("tags") if isinstance(item.get("tags"), list) else []
-    safetensors_info = item.get("safetensors") if isinstance(item.get("safetensors"), dict) else {}
-    gguf_info = item.get("gguf") if isinstance(item.get("gguf"), dict) else {}
+    safetensors_info: dict[str, Any] = item.get("safetensors") if isinstance(item.get("safetensors"), dict) else {}  # type: ignore[assignment]
+    gguf_info: dict[str, Any] = item.get("gguf") if isinstance(item.get("gguf"), dict) else {}  # type: ignore[assignment]
     safetensors_total = safetensors_info.get("total")
     gguf_total = gguf_info.get("totalFileSize") or gguf_info.get("total") or item.get("totalFileSize")
     pipeline_tag = str(item.get("pipeline_tag") or "text-generation")

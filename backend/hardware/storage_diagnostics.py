@@ -424,14 +424,16 @@ def collect_storage_diagnostics() -> dict[str, Any]:
     try:
         adapter = get_storage_platform()
         caps = adapter.get_capabilities().model_dump()
-        pools = [p.model_dump() for p in adapter.list_pools()]
-        shares = [s.model_dump() for s in adapter.list_shares()]
+        pools = [p.model_dump() if hasattr(p, "model_dump") else dict(p) for p in adapter.list_pools()]
+        shares = [s.model_dump() if hasattr(s, "model_dump") else dict(s) for s in adapter.list_shares()]
         for p in pools:
             pid = p.get("id")
             if pid:
                 try:
                     snaps = adapter.list_snapshots(pid)
-                    snapshots_list.extend([s.model_dump() if hasattr(s, "model_dump") else s for s in snaps])
+                    snapshots_list.extend(
+                        [s.model_dump() if hasattr(s, "model_dump") else s for s in snaps]  # pyright: ignore[reportAttributeAccessIssue]
+                    )
                 except Exception:
                     logger.debug(
                         "backend.hardware.storage_diagnostics.collect_storage_diagnostics: ignored error", exc_info=True

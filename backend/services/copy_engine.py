@@ -61,7 +61,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                     f"{slot_label} Removed",
                     f"{slot_label} was unmounted and removed from slot.",
                 )
-                if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+                if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:
                     logger.info(f"[AUTO-INGEST] Clearing pending ingest for removed card {slot}")
                     Z_STATE.pending_ingest = None
                     Z_STATE.ui_wake.set()
@@ -100,7 +100,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
             # Steady state: card remains inserted (curr_sz > 0 and prev_sz > 0)
             _PREV_MEDIA_SLOTS[slot] = {"size": curr_sz, "dev": curr_dev}
             if slot in _EJECTED_SLOTS:
-                if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+                if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:
                     logger.info(f"[AUTO-INGEST] Clearing pending ingest for ejected card in {slot}")
                     Z_STATE.pending_ingest = None
                     Z_STATE.ui_wake.set()
@@ -124,7 +124,7 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
     )
 
     if not auto_enabled:
-        if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+        if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:
             Z_STATE.pending_ingest = None
             Z_STATE.ui_wake.set()
         logger.debug(f"[AUTO-INGEST] Automatic slot ingest disabled in settings, skipping for {slot}")
@@ -324,7 +324,7 @@ def eject_media_slot(slot: str = "sd"):
 
     _EJECTED_SLOTS.add(slot)
 
-    if getattr(Z_STATE, "pending_ingest", None) and Z_STATE.pending_ingest.get("slot") == slot:
+    if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:
         Z_STATE.pending_ingest = None
         Z_STATE.ui_wake.set()
 

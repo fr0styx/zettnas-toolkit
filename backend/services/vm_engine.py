@@ -44,6 +44,8 @@ class PersistentQmpClient:
         return self._writer is not None and not self._writer.is_closing()
 
     async def _read_json(self) -> dict[str, Any]:
+        if self._reader is None:
+            raise ConnectionError("QMP not connected")
         line = await self._reader.readline()
         if not line:
             raise ConnectionError("QMP connection closed")
@@ -84,7 +86,9 @@ class PersistentQmpClient:
 
     def _safe_event(self, event: str, data: dict[str, Any]) -> None:
         try:
-            self.on_event(self.vm_id, event, data)
+            callback = self.on_event
+            if callback:
+                callback(self.vm_id, event, data)
         except Exception as e:
             logger.debug(f"[QMP-{self.vm_id}] event handler failed for {event}: {e}")
 
@@ -132,9 +136,13 @@ class PersistentQmpClient:
             payload["arguments"] = arguments
         fut = asyncio.get_running_loop().create_future()
         self._pending[seq] = fut
+        writer = self._writer
+        if writer is None:
+            self._pending.pop(seq, None)
+            return {"error": "QMP not connected"}
         try:
-            self._writer.write(json.dumps(payload).encode("utf-8") + b"\n")
-            await self._writer.drain()
+            writer.write(json.dumps(payload).encode("utf-8") + b"\n")
+            await writer.drain()
             return await asyncio.wait_for(fut, timeout)
         except TimeoutError:
             return {"error": f"QMP command '{command}' timed out after {timeout:g}s"}

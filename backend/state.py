@@ -183,6 +183,11 @@ class ZettState:
         self.prev_net: dict[str, Any] = {"time": 0.0, "rx": 0, "tx": 0, "iface": "bond0"}
         self.prev_net_ifaces: dict[str, Any] | None = None  # per-interface samples for the traffic rates
         self.discovered_host_ip: str | None = None  # found once by read_ip
+        self.prev_disk_sectors: dict[str, Any] | None = None  # disk throughput samples (disks.py)
+        self.prev_disk_time: float = 0.0
+        self.disk_throughput: dict[str, Any] = {}
+        self.zone_watchdog_engaged: dict[str, bool] = {}  # per fan zone (fans.py)
+        self.last_monthly_smart: float = 0.0  # when the scheduled SMART tests last started
         self.prev_disk_io: dict[str, Any] = {}
         self.cached_hwmon: Any = None
         self.cached_cpu_temp_path: str | None = None
