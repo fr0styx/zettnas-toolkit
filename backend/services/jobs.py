@@ -197,7 +197,7 @@ def _media_import() -> list[Job]:
 
     if not Z_STATE.copy_active:
         return []
-    p = Z_STATE.copy_progress or {}
+    p = Z_STATE.copy.snapshot()
     total = p.get("total") or 0
     pct = round(100.0 * (p.get("copied") or 0) / total, 1) if total else None
     return [

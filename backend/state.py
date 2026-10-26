@@ -38,6 +38,25 @@ class CopyState:
     abort_flag: bool = False
     pending_ingest: Any = None
 
+    # The copy thread changes progress while the stats loop serialises it for the live view:
+    # both go through these, under the lock (ARC-9), so a reader never sees the dict mid-change.
+    def update(self, **fields: Any) -> None:
+        with self.lock:
+            self.progress.update(fields)
+
+    def add(self, key: str, amount: int | float) -> None:
+        with self.lock:
+            self.progress[key] = self.progress.get(key, 0) + amount
+
+    def start(self, **progress: Any) -> None:
+        with self.lock:
+            self.progress = dict(progress)
+
+    def snapshot(self) -> dict[str, Any]:
+        """A copy of the progress, safe to serialise while the copy runs."""
+        with self.lock:
+            return dict(self.progress)
+
 
 @dataclass
 class FanState:

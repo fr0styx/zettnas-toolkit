@@ -510,7 +510,7 @@ async def copy_one_file(src_f: str, dst_f: str, verify_checksum: bool = True) ->
                 if verify_checksum:
                     hasher_src.update(buf)
                 await fdst.write(buf)
-                Z_STATE.copy_progress["copied"] += len(buf)
+                Z_STATE.copy.add("copied", len(buf))
             await fdst.flush()
             try:
                 os.fdatasync(fdst.fileno())
@@ -555,14 +555,16 @@ async def _do_copy(cfg):
 
     copy_start_ts = time.time()
     err_msg = ""
-    Z_STATE.copy_progress = {
-        "total": 0,
-        "copied": 0,
-        "start": copy_start_ts,
-        "file": "Initializing...",
-        "files_total": 0,
-        "files_done": 0,
-    }
+    Z_STATE.copy.start(
+        **{
+            "total": 0,
+            "copied": 0,
+            "start": copy_start_ts,
+            "file": "Initializing...",
+            "files_total": 0,
+            "files_done": 0,
+        }
+    )
     tmp_mount = False
     mounted_path = None
     try:
@@ -612,7 +614,7 @@ async def _do_copy(cfg):
             raise Exception(f"Destination {dst} is missing or outside the allowed folders.")
         dst_path = real_dst.rstrip("/") + "/"
 
-        Z_STATE.copy_progress["file"] = "Scanning media and EXIF metadata..."
+        Z_STATE.copy.update(file="Scanning media and EXIF metadata...")
         Z_STATE.ui_wake.set()
 
         all_files, collisions = await asyncio.to_thread(build_copy_plan, src_path, dst_path, use_exif)
@@ -623,7 +625,7 @@ async def _do_copy(cfg):
                 Z_STATE.copy_overwrite_choice = collision_rule
             else:
                 Z_STATE.copy_status = "awaiting_confirmation"
-                Z_STATE.copy_progress["file"] = f"{len(collisions)} files already exist in destination."
+                Z_STATE.copy.update(file=f"{len(collisions)} files already exist in destination.")
                 add_event(
                     "warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation."
                 )
@@ -641,11 +643,11 @@ async def _do_copy(cfg):
         skip_existing = bool(collisions) and Z_STATE.copy_overwrite_choice == "skip"
         files_to_copy, total_size = select_files_to_copy(all_files, skip_existing)
 
-        Z_STATE.copy_progress["total"] = total_size
-        Z_STATE.copy_progress["files_total"] = len(files_to_copy)
-        Z_STATE.copy_progress["files_done"] = 0
+        Z_STATE.copy.update(total=total_size)
+        Z_STATE.copy.update(files_total=len(files_to_copy))
+        Z_STATE.copy.update(files_done=0)
         Z_STATE.copy_abort_flag = False
-        Z_STATE.copy_progress["start"] = time.time()
+        Z_STATE.copy.update(start=time.time())
         Z_STATE.copy_status = "copying"
         Z_STATE.ui_wake.set()
 
@@ -653,24 +655,24 @@ async def _do_copy(cfg):
             if Z_STATE.copy_abort_flag:
                 break
             os.makedirs(os.path.dirname(dst_f), exist_ok=True)
-            Z_STATE.copy_progress["file"] = os.path.basename(src_f)
+            Z_STATE.copy.update(file=os.path.basename(src_f))
             try:
                 if not await copy_one_file(src_f, dst_f, verify_checksum):
                     break  # aborted
             except Exception as e:
                 logger.info(f"[ZettNAS] Error copying {src_f}: {e}")
                 raise
-            Z_STATE.copy_progress["files_done"] += 1
+            Z_STATE.copy.add("files_done", 1)
 
         if Z_STATE.copy_abort_flag:
             Z_STATE.copy_status = "aborted"
-            Z_STATE.copy_progress["file"] = "Aborted."
+            Z_STATE.copy.update(file="Aborted.")
             err_msg = "User aborted the copy operation."
             add_event("warning", "Copy Aborted", err_msg)
             raise Exception("Aborted by user.")
         else:
             Z_STATE.copy_status = "success"
-            done_cnt = Z_STATE.copy_progress.get("files_done", 0)
+            done_cnt = Z_STATE.copy.snapshot().get("files_done", 0)
             verified_note = " (SHA-256 verified)" if verify_checksum else ""
             add_event("success", "Copy Completed", f"Successfully copied {done_cnt} files{verified_note}.")
             send_notification(
@@ -680,13 +682,13 @@ async def _do_copy(cfg):
                 event_type="copy",
                 dedup_key="copy_finished",
             )
-            Z_STATE.copy_progress["file"] = "Finished successfully."
+            Z_STATE.copy.update(file="Finished successfully.")
 
     except Exception as e:
         err_msg = str(e)
         logger.info(f"[ZettNAS] Copy failed: {e}")
         Z_STATE.copy_status = "error"
-        Z_STATE.copy_progress["file"] = f"Error: {e}"
+        Z_STATE.copy.update(file=f"Error: {e}")
         add_event("error", "Copy Failed", str(e))
         send_notification(
             title="ZettNAS Alert: Media Ingest Failed",
@@ -708,8 +710,8 @@ async def _do_copy(cfg):
                 ts=int(copy_start_ts),
                 source=src_mode,
                 dest=dst,
-                files_count=Z_STATE.copy_progress.get("files_done", 0),
-                total_bytes=Z_STATE.copy_progress.get("copied", 0),
+                files_count=Z_STATE.copy.snapshot().get("files_done", 0),
+                total_bytes=Z_STATE.copy.snapshot().get("copied", 0),
                 status=Z_STATE.copy_status,
                 checksum_verified=bool(verify_checksum and Z_STATE.copy_status == "success"),
                 duration_sec=time.time() - copy_start_ts,

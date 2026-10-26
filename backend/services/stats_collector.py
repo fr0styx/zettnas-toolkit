@@ -737,7 +737,7 @@ def _build_payload(
         "copy_state": {
             "active": Z_STATE.copy_active,
             "status": Z_STATE.copy_status,
-            "progress": Z_STATE.copy_progress,
+            "progress": Z_STATE.copy.snapshot(),  # a copy: the copy thread keeps changing it (ARC-9)
             "pending_ingest": getattr(Z_STATE, "pending_ingest", None),
         },
         "media_slots": (lambda s: (check_media_slot_transitions(s), s)[1])(read_media_slots()),
