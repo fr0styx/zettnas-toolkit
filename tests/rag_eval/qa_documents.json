@@ -1,0 +1,227 @@
+[
+ {
+  "id": "docqa-001",
+  "kind": "long",
+  "lang": "en",
+  "question": "Which salt does our water softener take?",
+  "relevant": [
+   "en/home/house-handbook.md"
+  ],
+  "answer_any": [
+   "tablet salt",
+   "granulated"
+  ]
+ },
+ {
+  "id": "docqa-002",
+  "kind": "long",
+  "lang": "en",
+  "question": "Where is the storage room key kept?",
+  "relevant": [
+   "en/home/house-handbook.md"
+  ],
+  "answer_any": [
+   "hall cupboard"
+  ]
+ },
+ {
+  "id": "docqa-003",
+  "kind": "long",
+  "lang": "de",
+  "question": "Wie hoch ist die Pauschale für ein Wochenende Rufbereitschaft?",
+  "relevant": [
+   "de/arbeit/betriebsvereinbarung.pdf"
+  ],
+  "answer_any": [
+   "45"
+  ]
+ },
+ {
+  "id": "docqa-004",
+  "kind": "long",
+  "lang": "fr",
+  "question": "Quel soir faut-il sortir les poubelles ?",
+  "relevant": [
+   "fr/maison/reglement-copropriete.docx"
+  ],
+  "answer_any": [
+   "mardi"
+  ]
+ },
+ {
+  "id": "docqa-005",
+  "kind": "office",
+  "lang": "en",
+  "question": "How much did we budget for heating maintenance in 2026?",
+  "relevant": [
+   "en/finance/household-budget-2026.xlsx"
+  ],
+  "answer_any": [
+   "650"
+  ]
+ },
+ {
+  "id": "docqa-006",
+  "kind": "office",
+  "lang": "de",
+  "question": "Welches VLAN nutzen die Kameras?",
+  "relevant": [
+   "de/homelab/netzplan.pptx"
+  ],
+  "answer_any": [
+   "30"
+  ]
+ },
+ {
+  "id": "docqa-007",
+  "kind": "office",
+  "lang": "es",
+  "question": "¿En qué caja están los adornos de Navidad?",
+  "relevant": [
+   "es/casa/inventario-trastero.ods"
+  ],
+  "answer_any": [
+   "7"
+  ]
+ },
+ {
+  "id": "docqa-008",
+  "kind": "office",
+  "lang": "en",
+  "question": "When is the team offsite?",
+  "relevant": [
+   "en/work/offsite-meeting-notes.odt"
+  ],
+  "answer_any": [
+   "14 May",
+   "14th May",
+   "May 14"
+  ]
+ },
+ {
+  "id": "docqa-009",
+  "kind": "office",
+  "lang": "fr",
+  "question": "Quel est le montant du prélèvement EDF ?",
+  "relevant": [
+   "fr/finances/releve-prelevement.eml"
+  ],
+  "answer_any": [
+   "84,20",
+   "84.20"
+  ]
+ },
+ {
+  "id": "docqa-010",
+  "kind": "office",
+  "lang": "zh",
+  "question": "第三季度的目标是什么？",
+  "relevant": [
+   "zh/工作/年度计划.xlsx"
+  ],
+  "answer_any": [
+   "92%",
+   "92"
+  ]
+ },
+ {
+  "id": "docqa-011",
+  "kind": "scanned",
+  "lang": "en",
+  "question": "What was the total on the boiler repair invoice?",
+  "relevant": [
+   "en/finance/boiler-repair-invoice-scan.pdf"
+  ],
+  "answer_any": [
+   "583.20",
+   "583,20"
+  ]
+ },
+ {
+  "id": "docqa-012",
+  "kind": "scanned",
+  "lang": "de",
+  "question": "Wann ist die nächste Tetanus-Auffrischung fällig?",
+  "relevant": [
+   "de/gesundheit/impfpass-scan.pdf"
+  ],
+  "answer_any": [
+   "2034"
+  ]
+ },
+ {
+  "id": "docqa-013",
+  "kind": "scanned",
+  "lang": "es",
+  "question": "¿Hasta cuándo es válida la garantía de la lavadora?",
+  "relevant": [
+   "es/casa/garantia-lavadora-scan.pdf"
+  ],
+  "answer_any": [
+   "12/2028",
+   "2028"
+  ]
+ },
+ {
+  "id": "docqa-014",
+  "kind": "multihop",
+  "lang": "en",
+  "question": "Was the boiler repair within what we budgeted for heating maintenance?",
+  "relevant": [
+   "en/finance/boiler-repair-invoice-scan.pdf",
+   "en/finance/household-budget-2026.xlsx"
+  ],
+  "answer_any": [],
+  "answer_all": [
+   "583",
+   "650"
+  ]
+ },
+ {
+  "id": "docqa-015",
+  "kind": "multihop",
+  "lang": "en",
+  "question": "Over a year, does the EDF direct debit fit in the electricity budget?",
+  "relevant": [
+   "fr/finances/releve-prelevement.eml",
+   "en/finance/household-budget-2026.xlsx"
+  ],
+  "answer_any": [
+   "1010",
+   "1 010",
+   "1,010"
+  ],
+  "answer_all": [
+   "1100"
+  ]
+ },
+ {
+  "id": "docqa-016",
+  "kind": "multihop",
+  "lang": "en",
+  "question": "Which box holds the Christmas decorations, and where is the key to the storage room?",
+  "relevant": [
+   "es/casa/inventario-trastero.ods",
+   "en/home/house-handbook.md"
+  ],
+  "answer_any": [],
+  "answer_all": [
+   "7",
+   "hall cupboard"
+  ]
+ },
+ {
+  "id": "docqa-017",
+  "kind": "multihop",
+  "lang": "en",
+  "question": "Does the train arrive the evening before the offsite starts?",
+  "relevant": [
+   "en/travel/leeds-itinerary.rtf",
+   "en/work/offsite-meeting-notes.odt"
+  ],
+  "answer_any": [],
+  "answer_all": [
+   "13 May"
+  ]
+ }
+]

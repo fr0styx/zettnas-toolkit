@@ -1,0 +1,304 @@
+[
+ {
+  "id": "doc-001",
+  "kind": "long",
+  "lang": "en",
+  "query": "which salt does the water softener need",
+  "relevant": [
+   "en/home/house-handbook.md"
+  ]
+ },
+ {
+  "id": "doc-002",
+  "kind": "long",
+  "lang": "en",
+  "query": "where is the key for the storage room",
+  "relevant": [
+   "en/home/house-handbook.md"
+  ]
+ },
+ {
+  "id": "doc-003",
+  "kind": "long",
+  "lang": "en",
+  "query": "which circuit feeds the garden sockets",
+  "relevant": [
+   "en/home/house-handbook.md"
+  ]
+ },
+ {
+  "id": "doc-004",
+  "kind": "long",
+  "lang": "en",
+  "query": "who clears our gutters and their phone number",
+  "relevant": [
+   "en/home/house-handbook.md"
+  ]
+ },
+ {
+  "id": "doc-005",
+  "kind": "long",
+  "lang": "en",
+  "query": "battery for the smoke alarms",
+  "relevant": [
+   "en/home/house-handbook.md"
+  ]
+ },
+ {
+  "id": "doc-006",
+  "kind": "long",
+  "lang": "de",
+  "query": "wie hoch ist die Pauschale für Rufbereitschaft am Wochenende",
+  "relevant": [
+   "de/arbeit/betriebsvereinbarung.pdf"
+  ]
+ },
+ {
+  "id": "doc-007",
+  "kind": "long",
+  "lang": "de",
+  "query": "wie viele Tage Homeoffice pro Woche sind erlaubt",
+  "relevant": [
+   "de/arbeit/betriebsvereinbarung.pdf"
+  ]
+ },
+ {
+  "id": "doc-008",
+  "kind": "long",
+  "lang": "de",
+  "query": "Kernarbeitszeit Gleitzeit",
+  "relevant": [
+   "de/arbeit/betriebsvereinbarung.pdf"
+  ]
+ },
+ {
+  "id": "doc-009",
+  "kind": "long",
+  "lang": "fr",
+  "query": "quel soir sort-on les poubelles",
+  "relevant": [
+   "fr/maison/reglement-copropriete.docx"
+  ]
+ },
+ {
+  "id": "doc-010",
+  "kind": "long",
+  "lang": "fr",
+  "query": "où ranger les vélos dans la copropriété",
+  "relevant": [
+   "fr/maison/reglement-copropriete.docx"
+  ]
+ },
+ {
+  "id": "doc-011",
+  "kind": "long",
+  "lang": "fr",
+  "query": "horaires autorisés pour les travaux bruyants",
+  "relevant": [
+   "fr/maison/reglement-copropriete.docx"
+  ]
+ },
+ {
+  "id": "doc-012",
+  "kind": "office",
+  "lang": "en",
+  "query": "how much did we plan for heating maintenance this year",
+  "relevant": [
+   "en/finance/household-budget-2026.xlsx"
+  ]
+ },
+ {
+  "id": "doc-013",
+  "kind": "office",
+  "lang": "en",
+  "query": "car insurance budget 2026",
+  "relevant": [
+   "en/finance/household-budget-2026.xlsx"
+  ]
+ },
+ {
+  "id": "doc-014",
+  "kind": "office",
+  "lang": "de",
+  "query": "welches VLAN haben die Kameras",
+  "relevant": [
+   "de/homelab/netzplan.pptx"
+  ]
+ },
+ {
+  "id": "doc-015",
+  "kind": "office",
+  "lang": "de",
+  "query": "an welchem Switch-Port hängen die Kameras",
+  "relevant": [
+   "de/homelab/netzplan.pptx"
+  ]
+ },
+ {
+  "id": "doc-016",
+  "kind": "office",
+  "lang": "es",
+  "query": "en qué caja están los adornos de Navidad",
+  "relevant": [
+   "es/casa/inventario-trastero.ods"
+  ]
+ },
+ {
+  "id": "doc-017",
+  "kind": "office",
+  "lang": "es",
+  "query": "dónde guardamos la ropa de invierno",
+  "relevant": [
+   "es/casa/inventario-trastero.ods"
+  ]
+ },
+ {
+  "id": "doc-018",
+  "kind": "office",
+  "lang": "en",
+  "query": "when and where is the team offsite",
+  "relevant": [
+   "en/work/offsite-meeting-notes.odt"
+  ]
+ },
+ {
+  "id": "doc-019",
+  "kind": "office",
+  "lang": "en",
+  "query": "what time is the train to Leeds",
+  "relevant": [
+   "en/travel/leeds-itinerary.rtf"
+  ]
+ },
+ {
+  "id": "doc-020",
+  "kind": "office",
+  "lang": "fr",
+  "query": "montant du prélèvement EDF",
+  "relevant": [
+   "fr/finances/releve-prelevement.eml"
+  ]
+ },
+ {
+  "id": "doc-021",
+  "kind": "office",
+  "lang": "zh",
+  "query": "第三季度的目标是什么",
+  "relevant": [
+   "zh/工作/年度计划.xlsx"
+  ]
+ },
+ {
+  "id": "doc-022",
+  "kind": "scanned",
+  "lang": "en",
+  "query": "boiler repair invoice total",
+  "relevant": [
+   "en/finance/boiler-repair-invoice-scan.pdf"
+  ]
+ },
+ {
+  "id": "doc-023",
+  "kind": "scanned",
+  "lang": "en",
+  "query": "Heatwise plumbing invoice number",
+  "relevant": [
+   "en/finance/boiler-repair-invoice-scan.pdf"
+  ]
+ },
+ {
+  "id": "doc-024",
+  "kind": "scanned",
+  "lang": "de",
+  "query": "wann ist die nächste Tetanus-Auffrischung fällig",
+  "relevant": [
+   "de/gesundheit/impfpass-scan.pdf"
+  ]
+ },
+ {
+  "id": "doc-025",
+  "kind": "scanned",
+  "lang": "de",
+  "query": "Impfung Praxis Dr. Albers",
+  "relevant": [
+   "de/gesundheit/impfpass-scan.pdf"
+  ]
+ },
+ {
+  "id": "doc-026",
+  "kind": "scanned",
+  "lang": "es",
+  "query": "hasta cuándo dura la garantía de la lavadora",
+  "relevant": [
+   "es/casa/garantia-lavadora-scan.pdf"
+  ]
+ },
+ {
+  "id": "doc-027",
+  "kind": "scanned",
+  "lang": "es",
+  "query": "número de serie de la lavadora",
+  "relevant": [
+   "es/casa/garantia-lavadora-scan.pdf"
+  ]
+ },
+ {
+  "id": "doc-028",
+  "kind": "scanned",
+  "lang": "en",
+  "query": "receipt for water softener salt",
+  "relevant": [
+   "en/home/hardware-store-receipt.jpg"
+  ]
+ },
+ {
+  "id": "doc-029",
+  "kind": "multihop",
+  "lang": "en",
+  "query": "was the boiler repair within the heating maintenance budget",
+  "relevant": [
+   "en/finance/boiler-repair-invoice-scan.pdf",
+   "en/finance/household-budget-2026.xlsx"
+  ]
+ },
+ {
+  "id": "doc-030",
+  "kind": "multihop",
+  "lang": "en",
+  "query": "is the EDF direct debit covered by the electricity budget for the year",
+  "relevant": [
+   "fr/finances/releve-prelevement.eml",
+   "en/finance/household-budget-2026.xlsx"
+  ]
+ },
+ {
+  "id": "doc-031",
+  "kind": "multihop",
+  "lang": "en",
+  "query": "which box has the Christmas decorations and where is the storage room key",
+  "relevant": [
+   "es/casa/inventario-trastero.ods",
+   "en/home/house-handbook.md"
+  ]
+ },
+ {
+  "id": "doc-032",
+  "kind": "multihop",
+  "lang": "en",
+  "query": "does the train get to Leeds in time for the offsite",
+  "relevant": [
+   "en/travel/leeds-itinerary.rtf",
+   "en/work/offsite-meeting-notes.odt"
+  ]
+ },
+ {
+  "id": "doc-033",
+  "kind": "multihop",
+  "lang": "en",
+  "query": "how much salt did we buy and which salt does the softener take",
+  "relevant": [
+   "en/home/hardware-store-receipt.jpg",
+   "en/home/house-handbook.md"
+  ]
+ }
+]

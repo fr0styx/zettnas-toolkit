@@ -15,13 +15,13 @@ import sys
 def drops(now: dict, base: dict, tol: float) -> list[str]:
     out = []
     scopes = [("overall", now.get("overall"), base.get("overall"))]
-    for group in ("by_language", "by_kind"):
+    for group in ("by_language", "by_kind", "by_split"):
         for k, v in (base.get(group) or {}).items():
             scopes.append((f"{group}.{k}", (now.get(group) or {}).get(k), v))
     for name, n, b in scopes:
         if not n or not b:
             continue
-        for metric in ("recall@1", "recall@5", "mrr@10"):
+        for metric in ("recall@1", "recall@5", "all@5", "mrr@10"):
             if metric in b and n.get(metric, 0) < b[metric] - tol:
                 out.append(f"{name} {metric}: {b[metric]} -> {n.get(metric)}")
     if "answers" in base and "answers" in now and now["answers"]["accuracy"] < base["answers"]["accuracy"] - tol:

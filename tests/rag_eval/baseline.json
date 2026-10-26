@@ -37,5 +37,21 @@
    "mrr@10": 0.85,
    "queries": 40
   }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.761,
+   "recall@5": 0.868,
+   "all@5": 0.868,
+   "mrr@10": 0.801,
+   "queries": 159
+  },
+  "heldout": {
+   "recall@1": 0.732,
+   "recall@5": 0.78,
+   "all@5": 0.78,
+   "mrr@10": 0.754,
+   "queries": 41
+  }
  }
 }

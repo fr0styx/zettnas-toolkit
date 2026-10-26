@@ -8,7 +8,16 @@ commit; if a change lowers any of them by more than 0.01, this test fails.
 import json
 import os
 
-from tests.rag_eval.run_eval import HERE, answer_matches, evaluate, load_qa, load_queries, write_distractors
+from tests.rag_eval import documents
+from tests.rag_eval.run_eval import (
+    HERE,
+    answer_matches,
+    evaluate,
+    load_qa,
+    load_queries,
+    split_of,
+    write_distractors,
+)
 
 TOLERANCE = 0.01
 
@@ -48,6 +57,10 @@ def test_answer_scoring_ignores_case_and_spacing():
     assert answer_matches("Bake it at 175 °C for an hour.", ["175"])
     assert answer_matches("Die Nachzahlung beträgt 217,45 EUR", ["217,45", "217.45"])
     assert not answer_matches("I could not find that.", ["4711"])
+    # multi-hop: every required part, and one of the accepted ones
+    assert answer_matches("The repair cost 583.20, under the 650 planned.", [], ["583", "650"])
+    assert not answer_matches("The repair cost 583.20.", [], ["583", "650"])
+    assert answer_matches("About 1010 a year against 1100 planned.", ["1010", "1 010"], ["1100"])
 
 
 def test_distractors_are_deterministic(tmp_path):
@@ -64,8 +77,10 @@ def test_retrieval_does_not_regress():
         baseline = json.load(f)
     got = evaluate()
     drops = []
-    for scope, base in [("overall", baseline["overall"])] + list(baseline["by_language"].items()):
-        now = got["overall"] if scope == "overall" else got["by_language"][scope]
+    scopes = [("overall", baseline["overall"], got["overall"])]
+    scopes += [(lang, b, got["by_language"][lang]) for lang, b in baseline["by_language"].items()]
+    scopes += [(f"{s} split", b, got["by_split"][s]) for s, b in baseline.get("by_split", {}).items()]
+    for scope, base, now in scopes:
         for metric in ("recall@1", "recall@5", "mrr@10"):
             if now[metric] < base[metric] - TOLERANCE:
                 drops.append(f"{scope} {metric}: {base[metric]} -> {now[metric]}")
@@ -85,3 +100,55 @@ def test_extended_retrieval_does_not_regress():
             if now[metric] < base[metric] - TOLERANCE:
                 drops.append(f"{kind} {metric}: {base[metric]} -> {now[metric]}")
     assert not drops, "Retrieval got worse: " + "; ".join(drops)
+
+
+# --- AI-16: long, Office and scanned documents, multi-hop questions, a held-out split ----------
+
+
+def test_the_document_set_is_the_same_every_run_and_covers_each_kind(tmp_path):
+    a, b = tmp_path / "a", tmp_path / "b"
+    written = documents.build(str(a))
+    documents.build(str(b))
+    assert all((a / f).read_bytes() == (b / f).read_bytes() for f in written)
+    queries, qa = load_queries("documents"), load_qa("documents")
+    kinds = {q["kind"] for q in queries}
+    assert kinds == {"long", "office", "scanned", "multihop"}
+    assert {q["kind"] for q in qa} == kinds
+    for item in queries + qa:
+        assert item["relevant"] and all(r in written for r in item["relevant"]), item["id"]
+        if item["kind"] == "multihop":
+            assert len(item["relevant"]) == 2
+    for item in qa:
+        assert item["answer_any"] or item.get("answer_all"), item["id"]
+    # scanned files have no text of their own: only the vision model (or its stand-in) reads them
+    from backend.services.rag_documents import extract_document_text
+
+    for rel in documents.SCANNED:
+        if rel.endswith(".pdf"):
+            assert not extract_document_text(str(a / rel), ".pdf").strip()
+
+
+def test_document_retrieval_does_not_regress():
+    with open(os.path.join(HERE, "baseline_documents.json"), encoding="utf-8") as f:
+        baseline = json.load(f)
+    got = evaluate(which="documents")
+    # every photo and scanned PDF went through the vision queue and became searchable text
+    assert got["scanned_read"].get("done") == len(documents.SCANNED)
+    drops = []
+    scopes = [(f"kind {k}", b, got["by_kind"][k]) for k, b in baseline["by_kind"].items()]
+    scopes += [(f"{s} split", b, got["by_split"][s]) for s, b in baseline["by_split"].items()]
+    for scope, base, now in scopes:
+        for metric in ("recall@1", "recall@5", "all@5", "mrr@10"):
+            if now[metric] < base[metric] - TOLERANCE:
+                drops.append(f"{scope} {metric}: {base[metric]} -> {now[metric]}")
+    assert not drops, "Retrieval got worse: " + "; ".join(drops)
+
+
+def test_one_question_in_five_is_held_out_and_stays_so():
+    items = load_queries("all") + load_queries("documents") + load_qa() + load_qa("documents")
+    held = [i for i in items if i["split"] == "heldout"]
+    assert 0.15 <= len(held) / len(items) <= 0.25
+    for name in ("base", "extended", "documents"):
+        assert {q["split"] for q in load_queries(name)} == {"dev", "heldout"}, name
+    # fixed by the id alone: adding or reordering questions moves nobody between splits
+    assert split_of("doc-030") == "heldout" and split_of("doc-031") == "dev"

@@ -9,15 +9,27 @@ tuned to the engine.
 - queries_extended.json: 50 cross-language queries (asked in one language about a file in
   another) and 40 paraphrases that share few or no words with the file.
 - qa.json: 97 questions with the facts a correct answer must contain, for answer quality.
+- queries_documents.json, qa_documents.json (AI-16): long, Office and scanned documents and
+  multi-hop questions that need two files. The files are generated (documents.py) and indexed
+  with the corpus; scanned ones are read by the vision model (--ocr vision) or, per commit, by a
+  stand-in that returns each page's known text, which checks everything but the model itself.
+
+Held-out split (AI-16): one query or question in five, chosen by a hash of its id, is held out.
+Tune and look at misses on the rest ("dev"); the held-out scores only say whether a change
+generalises. --misses lists dev misses only (--show-heldout to see all, e.g. for a release).
 
     python -m tests.rag_eval.run_eval                                  # base set, lexical vectors (CI)
     python -m tests.rag_eval.run_eval --set extended                   # cross-language and paraphrase
     python -m tests.rag_eval.run_eval --model embeddinggemma --host http://127.0.0.1:11434 \\
         --set all --distractors 2000                                   # nightly: neural model, 2,000 extra files
     python -m tests.rag_eval.run_eval --model embeddinggemma --answers qwen3:4b   # answers, scored
+    python -m tests.rag_eval.run_eval --set documents                              # long, Office, scanned, multi-hop
+    python -m tests.rag_eval.run_eval --set documents --model embeddinggemma --host http://127.0.0.1:11434 \\
+        --ocr vision --answers qwen3:4b                                            # with the real vision model
 """
 
 import argparse
+import hashlib
 import json
 import os
 import random
@@ -28,22 +40,30 @@ from unittest.mock import patch
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORPUS = os.path.join(HERE, "corpus")
 FIXED_MTIME_NS = 1_700_000_000_000_000_000
-SETS = {"base": "queries.json", "extended": "queries_extended.json"}
+SETS = {"base": "queries.json", "extended": "queries_extended.json", "documents": "queries_documents.json"}
+ALL = ("base", "extended")  # "all": what the nightly compares; documents run as their own set
+HELDOUT_EVERY = 5
+
+
+def split_of(item_id: str) -> str:
+    """'heldout' for one id in five (fixed by its hash), else 'dev'."""
+    return "heldout" if int(hashlib.sha1(item_id.encode()).hexdigest(), 16) % HELDOUT_EVERY == 0 else "dev"
 
 
 def load_queries(which: str = "base") -> list[dict]:
-    names = list(SETS.values()) if which == "all" else [SETS[which]]
+    names = [SETS[w] for w in ALL] if which == "all" else [SETS[which]]
     out = []
     for name in names:
         with open(os.path.join(HERE, name), encoding="utf-8") as f:
             for q in json.load(f):
-                out.append({"kind": "same-language", **q})
+                out.append({"kind": "same-language", **q, "split": split_of(q["id"])})
     return out
 
 
-def load_qa() -> list[dict]:
-    with open(os.path.join(HERE, "qa.json"), encoding="utf-8") as f:
-        return json.load(f)
+def load_qa(which: str = "base") -> list[dict]:
+    name = "qa_documents.json" if which == "documents" else "qa.json"
+    with open(os.path.join(HERE, name), encoding="utf-8") as f:
+        return [{**q, "split": split_of(q["id"])} for q in json.load(f)]
 
 
 # Distractors: plausible household files on other subjects, generated the same way every time,
@@ -188,6 +208,8 @@ def _metrics(ranked: list[str], relevant: list[str]) -> dict[str, float]:
     return {
         "recall@1": float(any(p in relevant for p in ranked[:1])),
         "recall@5": float(any(p in relevant for p in ranked[:5])),
+        # every file the answer needs is in the top 5 (multi-hop; the same as recall@5 for one file)
+        "all@5": float(all(p in ranked[:5] for p in relevant)),
         "mrr@10": rr,
     }
 
@@ -231,9 +253,41 @@ def says_not_found(answer: str) -> bool:
     return any(m in low for m in REFUSAL_MARKERS)
 
 
-def answer_matches(answer: str, accepted: list[str]) -> bool:
+def answer_matches(answer: str, accepted: list[str], required: list[str] | None = None) -> bool:
+    """One of the accepted facts is in the answer, and every required one (multi-hop)."""
     a = _norm(answer)
-    return any(_norm(x) and _norm(x) in a for x in accepted)
+    if required and not all(_norm(x) in a for x in required):
+        return False
+    return not accepted or any(_norm(x) and _norm(x) in a for x in accepted)
+
+
+def read_scanned(engine, ocr: str = "standin", host: str | None = None) -> dict:
+    """Runs the vision queue over the index until it has read every photo and scanned PDF.
+
+    ocr "standin" answers with the known text of each page (tests/rag_eval/documents.py), so
+    the pipeline from scan to search is checked without a model; "vision" uses the real one.
+    """
+    from backend.services.vision_queue import VisionQueue
+    from tests.rag_eval import documents
+
+    if ocr == "vision":
+        q = VisionQueue(engine, idle=lambda: True, host=(lambda: host) if host else None)
+    else:
+        q = VisionQueue(
+            engine,
+            describe=lambda path, model, h: documents.photo_text_for(path),
+            idle=lambda: True,
+            host=lambda: "http://standin",
+            model_picker=lambda cfg, h: "standin",
+        )
+        q.ocr = lambda data, model, h: documents.page_text_for(data)
+    seen = {}
+    for _ in range(200):
+        state = q.process_one()
+        seen[state] = seen.get(state, 0) + 1
+        if state not in ("done", "error"):
+            break
+    return seen
 
 
 def _index_tree(engine, root: str) -> None:
@@ -263,6 +317,7 @@ def evaluate(
     answers_model: str | None = None,
     qa_limit: int | None = None,
     llm_host: str | None = None,
+    ocr: str = "standin",
 ) -> dict:
     from backend.services.rag_engine import RagSearchEngine
 
@@ -279,7 +334,12 @@ def evaluate(
         cfg["active_model"] = answers_model
     if llm_host:
         cfg["llm_endpoint"] = llm_host
-    rel = lambda p: os.path.relpath(p, CORPUS).replace(os.sep, "/")  # noqa: E731
+    docs_root = os.path.join(tmp, "documents")
+
+    def rel(p: str) -> str:
+        root = docs_root if p.startswith(docs_root + os.sep) else CORPUS
+        return os.path.relpath(p, root).replace(os.sep, "/")
+
     per_query = []
     qa_rows = []
     try:
@@ -288,6 +348,13 @@ def evaluate(
             patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=False),
         ):
             _index_tree(engine, CORPUS)
+            scanned = None
+            if which == "documents":
+                from tests.rag_eval import documents
+
+                documents.build(docs_root)
+                _index_tree(engine, docs_root)
+                scanned = read_scanned(engine, ocr, host)
             if distractors:
                 noise = os.path.join(tmp, "distractors")
                 write_distractors(noise, distractors)
@@ -308,7 +375,7 @@ def evaluate(
                 os.environ.pop("ZETTNAS_TEST_MODE", None)
 
                 with patch.object(ai_chat_agent, "get_rag_engine", return_value=engine):
-                    for item in load_qa()[: qa_limit or None]:
+                    for item in load_qa(which)[: qa_limit or None]:
                         out = ai_chat_agent.run_agentic_chat(
                             item["question"], allow_web_search=False, model_override=answers_model
                         )
@@ -325,10 +392,10 @@ def evaluate(
                                 "correct": float(
                                     says_not_found(text)
                                     if item.get("unanswerable")
-                                    else answer_matches(text, item["answer_any"])
+                                    else answer_matches(text, item["answer_any"], item.get("answer_all"))
                                 ),
                                 "source_hit": float(
-                                    item.get("unanswerable") or any(p in item["relevant"] for p in sources)
+                                    item.get("unanswerable") or all(p in sources for p in item["relevant"])
                                 ),
                                 "answer": text[:400],
                             }
@@ -338,7 +405,7 @@ def evaluate(
 
     def summary(rows):
         n = len(rows) or 1
-        return {k: round(sum(r[k] for r in rows) / n, 3) for k in ("recall@1", "recall@5", "mrr@10")} | {
+        return {k: round(sum(r[k] for r in rows) / n, 3) for k in ("recall@1", "recall@5", "all@5", "mrr@10")} | {
             "queries": len(rows)
         }
 
@@ -351,10 +418,15 @@ def evaluate(
         "overall": summary(per_query),
         "by_language": {lang: summary([r for r in per_query if r["lang"] == lang]) for lang in langs},
         "by_kind": {k: summary([r for r in per_query if r["kind"] == k]) for k in kinds},
+        "by_split": {s: summary([r for r in per_query if r["split"] == s]) for s in ("dev", "heldout")},
         "misses": [
-            {"id": r["id"], "query": r["query"], "top": r["ranked"][:3]} for r in per_query if not r["recall@5"]
+            {"id": r["id"], "split": r["split"], "query": r["query"], "top": r["ranked"][:3]}
+            for r in per_query
+            if not r["all@5"]
         ],
     }
+    if scanned is not None:
+        out["scanned_read"] = scanned
     if qa_rows:
         refusals = [r for r in qa_rows if r.get("unanswerable")]
         qa_rows = [r for r in qa_rows if not r.get("unanswerable")]
@@ -374,8 +446,18 @@ def evaluate(
                 )
                 for lang in sorted({r["lang"] for r in qa_rows})
             },
+            "by_split": {
+                s: round(
+                    sum(r["correct"] for r in qa_rows if r["split"] == s)
+                    / max(1, sum(1 for r in qa_rows if r["split"] == s)),
+                    3,
+                )
+                for s in ("dev", "heldout")
+            },
             "wrong": [
-                {"id": r["id"], "question": r["question"], "answer": r["answer"]} for r in qa_rows if not r["correct"]
+                {"id": r["id"], "split": r["split"], "question": r["question"], "answer": r["answer"]}
+                for r in qa_rows
+                if not r["correct"]
             ],
         }
     return out
@@ -385,7 +467,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="zett_lexical_384d")
     ap.add_argument("--dim", type=int, default=None)
-    ap.add_argument("--set", default="base", choices=["base", "extended", "all"])
+    ap.add_argument("--set", default="base", choices=["base", "extended", "all", "documents"])
     ap.add_argument("--distractors", type=int, default=0, help="extra generated files to search through")
     ap.add_argument("--host", default=None, help="Ollama-compatible host for the embedder and the answer model")
     ap.add_argument(
@@ -393,16 +475,30 @@ def main():
     )
     ap.add_argument("--llm-host", default=None, help="host of the answer model, when not the embedder host")
     ap.add_argument("--qa-limit", type=int, default=None, help="answer only the first N questions (quick check)")
-    ap.add_argument("--misses", action="store_true", help="list queries whose file wasn't in the top 5")
+    ap.add_argument("--misses", action="store_true", help="list dev queries whose files weren't in the top 5")
+    ap.add_argument("--show-heldout", action="store_true", help="with --misses: held-out misses too (not for tuning)")
+    ap.add_argument("--ocr", default="standin", choices=["standin", "vision"], help="how scanned files are read")
     ap.add_argument("--out", default=None, help="write the JSON result here too")
     args = ap.parse_args()
     out = evaluate(
-        args.model, args.dim, args.set, args.distractors, args.host, args.answers, args.qa_limit, args.llm_host
+        args.model,
+        args.dim,
+        args.set,
+        args.distractors,
+        args.host,
+        args.answers,
+        args.qa_limit,
+        args.llm_host,
+        args.ocr,
     )
     if not args.misses:
         out.pop("misses")
         if "answers" in out:
             out["answers"].pop("wrong")
+    elif not args.show_heldout:
+        out["misses"] = [m for m in out["misses"] if m["split"] == "dev"]
+        if "answers" in out:
+            out["answers"]["wrong"] = [w for w in out["answers"]["wrong"] if w["split"] == "dev"]
     text = json.dumps(out, ensure_ascii=False, indent=1)
     if args.out:
         with open(args.out, "w", encoding="utf-8") as f:
