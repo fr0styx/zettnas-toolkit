@@ -198,7 +198,8 @@ class SambaEngine:
 
     def can_run_sidecar(self) -> tuple[bool, str]:
         """Pre-flight check to verify if zettnas-samba sidecar can bind port 445."""
-        from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
+        from backend.hardware.pal.base import PlatformType
+        from backend.hardware.pal.detect import StoragePlatformDetector
 
         platform = StoragePlatformDetector.detect()
         if platform in (
@@ -593,7 +594,8 @@ class SambaEngine:
         sidecar_detected = sidecar_info.get("detected", False)
         is_sidecar_running = sidecar_detected and sidecar_info.get("state") == "running"
 
-        from backend.hardware.pal_storage import PlatformType, StoragePlatformDetector
+        from backend.hardware.pal.base import PlatformType
+        from backend.hardware.pal.detect import StoragePlatformDetector
 
         platform = StoragePlatformDetector.detect()
         is_turnkey = platform in (

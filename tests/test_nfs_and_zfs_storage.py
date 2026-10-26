@@ -35,7 +35,7 @@ def isolated_nfs_and_storage_env(monkeypatch, tmp_path):
     test_data.mkdir()
     test_nfs_exports_d = tmp_path / "exports.d" / "zettnas.exports"
 
-    monkeypatch.setattr("backend.hardware.pal_storage.POOL_PATH", str(test_storage))
+    monkeypatch.setattr("backend.hardware.pal.base.POOL_PATH", str(test_storage))
     monkeypatch.setattr("backend.config.POOL_PATH", str(test_storage))
     monkeypatch.setattr("backend.config.DATA_DIR", str(test_data))
     monkeypatch.setattr("backend.services.nfs_engine.DATA_DIR", str(test_data))

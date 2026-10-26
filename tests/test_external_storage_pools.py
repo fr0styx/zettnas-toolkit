@@ -26,7 +26,7 @@ def isolated_storage_env(monkeypatch, tmp_path):
     test_data = tmp_path / "data"
     test_data.mkdir()
 
-    monkeypatch.setattr("backend.hardware.pal_storage.POOL_PATH", str(test_storage))
+    monkeypatch.setattr("backend.hardware.pal.base.POOL_PATH", str(test_storage))
     monkeypatch.setattr("backend.config.POOL_PATH", str(test_storage))
     monkeypatch.setattr("backend.config.DATA_DIR", str(test_data))
     monkeypatch.setattr("backend.hardware.pal_storage._CACHED_ADAPTER", None)
@@ -57,7 +57,7 @@ def test_resolve_disk_path_by_id_symlink(tmp_path, monkeypatch):
     wwn_link.symlink_to(real_dev)
 
     # Mock by_id directory searching
-    monkeypatch.setattr("backend.hardware.pal_storage.HOST_DEV", str(tmp_path / "dev"))
+    monkeypatch.setattr("backend.hardware.pal.base.HOST_DEV", str(tmp_path / "dev"))
     resolved = adapter._resolve_disk_path("sde")
     # Should resolve to top-ranked WWN identifier
     assert resolved == str(wwn_link)

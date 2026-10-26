@@ -179,7 +179,7 @@ def test_platform_detector_env_overrides():
     with patch.dict(os.environ, {"ZETTNAS_PAL_MODE": "observer"}):
         # Clear ZETTNAS_PLATFORM and ZETTNAS_OBSERVER_ADAPTER so PAL_MODE is checked
         with patch.dict(os.environ, {"ZETTNAS_PLATFORM": "", "ZETTNAS_OBSERVER_ADAPTER": ""}):
-            with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+            with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
                 with patch("os.path.isfile", return_value=False):
                     assert StoragePlatformDetector.detect() == PlatformType.GENERIC_OBSERVER
 
@@ -189,7 +189,7 @@ def test_platform_detector_zettos_release_files():
         return p == "/etc/zettos-release"
 
     with patch.dict(os.environ, {"ZETTNAS_PLATFORM": ""}):
-        with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+        with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", side_effect=mock_isfile):
                 assert StoragePlatformDetector.detect() == PlatformType.ZETTOS
 
@@ -199,7 +199,7 @@ def test_platform_detector_fygoos_release_files():
         return p == "/etc/fygoos-release"
 
     with patch.dict(os.environ, {"ZETTNAS_PLATFORM": ""}):
-        with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+        with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", return_value=False):
                 with patch("os.path.exists", side_effect=mock_exists):
                     assert StoragePlatformDetector.detect() == PlatformType.FYGOOS
@@ -210,7 +210,7 @@ def test_platform_detector_ugos_release_files():
         return p == "/etc/ugos-release"
 
     with patch.dict(os.environ, {"ZETTNAS_PLATFORM": ""}):
-        with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+        with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", return_value=False):
                 with patch("os.path.exists", side_effect=mock_exists):
                     assert StoragePlatformDetector.detect() == PlatformType.UGOS
@@ -219,21 +219,21 @@ def test_platform_detector_ugos_release_files():
 def test_platform_detector_other_nas_release_files():
     # Synology DSM
     with patch.dict(os.environ, {"ZETTNAS_PLATFORM": ""}):
-        with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+        with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", return_value=False):
                 with patch("os.path.exists", side_effect=lambda p: p == "/etc/synoinfo.conf"):
                     assert StoragePlatformDetector.detect() == PlatformType.GENERIC_OBSERVER
 
     # QNAP QTS
     with patch.dict(os.environ, {"ZETTNAS_PLATFORM": ""}):
-        with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+        with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", return_value=False):
                 with patch("os.path.exists", side_effect=lambda p: p == "/etc/config/uLinux.conf"):
                     assert StoragePlatformDetector.detect() == PlatformType.GENERIC_OBSERVER
 
     # CasaOS
     with patch.dict(os.environ, {"ZETTNAS_PLATFORM": ""}):
-        with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+        with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", return_value=False):
                 with patch("os.path.exists", side_effect=lambda p: p == "/etc/casaos"):
                     assert StoragePlatformDetector.detect() == PlatformType.GENERIC_OBSERVER

@@ -36,8 +36,8 @@ def adapter(monkeypatch):
 def proc(tmp_path, monkeypatch):
     root = tmp_path / "proc"
     root.mkdir()
-    monkeypatch.setattr(pal, "HOST_PROC", str(root))
-    monkeypatch.setattr(pal, "HOST_SYS", str(tmp_path / "sys"))
+    monkeypatch.setattr(pal.base, "HOST_PROC", str(root))
+    monkeypatch.setattr(pal.base, "HOST_SYS", str(tmp_path / "sys"))
     return root
 
 
@@ -109,7 +109,7 @@ class TestParsers:
             f"[global]\nworkgroup = WG\n[homes]\npath=/home\n[Media]\npath = {media}\ncomment = Films\nguest ok = yes\n"
             "[Private]\npath = /nonexistent/private\n[NoPath]\ncomment = x\n"
         )
-        monkeypatch.setattr(pal, "SMB_CONF_PATHS", (str(conf),))
+        monkeypatch.setattr(pal.base, "SMB_CONF_PATHS", (str(conf),))
         shares = {s.name: s for s in pal.TrueNASStorageAdapter()._parse_smb_conf()}
         assert set(shares) == {"Media", "Private"}
         assert (
@@ -120,7 +120,7 @@ class TestParsers:
         assert shares["Private"].security == "private"
 
     def test_no_smb_conf(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(pal, "SMB_CONF_PATHS", (str(tmp_path / "none.conf"),))
+        monkeypatch.setattr(pal.base, "SMB_CONF_PATHS", (str(tmp_path / "none.conf"),))
         assert pal.TrueNASStorageAdapter()._parse_smb_conf() == []
 
 

@@ -140,14 +140,14 @@ export="e"
 
 
 def test_platform_detector_unraid():
-    with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value="/var/local/emhttp"):
+    with patch("backend.hardware.pal.base._find_emhttp_dir", return_value="/var/local/emhttp"):
         p_type = StoragePlatformDetector.detect()
         assert p_type == PlatformType.UNRAID
 
 
 def test_platform_detector_generic_linux():
     with (
-        patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None),
+        patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None),
         patch("os.path.isfile", return_value=False),
         patch("os.path.exists", return_value=False),
     ):

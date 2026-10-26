@@ -35,7 +35,7 @@ def isolated_storage_env(monkeypatch, tmp_path):
     test_data = tmp_path / "data"
     test_data.mkdir()
 
-    monkeypatch.setattr("backend.hardware.pal_storage.POOL_PATH", str(test_storage))
+    monkeypatch.setattr("backend.hardware.pal.base.POOL_PATH", str(test_storage))
     monkeypatch.setattr("backend.config.POOL_PATH", str(test_storage))
     monkeypatch.setattr("backend.config.DATA_DIR", str(test_data))
     monkeypatch.setattr("backend.services.samba_engine.DATA_DIR", str(test_data))

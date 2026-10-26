@@ -44,7 +44,7 @@ def isolated_hyper_backup_env(monkeypatch, tmp_path):
     monkeypatch.setattr("backend.services.backup_engine.DATA_DIR", str(test_data))
     monkeypatch.setattr("backend.services.backup_engine.BACKUP_JOBS_FILE", jobs_file)
     monkeypatch.setattr("backend.services.backup_engine.BACKUP_HISTORY_FILE", history_file)
-    monkeypatch.setattr("backend.hardware.pal_storage.POOL_PATH", str(test_storage))
+    monkeypatch.setattr("backend.hardware.pal.base.POOL_PATH", str(test_storage))
 
     # Reset platform adapter singleton
     monkeypatch.setattr("backend.hardware.pal_storage._CACHED_ADAPTER", None)

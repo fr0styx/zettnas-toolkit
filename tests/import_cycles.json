@@ -3,6 +3,7 @@
   "backend.auth",
   "backend.confirmations",
   "backend.errors",
+  "backend.hardware.pal.generic_linux",
   "backend.hardware.pal_storage",
   "backend.secret_box",
   "backend.services.ip_block",

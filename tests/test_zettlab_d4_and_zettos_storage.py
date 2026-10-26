@@ -111,7 +111,7 @@ def test_storage_platform_detector_identifies_zettos():
         return p == "/etc/zettos-release"
 
     with patch.dict(os.environ, {"ZETTNAS_PLATFORM": "", "ZETTNAS_OBSERVER_ADAPTER": ""}):
-        with patch("backend.hardware.pal_storage._find_emhttp_dir", return_value=None):
+        with patch("backend.hardware.pal.base._find_emhttp_dir", return_value=None):
             with patch("os.path.isfile", side_effect=mock_isfile):
                 plat = StoragePlatformDetector.detect()
                 assert plat == PlatformType.ZETTOS

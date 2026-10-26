@@ -73,7 +73,9 @@ def test_fygoos_reports_protection_from_the_profile(fygo, monkeypatch):
         ],
     )
     monkeypatch.setattr(
-        pal_storage, "btrfs_data_profiles", lambda dev, *a: {"/dev/sdb": ["raid1"], "/dev/sdd": ["single"]}.get(dev, [])
+        pal_storage.base,
+        "btrfs_data_profiles",
+        lambda dev, *a: {"/dev/sdb": ["raid1"], "/dev/sdd": ["single"]}.get(dev, []),
     )
     pools = {p.id: p for p in fygo.list_pools()}
     assert set(pools) == {"mirror", "single", "usb"}
@@ -112,7 +114,7 @@ def zettos_md(tmp_path, monkeypatch):
     sa = tmp_path / "block" / "md0" / "md"
     sa.mkdir(parents=True)
     (sa / "sync_action").write_text("idle\n")
-    monkeypatch.setattr(pal_storage, "HOST_SYS", str(tmp_path))
+    monkeypatch.setattr(pal_storage.base, "HOST_SYS", str(tmp_path))
     state = {"sync_action": None}
     monkeypatch.setattr(
         a, "_parse_mdstat", lambda: {"md0": {"sync_action": state["sync_action"], "progress_pct": 42.0}}
