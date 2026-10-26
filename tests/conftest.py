@@ -185,6 +185,16 @@ def _fresh_data_folder():
 
 
 @pytest.fixture(autouse=True)
+def _web_off():
+    """A chat turn sets "web allowed" for its context; each test starts with it off (ARC-13)."""
+    from backend.services.chat_web_tools import _WEB_ALLOWED
+
+    token = _WEB_ALLOWED.set(False)
+    yield
+    _WEB_ALLOWED.reset(token)
+
+
+@pytest.fixture(autouse=True)
 def _fresh_hardware_state():
     """Fan hold trackers, thermal fail-safe flags and standby caches start empty (ARC-13)."""
     from backend.services import rag_standby

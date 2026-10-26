@@ -785,65 +785,28 @@ def run_agentic_chat(
     )
 
 
-def _run_agentic_chat_turn(
-    message: str,
-    history: list[dict[str, Any]] | None = None,
-    allow_web_search: bool = False,
-    allow_nas_tools: bool = True,
-    model_override: str | None = None,
-    principal: Any = None,
-) -> dict[str, Any]:
-    """
-    Executes a conversational turn with the ZettAI Local Chatbot & NAS Copilot:
-      1. Detects required NAS Hardware Tools (telemetry, standby-safe disks, fan control,
-         Docker containers, local RAG search, AI sync) and executes them safely.
-      2. Browses the live internet (`browse_internet`) whenever web verification is requested
-         or a general knowledge question is asked.
-      3. Synthesizes the final response using the selected LLM (via local Ollama/OpenAI runtime
-         when available, or the model-aware ReAct synthesis engine) and returns full `llm_telemetry`.
-    """
-    _WEB_ALLOWED.set(bool(allow_web_search))
-    t0 = time.perf_counter()
-    clean_msg = str(message or "").strip()
-    if not clean_msg:
-        raise ValueError("Chat message cannot be empty.")
+# --- One chat turn, step by step (ARC-5). _run_agentic_chat_turn calls these in order; each
+# takes what it reads and returns what it changes. tests/test_arc5_chat_turn_characterization.py
+# pins the whole turn. ----------------------------------------------------------------------------
 
-    rag = get_rag_engine()
-    cfg = rag.get_config()
-    active_model = str(model_override or cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b").strip()
-    llm_endpoint = str(cfg.get("llm_endpoint") or "").strip()
-    accel = detect_hardware_accelerator()
 
-    msg_lower = clean_msg.lower()
-    clean_norm = clean_msg.strip().lower().rstrip("!.?,")
-    is_conversational_affirmation = bool(
-        re.match(
-            r"^(?:do\s+(?:that|it|this)|yes(?: please)?|sure(?: thing)?|run\s+it|go\s+ahead|proceed|ok|okay|yep|yeah|restart\s+it|start\s+it|stop\s+it|check\s+(?:that|it|again)|rescan|why(?:\s+(?:is\s+that|so))?)$",
-            clean_norm,
-        )
-    )
-
-    combined_prev = ""
-    last_assistant_msg = ""
-    last_user_msg = ""
-    if history:
-        for h in reversed(history):
-            if isinstance(h, dict):
-                role = h.get("role")
-                if role == "assistant" and not last_assistant_msg:
-                    last_assistant_msg = str(h.get("content") or "")
-                elif role == "user" and not last_user_msg:
-                    last_user_msg = str(h.get("content") or "")
-                if last_assistant_msg and last_user_msg:
-                    break
-        combined_prev = (last_assistant_msg + " " + last_user_msg).lower()
-
-    tool_results: list[dict[str, Any]] = []
-    tools_called: list[str] = []
-    web_sources: list[dict[str, Any]] = []
-    citations: list[dict[str, Any]] = []
-    photos: list[dict[str, Any]] = []
-
+def _turn_run_requested_tools(
+    *,
+    allow_nas_tools,
+    citations,
+    clean_msg,
+    clean_norm,
+    combined_prev,
+    history,
+    is_conversational_affirmation,
+    msg_lower,
+    photos,
+    principal,
+    tool_results,
+    tools_called,
+):
+    """Runs the NAS tools the message clearly asks for (system, storage, disks, fans, containers,
+    network, maths, documents) before the model is asked."""
     # --- Step 1: Intelligent Tool Routing & Execution ---
     if allow_nas_tools:
         # Context-aware follow-up resolution for affirmations (e.g. "Do that", "Yes", "Run it", "Restart it")
@@ -1127,7 +1090,27 @@ def _run_agentic_chat_turn(
                 tools_called.append("search_nas_knowledge")
                 citations = res_know.get("citations", [])
                 photos = res_know.get("photos", [])
+    return citations, photos
 
+
+def _turn_classify(
+    *,
+    allow_nas_tools,
+    allow_web_search,
+    citations,
+    clean_msg,
+    clean_norm,
+    history,
+    is_conversational_affirmation,
+    msg_lower,
+    photos,
+    principal,
+    tool_results,
+    tools_called,
+    web_sources,
+):
+    """Classifies the message (identity, small talk, weather, diagnostics, general knowledge) and
+    runs the tools that still apply."""
     # Check if the user is asking about the assistant's own identity, creator, model, or origin
     is_self_identity = _is_self_identity_question(msg_lower)
 
@@ -1243,7 +1226,12 @@ def _run_agentic_chat_turn(
             tools_called.append("search_nas_knowledge")
             citations = res_know.get("citations", [])
             photos = res_know.get("photos", [])
+    return citations, is_meta_diagnostic, is_pure_conversational, is_self_identity, photos, web_sources
 
+
+def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_identity, tool_results, web_sources):
+    """The model's messages: the system prompt (this NAS, the model, the tool results), recent
+    history and the user turn."""
     # --- Step 3: Build Context & Invoke Local LLM (or Model-Aware ReAct Synthesizer) ---
     act_accel = resolve_model_runtime_accelerator(active_model, host_accel=accel)
     ram_gb = round(read_total_ram_bytes() / (1024**3), 1)
@@ -1344,7 +1332,22 @@ def _run_agentic_chat_turn(
         Z_STATE.ai_active = True
         Z_STATE.ai_accelerator = target_accel
         Z_STATE.ai_model = active_model
+    return act_accel, llm_messages, model_info, ram_gb
 
+
+def _turn_call_model(
+    *,
+    active_model,
+    allow_nas_tools,
+    citations,
+    is_pure_conversational,
+    llm_endpoint,
+    llm_messages,
+    principal,
+    tool_results,
+    tools_called,
+):
+    """Asks the model, running the tools it requests (at most three rounds)."""
     try:
         MAX_TOOL_RECURSIONS = 3
         tool_recursions = 0
@@ -1461,7 +1464,26 @@ def _run_agentic_chat_turn(
             Z_STATE.ai_active = False
             Z_STATE.ai_accelerator = ""
             Z_STATE.ai_model = ""
+    return eval_tokens, llm_reply, measured_tok_sec, runtime_accel, runtime_name
 
+
+def _turn_fallback_reply(
+    *,
+    accel,
+    active_model,
+    clean_msg,
+    combined_prev,
+    is_conversational_affirmation,
+    is_meta_diagnostic,
+    is_self_identity,
+    llm_reply,
+    model_info,
+    msg_lower,
+    ram_gb,
+    tool_results,
+    tools_called,
+):
+    """When the model gave no answer: the reply built from the tool results."""
     raw_think_content, reply_outside_think = extract_and_strip_reasoning(llm_reply or "")
     if not reply_outside_think:
         think_prefix = f"<think>\n{raw_think_content}\n</think>\n\n" if raw_think_content else ""
@@ -1637,7 +1659,26 @@ def _run_agentic_chat_turn(
                         llm_reply = think_prefix + abstain_msg
                     else:
                         llm_reply = think_prefix + autonomous_reply
+    return (llm_reply,)
 
+
+def _turn_trace(
+    *,
+    act_accel,
+    active_model,
+    cfg,
+    citations,
+    eval_tokens,
+    llm_reply,
+    measured_tok_sec,
+    runtime_accel,
+    runtime_name,
+    t0,
+    tool_results,
+    tools_called,
+    web_sources,
+):
+    """The tool trace, telemetry, grounding and citations for the turn's result."""
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     tools_called_trace: list[dict[str, Any]] = []
     for idx, tr in enumerate(tool_results):
@@ -1711,6 +1752,172 @@ def _run_agentic_chat_turn(
         grounding_detail = score_answer_grounding(llm_reply, citations, embed=_grounding_embedder(cfg))
         if grounding_detail:
             grounding_score = grounding_detail["score"]
+    return (
+        crag_grade,
+        elapsed_ms,
+        folder_manifest,
+        folder_path,
+        grounding_detail,
+        grounding_score,
+        llm_reply,
+        telemetry,
+        tools_called_trace,
+    )
+
+
+def _run_agentic_chat_turn(
+    message: str,
+    history: list[dict[str, Any]] | None = None,
+    allow_web_search: bool = False,
+    allow_nas_tools: bool = True,
+    model_override: str | None = None,
+    principal: Any = None,
+) -> dict[str, Any]:
+    """
+    Executes a conversational turn with the ZettAI Local Chatbot & NAS Copilot:
+      1. Detects required NAS Hardware Tools (telemetry, standby-safe disks, fan control,
+         Docker containers, local RAG search, AI sync) and executes them safely.
+      2. Browses the live internet (`browse_internet`) whenever web verification is requested
+         or a general knowledge question is asked.
+      3. Synthesizes the final response using the selected LLM (via local Ollama/OpenAI runtime
+         when available, or the model-aware ReAct synthesis engine) and returns full `llm_telemetry`.
+    """
+    _WEB_ALLOWED.set(bool(allow_web_search))
+    t0 = time.perf_counter()
+    clean_msg = str(message or "").strip()
+    if not clean_msg:
+        raise ValueError("Chat message cannot be empty.")
+
+    rag = get_rag_engine()
+    cfg = rag.get_config()
+    active_model = str(model_override or cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b").strip()
+    llm_endpoint = str(cfg.get("llm_endpoint") or "").strip()
+    accel = detect_hardware_accelerator()
+
+    msg_lower = clean_msg.lower()
+    clean_norm = clean_msg.strip().lower().rstrip("!.?,")
+    is_conversational_affirmation = bool(
+        re.match(
+            r"^(?:do\s+(?:that|it|this)|yes(?: please)?|sure(?: thing)?|run\s+it|go\s+ahead|proceed|ok|okay|yep|yeah|restart\s+it|start\s+it|stop\s+it|check\s+(?:that|it|again)|rescan|why(?:\s+(?:is\s+that|so))?)$",
+            clean_norm,
+        )
+    )
+
+    combined_prev = ""
+    last_assistant_msg = ""
+    last_user_msg = ""
+    if history:
+        for h in reversed(history):
+            if isinstance(h, dict):
+                role = h.get("role")
+                if role == "assistant" and not last_assistant_msg:
+                    last_assistant_msg = str(h.get("content") or "")
+                elif role == "user" and not last_user_msg:
+                    last_user_msg = str(h.get("content") or "")
+                if last_assistant_msg and last_user_msg:
+                    break
+        combined_prev = (last_assistant_msg + " " + last_user_msg).lower()
+
+    tool_results: list[dict[str, Any]] = []
+    tools_called: list[str] = []
+    web_sources: list[dict[str, Any]] = []
+    citations: list[dict[str, Any]] = []
+    photos: list[dict[str, Any]] = []
+
+    citations, photos = _turn_run_requested_tools(
+        allow_nas_tools=allow_nas_tools,
+        citations=citations,
+        clean_msg=clean_msg,
+        clean_norm=clean_norm,
+        combined_prev=combined_prev,
+        history=history,
+        is_conversational_affirmation=is_conversational_affirmation,
+        msg_lower=msg_lower,
+        photos=photos,
+        principal=principal,
+        tool_results=tool_results,
+        tools_called=tools_called,
+    )
+
+    citations, is_meta_diagnostic, is_pure_conversational, is_self_identity, photos, web_sources = _turn_classify(
+        allow_nas_tools=allow_nas_tools,
+        allow_web_search=allow_web_search,
+        citations=citations,
+        clean_msg=clean_msg,
+        clean_norm=clean_norm,
+        history=history,
+        is_conversational_affirmation=is_conversational_affirmation,
+        msg_lower=msg_lower,
+        photos=photos,
+        principal=principal,
+        tool_results=tool_results,
+        tools_called=tools_called,
+        web_sources=web_sources,
+    )
+
+    act_accel, llm_messages, model_info, ram_gb = _turn_build_prompt(
+        accel=accel,
+        active_model=active_model,
+        clean_msg=clean_msg,
+        history=history,
+        is_self_identity=is_self_identity,
+        tool_results=tool_results,
+        web_sources=web_sources,
+    )
+
+    eval_tokens, llm_reply, measured_tok_sec, runtime_accel, runtime_name = _turn_call_model(
+        active_model=active_model,
+        allow_nas_tools=allow_nas_tools,
+        citations=citations,
+        is_pure_conversational=is_pure_conversational,
+        llm_endpoint=llm_endpoint,
+        llm_messages=llm_messages,
+        principal=principal,
+        tool_results=tool_results,
+        tools_called=tools_called,
+    )
+
+    (llm_reply,) = _turn_fallback_reply(
+        accel=accel,
+        active_model=active_model,
+        clean_msg=clean_msg,
+        combined_prev=combined_prev,
+        is_conversational_affirmation=is_conversational_affirmation,
+        is_meta_diagnostic=is_meta_diagnostic,
+        is_self_identity=is_self_identity,
+        llm_reply=llm_reply,
+        model_info=model_info,
+        msg_lower=msg_lower,
+        ram_gb=ram_gb,
+        tool_results=tool_results,
+        tools_called=tools_called,
+    )
+
+    (
+        crag_grade,
+        elapsed_ms,
+        folder_manifest,
+        folder_path,
+        grounding_detail,
+        grounding_score,
+        llm_reply,
+        telemetry,
+        tools_called_trace,
+    ) = _turn_trace(
+        act_accel=act_accel,
+        active_model=active_model,
+        cfg=cfg,
+        citations=citations,
+        eval_tokens=eval_tokens,
+        llm_reply=llm_reply,
+        measured_tok_sec=measured_tok_sec,
+        runtime_accel=runtime_accel,
+        runtime_name=runtime_name,
+        t0=t0,
+        tool_results=tool_results,
+        tools_called=tools_called,
+        web_sources=web_sources,
+    )
 
     return {
         "status": "ok",
