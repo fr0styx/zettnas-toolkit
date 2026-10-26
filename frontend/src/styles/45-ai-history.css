@@ -286,5 +286,9 @@
 }
 
 
-/* The message box fills the composer row (phones put it on a line of its own, 56-phone.css) */
-.ai-chat-composer-row #ai-chat-input { flex: 1; }
+/* The message box fills the composer row but never gets narrower than a few words: in a narrow
+   pane the buttons move to the next line (phones put the box on a line of its own, 56-phone.css) */
+.ai-chat-composer-row { flex-wrap: wrap; }
+.ai-chat-composer-row #ai-chat-input { flex: 1 1 240px; min-width: 0; }
+/* Stop shows only while an answer is being written (the button class would override hidden) */
+.ai-chat-composer-row .btn-pill-toggle[hidden] { display: none; }
