@@ -447,11 +447,12 @@ def _norm(value, subs, key=""):
         return "<ts>" if re.fullmatch(r"1[6-9]\d{8}(\.\d+)?", str(value)) else value
     if not isinstance(value, str):
         return f"<{type(value).__name__}>"
+    # a random id first: its digits could otherwise look like a timestamp
+    if (key in ("canary_id", "id") and re.fullmatch(r"[0-9a-f-]{8,}", value)) or re.fullmatch(r"[0-9a-f]{16}", value):
+        return "<id>"
     for real, tag in subs:
         value = value.replace(real, tag)
     value = re.sub(r"(?<!\d)1[6-9]\d{8}(\.\d+)?(?!\d)", "<ts>", value)
-    if (key in ("canary_id", "id") and re.fullmatch(r"[0-9a-f-]{8,}", value)) or re.fullmatch(r"[0-9a-f]{16}", value):
-        return "<id>"
     return value
 
 

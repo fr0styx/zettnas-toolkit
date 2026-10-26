@@ -220,7 +220,7 @@ def test_e2e_live_desktop_session_and_badge():
 
         badge = _wait("#suite-brand-badge")
         assert badge is not None
-        assert "NAS WORKBENCH" in badge.inner_text()
+        assert "NAS WORKBENCH" in badge.inner_text().upper()  # the words, whatever the case
 
         # The hardware settings button is in the page, but only shown on supported
         # appliance hardware, which a CI runner doesn't have.
