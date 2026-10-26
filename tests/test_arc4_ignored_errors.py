@@ -9,7 +9,7 @@ from backend import ignored_errors as ie
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # places that ignore an error on purpose; lower it when you handle one properly, never raise it
-IGNORED_BASELINE = 310
+IGNORED_BASELINE = 309
 
 
 def _raise_and_ignore(where, now):

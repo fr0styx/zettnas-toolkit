@@ -2,6 +2,8 @@
 Tests for Phase 3: DMTF Redfish REST API and SNMP v2c/v3 Monitoring & MIB Management.
 """
 
+import pytest
+
 from backend.state import Z_STATE
 
 
@@ -14,6 +16,26 @@ def test_redfish_service_root(client):
     assert "Systems" in data
     assert "Chassis" in data
     assert "Storage" in data
+
+
+SEEDED_STATS = {
+    "chassis": "d6u",
+    "cpu": {"temp": 42.5, "util": 15.0},
+    "disks": [
+        {"dev": "sda", "name": "sda", "temp": 35.0, "standby": False, "size_bytes": 4000000000000},
+        {"dev": "nvme0n1", "name": "nvme0n1", "temp": 40.0, "standby": False, "size_bytes": 1000000000000},
+    ],
+    "fans": [1200, 850],
+    "mem": {"total_gb": 32.0, "used_gb": 8.0, "pct": 25.0},
+}
+
+
+@pytest.fixture(autouse=True)
+def _seeded_stats(monkeypatch):
+    """Each test sees the same stats, whatever ran before it (ARC-13)."""
+    import copy
+
+    monkeypatch.setattr(Z_STATE, "cached_stats", copy.deepcopy(SEEDED_STATS))
 
 
 def test_redfish_chassis_and_thermal(client, auth_headers):

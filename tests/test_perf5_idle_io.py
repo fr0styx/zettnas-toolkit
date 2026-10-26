@@ -4,6 +4,8 @@ import json
 import os
 import types
 
+import pytest
+
 
 def test_settings_written_by_the_app_are_seen_at_once_outside_edits_later(monkeypatch, tmp_path):
     from backend import fsutil
@@ -92,10 +94,15 @@ def test_an_idle_reindex_status_is_reused_for_a_few_seconds(monkeypatch, tmp_pat
 
     rs._REINDEX_CACHE = {"status": "complete"}
     rs._REINDEX_CACHE_TIME = 1000.0
+    rs._REINDEX_KEY = repr(sorted(rs.REINDEX_STATUS.items(), key=lambda kv: str(kv[0])))
     monkeypatch.setattr("time.time", lambda: 1005.0)
     monkeypatch.setattr(rs.os.path, "exists", lambda p: (_ for _ in ()).throw(AssertionError("looked at disk")))
     assert rs.get_reindex_status()["status"] == "complete"
     assert rs.IDLE_RECHECK_SECS <= 30
+    # a change to the in-process status (a run failed) is seen at once, not after 15 s
+    monkeypatch.setitem(rs.REINDEX_STATUS, "error", "a failure only this test reports")
+    with pytest.raises(AssertionError, match="looked at disk"):
+        rs.get_reindex_status()
 
 
 def test_lsblk_runs_again_only_when_the_disks_change(monkeypatch):

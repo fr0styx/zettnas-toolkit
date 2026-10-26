@@ -23,6 +23,7 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
         Z_STATE.copy_active = False
         Z_STATE.copy_paused = False
         Z_STATE.copy_status = "idle"
+        Z_STATE.pending_ingest = None  # another test may leave a prompt waiting (ARC-13)
 
     def tearDown(self):
         reset_failsafe_state()

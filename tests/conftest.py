@@ -78,6 +78,126 @@ except Exception:
     pass
 
 
+# --- ARC-13: each test starts from the same data folder --------------------------------------
+# Several tests patch os.stat, os.listdir or os.path.realpath to prove that code never touches
+# a disk, and their patches may still be in place when this clean-up runs. It therefore calls
+# the posix module directly, which those patches do not reach.
+import posix  # noqa: E402
+import stat as _stat  # noqa: E402
+
+_DB_SUFFIXES = (".db", ".db-wal", ".db-shm", ".db-journal", ".sqlite", ".sqlite-wal", ".sqlite-shm")
+_RESTORE_MAX_BYTES = 256 * 1024
+
+
+def _lstat(path):
+    try:
+        return posix.lstat(path)
+    except OSError:
+        return None
+
+
+def _read(path):
+    fd = posix.open(path, posix.O_RDONLY)
+    try:
+        chunks = []
+        while chunk := posix.read(fd, 65536):
+            chunks.append(chunk)
+        return b"".join(chunks)
+    finally:
+        posix.close(fd)
+
+
+def _write(path, data):
+    fd = posix.open(path, posix.O_WRONLY | posix.O_CREAT | posix.O_TRUNC, 0o600)
+    try:
+        posix.write(fd, data)
+    finally:
+        posix.close(fd)
+
+
+def _remove(path):
+    st = _lstat(path)
+    if st is None:
+        return
+    if _stat.S_ISDIR(st.st_mode):
+        for name in posix.listdir(path):
+            _remove(path + "/" + name)
+        posix.rmdir(path)
+    else:
+        posix.unlink(path)
+
+
+def _data_snapshot():
+    files = {}
+    try:
+        names = posix.listdir(DATA_DIR)
+    except OSError:
+        return files
+    for name in names:
+        path = DATA_DIR + "/" + name
+        st = _lstat(path)
+        if name.endswith(_DB_SUFFIXES) or st is None or not _stat.S_ISREG(st.st_mode):
+            files[name] = None  # databases keep open connections; folders are left as they are
+        elif st.st_size <= _RESTORE_MAX_BYTES:
+            try:
+                files[name] = _read(path)
+            except OSError:
+                files[name] = None
+        else:
+            files[name] = None
+    return files
+
+
+@pytest.fixture(autouse=True)
+def _fresh_data_folder():
+    """Files a test adds to the data folder are removed after it, and small settings files it
+    changed or removed are put back, so no test depends on what an earlier one left behind
+    (ARC-13). Databases are left alone (their connections stay open across tests)."""
+    before = _data_snapshot()
+    yield
+    try:
+        names = posix.listdir(DATA_DIR)
+    except OSError:
+        names = []
+    for name in names:
+        if name.endswith(_DB_SUFFIXES):
+            continue
+        path = DATA_DIR + "/" + name
+        try:
+            if name not in before:
+                _remove(path)
+            elif before[name] is not None and _read(path) != before[name]:
+                _write(path, before[name])
+        except OSError:
+            pass
+    for name, old in before.items():
+        if old is not None and name not in names:
+            try:
+                _write(DATA_DIR + "/" + name, old)
+            except OSError:
+                pass
+    try:
+        from backend import fsutil
+
+        fsutil.clear_json_cache()
+    except Exception:
+        pass
+
+
+@pytest.fixture(autouse=True)
+def _fresh_hardware_state():
+    """Fan hold trackers, thermal fail-safe flags and standby caches start empty (ARC-13)."""
+    from backend.services import rag_standby
+    from backend.state import Z_STATE
+
+    Z_STATE.fan_state_tracker.clear()
+    Z_STATE.critical_temp_active = False
+    Z_STATE.thermal_watchdog_engaged = False
+    Z_STATE.cached_smart_data.clear()
+    rag_standby._SMARTCTL_STANDBY_CACHE.clear()
+    rag_standby._UNRAID_INI_CACHE.update({"ts": 0.0, "disks": {}, "shares": {}})
+
+
 @pytest.fixture(autouse=True)
 def _auto_confirm_destructive_actions(request, monkeypatch):
     """Most API tests call destructive routes directly; treat them as confirmed.
@@ -145,6 +265,14 @@ def _fresh_rate_limits():
     rate_limit.reset()
 
 
+try:
+    from backend.services import rag_reindex_status as _rrs
+
+    _REINDEX_STATUS_AT_START = dict(_rrs.REINDEX_STATUS)
+except Exception:
+    _REINDEX_STATUS_AT_START = {}
+
+
 @pytest.fixture(autouse=True)
 def _fresh_idle_caches():
     """The idle-loop caches (PERF-5) start empty, so a test sees the files it writes."""
@@ -162,6 +290,9 @@ def _fresh_idle_caches():
     DiskDiscoveryHAL.clear_cache()
     rag_reindex_status._REINDEX_CACHE = {"status": "idle"}
     rag_reindex_status._REINDEX_CACHE_TIME = 0.0
+    rag_reindex_status._REINDEX_KEY = ""
+    rag_reindex_status.REINDEX_STATUS.clear()
+    rag_reindex_status.REINDEX_STATUS.update(_REINDEX_STATUS_AT_START)
 
 
 def _install_response_hook():
@@ -332,3 +463,35 @@ def token(client):
 @pytest.fixture
 def auth_headers(token):
     return {"Authorization": f"Bearer {token}"}
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--random-order",
+        nargs="?",
+        const="random",
+        default=os.environ.get("ZETTNAS_RANDOM_ORDER"),
+        help="run the tests in a shuffled order (optionally with a seed) to find order dependencies",
+    )
+
+
+def pytest_configure(config):
+    seed = config.getoption("--random-order")
+    if seed == "random":
+        import random
+
+        seed = str(random.SystemRandom().randrange(1, 10**6))
+    config._zn_random_seed = seed
+
+
+def pytest_collection_modifyitems(config, items):
+    seed = getattr(config, "_zn_random_seed", None)
+    if seed:
+        import random
+
+        random.Random(seed).shuffle(items)
+
+
+def pytest_report_header(config):
+    seed = getattr(config, "_zn_random_seed", None)
+    return f"random order: seed {seed} (re-run with --random-order={seed})" if seed else None

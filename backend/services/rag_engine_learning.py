@@ -300,7 +300,9 @@ class RagLearningMixin:
         return res_complete
 
     def _write_reindex_progress(self, data: dict[str, Any]) -> None:
-        prog_path = "/app/data/reindex_progress.json"
+        from backend import config as _cfg
+
+        prog_path = os.path.join(_cfg.DATA_DIR, "reindex_progress.json")
         try:
             atomic_write_json(prog_path, data)
         except OSError:

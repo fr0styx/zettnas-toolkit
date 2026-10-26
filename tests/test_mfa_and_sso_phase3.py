@@ -283,6 +283,7 @@ def test_reverse_proxy_sso_authentication(test_env):
 
     # Enable Proxy SSO
     config.ENABLE_PROXY_SSO = True
+    old_proxies = config.TRUSTED_PROXIES
     config.TRUSTED_PROXIES = ["testclient", "127.0.0.1", "10.0.0.0/8"]
 
     try:
@@ -302,3 +303,4 @@ def test_reverse_proxy_sso_authentication(test_env):
 
     finally:
         config.ENABLE_PROXY_SSO = False
+        config.TRUSTED_PROXIES = old_proxies
