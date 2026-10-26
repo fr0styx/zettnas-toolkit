@@ -181,7 +181,8 @@ export function calculateNextAvailablePosition() {
     { id: 'vm-desktop-icon', col: 0, row: 2 },
     { id: 'fm-desktop-icon', col: 0, row: 3 },
     { id: 'rb-desktop-icon', col: 0, row: 4 },
-    { id: 'chassis-desktop-icon', col: 0, row: 5 },
+    { id: 'dh-desktop-icon', col: 0, row: 5 },
+    { id: 'chassis-desktop-icon', col: 0, row: 6 },
   ];
   if (typeof document !== 'undefined') {
     defaultConfigs.forEach(({ id, col, row }) => {

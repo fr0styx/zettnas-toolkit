@@ -160,4 +160,44 @@ describe('Drive Health', () => {
     expect(html).toContain('Drive sdc needs attention: The drive is too hot.');
     expect(html).toContain('data-ov-open="drives"');
   });
+
+  it('has its own desktop icon that opens it', async () => {
+    const { readFileSync } = await import('node:fs');
+    const path = await import('node:path');
+    const page = readFileSync(path.resolve(__dirname, '../../index.html'), 'utf8');
+    const icon = page.match(/<div[^>]*id="dh-desktop-icon"[^>]*>/)?.[0] || '';
+    expect(icon).toContain('data-action="open-drive-health"');
+    expect(page).toContain('<use href="#i-disk"/>');
+    const { installDomActions } = await import('../dom-actions.js');
+    routeGet();
+    dh.initDriveHealth();
+    document.body.insertAdjacentHTML('beforeend', '<div id="dh-desktop-icon" data-action="open-drive-health"></div>');
+    installDomActions();
+    document.getElementById('dh-desktop-icon').click();
+    await flush();
+    await flush();
+    expect(document.getElementById('drive-health-window')?.hidden).toBe(false);
+  });
+
+  it('takes a free spot on a desktop someone already arranged, moving none of their icons', async () => {
+    const { initDraggableDesktopIcons } = await import('../components/dock/desktop-icons.js');
+    const ids = ['management-desktop-icon', 'containers-desktop-icon', 'vm-desktop-icon', 'fm-desktop-icon', 'rb-desktop-icon', 'dh-desktop-icon', 'chassis-desktop-icon'];
+    document.body.innerHTML = `<div id="desktop-icons-container">${ids.map((id) => `<div class="chassis-hero-box" id="${id}"><span class="icon-text">${id}</span></div>`).join('')}</div>`;
+    const saved = {
+      'management-desktop-icon': { left: 24, top: 77 },
+      'containers-desktop-icon': { left: 24, top: 189 },
+      'vm-desktop-icon': { left: 24, top: 301 },
+      'fm-desktop-icon': { left: 24, top: 413 },
+      'rb-desktop-icon': { left: 24, top: 525 },
+      'chassis-desktop-icon': { left: 24, top: 637 },
+    };
+    localStorage.setItem('zettnas_desktop_icon_positions_v3', JSON.stringify(saved));
+    Object.defineProperty(window, 'innerHeight', { value: 1200, configurable: true });
+    Object.defineProperty(window, 'innerWidth', { value: 1600, configurable: true });
+    initDraggableDesktopIcons();
+    const pos = (id) => [document.getElementById(id).style.left, document.getElementById(id).style.top].join(',');
+    expect(pos('chassis-desktop-icon')).toBe('24px,637px');
+    expect(pos('dh-desktop-icon')).not.toBe('24px,637px');
+    expect(new Set(ids.map(pos)).size).toBe(ids.length);
+  });
 });

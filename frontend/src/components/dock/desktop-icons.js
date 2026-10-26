@@ -31,11 +31,12 @@ export function initDraggableDesktopIcons() {
     { id: 'vm-desktop-icon', defaultLeft: 24, defaultTop: 301 },
     { id: 'fm-desktop-icon', defaultLeft: 24, defaultTop: 413 },
     { id: 'rb-desktop-icon', defaultLeft: 24, defaultTop: 525 },
-    { id: 'chassis-desktop-icon', defaultLeft: 24, defaultTop: 637 },
+    { id: 'dh-desktop-icon', defaultLeft: 24, defaultTop: 637 },
+    { id: 'chassis-desktop-icon', defaultLeft: 24, defaultTop: 749 },
   ];
 
   const getAllIconElements = () => {
-    const defaultIds = ['management-desktop-icon', 'containers-desktop-icon', 'vm-desktop-icon', 'fm-desktop-icon', 'rb-desktop-icon', 'chassis-desktop-icon'];
+    const defaultIds = ['management-desktop-icon', 'containers-desktop-icon', 'vm-desktop-icon', 'fm-desktop-icon', 'rb-desktop-icon', 'dh-desktop-icon', 'chassis-desktop-icon'];
     const elements = [];
     const seen = new Set();
     defaultIds.forEach((id) => {
@@ -229,6 +230,7 @@ export function initDraggableDesktopIcons() {
       else if (iconEl.id === 'vm-desktop-icon') iconAppId = 'vm';
       else if (iconEl.id === 'chassis-desktop-icon') iconAppId = 'console';
       else if (iconEl.id === 'fm-desktop-icon' || iconEl.id === 'rb-desktop-icon') iconAppId = 'fm';
+      else if (iconEl.id === 'dh-desktop-icon') iconAppId = 'smart';
 
       const openLabel = t('dock.open_app', 'Open');
       const nameEl = iconEl.querySelector('.icon-text');
@@ -437,6 +439,8 @@ export function initDraggableDesktopIcons() {
         iconsToProcess.push(icon);
       }
     });
+    // Icons someone has placed keep their spot; a new icon (Drive Health, say) takes a free one
+    iconsToProcess.sort((a, b) => (savedPositions[a.id] ? 0 : 1) - (savedPositions[b.id] ? 0 : 1));
 
     iconsToProcess.forEach(({ id, el, defaultLeft = 24, defaultTop = 77 }) => {
       const saved = savedPositions[id];

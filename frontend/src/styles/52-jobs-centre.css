@@ -25,8 +25,7 @@
   text-align: center;
 }
 /* Solid like the file manager: on the glass surface the wallpaper showed through the list */
-.os-window.jobs-centre-window,
-.os-window.drive-health-window {
+.os-window.jobs-centre-window {
   background: var(--lt-b-0f172afa, rgba(15, 23, 42, 0.98));
   border-color: var(--zn-line-12);
 }

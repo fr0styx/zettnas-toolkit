@@ -1,6 +1,6 @@
 /* Drive Health (components/drive-health.js): the drives on the left, the chosen one on the right. */
 .drive-health-window { width: min(980px, 94vw); height: min(680px, 86vh); flex-direction: column; }
-/* solid background: shared with the jobs centre (52-jobs-centre.css) */
+/* solid background: shared with the file manager (25-mobile-ergonomics.css) */
 .dh-body { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; flex: 1; min-height: 0; }
 .dh-side { border-right: 1px solid var(--track); padding: 12px; overflow-y: auto; }
 .dh-detail { padding: 16px 20px; overflow-y: auto; }
