@@ -1,0 +1,141 @@
+{
+ "geometry": {
+  "left": {
+   "left": 8,
+   "top": 48,
+   "width": 504,
+   "height": 644,
+   "label": "Left Half (1/2)"
+  },
+  "right": {
+   "left": 520,
+   "top": 48,
+   "width": 504,
+   "height": 644,
+   "label": "Right Half (1/2)"
+  },
+  "top": null,
+  "bottom": null,
+  "top-left": {
+   "left": 8,
+   "top": 48,
+   "width": 504,
+   "height": 318,
+   "label": "Top Left (1/4)"
+  },
+  "top-right": {
+   "left": 520,
+   "top": 48,
+   "width": 504,
+   "height": 318,
+   "label": "Top Right (1/4)"
+  },
+  "bottom-left": {
+   "left": 8,
+   "top": 374,
+   "width": 504,
+   "height": 318,
+   "label": "Bottom Left (1/4)"
+  },
+  "bottom-right": {
+   "left": 520,
+   "top": 374,
+   "width": 504,
+   "height": 318,
+   "label": "Bottom Right (1/4)"
+  },
+  "maximize": {
+   "left": 8,
+   "top": 48,
+   "width": 1008,
+   "height": 644,
+   "label": "Maximize (Full)"
+  },
+  "center": null,
+  "nonsense": null
+ },
+ "snapZones": [
+  "left",
+  "right",
+  "maximize",
+  null,
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+  null
+ ],
+ "keys": [
+  "1790000000_Disk sdb hot_warning",
+  "1790000100_Backup done_info"
+ ],
+ "before": [
+  false,
+  false
+ ],
+ "after": [
+  true,
+  false
+ ],
+ "reset": [
+  false,
+  false
+ ],
+ "apps": {
+  "fm": {
+   "id": "fm",
+   "icon": "#i-storage"
+  },
+  "management": {
+   "id": "management",
+   "icon": "#i-management"
+  },
+  "console": {
+   "id": "console",
+   "icon": "#i-screen"
+  },
+  "smart": {
+   "id": "smart",
+   "icon": "#i-disk"
+  },
+  "container-inspector": {
+   "id": "container-inspector",
+   "icon": "#i-chip"
+  },
+  "containers": {
+   "id": "containers",
+   "icon": "#i-chip"
+  },
+  "vm": {
+   "id": "vm",
+   "icon": "#i-vm"
+  },
+  "app-deploy": {
+   "id": "app-deploy",
+   "icon": "#i-chip"
+  },
+  "notif": {
+   "id": "notif",
+   "icon": "#i-bell"
+  },
+  "cloud-remote": {
+   "id": "cloud-remote",
+   "icon": "#i-cloud"
+  },
+  "personalization": {
+   "id": "personalization",
+   "icon": "#i-screen"
+  },
+  "zettai": {
+   "id": "zettai",
+   "icon": "#i-search"
+  }
+ },
+ "settings": {
+  "position": "bottom",
+  "magnification": true,
+  "scale": 1.45,
+  "size": "medium",
+  "autohide": false
+ }
+}

@@ -73,9 +73,51 @@
  },
  "frontend/src/components/dock.js": {
   "buttons": 0,
-  "globals": 28,
-  "styles": 89,
-  "templates": 20
+  "globals": 20,
+  "styles": 0,
+  "templates": 0
+ },
+ "frontend/src/components/dock/apps.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 21,
+  "templates": 2
+ },
+ "frontend/src/components/dock/console-window.js": {
+  "buttons": 0,
+  "globals": 2,
+  "styles": 0,
+  "templates": 0
+ },
+ "frontend/src/components/dock/desktop-icons.js": {
+  "buttons": 0,
+  "globals": 5,
+  "styles": 15,
+  "templates": 2
+ },
+ "frontend/src/components/dock/dock-manager.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 25,
+  "templates": 12
+ },
+ "frontend/src/components/dock/notifications.js": {
+  "buttons": 0,
+  "globals": 1,
+  "styles": 9,
+  "templates": 2
+ },
+ "frontend/src/components/dock/snap-assist.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 0,
+  "templates": 1
+ },
+ "frontend/src/components/dock/user-flyout.js": {
+  "buttons": 0,
+  "globals": 0,
+  "styles": 19,
+  "templates": 1
  },
  "frontend/src/components/docker-table.js": {
   "buttons": 0,
