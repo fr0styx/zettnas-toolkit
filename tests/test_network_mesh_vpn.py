@@ -14,11 +14,12 @@ from backend.main import app
 
 def test_get_mesh_vpn_status_not_installed():
     with (
-        patch("backend.hardware.network._find_tailscale_bin", return_value=None),
+        patch("backend.hardware.net.tailscale._find_tailscale_bin", return_value=None),
         patch(
-            "backend.hardware.network._get_tailscale_container_info", return_value={"exists": False, "running": False}
+            "backend.hardware.net.tailscale._get_tailscale_container_info",
+            return_value={"exists": False, "running": False},
         ),
-        patch("backend.hardware.network._run_tailscale_cmd", return_value=(127, "not found")),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(127, "not found")),
         patch("subprocess.run") as mock_subp,
     ):
         mock_subp.return_value = MagicMock(returncode=0, stdout="wg0\n")
@@ -43,12 +44,12 @@ def test_get_mesh_vpn_status_container_running():
         }
     )
     with (
-        patch("backend.hardware.network._find_tailscale_bin", return_value=None),
+        patch("backend.hardware.net.tailscale._find_tailscale_bin", return_value=None),
         patch(
-            "backend.hardware.network._get_tailscale_container_info",
+            "backend.hardware.net.tailscale._get_tailscale_container_info",
             return_value={"exists": True, "running": True, "id": "abc123def456"},
         ),
-        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, mock_status_json)),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, mock_status_json)),
         patch("subprocess.run") as mock_subp,
     ):
         mock_subp.return_value = MagicMock(returncode=1, stdout="")
@@ -65,9 +66,9 @@ def test_get_mesh_vpn_status_container_running():
 
 def test_get_mesh_vpn_status_container_stopped():
     with (
-        patch("backend.hardware.network._find_tailscale_bin", return_value=None),
+        patch("backend.hardware.net.tailscale._find_tailscale_bin", return_value=None),
         patch(
-            "backend.hardware.network._get_tailscale_container_info",
+            "backend.hardware.net.tailscale._get_tailscale_container_info",
             return_value={"exists": True, "running": False, "id": "abc123def456"},
         ),
         patch("subprocess.run") as mock_subp,
@@ -109,9 +110,9 @@ def test_get_mesh_vpn_status_exit_node_and_routes_separation():
         return 1, ""
 
     with (
-        patch("backend.hardware.network._find_tailscale_bin", return_value="/usr/bin/tailscale"),
-        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
-        patch("backend.hardware.network._run_tailscale_cmd", side_effect=mock_cmd),
+        patch("backend.hardware.net.tailscale._find_tailscale_bin", return_value="/usr/bin/tailscale"),
+        patch("backend.hardware.net.tailscale._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", side_effect=mock_cmd),
         patch("subprocess.run") as mock_subp,
     ):
         mock_subp.return_value = MagicMock(returncode=1, stdout="")
@@ -132,8 +133,8 @@ def test_get_mesh_vpn_status_exit_node_and_routes_separation():
 def test_execute_tailscale_up_needs_login():
     auth_text = "To authenticate, visit:\n\n\thttps://login.tailscale.com/a/sample123456\n"
     with (
-        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
-        patch("backend.hardware.network._run_tailscale_cmd", return_value=(1, auth_text)),
+        patch("backend.hardware.net.tailscale._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(1, auth_text)),
     ):
         res = execute_tailscale_up()
         assert res["status"] == "needs_login"
@@ -149,8 +150,8 @@ def test_execute_tailscale_up_status_json_fallback():
         return 1, "Some generic error without url"
 
     with (
-        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
-        patch("backend.hardware.network._run_tailscale_cmd", side_effect=mock_cmd),
+        patch("backend.hardware.net.tailscale._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", side_effect=mock_cmd),
     ):
         res = execute_tailscale_up()
         assert res["status"] == "needs_login"
@@ -159,8 +160,8 @@ def test_execute_tailscale_up_status_json_fallback():
 
 def test_execute_tailscale_up_success():
     with (
-        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
-        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Success")),
+        patch("backend.hardware.net.tailscale._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "Success")),
     ):
         res = execute_tailscale_up(auth_key="tskey-auth-123", hostname="my-nas")
         assert res["status"] == "success"
@@ -170,11 +171,11 @@ def test_execute_tailscale_up_success():
 def test_execute_tailscale_up_starts_stopped_container():
     with (
         patch(
-            "backend.hardware.network._get_tailscale_container_info",
+            "backend.hardware.net.tailscale._get_tailscale_container_info",
             return_value={"exists": True, "running": False, "id": "abc123def456"},
         ),
         patch("backend.services.container_mutator._docker_request", return_value=(204, {})) as mock_start,
-        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Success")),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "Success")),
         patch("time.sleep"),
     ):
         res = execute_tailscale_up()
@@ -185,8 +186,8 @@ def test_execute_tailscale_up_starts_stopped_container():
 def test_execute_tailscale_down():
     # Host CLI mode
     with (
-        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": False}),
-        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "Logged out")),
+        patch("backend.hardware.net.tailscale._get_tailscale_container_info", return_value={"exists": False}),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "Logged out")),
     ):
         res = execute_tailscale_down()
         assert res["status"] == "success"
@@ -194,8 +195,11 @@ def test_execute_tailscale_down():
 
     # Container mode
     with (
-        patch("backend.hardware.network._get_tailscale_container_info", return_value={"exists": True, "running": True}),
-        patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "")),
+        patch(
+            "backend.hardware.net.tailscale._get_tailscale_container_info",
+            return_value={"exists": True, "running": True},
+        ),
+        patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "")),
         patch("backend.services.container_mutator._docker_request", return_value=(204, {})) as mock_stop,
     ):
         res = execute_tailscale_down()
@@ -216,7 +220,7 @@ def test_deploy_tailscale_container_existing_running():
     with (
         patch("os.path.exists", return_value=True),
         patch("backend.services.container_mutator._docker_request", return_value=(200, fake_info)),
-        patch("backend.hardware.network.execute_tailscale_up", return_value={"status": "success"}),
+        patch("backend.hardware.net.tailscale_setup.execute_tailscale_up", return_value={"status": "success"}),
     ):
         res = deploy_tailscale_container(auth_key="tskey-auth-test")
         assert res["status"] == "success"
@@ -240,7 +244,7 @@ def test_deploy_tailscale_container_new_flow(tmp_path):
         patch("time.sleep", return_value=None),
         patch("backend.services.container_mutator._docker_request", side_effect=fake_docker_req),
         patch(
-            "backend.hardware.network.execute_tailscale_up",
+            "backend.hardware.net.tailscale_setup.execute_tailscale_up",
             return_value={"status": "needs_login", "auth_url": "https://login.tailscale.com/a/xyz999"},
         ),
     ):
@@ -419,25 +423,25 @@ def test_tailscale_extended_hardware_functions(tmp_path):
     )
 
     # Routes
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "ok")):
+    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "ok")):
         res = execute_tailscale_set_routes("192.168.1.0/24", enabled=True)
         assert res["status"] == "ok"
         res_dis = execute_tailscale_set_routes("", enabled=False)
         assert res_dis["status"] == "ok"
 
     # Exit node
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "ok")):
+    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "ok")):
         res = execute_tailscale_set_exit_node(enabled=True)
         assert res["status"] == "ok"
 
     # SSH
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "ok")):
+    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "ok")):
         res = execute_tailscale_set_ssh(enabled=True)
         assert res["status"] == "ok"
 
     # Ping
     ping_out = "pong from test-peer (100.80.1.2) via 192.168.1.50:41641 in 8ms\n"
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, ping_out)):
+    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, ping_out)):
         res = execute_tailscale_ping("100.80.1.2")
         assert res["status"] == "success"
         assert res["latency_ms"] == 8.0
@@ -445,13 +449,13 @@ def test_tailscale_extended_hardware_functions(tmp_path):
 
     # Reauth
     reauth_out = "To authenticate, visit:\n\n\thttps://login.tailscale.com/a/reauth789\n"
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(1, reauth_out)):
+    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(1, reauth_out)):
         res = execute_tailscale_reauth()
         assert res["status"] == "needs_login"
         assert res["auth_url"] == "https://login.tailscale.com/a/reauth789"
 
     # Serve
-    with patch("backend.hardware.network._run_tailscale_cmd", return_value=(0, "https://my-nas.ts.net")):
+    with patch("backend.hardware.net.tailscale._run_tailscale_cmd", return_value=(0, "https://my-nas.ts.net")):
         res = execute_tailscale_set_serve(True, False, 8082)
         assert res["status"] == "ok"
 
@@ -460,14 +464,14 @@ def test_tailscale_extended_hardware_functions(tmp_path):
     td_dir.mkdir()
     sample_file = td_dir / "document.pdf"
     sample_file.write_text("dummy content")
-    with patch("backend.hardware.network.get_taildrop_dir", return_value=str(td_dir)):
+    with patch("backend.hardware.net.tailscale.get_taildrop_dir", return_value=str(td_dir)):
         files = get_taildrop_inbox_files()
         assert len(files) == 1
         assert files[0]["name"] == "document.pdf"
 
     # Detect subnets
     with patch(
-        "backend.hardware.network._parse_routes",
+        "backend.hardware.net.common._parse_routes",
         return_value=[{"destination": "192.168.10.0", "mask": "255.255.255.0", "iface": "eth0"}],
     ):
         subnets = detect_local_subnets()

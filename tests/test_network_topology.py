@@ -117,9 +117,9 @@ def test_get_network_topology_mocked(tmp_path):
     (bonding / "active_slave").write_text("eth0\n")
 
     with (
-        patch("backend.hardware.network._find_sys_net_dir", return_value=str(sys_net)),
+        patch("backend.hardware.net.common._find_sys_net_dir", return_value=str(sys_net)),
         patch(
-            "backend.hardware.network._parse_routes",
+            "backend.hardware.net.common._parse_routes",
             return_value=[
                 {"iface": "br0", "destination": "0.0.0.0", "gateway": "10.0.0.1", "is_default": True, "metric": 1},
                 {
@@ -132,10 +132,10 @@ def test_get_network_topology_mocked(tmp_path):
                 },
             ],
         ),
-        patch("backend.hardware.network._get_dns_servers", return_value=["10.0.0.1"]),
-        patch("backend.hardware.network.read_ip", return_value="10.0.0.100"),
+        patch("backend.hardware.net.common._get_dns_servers", return_value=["10.0.0.1"]),
+        patch("backend.hardware.net.topology.read_ip", return_value="10.0.0.100"),
         patch(
-            "backend.hardware.network._get_docker_topology",
+            "backend.hardware.net.topology._get_docker_topology",
             return_value=[
                 {
                     "id": "net123456789",
@@ -211,7 +211,7 @@ def test_network_topology_api_endpoints(client, token):
 
 def test_network_config_persistence(tmp_path):
     cfg_file = tmp_path / "network_config.json"
-    with patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)):
+    with patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)):
         cfg = load_network_config()
         assert cfg == {"aliases": {}, "ports": {}}
 
@@ -235,15 +235,15 @@ def test_get_and_update_port_config(tmp_path):
     }
 
     with (
-        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
         patch(
-            "backend.hardware.network._query_ethtool",
+            "backend.hardware.net.ports._query_ethtool",
             return_value="Supports Wake-on: pumbg\nWake-on: d\nAuto-negotiation: on",
         ),
-        patch("backend.hardware.network._apply_mtu", return_value=True) as mock_mtu,
-        patch("backend.hardware.network._apply_wol", return_value=True) as mock_wol,
-        patch("backend.hardware.network._apply_negotiation", return_value=True) as mock_neg,
+        patch("backend.hardware.net.ports._apply_mtu", return_value=True) as mock_mtu,
+        patch("backend.hardware.net.ports._apply_wol", return_value=True) as mock_wol,
+        patch("backend.hardware.net.ports._apply_negotiation", return_value=True) as mock_neg,
     ):
         # 1. Query port configuration
         cfg = get_port_config("eth0")
@@ -340,9 +340,9 @@ def test_get_host_ip_config(tmp_path):
     }
 
     with (
-        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
-        patch("backend.hardware.network._parse_unraid_network_cfg", return_value={}),
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
+        patch("backend.hardware.net.canary._parse_unraid_network_cfg", return_value={}),
     ):
         res = get_host_ip_config()
         assert res["status"] == "ok"
@@ -372,9 +372,9 @@ def test_apply_host_ip_config_canary_and_confirm(tmp_path):
     watchdog.confirm()  # Ensure reset
 
     with (
-        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
-        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True) as mock_write_unraid,
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
+        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True) as mock_write_unraid,
         patch("backend.state.add_event") as mock_event,
     ):
         # 1. Apply new IP config with 60s Canary
@@ -434,9 +434,9 @@ def test_apply_host_ip_config_canary_revert(tmp_path):
     watchdog.confirm()  # Ensure reset
 
     with (
-        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
-        patch("backend.hardware.network.get_network_topology", return_value=mock_topo),
-        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True),
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.net.topology.get_network_topology", return_value=mock_topo),
+        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True),
         patch("backend.state.add_event"),
     ):
         apply_res = apply_host_ip_config_canary(
@@ -469,7 +469,7 @@ def test_canary_watchdog_auto_rollback_on_timeout():
     original = {"ip_address": "192.168.1.50"}
 
     with (
-        patch("backend.hardware.network._execute_revert") as mock_revert,
+        patch("backend.hardware.net.canary._execute_revert") as mock_revert,
         patch("backend.state.add_event") as mock_event,
     ):
         canary_id = watchdog.arm(target, original, timeout_sec=60)
@@ -546,18 +546,18 @@ def test_get_and_update_bond_config(tmp_path):
     cfg_file = tmp_path / "network_config.json"
 
     with (
-        patch("backend.hardware.network._find_sys_net_dir", return_value=str(sys_net)),
-        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.net.common._find_sys_net_dir", return_value=str(sys_net)),
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
         patch(
             "backend.hardware.network.get_network_topology",
             return_value={"physical_interfaces": [{"name": "eth0"}, {"name": "eth1"}]},
         ),
         patch("os.path.isfile", side_effect=lambda p: str(p) == str(unraid_cfg) or os.path.exists(p)),
         patch(
-            "backend.hardware.network._parse_unraid_network_cfg",
+            "backend.hardware.net.canary._parse_unraid_network_cfg",
             return_value={"BONDING_MODE[0]": "1", "BONDNICS[0]": "eth0 eth1", "BONDING_MIIMON[0]": "100"},
         ),
-        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True),
+        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True),
     ):
         # 1. Get bond config
         cfg = get_bond_config("bond0")
@@ -597,13 +597,13 @@ def test_get_and_update_bridge_config(tmp_path):
     cfg_file = tmp_path / "network_config.json"
 
     with (
-        patch("backend.hardware.network._find_sys_net_dir", return_value=str(sys_net)),
-        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.net.common._find_sys_net_dir", return_value=str(sys_net)),
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
         patch(
             "backend.hardware.network.get_network_topology",
             return_value={"physical_interfaces": [{"name": "eth0"}], "bonds": [{"name": "bond0"}]},
         ),
-        patch("backend.hardware.network._write_unraid_network_cfg", return_value=True),
+        patch("backend.hardware.net.canary._write_unraid_network_cfg", return_value=True),
     ):
         # 1. Get bridge config
         cfg = get_bridge_config("br0")
@@ -627,7 +627,7 @@ def test_vlan_lifecycle(tmp_path):
     cfg_file = tmp_path / "network_config.json"
 
     with (
-        patch("backend.hardware.network.NETWORK_CONFIG_FILE", str(cfg_file)),
+        patch("backend.hardware.net.common.NETWORK_CONFIG_FILE", str(cfg_file)),
         patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="", stderr="")),
         patch("os.path.exists", return_value=False),
     ):
@@ -738,7 +738,7 @@ def test_read_network_rates_combined_and_interfaces(tmp_path):
     )
     dev_file.write_text(content_t1)
 
-    with patch("backend.hardware.network._find_proc_net_path", return_value=str(dev_file)):
+    with patch("backend.hardware.net.common._find_proc_net_path", return_value=str(dev_file)):
         # Sample 1
         res1 = read_network_rates()
         assert res1["iface"] == "combined"

@@ -110,7 +110,7 @@ def test_wireguard_client_config_generation():
 
 
 def test_wireguard_subnet_routing(monkeypatch):
-    monkeypatch.setattr("backend.hardware.network.set_ip_forwarding", lambda x: True)
+    monkeypatch.setattr("backend.hardware.net.wireguard.set_ip_forwarding", lambda x: True)
     res = toggle_wireguard_subnet_nat(True, iface="wg0", out_iface="eth0")
     assert res["enabled"] is True
     assert res["ip_forwarding"] is True

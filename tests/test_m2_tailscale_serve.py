@@ -15,14 +15,14 @@ def test_serve_returns_the_tailnet_address(monkeypatch):
             return 0, json.dumps({"Self": {"DNSName": "ark.tail1234.ts.net."}})
         return 0, ""
 
-    monkeypatch.setattr(network, "_run_tailscale_cmd", fake)
+    monkeypatch.setattr(network.tailscale, "_run_tailscale_cmd", fake)
     res = network.execute_tailscale_set_serve(serve=True)
     assert res["status"] == "ok" and res["serve_url"] == "https://ark.tail1234.ts.net"
 
 
 def test_serve_approval_is_passed_through(monkeypatch):
     monkeypatch.setattr(
-        network,
+        network.tailscale,
         "_run_tailscale_cmd",
         lambda args, timeout=3.0: (
             (1, "Serve is not enabled. https://login.tailscale.com/f/serve?node=abc")

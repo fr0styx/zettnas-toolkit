@@ -10,7 +10,6 @@
  "backend/hardware/disks.py": 3,
  "backend/hardware/docker_stats.py": 2,
  "backend/hardware/fans.py": 16,
- "backend/hardware/network.py": 8,
  "backend/hardware/storage_diagnostics.py": 1,
  "backend/hardware/ups.py": 1,
  "backend/main.py": 2,

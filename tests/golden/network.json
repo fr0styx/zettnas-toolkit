@@ -1,0 +1,4354 @@
+{
+ "behaviour": [
+  {
+   "call": "_hex_to_ip",
+   "commands": [],
+   "result": [
+    "192.168.1.1",
+    "0.0.0.0",
+    "192.168.1.10",
+    "zz"
+   ]
+  },
+  {
+   "call": "_mask_to_cidr",
+   "commands": [],
+   "result": [
+    24,
+    16,
+    0,
+    24
+   ]
+  },
+  {
+   "call": "_format_speed",
+   "commands": [],
+   "result": [
+    "Unknown",
+    "Disconnected",
+    "Unknown",
+    "Disconnected",
+    "10 Mbps",
+    "Disconnected",
+    "100 Mbps",
+    "Disconnected",
+    "1 Gbps",
+    "Disconnected",
+    "2.5 Gbps",
+    "Disconnected",
+    "10 Gbps",
+    "Disconnected",
+    "40 Gbps",
+    "Disconnected"
+   ]
+  },
+  {
+   "call": "_validate_ipv4",
+   "commands": [],
+   "result": [
+    [
+     "ok",
+     "192.168.1.10"
+    ],
+    [
+     "ValueError",
+     "Invalid IPv4 address for IP address: 256.1.1.1"
+    ],
+    [
+     "ValueError",
+     "IP address is required"
+    ],
+    [
+     "ValueError",
+     "Invalid IPv4 address for IP address: a.b.c.d"
+    ],
+    [
+     "ok",
+     "10.0.0.0"
+    ]
+   ]
+  },
+  {
+   "call": "_validate_netmask",
+   "commands": [],
+   "result": [
+    [
+     "ok",
+     "255.255.255.0"
+    ],
+    [
+     "ValueError",
+     "Invalid netmask: 255.0.255.0"
+    ],
+    [
+     "ok",
+     "255.255.255.0"
+    ],
+    [
+     "ok",
+     "255.255.255.255"
+    ],
+    [
+     "ok",
+     "255.255.255.0"
+    ]
+   ]
+  },
+  {
+   "call": "_read_file",
+   "commands": [],
+   "result": [
+    "1500",
+    "dflt"
+   ]
+  },
+  {
+   "call": "_read_stat",
+   "commands": [],
+   "result": 123456789
+  },
+  {
+   "call": "_parse_routes",
+   "commands": [],
+   "result": [
+    {
+     "cidr": 0,
+     "destination": "0.0.0.0",
+     "flags": 3,
+     "gateway": "192.168.1.1",
+     "iface": "br0",
+     "is_default": true,
+     "mask": "0.0.0.0",
+     "metric": 0
+    },
+    {
+     "cidr": 24,
+     "destination": "192.168.1.0",
+     "flags": 1,
+     "gateway": "0.0.0.0",
+     "iface": "br0",
+     "is_default": false,
+     "mask": "255.255.255.0",
+     "metric": 0
+    },
+    {
+     "cidr": 16,
+     "destination": "172.17.0.0",
+     "flags": 1,
+     "gateway": "0.0.0.0",
+     "iface": "docker0",
+     "is_default": false,
+     "mask": "255.255.0.0",
+     "metric": 0
+    }
+   ]
+  },
+  {
+   "call": "_get_dns_servers",
+   "commands": [],
+   "result": [
+    "192.168.1.1",
+    "1.1.1.1"
+   ]
+  },
+  {
+   "call": "load_network_config (none)",
+   "commands": [],
+   "result": {
+    "aliases": {},
+    "ports": {}
+   }
+  },
+  {
+   "call": "save_network_config",
+   "commands": [],
+   "result": null
+  },
+  {
+   "call": "load_network_config",
+   "commands": [],
+   "result": {
+    "aliases": {},
+    "example": true,
+    "ports": {}
+   }
+  },
+  {
+   "call": "_parse_unraid_network_cfg",
+   "commands": [],
+   "result": {
+    "BONDING_MODE[0]": "4",
+    "BONDNAME[0]": "bond0",
+    "BRNAME[0]": "br0",
+    "BRSTP[0]": "no",
+    "DESCRIPTION[0]": "Main LAN",
+    "DESCRIPTION[1]": "Backup NIC",
+    "DHCP_KEEPRESOLV": "yes",
+    "DNS_SERVER1": "192.168.1.1",
+    "DNS_SERVER2": "1.1.1.1",
+    "GATEWAY": "192.168.1.1",
+    "IFNAME[0]": "br0",
+    "IPADDR[0]": "192.168.1.10",
+    "MTU[0]": "1500",
+    "NETMASK[0]": "255.255.255.0",
+    "SYSNICS": "2",
+    "USE_DHCP[0]": "no"
+   }
+  },
+  {
+   "call": "_get_unraid_descriptions",
+   "commands": [],
+   "result": {
+    "0": "Main LAN",
+    "1": "Backup NIC",
+    "bond0": "Main LAN",
+    "br0": "Main LAN",
+    "eth0": "Main LAN"
+   }
+  },
+  {
+   "call": "get_host_ip_config",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "available_interfaces": [
+     "br0",
+     "bond0",
+     "eth0",
+     "eth1",
+     "eth2"
+    ],
+    "canary": {
+     "canary_id": null,
+     "expires_in": 0,
+     "is_active": false,
+     "target_ip": null
+    },
+    "cidr": 24,
+    "dns1": "192.168.1.1",
+    "dns2": "1.1.1.1",
+    "dns_servers": [
+     "192.168.1.1",
+     "1.1.1.1"
+    ],
+    "gateway": "192.168.1.1",
+    "interface": "br0",
+    "ip_address": "192.168.1.10",
+    "mode": "static",
+    "netmask": "255.255.255.0",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "apply_host_ip_config_canary {'mode': 'static', 'ip_address': '999.1.1.1'}",
+   "commands": [],
+   "result": {
+    "message": "Invalid IPv4 address for IPv4 Address: 999.1.1.1",
+    "raised": "ValueError"
+   }
+  },
+  {
+   "call": "apply_host_ip_config_canary {'mode': 'static', 'ip_address': '192.168.1.20', 'netmask': '255.0.255.0'}",
+   "commands": [],
+   "result": {
+    "message": "Invalid netmask: 255.0.255.0",
+    "raised": "ValueError"
+   }
+  },
+  {
+   "call": "apply_host_ip_config_canary {'mode': 'weird'}",
+   "commands": [],
+   "result": {
+    "message": "Mode must be 'dhcp' or 'static'",
+    "raised": "ValueError"
+   }
+  },
+  {
+   "call": "apply_host_ip_config_canary {'mode': 'dhcp', 'interface': 'br0;x'}",
+   "commands": [],
+   "result": {
+    "message": "Invalid interface name",
+    "raised": "ValueError"
+   }
+  },
+  {
+   "call": "apply_host_ip_config_canary {'mode': 'static', 'ip_address': '192.168.1.20', 'dns1': 'x'}",
+   "commands": [],
+   "result": {
+    "message": "Invalid IPv4 address for Primary DNS: x",
+    "raised": "ValueError"
+   }
+  },
+  {
+   "call": "apply_host_ip_config_canary static",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "canary_id": "<id>",
+    "expires_in": "<seconds left>",
+    "message": "Network Canary armed. Please confirm within 30s to keep settings permanently.",
+    "original_ip": "192.168.1.10",
+    "status": "testing",
+    "target_ip": "192.168.1.20",
+    "target_url": "http://192.168.1.20:8082"
+   }
+  },
+  {
+   "call": "canary status",
+   "commands": [],
+   "result": {
+    "canary_id": "<id>",
+    "expires_in": "<seconds left>",
+    "is_active": true,
+    "target_ip": "192.168.1.20"
+   }
+  },
+  {
+   "call": "network.cfg after apply",
+   "commands": [],
+   "result": "# Generated settings:\nIFNAME[0]=\"br0\"\nBONDNAME[0]=\"bond0\"\nBONDING_MODE[0]=\"4\"\nBRNAME[0]=\"br0\"\nBRSTP[0]=\"no\"\nDESCRIPTION[0]=\"Main LAN\"\nUSE_DHCP[0]=\"no\"\nIPADDR[0]=\"192.168.1.20\"\nNETMASK[0]=\"255.255.255.0\"\nGATEWAY=\"192.168.1.1\"\nDNS_SERVER1=\"1.1.1.1\"\nDNS_SERVER2=\"9.9.9.9\"\nDHCP_KEEPRESOLV=\"yes\"\nMTU[0]=\"1500\"\nDESCRIPTION[1]=\"Backup NIC\"\nSYSNICS=\"2\"\nGATEWAY[0]=\"192.168.1.1\"\n"
+  },
+  {
+   "call": "confirm wrong id",
+   "commands": [],
+   "result": {
+    "message": "Invalid or expired canary ID",
+    "status": "error"
+   }
+  },
+  {
+   "call": "confirm",
+   "commands": [],
+   "result": {
+    "config": {
+     "cidr": 24,
+     "dns1": "1.1.1.1",
+     "dns2": "9.9.9.9",
+     "gateway": "192.168.1.1",
+     "interface": "br0",
+     "ip_address": "192.168.1.20",
+     "mode": "static",
+     "netmask": "255.255.255.0",
+     "updated_at": "<ts>"
+    },
+    "message": "Host network configuration successfully committed.",
+    "status": "confirmed"
+   }
+  },
+  {
+   "call": "revert after confirm",
+   "commands": [],
+   "result": {
+    "message": "No active canary test to revert",
+    "status": "error"
+   }
+  },
+  {
+   "call": "apply again (dhcp)",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "canary_id": "<id>",
+    "expires_in": "<seconds left>",
+    "message": "Network Canary armed. Please confirm within 30s to keep settings permanently.",
+    "original_ip": "192.168.1.20",
+    "status": "testing",
+    "target_ip": "192.168.1.20",
+    "target_url": "http://192.168.1.20:8082"
+   }
+  },
+  {
+   "call": "revert",
+   "commands": [],
+   "result": {
+    "message": "Host network configuration reverted to previous state.",
+    "restored_ip": "192.168.1.20",
+    "status": "reverted"
+   }
+  },
+  {
+   "call": "network.cfg after revert",
+   "commands": [],
+   "result": "# Generated settings:\nIFNAME[0]=\"br0\"\nBONDNAME[0]=\"bond0\"\nBONDING_MODE[0]=\"4\"\nBRNAME[0]=\"br0\"\nBRSTP[0]=\"no\"\nDESCRIPTION[0]=\"Main LAN\"\nUSE_DHCP[0]=\"no\"\nIPADDR[0]=\"192.168.1.20\"\nNETMASK[0]=\"255.255.255.0\"\nGATEWAY=\"192.168.1.1\"\nDNS_SERVER1=\"1.1.1.1\"\nDNS_SERVER2=\"9.9.9.9\"\nDHCP_KEEPRESOLV=\"yes\"\nMTU[0]=\"1500\"\nDESCRIPTION[1]=\"Backup NIC\"\nSYSNICS=\"2\"\nGATEWAY[0]=\"192.168.1.1\"\n"
+  },
+  {
+   "call": "watchdog arm",
+   "commands": [],
+   "result": "<id>"
+  },
+  {
+   "call": "watchdog timeout",
+   "commands": [],
+   "result": {
+    "canary_id": null,
+    "expires_in": 0,
+    "is_active": false,
+    "target_ip": null
+   }
+  },
+  {
+   "call": "_query_ethtool",
+   "commands": [
+    [
+     "run",
+     "ethtool",
+     "eth0"
+    ]
+   ],
+   "result": "Settings for eth0:\n\tSupported link modes:   10baseT/Full 100baseT/Full 1000baseT/Full\n\tSpeed: 1000Mb/s\n\tDuplex: Full\n\tAuto-negotiation: on\n\tSupports Wake-on: pumbg\n\tWake-on: g\n\tLink detected: yes\n"
+  },
+  {
+   "call": "get_port_config eth0",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ],
+    [
+     "run",
+     "ethtool",
+     "eth0"
+    ]
+   ],
+   "result": {
+    "alias": "Main LAN",
+    "autoneg": true,
+    "interface": {
+     "alias": "Main LAN",
+     "carrier": 1,
+     "driver": "igc",
+     "duplex": "full",
+     "is_up": true,
+     "mac": "aa:bb:cc:00:00:01",
+     "master": "bond0",
+     "mtu": 1500,
+     "name": "eth0",
+     "pci_id": "",
+     "pci_slot": "0000:01:00.0",
+     "rx_bytes": 123456789,
+     "rx_dropped": 2,
+     "rx_errors": 1,
+     "rx_packets": 1000,
+     "speed_human": "1 Gbps",
+     "speed_mbps": 1000,
+     "state": "up",
+     "tx_bytes": 987654321,
+     "tx_dropped": 0,
+     "tx_errors": 0,
+     "tx_packets": 2000
+    },
+    "mtu": 1500,
+    "status": "ok",
+    "supported_speeds": [
+     10000,
+     5000,
+     2500,
+     1000,
+     100
+    ],
+    "wol_enabled": true,
+    "wol_supported": true
+   }
+  },
+  {
+   "call": "get_port_config eth2",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ],
+    [
+     "run",
+     "ethtool",
+     "eth2"
+    ]
+   ],
+   "result": {
+    "alias": "",
+    "autoneg": true,
+    "interface": {
+     "alias": "",
+     "carrier": 0,
+     "driver": "r8169",
+     "duplex": "unknown",
+     "is_up": false,
+     "mac": "aa:bb:cc:00:00:03",
+     "master": null,
+     "mtu": 9000,
+     "name": "eth2",
+     "pci_id": "",
+     "pci_slot": "",
+     "rx_bytes": 123456789,
+     "rx_dropped": 2,
+     "rx_errors": 1,
+     "rx_packets": 1000,
+     "speed_human": "Disconnected",
+     "speed_mbps": null,
+     "state": "down",
+     "tx_bytes": 987654321,
+     "tx_dropped": 0,
+     "tx_errors": 0,
+     "tx_packets": 2000
+    },
+    "mtu": 9000,
+    "status": "ok",
+    "supported_speeds": [
+     10000,
+     5000,
+     2500,
+     1000,
+     100
+    ],
+    "wol_enabled": true,
+    "wol_supported": true
+   }
+  },
+  {
+   "call": "get_port_config bond0",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ],
+    [
+     "run",
+     "ethtool",
+     "bond0"
+    ]
+   ],
+   "result": {
+    "alias": "Main LAN",
+    "autoneg": true,
+    "interface": {
+     "active_slave": "",
+     "ad_num_ports": "2",
+     "alias": "Main LAN",
+     "carrier": 1,
+     "duplex": "unknown",
+     "is_up": true,
+     "lacp_rate": "fast 1",
+     "mac": "aa:bb:cc:00:00:01",
+     "master": "br0",
+     "miimon": 100,
+     "mode": "802.3ad 4",
+     "mode_code": "4",
+     "mode_name": "802.3ad",
+     "mode_title": "IEEE 802.3ad LACP (Dynamic Link Aggregation)",
+     "mtu": 1500,
+     "name": "bond0",
+     "rx_bytes": 123456789,
+     "slaves": [
+      "eth0",
+      "eth1"
+     ],
+     "speed_human": "2.5 Gbps",
+     "speed_mbps": 3500,
+     "tx_bytes": 987654321,
+     "xmit_hash_policy": "layer3+4 1"
+    },
+    "mtu": 1500,
+    "status": "ok",
+    "supported_speeds": [
+     10000,
+     5000,
+     2500,
+     1000,
+     100
+    ],
+    "wol_enabled": true,
+    "wol_supported": true
+   }
+  },
+  {
+   "call": "get_port_config br0",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ],
+    [
+     "run",
+     "ethtool",
+     "br0"
+    ]
+   ],
+   "result": {
+    "alias": "Main LAN",
+    "autoneg": true,
+    "interface": {
+     "alias": "Main LAN",
+     "carrier": 1,
+     "forward_delay": 15,
+     "interfaces": [
+      "bond0",
+      "vnet0"
+     ],
+     "ip_address": "192.168.1.0/24",
+     "is_up": true,
+     "mac": "aa:bb:cc:00:00:01",
+     "mtu": 1500,
+     "name": "br0",
+     "rx_bytes": 123456789,
+     "stp": false,
+     "tx_bytes": 987654321
+    },
+    "mtu": 1500,
+    "status": "ok",
+    "supported_speeds": [
+     10000,
+     5000,
+     2500,
+     1000,
+     100
+    ],
+    "wol_enabled": true,
+    "wol_supported": true
+   }
+  },
+  {
+   "call": "get_port_config nope0",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "message": "Interface 'nope0' not found",
+    "status": "error"
+   }
+  },
+  {
+   "call": "update_port_config eth2 {'mtu': 9000}",
+   "commands": [
+    [
+     "run",
+     "ip",
+     "link",
+     "set",
+     "dev",
+     "eth2",
+     "mtu",
+     "9000"
+    ]
+   ],
+   "result": {
+    "config": {
+     "mtu": 9000
+    },
+    "message": "Port configuration saved for eth2",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "update_port_config eth2 {'mtu': 100}",
+   "commands": [
+    [
+     "run",
+     "ip",
+     "link",
+     "set",
+     "dev",
+     "eth2",
+     "mtu",
+     "100"
+    ]
+   ],
+   "result": {
+    "config": {
+     "mtu": 100
+    },
+    "message": "Port configuration saved for eth2",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "update_port_config eth2 {'wol': True}",
+   "commands": [],
+   "result": {
+    "config": {
+     "mtu": 100
+    },
+    "message": "Port configuration saved for eth2",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "update_port_config eth2 {'autoneg': False, 'speed': 1000, 'duplex': 'full'}",
+   "commands": [
+    [
+     "run",
+     "ethtool",
+     "-s",
+     "eth2",
+     "speed",
+     "1000",
+     "duplex",
+     "full",
+     "autoneg",
+     "off"
+    ]
+   ],
+   "result": {
+    "config": {
+     "autoneg": false,
+     "duplex": "full",
+     "mtu": 100,
+     "speed": 1000
+    },
+    "message": "Port configuration saved for eth2",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "update_port_config eth2 {'description': 'Uplink'}",
+   "commands": [],
+   "result": {
+    "config": {
+     "autoneg": false,
+     "duplex": "full",
+     "mtu": 100,
+     "speed": 1000
+    },
+    "message": "Port configuration saved for eth2",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "update_port_config eth2 {}",
+   "commands": [],
+   "result": {
+    "config": {
+     "autoneg": false,
+     "duplex": "full",
+     "mtu": 100,
+     "speed": 1000
+    },
+    "message": "Port configuration saved for eth2",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "update_port_config missing",
+   "commands": [
+    [
+     "run",
+     "ip",
+     "link",
+     "set",
+     "dev",
+     "nope0",
+     "mtu",
+     "1500"
+    ]
+   ],
+   "result": {
+    "config": {
+     "mtu": 1500
+    },
+    "message": "Port configuration saved for nope0",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "create_docker_network",
+   "commands": [
+    [
+     "http",
+     "POST",
+     "/networks/create",
+     "{\"Name\":\"zn-test\",\"Driver\":\"bridge\",\"CheckDuplicate\":true,\"IPAM\":{\"Config\":[{\"Subnet\":\"172.30.0.0/16\",\"Gateway\":\"172.30.0.1\"}]}}"
+    ]
+   ],
+   "result": {
+    "id": "net123",
+    "message": "Network 'zn-test' created",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "create_docker_network bad",
+   "commands": [],
+   "result": {
+    "message": "Invalid network name",
+    "status": "error"
+   }
+  },
+  {
+   "call": "delete_docker_network",
+   "commands": [
+    [
+     "http",
+     "DELETE",
+     "/networks/zn-test"
+    ]
+   ],
+   "result": {
+    "message": "Network 'zn-test' deleted",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "delete_docker_network missing",
+   "commands": [
+    [
+     "http",
+     "DELETE",
+     "/networks/nope"
+    ]
+   ],
+   "result": {
+    "message": "network not found",
+    "status": "error"
+   }
+  },
+  {
+   "call": "_parse_proc_net_vlan",
+   "commands": [],
+   "result": {
+    "br0.20": {
+     "parent": "br0",
+     "vlan_id": 20
+    }
+   }
+  },
+  {
+   "call": "get_vlans",
+   "commands": [],
+   "result": [
+    {
+     "alias": "",
+     "carrier": 1,
+     "ip_address": "",
+     "is_up": true,
+     "mac": "aa:bb:cc:00:00:01",
+     "mtu": 1500,
+     "name": "br0.20",
+     "parent": "br0",
+     "rx_bytes": 123456789,
+     "speed_human": "Unknown",
+     "tx_bytes": 987654321,
+     "vlan_id": 20
+    }
+   ]
+  },
+  {
+   "call": "create_vlan ('eth2', 30, 'Cameras')",
+   "commands": [
+    [
+     "run",
+     "ip",
+     "link",
+     "add",
+     "link",
+     "eth2",
+     "name",
+     "eth2.30",
+     "type",
+     "vlan",
+     "id",
+     "30"
+    ],
+    [
+     "run",
+     "ip",
+     "link",
+     "set",
+     "dev",
+     "eth2.30",
+     "up"
+    ]
+   ],
+   "result": {
+    "alias": "Cameras",
+    "applied_runtime": true,
+    "message": "VLAN sub-interface 'eth2.30' created successfully",
+    "name": "eth2.30",
+    "parent": "eth2",
+    "status": "ok",
+    "vlan_id": 30
+   }
+  },
+  {
+   "call": "create_vlan ('eth2', 5000, '')",
+   "commands": [],
+   "result": {
+    "message": "VLAN ID must be an integer between 1 and 4094",
+    "status": "error"
+   }
+  },
+  {
+   "call": "create_vlan ('nope0', 30, '')",
+   "commands": [
+    [
+     "run",
+     "ip",
+     "link",
+     "add",
+     "link",
+     "nope0",
+     "name",
+     "nope0.30",
+     "type",
+     "vlan",
+     "id",
+     "30"
+    ],
+    [
+     "run",
+     "ip",
+     "link",
+     "set",
+     "dev",
+     "nope0.30",
+     "up"
+    ]
+   ],
+   "result": {
+    "alias": "",
+    "applied_runtime": true,
+    "message": "VLAN sub-interface 'nope0.30' created successfully",
+    "name": "nope0.30",
+    "parent": "nope0",
+    "status": "ok",
+    "vlan_id": 30
+   }
+  },
+  {
+   "call": "create_vlan ('eth2', 999, '')",
+   "commands": [
+    [
+     "run",
+     "ip",
+     "link",
+     "add",
+     "link",
+     "eth2",
+     "name",
+     "eth2.999",
+     "type",
+     "vlan",
+     "id",
+     "999"
+    ]
+   ],
+   "result": {
+    "alias": "",
+    "applied_runtime": false,
+    "message": "VLAN 'eth2.999' configuration saved. Will apply on network restart.",
+    "name": "eth2.999",
+    "parent": "eth2",
+    "status": "ok",
+    "vlan_id": 999
+   }
+  },
+  {
+   "call": "create_vlan ('eth2;rm', 30, '')",
+   "commands": [],
+   "result": {
+    "message": "Invalid parent interface name",
+    "status": "error"
+   }
+  },
+  {
+   "call": "delete_vlan eth2.30",
+   "commands": [],
+   "result": {
+    "message": "VLAN sub-interface 'eth2.30' removed successfully.",
+    "name": "eth2.30",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "delete_vlan br0.20",
+   "commands": [
+    [
+     "run",
+     "ip",
+     "link",
+     "del",
+     "dev",
+     "br0.20"
+    ]
+   ],
+   "result": {
+    "message": "VLAN sub-interface 'br0.20' removed successfully.",
+    "name": "br0.20",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "delete_vlan eth0",
+   "commands": [],
+   "result": {
+    "message": "Invalid VLAN interface name",
+    "status": "error"
+   }
+  },
+  {
+   "call": "delete_vlan nope.1",
+   "commands": [],
+   "result": {
+    "message": "'nope.1' is not a VLAN; only VLAN sub-interfaces can be removed here.",
+    "status": "error"
+   }
+  },
+  {
+   "call": "get_bond_config bond0",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "active_slave": "",
+    "available_modes": [
+     {
+      "code": "0",
+      "description": "Transmit packets in sequential order from first available slave to last. Provides link load balancing and fault tolerance.",
+      "name": "balance-rr",
+      "title": "Round-Robin"
+     },
+     {
+      "code": "1",
+      "description": "Only one slave in the bond is active. A different slave becomes active if and only if the active slave fails. Recommended for unmanaged switches.",
+      "name": "active-backup",
+      "title": "Active-Backup (Failover)"
+     },
+     {
+      "code": "2",
+      "description": "Transmit based on the selected transmit hash policy (MAC / IP). Provides load balancing and fault tolerance.",
+      "name": "balance-xor",
+      "title": "Balance-XOR"
+     },
+     {
+      "code": "4",
+      "description": "IEEE 802.3ad Dynamic Link Aggregation. Requires an 802.3ad LACP-capable switch with matching LAG/trunk configured.",
+      "name": "802.3ad",
+      "title": "IEEE 802.3ad LACP (Dynamic Link Aggregation)"
+     },
+     {
+      "code": "6",
+      "description": "Includes balance-tlb plus receive load balancing (RLB) for IPv4 traffic. Does not require special switch configuration.",
+      "name": "balance-alb",
+      "title": "Adaptive Load Balancing (ALB)"
+     }
+    ],
+    "bond_name": "bond0",
+    "candidate_slaves": [
+     {
+      "alias": "Main LAN",
+      "is_slave": true,
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:01",
+      "master": "bond0",
+      "name": "eth0",
+      "speed_human": "1 Gbps"
+     },
+     {
+      "alias": "",
+      "is_slave": true,
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:02",
+      "master": "bond0",
+      "name": "eth1",
+      "speed_human": "2.5 Gbps"
+     },
+     {
+      "alias": "",
+      "is_slave": false,
+      "is_up": false,
+      "mac": "aa:bb:cc:00:00:03",
+      "master": null,
+      "name": "eth2",
+      "speed_human": "Disconnected"
+     }
+    ],
+    "miimon": 100,
+    "mode": "4",
+    "mode_name": "802.3ad",
+    "mode_title": "IEEE 802.3ad LACP (Dynamic Link Aggregation)",
+    "slaves": [
+     "eth0",
+     "eth1"
+    ],
+    "status": "ok"
+   }
+  },
+  {
+   "call": "get_bond_config missing",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "active_slave": "",
+    "available_modes": [
+     {
+      "code": "0",
+      "description": "Transmit packets in sequential order from first available slave to last. Provides link load balancing and fault tolerance.",
+      "name": "balance-rr",
+      "title": "Round-Robin"
+     },
+     {
+      "code": "1",
+      "description": "Only one slave in the bond is active. A different slave becomes active if and only if the active slave fails. Recommended for unmanaged switches.",
+      "name": "active-backup",
+      "title": "Active-Backup (Failover)"
+     },
+     {
+      "code": "2",
+      "description": "Transmit based on the selected transmit hash policy (MAC / IP). Provides load balancing and fault tolerance.",
+      "name": "balance-xor",
+      "title": "Balance-XOR"
+     },
+     {
+      "code": "4",
+      "description": "IEEE 802.3ad Dynamic Link Aggregation. Requires an 802.3ad LACP-capable switch with matching LAG/trunk configured.",
+      "name": "802.3ad",
+      "title": "IEEE 802.3ad LACP (Dynamic Link Aggregation)"
+     },
+     {
+      "code": "6",
+      "description": "Includes balance-tlb plus receive load balancing (RLB) for IPv4 traffic. Does not require special switch configuration.",
+      "name": "balance-alb",
+      "title": "Adaptive Load Balancing (ALB)"
+     }
+    ],
+    "bond_name": "bond9",
+    "candidate_slaves": [
+     {
+      "alias": "Main LAN",
+      "is_slave": false,
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:01",
+      "master": "bond0",
+      "name": "eth0",
+      "speed_human": "1 Gbps"
+     },
+     {
+      "alias": "",
+      "is_slave": false,
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:02",
+      "master": "bond0",
+      "name": "eth1",
+      "speed_human": "2.5 Gbps"
+     },
+     {
+      "alias": "",
+      "is_slave": false,
+      "is_up": false,
+      "mac": "aa:bb:cc:00:00:03",
+      "master": null,
+      "name": "eth2",
+      "speed_human": "Disconnected"
+     }
+    ],
+    "miimon": 100,
+    "mode": "1",
+    "mode_name": "active-backup",
+    "mode_title": "Active-Backup (Failover)",
+    "slaves": [],
+    "status": "ok"
+   }
+  },
+  {
+   "call": "update_bond_config {'mode': 'active-backup'}",
+   "commands": [],
+   "result": {
+    "message": "At least one member interface must be selected for the bond",
+    "status": "error"
+   }
+  },
+  {
+   "call": "update_bond_config {'mode': 'nonsense'}",
+   "commands": [],
+   "result": {
+    "message": "Invalid bonding mode. Supported modes: 0 (balance-rr), 1 (active-backup), 2 (balance-xor), 4 (802.3ad), 6 (balance-alb)",
+    "status": "error"
+   }
+  },
+  {
+   "call": "update_bond_config {'miimon': 200}",
+   "commands": [],
+   "result": {
+    "message": "At least one member interface must be selected for the bond",
+    "status": "error"
+   }
+  },
+  {
+   "call": "update_bond_config {'slaves': ['eth0', 'eth2']}",
+   "commands": [],
+   "result": {
+    "bond_name": "bond0",
+    "message": "Bonding configuration for 'bond0' saved successfully. Settings persisted to system config.",
+    "miimon": 100,
+    "mode": "1",
+    "mode_title": "Active-Backup (Failover)",
+    "slaves": [
+     "eth0",
+     "eth2"
+    ],
+    "status": "ok"
+   }
+  },
+  {
+   "call": "get_bridge_config br0",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "bridge_name": "br0",
+    "candidate_members": [
+     {
+      "alias": "Main LAN",
+      "is_member": true,
+      "is_up": true,
+      "name": "bond0",
+      "speed_human": "2.5 Gbps",
+      "type": "bond"
+     },
+     {
+      "alias": "Main LAN",
+      "is_member": false,
+      "is_up": true,
+      "name": "eth0",
+      "speed_human": "1 Gbps",
+      "type": "physical"
+     },
+     {
+      "alias": "",
+      "is_member": false,
+      "is_up": true,
+      "name": "eth1",
+      "speed_human": "2.5 Gbps",
+      "type": "physical"
+     },
+     {
+      "alias": "",
+      "is_member": false,
+      "is_up": false,
+      "name": "eth2",
+      "speed_human": "Disconnected",
+      "type": "physical"
+     }
+    ],
+    "forward_delay": 15,
+    "members": [
+     "bond0",
+     "vnet0"
+    ],
+    "status": "ok",
+    "stp": false
+   }
+  },
+  {
+   "call": "get_bridge_config missing",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "bridge_name": "br9",
+    "candidate_members": [
+     {
+      "alias": "Main LAN",
+      "is_member": false,
+      "is_up": true,
+      "name": "bond0",
+      "speed_human": "2.5 Gbps",
+      "type": "bond"
+     },
+     {
+      "alias": "Main LAN",
+      "is_member": false,
+      "is_up": true,
+      "name": "eth0",
+      "speed_human": "1 Gbps",
+      "type": "physical"
+     },
+     {
+      "alias": "",
+      "is_member": false,
+      "is_up": true,
+      "name": "eth1",
+      "speed_human": "2.5 Gbps",
+      "type": "physical"
+     },
+     {
+      "alias": "",
+      "is_member": false,
+      "is_up": false,
+      "name": "eth2",
+      "speed_human": "Disconnected",
+      "type": "physical"
+     }
+    ],
+    "forward_delay": 0,
+    "members": [],
+    "status": "ok",
+    "stp": false
+   }
+  },
+  {
+   "call": "update_bridge_config {'stp': True}",
+   "commands": [],
+   "result": {
+    "bridge_name": "br0",
+    "forward_delay": 0,
+    "members": [],
+    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
+    "status": "ok",
+    "stp": true
+   }
+  },
+  {
+   "call": "update_bridge_config {'forward_delay': 4}",
+   "commands": [],
+   "result": {
+    "bridge_name": "br0",
+    "forward_delay": 4,
+    "members": [],
+    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
+    "status": "ok",
+    "stp": false
+   }
+  },
+  {
+   "call": "update_bridge_config {'members': ['bond0', 'eth2']}",
+   "commands": [],
+   "result": {
+    "bridge_name": "br0",
+    "forward_delay": 0,
+    "members": [
+     "bond0",
+     "eth2"
+    ],
+    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
+    "status": "ok",
+    "stp": false
+   }
+  },
+  {
+   "call": "update_bridge_config {'stp': 'maybe'}",
+   "commands": [],
+   "result": {
+    "bridge_name": "br0",
+    "forward_delay": 0,
+    "members": [],
+    "message": "Bridge configuration for 'br0' saved successfully. Settings persisted to system config.",
+    "status": "ok",
+    "stp": true
+   }
+  },
+  {
+   "call": "_get_docker_topology",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": [
+    {
+     "bridge_device": "docker0",
+     "container_count": 0,
+     "containers": [],
+     "driver": "bridge",
+     "gateway": "172.17.0.1",
+     "id": "n1",
+     "is_custom": false,
+     "name": "bridge",
+     "subnet": "172.17.0.0/16"
+    },
+    {
+     "bridge_device": "",
+     "container_count": 0,
+     "containers": [],
+     "driver": "host",
+     "gateway": "",
+     "id": "n2",
+     "is_custom": false,
+     "name": "host",
+     "subnet": ""
+    },
+    {
+     "bridge_device": "br-n3",
+     "container_count": 0,
+     "containers": [],
+     "driver": "bridge",
+     "gateway": "172.30.0.1",
+     "id": "n3",
+     "is_custom": true,
+     "name": "zn-apps",
+     "subnet": "172.30.0.0/16"
+    }
+   ]
+  },
+  {
+   "call": "get_network_topology",
+   "commands": [
+    [
+     "http",
+     "GET",
+     "/networks"
+    ],
+    [
+     "http",
+     "GET",
+     "/containers/json"
+    ]
+   ],
+   "result": {
+    "bonds": [
+     {
+      "active_slave": "",
+      "ad_num_ports": "2",
+      "alias": "Main LAN",
+      "carrier": 1,
+      "duplex": "unknown",
+      "is_up": true,
+      "lacp_rate": "fast 1",
+      "mac": "aa:bb:cc:00:00:01",
+      "master": "br0",
+      "miimon": 100,
+      "mode": "802.3ad 4",
+      "mode_code": "4",
+      "mode_name": "802.3ad",
+      "mode_title": "IEEE 802.3ad LACP (Dynamic Link Aggregation)",
+      "mtu": 1500,
+      "name": "bond0",
+      "rx_bytes": 123456789,
+      "slaves": [
+       "eth0",
+       "eth1"
+      ],
+      "speed_human": "2.5 Gbps",
+      "speed_mbps": 3500,
+      "tx_bytes": 987654321,
+      "xmit_hash_policy": "layer3+4 1"
+     }
+    ],
+    "bridges": [
+     {
+      "alias": "Main LAN",
+      "carrier": 1,
+      "forward_delay": 0,
+      "interfaces": [
+       "bond0",
+       "vnet0"
+      ],
+      "ip_address": "192.168.1.0/24",
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:01",
+      "mtu": 1500,
+      "name": "br0",
+      "rx_bytes": 123456789,
+      "stp": true,
+      "tx_bytes": 987654321
+     }
+    ],
+    "docker_networks": [
+     {
+      "bridge_device": "docker0",
+      "container_count": 0,
+      "containers": [],
+      "driver": "bridge",
+      "gateway": "172.17.0.1",
+      "id": "n1",
+      "is_custom": false,
+      "name": "bridge",
+      "subnet": "172.17.0.0/16"
+     },
+     {
+      "bridge_device": "",
+      "container_count": 0,
+      "containers": [],
+      "driver": "host",
+      "gateway": "",
+      "id": "n2",
+      "is_custom": false,
+      "name": "host",
+      "subnet": ""
+     },
+     {
+      "bridge_device": "br-n3",
+      "container_count": 0,
+      "containers": [],
+      "driver": "bridge",
+      "gateway": "172.30.0.1",
+      "id": "n3",
+      "is_custom": true,
+      "name": "zn-apps",
+      "subnet": "172.30.0.0/16"
+     }
+    ],
+    "listening_ports": [
+     {
+      "bind_address": "127.0.0.1",
+      "container": "",
+      "container_id": "",
+      "ipv6": false,
+      "port": 22,
+      "protocol": "tcp",
+      "service": "SSH",
+      "state": "LISTEN"
+     },
+     {
+      "bind_address": "::",
+      "container": "",
+      "container_id": "",
+      "ipv6": true,
+      "port": 445,
+      "protocol": "tcp",
+      "service": "SMB / CIFS",
+      "state": "LISTEN"
+     },
+     {
+      "bind_address": "0.0.0.0",
+      "container": "",
+      "container_id": "",
+      "ipv6": false,
+      "port": 5353,
+      "protocol": "udp",
+      "service": "mDNS / Bonjour",
+      "state": "ACTIVE"
+     },
+     {
+      "bind_address": "0.0.0.0",
+      "container": "",
+      "container_id": "",
+      "ipv6": false,
+      "port": 8082,
+      "protocol": "tcp",
+      "service": "ZettNAS Web Desktop",
+      "state": "LISTEN"
+     },
+     {
+      "bind_address": "0.0.0.0",
+      "container": "wireguard",
+      "container_id": "fedcba987654",
+      "ipv6": false,
+      "port": 51820,
+      "protocol": "udp",
+      "service": "WireGuard VPN",
+      "state": "ACTIVE"
+     }
+    ],
+    "physical_interfaces": [
+     {
+      "alias": "Main LAN",
+      "carrier": 1,
+      "driver": "igc",
+      "duplex": "full",
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:01",
+      "master": "bond0",
+      "mtu": 1500,
+      "name": "eth0",
+      "pci_id": "",
+      "pci_slot": "0000:01:00.0",
+      "rx_bytes": 123456789,
+      "rx_dropped": 2,
+      "rx_errors": 1,
+      "rx_packets": 1000,
+      "speed_human": "1 Gbps",
+      "speed_mbps": 1000,
+      "state": "up",
+      "tx_bytes": 987654321,
+      "tx_dropped": 0,
+      "tx_errors": 0,
+      "tx_packets": 2000
+     },
+     {
+      "alias": "",
+      "carrier": 1,
+      "driver": "igc",
+      "duplex": "full",
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:02",
+      "master": "bond0",
+      "mtu": 1500,
+      "name": "eth1",
+      "pci_id": "",
+      "pci_slot": "",
+      "rx_bytes": 123456789,
+      "rx_dropped": 2,
+      "rx_errors": 1,
+      "rx_packets": 1000,
+      "speed_human": "2.5 Gbps",
+      "speed_mbps": 2500,
+      "state": "up",
+      "tx_bytes": 987654321,
+      "tx_dropped": 0,
+      "tx_errors": 0,
+      "tx_packets": 2000
+     },
+     {
+      "alias": "",
+      "carrier": 0,
+      "driver": "r8169",
+      "duplex": "unknown",
+      "is_up": false,
+      "mac": "aa:bb:cc:00:00:03",
+      "master": null,
+      "mtu": 9000,
+      "name": "eth2",
+      "pci_id": "",
+      "pci_slot": "",
+      "rx_bytes": 123456789,
+      "rx_dropped": 2,
+      "rx_errors": 1,
+      "rx_packets": 1000,
+      "speed_human": "Disconnected",
+      "speed_mbps": null,
+      "state": "down",
+      "tx_bytes": 987654321,
+      "tx_dropped": 0,
+      "tx_errors": 0,
+      "tx_packets": 2000
+     }
+    ],
+    "routes": [
+     {
+      "cidr": 0,
+      "destination": "0.0.0.0",
+      "flags": 3,
+      "gateway": "192.168.1.1",
+      "iface": "br0",
+      "is_default": true,
+      "mask": "0.0.0.0",
+      "metric": 0
+     },
+     {
+      "cidr": 24,
+      "destination": "192.168.1.0",
+      "flags": 1,
+      "gateway": "0.0.0.0",
+      "iface": "br0",
+      "is_default": false,
+      "mask": "255.255.255.0",
+      "metric": 0
+     },
+     {
+      "cidr": 16,
+      "destination": "172.17.0.0",
+      "flags": 1,
+      "gateway": "0.0.0.0",
+      "iface": "docker0",
+      "is_default": false,
+      "mask": "255.255.0.0",
+      "metric": 0
+     }
+    ],
+    "status": "ok",
+    "summary": {
+     "active_physical": 2,
+     "canary": {
+      "canary_id": null,
+      "expires_in": 0,
+      "is_active": false,
+      "target_ip": null
+     },
+     "default_gateway": "192.168.1.1",
+     "dns_servers": [
+      "1.1.1.1",
+      "9.9.9.9"
+     ],
+     "docker_containers_count": 0,
+     "docker_networks_count": 3,
+     "max_speed": "2.5 Gbps",
+     "primary_interface": "br0",
+     "primary_ip": "192.168.1.10",
+     "total_physical": 3,
+     "vlan_count": 3
+    },
+    "vlans": [
+     {
+      "alias": "",
+      "carrier": 1,
+      "ip_address": "",
+      "is_up": true,
+      "mac": "aa:bb:cc:00:00:01",
+      "mtu": 1500,
+      "name": "br0.20",
+      "parent": "br0",
+      "rx_bytes": 123456789,
+      "speed_human": "Unknown",
+      "tx_bytes": 987654321,
+      "vlan_id": 20
+     },
+     {
+      "alias": "",
+      "carrier": 0,
+      "ip_address": "",
+      "is_up": false,
+      "mac": "",
+      "mtu": 1500,
+      "name": "eth2.999",
+      "parent": "eth2",
+      "rx_bytes": 0,
+      "speed_human": "Disconnected",
+      "tx_bytes": 0,
+      "vlan_id": 999
+     },
+     {
+      "alias": "",
+      "carrier": 0,
+      "ip_address": "",
+      "is_up": false,
+      "mac": "",
+      "mtu": 1500,
+      "name": "nope0.30",
+      "parent": "nope0",
+      "rx_bytes": 0,
+      "speed_human": "Disconnected",
+      "tx_bytes": 0,
+      "vlan_id": 30
+     }
+    ]
+   }
+  },
+  {
+   "call": "read_network_rates",
+   "commands": [],
+   "result": {
+    "iface": "combined",
+    "interfaces": {
+     "br0": {
+      "is_bond": false,
+      "is_bridge": true,
+      "is_physical": false,
+      "rx": "0 B/s",
+      "rx_bytes": 5000000,
+      "rx_rate": "<rate>",
+      "tx": "0 B/s",
+      "tx_bytes": 7000000,
+      "tx_rate": "<rate>"
+     },
+     "eth0": {
+      "is_bond": false,
+      "is_bridge": false,
+      "is_physical": true,
+      "rx": "0 B/s",
+      "rx_bytes": 123456789,
+      "rx_rate": "<rate>",
+      "tx": "0 B/s",
+      "tx_bytes": 987654321,
+      "tx_rate": "<rate>"
+     }
+    },
+    "rx": "0 B/s",
+    "rx_bytes": 123456789,
+    "rx_bytes_sec": 0.0,
+    "rx_rate": "<rate>",
+    "tx": "0 B/s",
+    "tx_bytes": 987654321,
+    "tx_bytes_sec": 0.0,
+    "tx_rate": "<rate>"
+   }
+  },
+  {
+   "call": "read_ip",
+   "commands": [],
+   "result": "192.168.1.10"
+  },
+  {
+   "call": "native _find_tailscale_bin",
+   "commands": [],
+   "result": "/usr/bin/tailscale"
+  },
+  {
+   "call": "native _get_tailscale_container_info",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ]
+   ],
+   "result": {
+    "exists": false,
+    "id": "",
+    "running": false,
+    "status": "not_found"
+   }
+  },
+  {
+   "call": "native _run_tailscale_cmd",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": [
+    0,
+    "{\"BackendState\": \"Running\", \"Self\": {\"HostName\": \"nas\", \"DNSName\": \"nas.tail1234.ts.net.\", \"TailscaleIPs\": [\"100.64.0.1\", \"fd7a::1\"], \"Online\": true, \"OS\": \"linux\", \"ExitNodeOption\": false, \"PrimaryRoutes\": [\"192.168.1.0/24\"]}, \"Peer\": {\"nodekey:1\": {\"HostName\": \"laptop\", \"DNSName\": \"laptop.tail1234.ts.net.\", \"TailscaleIPs\": [\"100.64.0.2\"], \"Online\": true, \"OS\": \"macOS\", \"ExitNode\": false, \"ExitNodeOption\": true, \"RxBytes\": 1000, \"TxBytes\": 2000, \"LastSeen\": \"2026-10-20T10:00:00Z\", \"Relay\": \"fra\"}, \"nodekey:2\": {\"HostName\": \"phone\", \"DNSName\": \"phone.tail1234.ts.net.\", \"TailscaleIPs\": [\"100.64.0.3\"], \"Online\": false, \"OS\": \"iOS\", \"LastSeen\": \"2026-10-19T10:00:00Z\"}}, \"CurrentTailnet\": {\"Name\": \"example.org\", \"MagicDNSSuffix\": \"tail1234.ts.net\"}, \"MagicDNSSuffix\": \"tail1234.ts.net\"}"
+   ]
+  },
+  {
+   "call": "native detect_local_subnets",
+   "commands": [],
+   "result": [
+    "192.168.1.0/24"
+   ]
+  },
+  {
+   "call": "native get_taildrop_dir",
+   "commands": [],
+   "result": "<root>/data/taildrop"
+  },
+  {
+   "call": "native get_taildrop_inbox_files",
+   "commands": [],
+   "result": []
+  },
+  {
+   "call": "native taildrop receive",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "file",
+     "get",
+     "--conflict=rename",
+     "<root>/data/taildrop"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "count": 0,
+    "directory": "<root>/data/taildrop",
+    "files": [],
+    "output": "Success.",
+    "received_count": 0,
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native ping",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "ping",
+     "--c=1",
+     "--timeout=2s",
+     "laptop"
+    ]
+   ],
+   "result": {
+    "is_direct": true,
+    "latency": "12.0 ms",
+    "latency_ms": 12.0,
+    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
+    "peer": "laptop",
+    "route": "203.0.113.5:41641",
+    "status": "success"
+   }
+  },
+  {
+   "call": "native ping bad",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "ping",
+     "--c=1",
+     "--timeout=2s",
+     "laptop; reboot"
+    ]
+   ],
+   "result": {
+    "is_direct": true,
+    "latency": "12.0 ms",
+    "latency_ms": 12.0,
+    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
+    "peer": "laptop; reboot",
+    "route": "203.0.113.5:41641",
+    "status": "success"
+   }
+  },
+  {
+   "call": "native set routes",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "set",
+     "--advertise-routes=192.168.1.0/24"
+    ]
+   ],
+   "result": {
+    "advertised_routes": "192.168.1.0/24",
+    "code": 0,
+    "enabled": true,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native set routes bad",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "set",
+     "--advertise-routes=not-a-route"
+    ]
+   ],
+   "result": {
+    "advertised_routes": "not-a-route",
+    "code": 0,
+    "enabled": true,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native exit node",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "set",
+     "--advertise-exit-node=true"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "enabled": true,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native ssh",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "set",
+     "--ssh=false"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "enabled": false,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native serve",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "serve",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "funnel",
+     "reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "approval_url": "",
+    "error": "",
+    "feature": "serve",
+    "funnel_enabled": false,
+    "port": 8082,
+    "serve_enabled": true,
+    "serve_url": "https://nas.tail1234.ts.net",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native funnel",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "serve",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "funnel",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "approval_url": "",
+    "error": "",
+    "feature": "serve",
+    "funnel_enabled": true,
+    "port": 8082,
+    "serve_enabled": true,
+    "serve_url": "https://nas.tail1234.ts.net",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native serve off",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "serve",
+     "reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "funnel",
+     "reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "approval_url": "",
+    "error": "",
+    "feature": "serve",
+    "funnel_enabled": false,
+    "port": 8082,
+    "serve_enabled": true,
+    "serve_url": "https://nas.tail1234.ts.net",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native reauth",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "up",
+     "--force-reauth",
+     "--reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "auth_url": "",
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "native mesh status",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "debug",
+     "prefs"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "wg",
+     "show",
+     "interfaces"
+    ],
+    [
+     "run",
+     "wg",
+     "show",
+     "all",
+     "dump"
+    ]
+   ],
+   "result": {
+    "tailscale": {
+     "active": true,
+     "admin_console_url": "https://login.tailscale.com/admin/machines",
+     "advertise_exit_node": false,
+     "advertised_routes": [],
+     "auth_url": "",
+     "backend_state": "Running",
+     "container_id": "",
+     "container_mode": false,
+     "detected_subnets": [
+      "192.168.1.0/24"
+     ],
+     "dns_name": "nas.tail1234.ts.net",
+     "exit_node_approved": false,
+     "funnel_enabled": false,
+     "hostname": "nas",
+     "installed": true,
+     "ipv4": "100.64.0.1",
+     "is_exit_node": false,
+     "is_subnet_router": false,
+     "key_expired": false,
+     "key_expiry": "",
+     "key_expiry_days": null,
+     "peers": [
+      {
+       "connection_type": "DERP (fra)",
+       "cur_addr": "",
+       "dns_name": "laptop.tail1234.ts.net",
+       "exit_node_option": true,
+       "hostname": "laptop",
+       "id": "nodekey:1",
+       "ip": "100.64.0.2",
+       "last_seen": "2026-10-20T10:00:00Z",
+       "name": "laptop",
+       "online": true,
+       "os": "macOS",
+       "relay": "fra"
+      },
+      {
+       "connection_type": "Offline",
+       "cur_addr": "",
+       "dns_name": "phone.tail1234.ts.net",
+       "exit_node_option": false,
+       "hostname": "phone",
+       "id": "nodekey:2",
+       "ip": "100.64.0.3",
+       "last_seen": "2026-10-19T10:00:00Z",
+       "name": "phone",
+       "online": false,
+       "os": "iOS",
+       "relay": ""
+      }
+     ],
+     "peers_count": 2,
+     "serve_enabled": true,
+     "serve_url": "https://nas.tail1234.ts.net",
+     "ssh_enabled": false,
+     "taildrop_dir": "<root>/data/taildrop",
+     "taildrop_files": [],
+     "taildrop_files_count": 0,
+     "tailnet": "tail1234.ts.net"
+    },
+    "wireguard": {
+     "active": true,
+     "installed": true,
+     "interfaces": [
+      "wg0"
+     ],
+     "peers": [
+      {
+       "active": false,
+       "allowed_ips": [
+        "10.13.13.2/32"
+       ],
+       "endpoint": "203.0.113.5:51820",
+       "interface": "wg0",
+       "latest_handshake": "<ts>",
+       "latest_handshake_age": "<age>",
+       "public_key": "PEERPUB1...",
+       "transfer_rx_bytes": 1024,
+       "transfer_tx_bytes": 2048
+      },
+      {
+       "active": false,
+       "allowed_ips": [
+        "10.13.13.3/32"
+       ],
+       "endpoint": "",
+       "interface": "wg0",
+       "latest_handshake": 0,
+       "latest_handshake_age": null,
+       "public_key": "PEERPUB2...",
+       "transfer_rx_bytes": 0,
+       "transfer_tx_bytes": 0
+      }
+     ],
+     "peers_count": 2
+    }
+   }
+  },
+  {
+   "call": "native up",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "up",
+     "--reset",
+     "--authkey",
+     "tskey-auth-example",
+     "--hostname",
+     "nas",
+     "--accept-routes"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "output": "Success.",
+    "status": "success"
+   }
+  },
+  {
+   "call": "native down",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "down"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "output": "Success.",
+    "status": "success"
+   }
+  },
+  {
+   "call": "container _find_tailscale_bin",
+   "commands": [],
+   "result": "/usr/bin/tailscale"
+  },
+  {
+   "call": "container _get_tailscale_container_info",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ]
+   ],
+   "result": {
+    "exists": true,
+    "id": "<id>",
+    "running": true,
+    "status": "running"
+   }
+  },
+  {
+   "call": "container _run_tailscale_cmd",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": [
+    0,
+    "{\"BackendState\": \"Running\", \"Self\": {\"HostName\": \"nas\", \"DNSName\": \"nas.tail1234.ts.net.\", \"TailscaleIPs\": [\"100.64.0.1\", \"fd7a::1\"], \"Online\": true, \"OS\": \"linux\", \"ExitNodeOption\": false, \"PrimaryRoutes\": [\"192.168.1.0/24\"]}, \"Peer\": {\"nodekey:1\": {\"HostName\": \"laptop\", \"DNSName\": \"laptop.tail1234.ts.net.\", \"TailscaleIPs\": [\"100.64.0.2\"], \"Online\": true, \"OS\": \"macOS\", \"ExitNode\": false, \"ExitNodeOption\": true, \"RxBytes\": 1000, \"TxBytes\": 2000, \"LastSeen\": \"2026-10-20T10:00:00Z\", \"Relay\": \"fra\"}, \"nodekey:2\": {\"HostName\": \"phone\", \"DNSName\": \"phone.tail1234.ts.net.\", \"TailscaleIPs\": [\"100.64.0.3\"], \"Online\": false, \"OS\": \"iOS\", \"LastSeen\": \"2026-10-19T10:00:00Z\"}}, \"CurrentTailnet\": {\"Name\": \"example.org\", \"MagicDNSSuffix\": \"tail1234.ts.net\"}, \"MagicDNSSuffix\": \"tail1234.ts.net\"}"
+   ]
+  },
+  {
+   "call": "container detect_local_subnets",
+   "commands": [],
+   "result": [
+    "192.168.1.0/24"
+   ]
+  },
+  {
+   "call": "container get_taildrop_dir",
+   "commands": [],
+   "result": "<root>/data/taildrop"
+  },
+  {
+   "call": "container get_taildrop_inbox_files",
+   "commands": [],
+   "result": []
+  },
+  {
+   "call": "container taildrop receive",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "file",
+     "get",
+     "--conflict=rename",
+     "/var/lib/tailscale/taildrop"
+    ],
+    [
+     "run",
+     "tailscale",
+     "file",
+     "get",
+     "--conflict=rename",
+     "/var/lib/tailscale/taildrop"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "count": 0,
+    "directory": "<root>/data/taildrop",
+    "files": [],
+    "output": "Success.",
+    "received_count": 0,
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container ping",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "ping",
+     "--c=1",
+     "--timeout=2s",
+     "laptop"
+    ],
+    [
+     "run",
+     "tailscale",
+     "ping",
+     "--c=1",
+     "--timeout=2s",
+     "laptop"
+    ]
+   ],
+   "result": {
+    "is_direct": true,
+    "latency": "12.0 ms",
+    "latency_ms": 12.0,
+    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
+    "peer": "laptop",
+    "route": "203.0.113.5:41641",
+    "status": "success"
+   }
+  },
+  {
+   "call": "container ping bad",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "ping",
+     "--c=1",
+     "--timeout=2s",
+     "laptop; reboot"
+    ],
+    [
+     "run",
+     "tailscale",
+     "ping",
+     "--c=1",
+     "--timeout=2s",
+     "laptop; reboot"
+    ]
+   ],
+   "result": {
+    "is_direct": true,
+    "latency": "12.0 ms",
+    "latency_ms": 12.0,
+    "output": "pong from laptop (100.64.0.2) via 203.0.113.5:41641 in 12ms",
+    "peer": "laptop; reboot",
+    "route": "203.0.113.5:41641",
+    "status": "success"
+   }
+  },
+  {
+   "call": "container set routes",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "set",
+     "--advertise-routes=192.168.1.0/24"
+    ],
+    [
+     "run",
+     "tailscale",
+     "set",
+     "--advertise-routes=192.168.1.0/24"
+    ]
+   ],
+   "result": {
+    "advertised_routes": "192.168.1.0/24",
+    "code": 0,
+    "enabled": true,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container set routes bad",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "set",
+     "--advertise-routes=not-a-route"
+    ],
+    [
+     "run",
+     "tailscale",
+     "set",
+     "--advertise-routes=not-a-route"
+    ]
+   ],
+   "result": {
+    "advertised_routes": "not-a-route",
+    "code": 0,
+    "enabled": true,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container exit node",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "set",
+     "--advertise-exit-node=true"
+    ],
+    [
+     "run",
+     "tailscale",
+     "set",
+     "--advertise-exit-node=true"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "enabled": true,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container ssh",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "set",
+     "--ssh=false"
+    ],
+    [
+     "run",
+     "tailscale",
+     "set",
+     "--ssh=false"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "enabled": false,
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container serve",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "timeout",
+     "3",
+     "tailscale",
+     "serve",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "run",
+     "timeout",
+     "3",
+     "tailscale",
+     "serve",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "funnel",
+     "reset"
+    ],
+    [
+     "run",
+     "tailscale",
+     "funnel",
+     "reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "approval_url": "",
+    "error": "",
+    "feature": "serve",
+    "funnel_enabled": false,
+    "port": 8082,
+    "serve_enabled": true,
+    "serve_url": "https://nas.tail1234.ts.net",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container funnel",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "timeout",
+     "3",
+     "tailscale",
+     "serve",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "run",
+     "timeout",
+     "3",
+     "tailscale",
+     "serve",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "timeout",
+     "3",
+     "tailscale",
+     "funnel",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "run",
+     "timeout",
+     "3",
+     "tailscale",
+     "funnel",
+     "--bg",
+     "--yes",
+     "8082"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "approval_url": "",
+    "error": "",
+    "feature": "serve",
+    "funnel_enabled": true,
+    "port": 8082,
+    "serve_enabled": true,
+    "serve_url": "https://nas.tail1234.ts.net",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container serve off",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "serve",
+     "reset"
+    ],
+    [
+     "run",
+     "tailscale",
+     "serve",
+     "reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "funnel",
+     "reset"
+    ],
+    [
+     "run",
+     "tailscale",
+     "funnel",
+     "reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "approval_url": "",
+    "error": "",
+    "feature": "serve",
+    "funnel_enabled": false,
+    "port": 8082,
+    "serve_enabled": true,
+    "serve_url": "https://nas.tail1234.ts.net",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container reauth",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "up",
+     "--force-reauth",
+     "--reset"
+    ],
+    [
+     "run",
+     "tailscale",
+     "up",
+     "--force-reauth",
+     "--reset"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "auth_url": "",
+    "output": "Success.",
+    "status": "ok"
+   }
+  },
+  {
+   "call": "container mesh status",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "debug",
+     "prefs"
+    ],
+    [
+     "run",
+     "tailscale",
+     "debug",
+     "prefs"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "wg",
+     "show",
+     "interfaces"
+    ],
+    [
+     "run",
+     "wg",
+     "show",
+     "all",
+     "dump"
+    ]
+   ],
+   "result": {
+    "tailscale": {
+     "active": true,
+     "admin_console_url": "https://login.tailscale.com/admin/machines",
+     "advertise_exit_node": false,
+     "advertised_routes": [],
+     "auth_url": "",
+     "backend_state": "Running",
+     "container_id": "abcdef123456",
+     "container_mode": true,
+     "detected_subnets": [
+      "192.168.1.0/24"
+     ],
+     "dns_name": "nas.tail1234.ts.net",
+     "exit_node_approved": false,
+     "funnel_enabled": false,
+     "hostname": "nas",
+     "installed": true,
+     "ipv4": "100.64.0.1",
+     "is_exit_node": false,
+     "is_subnet_router": false,
+     "key_expired": false,
+     "key_expiry": "",
+     "key_expiry_days": null,
+     "peers": [
+      {
+       "connection_type": "DERP (fra)",
+       "cur_addr": "",
+       "dns_name": "laptop.tail1234.ts.net",
+       "exit_node_option": true,
+       "hostname": "laptop",
+       "id": "nodekey:1",
+       "ip": "100.64.0.2",
+       "last_seen": "2026-10-20T10:00:00Z",
+       "name": "laptop",
+       "online": true,
+       "os": "macOS",
+       "relay": "fra"
+      },
+      {
+       "connection_type": "Offline",
+       "cur_addr": "",
+       "dns_name": "phone.tail1234.ts.net",
+       "exit_node_option": false,
+       "hostname": "phone",
+       "id": "nodekey:2",
+       "ip": "100.64.0.3",
+       "last_seen": "2026-10-19T10:00:00Z",
+       "name": "phone",
+       "online": false,
+       "os": "iOS",
+       "relay": ""
+      }
+     ],
+     "peers_count": 2,
+     "serve_enabled": true,
+     "serve_url": "https://nas.tail1234.ts.net",
+     "ssh_enabled": false,
+     "taildrop_dir": "<root>/data/taildrop",
+     "taildrop_files": [],
+     "taildrop_files_count": 0,
+     "tailnet": "tail1234.ts.net"
+    },
+    "wireguard": {
+     "active": true,
+     "installed": true,
+     "interfaces": [
+      "wg0"
+     ],
+     "peers": [
+      {
+       "active": false,
+       "allowed_ips": [
+        "10.13.13.2/32"
+       ],
+       "endpoint": "203.0.113.5:51820",
+       "interface": "wg0",
+       "latest_handshake": "<ts>",
+       "latest_handshake_age": "<age>",
+       "public_key": "PEERPUB1...",
+       "transfer_rx_bytes": 1024,
+       "transfer_tx_bytes": 2048
+      },
+      {
+       "active": false,
+       "allowed_ips": [
+        "10.13.13.3/32"
+       ],
+       "endpoint": "",
+       "interface": "wg0",
+       "latest_handshake": 0,
+       "latest_handshake_age": null,
+       "public_key": "PEERPUB2...",
+       "transfer_rx_bytes": 0,
+       "transfer_tx_bytes": 0
+      }
+     ],
+     "peers_count": 2
+    }
+   }
+  },
+  {
+   "call": "container up",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "up",
+     "--reset",
+     "--authkey",
+     "tskey-auth-example",
+     "--hostname",
+     "nas",
+     "--accept-routes"
+    ],
+    [
+     "run",
+     "tailscale",
+     "up",
+     "--reset",
+     "--authkey",
+     "tskey-auth-example",
+     "--hostname",
+     "nas",
+     "--accept-routes"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "output": "Success.",
+    "status": "success"
+   }
+  },
+  {
+   "call": "container down",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "down"
+    ],
+    [
+     "run",
+     "tailscale",
+     "down"
+    ],
+    [
+     "docker",
+     "POST",
+     "/containers/tailscale/stop?t=5"
+    ]
+   ],
+   "result": {
+    "code": 0,
+    "output": "Tailscale container stopped and disconnected",
+    "status": "success"
+   }
+  },
+  {
+   "call": "mesh status needs login",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "debug",
+     "prefs"
+    ],
+    [
+     "run",
+     "tailscale",
+     "debug",
+     "prefs"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "serve",
+     "status",
+     "--json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "exec",
+     "tailscale",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "tailscale",
+     "funnel",
+     "status",
+     "--json"
+    ],
+    [
+     "run",
+     "wg",
+     "show",
+     "interfaces"
+    ],
+    [
+     "run",
+     "wg",
+     "show",
+     "all",
+     "dump"
+    ]
+   ],
+   "result": {
+    "tailscale": {
+     "active": false,
+     "admin_console_url": "https://login.tailscale.com/admin/machines",
+     "advertise_exit_node": false,
+     "advertised_routes": [],
+     "auth_url": "https://login.tailscale.com/a/abc",
+     "backend_state": "NeedsLogin",
+     "container_id": "abcdef123456",
+     "container_mode": true,
+     "detected_subnets": [
+      "192.168.1.0/24"
+     ],
+     "dns_name": "",
+     "exit_node_approved": false,
+     "funnel_enabled": false,
+     "hostname": "",
+     "installed": true,
+     "ipv4": "",
+     "is_exit_node": false,
+     "is_subnet_router": false,
+     "key_expired": false,
+     "key_expiry": "",
+     "key_expiry_days": null,
+     "peers": [],
+     "peers_count": 0,
+     "serve_enabled": true,
+     "serve_url": "",
+     "ssh_enabled": false,
+     "taildrop_dir": "<root>/data/taildrop",
+     "taildrop_files": [],
+     "taildrop_files_count": 0,
+     "tailnet": ""
+    },
+    "wireguard": {
+     "active": true,
+     "installed": true,
+     "interfaces": [
+      "wg0"
+     ],
+     "peers": [
+      {
+       "active": false,
+       "allowed_ips": [
+        "10.13.13.2/32"
+       ],
+       "endpoint": "203.0.113.5:51820",
+       "interface": "wg0",
+       "latest_handshake": "<ts>",
+       "latest_handshake_age": "<age>",
+       "public_key": "PEERPUB1...",
+       "transfer_rx_bytes": 1024,
+       "transfer_tx_bytes": 2048
+      },
+      {
+       "active": false,
+       "allowed_ips": [
+        "10.13.13.3/32"
+       ],
+       "endpoint": "",
+       "interface": "wg0",
+       "latest_handshake": 0,
+       "latest_handshake_age": null,
+       "public_key": "PEERPUB2...",
+       "transfer_rx_bytes": 0,
+       "transfer_tx_bytes": 0
+      }
+     ],
+     "peers_count": 2
+    }
+   }
+  },
+  {
+   "call": "deploy tailscale container",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/images/tailscale/tailscale:stable/json"
+    ],
+    [
+     "docker",
+     "POST",
+     "/containers/create?name=tailscale",
+     "{\"Env\": [\"TS_STATE_DIR=/var/lib/tailscale\", \"TS_HOSTNAME=nas\", \"TS_AUTHKEY=tskey-auth-example\", \"TS_EXTRA_ARGS=--reset --accept-routes\", \"TS_USERSPACE=true\"], \"HostConfig\": {\"Binds\": [\"<root>/ts-state:/var/lib/tailscale\"], \"CapAdd\": [\"NET_ADMIN\", \"NET_RAW\"], \"Devices\": [], \"NetworkMode\": \"host\", \"RestartPolicy\": {\"Name\": \"unless-stopped\"}}, \"Image\": \"tailscale/tailscale:stable\", \"Labels\": {\"app.name\": \"Tailscale Zero-Trust Mesh\", \"com.docker.compose.project\": \"tailscale\", \"com.docker.compose.service\": \"tailscale\", \"net.unraid.docker.icon\": \"https://raw.githubusercontent.com/tailscale/tailscale/main/cmd/tailscale/logo.png\", \"net.unraid.docker.managed\": \"dockerman\"}}"
+    ],
+    [
+     "docker",
+     "POST",
+     "/containers/fedcba0987654321/start"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "up",
+     "--reset",
+     "--authkey",
+     "tskey-auth-example",
+     "--hostname",
+     "nas",
+     "--accept-routes"
+    ]
+   ],
+   "result": {
+    "auth_url": null,
+    "backend_state": "Running",
+    "container_id": "fedcba098765",
+    "message": "Tailscale container deployed and connected to Tailnet.",
+    "state_dir": "<root>/ts-state",
+    "status": "success"
+   }
+  },
+  {
+   "call": "deploy (exists, stopped)",
+   "commands": [
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "POST",
+     "/containers/tailscale/start"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "docker",
+     "POST",
+     "/containers/tailscale/start"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "up",
+     "--reset",
+     "--accept-routes",
+     "--timeout=3s"
+    ],
+    [
+     "docker",
+     "GET",
+     "/containers/tailscale/json"
+    ],
+    [
+     "run",
+     "/usr/bin/tailscale",
+     "status",
+     "--json"
+    ]
+   ],
+   "result": {
+    "auth_url": "https://login.tailscale.com/a/abc",
+    "backend_state": "NeedsLogin",
+    "container_id": "abcdef123456",
+    "message": "Tailscale container running. Please authenticate in your browser to complete setup.",
+    "status": "success"
+   }
+  },
+  {
+   "call": "_get_wireguard_status",
+   "commands": [
+    [
+     "run",
+     "wg",
+     "show",
+     "interfaces"
+    ],
+    [
+     "run",
+     "wg",
+     "show",
+     "all",
+     "dump"
+    ]
+   ],
+   "result": {
+    "active": true,
+    "installed": true,
+    "interfaces": [
+     "wg0"
+    ],
+    "peers": [
+     {
+      "active": false,
+      "allowed_ips": [
+       "10.13.13.2/32"
+      ],
+      "endpoint": "203.0.113.5:51820",
+      "interface": "wg0",
+      "latest_handshake": "<ts>",
+      "latest_handshake_age": "<age>",
+      "public_key": "PEERPUB1...",
+      "transfer_rx_bytes": 1024,
+      "transfer_tx_bytes": 2048
+     },
+     {
+      "active": false,
+      "allowed_ips": [
+       "10.13.13.3/32"
+      ],
+      "endpoint": "",
+      "interface": "wg0",
+      "latest_handshake": 0,
+      "latest_handshake_age": null,
+      "public_key": "PEERPUB2...",
+      "transfer_rx_bytes": 0,
+      "transfer_tx_bytes": 0
+     }
+    ],
+    "peers_count": 2
+   }
+  },
+  {
+   "call": "generate_wireguard_keypair",
+   "commands": [
+    [
+     "run",
+     "wg",
+     "genkey"
+    ],
+    [
+     "run",
+     "wg",
+     "pubkey"
+    ]
+   ],
+   "result": [
+    "cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=",
+    "cHVibGlja2V5cHVibGlja2V5cHVibGlja2V5MDAwMDA="
+   ]
+  },
+  {
+   "call": "generate_wireguard_client_config",
+   "commands": [
+    [
+     "run",
+     "wg",
+     "genkey"
+    ],
+    [
+     "run",
+     "wg",
+     "pubkey"
+    ]
+   ],
+   "result": {
+    "allowed_ips": "0.0.0.0/0, ::/0",
+    "client_ip": "10.13.13.5/32",
+    "client_name": "phone",
+    "config_content": "# WireGuard Client Profile: phone\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = 10.13.13.5/32\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVERPUB=\nEndpoint = vpn.example.org:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
+    "config_text": "# WireGuard Client Profile: phone\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = 10.13.13.5/32\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVERPUB=\nEndpoint = vpn.example.org:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
+    "endpoint": "vpn.example.org:51820",
+    "private_key": "cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=",
+    "public_key": "cHVibGlja2V5cHVibGlja2V5cHVibGlja2V5MDAwMDA="
+   }
+  },
+  {
+   "call": "generate_wireguard_client_config bad",
+   "commands": [
+    [
+     "run",
+     "wg",
+     "genkey"
+    ],
+    [
+     "run",
+     "wg",
+     "pubkey"
+    ]
+   ],
+   "result": {
+    "allowed_ips": "0.0.0.0/0, ::/0",
+    "client_ip": "nonsense",
+    "client_name": "bad name\n",
+    "config_content": "# WireGuard Client Profile: bad name\n\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = nonsense\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVER_PUBLIC_KEY_PLACEHOLDER\nEndpoint = your-nas-domain.com:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
+    "config_text": "# WireGuard Client Profile: bad name\n\n[Interface]\nPrivateKey = cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=\nAddress = nonsense\nDNS = 1.1.1.1\n\n[Peer]\nPublicKey = SERVER_PUBLIC_KEY_PLACEHOLDER\nEndpoint = your-nas-domain.com:51820\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
+    "endpoint": "",
+    "private_key": "cHJpdmF0ZWtleXByaXZhdGVrZXlwcml2YXRla2V5MDA=",
+    "public_key": "cHVibGlja2V5cHVibGlja2V5cHVibGlja2V5MDAwMDA="
+   }
+  },
+  {
+   "call": "get_ip_forwarding_status",
+   "commands": [],
+   "result": true
+  },
+  {
+   "call": "set_ip_forwarding off",
+   "commands": [],
+   "result": true
+  },
+  {
+   "call": "set_ip_forwarding on",
+   "commands": [],
+   "result": true
+  },
+  {
+   "call": "toggle_wireguard_subnet_nat",
+   "commands": [
+    [
+     "run",
+     "iptables",
+     "-t",
+     "nat",
+     "-A",
+     "POSTROUTING",
+     "-o",
+     "br0",
+     "-j",
+     "MASQUERADE"
+    ]
+   ],
+   "result": {
+    "enabled": true,
+    "ip_forwarding": true,
+    "message": "Subnet routing enabled (wg0 -> br0)",
+    "nat_rule": true
+   }
+  },
+  {
+   "call": "toggle_wireguard_subnet_nat bad",
+   "commands": [
+    [
+     "run",
+     "iptables",
+     "-t",
+     "nat",
+     "-A",
+     "POSTROUTING",
+     "-o",
+     "br0",
+     "-j",
+     "MASQUERADE"
+    ]
+   ],
+   "result": {
+    "enabled": true,
+    "ip_forwarding": true,
+    "message": "Subnet routing enabled (wg0;x -> br0)",
+    "nat_rule": true
+   }
+  },
+  {
+   "call": "get_active_listening_ports",
+   "commands": [],
+   "result": [
+    {
+     "bind_address": "127.0.0.1",
+     "container": "",
+     "container_id": "",
+     "ipv6": false,
+     "port": 22,
+     "protocol": "tcp",
+     "service": "SSH",
+     "state": "LISTEN"
+    },
+    {
+     "bind_address": "::",
+     "container": "",
+     "container_id": "",
+     "ipv6": true,
+     "port": 445,
+     "protocol": "tcp",
+     "service": "SMB / CIFS",
+     "state": "LISTEN"
+    },
+    {
+     "bind_address": "0.0.0.0",
+     "container": "",
+     "container_id": "",
+     "ipv6": false,
+     "port": 5353,
+     "protocol": "udp",
+     "service": "mDNS / Bonjour",
+     "state": "ACTIVE"
+    },
+    {
+     "bind_address": "0.0.0.0",
+     "container": "",
+     "container_id": "",
+     "ipv6": false,
+     "port": 8082,
+     "protocol": "tcp",
+     "service": "ZettNAS Web Desktop",
+     "state": "LISTEN"
+    },
+    {
+     "bind_address": "0.0.0.0",
+     "container": "wireguard",
+     "container_id": "fedcba987654",
+     "ipv6": false,
+     "port": 51820,
+     "protocol": "udp",
+     "service": "WireGuard VPN",
+     "state": "ACTIVE"
+    }
+   ]
+  },
+  {
+   "call": "timers",
+   "commands": [],
+   "result": [
+    [
+     30.0,
+     "_on_timeout"
+    ],
+    [
+     30.0,
+     "_on_timeout"
+    ],
+    [
+     5.0,
+     "_on_timeout"
+    ]
+   ]
+  }
+ ],
+ "surface": {
+  "BONDING_MODES": {
+   "value": {
+    "0": {
+     "code": "0",
+     "description": "Transmit packets in sequential order from first available slave to last. Provides link load balancing and fault tolerance.",
+     "name": "balance-rr",
+     "title": "Round-Robin"
+    },
+    "1": {
+     "code": "1",
+     "description": "Only one slave in the bond is active. A different slave becomes active if and only if the active slave fails. Recommended for unmanaged switches.",
+     "name": "active-backup",
+     "title": "Active-Backup (Failover)"
+    },
+    "2": {
+     "code": "2",
+     "description": "Transmit based on the selected transmit hash policy (MAC / IP). Provides load balancing and fault tolerance.",
+     "name": "balance-xor",
+     "title": "Balance-XOR"
+    },
+    "4": {
+     "code": "4",
+     "description": "IEEE 802.3ad Dynamic Link Aggregation. Requires an 802.3ad LACP-capable switch with matching LAG/trunk configured.",
+     "name": "802.3ad",
+     "title": "IEEE 802.3ad LACP (Dynamic Link Aggregation)"
+    },
+    "6": {
+     "code": "6",
+     "description": "Includes balance-tlb plus receive load balancing (RLB) for IPv4 traffic. Does not require special switch configuration.",
+     "name": "balance-alb",
+     "title": "Adaptive Load Balancing (ALB)"
+    }
+   }
+  },
+  "CanaryWatchdog": {
+   "class": {
+    "__init__": "(self)",
+    "_on_timeout": "(self, canary_id: str)",
+    "arm": "(self, target_config: dict[str, typing.Any], original_config: dict[str, typing.Any], timeout_sec: int = 60) -> str",
+    "confirm": "(self, canary_id: str | None = None) -> bool",
+    "get_status": "(self) -> dict[str, typing.Any]",
+    "revert": "(self, canary_id: str | None = None) -> dict[str, typing.Any] | None"
+   }
+  },
+  "DNS_SOURCES": {
+   "value": [
+    "<root>/boot/network.cfg",
+    "<root>/etc/resolv.conf"
+   ]
+  },
+  "HOST_IP_SOURCES": {
+   "value": [
+    "<root>/boot/network.cfg",
+    "<root>/etc/interfaces"
+   ]
+  },
+  "HOST_PROC": {
+   "value": "<root>/proc"
+  },
+  "HOST_SYS": {
+   "value": "<root>/sys"
+  },
+  "IP_FORWARD_PATHS": {
+   "value": [
+    "<root>/proc/sys/net/ipv4/ip_forward"
+   ]
+  },
+  "NETWORK_CONFIG_FILE": {
+   "value": "<root>/network_config.json"
+  },
+  "UNRAID_NETWORK_CFG": {
+   "value": [
+    "<root>/boot/network.cfg"
+   ]
+  },
+  "_apply_mtu": {
+   "function": "(iface: str, mtu_val: int) -> bool"
+  },
+  "_apply_negotiation": {
+   "function": "(iface: str, autoneg: bool, speed: int | None = None, duplex: str = 'full') -> bool"
+  },
+  "_apply_wol": {
+   "function": "(iface: str, enabled: bool) -> bool"
+  },
+  "_execute_revert": {
+   "function": "(orig: dict[str, typing.Any]) -> None"
+  },
+  "_find_tailscale_bin": {
+   "function": "() -> str | None"
+  },
+  "_format_speed": {
+   "function": "(speed_val: int | None, is_up: bool = True) -> str"
+  },
+  "_get_dns_servers": {
+   "function": "() -> list[str]"
+  },
+  "_get_docker_topology": {
+   "function": "() -> list[dict[str, typing.Any]]"
+  },
+  "_get_tailscale_container_info": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "_get_unraid_descriptions": {
+   "function": "() -> dict[str, str]"
+  },
+  "_get_wireguard_status": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "_hex_to_ip": {
+   "function": "(hex_str: str) -> str"
+  },
+  "_ip_link_delete": {
+   "function": "(name: str) -> tuple[bool, str]"
+  },
+  "_mask_to_cidr": {
+   "function": "(mask_ip: str) -> int"
+  },
+  "_parse_proc_net_vlan": {
+   "function": "() -> dict[str, dict[str, typing.Any]]"
+  },
+  "_parse_routes": {
+   "function": "() -> list[dict[str, typing.Any]]"
+  },
+  "_parse_unraid_network_cfg": {
+   "function": "() -> dict[str, str]"
+  },
+  "_query_ethtool": {
+   "function": "(iface: str) -> str"
+  },
+  "_read_file": {
+   "function": "(path: str, default: str = '') -> str"
+  },
+  "_read_stat": {
+   "function": "(iface_dir: str, stat_name: str) -> int"
+  },
+  "_run_tailscale_cmd": {
+   "function": "(args: list[str], timeout: float = 10.0) -> tuple[int, str]"
+  },
+  "_validate_ipv4": {
+   "function": "(val: str, field_name: str) -> str"
+  },
+  "_validate_netmask": {
+   "function": "(val: str) -> str"
+  },
+  "_write_unraid_network_cfg": {
+   "function": "(updates: dict[str, str]) -> bool"
+  },
+  "apply_host_ip_config_canary": {
+   "function": "(updates: dict[str, typing.Any], timeout_sec: int = 60) -> dict[str, typing.Any]"
+  },
+  "confirm_host_ip_config": {
+   "function": "(canary_id: str | None = None) -> dict[str, typing.Any]"
+  },
+  "create_docker_network": {
+   "function": "(name: str, driver: str = 'bridge', subnet: str = '', gateway: str = '') -> dict[str, typing.Any]"
+  },
+  "create_vlan": {
+   "function": "(parent: str, vlan_id: int, alias: str = '') -> dict[str, typing.Any]"
+  },
+  "delete_docker_network": {
+   "function": "(net_id_or_name: str) -> dict[str, typing.Any]"
+  },
+  "delete_vlan": {
+   "function": "(vlan_name: str) -> dict[str, typing.Any]"
+  },
+  "deploy_tailscale_container": {
+   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = True, state_dir: str | None = None) -> dict[str, typing.Any]"
+  },
+  "detect_local_subnets": {
+   "function": "() -> list[str]"
+  },
+  "execute_tailscale_down": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_ping": {
+   "function": "(peer: str) -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_reauth": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_set_exit_node": {
+   "function": "(enabled: bool) -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_set_routes": {
+   "function": "(routes: str, enabled: bool = True) -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_set_serve": {
+   "function": "(serve: bool, funnel: bool = False, port: int = 8082) -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_set_ssh": {
+   "function": "(enabled: bool) -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_taildrop_receive": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "execute_tailscale_up": {
+   "function": "(auth_key: str | None = None, hostname: str | None = None, accept_routes: bool = True) -> dict[str, typing.Any]"
+  },
+  "generate_wireguard_client_config": {
+   "function": "(client_name: str, client_ip: str = '10.13.13.2/32', server_endpoint: str = '', server_pubkey: str = '', dns: str = '1.1.1.1', allowed_ips: str = '0.0.0.0/0, ::/0', keepalive: int = 25) -> dict[str, typing.Any]"
+  },
+  "generate_wireguard_keypair": {
+   "function": "() -> tuple[str, str]"
+  },
+  "get_active_listening_ports": {
+   "function": "() -> list[dict[str, typing.Any]]"
+  },
+  "get_bond_config": {
+   "function": "(bond_name: str) -> dict[str, typing.Any]"
+  },
+  "get_bridge_config": {
+   "function": "(br_name: str) -> dict[str, typing.Any]"
+  },
+  "get_canary_watchdog": {
+   "function": "() -> CanaryWatchdog"
+  },
+  "get_host_ip_config": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "get_ip_forwarding_status": {
+   "function": "() -> bool"
+  },
+  "get_mesh_vpn_status": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "get_network_topology": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "get_port_config": {
+   "function": "(iface_name: str) -> dict[str, typing.Any]"
+  },
+  "get_taildrop_dir": {
+   "function": "() -> str"
+  },
+  "get_taildrop_inbox_files": {
+   "function": "() -> list[dict[str, typing.Any]]"
+  },
+  "get_vlans": {
+   "function": "() -> list[dict[str, typing.Any]]"
+  },
+  "load_network_config": {
+   "function": "() -> dict[str, typing.Any]"
+  },
+  "read_ip": {
+   "function": "()"
+  },
+  "read_network_rates": {
+   "function": "()"
+  },
+  "revert_host_ip_config": {
+   "function": "(canary_id: str | None = None) -> dict[str, typing.Any]"
+  },
+  "save_network_config": {
+   "function": "(cfg: dict[str, typing.Any]) -> None"
+  },
+  "set_ip_forwarding": {
+   "function": "(enable: bool) -> bool"
+  },
+  "toggle_wireguard_subnet_nat": {
+   "function": "(enable: bool, iface: str = 'wg0', out_iface: str = 'eth0') -> dict[str, typing.Any]"
+  },
+  "update_bond_config": {
+   "function": "(bond_name: str, updates: dict[str, typing.Any]) -> dict[str, typing.Any]"
+  },
+  "update_bridge_config": {
+   "function": "(br_name: str, updates: dict[str, typing.Any]) -> dict[str, typing.Any]"
+  },
+  "update_port_config": {
+   "function": "(iface_name: str, updates: dict[str, typing.Any]) -> dict[str, typing.Any]"
+  }
+ }
+}

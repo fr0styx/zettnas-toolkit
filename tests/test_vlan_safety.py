@@ -10,7 +10,7 @@ from backend.hardware import network as net
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.setattr(net, "NETWORK_CONFIG_FILE", str(tmp_path / "network_config.json"))
+    monkeypatch.setattr(net.common, "NETWORK_CONFIG_FILE", str(tmp_path / "network_config.json"))
     ran = []
     kernel = {}
 
@@ -19,7 +19,7 @@ def env(tmp_path, monkeypatch):
         return subprocess.CompletedProcess(cmd, 0, "", "")
 
     monkeypatch.setattr(net.subprocess, "run", run)
-    monkeypatch.setattr(net, "_parse_proc_net_vlan", lambda: dict(kernel))
+    monkeypatch.setattr(net.vlans, "_parse_proc_net_vlan", lambda: dict(kernel))
     monkeypatch.setattr(
         net.os.path, "exists", lambda p: False if p == "/host/proc/1/ns/net" else __import__("os").path.lexists(p)
     )

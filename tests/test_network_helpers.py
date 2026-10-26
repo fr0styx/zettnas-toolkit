@@ -43,7 +43,7 @@ def unraid_cfg(tmp_path, monkeypatch):
         '# generated\nUSE_DHCP[0]="no"\nIPADDR[0]="192.168.7.20"\nNETMASK[0]="255.255.255.0"\n'
         'DESCRIPTION[0]="Main LAN"\nDESCRIPTION[1]="Backup link"\nDNS_SERVER1="9.9.9.9"\n'
     )
-    monkeypatch.setattr(net, "UNRAID_NETWORK_CFG", (str(cfg),))
+    monkeypatch.setattr(net.common, "UNRAID_NETWORK_CFG", (str(cfg),))
     return cfg
 
 
@@ -59,7 +59,7 @@ class TestUnraidConfig:
         assert text.rstrip().endswith('GATEWAY[0]="192.168.7.1"')
 
     def test_missing_file(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(net, "UNRAID_NETWORK_CFG", (str(tmp_path / "nope.cfg"),))
+        monkeypatch.setattr(net.common, "UNRAID_NETWORK_CFG", (str(tmp_path / "nope.cfg"),))
         assert net._parse_unraid_network_cfg() == {}
         assert net._write_unraid_network_cfg({"A": "b"}) is False
         assert net._get_unraid_descriptions() == {}
@@ -69,9 +69,9 @@ class TestUnraidConfig:
         assert d["0"] == d["eth0"] == d["br0"] == "Main LAN" and d["1"] == "Backup link"
 
     def test_revert_writes_the_old_settings(self, unraid_cfg, monkeypatch):
-        monkeypatch.setattr(net, "load_network_config", lambda: {"host_ip_staged": {}})
+        monkeypatch.setattr(net.common, "load_network_config", lambda: {"host_ip_staged": {}})
         saved = []
-        monkeypatch.setattr(net, "save_network_config", lambda cfg: saved.append(cfg))
+        monkeypatch.setattr(net.common, "save_network_config", lambda cfg: saved.append(cfg))
         net._execute_revert(
             {
                 "mode": "static",
@@ -95,11 +95,11 @@ class TestDns:
         resolv.write_text(
             "nameserver 127.0.0.11\nnameserver 10.0.0.53\nnameserver 10.0.0.53\n# ExtServers: [host(192.168.1.1)]\n"
         )
-        monkeypatch.setattr(net, "DNS_SOURCES", (str(tmp_path / "missing"), str(resolv)))
+        monkeypatch.setattr(net.common, "DNS_SOURCES", (str(tmp_path / "missing"), str(resolv)))
         assert net._get_dns_servers() == ["10.0.0.53", "192.168.1.1"]
 
     def test_from_unraid(self, unraid_cfg, monkeypatch):
-        monkeypatch.setattr(net, "DNS_SOURCES", (str(unraid_cfg),))
+        monkeypatch.setattr(net.common, "DNS_SOURCES", (str(unraid_cfg),))
         assert net._get_dns_servers() == ["9.9.9.9"]
 
 
@@ -154,13 +154,13 @@ class TestLinkSettings:
     def test_mtu_via_sysfs(self, run, tmp_path, monkeypatch):
         (tmp_path / "class/net/eth0").mkdir(parents=True)
         (tmp_path / "class/net/eth0/mtu").write_text("1500")
-        monkeypatch.setattr(net, "HOST_SYS", str(tmp_path))
+        monkeypatch.setattr(net.common, "HOST_SYS", str(tmp_path))
         monkeypatch.setattr(net.os.path, "exists", lambda p: False)
         assert net._apply_mtu("eth0", 9000)
         assert (tmp_path / "class/net/eth0/mtu").read_text() == "9000"
 
     def test_mtu_nowhere(self, run, tmp_path, monkeypatch):
-        monkeypatch.setattr(net, "HOST_SYS", str(tmp_path))
+        monkeypatch.setattr(net.common, "HOST_SYS", str(tmp_path))
         monkeypatch.setattr(net.os.path, "exists", lambda p: False)
         monkeypatch.setattr(net.os.path, "isfile", lambda p: False)
         assert net._apply_mtu("eth0", 9000) is False
@@ -192,7 +192,7 @@ def docker(tmp_path, monkeypatch):
     """A fake Docker engine behind the socket."""
     sock = tmp_path / "docker.sock"
     sock.write_text("")
-    monkeypatch.setattr(net, "_docker_sock_path", lambda: str(sock))
+    monkeypatch.setattr(net.common, "_docker_sock_path", lambda: str(sock))
     state = {"networks": [], "containers": [], "fail": None}
 
     def handler(request):
@@ -245,7 +245,7 @@ class TestDockerNetworks:
         assert topo["host"]["bridge_device"] == "" and not topo["host"]["is_custom"]
 
     def test_topology_without_docker(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(net, "_docker_sock_path", lambda: str(tmp_path / "none.sock"))
+        monkeypatch.setattr(net.common, "_docker_sock_path", lambda: str(tmp_path / "none.sock"))
         assert net._get_docker_topology() == []
 
     def test_create(self, docker):
@@ -266,7 +266,7 @@ class TestDockerNetworks:
         assert "active endpoints" in net.delete_docker_network("apps")["message"]
 
     def test_without_socket(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(net, "_docker_sock_path", lambda: str(tmp_path / "none.sock"))
+        monkeypatch.setattr(net.common, "_docker_sock_path", lambda: str(tmp_path / "none.sock"))
         assert net.create_docker_network("x")["message"] == "Docker socket not accessible"
         assert net.delete_docker_network("x")["message"] == "Docker socket not accessible"
 
@@ -290,17 +290,17 @@ class TestVlans:
         iface("eth0.10", operstate="up", carrier="1", speed="1000", mtu="1500", address="AA:BB:10")
         iface("vlan20", operstate="down", carrier="0", speed="-1", mtu="1500", address="CC", uevent="DEVTYPE=vlan")
         (root / "vlan20" / "lower_eth1").mkdir()
-        monkeypatch.setattr(net, "_find_sys_net_dir", lambda: str(root))
+        monkeypatch.setattr(net.common, "_find_sys_net_dir", lambda: str(root))
         monkeypatch.setattr(
-            net, "_parse_routes", lambda: [{"iface": "eth0.10", "destination": "10.10.0.0", "cidr": 24}]
+            net.common, "_parse_routes", lambda: [{"iface": "eth0.10", "destination": "10.10.0.0", "cidr": 24}]
         )
         vlan_conf = tmp_path / "vlan_config"
         vlan_conf.write_text(
             "VLAN Dev name | VLAN ID\nName-Type: VLAN_NAME_TYPE_RAW_PLUS_VID_NO_PAD\nvlan20 | 20 | eth1\nbroken | x | eth9\n"
         )
-        monkeypatch.setattr(net, "_find_proc_net_path", lambda name: str(vlan_conf))
+        monkeypatch.setattr(net.common, "_find_proc_net_path", lambda name: str(vlan_conf))
         monkeypatch.setattr(
-            net,
+            net.common,
             "load_network_config",
             lambda: {
                 "vlans": {"eth2.30": {"parent": "eth2", "vlan_id": 30, "alias": "IoT"}},
@@ -336,14 +336,14 @@ class TestHostIp:
         assert net.read_ip() == "10.1.2.3"
 
     def test_from_unraid(self, unraid_cfg, monkeypatch):
-        monkeypatch.setattr(net, "HOST_IP_SOURCES", (str(unraid_cfg),))
+        monkeypatch.setattr(net.common, "HOST_IP_SOURCES", (str(unraid_cfg),))
         assert net.read_ip() == "192.168.7.20"
         assert net.read_ip() == "192.168.7.20"  # cached
 
     def test_from_interfaces_file(self, tmp_path, monkeypatch):
         f = tmp_path / "interfaces"
         f.write_text("iface eth0 inet static\n  address 10.20.30.40\n")
-        monkeypatch.setattr(net, "HOST_IP_SOURCES", (str(f),))
+        monkeypatch.setattr(net.common, "HOST_IP_SOURCES", (str(f),))
         assert net.read_ip() == "10.20.30.40"
 
     def test_from_fib_trie(self, tmp_path, monkeypatch):
@@ -351,13 +351,13 @@ class TestHostIp:
         fib.write_text(
             "Main:\n  +-- 0.0.0.0/0 3 0 5\n     |-- 127.0.0.1\n        /32 host LOCAL\n     |-- 192.168.50.9\n        /32 host LOCAL\n"
         )
-        monkeypatch.setattr(net, "HOST_IP_SOURCES", ())
-        monkeypatch.setattr(net, "_find_proc_net_path", lambda name: str(fib))
+        monkeypatch.setattr(net.common, "HOST_IP_SOURCES", ())
+        monkeypatch.setattr(net.common, "_find_proc_net_path", lambda name: str(fib))
         assert net.read_ip() == "192.168.50.9"
 
     def test_unknown(self, monkeypatch):
-        monkeypatch.setattr(net, "HOST_IP_SOURCES", ())
-        monkeypatch.setattr(net, "_find_proc_net_path", lambda name: None)
+        monkeypatch.setattr(net.common, "HOST_IP_SOURCES", ())
+        monkeypatch.setattr(net.common, "_find_proc_net_path", lambda name: None)
         assert net.read_ip() == "?"
 
 
@@ -365,21 +365,41 @@ class TestForwarding:
     def test_read_and_write(self, tmp_path, monkeypatch):
         f = tmp_path / "ip_forward"
         f.write_text("0\n")
-        monkeypatch.setattr(net, "IP_FORWARD_PATHS", (str(f),))
+        monkeypatch.setattr(net.common, "IP_FORWARD_PATHS", (str(f),))
         assert net.get_ip_forwarding_status() is False
         assert net.set_ip_forwarding(True)
         assert net.get_ip_forwarding_status() is True
 
     def test_falls_back_to_sysctl(self, run, monkeypatch):
-        monkeypatch.setattr(net, "IP_FORWARD_PATHS", ())
+        monkeypatch.setattr(net.common, "IP_FORWARD_PATHS", ())
         assert net.get_ip_forwarding_status() is False
         assert net.set_ip_forwarding(False)
         assert run.calls[-1] == ["sysctl", "-w", "net.ipv4.ip_forward=0"]
 
     def test_wireguard_nat(self, run, monkeypatch):
-        monkeypatch.setattr(net, "IP_FORWARD_PATHS", ())
+        monkeypatch.setattr(net.common, "IP_FORWARD_PATHS", ())
         run.answers["iptables"] = (0, "")
         r = net.toggle_wireguard_subnet_nat(True, out_iface="br0")
         assert r["nat_rule"] and "enabled" in r["message"]
         run.answers["iptables"] = OSError("no iptables")
         assert net.toggle_wireguard_subnet_nat(False)["nat_rule"] is False
+
+
+def test_a_tailscale_timeout_reports_what_it_printed(monkeypatch):
+    """TimeoutExpired carries bytes even with text=True; the reply is still text (ARC-5 type fix)."""
+    import subprocess
+
+    from backend.hardware.net import tailscale
+
+    def slow(*a, **k):
+        raise subprocess.TimeoutExpired(a[0], 10, output=b"partial output", stderr=b"still waiting")
+
+    monkeypatch.setattr(tailscale, "_get_tailscale_container_info", lambda: {"exists": False})
+    monkeypatch.setattr(tailscale.subprocess, "run", slow)
+    assert tailscale._run_tailscale_cmd(["status"]) == (1, "partial output\nstill waiting")
+
+    def silent(*a, **k):
+        raise subprocess.TimeoutExpired(a[0], 10)
+
+    monkeypatch.setattr(tailscale.subprocess, "run", silent)
+    assert tailscale._run_tailscale_cmd(["status"]) == (1, "Command timed out")
