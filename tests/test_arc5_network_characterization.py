@@ -679,6 +679,12 @@ def fake_host(tmp_path, monkeypatch):
         "docker_sock": lambda: docker_sock,
     }.items():
         _patch_everywhere(monkeypatch, name, value)
+    # host paths the code probes directly: absent on the fake host, whatever this machine has
+    absent = {"/dev/net/tun", "/host/dev/net/tun", "/host/proc/1/ns/net", "/mnt/user/appdata"}
+    real_exists = os.path.exists
+    monkeypatch.setattr(os.path, "exists", lambda p: False if str(p) in absent else real_exists(p))
+    real_isdir = os.path.isdir
+    monkeypatch.setattr(os.path, "isdir", lambda p: False if str(p) in absent else real_isdir(p))
     monkeypatch.setattr(subprocess, "run", host.run)
     monkeypatch.setattr(httpx, "HTTPTransport", lambda uds=None, **kw: httpx.MockTransport(host.http))
     monkeypatch.setattr(threading, "Timer", _Timer)
