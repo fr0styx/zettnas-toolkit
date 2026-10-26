@@ -25,6 +25,7 @@ from backend.hardware.pal_storage import get_storage_platform
 from backend.hardware.screen import get_screen_state
 from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name
 from backend.hardware.ups import read_ups_status
+from backend.ignored_errors import snapshot as ignored_snapshot
 from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
 from backend.state import Z_STATE
@@ -306,6 +307,7 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
         zf.writestr("container_manifests.json", json.dumps(sanitized_containers, indent=2))
         zf.writestr("notifications_summary.json", json.dumps(sanitized_notifs, indent=2))
         zf.writestr("system_events.json", json.dumps(sanitize_dict(events), indent=2))
+        zf.writestr("ignored_errors.json", json.dumps(sanitize_dict(ignored_snapshot(top=100)), indent=2))
         zf.writestr("recent_logs.log", sanitize_string(recent_logs_text))
 
         if client_env is not None:
@@ -470,6 +472,9 @@ def _build_summary_sync() -> dict[str, Any]:
         + (f" — ⚠️ Needs Attention: `{', '.join(troubled_names)}`" if troubled_names else ""),
         f"- **Virtual Machines:** `{vm_tel.get('total_vm_count', 0)} configured` (`{vm_tel.get('active_vm_count', 0)} running`)",
     ]
+    _ign = ignored_snapshot(top=1)
+    if _ign["total"]:
+        md_lines.append(f"- **Ignored errors:** `{_ign['total']}` at {_ign['places']} place(s) since start")
     if ups_mode != "disabled":
         ups_status_str = "Connected (Online)" if ups_connected else "Standby / Offline"
         if ups_permission_blocked:
@@ -508,6 +513,7 @@ def _build_summary_sync() -> dict[str, Any]:
             "permission_blocked": ups_permission_blocked,
         },
         "support_markdown": "\n".join(md_lines),
+        "ignored_errors": ignored_snapshot(top=10),  # ARC-4
     }
 
 
