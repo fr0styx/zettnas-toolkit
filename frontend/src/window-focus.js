@@ -1,3 +1,4 @@
+import { isCompact } from './device.js';
 /**
  * Keyboard focus for desktop windows (FE-11).
  *
@@ -54,7 +55,7 @@ export function labelWindow(win) {
 /** A desktop window with no place of its own opens centred below the top bar, not under it. */
 export function placeIfUnplaced(win) {
   if (!win || !win.classList || !win.classList.contains('os-window') || win.style.top) return;
-  if (document.body.classList.contains('mobile-mode') || document.body.classList.contains('phone-shell') || window.innerWidth <= 768) return;
+  if (isCompact()) return;
   const r = win.getBoundingClientRect();
   if (r.top >= 52) return; // already clear of the top bar
   const w = r.width || 900;

@@ -8,6 +8,7 @@ import { t } from '../../i18n.js';
 import { makeDraggable, bringToFront } from '../dock.js';
 import { createTerminalView } from '../terminal-view.js';
 import { vmState } from './state.js';
+import { isCompact, isTouch } from '../../device.js';
 
 /**
  * Universal Clipboard Helper
@@ -1151,7 +1152,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
         setConsoleFocus(true);
         focusActiveConsole();
         const hiddenInput = consoleWin.querySelector('#vm-console-hidden-input');
-        if (hiddenInput && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
+        if (hiddenInput && isTouch()) {
           hiddenInput.focus();
         }
       };
@@ -1309,7 +1310,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
     if (btnKeys && menuKeys) {
       btnKeys.onclick = (e) => {
         e.stopPropagation();
-        const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+        const isMobile = isCompact();
         if (isMobile) {
           showBottomSheet({
             title: 'Send Special Key',

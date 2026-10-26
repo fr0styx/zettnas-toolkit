@@ -1,3 +1,4 @@
+import { isCompact } from '../../device.js';
 // Selecting several desktop icons with a lasso.
 // Part of dock.js, split out by ARC-5.
 
@@ -12,7 +13,7 @@ export function initDesktopLasso() {
 
   document.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (isCompact()) return;
     if (
       typeof e.target?.closest === 'function' &&
       e.target.closest(

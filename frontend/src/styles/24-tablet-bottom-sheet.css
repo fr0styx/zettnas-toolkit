@@ -35,13 +35,27 @@
     display: none !important;
   }
 
-  #management-modal-overlay .mgmt-sidebar-badge {
-    position: absolute !important;
-    top: 3px !important;
-    right: 3px !important;
-    font-size: var(--zn-fs-xs) !important;
-    padding: 1px 4px !important;
-    border-radius: 4px !important;
+  /* The rail shows icons only. Section names are hidden; badges and the Advanced caption stay
+     for screen readers (as in a narrow desktop window, 60-mgmt-window.css). */
+  #management-modal-overlay .mgmt-sidebar-category {
+    display: none;
+  }
+
+  #management-modal-overlay .mgmt-sidebar-badge,
+  #management-modal-overlay .mgmt-advanced-row > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  #management-modal-overlay .mgmt-advanced-row {
+    justify-content: center;
   }
 
   #management-modal-overlay .mgmt-sidebar-svg {

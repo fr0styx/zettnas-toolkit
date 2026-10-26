@@ -20,6 +20,7 @@ import { getActiveWindowElement, restoreWindowSnap } from './dock/snap.js';
 import { initTopbarUserPill } from './dock/user-flyout.js';
 import { bringToFront, makeDraggable, makeResizable } from './dock/window-drag.js';
 import { clearMobileInlineBounds, loadSavedWindowBounds, restoreOpenWindowsState, saveOpenWindowsState, saveWindowBounds, setWindowRestorationComplete } from './dock/window-state.js';
+import { COMPACT_MAX } from '../device.js';
 export { KNOWN_APPS, showDockItemContextMenu, toggleFmWindowSwitcher } from './dock/apps.js';
 export { openConsoleWindow, toggleConsoleMaximize } from './dock/console-window.js';
 export { initDraggableDesktopIcons } from './dock/desktop-icons.js';
@@ -163,7 +164,7 @@ export function initDockSystem() {
   // Mobile / Stacked Mode Toggle & Auto-detection
   const mobileToggleBtn = document.getElementById('mobile-view-toggle-btn');
   const storedMobile = localStorage.getItem('zettnas_mobile_mode');
-  const isMobileInitial = storedMobile === '1' || (storedMobile === null && window.innerWidth <= 768);
+  const isMobileInitial = storedMobile === '1' || (storedMobile === null && window.innerWidth <= COMPACT_MAX);
   const purgeAllMobileWindows = () => {
     document.querySelectorAll('.os-window, .file-manager-window, #management-window, .management-window, .smart-modal-window, #console-window, .chassis-front-panel, #container-inspector-window, #stack-inspector-window, #app-deploy-modal-window, #notif-center-panel').forEach(clearMobileInlineBounds);
   };

@@ -7,6 +7,7 @@ import { openConsoleWindow } from './console-window.js';
 import { DockManager } from './dock-manager.js';
 import { getSnapGeometry } from './snap.js';
 import { bringToFront } from './window-drag.js';
+import { isCompact } from '../../device.js';
 
 const WIN_BOUNDS_KEY = 'zettnas_window_bounds_v2';
 export const OPEN_WINDOWS_KEY = 'zettnas_open_windows_v1';
@@ -20,7 +21,7 @@ export function loadSavedWindowBounds() {
 }
 
 export function saveWindowBounds(id, bounds) {
-  if (!id || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  if (!id || isCompact()) return;
   try {
     const all = loadSavedWindowBounds();
     all[id] = { ...(all[id] || {}), ...bounds };
@@ -55,13 +56,13 @@ export function clearMobileInlineBounds(el) {
 }
 
 let _wasNarrowScreen = typeof window !== 'undefined'
-  && (window.innerWidth <= 768 || document.body.classList.contains('mobile-mode'));
+  && (isCompact());
 
 // Phone layout clears window positions. When the screen widens past it (a narrow browser
 // window made wider, a tablet turned), put open windows back where they were saved, or at
 // least below the navigation bar.
 export function restoreWindowsAfterWiden() {
-  const narrow = window.innerWidth <= 768 || document.body.classList.contains('mobile-mode');
+  const narrow = isCompact();
   const widened = _wasNarrowScreen && !narrow;
   _wasNarrowScreen = narrow;
   if (!widened) return;
@@ -79,7 +80,7 @@ export function restoreWindowsAfterWiden() {
 
 export function applySavedBounds(dragEl, winId) {
   if (!dragEl || dragEl.id === 'global-toast-container') return;
-  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+  if (isCompact()) {
     clearMobileInlineBounds(dragEl);
     return;
   }
@@ -163,7 +164,7 @@ export function setWindowRestorationComplete(val = true) {
 export function saveOpenWindowsState() {
   if (!isWindowRestorationComplete) return;
   if (state.isVmConsoleDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=vm-console')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct'))) return;
-  if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+  if (isCompact()) return;
   try {
     const stateObj = {
       activeId: DockManager.activeId,
@@ -237,7 +238,7 @@ export function saveOpenWindowsState() {
 }
 
 export function restoreOpenWindowsState() {
-  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')) || state.isVmConsoleDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=vm-console')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+  if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('lcd-direct')) || state.isVmConsoleDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=vm-console')) || (typeof document !== 'undefined' && document.body && document.body.classList.contains('vm-console-direct')) || isCompact()) {
     isWindowRestorationComplete = true;
     return;
   }

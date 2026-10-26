@@ -1,0 +1,31 @@
+/* One touch rule (UX-15). On a touch screen (pointer: coarse), whatever its width, every control
+   is big enough for a finger: at least 44px tall, checkboxes 22px. A portrait tablet keeps the
+   desktop windows but no longer gets 12px buttons. The round window buttons keep their look and
+   get a finger-sized area around them. Which screens are compact or phones: src/device.js. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  select,
+  .btn-pill-toggle,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]) {
+    min-height: 44px;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 22px;
+    height: 22px;
+  }
+  #topbar-user-pill {
+    min-width: 44px;
+    justify-content: center;
+  }
+  .win-btn {
+    position: relative;
+    min-height: 0;
+  }
+  .win-btn::after {
+    content: "";
+    position: absolute;
+    inset: -14px -6px;
+  }
+}

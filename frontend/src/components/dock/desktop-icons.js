@@ -9,6 +9,7 @@ import { hideDesktopContextMenu } from '../desktop-context-menu.js';
 import { KNOWN_APPS } from './apps.js';
 import { initDesktopLasso } from './lasso.js';
 import { restoreWindowsAfterWiden } from './window-state.js';
+import { isCompact } from '../../device.js';
 
 export function initDraggableDesktopIcons() {
   const storageKey = 'zettnas_desktop_icon_positions_v3';
@@ -123,7 +124,7 @@ export function initDraggableDesktopIcons() {
   };
 
   const alignGrid = () => {
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (isCompact()) return;
     const GRID_X = 140;
     const GRID_Y = 112;
     const OFFSET_X = 24;
@@ -160,7 +161,7 @@ export function initDraggableDesktopIcons() {
   window.alignDesktopGrid = alignGrid;
 
   const sortByName = () => {
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (isCompact()) return;
     const icons = getAllIconElements();
     let items = icons.map(({ id, el }) => {
       const nameEl = el.querySelector('.icon-text');
@@ -379,7 +380,7 @@ export function initDraggableDesktopIcons() {
   });
 
   const refreshIconPositions = () => {
-    const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+    const isMobile = isCompact();
     const allIcons = getAllIconElements();
     if (isMobile) {
       allIcons.forEach(({ el }) => {
@@ -489,7 +490,7 @@ export function initDraggableDesktopIcons() {
 
     const onMouseDown = (e) => {
       if (e.button !== 0) return;
-      if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+      if (isCompact()) return;
 
       startX = e.clientX;
       startY = e.clientY;

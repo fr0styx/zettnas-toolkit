@@ -4,6 +4,7 @@
 import { DockManager } from './dock-manager.js';
 import { applyWindowSnap, evaluateSnapZone, getSnapGeometry } from './snap.js';
 import { applySavedBounds, saveOpenWindowsState, saveWindowBounds } from './window-state.js';
+import { COMPACT_MAX, isCompact } from '../../device.js';
 
 /**
  * ZettNAS Toolkit Dock & Window Manager
@@ -232,7 +233,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
   if (window.ResizeObserver && winId) {
     let resizeTimer = null;
     ro = new ResizeObserver(() => {
-      if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+      if (isCompact()) return;
       if (dragEl.dataset.snapped) return;
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
@@ -257,7 +258,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
   const onPointerDown = (e) => {
     if (e.button !== 0 || e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
     bringToFront(dragEl);
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) {
+    if (isCompact()) {
       // Mobile & touch swipe-to-dismiss gesture
       const touchStartY = e.clientY;
       let currentDy = 0;
@@ -270,7 +271,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
         dragEl.classList.contains('file-manager-window') ||
         dragEl.classList.contains('vm-manager-window') ||
         dragEl.classList.contains('containers-manager-window') ||
-        (window.innerWidth <= 768 && !dragEl.style.left?.includes('50%'));
+        (window.innerWidth <= COMPACT_MAX && !dragEl.style.left?.includes('50%'));
       const hasTranslateX50 = !isLeftPinnedMobile && Boolean((dragEl.style.transform || '').includes('translateX(-50%)') || dragEl.style.left === '50%');
       const xPrefix = hasTranslateX50 ? 'translateX(-50%) ' : '';
 
@@ -436,7 +437,7 @@ export function makeDraggable(dragEl, handleEl, customId) {
 
   const onDblClick = (e) => {
     if (e.target.closest('button') || e.target.closest('input') || e.target.closest('.modal-ctrl-btn')) return;
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (isCompact()) return;
     if (dragEl.id === 'console-window') {
       const cMax = document.getElementById('console-max');
       if (cMax) { cMax.click(); return; }
@@ -503,7 +504,7 @@ export function makeResizable(dragEl, resizerEl, customId, options = {}) {
 
   resizerEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (isCompact()) return;
     e.preventDefault();
     e.stopPropagation();
     bringToFront(dragEl);

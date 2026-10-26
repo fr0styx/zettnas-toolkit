@@ -241,7 +241,7 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       <div class="m2-motherboard-twin">
         <div class="m2-twin-header">
           <svg viewBox="0 0 24 24" width="14" height="14"><use href="#i-nvme"/></svg>
-          <span>MOTHERBOARD M.2 NVME TWIN</span>
+          <span>${escapeHtml(t('storage.m2_on_board', 'M.2 drives on the mainboard'))}</span>
         </div>
         <div class="m2-slots-grid">
     `;

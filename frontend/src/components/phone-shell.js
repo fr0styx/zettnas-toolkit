@@ -5,14 +5,20 @@
  * The launcher is the layer under every page and the desktop (widgets, icons, dock) is hidden,
  * so closing a page never shows the desktop, however long its close animation takes. Back and
  * the tabs follow the open pages through a MutationObserver (no polling).
+ *
+ * The launcher opens with how the server is doing (UX-15): the same summary as the Overview
+ * ("Everything is fine", or what needs attention with a button to open it), then the live
+ * numbers and the tiles.
  */
 import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 import { ROUTES } from '../router.js';
 import { ZettEventBus } from '../event-bus.js';
 import { watchDom } from '../dom-watch.js';
+import { PHONE_QUERY } from '../device.js';
+import { api } from '../api.js';
+import { statusHtml as healthHtml } from './management/overview.js';
 
-const PHONE_QUERY = '(max-width: 600px)';
 const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window';
 // A page on its way out is not open any more
 const CLOSING = /\b(window-closing|closing|window-minimized|is-closing|minimized)\b/;
@@ -55,7 +61,8 @@ export function statusHtml() {
 }
 
 export function launcherHtml() {
-  return `${statusHtml()}<nav class="phone-launcher-grid" aria-label="${escapeHtml(t('phone.home', 'Home'))}">${TILES()
+  const health = `<section class="phone-health" aria-live="polite" aria-label="${escapeHtml(t('overview.status_label', 'Status'))}" hidden></section>`;
+  return `${health}${statusHtml()}<nav class="phone-launcher-grid" aria-label="${escapeHtml(t('phone.home', 'Home'))}">${TILES()
     .map(
       ([route, name, icon]) =>
         `<button type="button" class="phone-tile" data-phone-open="${route}"><svg class="ic" aria-hidden="true"><use href="${icon}"/></svg><span>${escapeHtml(name)}</span></button>`,
@@ -187,7 +194,10 @@ function sync() {
   // only real changes: rewriting the same value would wake the observer again
   if (back && back.hidden !== !page) back.hidden = !page;
   document.body.classList.toggle('phone-page-open', Boolean(page));
-  if (!page) openedFrom = 'home';
+  if (!page) {
+    openedFrom = 'home';
+    refreshHealth(); // back on the launcher: the summary is at most a minute old
+  }
   const current = tabForPage(page);
   document.querySelectorAll('[data-phone-tab]').forEach((b) => {
     const on = b.dataset.phoneTab === current;
@@ -226,6 +236,25 @@ export function updateStatus(stats, root = document) {
   if (stats.net) set('net', `↓ ${fmtRate(stats.net.rx_bytes_sec)} ↑ ${fmtRate(stats.net.tx_bytes_sec)}`);
 }
 
+// The health summary: when the launcher appears and at most once a minute while it is up
+const HEALTH_EVERY_MS = 60000;
+let healthAt = 0;
+
+export async function refreshHealth(force = false, root = document) {
+  const box = root.querySelector('#phone-shell .phone-health');
+  if (!box || (!force && Date.now() - healthAt < HEALTH_EVERY_MS)) return null;
+  healthAt = Date.now();
+  try {
+    const summary = await api.get('/api/system/status-summary');
+    box.innerHTML = healthHtml(summary);
+    box.hidden = false;
+    return summary;
+  } catch {
+    box.hidden = true; // not allowed or not reachable: the launcher still works
+    return null;
+  }
+}
+
 let unwatch = null;
 
 export function enablePhoneShell(on) {
@@ -256,6 +285,10 @@ export function enablePhoneShell(on) {
       closePage(page);
       if (page && topPage() === page) page.style.display = 'none';
       schedule();
+    } else if (e.target.closest('[data-ov-open]')) {
+      const route = e.target.closest('[data-ov-open]').dataset.ovOpen;
+      if (ROUTES[route]) ROUTES[route]();
+      schedule();
     } else if (tab) {
       openTab(tab.dataset.phoneTab);
     } else if (tile && ROUTES[tile.dataset.phoneOpen]) {
@@ -267,6 +300,7 @@ export function enablePhoneShell(on) {
   // pages open and close from many places: follow their style and class changes
   unwatch = watchDom({ attributes: ['style', 'class', 'hidden', 'aria-hidden'], onRecords: schedule });
   sync();
+  refreshHealth(true);
 }
 
 export function initPhoneShell() {
@@ -277,6 +311,8 @@ export function initPhoneShell() {
   // signing in or out switches the shell at once (the desktop never shows in between)
   new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   ZettEventBus.on('stats:updated', (stats) => {
-    if (document.body.classList.contains('phone-shell')) updateStatus(stats);
+    if (!document.body.classList.contains('phone-shell')) return;
+    updateStatus(stats);
+    if (!document.body.classList.contains('phone-page-open')) refreshHealth();
   });
 }

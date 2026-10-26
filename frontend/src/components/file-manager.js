@@ -18,6 +18,7 @@ import { favorites, isFavorite, toggleFavorite, closestPath } from './fm-favorit
 import { thumbKind, thumbUrl } from './viewer-kit.js';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
+import { isCompact } from '../device.js';
 // Virtualized DOM constants
 const ROW_HEIGHT = 42;
 const BUFFER = 5;
@@ -540,7 +541,7 @@ export class FileManagerWindow {
   /** A window with no saved place opens centred below the top bar, not under it. */
   placeIfUnplaced() {
     const el = this.windowEl;
-    if (!el || el.style.top || document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (!el || el.style.top || isCompact()) return;
     const r = el.getBoundingClientRect();
     const w = r.width || 900;
     const h = r.height || 600;
@@ -550,7 +551,7 @@ export class FileManagerWindow {
 
   restoreSavedBounds() {
     try {
-      const isMobile = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+      const isMobile = isCompact();
       if (!isMobile) {
         const saved = JSON.parse(localStorage.getItem(BOUNDS_KEY) || 'null');
         if (saved && saved.left != null && saved.top != null) {
@@ -580,7 +581,7 @@ export class FileManagerWindow {
 
   // A window opened while the screen was narrow has no position; give it its saved one back.
   restoreAfterWiden() {
-    const narrow = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+    const narrow = isCompact();
     const widened = this._wasNarrow && !narrow;
     this._wasNarrow = narrow;
     if (widened && this.isPrimary && !this.isMaximized) this.restoreSavedBounds();
@@ -588,7 +589,7 @@ export class FileManagerWindow {
 
   saveBounds() {
     if (this.isMaximized || !this.isPrimary) return;
-    if (document.body.classList.contains('mobile-mode') || window.innerWidth <= 768) return;
+    if (isCompact()) return;
     try {
       const rect = this.windowEl.getBoundingClientRect();
       localStorage.setItem(BOUNDS_KEY, JSON.stringify({
@@ -620,7 +621,7 @@ export class FileManagerWindow {
     this.windowEl.addEventListener('pointerdown', activate);
 
     this._onSaveBounds = () => this.saveBounds();
-    this._wasNarrow = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+    this._wasNarrow = isCompact();
     this._onResize = () => {
       this.renderViewport();
       this.restoreAfterWiden();
@@ -699,7 +700,7 @@ export class FileManagerWindow {
         action: () => toggleFavorite(here),
       });
 
-      const isPhone = document.body.classList.contains('mobile-mode') || window.innerWidth <= 768;
+      const isPhone = isCompact();
       if (isPhone) {
         showBottomSheet({
           title: t('fm.quick_locations', 'Quick Locations'),
