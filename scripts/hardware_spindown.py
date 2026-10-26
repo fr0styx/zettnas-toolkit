@@ -63,12 +63,20 @@ def backend_pid(proc=HOST_PROC):
         names = os.listdir(proc)
     except OSError:
         return None
+    found = []
     for name in names:
         if name.isdigit():
             cmd = _read(os.path.join(proc, name, "cmdline")).replace("\0", " ")
             if "backend.main" in cmd and "fan_watchdog" not in cmd:
-                return name
-    return None
+                found.append(name)
+
+    def rss_kb(pid):  # helpers run backend.main too: the backend is the largest
+        for line in _read(os.path.join(proc, pid, "status")).splitlines():
+            if line.startswith("VmRSS:"):
+                return int(line.split()[1])
+        return 0
+
+    return max(found, key=rss_kb, default=None)
 
 
 def backend_io(pid, proc=HOST_PROC):

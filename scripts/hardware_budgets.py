@@ -30,6 +30,7 @@ BUDGETS = {
 CHAT_SERVERS = ("ovms", "ollama", "llama-server", "vllm")
 APP_PORT = int(os.environ.get("HW_APP_PORT", "8082"))
 IDLE_BUDGETS = ("idle-cpu", "wakeups")  # only meaningful with nobody using the app
+BACKEND_BUDGETS = ("idle-cpu", "wakeups", "backend-memory")  # meaningless if the backend restarted mid-soak
 
 
 def _read(path):
@@ -51,11 +52,10 @@ def processes(proc=HOST_PROC):
     return out
 
 
-def backend_pid(procs):
-    for pid, cmd in procs:
-        if "backend.main" in cmd and "fan_watchdog" not in cmd:
-            return pid
-    return None
+def backend_pid(procs, proc=HOST_PROC):
+    """The backend: of the processes running backend.main, the largest (helpers match too)."""
+    found = [pid for pid, cmd in procs if "backend.main" in cmd and "fan_watchdog" not in cmd]
+    return max(found, key=lambda pid: rss_mb(pid, proc), default=None)
 
 
 def cpu_ticks(pid, proc=HOST_PROC):
@@ -107,7 +107,7 @@ def viewers(pid, proc=HOST_PROC, port=APP_PORT):
 
 def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time):
     procs = processes(proc)
-    pid = backend_pid(procs)
+    pid = backend_pid(procs, proc)
     if not pid:
         raise SystemExit("the ZettNAS backend is not running on this machine")
     hz = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
@@ -117,7 +117,10 @@ def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time):
     t1, c1, s1 = clock(), cpu_ticks(pid, proc), context_switches(pid, proc)
     seen = max(seen, viewers(pid, proc))
     elapsed = max(1e-6, t1 - t0)
+    # a deploy or a crash during the soak: the counters belong to two processes
+    restarted = backend_pid(processes(proc), proc) != pid or c1 < c0 or s1 < s0
     return {
+        "restarted": restarted,
         "viewers": seen,
         "idle-cpu": round(100 * (c1 - c0) / hz / elapsed, 2),
         "wakeups": round((s1 - s0) / elapsed * 60),
@@ -126,11 +129,19 @@ def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time):
     }
 
 
+def skip_reason(values, name):
+    """Why a budget can't be judged this time, or None."""
+    if values.get("restarted") and name in BACKEND_BUDGETS:
+        return "the backend restarted during the soak"
+    if values.get("viewers") and name in IDLE_BUDGETS:
+        return "someone was using the app"
+    return None
+
+
 def verdicts(values, budgets=BUDGETS):
-    """True/False per budget; None (skipped) for the idle budgets while someone used the app."""
-    busy = bool(values.get("viewers"))
+    """True/False per budget; None (skipped) when it can't be judged (skip_reason)."""
     return {
-        name: (None if busy and name in IDLE_BUDGETS else values[name] <= limit)
+        name: (None if skip_reason(values, name) else values[name] <= limit)
         for name, limit in budgets.items()
         if name in values
     }
@@ -146,7 +157,7 @@ def main(argv=None):
     ok = verdicts(values)
     for name in BUDGETS:
         if ok.get(name) is None:
-            print(f"SKIP {name} (someone was using the app)")
+            print(f"SKIP {name} ({skip_reason(values, name)})")
             continue
         print(f"{'PASS' if ok.get(name) else 'FAIL'} {name}")
         if not ok.get(name):

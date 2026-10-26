@@ -94,3 +94,13 @@ def test_the_ai_check_skips_when_the_image_is_behind(monkeypatch, capsys):
     monkeypatch.setattr(ai, "lock_matches", lambda path: False)
     assert ai.main([]) == 0
     assert capsys.readouterr().out.startswith("SKIP ai-eval")
+
+
+def test_spindown_watches_the_largest_backend_process(tmp_path):
+    proc = tmp_path / "proc"
+    for pid, rss in (("10", 2000), ("11", 200000), ("12", 27000)):
+        d = proc / pid
+        d.mkdir(parents=True)
+        (d / "cmdline").write_bytes(b"python3\0-m\0backend.main\0")
+        (d / "status").write_text(f"VmRSS:\t{rss} kB\n")
+    assert sd.backend_pid(str(proc)) == "11"

@@ -38,7 +38,14 @@ def test_measures_and_judges(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
     values = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"])
-    assert values == {"viewers": 0, "idle-cpu": 1.0, "wakeups": 600, "backend-memory": 180.0, "ai-memory": 3072.0}
+    assert values == {
+        "restarted": False,
+        "viewers": 0,
+        "idle-cpu": 1.0,
+        "wakeups": 600,
+        "backend-memory": 180.0,
+        "ai-memory": 3072.0,
+    }
     ok = hb.verdicts(values)
     assert ok == {"idle-cpu": True, "wakeups": True, "backend-memory": True, "ai-memory": False}
 
@@ -81,3 +88,28 @@ def test_idle_budgets_are_skipped_while_someone_uses_the_app(tmp_path, capsys, m
     )
     assert hb.main(["--seconds", "1", "--results", str(tmp_path / "r"), "--strict"]) == 0
     assert "SKIP idle-cpu" in capsys.readouterr().out
+
+
+def test_the_backend_is_the_largest_backend_process(tmp_path):
+    _proc(tmp_path, 5, "sh -c python3 -m backend.main", 0, 0, 2 * 1024)
+    _proc(tmp_path, 6, "python3 -m backend.main", 0, 0, 200 * 1024)
+    _proc(tmp_path, 7, "python3 -m backend.main --helper", 0, 0, 27 * 1024)
+    assert hb.backend_pid(hb.processes(str(tmp_path)), str(tmp_path)) == "6"
+
+
+def test_a_restart_during_the_soak_skips_the_backend_budgets(tmp_path, capsys, monkeypatch):
+    import shutil
+
+    _proc(tmp_path, 1, "python3 -m backend.main", 500, 9000, 180 * 1024)
+
+    def restart(s):  # a deploy: the old process is gone, a new one starts
+        shutil.rmtree(tmp_path / "1")
+        _proc(tmp_path, 2, "python3 -m backend.main", 5, 10, 150 * 1024)
+
+    monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
+    values = hb.measure(60, proc=str(tmp_path), sleep=restart, clock=iter([0.0, 60.0]).__next__)
+    assert values["restarted"] is True
+    assert hb.verdicts(values) == {"idle-cpu": None, "wakeups": None, "backend-memory": None, "ai-memory": True}
+    monkeypatch.setattr(hb, "measure", lambda seconds: values)
+    assert hb.main(["--seconds", "1", "--results", str(tmp_path / "r"), "--strict"]) == 0
+    assert "SKIP backend-memory (the backend restarted during the soak)" in capsys.readouterr().out
