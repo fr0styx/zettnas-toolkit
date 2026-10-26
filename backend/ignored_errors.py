@@ -48,7 +48,7 @@ def ignored(where: str, now: float | None = None) -> None:
             site["warned_at"], site["since_warning"] = now, 0
     if warn:
         more = f" ({repeats} times since the last warning)" if site["count"] > 1 else ""
-        logger.warning(f"[ignored] {where}: {desc}{more}")
+        logger.warning(f"[ignored] {where}: {desc}{more}", extra={"ignored_at": where, "repeats": repeats})
     logger.log(logging.DEBUG, "%s: traceback of the ignored error", where, exc_info=exc is not None)
 
 

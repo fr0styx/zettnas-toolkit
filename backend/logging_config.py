@@ -123,8 +123,16 @@ def sanitize_dict(data: Any) -> Any:
     return data
 
 
+# Attributes every LogRecord has; anything else came from logger.x(..., extra={...})
+_RECORD_ATTRS = set(vars(logging.LogRecord("", 0, "", 0, "", None, None))) | {"message", "asctime", "correlation_id"}
+
+
 class JSONLogFormatter(logging.Formatter):
-    """Formats log records as single-line structured JSON with correlation IDs."""
+    """Formats log records as single-line structured JSON with correlation IDs.
+
+    Fields passed as logger.info("...", extra={"job": "nightly"}) appear under "fields"
+    (redacted like the message), so new code can log structured values (ARC-16).
+    """
 
     def format(self, record: logging.LogRecord) -> str:
         log_data: dict[str, Any] = {
@@ -140,6 +148,12 @@ class JSONLogFormatter(logging.Formatter):
         corr_id = correlation_id_ctx.get() or getattr(record, "correlation_id", "")
         if corr_id:
             log_data["correlation_id"] = corr_id
+
+        fields = {k: v for k, v in vars(record).items() if k not in _RECORD_ATTRS and not k.startswith("_")}
+        if fields:
+            log_data["fields"] = sanitize_dict(
+                {k: v if isinstance(v, (str, int, float, bool, type(None))) else repr(v) for k, v in fields.items()}
+            )
 
         # Attach exception details if present
         if record.exc_info:
