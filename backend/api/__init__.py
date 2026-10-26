@@ -13,6 +13,7 @@ from backend.api.catalog import router as catalog_router
 from backend.api.chassis import router as chassis_router
 from backend.api.diagnostics import router as diagnostics_router
 from backend.api.docker import router as docker_router
+from backend.api.drives import router as drives_router
 from backend.api.fans import router as fans_router
 from backend.api.file_versions import router as file_versions_router  # noqa: E402
 from backend.api.fs import router as fs_router
@@ -61,6 +62,7 @@ api_router.include_router(push_router)
 api_router.include_router(stats_router)
 api_router.include_router(fans_router)
 api_router.include_router(led_router)
+api_router.include_router(drives_router)
 api_router.include_router(wallpapers_router)
 api_router.include_router(system_router)
 api_router.include_router(docker_router)
@@ -92,6 +94,7 @@ __all__ = [
     "stats_router",
     "fans_router",
     "led_router",
+    "drives_router",
     "notifications_router",
     "wallpapers_router",
     "system_router",

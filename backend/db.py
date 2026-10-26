@@ -677,6 +677,32 @@ VELOCITY_RECHECK_SECS = 600  # temperature/power-on-hours-only changes refresh a
 SPARKLINE_BUCKET_SECS = 7200  # 30 days -> at most 360 sparkline points
 
 
+def get_smart_history_samples(dev: str, days: int = 45, bucket_secs: int = 21600) -> list[dict]:
+    """A drive's stored counters over `days` days, one sample per `bucket_secs` (the highest value of
+    each counter in it: they only grow), plus the newest row. For Drive Health's trends."""
+    since = int(time.time()) - days * 86400
+    try:
+        with history_session() as c:
+            c.row_factory = sqlite3.Row
+            rows = c.execute(
+                """SELECT MAX(ts) AS ts, ROUND(AVG(temp), 1) AS temp,
+                          MAX(reallocated_sectors) AS reallocated_sectors, MAX(pending_sectors) AS pending_sectors,
+                          MAX(offline_uncorrectable) AS offline_uncorrectable, MAX(crc_errors) AS crc_errors,
+                          MAX(nvme_pct_used) AS nvme_pct_used, MAX(nvme_media_errors) AS nvme_media_errors,
+                          MAX(power_on_hours) AS power_on_hours
+                   FROM smart_history WHERE dev = ? AND ts >= ? GROUP BY ts / ? ORDER BY ts ASC""",
+                (dev, since, bucket_secs),
+            ).fetchall()
+            out = [dict(r) for r in rows]
+            last = c.execute("SELECT * FROM smart_history WHERE dev = ? ORDER BY ts DESC LIMIT 1", (dev,)).fetchone()
+            if last is not None and (not out or out[-1]["ts"] != last["ts"]):
+                out.append(dict(last))
+            return out
+    except sqlite3.Error:
+        logger.debug("backend.db.get_smart_history_samples: no history for %s", dev, exc_info=True)
+        return []
+
+
 def query_smart_velocity(dev: str, conn: sqlite3.Connection | None = None) -> dict:
     """
     Predictive SMART degradation engine:

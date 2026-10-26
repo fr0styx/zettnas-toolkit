@@ -271,7 +271,7 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
     ]);
   });
 
-  it('protects sleeping drives: prompts confirmation on standby bay chips before opening SMART', () => {
+  it('opens Drive Health straight away for sleeping drives too, since it never wakes them', () => {
     const disks = [
       { name: 'sda', dev: '/dev/sda', temp: 35, health: 'ok', standby: false },
       { name: 'sdb', dev: '/dev/sdb', temp: null, health: 'standby', standby: true }
@@ -280,37 +280,15 @@ describe('Streamline Minimalist / Big IP Screen Layout Suite', () => {
 
     updateStreamlineBayChips(disks);
 
-    const bayRow = document.getElementById('sl-bay-row');
-    const chips = bayRow.querySelectorAll('.sl-bay-chip');
-
+    const chips = document.getElementById('sl-bay-row').querySelectorAll('.sl-bay-chip');
     const confirmToastSpy = vi.spyOn(toastModule, 'showConfirmToast').mockImplementation(() => {});
     const smartEventSpy = vi.fn();
     ZettEventBus.on('modal:smart:open', smartEventSpy);
 
-    // Click active disk: opens SMART directly without prompt
     chips[0].click();
-    expect(confirmToastSpy).not.toHaveBeenCalled();
-    expect(smartEventSpy.mock.calls[0][0]).toBe('/dev/sda');
-
-    // Click standby disk: triggers confirm toast to prevent spinup
-    smartEventSpy.mockClear();
-    let onConfirmCb = null;
-    confirmToastSpy.mockImplementation((title, desc, onConfirm) => {
-      onConfirmCb = onConfirm;
-    });
-
     chips[1].click();
-    expect(confirmToastSpy).toHaveBeenCalledWith(
-      'Drive in Standby Mode',
-      expect.stringContaining('currently sleeping'),
-      expect.any(Function)
-    );
-    expect(smartEventSpy).not.toHaveBeenCalled();
-
-    // Invoking confirmation callback triggers modal with forceWake: true
-    expect(onConfirmCb).toBeTypeOf('function');
-    onConfirmCb();
-    expect(smartEventSpy).toHaveBeenCalledWith({ dev: '/dev/sdb', forceWake: true }, expect.anything());
+    expect(confirmToastSpy).not.toHaveBeenCalled();
+    expect(smartEventSpy.mock.calls.map((c) => c[0])).toEqual(['/dev/sda', '/dev/sdb']);
   });
 
   it('delegates interactive clicks from streamline storage, CPU, Memory, and IP zones to metrics modal', () => {

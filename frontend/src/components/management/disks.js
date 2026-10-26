@@ -6,7 +6,7 @@ import { ZettEventBus } from '../../event-bus.js';
 import { triggerLocateDisk, getThermalLevel } from '../chassis-visualizer.js';
 import { state } from '../../state.js';
 import { api } from '../../api.js';
-import { showToast, showConfirmToast, showBottomSheet } from '../../toast.js';
+import { showBottomSheet } from '../../toast.js';
 import { escapeHtml, reconcileKeyedTable } from '../../utils.js';
 import { t } from '../../i18n.js';
 
@@ -177,20 +177,8 @@ function bindDiskTableEvents(tbody) {
     const smartBtn = e.target.closest('.btn-smart-row');
     if (smartBtn) {
       const dev = smartBtn.dataset.dev;
-      const row = smartBtn.closest('tr');
-      const isStandby = row?.querySelector('.bay-health-tag')?.textContent?.trim() === 'STANDBY';
-      if (isStandby) {
-        showConfirmToast(
-          'Drive in Standby Mode',
-          `Disk /dev/${dev} is currently sleeping. Querying S.M.A.R.T. diagnostics will wake the drive, spinning up platters. Do you wish to wake it?`,
-          () => {
-            showToast(t('toast.waking_disk_dev_2', 'Waking disk /dev/{dev}...', { dev: dev }), 'info');
-            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
-          }
-        );
-      } else {
-        ZettEventBus.emit('modal:smart:open', dev);
-      }
+      // Drive Health shows a sleeping drive from its last reading and never wakes it on open
+      ZettEventBus.emit('modal:smart:open', dev);
     }
   });
 }

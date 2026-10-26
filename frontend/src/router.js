@@ -2,11 +2,14 @@
  * Deep links (UX-4): #/apps, #/apps/catalog, #/files, #/storage, #/shares, #/backup, #/users,
  * #/network, #/power, #/ai, #/vms, #/settings open the one place that does that job.
  */
+import { ZettEventBus } from './event-bus.js';
+
 export const ROUTES = {
   apps: () => window.openContainersManager?.(),
   'apps/catalog': () => window.openContainersManager?.({ view: 'catalog' }),
   files: () => window.openFileManager?.(),
   storage: () => window.openManagementSection?.('mgmt-sec-storage'),
+  drives: () => ZettEventBus.emit('modal:smart:open', null),
   shares: () => window.openManagementSection?.('mgmt-pane-storage-shares'),
   backup: () => window.openManagementSection?.('mgmt-pane-backups'),
   users: () => window.openManagementSection?.('mgmt-pane-users'),

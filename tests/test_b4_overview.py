@@ -14,6 +14,7 @@ def quiet(monkeypatch):
     from backend.state import Z_STATE
 
     monkeypatch.setattr(Z_STATE, "cached_smart_data", {"sda": (30, "ok"), "sdb": (None, "standby")})
+    monkeypatch.setattr(Z_STATE, "drive_verdicts", {})
     monkeypatch.setattr(Z_STATE, "critical_temp_active", False, raising=False)
     monkeypatch.setattr(storage, "read_storage", lambda: {"pct": 40})
     monkeypatch.setattr(backup_watch, "overdue_backups", lambda: [])
@@ -72,3 +73,31 @@ def test_nearly_full_is_a_warning_and_a_broken_check_is_skipped(quiet):
 def test_the_endpoint_answers(client, auth_headers, quiet):
     r = client.get("/api/system/status-summary", headers=auth_headers)
     assert r.status_code == 200 and r.json()["ok"] is True
+
+
+def test_drive_health_verdicts_decide_what_the_overview_says(quiet):
+    import time
+
+    from backend.state import Z_STATE
+
+    now = time.time()
+    quiet.setattr(Z_STATE, "cached_smart_data", {"sda": (30, "crit"), "sdb": (40, "ok"), "sdz": (35, "warn")})
+    quiet.setattr(
+        Z_STATE,
+        "drive_verdicts",
+        {
+            "sda": {"verdict": "ok", "kind": "", "summary": "No sign of trouble.", "ts": now},
+            "sdb": {"verdict": "now", "kind": "replace", "summary": "8 sectors could not be read", "ts": now},
+            "sdc": {"verdict": "soon", "kind": "cooling", "summary": "The drive is too hot", "ts": now},
+            "sdd": {"verdict": "watch", "kind": "replace", "summary": "An old drive", "ts": now},
+            "sde": {"verdict": "now", "kind": "replace", "summary": "gone", "ts": now - 3 * 3600},
+        },
+    )
+    items = {i["subject"]: i for i in status_summary._drives()}
+    # Drive Health's verdict wins over the old pass/fail flag; watch-only and stale verdicts stay quiet
+    assert set(items) == {"sdb", "sdc", "sdz"}
+    assert items["sdb"]["kind"] == "drive_failing" and items["sdb"]["level"] == "critical"
+    assert items["sdb"]["detail"] == "8 sectors could not be read"
+    assert items["sdc"]["kind"] == "drive_attention" and items["sdc"]["level"] == "warning"
+    assert items["sdz"]["kind"] == "drive_warning"  # not judged yet: the old check still speaks
+    assert {i["open"] for i in items.values()} == {"drives"}

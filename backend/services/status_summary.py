@@ -17,11 +17,38 @@ def _safe(check: Callable[[], list[dict[str, Any]]]) -> list[dict[str, Any]]:
         return []
 
 
+VERDICT_MAX_AGE = 7200  # the poller refreshes verdicts every 30 minutes
+
+
 def _drives() -> list[dict[str, Any]]:
+    import time
+
     from backend.state import Z_STATE
 
     out = []
+    with Z_STATE.smart.lock:
+        verdicts = {
+            d: v for d, v in Z_STATE.drive_verdicts.items() if time.time() - float(v.get("ts") or 0) < VERDICT_MAX_AGE
+        }
+    for dev, v in sorted(verdicts.items()):
+        if v.get("verdict") not in ("now", "soon"):
+            continue
+        replace = v.get("kind") == "replace"
+        out.append(
+            {
+                "id": f"drive:{dev}",
+                "level": "critical" if v["verdict"] == "now" else "warning",
+                "kind": ("drive_failing" if v["verdict"] == "now" else "drive_warning")
+                if replace
+                else "drive_attention",
+                "subject": dev,
+                "detail": v.get("summary", ""),
+                "open": "drives",
+            }
+        )
     for dev, (_, health) in sorted(dict(Z_STATE.cached_smart_data).items()):
+        if dev in verdicts:
+            continue
         if health in ("crit", "warn"):
             out.append(
                 {
@@ -29,7 +56,7 @@ def _drives() -> list[dict[str, Any]]:
                     "level": "critical" if health == "crit" else "warning",
                     "kind": "drive_failing" if health == "crit" else "drive_warning",
                     "subject": dev,
-                    "open": "storage",
+                    "open": "drives",
                 }
             )
     return out

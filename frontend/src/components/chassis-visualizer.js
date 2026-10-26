@@ -308,19 +308,8 @@ export function renderChassisTwin(container, disks = [], options = {}) {
       if (e.target.closest('.bay-locate-btn')) return;
       const dev = slot.dataset.dev;
       if (!dev) return;
-      const isStandby = slot.classList.contains('standby') || Boolean(slot.querySelector('.bay-led-lens')?.classList.contains('standby-pulse'));
-      if (isStandby) {
-        showConfirmToast(
-          'Drive in Standby Mode',
-          `Drive /dev/${dev} in this bay is currently sleeping. Querying S.M.A.R.T. will spin up the disk. Are you sure you want to wake it?`,
-          () => {
-            showToast(t('toast.waking_disk_dev_2', 'Waking disk /dev/{dev}...', { dev: dev }), 'info');
-            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
-          }
-        );
-      } else {
-        ZettEventBus.emit('modal:smart:open', dev);
-      }
+      // Drive Health shows a sleeping drive from its last reading and never wakes it on open
+      ZettEventBus.emit('modal:smart:open', dev);
     });
   });
 

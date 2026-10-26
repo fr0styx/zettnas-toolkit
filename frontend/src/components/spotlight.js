@@ -16,6 +16,7 @@ const openContainerInspector = (...args) =>
   });
 
 import { t } from '../i18n.js';
+import { ZettEventBus } from '../event-bus.js';
 // Destructive actions always ask first (FE-07).
 function confirmThen(title, msg, action) {
   return new Promise((resolve, reject) => {
@@ -153,18 +154,12 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'app-smart',
-      title: 'S.M.A.R.T. Diagnostics',
-      subtitle: 'Drive health, degradation sparklines, self-tests',
+      title: 'Drive Health',
+      subtitle: 'Every drive: is it healthy, why, and what to do; self-tests',
       icon: '💽',
       category: 'app',
-      keywords: ['drive', 'disk', 'smart', 'health', 'temperature'],
-      run: () => {
-        const smartOverlay = document.getElementById('smart-modal-overlay');
-        if (smartOverlay) {
-          smartOverlay.style.display = 'flex';
-          smartOverlay.classList.add('open');
-        }
-      },
+      keywords: ['drive', 'disk', 'smart', 's.m.a.r.t', 'health', 'temperature', 'self-test', 'sectors', 'replace'],
+      run: () => ZettEventBus.emit('modal:smart:open', null),
     },
     {
       id: 'app-catalog',

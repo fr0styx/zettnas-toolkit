@@ -42544,6 +42544,52 @@
     ]
    }
   },
+  "/api/v1/drives/health": {
+   "get": {
+    "description": "Every drive with its verdict, reason and what to do; worst first. Never wakes a drive.",
+    "operationId": "drives_health_api_v1_drives_health_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "refresh",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Refresh",
+       "type": "boolean"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Drives Health Api V1 Drives Health Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Drives Health",
+    "tags": [
+     "Drive Health"
+    ]
+   }
+  },
   "/api/v1/events/clear": {
    "delete": {
     "operationId": "clear_events_api_v1_events_clear_delete",

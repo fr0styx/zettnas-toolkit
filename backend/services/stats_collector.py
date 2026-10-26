@@ -686,6 +686,7 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
 
 SMART_POLL_TICK_SECS = 10.0
 SMART_VELOCITY_EVERY_SECS = 300.0
+DRIVE_VERDICTS_EVERY_SECS = 1800.0  # Drive Health verdicts for the Overview
 
 
 def smart_poller_daemon():
@@ -702,6 +703,7 @@ def smart_poller_daemon():
         logger.debug(f"[SMART/UPS Poller] Initial scan error: {e}")
 
     last_velocity = time.monotonic()
+    last_verdicts = None
     while not Z_STATE.shutting_down:
         try:
             # one 10 s sleep, not twenty 0.5 s slices (PERF-5); per-disk SMART intervals and the
@@ -714,6 +716,14 @@ def smart_poller_daemon():
             if time.monotonic() - last_velocity >= SMART_VELOCITY_EVERY_SECS:
                 evaluate_smart_velocity_alerts()  # SMART history changes slowly
                 last_velocity = time.monotonic()
+            if last_verdicts is None or time.monotonic() - last_verdicts >= DRIVE_VERDICTS_EVERY_SECS:
+                last_verdicts = time.monotonic()
+                try:
+                    from backend.hardware.disks import refresh_drive_verdicts
+
+                    refresh_drive_verdicts()  # never wakes a sleeping drive
+                except Exception as dv_e:
+                    logger.debug(f"[SMART Poller] drive verdicts threw: {dv_e}")
             try:
                 from backend.hardware.disks import check_active_smart_tests
 

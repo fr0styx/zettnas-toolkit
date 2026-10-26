@@ -302,11 +302,7 @@ export function restoreOpenWindowsState() {
           }, 60);
         }
       } else if (id === 'smart') {
-        if (KNOWN_APPS['smart']?.launch) {
-          KNOWN_APPS['smart'].launch(entry.devName);
-        } else if (typeof window.openSmartModal === 'function') {
-          window.openSmartModal(entry.devName);
-        }
+        KNOWN_APPS['smart']?.launch?.(entry.devName);
         if (entry.minimized) {
           setTimeout(() => {
             if (DockManager.windows['smart']) {

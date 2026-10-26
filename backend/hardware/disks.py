@@ -26,6 +26,8 @@ from backend.config import (
 )
 from backend.db import (
     get_latest_smart_test_result,
+    get_smart_history_samples,
+    get_smart_test_history,
     log_smart_metrics,
     log_smart_test_result,
     query_smart_velocity,
@@ -1077,6 +1079,48 @@ def _parse_self_test_info(doc: dict | None, raw_text: str):
     return progress, log_entries
 
 
+def drive_health_for(dev_name: str, doc: dict | None) -> dict:
+    """Drive Health's verdict for a drive: from smartctl's JSON when it was read now, else from its
+    stored history (a sleeping drive is never woken for this)."""
+    from backend.services import drive_health
+
+    try:
+        readings = drive_health.read_smartctl(doc) if doc else None
+        result = drive_health.assess(readings, get_smart_history_samples(dev_name), get_smart_test_history(dev_name, 5))
+    except Exception:
+        logger.debug("backend.hardware.disks.drive_health_for: could not assess %s", dev_name, exc_info=True)
+        return {"verdict": "unknown", "label": "Not read yet", "summary": "", "findings": []}
+    remember_verdict(dev_name, result)
+    return result
+
+
+def remember_verdict(dev_name: str, result: dict) -> None:
+    """Keeps the latest verdict per drive for the Overview and the phone (status_summary)."""
+    top = next((f for f in result.get("findings") or [] if f.get("severity") == result.get("verdict")), None)
+    with Z_STATE.smart.lock:
+        Z_STATE.drive_verdicts[dev_name] = {
+            "verdict": result.get("verdict", "unknown"),
+            "kind": (top or {}).get("kind", ""),
+            "summary": result.get("summary", ""),
+            "ts": time.time(),
+        }
+
+
+def refresh_drive_verdicts() -> int:
+    """Judges every drive the way Drive Health does, never waking one. Run by the SMART poller."""
+    done = 0
+    for d in _discover_disks():
+        dev = d.get("dev")
+        if not dev:
+            continue
+        try:
+            fetch_disk_smart_detail(dev, False)
+            done += 1
+        except Exception:
+            logger.debug("backend.hardware.disks.refresh_drive_verdicts: %s failed", dev, exc_info=True)
+    return done
+
+
 def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
     if not VALID_DEV_PATTERN.fullmatch(dev_name):
         return {"error": "Invalid device name format."}
@@ -1128,6 +1172,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                     "latest_report": get_latest_smart_test_result(dev_name),
                     "metrics": {},
                     "degradation": query_smart_velocity(dev_name),
+                    "drive_health": drive_health_for(dev_name, None),
                     "nvme_endurance": None,
                     "raw": "Device is in low-power STANDBY mode. Platters are not spinning.\nIssue a wake command to inspect live SMART counters.",
                 }
@@ -1213,6 +1258,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                     "latest_report": get_latest_smart_test_result(dev_name),
                     "metrics": {},
                     "degradation": query_smart_velocity(dev_name),
+                    "drive_health": drive_health_for(dev_name, None),
                     "nvme_endurance": None,
                     "raw": "Device is in low-power STANDBY mode. Platters are not spinning.\nIssue a wake command to inspect live SMART counters.",
                 }
@@ -1322,6 +1368,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         "latest_report": get_latest_smart_test_result(dev_name),
         "metrics": metrics,
         "degradation": velocity,
+        "drive_health": drive_health_for(dev_name, doc),
         "nvme_endurance": (
             {
                 "tbw_tb": metrics.get("tbw_tb"),

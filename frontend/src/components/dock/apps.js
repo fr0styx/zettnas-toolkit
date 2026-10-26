@@ -53,12 +53,8 @@ export const KNOWN_APPS = {
   smart: {
     id: 'smart',
     icon: '#i-disk',
-    getTitle: () => 'Diagnostics',
-    launch: (devName = null) => {
-      if (typeof window.openSmartModal === 'function') {
-        window.openSmartModal(devName);
-      }
-    }
+    getTitle: () => t('dh.title', 'Drive Health'),
+    launch: (devName = null) => ZettEventBus.emit('modal:smart:open', devName)
   },
   'container-inspector': {
     id: 'container-inspector',

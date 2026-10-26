@@ -52,6 +52,7 @@ export function installAdvancedSwitch(root = document) {
 const MESSAGES = {
   drive_failing: () => t('overview.drive_failing', 'Drive {subject} is failing. Copy what is on it elsewhere and replace it.'),
   drive_warning: () => t('overview.drive_warning', 'Drive {subject} shows early warning signs.'),
+  drive_attention: () => t('overview.drive_attention', 'Drive {subject} needs attention: {detail}.'),
   storage_full: () => t('overview.storage_full', 'Storage is {subject} full.'),
   backup_overdue: () => t('overview.backup_overdue', 'Backup "{subject}" has not finished lately.'),
   writes_frozen: () => t('overview.writes_frozen', 'Changes to files are paused: something looked like ransomware.'),
@@ -67,7 +68,7 @@ export function statusHtml(summary) {
   }
   const rows = summary.items
     .map((i) => {
-      const text = (MESSAGES[i.kind] || (() => i.kind))().replace('{subject}', i.subject || '');
+      const text = (MESSAGES[i.kind] || (() => i.kind))().replace('{subject}', i.subject || '').replace('{detail}', i.detail || '');
       const open = ROUTES[i.open] ? `<button type="button" class="btn-pill-toggle" data-ov-open="${escapeHtml(i.open)}">${escapeHtml(t('overview.open', 'Open'))}</button>` : '';
       return `<li class="ov-item ov-${i.level === 'critical' ? 'crit' : 'warn'}"><span>${escapeHtml(text)}</span>${open}</li>`;
     })

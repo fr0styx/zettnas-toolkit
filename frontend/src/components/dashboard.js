@@ -215,21 +215,8 @@ export function renderDisks(disks) {
       const tile = e.target.closest('.disk');
       if (!tile) return;
       const dev = tile.dataset.dev;
-      const diskData = state.latestStats?.disks?.find((d) => (d.dev || d.name) === dev || d.name === dev || d.dev === dev);
-      const isStandby = tile.classList.contains('disk-standby') || Boolean(diskData?.standby || diskData?.health === 'standby');
-      const diskName = diskData?.name || dev || tile.querySelector('.dn')?.textContent;
-      if (isStandby) {
-        showConfirmToast(
-          'Drive in Standby Mode',
-          `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
-          () => {
-            showToast(t('toast.waking_disk', 'Waking disk {diskName}...', { diskName: diskName }), 'info');
-            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
-          }
-        );
-      } else {
-        ZettEventBus.emit('modal:smart:open', dev);
-      }
+      // Drive Health shows a sleeping drive from its last reading and never wakes it on open
+      ZettEventBus.emit('modal:smart:open', dev);
     });
   }
 
@@ -846,21 +833,8 @@ export function updateStreamlineBayChips(disks) {
       const chip = e.target.closest('.sl-bay-chip');
       if (!chip) return;
       const dev = chip.dataset.dev;
-      const diskData = state.latestStats?.disks?.find((d) => (d.dev || d.name) === dev || d.name === dev || d.dev === dev);
-      const isStandby = chip.classList.contains('chip-standby') || Boolean(diskData?.standby || diskData?.health === 'standby');
-      const diskName = diskData?.name || dev || chip.querySelector('.slot-lbl')?.textContent;
-      if (isStandby) {
-        showConfirmToast(
-          'Drive in Standby Mode',
-          `Disk ${diskName} is currently sleeping. Querying S.M.A.R.T. data will wake it up, causing mechanical wear and consuming power. Are you sure you want to wake it?`,
-          () => {
-            showToast(t('toast.waking_disk', 'Waking disk {diskName}...', { diskName: diskName }), 'info');
-            ZettEventBus.emit('modal:smart:open', { dev, forceWake: true });
-          }
-        );
-      } else {
-        ZettEventBus.emit('modal:smart:open', dev);
-      }
+      // Drive Health shows a sleeping drive from its last reading and never wakes it on open
+      ZettEventBus.emit('modal:smart:open', dev);
     });
   }
 

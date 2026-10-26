@@ -43,6 +43,7 @@ import { initCommandPalette } from './components/command-palette.js';
 import { initWidgets } from './components/widgets.js';
 import { lazyWindow } from './lazy-windows.js';
 import { initJobsCentre } from './components/jobs-centre.js';
+import { initDriveHealth } from './components/drive-health.js';
 import { initGettingStarted } from './components/getting-started.js';
 import { initRouter } from './router.js';
 import { initInviteLanding } from './components/invites.js';
@@ -381,6 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   idleLoad(() => ensureManagement().then(() => { managementReady = true; }, () => {}));
   initCommandPalette();
   initJobsCentre();
+  initDriveHealth(); // the drive view: everything that opened the S.M.A.R.T. window opens it
   initGettingStarted();
   initRouter();
   initPhoneShell();

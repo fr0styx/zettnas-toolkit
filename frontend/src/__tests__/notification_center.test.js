@@ -188,7 +188,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
 
     const contextBtn = document.getElementById('event-detail-context-btn');
     expect(contextBtn.style.display).toBe('inline-block');
-    expect(contextBtn.textContent).toBe('Inspect S.M.A.R.T.');
+    expect(contextBtn.textContent).toBe('Open Drive Health');
   });
 
   it('closes Event Detail Modal properly', () => {

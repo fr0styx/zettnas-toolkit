@@ -121,6 +121,7 @@ class SmartState:
     disk_risk: dict[str, Any] = field(default_factory=dict)  # dev -> predicted failure risk (D6)
     last_scan: dict[str, float] = field(default_factory=dict)
     active_tests: dict[str, Any] = field(default_factory=dict)
+    verdicts: dict[str, Any] = field(default_factory=dict)  # dev -> latest Drive Health verdict
 
 
 class _Alias[T]:
@@ -168,6 +169,7 @@ class ZettState:
     disk_risk = _Alias[dict]("smart", "disk_risk")
     last_smart_scan = _Alias[dict]("smart", "last_scan")
     active_smart_tests = _Alias[dict]("smart", "active_tests")
+    drive_verdicts = _Alias[dict]("smart", "verdicts")
 
     def __init__(self) -> None:
         self.lock = threading.RLock()  # the shared lock for everything not in a domain below
