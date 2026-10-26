@@ -666,34 +666,11 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 return
             conn = self._get_conn(readonly=False)
             try:
-                # Dynamic column migrations for existing v2 DBs
-                try:
-                    chunk_cols = {col["name"] for col in conn.execute("PRAGMA table_info(document_chunks);").fetchall()}
-                    if chunk_cols:
-                        if "parent_chunk_id" not in chunk_cols:
-                            conn.execute("ALTER TABLE document_chunks ADD COLUMN parent_chunk_id INTEGER DEFAULT NULL;")
-                        if "chunk_level" not in chunk_cols:
-                            conn.execute(
-                                "ALTER TABLE document_chunks ADD COLUMN chunk_level TEXT NOT NULL DEFAULT 'child';"
-                            )
-                        if "structural_context" not in chunk_cols:
-                            conn.execute(
-                                "ALTER TABLE document_chunks ADD COLUMN structural_context TEXT NOT NULL DEFAULT '';"
-                            )
-                        if "raw_chunk_text" not in chunk_cols:
-                            conn.execute(
-                                "ALTER TABLE document_chunks ADD COLUMN raw_chunk_text TEXT NOT NULL DEFAULT '';"
-                            )
+                # columns added after these tables first shipped (before the CREATE INDEX
+                # statements below use them): see db_schema (ARC-8)
+                from backend.db_schema import ensure_columns
 
-                    file_cols = {col["name"] for col in conn.execute("PRAGMA table_info(indexed_files);").fetchall()}
-                    if file_cols and "embedding_model" not in file_cols:
-                        conn.execute(
-                            "ALTER TABLE indexed_files ADD COLUMN embedding_model TEXT NOT NULL DEFAULT 'zett_lexical_384d';"
-                        )
-                except Exception:
-                    logger.debug(
-                        "backend.services.rag_engine.RagSearchEngine._ensure_schema: ignored error", exc_info=True
-                    )
+                ensure_columns(conn, "rag_index.db")
 
                 conn.executescript(
                     """

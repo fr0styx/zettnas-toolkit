@@ -11,10 +11,17 @@ Each database records its schema version in `PRAGMA user_version`. On start:
 - after the init code has created or upgraded the tables, each database is
   stamped with the version this code writes.
 
-Changing a table (ARCH-7): append a migration function to that database's list in
-MIGRATIONS. Never edit or remove one that has shipped. MIGRATIONS[name][i] upgrades
-schema v(i+1) to v(i+2); v1 is what the init code creates. Each migration runs in
-its own transaction together with the version bump, so a failed one changes nothing.
+Changing a table (ARCH-7, ARC-8):
+- Adding a column with a default: add it to the CREATE TABLE in the init code and to
+  COLUMN_UPGRADES below. Older code reads such a database fine, so there is no version
+  bump and an image rollback keeps working. The init code calls ensure_columns().
+- Anything else (renames, new constraints, data rewrites): append a migration function to
+  that database's list in MIGRATIONS. Never edit or remove one that has shipped.
+  MIGRATIONS[name][i] upgrades schema v(i+1) to v(i+2); v1 is what the init code creates.
+  Each migration runs in its own transaction together with the version bump, so a failed
+  one changes nothing. A version bump means an older image refuses the database: rolling
+  back then needs the pre-update snapshot.
+No ALTER TABLE outside this module (tests/test_arc8_schema.py).
 """
 
 import logging
@@ -37,6 +44,45 @@ MIGRATIONS: dict[str, list[Migration]] = {
     "rag_index.db": [],
 }
 REBUILDABLE = {"rag_index.db"}
+
+# Columns added after a table first shipped: (table, column, declaration). ensure_columns()
+# adds the missing ones; a table that does not exist yet is skipped (its CREATE has them all).
+COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
+    "users.db": [
+        ("users", "mfa_enabled", "INTEGER DEFAULT 0"),
+        ("users", "mfa_secret", "TEXT DEFAULT ''"),
+        ("users", "mfa_recovery_codes_json", "TEXT DEFAULT '[]'"),
+        ("users", "idp_type", "TEXT DEFAULT 'local'"),
+        ("users", "idp_sub", "TEXT DEFAULT ''"),
+    ],
+    "history.db": [
+        ("metrics", "net_rx_bytes_sec", "REAL DEFAULT 0.0"),
+        ("metrics", "net_tx_bytes_sec", "REAL DEFAULT 0.0"),
+        ("metrics", "disk_read_bytes_sec", "REAL DEFAULT 0.0"),
+        ("metrics", "disk_write_bytes_sec", "REAL DEFAULT 0.0"),
+        ("smart_history", "power_on_hours", "INTEGER DEFAULT 0"),
+    ],
+    "rag_index.db": [
+        ("document_chunks", "parent_chunk_id", "INTEGER DEFAULT NULL"),
+        ("document_chunks", "chunk_level", "TEXT NOT NULL DEFAULT 'child'"),
+        ("document_chunks", "structural_context", "TEXT NOT NULL DEFAULT ''"),
+        ("document_chunks", "raw_chunk_text", "TEXT NOT NULL DEFAULT ''"),
+        ("indexed_files", "embedding_model", "TEXT NOT NULL DEFAULT 'zett_lexical_384d'"),
+    ],
+}
+
+
+def ensure_columns(conn: sqlite3.Connection, name: str) -> list[str]:
+    """Adds the columns from COLUMN_UPGRADES[name] that an existing table lacks; returns them."""
+    added: list[str] = []
+    for table, column, decl in COLUMN_UPGRADES.get(name, []):
+        cols = {row[1] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+        if cols and column not in cols:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+            added.append(f"{table}.{column}")
+    if added:
+        logger.info(f"[DB Schema] {name}: added {', '.join(added)}")
+    return added
 
 
 def _versions() -> dict[str, tuple[int, bool]]:

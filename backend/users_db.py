@@ -248,18 +248,10 @@ def init_users_db(db_path: str | None = None) -> None:
             );
         """)
 
-        # Ensure MFA and IdP columns exist on users table
-        cols = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
-        if "mfa_enabled" not in cols:
-            conn.execute("ALTER TABLE users ADD COLUMN mfa_enabled INTEGER DEFAULT 0;")
-        if "mfa_secret" not in cols:
-            conn.execute("ALTER TABLE users ADD COLUMN mfa_secret TEXT DEFAULT '';")
-        if "mfa_recovery_codes_json" not in cols:
-            conn.execute("ALTER TABLE users ADD COLUMN mfa_recovery_codes_json TEXT DEFAULT '[]';")
-        if "idp_type" not in cols:
-            conn.execute("ALTER TABLE users ADD COLUMN idp_type TEXT DEFAULT 'local';")
-        if "idp_sub" not in cols:
-            conn.execute("ALTER TABLE users ADD COLUMN idp_sub TEXT DEFAULT '';")
+        # Columns added after the users table first shipped (MFA, IdP): see db_schema (ARC-8)
+        from backend.db_schema import ensure_columns
+
+        ensure_columns(conn, "users.db")
 
         # Seed default roles if missing
         now = time.time()

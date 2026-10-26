@@ -116,15 +116,6 @@ def init_db():
                     disk_write_bytes_sec REAL DEFAULT 0.0
                 )
             """)
-            # Auto-migrate metrics table columns if missing
-            cur = conn.execute("PRAGMA table_info(metrics)")
-            existing_cols = {row[1] for row in cur.fetchall()}
-            for col_name in ("net_rx_bytes_sec", "net_tx_bytes_sec", "disk_read_bytes_sec", "disk_write_bytes_sec"):
-                if col_name not in existing_cols:
-                    try:
-                        conn.execute(f"ALTER TABLE metrics ADD COLUMN {col_name} REAL DEFAULT 0.0")
-                    except Exception:
-                        logger.debug("backend.db.init_db: ignored error", exc_info=True)
             conn.execute("DROP INDEX IF EXISTS idx_metrics_ts")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS copy_history (
@@ -156,10 +147,10 @@ def init_db():
                     PRIMARY KEY (ts, dev)
                 )
             """)
-            # older databases lack the column; adding it again failed (and warned) on every start
-            smart_cols = {row[1] for row in conn.execute("PRAGMA table_info(smart_history)").fetchall()}
-            if "power_on_hours" not in smart_cols:
-                conn.execute("ALTER TABLE smart_history ADD COLUMN power_on_hours INTEGER DEFAULT 0;")
+            # columns added after these tables first shipped (metrics rates, power-on hours): ARC-8
+            from backend.db_schema import ensure_columns
+
+            ensure_columns(conn, "history.db")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_dev_ts ON smart_history(dev, ts DESC)")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ups_events (
