@@ -10,6 +10,7 @@ import { api } from '../api.js';
 import { showToast } from '../toast.js';
 import { trapFocus, escapeHtml, copyTextToClipboard } from '../utils.js';
 import { t, getLanguage } from '../i18n.js';
+import '../styles/management-lazy.css'; // Mission Control's own sheet loads with this code (ARC-12)
 import { wireTablists, markCurrent } from './tab-a11y.js';
 import { openFilePreviewModal } from './file-preview-modal.js';
 import { fetchAndRenderAppCatalog, fetchAndRenderDockerContainers, presetCatalogSearch, refreshCatalogCountBadges, startDockerAutoRefresh, stopDockerAutoRefresh } from './management/docker.js';

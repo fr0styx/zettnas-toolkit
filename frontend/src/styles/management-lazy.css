@@ -1,0 +1,8 @@
+/* Mission Control's own stylesheet (ARC-12): it loads with the window's code, not on first
+   paint. Only sheets whose rules no later global sheet can override in a different order
+   belong here; tests/test_lazy_css.py checks that (lazy CSS lands after every global sheet). */
+@import './31-network-inspector.css';
+@import './32-network-host-vlan.css';
+@import './33-wallpaper-gallery.css';
+@import './45-ai-history.css';
+@import './60-mgmt-window.css';

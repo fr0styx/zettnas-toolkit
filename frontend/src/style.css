@@ -31,9 +31,6 @@
 @import './styles/28-spotlight-resize.css';
 @import './styles/29-storage-pools-remote.css';
 @import './styles/30-users-lock-screen.css';
-@import './styles/31-network-inspector.css';
-@import './styles/32-network-host-vlan.css';
-@import './styles/33-wallpaper-gallery.css';
 @import './styles/34-desktop-twin-preview.css';
 @import './styles/35-glass-context-menu.css';
 @import './styles/36-wallpaper-drop.css';
@@ -45,7 +42,6 @@
 @import './styles/42-ai-workspace.css';
 @import './styles/43-security-advisor.css';
 @import './styles/44-file-explorer.css';
-@import './styles/45-ai-history.css';
 @import './styles/46-time-picker.css';
 @import './styles/47-containers-bulk.css';
 @import './styles/48-viewer.css';

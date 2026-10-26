@@ -1,0 +1,30 @@
+/* Mission Control follows its own width, not the screen's (ARC-12). On a desktop the window
+   can be made narrow; phones and tablets keep their own layouts (23-, 24-*.css), so these
+   rules start above the tablet breakpoint. */
+@media (min-width: 1025px) {
+  .management-window-body { container: mgmtwin / inline-size; }
+  .mgmt-content-pane { container: mgmtpane / inline-size; }
+
+  @container mgmtwin (max-width: 860px) {
+    .mgmt-sidebar { width: 176px; min-width: 176px; }
+    .mgmt-content-pane { padding: 14px; }
+  }
+
+  /* Narrow: the sidebar shows icons; each item keeps its name (title and hidden text) */
+  @container mgmtwin (max-width: 680px) {
+    .mgmt-sidebar { width: 56px; min-width: 56px; padding: 10px 6px; }
+    .mgmt-sidebar-item { justify-content: center; padding: 8px 0; }
+    .mgmt-sidebar-category { display: none; }
+    .mgmt-sidebar-text,
+    .mgmt-sidebar-badge,
+    .mgmt-advanced-row > span {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+    .mgmt-advanced-row { justify-content: center; margin: 12px 0 4px; }
+  }
+
+  @container mgmtpane (max-width: 560px) {
+    .management-hub-grid { grid-template-columns: 1fr; }
+  }
+}
