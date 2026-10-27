@@ -825,6 +825,7 @@ export function initManagement() {
           .then(([m, u]) => {
             const scopes = (u.getCurrentUser() || {}).scopes || [];
             m.renderImmichSettings(document.getElementById('immich-settings-mount'), scopes.includes('*') || scopes.includes('system:config'));
+            import('./phone-backup.js').then((p) => p.installPhoneBackup(document.getElementById('immich-settings-mount'))).catch(() => {}); // B8
           })
           .catch(() => {});
       }

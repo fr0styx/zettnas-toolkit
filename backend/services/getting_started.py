@@ -73,6 +73,12 @@ def _alerts_set_up() -> bool:
     return bool(cfg.get("enabled")) and bool(build_apprise_urls(cfg))
 
 
+def _phone_backs_up(username: str) -> bool:
+    from backend.services.immich_photos import phone_done
+
+    return phone_done(username)
+
+
 def checklist(username: str, is_admin: bool) -> dict[str, Any]:
     """Items in the order a new owner should do them. `open` is a Mission Control section key."""
     try:
@@ -88,11 +94,12 @@ def checklist(username: str, is_admin: bool) -> dict[str, Any]:
         ("backup", "mgmt-pane-backups", _safe(_has_backup), True),
         ("alerts", "mgmt-pane-notifications", _safe(_alerts_set_up), True),
         ("ai_folder", "ai", _safe(_ai_has_files), True),
+        ("phone_backup", "mgmt-pane-ai-index", _safe(lambda: _phone_backs_up(username)), False),
     ]
     rows = [
         {"id": item_id, "open": where, "done": done, "host": host if item_id == "share_host" else ""}
         for item_id, where, done, admin_only in items
-        if is_admin or not admin_only or item_id == "password"
+        if is_admin or not admin_only or item_id in ("password", "phone_backup")
     ]
     done = sum(1 for r in rows if r["done"])
     return {"items": rows, "done": done, "total": len(rows), "complete": done == len(rows)}

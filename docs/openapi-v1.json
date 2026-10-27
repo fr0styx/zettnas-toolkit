@@ -25774,6 +25774,19 @@
     "title": "PermissionsUpdateRequest",
     "type": "object"
    },
+   "PhoneIn": {
+    "properties": {
+     "done": {
+      "title": "Done",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "done"
+    ],
+    "title": "PhoneIn",
+    "type": "object"
+   },
    "PortConfigUpdateRequest": {
     "properties": {
      "alias": {
@@ -45144,6 +45157,46 @@
      }
     },
     "summary": "Connect Me",
+    "tags": [
+     "Immich"
+    ]
+   }
+  },
+  "/api/v1/immich/phone": {
+   "put": {
+    "description": "Marks this person's phone as backing up to Immich (Getting started, B8).",
+    "operationId": "put_phone_api_v1_immich_phone_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PhoneIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Phone",
     "tags": [
      "Immich"
     ]

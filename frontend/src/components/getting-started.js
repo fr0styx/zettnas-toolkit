@@ -17,6 +17,7 @@ const ITEMS = {
   backup: ['gs.backup', 'Set up a backup', 'gs.backup_desc', 'Copy your files, and ZettNAS settings, somewhere else on a schedule.'],
   alerts: ['gs.alerts', 'Get alerts', 'gs.alerts_desc', 'Hear about failing disks and power cuts on your phone or by email.'],
   ai_folder: ['gs.ai_folder', 'Let AI learn a folder', 'gs.ai_folder_desc', 'Search and ask questions about your own documents, privately.'],
+  phone_backup: ['gs.phone_backup', 'Back up your phone', 'gs.phone_backup_desc', 'Photos from your phone copied here automatically, with Immich.'],
 };
 
 function isHidden() {

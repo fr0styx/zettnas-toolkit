@@ -40,6 +40,16 @@ def connect_me(req: KeyIn, principal: AuthenticatedPrincipal = Depends(get_curre
         raise HTTPException(status_code=502, detail=str(e)) from None
 
 
+class PhoneIn(BaseModel):
+    done: bool
+
+
+@router.put("/immich/phone")
+def put_phone(req: PhoneIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Marks this person's phone as backing up to Immich (Getting started, B8)."""
+    return {"done": im.set_phone_done(principal.username, req.done)}
+
+
 @router.delete("/immich/me")
 def disconnect_me(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     return {"disconnected": im.disconnect(principal.username)}

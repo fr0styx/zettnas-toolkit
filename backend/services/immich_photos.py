@@ -45,7 +45,32 @@ def status(username: str) -> dict[str, Any]:
         "url": c.get("url") or "",
         "connected": bool(c.get("url") and c["keys"].get(username)),
         "detected": detect(),
+        "sso": bool(c.get("sso")),  # Immich signs in with ZettNAS's provider (set by apps/immich)
+        "phone_done": username in (c.get("phone_done") or []),
     }
+
+
+def set_phone_done(username: str, done: bool) -> bool:
+    """Someone says their phone backs up to Immich (the Back up my phone card, B8)."""
+    with _lock:
+        c = _cfg()
+        people = [u for u in (c.get("phone_done") or []) if u != username]
+        if done:
+            people.append(username)
+        c["phone_done"] = people
+        _save(c)
+    return done
+
+
+def phone_done(username: str) -> bool:
+    return username in (_cfg().get("phone_done") or [])
+
+
+def set_sso(on: bool) -> None:
+    with _lock:
+        c = _cfg()
+        c["sso"] = bool(on)
+        _save(c)
 
 
 def set_url(url: str) -> str:

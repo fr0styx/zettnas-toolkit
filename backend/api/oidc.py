@@ -169,7 +169,7 @@ def connect_immich(req: ImmichConnect, principal: AuthenticatedPrincipal = Depen
 
     me = get_user_by_username(principal.username) or {}
     try:
-        return immich_sso.connect(
+        res = immich_sso.connect(
             req.immich_url,
             me.get("email") or "",
             _immich_app_dir(),
@@ -177,5 +177,9 @@ def connect_immich(req: ImmichConnect, principal: AuthenticatedPrincipal = Depen
             req.client_id,
             req.client_secret,
         )
+        from backend.services import immich_photos
+
+        immich_photos.set_sso(True)  # the Back up my phone card says "Sign in with ZettNAS"
+        return res
     except immich_sso.ImmichSsoError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
