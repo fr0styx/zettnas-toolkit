@@ -33,7 +33,7 @@ export function tagLabel(tag) {
 
 function chip(item) {
   const on = selected.has(item.tag);
-  return html`<button type="button" class="btn-pill-toggle is-small${on ? ' is-active' : ''}" data-doc-tag="${item.tag}" aria-pressed="${on ? 'true' : 'false'}">${tagLabel(item.tag)} <span class="zn-muted">${item.count}</span></button>`;
+  return html`<button type="button" class="btn-pill-toggle is-small${on ? ' active' : ''}" data-doc-tag="${item.tag}" aria-pressed="${on ? 'true' : 'false'}">${tagLabel(item.tag)} <span class="zn-muted">${item.count}</span></button>`;
 }
 
 export function filtersHtml(data) {
