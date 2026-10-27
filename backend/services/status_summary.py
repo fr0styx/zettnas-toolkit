@@ -43,6 +43,9 @@ def _drives() -> list[dict[str, Any]]:
                 else "drive_attention",
                 "subject": dev,
                 "detail": v.get("summary", ""),
+                # the interface shows the detail in the reader's language (dh.f.<key>.title)
+                "detail_key": f"dh.f.{v['summary_key']}.title" if v.get("summary_key") else "",
+                "detail_params": v.get("summary_params") or {},
                 "open": "drives",
             }
         )

@@ -132,6 +132,8 @@ COUNTERS = {  # history column -> attribute id it follows (NVMe ones have their 
     "crc_errors": 199,
     "nvme_media_errors": "media_errors",
     "nvme_pct_used": "percentage_used",
+    "command_timeouts": 188,
+    "spin_retries": 10,
 }
 
 
@@ -165,6 +167,8 @@ def from_history(last: dict[str, Any]) -> dict[str, Any]:
             197: {"name": "Current_Pending_Sector", "raw": int(last.get("pending_sectors") or 0)},
             198: {"name": "Offline_Uncorrectable", "raw": int(last.get("offline_uncorrectable") or 0)},
             199: {"name": "UDMA_CRC_Error_Count", "raw": int(last.get("crc_errors") or 0)},
+            188: {"name": "Command_Timeout", "raw": int(last.get("command_timeouts") or 0)},
+            10: {"name": "Spin_Retry_Count", "raw": int(last.get("spin_retries") or 0)},
         },
         "failing_attributes": [],
         "self_tests": [],
@@ -173,9 +177,25 @@ def from_history(last: dict[str, Any]) -> dict[str, Any]:
 
 
 # --- the rules ------------------------------------------------------------------------------------
-def _f(code: str, severity: str, kind: str, title: str, detail: str, action: str, **evidence: Any) -> dict[str, Any]:
+# Every finding carries a message key and the values in it, so the interface shows it in the
+# reader's language (dh.f.<key>.title / .detail / .action in the locale files). The English text
+# here is the same message filled in; tests/test_drive_health.py keeps the two in step.
+def _f(
+    code: str,
+    severity: str,
+    kind: str,
+    title: str,
+    detail: str,
+    action: str,
+    *,
+    key: str | None = None,
+    params: dict[str, Any] | None = None,
+    **evidence: Any,
+) -> dict[str, Any]:
     return {
         "code": code,
+        "key": key or code,
+        "params": params or {},
         "severity": severity,
         "kind": kind,
         "title": title,
@@ -193,6 +213,9 @@ def _plural(n: int, one: str, many: str) -> str:
     return f"{n} {one if n == 1 else many}"
 
 
+BACKUP = "Copy what matters on it to another drive or a backup now"
+
+
 def findings_for(
     r: dict[str, Any],
     grew: dict[str, int] | None = None,
@@ -204,7 +227,7 @@ def findings_for(
     now = now or time.time()
     out: list[dict[str, Any]] = []
     nvme = r.get("protocol") == "nvme"
-    backup = "Copy what matters on it to another drive or a backup now"
+    days = TREND_DAYS
 
     # the drive's own verdict and its own tests
     if r.get("smart_passed") is False:
@@ -215,33 +238,37 @@ def findings_for(
                 REPLACE,
                 "The drive reports that it is failing",
                 "Its own health check (SMART overall status) says FAILED.",
-                f"{backup}, then replace it.",
+                f"{BACKUP}, then replace it.",
                 smart_passed=False,
             )
         )
     if r.get("failing_attributes"):
+        names = ", ".join(r["failing_attributes"])
         out.append(
             _f(
                 "attribute_failing",
                 NOW,
                 REPLACE,
                 "A health value is below the maker's limit",
-                "Failing now: " + ", ".join(r["failing_attributes"]) + ".",
-                f"{backup}, then replace it.",
+                f"Failing now: {names}.",
+                f"{BACKUP}, then replace it.",
+                params={"names": names},
                 attributes=r["failing_attributes"],
             )
         )
     drive_tests = r.get("self_tests") or []
     if drive_tests and drive_tests[0].get("passed") is False:
         t = drive_tests[0]
+        status = t.get("status") or "a read error"
         out.append(
             _f(
                 "self_test_failed",
                 NOW,
                 REPLACE,
                 "Its last self-test failed",
-                f"The {t.get('kind', '')} test stopped with: {t.get('status') or 'a read error'}.",
-                f"{backup}, then replace it.",
+                f"The test stopped with: {status}.",
+                f"{BACKUP}, then replace it.",
+                params={"status": status},
                 test=t,
             )
         )
@@ -250,15 +277,17 @@ def findings_for(
     pending, offline, reported = _count(r, 197), _count(r, 198), _count(r, 187)
     if pending or offline or reported:
         n = max(pending, offline, reported)
-        sev = NOW if (grew.get("pending_sectors") or grew.get("offline_uncorrectable")) else SOON
+        worse = bool(grew.get("pending_sectors") or grew.get("offline_uncorrectable"))
         out.append(
             _f(
                 "unreadable_sectors",
-                sev,
+                NOW if worse else SOON,
                 REPLACE,
-                "Parts of the disk could not be read" + (" and it is getting worse" if sev == NOW else ""),
+                "Parts of the disk could not be read" + (" and it is getting worse" if worse else ""),
                 f"{_plural(n, 'sector', 'sectors')} could not be read back. Files there may already be damaged.",
-                f"{backup}. Run a long self-test, and plan to replace the drive.",
+                f"{BACKUP}. Run a long self-test, and plan to replace the drive.",
+                key="unreadable_sectors_worse" if worse else "unreadable_sectors",
+                params={"n": n},
                 pending=pending,
                 offline_uncorrectable=offline,
                 reported_uncorrectable=reported,
@@ -276,9 +305,10 @@ def findings_for(
                     SOON,
                     REPLACE,
                     "The drive keeps replacing worn-out sectors",
-                    f"{_plural(rising, 'sector was', 'sectors were')} replaced in the last {TREND_DAYS} days "
+                    f"{_plural(rising, 'sector was', 'sectors were')} replaced in the last {days} days "
                     f"({realloc} in all). A drive that keeps doing this usually fails within months.",
-                    f"{backup} and plan to replace it.",
+                    f"{BACKUP} and plan to replace it.",
+                    params={"rising": rising, "total": realloc, "days": days},
                     reallocated=realloc,
                     grew=rising,
                 )
@@ -292,6 +322,7 @@ def findings_for(
                     "Many sectors have been replaced",
                     f"{realloc} sectors were replaced over the drive's life. The count is stable for now.",
                     "Keep backups current and plan a replacement.",
+                    params={"n": realloc},
                     reallocated=realloc,
                 )
             )
@@ -303,21 +334,29 @@ def findings_for(
                     REPLACE,
                     "Some sectors were replaced, a while ago",
                     f"{_plural(realloc, 'sector was', 'sectors were')} replaced and the number has not moved "
-                    f"in the last {TREND_DAYS} days. That alone is not a reason to replace the drive.",
+                    f"in the last {days} days. That alone is not a reason to replace the drive.",
                     "Nothing to do now. If the number starts to rise, replace it.",
+                    params={"n": realloc, "days": days},
                     reallocated=realloc,
                 )
             )
-    if _count(r, 10):
+    spins = _count(r, 10)
+    if spins:
+        rising = grew.get("spin_retries", 0)
         out.append(
             _f(
                 "spin_retries",
                 SOON,
                 REPLACE,
-                "The motor needed several tries to spin up",
-                f"Spin-up retries: {_count(r, 10)}. A weak motor or a power problem.",
-                f"Check the power cable and supply; if they are fine, {backup.lower()} and replace the drive.",
-                spin_retries=_count(r, 10),
+                "The motor needed several tries to spin up" + (", more of them lately" if rising else ""),
+                f"Spin-up retries: {spins}"
+                + (f", {rising} of them in the last {days} days" if rising else "")
+                + ". A weak motor or a power problem.",
+                f"Check the power cable and supply; if they are fine, {BACKUP.lower()} and replace the drive.",
+                key="spin_retries_growing" if rising else "spin_retries",
+                params={"n": spins, "rising": rising, "days": days},
+                spin_retries=spins,
+                grew=rising,
             )
         )
     if _count(r, 184):
@@ -328,27 +367,48 @@ def findings_for(
                 REPLACE,
                 "Data got corrupted inside the drive",
                 f"End-to-end errors: {_count(r, 184)}. The drive's own path from cache to disk is faulty.",
-                f"{backup} and replace the drive.",
+                f"{BACKUP} and replace the drive.",
+                params={"n": _count(r, 184)},
                 end_to_end=_count(r, 184),
             )
         )
     timeouts = _count(r, 188)
     if timeouts:
-        # the history does not keep this counter, so only a large count says more than a past blip
+        rising = grew.get("command_timeouts", 0)
         many = timeouts >= 100
-        out.append(
-            _f(
-                "command_timeouts",
-                WATCH if many else OK,
-                CABLE if many else INFO,
-                "Many commands to the drive timed out" if many else "A few commands timed out at some point",
-                f"Command timeouts: {timeouts}. Usually a loose cable, a weak power supply or a busy controller.",
-                "Reseat the data and power cables, or try another port."
-                if many
-                else "Nothing to do unless other errors appear; then check its cables.",
-                command_timeouts=timeouts,
+        if rising:
+            # new timeouts since the last weeks: something is wrong now, most often the cable
+            out.append(
+                _f(
+                    "command_timeouts",
+                    WATCH,
+                    CABLE,
+                    "Commands to the drive keep timing out",
+                    f"{_plural(rising, 'timeout', 'timeouts')} in the last {days} days ({timeouts} in all). "
+                    "Usually a loose cable, a weak power supply or a busy controller.",
+                    "Reseat the data and power cables, or try another port.",
+                    key="command_timeouts_growing",
+                    params={"rising": rising, "total": timeouts, "days": days},
+                    command_timeouts=timeouts,
+                    grew=rising,
+                )
             )
-        )
+        else:
+            out.append(
+                _f(
+                    "command_timeouts",
+                    WATCH if many else OK,
+                    CABLE if many else INFO,
+                    "Many commands to the drive timed out" if many else "A few commands timed out at some point",
+                    f"Command timeouts: {timeouts}. Usually a loose cable, a weak power supply or a busy controller.",
+                    "Reseat the data and power cables, or try another port."
+                    if many
+                    else "Nothing to do unless other errors appear; then check its cables.",
+                    key="command_timeouts_many" if many else "command_timeouts_few",
+                    params={"n": timeouts},
+                    command_timeouts=timeouts,
+                )
+            )
 
     # not the drive's fault: the cable
     crc = _count(r, 199)
@@ -361,9 +421,10 @@ def findings_for(
                     WATCH,
                     CABLE,
                     "Errors on the cable to this drive",
-                    f"{_plural(rising, 'transfer error', 'transfer errors')} in the last {TREND_DAYS} days "
+                    f"{_plural(rising, 'transfer error', 'transfer errors')} in the last {days} days "
                     f"({crc} in all). The drive itself is fine; the data got garbled on the way.",
                     "Reseat or replace the SATA cable, or move the drive to another bay.",
+                    params={"rising": rising, "total": crc, "days": days},
                     crc=crc,
                     grew=rising,
                 )
@@ -375,8 +436,10 @@ def findings_for(
                     OK,
                     INFO,
                     "Old cable errors, none lately",
-                    f"{crc} transfer errors were counted at some point, none in the last {TREND_DAYS} days.",
+                    f"{_plural(crc, 'transfer error was', 'transfer errors were')} counted at some point, "
+                    f"none in the last {days} days.",
                     "Nothing to do.",
+                    params={"n": crc, "days": days},
                     crc=crc,
                 )
             )
@@ -390,16 +453,17 @@ def findings_for(
             and nv.get("available_spare_threshold") is not None
             and nv["available_spare"] <= nv["available_spare_threshold"]
         ):
+            spare, limit = nv.get("available_spare"), nv.get("available_spare_threshold")
             out.append(
                 _f(
                     "nvme_spare",
                     NOW,
                     REPLACE,
                     "The SSD has run out of spare blocks",
-                    f"Spare blocks left: {nv.get('available_spare')}% (the maker's limit is "
-                    f"{nv.get('available_spare_threshold')}%).",
-                    f"{backup}, then replace it.",
-                    available_spare=nv.get("available_spare"),
+                    f"Spare blocks left: {spare}% (the maker's limit is {limit}%).",
+                    f"{BACKUP}, then replace it.",
+                    params={"spare": spare, "limit": limit},
+                    available_spare=spare,
                 )
             )
         if cw & 0x04:
@@ -410,7 +474,7 @@ def findings_for(
                     REPLACE,
                     "The SSD reports it is no longer reliable",
                     "Its own reliability flag is set (critical warning bit 2).",
-                    f"{backup}, then replace it.",
+                    f"{BACKUP}, then replace it.",
                     critical_warning=cw,
                 )
             )
@@ -440,15 +504,17 @@ def findings_for(
             )
         used = nv.get("percentage_used")
         if isinstance(used, int) and used >= 80:
-            sev = SOON if used >= 100 else WATCH
+            past = used >= 100
             out.append(
                 _f(
                     "nvme_wear",
-                    sev,
+                    SOON if past else WATCH,
                     REPLACE,
-                    "The SSD is wearing out" if used < 100 else "The SSD is past its rated life",
+                    "The SSD is past its rated life" if past else "The SSD is wearing out",
                     f"{used}% of its rated writes are used up.",
-                    "Plan a replacement." if used < 100 else "Replace it soon; it can fail without warning now.",
+                    "Replace it soon; it can fail without warning now." if past else "Plan a replacement.",
+                    key="nvme_wear_past" if past else "nvme_wear",
+                    params={"used": used},
                     percentage_used=used,
                 )
             )
@@ -461,9 +527,10 @@ def findings_for(
                     SOON if rising else WATCH,
                     REPLACE,
                     "The SSD could not read some data" + (" and it is getting worse" if rising else ""),
-                    f"Media errors: {media}"
-                    + (f", {rising} of them in the last {TREND_DAYS} days." if rising else "."),
-                    f"{backup}." + (" Plan to replace it." if rising else " If the count rises, replace it."),
+                    f"Media errors: {media}" + (f", {rising} of them in the last {days} days." if rising else "."),
+                    f"{BACKUP}." + (" Plan to replace it." if rising else " If the count rises, replace it."),
+                    key="nvme_media_errors_growing" if rising else "nvme_media_errors",
+                    params={"n": media, "rising": rising, "days": days},
                     media_errors=media,
                     grew=rising,
                 )
@@ -471,14 +538,16 @@ def findings_for(
     for aid, name in ((231, "SSD_Life_Left"), (233, "Media_Wearout_Indicator"), (177, "Wear_Leveling_Count")):
         a = (r.get("attributes") or {}).get(aid)
         if a and isinstance(a.get("value"), int) and a["value"] <= 20 and not nv:
+            attr = a.get("name") or name
             out.append(
                 _f(
                     "ssd_wear",
                     SOON if a["value"] <= 10 else WATCH,
                     REPLACE,
                     "The SSD is wearing out",
-                    f"About {a['value']}% of its life is left ({a.get('name') or name}).",
+                    f"About {a['value']}% of its life is left ({attr}).",
                     "Plan a replacement.",
+                    params={"left": a["value"], "attr": attr},
                     life_left=a["value"],
                 )
             )
@@ -497,6 +566,7 @@ def findings_for(
                     "The drive is too hot",
                     f"{temp:g} °C now; it should stay below {hot} °C.",
                     "Check that the fans run and nothing blocks the airflow. Heat shortens a drive's life.",
+                    params={"temp": f"{temp:g}", "limit": hot},
                     temp_c=temp,
                 )
             )
@@ -509,6 +579,7 @@ def findings_for(
                     "The drive runs warm",
                     f"{temp:g} °C now; below {hot} °C is better for its life.",
                     "Check the fan curve and the airflow around it.",
+                    params={"temp": f"{temp:g}", "limit": hot},
                     temp_c=temp,
                 )
             )
@@ -524,6 +595,7 @@ def findings_for(
                 "An old drive",
                 f"Powered on for {hours // 8760} years. Failures become more likely after five.",
                 "Nothing urgent. Keep backups current and budget for a replacement.",
+                params={"years": hours // 8760},
                 power_on_hours=hours,
             )
         )
@@ -545,13 +617,14 @@ def findings_for(
     return out
 
 
-LABELS = {
-    OK: "Healthy",
-    WATCH: "Keep an eye on it",
-    (SOON, REPLACE): "Replace soon",
-    (NOW, REPLACE): "Replace now",
-    (SOON, "other"): "Needs attention",
-    (NOW, "other"): "Needs attention now",
+LABELS = {  # label key -> English label (dh.label.<key> in the locale files)
+    "ok": "Healthy",
+    "watch": "Keep an eye on it",
+    "soon_replace": "Replace soon",
+    "now_replace": "Replace now",
+    "soon_other": "Needs attention",
+    "now_other": "Needs attention now",
+    "unknown": "Not read yet",
 }
 
 
@@ -561,15 +634,19 @@ def assess(
     tests: list[dict[str, Any]] | None = None,
     now: float | None = None,
 ) -> dict[str, Any]:
-    """The verdict for one drive: {verdict, label, summary, findings, from_history}."""
+    """The verdict for one drive: {verdict, label, summary, findings, from_history}, plus the keys
+    the interface translates them by (label_key, summary_key, summary_params)."""
     history = history or []
     if not readings and history:
         readings = from_history(max(history, key=lambda h: h.get("ts") or 0))
     if not readings:
         return {
             "verdict": "unknown",
-            "label": "Not read yet",
+            "label": LABELS["unknown"],
+            "label_key": "unknown",
             "summary": "No reading of this drive yet.",
+            "summary_key": "unread",
+            "summary_params": {},
             "findings": [],
             "from_history": False,
         }
@@ -577,14 +654,18 @@ def assess(
     worst = max((f["severity"] for f in findings), key=lambda s: ORDER[s], default=OK)
     top = next((f for f in findings if f["severity"] == worst), None)
     if worst in (OK, WATCH):
-        label = LABELS[worst]
+        label_key = worst
     else:
-        label = LABELS[(worst, REPLACE if top and top["kind"] == REPLACE else "other")]
-    summary = top["title"] if top and worst != OK else "No sign of trouble."
+        label_key = f"{worst}_{'replace' if top and top['kind'] == REPLACE else 'other'}"
+    trouble = bool(top and worst != OK)
     return {
         "verdict": worst,
-        "label": label,
-        "summary": summary,
+        "label": LABELS[label_key],
+        "label_key": label_key,
+        "summary": top["title"] if trouble and top else "No sign of trouble.",
+        # a finding's title (dh.f.<key>.title), or dh.f.fine.title when there is nothing to report
+        "summary_key": top["key"] if trouble and top else "fine",
+        "summary_params": top["params"] if trouble and top else {},
         "findings": findings,
         "from_history": bool(readings.get("from_history_ts")),
         "reading_ts": readings.get("from_history_ts"),

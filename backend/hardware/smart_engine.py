@@ -83,6 +83,8 @@ class SmartTelemetryEngine:
             "power_cycles": None,
             "critical_warning": None,
             "sas_grown_defects": None,
+            "timeouts": 0,
+            "spin_retries": 0,
         }
 
         # Power on hours lookup in power_on_time
@@ -139,6 +141,10 @@ class SmartTelemetryEngine:
                     metrics["offline"] = int(raw_val)
                 elif aid == 199:
                     metrics["crc"] = int(raw_val)
+                elif aid == 188:
+                    metrics["timeouts"] = int(raw_val) & 0xFFFF
+                elif aid == 10:
+                    metrics["spin_retries"] = int(raw_val)
                 elif aid == 194:
                     raw_str = attr.get("raw", {}).get("string", "")
                     digits = [int(x) for x in raw_str.split() if x.isdigit()]

@@ -61,6 +61,8 @@ COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
         ("metrics", "disk_read_bytes_sec", "REAL DEFAULT 0.0"),
         ("metrics", "disk_write_bytes_sec", "REAL DEFAULT 0.0"),
         ("smart_history", "power_on_hours", "INTEGER DEFAULT 0"),
+        ("smart_history", "command_timeouts", "INTEGER DEFAULT 0"),
+        ("smart_history", "spin_retries", "INTEGER DEFAULT 0"),
     ],
     "rag_index.db": [
         ("document_chunks", "parent_chunk_id", "INTEGER DEFAULT NULL"),

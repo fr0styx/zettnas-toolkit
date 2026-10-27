@@ -26,6 +26,12 @@ let _testTimer = null;
 const VERDICT_CLASS = { ok: 'is-ok', watch: 'is-watch', soon: 'is-soon', now: 'is-now', unknown: 'is-unknown' };
 const verdictClass = (v) => VERDICT_CLASS[v] || 'is-unknown';
 
+// The server sends each text with a message key and its values; show it in the reader's language,
+// with the server's English as the fallback
+const findingText = (f, part) => t(`dh.f.${f.key || f.code}.${part}`, f[part] || '', f.params || {});
+export const labelText = (d) => (d.label_key ? t(`dh.label.${d.label_key}`, d.label || '') : d.label || '');
+export const summaryText = (d) => (d.summary_key ? t(`dh.f.${d.summary_key}.title`, d.summary || '', d.summary_params || {}) : d.summary || '');
+
 function when(ts) {
   return ts ? formatDateTime(ts * 1000, undefined, '') : '';
 }
@@ -40,9 +46,9 @@ export function driveCardHtml(d, selected) {
     <span class="dh-card-main">
       <span class="dh-card-name">${escapeHtml(name)}</span>
       <span class="dh-card-meta">${escapeHtml(bits)}${asleep}${testing}</span>
-      <span class="dh-card-summary">${escapeHtml(d.summary || '')}</span>
+      <span class="dh-card-summary">${escapeHtml(summaryText(d))}</span>
     </span>
-    <span class="dh-pill">${escapeHtml(d.label || '')}</span>
+    <span class="dh-pill">${escapeHtml(labelText(d))}</span>
   </button></li>`;
 }
 
@@ -77,9 +83,9 @@ function findingButton(f) {
 
 export function findingHtml(f) {
   return `<li class="dh-finding ${verdictClass(f.severity)}">
-    <div class="dh-finding-title">${escapeHtml(f.title)}</div>
-    <div class="dh-finding-detail">${escapeHtml(f.detail)}</div>
-    <div class="dh-finding-action"><strong>${escapeHtml(t('dh.what_to_do', 'What to do:'))}</strong> ${escapeHtml(f.action)} ${findingButton(f)}</div>
+    <div class="dh-finding-title">${escapeHtml(findingText(f, 'title'))}</div>
+    <div class="dh-finding-detail">${escapeHtml(findingText(f, 'detail'))}</div>
+    <div class="dh-finding-action"><strong>${escapeHtml(t('dh.what_to_do', 'What to do:'))}</strong> ${escapeHtml(findingText(f, 'action'))} ${findingButton(f)}</div>
   </li>`;
 }
 
@@ -142,7 +148,7 @@ export function detailHtml(drive, detail, tests) {
         <h3 class="dh-title">${escapeHtml(drive.model || drive.dev)}</h3>
         <div class="dh-sub">${escapeHtml([drive.dev, drive.role, drive.serial].filter(Boolean).join(' · '))}</div>
       </div>
-      <span class="dh-pill ${verdictClass(health.verdict)}">${escapeHtml(health.label || '')}</span>
+      <span class="dh-pill ${verdictClass(health.verdict)}">${escapeHtml(labelText(health))}</span>
     </div>
     ${sleepNote}
     <section class="dh-section">

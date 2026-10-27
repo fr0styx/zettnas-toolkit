@@ -68,7 +68,7 @@ export function statusHtml(summary) {
   }
   const rows = summary.items
     .map((i) => {
-      const text = (MESSAGES[i.kind] || (() => i.kind))().replace('{subject}', i.subject || '').replace('{detail}', i.detail || '');
+      const text = (MESSAGES[i.kind] || (() => i.kind))().replace('{subject}', i.subject || '').replace('{detail}', i.detail_key ? t(i.detail_key, i.detail || '', i.detail_params || {}) : i.detail || '');
       const open = ROUTES[i.open] ? `<button type="button" class="btn-pill-toggle" data-ov-open="${escapeHtml(i.open)}">${escapeHtml(t('overview.open', 'Open'))}</button>` : '';
       return `<li class="ov-item ov-${i.level === 'critical' ? 'crit' : 'warn'}"><span>${escapeHtml(text)}</span>${open}</li>`;
     })

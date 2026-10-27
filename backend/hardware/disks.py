@@ -207,7 +207,7 @@ def _short_name(dev, idx_nvme=0):
 def _parse_smart_json(doc: dict, is_nvme: bool):
     temp = None
     passed = None
-    realloc = pending = offline = crc = 0
+    realloc = pending = offline = crc = timeouts = spin_retries = 0
     nvme_spare = None
     nvme_spare_thresh = None
     nvme_used = None
@@ -301,6 +301,10 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
                     offline = int(raw_val)
                 elif attr_id == 199:
                     crc = int(raw_val)
+                elif attr_id == 188:
+                    timeouts = int(raw_val) & 0xFFFF  # Seagate packs three counters; the low one is timeouts
+                elif attr_id == 10:
+                    spin_retries = int(raw_val)
                 elif attr_id == 194:
                     try:
                         raw_str = attr.get("raw", {}).get("string", "")
@@ -406,6 +410,8 @@ def _parse_smart_json(doc: dict, is_nvme: bool):
         "tbr_tb": tbr_tb,
         "power_cycles": power_cycles,
         "critical_warning": critical_warning,
+        "timeouts": timeouts,
+        "spin_retries": spin_retries,
     }
     return temp, health, metrics
 
@@ -450,7 +456,7 @@ def _parse_smart_text(text: str, is_nvme: bool):
     temp_from_194 = None
     temp_from_190 = None
     passed = None
-    realloc = pending = offline = crc = 0
+    realloc = pending = offline = crc = timeouts = spin_retries = 0
     nvme_spare = None
     nvme_spare_thresh = None
     nvme_used = None
@@ -486,6 +492,10 @@ def _parse_smart_text(text: str, is_nvme: bool):
             offline = _extract_raw_val(s.split())
         elif "UDMA_CRC_Error_Count" in s:
             crc = _extract_raw_val(s.split())
+        elif "Command_Timeout" in s:
+            timeouts = _extract_raw_val(s.split()) & 0xFFFF
+        elif "Spin_Retry_Count" in s:
+            spin_retries = _extract_raw_val(s.split())
 
         if is_nvme:
 
@@ -584,6 +594,8 @@ def _parse_smart_text(text: str, is_nvme: bool):
         "tbr_tb": tbr_tb,
         "power_cycles": power_cycles,
         "critical_warning": critical_warning,
+        "timeouts": timeouts,
+        "spin_retries": spin_retries,
     }
     return temp, health, metrics
 
@@ -1089,7 +1101,7 @@ def drive_health_for(dev_name: str, doc: dict | None) -> dict:
         result = drive_health.assess(readings, get_smart_history_samples(dev_name), get_smart_test_history(dev_name, 5))
     except Exception:
         logger.debug("backend.hardware.disks.drive_health_for: could not assess %s", dev_name, exc_info=True)
-        return {"verdict": "unknown", "label": "Not read yet", "summary": "", "findings": []}
+        return {"verdict": "unknown", "label": "Not read yet", "label_key": "unknown", "summary": "", "findings": []}
     remember_verdict(dev_name, result)
     return result
 
@@ -1102,6 +1114,8 @@ def remember_verdict(dev_name: str, result: dict) -> None:
             "verdict": result.get("verdict", "unknown"),
             "kind": (top or {}).get("kind", ""),
             "summary": result.get("summary", ""),
+            "summary_key": result.get("summary_key", ""),
+            "summary_params": result.get("summary_params") or {},
             "ts": time.time(),
         }
 

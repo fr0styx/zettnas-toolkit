@@ -17,16 +17,19 @@ const { showToast } = await import('../toast.js');
 const { ZettEventBus } = await import('../event-bus.js');
 const dh = await import('../components/drive-health.js');
 const { statusHtml } = await import('../components/management/overview.js');
+const { setLanguage } = await import('../i18n.js');
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 const FINDING_NOW = {
   code: 'unreadable_sectors',
+  key: 'unreadable_sectors',
+  params: { n: 8 },
   severity: 'now',
   kind: 'replace',
-  title: '8 sectors could not be read',
-  detail: 'The drive tried to read them and failed.',
-  action: 'Copy what matters off this drive, then replace it.',
+  title: 'Parts of the disk could not be read',
+  detail: '8 sectors could not be read back. Files there may already be damaged.',
+  action: 'Copy what matters on it to another drive or a backup now. Run a long self-test, and plan to replace the drive.',
 };
 const DRIVES = {
   drives: [
@@ -199,5 +202,30 @@ describe('Drive Health', () => {
     expect(pos('chassis-desktop-icon')).toBe('24px,637px');
     expect(pos('dh-desktop-icon')).not.toBe('24px,637px');
     expect(new Set(ids.map(pos)).size).toBe(ids.length);
+  });
+});
+
+describe('Drive Health in the reader\'s language', () => {
+  afterEach(async () => {
+    await setLanguage('en');
+  });
+
+  it('shows findings, labels, summaries and the Overview line from their message keys', async () => {
+    await setLanguage('de');
+    const warm = { code: 'warm', key: 'warm', params: { temp: '55', limit: 50 }, severity: 'watch', kind: 'cooling', title: 'The drive runs warm', detail: 'x', action: 'y' };
+    const html = dh.findingHtml(warm);
+    expect(html).toContain('Das Laufwerk läuft warm');
+    expect(html).toContain('Jetzt 55 °C; unter 50 °C ist besser');
+    const card = dh.driveCardHtml({ dev: 'sdc', verdict: 'now', label: 'Replace now', label_key: 'now_replace', summary: 'Parts of the disk could not be read', summary_key: 'unreadable_sectors', summary_params: { n: 3 } }, false);
+    expect(card).toContain('Jetzt austauschen');
+    expect(card).toContain('Teile der Platte konnten nicht gelesen werden');
+    const ov = statusHtml({ ok: false, items: [{ kind: 'drive_attention', level: 'warning', subject: 'sdc', detail: 'The drive is too hot', detail_key: 'dh.f.too_hot.title', detail_params: {}, open: 'drives' }] });
+    expect(ov).toContain('Das Laufwerk ist zu heiß');
+  });
+
+  it('falls back to the server text for a message it does not know', async () => {
+    await setLanguage('de');
+    expect(dh.findingHtml({ code: 'brand_new', title: 'A new rule', detail: 'd', action: 'a' })).toContain('A new rule');
+    expect(dh.driveCardHtml({ dev: 'sdc', verdict: 'ok', label: 'Healthy', summary: 'Server words' }, false)).toContain('Server words');
   });
 });

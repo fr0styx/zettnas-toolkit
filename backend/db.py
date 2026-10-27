@@ -144,6 +144,8 @@ def init_db():
                     nvme_pct_used INTEGER DEFAULT 0,
                     nvme_media_errors INTEGER DEFAULT 0,
                     power_on_hours INTEGER DEFAULT 0,
+                    command_timeouts INTEGER DEFAULT 0,
+                    spin_retries INTEGER DEFAULT 0,
                     PRIMARY KEY (ts, dev)
                 )
             """)
@@ -501,7 +503,17 @@ _SMART_PRUNED: dict[str, int] = {}
 
 def _smart_counters(metrics: dict) -> tuple:
     return tuple(
-        int(metrics.get(k, 0) or 0) for k in ("realloc", "pending", "offline", "crc", "nvme_used", "nvme_media_err")
+        int(metrics.get(k, 0) or 0)
+        for k in (
+            "realloc",
+            "pending",
+            "offline",
+            "crc",
+            "nvme_used",
+            "nvme_media_err",
+            "timeouts",
+            "spin_retries",
+        )
     )
 
 
@@ -512,12 +524,13 @@ def _smart_row_due(conn: sqlite3.Connection, ts: int, dev: str, temp: float | No
     if last is None:
         row = conn.execute(
             "SELECT ts, reallocated_sectors, pending_sectors, offline_uncorrectable, crc_errors, nvme_pct_used, "
-            "nvme_media_errors, temp FROM smart_history WHERE dev = ? ORDER BY ts DESC LIMIT 1",
+            "nvme_media_errors, command_timeouts, spin_retries, temp FROM smart_history "
+            "WHERE dev = ? ORDER BY ts DESC LIMIT 1",
             (dev,),
         ).fetchone()
         if row is None:
             return True
-        last = (row[0], tuple(int(v or 0) for v in row[1:7]), row[7])
+        last = (row[0], tuple(int(v or 0) for v in row[1:9]), row[9])
         _SMART_STORED[key] = last
     last_ts, last_counters, last_temp = last
     if counters != last_counters:
@@ -539,8 +552,9 @@ def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, powe
                 """
                 INSERT OR REPLACE INTO smart_history (
                     ts, dev, temp, reallocated_sectors, pending_sectors,
-                    offline_uncorrectable, crc_errors, nvme_pct_used, nvme_media_errors, power_on_hours
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    offline_uncorrectable, crc_errors, nvme_pct_used, nvme_media_errors, power_on_hours,
+                    command_timeouts, spin_retries
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ts,
@@ -553,6 +567,8 @@ def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, powe
                     metrics.get("nvme_used", 0) or 0,
                     metrics.get("nvme_media_err", 0) or 0,
                     int(poh) if str(poh).isdigit() else 0,
+                    metrics.get("timeouts", 0) or 0,
+                    metrics.get("spin_retries", 0) or 0,
                 ),
             )
             _SMART_STORED[(DB_PATH, dev)] = (ts, counters, round(temp, 1) if temp is not None else None)
@@ -689,7 +705,8 @@ def get_smart_history_samples(dev: str, days: int = 45, bucket_secs: int = 21600
                           MAX(reallocated_sectors) AS reallocated_sectors, MAX(pending_sectors) AS pending_sectors,
                           MAX(offline_uncorrectable) AS offline_uncorrectable, MAX(crc_errors) AS crc_errors,
                           MAX(nvme_pct_used) AS nvme_pct_used, MAX(nvme_media_errors) AS nvme_media_errors,
-                          MAX(power_on_hours) AS power_on_hours
+                          MAX(power_on_hours) AS power_on_hours, MAX(command_timeouts) AS command_timeouts,
+                          MAX(spin_retries) AS spin_retries
                    FROM smart_history WHERE dev = ? AND ts >= ? GROUP BY ts / ? ORDER BY ts ASC""",
                 (dev, since, bucket_secs),
             ).fetchall()
