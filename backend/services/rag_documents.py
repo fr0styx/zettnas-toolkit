@@ -28,6 +28,30 @@ from backend.services.rag_text import (
     looks_like_binary,
 )
 
+PDF_MAX_PAGES = 300
+
+
+def pdf_text(file_path: str, max_pages: int = PDF_MAX_PAGES) -> str:
+    """The text of a PDF, page by page (pages separated by a form feed), via PDFium."""
+    import pypdfium2 as pdfium
+
+    pdf = pdfium.PdfDocument(file_path)
+    try:
+        pages = []
+        for i in range(min(len(pdf), max_pages)):
+            page = pdf[i]
+            try:
+                textpage = page.get_textpage()
+                try:
+                    pages.append((textpage.get_text_range() or "").replace("\r\n", "\n").strip())
+                finally:
+                    textpage.close()
+            finally:
+                page.close()
+    finally:
+        pdf.close()
+    return "\n\f\n".join(p for p in pages if p)
+
 
 def extract_document_text(file_path: str, file_ext: str) -> str:
     """
@@ -123,7 +147,14 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
             return f"Video: {os.path.basename(file_path)}"
 
     if ext == ".pdf":
-        # Try pypdf/fitz first if installed, otherwise use native zlib FlateDecode stream parser
+        # AI-21: PDFium reads what Word, LibreOffice, Chrome and macOS write (CID fonts, accents,
+        # CJK). Text that comes out as symbols returns "" so the scanned-PDF OCR path takes it.
+        try:
+            text = pdf_text(file_path)
+            if text.strip():
+                return "" if looks_like_binary(text) else text
+        except Exception:
+            logger.debug("backend.services.rag_documents: PDFium could not read %s", file_path, exc_info=True)
         try:
             import pypdf  # type: ignore
 

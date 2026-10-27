@@ -6,9 +6,9 @@ import asyncio
 import hashlib
 import mimetypes
 import os
-import tempfile
 import time
 import zipfile
+from typing import IO, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
@@ -356,44 +356,63 @@ def fs_download_zip(
         if resolve_within(target, ALLOWED_BROWSE_ROOTS) is None:
             raise HTTPException(status_code=403, detail="Path outside allowed folders")
 
-    def _zip_generator():
-        spool = tempfile.SpooledTemporaryFile(max_size=10 * 1024 * 1024)  # noqa: SIM115
-        try:
-            with zipfile.ZipFile(spool, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
-                for p in path_list:
-                    real_target = _contained(p, must_exist=True)
-                    base = os.path.basename(real_target)
-                    if os.path.isdir(real_target):
-                        for root_dir, sub_dirs, files in os.walk(real_target):
-                            prune_protected(root_dir, sub_dirs)
-                            for f in files:
-                                fp = os.path.join(root_dir, f)
-                                # Ensure symlinks inside directories do not escape allowed roots or user bounds
-                                if os.path.islink(fp):
-                                    resolved_sym = os.path.realpath(fp)
-                                    if resolve_within(resolved_sym, ALLOWED_BROWSE_ROOTS) is None:
-                                        continue
-                                    try:
-                                        check_user_path_access(resolved_sym, principal)
-                                    except HTTPException:
-                                        continue
-                                rel = os.path.relpath(fp, os.path.dirname(real_target))
-                                zf.write(fp, arcname=rel)
-                    else:
-                        if os.path.islink(real_target):
-                            resolved_sym = os.path.realpath(real_target)
+    from backend.api.files.share_links import _release_share_zip_slot, _share_zip_slot, _ZipSink, zip_entry
+
+    slot = _share_zip_slot()
+    if slot is None:
+        raise HTTPException(status_code=429, detail="Two downloads are already being prepared. Try again in a moment.")
+
+    def _files():
+        """(path, name in the zip) for every file the person may download."""
+        for p in path_list:
+            real_target = _contained(p, must_exist=True)
+            base = os.path.basename(real_target)
+            if os.path.isdir(real_target):
+                for root_dir, sub_dirs, files in os.walk(real_target):
+                    prune_protected(root_dir, sub_dirs)
+                    for f in files:
+                        fp = os.path.join(root_dir, f)
+                        # Ensure symlinks inside directories do not escape allowed roots or user bounds
+                        if os.path.islink(fp):
+                            resolved_sym = os.path.realpath(fp)
                             if resolve_within(resolved_sym, ALLOWED_BROWSE_ROOTS) is None:
                                 continue
                             try:
                                 check_user_path_access(resolved_sym, principal)
                             except HTTPException:
                                 continue
-                        zf.write(real_target, arcname=base)
-            spool.seek(0)
-            while chunk := spool.read(65536):
-                yield chunk
+                        yield fp, os.path.relpath(fp, os.path.dirname(real_target))
+            else:
+                if os.path.islink(real_target):
+                    resolved_sym = os.path.realpath(real_target)
+                    if resolve_within(resolved_sym, ALLOWED_BROWSE_ROOTS) is None:
+                        continue
+                    try:
+                        check_user_path_access(resolved_sym, principal)
+                    except HTTPException:
+                        continue
+                yield real_target, base
+
+    def _zip_generator():
+        """Sends the zip while it is built: nothing is staged on disk, at most ~1 MB in memory (PERF-17)."""
+        sink = _ZipSink()
+        try:
+            with zipfile.ZipFile(cast(IO[bytes], sink), mode="w") as zf:
+                for fp, arcname in _files():
+                    try:
+                        with open(fp, "rb") as src, zf.open(zip_entry(fp, arcname), "w", force_zip64=True) as dst:
+                            while block := src.read(1024 * 1024):
+                                dst.write(block)
+                                if len(sink.buf) >= 256 * 1024:
+                                    yield sink.take()
+                    except OSError:
+                        logger.warning(f"[Download] Skipping unreadable file {fp}", exc_info=True)
+                    if sink.buf:
+                        yield sink.take()
+            if sink.buf:
+                yield sink.take()
         finally:
-            spool.close()
+            _release_share_zip_slot(slot)
 
     ts = int(time.time())
     zip_name = f"download_{ts}.zip"

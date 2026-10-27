@@ -951,6 +951,50 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             logger.debug("vec0 table creation failed: %s", e)
             return False
 
+    def file_chunks(self, path: str, max_chars: int = 16000) -> dict[str, Any]:
+        """One indexed file's text in reading order, from the index (no disk access, AI-22).
+        Returns {"found": False} when the path is not an indexed file (a folder, say)."""
+        conn = self._get_conn(readonly=True)
+        try:
+            row = (
+                conn.execute(
+                    "SELECT file_id, file_name, doc_title, doc_type FROM indexed_files WHERE canonical_path = ?",
+                    (os.path.realpath(path),),
+                ).fetchone()
+                or conn.execute(
+                    "SELECT file_id, file_name, doc_title, doc_type FROM indexed_files WHERE canonical_path = ?",
+                    (path,),
+                ).fetchone()
+            )
+            if not row:
+                return {"found": False}
+            fid, name, title, doc_type = row
+            rows = conn.execute(
+                "SELECT chunk_id, chunk_text, heading_context, line_start, line_end FROM document_chunks "
+                "WHERE file_id = ? AND chunk_level != 'parent' ORDER BY chunk_index",
+                (fid,),
+            ).fetchall()
+        finally:
+            conn.close()
+        chunks, used, total = [], 0, 0
+        for chunk_id, text, heading, l0, l1 in rows:
+            total += len(text or "")
+            if used + len(text or "") > max_chars:
+                continue
+            used += len(text or "")
+            chunks.append(
+                {"chunk_id": chunk_id, "text": text or "", "heading": heading or "", "line_start": l0, "line_end": l1}
+            )
+        return {
+            "found": True,
+            "file_id": fid,
+            "name": name or os.path.basename(path),
+            "title": title or "",
+            "doc_type": doc_type or "document",
+            "chunks": chunks,
+            "complete": used >= total,
+        }
+
     def _drop_file_vectors(self, conn: sqlite3.Connection, file_ids_sql: str, params: Any) -> None:
         """Removes the vector-table rows of these files' chunks; call it before the chunks go.
 

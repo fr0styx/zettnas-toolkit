@@ -324,6 +324,58 @@ def _folder_size_capped(folder: str, limit: int) -> int:
     return total
 
 
+# Already-compressed files gain nothing from deflate; storing them saves a CPU core (PERF-17)
+STORED_EXTS = frozenset(
+    [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".webp",
+        ".heic",
+        ".heif",
+        ".avif",
+        ".mp4",
+        ".mov",
+        ".mkv",
+        ".avi",
+        ".webm",
+        ".m4v",
+        ".mp3",
+        ".m4a",
+        ".aac",
+        ".flac",
+        ".ogg",
+        ".opus",
+        ".zip",
+        ".7z",
+        ".rar",
+        ".gz",
+        ".tgz",
+        ".bz2",
+        ".xz",
+        ".zst",
+        ".pdf",
+        ".docx",
+        ".xlsx",
+        ".pptx",
+        ".odt",
+        ".ods",
+        ".epub",
+        ".iso",
+        ".dmg",
+    ]
+)
+
+
+def zip_entry(fp: str, arcname: str) -> zipfile.ZipInfo:
+    """A zip entry for a file: stored when it is already compressed, deflated otherwise."""
+    info = zipfile.ZipInfo.from_file(fp, arcname=arcname)
+    ext = os.path.splitext(fp)[1].lower()
+    info.compress_type = zipfile.ZIP_STORED if ext in STORED_EXTS else zipfile.ZIP_DEFLATED
+    return info
+
+
 class _ZipSink:
     """A write-only stream for zipfile: the bytes written so far, handed out as they come."""
 
@@ -365,7 +417,7 @@ def _stream_folder_zip(folder: str, slot: str = ""):
                         continue
                     rel = os.path.relpath(fp, os.path.dirname(folder))
                     try:
-                        with open(fp, "rb") as src, zf.open(rel, "w", force_zip64=True) as dst:
+                        with open(fp, "rb") as src, zf.open(zip_entry(fp, rel), "w", force_zip64=True) as dst:
                             while block := src.read(1024 * 1024):
                                 dst.write(block)
                                 if len(sink.buf) >= 256 * 1024:

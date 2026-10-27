@@ -552,7 +552,40 @@ def tool_search_nas_knowledge(
     answer_summary = ""
     structured_card = None
 
-    if target_folder and effective_mode == "comprehensive":
+    # AI-22: a question about one file is answered from that file's own text, in any language,
+    # whenever it fits; only long files fall back to a targeted search inside the file.
+    one_file: dict[str, Any] = {}
+    if target_folder and hasattr(rag, "file_chunks"):
+        try:
+            one_file = rag.file_chunks(target_folder) or {}
+        except Exception:
+            logger.debug("chat_nas_tools: file_chunks failed", exc_info=True)
+    if (
+        one_file.get("found")
+        and one_file.get("chunks")
+        and (one_file.get("complete") or effective_mode == "comprehensive")
+    ):
+        context_text = "\n\n".join(c["text"] for c in one_file["chunks"])
+        crag_grade = "high"
+        raw_citations = [
+            {
+                "file_id": one_file["file_id"],
+                "name": one_file["name"],
+                "path": target_folder,
+                "doc_title": one_file.get("title") or one_file["name"],
+                "breadcrumb": c.get("heading") or "",
+                "excerpt": c["text"][:450],
+                "full_parent_context": c["text"],
+                "score": 1.0,
+                "parent_chunk_id": c["chunk_id"],
+                "line_start": int(c.get("line_start") or 1),
+                "line_end": int(c.get("line_end") or 1),
+                "doc_type": one_file.get("doc_type", "document"),
+                "source_modality": "document",
+            }
+            for c in one_file["chunks"]
+        ]
+    elif target_folder and effective_mode == "comprehensive":
         agg_res = rag.aggregate_folder_context(
             folder_path=target_folder,
             query=effective_query,

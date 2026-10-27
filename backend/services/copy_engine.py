@@ -345,6 +345,35 @@ def eject_media_slot(slot: str = "sd"):
     return {"status": "ok", "message": f"{slot_label} safely ejected"}
 
 
+CARD_READER_IDS = {("05e3", "0764")}  # the appliance's SD/TF reader (Genesys Logic)
+_READER_CACHE: dict[str, bool] = {}
+
+
+def is_card_reader(block_path: str) -> bool:
+    """True when a block device sits behind the appliance's card reader (by its USB vendor and
+    product ID), so other USB disks, such as Unraid's boot flash, are never probed (PERF-18)."""
+    try:
+        real = os.path.realpath(block_path)
+    except OSError:
+        return False
+    if real in _READER_CACHE:
+        return _READER_CACHE[real]
+    found = False
+    d = real
+    while d and d != os.path.dirname(d):
+        vid, pid = os.path.join(d, "idVendor"), os.path.join(d, "idProduct")
+        if os.path.isfile(vid) and os.path.isfile(pid):
+            try:
+                with open(vid) as fv, open(pid) as fp:
+                    found = (fv.read().strip().lower(), fp.read().strip().lower()) in CARD_READER_IDS
+            except OSError:
+                found = False
+            break
+        d = os.path.dirname(d)
+    _READER_CACHE[real] = found
+    return found
+
+
 def read_media_slots():
     slots = {
         "sd": {"size": 0, "dev": None, "ejected": "sd" in _EJECTED_SLOTS},
@@ -354,7 +383,7 @@ def read_media_slots():
         for p in glob.glob(os.path.join(HOST_SYS, "block/sd*")):
             try:
                 target = os.readlink(p)
-                if "usb" in target:
+                if "usb" in target and is_card_reader(p):
                     lun_str = target.split("/")[-3]
                     dev = os.path.basename(p)
                     size = probe_media_slot_capacity(dev, fallback_sysfs_path=os.path.join(p, "size"))
