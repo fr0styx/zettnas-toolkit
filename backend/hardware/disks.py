@@ -1166,6 +1166,30 @@ def read_smart_detail(dev_name: str, wake_if_standby: bool = False, max_age: flo
         return detail
 
 
+def is_drive_asleep(dev_name: str) -> bool:
+    """Whether a drive is spun down right now, asked without waking it (smartctl -n standby).
+    NVMe drives never count as asleep. Anything that would wake a drive that is asleep must be
+    confirmed by the person first (the "disk.wake" confirmation)."""
+    clean = dev_name.removeprefix("/dev/").removeprefix("/host/dev/")
+    if clean.startswith("nvme") or not VALID_DEV_PATTERN.fullmatch(clean):
+        return False
+    try:
+        r = subprocess.run(
+            ["smartctl", "-n", "standby", "-i", "-d", _get_smart_device_type(clean, False), _resolve_dev_path(clean)],
+            capture_output=True,
+            text=True,
+            timeout=6,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return (Z_STATE.cached_smart_data.get(clean) or (None, None))[1] == "standby"
+    out = ((r.stdout or "") + " " + (r.stderr or "")).upper()
+    return bool(
+        r.returncode == 2
+        or (r.returncode & 2) != 0
+        or any(w in out for w in ("DEVICE IS IN STANDBY", "DEVICE IS IN SLEEP", "STANDBY MODE", "SLEEP MODE"))
+    )
+
+
 def refresh_drive_verdicts() -> int:
     """Judges every drive the way Drive Health does, never waking one. Run by the SMART poller."""
     done = 0
@@ -1858,7 +1882,7 @@ def check_active_smart_tests():
             logger.error(f"[SMART] Error checking active self-test for {dev_name}: {e}")
 
 
-def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:
+def locate_disk(dev_name: str, duration_sec: int = 5, allow_read_strobe: bool = True) -> dict:
     """
     Triggers physical drive identification strobe (Locate Drive / Blink Bay).
     Uses multi-tier hardware driver (SES -> ARGB -> Software Read Strobe).
@@ -1872,4 +1896,4 @@ def locate_disk(dev_name: str, duration_sec: int = 5) -> dict:
 
     from backend.hardware.locate import locate_drive_multitier
 
-    return locate_drive_multitier(dev_name, dev_path, duration_sec)
+    return locate_drive_multitier(dev_name, dev_path, duration_sec, allow_read_strobe)

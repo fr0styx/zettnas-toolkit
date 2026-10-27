@@ -15,7 +15,9 @@ from backend.config import logger
 from backend.hardware.led import find_led_port, send_led_packet
 
 
-def locate_drive_multitier(dev_name: str, dev_path: str, duration_sec: int = 5) -> dict[str, Any]:
+def locate_drive_multitier(
+    dev_name: str, dev_path: str, duration_sec: int = 5, allow_read_strobe: bool = True
+) -> dict[str, Any]:
     """
     Triggers physical drive identification across 3 hardware tiers:
     - Tier 1: Hardware backplane SES fault LED via ledctl (ledmon).
@@ -65,6 +67,10 @@ def locate_drive_multitier(dev_name: str, dev_path: str, duration_sec: int = 5) 
             return {"success": True, "tier": "argb", "method": "microcontroller", "dev": dev_name, "duration": duration}
         except Exception as e:
             logger.debug(f"[DiskLocate] Tier 2 ARGB failed: {e}")
+
+    # Tier 3 reads the disk, which wakes a sleeping one: only with the person's confirmation
+    if not allow_read_strobe:
+        return {"success": False, "needs_wake": True, "dev": dev_name}
 
     # Tier 3: Universal Software-Triggered Direct Read Strobe
     # Reads 4KB block 0 in a gentle 120ms rhythm. Flashes hardware activity LED safely on any standard chassis!

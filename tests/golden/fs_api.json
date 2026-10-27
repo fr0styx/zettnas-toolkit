@@ -277,7 +277,8 @@
    ],
    "params": [
     "principal",
-    "req"
+    "req",
+    "request"
    ],
    "path": "/fs/folder-size",
    "response_model": null,
@@ -2160,6 +2161,9 @@
   "_handle_browse_logic_unfiltered": {
    "function": "(path: str, dirs_only: bool, principal: backend.auth.AuthenticatedPrincipal | None = None)"
   },
+  "_inbox_dir": {
+   "function": "(principal: backend.auth.AuthenticatedPrincipal) -> str"
+  },
   "_load_favorites": {
    "function": "(principal: backend.auth.AuthenticatedPrincipal | None) -> list[dict[str, str]]"
   },
@@ -2251,7 +2255,7 @@
    "function": "(paths: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_folder_size": {
-   "async": "(req: FolderSizeRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+   "async": "(req: FolderSizeRequest, request: starlette.requests.Request, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_get_permissions": {
    "function": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"

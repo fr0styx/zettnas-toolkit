@@ -50,6 +50,7 @@ ACTIONS: dict[str, str] = {
     "webdav.config": "Change who can reach files over WebDAV and which folder it shares",
     "security.rotate_key": "Replace the install's secret key; everyone signs in to WebDAV and two-factor again",
     "docker.container.recreate.elevated": "Recreate container {target} with access to the host system",
+    "disk.wake": "Wake sleeping drive {target}. It spins up now and goes back to sleep on its own later",
 }
 
 _pending: dict[str, dict[str, Any]] = {}
@@ -114,25 +115,30 @@ def require_confirmation(action: str):
         raise ValueError(f"Unknown action '{action}'")
 
     async def _dep(request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> None:
-        target = target_of(request)
-        token = request.headers.get("x-confirm-token")
-        if not consume(token, principal, action, target):
-            raise ConfirmationRequired(action, target, "invalid" if token else "missing")
-        try:
-            from backend.users_db import log_security_event
-
-            log_security_event(
-                f"confirm.{action}",
-                "success",
-                actor_id=getattr(principal, "user_id", None),
-                actor_username=getattr(principal, "username", None),
-                actor_ip=request.client.host if request.client else "",
-                details={"target": target, "path": request.url.path},
-            )
-        except Exception:
-            logger.debug("backend.confirmations.require_confirmation._dep: ignored error", exc_info=True)
+        confirm_or_raise(request, principal, action, target_of(request))
 
     return _dep
+
+
+def confirm_or_raise(request: Request, principal: Any, action: str, target: str = "") -> None:
+    """The same check for a route that needs confirming only sometimes (a drive that is asleep):
+    raises ConfirmationRequired (428) unless the request carries a valid token, and audits it."""
+    token = request.headers.get("x-confirm-token")
+    if not consume(token, principal, action, target):
+        raise ConfirmationRequired(action, target, "invalid" if token else "missing")
+    try:
+        from backend.users_db import log_security_event
+
+        log_security_event(
+            f"confirm.{action}",
+            "success",
+            actor_id=getattr(principal, "user_id", None),
+            actor_username=getattr(principal, "username", None),
+            actor_ip=request.client.host if request.client else "",
+            details={"target": target, "path": request.url.path},
+        )
+    except Exception:
+        logger.debug("backend.confirmations.confirm_or_raise: ignored error", exc_info=True)
 
 
 async def confirmation_required_handler(request: Request, exc: ConfirmationRequired):

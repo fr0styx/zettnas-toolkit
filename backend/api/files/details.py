@@ -8,7 +8,7 @@ import os
 import stat
 import time
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from backend.api.files.common import _contained
@@ -80,6 +80,7 @@ async def fs_checksum(
 )
 async def fs_folder_size(
     req: FolderSizeRequest,
+    request: Request,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     check_user_path_access(req.path, principal)
@@ -87,25 +88,28 @@ async def fs_folder_size(
     if not os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Path is not a directory")
 
-    if not req.force_wake:
-        is_standby = False
-        try:
-            from backend.services.rag_standby import is_backing_disk_in_standby
+    is_standby = False
+    try:
+        from backend.services.rag_standby import is_backing_disk_in_standby
 
-            is_standby = is_backing_disk_in_standby(target)
-        except Exception:
-            logger.debug("backend.api.fs.fs_folder_size: ignored error", exc_info=True)
-        if is_standby:
-            return {
-                "status": "standby",
-                "path": req.path,
-                "size": None,
-                "files_count": None,
-                "dirs_count": None,
-                "is_standby": True,
-                "cached": False,
-                "message": "Drive is in standby mode. Size calculation deferred to prevent spinup.",
-            }
+        is_standby = is_backing_disk_in_standby(target)
+    except Exception:
+        logger.debug("backend.api.fs.fs_folder_size: ignored error", exc_info=True)
+    if is_standby and req.force_wake:  # waking the drive to count is the person's call
+        from backend.confirmations import confirm_or_raise
+
+        confirm_or_raise(request, principal, "disk.wake", req.path)
+    if is_standby and not req.force_wake:
+        return {
+            "status": "standby",
+            "path": req.path,
+            "size": None,
+            "files_count": None,
+            "dirs_count": None,
+            "is_standby": True,
+            "cached": False,
+            "message": "Drive is in standby mode. Size calculation deferred to prevent spinup.",
+        }
 
     now = time.time()
     try:

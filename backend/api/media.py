@@ -13,7 +13,7 @@ import time
 import urllib.parse
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -269,7 +269,9 @@ def trigger_media_scan(
     dependencies=[Depends(require_scope("shares:user_write", "storage:write", "storage:admin", "system:config"))],
 )
 async def sync_rag_index(
-    req: RagIndexSyncRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+    req: RagIndexSyncRequest,
+    http_request: Request,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
     """
     Runs incremental, spindown-safe multi-modal indexing on the requested directory or watched folders.
@@ -278,6 +280,10 @@ async def sync_rag_index(
     """
     if req.force_wake and not principal.has_any_scope("storage:admin", "system:config", "*"):
         raise HTTPException(status_code=403, detail="Forcing wake on sleeping disks requires storage:admin scope.")
+    if req.force_wake:  # it wakes sleeping drives on purpose: the person confirms that first
+        from backend.confirmations import confirm_or_raise
+
+        confirm_or_raise(http_request, principal, "disk.wake", "indexing")
 
     rag = get_rag_engine()
     raw_targets: list[str] = []

@@ -34,10 +34,10 @@ from backend.config import (
     docker_sock,
     logger,
 )
-from backend.confirmations import require_confirmation
+from backend.confirmations import confirm_or_raise, require_confirmation
 from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within, root_for
-from backend.hardware.disks import locate_disk, read_smart_detail, run_disk_smart_test
+from backend.hardware.disks import is_drive_asleep, locate_disk, read_smart_detail, run_disk_smart_test
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
@@ -169,8 +169,19 @@ from backend.hardware.docker_stats import container_action, read_docker_containe
 logger = logging.getLogger("ZettNAS")
 
 
+async def _confirm_wake(request: Request, principal: AuthenticatedPrincipal, dev: str) -> None:
+    """A sleeping drive is only woken after the person confirms it (428 "disk.wake" until then)."""
+    if await asyncio.to_thread(is_drive_asleep, dev):
+        confirm_or_raise(request, principal, "disk.wake", dev)
+
+
 @router.get("/disk_detail", dependencies=[Depends(require_scope("storage:read", "system:view"))])
-async def disk_detail(dev: str = "sda", wake: bool = False):
+async def disk_detail(
+    request: Request,
+    dev: str = "sda",
+    wake: bool = False,
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+):
     if dev.startswith("/dev/"):
         dev = dev.replace("/dev/", "")
     m = re.match(r"^nv([0-9]+)$", dev)
@@ -178,12 +189,16 @@ async def disk_detail(dev: str = "sda", wake: bool = False):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    if wake:
+        await _confirm_wake(request, principal, dev)
     # A reading under 30 s old is reused (Drive Health has usually just taken it); waking reads anew.
     return await asyncio.to_thread(read_smart_detail, dev, wake, 0.0 if wake else 30.0)
 
 
 @router.post("/disk_wake", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
-async def disk_wake(payload: dict):
+async def disk_wake(
+    payload: dict, request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
     dev = str(payload.get("dev", "sda"))
     if dev.startswith("/dev/"):
         dev = dev.replace("/dev/", "")
@@ -192,12 +207,15 @@ async def disk_wake(payload: dict):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    await _confirm_wake(request, principal, dev)
     detail = await asyncio.to_thread(read_smart_detail, dev, True)
     return {"success": True, "dev": dev, "detail": detail}
 
 
 @router.post("/disk/smart_test", dependencies=[Depends(require_scope("storage:admin"))])
-async def disk_smart_test(req: DiskSmartTestRequest):
+async def disk_smart_test(
+    req: DiskSmartTestRequest, request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
     dev = str(req.dev)
     test_type = str(req.test_type)
     if dev.startswith("/dev/"):
@@ -207,6 +225,7 @@ async def disk_smart_test(req: DiskSmartTestRequest):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    await _confirm_wake(request, principal, dev)  # a self-test spins a sleeping drive up
     return await asyncio.to_thread(run_disk_smart_test, dev, test_type)
 
 
@@ -239,7 +258,9 @@ async def get_disk_smart_tests(dev: str | None = None, limit: int = Query(20, ge
 
 
 @router.post("/disk/locate", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
-async def disk_locate_endpoint(payload: dict):
+async def disk_locate_endpoint(
+    payload: dict, request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
     dev = str(payload.get("dev", "sda"))
     duration = int(payload.get("duration", 5))
     if dev.startswith("/dev/"):
@@ -251,7 +272,14 @@ async def disk_locate_endpoint(payload: dict):
 
     if not VALID_DEV_PATTERN.fullmatch(dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
-    return await asyncio.to_thread(locate_disk, dev, duration)
+    if not await asyncio.to_thread(is_drive_asleep, dev):
+        return await asyncio.to_thread(locate_disk, dev, duration)
+    # Asleep: the bay lights do not wake it; reading the disk to blink its activity light does.
+    result = await asyncio.to_thread(locate_disk, dev, duration, False)
+    if not result.get("needs_wake"):
+        return result
+    confirm_or_raise(request, principal, "disk.wake", dev)
+    return await asyncio.to_thread(locate_disk, dev, duration, True)
 
 
 @router.get("/screen")

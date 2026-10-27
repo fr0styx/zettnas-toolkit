@@ -98,6 +98,26 @@ describe('Drive Health', () => {
     expect(api.get).toHaveBeenCalledWith('/api/disk_detail?dev=sdc');
   });
 
+  it('leaves a sleeping drive asleep when the wake is not confirmed', async () => {
+    routeGet({ detail: { model: 'Sleepy Disk', is_standby: true, metrics: {}, raw: '' } });
+    await dh.openDriveHealth('/dev/sdb');
+    const cancelled = Object.assign(new Error('Cancelled'), { error: 'cancelled' });
+    api.post.mockRejectedValueOnce(cancelled);
+    document.querySelector('[data-dh-test="short"]').click();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(showToast).not.toHaveBeenCalled(); // no error for choosing not to wake it
+    api.get.mockImplementation(async (url) => {
+      if (url.includes('wake=true')) throw cancelled;
+      if (url.startsWith('/api/disk/smart_tests')) return { active_test: null, history: [] };
+      return { model: 'Sleepy Disk', is_standby: true, metrics: {}, raw: '' };
+    });
+    document.querySelector('[data-dh-wake]').click();
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(api.get).toHaveBeenLastCalledWith('/api/disk/smart_tests?dev=sdb&limit=10');
+    expect(document.querySelector('#dh-detail').textContent).not.toContain('Could not read this drive');
+  });
+
   it('shows the last readings at once and then the fresh ones', async () => {
     const fresh = { ...DRIVES, drives: DRIVES.drives.map((d) => ({ ...d, temp: 44 })), stale: false };
     api.get.mockImplementation(async (url) => {

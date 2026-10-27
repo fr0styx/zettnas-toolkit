@@ -224,7 +224,7 @@ def test_force_wake_needs_admin_scope(rag, media):
     principal = media_api.AuthenticatedPrincipal(username="u", scopes=["storage:write"], is_admin=False)
     req = media_api.RagIndexSyncRequest(path=POOL_DIR, force_wake=True)
     with pytest.raises(media_api.HTTPException) as e:
-        asyncio.run(media_api.sync_rag_index(req, principal))
+        asyncio.run(media_api.sync_rag_index(req, http_request=None, principal=principal))
     assert e.value.status_code == 403
 
 

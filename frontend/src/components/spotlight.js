@@ -440,9 +440,10 @@ export function parseNaturalLanguageAction(rawQuery) {
       keywords: ['locate', 'drive', dev],
       run: async () => {
         try {
-          await api.post('/api/chassis/locate', { device: dev, duration_seconds: 15 });
+          await api.post('/api/disk/locate', { dev, duration: 15 });
           showToast(t('toast.locate_led_strobing_on_drive_for', 'Locate LED strobing on drive {dev} for 15s', { dev: dev }), 'info');
         } catch (e) {
+          if (e?.error === 'cancelled') return; // a sleeping drive stays asleep
           showToast(t('toast.failed_to_locate_drive', 'Failed to locate drive {dev}: {message}', { dev: dev, message: e.message }), 'error');
         }
       }

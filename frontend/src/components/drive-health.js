@@ -221,6 +221,8 @@ async function loadDetail(dev, wake = false) {
     clearInterval(_testTimer);
     if (tests && tests.active_test) _testTimer = setInterval(() => refreshTests(dev), TEST_POLL_MS);
   } catch (e) {
+    // Waking a sleeping drive is confirmed first; "Cancel" leaves it asleep and shows its last reading.
+    if (wake && e?.error === 'cancelled') return loadDetail(dev);
     pane.innerHTML = detailHtml(drive, null, null) + emptyHtml(t('dh.detail_failed', 'Could not read this drive.'));
   }
 }
@@ -257,6 +259,7 @@ async function runTest(kind) {
     );
     loadDetail(dev);
   } catch (e) {
+    if (e?.error === 'cancelled') return; // the person chose not to wake the sleeping drive
     showToast(t('dh.test_failed_start', 'Could not start the test: {error}', { error: e?.message || '' }), 'error');
   }
 }
