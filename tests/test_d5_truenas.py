@@ -75,7 +75,7 @@ class _FakeWS:
 
 
 def test_truenas_26_without_rest_uses_json_rpc(monkeypatch):
-    """TrueNAS 26 removed /api/v2.0: the same data comes over JSON-RPC (/api/current)."""
+    """TrueNAS 27 removed /api/v2.0: the same data comes over JSON-RPC (/api/current)."""
     import httpx
 
     from backend.services import truenas_api

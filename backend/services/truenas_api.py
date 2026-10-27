@@ -8,7 +8,7 @@ through the API, and can take ZFS snapshots, which the ransomware guard uses. It
 never changes pools or shares. TRUENAS_VERIFY_TLS=0 accepts the self-signed
 certificate TrueNAS ships with.
 
-TrueNAS 25.04 added a JSON-RPC 2.0 API over a WebSocket (/api/current) and TrueNAS 26 removed
+TrueNAS 25.04 added a JSON-RPC 2.0 API over a WebSocket (/api/current) and TrueNAS 27 removed
 the REST API; when REST answers 404, 405 or 410 the same calls go over JSON-RPC.
 """
 
@@ -44,7 +44,7 @@ def _client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
     )
 
 
-REST_GONE = (404, 405, 410)  # TrueNAS 26 has no /api/v2.0
+REST_GONE = (404, 405, 410)  # TrueNAS 27 has no /api/v2.0
 
 
 class _RestGone(Exception):
@@ -99,7 +99,7 @@ def _rpc(method: str, params: list | None = None) -> Any:
 
 
 def _query(path: str, method: str, params: list | None = None, transport=None) -> Any:
-    """REST where it exists, JSON-RPC where it doesn't (TrueNAS 26)."""
+    """REST where it exists, JSON-RPC where it doesn't (TrueNAS 27)."""
     try:
         return _get(path, transport)
     except _RestGone:
@@ -153,7 +153,7 @@ def create_snapshot(dataset: str, name: str, recursive: bool = True, transport=N
     with _client(transport) as c:
         r = c.post("/zfs/snapshot", json={"dataset": dataset, "name": name, "recursive": recursive})
     if r.status_code in REST_GONE:
-        # TrueNAS 26: JSON-RPC; the method moved from zfs.snapshot to pool.snapshot in 25.04
+        # TrueNAS 27: JSON-RPC; the method moved from zfs.snapshot to pool.snapshot in 25.04
         args = [{"dataset": dataset, "name": name, "recursive": recursive}]
         try:
             _rpc("pool.snapshot.create", args)
