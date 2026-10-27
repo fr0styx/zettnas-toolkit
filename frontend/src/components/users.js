@@ -420,6 +420,7 @@ export function showEditUserModal(user) {
   const quotaGb = user.storage_quota_bytes > 0 ? Math.round(user.storage_quota_bytes / (1024 * 1024 * 1024)) : 0;
   document.getElementById('edit-user-quota').value = quotaGb || '';
 
+  import('./management/user-data.js').then((m) => m.installUserDataFor(modal, user)).catch(() => {}); // B8
   const form = document.getElementById('form-edit-user');
   if (form) {
     form.onsubmit = async (e) => {

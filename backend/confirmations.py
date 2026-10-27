@@ -37,6 +37,7 @@ ACTIONS: dict[str, str] = {
     "storage.snapshot.restore": "Roll the pool back to snapshot {target}; newer changes are lost",
     "share.delete": "Delete share {target}",
     "users.delete": "Delete user {target}",
+    "users.erase_data": "Erase the chats, Zetty log and search data of user {target}",
     "docker.container.delete": "Delete container {target}",
     "vm.delete": "Delete virtual machine {target}",
     "backup.delete": "Delete backup {target}",

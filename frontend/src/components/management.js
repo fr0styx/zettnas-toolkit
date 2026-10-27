@@ -805,6 +805,7 @@ export function initManagement() {
       import('./settings.js').then((m) => m.renderApiTokens && m.renderApiTokens()).catch(() => {});
       import('./guard-panel.js').then((m) => m.renderGuardPanel()).catch(() => {});
       import('./sso.js').then((m) => { m.renderSsoPanel(); m.renderLdapPanel(); }).catch(() => {});
+      import('./management/user-data.js').then((m) => m.installMyData()).catch(() => {}); // your data (B8)
       fetchAndRenderSecurityPosture();
     } else if (paneId === 'mgmt-pane-notifications') {
       fetchAndRenderNotificationConfig();

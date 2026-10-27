@@ -42,6 +42,7 @@ from backend.api.stats import router as stats_router
 from backend.api.storage import router as storage_router
 from backend.api.system import router as system_router
 from backend.api.ups import router as ups_router
+from backend.api.user_data import router as user_data_router
 from backend.api.vms import router as vms_router
 from backend.api.wallpapers import router as wallpapers_router
 from backend.api.webdav import router as webdav_router
@@ -55,6 +56,7 @@ api_router.include_router(offsite_router)
 api_router.include_router(invites_router)
 api_router.include_router(immich_router)
 api_router.include_router(auth_router)
+api_router.include_router(user_data_router)
 api_router.include_router(oidc_router)
 api_router.include_router(ldap_router)
 api_router.include_router(mcp_router)

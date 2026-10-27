@@ -6573,6 +6573,20 @@
     "title": "EnableMfaResponse",
     "type": "object"
    },
+   "EraseRequest": {
+    "properties": {
+     "parts": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 3,
+      "title": "Parts",
+      "type": "array"
+     }
+    },
+    "title": "EraseRequest",
+    "type": "object"
+   },
    "ExchangeOauthCodeResponse": {
     "additionalProperties": true,
     "description": "POST /remotes/oauth/exchange",
@@ -54452,6 +54466,100 @@
     "summary": "Update User Endpoint",
     "tags": [
      "Authentication & Security"
+    ]
+   }
+  },
+  "/api/v1/users/{user_id}/erase-data": {
+   "post": {
+    "operationId": "erase_user_data_api_v1_users__user_id__erase_data_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EraseRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Erase User Data Api V1 Users  User Id  Erase Data Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Erase User Data",
+    "tags": [
+     "users"
+    ]
+   }
+  },
+  "/api/v1/users/{user_id}/export": {
+   "get": {
+    "operationId": "export_user_data_api_v1_users__user_id__export_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "user_id",
+      "required": true,
+      "schema": {
+       "title": "User Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Export User Data",
+    "tags": [
+     "users"
     ]
    }
   },

@@ -1118,9 +1118,14 @@ def delete_user_endpoint(
         return error_response(400, "Cannot delete your own active account.")
 
     try:
+        target = get_user_by_id(user_id)
         ok = delete_user(user_id)
         if not ok:
             raise HTTPException(status_code=404, detail="User not found.")
+        if target:
+            from backend.services.user_data import erase_user_data
+
+            erase_user_data(target)
         log_security_event(
             "user.deleted",
             "success",
