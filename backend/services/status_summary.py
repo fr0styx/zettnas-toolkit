@@ -110,6 +110,22 @@ def _backups() -> list[dict[str, Any]]:
     ]
 
 
+def _protection() -> list[dict[str, Any]]:
+    """Snapshot schedules and monthly checks that failed or are late (REL-12)."""
+    from backend.services.protection_jobs import needing_attention
+
+    return [
+        {
+            "id": f"{j['kind']}:{j['id']}",
+            "level": "warning",
+            "kind": "snapshot_overdue" if j["kind"] == "snapshot" else "scrub_overdue",
+            "subject": j["name"],
+            "open": "backup" if j["kind"] == "snapshot" else "storage",
+        }
+        for j in needing_attention()
+    ]
+
+
 def _frozen() -> list[dict[str, Any]]:
     from backend.services.ransomware_guard import writes_frozen
 
@@ -147,7 +163,7 @@ def _password() -> list[dict[str, Any]]:
     return []
 
 
-CHECKS = (_drives, _pools, _storage, _backups, _frozen, _power, _password)
+CHECKS = (_drives, _pools, _storage, _backups, _protection, _frozen, _power, _password)
 
 
 def summary() -> dict[str, Any]:

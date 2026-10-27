@@ -30839,6 +30839,19 @@
     "title": "ScreenConfigRequest",
     "type": "object"
    },
+   "ScrubSwitch": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "enabled"
+    ],
+    "title": "ScrubSwitch",
+    "type": "object"
+   },
    "SecurityUpdateRequest": {
     "properties": {
      "current_password": {
@@ -49822,6 +49835,83 @@
     "summary": "Restore",
     "tags": [
      "Offsite backup"
+    ]
+   }
+  },
+  "/api/v1/protection/jobs": {
+   "get": {
+    "operationId": "list_protection_jobs_api_v1_protection_jobs_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response List Protection Jobs Api V1 Protection Jobs Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "List Protection Jobs",
+    "tags": [
+     "backup"
+    ]
+   }
+  },
+  "/api/v1/protection/scrub/{pool_id}": {
+   "put": {
+    "operationId": "set_monthly_scrub_api_v1_protection_scrub__pool_id__put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pool_id",
+      "required": true,
+      "schema": {
+       "title": "Pool Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrubSwitch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Set Monthly Scrub Api V1 Protection Scrub  Pool Id  Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set Monthly Scrub",
+    "tags": [
+     "backup"
     ]
    }
   },

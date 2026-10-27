@@ -39,6 +39,11 @@
   disk errors, errors found by the last scrub or parity check, and a pool 85 % or 95 % full
   are alerted (once, daily while critical, and when fixed) and shown on the Overview. A weekly
   health report goes out on Sunday mornings (switch it off under Alerts).
+- **What protects your data, in one list** (Backup page): backups, off-site backups, snapshot
+  schedules and monthly pool checks, each fine, failed, late, run by the host or off; late and
+  failed ones are alerted and shown on the Overview. A monthly check (scrub) runs where ZettNAS
+  manages the pools: on by default for SSD pools; for spinning disks you switch it on and
+  confirm that they spin up once a month. Unraid and TrueNAS keep running their own.
 
 #### Security and privacy
 

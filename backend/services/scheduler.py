@@ -113,6 +113,13 @@ def _run_pool_checks(now: float) -> None:
         pool_alerts.send_weekly_if_due(now)
     except Exception as e:
         logger.warning(f"[Scheduler] Pool health check failed: {e}")
+    try:
+        from backend.services import protection_jobs
+
+        protection_jobs.check_and_alert(now)  # late snapshot schedules and checks (REL-12)
+        protection_jobs.run_scrubs_due(now)  # monthly scrubs where ZettNAS owns the pools
+    except Exception as e:
+        logger.warning(f"[Scheduler] Monthly scrub failed: {e}")
 
 
 def _run_scheduled_tasks():

@@ -29,6 +29,7 @@ from backend.api.notifications import router as notifications_router
 from backend.api.offsite import router as offsite_router  # noqa: E402
 from backend.api.oidc import ldap_router
 from backend.api.oidc import router as oidc_router
+from backend.api.protection import router as protection_router
 from backend.api.push import router as push_router
 from backend.api.remotes import router as remotes_router
 from backend.api.replication import router as replication_router
@@ -57,6 +58,7 @@ api_router.include_router(invites_router)
 api_router.include_router(immich_router)
 api_router.include_router(auth_router)
 api_router.include_router(user_data_router)
+api_router.include_router(protection_router)
 api_router.include_router(oidc_router)
 api_router.include_router(ldap_router)
 api_router.include_router(mcp_router)

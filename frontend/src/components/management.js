@@ -801,6 +801,7 @@ export function initManagement() {
       if (paneId === 'mgmt-pane-backups') {
         // phone backup sits with the other backups (UX-26)
         import('./phone-backup.js').then((p) => p.installPhoneBackup(document.getElementById('phone-backup-mount'))).catch(() => {});
+        import('./management/protection.js').then((p) => p.installProtectionJobs(document.getElementById('protection-jobs-mount'))).catch(() => {});
       }
       fetchAndRenderBackupJobs();
       fetchAndRenderSystemSnapshots();
