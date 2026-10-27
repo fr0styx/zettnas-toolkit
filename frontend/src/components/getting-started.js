@@ -13,6 +13,7 @@ const ITEMS = {
   two_factor: ['gs.two_factor', 'Turn on two-factor sign-in', 'gs.two_factor_desc', 'A code from your phone, on top of the password.'],
   share: ['gs.share', 'Create a share', 'gs.share_desc', 'A folder your computers and phones can open over the network.'],
   share_host: ['gs.share_host', 'Make a shared folder in {host}', 'gs.share_host_desc', '{host} creates shared folders; ZettNAS lists them under Shares.'],
+  invite: ['gs.invite', 'Invite someone', 'gs.invite_desc', 'Add the people in your home, each with their own folder and sign-in.'],
   app: ['gs.app', 'Install an app', 'gs.app_desc', 'Photos, media, home automation and more from the app catalog.'],
   backup: ['gs.backup', 'Set up a backup', 'gs.backup_desc', 'Copy your files, and ZettNAS settings, somewhere else on a schedule.'],
   alerts: ['gs.alerts', 'Get alerts', 'gs.alerts_desc', 'Hear about failing disks and power cuts on your phone or by email.'],

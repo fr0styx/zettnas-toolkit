@@ -24,7 +24,7 @@ def test_getting_started_asks_everyone_to_back_up_their_phone(tmp_path, monkeypa
     monkeypatch.setattr(getting_started, "_two_factor", lambda u: True)
     kid = {r["id"]: r for r in getting_started.checklist("lea", is_admin=False)["items"]}
     assert set(kid) == {"password", "two_factor", "phone_backup"}  # the rest is the owner's job
-    assert kid["phone_backup"]["done"] is False and kid["phone_backup"]["open"] == "mgmt-pane-ai-index"
+    assert kid["phone_backup"]["done"] is False and kid["phone_backup"]["open"] == "mgmt-pane-backups"
     im.set_phone_done("lea", True)
     assert getting_started.checklist("lea", is_admin=False)["complete"]
 

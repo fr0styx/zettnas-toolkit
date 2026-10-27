@@ -25,5 +25,6 @@ class Checklist(BaseModel):
 
 @router.get("/setup/checklist", response_model=Checklist)
 def get_checklist(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    is_admin = bool(principal and (principal.has_scope("*") or principal.has_scope("system:manage")))
-    return checklist(principal.username if principal else "", is_admin)
+    if not principal:
+        return checklist("", False)
+    return checklist(principal.username, scopes=list(getattr(principal, "scopes", None) or []))

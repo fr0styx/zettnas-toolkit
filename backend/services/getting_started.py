@@ -73,14 +73,40 @@ def _alerts_set_up() -> bool:
     return bool(cfg.get("enabled")) and bool(build_apprise_urls(cfg))
 
 
+def _invited_someone() -> bool:
+    """Someone besides the owner has an account, or an invite is waiting (UX-26)."""
+    from backend.users_db import list_invites, users_db_session
+
+    with users_db_session(readonly=True) as conn:
+        people = conn.execute("SELECT count(*) FROM users WHERE status = 'active'").fetchone()[0]
+    return people > 1 or bool(list_invites())
+
+
 def _phone_backs_up(username: str) -> bool:
     from backend.services.immich_photos import phone_done
 
     return phone_done(username)
 
 
-def checklist(username: str, is_admin: bool) -> dict[str, Any]:
-    """Items in the order a new owner should do them. `open` is a Mission Control section key."""
+# What each item needs the person to be able to do (UX-26): an item is shown only to someone who
+# can open the place it leads to. None: everyone.
+NEEDS: dict[str, tuple[str, ...] | None] = {
+    "password": None,
+    "two_factor": None,
+    "share": ("shares:manage",),
+    "share_host": ("shares:manage",),
+    "invite": ("users:write",),
+    "app": ("containers:manage",),
+    "backup": ("backup:write",),
+    "alerts": ("system:config",),
+    "ai_folder": ("system:config", "ai:manage"),
+    "phone_backup": None,
+}
+
+
+def checklist(username: str, is_admin: bool = False, scopes: list[str] | None = None) -> dict[str, Any]:
+    """Items in the order a new owner should do them. `open` is a Mission Control section key.
+    With `scopes` each item is shown to whoever can open it; without, admins see everything."""
     try:
         host = _host_managed()
     except Exception:
@@ -90,16 +116,26 @@ def checklist(username: str, is_admin: bool) -> dict[str, Any]:
         ("password", "system", _safe(_password_changed), True),
         ("two_factor", "system", _safe(lambda: _two_factor(username)), False),
         ("share_host" if host else "share", "mgmt-pane-storage-shares", _safe(_has_share), True),
+        ("invite", "mgmt-pane-users", _safe(_invited_someone), True),
         ("app", "catalog", _safe(_has_app), True),
         ("backup", "mgmt-pane-backups", _safe(_has_backup), True),
         ("alerts", "mgmt-pane-notifications", _safe(_alerts_set_up), True),
         ("ai_folder", "ai", _safe(_ai_has_files), True),
-        ("phone_backup", "mgmt-pane-ai-index", _safe(lambda: _phone_backs_up(username)), False),
+        ("phone_backup", "mgmt-pane-backups", _safe(lambda: _phone_backs_up(username)), False),
     ]
+
+    def shown(item_id: str, admin_only: bool) -> bool:
+        if scopes is not None:
+            from backend.auth import has_scope
+
+            needs = NEEDS.get(item_id)
+            return not needs or any(has_scope(scopes, s) for s in needs)
+        return is_admin or not admin_only or item_id in ("password", "phone_backup")
+
     rows = [
         {"id": item_id, "open": where, "done": done, "host": host if item_id == "share_host" else ""}
         for item_id, where, done, admin_only in items
-        if is_admin or not admin_only or item_id in ("password", "phone_backup")
+        if shown(item_id, admin_only)
     ]
     done = sum(1 for r in rows if r["done"])
     return {"items": rows, "done": done, "total": len(rows), "complete": done == len(rows)}

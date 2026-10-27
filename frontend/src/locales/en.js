@@ -340,6 +340,8 @@ export default {
   "gs.two_factor_desc": "A code from your phone, on top of the password.",
   "gs.share": "Create a share",
   "gs.share_desc": "A folder your computers and phones can open over the network.",
+  "gs.invite": "Invite someone",
+  "gs.invite_desc": "Add the people in your home, each with their own folder and sign-in.",
   "gs.app": "Install an app",
   "gs.app_desc": "Photos, media, home automation and more from the app catalog.",
   "gs.backup": "Set up a backup",

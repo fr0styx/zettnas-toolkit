@@ -80,6 +80,9 @@
   out, and when accounts with two-factor sign-in reach SMB with their password alone; the next
   release makes SMB follow share access and gives those accounts a separate SMB password.
 
+- **Getting started fits the person**: it suggests inviting the people in your home, shows
+  only the steps their role can open, and phone backup now opens under Backup.
+
 #### Backups and power
 
 - **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.

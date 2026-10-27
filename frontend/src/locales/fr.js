@@ -378,6 +378,8 @@ export default {
   "gs.two_factor_desc": "Un code de votre téléphone en plus du mot de passe.",
   "gs.share": "Créer un partage",
   "gs.share_desc": "Un dossier que vos ordinateurs et téléphones ouvrent sur le réseau.",
+  "gs.invite": "Inviter quelqu'un",
+  "gs.invite_desc": "Ajoutez les personnes de votre foyer, chacune avec son dossier et sa connexion.",
   "gs.app": "Installer une application",
   "gs.app_desc": "Photos, médias, domotique et plus depuis le catalogue.",
   "gs.backup": "Mettre en place une sauvegarde",

@@ -798,6 +798,10 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-storage-replication') {
       fetchAndRenderReplication();
     } else if (paneId === 'mgmt-pane-backups' || paneId === 'mgmt-pane-system') {
+      if (paneId === 'mgmt-pane-backups') {
+        // phone backup sits with the other backups (UX-26)
+        import('./phone-backup.js').then((p) => p.installPhoneBackup(document.getElementById('phone-backup-mount'))).catch(() => {});
+      }
       fetchAndRenderBackupJobs();
       fetchAndRenderSystemSnapshots();
       fetchAndRenderAppBackups();
@@ -825,7 +829,6 @@ export function initManagement() {
           .then(([m, u]) => {
             const scopes = (u.getCurrentUser() || {}).scopes || [];
             m.renderImmichSettings(document.getElementById('immich-settings-mount'), scopes.includes('*') || scopes.includes('system:config'));
-            import('./phone-backup.js').then((p) => p.installPhoneBackup(document.getElementById('immich-settings-mount'))).catch(() => {}); // B8
           })
           .catch(() => {});
       }

@@ -368,6 +368,8 @@ export default {
   "gs.two_factor_desc": "Un código del teléfono además de la contraseña.",
   "gs.share": "Crea una carpeta compartida",
   "gs.share_desc": "Una carpeta que tus ordenadores y teléfonos abren por la red.",
+  "gs.invite": "Invitar a alguien",
+  "gs.invite_desc": "Añada a las personas de su hogar, cada una con su propia carpeta e inicio de sesión.",
   "gs.app": "Instala una aplicación",
   "gs.app_desc": "Fotos, multimedia, domótica y más desde el catálogo.",
   "gs.backup": "Configura una copia de seguridad",

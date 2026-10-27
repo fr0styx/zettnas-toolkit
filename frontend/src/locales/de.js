@@ -368,6 +368,8 @@ export default {
   "gs.two_factor_desc": "Ein Code vom Handy zusätzlich zum Passwort.",
   "gs.share": "Freigabe anlegen",
   "gs.share_desc": "Ein Ordner, den Computer und Handys im Netzwerk öffnen können.",
+  "gs.invite": "Jemanden einladen",
+  "gs.invite_desc": "Fügen Sie die Menschen in Ihrem Zuhause hinzu, jeweils mit eigenem Ordner und eigener Anmeldung.",
   "gs.app": "App installieren",
   "gs.app_desc": "Fotos, Medien, Hausautomation und mehr aus dem App-Katalog.",
   "gs.backup": "Backup einrichten",

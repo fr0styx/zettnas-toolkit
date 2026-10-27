@@ -368,6 +368,8 @@ export default {
   "gs.two_factor_desc": "除密码外，再输入手机上的验证码。",
   "gs.share": "创建共享",
   "gs.share_desc": "电脑和手机可以通过网络打开的文件夹。",
+  "gs.invite": "邀请他人",
+  "gs.invite_desc": "添加家中的成员，每人都有自己的文件夹和登录账号。",
   "gs.app": "安装应用",
   "gs.app_desc": "从应用目录安装相册、媒体、智能家居等应用。",
   "gs.backup": "设置备份",

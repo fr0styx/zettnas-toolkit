@@ -16,13 +16,14 @@ def test_items_follow_the_system_state():
         patch.object(gs, "_alerts_set_up", side_effect=RuntimeError("no config")),
         patch.object(gs, "_host_managed", return_value=""),
         patch.object(gs, "_phone_backs_up", return_value=False),
+        patch.object(gs, "_invited_someone", return_value=False),
     ):
         data = gs.checklist("admin", is_admin=True)
     by_id = {i["id"]: i for i in data["items"]}
     assert by_id["password"]["done"] and by_id["app"]["done"]
     assert not by_id["share"]["done"] and by_id["share"]["open"] == "mgmt-pane-storage-shares"
     assert by_id["alerts"]["done"] is False  # a failing check counts as not done
-    assert data["total"] == 8 and data["done"] == 2 and not data["complete"]
+    assert data["total"] == 9 and data["done"] == 2 and not data["complete"]  # invite since B11
 
 
 def test_non_admins_only_see_their_own_items():
