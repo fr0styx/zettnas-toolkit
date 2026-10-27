@@ -34,7 +34,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-v --tb=short"
 asyncio_mode = "auto"
-markers = ["real_confirmations: run the real destructive-action confirm flow", "real_signatures: run the real update-signature check"]
+markers = ["real_confirmations: run the real destructive-action confirm flow", "real_signatures: run the real update-signature check", "real_storage_tools: see the btrfs/ZFS/mdadm tools of the machine running the tests"]
 filterwarnings = [
     "ignore::DeprecationWarning:starlette.testclient",
     "ignore::starlette.exceptions.StarletteDeprecationWarning",

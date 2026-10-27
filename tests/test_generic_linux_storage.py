@@ -55,6 +55,7 @@ def isolated_storage_env(monkeypatch, tmp_path):
 # ==============================================================================
 
 
+@pytest.mark.real_storage_tools
 def test_generic_linux_capabilities(monkeypatch):
     import shutil
 
@@ -355,6 +356,7 @@ def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch, tmp
     assert del_pool_res.json()["status"] == "destroyed"
 
 
+@pytest.mark.real_storage_tools
 def test_generic_linux_offers_only_what_its_tools_can_do(monkeypatch):
     """REL-4: without btrfs, ZFS or mdadm there is no scrub or snapshot to offer."""
     import shutil
