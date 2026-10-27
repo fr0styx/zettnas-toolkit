@@ -13,12 +13,14 @@ import { initTopbarUserPill } from './dock.js';
 import { grantShares, openShareAccessModal, shareChoicesHtml } from './share-access.js';
 
 import { formatDateTime } from '../format.js';
+import { setServerAdvanced } from '../advanced.js';
 import { renderInvites } from './invites.js';
 import { emptyRowHtml } from './empty-state.js';
 let _currentUser = null;
 
 export function setCurrentUser(user) {
   _currentUser = user;
+  setServerAdvanced(user?.advanced); // UX-23: Advanced is the person's own setting
   updateUserInterfaceElements();
 }
 

@@ -25217,6 +25217,23 @@
     "title": "MyAlertsIn",
     "type": "object"
    },
+   "MyPreferences": {
+    "properties": {
+     "advanced": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Advanced"
+     }
+    },
+    "title": "MyPreferences",
+    "type": "object"
+   },
    "NewInviteResponse": {
     "additionalProperties": true,
     "description": "POST /invites",
@@ -38835,6 +38852,46 @@
      }
     },
     "summary": "Get Current User Profile",
+    "tags": [
+     "Authentication & Security"
+    ]
+   }
+  },
+  "/api/v1/auth/me/preferences": {
+   "put": {
+    "description": "The signed-in person's own settings (B11, UX-23); only the keys sent change.",
+    "operationId": "put_my_preferences_api_v1_auth_me_preferences_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MyPreferences"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put My Preferences",
     "tags": [
      "Authentication & Security"
     ]

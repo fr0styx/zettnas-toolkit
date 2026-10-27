@@ -16,6 +16,7 @@ OWN_OR_SIGN_IN = {
     "/api/v1/auth/sessions/{session_id_hash}": "their own sessions",
     "/api/v1/auth/ticket": "a ticket for their own session",
     "/api/v1/confirmations": "a confirm token for their own request",
+    "/api/v1/auth/me/preferences": "their own settings (Advanced)",
     "/api/v1/users/{user_id}": "their own profile; others need users:write (checked in the route)",
     "/api/v1/users/{user_id}/password": "their own password; others need users:write (checked in the route)",
     "/api/v1/users/{user_id}/erase-data": "their own data; others need users:delete and a confirmation",

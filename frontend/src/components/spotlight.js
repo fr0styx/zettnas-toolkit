@@ -17,6 +17,7 @@ const openContainerInspector = (...args) =>
 
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
+import { ADVANCED_SPOTLIGHT, advancedOn } from '../advanced.js';
 // Destructive actions always ask first (FE-07).
 function confirmThen(title, msg, action) {
   return new Promise((resolve, reject) => {
@@ -518,6 +519,7 @@ export function filterSpotlightResults(query = '') {
   const q = query.trim().toLowerCase();
 
   let matched = _spotlightItems.filter((item) => {
+    if (ADVANCED_SPOTLIGHT.includes(item.id) && !advancedOn()) return false; // UX-23
     if (!q) return true;
     if (q.startsWith('>') && item.category === 'action') {
       const subq = q.slice(1).trim();

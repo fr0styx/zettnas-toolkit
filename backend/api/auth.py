@@ -853,6 +853,42 @@ def create_confirmation_token(
     return {"token": token, "expires_in": TOKEN_TTL_SECS, "summary": summary}
 
 
+FAMILY_ROLES = ("kid", "guest", "share_user")
+
+
+def advanced_for(user: dict[str, Any]) -> bool:
+    """Whether Advanced is on for this person (B11, UX-23): their own choice once made; else off
+    for family roles and for accounts made since B11, on for accounts that already had it all."""
+    prefs = user.get("preferences") or {}
+    if isinstance(prefs.get("advanced"), bool):
+        return prefs["advanced"]
+    if user.get("role_id") in FAMILY_ROLES:
+        return False
+    from backend.services.install_defaults import upgraded_at
+
+    since = upgraded_at()
+    return bool(since and float(user.get("created_at") or 0) < since)
+
+
+class MyPreferences(BaseModel):
+    advanced: bool | None = None
+
+
+@router.put("/auth/me/preferences", response_model=None)
+def put_my_preferences(req: MyPreferences, request: Request) -> dict[str, Any] | JSONResponse:
+    """The signed-in person's own settings (B11, UX-23); only the keys sent change."""
+    from backend.users_db import update_user_profile
+
+    user = _get_authenticated_user(request)
+    if not user or not _is_person_session(user):
+        return error_response(401, "Sign in as a person to change your settings.", error="unauthorized")
+    prefs = dict(user.get("preferences") or {})
+    changes = {k: v for k, v in req.model_dump().items() if v is not None}
+    prefs.update(changes)
+    update_user_profile(user["id"], preferences=prefs)
+    return {"preferences": prefs, "advanced": advanced_for({**user, "preferences": prefs})}
+
+
 @router.get("/auth/me")
 def get_current_user_profile(request: Request):
     user = _get_authenticated_user(request)
@@ -873,6 +909,7 @@ def get_current_user_profile(request: Request):
             "must_change_password": is_def_pwd,
             "is_default_password": is_def_pwd,
             "preferences": {},
+            "advanced": True,
         }
     return {
         "id": user["id"],
@@ -890,6 +927,7 @@ def get_current_user_profile(request: Request):
         "home_directory": user.get("home_directory", ""),
         "storage_quota_bytes": user.get("storage_quota_bytes", 0),
         "preferences": user.get("preferences", {}),
+        "advanced": advanced_for(user),
         "is_default_password": is_def_pwd,
     }
 

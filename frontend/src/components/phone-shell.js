@@ -18,6 +18,7 @@ import { watchDom } from '../dom-watch.js';
 import { PHONE_QUERY } from '../device.js';
 import { api } from '../api.js';
 import { statusHtml as healthHtml } from './management/overview.js';
+import { advancedOn, isAdvancedRoute } from '../advanced.js';
 
 const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window';
 // A page on its way out is not open any more
@@ -65,7 +66,7 @@ export function launcherHtml() {
   return `${health}${statusHtml()}<nav class="phone-launcher-grid" aria-label="${escapeHtml(t('phone.home', 'Home'))}">${TILES()
     .map(
       ([route, name, icon]) =>
-        `<button type="button" class="phone-tile" data-phone-open="${route}"><svg class="ic" aria-hidden="true"><use href="${icon}"/></svg><span>${escapeHtml(name)}</span></button>`,
+        `<button type="button" class="phone-tile" data-phone-open="${route}"${isAdvancedRoute(route) && !advancedOn() ? ' hidden' : ''}><svg class="ic" aria-hidden="true"><use href="${icon}"/></svg><span>${escapeHtml(name)}</span></button>`,
     )
     .join('')}</nav>`;
 }

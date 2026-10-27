@@ -24,6 +24,12 @@ def _marker() -> str:
     return os.path.join(config.DATA_DIR, MARKER)
 
 
+def upgraded_at() -> float | None:
+    """When an install from before B11 first started with it; None for a new install."""
+    data = read_json(_marker(), {}) or {}
+    return float(data.get("at") or 0) or None if data.get("existing") else None
+
+
 def is_existing_install() -> bool:
     """True when this data folder came from a version before the B11 defaults."""
     data = read_json(_marker(), {}) or {}

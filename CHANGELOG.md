@@ -80,9 +80,6 @@
   out, and when accounts with two-factor sign-in reach SMB with their password alone; the next
   release makes SMB follow share access and gives those accounts a separate SMB password.
 
-- **Getting started fits the person**: it suggests inviting the people in your home, shows
-  only the steps their role can open, and phone backup now opens under Backup.
-
 #### Backups and power
 
 - **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.
@@ -92,6 +89,11 @@
 
 #### Setup, phone and alerts
 
+- **Getting started fits the person**: it suggests inviting the people in your home, shows
+  only the steps their role can open, and phone backup now opens under Backup.
+- **Advanced is each person's own setting**, and it now also tidies the desktop icons, dock,
+  phone launcher and Spotlight. It starts off for family members and new accounts; accounts
+  that had everything keep it on.
 - **Back up your phone**: a QR card sets up Immich's phone app with your ZettNAS sign-in.
 - The alert address entered in the setup wizard is saved and tested; personal alert routes work
   while the shared channels are off.

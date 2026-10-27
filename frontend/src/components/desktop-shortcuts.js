@@ -10,6 +10,7 @@ import { escapeHtml } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 
 import { t } from '../i18n.js';
+import { advancedOn, isAdvancedSection } from '../advanced.js';
 export const SHORTCUTS_STORAGE_KEY = 'zettnas_custom_desktop_shortcuts_v1';
 export const POSITIONS_STORAGE_KEY = 'zettnas_desktop_icon_positions_v3';
 
@@ -235,6 +236,10 @@ export function createShortcutElement(shortcut) {
   el.setAttribute('tabindex', '0');
   el.title = shortcut.title || shortcut.name;
   el.dataset.shortcutId = shortcut.id;
+  if (shortcut.targetSection) {
+    el.dataset.advancedSection = shortcut.targetSection; // hidden while Advanced is off (UX-23)
+    if (isAdvancedSection(shortcut.targetSection) && !advancedOn()) el.style.display = 'none';
+  }
 
   const iconInner = shortcut.svg
     ? `<svg class="console-hero-icon" style="${shortcut.color ? `color:${shortcut.color};` : ''}"><use href="${shortcut.icon}"/></svg>`

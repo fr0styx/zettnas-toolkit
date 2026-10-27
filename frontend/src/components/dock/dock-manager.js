@@ -7,6 +7,7 @@ import { t } from '../../i18n.js';
 import { openSpotlight } from '../spotlight.js';
 import { formatTime } from '../../format.js';
 import { KNOWN_APPS, showDockItemContextMenu, toggleFmWindowSwitcher } from './apps.js';
+import { ADVANCED_DOCK_APPS, advancedOn } from '../../advanced.js';
 import { _dockPosition } from './dock-settings.js';
 import { DOCK_PINNED_KEY, clearedEventsTs, isEventChecked, showDockToast } from './notifications.js';
 import { bringToFront, keyboardFocused } from './window-drag.js';
@@ -883,7 +884,8 @@ export const DockManager = {
     const fmRunning = fmWindows.length > 0;
 
     const runningIds = Object.keys(this.windows).filter((id) => !this.windows[id].closed);
-    const displayedIds = [...pinned];
+    // a pinned advanced app stays out of the dock while Advanced is off, unless it is open (UX-23)
+    const displayedIds = pinned.filter((id) => advancedOn() || !ADVANCED_DOCK_APPS.includes(id) || runningIds.includes(id));
 
     // If any FM window is running and 'fm' isn't already in displayedIds, add 'fm'
     if (fmRunning && !displayedIds.includes('fm')) {

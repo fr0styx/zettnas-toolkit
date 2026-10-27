@@ -6,26 +6,18 @@ import { api } from '../../api.js';
 import { t } from '../../i18n.js';
 import { escapeHtml } from '../../utils.js';
 import { ROUTES } from '../../router.js';
+import { ADVANCED_SECTIONS, advancedOn, saveAdvanced } from '../../advanced.js';
+import { ZettEventBus } from '../../event-bus.js';
 
-export const ADVANCED_SECTIONS = ['mgmt-sec-vms', 'mgmt-sec-network', 'mgmt-sec-hardware', 'mgmt-sec-ups', 'mgmt-sec-activity'];
-const PREF = 'zettnas_advanced';
+export { ADVANCED_SECTIONS, advancedOn };
 
-export function advancedOn() {
-  try {
-    return localStorage.getItem(PREF) !== '0'; // on unless chosen off: nobody loses a page they use
-  } catch {
-    return true;
-  }
-}
-
+/** The switch in Mission Control: saved to the person's account (UX-23). */
 export function setAdvanced(on) {
-  try {
-    localStorage.setItem(PREF, on ? '1' : '0');
-  } catch {
-    /* private window: the choice lasts until reload */
-  }
   applyAdvanced(on);
+  return saveAdvanced(on, api);
 }
+
+ZettEventBus.on?.('advanced:changed', ({ on } = {}) => applyAdvanced(on));
 
 /** Shows or hides the advanced places in the sidebar and on the Overview. */
 export function applyAdvanced(on = advancedOn(), root = document) {
