@@ -76,6 +76,9 @@
   asked; it keeps a year (ZETTNAS_AUDIT_RETENTION_DAYS); erasing someone replaces their name,
   address and browser with a pseudonym. Their data download now also holds their calendar
   notes, share links, favourites, phones, alert route and Immich link.
+- The Security Advisor warns when network shares (SMB) let in people that share access keeps
+  out, and when accounts with two-factor sign-in reach SMB with their password alone; the next
+  release makes SMB follow share access and gives those accounts a separate SMB password.
 
 #### Backups and power
 

@@ -98,6 +98,8 @@ def test_security_posture_evaluation_hardened():
         patch("backend.services.security_advisor.users_db_session", side_effect=mock_session_with_mfa),
         patch("backend.services.samba_engine.get_samba_engine", return_value=mock_samba),
         patch.dict("os.environ", {"ENABLE_PROXY_SSO": "1", "TRUSTED_PROXIES": "10.0.0.1"}),
+        # the B11 safe-default and sign-in findings have their own tests (test_b11_*)
+        patch("backend.services.safe_defaults_advisor.findings", return_value=[]),
     ):
         posture = evaluate_security_posture()
         assert posture["score"] >= 85
