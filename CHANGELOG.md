@@ -95,6 +95,8 @@
   hour, a day of them kept plus one a day for 30 days. Existing folders without snapshots show in the
   Security Advisor with a one-click fix. **Roll a whole share back** to a snapshot from its file
   list; how it was before is kept as a snapshot first, so the rollback can be undone.
+- On TrueNAS (with the API key set) share snapshots, their retention and rollbacks go through the
+  TrueNAS API, on each share's own dataset.
 - **Snapshots and scrubs have their tools**: every image now carries btrfs and mdadm, and the full
   image Debian's ZFS 2.4 tools. ZFS runs only when it matches the host's ZFS module and /dev/zfs
   is passed in; otherwise Backup says why. (On Unraid and TrueNAS the host keeps running its own.)

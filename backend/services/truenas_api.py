@@ -163,3 +163,55 @@ def create_snapshot(dataset: str, name: str, recursive: bool = True, transport=N
         raise TrueNASError(f"Snapshot failed ({r.status_code}): {r.text[:200]}")
     logger.info(f"[TrueNAS] Snapshot {dataset}@{name} created")
     return {"success": True, "snapshot": f"{dataset}@{name}"}
+
+
+_SNAP_NAME = re.compile(r"[A-Za-z0-9_.:-]{1,64}")
+
+
+def _created(snap: dict[str, Any]) -> float | None:
+    """When a snapshot was taken, from the properties TrueNAS returns (seconds), if it says."""
+    prop = ((snap.get("properties") or {}).get("creation") or {}) if isinstance(snap.get("properties"), dict) else {}
+    raw = prop.get("rawvalue") or prop.get("value")
+    if not isinstance(raw, (str, int, float)):
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def list_snapshots(transport=None) -> list[dict[str, Any]]:
+    """Every ZFS snapshot TrueNAS has: [{dataset, name, created}] (FEAT-02)."""
+    rows = _query(
+        "/zfs/snapshot?limit=5000",
+        "pool.snapshot.query",
+        [[], {"limit": 5000, "extra": {"properties": ["creation"]}}],
+        transport=transport,
+    )
+    out = []
+    for s in rows or []:
+        full = str(s.get("name") or s.get("id") or "")
+        dataset = s.get("dataset") or full.split("@", 1)[0]
+        name = s.get("snapshot_name") or (full.split("@", 1)[1] if "@" in full else "")
+        if dataset and name:
+            out.append({"dataset": dataset, "name": name, "created": _created(s)})
+    return out
+
+
+def delete_snapshot(dataset: str, name: str, transport=None) -> dict[str, Any]:
+    if not _SNAP_NAME.fullmatch(name or "") or not dataset:
+        raise TrueNASError("Invalid snapshot name")
+    sid = f"{dataset}@{name}"
+    from urllib.parse import quote
+
+    with _client(transport) as c:
+        r = c.delete(f"/zfs/snapshot/id/{quote(sid, safe='')}")
+    if r.status_code in REST_GONE:
+        try:
+            _rpc("pool.snapshot.delete", [sid])
+        except TrueNASError:
+            _rpc("zfs.snapshot.delete", [sid])
+    elif r.status_code not in (200, 204):
+        raise TrueNASError(f"Deleting the snapshot failed ({r.status_code}): {r.text[:200]}")
+    logger.info(f"[TrueNAS] Snapshot {sid} deleted")
+    return {"success": True, "snapshot": sid}

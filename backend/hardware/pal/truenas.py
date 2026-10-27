@@ -29,6 +29,12 @@ from backend.hardware.pal.observer import ObserverStorageAdapter
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
 
 
+def _api_configured() -> bool:
+    from backend.services import truenas_api
+
+    return truenas_api.configured()
+
+
 class TrueNASStorageAdapter(ObserverStorageAdapter):
     """
     TrueNAS SCALE Storage Platform Adapter.
@@ -39,14 +45,69 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
     def get_platform_type(self) -> PlatformType:
         return PlatformType.TRUENAS
 
+    def _dataset_for(self, share: str) -> dict[str, Any] | None:
+        """The TrueNAS dataset a share lives in: the one named after it, or mounted where it is."""
+        from backend.services import truenas_api
+
+        sets = truenas_api.datasets()
+        for d in sets:
+            if str(d.get("id") or "").rsplit("/", 1)[-1] == share:
+                return d
+        for d in sets:
+            if os.path.basename(str(d.get("mountpoint") or "").rstrip("/")) == share:
+                return d
+        return None
+
     def create_snapshot(self, pool_id: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        """With TRUENAS_URL and TRUENAS_API_KEY set, snapshots go through the TrueNAS API (D5)."""
+        """With TRUENAS_URL and TRUENAS_API_KEY set, snapshots go through the TrueNAS API (D5, D2).
+        A share's snapshot "<share>@<name>" is the ZFS snapshot <dataset>@<name> of its dataset."""
         from backend.services import truenas_api
 
         if not truenas_api.configured():
             return super().create_snapshot(pool_id, *args, **kwargs)
+        share = kwargs.get("subvol_name") or (args[0] if args else "")
         name = kwargs.get("snapshot_name") or (args[1] if len(args) > 1 else "") or "zettnas"
-        return truenas_api.create_snapshot(pool_id, name, recursive=True)
+        if "@" in name:
+            share, name = name.split("@", 1)
+        dataset = (self._dataset_for(share) or {}).get("id") if share else None
+        return truenas_api.create_snapshot(dataset or pool_id, name, recursive=True)
+
+    def list_snapshots(self, pool_id: str) -> list[dict[str, Any]]:
+        """The datasets' snapshots, named "<share>@<snapshot>", with the path ZFS shows them at
+        (<mountpoint>/.zfs/snapshot/<name>) for browsing and restoring (FEAT-02)."""
+        from backend.services import truenas_api
+
+        if not truenas_api.configured():
+            return super().list_snapshots(pool_id)
+        mounts = {d["id"]: d.get("mountpoint") for d in truenas_api.datasets()}
+        out = []
+        for s in truenas_api.list_snapshots():
+            mount = mounts.get(s["dataset"])
+            if not mount:
+                continue
+            share = str(s["dataset"]).rsplit("/", 1)[-1]
+            out.append(
+                {
+                    "name": f"{share}@{s['name']}",
+                    "path": os.path.join(mount, ".zfs", "snapshot", s["name"]),
+                    "created_at": s.get("created"),
+                    "pool_id": pool_id,
+                    "dataset": s["dataset"],
+                    "is_immutable": False,
+                }
+            )
+        return out
+
+    def delete_snapshot(self, pool_id: str, snapshot_name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        from backend.services import truenas_api
+
+        if not truenas_api.configured() or "@" not in snapshot_name:
+            return super().delete_snapshot(pool_id, snapshot_name, *args, **kwargs)
+        share, name = snapshot_name.split("@", 1)
+        dataset = (self._dataset_for(share) or {}).get("id")
+        if not dataset:
+            raise PlatformCapabilityError(f"No TrueNAS dataset found for share {share}")
+        return truenas_api.delete_snapshot(dataset, name)
 
     def get_capabilities(self) -> PlatformCapabilities:
         return PlatformCapabilities(
@@ -56,6 +117,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
             can_destroy_pools=False,
             can_manage_shares=False,
             can_trigger_scrub=True,
+            can_snapshot=_api_configured(),  # through the TrueNAS API (D2); without it, nothing to call
             can_export_pools=False,
             can_import_pools=False,
             supported_filesystems=["zfs"],

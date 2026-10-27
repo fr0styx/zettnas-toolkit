@@ -85,7 +85,7 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
-    "can_snapshot": true,
+    "can_snapshot": false,
     "can_trigger_scrub": true,
     "description": "Observer Mode: TrueNAS SCALE host detected. ZFS pools, datasets, and shares are managed by TrueNAS Middleware. Telemetry and scrub monitoring enabled.",
     "is_observer_mode": true,
@@ -471,14 +471,17 @@
    "fields": [],
    "methods": {
     "_check_is_storage_busy_uncached": "(self) -> bool",
+    "_dataset_for": "(self, share: str) -> dict[str, typing.Any] | None",
     "create_pool": "(self, name: str, *args: Any, **kwargs: Any) -> Any",
     "create_snapshot": "(self, pool_id: str, *args: Any, **kwargs: Any) -> dict[str, typing.Any]",
+    "delete_snapshot": "(self, pool_id: str, snapshot_name: str, *args: Any, **kwargs: Any) -> dict[str, typing.Any]",
     "destroy_pool": "(self, pool_id: str, *args: Any, **kwargs: Any) -> Any",
     "get_capabilities": "(self) -> PlatformCapabilities",
     "get_platform_type": "(self) -> PlatformType",
     "is_storage_busy": "(self) -> bool",
     "list_pools": "(self) -> list[StoragePool]",
     "list_shares": "(self) -> list[NetworkShare]",
+    "list_snapshots": "(self, pool_id: str) -> list[dict[str, typing.Any]]",
     "trigger_scrub": "(self, pool_id: str, action: str = 'start') -> dict[str, typing.Any]"
    },
    "mro": [
