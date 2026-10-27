@@ -259,11 +259,15 @@
       },
       "title": "Roles",
       "type": "object"
+     },
+     "search_roles": {
+      "additionalProperties": {
+       "type": "boolean"
+      },
+      "title": "Search Roles",
+      "type": "object"
      }
     },
-    "required": [
-     "roles"
-    ],
     "title": "AiAccessUpdate",
     "type": "object"
    },

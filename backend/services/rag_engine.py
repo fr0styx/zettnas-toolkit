@@ -1052,6 +1052,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "rerank_model": "",
             "rerank_top_n": 30,
             "ai_role_access": {"kid": False, "guest": False},  # who may ask Zetty (B8, ai_access)
+            "ai_search_role_access": {"kid": False, "guest": False},  # who may use AI search (B11, AI-26)
         }
         saved = read_json(RAG_CONFIG_PATH, {})
         if isinstance(saved, dict):
@@ -1120,10 +1121,11 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]
-        if isinstance(updates.get("ai_role_access"), dict):
-            # who may ask Zetty (B8); the API checks the values first (ai_access.clean_switches)
-            switches = {str(k): bool(v) for k, v in updates["ai_role_access"].items()}
-            cfg["ai_role_access"] = {**(cfg.get("ai_role_access") or {}), **switches}
+        for key in ("ai_role_access", "ai_search_role_access"):
+            if isinstance(updates.get(key), dict):
+                # who may ask Zetty / use AI search; the API checks the values first (ai_access.clean_switches)
+                switches = {str(k): bool(v) for k, v in updates[key].items()}
+                cfg[key] = {**(cfg.get(key) or {}), **switches}
         if str(cfg.get("vision_captions", "auto")).lower() not in ("auto", "off"):
             cfg["vision_captions"] = "auto"
         if "conversation_retention_days" in cfg:

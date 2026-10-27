@@ -130,7 +130,7 @@ def test_the_api_lists_saves_and_answers_for_me(cfg, tmp_path, monkeypatch):
     monkeypatch.setattr(ai_access, "roles_with_access", lambda: [{"id": "kid", "on": ai_access.role_access()["kid"]}])
     assert media.get_ai_access()["roles"] == [{"id": "kid", "on": False}]
     assert media.put_ai_access(media.AiAccessUpdate(roles={"kid": True}))["roles"] == [{"id": "kid", "on": True}]
-    assert media.get_my_ai_access(who("kid")) == {"allowed": True}
+    assert media.get_my_ai_access(who("kid")) == {"allowed": True, "search": False}
     with pytest.raises(media.HTTPException):
         media.put_ai_access(media.AiAccessUpdate(roles={"kid": True, "": False}))
     ai_access.log_request(who("kid", "lea3"), "chat", "", False, "answered")

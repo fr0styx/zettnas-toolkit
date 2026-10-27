@@ -165,13 +165,46 @@ def _fix_auditor() -> str:
     return "Auditor now reads system status only."
 
 
-FINDERS: tuple[Callable[[], dict[str, Any] | None], ...] = (_share_access_finding, _nfs_finding, _auditor_finding)
+def _ai_search_finding() -> dict[str, Any] | None:
+    """Kids or guests can use AI search (kept on for installs upgraded from before AI-26)."""
+    from backend.services import ai_access
+
+    access = ai_access.role_access(feature="search")
+    open_roles = [r for r in FAMILY_ROLES if access.get(r, True)]
+    if not open_roles or not _family_users():
+        return None
+    return {
+        "id": "ai_search_family",
+        "name": "Kids and guests can use AI search",
+        "penalty": 5,
+        "severity": "low",
+        "details": "AI search shows them what their folders hold by meaning, photos included.",
+        "remediation": "Turn AI search off for kids and guests; turn it on per role in AI settings when wanted.",
+        "fix": "ai_search_family",
+        "fix_label": "Turn AI search off for kids and guests",
+    }
+
+
+def _fix_ai_search_family() -> str:
+    from backend.services.rag_engine import get_rag_engine
+
+    get_rag_engine().update_config({"ai_search_role_access": {r: False for r in FAMILY_ROLES}})
+    return "AI search is off for kids and guests."
+
+
+FINDERS: tuple[Callable[[], dict[str, Any] | None], ...] = (
+    _share_access_finding,
+    _nfs_finding,
+    _auditor_finding,
+    _ai_search_finding,
+)
 
 FIXES: dict[str, Callable[[], str]] = {
     "share_access_family": _fix_share_access_family,
     "nfs_open_exports": _fix_nfs_open_exports,
     "smb_guest_access": _fix_smb_guest,
     "auditor_reads_everything": _fix_auditor,
+    "ai_search_family": _fix_ai_search_family,
 }
 
 

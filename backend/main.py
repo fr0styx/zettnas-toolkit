@@ -160,6 +160,7 @@ def startup_system():
         from backend.services import install_defaults
 
         install_defaults.apply_once(_existing_install)
+        install_defaults.apply_steps()
     except Exception as e:
         logger.error(f"[Main] Could not record the install defaults: {e}")
     if not _data_key_problem:

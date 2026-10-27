@@ -48,3 +48,40 @@ def apply_once(existing_install: bool) -> bool:
         share_access.invalidate()
     atomic_write_json(path, {"existing": bool(existing_install), "at": time.time()})
     return True
+
+
+def _keep_ai_search() -> None:
+    """Kids and guests could use AI search before AI-26 split it from Ask Zetty: keep it on."""
+    from backend.services.rag_engine import RAG_CONFIG_PATH
+
+    with locked_json(RAG_CONFIG_PATH):
+        cfg = read_json(RAG_CONFIG_PATH, {}) or {}
+        if "ai_search_role_access" not in cfg:
+            cfg["ai_search_role_access"] = {"kid": True, "guest": True}
+            atomic_write_json(RAG_CONFIG_PATH, cfg)
+
+
+# Steps added after the first B11 release, run once each: on an upgraded install they keep
+# what it had; on a new install they only get recorded as done.
+STEPS = {"ai_search": _keep_ai_search}
+
+
+def apply_steps() -> list[str]:
+    """Runs the steps this install has not had yet; returns their names."""
+    path = _marker()
+    with locked_json(path):
+        data = read_json(path, {}) or {}
+        if not data:
+            return []
+        done = list(data.get("steps") or [])
+        ran = []
+        for name, step in STEPS.items():
+            if name in done:
+                continue
+            if data.get("existing"):
+                step()
+            done.append(name)
+            ran.append(name)
+        if ran:
+            atomic_write_json(path, {**data, "steps": done})
+    return ran

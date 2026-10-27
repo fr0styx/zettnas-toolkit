@@ -25,7 +25,7 @@ from backend.confirmations import require_confirmation
 from backend.fsutil import resolve_within
 from backend.rate_limit import rate_limit
 from backend.services import ai_access
-from backend.services.ai_access import require_ai_access
+from backend.services.ai_access import require_ai_access, require_ai_search
 from backend.services.ai_chat_agent import (
     AVAILABLE_NAS_TOOLS,
     build_llm_execution_telemetry,
@@ -857,11 +857,17 @@ async def _with_immich(res: Any, q: str | None, mode: str | None, principal: Any
 
 @router.get(
     "/media/search",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_search),
+    ],
 )
 @router.get(
     "/ai/search",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_search),
+    ],
 )
 async def search_multimodal_get(
     q: str = Query(default="", max_length=500),
@@ -905,16 +911,23 @@ async def search_multimodal_get(
         sort_by,
         tags=[t for t in (tags or "").split(",") if t.strip()] or None,
     )
+    ai_access.log_request(principal, "search", "", False, "answered")
     return await _with_immich(res, effective_q, effective_mode, principal, limit)
 
 
 @router.post(
     "/media/search",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_search),
+    ],
 )
 @router.post(
     "/ai/search",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_search),
+    ],
 )
 async def search_multimodal_post(
     req: MultimodalSearchRequest,
@@ -948,6 +961,7 @@ async def search_multimodal_post(
         req.sort_by,
         tags=req.tags,
     )
+    ai_access.log_request(principal, "search", "", False, "answered")
     return await _with_immich(res, effective_q, effective_mode, principal, req.limit)
 
 
@@ -968,11 +982,17 @@ def get_search_tags(principal: AuthenticatedPrincipal = Depends(get_current_prin
 
 @router.post(
     "/media/ask",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_access),
+    ],
 )
 @router.post(
     "/ai/ask",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_access),
+    ],
 )
 async def ask_knowledge_base(
     req: RagAskRequest,
@@ -1000,6 +1020,7 @@ async def ask_knowledge_base(
         Z_STATE.ai_accelerator = target_accel
         Z_STATE.ai_model = active_model
 
+    started = time.monotonic()
     try:
         res = await asyncio.to_thread(
             rag.ask,
@@ -1008,6 +1029,13 @@ async def ask_knowledge_base(
             validated_prefix,
             effective_top_k,
             principal,
+        )
+    except Exception:
+        ai_access.log_request(principal, "ask", active_model, False, "failed")
+        raise
+    else:
+        ai_access.log_request(
+            principal, "ask", active_model, False, "answered", int((time.monotonic() - started) * 1000)
         )
     finally:
         with Z_STATE.lock:
@@ -1071,11 +1099,17 @@ async def list_folder_manifests_endpoint(
 
 @router.post(
     "/media/folder/audit",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_search),
+    ],
 )
 @router.post(
     "/ai/folder/audit",
-    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+    dependencies=[
+        Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_search),
+    ],
 )
 async def audit_folder_endpoint(
     req: FolderAuditRequest,
@@ -1087,6 +1121,7 @@ async def audit_folder_endpoint(
     """
     validated_path = _validate_media_path(req.folder_path, principal, must_exist=False)
     rag = get_rag_engine()
+    ai_access.log_request(principal, "search", "", False, "answered")
     res = await asyncio.to_thread(
         rag.aggregate_folder_context,
         folder_path=validated_path,
@@ -1331,7 +1366,8 @@ def get_rag_config() -> dict[str, Any]:
 
 
 class AiAccessUpdate(BaseModel):
-    roles: dict[str, bool]
+    roles: dict[str, bool] = Field(default_factory=dict)  # Ask Zetty
+    search_roles: dict[str, bool] = Field(default_factory=dict)  # AI search (B11, AI-26)
 
 
 @router.get("/ai/access", dependencies=[Depends(require_scope("system:config", "users:read"))])
@@ -1343,7 +1379,12 @@ def get_ai_access() -> dict[str, Any]:
 @router.put("/ai/access", dependencies=[Depends(require_scope("system:config"))])
 def put_ai_access(req: AiAccessUpdate) -> dict[str, Any]:
     try:
-        get_rag_engine().update_config({"ai_role_access": ai_access.clean_switches(req.roles)})
+        get_rag_engine().update_config(
+            {
+                "ai_role_access": ai_access.clean_switches(req.roles),
+                "ai_search_role_access": ai_access.clean_switches(req.search_roles),
+            }
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     return get_ai_access()
@@ -1351,7 +1392,7 @@ def put_ai_access(req: AiAccessUpdate) -> dict[str, Any]:
 
 @router.get("/ai/access/me")
 def get_my_ai_access(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
-    return {"allowed": ai_access.allowed(principal)}
+    return {"allowed": ai_access.allowed(principal), "search": ai_access.allowed(principal, feature="search")}
 
 
 @router.get("/ai/requests", dependencies=[Depends(require_scope("system:config", "audit:read"))])

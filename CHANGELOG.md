@@ -61,6 +61,10 @@
   access to the folder; container logs need the containers right.
 - Kids and guests no longer read hardware, UPS, fan, share-service and app-catalog details;
   every API read now needs a permission unless it is part of the desktop or their own account.
+- **AI search and Ask Zetty are separate switches per role**, both enforced (grounded answers
+  and folder summaries included). Kids and guests start with both off on new installs; upgraded
+  installs keep AI search on for them and the Security Advisor offers to turn it off. The
+  request log now says whether it was a chat, an answer or a search.
 
 #### Backups and power
 

@@ -1,12 +1,15 @@
-"""Who may ask Zetty, and a log of who did (B8: AI access per role).
+"""Who may use Zetty, and a log of who did (B8: AI access per role; B11, AI-26).
 
-Each role is on or off for the assistant (chat and its file tools). Kids and guests are off
-until an administrator turns them on; every other role is on. The superadmin is always on, so
-nobody can lock the household out of its own assistant.
+Each role has two switches: "ask" (chat, grounded answers and their file tools) and "search"
+(AI search over files and photos). Kids and guests start with both off on a new install;
+every other role is on. An install upgraded from before AI-26 keeps AI search on for kids and
+guests (install_defaults) and the Security Advisor offers to turn it off. The superadmin is
+always on, so nobody can lock the household out of its own assistant.
 
-Every chat request is logged: when, who, their role, the model, whether web search was allowed
-and how it ended. The question and the answer are not: what someone asked stays in their own
-chat history, which only they can read. Rows older than LOG_DAYS are pruned.
+Every request is logged with its kind (chat, ask, search): when, who, their role, the model,
+whether web search was allowed and how it ended. The question and the answer are not: what
+someone asked stays in their own chat history, which only they can read. Rows older than
+LOG_DAYS are pruned.
 """
 
 from __future__ import annotations
@@ -25,15 +28,17 @@ OFF_BY_DEFAULT = ("kid", "guest")
 ALWAYS_ON = ("superadmin",)
 LOG_DAYS = 90
 OUTCOMES = ("answered", "streamed", "failed", "refused")
+# feature -> the rag_config key holding its switches
+FEATURES = {"ask": "ai_role_access", "search": "ai_search_role_access"}
 
 
-def role_access(cfg: dict[str, Any] | None = None) -> dict[str, bool]:
+def role_access(cfg: dict[str, Any] | None = None, feature: str = "ask") -> dict[str, bool]:
     """The saved switches (role id -> on), over the defaults for the roles that start off."""
     if cfg is None:
         from backend.services.rag_engine import get_rag_engine
 
         cfg = get_rag_engine().get_config()
-    raw = cfg.get("ai_role_access")
+    raw = cfg.get(FEATURES[feature])
     saved: dict[str, Any] = raw if isinstance(raw, dict) else {}
     out = {r: False for r in OFF_BY_DEFAULT}
     out.update({str(k): bool(v) for k, v in saved.items()})
@@ -56,21 +61,33 @@ def clean_switches(value: Any) -> dict[str, bool]:
     return out
 
 
-def allowed(principal: Any, cfg: dict[str, Any] | None = None) -> bool:
+def allowed(principal: Any, cfg: dict[str, Any] | None = None, feature: str = "ask") -> bool:
     role = str(getattr(principal, "role_id", "") or "")
     if role in ALWAYS_ON:
         return True
-    return role_access(cfg).get(role, True)
+    return role_access(cfg, feature).get(role, True)
 
 
 def require_ai_access(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> AuthenticatedPrincipal:
-    """FastAPI dependency for the assistant's endpoints."""
+    """FastAPI dependency for asking Zetty (chat and grounded answers)."""
     if not allowed(principal):
         log_request(principal, "chat", "", False, "refused")
         raise ShownServerError(
             "Zetty is turned off for your account. An administrator can turn it on in AI settings.",
             status_code=403,
             error="ai_off_for_role",
+        )
+    return principal
+
+
+def require_ai_search(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> AuthenticatedPrincipal:
+    """FastAPI dependency for AI search over files and photos (B11, AI-26)."""
+    if not allowed(principal, feature="search"):
+        log_request(principal, "search", "", False, "refused")
+        raise ShownServerError(
+            "AI search is turned off for your account. An administrator can turn it on in AI settings.",
+            status_code=403,
+            error="ai_search_off_for_role",
         )
     return principal
 
@@ -150,18 +167,20 @@ def recent(limit: int = 100, username: str | None = None) -> list[dict[str, Any]
 
 
 def roles_with_access() -> list[dict[str, Any]]:
-    """Every role with its switch, for AI settings: {id, name, description, on, locked}."""
+    """Every role with its switches, for AI settings: {id, name, description, on, search, locked}."""
     from backend.users_db import users_db_session
 
     with users_db_session(readonly=True) as conn:
         rows = conn.execute("SELECT id, name, description FROM roles ORDER BY is_system DESC, name").fetchall()
     access = role_access()
+    search = role_access(feature="search")
     return [
         {
             "id": r[0],
             "name": r[1],
             "description": r[2] or "",
             "on": access.get(r[0], True),
+            "search": search.get(r[0], True),
             "locked": r[0] in ALWAYS_ON,
         }
         for r in rows
