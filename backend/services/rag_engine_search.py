@@ -242,6 +242,11 @@ class RagSearchMixin:
             req_colors=req_colors,
             task_prompt=task_prefix,
         )
+        if effective_emb_model != "zett_lexical_384d":
+            # the first search with a model measures its similarity cut-off, in the background (AI-17)
+            from backend.services import rag_calibration
+
+            rag_calibration.ensure_measured(effective_emb_model, target_dim, embedding_host(cfg))
         fts_query = build_safe_fts5_query(query)
         target_hist = build_target_color_histogram(req_colors) if req_colors else []
         # The embedder didn't answer: results come from keywords only, and the person is told (AI-4)
@@ -295,6 +300,7 @@ class RagSearchMixin:
                     modality_hint=intent.get("modality_hint", "all"),
                     only_docs=(effective_mode == "documents"),
                     query_embedding_model=effective_emb_model,
+                    query_embedding_dim=target_dim,
                     intent_type=intent_type,
                 )
                 # Optional cross-encoder reranking of the top documents (AI-13)
@@ -686,6 +692,7 @@ class RagSearchMixin:
         modality_hint: str = "all",
         only_docs: bool = False,
         query_embedding_model: str = "zett_lexical_384d",
+        query_embedding_dim: int | None = None,
         intent_type: str = "search",
     ) -> list[dict[str, Any]]:
         bm25_map: dict[int, float] = {}
@@ -850,7 +857,7 @@ class RagSearchMixin:
         vec_rank: dict[int, int] = {int(tup[1]["chunk_id"]): idx for idx, tup in enumerate(scored_chunks, start=1)}
 
         q_tokens = [t for t in text_tokens((raw_query or "").lower()) if t not in _STOPWORDS]
-        prof = _core().similarity_profile(query_embedding_model)
+        prof = _core().similarity_profile(query_embedding_model, query_embedding_dim)
         per_file_best: dict[int, dict[str, Any]] = {}
         readable = self._post_rbac_checker(principal)  # one check per file, no disk access
 

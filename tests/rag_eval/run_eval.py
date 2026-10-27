@@ -266,6 +266,21 @@ def answer_matches(answer: str, accepted: list[str], required: list[str] | None 
     return not accepted or any(_norm(x) and _norm(x) in a for x in accepted)
 
 
+def faithfulness(rows: list[dict]) -> dict:
+    """How much of the answers their cited sources back up (AI-16): the app's own sentence check
+    (rag_grounding.score_answer_grounding, every number in a sentence must be in the source it
+    leans on). `faithfulness` is the mean share of supported sentences, `fully_supported` the
+    share of answers with every sentence supported; answers with nothing to check are left out."""
+    scored = [r["faithful"] for r in rows if r.get("faithful") is not None]
+    if not scored:
+        return {"faithfulness": None, "fully_supported": None, "faithfulness_scored": 0}
+    return {
+        "faithfulness": round(sum(scored) / len(scored) / 100, 3),
+        "fully_supported": round(sum(1 for s in scored if s >= 100) / len(scored), 3),
+        "faithfulness_scored": len(scored),
+    }
+
+
 def read_scanned(engine, ocr: str = "standin", host: str | None = None) -> dict:
     """Runs the vision queue over the index until it has read every photo and scanned PDF.
 
@@ -357,8 +372,10 @@ def evaluate(
     qa_limit: int | None = None,
     llm_host: str | None = None,
     ocr: str = "standin",
+    measure_cut_off: bool = True,
 ) -> dict:
-    from backend.services.rag_engine import RagSearchEngine
+    from backend.services import rag_calibration
+    from backend.services.rag_engine import RagSearchEngine, similarity_profile
 
     tmp = tempfile.mkdtemp(prefix="zettnas-rag-eval-")
     engine = RagSearchEngine(db_path=os.path.join(tmp, "eval.db"))
@@ -374,6 +391,13 @@ def evaluate(
     if llm_host:
         cfg["llm_endpoint"] = llm_host
     docs_root = os.path.join(tmp, "documents")
+    neural = model != "zett_lexical_384d"
+    measured_patch = patch.object(rag_calibration, "measured", return_value=None)
+    if neural and measure_cut_off:
+        rag_calibration.reset()
+        rag_calibration.ensure_measured(model, dim, host, background=False)
+    elif neural:
+        measured_patch.start()
 
     def rel(p: str) -> str:
         root = docs_root if p.startswith(docs_root + os.sep) else CORPUS
@@ -441,10 +465,14 @@ def evaluate(
                                     item.get("unanswerable") or all(p in sources for p in item["relevant"])
                                 ),
                                 "answer": text[:400],
+                                "faithful": (out.get("grounding_detail") or {}).get("score"),
                             }
                         )
     finally:
         engine.close()
+        vec_min = similarity_profile(model, dim).get("vec_min")
+        if neural and not measure_cut_off:
+            measured_patch.stop()
 
     def summary(rows):
         n = len(rows) or 1
@@ -458,6 +486,7 @@ def evaluate(
         "model": model,
         "set": which,
         "distractors": distractors,
+        "vec_min": vec_min,
         "overall": summary(per_query),
         "by_language": {lang: summary([r for r in per_query if r["lang"] == lang]) for lang in langs},
         "by_kind": {k: summary([r for r in per_query if r["kind"] == k]) for k in kinds},
@@ -482,6 +511,7 @@ def evaluate(
             "accuracy": round(sum(r["correct"] for r in qa_rows) / n, 3),
             "source_hit": round(sum(r["source_hit"] for r in qa_rows) / n, 3),
             "model_answered": round(sum(r["model_answered"] for r in qa_rows) / n, 3),
+            **faithfulness(qa_rows),
             "by_language": {
                 lang: round(
                     sum(r["correct"] for r in qa_rows if r["lang"] == lang)
@@ -523,6 +553,9 @@ def main():
     ap.add_argument("--show-heldout", action="store_true", help="with --misses: held-out misses too (not for tuning)")
     ap.add_argument("--ocr", default="standin", choices=["standin", "vision"], help="how scanned files are read")
     ap.add_argument("--out", default=None, help="write the JSON result here too")
+    ap.add_argument(
+        "--no-calibration", action="store_true", help="use the built-in similarity cut-off, not one measured"
+    )
     args = ap.parse_args()
     out = evaluate(
         args.model,
@@ -534,6 +567,7 @@ def main():
         args.qa_limit,
         args.llm_host,
         args.ocr,
+        not args.no_calibration,
     )
     if not args.misses:
         out.pop("misses")

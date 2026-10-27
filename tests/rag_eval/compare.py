@@ -2,8 +2,8 @@
 
     python -m tests.rag_eval.compare result.json tests/rag_eval/baseline_nightly.json [--tolerance 0.02]
 
-Exits 1 when any recall@1, recall@5 or mrr@10 (overall, per language, per kind) or the answer
-accuracy dropped by more than the tolerance; a missing baseline only prints the result.
+Exits 1 when any recall@1, recall@5 or mrr@10 (overall, per language, per kind), the answer
+accuracy or the answers' faithfulness to their sources dropped by more than the tolerance; a missing baseline only prints the result.
 """
 
 import argparse
@@ -29,6 +29,11 @@ def drops(now: dict, base: dict, tol: float) -> list[str]:
         out.append(f"search p95: {lb} -> {ln} units (more than half again as slow)")
     if "answers" in base and "answers" in now and now["answers"]["accuracy"] < base["answers"]["accuracy"] - tol:
         out.append(f"answers accuracy: {base['answers']['accuracy']} -> {now['answers']['accuracy']}")
+    # faithfulness: the answers say only what their sources say (AI-16)
+    for metric in ("faithfulness", "fully_supported"):
+        b, n = (base.get("answers") or {}).get(metric), (now.get("answers") or {}).get(metric)
+        if b is not None and n is not None and n < b - tol:
+            out.append(f"answers {metric}: {b} -> {n}")
     return out
 
 

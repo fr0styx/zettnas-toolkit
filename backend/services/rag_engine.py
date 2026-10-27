@@ -501,9 +501,18 @@ SIMILARITY_PROFILES: dict[str, dict[str, Any]] = {
 }
 
 
-def similarity_profile(model: str | None) -> dict[str, Any]:
+def similarity_profile(model: str | None, dim: int | None = None) -> dict[str, Any]:
+    """The profile for this embedding model; a neural model's vec_min is the one measured for that
+    exact model on this install, once it has been (AI-17, rag_calibration)."""
     m = (model or "").lower()
-    return SIMILARITY_PROFILES["lexical" if (not m or "lexical" in m) else "neural"]
+    if not m or "lexical" in m:
+        return SIMILARITY_PROFILES["lexical"]
+    from backend.services import rag_calibration
+
+    got = rag_calibration.measured(model or "", dim)
+    if got and isinstance(got.get("vec_min"), (int, float)):
+        return {**SIMILARITY_PROFILES["neural"], "vec_min": float(got["vec_min"]), "vec_min_measured": True}
+    return SIMILARITY_PROFILES["neural"]
 
 
 def classify_path_rbac(canonical_path: str) -> tuple[str, str, str, str]:
