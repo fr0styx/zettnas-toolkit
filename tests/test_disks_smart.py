@@ -192,17 +192,19 @@ class TestTrends:
         disks._evaluate_smart_trends("sda", {"realloc": 3, "nvme_used": None})
         assert self.alerts == []
 
-    def test_growth_alerts(self, tmp_path):
+    def test_growth_is_tracked_but_alerted_by_drive_health(self, tmp_path):
+        # REL-7: growth is alerted once, when Drive Health's verdict changes, not from here
         disks._evaluate_smart_trends("sda", {"realloc": 3, "pending": 1})
         disks._evaluate_smart_trends("sda", {"realloc": 5, "pending": 1, "nvme_used": 4})
-        assert self.alerts == ["Reallocated Sectors increased from 3 to 5"]
+        assert self.alerts == []
         assert json.loads((tmp_path / "trends.json").read_text())["sda"]["realloc"] == 5
 
-    def test_baseline_survives_a_restart(self, monkeypatch):
+    def test_baseline_survives_a_restart(self, monkeypatch, tmp_path):
         disks._evaluate_smart_trends("nvme0n1", {"nvme_media_err": 1})
         monkeypatch.setattr(disks, "_smart_trends", None)
         disks._evaluate_smart_trends("nvme0n1", {"nvme_media_err": 4})
-        assert self.alerts == ["NVMe Media Errors increased from 1 to 4"]
+        assert json.loads((tmp_path / "trends.json").read_text())["nvme0n1"]["nvme_media_err"] == 4
+        assert self.alerts == []
 
 
 class TestDeviceResolution:

@@ -86,7 +86,7 @@ def _async_notify(**kwargs):
 _delta_encoder = StatsDeltaEncoder()
 
 
-def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now):
+def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=None):
     """Fan stalls, CPU temperature and drive health: events and notifications."""
     # Evaluate hardware health, stalls, and thermal alerts (unconditionally)
     notif_cfg = read_json_cached(NOTIFICATIONS_FILE, {}, max_age=SETTINGS_RECHECK_SECS)
@@ -167,38 +167,14 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now):
             dedup_key="cpu_temp_warn",
         )
 
-    for d in bad:
-        d_name = d.get("name", "Unknown")
-        d_health = d.get("health", "warn")
-        d_temp = d.get("temp", 0)
-        if d_health == "crit":
-            add_event(
-                "error",
-                f"Drive Critical: {d_name}",
-                f"Drive reached critical health or extreme temp ({d_temp}°C)",
-                details=d,
-            )
-            _async_notify(
-                title=f"ZettNAS Alert: Drive Critical ({d_name})",
-                message=f"Drive {d_name} has entered CRITICAL state ({d_temp}°C). Inspect S.M.A.R.T. health immediately.",
-                level="critical",
-                event_type="smart",
-                dedup_key=f"drive_crit_{d_name}",
-            )
-        elif d_health == "warn":
-            add_event(
-                "warning",
-                f"Drive Warning: {d_name}",
-                f"Drive is running hot or has warnings ({d_temp}°C)",
-                details=d,
-            )
-            _async_notify(
-                title=f"ZettNAS Warning: Drive Alert ({d_name})",
-                message=f"Drive {d_name} is running hot or reported S.M.A.R.T. warnings ({d_temp}°C).",
-                level="warning",
-                event_type="smart",
-                dedup_key=f"drive_warn_{d_name}",
-            )
+    # Drives: a temperature alert once per crossing; their condition is alerted by Drive Health
+    # when its verdict changes (REL-7), not every half hour from here.
+    try:
+        from backend.services import drive_alerts
+
+        drive_alerts.check_temperatures(all_disks or bad, notif_cfg.get("hdd_temp_threshold", 50), _async_notify)
+    except Exception:
+        logger.debug("stats_collector: drive temperature check failed", exc_info=True)
     return {"is_crit": is_crit, "is_warn": is_warn}
 
 
@@ -520,7 +496,7 @@ def stats_collector_daemon():
             target_bl = get_effective_brightness()
             set_screen_brightness(target_bl, cached=True)  # written when it changes (PERF-5)
 
-            _r = _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now)
+            _r = _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, disks)
             is_crit = _r["is_crit"]
             is_warn = _r["is_warn"]
 

@@ -396,8 +396,7 @@ def send_notification(
             push_on = bool(web_push.subscriptions())
         except Exception:
             logger.debug("notifications: push unavailable", exc_info=True)
-    if not cfg.get("enabled", False) and not push_on:
-        return {"dispatched": False, "reason": "disabled"}
+    shared_off = not cfg.get("enabled", False) and not push_on
 
     # Subsystem-specific event toggles
     type_toggle_map = {
@@ -432,8 +431,10 @@ def send_notification(
 
         _alert_history[dedup_key] = {"last_sent": now, "last_level": level}
 
-    # Each person's own alerts (Batch 6), whether or not the shared channels are on
+    # Each person's own alerts (Batch 6), whether or not the shared channels are on (REL-6)
     _route_to_people(cfg, str(title), str(message), level, event_type)
+    if shared_off:
+        return {"dispatched": False, "reason": "disabled"}
 
     # Daily digest: only urgent alerts go out now
     if cfg.get("digest_mode") == "daily" and level not in URGENT_LEVELS:

@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.services.notifications import (
@@ -50,6 +50,15 @@ class NotificationConfigModel(BaseModel):
 
     # Raw Apprise URLs
     apprise_urls: list[str] = Field(default_factory=list)
+    # older setup wizards sent the address as "urls"; it is folded into apprise_urls (REL-6)
+    urls: list[str] = Field(default_factory=list, exclude=True)
+
+    @model_validator(mode="after")
+    def _fold_urls(self):
+        for u in self.urls:
+            if u and u.strip() and u.strip() not in self.apprise_urls:
+                self.apprise_urls.append(u.strip())
+        return self
 
     # Event triggers
     notify_on_smart: bool = True

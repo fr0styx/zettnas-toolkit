@@ -212,10 +212,17 @@ class TestHealth:
         assert sc._check_health([], None, False, [], False, time.time()) == {"is_crit": False, "is_warn": False}
 
     def test_drive_alerts(self, hw):
+        # REL-7: drives alert on temperature crossings here (condition comes from Drive Health)
+        from backend.services import drive_alerts
+
+        drive_alerts._hot.clear()
         bad = [{"name": "sda", "health": "crit", "temp": 60}, {"name": "sdb", "health": "warn", "temp": 50}]
         r = sc._check_health(bad, 40, False, [], True, time.time())
         keys = [n["dedup_key"] for n in hw["notify"]]
-        assert keys == ["drive_crit_sda", "drive_warn_sdb"] and r["is_crit"] and r["is_warn"]
+        assert keys == ["drive_temp_sda_crit", "drive_temp_sdb_warn"] and r["is_crit"] and r["is_warn"]
+        sc._check_health(bad, 40, False, [], True, time.time())  # the next tick, still hot: quiet
+        assert len(hw["notify"]) == 2
+        drive_alerts._hot.clear()
 
 
 class TestLeds:

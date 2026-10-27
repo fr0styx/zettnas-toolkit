@@ -320,10 +320,15 @@ export function initSetupWizard() {
         const notifUrl = (document.getElementById('setup-notif-url')?.value || '').trim();
         if (notifUrl) {
           try {
+            // REL-6: add to the saved settings (secrets stay masked and kept), then send a test alert
+            const current = (await api.get('/api/notifications/config').catch(() => null)) || {};
+            const urls = Array.isArray(current.apprise_urls) ? current.apprise_urls : [];
             await api.post('/api/notifications/config', {
-              urls: [notifUrl],
-              enabled: true
+              ...current,
+              enabled: true,
+              apprise_urls: urls.includes(notifUrl) ? urls : [...urls, notifUrl],
             });
+            api.post('/api/notifications/test', {}).catch(() => null);
           } catch (notifErr) {
             console.warn('[SetupWizard] Failed to save notification URL:', notifErr);
           }

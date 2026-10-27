@@ -25421,6 +25421,13 @@
       "title": "Unraid Notify",
       "type": "boolean"
      },
+     "urls": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Urls",
+      "type": "array"
+     },
      "webhook_enabled": {
       "default": false,
       "title": "Webhook Enabled",

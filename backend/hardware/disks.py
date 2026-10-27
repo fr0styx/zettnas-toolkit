@@ -92,11 +92,9 @@ def _evaluate_smart_trends(dev_name, metrics):
     if changed:
         _smart_trends[dev_name] = baseline
         atomic_write_json(TRENDS_FILE, _smart_trends)
+        # growth is judged and alerted by Drive Health's verdicts (REL-7), not here
         for msg in alerts:
-            add_event("warning", f"SMART Degradation: {dev_name}", msg)
-            send_notification(
-                {"type": "hardware", "title": f"SMART Degradation: {dev_name}", "message": msg, "level": "warning"}
-            )
+            logger.info(f"[SMART] {dev_name}: {msg}")
 
 
 _DISK_LIST_TTL = 15.0  # seconds
@@ -1106,8 +1104,29 @@ def drive_health_for(dev_name: str, doc: dict | None) -> dict:
     return result
 
 
+def drive_identity(dev_name: str) -> str:
+    """A drive's lasting name: its WWN or serial, or the kernel name when neither is known (REL-7)."""
+    try:
+        for d in _discover_disks():
+            if d.get("dev") == dev_name:
+                for k in ("wwn", "serial"):
+                    v = str(d.get(k) or "").strip()
+                    if v and "standby" not in v.lower():
+                        return f"{k}:{v}"
+    except Exception:
+        logger.debug("backend.hardware.disks.drive_identity: discovery failed", exc_info=True)
+    return f"dev:{dev_name}"
+
+
 def remember_verdict(dev_name: str, result: dict) -> None:
-    """Keeps the latest verdict per drive for the Overview and the phone (status_summary)."""
+    """Keeps the latest verdict per drive for the Overview and the phone (status_summary), and
+    alerts when it changed (REL-7)."""
+    try:
+        from backend.services import drive_alerts
+
+        drive_alerts.on_verdict(dev_name, result, key=drive_identity(dev_name))
+    except Exception:
+        logger.debug("backend.hardware.disks.remember_verdict: alert not sent", exc_info=True)
     top = next((f for f in result.get("findings") or [] if f.get("severity") == result.get("verdict")), None)
     with Z_STATE.smart.lock:
         Z_STATE.drive_verdicts[dev_name] = {
