@@ -46,10 +46,27 @@ def sso_public_config() -> dict[str, Any]:
     return oidc.public_config()
 
 
+STATE_COOKIE = "zn_sso_state"
+
+
 @router.get("/login")
 def sso_login(request: Request):
     try:
-        return RedirectResponse(oidc.start_login(_base(request)), status_code=303)
+        url = oidc.start_login(_base(request))
+        resp = RedirectResponse(url, status_code=303)
+        # The callback must come back to the browser that started it (B11, SEC-29): a sign-in
+        # link started elsewhere cannot sign this browser in to someone else's account.
+        state = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query).get("state", [""])[0]
+        resp.set_cookie(
+            STATE_COOKIE,
+            state,
+            max_age=oidc.STATE_TTL_S,
+            httponly=True,
+            samesite="lax",
+            secure=request.url.scheme == "https",
+            path="/api",
+        )
+        return resp
     except Exception as e:
         logger.warning(f"[OIDC] Could not start sign-in: {e}")
         return _fail(str(e) if isinstance(e, oidc.OidcError) else "The sign-in provider is not reachable.")
@@ -59,6 +76,12 @@ def sso_login(request: Request):
 def sso_callback(request: Request, code: str = "", state: str = "", error: str = "", error_description: str = ""):
     if error:
         return _fail(error_description or error)
+    started_here = request.cookies.get(STATE_COOKIE)
+    if started_here and started_here != state:
+        return _fail("This sign-in was started in another browser. Start it again here.")
+    if not started_here:
+        # warned for one release (D11): from the next one a sign-in without the cookie is refused
+        logger.warning("[OIDC] Sign-in callback without the browser cookie it was started with")
     try:
         claims = oidc.finish_login(code, state)
         user = oidc.user_for_claims(claims)
@@ -74,6 +97,7 @@ def sso_callback(request: Request, code: str = "", state: str = "", error: str =
     for k, v in session.raw_headers:
         if k.lower() == b"set-cookie":
             resp.raw_headers.append((k, v))
+    resp.delete_cookie(STATE_COOKIE, path="/api")
     return resp
 
 

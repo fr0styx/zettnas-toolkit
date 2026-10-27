@@ -406,6 +406,31 @@ def _is_file_write(path: str, method: str) -> bool:
     return False
 
 
+_PROXY_WARNED: dict[str, float] = {}
+
+
+def _warn_proxy_local_account(user: dict[str, Any]) -> None:
+    """Proxy SSO signed in to an account it did not create (B11, SEC-29). Warned for one
+    release (D11), once a day per account; from the next release this is refused."""
+    name = str(user.get("username") or "")
+    now = time.time()
+    if now - _PROXY_WARNED.get(name, 0.0) < 86400:
+        return
+    _PROXY_WARNED[name] = now
+    logger.warning(f"[Auth] Proxy SSO signed in to {user.get('idp_type') or 'local'} account '{name}'")
+    try:
+        from backend.users_db import log_security_event
+
+        log_security_event(
+            "auth.proxy_sso_local_account",
+            "warning",
+            actor_username=name,
+            details={"idp_type": user.get("idp_type") or "local"},
+        )
+    except Exception:
+        logger.debug("[Auth] could not log the proxy SSO warning", exc_info=True)
+
+
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
@@ -480,6 +505,8 @@ async def auth_middleware(request: Request, call_next):
                         logger.warning(f"Failed to auto-provision proxy user '{proxy_user}': {e}")
                         user = get_user_by_username(proxy_user)
 
+                if user and user.get("status") == "active" and user.get("idp_type") != "proxy_sso":
+                    _warn_proxy_local_account(user)
                 if user and user.get("status") == "active":
                     # The proxy adds the identity header to every request it lets through, so a
                     # write must come from this server's own pages (same rule as cookie sessions).

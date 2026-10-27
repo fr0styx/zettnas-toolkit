@@ -68,6 +68,10 @@
 - **Zetty's web searches can't carry your files out**: it opens a web page only when you typed
   its address (exactly as you typed it), never one it made up, and opens none at all in a
   chat turn that read your files; it can still search.
+- **Sign-in warnings (refused from the next release)**: the Security Advisor names single sign-on
+  through an http:// provider, directory (LDAP) sign-in without encryption or certificate
+  checks, and a sign-in proxy that can reach accounts it did not create. Single sign-on is now
+  tied to the browser that started it.
 
 #### Backups and power
 

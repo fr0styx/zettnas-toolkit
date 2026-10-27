@@ -242,13 +242,12 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             {
                 "id": f["id"],
                 "name": f["name"],
-                "category": "Safe defaults",
+                "category": f.get("category", "Safe defaults"),
                 "passed": False,
                 "penalty": f["penalty"],
                 "severity": f["severity"],
                 "details": f["details"],
-                "fix": f["fix"],
-                "fix_label": f["fix_label"],
+                **({"fix": f["fix"], "fix_label": f["fix_label"]} if f.get("fix") else {}),
             }
         )
         issues.append(
@@ -258,7 +257,7 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
                 "severity": f["severity"],
                 "description": f["details"],
                 "remediation": f["remediation"],
-                "fix": f["fix"],
+                **({"fix": f["fix"]} if f.get("fix") else {}),
             }
         )
 

@@ -192,6 +192,92 @@ def _fix_ai_search_family() -> str:
     return "AI search is off for kids and guests."
 
 
+# --- sign-in (B11, SEC-29): warned for one release (D11), refused from the next ------------------
+NEXT = "From the next release ZettNAS refuses this."
+
+
+def _oidc_finding() -> dict[str, Any] | None:
+    from backend.services import oidc
+
+    cfg = oidc.load_config()
+    issuer = str(cfg.get("issuer") or "")
+    if not cfg.get("enabled") or not issuer.lower().startswith("http://"):
+        return None
+    return {
+        "id": "sso_http_issuer",
+        "name": "Single sign-on talks to its server without encryption",
+        "penalty": 15,
+        "severity": "high",
+        "details": f"The provider address is {issuer}, so sign-in codes and tokens travel in the clear. {NEXT}",
+        "remediation": "Use the provider's https:// address in Settings, Single sign-on.",
+    }
+
+
+def _ldap_findings() -> list[dict[str, Any]]:
+    from backend.services import ldap_auth
+
+    cfg = ldap_auth.load_config()
+    url = str(cfg.get("server_url") or "").lower()
+    if not cfg.get("enabled") or not url:
+        return []
+    out = []
+    if url.startswith("ldap://") and not cfg.get("start_tls"):
+        out.append(
+            {
+                "id": "ldap_plaintext",
+                "name": "Directory sign-in sends passwords without encryption",
+                "penalty": 15,
+                "severity": "high",
+                "details": f"Passwords go to the directory server in the clear (ldap:// without StartTLS). {NEXT}",
+                "remediation": "Use an ldaps:// address, or turn on StartTLS, in Settings, Directory (LDAP).",
+            }
+        )
+    if not cfg.get("verify_tls", True):
+        out.append(
+            {
+                "id": "ldap_unverified",
+                "name": "Directory sign-in does not check the server's certificate",
+                "penalty": 10,
+                "severity": "medium",
+                "details": "Anyone in between could pose as the directory server and collect passwords.",
+                "remediation": "Turn certificate checking on in Settings, Directory (LDAP).",
+            }
+        )
+    return out
+
+
+def _proxy_sso_finding() -> dict[str, Any] | None:
+    from backend import config
+    from backend.users_db import users_db_session
+
+    if not getattr(config, "ENABLE_PROXY_SSO", False):
+        return None
+    with users_db_session() as conn:
+        n = conn.execute(
+            "SELECT count(*) FROM users WHERE COALESCE(idp_type, 'local') != 'proxy_sso' AND status = 'active'"
+        ).fetchone()[0]
+    if not n:
+        return None
+    return {
+        "id": "proxy_sso_local_accounts",
+        "name": "Your sign-in proxy can sign in as any account",
+        "penalty": 10,
+        "severity": "medium",
+        "details": f"{n} account(s) not made by the proxy, admins included, can be reached with the proxy's user header. "
+        f"{NEXT} The proxy will reach only the accounts it created.",
+        "remediation": "Let the proxy create its own accounts, and keep admins on a password and two-factor sign-in.",
+    }
+
+
+def _sign_in_findings() -> list[dict[str, Any]]:
+    out = []
+    for find in (_oidc_finding, _proxy_sso_finding):
+        item = find()
+        if item:
+            out.append(item)
+    return out + _ldap_findings()
+
+
 FINDERS: tuple[Callable[[], dict[str, Any] | None], ...] = (
     _share_access_finding,
     _nfs_finding,
@@ -218,6 +304,10 @@ def findings() -> list[dict[str, Any]]:
             continue
         if item:
             out.append(item)
+    try:
+        out += _sign_in_findings()
+    except Exception as e:
+        logger.debug(f"[SecurityAdvisor] sign-in checks failed: {e}")
     return out
 
 
