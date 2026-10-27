@@ -90,7 +90,27 @@ def validate_share_path(path: str) -> str:
     system_path = real == "/" or any(real == f or real.startswith(f + "/") for f in _FORBIDDEN_PREFIXES)
     if not inside or system_path:
         raise ValueError(f"Share path must be inside {', '.join(roots) or 'the storage pool'}")
+    from backend.fsutil import is_protected
+
+    if is_protected(real):
+        raise ValueError("Share path is ZettNAS's own data folder; choose another folder")
     return real
+
+
+def protected_veto_names(share_path: str) -> list[str]:
+    """Names of app folders inside a share, for Samba's veto files (SEC-28): they never show over SMB."""
+    from backend.fsutil import protected_dirs
+
+    base = os.path.realpath(share_path or "")
+    inside = [d for d in protected_dirs() if base and d != base and d.startswith(base.rstrip("/") + "/")]
+    names = []
+    for d in inside:
+        if any(p != d and d.startswith(p.rstrip("/") + "/") for p in inside):
+            continue  # its parent is hidden already (the install folder hides its data folder)
+        name = os.path.basename(d)
+        if name and name not in names and "/" not in name:
+            names.append(name)
+    return names
 
 
 def validate_share(share: "SambaShareConfig") -> None:
@@ -358,6 +378,10 @@ class SambaEngine:
             if share.force_group:
                 conf_lines.append(f"   force group = {share.force_group}")
 
+            veto = protected_veto_names(share.path)
+            if veto:
+                conf_lines.append("   veto files = " + "".join(f"/{n}/" for n in veto))
+                conf_lines.append("   delete veto files = no")
             if share.valid_users:
                 conf_lines.append(f"   valid users = {share.valid_users}")
             if share.read_list:

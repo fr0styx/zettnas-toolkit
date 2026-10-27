@@ -264,11 +264,13 @@ def test_mfa_recovery_code_login_and_disable(test_env):
     status = client.get("/api/auth/mfa/status", headers=headers).json()
     assert status["recovery_codes_count"] == 7
 
-    # 5. Disable MFA using password
+    # 5. Disable MFA: the password alone is not enough (SEC-27); password + a recovery code is
+    weak = client.post("/api/auth/mfa/disable", headers=headers, json={"password": "SecurePassword456!"})
+    assert weak.status_code == 401
     disable_res = client.post(
         "/api/auth/mfa/disable",
         headers=headers,
-        json={"password": "SecurePassword456!"},
+        json={"password": "SecurePassword456!", "code": recovery_codes[1]},
     )
     assert disable_res.status_code == 200
 

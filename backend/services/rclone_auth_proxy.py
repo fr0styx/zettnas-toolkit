@@ -15,6 +15,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 
 # Ensure repository root is on sys.path
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,6 +26,7 @@ if REPO_ROOT not in sys.path:
 import logging
 
 from backend import config
+from backend.fsutil import safe_serve_root
 from backend.passwords import verify_password
 from backend.services import login_lockout
 from backend.users_db import get_user_by_username
@@ -90,14 +92,26 @@ def main():
                                 authenticated = True
                         if authenticated:
                             is_read_only = bool(u.get("read_only", False))
-                            shares = u.get("shares", [])
+                            # only folders the serve rules allow; an account left with none is refused
+                            shares = [
+                                r
+                                for r in (
+                                    safe_serve_root(s if os.path.isabs(s) else os.path.join(pool_path, s), pool_path)
+                                    for s in u.get("shares", [])
+                                )
+                                if r
+                            ]
+                            if u.get("shares") and not shares:
+                                authenticated = False
+                                break
                             if len(shares) == 1:
-                                s = shares[0]
-                                target_root = s if os.path.isabs(s) else os.path.join(pool_path, s)
+                                target_root = shares[0]
                             elif len(shares) > 1:
-                                data_dir = getattr(config, "DATA_DIR", "/app/data")
-                                user_chroot = os.path.join(data_dir, "sftp_chroot", username.lower())
-                                os.makedirs(user_chroot, exist_ok=True)
+                                # outside the data folder: the chroot holds only links to the shares
+                                user_chroot = os.path.join(
+                                    tempfile.gettempdir(), "zettnas-sftp-chroot", username.lower()
+                                )
+                                os.makedirs(user_chroot, mode=0o700, exist_ok=True)
                                 for entry in os.listdir(user_chroot):
                                     link_p = os.path.join(user_chroot, entry)
                                     if os.path.islink(link_p) or os.path.isfile(link_p):
@@ -147,7 +161,7 @@ def main():
         sys.exit(1)
     login_lockout.clear(lock_key)
 
-    # 4. Resolve root path safely
+    # 4. Resolve root path safely: never the data folder or a folder holding it (SEC-20)
     root = target_root or pool_path
     try:
         os.makedirs(root, exist_ok=True)
@@ -155,6 +169,10 @@ def main():
         pass
     if not os.path.exists(root):
         root = pool_path
+    chroot_base = os.path.join(tempfile.gettempdir(), "zettnas-sftp-chroot")
+    if not root.startswith(chroot_base + os.sep) and safe_serve_root(root, pool_path) is None:
+        login_lockout.register_failure(lock_key)
+        sys.exit(1)
 
     # 5. Output rclone backend configuration
     backend_config = {

@@ -258,6 +258,26 @@ def protected_rclone_excludes(base: str) -> list[str]:
     return flags
 
 
+def safe_serve_root(path: str, pool_path: str) -> str | None:
+    """The canonical folder WebDAV/SFTP may serve as an account's root, or None (SEC-20).
+
+    It must lie inside the browse roots, must not be an app folder, and must not contain
+    one: rclone's excludes for the app folders are written for the pool root only, so the
+    pool root itself is the one root allowed to contain them."""
+    import backend.config as config
+
+    if not path:
+        return None
+    roots = [*(getattr(config, "ALLOWED_BROWSE_ROOTS", None) or []), *([pool_path] if pool_path else [])]
+    real = resolve_within(path, roots)
+    if real is None:
+        return None
+    pool_real = os.path.realpath(pool_path) if pool_path else ""
+    if real != pool_real and any(_inside(d, real) for d in protected_dirs()):
+        return None
+    return real
+
+
 def resolve_within(path: str, roots: Iterable[str] | str) -> str | None:
     """Return the canonical (symlink-resolved) path if it lies inside one of
     `roots`, otherwise None. Defeats `..` segments and symlink escapes.

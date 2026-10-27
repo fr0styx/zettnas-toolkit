@@ -50,6 +50,11 @@ def _limit(request: Request) -> None:
 def new_invite(req: InviteIn, principal: AuthenticatedPrincipal = Depends(require_scope("users:write"))):  # noqa: B008
     if req.role_id not in INVITABLE_ROLES or not get_role(req.role_id):
         raise HTTPException(status_code=400, detail="That role can't be given by invite.")
+    from backend.api.auth import _role_within
+
+    if not _role_within(list(principal.scopes or []), req.role_id):
+        # SEC-26: an invite can't hand out more than its creator can do
+        raise HTTPException(status_code=403, detail="You can't invite someone into a role with more rights than yours.")
     token, invite = create_invite(
         req.role_id, req.days, req.max_uses, req.note, principal.username, req.quota_gb * 1024**3
     )

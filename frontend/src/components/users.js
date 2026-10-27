@@ -774,28 +774,40 @@ export function disable2FA() {
     'Disable Two-Factor Authentication',
     'Enter your account password to confirm disabling Two-Factor Authentication:',
     '',
-    async (pwd) => {
+    (pwd) => {
       if (!pwd) return;
-      try {
-        const res = await apiFetch('/api/auth/mfa/disable', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ password: pwd })
-        });
-        if (res.ok) {
-          showToast(t('toast.two_factor_authentication_has_been_disabled', 'Two-Factor Authentication has been disabled.'), 'success');
-          load2FAStatus();
-          fetchCurrentProfile();
-        } else {
-          const err = await res.json();
-          showToast(t('toast.could_not_disable_2fa', 'Could not disable 2FA: {detail}', { detail: err.detail || 'Invalid password' }), 'error');
-        }
-      } catch (err) {
-        showToast(t('toast.request_failed', 'Request failed: {error}', { error: err.message }), 'error');
-      }
+      // SEC-27: the password and a current code (or a recovery code) are both needed
+      showPromptToast(
+        t('mfa.disable_title', 'Turn off two-factor sign-in'),
+        t('mfa.disable_code_prompt', 'Enter the 6-digit code from your authenticator app, or one of your recovery codes:'),
+        '',
+        (code) => (code ? _sendDisable2FA(pwd, code.trim()) : undefined),
+        null,
+        { okText: t('mfa.disable_ok', 'Turn off'), cancelText: t('common.cancel', 'Cancel') }
+      );
     },
     null,
-    { inputType: 'password', okText: 'Disable 2FA', cancelText: 'Cancel' }
+    { inputType: 'password', okText: t('common.next', 'Next'), cancelText: t('common.cancel', 'Cancel') }
   );
+}
+
+async function _sendDisable2FA(pwd, code) {
+  try {
+    const res = await apiFetch('/api/auth/mfa/disable', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ password: pwd, code })
+    });
+    if (res.ok) {
+      showToast(t('toast.two_factor_authentication_has_been_disabled', 'Two-Factor Authentication has been disabled.'), 'success');
+      load2FAStatus();
+      fetchCurrentProfile();
+    } else {
+      const err = await res.json();
+      showToast(t('toast.could_not_disable_2fa', 'Could not disable 2FA: {detail}', { detail: err.detail || 'Invalid password' }), 'error');
+    }
+  } catch (err) {
+    showToast(t('toast.request_failed', 'Request failed: {error}', { error: err.message }), 'error');
+  }
 }

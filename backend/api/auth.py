@@ -605,6 +605,7 @@ def mfa_challenge(req: MfaChallengeRequest, request: Request):
     if not mfa_ok:
         _register_failure(ip)
         _register_failure(f"user:{target_username}@{ip}")
+        _register_failure(f"account:{target_username}")
         log_security_event(
             "auth.mfa.failure",
             "failure",
@@ -717,14 +718,33 @@ def disable_mfa(data: MfaDisableRequest, request: Request):
     if not user_mfa or not user_mfa.get("mfa_enabled"):
         return {"status": "ok", "message": "Two-factor authentication is already disabled."}
 
-    valid = False
-    if data.password:
-        valid = verify_password(data.password, user.get("password_hash", ""))
-    elif data.code and user_mfa.get("mfa_secret"):
-        valid = verify_totp_code(user_mfa["mfa_secret"], data.code, user_id=user["id"])
+    # SEC-27: the password AND a current code (or a recovery code), with a lockout, so a
+    # stolen session can neither guess its way to removing two-factor nor test passwords here
+    lock_key = f"mfa-off:{user['id']}"
+    wait = _lockout_remaining(lock_key)
+    if wait > 0:
+        return _rate_limited(wait)
+    code = (data.code or "").strip()
+    valid = bool(data.password) and verify_password(data.password or "", user.get("password_hash", ""))
+    if valid:
+        valid = bool(code) and (
+            (bool(user_mfa.get("mfa_secret")) and verify_totp_code(user_mfa["mfa_secret"], code, user_id=user["id"]))
+            or consume_user_recovery_code(user["id"], code)
+        )
 
     if not valid:
-        return error_response(401, "Invalid password or verification code to disable 2FA.")
+        _register_failure(lock_key, is_ip=False)
+        log_security_event(
+            "auth.mfa.disable_failed",
+            "failure",
+            actor_id=user["id"],
+            actor_username=user["username"],
+            actor_ip=_client_ip(request),
+        )
+        return error_response(
+            401, "To turn off two-factor sign-in, enter your password and a current code or a recovery code."
+        )
+    _clear_failures(lock_key)
 
     ok = disable_user_mfa(user["id"])
     if not ok:
@@ -737,6 +757,12 @@ def disable_mfa(data: MfaDisableRequest, request: Request):
         actor_username=user["username"],
         actor_ip=_client_ip(request),
     )
+    try:  # visible to the admins in the event log
+        from backend.state import add_event
+
+        add_event("warning", "Two-factor sign-in turned off", f"{user['username']} turned off two-factor sign-in.")
+    except Exception:
+        logger.debug("backend.api.auth.disable_mfa: event not recorded", exc_info=True)
     return {"status": "ok", "message": "Two-factor authentication disabled successfully."}
 
 
@@ -1060,6 +1086,12 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
             has_scope(scopes, s) for s in ("users:write", "users:manage")
         ):
             return error_response(403, "Permission denied.")
+        target = get_user_by_id(user_id)
+        if target and not _role_within(scopes, target.get("role_id")):
+            # SEC-26: no taking over an account that can do more than you can
+            return error_response(
+                403, "You can't change the password of someone with more rights than you.", error="role_too_high"
+            )
 
     if len(data.new_password) < config.MIN_PASSWORD_LENGTH:
         return error_response(400, f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters.")
@@ -1117,8 +1149,11 @@ def delete_user_endpoint(
     if principal.user_id == user_id:
         return error_response(400, "Cannot delete your own active account.")
 
+    target = get_user_by_id(user_id)
+    if target and not _role_within(list(principal.scopes or []), target.get("role_id")):
+        # SEC-26: nobody deletes an account that can do more than they can
+        return error_response(403, "You can't delete someone with more rights than you.", error="role_too_high")
     try:
-        target = get_user_by_id(user_id)
         ok = delete_user(user_id)
         if not ok:
             raise HTTPException(status_code=404, detail="User not found.")

@@ -210,6 +210,16 @@ Match Group sftpusers
 
                 stored_pw = hash_password(raw_pw)
 
+        from backend import config as _config
+        from backend.fsutil import safe_serve_root
+
+        pool = getattr(_config, "POOL_PATH", "/mnt/user")
+        for s in user_data.get("shares", []) or []:
+            if safe_serve_root(s if os.path.isabs(str(s)) else os.path.join(pool, str(s)), pool) is None:
+                raise ValueError(
+                    f"'{s}' cannot be shared over SFTP: it is outside the shares or holds ZettNAS's own data."
+                )
+
         user_entry = {
             "username": username,
             "display_name": user_data.get("display_name", username),

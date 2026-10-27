@@ -235,7 +235,7 @@ def test_sftp_auth_proxy_chroot_and_exact_key(tmp_path):
     assert resp.get("_read_only") is True
     # Crucial security check: root must NOT be pool_dir
     assert resp.get("_root") != str(pool_dir)
-    assert "sftp_chroot" in resp.get("_root")
+    assert "zettnas-sftp-chroot" in resp.get("_root")
     # Verify symlinks inside chroot
     chroot_entries = os.listdir(resp.get("_root"))
     assert "media" in chroot_entries

@@ -134,5 +134,5 @@ def test_deleting_an_account_forgets_its_data(family, monkeypatch):
 
     erased = []
     monkeypatch.setattr(user_data, "erase_user_data", lambda u, parts=user_data.PARTS: erased.append(u["username"]))
-    res = auth_api.delete_user_endpoint(family["lea"]["id"], request(), principal(family["mum"], ["users:delete"]))
+    res = auth_api.delete_user_endpoint(family["lea"]["id"], request(), principal(family["mum"], ["*"]))
     assert res == {"status": "ok"} and erased == ["lea"]
