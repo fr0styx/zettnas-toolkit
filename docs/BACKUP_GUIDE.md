@@ -58,8 +58,11 @@ Run the backup from a systemd timer or cron, and `restic forget --keep-daily 7
 - Turn on **guard files** in the ransomware guard (Security) so an attack on a share
   freezes writes before it reaches the rest.
 - Send a copy off the box: an **off-site backup** (Backup → Off-site) to another NAS or a
-  cloud remote, and save its recovery key outside the NAS. (Storage replication is turned
-  off for now while it is being fixed.)
+  cloud remote, and save its recovery key outside the NAS.
+- Where ZettNAS manages the pools itself (ZettOS, plain Linux), **replication** (Storage →
+  Replication) copies a ZFS dataset or btrfs subvolume as snapshots to another pool or over
+  SSH, sending only what changed. The copy is read-only and keeps the job's last snapshots.
+  On TrueNAS use its own Replication Tasks; on Unraid use an off-site backup.
 
 
 ## Disaster recovery: getting ZettNAS itself back

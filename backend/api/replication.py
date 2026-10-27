@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
 from backend.paging import PageParams
-from backend.services.replication_engine import get_replication_engine
+from backend.services.replication_engine import availability, get_replication_engine, validate
 
 router = APIRouter(prefix="/storage/replication", tags=["Storage Replication"])
 
@@ -29,25 +29,32 @@ class ReplicationJobCreateRequest(BaseModel):
     incremental: bool = Field(default=True)
     retention_count: int = Field(default=14, ge=1, le=365)
     schedule: str = Field(default="daily", pattern=r"^(manual|hourly|daily|weekly)$")
+    hour: int = Field(default=1, ge=0, le=23)
 
 
 @router.get("/jobs", dependencies=[Depends(require_scope("storage:read"))])
 def list_replication_jobs() -> dict[str, Any]:
     engine = get_replication_engine()
-    return {"jobs": engine.list_jobs(), "available": False, "reason": REPLICATION_OFF}
+    ok, reason = availability()
+    return {"jobs": engine.list_jobs(), "available": ok, "reason": reason}
 
 
-REPLICATION_OFF = (
-    "Replication is turned off for now: it needs the ZFS or btrfs tools and a safe schedule, "
-    "which are being fixed. Use an off-site backup to another NAS instead."
-)
+def _available() -> None:
+    """REL-5: replication runs where ZettNAS manages the pools and has their tools."""
+    ok, reason = availability()
+    if not ok:
+        raise HTTPException(status_code=409, detail=reason)
 
 
 @router.post("/jobs", dependencies=[Depends(require_scope("storage:admin"))])
 def create_replication_job(req: ReplicationJobCreateRequest) -> dict[str, Any]:
-    raise HTTPException(status_code=409, detail=REPLICATION_OFF)  # REL-5 (D7): off until fixed
-    engine = get_replication_engine()
-    job = engine.create_job(req.model_dump())
+    _available()
+    data = req.model_dump()
+    try:
+        validate(data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    job = get_replication_engine().create_job(data)
     return {"status": "created", "job": job}
 
 
@@ -71,14 +78,11 @@ def delete_replication_job(job_id: str) -> dict[str, Any]:
 
 @router.post("/jobs/{job_id}/run", dependencies=[Depends(require_scope("storage:admin"))])
 def run_replication_job(job_id: str) -> dict[str, Any]:
-    raise HTTPException(status_code=409, detail=REPLICATION_OFF)  # REL-5 (D7): off until fixed
-    engine = get_replication_engine()
+    _available()
     try:
-        return engine.run_job_async(job_id)
+        return get_replication_engine().run_job_async(job_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/history", dependencies=[Depends(require_scope("storage:read"))])

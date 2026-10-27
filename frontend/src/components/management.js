@@ -784,6 +784,7 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-chassis-twin') {
       const mount = document.getElementById('mgmt-chassis-twin-mount');
       if (mount) fetchAndRenderChassisTwin(mount);
+      import('./management/network.js').then((n) => n.revealReplicationTab()).catch(() => {});
     } else if (paneId === 'mgmt-pane-storage-topo') {
       const mount = document.getElementById('mgmt-storage-topo-mount');
       if (mount) fetchAndRenderStorageTopology(mount);

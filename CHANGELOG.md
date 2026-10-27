@@ -126,8 +126,12 @@
   skipped. Locks left by an interrupted run are cleared first. Backups and restores run as jobs with
   progress. The monthly restore drill picks a random file and compares its checksum with the
   original. A backup on the same storage as its folders is flagged.
-- Snapshot, scrub and replication settings are shown only where the host can run them; storage
-  replication is turned off until it is fixed (use an off-site backup to another NAS).
+- Snapshot, scrub and replication settings are shown only where the host can run them.
+- **Replication works again** where ZettNAS manages the pools (ZettOS, plain Linux): ZFS datasets
+  and btrfs subvolumes go to another pool or over SSH on their schedule, only what changed since the
+  last snapshot both sides have; a target that isn't this job's replica is never overwritten, the
+  ZFS copy is received read-only, old snapshots are pruned on both sides, the bandwidth limit holds,
+  and a failed or late run is alerted like a backup. TrueNAS and Unraid replicate their own pools.
 - On battery, the UPS outlets are switched off only after the host shutdown really started.
 
 #### Setup, phone and alerts

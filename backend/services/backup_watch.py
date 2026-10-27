@@ -62,6 +62,12 @@ def overdue_backups(now: float | None = None) -> list[dict[str, Any]]:
                 )
     except Exception:
         logger.debug("backup_watch: offsite repositories unreadable", exc_info=True)
+    try:
+        from backend.services.replication_engine import overdue
+
+        out.extend(overdue(now))  # REL-5
+    except Exception:
+        logger.debug("backup_watch: replication jobs unreadable", exc_info=True)
     return out
 
 

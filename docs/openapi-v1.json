@@ -29253,6 +29253,13 @@
       ],
       "title": "Bandwidth Limit Kbps"
      },
+     "hour": {
+      "default": 1,
+      "maximum": 23.0,
+      "minimum": 0.0,
+      "title": "Hour",
+      "type": "integer"
+     },
      "incremental": {
       "default": true,
       "title": "Incremental",

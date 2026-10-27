@@ -53,6 +53,21 @@ export async function fetchAndRenderCopyHistory() {
   }
 }
 
+let replicationTabChecked = false;
+
+/** REL-5: the Replication tab shows only where this NAS can replicate its pools, or keeps jobs. */
+export async function revealReplicationTab() {
+  if (replicationTabChecked) return;
+  replicationTabChecked = true;
+  try {
+    const res = await api.get('/api/storage/replication/jobs');
+    const tab = document.querySelector('.mgmt-inner-tab[data-tab-target="mgmt-pane-storage-replication"]');
+    if (tab) tab.style.display = res.available || (res.jobs || []).length ? '' : 'none';
+  } catch (_) {
+    replicationTabChecked = false; // try again next time the storage section opens
+  }
+}
+
 export async function fetchAndRenderReplication() {
   const tbody = document.getElementById('replication-jobs-tbody');
   const histTbody = document.getElementById('replication-history-tbody');
@@ -65,7 +80,15 @@ export async function fetchAndRenderReplication() {
     ]);
 
     const jobs = jobsRes.jobs || [];
-    if (jobs.length === 0) {
+    if (jobsRes.available === false && jobsRes.reason) {
+      const cell = document.createElement('td');
+      cell.colSpan = 8;
+      cell.className = 'repl-note';
+      cell.textContent = jobsRes.reason;
+      const row = document.createElement('tr');
+      row.appendChild(cell);
+      tbody.replaceChildren(row);
+    } else if (jobs.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">No replication pipelines configured. Click '+ New Replication Pipeline' to create one.</td></tr>`;
     } else {
       tbody.innerHTML = jobs
@@ -77,12 +100,12 @@ export async function fetchAndRenderReplication() {
           return `
           <tr>
             <td><strong>${escapeHtml(j.name || j.id)}</strong></td>
-            <td><span class="badge" style="font-family:monospace;">${escapeHtml(j.source_pool)}/${escapeHtml(j.source_subvolume || '@')}</span></td>
+            <td><span class="badge" style="font-family:monospace;">${escapeHtml(j.source_pool)}/${escapeHtml(j.source_dataset || '')}</span></td>
             <td>${tgtDesc}</td>
             <td><span class="mgmt-app-pill" style="font-size:var(--zn-fs-xs);">${escapeHtml(j.schedule || 'manual')}</span></td>
-            <td>${j.bandwidth_limit_mbps ? `${j.bandwidth_limit_mbps} MB/s` : 'Unlimited'}</td>
-            <td>${j.retention_count || 7} snaps</td>
-            <td><span class="mgmt-app-pill ${j.enabled ? 'text-emerald' : 'text-muted'}">${j.enabled ? 'Active' : 'Disabled'}</span></td>
+            <td>${j.bandwidth_limit_kbps ? `${Math.round(j.bandwidth_limit_kbps / 1024)} MB/s` : 'Unlimited'}</td>
+            <td>${j.retention_count || 14} snaps</td>
+            <td><span class="mgmt-app-pill ${j.last_status === 'error' ? 'text-crit' : j.last_status === 'success' ? 'text-emerald' : 'text-muted'}" title="${escapeHtml(j.last_error || '')}">${escapeHtml(j.last_status || 'idle')}</span></td>
             <td style="text-align:right;">
               <button class="btn-pill-toggle btn-run-repl is-small" data-id="${escapeHtml(j.id)}" style="margin-right: 4px;" title="${t('ui.execute_replication_now', 'Execute Replication Now')}">▶ Run</button>
               <button class="btn-pill-toggle btn-del-repl is-danger is-small" data-id="${escapeHtml(j.id)}" title="${t('ui.delete_pipeline', 'Delete Pipeline')}">🗑️</button>

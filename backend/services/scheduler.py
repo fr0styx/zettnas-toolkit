@@ -114,6 +114,16 @@ def _run_alert_retries(now: float) -> None:
         logger.warning(f"[Scheduler] Alert retries failed: {e}")
 
 
+def _run_replication(now: float) -> None:
+    """Replication jobs on their schedule (REL-5)."""
+    try:
+        from backend.services.replication_engine import get_replication_engine
+
+        get_replication_engine().run_due(now)
+    except Exception as e:
+        logger.warning(f"[Scheduler] Replication schedules failed: {e}")
+
+
 def _run_pool_checks(now: float) -> None:
     """Degraded pools, disks, scrub errors and full pools (REL-11), and the weekly report."""
     try:
@@ -163,6 +173,7 @@ def _run_scheduled_tasks():
             logger.warning(f"[Scheduler] Notification digest failed: {e}")
         _run_pool_checks(now)
         _run_alert_retries(now)
+        _run_replication(now)
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

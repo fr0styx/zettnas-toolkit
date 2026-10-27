@@ -15,11 +15,13 @@ from backend.main import app
 
 
 def test_replication_router_endpoints(client, auth_headers, tmp_path, monkeypatch):
-    """REL-5 (D7): replication is turned off until it can run safely; listing still works."""
+    """REL-5: replication runs only where ZettNAS manages the pools with their tools; elsewhere
+    listing still works and creating or running a job says why."""
     monkeypatch.setattr("backend.services.replication_engine.REPLICATION_JOBS_FILE", str(tmp_path / "jobs.json"))
     monkeypatch.setattr("backend.services.replication_engine.REPLICATION_HISTORY_FILE", str(tmp_path / "hist.json"))
     res = client.get("/api/storage/replication/jobs", headers=auth_headers)
     assert res.status_code == 200 and res.json()["available"] is False and "jobs" in res.json()
+    why = res.json()["reason"]
     payload = {
         "name": "DR",
         "source_pool": "tank",
@@ -31,7 +33,7 @@ def test_replication_router_endpoints(client, auth_headers, tmp_path, monkeypatc
         "retention_count": 7,
     }
     created = client.post("/api/storage/replication/jobs", json=payload, headers=auth_headers)
-    assert created.status_code == 409 and "turned off" in created.json()["detail"]
+    assert created.status_code == 409 and created.json()["detail"] == why
     assert client.post("/api/storage/replication/jobs/any/run", headers=auth_headers).status_code == 409
     assert client.get("/api/storage/replication/history", headers=auth_headers).status_code == 200
 
