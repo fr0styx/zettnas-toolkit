@@ -34,6 +34,8 @@ def _errors(fn, *args, **kwargs):
         raise HTTPException(status_code=400, detail=str(e)) from None
     except ob.ResticError as e:
         raise HTTPException(status_code=502, detail=str(e)) from None
+    except ob.BusyError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from None
 
 
 @router.get("/offsite", dependencies=[READ])
@@ -77,7 +79,8 @@ def kit_saved(repo_id: str):
 
 @router.post("/offsite/repos/{repo_id}/backup", dependencies=[MANAGE])
 def run_backup(repo_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    return _errors(ob.backup, repo_id, owner=principal.username if principal else None)
+    """Starts the backup as a job (REL-16); its progress and result show in Jobs."""
+    return _errors(ob.start_backup, repo_id, owner=principal.username if principal else None)
 
 
 @router.post("/offsite/repos/{repo_id}/check", dependencies=[MANAGE])
@@ -101,5 +104,9 @@ def browse(
 
 
 @router.post("/offsite/repos/{repo_id}/snapshots/{snapshot_id}/restore", dependencies=[MANAGE])
-def restore(repo_id: str, snapshot_id: str, req: RestoreIn):
-    return _errors(ob.restore, repo_id, snapshot_id, req.path, req.target)
+def restore(
+    repo_id: str, snapshot_id: str, req: RestoreIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    """Starts the restore as a job (REL-16); never over the live files."""
+    owner = principal.username if principal else None
+    return _errors(ob.start_restore, repo_id, snapshot_id, req.path, req.target, owner=owner)

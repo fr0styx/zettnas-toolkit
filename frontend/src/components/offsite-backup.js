@@ -23,7 +23,10 @@ export function reposHtml(data) {
         )}</span>
         <span class="offsite-meta">${escapeHtml(t('offsite.last', 'Last backup {b} · last check {c}', { b: when(r.last_backup), c: when(r.last_check) }))}${
           r.last_result && r.last_result !== 'ok' ? ` · <strong>${escapeHtml(r.last_result)}</strong>` : ''
-        }${r.initialized && !r.kit_saved_at ? ` · <strong class="offsite-kit-missing">${escapeHtml(t('offsite.kit_missing', 'Recovery kit not saved'))}</strong>` : ''}</span>
+        }${r.initialized && !r.kit_saved_at ? ` · <strong class="offsite-kit-missing">${escapeHtml(t('offsite.kit_missing', 'Recovery kit not saved'))}</strong>` : ''}${
+          r.last_unreadable ? ` · <strong>${escapeHtml(t('offsite.unreadable', '{n} files could not be read', { n: r.last_unreadable }))}</strong>` : ''
+        }</span>
+        ${r.same_disk ? `<span class="offsite-meta"><strong>${escapeHtml(t('offsite.same_disk', 'Same storage as the folders it protects: a failed disk, a theft or a fire takes both. Use a USB disk, another NAS or the cloud.'))}</strong></span>` : ''}
       </div>
       <div class="offsite-actions">
         <button type="button" class="btn-pill-toggle is-small is-primary" data-off="backup" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.backup_now', 'Back up now'))}</button>
@@ -162,9 +165,8 @@ export async function renderOffsite(mount) {
     const act = b.dataset.off;
     try {
       if (act === 'backup') {
+        await api.post(`/api/offsite/repos/${id}/backup`, {});
         showToast(t('offsite.started', 'Backup started; it shows in Jobs.'), 'info');
-        const r = await api.post(`/api/offsite/repos/${id}/backup`, {});
-        showToast(t('offsite.done', 'Backup done: {n} new, {c} changed, {s} added.', { n: r.files_new, c: r.files_changed, s: formatBytes(r.data_added) }), 'success');
       } else if (act === 'check') {
         await api.post(`/api/offsite/repos/${id}/check`, {});
         showToast(t('offsite.verified', 'The backup is readable and complete.'), 'success');
@@ -247,7 +249,7 @@ async function openVersions(repoId) {
         const dir = path.split('/').slice(0, -1).join('/');
         const target = `${dir || ''}/Restored from backup ${new Date().toISOString().slice(0, 10)}`;
         const r = await api.post(`/api/offsite/repos/${id}/snapshots/${encodeURIComponent(version)}/restore`, { path, target });
-        showToast(t('offsite.restored', 'Restored to {path}', { path: r.restored_to }), 'success');
+        showToast(t('offsite.restore_started', 'Restoring into {path}; it shows in Jobs.', { path: r.restored_to }), 'info');
       }
     } catch (err) {
       showToast(err.message || String(err), 'error');

@@ -113,6 +113,12 @@
   backup is, the cloud settings it needs and the restore commands; the Overview says "Recovery kit
   not saved" until it is downloaded or copied. BACKUP_GUIDE explains how to recover on new hardware.
 - **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.
+- **Off-site backups are steadier**: each NAS keeps one name in restic across updates, so a backup
+  after an update no longer re-reads every file and old versions are pruned again. Files that could
+  not be read no longer fail the whole backup: the rest is saved and the backup says how many were
+  skipped. Locks left by an interrupted run are cleared first. Backups and restores run as jobs with
+  progress. The monthly restore drill picks a random file and compares its checksum with the
+  original. A backup on the same storage as its folders is flagged.
 - Snapshot, scrub and replication settings are shown only where the host can run them; storage
   replication is turned off until it is fixed (use an off-site backup to another NAS).
 - On battery, the UPS outlets are switched off only after the host shutdown really started.

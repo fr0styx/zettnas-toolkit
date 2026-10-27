@@ -49513,6 +49513,7 @@
   },
   "/api/v1/offsite/repos/{repo_id}/backup": {
    "post": {
+    "description": "Starts the backup as a job (REL-16); its progress and result show in Jobs.",
     "operationId": "run_backup_api_v1_offsite_repos__repo_id__backup_post",
     "parameters": [
      {
@@ -49870,6 +49871,7 @@
   },
   "/api/v1/offsite/repos/{repo_id}/snapshots/{snapshot_id}/restore": {
    "post": {
+    "description": "Starts the restore as a job (REL-16); never over the live files.",
     "operationId": "restore_api_v1_offsite_repos__repo_id__snapshots__snapshot_id__restore_post",
     "parameters": [
      {

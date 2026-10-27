@@ -20,7 +20,7 @@ from typing import Any
 
 from backend import config
 from backend.config import DATA_DIR, RCLONE_CONFIG_FILE, logger
-from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.fsutil import atomic_write_json, atomic_write_text, read_json, resolve_within
 
 REPOS_FILE = os.path.join(DATA_DIR, "offsite_repos.json")
 KEY_DIR = os.path.join(DATA_DIR, "offsite_keys")
@@ -28,10 +28,52 @@ DEFAULT_KEEP = {"daily": 7, "weekly": 4, "monthly": 12}
 _LOCK = threading.Lock()
 _RUNNING: dict[str, subprocess.Popen] = {}
 _ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,40}$")
+_BUSY: set[str] = set()  # repos with a backup or restore started, before restic itself runs
+WARN_EXIT = 3  # restic backup: the snapshot was made, but some files could not be read
+OFF_BOX_ROOTS = ("/mnt/disks/", "/mnt/remotes/", "/mnt/addons/")  # USB and network disks
+_HOST = re.compile(r"^zettnas-[0-9a-f]{8}$")
 
 
 class ResticError(RuntimeError):
     pass
+
+
+class BusyError(RuntimeError):
+    pass
+
+
+def host_id() -> str:
+    """The host name this NAS's backups carry in restic (REL-16). It stays the same across
+    updates, which give the container a new hostname each time; with a new one restic re-read
+    every file and the old versions were never pruned."""
+    path = os.path.join(DATA_DIR, "offsite_host")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            value = f.read().strip()
+        if _HOST.match(value):
+            return value
+    value = f"zettnas-{secrets.token_hex(4)}"
+    os.makedirs(DATA_DIR, exist_ok=True)
+    atomic_write_text(path, value + "\n")
+    return value
+
+
+def _device(path: str) -> int | None:
+    while path and path != "/" and not os.path.exists(path):
+        path = os.path.dirname(path)
+    try:
+        return os.stat(path or "/").st_dev
+    except OSError:
+        return None
+
+
+def same_disk(location: str, paths: list[str]) -> bool:
+    """True when a folder destination sits on the same storage as the folders it protects, so
+    one failed disk, a theft or a fire takes both (REL-16)."""
+    if not location.startswith("/") or location.startswith(OFF_BOX_ROOTS):
+        return False
+    dev = _device(location)
+    return dev is not None and any(_device(p) == dev for p in paths)
 
 
 def _in_storage(path: str) -> bool:
@@ -57,7 +99,7 @@ def _key_file(repo_id: str) -> str:
 
 
 def list_repos() -> list[dict[str, Any]]:
-    return list(_repos().values())
+    return [{**r, "same_disk": same_disk(r.get("location") or "", r.get("paths") or [])} for r in _repos().values()]
 
 
 def get_repo(repo_id: str) -> dict[str, Any]:
@@ -100,7 +142,7 @@ def save_repo(
             "kit_saved_at": old.get("kit_saved_at"),
         }
         _save(repos)
-    return repos[repo_id]
+    return {**repos[repo_id], "same_disk": same_disk(location, clean_paths)}
 
 
 def delete_repo(repo_id: str) -> bool:
@@ -121,13 +163,53 @@ def _env(repo: dict[str, Any]) -> dict[str, str]:
             "RESTIC_PASSWORD_FILE": _key_file(repo["id"]),
             "RCLONE_CONFIG": RCLONE_CONFIG_FILE,
             "RESTIC_CACHE_DIR": os.path.join(DATA_DIR, "restic_cache"),
+            "RESTIC_PROGRESS_FPS": "0.5",
         }
     )
     env.pop("RESTIC_PASSWORD", None)
     return env
 
 
-def run_restic(repo: dict[str, Any], args: list[str], timeout: int = 6 * 3600, track: bool = False) -> str:
+def _stream(proc: subprocess.Popen, timeout: int, on_line: Callable[[str], Any]) -> tuple[str, str]:
+    """Hands each output line to on_line as restic prints it; keeps all but the progress lines."""
+    err: list[str] = []
+    reader = threading.Thread(target=lambda: err.append(proc.stderr.read() if proc.stderr else ""), daemon=True)
+    reader.start()
+    timed_out = threading.Event()
+
+    def _kill() -> None:
+        timed_out.set()
+        proc.kill()
+
+    timer = threading.Timer(timeout, _kill)
+    timer.start()
+    kept: list[str] = []
+    try:
+        for line in proc.stdout or []:
+            if '"message_type":"status"' not in line:
+                kept.append(line)
+            try:
+                on_line(line)
+            except Exception:
+                logger.debug("offsite: progress line not understood", exc_info=True)
+        proc.wait()
+    finally:
+        timer.cancel()
+    reader.join(5)
+    if timed_out.is_set():
+        raise subprocess.TimeoutExpired(proc.args, timeout)
+    return "".join(kept), "".join(err)
+
+
+def _run(
+    repo: dict[str, Any],
+    args: list[str],
+    timeout: int = 6 * 3600,
+    track: bool = False,
+    ok: tuple[int, ...] = (0,),
+    on_line: Callable[[str], Any] | None = None,
+) -> tuple[int, str]:
+    """Runs restic; returns its exit code (one of `ok`) and output."""
     if not restic_available():
         raise ResticError("restic is not installed in this image.")
     cmd = ["restic", *args]
@@ -135,15 +217,50 @@ def run_restic(repo: dict[str, Any], args: list[str], timeout: int = 6 * 3600, t
     if track:
         _RUNNING[repo["id"]] = proc
     try:
-        out, err = proc.communicate(timeout=timeout)
+        out, err = _stream(proc, timeout, on_line) if on_line else proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         proc.kill()
         raise ResticError("restic took too long and was stopped.") from None
     finally:
         _RUNNING.pop(repo["id"], None)
-    if proc.returncode != 0:
+    if proc.returncode not in ok:
         raise ResticError((err or out or f"restic exited with {proc.returncode}").strip().splitlines()[-1][:300])
-    return out
+    return proc.returncode, out
+
+
+def run_restic(repo: dict[str, Any], args: list[str], timeout: int = 6 * 3600, track: bool = False) -> str:
+    return _run(repo, args, timeout=timeout, track=track)[1]
+
+
+def _unlock(repo: dict[str, Any]) -> None:
+    """Removes locks left by a restic that was killed (a restart, an update, a power cut), which
+    would otherwise block every later run. Locks of a running restic stay."""
+    try:
+        run_restic(repo, ["unlock"], timeout=300)
+    except ResticError as e:
+        logger.info(f"[Offsite] unlock of {repo['id']} skipped: {e}")
+
+
+def _message(line: str) -> dict[str, Any]:
+    line = line.strip()
+    if not line.startswith("{"):
+        return {}
+    try:
+        msg = json.loads(line)
+    except ValueError:
+        return {}
+    return msg if isinstance(msg, dict) else {}
+
+
+def _progress(job_id: str, msg: dict[str, Any], done_key: str) -> None:
+    from backend.services.jobs import job_manager
+
+    pct = msg.get("percent_done")
+    if msg.get("message_type") != "status" or pct is None:
+        return
+    total = msg.get("total_files")
+    detail = f"{msg.get(done_key) or 0} of {total} files" if total else ""
+    job_manager.update(job_id, percent=round(float(pct) * 100, 1), detail=detail)
 
 
 def init(repo_id: str) -> dict[str, Any]:
@@ -247,24 +364,49 @@ def kits_not_saved() -> list[dict[str, Any]]:
     ]
 
 
-def backup(repo_id: str, owner: str | None = None) -> dict[str, Any]:
-    """Backs up the repository's folders, then applies the retention rules."""
+def _backup_job(repo: dict[str, Any], owner: str | None) -> Any:
+    from backend.services.jobs import job_manager
+
+    rid = repo["id"]
+    return job_manager.register("backup", f"Offsite backup: {repo['name']}", owner=owner, cancel=lambda: cancel(rid))
+
+
+def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str, Any]:
+    """Backs up the repository's folders, then applies the retention rules. Files that could not
+    be read (restic exit 3) leave a backup of everything else and a warning, not a failure."""
     repo = get_repo(repo_id)
     if not repo.get("initialized"):
         init(repo_id)
     from backend.services.jobs import job_manager
 
-    job = job_manager.register("backup", f"Offsite backup: {repo['name']}", owner=owner, cancel=lambda: cancel(repo_id))
+    job = job or _backup_job(repo, owner)
+    summary: dict[str, Any] = {}
+    unreadable: list[str] = []
+    count = [0]
+
+    def line(text: str) -> None:
+        msg = _message(text)
+        kind = msg.get("message_type")
+        if kind == "status":
+            _progress(job.id, msg, "files_done")
+        elif kind == "error":
+            count[0] += 1
+            if len(unreadable) < 20:
+                unreadable.append(str(msg.get("item") or (msg.get("error") or {}).get("message") or "")[:300])
+        elif kind == "summary":
+            summary.update(msg)
+
     try:
-        out = run_restic(repo, ["backup", "--json", "--tag", "zettnas", *repo["paths"]], track=True)
-        summary = next(
-            (
-                json.loads(line)
-                for line in reversed(out.splitlines())
-                if '"message_type":"summary"' in line.replace(" ", "")
-            ),
-            {},
+        _unlock(repo)
+        code, _out = _run(
+            repo,
+            ["backup", "--json", "--host", host_id(), "--tag", "zettnas", *repo["paths"]],
+            track=True,
+            ok=(0, WARN_EXIT),
+            on_line=line,
         )
+        if code == WARN_EXIT and not count[0]:
+            count[0] = 1
         k = repo["keep"]
         run_restic(
             repo,
@@ -273,6 +415,8 @@ def backup(repo_id: str, owner: str | None = None) -> dict[str, Any]:
                 "--prune",
                 "--tag",
                 "zettnas",
+                "--group-by",
+                "paths,tags",
                 "--keep-daily",
                 str(k["daily"]),
                 "--keep-weekly",
@@ -286,14 +430,49 @@ def backup(repo_id: str, owner: str | None = None) -> dict[str, Any]:
             "files_new": summary.get("files_new", 0),
             "files_changed": summary.get("files_changed", 0),
             "data_added": summary.get("data_added", 0),
+            "unreadable": count[0],
+            "unreadable_files": unreadable,
         }
-        _update(repo_id, last_backup=time.time(), last_result="ok")
+        _update(
+            repo_id, last_backup=time.time(), last_result="ok", last_unreadable=count[0], unreadable_files=unreadable
+        )
+        if count[0]:
+            job_manager.update(job.id, detail=f"{count[0]} files could not be read")
         job_manager.finish(job.id, "done")
         return result
     except ResticError as e:
         _update(repo_id, last_result=f"failed: {e}"[:300])
         job_manager.finish(job.id, "error", error=str(e))
         raise
+
+
+def _start(repo_id: str, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+    with _LOCK:
+        if repo_id in _BUSY or repo_id in _RUNNING:
+            raise BusyError("A backup or restore of this repository is already running.")
+        _BUSY.add(repo_id)
+
+    def run() -> None:
+        try:
+            _safe(fn, *args, **kwargs)
+        finally:
+            _BUSY.discard(repo_id)
+
+    threading.Thread(target=run, daemon=True, name=f"offsite-{fn.__name__}-{repo_id}").start()
+
+
+def start_backup(repo_id: str, owner: str | None = None) -> dict[str, Any]:
+    """A backup as a job (REL-16): returns at once; progress and the result show in Jobs."""
+    repo = get_repo(repo_id)
+    job = _backup_job(repo, owner)
+    try:
+        _start(repo_id, backup, repo_id, owner=owner, job=job)
+    except BusyError:
+        from backend.services.jobs import job_manager
+
+        job_manager.finish(job.id, "cancelled")
+        raise
+    return {"status": "started", "job": job.id}
 
 
 def cancel(repo_id: str) -> bool:
@@ -364,17 +543,55 @@ def browse(repo_id: str, snapshot_id: str, path: str = "/", principal: Any = Non
     return sorted(entries, key=lambda e: (not e["is_dir"], str(e["name"]).lower()))
 
 
-def restore(repo_id: str, snapshot_id: str, path: str, target: str) -> dict[str, Any]:
-    """Restores one file or folder of a backup version into `target` (a folder that gets the
-    original path below it), never over the live files."""
+def _restore_plan(repo_id: str, snapshot_id: str, path: str, target: str) -> tuple[dict[str, Any], list[str], str]:
     repo = get_repo(repo_id)
     if not re.fullmatch(r"[0-9a-f]{6,64}|latest", snapshot_id):
         raise ValueError("Pick a backup version.")
     if not target.startswith("/") or ".." in target.split("/") or not _in_storage(target):
         raise ValueError("Restore into a folder on the storage.")
+    args = ["restore", "--json", snapshot_id, "--target", target, "--include", "/" + path.strip("/")]
+    return repo, args, os.path.join(target, path.strip("/"))
+
+
+def _run_restore(repo: dict[str, Any], args: list[str], target: str, job: Any = None) -> None:
+    from backend.services.jobs import job_manager
+
     os.makedirs(target, exist_ok=True)
-    run_restic(repo, ["restore", snapshot_id, "--target", target, "--include", "/" + path.strip("/")])
-    return {"restored_to": os.path.join(target, path.strip("/"))}
+    if job is None:
+        _run(repo, args)
+        return
+    try:
+        _run(repo, args, track=True, on_line=lambda text: _progress(job.id, _message(text), "files_restored"))
+    except ResticError as e:
+        job_manager.finish(job.id, "error", error=str(e))
+        raise
+    job_manager.finish(job.id, "done")
+
+
+def restore(repo_id: str, snapshot_id: str, path: str, target: str) -> dict[str, Any]:
+    """Restores one file or folder of a backup version into `target` (a folder that gets the
+    original path below it), never over the live files."""
+    repo, args, restored_to = _restore_plan(repo_id, snapshot_id, path, target)
+    _run_restore(repo, args, target)
+    return {"restored_to": restored_to}
+
+
+def start_restore(repo_id: str, snapshot_id: str, path: str, target: str, owner: str | None = None) -> dict[str, Any]:
+    """A restore as a job (REL-16): checked first, then run in the background with progress."""
+    from backend.services.jobs import job_manager
+
+    repo, args, restored_to = _restore_plan(repo_id, snapshot_id, path, target)
+    rid = repo["id"]
+    name = os.path.basename(path.rstrip("/")) or "/"
+    job = job_manager.register(
+        "restore", f"Restore {name} from {repo['name']}", owner=owner, cancel=lambda: cancel(rid)
+    )
+    try:
+        _start(rid, _run_restore, repo, args, target, job=job)
+    except BusyError:
+        job_manager.finish(job.id, "cancelled")
+        raise
+    return {"status": "started", "job": job.id, "restored_to": restored_to}
 
 
 def check(repo_id: str, read_percent: int = 5) -> dict[str, Any]:
@@ -382,6 +599,7 @@ def check(repo_id: str, read_percent: int = 5) -> dict[str, Any]:
     repo = get_repo(repo_id)
     pct = max(1, min(int(read_percent), 100))
     try:
+        _unlock(repo)
         run_restic(repo, ["check", f"--read-data-subset={pct}%"])
     except ResticError as e:
         _update(repo_id, last_check=time.time(), last_result=f"check failed: {e}"[:300])
@@ -394,27 +612,63 @@ DRILL_EVERY_SECS = 30 * 86400
 DRILL_MAX_FILE_BYTES = 20 * 1024 * 1024
 
 
-def drill(repo_id: str) -> dict[str, Any]:
-    """A restore drill: brings back one small file of the newest version into a scratch folder and
-    checks its size, proving the backup can actually be restored (audit batch 1)."""
-    import shutil
-    import tempfile
-
-    repo = get_repo(repo_id)
-    out = run_restic(repo, ["ls", "--json", "latest"], timeout=900)
-    pick = None
+def _pick_file(out: str) -> dict[str, Any] | None:
+    """One file picked at random among the small ones (reservoir sampling, one pass)."""
+    pick, seen = None, 0
     for line in out.splitlines():
-        try:
-            node = json.loads(line)
-        except ValueError:
-            continue
+        node = _message(line)
         if (
             node.get("struct_type") == "node"
             and node.get("type") == "file"
             and 0 < int(node.get("size") or 0) <= DRILL_MAX_FILE_BYTES
         ):
-            pick = node
-            break
+            seen += 1
+            if secrets.randbelow(seen) == 0:
+                pick = node
+    return pick
+
+
+def _sha256(path: str) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _mtime(value: Any) -> float | None:
+    """restic's RFC 3339 time (nanoseconds) as a timestamp."""
+    from datetime import datetime
+
+    text = re.sub(r"(\.\d{6})\d+", r"\1", str(value or "")).replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(text).timestamp()
+    except ValueError:
+        return None
+
+
+def _unchanged(live: str, node: dict[str, Any]) -> bool:
+    """The live file still is what the backup holds (same size and modification time)."""
+    when = _mtime(node.get("mtime"))
+    try:
+        st = os.stat(live)
+    except OSError:
+        return False
+    return when is not None and st.st_size == int(node.get("size") or -1) and abs(st.st_mtime - when) < 1
+
+
+def drill(repo_id: str) -> dict[str, Any]:
+    """A restore drill: brings back one small file, picked at random, of the newest version into a
+    scratch folder. Its SHA-256 is compared with the live file when that has not changed since the
+    backup, otherwise its size is checked; this proves the backup can actually be restored."""
+    import shutil
+    import tempfile
+
+    repo = get_repo(repo_id)
+    out = run_restic(repo, ["ls", "--json", "latest"], timeout=900)
+    pick = _pick_file(out)
     if not pick:
         _update(repo_id, last_drill=time.time(), last_drill_result="no file small enough to test")
         return {"ok": False, "reason": "no file small enough to test"}
@@ -423,15 +677,25 @@ def drill(repo_id: str) -> dict[str, Any]:
         run_restic(repo, ["restore", "latest", "--target", scratch, "--include", pick["path"]], timeout=1800)
         restored = os.path.join(scratch, pick["path"].lstrip("/"))
         ok = os.path.isfile(restored) and os.path.getsize(restored) == int(pick["size"])
+        digest = _sha256(restored) if ok else ""
+        verified = "size"
+        if ok and _unchanged(pick["path"], pick):
+            verified = "sha256"
+            ok = digest == _sha256(pick["path"])
     except ResticError as e:
         _update(repo_id, last_drill=time.time(), last_drill_result=f"failed: {e}"[:300])
         raise
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
-    _update(repo_id, last_drill=time.time(), last_drill_result="ok" if ok else "failed: restored file differs")
+    _update(
+        repo_id,
+        last_drill=time.time(),
+        last_drill_result="ok" if ok else "failed: restored file differs",
+        last_drill_verified=verified,
+    )
     if not ok:
         raise ResticError("the restored test file differs from the backup")
-    return {"ok": True, "file": pick["path"], "size": int(pick["size"])}
+    return {"ok": True, "file": pick["path"], "size": int(pick["size"]), "sha256": digest, "verified": verified}
 
 
 def _update(repo_id: str, **fields: Any) -> None:
@@ -448,7 +712,7 @@ def run_due(now: float | None = None) -> list[str]:
     t = time.localtime(now)
     started = []
     for repo in list_repos():
-        if repo.get("hour") is None or repo["id"] in _RUNNING:
+        if repo.get("hour") is None or repo["id"] in _RUNNING or repo["id"] in _BUSY:
             continue
         if t.tm_hour == repo["hour"] and now - float(repo.get("last_backup") or 0) > 20 * 3600:
             threading.Thread(target=_safe, args=(backup, repo["id"]), daemon=True, name=f"offsite-{repo['id']}").start()
@@ -472,9 +736,10 @@ def run_due(now: float | None = None) -> list[str]:
     return started
 
 
-def _safe(fn: Any, repo_id: str) -> None:
+def _safe(fn: Any, repo_or_id: Any, *args: Any, **kwargs: Any) -> None:
+    repo_id = repo_or_id["id"] if isinstance(repo_or_id, dict) else repo_or_id
     try:
-        fn(repo_id)
+        fn(repo_or_id, *args, **kwargs)
     except Exception as e:
         logger.warning(f"[Offsite] {fn.__name__} of {repo_id} failed: {e}")
         try:
