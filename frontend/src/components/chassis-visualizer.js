@@ -3065,6 +3065,17 @@ export async function openCreateStoragePoolModal(onSuccess) {
 /**
  * Opens Create Network Share Modal (Samba / WebDAV)
  */
+/** Guest access and NFS for every host are explicit, warned choices (B11, SEC-22/23). */
+export function confirmOpenShare(guest, nfsEveryone) {
+  if (!guest && !nfsEveryone) return Promise.resolve(true);
+  const parts = [];
+  if (guest) parts.push(t('share.confirm_guest', 'Anyone on your network can open this folder without a password.'));
+  if (nfsEveryone) parts.push(t('share.confirm_nfs_all', 'Any computer that can reach this NAS can mount it over NFS.'));
+  return new Promise((resolve) => {
+    showConfirmToast(t('share.confirm_open_title', 'Open this folder to everyone?'), parts.join(' '), () => resolve(true), () => resolve(false));
+  });
+}
+
 export function openCreateNetworkShareModal(onSuccess) {
   const modal = document.getElementById('modal-create-network-share');
   if (!modal) return;
@@ -3165,7 +3176,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       const isTm = document.getElementById('create-share-timemachine')?.checked ?? false;
       const exportSmb = document.getElementById('create-share-export-smb')?.checked ?? true;
       const exportNfs = document.getElementById('create-share-export-nfs')?.checked ?? false;
-      const nfsSquash = document.getElementById('create-share-nfs-squash')?.value || 'no_root_squash';
+      const nfsSquash = document.getElementById('create-share-nfs-squash')?.value || 'root_squash';
       const nfsAnonuid = parseInt(document.getElementById('create-share-nfs-anonuid')?.value, 10) || 1000;
       const nfsAnongid = parseInt(document.getElementById('create-share-nfs-anongid')?.value, 10) || 1000;
       const nfsSync = (document.getElementById('create-share-nfs-sync')?.value || 'sync') === 'sync';
@@ -3181,6 +3192,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       }
 
       if (!name) return;
+      if (!(await confirmOpenShare(security === 'public', exportNfs && nfsClients === '*'))) return;
 
       if (submitBtn) {
         submitBtn.disabled = true;

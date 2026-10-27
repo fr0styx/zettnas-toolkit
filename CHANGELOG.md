@@ -50,7 +50,8 @@
   they are given; new shares are private (no guest access, wrong passwords are refused); NFS
   exports reach this home network and map remote root to a normal user unless you choose
   otherwise; the Auditor role reads system status, not people's files or chats. The setup
-  wizard gives the person it adds the folder it creates.
+  wizard gives the person it adds the folder it creates, and "Add a person" asks which shared
+  folders they can open. Guest access and NFS for every host ask you to confirm first.
 - **Upgrading changes nothing you rely on**: an existing install keeps its settings, and the
   Security Advisor lists each one that is looser than the new defaults with a one-click fix
   (it asks you to confirm first). API callers creating NFS exports for every host now send

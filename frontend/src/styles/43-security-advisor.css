@@ -95,3 +95,43 @@
 }
 
 
+
+/* B11 safe defaults: the "Add a person" dialog asks which shared folders they can open */
+.add-user-shares-label {
+  font-size: var(--zn-fs-xs);
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.add-user-shares-hint {
+  font-size: var(--zn-fs-xs);
+  color: var(--zn-text-muted);
+  margin-bottom: 6px;
+}
+.add-user-shares-list {
+  max-height: 160px;
+  overflow: auto;
+}
+.add-user-share-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+.add-user-share-name {
+  font-size: var(--zn-fs-xs);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.add-user-share-level {
+  background: var(--zn-shade-35);
+  color: var(--zn-text-strong);
+  border: 1px solid var(--zn-line-15);
+  border-radius: 4px;
+  font-size: var(--zn-fs-xs);
+  padding: 2px 4px;
+}

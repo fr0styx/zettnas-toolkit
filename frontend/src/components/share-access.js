@@ -9,6 +9,39 @@ import { showToast } from '../toast.js';
 import { t } from '../i18n.js';
 const LEVELS = ['none', 'read', 'write'];
 
+/** Gives one person these levels ({share: 'read'|'write'}), keeping every other grant (B11, SEC-21). */
+export async function grantShares(person, levels) {
+  const picked = Object.entries(levels || {}).filter(([, lvl]) => LEVELS.includes(lvl) && lvl !== 'none');
+  if (!person || !picked.length) return false;
+  const current = await api.get('/api/storage/share-access');
+  const shares = {};
+  for (const sh of current?.shares || []) {
+    shares[sh.name] = { users: { ...(sh.users || {}) }, ...(sh.default ? { default: sh.default } : {}) };
+  }
+  const who = String(person).toLowerCase();
+  for (const [name, lvl] of picked) {
+    shares[name] = { ...(shares[name] || {}), users: { ...(shares[name]?.users || {}), [who]: lvl } };
+  }
+  await api.put('/api/storage/share-access', { shares });
+  return true;
+}
+
+/** One row per share with a none/read/write choice, for the "Add a person" dialog. */
+export function shareChoicesHtml(shares) {
+  const label = {
+    none: t('share.level_none', 'No access'),
+    read: t('share.level_read', 'Can view'),
+    write: t('share.level_write', 'Can view and change'),
+  };
+  return (shares || []).map((s) => `
+    <div class="add-user-share-row">
+      <span class="add-user-share-name" title="${escapeHtml(s.path || '')}">${escapeHtml(s.name)}</span>
+      <select class="add-user-share-level" data-add-user-share="${escapeHtml(s.name)}" aria-label="${escapeHtml(s.name)}">
+        ${LEVELS.map((l) => `<option value="${l}"${l === 'none' ? ' selected' : ''}>${escapeHtml(label[l])}</option>`).join('')}
+      </select>
+    </div>`).join('');
+}
+
 function levelSelect(attrs, value, withInherit) {
   const opts = (withInherit ? ['inherit', ...LEVELS] : LEVELS)
     .map((l) => `<option value="${l}"${l === value ? ' selected' : ''}>${l}</option>`)

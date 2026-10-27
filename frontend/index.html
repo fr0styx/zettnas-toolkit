@@ -1462,6 +1462,11 @@
           <option value="superadmin">SuperAdmin 👑 (Full unrestricted control)</option>
         </select>
       </div>
+      <div id="add-user-shares-wrap" hidden>
+        <div class="add-user-shares-label" data-i18n="users.shares_label">SHARED FOLDERS</div>
+        <div class="add-user-shares-hint" data-i18n="users.shares_hint">They always have their own folder. Choose which shared folders they can open.</div>
+        <div id="add-user-shares" class="add-user-shares-list"></div>
+      </div>
       <div>
         <label for="add-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
         <input type="number" id="add-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">

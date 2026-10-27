@@ -4,13 +4,13 @@
  */
 
 import { onManagementDom } from '../management-dom.js';
-import { auth, apiFetch, setSessionUserProvider } from '../api.js';
+import { api, auth, apiFetch, setSessionUserProvider } from '../api.js';
 import { escapeHtml, trapFocus, copyText } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
 import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { initTopbarUserPill } from './dock.js';
-import { openShareAccessModal } from './share-access.js';
+import { grantShares, openShareAccessModal, shareChoicesHtml } from './share-access.js';
 
 import { formatDateTime } from '../format.js';
 import { renderInvites } from './invites.js';
@@ -355,10 +355,40 @@ export async function loadUsersList() {
   }
 }
 
+/** New people reach no shared folder until given one (B11, SEC-21), so the dialog asks which. */
+export async function loadAddUserShares() {
+  const wrap = document.getElementById('add-user-shares-wrap');
+  const list = document.getElementById('add-user-shares');
+  if (!wrap || !list) return;
+  wrap.hidden = true;
+  list.innerHTML = '';
+  try {
+    const data = await api.get('/api/storage/share-access');
+    if (!data?.shares?.length) return;
+    list.innerHTML = shareChoicesHtml(data.shares);
+    wrap.hidden = false;
+  } catch {
+    // no right to manage share access: the dialog works without the list
+  }
+}
+
+export async function grantChosenShares(username) {
+  const levels = {};
+  document.querySelectorAll('#add-user-shares select[data-add-user-share]').forEach((sel) => {
+    levels[sel.dataset.addUserShare] = sel.value;
+  });
+  try {
+    await grantShares(username, levels);
+  } catch (err) {
+    showToast(t('users.shares_failed', '{name} was added, but their shared folders were not set: {error}', { name: username, error: err.message }), 'warning');
+  }
+}
+
 export function showAddUserModal() {
   const modal = document.getElementById('modal-add-user');
   if (!modal) return;
   openModal(modal);
+  loadAddUserShares();
   const form = document.getElementById('form-add-user');
   if (form) {
     form.reset();
@@ -392,6 +422,7 @@ export function showAddUserModal() {
         const result = await res.json();
         if (res.ok) {
           closeModal(modal);
+          await grantChosenShares(username);
           loadUsersList();
           showToast(t('toast.user_created_successfully', 'User created successfully.'), 'success');
         } else {

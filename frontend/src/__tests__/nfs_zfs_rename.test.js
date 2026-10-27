@@ -7,6 +7,7 @@ import {
   renderStructuredPoolsTopology,
 } from '../components/chassis-visualizer.js';
 import { api } from '../api.js';
+import * as toast from '../toast.js';
 
 describe('NFS Exports, OpenZFS RAIDZ Provisioning & Storage Pool Renaming', () => {
   beforeEach(() => {
@@ -119,6 +120,8 @@ describe('NFS Exports, OpenZFS RAIDZ Provisioning & Storage Pool Renaming', () =
 
   it('toggles NFS options section and submits granular root squash parameters', async () => {
     const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ status: 'created' });
+    // a guest share is a warned choice (B11): the person confirms it
+    const confirmSpy = vi.spyOn(toast, 'showConfirmToast').mockImplementation((title, msg, ok) => ok());
 
     openCreateNetworkShareModal();
 
@@ -136,6 +139,8 @@ describe('NFS Exports, OpenZFS RAIDZ Provisioning & Storage Pool Renaming', () =
     const form = document.getElementById('create-share-form');
     form.dispatchEvent(new Event('submit'));
 
+    await vi.waitFor(() => expect(postSpy).toHaveBeenCalled());
+    expect(confirmSpy).toHaveBeenCalledWith('Open this folder to everyone?', expect.stringContaining('without a password'), expect.any(Function), expect.any(Function));
     expect(postSpy).toHaveBeenCalledWith('/api/storage/shares', {
       name: 'k8s_sql',
       path: '/mnt/storage/k8s_sql',

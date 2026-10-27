@@ -4,6 +4,7 @@
  * setting a secure administrator password, host operating role,
  * UPS detection, and notification channels.
  */
+import { grantShares } from './share-access.js';
 import { onManagementDom } from '../management-dom.js';
 import { api, auth } from '../api.js';
 import { state } from '../state.js';
@@ -403,13 +404,7 @@ export async function saveSetupExtras() {
 /** New installs give nobody a folder by default, so the person the wizard adds gets the folder it made. */
 export async function grantFolder(share, person) {
   try {
-    const current = await api.get('/api/storage/share-access');
-    const shares = {};
-    for (const sh of current?.shares || []) {
-      shares[sh.name] = { users: { ...(sh.users || {}) }, ...(sh.default ? { default: sh.default } : {}) };
-    }
-    shares[share] = { ...(shares[share] || {}), users: { ...(shares[share]?.users || {}), [person.toLowerCase()]: 'write' } };
-    await api.put('/api/storage/share-access', { shares });
+    await grantShares(person, { [share]: 'write' });
   } catch (err) {
     showToast(t('setup.err_grant', '{name} was added but cannot open {share} yet: {error}', { name: person, share, error: err.message }), 'warning');
   }
