@@ -44668,6 +44668,47 @@
     ]
    }
   },
+  "/api/v1/fs/transfers/{task_id}/dismiss": {
+   "post": {
+    "description": "Forgets a transfer a restart interrupted, after clearing its unfinished files.",
+    "operationId": "fs_dismiss_transfer_api_v1_fs_transfers__task_id__dismiss_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "task_id",
+      "required": true,
+      "schema": {
+       "title": "Task Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Fs Dismiss Transfer",
+    "tags": [
+     "File System & Shares"
+    ]
+   }
+  },
   "/api/v1/fs/transfers/{task_id}/pause": {
    "post": {
     "operationId": "fs_pause_transfer_api_v1_fs_transfers__task_id__pause_post",
@@ -44747,6 +44788,47 @@
      }
     },
     "summary": "Fs Resume Transfer",
+    "tags": [
+     "File System & Shares"
+    ]
+   }
+  },
+  "/api/v1/fs/transfers/{task_id}/undo": {
+   "post": {
+    "description": "Undoes a transfer a restart interrupted: copies to the Recycle Bin, moved items back.",
+    "operationId": "fs_undo_transfer_api_v1_fs_transfers__task_id__undo_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "task_id",
+      "required": true,
+      "schema": {
+       "title": "Task Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Fs Undo Transfer",
     "tags": [
      "File System & Shares"
     ]

@@ -155,6 +155,7 @@ _TRANSFER_STATUS = {
     "completed": "done",
     "done": "done",
     "failed": "error",
+    "interrupted": "error",
     "error": "error",
     "cancelled": "cancelled",
 }

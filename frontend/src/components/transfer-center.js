@@ -9,7 +9,7 @@
  */
 import { api } from '../api.js';
 import { t } from '../i18n.js';
-import { showToast } from '../toast.js';
+import { showToast, showConfirmToast } from '../toast.js';
 import { ZettEventBus } from '../event-bus.js';
 import { escapeHtml } from '../utils.js';
 import { formatBytes } from '../format.js';
@@ -53,6 +53,7 @@ export function taskStatus(task) {
   }
   if (s === 'failed') return t('transfers.failed', 'Failed: {error}', { error: task.error || '?' });
   if (s === 'cancelled') return t('transfers.cancelled', 'Cancelled');
+  if (s === 'interrupted') return t('transfers.interrupted', 'Stopped by a restart');
   const parts = [];
   if (s === 'paused') parts.push(t('transfers.paused', 'Paused'));
   if (task.total_files > 1) {
@@ -146,10 +147,30 @@ class TransferCenter {
       if (act === 'cancel') this.local.get(id).cancel?.();
       return;
     }
-    try {
-      await api.post(`/api/fs/transfers/${encodeURIComponent(id)}/${act}`, {});
-    } catch (err) {
+    const failed = (err) =>
       showToast(t('transfers.action_failed', 'Could not {action} this transfer: {error}', { action: act, error: err.message }), 'error');
+    const run = async () => {
+      const res = await api.post(`/api/fs/transfers/${encodeURIComponent(id)}/${act}`, {});
+      if (this.tasks.get(id)?.status !== 'interrupted') return;
+      // REL-25: a transfer stopped by a restart is replaced by its rerun, or gone
+      this.tasks.delete(id);
+      if (res?.task) this.follow(res.task);
+      if (act === 'undo' && res?.kept?.length) {
+        showToast(t('transfers.undo_kept', 'Undone. Kept, because they were merged into existing folders: {names}', { names: res.kept.join(', ') }), 'info');
+      }
+      this.render();
+    };
+    if (act === 'undo') {
+      showConfirmToast(
+        t('transfers.undo_confirm', 'Undo this transfer? Copies go to the Recycle Bin and moved items go back. Items merged into folders that already existed stay where they are.'),
+        () => run().catch(failed),
+      );
+      return;
+    }
+    try {
+      await run();
+    } catch (err) {
+      failed(err);
     }
   }
 
@@ -193,6 +214,11 @@ class TransferCenter {
     let buttons = '';
     if (!isLocal && s === 'running') buttons += btn('pause', t('transfers.pause', 'Pause'), '⏸');
     if (!isLocal && s === 'paused') buttons += btn('resume', t('transfers.resume', 'Resume'), '▶');
+    if (!isLocal && s === 'interrupted') {
+      buttons += btn('resume', t('transfers.resume', 'Resume'), '▶');
+      if (task.can_undo) buttons += btn('undo', t('transfers.undo', 'Undo'), '↶');
+      buttons += btn('dismiss', t('transfers.dismiss', 'Dismiss'), '✕');
+    }
     if (ACTIVE.has(s) && (!isLocal || this.local.get(task.id)?.cancel)) buttons += btn('cancel', t('transfers.cancel', 'Cancel'), '✕');
     const current = ACTIVE.has(s) && task.current_file ? `<div class="fm-task-file" title="${escapeHtml(task.current_file)}">${escapeHtml(task.current_file)}</div>` : '';
     return `

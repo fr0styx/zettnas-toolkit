@@ -224,6 +224,38 @@
    "deps": [
     "require_scope"
    ],
+   "endpoint": "fs_undo_transfer",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "task_id"
+   ],
+   "path": "/fs/transfers/{task_id}/undo",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_dismiss_transfer",
+   "methods": [
+    "POST"
+   ],
+   "params": [
+    "principal",
+    "task_id"
+   ],
+   "path": "/fs/transfers/{task_id}/dismiss",
+   "response_model": null,
+   "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
    "endpoint": "fs_cancel_transfer",
    "methods": [
     "POST"
@@ -1066,6 +1098,7 @@
      "action": "copy",
      "keys": [
       "action",
+      "can_undo",
       "collision_policy",
       "completed_at",
       "created_at",
@@ -1134,6 +1167,7 @@
      "action": "archive_create",
      "keys": [
       "action",
+      "can_undo",
       "collision_policy",
       "completed_at",
       "created_at",
@@ -1169,6 +1203,7 @@
      "action": "archive_create",
      "keys": [
       "action",
+      "can_undo",
       "collision_policy",
       "completed_at",
       "created_at",
@@ -1204,6 +1239,7 @@
      "action": "archive_extract",
      "keys": [
       "action",
+      "can_undo",
       "collision_policy",
       "completed_at",
       "created_at",

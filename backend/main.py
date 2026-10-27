@@ -295,6 +295,12 @@ def startup_system():
         mark_interrupted_jobs()  # cut off by the restart
     except Exception as e:
         logger.warning(f"[Main] Could not mark interrupted backups: {e}")
+    try:
+        from backend.services.fs_transfer import transfer_manager
+
+        transfer_manager.load_interrupted()  # copies and moves cut off by the restart (REL-25)
+    except Exception as e:
+        logger.warning(f"[Main] Could not load the saved transfers: {e}")
     supervise("BackupScheduler", backup_scheduler_daemon, beat_every=60)
 
     from backend.services.scheduler import scheduler_daemon

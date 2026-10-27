@@ -116,6 +116,9 @@
   disk before it deletes the original; replacing a folder builds the new one beside it and swaps it
   in only when complete. What an overwrite replaces (in a copy, a move or a snapshot restore) goes
   to the Recycle Bin instead of being destroyed.
+- **Copies and moves survive a restart**: one cut off by a restart or power cut shows in Transfers as
+  "Stopped by a restart", with Resume, Undo (copies to the Recycle Bin, moved items back) and Dismiss;
+  each clears that transfer's unfinished files, and nothing else on the disk is read.
 - **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.
 - **Off-site backups are steadier**: each NAS keeps one name in restic across updates, so a backup
   after an update no longer re-reads every file and old versions are pruned again. Files that could

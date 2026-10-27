@@ -8,6 +8,7 @@ import asyncio
 import collections
 import errno
 import os
+import re
 import shutil
 import tarfile
 import threading
@@ -18,9 +19,11 @@ from collections.abc import Callable
 from enum import Enum, StrEnum
 from typing import Any, Optional
 
-from backend.config import logger
-from backend.fsutil import is_protected, prune_protected
+from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json, is_protected, prune_protected, read_json
 from backend.services import recycle_bin
+
+TRANSFERS_FILE = os.path.join(DATA_DIR, "transfers.json")  # copies and moves, kept across restarts (REL-25)
 
 
 class CollisionPolicy(StrEnum):
@@ -482,6 +485,56 @@ def replace_with_copy(src: str, dest: str) -> None:
     _copy_file_resilient(src, dest)
 
 
+def _sweep_entry(dirpath: str, name: str, action: str, counts: dict[str, int]) -> bool:
+    """Clears one unfinished item: a part file goes; a folder being built for an overwrite goes
+    for a copy and is kept, visible, for a move (it may hold the only copy of moved files)."""
+    path = os.path.join(dirpath, name)
+    if name.startswith(".") and name.endswith(".zettnas-part") and not os.path.isdir(path):
+        os.unlink(path)
+        counts["removed"] += 1
+        return True
+    m = re.match(r"^\.(.+)\.zettnas-stage-[0-9a-f]{6}$", name)
+    if m and os.path.isdir(path) and not os.path.islink(path):
+        if action == "move":
+            os.rename(path, _generate_unique_target(os.path.join(dirpath, f"{m.group(1)} (incomplete move)")))
+            counts["kept"] += 1
+        else:
+            shutil.rmtree(path)
+            counts["removed"] += 1
+        return True
+    return False
+
+
+def sweep_leftovers(task: "TransferTask") -> dict[str, int]:
+    """Clears what an interrupted transfer left unfinished (REL-25), only in its own targets: the
+    destination folder's entries for them and the folders they became. Nothing else is read, so
+    no other disk wakes."""
+    counts = {"removed": 0, "kept": 0}
+    names = {os.path.basename(task.target(i)) for i in range(len(task.sources))}
+    try:
+        entries = os.listdir(task.destination)
+    except OSError as err:
+        logger.info(f"[FS Transfer] Nothing to sweep in {task.destination}: {err}")
+        return counts
+    for entry in entries:
+        if any(entry.startswith(f".{n}.zettnas-") for n in names):
+            _sweep_entry(task.destination, entry, task.action, counts)
+    for n in names:
+        top = os.path.join(task.destination, n)
+        if not os.path.isdir(top) or os.path.islink(top):
+            continue
+        for dirpath, dirnames, filenames in os.walk(top):
+            prune_protected(dirpath, dirnames)
+            for d in list(dirnames):
+                if _sweep_entry(dirpath, d, task.action, counts):
+                    dirnames.remove(d)
+            for f in filenames:
+                _sweep_entry(dirpath, f, task.action, counts)
+    if counts["removed"] or counts["kept"]:
+        logger.info(f"[FS Transfer] Swept {task.id}: {counts['removed']} unfinished, {counts['kept']} kept")
+    return counts
+
+
 def _same_or_inside(path: str, folder: str) -> bool:
     """True when `path` is `folder` or somewhere inside it (after resolving links)."""
     p, f = os.path.realpath(path), os.path.realpath(folder)
@@ -577,6 +630,7 @@ class TransferTaskStatus(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+    INTERRUPTED = "interrupted"  # ZettNAS stopped while it ran: resume, undo or dismiss (REL-25)
 
 
 class SpeedTracker:
@@ -632,6 +686,7 @@ class TransferTask:
         self.completed_at: float | None = None
         self.kind = action  # "duplicate" for copies made next to the original
         self.target_names: list[str] = []
+        self.existed: list[bool] = []  # per source: its target was already there (REL-25 undo)
         self.result: dict[str, Any] | None = None
 
         self._pause_event = threading.Event()
@@ -662,7 +717,44 @@ class TransferTask:
             "completed_at": self.completed_at,
             "kind": self.kind,
             "result": self.result,
+            "can_undo": self.status == TransferTaskStatus.INTERRUPTED and not all(self.existed or [True]),
         }
+
+    def record(self) -> dict[str, Any]:
+        """What is saved across a restart."""
+        return {**self.to_dict(), "target_names": self.target_names, "existed": self.existed}
+
+    @classmethod
+    def from_record(cls, rec: dict[str, Any]) -> "TransferTask":
+        task = cls(
+            str(rec["id"]),
+            str(rec.get("action") or "copy"),
+            [str(s) for s in rec.get("sources") or []],
+            str(rec.get("destination") or ""),
+            str(rec.get("collision_policy") or "merge"),
+        )
+        task.owner = str(rec.get("owner") or "")
+        task.kind = str(rec.get("kind") or task.action)
+        try:
+            task.status = TransferTaskStatus(str(rec.get("status")))
+        except ValueError:
+            task.status = TransferTaskStatus.FAILED
+        for key in ("total_bytes", "processed_bytes", "total_files", "processed_files"):
+            setattr(task, key, int(rec.get(key) or 0))
+        task.percent = float(rec.get("percent") or 0)
+        task.error = rec.get("error")
+        task.created_at = float(rec.get("created_at") or time.time())
+        task.started_at = rec.get("started_at")
+        task.completed_at = rec.get("completed_at")
+        task.result = rec.get("result")
+        task.target_names = [str(n) for n in rec.get("target_names") or []]
+        task.existed = [bool(x) for x in rec.get("existed") or []]
+        return task
+
+    def target(self, i: int) -> str:
+        names = self.target_names
+        name = (names[i] if i < len(names) else "") or os.path.basename(self.sources[i].rstrip("/\\"))
+        return os.path.join(self.destination, name)
 
 
 class _TaskProgress(TransferProgress):
@@ -734,7 +826,133 @@ class TransferTaskManager:
         self._tasks: dict[str, TransferTask] = {}
         self._history: collections.deque[TransferTask] = collections.deque(maxlen=100)
         self._lock = threading.Lock()
+        self._save_lock = threading.Lock()
         self._listeners: set[tuple[asyncio.Queue, asyncio.AbstractEventLoop]] = set()
+
+    # --- kept across restarts (REL-25) ---------------------------------------------------
+    def _persist(self) -> None:
+        """Saves the copies and moves (running and recent), so a restart can't lose them."""
+        with self._lock:
+            tasks = [*self._history, *self._tasks.values()]
+        records = [t.record() for t in tasks if t.action in ("copy", "move")][-100:]
+        with self._save_lock:
+            try:
+                atomic_write_json(TRANSFERS_FILE, {"tasks": records})
+            except OSError as err:
+                logger.warning(f"[TransferManager] Could not save the transfers: {err}")
+
+    def load_interrupted(self) -> int:
+        """At start: the saved transfers come back; those that were running show as interrupted."""
+        data = read_json(TRANSFERS_FILE, {}) or {}
+        count = 0
+        with self._lock:
+            known = {t.id for t in self._history} | set(self._tasks)
+            for rec in (data.get("tasks") if isinstance(data, dict) else None) or []:
+                try:
+                    task = TransferTask.from_record(rec)
+                except (KeyError, TypeError, ValueError) as err:
+                    logger.warning(f"[TransferManager] Skipped a saved transfer: {err}")
+                    continue
+                if task.id in known:
+                    continue
+                if task.status in (TransferTaskStatus.PENDING, TransferTaskStatus.RUNNING, TransferTaskStatus.PAUSED):
+                    task.status = TransferTaskStatus.INTERRUPTED
+                    task.error = "ZettNAS restarted during this transfer"
+                    task.completed_at = time.time()
+                    count += 1
+                self._history.append(task)
+        if count:
+            logger.warning(f"[TransferManager] {count} transfer(s) were interrupted by the restart")
+            self._persist()
+        return count
+
+    def _interrupted(self, task_id: str) -> TransferTask | None:
+        with self._lock:
+            return next(
+                (t for t in self._history if t.id == task_id and t.status == TransferTaskStatus.INTERRUPTED), None
+            )
+
+    def _forget(self, task: TransferTask) -> None:
+        with self._lock:
+            if task in self._history:
+                self._history.remove(task)
+        self._persist()
+
+    def resume_interrupted(self, task_id: str) -> TransferTask | None:
+        """Runs an interrupted transfer again with the same choices: finished files are copied or
+        moved again under the same rules, what a move already took is no longer at the source."""
+        task = self._interrupted(task_id)
+        if task is None:
+            return None
+        sweep_leftovers(task)
+        left = [i for i, s in enumerate(task.sources) if os.path.lexists(s)]
+        self._forget(task)
+        if not left:  # a move that had already finished every item
+            task.status, task.error, task.percent = TransferTaskStatus.COMPLETED, None, 100.0
+            with self._lock:
+                self._history.append(task)
+            self._persist()
+            self._notify_update(task)
+            return task
+        return self.submit_transfer(
+            [task.sources[i] for i in left],
+            task.destination,
+            task.action,
+            task.collision_policy,
+            owner=task.owner,
+            target_names=[os.path.basename(task.target(i)) for i in left] if task.target_names else None,
+            kind=task.kind,
+        )
+
+    def undo_interrupted(self, task_id: str) -> dict[str, Any] | None:
+        """Undoes an interrupted transfer: copies go to the Recycle Bin, moved items go back.
+        Items merged into a folder that was already there stay (what was there before is unknown)."""
+        task = self._interrupted(task_id)
+        if task is None:
+            return None
+        sweep_leftovers(task)
+        binned, kept, back = 0, [], {}
+        for i, src in enumerate(task.sources):
+            target = task.target(i)
+            if i >= len(task.existed) or task.existed[i]:
+                kept.append(os.path.basename(target))
+                continue
+            if not os.path.lexists(target):
+                continue
+            if task.action == "move":
+                back.setdefault(os.path.dirname(src.rstrip("/\\")), []).append(
+                    (target, os.path.basename(src.rstrip("/\\")))
+                )
+            elif recycle_bin.move_to_bin(target):
+                binned += 1
+            elif os.path.lexists(src):
+                _set_aside(target)  # no bin here: the copy goes, the original is still there
+                binned += 1
+            else:
+                kept.append(os.path.basename(target))
+        moves = [
+            self.submit_transfer(
+                [t for t, _ in items],
+                parent,
+                "move",
+                "merge",
+                owner=task.owner,
+                target_names=[n for _, n in items],
+                kind="move",
+            ).id
+            for parent, items in back.items()
+        ]
+        self._forget(task)
+        return {"status": "ok", "binned": binned, "kept": kept, "tasks": moves}
+
+    def dismiss_interrupted(self, task_id: str) -> dict[str, int] | None:
+        """Forgets an interrupted transfer after clearing its unfinished files."""
+        task = self._interrupted(task_id)
+        if task is None:
+            return None
+        swept = sweep_leftovers(task)
+        self._forget(task)
+        return swept
 
     def register_listener(self, queue: asyncio.Queue, loop: asyncio.AbstractEventLoop) -> None:
         with self._lock:
@@ -789,6 +1007,7 @@ class TransferTaskManager:
             task._pause_event.clear()
             task.status = TransferTaskStatus.PAUSED
             self._notify_update(task)
+            self._persist()
             return True
         return False
 
@@ -799,6 +1018,7 @@ class TransferTaskManager:
             task._pause_event.set()
             task.status = TransferTaskStatus.RUNNING
             self._notify_update(task)
+            self._persist()
             return True
         return False
 
@@ -811,6 +1031,7 @@ class TransferTaskManager:
             task.status = TransferTaskStatus.CANCELLED
             task.completed_at = time.time()
             self._notify_update(task)
+            self._persist()
             return True
         return False
 
@@ -824,6 +1045,7 @@ class TransferTaskManager:
             for tid in to_remove:
                 t = self._tasks.pop(tid)
                 self._history.append(t)
+        self._persist()
         return len(to_remove)
 
     def submit_transfer(
@@ -847,8 +1069,10 @@ class TransferTaskManager:
         task.owner = (owner or "").lower()
         task.target_names = list(target_names or [])
         task.kind = kind or action
+        task.existed = [os.path.lexists(task.target(i)) for i in range(len(sources))]
         with self._lock:
             self._tasks[task_id] = task
+        self._persist()
 
         worker = threading.Thread(
             target=self._worker_transfer,
@@ -976,6 +1200,7 @@ class TransferTaskManager:
             with self._lock:
                 if task.id in self._tasks:
                     self._history.append(self._tasks.pop(task.id))
+            self._persist()
 
     def _worker_archive_create(self, task: TransferTask, archive_name: str, fmt: str) -> None:
         speed_tracker = SpeedTracker()

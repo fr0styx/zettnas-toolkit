@@ -91,10 +91,42 @@ def fs_resume_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends
     from backend.services.fs_transfer import transfer_manager
 
     _assert_task_owner(task_id, principal)
-    ok = transfer_manager.resume_task(task_id)
-    if not ok:
+    if transfer_manager.resume_task(task_id):
+        return {"status": "ok", "resumed": True}
+    task = transfer_manager.resume_interrupted(task_id)  # stopped by a restart (REL-25)
+    if task is None:
         raise HTTPException(status_code=404, detail="Task not found or cannot be resumed")
-    return {"status": "ok", "resumed": True}
+    return {"status": "ok", "resumed": True, "task": task.to_dict()}
+
+
+@router.post(
+    "/fs/transfers/{task_id}/undo",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+def fs_undo_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Undoes a transfer a restart interrupted: copies to the Recycle Bin, moved items back."""
+    from backend.services.fs_transfer import transfer_manager
+
+    _assert_task_owner(task_id, principal)
+    res = transfer_manager.undo_interrupted(task_id)
+    if res is None:
+        raise HTTPException(status_code=404, detail="Only a transfer stopped by a restart can be undone")
+    return res
+
+
+@router.post(
+    "/fs/transfers/{task_id}/dismiss",
+    dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
+)
+def fs_dismiss_transfer(task_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Forgets a transfer a restart interrupted, after clearing its unfinished files."""
+    from backend.services.fs_transfer import transfer_manager
+
+    _assert_task_owner(task_id, principal)
+    res = transfer_manager.dismiss_interrupted(task_id)
+    if res is None:
+        raise HTTPException(status_code=404, detail="Only a transfer stopped by a restart can be dismissed")
+    return {"status": "ok", **res}
 
 
 @router.post(
