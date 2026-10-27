@@ -9,6 +9,7 @@ import { showToast, showConfirmToast, showPromptToast } from '../../toast.js';
 import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { immichResultsHtml } from '../immich-settings.js';
+import { installAiAccess } from './ai-access.js';
 import { formatDateTime, formatNumber, formatTime } from '../../format.js';
 
 // ============================================================================
@@ -1709,6 +1710,8 @@ export async function fetchAndRenderAiStatus() {
         });
       }
     }
+
+    installAiAccess(document); // who can use Zetty (B8)
 
     // Optional reranker (AI-13)
     const rerankForm = document.getElementById('ai-rerank-form');

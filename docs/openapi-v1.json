@@ -251,6 +251,22 @@
     "title": "AddOrUpdateCalendarFeedResponseFeed",
     "type": "object"
    },
+   "AiAccessUpdate": {
+    "properties": {
+     "roles": {
+      "additionalProperties": {
+       "type": "boolean"
+      },
+      "title": "Roles",
+      "type": "object"
+     }
+    },
+    "required": [
+     "roles"
+    ],
+    "title": "AiAccessUpdate",
+    "type": "object"
+   },
    "AiChatRequest": {
     "properties": {
      "allow_nas_tools": {
@@ -36053,6 +36069,94 @@
     "summary": "Serve Index"
    }
   },
+  "/api/v1/ai/access": {
+   "get": {
+    "description": "Who may ask Zetty, per role (B8).",
+    "operationId": "get_ai_access_api_v1_ai_access_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Ai Access Api V1 Ai Access Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get Ai Access",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   },
+   "put": {
+    "operationId": "put_ai_access_api_v1_ai_access_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AiAccessUpdate"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Ai Access Api V1 Ai Access Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Ai Access",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
+  "/api/v1/ai/access/me": {
+   "get": {
+    "operationId": "get_my_ai_access_api_v1_ai_access_me_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get My Ai Access Api V1 Ai Access Me Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get My Ai Access",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
   "/api/v1/ai/actions/{action_id}": {
    "get": {
     "operationId": "get_pending_ai_action_api_v1_ai_actions__action_id__get",
@@ -37974,6 +38078,71 @@
      }
     },
     "summary": "Get Ai Reindex Status",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
+  "/api/v1/ai/requests": {
+   "get": {
+    "description": "The assistant's request log: who asked when, the model, web search, the outcome; no text.",
+    "operationId": "get_ai_requests_api_v1_ai_requests_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 100,
+       "maximum": 500,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "user",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 64,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "User"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Ai Requests Api V1 Ai Requests Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Ai Requests",
     "tags": [
      "Smart Media & AI RAG Engine"
     ]

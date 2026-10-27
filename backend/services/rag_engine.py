@@ -1003,6 +1003,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "rerank_endpoint": "",  # AI-13: Cohere/OVMS/TEI-style /rerank URL, empty = off
             "rerank_model": "",
             "rerank_top_n": 30,
+            "ai_role_access": {"kid": False, "guest": False},  # who may ask Zetty (B8, ai_access)
         }
         saved = read_json(RAG_CONFIG_PATH, {})
         if isinstance(saved, dict):
@@ -1071,6 +1072,10 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]
+        if isinstance(updates.get("ai_role_access"), dict):
+            # who may ask Zetty (B8); the API checks the values first (ai_access.clean_switches)
+            switches = {str(k): bool(v) for k, v in updates["ai_role_access"].items()}
+            cfg["ai_role_access"] = {**(cfg.get("ai_role_access") or {}), **switches}
         if str(cfg.get("vision_captions", "auto")).lower() not in ("auto", "off"):
             cfg["vision_captions"] = "auto"
         if "conversation_retention_days" in cfg:

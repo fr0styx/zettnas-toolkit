@@ -9,6 +9,7 @@ import asyncio
 import ipaddress
 import logging
 import os
+import time
 import urllib.parse
 from typing import Any, Optional
 
@@ -23,6 +24,8 @@ from backend.config import ALLOWED_BROWSE_ROOTS, POOL_PATH
 from backend.confirmations import require_confirmation
 from backend.fsutil import resolve_within
 from backend.rate_limit import rate_limit
+from backend.services import ai_access
+from backend.services.ai_access import require_ai_access
 from backend.services.ai_chat_agent import (
     AVAILABLE_NAS_TOOLS,
     build_llm_execution_telemetry,
@@ -1092,6 +1095,7 @@ def get_ai_chat_tools() -> dict[str, Any]:
     "/media/chat",
     dependencies=[
         Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_access),
         Depends(rate_limit("ai.chat", 20, 60)),
     ],
 )
@@ -1099,6 +1103,7 @@ def get_ai_chat_tools() -> dict[str, Any]:
     "/ai/chat",
     dependencies=[
         Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_access),
         Depends(rate_limit("ai.chat", 20, 60)),
     ],
 )
@@ -1125,6 +1130,7 @@ async def chat_with_zettai_agent(
             history = []
             logger.warning(f"[AI Chat] Failed persisting user prompt: {_db_ex}")
 
+    started = time.monotonic()
     try:
         res = await asyncio.to_thread(
             run_agentic_chat,
@@ -1159,8 +1165,17 @@ async def chat_with_zettai_agent(
             except Exception as _db_ex2:
                 logger.warning(f"[AI Chat] Failed persisting assistant reply: {_db_ex2}")
 
+        ai_access.log_request(
+            principal,
+            "chat",
+            str(res.get("active_model") or req.model or ""),
+            bool(req.allow_web_search),
+            "answered",
+            int((time.monotonic() - started) * 1000),
+        )
         return res
     except ValueError as e:
+        ai_access.log_request(principal, "chat", req.model or "", bool(req.allow_web_search), "failed")
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
@@ -1168,6 +1183,7 @@ async def chat_with_zettai_agent(
     "/media/chat/stream",
     dependencies=[
         Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_access),
         Depends(rate_limit("ai.chat", 20, 60)),
     ],
 )
@@ -1175,6 +1191,7 @@ async def chat_with_zettai_agent(
     "/ai/chat/stream",
     dependencies=[
         Depends(require_scope("shares:read", "storage:read", "system:read")),
+        Depends(require_ai_access),
         Depends(rate_limit("ai.chat", 20, 60)),
     ],
 )
@@ -1200,6 +1217,7 @@ async def chat_with_zettai_agent_stream(
             history = []
             logger.warning(f"[AI Chat Stream] Failed user message prep: {_stream_db_ex}")
 
+    ai_access.log_request(principal, "chat", req.model or "", bool(req.allow_web_search), "streamed")
     generator = stream_agentic_chat(
         message=req.message,
         history=history,
@@ -1285,6 +1303,38 @@ def get_cached_thumbnail(
 )
 def get_rag_config() -> dict[str, Any]:
     return get_rag_engine().get_config()
+
+
+class AiAccessUpdate(BaseModel):
+    roles: dict[str, bool]
+
+
+@router.get("/ai/access", dependencies=[Depends(require_scope("system:config", "users:read"))])
+def get_ai_access() -> dict[str, Any]:
+    """Who may ask Zetty, per role (B8)."""
+    return {"roles": ai_access.roles_with_access(), "log_days": ai_access.LOG_DAYS}
+
+
+@router.put("/ai/access", dependencies=[Depends(require_scope("system:config"))])
+def put_ai_access(req: AiAccessUpdate) -> dict[str, Any]:
+    try:
+        get_rag_engine().update_config({"ai_role_access": ai_access.clean_switches(req.roles)})
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return get_ai_access()
+
+
+@router.get("/ai/access/me")
+def get_my_ai_access(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
+    return {"allowed": ai_access.allowed(principal)}
+
+
+@router.get("/ai/requests", dependencies=[Depends(require_scope("system:config", "audit:read"))])
+def get_ai_requests(
+    limit: int = Query(100, ge=1, le=500), user: str | None = Query(None, max_length=64)
+) -> dict[str, Any]:
+    """The assistant's request log: who asked when, the model, web search, the outcome; no text."""
+    return {"requests": ai_access.recent(limit, user), "log_days": ai_access.LOG_DAYS}
 
 
 @router.put(
