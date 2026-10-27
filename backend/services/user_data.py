@@ -25,7 +25,7 @@ from typing import Any
 from backend.config import logger
 
 FORMAT = 1
-PARTS = ("chats", "ai_log", "index")
+PARTS = ("chats", "ai_log", "index", "security_log")
 MAX_INDEX_FILES = 20000
 MAX_EVENTS = 5000
 
@@ -120,6 +120,89 @@ def _part(name: str, fn, user: dict[str, Any]) -> Any:
         return {"error": f"Could not read {name}; the rest of the export is complete."}
 
 
+def _calendar(user: dict[str, Any]) -> dict[str, Any]:
+    from backend import config
+    from backend.fsutil import read_json
+
+    store = read_json(os.path.join(config.DATA_DIR, "calendar_data.json"), {}) or {}
+
+    def mine(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [{k: v for k, v in i.items() if k != "owner"} for i in items if i.get("owner") == user.get("id")]
+
+    feeds = mine(store.get("feeds", []))
+    ids = {f.get("id") for f in feeds}
+    return {
+        "notes": mine(store.get("notes", [])),
+        "feeds": feeds,
+        "feed_events": [e for e in store.get("feed_events", []) if e.get("feed_id") in ids],
+    }
+
+
+def _share_links(user: dict[str, Any]) -> list[dict[str, Any]]:
+    from backend import config
+    from backend.fsutil import read_json
+
+    links = read_json(os.path.join(config.DATA_DIR, "shared_links.json"), {}) or {}
+    secret = ("password_hash", "token", "password")
+    return [
+        {k: v for k, v in link.items() if k not in secret}
+        for link in (links.values() if isinstance(links, dict) else [])
+        if isinstance(link, dict) and link.get("created_by") == user.get("username")
+    ]
+
+
+def _favorites(user: dict[str, Any]) -> list[dict[str, Any]]:
+    from backend import config
+    from backend.fsutil import read_json
+
+    data = read_json(os.path.join(config.DATA_DIR, "fm_favorites.json"), {}) or {}
+    return list(data.get(str(user.get("username") or "").lower(), [])) if isinstance(data, dict) else []
+
+
+def _devices(user: dict[str, Any]) -> list[dict[str, Any]]:
+    from backend.services import web_push
+
+    return [
+        {k: v for k, v in s.items() if k not in ("keys", "endpoint")}
+        for s in web_push.subscriptions(str(user.get("username") or ""))
+    ]
+
+
+def _alert_route(user: dict[str, Any]) -> dict[str, Any]:
+    from backend.services.notifications import get_routes
+
+    return dict(get_routes().get(str(user.get("username") or "")) or {})
+
+
+def _immich(user: dict[str, Any]) -> dict[str, Any]:
+    from backend.services import immich_photos
+
+    c = immich_photos._cfg()
+    name = str(user.get("username") or "")
+    return {
+        "connected": bool((c.get("keys") or {}).get(name)),
+        "phone_backup_done": name in (c.get("phone_done") or []),
+    }
+
+
+# Every store that holds something of one person's, and the export key it goes under. A test
+# checks this against the stores (SEC-32), so a new per-person store needs a line here.
+STORES = (
+    "account",
+    "api_tokens",
+    "chats",
+    "ai_requests",
+    "search_index",
+    "security_events",
+    "calendar",
+    "share_links",
+    "favorites",
+    "phone_devices",
+    "alert_route",
+    "immich",
+)
+
+
 def export_user(user: dict[str, Any]) -> dict[str, Any]:
     """One person's data as a JSON-ready dict."""
     from backend.services import ai_access
@@ -137,6 +220,12 @@ def export_user(user: dict[str, Any]) -> dict[str, Any]:
             "files": _part("files", _index_files, user),
         },
         "security_events": _part("security_events", _security_events, user),
+        "calendar": _part("calendar", _calendar, user),
+        "share_links": _part("share_links", _share_links, user),
+        "favorites": _part("favorites", _favorites, user),
+        "phone_devices": _part("phone_devices", _devices, user),
+        "alert_route": _part("alert_route", _alert_route, user),
+        "immich": _part("immich", _immich, user),
     }
 
 
@@ -171,4 +260,14 @@ def erase_user_data(user: dict[str, Any], parts: tuple[str, ...] = PARTS) -> dic
         except Exception:
             logger.warning("[UserData] Could not erase the index entries of %s", user.get("username"), exc_info=True)
             done["index"] = {"error": "Could not erase what search learned."}
+    if "security_log" in parts:
+        try:
+            from backend.users_db import pseudonymise_security_log
+
+            done["security_log"] = pseudonymise_security_log(str(user.get("id") or ""))
+        except Exception:
+            logger.warning(
+                "[UserData] Could not pseudonymise the security log of %s", user.get("username"), exc_info=True
+            )
+            done["security_log"] = {"error": "Could not remove their name from the security log."}
     return done

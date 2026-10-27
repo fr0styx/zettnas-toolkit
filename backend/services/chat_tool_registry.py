@@ -146,7 +146,8 @@ def execute_nas_tool(
 def _audit_tool_call(
     name: str, args: dict[str, Any], principal: Any, confirmed: bool, source: str, result: Any
 ) -> None:
-    """Every tool the assistant (or an MCP client) uses lands in the security audit log (D1)."""
+    """Every tool the assistant (or an MCP client) uses lands in the security audit log (D1): the
+    tool and the names of its arguments, never their values, which can hold the question (SEC-32)."""
     try:
         from backend.users_db import log_security_event
 
@@ -160,7 +161,7 @@ def _audit_tool_call(
                 "tool": name,
                 "source": source,
                 "status": status,
-                "args": {k: str(v)[:120] for k, v in (args or {}).items()},
+                "arg_names": sorted(str(k)[:40] for k in (args or {}))[:20],
             },
         )
     except Exception:

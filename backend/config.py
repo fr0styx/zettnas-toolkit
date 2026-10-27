@@ -102,6 +102,8 @@ def _default_data_dir() -> str:
 DATA_DIR = _default_data_dir()
 DB_PATH = os.path.join(DATA_DIR, "history.db")
 USERS_DB_PATH = os.environ.get("USERS_DB_PATH", os.path.join(DATA_DIR, "users.db"))
+# How long the security audit log keeps an event (B11, SEC-32); 0 keeps everything
+AUDIT_RETENTION_DAYS = max(0, int(os.environ.get("ZETTNAS_AUDIT_RETENTION_DAYS", "365") or 365))
 LED_STATE_FILE = os.path.join(DATA_DIR, "led_state.json")
 DASH_LAYOUT_FILE = os.environ.get("LAYOUT_PATH", os.path.join(DATA_DIR, "dash_layout.json"))
 FAN_STATE_FILE = os.path.join(DATA_DIR, "fan_state.json")

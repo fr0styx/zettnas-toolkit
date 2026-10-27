@@ -1132,6 +1132,33 @@ revoke_scoped_api_token = revoke_api_token
 # ==============================================================================
 
 
+_AUDIT_PRUNED = {"at": 0.0}
+
+
+def _prune_security_log(conn: sqlite3.Connection, now: float) -> None:
+    """Drops events older than AUDIT_RETENTION_DAYS, at most once an hour (SEC-32)."""
+    days = int(getattr(config, "AUDIT_RETENTION_DAYS", 365) or 0)
+    if days <= 0 or now - _AUDIT_PRUNED["at"] < 3600:
+        return
+    conn.execute("DELETE FROM security_audit_log WHERE timestamp < ?", (now - days * 86400,))
+    _AUDIT_PRUNED["at"] = now
+
+
+def pseudonymise_security_log(user_id: str, db_path: str | None = None) -> int:
+    """Replaces a person's name, id, address and browser in the security log with a pseudonym
+    (SEC-32): the events stay, so the log still adds up, but no longer say who."""
+    if not user_id:
+        return 0
+    alias = "erased-" + hashlib.sha256(str(user_id).encode()).hexdigest()[:10]
+    with users_db_session(db_path) as conn:
+        cur = conn.execute(
+            "UPDATE security_audit_log SET actor_id = ?, actor_username = ?, actor_ip = '', actor_user_agent = '' "
+            "WHERE actor_id = ?",
+            (alias, alias, user_id),
+        )
+        return max(0, cur.rowcount or 0)
+
+
 def log_security_event(
     event_type: str,
     status: str,
@@ -1162,6 +1189,7 @@ def log_security_event(
                     now,
                 ),
             )
+            _prune_security_log(conn, now)
         try:
             from backend.services.security_alerts import maybe_alert
 

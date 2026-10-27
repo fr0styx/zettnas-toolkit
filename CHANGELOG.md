@@ -72,6 +72,10 @@
   through an http:// provider, directory (LDAP) sign-in without encryption or certificate
   checks, and a sign-in proxy that can reach accounts it did not create. Single sign-on is now
   tied to the browser that started it.
+- **The security log is private by design**: it records which Zetty tool ran, never what was
+  asked; it keeps a year (ZETTNAS_AUDIT_RETENTION_DAYS); erasing someone replaces their name,
+  address and browser with a pseudonym. Their data download now also holds their calendar
+  notes, share links, favourites, phones, alert route and Immich link.
 
 #### Backups and power
 
