@@ -1,8 +1,8 @@
 # Backing up your computers to ZettNAS
 
 ZettNAS is a good target for backups of your Macs and PCs. Keep at least one more copy
-somewhere else, for example with ZettNAS replication or a cloud remote: a NAS is one
-copy, not a backup of itself.
+somewhere else, for example an off-site backup (Backup → Off-site) to a USB disk, another
+NAS or a cloud remote: a NAS is one copy, not a backup of itself.
 
 ## Mac: Time Machine
 
@@ -57,8 +57,9 @@ Run the backup from a systemd timer or cron, and `restic forget --keep-daily 7
   drives. File History and Veeam connect only while they run.
 - Turn on **guard files** in the ransomware guard (Security) so an attack on a share
   freezes writes before it reaches the rest.
-- Send a copy off the box: **Storage → Replication** to another NAS, or a cloud remote
-  under **Remotes**.
+- Send a copy off the box: an **off-site backup** (Backup → Off-site) to another NAS or a
+  cloud remote, and save its recovery key outside the NAS. (Storage replication is turned
+  off for now while it is being fixed.)
 
 
 ## Disaster recovery: getting ZettNAS itself back

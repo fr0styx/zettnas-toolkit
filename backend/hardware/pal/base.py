@@ -43,10 +43,19 @@ class PlatformCapabilities(BaseModel):
     can_destroy_pools: bool = False
     can_manage_shares: bool = False
     can_trigger_scrub: bool = True
+    can_snapshot: bool = True
+    storage_tools: dict[str, bool] = Field(default_factory=dict)  # btrfs / zfs / mdadm found (REL-4)
     can_export_pools: bool = True
     can_import_pools: bool = True
     supported_filesystems: list[str] = Field(default_factory=list)
     description: str = ""
+
+
+def storage_tools() -> dict[str, bool]:
+    """Which storage tools this image can run (REL-4: the image may lack btrfs, ZFS or mdadm)."""
+    import shutil
+
+    return {name: bool(shutil.which(name)) for name in ("btrfs", "zfs", "zpool", "mdadm")}
 
 
 class PoolMember(BaseModel):

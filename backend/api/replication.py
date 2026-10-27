@@ -34,11 +34,18 @@ class ReplicationJobCreateRequest(BaseModel):
 @router.get("/jobs", dependencies=[Depends(require_scope("storage:read"))])
 def list_replication_jobs() -> dict[str, Any]:
     engine = get_replication_engine()
-    return {"jobs": engine.list_jobs()}
+    return {"jobs": engine.list_jobs(), "available": False, "reason": REPLICATION_OFF}
+
+
+REPLICATION_OFF = (
+    "Replication is turned off for now: it needs the ZFS or btrfs tools and a safe schedule, "
+    "which are being fixed. Use an off-site backup to another NAS instead."
+)
 
 
 @router.post("/jobs", dependencies=[Depends(require_scope("storage:admin"))])
 def create_replication_job(req: ReplicationJobCreateRequest) -> dict[str, Any]:
+    raise HTTPException(status_code=409, detail=REPLICATION_OFF)  # REL-5 (D7): off until fixed
     engine = get_replication_engine()
     job = engine.create_job(req.model_dump())
     return {"status": "created", "job": job}
@@ -64,6 +71,7 @@ def delete_replication_job(job_id: str) -> dict[str, Any]:
 
 @router.post("/jobs/{job_id}/run", dependencies=[Depends(require_scope("storage:admin"))])
 def run_replication_job(job_id: str) -> dict[str, Any]:
+    raise HTTPException(status_code=409, detail=REPLICATION_OFF)  # REL-5 (D7): off until fixed
     engine = get_replication_engine()
     try:
         return engine.run_job_async(job_id)

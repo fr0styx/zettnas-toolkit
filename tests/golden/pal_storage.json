@@ -7,10 +7,12 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
+    "can_snapshot": true,
     "can_trigger_scrub": false,
     "description": "Observer Mode: FygoOS host detected. Storage pools, external drives, and media directories are authoritatively managed by FygoOS. Telemetry and capacity auditing enabled.",
     "is_observer_mode": true,
     "platform": "fygoos",
+    "storage_tools": {},
     "supported_filesystems": [
      "btrfs",
      "ext4",
@@ -23,15 +25,20 @@
     "can_export_pools": true,
     "can_import_pools": true,
     "can_manage_shares": true,
-    "can_trigger_scrub": true,
-    "description": "Active Provisioner Mode: Bare-metal Linux host detected. Full pool, subvolume snapshot, and share lifecycle management enabled.",
+    "can_snapshot": false,
+    "can_trigger_scrub": false,
+    "description": "Active Provisioner Mode: Bare-metal Linux host detected. Pool and share management enabled. Not available here: btrfs, zfs, mdadm tools are missing.",
     "is_observer_mode": false,
     "platform": "generic_linux",
+    "storage_tools": {
+     "btrfs": false,
+     "mdadm": false,
+     "zfs": false,
+     "zpool": false
+    },
     "supported_filesystems": [
-     "btrfs",
      "ext4",
-     "xfs",
-     "zfs"
+     "xfs"
     ]
    },
    "GenericObserverStorageAdapter": {
@@ -40,10 +47,12 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
+    "can_snapshot": true,
     "can_trigger_scrub": false,
     "description": "Observer Mode: Non-intrusive telemetry mode active. Storage pools and file shares are authoritatively managed by host OS. Block-level modifications are strictly disabled.",
     "is_observer_mode": true,
     "platform": "generic_observer",
+    "storage_tools": {},
     "supported_filesystems": [
      "btrfs",
      "ext4",
@@ -57,10 +66,12 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
+    "can_snapshot": true,
     "can_trigger_scrub": true,
     "description": "Observer Mode: Proxmox VE host detected. Storage pools and LVM/ZFS thin-pools are managed by PVE storage engine. Telemetry and scrub monitoring enabled.",
     "is_observer_mode": true,
     "platform": "proxmox",
+    "storage_tools": {},
     "supported_filesystems": [
      "zfs",
      "btrfs",
@@ -74,10 +85,12 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
+    "can_snapshot": true,
     "can_trigger_scrub": true,
     "description": "Observer Mode: TrueNAS SCALE host detected. ZFS pools, datasets, and shares are managed by TrueNAS Middleware. Telemetry and scrub monitoring enabled.",
     "is_observer_mode": true,
     "platform": "truenas",
+    "storage_tools": {},
     "supported_filesystems": [
      "zfs"
     ]
@@ -88,10 +101,12 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
+    "can_snapshot": true,
     "can_trigger_scrub": true,
     "description": "Observer Mode: UGOS (UGREEN NAS OS) host detected. Storage pools, mdadm RAID groups, and LVM volumes are authoritatively managed by UGOS. Telemetry and RAID scrub monitoring enabled.",
     "is_observer_mode": true,
     "platform": "ugos",
+    "storage_tools": {},
     "supported_filesystems": [
      "btrfs",
      "ext4"
@@ -103,10 +118,12 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
+    "can_snapshot": true,
     "can_trigger_scrub": true,
     "description": "Observer Mode: Unraid OS authoritatively manages array disks and shares. Modifying pools from container is prohibited to protect parity.",
     "is_observer_mode": true,
     "platform": "unraid",
+    "storage_tools": {},
     "supported_filesystems": [
      "unraid",
      "btrfs",
@@ -120,10 +137,12 @@
     "can_export_pools": false,
     "can_import_pools": false,
     "can_manage_shares": false,
+    "can_snapshot": true,
     "can_trigger_scrub": true,
     "description": "Observer Mode: ZettOS appliance host detected. Hybrid ZFS/Btrfs storage pools, parity groups, and shares are authoritatively managed by ZettOS. Telemetry and scrub monitoring enabled.",
     "is_observer_mode": true,
     "platform": "zettos",
+    "storage_tools": {},
     "supported_filesystems": [
      "zfs",
      "btrfs",
@@ -305,10 +324,12 @@
     "can_export_pools",
     "can_import_pools",
     "can_manage_shares",
+    "can_snapshot",
     "can_trigger_scrub",
     "description",
     "is_observer_mode",
     "platform",
+    "storage_tools",
     "supported_filesystems"
    ],
    "methods": {},

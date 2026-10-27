@@ -55,6 +55,11 @@ export async function renderSnapshotSchedules(mount) {
     const [s, sh] = await Promise.all([api.get('/api/snapshots/schedules'), api.get('/api/storage/shares').catch(() => ({ shares: [] }))]);
     schedules = s.schedules || [];
     shares = (sh.shares || []).map((x) => x.name).filter(Boolean);
+    if (s.available === false) {
+      // REL-4: no schedule is offered where snapshots can't be taken
+      mount.textContent = t('snap.unavailable', "Snapshots aren't available on this host: the btrfs and ZFS tools are missing.");
+      return;
+    }
   } catch (e) {
     mount.textContent = t('snap.load_failed', 'Snapshot schedules could not be loaded.');
     return;

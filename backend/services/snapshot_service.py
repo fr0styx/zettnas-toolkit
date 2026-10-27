@@ -39,6 +39,17 @@ def _default_pool_id(pal: Any) -> str:
     return "default"
 
 
+def availability(pal: Any = None) -> tuple[bool, str]:
+    """Whether this host can take snapshots, and why not (REL-4)."""
+    try:
+        caps = (pal or _pal()).get_capabilities()
+    except Exception:
+        return True, ""
+    if getattr(caps, "can_snapshot", True):
+        return True, ""
+    return False, "Snapshots aren't available on this host: the btrfs and ZFS tools are missing."
+
+
 def list_schedules() -> list[dict[str, Any]]:
     data = read_json(SCHEDULES_FILE, {})
     return list((data.get("schedules") or {}).values()) if isinstance(data, dict) else []
@@ -52,6 +63,9 @@ def save_schedule(
         raise ValueError("Pick a share by its name.")
     if every not in EVERY:
         raise ValueError("Snapshots run hourly, daily or weekly.")
+    ok, why = availability()
+    if not ok:
+        raise ValueError(why)
     keep = max(1, min(int(keep), 1000))
     immutable_days = max(0, min(int(immutable_days), 3650))
     with _LOCK:

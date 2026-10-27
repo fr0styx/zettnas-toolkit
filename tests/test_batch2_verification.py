@@ -15,19 +15,13 @@ from backend.main import app
 
 
 def test_replication_router_endpoints(client, auth_headers, tmp_path, monkeypatch):
-    jobs_file = str(tmp_path / "replication_jobs.json")
-    hist_file = str(tmp_path / "replication_history.json")
-    monkeypatch.setattr("backend.services.replication_engine.REPLICATION_JOBS_FILE", jobs_file)
-    monkeypatch.setattr("backend.services.replication_engine.REPLICATION_HISTORY_FILE", hist_file)
-
-    # List jobs
+    """REL-5 (D7): replication is turned off until it can run safely; listing still works."""
+    monkeypatch.setattr("backend.services.replication_engine.REPLICATION_JOBS_FILE", str(tmp_path / "jobs.json"))
+    monkeypatch.setattr("backend.services.replication_engine.REPLICATION_HISTORY_FILE", str(tmp_path / "hist.json"))
     res = client.get("/api/storage/replication/jobs", headers=auth_headers)
-    assert res.status_code == 200
-    assert "jobs" in res.json()
-
-    # Create job
-    create_payload = {
-        "name": "Disaster Recovery Pipeline",
+    assert res.status_code == 200 and res.json()["available"] is False and "jobs" in res.json()
+    payload = {
+        "name": "DR",
         "source_pool": "tank",
         "source_dataset": "data",
         "target_type": "local",
@@ -36,21 +30,10 @@ def test_replication_router_endpoints(client, auth_headers, tmp_path, monkeypatc
         "schedule": "daily",
         "retention_count": 7,
     }
-    create_res = client.post("/api/storage/replication/jobs", json=create_payload, headers=auth_headers)
-    assert create_res.status_code == 200
-    job_data = create_res.json()["job"]
-    assert job_data["name"] == "Disaster Recovery Pipeline"
-    job_id = job_data["id"]
-
-    # Get single job
-    get_res = client.get(f"/api/storage/replication/jobs/{job_id}", headers=auth_headers)
-    assert get_res.status_code == 200
-    assert get_res.json()["job"]["id"] == job_id
-
-    # History
-    hist_res = client.get("/api/storage/replication/history", headers=auth_headers)
-    assert hist_res.status_code == 200
-    assert "history" in hist_res.json()
+    created = client.post("/api/storage/replication/jobs", json=payload, headers=auth_headers)
+    assert created.status_code == 409 and "turned off" in created.json()["detail"]
+    assert client.post("/api/storage/replication/jobs/any/run", headers=auth_headers).status_code == 409
+    assert client.get("/api/storage/replication/history", headers=auth_headers).status_code == 200
 
 
 def test_storage_overview_and_disks_endpoints(client, auth_headers):

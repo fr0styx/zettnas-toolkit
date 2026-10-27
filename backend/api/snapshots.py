@@ -25,7 +25,8 @@ class RestoreIn(BaseModel):
 
 @router.get("/snapshots/schedules", dependencies=[Depends(require_scope("backup:read", "storage:read"))])
 def get_schedules():
-    return {"schedules": snaps.list_schedules()}
+    ok, why = snaps.availability()
+    return {"schedules": snaps.list_schedules(), "available": ok, "reason": why}
 
 
 @router.put("/snapshots/schedules", dependencies=[Depends(require_scope("backup:manage", "storage:admin"))])

@@ -47,15 +47,24 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         return PlatformType.GENERIC_LINUX
 
     def get_capabilities(self) -> PlatformCapabilities:
+        from backend.hardware.pal.base import storage_tools
+
+        tools = storage_tools()
+        has_cow = tools["btrfs"] or tools["zfs"]
+        missing = [n for n in ("btrfs", "zfs", "mdadm") if not tools[n]]
         return PlatformCapabilities(
             platform=PlatformType.GENERIC_LINUX,
             is_observer_mode=False,
             can_create_pools=True,
             can_destroy_pools=True,
             can_manage_shares=True,
-            can_trigger_scrub=True,
-            supported_filesystems=["btrfs", "ext4", "xfs", "zfs"],
-            description="Active Provisioner Mode: Bare-metal Linux host detected. Full pool, subvolume snapshot, and share lifecycle management enabled.",
+            # REL-4: offer only what the tools in this image can do
+            can_trigger_scrub=has_cow or tools["mdadm"],
+            can_snapshot=has_cow,
+            storage_tools=tools,
+            supported_filesystems=[f for f in ("btrfs", "ext4", "xfs", "zfs") if f in ("ext4", "xfs") or tools[f]],
+            description="Active Provisioner Mode: Bare-metal Linux host detected. Pool and share management enabled."
+            + (f" Not available here: {', '.join(missing)} tools are missing." if missing else ""),
         )
 
     def _run_cmd(self, cmd: list[str]) -> tuple[int, str, str]:

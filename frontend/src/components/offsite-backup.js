@@ -64,6 +64,53 @@ function slug(name) {
   );
 }
 
+/** REL-17: without its key nobody can read the backup, so the key leaves the NAS right away. */
+export async function offerRecoveryKit(repo) {
+  let key = '';
+  try {
+    ({ key } = await api.get(`/api/offsite/repos/${encodeURIComponent(repo.id)}/key`));
+  } catch (e) {
+    showToast(t('offsite.added', 'Offsite backup ready. Keep a copy of its recovery key somewhere safe.'), 'success');
+    return;
+  }
+  const kit = recoveryKitText(repo, key);
+  showConfirmToast(
+    t('offsite.kit_title', 'Save the recovery key now'),
+    t('offsite.kit_msg', 'Without this key nobody can read the backup, not even you, if this NAS is lost or broken. Keep it outside the NAS: in a password manager or printed.\n\nKey: {key}', { key }),
+    () => downloadText(`zettnas-recovery-${repo.id}.txt`, kit),
+    () => copyTextToClipboard(key),
+    { okText: t('offsite.kit_download', 'Download recovery kit'), cancelText: t('offsite.kit_copy', 'Copy the key') }
+  );
+}
+
+export function recoveryKitText(repo, key) {
+  return [
+    'ZettNAS off-site backup: recovery kit',
+    `Name: ${repo.name || repo.id}`,
+    `Location: ${repo.location}`,
+    `Recovery key: ${key}`,
+    '',
+    'To get your files back on any computer with restic installed:',
+    `  export RESTIC_PASSWORD='${key}'`,
+    `  restic -r '${repo.location}' snapshots`,
+    `  restic -r '${repo.location}' restore latest --target ./restored`,
+    'A cloud location also needs its access keys (the same ones set up in ZettNAS).',
+    'Keep this file somewhere other than the NAS.',
+    '',
+  ].join('\n');
+}
+
+function downloadText(name, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 export async function renderOffsite(mount) {
   if (!mount) return;
   let data;
@@ -91,8 +138,8 @@ export async function renderOffsite(mount) {
     try {
       await api.put('/api/offsite/repos', body);
       await api.post(`/api/offsite/repos/${encodeURIComponent(body.id)}/init`, {});
-      showToast(t('offsite.added', 'Offsite backup ready. Keep a copy of its recovery key somewhere safe.'), 'success');
       renderOffsite(mount);
+      await offerRecoveryKit(body);
     } catch (err) {
       showToast(err.message || String(err), 'error');
     }

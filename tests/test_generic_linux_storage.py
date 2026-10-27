@@ -55,7 +55,10 @@ def isolated_storage_env(monkeypatch, tmp_path):
 # ==============================================================================
 
 
-def test_generic_linux_capabilities():
+def test_generic_linux_capabilities(monkeypatch):
+    import shutil
+
+    monkeypatch.setattr(shutil, "which", lambda name: f"/usr/sbin/{name}")  # every tool present
     adapter = GenericLinuxStorageAdapter()
     caps = adapter.get_capabilities()
     assert caps.platform == PlatformType.GENERIC_LINUX
@@ -350,3 +353,16 @@ def test_api_pool_snapshots_and_lifecycle(client, auth_headers, monkeypatch, tmp
     del_pool_res = client.delete("/api/storage/pools/datapool", headers=auth_headers)
     assert del_pool_res.status_code == 200
     assert del_pool_res.json()["status"] == "destroyed"
+
+
+def test_generic_linux_offers_only_what_its_tools_can_do(monkeypatch):
+    """REL-4: without btrfs, ZFS or mdadm there is no scrub or snapshot to offer."""
+    import shutil
+
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    caps = GenericLinuxStorageAdapter().get_capabilities()
+    assert caps.can_trigger_scrub is False and caps.can_snapshot is False
+    assert caps.supported_filesystems == ["ext4", "xfs"] and "missing" in caps.description
+    monkeypatch.setattr(shutil, "which", lambda name: "/usr/sbin/btrfs" if name == "btrfs" else None)
+    caps = GenericLinuxStorageAdapter().get_capabilities()
+    assert caps.can_snapshot and caps.can_trigger_scrub and "btrfs" in caps.supported_filesystems

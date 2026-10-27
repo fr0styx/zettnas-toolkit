@@ -123,21 +123,34 @@ def send_ups_cut_power():
             logger.debug(f"[UPS FAILSAFE] Failed sending NUT power-cut: {e}")
 
 
-def signal_host_powerdown():
-    """Triggers host powerdown using available trigger binaries."""
+def host_shutdown_paths() -> list[str]:
+    """Commands that shut down the HOST (REL-10). Inside a container /sbin/poweroff only stops the
+    container, so it counts only when ZettNAS runs directly on the host."""
+    paths = ["/host/powerdown", "/usr/local/sbin/powerdown"]
+    if not os.path.exists("/.dockerenv"):
+        paths.append("/sbin/poweroff")
+    return [p for p in paths if os.path.exists(p) and os.access(p, os.X_OK)]
+
+
+def signal_host_powerdown() -> bool:
+    """Shuts the host down; True only when a host shutdown command ran and reported success."""
     if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
         logger.info("[UPS FAILSAFE] Test mode active; skipping host powerdown.")
         return True
-    for trigger_path in ("/host/powerdown", "/usr/local/sbin/powerdown", "/sbin/poweroff"):
-        if os.path.exists(trigger_path) and os.access(trigger_path, os.X_OK):
-            try:
-                import subprocess
+    import subprocess
 
-                subprocess.Popen([trigger_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                logger.critical(f"[UPS FAILSAFE] Successfully executed {trigger_path}")
-                return True
-            except Exception as e:
-                logger.error(f"[UPS FAILSAFE] Failed executing {trigger_path}: {e}")
+    for trigger_path in host_shutdown_paths():
+        try:
+            res = subprocess.run([trigger_path], capture_output=True, text=True, timeout=60)
+        except Exception as e:
+            logger.error(f"[UPS FAILSAFE] {trigger_path} could not run: {e}")
+            continue
+        if res.returncode == 0:
+            logger.critical(f"[UPS FAILSAFE] Host shutdown started with {trigger_path}")
+            return True
+        logger.error(
+            f"[UPS FAILSAFE] {trigger_path} failed (exit {res.returncode}): {(res.stderr or '').strip()[:200]}"
+        )
     return False
 
 
@@ -184,13 +197,24 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
     except Exception as e:
         logger.error(f"[UPS FAILSAFE] os.sync failed: {e}")
 
-    # Step 4: Issue UPS cut power if configured
-    if cfg.get("poweroff_ups"):
-        send_ups_cut_power()
+    # Step 4: shut the host down; only then may the UPS be told to cut its outlets (REL-10)
+    logger.critical("[UPS FAILSAFE] Initiating host powerdown.")
+    if signal_host_powerdown():
+        if cfg.get("poweroff_ups"):
+            send_ups_cut_power()
+        return
+    msg = (
+        "ZettNAS could not shut down this server on its own (no working host shutdown command). "
+        "The UPS outlets were NOT switched off. Shut the NAS down by hand now to avoid a hard power loss."
+    )
+    logger.critical(f"[UPS FAILSAFE] {msg}")
+    add_event("critical", "UPS: shut the NAS down by hand", msg)
+    try:
+        from backend.services.notifications import send_notification
 
-    # Step 5: Powerdown host
-    logger.critical("[UPS FAILSAFE] Initiating host ACPI powerdown.")
-    signal_host_powerdown()
+        send_notification(title="UPS: shut the NAS down by hand", message=msg, level="critical", event_type="ups")
+    except Exception:
+        logger.debug("ups_watchdog: notification failed", exc_info=True)
 
 
 def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
