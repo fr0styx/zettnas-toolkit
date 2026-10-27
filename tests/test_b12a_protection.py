@@ -172,9 +172,8 @@ def test_the_scheduler_starts_due_scrubs(monkeypatch):
     calls = []
     monkeypatch.setattr(pool_alerts, "check_and_alert", lambda now: None)
     monkeypatch.setattr(pool_alerts, "send_weekly_if_due", lambda now: None)
-    monkeypatch.setattr(protection_jobs, "check_and_alert", lambda now: calls.append(("alert", now)))
     monkeypatch.setattr(protection_jobs, "run_scrubs_due", lambda now: calls.append(("scrub", now)))
     scheduler._run_pool_checks(123.0)
-    assert calls == [("alert", 123.0), ("scrub", 123.0)]
+    assert calls == [("scrub", 123.0)]  # the alerts run in BackupWatch (REL-18)
     monkeypatch.setattr(protection_jobs, "run_scrubs_due", lambda now: 1 / 0)
     scheduler._run_pool_checks(123.0)  # logged, not raised

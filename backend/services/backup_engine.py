@@ -901,6 +901,9 @@ def _backup_scheduler_loop() -> None:
         except Exception as e:
             logger.error(f"[HYPER-BACKUP] Scheduler iteration error: {e}")
 
+        from backend.services.supervisor import beat
+
+        beat("BackupScheduler")
         # Sleep in short increments for responsive stopping
         for _ in range(60):
             if not _SCHEDULER_RUNNING:
@@ -908,6 +911,23 @@ def _backup_scheduler_loop() -> None:
             time.sleep(1)
 
     logger.info("[HYPER-BACKUP] Scheduler daemon stopped.")
+
+
+@json_locked(lambda *a, **k: BACKUP_JOBS_FILE)
+def mark_interrupted_jobs() -> list[str]:
+    """At start: a backup still marked running was cut off by the restart (REL-18). It says so
+    instead of looking busy forever, and runs again at its next time."""
+    jobs = get_backup_jobs()
+    cut = []
+    for j in jobs:
+        if j.get("last_status") == "running":
+            j["last_status"] = "interrupted"
+            j["last_error"] = "ZettNAS restarted while this backup was running; it runs again at its next time."
+            cut.append(str(j.get("id")))
+    if cut:
+        atomic_write_json(BACKUP_JOBS_FILE, jobs)
+        logger.warning(f"[HYPER-BACKUP] Marked interrupted at start: {', '.join(cut)}")
+    return cut
 
 
 def backup_scheduler_daemon() -> None:

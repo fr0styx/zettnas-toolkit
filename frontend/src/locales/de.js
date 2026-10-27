@@ -3278,6 +3278,7 @@ export default {
   "overview.pool_full": "Speicherpool {subject} ist zu {detail} voll.",
   "overview.scrub_errors": "Die letzte Prüfung von {subject} hat Fehler in den Daten gefunden.",
   "overview.backup_overdue": "Sicherung „{subject}“ wurde in letzter Zeit nicht abgeschlossen.",
+  "overview.service_stalled": "Der Dienst {subject} reagiert nicht mehr. Starten Sie ZettNAS neu, wenn er sich nicht erholt.",
   "overview.kit_not_saved": "Wiederherstellungspaket für „{subject}“ nicht gesichert: ohne es ist die Sicherung nicht lesbar.",
   "prot.kind_backup": "Sicherung",
   "prot.kind_offsite": "Externe Sicherung",

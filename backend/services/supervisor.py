@@ -5,6 +5,10 @@ A daemon that crashes is logged with its traceback and restarted, waiting 1 s, t
 2, 4, … up to 60 s between attempts (the wait resets after it has run for 10 minutes).
 A daemon that returns normally (e.g. no LCD fitted) is marked "stopped" and left alone.
 daemon_status() reports each one for /api/health and diagnostics.
+
+A daemon that loops calls beat() each time round (REL-18). One that was started with
+beat_every and has not beaten for three of its intervals (at least a minute) is "stalled":
+it is still running but stuck, which a crash counter alone never shows.
 """
 
 import logging
@@ -23,11 +27,24 @@ STABLE_AFTER_S = 600.0
 
 
 def supervise(
-    name: str, target: Callable[..., Any], *args: Any, restart: bool = True, _sleep=time.sleep
+    name: str,
+    target: Callable[..., Any],
+    *args: Any,
+    restart: bool = True,
+    beat_every: float | None = None,
+    _sleep=time.sleep,
 ) -> threading.Thread:
-    """Starts target(*args) in a supervised daemon thread named `name`."""
+    """Starts target(*args) in a supervised daemon thread named `name`. With beat_every (seconds),
+    the daemon is expected to call beat() that often."""
     with _lock:
-        _daemons[name] = {"state": "starting", "restarts": 0, "last_error": "", "started_at": time.time()}
+        _daemons[name] = {
+            "state": "starting",
+            "restarts": 0,
+            "last_error": "",
+            "started_at": time.time(),
+            "beat_every": beat_every,
+            "last_beat": None,
+        }
 
     def runner() -> None:
         backoff = 1.0
@@ -60,9 +77,36 @@ def supervise(
     return t
 
 
-def daemon_status() -> dict[str, dict[str, Any]]:
+def beat(name: str | None = None, now: float | None = None) -> None:
+    """The calling daemon is alive and going round its loop (REL-18)."""
+    key = name or threading.current_thread().name
     with _lock:
-        return {k: dict(v) for k, v in _daemons.items()}
+        if key in _daemons:
+            _daemons[key]["last_beat"] = now or time.time()
+
+
+def stalled_after(beat_every: float) -> float:
+    return max(3 * beat_every, beat_every + 60.0)
+
+
+def daemon_status(now: float | None = None) -> dict[str, dict[str, Any]]:
+    now = now or time.time()
+    out = {}
+    with _lock:
+        for k, v in _daemons.items():
+            d = dict(v)
+            every = d.get("beat_every")
+            if d["state"] == "running" and every:
+                since = now - float(d.get("last_beat") or d.get("started_at") or now)
+                d["beat_age"] = round(since, 1)
+                if since > stalled_after(float(every)):
+                    d["state"] = "stalled"
+            out[k] = d
+    return out
+
+
+def stalled() -> list[str]:
+    return sorted(k for k, v in daemon_status().items() if v["state"] == "stalled")
 
 
 def install_os_thread_names() -> bool:

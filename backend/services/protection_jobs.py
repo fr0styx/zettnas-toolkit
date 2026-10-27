@@ -15,6 +15,7 @@ so and does not add a second one.
 from __future__ import annotations
 
 import os
+import threading
 import time
 from typing import Any
 
@@ -280,3 +281,28 @@ def run_scrubs_due(now: float | None = None) -> list[str]:
         if started:
             atomic_write_json(_scrub_file(), settings)
     return started
+
+
+WATCH_TICK_S = 60
+
+
+def watch_daemon(stop: threading.Event | None = None, tick: float = WATCH_TICK_S) -> None:
+    """Its own supervised thread, BackupWatch (REL-18): a backup or scheduled job that hangs the
+    task scheduler can no longer silence the "your backup hasn't run" alerts."""
+    from backend.services import backup_watch
+    from backend.services.supervisor import beat
+
+    stop = stop or threading.Event()
+    while not stop.is_set():
+        beat("BackupWatch")
+        now = time.time()
+        try:
+            backup_watch.check_and_alert(now)
+        except Exception:
+            logger.warning("[Protection] backup check failed", exc_info=True)
+        try:
+            check_and_alert(now)  # snapshots and monthly checks (REL-12)
+        except Exception:
+            logger.warning("[Protection] protection check failed", exc_info=True)
+        if stop.wait(tick):
+            break

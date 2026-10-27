@@ -3278,6 +3278,7 @@ export default {
   "overview.pool_full": "El grupo {subject} está lleno al {detail}.",
   "overview.scrub_errors": "La última comprobación de {subject} encontró errores en los datos.",
   "overview.backup_overdue": "La copia «{subject}» no ha terminado últimamente.",
+  "overview.service_stalled": "El servicio {subject} ha dejado de responder. Reinicie ZettNAS si no se recupera.",
   "overview.kit_not_saved": "Kit de recuperación sin guardar para «{subject}»: sin él la copia no se puede leer.",
   "prot.kind_backup": "Copia de seguridad",
   "prot.kind_offsite": "Copia externa",

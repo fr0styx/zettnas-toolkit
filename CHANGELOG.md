@@ -117,6 +117,9 @@
 
 #### Fixes
 
+- A background service that hangs (instead of crashing) now shows as "stalled" in health and on
+  the Overview; backup alerts run in their own thread so a stuck job can't silence them; a backup
+  cut off by a restart says "interrupted" instead of looking busy forever.
 - The daily summary setting under Alerts is saved again (it was reset on every save).
 - "Download as zip" streams while it is built instead of filling the container's disk first.
 - The card-reader check no longer probes other USB disks (such as Unraid's boot flash).

@@ -422,9 +422,11 @@ def _publish(data, disks, fans, net, now):
 
 def stats_collector_daemon():
     from backend.services.fan_heartbeat import beat
+    from backend.services.supervisor import beat as supervisor_beat
 
     while not Z_STATE.shutting_down:
         Z_STATE.collector_heartbeat = time.time()
+        supervisor_beat("StatsCollector")
         beat(released=bool(getattr(Z_STATE, "fans_released", False)))  # for the host fan watchdog
         try:
             disks = read_disk_temps_and_io()
@@ -684,6 +686,9 @@ def smart_poller_daemon():
         try:
             # one 10 s sleep, not twenty 0.5 s slices (PERF-5); per-disk SMART intervals and the
             # UPS cache decide what is actually read
+            from backend.services.supervisor import beat as supervisor_beat
+
+            supervisor_beat("SmartPoller")
             time.sleep(SMART_POLL_TICK_SECS)
             if Z_STATE.shutting_down:
                 break

@@ -35,7 +35,9 @@ def quiet(monkeypatch):
     ):
         monkeypatch.setattr(target, noop)
     monkeypatch.setattr("backend.db_schema.check_versions", noop)
-    monkeypatch.setattr("backend.services.supervisor.supervise", lambda name, fn: rec["supervised"].append(name))
+    monkeypatch.setattr(
+        "backend.services.supervisor.supervise", lambda name, fn, *a, **k: rec["supervised"].append(name)
+    )
     monkeypatch.setattr(main, "setup_structured_logging", lambda: None)
     monkeypatch.setattr(main, "read_ip", lambda: "10.0.0.2")
     monkeypatch.setattr(main, "detect_chassis_model", lambda: "d6u")
@@ -64,7 +66,7 @@ class TestStartup:
         assert {"StatsCollector", "SmartPoller", "ButtonListener", "LcdRenderer", "FanWatchdog"} <= set(
             quiet["supervised"]
         )
-        assert {"BackupScheduler", "TaskScheduler"} <= set(quiet["supervised"])  # ARC-10
+        assert {"BackupScheduler", "TaskScheduler", "BackupWatch"} <= set(quiet["supervised"])  # ARC-10, REL-18
         assert {"rag", "webdav"} <= set(quiet["started"])
         assert "VmAutostart" in [n for n, _ in quiet["threads"]] and quiet["atexit"]
 

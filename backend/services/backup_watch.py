@@ -35,10 +35,9 @@ def overdue_backups(now: float | None = None) -> list[dict[str, Any]]:
                 or (job.get("last_run_at") if job.get("last_status") == "success" else 0)
                 or 0
             )
-            if job.get("last_status") == "error":
-                out.append(
-                    {"id": job.get("id"), "name": job.get("name"), "kind": "hyper", "why": "its last run failed"}
-                )
+            if job.get("last_status") in ("error", "interrupted"):
+                why = "its last run failed" if job.get("last_status") == "error" else "its last run was interrupted"
+                out.append({"id": job.get("id"), "name": job.get("name"), "kind": "hyper", "why": why})
             elif now - max(last_ok, created) > 2 * interval:
                 out.append(
                     {"id": job.get("id"), "name": job.get("name"), "kind": "hyper", "why": "it hasn't run lately"}

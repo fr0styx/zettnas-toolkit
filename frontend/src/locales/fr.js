@@ -3278,6 +3278,7 @@ export default {
   "overview.pool_full": "Le pool {subject} est plein à {detail}.",
   "overview.scrub_errors": "La dernière vérification de {subject} a trouvé des erreurs dans les données.",
   "overview.backup_overdue": "La sauvegarde « {subject} » ne s'est pas terminée récemment.",
+  "overview.service_stalled": "Le service {subject} ne répond plus. Redémarrez ZettNAS s'il ne repart pas.",
   "overview.kit_not_saved": "Kit de récupération non enregistré pour « {subject} » : sans lui, la sauvegarde est illisible.",
   "prot.kind_backup": "Sauvegarde",
   "prot.kind_offsite": "Sauvegarde externe",

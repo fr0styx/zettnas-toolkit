@@ -353,7 +353,10 @@ class RansomwareGuard:
         return self.status()
 
     def run_forever(self, sleep=time.sleep) -> None:
+        from backend.services.supervisor import beat
+
         while True:
+            beat("RansomwareGuard")
             try:
                 self.check_canaries()
             except Exception:

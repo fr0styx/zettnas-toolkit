@@ -3278,6 +3278,7 @@ export default {
   "overview.pool_full": "存储池 {subject} 已用 {detail}。",
   "overview.scrub_errors": "{subject} 的上次检查在数据中发现错误。",
   "overview.backup_overdue": "备份“{subject}”最近未能完成。",
+  "overview.service_stalled": "{subject} 服务已停止响应。如果没有恢复，请重启 ZettNAS。",
   "overview.kit_not_saved": "“{subject}”的恢复包尚未保存：没有它就无法读取备份。",
   "prot.kind_backup": "备份",
   "prot.kind_offsite": "异地备份",

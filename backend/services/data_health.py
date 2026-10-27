@@ -223,7 +223,10 @@ def data_guard_daemon(data_dir: str | None = None, sleep=time.sleep) -> None:
         warn_if_on_spinning_disk(folder)
     except Exception:
         logger.debug("[DataHealth] could not tell which disk holds the data folder", exc_info=True)
+    from backend.services.supervisor import beat
+
     while True:
+        beat("DataGuard")
         try:
             take_daily_snapshot_if_due(folder)
         except Exception:

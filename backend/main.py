@@ -259,8 +259,8 @@ def startup_system():
 
     _start_docker_proxy(supervise)
 
-    supervise("StatsCollector", stats_collector_daemon)
-    supervise("SmartPoller", smart_poller_daemon)
+    supervise("StatsCollector", stats_collector_daemon, beat_every=10)
+    supervise("SmartPoller", smart_poller_daemon, beat_every=30)
     from backend.hardware.fans import is_zettlab_appliance
 
     if is_zettlab_appliance():
@@ -268,31 +268,40 @@ def startup_system():
     else:
         logger.debug("[Main] Non-appliance hardware detected; skipping ButtonListener daemon.")
     supervise("LcdRenderer", render_lcd_loop)
-    supervise("FanWatchdog", fan_watchdog_daemon)
+    supervise("FanWatchdog", fan_watchdog_daemon, beat_every=10)
     if os.environ.get("TESTING") != "1":
         from backend.services.vision_queue import vision_daemon
 
         supervise("VisionCaptioner", vision_daemon)  # AI-14, idle-only
         from backend.services.ransomware_guard import guard_daemon
 
-        supervise("RansomwareGuard", guard_daemon)  # M4: guard-file checks
+        supervise("RansomwareGuard", guard_daemon, beat_every=30)  # M4: guard-file checks
         from backend.services.data_health import data_guard_daemon
 
-        supervise("DataGuard", data_guard_daemon)  # REL-2: daily data snapshot
+        supervise("DataGuard", data_guard_daemon, beat_every=3600)  # REL-2: daily data snapshot
 
     try:
         get_webdav_engine().start_if_enabled()
     except Exception as e:
         logger.warning(f"Could not auto-start WebDAV engine: {e}")
 
-    # Schedulers run supervised, so a crash is restarted and shows in health (ARC-10)
-    from backend.services.backup_engine import backup_scheduler_daemon
+    # Schedulers run supervised, so a crash is restarted and shows in health (ARC-10); each beats
+    # once a loop, so one that hangs shows as stalled (REL-18)
+    from backend.services.backup_engine import backup_scheduler_daemon, mark_interrupted_jobs
 
-    supervise("BackupScheduler", backup_scheduler_daemon)
+    try:
+        mark_interrupted_jobs()  # cut off by the restart
+    except Exception as e:
+        logger.warning(f"[Main] Could not mark interrupted backups: {e}")
+    supervise("BackupScheduler", backup_scheduler_daemon, beat_every=60)
 
     from backend.services.scheduler import scheduler_daemon
 
-    supervise("TaskScheduler", scheduler_daemon)  # SMART tests and scrubs on schedule
+    supervise("TaskScheduler", scheduler_daemon, beat_every=60)  # SMART tests and scrubs on schedule
+
+    from backend.services.protection_jobs import watch_daemon
+
+    supervise("BackupWatch", watch_daemon, beat_every=60)  # backup alerts in their own thread
 
     try:
         from backend.services.rag_engine import get_rag_engine
@@ -344,7 +353,10 @@ def fan_watchdog_daemon():
     COLLECTOR_WATCHDOG_SECS without a heartbeat we engage the failsafe. The
     collector automatically reclaims control once it recovers.
     """
+    from backend.services.supervisor import beat
+
     while not Z_STATE.shutting_down:
+        beat("FanWatchdog")
         time.sleep(5)
         if Z_STATE.shutting_down:
             break

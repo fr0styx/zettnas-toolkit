@@ -133,6 +133,7 @@ def health():
         "image_variant": _image_variant(),
         "checks": checks,
         "daemons": {k: {"state": v["state"], "restarts": v["restarts"]} for k, v in _daemon_status().items()},
+        "stalled": sorted(k for k, v in _daemon_status().items() if v["state"] == "stalled"),
         "collector_heartbeat_age": round(time.time() - hb, 1) if hb else None,
         "lcd_renderer_active": bool(Z_STATE.lcd_renderer_active),
         "fans_released": bool(Z_STATE.fans_released),

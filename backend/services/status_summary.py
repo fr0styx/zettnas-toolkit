@@ -136,6 +136,16 @@ def _kits() -> list[dict[str, Any]]:
     ]
 
 
+def _stalled() -> list[dict[str, Any]]:
+    """A background service that stopped going round its loop (REL-18)."""
+    from backend.services.supervisor import stalled
+
+    return [
+        {"id": f"daemon:{n}", "level": "warning", "kind": "service_stalled", "subject": n, "open": "activity"}
+        for n in stalled()
+    ]
+
+
 def _frozen() -> list[dict[str, Any]]:
     from backend.services.ransomware_guard import writes_frozen
 
@@ -173,7 +183,7 @@ def _password() -> list[dict[str, Any]]:
     return []
 
 
-CHECKS = (_drives, _pools, _storage, _backups, _protection, _kits, _frozen, _power, _password)
+CHECKS = (_drives, _pools, _storage, _backups, _protection, _kits, _stalled, _frozen, _power, _password)
 
 
 def summary() -> dict[str, Any]:

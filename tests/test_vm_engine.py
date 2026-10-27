@@ -35,6 +35,10 @@ class FakeQemu:
         self.conn.sendall(json.dumps(obj).encode() + b"\n")
 
     def emit(self, event, data=None):
+        # the client may be between connections on a busy CI box: wait for it, briefly
+        deadline = time.time() + 5
+        while self.conn is None and time.time() < deadline:
+            time.sleep(0.01)
         self._send({"event": event, "data": data or {}, "timestamp": {"seconds": 0, "microseconds": 0}})
 
     def _serve(self):

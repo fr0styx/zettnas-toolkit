@@ -116,15 +116,17 @@ def _run_pool_checks(now: float) -> None:
     try:
         from backend.services import protection_jobs
 
-        protection_jobs.check_and_alert(now)  # late snapshot schedules and checks (REL-12)
-        protection_jobs.run_scrubs_due(now)  # monthly scrubs where ZettNAS owns the pools
+        protection_jobs.run_scrubs_due(now)  # monthly scrubs where ZettNAS owns the pools (REL-12)
     except Exception as e:
         logger.warning(f"[Scheduler] Monthly scrub failed: {e}")
 
 
 def _run_scheduled_tasks():
     logger.info("[Scheduler] System background scheduler started.")
+    from backend.services.supervisor import beat
+
     while not _SCHEDULER_STOP_EVENT.is_set():
+        beat("TaskScheduler")
         if _SCHEDULER_STOP_EVENT.wait(60):
             break
 
@@ -143,12 +145,6 @@ def _run_scheduled_tasks():
             run_offsite(now)
         except Exception as e:
             logger.warning(f"[Scheduler] Offsite backups failed: {e}")
-        try:
-            from backend.services.backup_watch import check_and_alert
-
-            check_and_alert(now)  # backups without a recent success
-        except Exception as e:
-            logger.warning(f"[Scheduler] Backup watch failed: {e}")
         try:
             from backend.services.notifications import send_digest_if_due
 
