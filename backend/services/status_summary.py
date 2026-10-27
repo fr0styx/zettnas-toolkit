@@ -126,6 +126,16 @@ def _protection() -> list[dict[str, Any]]:
     ]
 
 
+def _kits() -> list[dict[str, Any]]:
+    """Off-site backups whose recovery kit was never saved (REL-17)."""
+    from backend.services.offsite_backup import kits_not_saved
+
+    return [
+        {"id": f"kit:{k['id']}", "level": "warning", "kind": "kit_not_saved", "subject": k["name"], "open": "backup"}
+        for k in kits_not_saved()
+    ]
+
+
 def _frozen() -> list[dict[str, Any]]:
     from backend.services.ransomware_guard import writes_frozen
 
@@ -163,7 +173,7 @@ def _password() -> list[dict[str, Any]]:
     return []
 
 
-CHECKS = (_drives, _pools, _storage, _backups, _protection, _frozen, _power, _password)
+CHECKS = (_drives, _pools, _storage, _backups, _protection, _kits, _frozen, _power, _password)
 
 
 def summary() -> dict[str, Any]:

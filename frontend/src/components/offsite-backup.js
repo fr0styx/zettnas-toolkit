@@ -23,13 +23,13 @@ export function reposHtml(data) {
         )}</span>
         <span class="offsite-meta">${escapeHtml(t('offsite.last', 'Last backup {b} · last check {c}', { b: when(r.last_backup), c: when(r.last_check) }))}${
           r.last_result && r.last_result !== 'ok' ? ` · <strong>${escapeHtml(r.last_result)}</strong>` : ''
-        }</span>
+        }${r.initialized && !r.kit_saved_at ? ` · <strong class="offsite-kit-missing">${escapeHtml(t('offsite.kit_missing', 'Recovery kit not saved'))}</strong>` : ''}</span>
       </div>
       <div class="offsite-actions">
         <button type="button" class="btn-pill-toggle is-small is-primary" data-off="backup" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.backup_now', 'Back up now'))}</button>
         <button type="button" class="btn-pill-toggle is-small" data-off="versions" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.versions', 'Versions'))}</button>
         <button type="button" class="btn-pill-toggle is-small" data-off="check" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.verify', 'Verify'))}</button>
-        <button type="button" class="btn-pill-toggle is-small" data-off="key" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.key', 'Recovery key'))}</button>
+        <button type="button" class="btn-pill-toggle is-small" data-off="kit" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.kit', 'Recovery kit'))}</button>
         <button type="button" class="btn-pill-toggle is-small is-danger" data-off="forget" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.forget', 'Forget'))}</button>
       </div>
     </li>`,
@@ -64,22 +64,33 @@ function slug(name) {
   );
 }
 
-/** REL-17: without its key nobody can read the backup, so the key leaves the NAS right away. */
-export async function offerRecoveryKit(repo) {
-  let key = '';
+/** REL-17: without its key nobody can read the backup, so the full kit leaves the NAS right away,
+ * and the Overview keeps asking until it has been saved. */
+export async function offerRecoveryKit(repo, onSaved = null) {
+  let kit;
   try {
-    ({ key } = await api.get(`/api/offsite/repos/${encodeURIComponent(repo.id)}/key`));
+    kit = await api.get(`/api/offsite/repos/${encodeURIComponent(repo.id)}/kit`);
   } catch (e) {
     showToast(t('offsite.added', 'Offsite backup ready. Keep a copy of its recovery key somewhere safe.'), 'success');
     return;
   }
-  const kit = recoveryKitText(repo, key);
+  const saved = async () => {
+    await api.post(`/api/offsite/repos/${encodeURIComponent(repo.id)}/kit-saved`, {}).catch(() => {});
+    if (onSaved) onSaved();
+  };
   showConfirmToast(
     t('offsite.kit_title', 'Save the recovery key now'),
-    t('offsite.kit_msg', 'Without this key nobody can read the backup, not even you, if this NAS is lost or broken. Keep it outside the NAS: in a password manager or printed.\n\nKey: {key}', { key }),
-    () => downloadText(`zettnas-recovery-${repo.id}.txt`, kit),
-    () => copyTextToClipboard(key),
-    { okText: t('offsite.kit_download', 'Download recovery kit'), cancelText: t('offsite.kit_copy', 'Copy the key') }
+    t('offsite.kit_msg_full', 'Without this kit nobody can read the backup, not even you, if this NAS is lost or broken. It holds the key, where the backup is and how to restore it. Keep it outside the NAS: in a password manager, on a USB stick or printed.'),
+    async () => {
+      downloadText(kit.filename || `zettnas-recovery-${repo.id}.txt`, kit.text);
+      await saved();
+    },
+    async () => {
+      await copyTextToClipboard(kit.text);
+      showToast(t('offsite.kit_copied', 'Recovery kit copied. Paste it into your password manager.'), 'info');
+      await saved();
+    },
+    { okText: t('offsite.kit_download', 'Download recovery kit'), cancelText: t('offsite.kit_copy_all', 'Copy the kit') }
   );
 }
 
@@ -157,10 +168,9 @@ export async function renderOffsite(mount) {
       } else if (act === 'check') {
         await api.post(`/api/offsite/repos/${id}/check`, {});
         showToast(t('offsite.verified', 'The backup is readable and complete.'), 'success');
-      } else if (act === 'key') {
-        const { key } = await api.get(`/api/offsite/repos/${id}/key`);
-        await copyTextToClipboard(key);
-        showToast(t('offsite.key_copied', 'Recovery key copied. Store it outside this NAS: without it the backup cannot be read.'), 'info');
+      } else if (act === 'kit') {
+        await offerRecoveryKit({ id: b.dataset.id }, () => renderOffsite(mount));
+        return;
       } else if (act === 'forget') {
         showConfirmToast(t('offsite.forget_confirm', 'Forget this backup in ZettNAS? The backup itself stays where it is.'), async () => {
           await api.delete(`/api/offsite/repos/${id}`);

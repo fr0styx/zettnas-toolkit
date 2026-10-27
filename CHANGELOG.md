@@ -91,6 +91,9 @@
 
 #### Backups and power
 
+- **A recovery kit that has to be saved**: each off-site backup gives a kit with the key, where the
+  backup is, the cloud settings it needs and the restore commands; the Overview says "Recovery kit
+  not saved" until it is downloaded or copied. BACKUP_GUIDE explains how to recover on new hardware.
 - **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.
 - Snapshot, scrub and replication settings are shown only where the host can run them; storage
   replication is turned off until it is fixed (use an off-site backup to another NAS).

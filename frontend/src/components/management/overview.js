@@ -54,6 +54,7 @@ const MESSAGES = {
   backup_overdue: () => t('overview.backup_overdue', 'Backup "{subject}" has not finished lately.'),
   snapshot_overdue: () => t('overview.snapshot_overdue', 'Snapshots of {subject} have not been taken lately.'),
   scrub_overdue: () => t('overview.scrub_overdue', '{subject} has not been checked for errors lately.'),
+  kit_not_saved: () => t('overview.kit_not_saved', 'Recovery kit not saved for "{subject}": without it the backup cannot be read.'),
   writes_frozen: () => t('overview.writes_frozen', 'Changes to files are paused: something looked like ransomware.'),
   on_battery: () => t('overview.on_battery', 'The server is running on battery power.'),
   too_hot: () => t('overview.too_hot', 'The server is too hot.'),

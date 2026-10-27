@@ -64,6 +64,17 @@ def get_key(repo_id: str):
     return {"key": _errors(ob.recovery_key, repo_id)}
 
 
+@router.get("/offsite/repos/{repo_id}/kit", dependencies=[MANAGE])
+def get_kit(repo_id: str):
+    """The full recovery kit (REL-17): key, location, cloud settings and restore commands."""
+    return {"filename": f"zettnas-recovery-{repo_id}.txt", "text": _errors(ob.recovery_kit, repo_id)}
+
+
+@router.post("/offsite/repos/{repo_id}/kit-saved", dependencies=[MANAGE])
+def kit_saved(repo_id: str):
+    return {"kit_saved_at": _errors(ob.mark_kit_saved, repo_id)}
+
+
 @router.post("/offsite/repos/{repo_id}/backup", dependencies=[MANAGE])
 def run_backup(repo_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     return _errors(ob.backup, repo_id, owner=principal.username if principal else None)

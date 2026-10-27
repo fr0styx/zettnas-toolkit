@@ -96,6 +96,7 @@ def save_repo(
             "last_drill": old.get("last_drill"),
             "last_drill_result": old.get("last_drill_result", ""),
             "created_at": old.get("created_at") or time.time(),
+            "kit_saved_at": old.get("kit_saved_at"),
         }
         _save(repos)
     return repos[repo_id]
@@ -167,6 +168,82 @@ def recovery_key(repo_id: str) -> str:
     get_repo(repo_id)
     with open(_key_file(repo_id), encoding="utf-8") as f:
         return f.read().strip()
+
+
+def _rclone_section(remote: str) -> str:
+    """The rclone settings of one remote, as rclone.conf text (empty when unknown)."""
+    import configparser
+
+    cp = configparser.RawConfigParser()
+    try:
+        cp.read(RCLONE_CONFIG_FILE, encoding="utf-8")
+    except (OSError, configparser.Error):
+        return ""
+    if not cp.has_section(remote):
+        return ""
+    lines = [f"[{remote}]"] + [f"{k} = {v}" for k, v in cp.items(remote)]
+    return "\n".join(lines)
+
+
+def recovery_kit(repo_id: str) -> str:
+    """Everything needed to read this backup on another computer, with plain restic (REL-17):
+    the key, where the backup is, the cloud settings it needs, and the commands."""
+    repo = get_repo(repo_id)
+    key = recovery_key(repo_id)
+    loc = repo["location"]
+    lines = [
+        "ZettNAS off-site backup: recovery kit",
+        "Keep this outside the NAS (a password manager, a USB stick in a drawer, or printed).",
+        "Anyone with this kit can read the backup.",
+        "",
+        f"Name: {repo.get('name') or repo_id}",
+        f"Backup location: {loc}",
+        f"Recovery key: {key}",
+        f"Folders in it: {', '.join(repo.get('paths') or [])}",
+        "",
+    ]
+    rclone_conf = ""
+    if loc.startswith("rclone:"):
+        remote = loc.split(":", 2)[1] if loc.count(":") >= 2 else ""
+        rclone_conf = _rclone_section(remote)
+    lines += [
+        "To get your files back on any computer:",
+        "  1. Install restic (https://restic.net)" + (" and rclone (https://rclone.org)." if rclone_conf else "."),
+    ]
+    if rclone_conf:
+        lines += ["  2. Save the cloud settings below as rclone.conf, then: export RCLONE_CONFIG=./rclone.conf"]
+    step = 3 if rclone_conf else 2
+    lines += [
+        f"  {step}. export RESTIC_PASSWORD='{key}'",
+        f"  {step + 1}. See the versions: restic -r '{loc}' snapshots",
+        f"  {step + 2}. Restore the newest: restic -r '{loc}' restore latest --target ./restored",
+        "",
+        "To restore the whole server on new hardware, see 'Recover on new hardware' in BACKUP_GUIDE.md.",
+    ]
+    if rclone_conf:
+        lines += ["", "----- rclone.conf -----", rclone_conf, "-----------------------"]
+    return "\n".join(lines) + "\n"
+
+
+def mark_kit_saved(repo_id: str) -> float:
+    """The person downloaded or copied the kit (REL-17)."""
+    with _LOCK:
+        repos = _repos()
+        if repo_id not in repos:
+            raise KeyError("No such backup.")
+        now = time.time()
+        repos[repo_id]["kit_saved_at"] = now
+        _save(repos)
+    return now
+
+
+def kits_not_saved() -> list[dict[str, Any]]:
+    """Set-up backups whose recovery kit nobody saved yet."""
+    return [
+        {"id": r["id"], "name": r.get("name") or r["id"]}
+        for r in list_repos()
+        if r.get("initialized") and not r.get("kit_saved_at")
+    ]
 
 
 def backup(repo_id: str, owner: str | None = None) -> dict[str, Any]:

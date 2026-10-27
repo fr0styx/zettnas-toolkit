@@ -71,3 +71,28 @@ Your files live on the pool; ZettNAS's own settings (users and their passwords a
 3. **If you set an AI data key** (`ZETTNAS_DATA_KEY`), keep a copy with the passphrase. A settings backup holds the encrypted AI chat history as it is; it needs the same key to be read.
 
 To recover on a new install: install ZettNAS with the same `ZETTNAS_DATA_KEY` (if you used one), open Mission Control → Settings → Backups & Recovery → *System Configuration Backup & Restore* → *Upload & Restore Archive*, choose the newest `zettnas_backup_*.zettbak` and enter the passphrase. Users, shares and settings come back; the AI index is rebuilt from your files in the background.
+
+## Recover on new hardware
+
+When the NAS itself is gone (stolen, burnt, or the motherboard died), you need two things kept
+somewhere else: the **recovery kit** of your off-site backup and, if you made one, the
+**settings backup** with its passphrase.
+
+1. **Get your files back first, on any computer.** The recovery kit (Backup → Off-site →
+   *Recovery kit*) is a text file with the key, where the backup is, the cloud settings it needs
+   and the exact commands. With [restic](https://restic.net) installed:
+   ```bash
+   export RESTIC_PASSWORD='<the key from the kit>'
+   restic -r '<the location from the kit>' snapshots
+   restic -r '<the location from the kit>' restore latest --target ./restored
+   ```
+   For a cloud location, save the kit's `rclone.conf` part to a file, install
+   [rclone](https://rclone.org) and run `export RCLONE_CONFIG=./rclone.conf` first.
+2. **Install ZettNAS on the new hardware** and create the pool and shares.
+3. **Bring the settings back** with *Upload & Restore Archive* (above), using the newest
+   settings backup and its passphrase: people, shares and permissions return.
+4. **Copy the restored files into the shares**, or point the off-site backup at the same
+   location again (same name and key) and use *Versions → Restore*.
+
+The Overview shows "Recovery kit not saved" until each off-site backup's kit has been downloaded
+or copied, so nobody finds out on the bad day that the key was only on the NAS.

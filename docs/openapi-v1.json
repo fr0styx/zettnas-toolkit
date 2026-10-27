@@ -49676,6 +49676,87 @@
     ]
    }
   },
+  "/api/v1/offsite/repos/{repo_id}/kit": {
+   "get": {
+    "description": "The full recovery kit (REL-17): key, location, cloud settings and restore commands.",
+    "operationId": "get_kit_api_v1_offsite_repos__repo_id__kit_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "repo_id",
+      "required": true,
+      "schema": {
+       "title": "Repo Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Kit",
+    "tags": [
+     "Offsite backup"
+    ]
+   }
+  },
+  "/api/v1/offsite/repos/{repo_id}/kit-saved": {
+   "post": {
+    "operationId": "kit_saved_api_v1_offsite_repos__repo_id__kit_saved_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "repo_id",
+      "required": true,
+      "schema": {
+       "title": "Repo Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Kit Saved",
+    "tags": [
+     "Offsite backup"
+    ]
+   }
+  },
   "/api/v1/offsite/repos/{repo_id}/snapshots": {
    "get": {
     "operationId": "list_versions_api_v1_offsite_repos__repo_id__snapshots_get",
