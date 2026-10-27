@@ -20,6 +20,7 @@ from typing import Any, Optional
 
 from backend.config import logger
 from backend.fsutil import is_protected, prune_protected
+from backend.services import recycle_bin
 
 
 class CollisionPolicy(StrEnum):
@@ -146,8 +147,57 @@ def _part_path(dst: str) -> str:
     return os.path.join(os.path.dirname(dst), f".{os.path.basename(dst)}.zettnas-part")
 
 
-def _stream_copy(src: str, dst: str, progress: TransferProgress) -> None:
-    """Copies file data with the kernel's copy (reflinks on btrfs/XFS), falling back to read/write."""
+def _stage_path(dst: str) -> str:
+    """Where a folder that replaces `dst` is built before the swap: hidden, next to it."""
+    return os.path.join(os.path.dirname(dst), f".{os.path.basename(dst)}.zettnas-stage-{uuid.uuid4().hex[:6]}")
+
+
+# fsync on FUSE and some network mounts is not supported; any other failure means the data may
+# not be on the disk, so the original must stay
+_NO_FSYNC = {errno.EINVAL, errno.ENOTSUP, errno.EOPNOTSUPP, errno.ENOSYS}
+
+
+def _fsync(fd: int, what: str) -> None:
+    try:
+        os.fsync(fd)
+    except OSError as err:
+        if err.errno not in _NO_FSYNC:
+            raise
+        logger.debug(f"[FS Transfer] No fsync for {what}: {err}")
+
+
+def _fsync_dir(path: str) -> None:
+    """Makes a rename in `path` durable (the folder entry itself is flushed)."""
+    try:
+        fd = os.open(path, os.O_RDONLY)
+    except OSError as err:
+        logger.debug(f"[FS Transfer] Cannot open {path} to flush it: {err}")
+        return
+    try:
+        _fsync(fd, path)
+    finally:
+        os.close(fd)
+
+
+def _set_aside(path: str, delete: bool = True) -> bool:
+    """Moves an item being replaced to its Recycle Bin (REL-14). Without a bin on the same
+    filesystem it is deleted (delete=True) or left for the caller to overwrite. True when binned."""
+    try:
+        if recycle_bin.move_to_bin(path, rename_only=True):
+            return True
+    except OSError as err:
+        logger.warning(f"[FS Transfer] Could not put {path} in the Recycle Bin: {err}")
+    if delete:
+        if os.path.isdir(path) and not os.path.islink(path):
+            shutil.rmtree(path)
+        else:
+            os.unlink(path)
+    return False
+
+
+def _stream_copy(src: str, dst: str, progress: TransferProgress, durable: bool = False) -> None:
+    """Copies file data with the kernel's copy (reflinks on btrfs/XFS), falling back to read/write.
+    durable: the data is flushed to the disk before this returns (a move deletes the original next)."""
     with open(src, "rb") as fsrc, open(dst, "wb") as fdst:
         in_fd, out_fd = fsrc.fileno(), fdst.fileno()
         use_kernel = hasattr(os, "copy_file_range")
@@ -167,33 +217,33 @@ def _stream_copy(src: str, dst: str, progress: TransferProgress) -> None:
             if not n:
                 break
             progress.add_bytes(n)
+        if durable:
+            fdst.flush()
+            _fsync(fdst.fileno(), dst)
 
 
-def _copy_file_resilient(src: str, dst: str, progress: TransferProgress | None = None) -> None:
-    """Copies a file with its metadata. With progress, the data goes to a hidden part file that
-    replaces `dst` only when complete, so a cancel or failure never leaves a broken file."""
-    if progress is None:
-        try:
-            if os.path.islink(src):
-                shutil.copy2(src, dst, follow_symlinks=False)
-            else:
-                shutil.copy2(src, dst)
-        except OSError:
-            shutil.copyfile(src, dst)
-        return
+def _copy_file_resilient(src: str, dst: str, progress: TransferProgress | None = None, durable: bool = False) -> None:
+    """Copies a file with its metadata. The data goes to a hidden part file that replaces `dst`
+    only when complete, so a cancel, failure or crash never leaves a broken file; a file it
+    replaces goes to the Recycle Bin (REL-14). durable: flushed to the disk, for a move."""
+    prog = progress or _NO_PROGRESS
     if os.path.islink(src):
         if os.path.lexists(dst) and not os.path.isdir(dst):
-            os.unlink(dst)
+            _set_aside(dst)
         shutil.copy2(src, dst, follow_symlinks=False)
         return
     part = _part_path(dst)
     try:
-        _stream_copy(src, part, progress)
+        _stream_copy(src, part, prog, durable=durable)
         try:
             shutil.copystat(src, part)
         except OSError as err:  # FUSE/cloud remotes may not keep times or modes
             logger.debug(f"[FS Transfer] Times/mode not kept for {dst}: {err}")
+        if os.path.lexists(dst) and not os.path.isdir(dst):
+            _set_aside(dst, delete=False)
         os.replace(part, dst)
+        if durable:
+            _fsync_dir(os.path.dirname(dst) or ".")
     except BaseException:
         try:
             os.unlink(part)
@@ -205,13 +255,16 @@ def _copy_file_resilient(src: str, dst: str, progress: TransferProgress | None =
 
 
 def _move_file_resilient(src: str, dst: str, progress: TransferProgress | None = None) -> None:
-    """Moves a file: a rename on the same filesystem, else copy then delete the original."""
+    """Moves a file: a rename on the same filesystem, else a copy that is flushed to the disk
+    before the original is deleted (REL-14). A file it replaces goes to the Recycle Bin."""
     size = 0
     if progress is not None:
         try:
             size = 0 if os.path.islink(src) else os.path.getsize(src)
         except OSError as err:
             logger.debug(f"[FS Transfer] Cannot size {src}: {err}")
+    if os.path.lexists(dst) and not os.path.isdir(dst):
+        _set_aside(dst, delete=False)
     try:
         os.replace(src, dst)
         if progress is not None:
@@ -219,7 +272,7 @@ def _move_file_resilient(src: str, dst: str, progress: TransferProgress | None =
         return
     except OSError as err:
         logger.debug(f"[FS Transfer] Rename {src} failed ({err}); copying instead")
-    _copy_file_resilient(src, dst, progress)
+    _copy_file_resilient(src, dst, progress, durable=True)
     try:
         os.unlink(src)
     except OSError as err:
@@ -293,11 +346,7 @@ def merge_directory_tree(
             dst_dir = _generate_unique_target(dst_dir)
             dst_exists = False
         elif policy == CollisionPolicy.OVERWRITE:
-            if os.path.isdir(dst_dir) and not os.path.islink(dst_dir):
-                shutil.rmtree(dst_dir)
-            else:
-                os.unlink(dst_dir)
-            dst_exists = False
+            return _replace_tree(src_dir, dst_dir, action, stats, progress)
 
     # Destination directory now either does not exist or we are performing MERGE
     if not dst_exists:
@@ -365,6 +414,72 @@ def merge_directory_tree(
             logger.debug(f"[FS Transfer] Kept source folder {src_dir}: {err}")
 
     return stats
+
+
+def _replace_tree(
+    src_dir: str, dst_dir: str, action: str, stats: dict[str, Any], progress: TransferProgress | None
+) -> dict[str, Any]:
+    """Overwrites an existing folder (REL-14): the new one is built beside it, hidden, and swapped
+    in only when complete; the old one goes to the Recycle Bin. A failure or a crash before the
+    swap leaves the old folder as it was. Files a failed move already took along are kept, visible,
+    as "<name> (incomplete move)" next to it, so nothing is lost either way."""
+    prog = progress or _NO_PROGRESS
+    stage = _stage_path(dst_dir)
+    if action == "move":
+        totals = tree_totals(src_dir) if progress is not None else (0, 0)
+        try:
+            os.rename(src_dir, stage)
+        except OSError as err:
+            logger.debug(f"[FS Transfer] Rename {src_dir} failed ({err}); copying instead")
+        else:
+            try:
+                _set_aside(dst_dir)
+            except BaseException:
+                os.rename(stage, src_dir)  # the old folder could not be moved away: undo
+                raise
+            os.rename(stage, dst_dir)
+            stats["transferred"] += 1
+            prog.current(src_dir)
+            prog.done_totals(*totals)
+            return stats
+    try:
+        merge_directory_tree(
+            src_dir, stage, action=action, policy=CollisionPolicy.MERGE, stats=stats, progress=progress
+        )
+    except BaseException:
+        if action == "move" and os.path.isdir(stage):
+            keep = _generate_unique_target(f"{dst_dir} (incomplete move)")
+            try:
+                os.rename(stage, keep)
+                logger.warning(f"[FS Transfer] Move into {dst_dir} stopped; what was moved is in {keep}")
+            except OSError as err:
+                logger.error(f"[FS Transfer] Move into {dst_dir} stopped; what was moved is in {stage}: {err}")
+        else:
+            shutil.rmtree(stage, ignore_errors=True)
+        raise
+    _set_aside(dst_dir)
+    os.rename(stage, dst_dir)
+    _fsync_dir(os.path.dirname(dst_dir) or ".")
+    return stats
+
+
+def replace_with_copy(src: str, dest: str) -> None:
+    """Puts a copy of `src` (a file or folder) at `dest`; what was there goes to the Recycle Bin.
+    The copy is complete before the old item is moved away (snapshot restores, REL-14)."""
+    if os.path.isdir(src) and not os.path.islink(src):
+        stage = _stage_path(dest)
+        try:
+            shutil.copytree(src, stage, symlinks=True)
+        except BaseException:
+            shutil.rmtree(stage, ignore_errors=True)
+            raise
+        if os.path.lexists(dest):
+            _set_aside(dest)
+        os.rename(stage, dest)
+        return
+    if os.path.isdir(dest) and not os.path.islink(dest):
+        _set_aside(dest)
+    _copy_file_resilient(src, dest)
 
 
 def _same_or_inside(path: str, folder: str) -> bool:

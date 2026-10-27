@@ -155,6 +155,7 @@ class _Norm:
         s = _UUID.sub(lambda m: self._id(m.group(0)), s)
         s = _HEX.sub(lambda m: self._id(m.group(0)), s)
         s = re.sub(r"(?<!\d)1[6-9]\d{8}(?!\d)", "<ts>", s)
+        s = re.sub(r"<ts>-\d+_", "<ts>_", s)  # a second item of one name in the same second
         return _ISO.sub("<date>", s)
 
     def _id(self, raw):
@@ -164,7 +165,10 @@ class _Norm:
         if isinstance(v, dict):
             return {self.text(k): self.value(x, k) for k, x in sorted(v.items())}
         if isinstance(v, list):
-            return [self.value(x, key) for x in v]
+            out = [self.value(x, key) for x in v]
+            if key == "items" and all(isinstance(x, dict) and "deleted_at" in x for x in out):
+                out.sort(key=lambda x: (str(x.get("name")), str(x.get("id"))))  # Recycle Bin: ties in time
+            return out
         if key in _VOLATILE and v is not None:
             return f"<{type(v).__name__}>"
         if isinstance(v, (int, float)) and not isinstance(v, bool) and _TS.match(str(v)):

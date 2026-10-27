@@ -1593,6 +1593,26 @@
     "items": [
      {
       "deleted_at": "<int>",
+      "id": "<ts>_a.txt",
+      "is_dir": false,
+      "name": "a.txt",
+      "original_path": "<work>/sub/a.txt",
+      "path": "<pool>/.RecycleBin/files/<ts>_a.txt",
+      "root_path": "<pool>",
+      "size": 5
+     },
+     {
+      "deleted_at": "<int>",
+      "id": "<ts>_a.txt",
+      "is_dir": false,
+      "name": "a.txt",
+      "original_path": "<work>/sub/a.txt",
+      "path": "<pool>/.RecycleBin/files/<ts>_a.txt",
+      "root_path": "<pool>",
+      "size": 5
+     },
+     {
+      "deleted_at": "<int>",
       "id": "<ts>_up.txt",
       "is_dir": false,
       "name": "up.txt",
@@ -1856,7 +1876,7 @@
   },
   {
    "body": {
-    "purged_count": 0,
+    "purged_count": 4,
     "status": "ok"
    },
    "label": "trash empty",

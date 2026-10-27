@@ -146,7 +146,7 @@ def test_cancelled_task_reports_cancelled(tmp_path):
     make_tree(tmp_path / "src", {"big.bin": b"x" * 1024})
     started = []
 
-    def slow_copy(src, dst, progress):
+    def slow_copy(src, dst, progress, durable=False):
         open(dst, "wb").close()
         started.append(dst)
         while True:  # a copy that only ends when cancelled

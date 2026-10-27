@@ -112,6 +112,10 @@
 - **A recovery kit that has to be saved**: each off-site backup gives a kit with the key, where the
   backup is, the cloud settings it needs and the restore commands; the Overview says "Recovery kit
   not saved" until it is downloaded or copied. BACKUP_GUIDE explains how to recover on new hardware.
+- **Copies and moves can't lose files in a crash**: a move to another disk writes the copy to the
+  disk before it deletes the original; replacing a folder builds the new one beside it and swaps it
+  in only when complete. What an overwrite replaces (in a copy, a move or a snapshot restore) goes
+  to the Recycle Bin instead of being destroyed.
 - **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.
 - **Off-site backups are steadier**: each NAS keeps one name in restic across updates, so a backup
   after an update no longer re-reads every file and old versions are pruned again. Files that could

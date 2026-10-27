@@ -16,6 +16,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.config import logger
 from backend.fsutil import resolve_within, root_for
 from backend.rate_limit import rate_limit
+from backend.services import recycle_bin
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access
 from backend.state import add_event
 
@@ -107,31 +108,9 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         if not real_root:
             real_root = ALLOWED_BROWSE_ROOTS[0]  # Fallback
 
-        recycle_dir = os.path.join(real_root, ".RecycleBin")
-        files_dir = os.path.join(recycle_dir, "files")
-        info_dir = os.path.join(recycle_dir, "info")
+        recycle_dir = os.path.join(real_root, recycle_bin.BIN)
         base_name = os.path.basename(target_unresolved)
-        ts = int(time.time())
-        dest_name = f"{ts}_{base_name}"
-        n = 1
-        while os.path.lexists(os.path.join(files_dir, dest_name)):  # two items of one name in one second
-            n += 1
-            dest_name = f"{ts}-{n}_{base_name}"
-        dest_path = os.path.join(files_dir, dest_name)
-        info_path = os.path.join(info_dir, f"{dest_name}.trashinfo")
-
-        def _move_to_recycle():
-            os.makedirs(files_dir, exist_ok=True)
-            os.makedirs(info_dir, exist_ok=True)
-            iso_now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-            try:
-                with open(info_path, "w", encoding="utf-8") as f_info:
-                    f_info.write(f"[Trash Info]\nPath={target_unresolved}\nDeletionDate={iso_now}\n")
-            except Exception as e_info:
-                logger.warning(f"[FS] Could not write .trashinfo: {e_info}")
-            shutil.move(target_unresolved, dest_path)
-
-        await asyncio.to_thread(_move_to_recycle)
+        dest_name = await asyncio.to_thread(recycle_bin.move_to_bin, target_unresolved, recycle_dir, target_unresolved)
         add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
 
         return {"status": "ok", "message": "Item moved to Recycle Bin", "trash_id": dest_name}

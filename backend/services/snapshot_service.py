@@ -300,9 +300,11 @@ def restore(
         stem, ext = os.path.splitext(dest) if os.path.isfile(src) else (dest, "")
         dest = f"{stem} (restored {time.strftime('%Y-%m-%d %H%M')}){ext}"
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    if os.path.isdir(src) and not os.path.islink(src):
-        if os.path.lexists(dest) and overwrite:
-            shutil.rmtree(dest)
+    if overwrite and os.path.lexists(dest):
+        from backend.services.fs_transfer import replace_with_copy
+
+        replace_with_copy(src, dest)  # the current version goes to the Recycle Bin (REL-14)
+    elif os.path.isdir(src) and not os.path.islink(src):
         shutil.copytree(src, dest, symlinks=True)
     else:
         shutil.copy2(src, dest, follow_symlinks=False)

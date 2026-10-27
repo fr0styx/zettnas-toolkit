@@ -127,7 +127,8 @@ class TestTrash:
         ok(client.post("/api/fs/delete", json={"path": target}, headers=auth_headers))
         listing = ok(client.get("/api/fs/trash", headers=auth_headers))
         items = listing.get("items", listing if isinstance(listing, list) else [])
-        mine = [i for i in items if i.get("original_path") == target or i.get("name") == "a.txt"]
+        # replaced copies of other a.txt files may be in the bin too (REL-14): take this one
+        mine = [i for i in items if i.get("original_path") == target] or [i for i in items if i.get("name") == "a.txt"]
         if not mine:
             pytest.skip("this pool deletes without a recycle bin")
         ok(client.post("/api/fs/trash/restore", json={"item_id": mine[0]["id"]}, headers=auth_headers))
