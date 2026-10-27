@@ -248,6 +248,26 @@ def _endpoint_settings(net: dict[str, Any], container_id: str) -> dict[str, Any]
     return ep
 
 
+# SEC-24: an update narrows the device rules of older installs to what the app opens
+_DROP_RULES = {"c 1:* rwm"}  # /dev/port, /dev/kmem, /dev/kmsg: never used
+_MISC_RULES = ["c 10:232 rwm", "c 10:238 rwm", "c 10:200 rwm", "c 10:196 rwm", "c 10:229 rwm"]
+
+
+def narrow_device_rules(rules: list[str] | None) -> list[str] | None:
+    """The container's device cgroup rules without the ones nothing uses (SEC-24)."""
+    if not rules:
+        return rules
+    out: list[str] = []
+    for r in rules:
+        r = str(r).strip()
+        if r in _DROP_RULES:
+            continue
+        for x in _MISC_RULES if r == "c 10:* rwm" else [r]:
+            if x not in out:
+                out.append(x)
+    return out
+
+
 def build_recreate_plan(
     inspect_data: dict[str, Any], old_image_cfg: dict[str, Any], image: str
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
@@ -278,6 +298,8 @@ def build_recreate_plan(
     }
     body["Labels"] = labels
     body["Image"] = image
+    if host_config.get("DeviceCgroupRules"):
+        host_config["DeviceCgroupRules"] = narrow_device_rules(host_config["DeviceCgroupRules"])
     body["HostConfig"] = host_config
 
     networks = dict((inspect_data.get("NetworkSettings") or {}).get("Networks") or {})

@@ -194,8 +194,17 @@ def elevated_reasons(path: str, body: dict[str, Any]) -> list[str]:
     if hc.get("Privileged"):
         reasons.append("privileged")
     for key in ("PidMode", "IpcMode", "UsernsMode", "UTSMode", "NetworkMode"):
-        if str(hc.get(key) or "").lower() == "host":
+        mode = str(hc.get(key) or "").lower()
+        if mode == "host":
             reasons.append(f"{key}=host")
+        elif mode.startswith("container:"):
+            # SEC-25: joining another container's namespaces reaches whatever that one can
+            reasons.append(f"{key}={mode}")
+    if str(hc.get("CgroupnsMode") or "").lower() == "host":
+        reasons.append("CgroupnsMode=host")
+    if hc.get("VolumesFrom"):
+        # SEC-25: every mount of another container, e.g. ZettNAS's own docker.sock and data folder
+        reasons.append("volumes-from " + ", ".join(str(v) for v in hc.get("VolumesFrom") or []))
     caps = {str(c).upper().removeprefix("CAP_") for c in hc.get("CapAdd") or []}
     for c in sorted(caps & DANGEROUS_CAPS):
         reasons.append(f"cap {c}")
@@ -203,6 +212,8 @@ def elevated_reasons(path: str, body: dict[str, Any]) -> list[str]:
         o = str(opt).replace(":", "=").lower()
         if o in ("seccomp=unconfined", "apparmor=unconfined", "label=disable", "systempaths=unconfined"):
             reasons.append(f"security-opt {opt}")
+        elif o.startswith("seccomp=") and o not in ("seccomp=default", "seccomp=builtin"):
+            reasons.append("security-opt custom seccomp profile")  # SEC-25: can allow any syscall
     for b in hc.get("Binds") or []:
         hit = _risky_host_path(_bind_source(str(b)))
         if hit:
@@ -212,6 +223,10 @@ def elevated_reasons(path: str, body: dict[str, Any]) -> list[str]:
             hit = _risky_host_path(str(m.get("Source") or ""))
             if hit:
                 reasons.append(f"mount {hit}")
+        elif isinstance(m, dict) and m.get("Type") == "volume":
+            # SEC-25: an inline local volume with o=bind is a bind mount of any host path
+            opts = ((m.get("VolumeOptions") or {}).get("DriverConfig") or {}).get("Options") or {}
+            reasons += [r.replace("volume bind", "mount volume bind") for r in volume_reasons({"DriverOpts": opts})]
     for d in hc.get("Devices") or []:
         host = str(d.get("PathOnHost") if isinstance(d, dict) else d).split(":", 1)[0]
         if not SAFE_DEVICE_RE.match(host):
@@ -240,6 +255,11 @@ def check_request(method: str, target: str, headers: dict[str, str], body: bytes
         if reasons and headers.get(ELEVATED_HEADER) != "1":
             return False, "elevated container settings need confirmation: " + ", ".join(reasons), reasons
         return True, "", reasons
+    if method.upper() == "PUT" and path.startswith("/containers/") and path.endswith("/archive"):
+        # SEC-25: writing files into a container (ZettNAS's own included) is never needed by the app
+        if headers.get(ELEVATED_HEADER) != "1":
+            return False, "writing files into a container needs confirmation", ["archive write"]
+        return True, "", ["archive write"]
     if method.upper() == "POST" and path == "/volumes/create":
         try:
             parsed = json.loads(body or b"{}")

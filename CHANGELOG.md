@@ -14,6 +14,58 @@
   day), not only when a sleeping disk wakes.
 - Long document questions on a CPU fallback get their answer instead of timing out; follow-up
   questions about the same files start faster.
+- **PDFs are read properly**: text from Word, LibreOffice, Chrome and macOS exports, including
+  accents and Chinese, is now indexed (it was often indexed by file name only). Scanned PDFs still
+  go to OCR.
+- **"Ask Zetty about this" answers "what's in it?"** for a single file, in any language.
+- **Document filters**: search can be narrowed by kind (bills, payslips, contracts, insurance,
+  tax, medical, manuals, school, travel, home, car, recipes) and by year; older documents get
+  their tags from the index without waking a disk.
+- **Who may ask Zetty, per role**, with a 90-day request log that never stores the question
+  text. Kids and guests are off by default.
+- Each install measures the similarity cut-off of its own embedding model, and the GPU serves a
+  chat reply before search, indexing and photo reading.
+
+#### Drives
+
+- **Drive Health**: every drive with a plain verdict (Healthy, Keep an eye on it, Replace soon,
+  Replace now), the reason, what to do and a button that does it; self-tests with progress and
+  history; in all five languages. It opens at once and never wakes a sleeping drive.
+- **A sleeping drive is never woken without asking**: reading it now, starting a self-test,
+  Locate, folder sizes and AI indexing that would spin a drive up show a confirmation first.
+- **Drive alerts no longer repeat**: a drive's condition is alerted once when its verdict
+  changes (with a daily reminder while it says "Replace now"), and temperature once per crossing.
+
+#### Security and privacy
+
+- **Your data, yours to take or erase**: everyone can download their chats, Zetty log and what
+  search learned from their folder, or erase it; deleting an account erases it too.
+- SFTP and WebDAV accounts and SMB shares can no longer reach ZettNAS's own data folder.
+- Resetting another person's password, deleting them or inviting someone needs every right the
+  role in question has; turning off two-factor sign-in needs the password and a code.
+- Signing in with a recovery code works in every language.
+- The app container no longer gets /dev/port, /dev/kmem or /dev/kmsg, and only the misc devices
+  virtual machines and FUSE use; updates narrow the rules of existing installs.
+
+#### Backups and power
+
+- **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.
+- Snapshot, scrub and replication settings are shown only where the host can run them; storage
+  replication is turned off until it is fixed (use an off-site backup to another NAS).
+- On battery, the UPS outlets are switched off only after the host shutdown really started.
+
+#### Setup, phone and alerts
+
+- **Back up your phone**: a QR card sets up Immich's phone app with your ZettNAS sign-in.
+- The alert address entered in the setup wizard is saved and tested; personal alert routes work
+  while the shared channels are off.
+
+#### Fixes
+
+- "Download as zip" streams while it is built instead of filling the container's disk first.
+- The card-reader check no longer probes other USB disks (such as Unraid's boot flash).
+- The front LCD no longer crashes the app when a monitor is connected next to the panel (#38).
+- Container CPU and memory stats come from the kernel instead of asking Docker each time.
 
 ## v1.10.3 (2026-10-25)
 ### 🧰 Backups that can't lose your data; damaged files repaired at start; uploads over 16 MB fixed
