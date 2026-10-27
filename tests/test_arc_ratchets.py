@@ -20,7 +20,7 @@ UNLOCKED_JSON_RMW_BASELINE = 7
 
 def _async_routes_without_await() -> list[str]:
     out = []
-    for p in sorted((ROOT / "backend" / "api").glob("*.py")):
+    for p in sorted((ROOT / "backend" / "api").rglob("*.py")):
         for node in ast.walk(ast.parse(p.read_text(encoding="utf-8"))):
             if not isinstance(node, ast.AsyncFunctionDef):
                 continue
@@ -88,3 +88,23 @@ def test_locked_json_serialises_writers(tmp_path):
     for t in threads:
         t.join()
     assert read_json(path)["n"] == 200
+
+
+BLOCKING_ON_LOOP = ("verify_password", "hash_password")
+
+
+def test_no_password_hashing_on_the_event_loop():
+    """ARC-18: Argon2 takes 64 MB and real CPU time; in an async route it freezes every user's UI.
+    Call it through asyncio.to_thread (or make the route a plain def)."""
+    found = []
+    for p in sorted((ROOT / "backend" / "api").rglob("*.py")):
+        tree = ast.parse(p.read_text(encoding="utf-8"))
+        for fn in ast.walk(tree):
+            if not isinstance(fn, ast.AsyncFunctionDef):
+                continue
+            for node in ast.walk(fn):
+                if isinstance(node, ast.Call):
+                    name = getattr(node.func, "id", None) or getattr(node.func, "attr", None)
+                    if name in BLOCKING_ON_LOOP:
+                        found.append(f"{p.relative_to(ROOT)}:{node.lineno} {fn.name} calls {name}")
+    assert not found, "password hashing on the event loop:\n" + "\n".join(found)

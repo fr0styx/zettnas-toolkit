@@ -149,6 +149,15 @@ def startup_system():
         _data_key_problem = str(e)
         logger.critical(f"[Encryption] {e}")
 
+    # Only now are the databases created or migrated: after the staged restore, the newer-version
+    # check, the snapshot, the repair and the encryption check above (ARC-17)
+    from backend.users_db import init_users_db
+
+    init_users_db()
+    if not _data_key_problem:
+        from backend.services.ai_conversations_db import init_conversations_db
+
+        init_conversations_db()
     init_db()
     _load_security()
     purge_legacy_session_files()

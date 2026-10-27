@@ -183,7 +183,7 @@ async def webdav_portal_login(request: Request):
     is_admin = False
     user = get_user_by_username(username)
     if user and user.get("status") == "active" and password:
-        if verify_password(password, user.get("password_hash", "")):
+        if await asyncio.to_thread(verify_password, password, user.get("password_hash", "")):
             if user.get("must_change_password"):
                 return HTMLResponse(
                     render_webdav_login(error_msg="Change your ZettNAS password before using WebDAV."),

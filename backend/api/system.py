@@ -103,7 +103,7 @@ def _health_checks() -> dict[str, str]:
         from backend.users_db import users_db_session
 
         with users_db_session(None) as conn:
-            conn.execute("SELECT 1").fetchone()
+            conn.execute("SELECT count(*) FROM users").fetchone()  # a real table, not just a file
         checks["database"] = "ok"
     except Exception:
         checks["database"] = "failed"

@@ -25,11 +25,8 @@ from backend.users_db import (
     validate_user_session,
 )
 
-# Ensure SQLite User DB and migrations are ready
-try:
-    init_users_db()
-except Exception as e:
-    logger.warning(f"Could not auto-initialize users DB on auth import: {e}")
+# The users DB is created and migrated by main.startup_system, after the staged restore, the
+# newer-version check, the snapshot and the repair have run (ARC-17), never at import time.
 
 
 def purge_legacy_session_files() -> None:

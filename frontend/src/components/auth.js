@@ -141,7 +141,9 @@ export function initAuth() {
     btnToggleRecovery.addEventListener('click', (e) => {
       e.preventDefault();
       const codeInput = document.getElementById('mfa-challenge-code');
-      const isRecovery = codeInput.placeholder.includes('Recovery');
+      // UX-20: the mode lives on the field, never in its (translated) placeholder
+      const isRecovery = codeInput.dataset.mode === 'recovery';
+      codeInput.dataset.mode = isRecovery ? 'totp' : 'recovery';
       if (isRecovery) {
         codeInput.placeholder = t('ui.6_digit_code_e_g', '6-Digit Code (e.g. 123456)');
         codeInput.maxLength = 6;
@@ -459,6 +461,11 @@ function showMfaChallengeView(username) {
   }
 }
 
+/** A recovery code when the person switched to that mode, or when it isn't a 6-digit code (UX-20). */
+export function isRecoveryCode(codeInput, rawCode) {
+  return codeInput?.dataset?.mode === 'recovery' || !/^\d{6}$/.test(String(rawCode || '').replace(/\s/g, ''));
+}
+
 async function submitMfaChallenge() {
   const codeInput = document.getElementById('mfa-challenge-code');
   const btnSubmit = document.getElementById('btn-submit-mfa');
@@ -469,7 +476,7 @@ async function submitMfaChallenge() {
   const rawCode = codeInput.value.trim();
   if (!rawCode) return;
 
-  const isRecovery = codeInput.placeholder.includes('Recovery');
+  const isRecovery = isRecoveryCode(codeInput, rawCode);
   const payload = {
     mfa_token: _pendingMfaToken,
     code: isRecovery ? undefined : rawCode,

@@ -111,10 +111,7 @@ def init_conversations_db(db_path: str | None = None) -> None:
     logger.debug(f"[AI DB] Initialized conversation tables at {db_path or get_db_path()}")
 
 
-try:
-    init_conversations_db()
-except Exception as _ex:
-    logger.warning(f"[AI DB] Deferred initialization due to startup environment: {_ex}")
+# Created by main.startup_system once the data key has been checked (ARC-17), not at import time.
 
 
 def create_conversation(

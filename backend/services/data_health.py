@@ -33,6 +33,8 @@ def _db_ok(path: str) -> bool:
     try:
         if db_crypto.applies_to(path) and db_crypto.is_encrypted(path) and not db_crypto.enabled():
             return True  # no key here to check it with; the app reports the missing key itself
+        if db_crypto.applies_to(path) and db_crypto.is_encrypted(path) and key_problem(path):
+            return True  # the key doesn't open it: locked, not damaged (ARC-19); startup reports it
         conn = db_crypto.connect(path, readonly=True)
         try:
             row = conn.execute("PRAGMA quick_check").fetchone()
@@ -42,6 +44,20 @@ def _db_ok(path: str) -> bool:
     except Exception:
         logger.warning(f"[DataHealth] {os.path.basename(path)} could not be checked", exc_info=True)
         return False
+
+
+def key_problem(path: str) -> str:
+    """Why the data key doesn't open this encrypted database, or "" when it does (ARC-19)."""
+    from backend import db_crypto
+
+    try:
+        db_crypto._verify(path)
+        return ""
+    except db_crypto.DataKeyError as e:
+        logger.critical(f"[DataHealth] {e} Nothing was moved or repaired; start with the right key.")
+        return str(e)
+    except Exception:
+        return ""  # not a key problem; quick_check decides
 
 
 def _snapshot_dirs(data_dir: str) -> list[str]:

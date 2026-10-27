@@ -131,7 +131,7 @@ async def create_share_link(
 
     password_hash = None
     if req.password and req.password.strip():
-        password_hash = hash_password(req.password.strip())
+        password_hash = await asyncio.to_thread(hash_password, req.password.strip())
 
     link_data = {
         "token": token,
@@ -414,7 +414,7 @@ async def _serve_shared_item(token: str, request: Request, info: bool, provided_
                 headers={"WWW-Authenticate": "ShareLink realm='Shared Resource'"},
             )
         expected_hash = item.get("password_hash") or ""
-        if not verify_password(provided_pwd.strip(), expected_hash):
+        if not await asyncio.to_thread(verify_password, provided_pwd.strip(), expected_hash):
             await _record_failed_share_attempt(client_ip)
             raise HTTPException(status_code=401, detail="Incorrect password for this share link")
         await _reset_share_rate_limit(client_ip)

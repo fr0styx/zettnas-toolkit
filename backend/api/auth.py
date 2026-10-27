@@ -601,6 +601,10 @@ def mfa_challenge(req: MfaChallengeRequest, request: Request):
     if not mfa_ok and req.recovery_code:
         mfa_ok = consume_user_recovery_code(user["id"], req.recovery_code)
         method = "recovery_code"
+    if not mfa_ok and code and not req.recovery_code and not code.strip().isdigit():
+        # UX-20: a recovery code typed into the code field still works, in any language
+        mfa_ok = consume_user_recovery_code(user["id"], code.strip())
+        method = "recovery_code"
 
     if not mfa_ok:
         _register_failure(ip)

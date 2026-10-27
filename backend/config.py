@@ -179,19 +179,24 @@ def _get_or_create_secret_key() -> str:
     env_key = os.environ.get("SECRET_KEY", "").strip()
     if env_key:
         return env_key
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL  # never over an existing key (ARC-20)
     if os.path.exists(SECRET_KEY_FILE):
         try:
             with open(SECRET_KEY_FILE, encoding="utf-8") as f:
                 k = f.read().strip()
-                if k:
-                    return k
         except OSError as e:
-            logger.warning(f"Failed to read {SECRET_KEY_FILE}: {e}")
+            # It seals the two-factor secrets and backup passphrases: replacing it would lose them.
+            raise RuntimeError(
+                f"Cannot read {SECRET_KEY_FILE} ({e}). It was not replaced. Fix its permissions or "
+                "restore it from a backup, then start ZettNAS again."
+            ) from e
+        if k:
+            return k
+        flags = os.O_WRONLY | os.O_TRUNC  # an empty file holds nothing to lose
 
     new_key = secrets.token_hex(32)
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
-        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
         fd = os.open(SECRET_KEY_FILE, flags, 0o600)
         with open(fd, "w", encoding="utf-8") as f:
             f.write(new_key)
