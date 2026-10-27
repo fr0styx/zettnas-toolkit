@@ -334,11 +334,48 @@ def _sign_in_findings() -> list[dict[str, Any]]:
     return out + _ldap_findings()
 
 
+def _shares_without_snapshots() -> list[str]:
+    from backend.hardware.pal_storage import get_storage_platform
+    from backend.services import snapshot_service
+
+    ok, _ = snapshot_service.availability()
+    if not ok:
+        return []
+    scheduled = {s.get("share") for s in snapshot_service.list_schedules()}
+    return sorted(sh.name for sh in get_storage_platform().list_shares() if sh.name not in scheduled)
+
+
+def _snapshots_finding() -> dict[str, Any] | None:
+    """Shares made before snapshots were on by default (FEAT-02, D1)."""
+    missing = _shares_without_snapshots()
+    if not missing:
+        return None
+    return {
+        "id": "snapshots_off",
+        "name": "Some shared folders have no snapshots",
+        "penalty": 5,
+        "severity": "low",
+        "category": "Storage & Shares",
+        "details": f"{', '.join(missing)}: a deleted or overwritten file can't be brought back from a snapshot.",
+        "remediation": "Take a snapshot every hour, keeping a day of them and one a day for 30 days.",
+        "fix": "snapshots_off",
+        "fix_label": "Turn on snapshots",
+    }
+
+
+def _fix_snapshots_off() -> str:
+    from backend.services import snapshot_service
+
+    done = [s for s in _shares_without_snapshots() if snapshot_service.ensure_default(s)]
+    return f"Snapshots are on for {', '.join(done)}." if done else "Nothing to change."
+
+
 FINDERS: tuple[Callable[[], dict[str, Any] | None], ...] = (
     _share_access_finding,
     _nfs_finding,
     _auditor_finding,
     _ai_search_finding,
+    _snapshots_finding,
 )
 
 FIXES: dict[str, Callable[[], str]] = {
@@ -347,6 +384,7 @@ FIXES: dict[str, Callable[[], str]] = {
     "smb_guest_access": _fix_smb_guest,
     "auditor_reads_everything": _fix_auditor,
     "ai_search_family": _fix_ai_search_family,
+    "snapshots_off": _fix_snapshots_off,
 }
 
 

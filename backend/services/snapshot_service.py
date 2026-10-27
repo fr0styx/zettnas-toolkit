@@ -61,9 +61,18 @@ def list_schedules() -> list[dict[str, Any]]:
     return list((data.get("schedules") or {}).values()) if isinstance(data, dict) else []
 
 
+# What a new share gets (FEAT-02): a snapshot every hour, the last 24 kept, and one a day for 30 days
+DEFAULT_SCHEDULE = {"every": "hourly", "keep": 24, "keep_daily": 30}
+
+
 @json_locked(lambda *a, **k: SCHEDULES_FILE)
 def save_schedule(
-    share: str, every: str, keep: int, immutable_days: int = 0, pool_id: str | None = None
+    share: str,
+    every: str,
+    keep: int,
+    immutable_days: int = 0,
+    pool_id: str | None = None,
+    keep_daily: int = 0,
 ) -> dict[str, Any]:
     if not share or "/" in share or share.startswith(".") or "@" in share:
         raise ValueError("Pick a share by its name.")
@@ -73,6 +82,7 @@ def save_schedule(
     if not ok:
         raise ValueError(why)
     keep = max(1, min(int(keep), 1000))
+    keep_daily = max(0, min(int(keep_daily), 3650))
     immutable_days = max(0, min(int(immutable_days), 3650))
     with _LOCK:
         data = read_json(SCHEDULES_FILE, {}) or {}
@@ -82,6 +92,7 @@ def save_schedule(
             "share": share,
             "every": every,
             "keep": keep,
+            "keep_daily": keep_daily,
             "immutable_days": immutable_days,
             "pool_id": pool_id or old.get("pool_id"),
             "last_run": old.get("last_run", 0.0),
@@ -90,6 +101,15 @@ def save_schedule(
         atomic_write_json(SCHEDULES_FILE, data)
     _set_previous_versions(share, True)
     return sched[share]
+
+
+def ensure_default(share: str) -> bool:
+    """A new share gets snapshots on by default, where this host can take them (FEAT-02)."""
+    ok, _ = availability()
+    if not ok or any(s.get("share") == share for s in list_schedules()):
+        return False
+    save_schedule(share, DEFAULT_SCHEDULE["every"], DEFAULT_SCHEDULE["keep"], keep_daily=DEFAULT_SCHEDULE["keep_daily"])
+    return True
 
 
 @json_locked(lambda *a, **k: SCHEDULES_FILE)
@@ -120,7 +140,9 @@ def take(share: str, schedule: dict[str, Any] | None = None, pal: Any = None) ->
         kwargs.update(worm_mode="governance", retention_days=days)
     res = pal.create_snapshot(pool_id, share, name, **kwargs)
     ok = res.get("status") in ("created", "ok") or res.get("success") is True
-    pruned = prune(share, int(schedule.get("keep") or 30), pool_id, pal) if ok else []
+    pruned = (
+        prune(share, int(schedule.get("keep") or 30), pool_id, pal, int(schedule.get("keep_daily") or 0)) if ok else []
+    )
     return {
         "share": share,
         "name": name,
@@ -130,14 +152,30 @@ def take(share: str, schedule: dict[str, Any] | None = None, pal: Any = None) ->
     }
 
 
-def prune(share: str, keep: int, pool_id: str, pal: Any) -> list[str]:
+def to_keep(names: list[str], keep: int, keep_daily: int = 0) -> set[str]:
+    """The newest `keep` scheduled snapshots, plus the newest of each of the last `keep_daily`
+    days that have one (names are "<share>@auto-YYYYMMDD-HHMM", so they sort by time)."""
+    ordered = sorted(names, reverse=True)
+    kept = set(ordered[:keep])
+    days: list[str] = []
+    for n in ordered:
+        day = n.split(AUTO_TAG, 1)[-1][:8]
+        if day not in days:
+            days.append(day)
+            if len(days) <= keep_daily:
+                kept.add(n)
+    return kept
+
+
+def prune(share: str, keep: int, pool_id: str, pal: Any, keep_daily: int = 0) -> list[str]:
     auto = sorted(
         (s for s in pal.list_snapshots(pool_id) if str(s.get("name", "")).startswith(f"{share}{AUTO_TAG}")),
         key=lambda s: s["name"],
         reverse=True,
     )
+    kept = to_keep([s["name"] for s in auto], keep, keep_daily)
     removed = []
-    for s in auto[keep:]:
+    for s in [x for x in auto if x["name"] not in kept]:
         if s.get("is_immutable"):
             continue
         try:
@@ -269,6 +307,48 @@ def restore(
     else:
         shutil.copy2(src, dest, follow_symlinks=False)
     return {"restored": os.path.relpath(dest, live_root).replace(os.sep, "/"), "overwrote": overwrite}
+
+
+def rollback(name: str, pal: Any = None, pool_id: str | None = None) -> dict[str, Any]:
+    """Puts a whole share back as it was in one of its snapshots (FEAT-02). A snapshot of how the
+    share is now ("<share>@before-rollback-<time>") is taken first, so the rollback can itself be
+    undone; without it nothing is changed."""
+    if "@" not in name:
+        raise ValueError("Only one of a share's own snapshots can roll that share back.")
+    pal = pal or _pal()
+    pool_id = pool_id or _default_pool_id(pal)
+    snap = _snapshot(name, pal, pool_id)
+    share = name.split("@", 1)[0]
+    src_root = os.path.realpath(snap["path"])
+    live_root = os.path.realpath(_live_root(name, pal, pool_id))
+    safety = f"{share}@before-rollback-{time.strftime(NAME_FORMAT)}"
+    res = pal.create_snapshot(pool_id, share, safety, readonly=True)
+    if not (res.get("status") in ("created", "ok") or res.get("success") is True):
+        raise RuntimeError("The snapshot of the current state could not be taken, so nothing was changed.")
+    wanted = set(os.listdir(src_root))
+    removed = 0
+    for entry in os.listdir(live_root):
+        if entry in wanted:
+            continue
+        path = os.path.join(live_root, entry)
+        if os.path.isdir(path) and not os.path.islink(path):
+            shutil.rmtree(path)
+        else:
+            os.unlink(path)
+        removed += 1
+    for entry in sorted(wanted):
+        src, dest = os.path.join(src_root, entry), os.path.join(live_root, entry)
+        if os.path.lexists(dest):
+            if os.path.isdir(dest) and not os.path.islink(dest):
+                shutil.rmtree(dest)
+            else:
+                os.unlink(dest)
+        if os.path.isdir(src) and not os.path.islink(src):
+            shutil.copytree(src, dest, symlinks=True)
+        else:
+            shutil.copy2(src, dest, follow_symlinks=False)
+    logger.warning(f"[Snapshots] {share} rolled back to {name}; the state before is {safety}")
+    return {"share": share, "snapshot": name, "safety_snapshot": safety, "restored": len(wanted), "removed": removed}
 
 
 def _set_previous_versions(share: str, on: bool) -> None:

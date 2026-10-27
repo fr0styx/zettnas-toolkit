@@ -91,6 +91,10 @@
 
 #### Backups and power
 
+- **Snapshots are on by default** for new shared folders where the host can take them: one every
+  hour, a day of them kept plus one a day for 30 days. Existing folders without snapshots show in the
+  Security Advisor with a one-click fix. **Roll a whole share back** to a snapshot from its file
+  list; how it was before is kept as a snapshot first, so the rollback can be undone.
 - **Snapshots and scrubs have their tools**: every image now carries btrfs and mdadm, and the full
   image Debian's ZFS 2.4 tools. ZFS runs only when it matches the host's ZFS module and /dev/zfs
   is passed in; otherwise Backup says why. (On Unraid and TrueNAS the host keeps running its own.)
@@ -123,6 +127,7 @@
 
 #### Fixes
 
+- On plain Linux a snapshot is no longer reported as taken when the btrfs tools are missing.
 - ZettNAS keeps a log file (data/logs, 2 MB and three older files) and the support bundle includes
   it, with secrets removed, so what happened before a restart is not lost.
 - **Settings files are harder to lose**: a damaged one comes back from the daily snapshot; one that

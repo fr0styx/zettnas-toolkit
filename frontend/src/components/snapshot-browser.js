@@ -117,6 +117,17 @@ export function entriesHtml(listing) {
   return `<p class="snap-path">/${escapeHtml(listing.path || '')}</p><ul class="snap-entries">${up}${rows}</ul>`;
 }
 
+/** The whole share as it was in this snapshot (FEAT-02); the server asks to confirm (428). */
+export async function rollbackShare(name, after = null) {
+  try {
+    const res = await api.post(`/api/snapshots/${encodeURIComponent(name)}/rollback`, {});
+    showToast(t('snap.rolled_back', 'Rolled back. How it was before is kept as {safety}.', { safety: res.safety_snapshot }), 'success');
+    if (after) after();
+  } catch (err) {
+    if (err?.error !== 'cancelled') showToast(err.message || String(err), 'error');
+  }
+}
+
 export async function openSnapshotBrowser(name) {
   let dlg = document.getElementById('snapshot-browser');
   if (!dlg) {
@@ -130,6 +141,7 @@ export async function openSnapshotBrowser(name) {
   dlg.innerHTML = `<header class="snap-head"><h2 id="snapshot-browser-title">${escapeHtml(t('snap.browse_title', 'Files in {name}', { name }))}</h2>
     <button type="button" class="btn-pill-toggle is-ghost is-small" data-snap-close>${escapeHtml(t('diagnostics.close_btn', 'Close'))}</button></header>
     <p class="snap-help">${escapeHtml(t('snap.browse_help', 'Restore a copy puts the old version next to the current one; nothing is overwritten.'))}</p>
+    ${name.includes('@') ? `<p class="snap-help"><button type="button" class="btn-pill-toggle is-small is-danger" data-snap-rollback>${escapeHtml(t('snap.rollback', 'Roll the whole share back to this'))}</button></p>` : ''}
     <div class="snap-body"></div>`;
   const show = async (path) => {
     try {
@@ -143,6 +155,7 @@ export async function openSnapshotBrowser(name) {
     const restore = e.target.closest('[data-snap-restore]');
     const replace = e.target.closest('[data-snap-replace]');
     if (e.target.closest('[data-snap-close]')) dlg.close();
+    else if (e.target.closest('[data-snap-rollback]')) rollbackShare(name, () => show(''));
     else if (open) show(open.dataset.snapOpen);
     else if (restore || replace) {
       const rel = (restore || replace).dataset[restore ? 'snapRestore' : 'snapReplace'];

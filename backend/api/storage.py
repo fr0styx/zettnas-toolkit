@@ -387,7 +387,7 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
             "Network shares must be configured via host OS to ensure proper Samba driver integration.",
         )
     try:
-        return adapter.create_share(
+        created = adapter.create_share(
             name=req.name,
             path=req.path,
             comment=req.comment,
@@ -405,6 +405,13 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
+    try:
+        from backend.services import snapshot_service
+
+        snapshot_service.ensure_default(req.name)  # snapshots on by default (FEAT-02)
+    except Exception as e:
+        logger.warning(f"[Storage] No default snapshots for {req.name}: {e}")
+    return created
 
 
 @router.post("/pools/{pool_id}/rename", dependencies=[Depends(require_scope("storage:admin"))])

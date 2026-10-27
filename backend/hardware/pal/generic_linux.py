@@ -1124,7 +1124,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 logger.warning(f"[PAL] Failed saving WORM metadata: {e}")
 
         return {
-            "status": "created" if code in (0, 127) else "error",
+            "status": "created" if code == 0 else "error",  # 127 = btrfs missing: not created (REL-4)
             "source": src_path,
             "snapshot": dest_path,
             "readonly": readonly,

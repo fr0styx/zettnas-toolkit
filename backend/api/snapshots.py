@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.confirmations import require_confirmation
 from backend.services import snapshot_service as snaps
 
 router = APIRouter(tags=["Snapshots"])
@@ -15,6 +16,7 @@ class ScheduleIn(BaseModel):
     share: str = Field(min_length=1, max_length=128)
     every: Literal["hourly", "daily", "weekly"] = "daily"
     keep: int = Field(default=14, ge=1, le=1000)
+    keep_daily: int = Field(default=0, ge=0, le=3650, description="Also keep one a day for this many days")
     immutable_days: int = Field(default=0, ge=0, le=3650, description="Days each snapshot can't be deleted")
 
 
@@ -32,7 +34,7 @@ def get_schedules():
 @router.put("/snapshots/schedules", dependencies=[Depends(require_scope("backup:manage", "storage:admin"))])
 def put_schedule(req: ScheduleIn):
     try:
-        return snaps.save_schedule(req.share, req.every, req.keep, req.immutable_days)
+        return snaps.save_schedule(req.share, req.every, req.keep, req.immutable_days, keep_daily=req.keep_daily)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
 
@@ -59,6 +61,25 @@ def browse(name: str, path: str = "", principal: AuthenticatedPrincipal = Depend
         raise HTTPException(status_code=404, detail=str(e)) from None
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e)) from None
+
+
+@router.post(
+    "/snapshots/{name}/rollback",
+    dependencies=[
+        Depends(require_scope("backup:manage", "storage:admin")),
+        Depends(require_confirmation("snapshot.rollback")),
+    ],
+)
+def rollback(name: str):
+    """Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot."""
+    try:
+        return snaps.rollback(name)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from None
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from None
 
 
 @router.post("/snapshots/{name}/restore", dependencies=[Depends(require_scope("backup:manage", "storage:admin"))])

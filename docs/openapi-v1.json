@@ -30745,6 +30745,14 @@
       "title": "Keep",
       "type": "integer"
      },
+     "keep_daily": {
+      "default": 0,
+      "description": "Also keep one a day for this many days",
+      "maximum": 3650.0,
+      "minimum": 0.0,
+      "title": "Keep Daily",
+      "type": "integer"
+     },
      "share": {
       "maxLength": 128,
       "minLength": 1,
@@ -52083,6 +52091,47 @@
      }
     },
     "summary": "Restore",
+    "tags": [
+     "Snapshots"
+    ]
+   }
+  },
+  "/api/v1/snapshots/{name}/rollback": {
+   "post": {
+    "description": "Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot.",
+    "operationId": "rollback_api_v1_snapshots__name__rollback_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Rollback",
     "tags": [
      "Snapshots"
     ]
