@@ -99,72 +99,18 @@ class TestBatch5UpsAndMedia(unittest.TestCase):
     # -------------------------------------------------------------------------
     @patch("os.sync")
     @patch("backend.services.notifications.send_notification")
-    def test_ups_failsafe_engagement_and_recovery(self, mock_notify, mock_sync):
+    def test_ups_alerts_only_and_leave_the_failsafe_to_the_watchdog(self, mock_notify, mock_sync):
+        """One UPS engine (REL-10): alert_rules alerts; ups_watchdog pauses, stops and shuts down."""
         unraid_ok = {"available": True, "state": "STARTED"}
-
-        # 1. Normal Online Power
-        ups_online = {
-            "available": True,
-            "status": "OL",
-            "battery_charge_pct": 100.0,
-            "time_left_min": 60.0,
-        }
-        evaluate_system_alerts(unraid_ok, ups_online)
-        fs_state = get_failsafe_status()
-        self.assertFalse(fs_state["failsafe_active"])
-        self.assertFalse(Z_STATE.copy_paused)
-
-        # 2. On Battery, but healthy charge (e.g., 75%, 35 min remaining)
-        ups_onbatt_healthy = {
-            "available": True,
-            "status": "OB DISCHRG",
-            "battery_charge_pct": 75.0,
-            "time_left_min": 35.0,
-        }
-        evaluate_system_alerts(unraid_ok, ups_onbatt_healthy)
-        fs_state = get_failsafe_status()
-        self.assertFalse(fs_state["failsafe_active"])
-
-        # 3. Simulate Active Copy Operation
         Z_STATE.copy_active = True
-        Z_STATE.copy_paused = False
-        Z_STATE.copy_status = "copying"
-
-        # 4. Critical Low Battery Trigger (< 20% charge)
-        ups_crit = {
-            "available": True,
-            "status": "OB LB DISCHRG",
-            "battery_charge_pct": 15.0,
-            "time_left_min": 3.5,
-        }
-
-        # Step 4a: First sample records timestamp for grace period
-        with patch.dict(os.environ, {"UPS_FAILSAFE_GRACE_SEC": "10.0"}):
-            evaluate_system_alerts(unraid_ok, ups_crit)
-            # Before grace period finishes, failsafe should not engage yet
-            self.assertFalse(get_failsafe_status()["failsafe_active"])
-            self.assertFalse(Z_STATE.copy_paused)
-
-            # Step 4b: Simulate time passing past grace period (12 seconds later)
-            with patch("time.time", return_value=time.time() + 15.0):
-                evaluate_system_alerts(unraid_ok, ups_crit)
-
-        fs_state = get_failsafe_status()
-        self.assertTrue(fs_state["failsafe_active"])
-        self.assertTrue(fs_state["copy_paused_by_failsafe"])
-        # Verify copy was paused to protect filesystem writes!
-        self.assertTrue(Z_STATE.copy_paused)
-        # Verify os.sync() was executed to flush disk caches!
-        mock_sync.assert_called_once()
-        # Verify critical notification was dispatched
-        mock_notify.assert_called()
-
-        # 5. Mains Power Restored (OL) -> Auto-recovery
-        evaluate_system_alerts(unraid_ok, ups_online)
-        fs_state_after = get_failsafe_status()
-        self.assertFalse(fs_state_after["failsafe_active"])
-        # Verify copy operation was automatically unpaused and resumed!
-        self.assertFalse(Z_STATE.copy_paused)
+        ups_crit = {"available": True, "status": "OB LB DISCHRG", "battery_charge_pct": 15.0, "time_left_min": 3.5}
+        evaluate_system_alerts(unraid_ok, ups_crit)
+        titles = [c.args[0]["title"] for c in mock_notify.call_args_list if c.args and isinstance(c.args[0], dict)]
+        self.assertIn("UPS Critical Battery", titles)
+        self.assertFalse(Z_STATE.copy_paused)  # pausing is the watchdog's job
+        mock_sync.assert_not_called()
+        self.assertFalse(get_failsafe_status()["failsafe_active"])
+        evaluate_system_alerts(unraid_ok, {"available": True, "status": "OL", "battery_charge_pct": 90.0})
 
     # -------------------------------------------------------------------------
     # 3. Media Slot Edge Detection & Auto-Ingest Tests (B5_3)

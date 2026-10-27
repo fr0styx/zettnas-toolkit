@@ -809,7 +809,12 @@ export function initUpsDrawerControls() {
       async () => {
         try {
           showToast(t('toast.outage_drill_started_15s', 'Outage drill started (15s)...'), 'warn');
-          await api.post('/api/ups/simulate', { duration_sec: 15 });
+          const res = await api.post('/api/ups/simulate', { duration_sec: 15 });
+          // when it is real: who shuts the server down, or that nothing will (REL-10)
+          const path = res?.shutdown_path;
+          if (path?.detail) {
+            showToast(t('ups.drill_path', 'When the battery really runs out: {detail}', { detail: path.detail }), path.ok ? 'info' : 'error');
+          }
           fetchAndRenderUpsTelemetry();
         } catch (err) {
           showToast(t('toast.simulation_failed', 'Simulation failed: {error}', { error: err.message }), 'error');

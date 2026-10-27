@@ -2687,6 +2687,7 @@ export default {
   "toast.opened_folder_location": "已打开所在文件夹：{parentDir}",
   "toast.opened_in_file_explorer": "已在文件管理器中打开 {path}",
   "toast.outage_drill_started_15s": "断电演练已开始（15 秒）...",
+  "ups.drill_path": "当电池真正耗尽时：{detail}",
   "toast.passwords_do_not_match": "两次输入的密码不一致。",
   "toast.pasted_url_from_clipboard": "已从剪贴板粘贴网址",
   "toast.pasted_characters_into_guest_vm": "已向虚拟机粘贴 {count} 个字符",

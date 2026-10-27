@@ -248,12 +248,14 @@ def test_lcd_16bpp_framebuffer_support():
 
 
 def test_ups_watchdog_preserves_orchestrator():
-    """Verifies graceful_docker_teardown does not kill zettnas-toolkit containers."""
+    """graceful_docker_teardown stops the apps ZettNAS installed, never ZettNAS itself or its helpers,
+    and leaves other people's containers to the host (REL-10)."""
     mock_containers = [
-        {"id": "c1", "name": "plex", "state": "running"},
+        {"id": "c1", "name": "plex", "state": "running", "zettnas_app": True},
         {"id": "c2", "name": "zettnas-toolkit", "state": "running"},
-        {"id": "c3", "name": "zettnas-samba", "state": "running"},
-        {"id": "c4", "name": "vaultwarden", "state": "running"},
+        {"id": "c3", "name": "zettnas-samba", "state": "running", "zettnas_app": True},
+        {"id": "c4", "name": "vaultwarden", "state": "running", "zettnas_app": True},
+        {"id": "c5", "name": "their-own", "state": "running"},
     ]
 
     stopped = []
@@ -272,3 +274,4 @@ def test_ups_watchdog_preserves_orchestrator():
     assert "c4" in stopped_ids
     assert "c2" not in stopped_ids
     assert "c3" not in stopped_ids
+    assert "c5" not in stopped_ids

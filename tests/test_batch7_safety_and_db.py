@@ -69,27 +69,6 @@ def test_db_session_zero_fd_leaks():
     assert isinstance(history, list)
 
 
-def test_ups_failsafe_os_sync_threaded():
-    """Verify that os.sync is called inside a background thread during UPS critical failsafe."""
-    reset_failsafe_state()
-    with patch("os.sync") as mock_sync, patch("backend.services.alert_rules.logger"):
-        # Configure UPS telemetry triggering low battery
-        ups_data = {
-            "available": True,
-            "status": "OB",
-            "battery_charge_pct": 10.0,  # Below default 20%
-            "time_left_min": 2.0,  # Below default 5 min
-        }
-        # Force grace period to 0 for immediate execution
-        with patch.dict(os.environ, {"UPS_FAILSAFE_GRACE_SEC": "0"}):
-            # Run alert rules
-            evaluate_system_alerts({}, ups_data)
-            # Allow background thread a moment to run
-            time.sleep(0.1)
-            assert mock_sync.called
-    reset_failsafe_state()
-
-
 def test_lcd_streamer_terminates_when_shutting_down():
     """Verify that lcd_renderer.render_lcd_loop exits cleanly when Z_STATE.shutting_down is True."""
     from backend.services.lcd_renderer import render_lcd_loop

@@ -91,6 +91,11 @@
 
 #### Backups and power
 
+- **The UPS hands the shutdown to Unraid and TrueNAS**: when the battery runs low ZettNAS pauses
+  copies, stops only the apps it installed (all at once, within the timeout) and saves what is in
+  memory; the host's own UPS service then shuts the server down, and ZettNAS never cuts the UPS
+  outlets there. The outage drill now says what will shut the server down, or that nothing will.
+  The second, older UPS failsafe is gone: one engine decides.
 - **A recovery kit that has to be saved**: each off-site backup gives a kit with the key, where the
   backup is, the cloud settings it needs and the restore commands; the Overview says "Recovery kit
   not saved" until it is downloaded or copied. BACKUP_GUIDE explains how to recover on new hardware.

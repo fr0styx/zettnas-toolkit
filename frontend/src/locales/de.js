@@ -2687,6 +2687,7 @@ export default {
   "toast.opened_folder_location": "Ordner geöffnet: {parentDir}",
   "toast.opened_in_file_explorer": "{path} im Datei-Explorer geöffnet",
   "toast.outage_drill_started_15s": "Stromausfall-Test gestartet (15 s)...",
+  "ups.drill_path": "Wenn der Akku wirklich leer wird: {detail}",
   "toast.passwords_do_not_match": "Die Passwörter stimmen nicht überein.",
   "toast.pasted_url_from_clipboard": "URL aus der Zwischenablage eingefügt",
   "toast.pasted_characters_into_guest_vm": "{count} Zeichen in die VM eingefügt",

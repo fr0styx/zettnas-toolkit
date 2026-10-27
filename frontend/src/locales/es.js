@@ -2687,6 +2687,7 @@ export default {
   "toast.opened_folder_location": "Carpeta abierta: {parentDir}",
   "toast.opened_in_file_explorer": "{path} abierto en el explorador",
   "toast.outage_drill_started_15s": "Simulacro de corte iniciado (15 s)...",
+  "ups.drill_path": "Cuando la batería se agote de verdad: {detail}",
   "toast.passwords_do_not_match": "Las contraseñas no coinciden.",
   "toast.pasted_url_from_clipboard": "URL pegada desde el portapapeles",
   "toast.pasted_characters_into_guest_vm": "{count} caracteres pegados en la VM",

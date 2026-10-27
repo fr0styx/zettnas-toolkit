@@ -1187,7 +1187,11 @@ def _deploy_companions(
             "Env": [f"{k}={_fill_secrets(str(v), secrets_map)}" for k, v in (s_def.get("env") or {}).items()],
             "HostConfig": host_cfg,
             "NetworkingConfig": {"EndpointsConfig": {network: {"Aliases": [s_name]}}},
-            "Labels": {"com.docker.compose.project": service_name, "com.docker.compose.service": s_name},
+            "Labels": {
+                "com.docker.compose.project": service_name,
+                "com.docker.compose.service": s_name,
+                "com.zettnas.managed": "1",
+            },
         }
         if "@" in image:
             body["Labels"][FOLLOW_TAG_LABEL] = "1"
@@ -1579,6 +1583,7 @@ def stream_deploy_catalog_app(
         "Labels": {
             "com.docker.compose.project": service_name,
             "com.docker.compose.service": service_name,
+            "com.zettnas.managed": "1",  # ZettNAS stops only its own apps on a power cut (REL-10)
             "net.unraid.docker.managed": "dockerman",
             "net.unraid.docker.webui": f"{app.get('webui_scheme', 'http')}://[IP]:[PORT:{port}]{(app.get('webui_path') or '/')}",
             "net.unraid.docker.icon": app.get("logo")
