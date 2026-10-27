@@ -42,7 +42,11 @@ def test_repeat_requests_are_one_shot_and_cpu_uses_the_last_sample():
         def close(self):
             pass
 
-    with patch.object(ds, "UnixHTTPConnection", Conn), patch.object(ds.os.path, "exists", return_value=True):
+    with (
+        patch.object(ds, "UnixHTTPConnection", Conn),
+        patch.object(ds.os.path, "exists", return_value=True),
+        patch.object(ds, "_kernel_telemetry", return_value=None),  # dockerd answers (PERF-4 falls back to it)
+    ):
         ds._fetch_container_telemetry("abc")
         second = ds._fetch_container_telemetry("abc")
     assert "one-shot" not in paths[0] and paths[1].endswith("&one-shot=true")

@@ -15,6 +15,7 @@ import time
 from typing import Any, Optional
 
 from backend.config import docker_sock, logger
+from backend.hardware import cgroup_stats
 from backend.state import Z_STATE
 
 _CACHED_CONTAINERS: list[dict[str, Any]] = []
@@ -346,7 +347,29 @@ def _fetch_container_inspect(cid_short: str, conn: UnixHTTPConnection | None = N
     return {}
 
 
+def _kernel_telemetry(cid: str) -> dict[str, Any] | None:
+    """CPU, memory and network from the kernel's files (PERF-4); None when they cannot be read."""
+    info = _fetch_container_inspect(cid[:12]) or {}
+    pid = int((info.get("State") or {}).get("Pid") or 0)
+    if pid and not cgroup_stats.owns(pid, cid):
+        # restarted since we last looked: its main process has a new number
+        with _INSPECT_LOCK:
+            _CONTAINER_INSPECT_CACHE.pop(cid[:12], None)
+        info = _fetch_container_inspect(cid[:12]) or {}
+        pid = int((info.get("State") or {}).get("Pid") or 0)
+    host_net = (info.get("HostConfig") or {}).get("NetworkMode") == "host"
+    return cgroup_stats.telemetry(cid, pid, host_net)
+
+
 def _fetch_container_telemetry(cid: str) -> dict[str, Any]:
+    # the kernel's own counters first: no work for dockerd. Its stats answer the rest (a layout
+    # we cannot read, and each container's first round, since a CPU % needs two samples).
+    try:
+        fast = _kernel_telemetry(cid)
+        if fast:
+            return fast
+    except Exception:
+        logger.debug("backend.hardware.docker_stats._fetch_container_telemetry: no kernel stats", exc_info=True)
     sock_path = docker_sock()
     if not os.path.exists(sock_path):
         return {}
@@ -443,6 +466,7 @@ def _docker_telemetry_worker():
                         )
             for gone in set(_PREV_CPU) - set(cids):
                 _PREV_CPU.pop(gone, None)
+            cgroup_stats.forget(set(cids))
             _DEMAND_WAKE.clear()
             deadline = time.time() + container_poll_interval()
             while not Z_STATE.shutting_down and time.time() < deadline:
