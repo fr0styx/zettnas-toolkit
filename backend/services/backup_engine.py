@@ -665,6 +665,19 @@ def is_job_running(job_id: str) -> bool:
         return job_id in _RUNNING_JOBS
 
 
+def _dump_databases(pal: Any, pool_id: str, subvol: str) -> list[dict[str, Any]]:
+    """Database dumps for the folder a copy job reads (REL-20); a failure never stops the job."""
+    try:
+        from backend.services import backup_hooks
+
+        pool_path = pal.get_pool_path(pool_id)
+        paths = [os.path.join(pool_path, "@shares", subvol), os.path.join(pool_path, subvol)] if subvol else [pool_path]
+        return backup_hooks.run_dumps([p for p in paths if os.path.isdir(p)])
+    except Exception as e:
+        logger.warning(f"[HYPER-BACKUP] Database dumps skipped: {e}")
+        return []
+
+
 def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
     job_id = str(job.get("id"))
 
@@ -702,6 +715,8 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
         if job.get("kind") == "config":
             history_record["snapshot_name"] = dest_target = _export_settings(job, retention)
         else:
+            # Step 0: databases in the source write a dump first, so the snapshot holds one (REL-20)
+            history_record["dumps"] = _dump_databases(pal, pool_id, subvol)
             # Step 1: Create atomic local filesystem snapshot
             if subvol:
                 snap_name = f"{subvol}_{time.strftime('%Y%m%d_%H%M%S')}"

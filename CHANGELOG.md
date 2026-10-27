@@ -120,6 +120,10 @@
   "Stopped by a restart", with Resume, Undo (copies to the Recycle Bin, moved items back) and Dismiss;
   each clears that transfer's unfinished files, and nothing else on the disk is read.
 - **Off-site backups hand you a recovery kit** (key, location and restore commands) when created.
+- **Backups hold consistent databases and VMs**: before an off-site backup or a copy job reads its
+  folders, the PostgreSQL, MariaDB/MySQL, Redis and MongoDB apps whose data is there write a dump
+  next to their files (.zettnas-dump.*), so the backup has one copy of each that starts; a running
+  VM is paused while its disks are copied and resumed after (one that can't be paused isn't copied).
 - **Off-site backups are steadier**: each NAS keeps one name in restic across updates, so a backup
   after an update no longer re-reads every file and old versions are pruned again. Files that could
   not be read no longer fail the whole backup: the rest is saved and the backup says how many were

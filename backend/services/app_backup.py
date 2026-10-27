@@ -519,6 +519,40 @@ def get_vm_backup_dir(vm_name: str) -> str:
     return d
 
 
+_CANT_PAUSE = "The VM is running and could not be paused for a consistent copy: shut it down, then back it up."
+
+
+def _pause_vm(vm_id: str) -> str:
+    """Pauses a running VM so its disks hold still while they are copied; QEMU finishes the writes
+    in flight first. Returns "stopped", "paused" (by its owner, it stays so) or "paused_for_backup".
+    A VM that can't be paused is not copied."""
+    from backend.services import vm_qemu
+
+    if not vm_qemu._is_qemu_process_alive(vm_id):
+        return "stopped"
+    try:
+        status = vm_qemu._qmp_command(vm_id, "query-status", timeout=10)
+        if not (status.get("return") or {}).get("running", True):
+            return "paused"
+        res = vm_qemu._qmp_command(vm_id, "stop", timeout=30)
+    except Exception as e:
+        raise RuntimeError(_CANT_PAUSE) from e
+    if "error" in res:
+        raise RuntimeError(_CANT_PAUSE)
+    logger.info(f"[VM Backup] Paused {vm_id} while its disks are copied")
+    return "paused_for_backup"
+
+
+def _resume_vm(vm_id: str) -> None:
+    from backend.services import vm_qemu
+
+    res = vm_qemu._qmp_command(vm_id, "cont", timeout=30)
+    if "error" in res:
+        logger.error(f"[VM Backup] {vm_id} could not be resumed after the backup: {res['error']}")
+    else:
+        logger.info(f"[VM Backup] Resumed {vm_id}")
+
+
 def create_vm_backup(
     vm_id: str,
     reason: str = "on-demand",
@@ -547,7 +581,9 @@ def create_vm_backup(
     archive_filename = f"{vname}_{reason}_{ts}.tar.gz"
     archive_filepath = os.path.join(backup_dir, archive_filename)
 
+    state = _pause_vm(vm_id)  # a running VM is paused while its disks are copied (REL-20)
     manifest: dict[str, Any] = {
+        "consistency": "stopped" if state == "stopped" else "paused",
         "backup_id": backup_id,
         "type": "vm",
         "app_name": vname,
@@ -613,6 +649,9 @@ def create_vm_backup(
                 logger.debug("backend.services.app_backup.create_vm_backup: ignored error", exc_info=True)
         logger.error(f"[VM Backup] Failed to create backup for {vname}: {e}")
         raise
+    finally:
+        if state == "paused_for_backup":
+            _resume_vm(vm_id)
 
 
 def list_vm_backups(vm_id_or_name: str | None = None) -> list[dict[str, Any]]:

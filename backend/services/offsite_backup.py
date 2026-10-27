@@ -397,6 +397,10 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
             summary.update(msg)
 
     try:
+        from backend.services import backup_hooks
+
+        job_manager.update(job.id, detail="Writing database dumps")
+        dumps = backup_hooks.run_dumps(repo["paths"])  # a consistent copy of each database (REL-20)
         _unlock(repo)
         code, _out = _run(
             repo,
@@ -432,6 +436,7 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
             "data_added": summary.get("data_added", 0),
             "unreadable": count[0],
             "unreadable_files": unreadable,
+            "dumps": dumps,
         }
         _update(
             repo_id, last_backup=time.time(), last_result="ok", last_unreadable=count[0], unreadable_files=unreadable
