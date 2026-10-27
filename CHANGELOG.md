@@ -99,7 +99,8 @@
   TrueNAS API, on each share's own dataset.
 - **Snapshots and scrubs have their tools**: every image now carries btrfs and mdadm, and the full
   image Debian's ZFS 2.4 tools. ZFS runs only when it matches the host's ZFS module and /dev/zfs
-  is passed in; otherwise Backup says why. (On Unraid and TrueNAS the host keeps running its own.)
+  is passed in; otherwise Backup says why, and ZFS commands answer at once instead of
+  waiting 10 seconds each. (On Unraid and TrueNAS the host keeps running its own.)
 - Snapshots and off-site backup versions show each person only the folders they may open today.
 - "Set up a backup" in Getting started is ticked once a backup has actually reached a cloud remote or
   a USB / network disk, not when one is merely set up.

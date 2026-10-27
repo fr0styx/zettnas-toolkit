@@ -21,6 +21,8 @@ FROM python:3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
+# Without /dev/zfs, zpool and zfs wait 10 s for a kernel module a container can't load
+ENV ZFS_MODULE_TIMEOUT=0
 
 LABEL org.opencontainers.image.source="https://github.com/fr0styx/zettnas-toolkit"
 LABEL org.opencontainers.image.description="ZettNAS Toolkit: Hardware telemetry, custom fan curves, ARGB lightbar, and LCD dashboard"

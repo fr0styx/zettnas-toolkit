@@ -79,3 +79,4 @@ def test_the_image_carries_the_tools_the_way_d2_decided():
     zfs = re.search(r'RUN if \[ "\$VARIANT" = "full" \]; then \\\n    printf.*?fi', text, re.S)
     assert zfs and "trixie-backports" in zfs.group(0) and "zfsutils-linux" in zfs.group(0)  # full image only
     assert "zfsutils-linux" not in core
+    assert "ENV ZFS_MODULE_TIMEOUT=0" in text  # no 10 s wait per call without /dev/zfs
