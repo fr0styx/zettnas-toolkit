@@ -358,7 +358,7 @@ _WEB_ALLOWED: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_web_al
 _WEB_BLOCKED_MSG = "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather."
 
 
-def tool_browse_internet(query: str, max_results: int = 5) -> dict[str, Any]:
+def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = True) -> dict[str, Any]:
     if not _WEB_ALLOWED.get():
         return {"tool": "browse_internet", "status": "blocked", "error": _WEB_BLOCKED_MSG, "sources": []}
     """
@@ -372,6 +372,9 @@ def tool_browse_internet(query: str, max_results: int = 5) -> dict[str, Any]:
     # the search carries the question, not addresses, paths, numbers or keys (AI-12)
     from backend.services.ai_safeguards import safe_web_query
 
+    if not allow_fetch:
+        # search only (SEC-31): no page is fetched, so no URL goes out either
+        clean_q = " ".join(re.sub(r"https?://[^\s<>\"']+", " ", clean_q).split())
     scrubbed, why = safe_web_query(clean_q)
     if scrubbed is None:
         return {"tool": "browse_internet", "status": "blocked", "sources": [], "error": f"Web search refused: {why}."}
@@ -423,7 +426,7 @@ def tool_browse_internet(query: str, max_results: int = 5) -> dict[str, Any]:
         )
 
     # 1. If user included a direct URL, fetch and extract its title + text
-    url_match = re.search(r"https?://[^\s<>\"']+", clean_q)
+    url_match = re.search(r"https?://[^\s<>\"']+", clean_q) if allow_fetch else None
     if url_match:
         target_url = url_match.group(0).rstrip(".,;)")
         if not _is_safe_public_url(target_url):

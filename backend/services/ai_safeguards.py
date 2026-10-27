@@ -4,6 +4,9 @@
   e-mail addresses, file paths, long numbers and keys are removed, and a search the model asks
   for is refused when it repeats text from the person's files (the classic way a prompt hidden
   in a document gets data out).
+- model_web_query: a web call the model asks for (SEC-31 / AI-25) may search, but only fetches
+  a page the person typed themselves, never one the model made up (a URL can carry data out in
+  its path or query), and fetches nothing in a turn that read the person's files.
 - compose_risks: what to check in a Compose file before running it.
 """
 
@@ -44,6 +47,53 @@ def safe_web_query(query: str, private_texts: list[str] | tuple[str, ...] = ()) 
             if any(" ".join(w[i : i + SHINGLE_WORDS]) in shingles for i in range(max(0, len(w) - SHINGLE_WORDS + 1))):
                 return None, "the search repeated text from your files"
     return q, ""
+
+
+_URL = re.compile(r"https?://[^\s<>\"']+", re.I)
+
+
+def _bare_url(url: str) -> str:
+    """scheme://host/path, lower-case host, without query, fragment or trailing punctuation."""
+    url = url.rstrip(".,;:!?)]}'\"")
+    url = url.split("#", 1)[0].split("?", 1)[0]
+    scheme, _, rest = url.partition("://")
+    host, slash, path = rest.partition("/")
+    return f"{scheme.lower()}://{host.lower()}{slash}{path}".rstrip("/")
+
+
+def typed_urls(user_text: str) -> dict[str, str]:
+    """The URLs the person typed in this message: bare form -> exactly as typed."""
+    out = {}
+    for m in _URL.finditer(str(user_text or "")):
+        typed = m.group(0).rstrip(".,;:!?)]}'\"")
+        out[_bare_url(typed)] = typed
+    return out
+
+
+def model_web_query(
+    query: str, user_text: str, private_texts: list[str] | tuple[str, ...] = ()
+) -> tuple[str | None, bool, str]:
+    """A web call the model asks for: (query to send, may fetch a page, "") or (None, False, why).
+
+    A URL in the query is kept only when the person typed it (then exactly as they typed it, so
+    the model cannot add a query string); any other URL is removed. In a turn that read the
+    person's files or other private results, nothing is fetched at all: search only."""
+    used_private = any(str(t or "").strip() for t in private_texts)
+    typed = typed_urls(user_text)
+    kept = []
+
+    def _keep(m: re.Match) -> str:
+        bare = _bare_url(m.group(0))
+        if bare in typed and not used_private:
+            kept.append(bare)
+            return typed[bare]
+        return " "
+
+    q = _URL.sub(_keep, str(query or ""))
+    safe, why = safe_web_query(q, private_texts)
+    if safe is None:
+        return None, False, why
+    return safe, bool(kept), ""
 
 
 _COMPOSE_CHECKS = [

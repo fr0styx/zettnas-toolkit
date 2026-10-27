@@ -40,7 +40,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import FAN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
-from backend.services.ai_safeguards import compose_warning_for_reply, safe_web_query
+from backend.services.ai_safeguards import compose_warning_for_reply, model_web_query
 from backend.services.chat_context import (  # noqa: E402, F401
     _CJK_RE,
     _FOLLOWUP_REF,
@@ -717,7 +717,9 @@ _TOOL_HANDLERS: dict[str, Any] = {
     ),
     "trigger_ai_sync": lambda a, p: tool_trigger_ai_sync(action=_arg(a, "action", default="start"), principal=p),
     "browse_internet": lambda a, p: tool_browse_internet(
-        _arg(a, "query", "search_query"), max_results=int(a.get("max_results") or 5)
+        _arg(a, "query", "search_query"),
+        max_results=int(a.get("max_results") or 5),
+        allow_fetch=a.get("_allow_fetch") is not False,
     ),
     "calculate": lambda a, p: tool_calculate(_arg(a, "expression", "formula", "query")),
     "get_storage_status": lambda a, p: tool_get_storage_status(),
@@ -1346,8 +1348,10 @@ def _turn_call_model(
     principal,
     tool_results,
     tools_called,
+    user_text="",
 ):
-    """Asks the model, running the tools it requests (at most three rounds)."""
+    """Asks the model, running the tools it requests (at most three rounds). user_text is what the
+    person typed this turn: the only place a page the model fetches may come from (SEC-31)."""
     try:
         MAX_TOOL_RECURSIONS = 3
         tool_recursions = 0
@@ -1420,11 +1424,14 @@ def _turn_call_model(
                     private += [
                         json.dumps(tr, default=str)[:4000] for tr in tool_results if tr.get("tool") != "browse_internet"
                     ]
-                    q_safe, why = safe_web_query(str(t_args.get("query") or ""), private)
+                    # search, but fetch only a page the person typed, and none after reading files (SEC-31)
+                    q_safe, may_fetch, why = model_web_query(str(t_args.get("query") or ""), user_text, private)
                     if q_safe is None:
                         t_res = {"tool": "browse_internet", "status": "blocked", "error": f"Web search refused: {why}."}
                     else:
-                        t_res = execute_nas_tool(t_name, {**t_args, "query": q_safe}, principal=principal)
+                        t_res = execute_nas_tool(
+                            t_name, {**t_args, "query": q_safe, "_allow_fetch": may_fetch}, principal=principal
+                        )
                 else:
                     already_done = next(
                         (
@@ -1875,6 +1882,7 @@ def _run_agentic_chat_turn(
         principal=principal,
         tool_results=tool_results,
         tools_called=tools_called,
+        user_text=clean_msg,
     )
 
     (llm_reply,) = _turn_fallback_reply(

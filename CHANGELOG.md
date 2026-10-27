@@ -65,6 +65,9 @@
   and folder summaries included). Kids and guests start with both off on new installs; upgraded
   installs keep AI search on for them and the Security Advisor offers to turn it off. The
   request log now says whether it was a chat, an answer or a search.
+- **Zetty's web searches can't carry your files out**: it opens a web page only when you typed
+  its address (exactly as you typed it), never one it made up, and opens none at all in a
+  chat turn that read your files; it can still search.
 
 #### Backups and power
 
