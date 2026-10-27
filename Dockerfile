@@ -29,9 +29,11 @@ LABEL net.unraid.docker.webui="http://[IP]:[PORT:8082]/"
 LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
 LABEL net.unraid.docker.shell="bash"
 
-# Core: disks, SMART, UPS, USB and cloud remotes (OPS-11)
+# Core: disks, SMART, UPS, USB, cloud remotes (OPS-11), and btrfs and software RAID (REL-4, D2)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
+    btrfs-progs \
+    mdadm \
     nvme-cli \
     apcupsd \
     udev \
@@ -106,6 +108,17 @@ RUN if [ "$VARIANT" = "full" ]; then \
         fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*; \
     elif [ "$VARIANT" != "core" ]; then echo "VARIANT must be full or core" >&2; exit 1; fi
+
+# ZFS (REL-4, D2): the full image only, for hosts where ZettNAS runs the pools (ZettOS, plain Linux,
+# the appliance image). Debian's own package from trixie-backports, the same 2.4 line the
+# appliance OS will use; ZettNAS runs it only when it matches the host's ZFS module (pal/base.py).
+# The core image is for Unraid, TrueNAS and Proxmox, which run their own ZFS.
+RUN if [ "$VARIANT" = "full" ]; then \
+    printf "Types: deb\nURIs: http://deb.debian.org/debian\nSuites: trixie-backports\nComponents: main contrib\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\n" \
+        > /etc/apt/sources.list.d/backports.sources \
+    && apt-get update && apt-get install -y --no-install-recommends -t trixie-backports zfsutils-linux \
+    && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 # Build metadata arguments injected by CI
 ARG BUILD_COMMIT=""

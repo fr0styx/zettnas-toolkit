@@ -48,6 +48,11 @@ def availability(pal: Any = None) -> tuple[bool, str]:
         return True, ""
     if getattr(caps, "can_snapshot", True):
         return True, ""
+    from backend.hardware.pal.base import storage_tools_problem
+
+    why = storage_tools_problem()
+    if why:
+        return False, f"Snapshots aren't available on this host: {why}."
     return False, "Snapshots aren't available on this host: the btrfs and ZFS tools are missing."
 
 

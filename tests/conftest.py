@@ -213,10 +213,11 @@ def _no_host_storage_tools(request, monkeypatch):
     """Tests see the same storage tools everywhere: none. The Docker test image has no btrfs, ZFS
     or mdadm while GitHub's runner has some, and results must not depend on the machine.
     Tests marked @pytest.mark.real_storage_tools ask shutil.which themselves."""
-    if request.node.get_closest_marker("real_storage_tools"):
-        return
     from backend.hardware.pal import base
 
+    monkeypatch.setattr(base, "_ZFS_PROBLEM", {})  # the once-per-start ZFS check starts fresh
+    if request.node.get_closest_marker("real_storage_tools"):
+        return
     monkeypatch.setattr(base, "storage_tools", lambda: {"btrfs": False, "zfs": False, "zpool": False, "mdadm": False})
 
 

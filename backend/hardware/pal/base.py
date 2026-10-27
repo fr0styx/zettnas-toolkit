@@ -51,11 +51,78 @@ class PlatformCapabilities(BaseModel):
     description: str = ""
 
 
+def _major_minor(version: str) -> tuple[int, int] | None:
+    import re as _re
+
+    m = _re.match(r"(?:zfs-)?(\d+)\.(\d+)", str(version or "").strip())
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+def host_zfs_version() -> str:
+    """The ZFS module the host kernel has loaded (e.g. 2.4.4-1), or "" when it has none."""
+    from backend.config import HOST_SYS
+
+    for path in (os.path.join(HOST_SYS, "module", "zfs", "version"), "/sys/module/zfs/version"):
+        try:
+            with open(path, encoding="utf-8") as f:
+                return f.read().strip()
+        except OSError:
+            continue
+    return ""
+
+
+def image_zfs_version() -> str:
+    """The ZFS tools in this image (Debian's zfsutils-linux), or "" when there are none."""
+    try:
+        res = subprocess.run(
+            ["dpkg-query", "-W", "-f=${Version}", "zfsutils-linux"], capture_output=True, text=True, timeout=10
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return res.stdout.strip() if res.returncode == 0 else ""
+
+
+def zfs_problem(host: str | None = None, image: str | None = None, dev_zfs: bool | None = None) -> str:
+    """Why this container must not run ZFS commands, or "" when it may (REL-4, D2). The tools in
+    the image talk to the host's kernel module through /dev/zfs; a different major.minor version
+    can misread the pool, so it is refused rather than tried."""
+    host = host_zfs_version() if host is None else host
+    image = image_zfs_version() if image is None else image
+    if not image:
+        return "this image has no ZFS tools (the core image leaves them out)"
+    if not host:
+        return "the host has no ZFS module loaded"
+    if dev_zfs is None:
+        dev_zfs = os.path.exists("/dev/zfs")
+    if not dev_zfs:
+        return "the host's /dev/zfs is not passed to the container"
+    if _major_minor(host) != _major_minor(image):
+        return f"the ZFS tools in this image ({image}) do not match the host's ZFS ({host})"
+    return ""
+
+
+_ZFS_PROBLEM: dict[str, str] = {}
+
+
 def storage_tools() -> dict[str, bool]:
-    """Which storage tools this image can run (REL-4: the image may lack btrfs, ZFS or mdadm)."""
+    """Which storage tools this image can run (REL-4). ZFS counts only when its tools match the
+    host's ZFS module (checked once per start)."""
     import shutil
 
-    return {name: bool(shutil.which(name)) for name in ("btrfs", "zfs", "zpool", "mdadm")}
+    tools = {name: bool(shutil.which(name)) for name in ("btrfs", "zfs", "zpool", "mdadm")}
+    if tools["zfs"] or tools["zpool"]:
+        if "reason" not in _ZFS_PROBLEM:
+            _ZFS_PROBLEM["reason"] = zfs_problem()
+            if _ZFS_PROBLEM["reason"]:
+                logger.info(f"[PAL] ZFS not used: {_ZFS_PROBLEM['reason']}")
+        if _ZFS_PROBLEM["reason"]:
+            tools["zfs"] = tools["zpool"] = False
+    return tools
+
+
+def storage_tools_problem() -> str:
+    """Why ZFS is not used, after storage_tools() ran; "" when it is or was never found."""
+    return _ZFS_PROBLEM.get("reason", "")
 
 
 class PoolMember(BaseModel):

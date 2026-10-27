@@ -63,8 +63,18 @@ then reads pools, datasets and shares through the TrueNAS API and can take ZFS s
 
 | Tag | Size | Includes |
 | --- | ---- | -------- |
-| `latest`, `edge` | about 1.7 GB | Everything: virtual machines (QEMU, UEFI, vTPM) and Chromium for the front-panel LCD |
-| `latest-core`, `edge-core` | about 500 MB | Everything except virtual machines and Chromium; the front LCD uses the built-in renderer |
+| `latest`, `edge` | about 1.8 GB | Everything: virtual machines (QEMU, UEFI, vTPM), Chromium for the front-panel LCD, and the ZFS tools |
+| `latest-core`, `edge-core` | about 500 MB | Everything except virtual machines, Chromium and ZFS; the front LCD uses the built-in renderer |
+
+Both images carry the btrfs and software-RAID (mdadm) tools. The full image also carries
+Debian's ZFS 2.4 tools for servers where ZettNAS runs the pools itself (plain Linux, ZettOS).
+On Unraid, TrueNAS and Proxmox the host runs its own ZFS and ZettNAS leaves it to the host.
+
+**Snapshots and scrubs where ZettNAS runs the pools** need the pool's folder mounted into the
+container at the same path (for example `-v /mnt/tank:/mnt/tank`). ZFS also needs the host's
+`/dev/zfs` passed in (`--device /dev/zfs`) and a ZFS module of the same version line as the
+image's tools (2.4): ZettNAS checks this at start and, when they differ, says so under
+Backup instead of running ZFS commands.
 
 Use the core tags on servers that don't run VMs. The front LCD still works: the core
 images draw it with a built-in renderer instead of the web dashboard (`LCD_RENDERER`,
