@@ -27,6 +27,8 @@ import urllib.request
 from collections.abc import Callable
 from typing import Any
 
+from backend.services import gpu_queue
+
 logger = logging.getLogger("ZettNAS")
 
 VISION_FAMILIES = (
@@ -189,7 +191,9 @@ def ocr_image_bytes(data: bytes, model: str, host: str, post: Callable = _http_j
         "options": {"temperature": 0},
         "messages": [{"role": "user", "content": OCR_PROMPT, "images": [base64.b64encode(buf.getvalue()).decode()]}],
     }
-    content = (((post(f"{host}/api/chat", body, timeout=300) or {}).get("message") or {}).get("content")) or ""
+    with gpu_queue.use(gpu_queue.VISION):
+        reply = post(f"{host}/api/chat", body, timeout=300)
+    content = (((reply or {}).get("message") or {}).get("content")) or ""
     m = re.search(r"\{.*\}", content, re.S)
     if m:
         try:
@@ -212,7 +216,8 @@ def describe_image(path: str, model: str, host: str, post: Callable = _http_json
         "options": {"temperature": 0},
         "messages": [{"role": "user", "content": PROMPT, "images": [encode_image(path)]}],
     }
-    reply = post(f"{host}/api/chat", body, timeout=180)
+    with gpu_queue.use(gpu_queue.VISION):
+        reply = post(f"{host}/api/chat", body, timeout=180)
     return parse_reply(((reply or {}).get("message") or {}).get("content") or "")
 
 
@@ -222,6 +227,8 @@ def system_idle() -> bool:
 
         if chat_recently_active():
             return False  # someone is chatting: the iGPU is theirs (AI-14)
+        if gpu_queue.ahead_of(gpu_queue.VISION):
+            return False  # a reply, a search or indexing is on the GPU now (PERF-1)
         if os.getloadavg()[0] > max(1, os.cpu_count() or 1) * 0.5:
             return False
         from backend.hardware.cpu import read_cpu_temp

@@ -17,6 +17,7 @@ import urllib.error
 import urllib.request
 
 from backend.config import logger
+from backend.services import gpu_queue
 from backend.services.rag_text import (
     _STOPWORDS,
     CANONICAL_COLORS,
@@ -509,6 +510,35 @@ def _pack_embedding(raw: list[float], target_dim: int | None) -> bytes:
     return struct.pack(f"<{len(vec)}f", *vec)
 
 
+def _embed_one_batch(target_host: str, model: str, batch: list[str]) -> list | None:
+    """One /api/embed call (trying the model's aliases); None when it failed."""
+    embs = None
+    for cand in _embedding_model_candidates(model):
+        try:
+            req = urllib.request.Request(
+                f"{target_host}/api/embed",
+                data=json.dumps({"model": cand, "input": batch}).encode("utf-8"),
+                headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
+                method="POST",
+            )
+            with urllib.request.urlopen(
+                req, timeout=15.0 + 4.0 * len(batch)
+            ) as resp:  # a 2,048-token text takes ~3 s on an iGPU
+                data = json.loads(resp.read().decode("utf-8"))
+            got = data.get("embeddings")
+            if isinstance(got, list) and len(got) == len(batch) and all(isinstance(e, list) and e for e in got):
+                embs = got
+                _EMBED_MODEL_SEEN[model] = cand
+                break
+        except urllib.error.HTTPError as e:
+            if e.code == 404:  # unknown model name: try the next alias
+                continue
+            break
+        except Exception:
+            break
+    return embs
+
+
 def compute_neural_embeddings_batch(
     texts: list[str],
     model: str,
@@ -532,30 +562,9 @@ def compute_neural_embeddings_batch(
     out: list[bytes] = []
     for start in range(0, len(clean), max(1, batch_size)):
         batch = clean[start : start + batch_size]
-        embs = None
-        for cand in _embedding_model_candidates(model):
-            try:
-                req = urllib.request.Request(
-                    f"{target_host}/api/embed",
-                    data=json.dumps({"model": cand, "input": batch}).encode("utf-8"),
-                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
-                    method="POST",
-                )
-                with urllib.request.urlopen(
-                    req, timeout=15.0 + 4.0 * len(batch)
-                ) as resp:  # a 2,048-token text takes ~3 s on an iGPU
-                    data = json.loads(resp.read().decode("utf-8"))
-                got = data.get("embeddings")
-                if isinstance(got, list) and len(got) == len(batch) and all(isinstance(e, list) and e for e in got):
-                    embs = got
-                    _EMBED_MODEL_SEEN[model] = cand
-                    break
-            except urllib.error.HTTPError as e:
-                if e.code == 404:  # unknown model name: try the next alias
-                    continue
-                break
-            except Exception:
-                break
+        gpu_queue.wait_turn(gpu_queue.INDEX)  # a chat reply or a search goes first (PERF-1)
+        with gpu_queue.use(gpu_queue.INDEX):
+            embs = _embed_one_batch(target_host, model, batch)
         if embs is None:
             _EMBED_BREAKER["until"] = time.time() + 60.0
             logger.warning(
@@ -595,18 +604,19 @@ def compute_multimodal_query_embedding(
         # A busy iGPU (chat or captioning running) can take seconds: wait longer and try once
         # more before falling back to keyword vectors (AI-4)
         res = None
-        for timeout in (QUERY_EMBED_TIMEOUT, QUERY_EMBED_TIMEOUT):
-            res = compute_neural_embedding_via_ollama(
-                text=query,
-                model=model,
-                host=ollama_host,
-                target_dim=target_dim,
-                is_query=True,
-                task_prompt=task_prompt,
-                timeout=timeout,
-            )
-            if res is not None:
-                break
+        with gpu_queue.use(gpu_queue.QUERY):  # indexing waits while a question is embedded
+            for timeout in (QUERY_EMBED_TIMEOUT, QUERY_EMBED_TIMEOUT):
+                res = compute_neural_embedding_via_ollama(
+                    text=query,
+                    model=model,
+                    host=ollama_host,
+                    target_dim=target_dim,
+                    is_query=True,
+                    task_prompt=task_prompt,
+                    timeout=timeout,
+                )
+                if res is not None:
+                    break
         if res is not None:
             _, vec = res
             if len(_QUERY_VEC_CACHE) >= QUERY_VEC_CACHE_SIZE:

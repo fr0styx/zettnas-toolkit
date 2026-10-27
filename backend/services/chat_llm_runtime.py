@@ -13,6 +13,7 @@ from typing import (  # noqa: F401
 from backend.config import (  # noqa: F401
     logger,
 )
+from backend.services import gpu_queue
 from backend.services.chat_context import (  # noqa: F401
     _context_window_for,
 )
@@ -316,6 +317,7 @@ def _keep_alive() -> str:
     return "-1" if minutes <= 0 else f"{minutes}m"
 
 
+@gpu_queue.holds(gpu_queue.CHAT)
 def _try_local_llm_completion(
     active_model: str,
     llm_endpoint: str,
