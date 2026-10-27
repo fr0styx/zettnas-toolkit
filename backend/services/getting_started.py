@@ -46,10 +46,34 @@ def _has_app() -> bool:
     return any(not str(c.get("name") or "").startswith("zettnas") for c in read_docker_containers())
 
 
+OFF_BOX_ROOTS = ("/mnt/disks/", "/mnt/remotes/", "/mnt/addons/")  # USB and network disks
+
+
+def _off_box(where: str) -> bool:
+    where = str(where or "")
+    return where.startswith("rclone:") or where.startswith(OFF_BOX_ROOTS)
+
+
 def _has_backup() -> bool:
+    """Done once a backup has actually reached somewhere other than this box (REL-27): a cloud
+    remote or a USB / network disk, with a successful run. Setting one up is not enough."""
     from backend.services.backup_engine import get_backup_jobs
 
-    return bool(get_backup_jobs())
+    for j in get_backup_jobs():
+        ok = j.get("last_success_at") or j.get("last_status") == "success"
+        if ok and (
+            j.get("destination_type") == "remote" or _off_box(j.get("destination_path") or j.get("local_path") or "")
+        ):
+            return True
+    try:
+        from backend.services.offsite_backup import list_repos
+
+        for r in list_repos():
+            if r.get("last_backup") and str(r.get("last_result") or "") == "ok" and _off_box(r.get("location") or ""):
+                return True
+    except Exception:
+        logger.debug("[GettingStarted] off-site backups unreadable", exc_info=True)
+    return False
 
 
 def _two_factor(username: str) -> bool:

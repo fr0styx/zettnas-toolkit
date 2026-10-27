@@ -11,6 +11,7 @@ import os
 import shutil
 import threading
 import time
+from collections.abc import Callable
 from typing import Any
 
 from backend.config import DATA_DIR, logger
@@ -192,13 +193,31 @@ def _live_root(name: str, pal: Any, pool_id: str) -> str:
     return pal.get_pool_path(pool_id)
 
 
-def browse(name: str, rel: str = "", pal: Any = None, pool_id: str | None = None) -> dict[str, Any]:
+def browse(
+    name: str, rel: str = "", pal: Any = None, pool_id: str | None = None, principal: Any = None
+) -> dict[str, Any]:
+    """A folder of a snapshot. With a principal, only what that person may open today is listed
+    (REL-23): a snapshot is no back door to someone else's folder."""
     pal = pal or _pal()
     snap = _snapshot(name, pal, pool_id)
     root = os.path.realpath(snap["path"])
     target = resolve_within(os.path.join(root, (rel or "").lstrip("/")), root)
     if target is None or not os.path.isdir(target):
         raise FileNotFoundError("No such folder in this snapshot.")
+    visible: Callable[[str, bool], bool] | None = None
+    if principal is not None:
+        from backend.services.path_access import user_can_access_path
+
+        live = _live_root(name, pal, pool_id or _default_pool_id(pal))
+        here = os.path.join(live, os.path.relpath(target, root))
+        if not user_can_access_path(here, principal, allow_list=True):
+            raise PermissionError("You don't have access to this folder.")
+
+        def _visible(entry_name: str, is_dir: bool) -> bool:
+            return user_can_access_path(os.path.join(here, entry_name), principal, allow_list=is_dir)
+
+        visible = _visible
+
     entries = []
     with os.scandir(target) as it:
         for e in it:
@@ -206,9 +225,10 @@ def browse(name: str, rel: str = "", pal: Any = None, pool_id: str | None = None
                 st = e.stat(follow_symlinks=False)
             except OSError:
                 continue
-            entries.append(
-                {"name": e.name, "is_dir": e.is_dir(follow_symlinks=False), "size": st.st_size, "mtime": st.st_mtime}
-            )
+            is_dir = e.is_dir(follow_symlinks=False)
+            if visible is not None and not visible(e.name, is_dir):
+                continue
+            entries.append({"name": e.name, "is_dir": is_dir, "size": st.st_size, "mtime": st.st_mtime})
     entries.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
     return {
         "snapshot": name,

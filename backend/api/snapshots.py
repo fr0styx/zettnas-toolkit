@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.auth import require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.services import snapshot_service as snaps
 
 router = APIRouter(tags=["Snapshots"])
@@ -52,11 +52,13 @@ def run_now(share: str):
 
 
 @router.get("/snapshots/{name}/browse", dependencies=[Depends(require_scope("backup:read", "storage:read"))])
-def browse(name: str, path: str = ""):
+def browse(name: str, path: str = "", principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     try:
-        return snaps.browse(name, path)
+        return snaps.browse(name, path, principal=principal)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from None
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e)) from None
 
 
 @router.post("/snapshots/{name}/restore", dependencies=[Depends(require_scope("backup:manage", "storage:admin"))])

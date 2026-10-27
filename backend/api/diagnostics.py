@@ -314,6 +314,15 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
         zf.writestr("system_events.json", json.dumps(sanitize_dict(events), indent=2))
         zf.writestr("ignored_errors.json", json.dumps(sanitize_dict(ignored_snapshot(top=100)), indent=2))
         zf.writestr("recent_logs.log", sanitize_string(recent_logs_text))
+        # the log file and its rotated copies: what happened before the last restart (REL-28)
+        from backend.logging_config import log_files
+
+        for path in log_files():
+            try:
+                with open(path, encoding="utf-8", errors="replace") as f:
+                    zf.writestr(f"logs/{os.path.basename(path)}", sanitize_string(f.read()))
+            except OSError:
+                logger.debug("diagnostics: log file unreadable", exc_info=True)
 
         if client_env is not None:
             zf.writestr("client_environment.json", json.dumps(client_env, indent=2))

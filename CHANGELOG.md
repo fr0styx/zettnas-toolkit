@@ -91,6 +91,9 @@
 
 #### Backups and power
 
+- Snapshots and off-site backup versions show each person only the folders they may open today.
+- "Set up a backup" in Getting started is ticked once a backup has actually reached a cloud remote or
+  a USB / network disk, not when one is merely set up.
 - **The UPS hands the shutdown to Unraid and TrueNAS**: when the battery runs low ZettNAS pauses
   copies, stops only the apps it installed (all at once, within the timeout) and saves what is in
   memory; the host's own UPS service then shuts the server down, and ZettNAS never cuts the UPS
@@ -117,6 +120,8 @@
 
 #### Fixes
 
+- ZettNAS keeps a log file (data/logs, 2 MB and three older files) and the support bundle includes
+  it, with secrets removed, so what happened before a restart is not lost.
 - **Settings files are harder to lose**: a damaged one comes back from the daily snapshot; one that
   only can't be opened (permissions, a disk error) is reported and never overwritten; smb.conf is
   written in one step.

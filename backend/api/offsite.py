@@ -91,8 +91,13 @@ def list_versions(repo_id: str):
 
 
 @router.get("/offsite/repos/{repo_id}/snapshots/{snapshot_id}/browse", dependencies=[READ])
-def browse(repo_id: str, snapshot_id: str, path: str = "/"):
-    return {"entries": _errors(ob.browse, repo_id, snapshot_id, path)}
+def browse(
+    repo_id: str, snapshot_id: str, path: str = "/", principal: AuthenticatedPrincipal = Depends(get_current_principal)
+):
+    try:
+        return {"entries": _errors(ob.browse, repo_id, snapshot_id, path, principal)}
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e)) from None
 
 
 @router.post("/offsite/repos/{repo_id}/snapshots/{snapshot_id}/restore", dependencies=[MANAGE])

@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import threading
 import time
+from collections.abc import Callable
 from typing import Any
 
 from backend import config
@@ -318,12 +319,25 @@ def snapshots(repo_id: str) -> list[dict[str, Any]]:
     ]
 
 
-def browse(repo_id: str, snapshot_id: str, path: str = "/") -> list[dict[str, Any]]:
-    """Entries directly inside `path` of a backup version."""
+def browse(repo_id: str, snapshot_id: str, path: str = "/", principal: Any = None) -> list[dict[str, Any]]:
+    """Entries directly inside `path` of a backup version. With a principal, only what that
+    person may open today (REL-23)."""
     repo = get_repo(repo_id)
     if not re.fullmatch(r"[0-9a-f]{6,64}|latest", snapshot_id):
         raise ValueError("Pick a backup version.")
     path = "/" + path.strip("/")
+    can: Callable[[str, bool], bool] | None = None
+    if principal is not None:
+        from backend.services.path_access import user_can_access_path
+
+        if path != "/" and not user_can_access_path(path, principal, allow_list=True):
+            raise PermissionError("You don't have access to this folder.")
+
+        def _can(p: str, is_dir: bool) -> bool:
+            return user_can_access_path(p, principal, allow_list=is_dir)
+
+        can = _can
+
     out = run_restic(repo, ["ls", "--json", snapshot_id, path], timeout=600)
     entries = []
     for line in out.splitlines():
@@ -335,6 +349,8 @@ def browse(repo_id: str, snapshot_id: str, path: str = "/") -> list[dict[str, An
             continue
         p = node.get("path", "")
         if os.path.dirname(p.rstrip("/")) != path.rstrip("/") and not (path == "/" and p.count("/") == 1):
+            continue
+        if can is not None and not can(p, node.get("type") == "dir"):
             continue
         entries.append(
             {

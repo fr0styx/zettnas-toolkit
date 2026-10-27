@@ -174,6 +174,39 @@ class RingBufferHandler(logging.Handler):
 
 
 _LOGGING_CONFIGURED = False
+LOG_FILE_BYTES = 2 * 1024 * 1024
+LOG_FILE_BACKUPS = 3
+
+
+def log_file_path() -> str:
+    return os.path.join(os.environ.get("DATA_DIR") or "/app/data", "logs", "zettnas.log")
+
+
+def _add_file_handler(root_logger: logging.Logger, formatter: logging.Formatter) -> str | None:
+    """A rotating log file in the data folder (REL-28): what happened before a restart survives it,
+    and the support bundle can carry it. 2 MB, three older files; ZETTNAS_LOG_FILE=0 turns it off."""
+    if os.environ.get("ZETTNAS_LOG_FILE", "1") == "0" or os.environ.get("TESTING") == "1":
+        return None
+    from logging.handlers import RotatingFileHandler
+
+    path = log_file_path()
+    try:
+        os.makedirs(os.path.dirname(path), mode=0o700, exist_ok=True)
+        handler = RotatingFileHandler(path, maxBytes=LOG_FILE_BYTES, backupCount=LOG_FILE_BACKUPS, encoding="utf-8")
+    except OSError as e:
+        logging.getLogger("ZettNAS").warning(f"[Logging] no log file: {e}")
+        return None
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+    root_logger.addHandler(handler)
+    return path
+
+
+def log_files() -> list[str]:
+    """The log file and its rotated copies, oldest first."""
+    base = log_file_path()
+    names = [f"{base}.{i}" for i in range(LOG_FILE_BACKUPS, 0, -1)] + [base]
+    return [n for n in names if os.path.isfile(n)]
 
 
 def setup_structured_logging():
@@ -191,6 +224,7 @@ def setup_structured_logging():
 
     root_logger = logging.getLogger()
     root_logger.addHandler(ring_handler)
+    _add_file_handler(root_logger, json_formatter)
 
     # 2. Check if stdout JSON logging is active
     if os.environ.get("LOG_FORMAT", "").lower() == "json" or os.environ.get("STRUCTURED_LOGS", "") == "1":
