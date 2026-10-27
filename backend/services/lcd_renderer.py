@@ -1,8 +1,12 @@
 import base64
+import fcntl
 import io
 import mmap
 import os
+import re
+import struct
 import time
+from dataclasses import dataclass
 
 from PIL import Image, ImageChops
 
@@ -78,6 +82,107 @@ def discover_fb_bpp() -> int:
     return default_bpp
 
 
+FBIOGET_VSCREENINFO = 0x4600
+FBIOGET_FSCREENINFO = 0x4602
+
+
+@dataclass(frozen=True)
+class FbLayout:
+    """What the renderer draws into: the visible panel inside the framebuffer (issue #38).
+
+    The kernel can size one framebuffer for every connected screen: with the front panel
+    (eDP, 172x640) and an HDMI monitor (1920x1080) both connected, fb0 is a 1920x1080
+    buffer with 7680-byte rows, of which the panel shows the top-left 172x640. The renderer
+    draws the visible size at the real row length and maps only the rows it writes.
+    """
+
+    width: int  # visible pixels per row
+    height: int  # visible rows
+    stride: int  # bytes per row in the buffer
+    bpp: int
+    buffer_bytes: int  # the whole framebuffer, 0 when unknown
+
+    @property
+    def map_bytes(self) -> int:
+        return self.stride * self.height
+
+
+def _fb_ioctl_info(fb_path: str) -> dict | None:
+    """Visible size, bits per pixel, row length and buffer size straight from the device."""
+    try:
+        with open(fb_path, "rb", buffering=0) as f:
+            var = fcntl.ioctl(f.fileno(), FBIOGET_VSCREENINFO, bytes(160))
+            fix = fcntl.ioctl(f.fileno(), FBIOGET_FSCREENINFO, bytes(128))
+    except (OSError, ValueError):
+        return None
+    xres, yres, _xv, _yv, _xo, _yo, bpp = struct.unpack_from("@7I", var)
+    _id, _start, smem_len, _type, _aux, _visual, _xp, _yp, _yw, line_length = struct.unpack_from("@16sLIIIIHHHI", fix)
+    return {"width": xres, "height": yres, "bpp": bpp, "stride": line_length, "buffer": smem_len}
+
+
+def _fb_sysfs_info() -> dict:
+    """The same from sysfs, for when the ioctls are not available."""
+    bases = ["/sys/class/graphics/fb0", "/host/sys/class/graphics/fb0"]
+    if HOST_SYS and os.path.isdir(os.path.join(HOST_SYS, "class/graphics/fb0")):
+        bases.insert(0, os.path.join(HOST_SYS, "class/graphics/fb0"))
+
+    base = next((b for b in bases if os.path.isdir(b)), "")  # every value from the same device
+
+    def read(name: str) -> str:
+        try:
+            with open(os.path.join(base, name)) as f:
+                return f.read().strip()
+        except OSError:
+            return ""
+
+    info: dict = {"bpp": discover_fb_bpp()}
+    try:
+        info["stride"] = int(read("stride") or 0)
+    except ValueError:
+        info["stride"] = 0
+    vparts = [int(p) for p in re.findall(r"\d+", read("virtual_size"))][:2]
+    m = re.search(r"(\d+)x(\d+)", read("modes").splitlines()[0] if read("modes") else "")
+    if m:  # the mode the screen shows, e.g. "U:172x640p-0"
+        info["width"], info["height"] = int(m.group(1)), int(m.group(2))
+    elif len(vparts) == 2:  # no mode: the whole buffer, portrait as before
+        info["width"], info["height"] = min(vparts), max(vparts)
+    if len(vparts) == 2 and info["stride"]:
+        # rows in the buffer: the second number, unless the rows are the short side (a panel
+        # reported as "640,172" with 704-byte rows holds 640 rows of 172 pixels)
+        bytes_pp = 2 if info["bpp"] == 16 else 4
+        rows = vparts[1] if info["stride"] >= vparts[0] * bytes_pp else max(vparts)
+        info["buffer"] = info["stride"] * rows
+    return info
+
+
+def fb_layout(fb_path: str) -> FbLayout | None:
+    """The framebuffer layout to draw into, or None when it does not add up.
+
+    Never maps past the end of the buffer: a layout whose rows are wider than the row
+    length, or whose rows do not fit in the buffer, is refused and the LCD stays off
+    instead of crashing the app with SIGBUS (issue #38).
+    """
+    info = _fb_ioctl_info(fb_path) or _fb_sysfs_info()
+    width, height = int(info.get("width") or 0), int(info.get("height") or 0)
+    bpp = int(info.get("bpp") or 32)
+    if bpp not in (16, 24, 32):
+        bpp = 32
+    stride = int(info.get("stride") or 0) or width * (bpp // 8)
+    buffer_bytes = int(info.get("buffer") or 0)
+    layout = FbLayout(width, height, stride, bpp, buffer_bytes)
+    problem = ""
+    if width <= 0 or height <= 0:
+        problem = "no visible size"
+    elif width * (2 if bpp == 16 else 4) > stride:
+        problem = f"{width} pixels do not fit in {stride}-byte rows"
+    elif buffer_bytes and layout.map_bytes > buffer_bytes:
+        problem = f"{height} rows of {stride} bytes ({layout.map_bytes}) exceed the {buffer_bytes}-byte buffer"
+    if problem:
+        logger.warning(f"[LCD] Framebuffer {fb_path} layout does not add up ({problem}). Running web-only.")
+        return None
+    return layout
+
+
 def render_lcd_loop():
     """
     Active Framebuffer Streamer:
@@ -120,10 +225,11 @@ def render_lcd_loop():
     set_fb_blank(eff_bri > 0)
     set_screen_brightness(eff_bri)
 
-    fb_width, fb_height, stride = discover_fb_geometry()
-    bpp = discover_fb_bpp()
-    row_bytes = fb_width * (2 if bpp == 16 else 4)
-    total_fb_bytes = fb_height * stride
+    layout = fb_layout(fb_path)
+    if layout is None:
+        return
+    fb_width, fb_height, stride, bpp = layout.width, layout.height, layout.stride, layout.bpp
+    total_fb_bytes = layout.map_bytes  # only the visible rows, never past the end of the buffer
 
     target_fps = max(1, LCD_FPS)
     frame_interval = 1.0 / target_fps
@@ -244,9 +350,11 @@ def _run_pil(fb_path: str) -> None:
     eff_bri = get_effective_brightness()
     set_fb_blank(eff_bri > 0)
     set_screen_brightness(eff_bri)
-    fb_width, fb_height, stride = discover_fb_geometry()
-    bpp = discover_fb_bpp()
-    total_fb_bytes = fb_height * stride
+    layout = fb_layout(fb_path)
+    if layout is None:
+        return
+    fb_width, fb_height, stride, bpp = layout.width, layout.height, layout.stride, layout.bpp
+    total_fb_bytes = layout.map_bytes
     logger.info(f"[LCD] Starting the built-in renderer (no browser): {fb_width}x{fb_height} ({bpp}bpp) -> {fb_path}")
     retry_delay = 2.0
     while not Z_STATE.shutting_down:
