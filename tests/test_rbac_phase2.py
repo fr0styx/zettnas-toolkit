@@ -169,21 +169,21 @@ def test_share_user_permissions_and_restrictions(client: TestClient):
 
 
 def test_auditor_read_only_and_mutation_denial(client: TestClient):
-    """Auditor has *:read and system:view. Can read users and logs, but cannot trigger any mutations."""
+    """Auditor reads system status, hardware, logs, the audit log and storage health (B11, SEC-30),
+    not people's accounts, files or backups, and cannot trigger any mutations."""
     admin_login = client.post("/api/auth/login", json={"password": "admin"})
     admin_token = admin_login.json()["token"]
 
     auditor_token = _create_user_with_role(client, admin_token, "audit_officer", "auditor")
     auditor_headers = {"Authorization": f"Bearer {auditor_token}"}
 
-    # 1. Allowed: Read users (users:read is satisfied by *:read)
-    res = client.get("/api/users", headers=auditor_headers)
+    # 1. Allowed: system status
+    res = client.get("/api/system/security-posture", headers=auditor_headers)
     assert res.status_code == 200
 
-    # 2. Allowed: Read remotes (storage:read is satisfied by *:read)
-    with patch("backend.services.rclone_engine.RcloneEngine.list_remotes", return_value=[]):
-        res = client.get("/api/remotes", headers=auditor_headers)
-        assert res.status_code == 200
+    # 2. Denied: the people on this NAS (users:read is no longer part of the role)
+    res = client.get("/api/users", headers=auditor_headers)
+    assert res.status_code == 403
 
     # 3. Denied (403): Create user (requires users:write)
     res = client.post(

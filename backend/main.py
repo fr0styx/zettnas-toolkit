@@ -151,9 +151,17 @@ def startup_system():
 
     # Only now are the databases created or migrated: after the staged restore, the newer-version
     # check, the snapshot, the repair and the encryption check above (ARC-17)
+    import backend.config as _config
     from backend.users_db import init_users_db
 
+    _existing_install = os.path.exists(_config.USERS_DB_PATH)  # before it is created (B11, D1)
     init_users_db()
+    try:
+        from backend.services import install_defaults
+
+        install_defaults.apply_once(_existing_install)
+    except Exception as e:
+        logger.error(f"[Main] Could not record the install defaults: {e}")
     if not _data_key_problem:
         from backend.services.ai_conversations_db import init_conversations_db
 

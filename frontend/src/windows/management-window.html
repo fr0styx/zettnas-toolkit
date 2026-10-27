@@ -5424,8 +5424,8 @@
         <div>
           <label for="create-share-security" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px; letter-spacing:0.5px;">SECURITY ACCESS</label>
           <select id="create-share-security" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
-            <option value="public" selected>Public (Guest Access Allowed)</option>
-            <option value="private">Private (Authenticated Users Only)</option>
+            <option value="private" selected>Private (people sign in)</option>
+            <option value="public">Anyone on my network, no password (not recommended)</option>
           </select>
         </div>
       </div>
@@ -5487,8 +5487,8 @@
           <div>
             <label for="create-share-nfs-squash" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_squash_label">Root Squash Policy</label>
             <select id="create-share-nfs-squash" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);">
-              <option value="no_root_squash" selected data-i18n="storage.nfs_no_root_squash">no_root_squash (Kubernetes / Databases / Root)</option>
-              <option value="root_squash" data-i18n="storage.nfs_root_squash">root_squash (Squash root to anonymous UID)</option>
+              <option value="no_root_squash" data-i18n="storage.nfs_no_root_squash">no_root_squash (Kubernetes / Databases / Root)</option>
+              <option value="root_squash" selected data-i18n="storage.nfs_root_squash">root_squash (Squash root to anonymous UID)</option>
               <option value="all_squash" data-i18n="storage.nfs_all_squash">all_squash (Map all users to anonymous UID)</option>
             </select>
           </div>
@@ -5514,7 +5514,7 @@
 
         <div>
           <label for="create-share-nfs-clients" style="display:block; font-size:var(--zn-fs-xs); font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:4px;" data-i18n="storage.nfs_clients_label">Allowed Clients (CIDR / Host)</label>
-          <input type="text" id="create-share-nfs-clients" value="*" placeholder="* or 10.244.0.0/16, 192.168.1.0/24" data-i18n-placeholder="ph.nfs_clients" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
+          <input type="text" id="create-share-nfs-clients" value="" placeholder="Empty: this home network. Or 192.168.1.0/24" data-i18n-placeholder="ph.nfs_clients" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:6px 8px; color:var(--zn-text-strong); border-radius:6px; font-size:var(--zn-fs-xs);" />
         </div>
       </div>
 

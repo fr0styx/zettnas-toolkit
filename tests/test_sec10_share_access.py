@@ -46,7 +46,18 @@ def tree(tmp_path, monkeypatch):
     return root
 
 
-def test_default_keeps_write_access_to_shares_but_not_other_folders(tree):
+def test_a_new_install_gives_no_share_until_it_is_granted(tree):
+    alice = _user("alice")
+    check_user_path_access(str(tree / "homes" / "alice"), alice, write=True)
+    with pytest.raises(HTTPException) as e:
+        check_user_path_access(str(tree / "media" / "song.mp3"), alice)
+    assert e.value.status_code == 403
+    share_access.save_config({"shares": {"media": {"users": {"alice": "write"}}}})
+    check_user_path_access(str(tree / "media" / "song.mp3"), alice, write=True)
+
+
+def test_an_upgraded_install_keeps_write_access_to_shares_but_not_other_folders(tree):
+    share_access.save_config({"default_level": "write", "shares": {}})
     alice = _user("alice")
     check_user_path_access(str(tree / "media" / "song.mp3"), alice, write=True)
     check_user_path_access(str(tree / "homes" / "alice"), alice, write=True)
@@ -82,6 +93,7 @@ def test_symlink_out_of_a_share_is_judged_by_its_target(tree):
 
 
 def test_browse_hides_folders_the_user_cannot_reach(tree):
+    share_access.save_config({"shares": {"media": {"users": {"alice": "read"}}}})
     listing = _handle_browse_logic(str(tree), False, _user("alice"))
     names = {e["name"] for e in listing["dirs"]}
     assert {"media", "homes"} <= names

@@ -133,7 +133,8 @@ DEFAULT_ROLES = [
         "id": "auditor",
         "name": "Auditor",
         "description": "Read-only access to system telemetry, metrics, event logs, and status",
-        "scopes": ["*:read", "system:view"],
+        # B11 (SEC-30): not *:read, which also read people's chats, files and backups
+        "scopes": ["system:view", "hardware:read", "logs:read", "audit:read", "storage:read"],
         "is_system": 1,
     },
 ]

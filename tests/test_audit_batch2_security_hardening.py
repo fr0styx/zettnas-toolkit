@@ -133,6 +133,7 @@ def test_rag_learning_results_rbac_filtering(monkeypatch):
         "known_shares",
         lambda: [{"name": "documents", "path": "/mnt/user/documents", "samba": None}],
     )
+    share_access.save_config({"shares": {"documents": {"users": {"alice": "read"}}}})
     rag = get_rag_engine()
     rag._ensure_schema()
     conn = rag._get_conn()

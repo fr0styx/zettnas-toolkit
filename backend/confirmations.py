@@ -51,6 +51,7 @@ ACTIONS: dict[str, str] = {
     "security.rotate_key": "Replace the install's secret key; everyone signs in to WebDAV and two-factor again",
     "docker.container.recreate.elevated": "Recreate container {target} with access to the host system",
     "disk.wake": "Wake sleeping drive {target}. It spins up now and goes back to sleep on its own later",
+    "security.advisor_fix": "Apply the Security Advisor fix '{target}'. People may lose access they had before",
 }
 
 _pending: dict[str, dict[str, Any]] = {}

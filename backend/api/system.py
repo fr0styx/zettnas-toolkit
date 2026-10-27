@@ -1522,3 +1522,27 @@ async def system_security_posture(request: Request):
     from backend.services.security_advisor import evaluate_security_posture
 
     return await asyncio.to_thread(evaluate_security_posture, request)
+
+
+@router.post(
+    "/system/security-posture/fix/{fix_id}",
+    dependencies=[Depends(require_scope("system:config")), Depends(require_confirmation("security.advisor_fix"))],
+)
+async def system_security_fix(fix_id: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Applies one Security Advisor fix (B11): tightens a setting an upgraded install kept."""
+    from backend.services.safe_defaults_advisor import FIXES, apply_fix
+
+    if fix_id not in FIXES:
+        raise HTTPException(status_code=404, detail="Unknown fix")
+    try:
+        message = await asyncio.to_thread(apply_fix, fix_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    who = getattr(principal, "username", None) or "admin"
+    try:
+        from backend.state import add_event
+
+        add_event("info", "Security Advisor fix applied", f"{who}: {message}", details={"fix": fix_id})
+    except Exception as e:
+        logger.debug(f"[SecurityAdvisor] Could not record event: {e}")
+    return {"ok": True, "fix": fix_id, "message": message}

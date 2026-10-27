@@ -229,7 +229,7 @@
     "_resolve_disk_path": "(self, disk: str) -> str",
     "_run_cmd": "(self, cmd: list[str]) -> tuple[int, str, str]",
     "create_pool": "(self, name: str, fs_type: str, profile: str, disks: list[str], mountpoint: str) -> dict[str, typing.Any]",
-    "create_share": "(self, name: str, path: str, comment: str = '', security: str = 'public', read_only: bool = False, export_smb: bool = True, export_nfs: bool = False, quota_gb: int = 0, user_permissions: dict[str, str] | None = None, nfs_squash: str = 'no_root_squash', nfs_anonuid: int = 1000, nfs_anongid: int = 1000, nfs_sync: bool = True, nfs_clients: str = '*') -> dict[str, typing.Any]",
+    "create_share": "(self, name: str, path: str, comment: str = '', security: str = 'public', read_only: bool = False, export_smb: bool = True, export_nfs: bool = False, quota_gb: int = 0, user_permissions: dict[str, str] | None = None, nfs_squash: str = 'root_squash', nfs_anonuid: int = 1000, nfs_anongid: int = 1000, nfs_sync: bool = True, nfs_clients: str = '') -> dict[str, typing.Any]",
     "create_snapshot": "(self, pool_id: str, subvol_name: str, snapshot_name: str, readonly: bool = True, worm_mode: str | None = None, retention_days: int | None = None) -> dict[str, typing.Any]",
     "delete_share": "(self, name: str) -> dict[str, typing.Any]",
     "delete_snapshot": "(self, pool_id: str, snapshot_name: str, break_glass: bool = False, reason: str = '') -> dict[str, typing.Any]",

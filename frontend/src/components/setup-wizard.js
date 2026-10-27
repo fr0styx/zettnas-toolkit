@@ -376,9 +376,11 @@ export async function saveSetupExtras() {
   }
   const shareForm = document.getElementById('setup-share-form');
   const shareName = document.getElementById('setup-share-name')?.value?.trim() || '';
+  let sharedFolder = '';
   if (shareForm && !shareForm.hidden && document.getElementById('setup-share-create')?.checked && shareName) {
     try {
-      await api.post('/api/storage/shares', { name: shareName });
+      await api.post('/api/storage/shares', { name: shareName, security: 'private' });
+      sharedFolder = shareName;
     } catch (err) {
       showToast(t('setup.err_share', 'The shared folder was not created: {error}', { error: err.message }), 'warning');
     }
@@ -391,9 +393,25 @@ export async function saveSetupExtras() {
         password: document.getElementById('setup-person-pwd')?.value || '',
         role_id: document.getElementById('setup-person-role')?.value || 'share_user',
       });
+      if (sharedFolder) await grantFolder(sharedFolder, person);
     } catch (err) {
       showToast(t('setup.err_person', '{name} was not added: {error}', { name: person, error: err.message }), 'warning');
     }
+  }
+}
+
+/** New installs give nobody a folder by default, so the person the wizard adds gets the folder it made. */
+export async function grantFolder(share, person) {
+  try {
+    const current = await api.get('/api/storage/share-access');
+    const shares = {};
+    for (const sh of current?.shares || []) {
+      shares[sh.name] = { users: { ...(sh.users || {}) }, ...(sh.default ? { default: sh.default } : {}) };
+    }
+    shares[share] = { ...(shares[share] || {}), users: { ...(shares[share]?.users || {}), [person.toLowerCase()]: 'write' } };
+    await api.put('/api/storage/share-access', { shares });
+  } catch (err) {
+    showToast(t('setup.err_grant', '{name} was added but cannot open {share} yet: {error}', { name: person, share, error: err.message }), 'warning');
   }
 }
 

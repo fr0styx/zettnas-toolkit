@@ -108,6 +108,7 @@ def test_ai_folder_views_keep_only_readable_files(tree):
     from backend.services.rag_engine import RagSearchEngine
 
     root, name = tree
+    share_access.save_config({"shares": {"media": {"users": {name: "read"}}}})
     engine = RagSearchEngine.__new__(RagSearchEngine)
     paths = [
         str(root / "media" / "song.mp3"),

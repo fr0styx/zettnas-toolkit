@@ -151,6 +151,7 @@ describe('NFS Exports, OpenZFS RAIDZ Provisioning & Storage Pool Renaming', () =
       nfs_anongid: 999,
       nfs_sync: true,
       nfs_clients: '10.244.0.0/16',
+      nfs_allow_everyone: false,
     });
   });
 

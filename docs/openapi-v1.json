@@ -31024,9 +31024,29 @@
    "ShareAccessUpdate": {
     "properties": {
      "default_level": {
-      "default": "write",
-      "title": "Default Level",
-      "type": "string"
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Default Level"
+     },
+     "role_defaults": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "type": "string"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role Defaults"
      },
      "shares": {
       "additionalProperties": {
@@ -31866,6 +31886,12 @@
       "title": "Name",
       "type": "string"
      },
+     "nfs_allow_everyone": {
+      "default": false,
+      "description": "True to export to every host (*), chosen explicitly",
+      "title": "Nfs Allow Everyone",
+      "type": "boolean"
+     },
      "nfs_anongid": {
       "default": 1000,
       "description": "Mapped GID for anonymous/squashed users",
@@ -31879,14 +31905,14 @@
       "type": "integer"
      },
      "nfs_clients": {
-      "default": "*",
-      "description": "Allowed client host, CIDR subnet, or wildcard (*)",
+      "default": "",
+      "description": "Allowed client host or CIDR subnet; empty = this home network",
       "title": "Nfs Clients",
       "type": "string"
      },
      "nfs_squash": {
-      "default": "no_root_squash",
-      "description": "'no_root_squash', 'root_squash', or 'all_squash'",
+      "default": "root_squash",
+      "description": "'root_squash', 'all_squash' or 'no_root_squash'",
       "title": "Nfs Squash",
       "type": "string"
      },
@@ -31920,7 +31946,7 @@
       "type": "boolean"
      },
      "security": {
-      "default": "public",
+      "default": "private",
       "title": "Security",
       "type": "string"
      },
@@ -53762,6 +53788,47 @@
      }
     },
     "summary": "System Security Posture",
+    "tags": [
+     "System & Storage"
+    ]
+   }
+  },
+  "/api/v1/system/security-posture/fix/{fix_id}": {
+   "post": {
+    "description": "Applies one Security Advisor fix (B11): tightens a setting an upgraded install kept.",
+    "operationId": "system_security_fix_api_v1_system_security_posture_fix__fix_id__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "fix_id",
+      "required": true,
+      "schema": {
+       "title": "Fix Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "System Security Fix",
     "tags": [
      "System & Storage"
     ]

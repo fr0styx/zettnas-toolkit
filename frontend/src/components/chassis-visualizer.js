@@ -3160,7 +3160,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       const comment = document.getElementById('create-share-comment')?.value.trim() || '';
       const quotaVal = parseInt(document.getElementById('create-share-quota-gb')?.value, 10);
       const quotaGb = isNaN(quotaVal) ? 0 : Math.max(0, quotaVal);
-      const security = document.getElementById('create-share-security')?.value || 'public';
+      const security = document.getElementById('create-share-security')?.value || 'private';
       const readOnly = document.getElementById('create-share-readonly')?.checked ?? false;
       const isTm = document.getElementById('create-share-timemachine')?.checked ?? false;
       const exportSmb = document.getElementById('create-share-export-smb')?.checked ?? true;
@@ -3169,7 +3169,7 @@ export function openCreateNetworkShareModal(onSuccess) {
       const nfsAnonuid = parseInt(document.getElementById('create-share-nfs-anonuid')?.value, 10) || 1000;
       const nfsAnongid = parseInt(document.getElementById('create-share-nfs-anongid')?.value, 10) || 1000;
       const nfsSync = (document.getElementById('create-share-nfs-sync')?.value || 'sync') === 'sync';
-      const nfsClients = document.getElementById('create-share-nfs-clients')?.value.trim() || '*';
+      const nfsClients = document.getElementById('create-share-nfs-clients')?.value.trim() || '';
 
       const userPermissions = {};
       if (usersMatrix) {
@@ -3203,6 +3203,7 @@ export function openCreateNetworkShareModal(onSuccess) {
           nfs_anongid: nfsAnongid,
           nfs_sync: nfsSync,
           nfs_clients: nfsClients,
+          nfs_allow_everyone: nfsClients === '*',
         });
 
         if (isTm) {

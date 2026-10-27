@@ -31,13 +31,27 @@ _NFS_UNSAFE = re.compile(r'[\x00-\x1f\x7f"]')
 _NFS_CLIENT_RE = re.compile(r"[A-Za-z0-9.*?:/\[\]_-]{1,255}")
 
 
+def home_network() -> str:
+    """This NAS's own IPv4 network as a /24 (e.g. 192.168.1.0/24); "127.0.0.1" when unknown."""
+    try:
+        from backend.hardware.net.topology import read_ip
+
+        ip = str(read_ip() or "")
+    except Exception:
+        ip = ""
+    parts = ip.split(".")
+    if len(parts) == 4 and all(p.isdigit() for p in parts) and not ip.startswith("127."):
+        return ".".join(parts[:3]) + ".0/24"
+    return "127.0.0.1"
+
+
 class NfsExportRule(BaseModel):
     name: str = Field(..., description="Unique identifier or share name")
     path: str = Field(..., description="Filesystem directory path to export")
     clients: str = Field(default="*", description="Allowed client hosts, subnets (CIDR), or wildcard (*)")
     permission: str = Field(default="rw", description="'rw' (read-write) or 'ro' (read-only)")
     squash: str = Field(
-        default="no_root_squash",
+        default="root_squash",
         description="Root squash policy: 'no_root_squash', 'root_squash', or 'all_squash'",
     )
     anonuid: int = Field(default=1000, description="Anonymous UID for squashed credentials (K8s/DB pod mapping)")
@@ -47,7 +61,7 @@ class NfsExportRule(BaseModel):
         default=True, description="Disable subtree checking for improved reliability and speed"
     )
     insecure: bool = Field(
-        default=True, description="Permit NFS clients connecting on unprivileged ports > 1024 (macOS / K8s)"
+        default=False, description="Permit NFS clients connecting on unprivileged ports > 1024 (macOS / K8s)"
     )
     fsid: int | None = Field(default=None, description="Optional unique numeric filesystem identifier for NFSv4")
     comment: str = Field(default="", description="Human-readable description")

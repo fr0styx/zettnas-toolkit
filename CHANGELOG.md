@@ -46,6 +46,15 @@
 - Signing in with a recovery code works in every language.
 - The app container no longer gets /dev/port, /dev/kmem or /dev/kmsg, and only the misc devices
   virtual machines and FUSE use; updates narrow the rules of existing installs.
+- **Safer defaults for new installs**: people reach only their own folder and the shared folders
+  they are given; new shares are private (no guest access, wrong passwords are refused); NFS
+  exports reach this home network and map remote root to a normal user unless you choose
+  otherwise; the Auditor role reads system status, not people's files or chats. The setup
+  wizard gives the person it adds the folder it creates.
+- **Upgrading changes nothing you rely on**: an existing install keeps its settings, and the
+  Security Advisor lists each one that is looser than the new defaults with a one-click fix
+  (it asks you to confirm first). API callers creating NFS exports for every host now send
+  `nfs_allow_everyone: true`.
 
 #### Backups and power
 

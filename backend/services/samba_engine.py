@@ -328,7 +328,11 @@ class SambaEngine:
 
     def generate_and_save_conf(self) -> str:
         """Generates the full smb.conf text and saves it to disk."""
-        conf_lines = [self._DEFAULT_GLOBAL_CONFIG.strip()]
+        glob = self._DEFAULT_GLOBAL_CONFIG.strip()
+        if not any(getattr(s, "guest_ok", False) for s in self._shares.values()):
+            # B11 (SEC-22): no guest share, so a wrong password is refused, never mapped to guest
+            glob = glob.replace("map to guest = Bad User", "map to guest = Never")
+        conf_lines = [glob]
         from backend.services import ip_block
         from backend.services.ransomware_guard import get_guard
 

@@ -949,25 +949,25 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         export_nfs: bool = False,
         quota_gb: int = 0,
         user_permissions: dict[str, str] | None = None,
-        nfs_squash: str = "no_root_squash",
+        nfs_squash: str = "root_squash",
         nfs_anonuid: int = 1000,
         nfs_anongid: int = 1000,
         nfs_sync: bool = True,
-        nfs_clients: str = "*",
+        nfs_clients: str = "",
     ) -> dict[str, Any]:
         """Provisions a network share and syncs with SambaEngine and NfsEngine."""
         from backend.services.samba_engine import validate_share_path
 
         full_path = validate_share_path(path if path else os.path.join(self._pool_path, name))
         if export_nfs:  # refuse bad NFS settings before anything is created
-            from backend.services.nfs_engine import NfsExportRule
+            from backend.services.nfs_engine import NfsExportRule, home_network
 
             try:
                 NfsExportRule(
                     name=name,
                     path=full_path,
-                    clients=nfs_clients.strip() or "*",
-                    squash=nfs_squash or "no_root_squash",
+                    clients=nfs_clients.strip() or home_network(),
+                    squash=nfs_squash or "root_squash",
                     comment=comment,
                 )
             except Exception as e:
@@ -1017,15 +1017,15 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 logger.warning(f"[PAL] SambaEngine registration failed: {e}")
 
         if export_nfs:
-            from backend.services.nfs_engine import NfsExportRule
+            from backend.services.nfs_engine import NfsExportRule, home_network
 
             try:
                 rule = NfsExportRule(
                     name=name,
                     path=full_path,
-                    clients=nfs_clients.strip() or "*",
+                    clients=nfs_clients.strip() or home_network(),
                     permission="ro" if read_only else "rw",
-                    squash=nfs_squash or "no_root_squash",
+                    squash=nfs_squash or "root_squash",
                     anonuid=nfs_anonuid,
                     anongid=nfs_anongid,
                     sync_mode="sync" if nfs_sync else "async",

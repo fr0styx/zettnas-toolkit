@@ -149,6 +149,7 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
             "details": f"Guest shares detected: {', '.join(guest_share_names)}"
             if has_guest_shares
             else "All SMB shares require authenticated credentials",
+            **({"fix": "smb_guest_access", "fix_label": "Make them private"} if has_guest_shares else {}),
         }
     )
     if has_guest_shares:
@@ -230,6 +231,34 @@ def evaluate_security_posture(request: Request | None = None) -> dict[str, Any]:
                 "remediation": "Remove the published ports and put the AI container on the same Docker network as ZettNAS "
                 "(ZettNAS finds zettnas-ollama / zettnas-ovms by name), or publish to 127.0.0.1 only.",
                 "action_url": "https://github.com/fr0styx/zettnas-toolkit/blob/main/docs/INSTALLATION.md#local-ai-runtimes",
+            }
+        )
+
+    # Settings looser than the B11 defaults (kept on upgraded installs), each with a one-click fix
+    from backend.services.safe_defaults_advisor import findings
+
+    for f in findings():
+        checks.append(
+            {
+                "id": f["id"],
+                "name": f["name"],
+                "category": "Safe defaults",
+                "passed": False,
+                "penalty": f["penalty"],
+                "severity": f["severity"],
+                "details": f["details"],
+                "fix": f["fix"],
+                "fix_label": f["fix_label"],
+            }
+        )
+        issues.append(
+            {
+                "id": f"sec-issue-{f['id']}",
+                "title": f["name"],
+                "severity": f["severity"],
+                "description": f["details"],
+                "remediation": f["remediation"],
+                "fix": f["fix"],
             }
         )
 

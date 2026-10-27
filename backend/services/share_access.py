@@ -14,8 +14,10 @@ Levels live in data/share_access.json:
      "shares": {"media": {"default": "read", "users": {"alice": "write"}}}}
 A user's level for a share is, in order: their entry under "users", the
 share's Samba user lists (valid users / read list / write list), the share's
-"default", then the global "default_level". The global default stays "write" so
-upgrading changes nothing for existing shares; admins tighten it from here.
+"default", the default for their role ("role_defaults", e.g. kids and guests), then
+the global "default_level". A new install starts at "none" (B11, SEC-21); an install
+upgraded from an earlier version had "write" written down for it, so nothing changes
+for its families until an admin tightens it (the Security Advisor offers that).
 """
 
 import logging
@@ -42,17 +44,24 @@ def _file() -> str:
 
 def load_config() -> dict[str, Any]:
     data = read_json(_file(), {}) or {}
-    level = data.get("default_level", "write")
+    level = data.get("default_level", "none")
+    roles = data.get("role_defaults") or {}
     return {
-        "default_level": level if level in LEVELS else "write",
+        "default_level": level if level in LEVELS else "none",
+        "role_defaults": {str(k): v for k, v in roles.items() if v in LEVELS} if isinstance(roles, dict) else {},
         "shares": {k: v for k, v in (data.get("shares") or {}).items() if isinstance(v, dict)},
     }
 
 
 def save_config(cfg: dict[str, Any]) -> dict[str, Any]:
-    clean: dict[str, Any] = {"default_level": cfg.get("default_level", "write"), "shares": {}}
+    clean: dict[str, Any] = {"default_level": cfg.get("default_level", "none"), "shares": {}}
     if clean["default_level"] not in LEVELS:
         raise ValueError("default_level must be none, read or write")
+    roles = cfg.get("role_defaults") or {}
+    if not isinstance(roles, dict) or any(v not in LEVELS for v in roles.values()):
+        raise ValueError("role_defaults must map roles to none, read or write")
+    if roles:
+        clean["role_defaults"] = {str(k): v for k, v in roles.items()}
     for name, entry in (cfg.get("shares") or {}).items():
         if not re.match(r"^[A-Za-z0-9 ._-]{1,80}$", str(name)):
             raise ValueError(f"Invalid share name: {name!r}")
@@ -129,14 +138,18 @@ def _samba_level(samba: dict[str, Any] | None, username: str) -> str | None:
     return "read" if samba["read_only"] else "write"
 
 
-def _home_for(username: str) -> str | None:
+def _user(username: str) -> dict[str, Any]:
     try:
         from backend.users_db import get_user_by_username
 
-        user = get_user_by_username(username) or {}
-        home = user.get("home_directory")
+        return get_user_by_username(username) or {}
     except Exception:
-        home = None
+        return {}
+
+
+def _home_for(username: str, user: dict[str, Any] | None = None) -> str | None:
+    user = user if user is not None else _user(username)
+    home = user.get("home_directory")
     home = home or os.path.join(getattr(config, "POOL_PATH", "/mnt/user"), "homes", username)
     return os.path.realpath(home)
 
@@ -148,7 +161,9 @@ def grants_for(username: str) -> list[tuple[str, str]]:
         return []
     cfg = load_config()
     grants: list[tuple[str, str]] = []
-    home = _home_for(username)
+    user = _user(username)
+    role_default = cfg["role_defaults"].get(str(user.get("role_id") or ""))
+    home = _home_for(username, user)
     if home:
         grants.append((home, "write"))
     for share in known_shares():
@@ -157,6 +172,7 @@ def grants_for(username: str) -> list[tuple[str, str]]:
             (entry.get("users") or {}).get(username)
             or _samba_level(share["samba"], username)
             or entry.get("default")
+            or role_default
             or cfg["default_level"]
         )
         grants.append((share["path"], level))

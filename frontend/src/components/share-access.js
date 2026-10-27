@@ -30,7 +30,7 @@ export function buildShareAccessHtml(data, users) {
   }).join('');
   return `
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:var(--zn-fs-xs);">
-      <span>Everyone else, on shares without a setting:</span>${levelSelect('id="share-access-global"', data.default_level || 'write', false)}
+      <span>Everyone else, on shares without a setting:</span>${levelSelect('id="share-access-global"', data.default_level || 'none', false)}
     </div>
     <div style="overflow-x:auto;"><table style="border-collapse:collapse; min-width:420px; font-size:var(--zn-fs-xs);">
       <thead><tr style="color:var(--muted); text-transform:uppercase;"><th style="padding:6px 8px; text-align:left;">Share</th><th style="padding:6px 8px;">Default</th>${head}</tr></thead>
@@ -40,7 +40,7 @@ export function buildShareAccessHtml(data, users) {
 }
 
 export function collectShareAccess(root) {
-  const out = { default_level: root.querySelector('#share-access-global')?.value || 'write', shares: {} };
+  const out = { default_level: root.querySelector('#share-access-global')?.value || 'none', shares: {} };
   root.querySelectorAll('[data-share-default]').forEach((sel) => {
     const name = sel.dataset.shareDefault;
     out.shares[name] = out.shares[name] || { users: {} };

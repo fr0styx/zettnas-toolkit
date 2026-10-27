@@ -75,7 +75,7 @@ describe('six-step setup (UX-17)', () => {
     api.post.mockResolvedValueOnce({}).mockRejectedValueOnce(new Error('taken'));
     await wiz.saveSetupExtras();
     expect(api.put).toHaveBeenCalledWith('/api/system/identity', { server_name: 'Home', timezone: 'Europe/Berlin' });
-    expect(api.post).toHaveBeenCalledWith('/api/storage/shares', { name: 'Family' });
+    expect(api.post).toHaveBeenCalledWith('/api/storage/shares', { name: 'Family', security: 'private' });
     expect(api.post).toHaveBeenCalledWith('/api/users', { username: 'mia', password: 'long-enough-1', role_id: 'kid' });
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining('taken'), 'warning');
     expect(document.title).toBe('Home · ZettNAS');

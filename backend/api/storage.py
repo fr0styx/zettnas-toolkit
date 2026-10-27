@@ -59,7 +59,7 @@ class StorageShareCreateRequest(BaseModel):
     name: str
     path: str = ""
     comment: str = ""
-    security: str = "public"
+    security: str = "private"  # B11 (SEC-22): guest access only when chosen
     read_only: bool = False
     export_smb: bool = True
     export_nfs: bool = False
@@ -67,11 +67,23 @@ class StorageShareCreateRequest(BaseModel):
     user_permissions: dict[str, str] | None = Field(
         default_factory=dict, description="User permission matrix: {username: 'rw'|'ro'|'deny'}"
     )
-    nfs_squash: str = Field(default="no_root_squash", description="'no_root_squash', 'root_squash', or 'all_squash'")
+    nfs_squash: str = Field(default="root_squash", description="'root_squash', 'all_squash' or 'no_root_squash'")
     nfs_anonuid: int = Field(default=1000, description="Mapped UID for anonymous/squashed users")
     nfs_anongid: int = Field(default=1000, description="Mapped GID for anonymous/squashed users")
     nfs_sync: bool = Field(default=True, description="True for synchronous commits (ACID), False for async")
-    nfs_clients: str = Field(default="*", description="Allowed client host, CIDR subnet, or wildcard (*)")
+    nfs_clients: str = Field(default="", description="Allowed client host or CIDR subnet; empty = this home network")
+    nfs_allow_everyone: bool = Field(default=False, description="True to export to every host (*), chosen explicitly")
+
+
+def nfs_clients_for(clients: str, allow_everyone: bool) -> str:
+    """Who an NFS export reaches (B11, SEC-23): what was asked for, this home network when nothing
+    was, and every host ("*") only when that was chosen explicitly."""
+    from backend.services.nfs_engine import home_network
+
+    clients = (clients or "").strip()
+    if clients in ("", "*") and not allow_everyone:
+        return home_network()
+    return clients
 
 
 class StoragePoolRenameRequest(BaseModel):
@@ -322,7 +334,9 @@ def create_storage_pool(
 
 
 class ShareAccessUpdate(BaseModel):
-    default_level: str = "write"
+    # Left out = keep what is saved now (the file manager page sends only shares).
+    default_level: str | None = None
+    role_defaults: dict[str, str] | None = None
     shares: dict[str, dict[str, Any]] = Field(default_factory=dict)
 
 
@@ -334,6 +348,7 @@ def get_share_access() -> dict[str, Any]:
     cfg = load_config()
     return {
         "default_level": cfg["default_level"],
+        "role_defaults": cfg["role_defaults"],
         "levels": ["none", "read", "write"],
         "shares": [
             {"name": sh["name"], "path": sh["path"], **cfg["shares"].get(sh["name"], {"users": {}})}
@@ -344,10 +359,15 @@ def get_share_access() -> dict[str, Any]:
 
 @router.put("/share-access", dependencies=[Depends(require_scope("shares:manage"))])
 def put_share_access(req: ShareAccessUpdate) -> dict[str, Any]:
-    from backend.services.share_access import save_config
+    from backend.services.share_access import load_config, save_config
 
+    current = load_config()
+    body = req.model_dump()
+    body["default_level"] = body["default_level"] or current["default_level"]
+    if body["role_defaults"] is None:
+        body["role_defaults"] = current["role_defaults"]
     try:
-        return save_config(req.model_dump())
+        return save_config(body)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -381,7 +401,7 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
             nfs_anonuid=req.nfs_anonuid,
             nfs_anongid=req.nfs_anongid,
             nfs_sync=req.nfs_sync,
-            nfs_clients=req.nfs_clients,
+            nfs_clients=nfs_clients_for(req.nfs_clients, req.nfs_allow_everyone),
         )
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e

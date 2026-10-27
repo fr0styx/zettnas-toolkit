@@ -205,6 +205,22 @@ export function handleSecurityAdvisorClick(checkId) {
   }
 }
 
+/** One-click fix for a setting looser than the safe defaults (B11). The server asks the person to confirm first. */
+export async function applySecurityFix(fixId, btn = null) {
+  if (!fixId) return;
+  if (btn) btn.disabled = true;
+  try {
+    const res = await api.post(`/api/system/security-posture/fix/${encodeURIComponent(fixId)}`, {});
+    showToast(res?.message || t('sec.fix_done', 'Fixed.'), 'success');
+    await fetchAndRenderSecurityPosture();
+  } catch (err) {
+    if (err?.error === 'cancelled') return; // the person chose not to apply it
+    showToast(t('sec.fix_failed', 'That fix did not apply: {error}', { error: err?.message || '' }), 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 export async function fetchAndRenderSecurityPosture() {
   const badge = document.getElementById('sec-advisor-score-badge');
   const container = document.getElementById('sec-advisor-items');
@@ -252,11 +268,20 @@ export async function fetchAndRenderSecurityPosture() {
             </div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
               <span class="sec-advisor-status-badge" style="font-size: var(--zn-fs-xs); font-weight:700; color:${passColor}; text-transform:uppercase; letter-spacing:0.5px;">${c.passed ? 'PASSED' : 'NEEDS ACTION'}</span>
+              ${c.fix ? `<button type="button" class="sec-advisor-fix-btn btn btn-sm" data-fix="${escapeHtml(c.fix)}">${escapeHtml(t(`sec.fix.${c.fix}`, c.fix_label || t('sec.fix_btn', 'Fix it')))}</button>` : ''}
               <span class="sec-advisor-action-pill">${actionText}</span>
             </div>
           </div>
         `;
       }).join('');
+
+      container.querySelectorAll('.sec-advisor-fix-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          applySecurityFix(btn.dataset.fix, btn);
+        });
+        btn.addEventListener('keydown', (e) => e.stopPropagation());
+      });
 
       container.querySelectorAll('.sec-advisor-item').forEach(item => {
         const checkId = item.dataset.checkId;
