@@ -37,7 +37,7 @@ from backend.config import (
 from backend.confirmations import require_confirmation
 from backend.db import query_copy_history
 from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within, root_for
-from backend.hardware.disks import fetch_disk_smart_detail, locate_disk, run_disk_smart_test
+from backend.hardware.disks import locate_disk, read_smart_detail, run_disk_smart_test
 from backend.hardware.docker_stats import container_action, read_docker_containers
 from backend.hardware.fans import set_fan_pwm
 from backend.hardware.led import apply_led_state
@@ -178,7 +178,8 @@ async def disk_detail(dev: str = "sda", wake: bool = False):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
-    return await asyncio.to_thread(fetch_disk_smart_detail, dev, wake)
+    # A reading under 30 s old is reused (Drive Health has usually just taken it); waking reads anew.
+    return await asyncio.to_thread(read_smart_detail, dev, wake, 0.0 if wake else 30.0)
 
 
 @router.post("/disk_wake", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
@@ -191,7 +192,7 @@ async def disk_wake(payload: dict):
         dev = f"nvme{m.group(1)}n1"
     if not re.fullmatch(r"^(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)$", dev):
         raise HTTPException(status_code=400, detail="Invalid device parameter.")
-    detail = await asyncio.to_thread(fetch_disk_smart_detail, dev, True)
+    detail = await asyncio.to_thread(read_smart_detail, dev, True)
     return {"success": True, "dev": dev, "detail": detail}
 
 

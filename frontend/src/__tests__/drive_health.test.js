@@ -98,6 +98,22 @@ describe('Drive Health', () => {
     expect(api.get).toHaveBeenCalledWith('/api/disk_detail?dev=sdc');
   });
 
+  it('shows the last readings at once and then the fresh ones', async () => {
+    const fresh = { ...DRIVES, drives: DRIVES.drives.map((d) => ({ ...d, temp: 44 })), stale: false };
+    api.get.mockImplementation(async (url) => {
+      if (url === '/api/drives/health') return { ...DRIVES, stale: true };
+      if (url === '/api/drives/health?refresh=1') return fresh;
+      if (url.startsWith('/api/disk/smart_tests')) return { active_test: null, history: [] };
+      if (url.startsWith('/api/disk_detail')) return { model: 'Old Disk', is_standby: false, metrics: {}, raw: '' };
+      throw new Error(`unexpected ${url}`);
+    });
+    await dh.openDriveHealth();
+    await new Promise((r) => setTimeout(r, 0));
+    const urls = api.get.mock.calls.map(([u]) => u).filter((u) => u.startsWith('/api/drives/health'));
+    expect(urls).toEqual(['/api/drives/health', '/api/drives/health?refresh=1']);
+    expect(document.querySelector('#dh-list').textContent).toContain('44');
+  });
+
   it('shows a sleeping drive from its last reading and wakes it only on request', async () => {
     routeGet({ detail: { model: 'Sleepy Disk', is_standby: true, metrics: {} } });
     await dh.openDriveHealth('/dev/sdb');

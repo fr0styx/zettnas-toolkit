@@ -1120,6 +1120,52 @@ def remember_verdict(dev_name: str, result: dict) -> None:
         }
 
 
+# The latest S.M.A.R.T. reading per drive, shared by Drive Health's list, its detail pane and the
+# S.M.A.R.T. detail route, so opening the window reads each drive once, not twice. One reader per
+# drive at a time: a second caller waits for the first and takes its reading.
+_DETAIL_CACHE: dict[str, tuple[float, dict]] = {}
+_DETAIL_LOCKS: dict[str, threading.Lock] = {}
+_DETAIL_LOCKS_GUARD = threading.Lock()
+
+
+def _detail_lock(dev_name: str) -> threading.Lock:
+    with _DETAIL_LOCKS_GUARD:
+        return _DETAIL_LOCKS.setdefault(dev_name, threading.Lock())
+
+
+def cached_smart_detail(dev_name: str, max_age: float) -> dict | None:
+    """The last reading of this drive (or its error) if at most max_age seconds old, else None."""
+    hit = _DETAIL_CACHE.get(dev_name)
+    if hit and time.time() - hit[0] <= max_age:
+        return hit[1]
+    return None
+
+
+def smart_detail_age(dev_name: str) -> float | None:
+    hit = _DETAIL_CACHE.get(dev_name)
+    return time.time() - hit[0] if hit else None
+
+
+def forget_smart_detail(dev_name: str) -> None:
+    _DETAIL_CACHE.pop(dev_name.removeprefix("/dev/").removeprefix("/host/dev/"), None)
+
+
+def read_smart_detail(dev_name: str, wake_if_standby: bool = False, max_age: float = 0.0) -> dict:
+    """fetch_disk_smart_detail, reusing a reading at most max_age seconds old (never when waking)."""
+    with _detail_lock(dev_name):
+        if not wake_if_standby and max_age > 0:
+            hit = cached_smart_detail(dev_name, max_age)
+            if hit is not None:
+                return hit
+        try:
+            detail = fetch_disk_smart_detail(dev_name, wake_if_standby)
+        except Exception as e:  # kept too, so one broken drive does not slow every opening
+            detail = {"error": f"{type(e).__name__}: {e}"}
+        if isinstance(detail, dict):
+            _DETAIL_CACHE[dev_name] = (time.time(), detail)
+        return detail
+
+
 def refresh_drive_verdicts() -> int:
     """Judges every drive the way Drive Health does, never waking one. Run by the SMART poller."""
     done = 0
@@ -1128,8 +1174,9 @@ def refresh_drive_verdicts() -> int:
         if not dev:
             continue
         try:
-            fetch_disk_smart_detail(dev, False)
-            done += 1
+            detail = read_smart_detail(dev, False)  # also keeps it for Drive Health's next opening
+            if not (detail or {}).get("error"):
+                done += 1
         except Exception:
             logger.debug("backend.hardware.disks.refresh_drive_verdicts: %s failed", dev, exc_info=True)
     return done
@@ -1408,6 +1455,7 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
     clean_name = dev_name.removeprefix("/dev/").removeprefix("/host/dev/")
     if not VALID_DEV_PATTERN.fullmatch(clean_name):
         return {"success": False, "error": "Invalid device name format."}
+    forget_smart_detail(clean_name)  # a test changes what the drive reports
 
     # Invariant: Never wake sleeping drive platters during automated scheduled self-tests
     if skip_if_standby:

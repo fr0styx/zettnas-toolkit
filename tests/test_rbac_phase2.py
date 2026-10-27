@@ -80,7 +80,7 @@ def test_storage_admin_permissions_and_restrictions(client: TestClient):
     storage_headers = {"Authorization": f"Bearer {storage_token}"}
 
     # 1. Allowed: disk operations
-    with patch("backend.api.system.fetch_disk_smart_detail", return_value={"smart": "ok"}):
+    with patch("backend.api.system.read_smart_detail", return_value={"smart": "ok"}):
         res = client.post("/api/disk_wake", headers=storage_headers, json={"dev": "sda"})
         assert res.status_code == 200
 
@@ -230,7 +230,7 @@ def test_scoped_api_token_enforcement(client: TestClient):
     scoped_headers = {"Authorization": f"Bearer {raw_api_token}"}
 
     # 1. Allowed: Disk wake (requires storage:write, covered by storage:*)
-    with patch("backend.api.system.fetch_disk_smart_detail", return_value={"smart": "ok"}):
+    with patch("backend.api.system.read_smart_detail", return_value={"smart": "ok"}):
         res = client.post("/api/disk_wake", headers=scoped_headers, json={"dev": "sda"})
         assert res.status_code == 200
 

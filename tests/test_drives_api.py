@@ -43,15 +43,17 @@ def fake_drives(monkeypatch):
             "model": f"{dev} live",
             "serial": "S",
             "temp": 35,
-            "power_on_hours": 100,
+            "power_on_hours": "100",
             "drive_health": {"verdict": "ok", "label": "Healthy", "summary": "No sign of trouble.", "findings": []},
         }
 
+    from backend.hardware import disks
+
     monkeypatch.setattr(drives, "_discover_disks", lambda: DISKS)
-    monkeypatch.setattr(drives, "fetch_disk_smart_detail", detail)
-    drives._cache.update(ts=0.0, data=None)
+    monkeypatch.setattr(disks, "fetch_disk_smart_detail", detail)
+    disks._DETAIL_CACHE.clear()
     yield woke
-    drives._cache.update(ts=0.0, data=None)
+    disks._DETAIL_CACHE.clear()
 
 
 def test_every_drive_worst_first_without_waking_any(client, auth_headers, fake_drives):
@@ -142,3 +144,57 @@ def test_verdicts_are_remembered_and_refreshed_for_every_drive(monkeypatch):
     monkeypatch.setattr(disks, "fetch_disk_smart_detail", fake)
     assert disks.refresh_drive_verdicts() == 1
     assert seen == ["sda", "sdb"]
+
+
+def test_drives_are_read_side_by_side(monkeypatch):
+    from backend.hardware import disks
+
+    monkeypatch.setattr(drives, "_discover_disks", lambda: DISKS)
+
+    def slow(dev, wake):
+        time.sleep(0.3)
+        return {"dev": dev, "drive_health": {"verdict": "ok"}}
+
+    monkeypatch.setattr(disks, "fetch_disk_smart_detail", slow)
+    disks._DETAIL_CACHE.clear()
+    t0 = time.monotonic()
+    page = drives._read_all()
+    assert len(page["drives"]) == 4
+    assert time.monotonic() - t0 < 0.9  # one after another would take 1.2 s
+    disks._DETAIL_CACHE.clear()
+
+
+def test_the_detail_pane_reuses_the_reading_the_list_just_took(client, auth_headers, fake_drives):
+    client.get("/api/drives/health", headers=auth_headers)
+    n = len(fake_drives)
+    r = client.get("/api/disk_detail?dev=sda", headers=auth_headers)
+    assert r.status_code == 200 and r.json()["model"] == "sda live"
+    assert len(fake_drives) == n  # no second read of the same drive
+    client.get("/api/disk_detail?dev=sda&wake=true", headers=auth_headers)
+    assert len(fake_drives) == n + 1 and fake_drives[-1] is True  # waking always reads anew
+
+
+def test_older_readings_show_at_once_marked_stale_and_refresh_reads_anew(client, auth_headers, fake_drives):
+    from backend.hardware import disks
+
+    client.get("/api/drives/health", headers=auth_headers)
+    n = len(fake_drives)
+    for dev, (ts, det) in list(disks._DETAIL_CACHE.items()):
+        disks._DETAIL_CACHE[dev] = (ts - 600, det)  # ten minutes old
+    r = client.get("/api/drives/health", headers=auth_headers).json()
+    assert r["stale"] is True and {d["dev"] for d in r["drives"]} >= {"sda", "nvme0n1"}
+    fresh = client.get("/api/drives/health?refresh=1", headers=auth_headers).json()
+    assert fresh["stale"] is False and len(fake_drives) >= n + len(DISKS)
+
+
+def test_a_drive_never_read_is_read_before_answering(client, auth_headers, fake_drives):
+    r = client.get("/api/drives/health", headers=auth_headers).json()
+    assert r["stale"] is False and len(fake_drives) == len(DISKS)
+
+
+def test_starting_a_self_test_forgets_the_kept_reading():
+    from backend.hardware import disks
+
+    disks._DETAIL_CACHE["sdq"] = (time.time(), {"dev": "sdq"})
+    disks.forget_smart_detail("/dev/sdq")
+    assert disks.cached_smart_detail("sdq", 60) is None

@@ -196,6 +196,8 @@ export async function loadDrives(refresh = false) {
     _drives = (data && data.drives) || [];
     if (!_selected || !_drives.some((d) => d.dev === _selected)) _selected = _drives[0]?.dev || null;
     renderList();
+    // Shown at once from the last readings; the fresh read already running updates the list.
+    if (data && data.stale && !refresh) loadDrives(true);
     return data;
   } catch (e) {
     const list = _win?.querySelector('#dh-list');
