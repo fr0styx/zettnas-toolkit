@@ -24,14 +24,22 @@ from backend.services.samba_engine import (
 router = APIRouter(prefix="/samba", tags=["Samba File Sharing"])
 
 
-@router.get("/status", response_model=SambaStatus)
+@router.get(
+    "/status",
+    response_model=SambaStatus,
+    dependencies=[Depends(require_scope("shares:manage", "storage:read", "system:view"))],
+)
 def get_samba_status() -> SambaStatus:
     """Returns current runtime status of Samba service and sidecar."""
     engine = get_samba_engine()
     return engine.get_status()
 
 
-@router.get("/shares", response_model=list[SambaShareConfig])
+@router.get(
+    "/shares",
+    response_model=list[SambaShareConfig],
+    dependencies=[Depends(require_scope("shares:manage", "storage:read"))],
+)
 def get_samba_shares() -> list[SambaShareConfig]:
     """Returns all configured Samba shares."""
     engine = get_samba_engine()

@@ -151,7 +151,7 @@ def get_evaluated_oids():
     }
 
 
-@router.get("/mib", response_class=PlainTextResponse)
+@router.get("/mib", response_class=PlainTextResponse, dependencies=[Depends(require_scope("system:view"))])
 def download_mib_file():
     """Returns downloadable SMIv2 ZETTLAB-ZETTNAS-MIB file."""
     return """-- ZETTLAB-ZETTNAS-MIB.txt

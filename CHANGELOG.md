@@ -59,6 +59,8 @@
 - Downloading someone else's data needs the right to manage accounts and a confirmation, and
   the person is told (on their own alert channel or by email). Public share links need write
   access to the folder; container logs need the containers right.
+- Kids and guests no longer read hardware, UPS, fan, share-service and app-catalog details;
+  every API read now needs a permission unless it is part of the desktop or their own account.
 
 #### Backups and power
 

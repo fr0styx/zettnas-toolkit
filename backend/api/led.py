@@ -14,7 +14,7 @@ def _load_led():
     return cur if isinstance(cur, dict) else {}
 
 
-@router.get("/led")
+@router.get("/led", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_led():
     return _load_led()
 

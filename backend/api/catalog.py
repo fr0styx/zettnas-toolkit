@@ -41,14 +41,14 @@ class ContainerExecRequest(BaseModel):
     cmd: str
 
 
-@router.get("/docker/catalog")
+@router.get("/docker/catalog", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])
 async def get_docker_catalog():
     from backend.services.app_catalog import get_all_catalog_apps
 
     return await asyncio.to_thread(get_all_catalog_apps)
 
 
-@router.get("/docker/catalog/sources")
+@router.get("/docker/catalog/sources", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])
 async def get_docker_catalog_sources():
     from backend.services.app_catalog import get_catalog_sources
 
@@ -137,7 +137,9 @@ async def post_docker_catalog_sideload(req: AppSideloadRequest):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@router.get("/docker/catalog/{app_id}/resolve")
+@router.get(
+    "/docker/catalog/{app_id}/resolve", dependencies=[Depends(require_scope("containers:read", "containers:manage"))]
+)
 async def get_docker_catalog_resolve(app_id: str):
     if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
         raise HTTPException(status_code=400, detail="Invalid application ID")
@@ -183,7 +185,9 @@ class AppDeployRequest(BaseModel):
     replace_existing: bool = False
 
 
-@router.get("/docker/check_container_name")
+@router.get(
+    "/docker/check_container_name", dependencies=[Depends(require_scope("containers:read", "containers:manage"))]
+)
 async def get_check_container_name(name: str):
     from backend.services.container_mutator import _docker_request
 

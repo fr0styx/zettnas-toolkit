@@ -10,7 +10,7 @@ from backend.hardware.chassis import ChassisBayMapRequest, ChassisEngine
 router = APIRouter(prefix="/chassis", tags=["Chassis Visualizer & Layout"])
 
 
-@router.get("/config")
+@router.get("/config", dependencies=[Depends(require_scope("hardware:read", "storage:read", "system:view"))])
 def get_chassis_config():
     """
     Returns dynamic chassis layout configuration, detected bays, populated disks,
@@ -27,7 +27,7 @@ def save_chassis_bay_map(request: ChassisBayMapRequest):
     return ChassisEngine.save_bay_mapping(request)
 
 
-@router.get("/bridges")
+@router.get("/bridges", dependencies=[Depends(require_scope("hardware:read", "storage:read", "system:view"))])
 def get_chassis_bridges():
     """Returns detected hardware platform bridges (Zettlab, Aoostar, Ugreen, CWWK)."""
     return ChassisEngine.get_appliance_bridge_status()

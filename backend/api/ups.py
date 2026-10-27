@@ -84,7 +84,7 @@ class UpsSimulateRequest(BaseModel):
     duration_sec: int = Field(default=15, ge=5, le=60)
 
 
-@router.get("/ups")
+@router.get("/ups", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 async def get_ups_telemetry():
     """Returns real-time UPS telemetry enriched with power flow metrics and voltage data."""
     return await asyncio.to_thread(read_ups_status)
@@ -140,7 +140,7 @@ async def post_ups_self_test():
     return res
 
 
-@router.get("/ups/events")
+@router.get("/ups/events", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 async def get_ups_event_history(page: PageParams = Depends()):
     """Returns historical power events, outages, brownouts, and diagnostic logs from SQLite."""
     rows = await asyncio.to_thread(query_ups_events, limit=page.fetch)

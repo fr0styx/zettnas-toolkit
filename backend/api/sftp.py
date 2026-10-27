@@ -31,7 +31,11 @@ class SFTPUserCreateRequest(BaseModel):
     read_only: bool = False
 
 
-@router.get("/sftp/status", response_model=SFTPStatus)
+@router.get(
+    "/sftp/status",
+    response_model=SFTPStatus,
+    dependencies=[Depends(require_scope("shares:manage", "storage:read", "system:view"))],
+)
 async def get_sftp_status():
     """Returns operational status, port, sidecar state, and quick-connect info for SFTP."""
     engine = get_sftp_engine()

@@ -229,7 +229,7 @@ async def disk_smart_test(
     return await asyncio.to_thread(run_disk_smart_test, dev, test_type)
 
 
-@router.get("/disk/smart_tests")
+@router.get("/disk/smart_tests", dependencies=[Depends(require_scope("storage:read", "hardware:read", "system:view"))])
 async def get_disk_smart_tests(dev: str | None = None, limit: int = Query(20, ge=1, le=500)):
     """Returns persistent historical self-test runs and latest diagnostic report."""
     if dev:
@@ -282,7 +282,7 @@ async def disk_locate_endpoint(
     return await asyncio.to_thread(locate_disk, dev, duration, True)
 
 
-@router.get("/screen")
+@router.get("/screen", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def screen_state():
     return get_screen_state()
 
@@ -406,7 +406,7 @@ def rescan_media():
     return {"status": "ok", "slots": slots}
 
 
-@router.get("/buttons")
+@router.get("/buttons", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_buttons():
     return _load_buttons()
 
@@ -478,7 +478,7 @@ def post_state(req: StateRequest):
     return {"status": "ok"}
 
 
-@router.get("/lcd/page")
+@router.get("/lcd/page", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_lcd_page():
     return {
         "page": Z_STATE.current_lcd_page,
@@ -486,7 +486,7 @@ def get_lcd_page():
     }
 
 
-@router.get("/lcd/preview.png")
+@router.get("/lcd/preview.png", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_lcd_preview(page: int | None = Query(None, ge=0, le=3), theme: str | None = Query(None, max_length=20)):
     """The LCD as the built-in (no-browser) renderer draws it, as a 640x172 PNG."""
     from backend.services import lcd_pil

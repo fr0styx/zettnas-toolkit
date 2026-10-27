@@ -1,9 +1,10 @@
 import asyncio
 import os
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from backend.auth import require_scope
 from backend.config import ENABLE_FB, LCD_FPS, logger
 from backend.db import query_history
 from backend.hardware.screen import (
@@ -18,7 +19,7 @@ from backend.state import Z_STATE
 router = APIRouter(tags=["Telemetry & Stats"])
 
 
-@router.get("/lcd_status")
+@router.get("/lcd_status", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_lcd_status():
     fb_path = find_fb_device(writable_only=False)
     scr = get_screen_state()
@@ -98,7 +99,7 @@ async def stats_stream(request: Request):
     )
 
 
-@router.get("/history")
+@router.get("/history", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_history(range: str = "24h"):
     try:
         data = query_history(range)

@@ -52,7 +52,7 @@ def _load_fans():
     return cfg
 
 
-@router.get("/fans")
+@router.get("/fans", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_fans():
     return _load_fans()
 
@@ -103,7 +103,7 @@ def post_fans(req: FanConfigRequest):
     return fan_cfg
 
 
-@router.get("/fans/presets")
+@router.get("/fans/presets", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_fan_presets():
     """Lists all saved custom fan curve presets."""
     fan_cfg = _load_fans()
@@ -192,7 +192,7 @@ def start_acoustic_calibration(req: FanAcousticSweepRequest | None = None):
     return res
 
 
-@router.get("/fans/calibrate/acoustic")
+@router.get("/fans/calibrate/acoustic", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 def get_acoustic_calibration():
     """Returns the live progress, state, and stability results of the acoustic sweep."""
     return get_acoustic_sweep_status()
