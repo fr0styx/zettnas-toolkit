@@ -66,6 +66,19 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
         mover = status.get("mover", {}).get("active", False)
         return bool(resync or mover)
 
+    def scrub_result(self, pool: StoragePool) -> dict[str, Any] | None:
+        """The array's last parity check (Unraid keeps it in var.ini); other pools as usual."""
+        if pool.id != "unraid_array":
+            return super().scrub_result(pool)
+        last = (read_unraid_status() or {}).get("last_parity_check") or {}
+        if not last.get("finished_at"):
+            return {"state": "never", "errors": 0, "finished_at": None}
+        return {
+            "state": "finished" if last.get("exit") == 0 else "canceled",
+            "errors": int(last.get("errors") or 0),
+            "finished_at": float(last["finished_at"]),
+        }
+
     def trigger_scrub(self, pool_id: str, action: str = "start") -> dict[str, Any]:
         status = read_unraid_status(force=True)
         parity_check = status.get("parity_check", {})

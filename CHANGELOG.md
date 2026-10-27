@@ -35,6 +35,10 @@
   Locate, folder sizes and AI indexing that would spin a drive up show a confirmation first.
 - **Drive alerts no longer repeat**: a drive's condition is alerted once when its verdict
   changes (with a daily reminder while it says "Replace now"), and temperature once per crossing.
+- **Storage pools tell you when something is wrong**: a degraded pool, a disk out of the pool,
+  disk errors, errors found by the last scrub or parity check, and a pool 85 % or 95 % full
+  are alerted (once, daily while critical, and when fixed) and shown on the Overview. A weekly
+  health report goes out on Sunday mornings (switch it off under Alerts).
 
 #### Security and privacy
 
@@ -100,6 +104,7 @@
 
 #### Fixes
 
+- The daily summary setting under Alerts is saved again (it was reset on every save).
 - "Download as zip" streams while it is built instead of filling the container's disk first.
 - The card-reader check no longer probes other USB disks (such as Unraid's boot flash).
 - The front LCD no longer crashes the app when a monitor is connected next to the panel (#38).

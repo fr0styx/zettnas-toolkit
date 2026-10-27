@@ -182,6 +182,12 @@ def read_unraid_status(force: bool = False) -> dict[str, Any]:
             "errors": resync_corr if (resync_active or resync_paused) else 0,
             "speed": md_resync if resync_active else 0,
         },
+        # the last finished (or stopped) parity check: errors it found, when, and how it ended
+        "last_parity_check": {
+            "errors": _to_int("sbSyncErrs"),
+            "finished_at": _to_int("sbSynced2") or None,
+            "exit": _to_int("sbSyncExit", -1),
+        },
         "mover": {
             "active": mover_active,
             "action": mover_action,

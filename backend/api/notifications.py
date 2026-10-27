@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
@@ -73,6 +73,11 @@ class NotificationConfigModel(BaseModel):
     hdd_temp_threshold: int = Field(default=50, ge=30, le=80)
     cpu_temp_threshold: int = Field(default=80, ge=40, le=105)
     cooldown_seconds: int = Field(default=1800, ge=60, le=86400)
+
+    # Daily summary (Batch 6) and the weekly health report (B12a, FEAT-05)
+    digest_mode: Literal["off", "daily"] = "off"
+    digest_hour: int = Field(default=8, ge=0, le=23)
+    weekly_report: bool = True
 
 
 class TestChannelRequest(BaseModel):

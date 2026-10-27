@@ -86,12 +86,25 @@ DEFAULT_NOTIFICATION_CONFIG: dict[str, Any] = {
     # Daily digest (Batch 6): critical alerts go out at once, everything else in one summary
     "digest_mode": "off",  # "off" or "daily"
     "digest_hour": 8,
+    "weekly_report": True,  # a health summary on Sunday mornings (B12a, FEAT-05)
 }
 
 DIGEST_FILE = os.path.join(DATA_DIR, "notification_digest.json")
 ROUTES_FILE = os.path.join(DATA_DIR, "notification_routes.json")
 URGENT_LEVELS = ("critical", "alert", "error")
-ROUTABLE_EVENTS = ("smart", "temp", "fan", "ups", "copy", "container", "backup", "security", "general")
+ROUTABLE_EVENTS = (
+    "smart",
+    "storage",
+    "temp",
+    "fan",
+    "ups",
+    "copy",
+    "container",
+    "backup",
+    "security",
+    "health",
+    "general",
+)
 _LEVEL_RANK = {"info": 0, "normal": 0, "warning": 1, "warn": 1, "critical": 2, "alert": 2, "error": 2}
 
 # Alert tracking for deduplication: key -> {"last_sent": float, "last_level": str}
@@ -137,7 +150,9 @@ def unmask_notification_config(new_cfg: dict[str, Any], existing_cfg: dict[str, 
 @json_locked(lambda *a, **k: NOTIFICATIONS_FILE)
 def save_notification_config(cfg: dict[str, Any]) -> None:
     existing = load_notification_config()
-    merged = unmask_notification_config(cfg, existing)
+    # keys the caller did not send keep their saved value (a field the form doesn't know about
+    # is not reset to its default)
+    merged = {**existing, **unmask_notification_config(cfg, existing)}
     atomic_write_json(NOTIFICATIONS_FILE, merged)
 
 

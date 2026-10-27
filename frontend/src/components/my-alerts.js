@@ -11,6 +11,8 @@ const EVENT_NAMES = () => ({
   security: t('alerts.ev_security', 'Security'),
   backup: t('alerts.ev_backup', 'Backups'),
   smart: t('alerts.ev_smart', 'Disk health'),
+  storage: t('alerts.ev_storage', 'Storage pools'),
+  health: t('alerts.ev_health', 'Weekly health report'),
   temp: t('alerts.ev_temp', 'Temperatures'),
   fan: t('alerts.ev_fan', 'Fans'),
   copy: t('alerts.ev_copy', 'Copies and imports'),

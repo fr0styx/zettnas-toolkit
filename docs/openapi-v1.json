@@ -25292,6 +25292,22 @@
       "title": "Cpu Temp Threshold",
       "type": "integer"
      },
+     "digest_hour": {
+      "default": 8,
+      "maximum": 23.0,
+      "minimum": 0.0,
+      "title": "Digest Hour",
+      "type": "integer"
+     },
+     "digest_mode": {
+      "default": "off",
+      "enum": [
+       "off",
+       "daily"
+      ],
+      "title": "Digest Mode",
+      "type": "string"
+     },
      "discord_enabled": {
       "default": false,
       "title": "Discord Enabled",
@@ -25459,6 +25475,11 @@
       "maxLength": 512,
       "title": "Webhook Url",
       "type": "string"
+     },
+     "weekly_report": {
+      "default": true,
+      "title": "Weekly Report",
+      "type": "boolean"
      }
     },
     "title": "NotificationConfigModel",

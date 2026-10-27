@@ -31,6 +31,8 @@ export function renderNotificationConfigUI() {
   if (digestMode) digestMode.value = cfg.digest_mode === 'daily' ? 'daily' : 'off';
   const digestHour = document.getElementById('notif-digest-hour');
   if (digestHour) digestHour.value = String(cfg.digest_hour ?? 8);
+  const weekly = document.getElementById('notif-weekly-report');
+  if (weekly) weekly.checked = cfg.weekly_report !== false;
   renderMyAlerts(document.getElementById('my-alerts-mount'));
 
   // Master switch
@@ -111,6 +113,8 @@ export async function saveNotificationsConfig() {
   cfg.digest_mode = document.getElementById('notif-digest-mode')?.value === 'daily' ? 'daily' : 'off';
   const dh = parseInt(document.getElementById('notif-digest-hour')?.value, 10);
   if (!isNaN(dh)) cfg.digest_hour = Math.max(0, Math.min(23, dh));
+  const weekly = document.getElementById('notif-weekly-report');
+  if (weekly) cfg.weekly_report = weekly.checked;
 
   try {
     const res = await api.post('/api/notifications/config', cfg);

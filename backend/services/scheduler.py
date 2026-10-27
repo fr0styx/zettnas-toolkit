@@ -104,6 +104,17 @@ def _run_ai_retention(now: float) -> None:
         logger.warning(f"[Scheduler] AI conversation retention failed: {e}")
 
 
+def _run_pool_checks(now: float) -> None:
+    """Degraded pools, disks, scrub errors and full pools (REL-11), and the weekly report."""
+    try:
+        from backend.services import pool_alerts
+
+        pool_alerts.check_and_alert(now)
+        pool_alerts.send_weekly_if_due(now)
+    except Exception as e:
+        logger.warning(f"[Scheduler] Pool health check failed: {e}")
+
+
 def _run_scheduled_tasks():
     logger.info("[Scheduler] System background scheduler started.")
     while not _SCHEDULER_STOP_EVENT.is_set():
@@ -137,6 +148,7 @@ def _run_scheduled_tasks():
             send_digest_if_due(now)
         except Exception as e:
             logger.warning(f"[Scheduler] Notification digest failed: {e}")
+        _run_pool_checks(now)
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

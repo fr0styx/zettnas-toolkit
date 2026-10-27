@@ -428,6 +428,7 @@
     "list_snapshots": "(self, pool_id: str) -> list[dict[str, typing.Any]]",
     "rename_pool": "(self, pool_id: str, new_name: str) -> dict[str, typing.Any]",
     "restore_snapshot": "(self, pool_id: str, snapshot_name: str, target_subvol: str = '') -> dict[str, typing.Any]",
+    "scrub_result": "(self, pool: 'StoragePool') -> dict[str, typing.Any] | None",
     "trigger_scrub": "(self, pool_id: str, action: str = 'start') -> dict[str, typing.Any]"
    },
    "mro": [
@@ -525,6 +526,7 @@
     "list_snapshots": "(self, pool_id: str) -> list[dict[str, typing.Any]]",
     "rename_pool": "(self, pool_id: str, new_name: str) -> dict[str, typing.Any]",
     "restore_snapshot": "(self, pool_id: str, snapshot_name: str, target_subvol: str = '') -> dict[str, typing.Any]",
+    "scrub_result": "(self, pool: StoragePool) -> dict[str, typing.Any] | None",
     "trigger_scrub": "(self, pool_id: str, action: str = 'start') -> dict[str, typing.Any]"
    },
    "mro": [

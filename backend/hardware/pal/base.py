@@ -149,6 +149,19 @@ class StoragePlatformAdapter(ABC):
         """Triggers or checks the status of a scrub/parity check."""
         ...
 
+    def scrub_result(self, pool: "StoragePool") -> dict[str, Any] | None:
+        """The last scrub of a pool, {state, errors, finished_at}, from what ZFS or btrfs keep
+        (no disk is read); None when the pool has no scrub to report (REL-11)."""
+        from backend.hardware.pal.scrub_parse import parse_btrfs_scrub, parse_zpool_scan
+
+        if pool.fs_type == "zfs" or pool.pool_type == "zfs_pool":
+            code, out, _ = self._run_cmd(["zpool", "status", pool.id])
+            return parse_zpool_scan(out) if code == 0 else None
+        if pool.fs_type == "btrfs" and pool.mountpoint:
+            code, out, _ = self._run_cmd(["btrfs", "scrub", "status", "-R", pool.mountpoint])
+            return parse_btrfs_scrub(out) if code == 0 else None
+        return None
+
     @abstractmethod
     def create_pool(
         self,

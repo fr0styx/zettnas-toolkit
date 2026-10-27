@@ -65,8 +65,20 @@ def _drives() -> list[dict[str, Any]]:
     return out
 
 
+def _pools() -> list[dict[str, Any]]:
+    """Per pool (REL-11): degraded, a disk out, errors, scrub errors, 85 % / 95 % full."""
+    from backend.services.pool_alerts import current
+
+    return [{**i, "open": "drives" if i["kind"] in ("disk_disabled", "disk_errors") else "storage"} for i in current()]
+
+
 def _storage() -> list[dict[str, Any]]:
+    """The whole-server fill level, when the pools could not be read."""
     from backend.hardware.storage import read_storage
+    from backend.services.pool_alerts import current
+
+    if any(i["kind"] == "pool_full" for i in current()):
+        return []
 
     st = read_storage() or {}
     pct = int(st.get("pct") or 0)
@@ -135,7 +147,7 @@ def _password() -> list[dict[str, Any]]:
     return []
 
 
-CHECKS = (_drives, _storage, _backups, _frozen, _power, _password)
+CHECKS = (_drives, _pools, _storage, _backups, _frozen, _power, _password)
 
 
 def summary() -> dict[str, Any]:
