@@ -128,6 +128,7 @@ class MultimodalSearchRequest(BaseModel):
     scene: str | None = Field(default=None, max_length=64)
     path_prefix: str | None = Field(default=None, max_length=512)
     limit: int = Field(default=24, ge=1, le=100)
+    tags: list[str] | None = Field(default=None, max_length=6)  # auto-tag filters (B8)
 
 
 class RagAskRequest(BaseModel):
@@ -869,6 +870,7 @@ async def search_multimodal_get(
     scene: str | None = Query(default=None, max_length=64),
     path_prefix: str | None = Query(default=None, max_length=512),
     limit: int = Query(default=24, ge=1, le=100),
+    tags: str | None = Query(default=None, max_length=128),
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
     """Zero-Disk-Touch Cross-Modal Visual & Document Search (GET)."""
@@ -895,6 +897,7 @@ async def search_multimodal_get(
         principal,
         match_tab,
         sort_by,
+        tags=[t for t in (tags or "").split(",") if t.strip()] or None,
     )
     return await _with_immich(res, effective_q, effective_mode, principal, limit)
 
@@ -937,8 +940,24 @@ async def search_multimodal_post(
         principal,
         req.match_tab,
         req.sort_by,
+        tags=req.tags,
     )
     return await _with_immich(res, effective_q, effective_mode, principal, req.limit)
+
+
+@router.get("/ai/tags", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))])
+def get_search_tags(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
+    """The document filters: each auto-tag with how many files this person may see carry it (B8)."""
+    from backend.services import rag_tags
+
+    counts = get_rag_engine().tag_counts(principal)
+    kinds = [{"tag": t, "count": counts[t]} for t in rag_tags.TAGS if counts.get(t)]
+    years = sorted(
+        ({"tag": t, "count": n} for t, n in counts.items() if t.startswith("year:")),
+        key=lambda x: x["tag"],
+        reverse=True,
+    )
+    return {"kinds": kinds, "years": years}
 
 
 @router.post(

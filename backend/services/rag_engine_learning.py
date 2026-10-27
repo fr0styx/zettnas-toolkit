@@ -4,6 +4,7 @@
 
 import asyncio
 import os
+import sqlite3
 import threading
 import time
 from typing import (  # noqa: F401
@@ -984,9 +985,33 @@ class RagLearningMixin:
             logger.info(f"[RAG] Re-embedded {done} file(s) that had fallback vectors with '{model}'")
         return {"status": "ok", "files": done}
 
+    def _maybe_backfill_tags(self) -> None:
+        """Tags documents indexed before auto-tags existed, a batch per round, from the text the
+        index holds (no disk access), until none are left (B8)."""
+        if getattr(self, "_tags_backfilled", False):
+            return
+        from backend.services import rag_tags
+
+        try:
+            with self._write_lock:
+                conn = self._get_conn(readonly=False)
+                try:
+                    n = rag_tags.backfill(conn)
+                    conn.commit()
+                finally:
+                    conn.close()
+        except sqlite3.Error:
+            logger.warning("[RAG] Tagging older documents failed; trying again next round", exc_info=True)
+            return
+        if n:
+            logger.info(f"[RAG] Tagged {n} older document(s) for the search filters")
+        else:
+            self._tags_backfilled = True
+
     def _maybe_reembed_fallback_files(self) -> None:
         now = time.time()
         if now - self._last_fallback_reembed < _core().FALLBACK_REEMBED_EVERY_SECS:
             return
         self._last_fallback_reembed = now
         self.reembed_fallback_files()
+        self._maybe_backfill_tags()  # same five-minute cadence; stops once every older file is tagged

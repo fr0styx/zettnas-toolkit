@@ -117,6 +117,20 @@ class RagSearchMixin:
         )
         return (sql, [*public_params, username, username])
 
+    def tag_counts(self, principal: Any = None) -> dict[str, int]:
+        """How many documents this person may see carry each auto-tag (the search filter chips)."""
+        from backend.services import rag_tags
+
+        self._ensure_schema()
+        rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
+        conn = self._get_conn(readonly=True)
+        try:
+            return rag_tags.counts(conn, rbac_sql, rbac_params)
+        except sqlite3.OperationalError:
+            return {}
+        finally:
+            conn.close()
+
     @staticmethod
     def _build_subtree_clause(path_prefix: str | None, table_alias: str = "f") -> tuple[str, list[Any]]:
         """Exact B-tree directory boundary predicate immune to prefix sibling traversal (/homes/alice vs /homes/alice_bob)."""
@@ -186,6 +200,7 @@ class RagSearchMixin:
         match_tab: str = "semantic",
         sort_by: str = "relevance",
         embedding_model: str | None = None,
+        tags: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         100% Zero-Disk-Touch Cross-Modal Search over `/app/data/rag_index.db` (mode=ro).
@@ -195,6 +210,9 @@ class RagSearchMixin:
         """
         self._ensure_schema()
         limit = max(1, min(100, int(limit or 24)))
+        from backend.services import rag_tags
+
+        want_tags = rag_tags.valid(tags)
         intent = parse_multimodal_query(query)
         cfg = self.get_config()
         fav_set = {os.path.normpath(p) for p in (cfg.get("favorites") or [])}
@@ -258,7 +276,7 @@ class RagSearchMixin:
             doc_items: list[dict[str, Any]] = []
 
             # 1. Visual / Photo Search Branch (always run when query/filters exist so category_groups counts are complete)
-            if (
+            if not want_tags and (
                 effective_mode in ("all", "photos", "visual", "videos", "folders")
                 or (effective_mode == "recipes" and "recipe" in req_scenes)
                 or bool(query.strip() or req_colors or req_scenes)
@@ -286,7 +304,9 @@ class RagSearchMixin:
                 )
 
             # 2. Document / Recipe / Code / Audio Transcript Search Branch
-            if effective_mode in ("all", "documents", "recipes", "audio", "videos", "folders") or bool(query.strip()):
+            if effective_mode in ("all", "documents", "recipes", "audio", "videos", "folders") or bool(
+                query.strip() or want_tags
+            ):
                 doc_items = self._search_documents_ro(
                     conn=conn,
                     raw_query=query,
@@ -302,6 +322,7 @@ class RagSearchMixin:
                     query_embedding_model=effective_emb_model,
                     query_embedding_dim=target_dim,
                     intent_type=intent_type,
+                    tags=want_tags,
                 )
                 # Optional cross-encoder reranking of the top documents (AI-13)
                 if doc_items and query.strip():
@@ -694,6 +715,7 @@ class RagSearchMixin:
         query_embedding_model: str = "zett_lexical_384d",
         query_embedding_dim: int | None = None,
         intent_type: str = "search",
+        tags: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         bm25_map: dict[int, float] = {}
         bm25_rank: dict[int, int] = {}
@@ -719,6 +741,11 @@ class RagSearchMixin:
 
         rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
         sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
+        if tags:
+            from backend.services import rag_tags
+
+            tag_sql, tag_params = rag_tags.filter_sql(tags, "f")
+            sub_sql, sub_params = f"({sub_sql}{tag_sql})", [*sub_params, *tag_params]
         recipe_sql = "AND f.doc_type = 'recipe'" if only_recipes else ""
 
         fts_chunk_ids = list(bm25_map.keys())

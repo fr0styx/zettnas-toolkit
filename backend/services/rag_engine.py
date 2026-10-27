@@ -717,6 +717,10 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                     CREATE INDEX IF NOT EXISTS idx_files_modality_type ON indexed_files(modality, doc_type);
                     CREATE INDEX IF NOT EXISTS idx_files_parent ON indexed_files(parent_dir);
                     CREATE INDEX IF NOT EXISTS idx_files_ext ON indexed_files(file_ext);
+                    -- auto-tags for the document filters (B8, rag_tags.SCHEMA)
+                    CREATE TABLE IF NOT EXISTS doc_tags (file_id INTEGER NOT NULL, tag TEXT NOT NULL, PRIMARY KEY (file_id, tag));
+                    CREATE INDEX IF NOT EXISTS idx_doc_tags_tag ON doc_tags(tag, file_id);
+                    CREATE TABLE IF NOT EXISTS doc_tags_done (file_id INTEGER PRIMARY KEY);
                     -- the fallback re-embed check runs every 5 minutes; without this it scanned every file (PERF-5)
                     CREATE INDEX IF NOT EXISTS idx_files_fallback_vectors ON indexed_files(file_id)
                         WHERE parse_status = 'ok' AND embedding_model = 'zett_lexical_384d';

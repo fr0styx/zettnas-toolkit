@@ -9,6 +9,7 @@ import { showToast, showConfirmToast, showPromptToast } from '../../toast.js';
 import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { immichResultsHtml } from '../immich-settings.js';
+import { installDocFilters, selectedTags } from './doc-filters.js';
 import { installAiAccess } from './ai-access.js';
 import { formatDateTime, formatNumber, formatTime } from '../../format.js';
 
@@ -1452,6 +1453,8 @@ export function initAiKnowledgeEngine() {
     });
   });
 
+  installDocFilters(document, () => runAiVisualSearch()); // document filters (B8)
+
   // Sort Selector (#ai-search-sort-select)
   const sortSelect = document.getElementById('ai-search-sort-select');
   if (sortSelect && !sortSelect.dataset.bound) {
@@ -2506,7 +2509,7 @@ export async function runAiVisualSearch(rawQuery = null) {
   const grid = document.getElementById('ai-visual-results-grid');
   if (!grid) return null;
 
-  if (!q && !_aiSelectedColor && !_aiSelectedScene) {
+  if (!q && !_aiSelectedColor && !_aiSelectedScene && !selectedTags().length) {
     renderAiRagInitialEmptyState();
     return { status: 'ok', results: [] };
   }
@@ -2526,6 +2529,7 @@ export async function runAiVisualSearch(rawQuery = null) {
       sort_by: _aiSelectedSortBy || 'relevance',
       color: _aiSelectedColor || null,
       scene: _aiSelectedScene || null,
+      tags: selectedTags().length ? selectedTags() : undefined, // document filters (B8)
       limit: 24,
     });
 

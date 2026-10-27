@@ -1360,6 +1360,16 @@ class RagIndexingMixin:
 
                 self._drop_file_vectors(conn, "?", (file_id,))
                 conn.execute("DELETE FROM document_chunks WHERE file_id = ?", (file_id,))
+                # auto-tags for the document filters (B8), from the text just read
+                from backend.services import rag_tags
+
+                rag_tags.store(
+                    conn,
+                    file_id,
+                    rag_tags.tags_for(
+                        file_name, doc_title, doc_type, " ".join(ch["chunk_text"] for ch, _ in prepared_child_chunks)
+                    ),
+                )
                 parent_id_map: dict[int, int] = {}
                 for p, p_emb in prepared_parent_chunks:
                     p_dim = len(p_emb) // 4

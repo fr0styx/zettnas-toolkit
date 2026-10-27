@@ -25164,6 +25164,21 @@
       "maxLength": 32,
       "title": "Sort By",
       "type": "string"
+     },
+     "tags": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 6,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tags"
      }
     },
     "title": "MultimodalSearchRequest",
@@ -38341,6 +38356,23 @@
        "title": "Limit",
        "type": "integer"
       }
+     },
+     {
+      "in": "query",
+      "name": "tags",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 128,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Tags"
+      }
      }
     ],
     "responses": {
@@ -38433,6 +38465,30 @@
      }
     },
     "summary": "Get Media Status",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
+  "/api/v1/ai/tags": {
+   "get": {
+    "description": "The document filters: each auto-tag with how many files this person may see carry it (B8).",
+    "operationId": "get_search_tags_api_v1_ai_tags_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Search Tags Api V1 Ai Tags Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get Search Tags",
     "tags": [
      "Smart Media & AI RAG Engine"
     ]
@@ -47480,6 +47536,23 @@
        "minimum": 1,
        "title": "Limit",
        "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "tags",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 128,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Tags"
       }
      }
     ],
