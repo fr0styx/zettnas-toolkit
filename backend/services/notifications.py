@@ -728,6 +728,40 @@ def may_receive(username: str, event_type: str) -> bool:
         return False
 
 
+def notify_person(username: str, title: str, message: str, level: str = "warning") -> bool:
+    """Tells one person about something done to their account (B11, SEC-30): on their own alert
+    route if they set one, else to their account email when mail is set up. False when neither."""
+    if not username:
+        return False
+    cfg = load_notification_config()
+    route = get_routes().get(username) or {}
+    email = route.get("email") or ""
+    if not email:
+        try:
+            from backend.users_db import get_user_by_username
+
+            email = (get_user_by_username(username) or {}).get("email") or ""
+        except Exception:
+            email = ""
+    sent = False
+    try:
+        if route.get("ntfy_topic"):
+            sent = bool(_dispatch_ntfy({**cfg, "ntfy_topic": route["ntfy_topic"]}, title, message, level)) or sent
+        if email and cfg.get("smtp_host"):
+            only_mail = {
+                **cfg,
+                "email_enabled": True,
+                "email_to": email,
+                "discord_enabled": False,
+                "telegram_enabled": False,
+                "apprise_urls": [],
+            }
+            sent = bool(_dispatch_apprise(only_mail, title, message, level)) or sent
+    except Exception:
+        logger.warning(f"[Notify] message for {username} failed", exc_info=True)
+    return sent
+
+
 def _route_to_people(cfg: dict[str, Any], title: str, message: str, level: str, event_type: str) -> list[str]:
     """Sends an alert to everyone who asked for this kind, at this level or above."""
     sent = []

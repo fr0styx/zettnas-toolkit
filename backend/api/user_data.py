@@ -1,8 +1,9 @@
 """One person's data: download it, or have parts of it forgotten (B8, services/user_data.py).
 
-Anyone may export or erase their own; an administrator may for others (users:read to export,
-users:delete to erase), which is how a parent handles a kid's account. Erasing asks for the
-usual confirmation; both are written to the security log.
+Anyone may export or erase their own; an administrator may for others (users:write to export,
+users:delete to erase), which is how a parent handles a kid's account. Exporting someone else's
+data and erasing ask for the usual confirmation, and the person is told when someone else
+downloaded their data (B11, SEC-30); both are written to the security log.
 """
 
 import json
@@ -14,7 +15,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal
-from backend.confirmations import require_confirmation
+from backend.confirmations import confirm_or_raise, require_confirmation
 from backend.services import user_data
 
 router = APIRouter(tags=["users"])
@@ -48,13 +49,32 @@ def _log(event: str, principal: AuthenticatedPrincipal, request: Request, detail
     )
 
 
+def _tell_the_person(user: dict[str, Any], principal: AuthenticatedPrincipal) -> None:
+    from backend.services.notifications import notify_person
+
+    when = time.strftime("%Y-%m-%d %H:%M")
+    try:
+        notify_person(
+            user.get("username", ""),
+            "Your data was downloaded",
+            f"{principal.username} downloaded a copy of your chats, Zetty log and search data on {when}.",
+        )
+    except Exception:
+        pass  # the security log has it either way
+
+
 @router.get("/users/{user_id}/export")
 def export_user_data(
     user_id: str, request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)
 ) -> Response:
-    user = _target(user_id, principal, "users:read")
+    user = _target(user_id, principal, "users:write")
+    someone_else = principal.user_id != user_id
+    if someone_else:
+        confirm_or_raise(request, principal, "users.export_data", user_id)
     data = user_data.export_user(user)
     _log("user.data_exported", principal, request, {"target_user_id": user_id})
+    if someone_else:
+        _tell_the_person(user, principal)
     name = f"zettnas-data-{user.get('username', 'user')}-{time.strftime('%Y-%m-%d')}.json"
     return Response(
         json.dumps(data, ensure_ascii=False, indent=1, default=str),

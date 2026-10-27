@@ -110,13 +110,16 @@ def test_only_the_person_or_an_administrator_may(family):
     with pytest.raises(HTTPException) as e:
         api.export_user_data(mum["id"], request(), principal(lea))
     assert e.value.status_code == 403
-    assert api.export_user_data(lea["id"], request(), principal(mum, ["users:read"])).status_code == 200
+    with pytest.raises(HTTPException) as e:  # reading the user list is not enough (B11, SEC-30)
+        api.export_user_data(lea["id"], request(), principal(mum, ["users:read"]))
+    assert e.value.status_code == 403
+    assert api.export_user_data(lea["id"], request(), principal(mum, ["users:write"])).status_code == 200
     with pytest.raises(HTTPException):
         api.erase_user_data(lea["id"], api.EraseRequest(parts=["chats"]), request(), principal(mum, ["users:read"]))
     out = api.erase_user_data(lea["id"], api.EraseRequest(parts=["chats"]), request(), principal(mum, ["users:delete"]))
     assert out["erased"] == {"chats": 1}
     with pytest.raises(HTTPException) as e:
-        api.export_user_data("nobody", request(), principal(mum, ["users:read"]))
+        api.export_user_data("nobody", request(), principal(mum, ["users:write"]))
     assert e.value.status_code == 404
     events = [r["event"] for r in user_data._security_events(mum)]
     assert "user.data_exported" in events and "user.data_erased" in events

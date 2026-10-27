@@ -156,7 +156,7 @@ async def get_docker_container_details(container_id: str, request: Request, unma
 
 @router.get(
     "/docker/containers/{container_id}/logs",
-    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+    dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
 )
 async def get_docker_container_logs(container_id: str, tail: int = 200):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
@@ -168,7 +168,7 @@ async def get_docker_container_logs(container_id: str, tail: int = 200):
 
 @router.get(
     "/docker/containers/{container_id}/logs/stream",
-    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+    dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
 )
 async def stream_docker_container_logs(
     request: Request,

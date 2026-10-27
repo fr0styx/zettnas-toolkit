@@ -37,6 +37,7 @@ export function renderUserData(card, user, own) {
       const data = await api.get(`/api/users/${encodeURIComponent(user.id)}/export`);
       saveJson(`zettnas-data-${user.username}-${new Date().toISOString().slice(0, 10)}.json`, data);
     } catch (err) {
+      if (err?.error === 'cancelled') return;
       showToast(t('udata.export_failed', 'Could not download the data: {error}', { error: err.message }), 'error');
     } finally {
       e.target.disabled = false;

@@ -102,14 +102,14 @@ async def _reset_share_rate_limit(ip: str):
 @router.post(
     "/fs/share-links",
     dependencies=[
-        Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin")),
+        Depends(require_scope("files:write", "shares:user_write", "storage:admin")),
         Depends(rate_limit("share.create", 30, 3600)),
     ],
 )
 @router.post(
     "/share-links",
     dependencies=[
-        Depends(require_scope("files:read", "files:write", "storage:read", "storage:admin")),
+        Depends(require_scope("files:write", "shares:user_write", "storage:admin")),
         Depends(rate_limit("share.create", 30, 3600)),
     ],
 )
@@ -119,7 +119,8 @@ async def create_share_link(
 ):
     """Generates a secure, temporary or password-protected public share link for a file or folder."""
     target_path = req.path.strip()
-    check_user_path_access(target_path, principal)
+    # a public link hands the folder to anyone with the link: it needs write there (B11, SEC-30)
+    check_user_path_access(target_path, principal, write=True)
     real_target = _contained(target_path, must_exist=True)
 
     if resolve_within(real_target, ALLOWED_BROWSE_ROOTS) is None:

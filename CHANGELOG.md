@@ -56,6 +56,9 @@
   Security Advisor lists each one that is looser than the new defaults with a one-click fix
   (it asks you to confirm first). API callers creating NFS exports for every host now send
   `nfs_allow_everyone: true`.
+- Downloading someone else's data needs the right to manage accounts and a confirmation, and
+  the person is told (on their own alert channel or by email). Public share links need write
+  access to the folder; container logs need the containers right.
 
 #### Backups and power
 

@@ -38,6 +38,7 @@ ACTIONS: dict[str, str] = {
     "share.delete": "Delete share {target}",
     "users.delete": "Delete user {target}",
     "users.erase_data": "Erase the chats, Zetty log and search data of user {target}",
+    "users.export_data": "Download the chats, Zetty log and search data of user {target}. They are told",
     "docker.container.delete": "Delete container {target}",
     "vm.delete": "Delete virtual machine {target}",
     "backup.delete": "Delete backup {target}",
