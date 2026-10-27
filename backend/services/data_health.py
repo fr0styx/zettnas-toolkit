@@ -85,6 +85,80 @@ def _restore_db(data_dir: str, name: str) -> str | None:
     return None
 
 
+def restore_json(path: str, data_dir: str | None = None) -> bool:
+    """Puts back the newest copy of a damaged settings file that parses, from the snapshots of
+    the data folder (REL-21). Files outside the data folder are left alone."""
+    import json
+
+    from backend import config
+
+    folder = os.path.realpath(data_dir or config.DATA_DIR)
+    real = os.path.realpath(path)
+    if not real.startswith(folder + os.sep):
+        return False
+    rel = os.path.relpath(real, folder)
+    for snap in _snapshot_dirs(folder):
+        copy = os.path.join(snap, rel)
+        if not os.path.isfile(copy):
+            continue
+        try:
+            with open(copy, encoding="utf-8") as f:
+                json.load(f)
+        except (OSError, ValueError):
+            continue
+        tmp = real + ".restore-tmp"
+        shutil.copy2(copy, tmp)
+        os.replace(tmp, real)
+        logger.warning(f"[DataHealth] {rel} was damaged; restored the copy from {os.path.basename(snap)}")
+        try:
+            from backend.state import add_event
+
+            add_event(
+                "warning",
+                "Settings file restored",
+                f"{rel} was damaged; the copy from {os.path.basename(snap)} is back.",
+            )
+        except Exception:
+            logger.debug("[DataHealth] could not record the restore", exc_info=True)
+        return True
+    return False
+
+
+def install_json_restore() -> None:
+    """From now on a damaged settings file is replaced by its last good snapshot copy."""
+    from backend import fsutil
+
+    if restore_json not in fsutil.RESTORERS:
+        fsutil.RESTORERS.append(restore_json)
+
+
+def check_json_files(data_dir: str) -> dict[str, list[str]]:
+    """At start: every settings file in the data folder that is not valid JSON is set aside and
+    restored from the snapshots (REL-21)."""
+    import json
+
+    from backend.fsutil import quarantine_corrupt
+
+    result: dict[str, list[str]] = {"restored": [], "lost": []}
+    try:
+        names = sorted(n for n in os.listdir(data_dir) if n.endswith(".json"))
+    except OSError:
+        return result
+    for name in names:
+        path = os.path.join(data_dir, name)
+        try:
+            with open(path, encoding="utf-8") as f:
+                json.load(f)
+            continue
+        except OSError:
+            continue  # can't be opened: not damaged, and read_json reports it
+        except ValueError:
+            logger.warning(f"[DataHealth] {name} is not valid JSON")
+        quarantine_corrupt(path)
+        (result["restored"] if restore_json(path, data_dir) else result["lost"]).append(name)
+    return result
+
+
 def check_and_repair(data_dir: str) -> dict[str, Any]:
     """Checks every database in the data folder; moves damaged ones aside and restores the newest
     good copy. Run at start, before the databases are opened."""

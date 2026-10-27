@@ -104,6 +104,16 @@ def _run_ai_retention(now: float) -> None:
         logger.warning(f"[Scheduler] AI conversation retention failed: {e}")
 
 
+def _run_alert_retries(now: float) -> None:
+    """Alerts that could not be sent are tried again (REL-22)."""
+    try:
+        from backend.services.notifications import retry_outbox
+
+        retry_outbox(now)
+    except Exception as e:
+        logger.warning(f"[Scheduler] Alert retries failed: {e}")
+
+
 def _run_pool_checks(now: float) -> None:
     """Degraded pools, disks, scrub errors and full pools (REL-11), and the weekly report."""
     try:
@@ -152,6 +162,7 @@ def _run_scheduled_tasks():
         except Exception as e:
             logger.warning(f"[Scheduler] Notification digest failed: {e}")
         _run_pool_checks(now)
+        _run_alert_retries(now)
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

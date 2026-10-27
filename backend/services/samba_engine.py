@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.config import docker_sock as _docker_sock_path
-from backend.fsutil import atomic_write_json
+from backend.fsutil import atomic_write_json, atomic_write_text
 
 SAMBA_DIR = os.path.join(DATA_DIR, "samba")
 SAMBA_CONF_FILE = os.path.join(SAMBA_DIR, "smb.conf")
@@ -416,8 +416,7 @@ class SambaEngine:
 
         full_conf = "\n".join(conf_lines)
         try:
-            with open(SAMBA_CONF_FILE, "w", encoding="utf-8") as f:
-                f.write(full_conf)
+            atomic_write_text(SAMBA_CONF_FILE, full_conf)  # Samba never reads half a file (REL-22)
             logger.info(f"[SambaEngine] Generated and saved smb.conf with {len(self._shares)} shares")
         except Exception as e:
             logger.error(f"[SambaEngine] Failed writing smb.conf: {e}")

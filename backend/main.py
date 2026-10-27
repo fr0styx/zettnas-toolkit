@@ -132,9 +132,11 @@ def startup_system():
 
     # Damaged databases are found before anything opens them (REL-2)
     try:
-        from backend.services.data_health import check_and_repair
+        from backend.services.data_health import check_and_repair, check_json_files, install_json_restore
 
         check_and_repair(DATA_DIR)
+        install_json_restore()  # a damaged settings file comes back from the snapshots (REL-21)
+        check_json_files(DATA_DIR)
     except Exception as e:
         logger.error(f"[Main] Could not check the data folder's databases: {e}")
 

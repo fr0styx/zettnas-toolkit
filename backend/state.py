@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from backend.config import EVENTS_FILE, logger
-from backend.fsutil import CORRUPT_LISTENERS, atomic_write_json
+from backend.fsutil import CORRUPT_LISTENERS, UNREADABLE_LISTENERS, atomic_write_json
 
 
 def _fan_tracker(now: float) -> dict[str, dict[str, float]]:
@@ -268,9 +268,21 @@ def _record_damaged_file(path: str, dest: str) -> None:
     add_event(
         "error",
         "Damaged settings file",
-        f"{os.path.basename(path)} could not be read and was set aside as {os.path.basename(dest)}; "
-        "its defaults are used until you restore it from a backup.",
+        f"{os.path.basename(path)} was damaged and was set aside as {os.path.basename(dest)}; the newest good "
+        "copy from the daily snapshot is used when there is one, otherwise its defaults.",
     )
 
 
 CORRUPT_LISTENERS.append(_record_damaged_file)
+
+
+def _record_unreadable_file(path: str, error: str) -> None:
+    add_event(
+        "error",
+        "Settings file can't be opened",
+        f"{os.path.basename(path)} exists but could not be opened ({error}). It was not changed; its "
+        "defaults are used until it can be read again. Check the data folder's permissions and disk.",
+    )
+
+
+UNREADABLE_LISTENERS.append(_record_unreadable_file)

@@ -90,6 +90,10 @@ DEFAULT_NOTIFICATION_CONFIG: dict[str, Any] = {
 }
 
 DIGEST_FILE = os.path.join(DATA_DIR, "notification_digest.json")
+OUTBOX_FILE = os.path.join(DATA_DIR, "notification_outbox.json")
+# an alert whose channels all failed is tried again after these waits, then given up (REL-22)
+RETRY_DELAYS = (60, 300, 900, 3600, 3600, 3600)
+OUTBOX_MAX = 200
 ROUTES_FILE = os.path.join(DATA_DIR, "notification_routes.json")
 URGENT_LEVELS = ("critical", "alert", "error")
 ROUTABLE_EVENTS = (
@@ -430,7 +434,7 @@ def send_notification(
     now = time.time()
     cooldown = cfg.get("cooldown_seconds", 1800)
 
-    # Deduplication logic
+    # Deduplication logic: the cooldown counts from the last alert that got through (REL-22)
     if dedup_key:
         prev = _alert_history.get(dedup_key)
         if prev:
@@ -443,8 +447,8 @@ def send_notification(
             )
             if elapsed < cooldown and not is_escalation:
                 return {"dispatched": False, "reason": "cooldown"}
-
-        _alert_history[dedup_key] = {"last_sent": now, "last_level": level}
+        if _queued(dedup_key):
+            return {"dispatched": False, "reason": "queued"}  # already waiting for a retry
 
     # Each person's own alerts (Batch 6), whether or not the shared channels are on (REL-6)
     _route_to_people(cfg, str(title), str(message), level, event_type)
@@ -456,6 +460,18 @@ def send_notification(
         _queue_for_digest(str(title), str(message), level, event_type, now)
         return {"dispatched": False, "reason": "digest"}
 
+    res = _dispatch_shared(cfg, str(title), str(message), level, push_on)
+    if res["dispatched"]:
+        if dedup_key:
+            _alert_history[dedup_key] = {"last_sent": now, "last_level": level}
+    elif res["channels"]:
+        _enqueue(str(title), str(message), level, event_type, dedup_key, now)  # every channel failed
+        res["reason"] = "queued for retry"
+    return res
+
+
+def _dispatch_shared(cfg: dict[str, Any], title: str, message: str, level: str, push_on: bool) -> dict[str, Any]:
+    """Phones, Unraid, ntfy, webhooks and Apprise: {dispatched, channels}."""
     results: dict[str, bool] = {}
 
     if push_on:
@@ -618,6 +634,85 @@ def test_single_channel(channel: str, channel_cfg: dict[str, Any]) -> dict[str, 
         "latency_ms": latency_ms,
         "message": f"Delivered to {channel} in {latency_ms}ms" if success else error_msg,
     }
+
+
+# ---------------------------------------------------------------------------
+# The outbox: alerts whose channels all failed, tried again with growing waits (REL-22)
+# ---------------------------------------------------------------------------
+def _outbox() -> list[dict[str, Any]]:
+    data = read_json(OUTBOX_FILE, {}) or {}
+    items = data.get("items") if isinstance(data, dict) else None
+    return items if isinstance(items, list) else []
+
+
+def _queued(dedup_key: str) -> bool:
+    return bool(dedup_key) and any(i.get("dedup_key") == dedup_key for i in _outbox())
+
+
+@json_locked(lambda *a, **k: OUTBOX_FILE)
+def _enqueue(title: str, message: str, level: str, event_type: str, dedup_key: str, now: float) -> None:
+    items = _outbox()
+    items.append(
+        {
+            "title": title[:200],
+            "message": message[:2000],
+            "level": level,
+            "event_type": event_type,
+            "dedup_key": dedup_key,
+            "attempts": 1,
+            "first_at": now,
+            "next_try": now + RETRY_DELAYS[0],
+        }
+    )
+    atomic_write_json(OUTBOX_FILE, {"items": items[-OUTBOX_MAX:]})
+    logger.warning(f"[Notify] '{title}' could not be sent on any channel; it is retried in a minute")
+
+
+@json_locked(lambda *a, **k: OUTBOX_FILE)
+def retry_outbox(now: float | None = None) -> dict[str, list[str]]:
+    """From the scheduler every minute: sends the alerts that are due again."""
+    now = now or time.time()
+    items = _outbox()
+    if not items:
+        return {"sent": [], "retry": [], "dropped": []}
+    cfg = load_notification_config()
+    push_on = False
+    if cfg.get("push_enabled", True):
+        try:
+            from backend.services import web_push
+
+            push_on = bool(web_push.subscriptions())
+        except Exception:
+            push_on = False
+    out: dict[str, list[str]] = {"sent": [], "retry": [], "dropped": []}
+    keep = []
+    for item in items:
+        if float(item.get("next_try") or 0) > now:
+            keep.append(item)
+            continue
+        res = _dispatch_shared(cfg, item["title"], item["message"], item.get("level", "normal"), push_on)
+        if res["dispatched"]:
+            if item.get("dedup_key"):
+                _alert_history[item["dedup_key"]] = {"last_sent": now, "last_level": item.get("level")}
+            out["sent"].append(item["title"])
+            continue
+        attempts = int(item.get("attempts") or 1)
+        if attempts > len(RETRY_DELAYS) - 1:
+            out["dropped"].append(item["title"])
+            logger.error(f"[Notify] Gave up sending '{item['title']}' after {attempts + 1} tries")
+            try:
+                from backend.state import add_event
+
+                add_event("error", "An alert could not be sent", f"{item['title']}: every channel failed for hours.")
+            except Exception:
+                logger.debug("notifications: could not record the dropped alert", exc_info=True)
+            continue
+        item["attempts"] = attempts + 1
+        item["next_try"] = now + RETRY_DELAYS[attempts]
+        keep.append(item)
+        out["retry"].append(item["title"])
+    atomic_write_json(OUTBOX_FILE, {"items": keep})
+    return out
 
 
 # ---------------------------------------------------------------------------

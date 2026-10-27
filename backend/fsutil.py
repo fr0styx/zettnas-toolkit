@@ -34,6 +34,14 @@ def atomic_write_json(path: str, data: Any, indent: int | None = None) -> None:
     file intact — never a truncated/corrupt one. The file is readable by its
     owner only (0600), which suits settings that hold secrets.
     """
+    if os.path.abspath(path) in _UNREADABLE and os.path.exists(path):
+        try:
+            with open(path) as f:
+                f.read(1)
+            _UNREADABLE.discard(os.path.abspath(path))
+        except OSError as e:
+            # its settings are still in there: never replace a file just because it couldn't be read
+            raise OSError(f"{os.path.basename(path)} could not be read, so it was not overwritten: {e}") from e
     directory = os.path.dirname(os.path.abspath(path)) or "."
     os.makedirs(directory, exist_ok=True)
     fd, tmp_path = tempfile.mkstemp(prefix=".tmp-", suffix=".json", dir=directory)
@@ -84,19 +92,86 @@ def json_locked(path_of):
     return deco
 
 
+def atomic_write_text(path: str, text: str, mode: int = 0o644) -> None:
+    """Write text to `path` atomically (temp file + fsync + os.replace): a crash mid-write leaves
+    the old file or the new one, never half of it (REL-22)."""
+    directory = os.path.dirname(os.path.abspath(path)) or "."
+    os.makedirs(directory, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(prefix=".tmp-", dir=directory)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.chmod(tmp_path, mode)
+        os.replace(tmp_path, path)
+    except BaseException:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+
 def read_json(path: str, default: Any = None) -> Any:
-    """Read JSON from `path`, returning `default` if missing or unreadable.
+    """Read JSON from `path`, returning `default` if it is missing.
 
     A file that exists but isn't valid JSON is renamed to `<name>.corrupt-<time>` first, so the
-    next save can't overwrite what might still be recovered from it (REL-2)."""
+    next save can't overwrite what might still be recovered from it (REL-2), and the newest good
+    copy from the data snapshots is put back when there is one (REL-21).
+
+    A file that exists but can't be opened (permissions, an I/O error) is not "corrupt" and is
+    not moved: it is reported, `default` is returned, and atomic_write_json refuses to replace
+    it until it can be read again, so a passing problem never costs the settings (REL-21)."""
     try:
         with open(path) as f:
-            return json.load(f)
-    except OSError:
+            data = json.load(f)
+    except FileNotFoundError:
+        return default
+    except OSError as e:
+        _mark_unreadable(path, e)
         return default
     except (json.JSONDecodeError, UnicodeDecodeError):
         quarantine_corrupt(path)
+        if _restore(path):
+            try:
+                with open(path) as f:
+                    return json.load(f)
+            except (OSError, ValueError):
+                return default
         return default
+    _UNREADABLE.discard(os.path.abspath(path))
+    return data
+
+
+# Called with (path) after a damaged file was set aside: put a good copy back, True if done.
+# backend.services.data_health adds the snapshot restore at start (fsutil can't import it).
+RESTORERS: list = []
+# Called with (path, error) when a settings file exists but can't be opened.
+UNREADABLE_LISTENERS: list = []
+_UNREADABLE: set[str] = set()
+
+
+def _restore(path: str) -> bool:
+    for restorer in list(RESTORERS):
+        try:
+            if restorer(path):
+                return True
+        except Exception:
+            logger.warning(f"[fsutil] could not restore {os.path.basename(path)}", exc_info=True)
+    return False
+
+
+def _mark_unreadable(path: str, error: OSError) -> None:
+    key = os.path.abspath(path)
+    first = key not in _UNREADABLE
+    _UNREADABLE.add(key)
+    if not first:
+        return
+    logger.error(f"[fsutil] {os.path.basename(path)} exists but could not be opened: {error}")
+    for listener in list(UNREADABLE_LISTENERS):
+        try:
+            listener(path, str(error))
+        except Exception:
+            logger.debug("fsutil: could not record the unreadable-file event", exc_info=True)
 
 
 # Called with (path, dest) when a damaged settings file is set aside. backend.state adds the

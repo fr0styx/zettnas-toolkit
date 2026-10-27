@@ -117,6 +117,12 @@
 
 #### Fixes
 
+- **Settings files are harder to lose**: a damaged one comes back from the daily snapshot; one that
+  only can't be opened (permissions, a disk error) is reported and never overwritten; smb.conf is
+  written in one step.
+- **Alerts are not lost when a channel is down**: an alert that could not go out on any channel is
+  tried again after 1, 5 and 15 minutes and then hourly for a few hours, and the cooldown starts
+  only once an alert actually got through.
 - A background service that hangs (instead of crashing) now shows as "stalled" in health and on
   the Overview; backup alerts run in their own thread so a stuck job can't silence them; a backup
   cut off by a restart says "interrupted" instead of looking busy forever.
