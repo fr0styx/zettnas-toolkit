@@ -249,12 +249,19 @@ def classify_query_task_intent(query: str, modality_hint: str = "all") -> tuple[
     if modality_hint == "code":
         return "code", TASK_PREFIX_CODE
 
+    from backend.services import rag_lang
+
     # Rule 1: Evaluate conversational / interrogative QA FIRST
     if QA_INDICATORS_RE.search(low) or low.endswith("?"):
         return "qa", TASK_PREFIX_QA
+    # A question in German, French, Spanish or Chinese gets the embedder's question prompt too
+    # (AI-13); its score weights stay those of a search, which the eval shows suit the lexical
+    # vectors for those languages better than the English question weights
+    if rag_lang.QA_RE.search(low) or low.endswith("？"):
+        return "search", TASK_PREFIX_QA
 
     # Rule 2: Evaluate classification / listing requests
-    if CLASS_INDICATORS_RE.search(low):
+    if CLASS_INDICATORS_RE.search(low) or rag_lang.CLASS_RE.search(low):
         return "classification", TASK_PREFIX_CLASSIFICATION
 
     # Rule 3: Evaluate unambiguous code syntax, CLI commands, or source file extensions

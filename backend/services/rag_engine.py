@@ -356,6 +356,13 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
     parent_dir = os.path.basename(os.path.dirname(file_path)) if isinstance(file_path, str) else ""
     path_context = f"{parent_dir} {file_name}".lower()
     path_words = re.findall(r"[a-z0-9]+", path_context)
+    from backend.services import rag_lang
+
+    for slug in rag_lang.scenes_in(text_tokens(path_context), path_context):  # "Strand", "海边" (AI-13)
+        _add_tag(slug)
+    for cname in rag_lang.colors_in(text_tokens(path_context), path_context):
+        object_colors[cname] = max(object_colors.get(cname, 0.0), 0.55)
+        frame_colors[cname] = max(frame_colors.get(cname, 0.0), 0.35)
     for w in path_words:
         if w in COLOR_SYNONYMS:
             cname = COLOR_SYNONYMS[w]
@@ -436,6 +443,8 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
 
     ocr_text = sanitize_string("\n".join(p for p in ocr_text_parts if p)).strip()
     if ocr_text:
+        for slug in rag_lang.scenes_in(text_tokens(ocr_text.lower()), ocr_text.lower()):
+            _add_tag(slug)
         for w in re.findall(r"[a-z0-9]+", ocr_text.lower()):
             for scene_slug, (_, syn_set) in SCENE_ONTOLOGY.items():
                 if w in syn_set:
@@ -940,6 +949,16 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                     self._migrate_unicode_tokens(conn)
                 except sqlite3.Error as e:
                     logger.warning(f"[RAG] Unicode token migration skipped: {e}")
+                try:
+                    from backend.services import rag_cjk
+
+                    if rag_cjk.ensure_schema(conn):
+                        added = rag_cjk.backfill(conn)  # once per index (AI-13)
+                        if added:
+                            logger.info(f"[RAG] {added} chunk(s) with CJK text added to the keyword index")
+                    conn.commit()
+                except sqlite3.Error as e:
+                    logger.warning(f"[RAG] CJK keyword index skipped: {e}")
 
                 self._schema_initialized = True
             finally:
@@ -1058,6 +1077,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "custom_hf_models": [],
             "removed_models": [],
             "vision_captions": "auto",  # AI-14: "auto" (when a vision model is installed) or "off"
+            "caption_language": "auto",  # AI-13: "auto" (the documents' language) or en, de, fr, es, zh
             "vision_model": "",
             "embedding_host": "",  # Ollama-compatible server for embeddings only; empty = the Ollama host
             "rerank_endpoint": "",  # AI-13: Cohere/OVMS/TEI-style /rerank URL, empty = off
@@ -1126,6 +1146,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "removed_models",
             "conversation_retention_days",
             "vision_captions",
+            "caption_language",
             "vision_model",
             "rerank_endpoint",
             "rerank_model",
@@ -1140,6 +1161,8 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 cfg[key] = {**(cfg.get(key) or {}), **switches}
         if str(cfg.get("vision_captions", "auto")).lower() not in ("auto", "off"):
             cfg["vision_captions"] = "auto"
+        if str(cfg.get("caption_language", "auto")).lower() not in ("auto", "en", "de", "fr", "es", "zh"):
+            cfg["caption_language"] = "auto"
         if "conversation_retention_days" in cfg:
             try:
                 cfg["conversation_retention_days"] = max(0, min(3650, int(cfg["conversation_retention_days"])))

@@ -162,6 +162,7 @@ class RagConfigUpdateRequest(BaseModel):
     idle_unload_minutes: int | None = None
     conversation_retention_days: int | None = Field(default=None, ge=0, le=3650)
     vision_captions: str | None = Field(default=None, pattern="^(auto|off)$")
+    caption_language: str | None = Field(default=None, pattern="^(auto|en|de|fr|es|zh)$")  # AI-13
     vision_model: str | None = Field(default=None, max_length=128)
     embedding_host: str | None = Field(default=None, max_length=512)
     rerank_endpoint: str | None = Field(default=None, max_length=512)

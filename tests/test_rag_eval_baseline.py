@@ -40,7 +40,8 @@ def test_extended_and_answer_sets_point_at_real_files():
     corpus = os.path.join(HERE, "corpus")
     ext = load_queries("extended")
     assert {q["kind"] for q in ext} == {"cross", "paraphrase"}
-    assert sum(q["kind"] == "cross" for q in ext) >= 50
+    assert sum(q["kind"] == "cross" for q in ext) >= 200  # AI-13
+    assert {q["lang"] for q in ext if q["kind"] == "cross"} == {"en", "de", "fr", "es", "zh"}
     cross_langs = {(q["lang"], q["relevant"][0].split("/")[0]) for q in ext if q["kind"] == "cross"}
     assert all(a != b for a, b in cross_langs), "a cross-language query must ask in another language"
     qa = load_qa()

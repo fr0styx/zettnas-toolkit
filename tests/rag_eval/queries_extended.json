@@ -808,5 +808,1409 @@
   "relevant": [
    "zh/食谱/红烧肉.md"
   ]
+ },
+ {
+  "id": "cross-051",
+  "lang": "en",
+  "kind": "cross",
+  "query": "how much does the class trip to Bad Tölz cost per child",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "cross-052",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "qui a été élu représentant des parents de la classe 3b",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "cross-053",
+  "lang": "es",
+  "kind": "cross",
+  "query": "reunión de padres: hay que llevar zapatillas de casa nuevas",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "cross-054",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "家长会记录 班级旅行费用",
+  "relevant": [
+   "de/arbeit/protokoll_elternabend.md"
+  ]
+ },
+ {
+  "id": "cross-055",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "quand faut-il refaire la révision de la Golf",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "cross-056",
+  "lang": "es",
+  "kind": "cross",
+  "query": "qué aceite le pusieron al Golf en la última inspección",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "cross-057",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "大众高尔夫保养 下次检查 公里数",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "cross-058",
+  "lang": "en",
+  "kind": "cross",
+  "query": "where are the winter tyres stored for the VW",
+  "relevant": [
+   "de/auto/inspektion_golf.txt"
+  ]
+ },
+ {
+  "id": "cross-059",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "combien faut-il rembourser pour les charges de 2024",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "cross-060",
+  "lang": "es",
+  "kind": "cross",
+  "query": "gastos de calefacción y agua caliente del piso 2024",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "cross-061",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "物业费结算 取暖费 补缴",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "cross-062",
+  "lang": "en",
+  "kind": "cross",
+  "query": "service charge statement property tax and caretaker",
+  "relevant": [
+   "de/finanzen/nebenkostenabrechnung_2024.csv"
+  ]
+ },
+ {
+  "id": "cross-063",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "les médicaments de papi pour le diabète",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "cross-064",
+  "lang": "es",
+  "kind": "cross",
+  "query": "la receta de metformina del abuelo caduca",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "cross-065",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "爷爷吃的药 血压 糖尿病",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "cross-066",
+  "lang": "en",
+  "kind": "cross",
+  "query": "phone number of grandad's family doctor",
+  "relevant": [
+   "de/gesundheit/medikamentenplan_opa.json"
+  ]
+ },
+ {
+  "id": "cross-067",
+  "lang": "en",
+  "kind": "cross",
+  "query": "family private cloud docker compose with postgres",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-068",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "configuration du cloud familial nextcloud",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-069",
+  "lang": "es",
+  "kind": "cross",
+  "query": "en qué puerto está la nube privada de la familia",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-070",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "家庭私有云 nextcloud 配置",
+  "relevant": [
+   "de/homelab/nextcloud_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-071",
+  "lang": "en",
+  "kind": "cross",
+  "query": "holiday flat on the Baltic coast key box code",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "cross-072",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "vacances au bord de la Baltique en août, le chien peut venir",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "cross-073",
+  "lang": "es",
+  "kind": "cross",
+  "query": "vacaciones en el mar Báltico lista de equipaje",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "cross-074",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "波罗的海度假 八月 公寓",
+  "relevant": [
+   "de/reisen/ostsee_urlaub.html"
+  ]
+ },
+ {
+  "id": "cross-075",
+  "lang": "en",
+  "kind": "cross",
+  "query": "cheese noodles with fried onions recipe",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "cross-076",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "recette des spätzle au fromage",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "cross-077",
+  "lang": "es",
+  "kind": "cross",
+  "query": "receta alemana de pasta con queso y cebolla",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "cross-078",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "德国奶酪面疙瘩怎么做",
+  "relevant": [
+   "de/rezepte/kaesespaetzle.md"
+  ]
+ },
+ {
+  "id": "cross-079",
+  "lang": "en",
+  "kind": "cross",
+  "query": "script that reboots the router when the internet is down",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "cross-080",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "redémarrer la box automatiquement si internet est coupé",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "cross-081",
+  "lang": "es",
+  "kind": "cross",
+  "query": "script para reiniciar el router cuando no hay internet",
+  "relevant": [
+   "de/skripte/router_neustart.sh"
+  ]
+ },
+ {
+  "id": "cross-082",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Haushaltsbudget 2025 Ausgaben für die Kinderbetreuung",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "cross-083",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "budget du foyer 2025 assurance voiture",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "cross-084",
+  "lang": "es",
+  "kind": "cross",
+  "query": "presupuesto familiar hipoteca y supermercado 2025",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "cross-085",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "家庭预算 房贷 托儿费",
+  "relevant": [
+   "en/finance/2025_household_budget.csv"
+  ]
+ },
+ {
+  "id": "cross-086",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Impfungen der Kinder Masern Mumps Röteln",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "cross-087",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "carnet de vaccination des enfants rougeole",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "cross-088",
+  "lang": "es",
+  "kind": "cross",
+  "query": "vacunas de los niños, cuándo fue la de la gripe",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "cross-089",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "孩子的疫苗接种记录",
+  "relevant": [
+   "en/health/vaccination_record_kids.json"
+  ]
+ },
+ {
+  "id": "cross-090",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Heizung Druck zu niedrig Fehler F22 nachfüllen",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "cross-091",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "pression de la chaudière trop basse, comment la remettre",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "cross-092",
+  "lang": "es",
+  "kind": "cross",
+  "query": "la caldera marca error F22 qué hago",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "cross-093",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "锅炉压力低 故障代码",
+  "relevant": [
+   "en/home/boiler_manual_notes.txt"
+  ]
+ },
+ {
+  "id": "cross-094",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Medienserver fürs Wohnzimmer mit Hardware-Transcoding",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "cross-095",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "serveur multimédia pour la télé du salon",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "cross-096",
+  "lang": "es",
+  "kind": "cross",
+  "query": "servidor de películas jellyfin puerto",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "cross-097",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "家庭影音服务器 硬件转码",
+  "relevant": [
+   "en/homelab/docker-compose-jellyfin.yml"
+  ]
+ },
+ {
+  "id": "cross-098",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Rezept Bananenbrot von Oma",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "cross-099",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "recette du cake à la banane avec des noix",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "cross-100",
+  "lang": "es",
+  "kind": "cross",
+  "query": "pan de plátano de la abuela temperatura del horno",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "cross-101",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "香蕉面包 烤多久",
+  "relevant": [
+   "en/recipes/banana_bread.md"
+  ]
+ },
+ {
+  "id": "cross-102",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Skript sichert die Fotos jede Nacht auf die USB-Platte",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "cross-103",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "copie nocturne des photos vers le disque USB",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "cross-104",
+  "lang": "es",
+  "kind": "cross",
+  "query": "copia de seguridad de las fotos al disco USB",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "cross-105",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "照片备份到U盘的脚本",
+  "relevant": [
+   "en/scripts/backup_photos.py"
+  ]
+ },
+ {
+  "id": "cross-106",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Japanreise im April Hotel in Tokio",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "cross-107",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "voyage au Japon en avril, quand activer le JR Pass",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "cross-108",
+  "lang": "es",
+  "kind": "cross",
+  "query": "viaje a Japón vuelo a Tokio",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "cross-109",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "日本行程 京都 住几晚",
+  "relevant": [
+   "en/travel/japan_itinerary.html"
+  ]
+ },
+ {
+  "id": "cross-110",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Planungsmeeting Q3 Termin für die Datenbankumstellung",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "cross-111",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "réunion de planification du troisième trimestre migration de la facturation",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "cross-112",
+  "lang": "es",
+  "kind": "cross",
+  "query": "acta de planificación del tercer trimestre contratación",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "cross-113",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "第三季度规划会议 计费迁移",
+  "relevant": [
+   "en/work/meeting_notes_q3_planning.md"
+  ]
+ },
+ {
+  "id": "cross-114",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Garantie der Waschmaschine bis wann",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "cross-115",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "garantie du lave-linge Bosch numéro du service technique",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "cross-116",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "洗衣机保修 故障代码",
+  "relevant": [
+   "es/casa/garantia_lavadora.txt"
+  ]
+ },
+ {
+  "id": "cross-117",
+  "lang": "en",
+  "kind": "cross",
+  "query": "monthly spending rent flat in Valencia",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "cross-118",
+  "lang": "de",
+  "kind": "cross",
+  "query": "monatliche Ausgaben Miete Wohnung Valencia",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "cross-119",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "dépenses du mois loyer et salle de sport",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "cross-120",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "每月开支 房租 健身房",
+  "relevant": [
+   "es/finanzas/gastos_mensuales.csv"
+  ]
+ },
+ {
+  "id": "cross-121",
+  "lang": "en",
+  "kind": "cross",
+  "query": "home automation compose with the zigbee stick",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-122",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Hausautomation Rollläden Thermostat Container",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-123",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "domotique de la maison volets et thermostat",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-124",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "智能家居 home assistant 配置",
+  "relevant": [
+   "es/homelab/home_assistant_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-125",
+  "lang": "en",
+  "kind": "cross",
+  "query": "grandma's Spanish potato omelette",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "cross-126",
+  "lang": "de",
+  "kind": "cross",
+  "query": "spanisches Kartoffelomelett Rezept",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "cross-127",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "recette de l'omelette espagnole aux pommes de terre",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "cross-128",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "西班牙土豆煎蛋饼做法",
+  "relevant": [
+   "es/recetas/tortilla_de_patatas.md"
+  ]
+ },
+ {
+  "id": "cross-129",
+  "lang": "en",
+  "kind": "cross",
+  "query": "when is the dermatology appointment",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "cross-130",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Arzttermine Hautarzt und Zahnarzt",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "cross-131",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "rendez-vous chez l'ophtalmologue en décembre",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "cross-132",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "看牙医的预约时间",
+  "relevant": [
+   "es/salud/citas_medicas.json"
+  ]
+ },
+ {
+  "id": "cross-133",
+  "lang": "en",
+  "kind": "cross",
+  "query": "telegram alert when the NAS disk is over 90 percent",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "cross-134",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Warnung per Telegram wenn die Festplatte voll ist",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "cross-135",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "alerte Telegram quand le disque du NAS est plein",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "cross-136",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "硬盘快满了 发 telegram 提醒",
+  "relevant": [
+   "es/scripts/aviso_disco_lleno.py"
+  ]
+ },
+ {
+  "id": "cross-137",
+  "lang": "en",
+  "kind": "cross",
+  "query": "residents meeting lift replacement cost per flat",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "cross-138",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Eigentümerversammlung neuer Aufzug Umlage",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "cross-139",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "réunion des copropriétaires remplacement de l'ascenseur",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "cross-140",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "业主大会 更换电梯 费用",
+  "relevant": [
+   "es/trabajo/acta_reunion_vecinos.md"
+  ]
+ },
+ {
+  "id": "cross-141",
+  "lang": "en",
+  "kind": "cross",
+  "query": "trip to Asturias hiking the Cares route",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "cross-142",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Ausflug nach Asturien Seen von Covadonga",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "cross-143",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "escapade dans les Asturies gîte en mai",
+  "relevant": [
+   "es/viajes/escapada_asturias.html"
+  ]
+ },
+ {
+  "id": "cross-144",
+  "lang": "en",
+  "kind": "cross",
+  "query": "income tax 2025 childcare tax credit",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "cross-145",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Steuern 2025 Spenden und Haushaltshilfe",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "cross-146",
+  "lang": "es",
+  "kind": "cross",
+  "query": "impuestos 2025 guardería deducción",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "cross-147",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "2025年 个人所得税 托儿费抵税",
+  "relevant": [
+   "fr/finances/impots_2025.csv"
+  ]
+ },
+ {
+  "id": "cross-148",
+  "lang": "en",
+  "kind": "cross",
+  "query": "network wide ad blocker container",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-149",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Werbeblocker für das ganze Heimnetz",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-150",
+  "lang": "es",
+  "kind": "cross",
+  "query": "bloqueador de anuncios para toda la red de casa",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-151",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "全屋广告拦截 pihole",
+  "relevant": [
+   "fr/homelab/pihole_compose.yml"
+  ]
+ },
+ {
+  "id": "cross-152",
+  "lang": "en",
+  "kind": "cross",
+  "query": "how to cancel the internet contract and return the TV box",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "cross-153",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Internetvertrag Kündigung Frist",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "cross-154",
+  "lang": "es",
+  "kind": "cross",
+  "query": "contrato de fibra cuánto cuesta al mes",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "cross-155",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "宽带合同 怎么退订",
+  "relevant": [
+   "fr/maison/contrat_box_internet.txt"
+  ]
+ },
+ {
+  "id": "cross-156",
+  "lang": "en",
+  "kind": "cross",
+  "query": "quiche with bacon bits and cream",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "cross-157",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Rezept Quiche Lorraine mit Speck",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "cross-158",
+  "lang": "es",
+  "kind": "cross",
+  "query": "receta de quiche con beicon y nata",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "cross-159",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "法式咸派怎么做",
+  "relevant": [
+   "fr/recettes/quiche_lorraine.md"
+  ]
+ },
+ {
+  "id": "cross-160",
+  "lang": "en",
+  "kind": "cross",
+  "query": "when is the cat's next vaccine booster",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "cross-161",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Impfpass der Katze Tierarzt",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "cross-162",
+  "lang": "es",
+  "kind": "cross",
+  "query": "vacunas del gato y desparasitación",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "cross-163",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "猫咪疫苗 驱虫",
+  "relevant": [
+   "fr/sante/carnet_vaccination_chat.json"
+  ]
+ },
+ {
+  "id": "cross-164",
+  "lang": "en",
+  "kind": "cross",
+  "query": "weekly rsync of the paperwork to the external drive",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "cross-165",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Sicherung der Unterlagen auf die externe Festplatte jeden Sonntag",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "cross-166",
+  "lang": "es",
+  "kind": "cross",
+  "query": "copia de los papeles al disco externo los domingos",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "cross-167",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "每周日备份文件到外接硬盘",
+  "relevant": [
+   "fr/scripts/sauvegarde_documents.sh"
+  ]
+ },
+ {
+  "id": "cross-168",
+  "lang": "en",
+  "kind": "cross",
+  "query": "team meeting minutes trade fair in Lyon",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "cross-169",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Teambesprechung neue Rechnungssoftware Schulung",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "cross-170",
+  "lang": "es",
+  "kind": "cross",
+  "query": "acta de la reunión de equipo feria de Lyon",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "cross-171",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "团队会议纪要 里昂展会",
+  "relevant": [
+   "fr/travail/compte_rendu_reunion.md"
+  ]
+ },
+ {
+  "id": "cross-172",
+  "lang": "en",
+  "kind": "cross",
+  "query": "summer holiday in Brittany cottage in July",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "cross-173",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Urlaub in der Bretagne Bootsausflug Papageitaucher",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "cross-174",
+  "lang": "es",
+  "kind": "cross",
+  "query": "vacaciones en Bretaña en julio",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "cross-175",
+  "lang": "zh",
+  "kind": "cross",
+  "query": "布列塔尼度假 七月",
+  "relevant": [
+   "fr/voyages/bretagne_ete.html"
+  ]
+ },
+ {
+  "id": "cross-176",
+  "lang": "en",
+  "kind": "cross",
+  "query": "health check results cholesterol too high",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "cross-177",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Ergebnisse der Vorsorgeuntersuchung Blutdruck erhöht",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "cross-178",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "résultats du bilan de santé cholestérol",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "cross-179",
+  "lang": "es",
+  "kind": "cross",
+  "query": "resultados del chequeo médico tensión alta",
+  "relevant": [
+   "zh/健康/体检报告摘要.json"
+  ]
+ },
+ {
+  "id": "cross-180",
+  "lang": "en",
+  "kind": "cross",
+  "query": "air conditioner cleaning record and error E1",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "cross-181",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Klimaanlage Wartung Filter reinigen",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "cross-182",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "entretien de la climatisation Gree",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "cross-183",
+  "lang": "es",
+  "kind": "cross",
+  "query": "mantenimiento del aire acondicionado garantía",
+  "relevant": [
+   "zh/家庭/空调保养.txt"
+  ]
+ },
+ {
+  "id": "cross-184",
+  "lang": "en",
+  "kind": "cross",
+  "query": "NAS backup plan hyper backup to the external drive",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "cross-185",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Backup-Plan für das NAS externe Festplatte",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "cross-186",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "plan de sauvegarde du NAS Synology",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "cross-187",
+  "lang": "es",
+  "kind": "cross",
+  "query": "copia de seguridad del NAS y prueba de restauración",
+  "relevant": [
+   "zh/家庭网络/群晖备份说明.md"
+  ]
+ },
+ {
+  "id": "cross-188",
+  "lang": "en",
+  "kind": "cross",
+  "query": "weekly project report login module crash rate",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "cross-189",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Projekt-Wochenbericht Testserver zu wenig Speicher",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "cross-190",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "rapport hebdomadaire du projet module de paiement",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "cross-191",
+  "lang": "es",
+  "kind": "cross",
+  "query": "informe semanal del proyecto demostración al cliente",
+  "relevant": [
+   "zh/工作/项目周报.md"
+  ]
+ },
+ {
+  "id": "cross-192",
+  "lang": "en",
+  "kind": "cross",
+  "query": "Yunnan trip itinerary Dali and Lijiang",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "cross-193",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Reiseplan Yunnan Jadedrachen-Schneeberg",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "cross-194",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "itinéraire au Yunnan en octobre",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "cross-195",
+  "lang": "es",
+  "kind": "cross",
+  "query": "viaje de diez días por Yunnan",
+  "relevant": [
+   "zh/旅行/云南行程.html"
+  ]
+ },
+ {
+  "id": "cross-196",
+  "lang": "en",
+  "kind": "cross",
+  "query": "script deletes downloads older than thirty days",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "cross-197",
+  "lang": "de",
+  "kind": "cross",
+  "query": "alte Dateien im Download-Ordner automatisch löschen",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "cross-198",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "supprimer les vieux fichiers du dossier téléchargements",
+  "relevant": [
+   "zh/脚本/清理下载.py"
+  ]
+ },
+ {
+  "id": "cross-199",
+  "lang": "en",
+  "kind": "cross",
+  "query": "family spending mortgage and tutoring classes",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "cross-200",
+  "lang": "de",
+  "kind": "cross",
+  "query": "Familienausgaben Hypothek und Nachhilfe",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "cross-201",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "dépenses familiales prêt immobilier et cours de soutien",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "cross-202",
+  "lang": "es",
+  "kind": "cross",
+  "query": "gastos familiares hipoteca y seguro del coche",
+  "relevant": [
+   "zh/财务/家庭开支.csv"
+  ]
+ },
+ {
+  "id": "cross-203",
+  "lang": "en",
+  "kind": "cross",
+  "query": "mum's braised pork belly recipe",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "cross-204",
+  "lang": "de",
+  "kind": "cross",
+  "query": "geschmorter Schweinebauch chinesisch Rezept",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "cross-205",
+  "lang": "fr",
+  "kind": "cross",
+  "query": "recette du porc braisé à la chinoise",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
+ },
+ {
+  "id": "cross-206",
+  "lang": "es",
+  "kind": "cross",
+  "query": "receta de panceta de cerdo estofada china",
+  "relevant": [
+   "zh/食谱/红烧肉.md"
+  ]
  }
 ]

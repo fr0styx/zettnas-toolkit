@@ -4,6 +4,10 @@
 
 #### AI
 
+- **Search speaks your household's languages**: questions in German, French, Spanish and Chinese
+  are understood like English ones ("wie", "comment", "怎么" questions, colours and scenes such as
+  "rotes Auto" or "海边"), Chinese, Japanese and Korean text is found by keyword too, and photo
+  captions are written in the language most of your documents use (or the one you set).
 - **Photos by date and place**: the date a photo was taken and where (from its EXIF, iPhone HEIC
   photos too) are read as it is indexed; older photos are read overnight on disks that are awake.
   Search has year and place filters, and "photos from Rome in June 2023" filters by itself. Zetty

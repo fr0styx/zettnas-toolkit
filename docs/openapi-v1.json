@@ -28634,6 +28634,18 @@
       ],
       "title": "Auto Learn On Spinup"
      },
+     "caption_language": {
+      "anyOf": [
+       {
+        "pattern": "^(auto|en|de|fr|es|zh)$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Caption Language"
+     },
      "compute_preference": {
       "anyOf": [
        {

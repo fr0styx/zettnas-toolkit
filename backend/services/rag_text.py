@@ -11,6 +11,9 @@ import re
 import struct
 from typing import Any
 
+from backend.services import rag_lang
+from backend.services.rag_lang import ENGLISH_STOPWORDS
+
 EMBEDDING_DIM = 384
 MAX_INDEX_FILE_BYTES = 50 * 1024 * 1024  # 50 MB max text/PDF file parse cap
 
@@ -482,61 +485,7 @@ VIDEO_EXTENSIONS: set[str] = {
 }
 
 _FTS5_RESERVED = {"and", "or", "not", "near"}
-_STOPWORDS = {
-    "a",
-    "an",
-    "the",
-    "is",
-    "are",
-    "was",
-    "were",
-    "what",
-    "whats",
-    "where",
-    "wheres",
-    "when",
-    "whens",
-    "who",
-    "whos",
-    "how",
-    "hows",
-    "why",
-    "whys",
-    "in",
-    "on",
-    "at",
-    "to",
-    "for",
-    "of",
-    "with",
-    "by",
-    "from",
-    "about",
-    "me",
-    "my",
-    "find",
-    "show",
-    "search",
-    "get",
-    "tell",
-    "photos",
-    "photo",
-    "picture",
-    "pictures",
-    "image",
-    "images",
-    "file",
-    "files",
-    "color",
-    "coloured",
-    "colored",
-    "specific",
-    "some",
-    "any",
-    "can",
-    "you",
-    "please",
-}
+_STOPWORDS = ENGLISH_STOPWORDS  # kept in rag_lang next to the other four languages (AI-13)
 
 
 # Unicode tokenisation (AI-13). Chinese, Japanese and Korean have no spaces between words,
@@ -611,13 +560,14 @@ def build_safe_fts5_query(raw_query: str, remove_stopwords: bool = True) -> str:
         return ""
 
     cleaned = re.sub(r"(\w)['’]s\b", r"\1s", raw_query.lower())
-    raw_tokens = re.findall(r"[a-z0-9_\u00c0-\u024f\u0400-\u04ff\u4e00-\u9fff]+", cleaned)
+    raw_tokens = _TOKEN_RE.findall(cleaned)  # kana and hangul too (AI-13)
     if not raw_tokens:
         return ""
 
     filtered = [t for t in raw_tokens if t not in _FTS5_RESERVED and len(t) <= 64]
     if remove_stopwords:
-        meaningful = [t for t in filtered if t not in _STOPWORDS and (len(t) >= 2 or t.isdigit() or ord(t[0]) > 127)]
+        stop = rag_lang.stopwords_for(raw_query)  # the question's language too (AI-13)
+        meaningful = [t for t in filtered if t not in stop and (len(t) >= 2 or t.isdigit() or ord(t[0]) > 127)]
         if meaningful:
             filtered = meaningful
 
@@ -721,7 +671,8 @@ def parse_multimodal_query(raw_query: str) -> dict[str, Any]:
     """
     q = str(raw_query or "").strip()
     cleaned = re.sub(r"(\w)['’]s\b", r"\1s", q.lower())
-    tokens = re.findall(r"[a-z0-9_\u00c0-\u024f\u0400-\u04ff\u4e00-\u9fff]+", cleaned)
+    tokens = _TOKEN_RE.findall(cleaned)
+    stop = rag_lang.stopwords_for(q)
 
     auto_colors: list[str] = []
     auto_scenes: list[str] = []
@@ -736,8 +687,22 @@ def parse_multimodal_query(raw_query: str) -> dict[str, Any]:
             if tok in syn_set or (tok.endswith("s") and tok[:-1] in syn_set):
                 if scene_slug not in auto_scenes:
                     auto_scenes.append(scene_slug)
-        if tok not in _STOPWORDS:
+        if tok not in stop:
             content_tokens.append(tok)
+    # colours named in German, French, Spanish or Chinese (AI-13); their scenes only when the
+    # question is about pictures ("Fotos vom Strand"), so "darf der Hund mit" stays a question
+    # about a document
+    for c in rag_lang.colors_in(tokens, cleaned):
+        if c not in auto_colors:
+            auto_colors.append(c)
+    if (
+        auto_colors
+        or any(t in {"photo", "photos", "picture", "pictures", "image", "images"} for t in tokens)
+        or (rag_lang.any_word(tokens, cleaned, rag_lang.PHOTO_WORDS))
+    ):
+        for s in rag_lang.scenes_in(tokens, cleaned):
+            if s not in auto_scenes:
+                auto_scenes.append(s)
 
     # Determine modality hint
     photo_words = {"photo", "photos", "picture", "pictures", "image", "images", "img", "pic", "camera", "selfie"}
@@ -745,13 +710,20 @@ def parse_multimodal_query(raw_query: str) -> dict[str, Any]:
     visual_scenes = {"pool", "beach", "car", "person", "pet", "sunset", "snow"}
 
     modality_hint = "all"
-    if any(t in photo_words for t in tokens) or (
-        (auto_colors or any(s in visual_scenes for s in auto_scenes)) and not any(t in doc_words for t in tokens)
+    asks_docs = any(t in doc_words for t in tokens) or rag_lang.any_word(tokens, cleaned, rag_lang.DOC_WORDS)
+    if (
+        any(t in photo_words for t in tokens)
+        or rag_lang.any_word(tokens, cleaned, rag_lang.PHOTO_WORDS)
+        or ((auto_colors or any(s in visual_scenes for s in auto_scenes)) and not asks_docs)
     ):
         modality_hint = "photos"
-    elif "recipe" in auto_scenes or any(t in {"recipe", "recipes", "ingredients", "cook"} for t in tokens):
+    elif (
+        "recipe" in auto_scenes
+        or any(t in {"recipe", "recipes", "ingredients", "cook"} for t in tokens)
+        or rag_lang.any_word(tokens, cleaned, rag_lang.RECIPE_WORDS)
+    ):
         modality_hint = "recipes"
-    elif any(t in doc_words for t in tokens):
+    elif asks_docs:
         modality_hint = "documents"
 
     return {

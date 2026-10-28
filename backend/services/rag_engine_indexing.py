@@ -29,6 +29,7 @@ from backend.logging_config import (  # noqa: F401
     sanitize_string,
 )
 from backend.services import (  # noqa: F401
+    rag_cjk,
     rag_standby,
 )
 from backend.services.ai_activity import upgrade_window_open
@@ -1038,6 +1039,7 @@ class RagIndexingMixin:
                 f"INSERT INTO photo_assets ({', '.join(names)}) VALUES ({', '.join('?' * len(names))})",
                 [prow[n] for n in names],
             )
+        rag_cjk.sync_file(conn, new_id)  # the copy's CJK keyword rows (AI-13)
         for table in ("doc_tags",):
             conn.execute(
                 f"INSERT OR IGNORE INTO {table} (file_id, tag) SELECT ?, tag FROM {table} WHERE file_id = ?",
@@ -1500,6 +1502,7 @@ class RagIndexingMixin:
                                 conn, int(cur_c.lastrowid or 0), ch_blob, file_id, vis_tier, dim=ch_dim
                             )
 
+                    rag_cjk.sync_file(conn, file_id)  # CJK keyword rows (AI-13)
                     conn.commit()
                     return file_id
                 finally:
@@ -1705,6 +1708,7 @@ class RagIndexingMixin:
                     )
                     if effective_file_emb_model != "zett_lexical_384d" and ch_dim == self._vec_table_dim:
                         self.sync_vector_chunk(conn, int(cur_c.lastrowid or 0), emb_blob, file_id, vis_tier, dim=ch_dim)
+                rag_cjk.sync_file(conn, file_id)  # CJK keyword rows (AI-13)
                 conn.commit()
                 return file_id
             finally:

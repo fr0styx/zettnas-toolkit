@@ -708,6 +708,9 @@ class RagSearchMixin:
         results: list[dict[str, Any]] = []
         q_lower = (raw_query or "").lower()
         readable = self._post_rbac_checker(principal)
+        from backend.services import rag_lang
+
+        stop = rag_lang.stopwords_for(raw_query or "")
 
         for r in rows:
             c_path = r["canonical_path"]
@@ -782,7 +785,7 @@ class RagSearchMixin:
             # a photo the date or place filter chose is a match by itself (AI-24)
             if raw_query.strip() and not req_colors and not req_scenes and s_bm25 <= 0.0 and not filtered:
                 photo_haystack = f"{r['file_name']} {r['auto_tags_text']} {r['caption_text']} {r['ocr_text']}".lower()
-                q_words = [w for w in text_tokens(q_lower) if w not in _STOPWORDS and (len(w) >= 3 or _has_cjk(w))]
+                q_words = [w for w in text_tokens(q_lower) if w not in stop and (len(w) >= 3 or _has_cjk(w))]
                 if q_words and not any(_token_matches_word(w, photo_haystack) for w in q_words) and s_vec < 0.48:
                     continue
             if (raw_query.strip() or req_colors or req_scenes) and final_score < 0.12 and not filtered:
@@ -895,6 +898,31 @@ class RagSearchMixin:
                     bm25_rank[cid] = rank_idx
             except sqlite3.OperationalError:
                 pass
+        # Chinese, Japanese and Korean text by character pairs, from their own index (AI-13)
+        from backend.services import rag_cjk
+
+        cjk_query = rag_cjk.match_query(raw_query)
+        if cjk_query:
+            try:
+                for r in conn.execute(
+                    f"""
+                    SELECT x.rowid AS chunk_id, -bm25({rag_cjk.TABLE}) AS raw_bm25
+                    FROM {rag_cjk.TABLE} x
+                    JOIN document_chunks c ON c.chunk_id = x.rowid
+                    JOIN indexed_files f ON f.file_id = c.file_id
+                    WHERE {rag_cjk.TABLE} MATCH ? AND {scope_sql}
+                    ORDER BY raw_bm25 DESC
+                    LIMIT 250
+                    """,
+                    [cjk_query, *scope_params],
+                ).fetchall():
+                    cid = int(r["chunk_id"])
+                    raw_val = max(0.0, float(r["raw_bm25"] or 0.0))
+                    bm25_map[cid] = max(bm25_map.get(cid, 0.0), raw_val / (raw_val + 5.0))
+                ranked = sorted(bm25_map, key=lambda k: -bm25_map[k])
+                bm25_rank = {cid: i for i, cid in enumerate(ranked, start=1)}
+            except sqlite3.OperationalError:
+                pass  # no CJK index (an SQLite without contentless tables)
 
         fts_chunk_ids = list(bm25_map.keys())
         vec_ids: set[int] | None = None

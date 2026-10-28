@@ -1,56 +1,62 @@
 {
  "model": "zett_lexical_384d",
  "overall": {
-  "recall@1": 0.75,
-  "recall@5": 0.845,
-  "mrr@10": 0.785,
+  "recall@1": 0.835,
+  "recall@5": 0.865,
+  "all@5": 0.865,
+  "mrr@10": 0.848,
   "queries": 200
  },
  "by_language": {
   "de": {
-   "recall@1": 0.7,
-   "recall@5": 0.825,
-   "mrr@10": 0.748,
+   "recall@1": 0.775,
+   "recall@5": 0.8,
+   "all@5": 0.8,
+   "mrr@10": 0.783,
    "queries": 40
   },
   "en": {
    "recall@1": 0.8,
    "recall@5": 0.8,
+   "all@5": 0.8,
    "mrr@10": 0.8,
    "queries": 40
   },
   "es": {
-   "recall@1": 0.75,
-   "recall@5": 0.9,
-   "mrr@10": 0.793,
+   "recall@1": 0.875,
+   "recall@5": 0.925,
+   "all@5": 0.925,
+   "mrr@10": 0.9,
    "queries": 40
   },
   "fr": {
-   "recall@1": 0.65,
-   "recall@5": 0.85,
-   "mrr@10": 0.732,
+   "recall@1": 0.825,
+   "recall@5": 0.9,
+   "all@5": 0.9,
+   "mrr@10": 0.855,
    "queries": 40
   },
   "zh": {
-   "recall@1": 0.85,
-   "recall@5": 0.85,
-   "mrr@10": 0.85,
+   "recall@1": 0.9,
+   "recall@5": 0.9,
+   "all@5": 0.9,
+   "mrr@10": 0.9,
    "queries": 40
   }
  },
  "by_split": {
   "dev": {
-   "recall@1": 0.761,
-   "recall@5": 0.868,
-   "all@5": 0.868,
-   "mrr@10": 0.801,
+   "recall@1": 0.843,
+   "recall@5": 0.874,
+   "all@5": 0.874,
+   "mrr@10": 0.857,
    "queries": 159
   },
   "heldout": {
-   "recall@1": 0.732,
-   "recall@5": 0.78,
-   "all@5": 0.78,
-   "mrr@10": 0.754,
+   "recall@1": 0.805,
+   "recall@5": 0.829,
+   "all@5": 0.829,
+   "mrr@10": 0.81,
    "queries": 41
   }
  }

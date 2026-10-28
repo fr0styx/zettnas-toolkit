@@ -17,6 +17,7 @@ installed) or "off"; vision_model to pin a model.
 """
 
 import base64
+import contextvars
 import io
 import json
 import logging
@@ -52,6 +53,19 @@ PROMPT = (
     '{"caption": "<one plain sentence: the main subjects, how many people, the place and what is happening>", '
     '"text": "<all readable text in the image, copied exactly, or empty>"}'
 )
+# the language captions are written in, for the photo being described (AI-13)
+_CAPTION_LANG: contextvars.ContextVar[str] = contextvars.ContextVar("caption_lang", default="en")
+
+
+def caption_prompt(lang: str = "en") -> str:
+    """The prompt, asking for the caption in the household's language (the text stays as written)."""
+    from backend.services import rag_lang
+
+    if lang == "en" or lang not in rag_lang.NAMES:
+        return PROMPT
+    return f"{PROMPT} Write the caption in {rag_lang.NAMES[lang]}; copy the text in the image as it is."
+
+
 MAX_SIDE = 896
 CAPTION_MAX = 300
 TEXT_MAX = 2000
@@ -214,7 +228,7 @@ def describe_image(path: str, model: str, host: str, post: Callable = _http_json
         "format": "json",
         "keep_alive": "2m",
         "options": {"temperature": 0},
-        "messages": [{"role": "user", "content": PROMPT, "images": [encode_image(path)]}],
+        "messages": [{"role": "user", "content": caption_prompt(_CAPTION_LANG.get()), "images": [encode_image(path)]}],
     }
     with gpu_queue.use(gpu_queue.VISION):
         reply = post(f"{host}/api/chat", body, timeout=180)
@@ -292,10 +306,39 @@ class VisionQueue:
     @staticmethod
     def _apply(conn, file_id: int, base_caption: str, base_ocr: str, caption: str, text: str) -> None:
         ocr = base_ocr if not text or text in (base_ocr or "") else "\n".join(x for x in (base_ocr, text) if x)
+        new_caption = merged_caption(base_caption, caption, text)
         conn.execute(
             "UPDATE photo_assets SET caption_text = ?, ocr_text = ? WHERE file_id = ?",
-            (merged_caption(base_caption, caption, text), ocr[: TEXT_MAX * 2], file_id),
+            (new_caption, ocr[: TEXT_MAX * 2], file_id),
         )
+        VisionQueue._embed_caption(conn, file_id)
+
+    @staticmethod
+    def _embed_caption(conn, file_id: int) -> None:
+        """The photo's vector is made again with its caption and text in it, so a search finds
+        what the caption says, not only its words in the keyword index (AI-13)."""
+        import json as _json
+
+        from backend.services.rag_embeddings import compute_384d_embedding, unpack_embedding
+
+        try:
+            r = conn.execute(
+                "SELECT file_name, auto_tags_text, caption_text, ocr_text, scene_tags_json, object_colors_json, "
+                "frame_colors_json, center_color_hist_f32 FROM photo_assets WHERE file_id = ?",
+                (file_id,),
+            ).fetchone()
+            if not r:
+                return
+            blob, _ = compute_384d_embedding(
+                text=f"{r[0] or ''} {r[1] or ''} {r[2] or ''} {r[3] or ''}",
+                scene_tags=_json.loads(r[4] or "[]"),
+                object_colors=_json.loads(r[5] or "{}"),
+                frame_colors=_json.loads(r[6] or "{}"),
+                color_hist_64=unpack_embedding(r[7]) or None,
+            )
+            conn.execute("UPDATE photo_assets SET vision_embedding_f32 = ? WHERE file_id = ?", (blob, file_id))
+        except (ValueError, TypeError):
+            logger.debug("vision_queue: the photo's vector was not remade", exc_info=True)
 
     def process_one(self) -> str:
         """Captions one photo. Returns what happened; run_forever waits based on it."""
@@ -333,7 +376,15 @@ class VisionQueue:
                     return "standby"
             key = row["sha256_hash"]
             try:
-                caption, text = self.describe(path, model, host)
+                from backend.services import rag_lang
+
+                lang_token = _CAPTION_LANG.set(
+                    rag_lang.caption_language(cfg, conn, getattr(self.engine, "db_path", ""))
+                )
+                try:
+                    caption, text = self.describe(path, model, host)
+                finally:
+                    _CAPTION_LANG.reset(lang_token)
                 status, err = ("done", "") if caption or text else ("error", "empty reply")
             except Exception as e:
                 caption, text, status, err = "", "", "error", f"{type(e).__name__}: {e}"[:300]
