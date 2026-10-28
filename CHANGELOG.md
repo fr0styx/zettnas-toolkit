@@ -4,6 +4,9 @@
 
 #### AI
 
+- **See your duplicates**: a Duplicates button next to the search filters shows every set of copies
+  (photos that look the same, a resized copy included, and identical files), how much space they
+  take, and lets you move a copy to the recycle bin; the last copy of a set stays.
 - **Document tags you can trust, and Zetty uses them**: words that also mean something everyday
   ("Firma", "premium", "balance") no longer tag a file on their own; a labelled set in five languages
   checks every tag. Asking Zetty for "my bills from 2024" searches the bills of 2024. Browsing by a

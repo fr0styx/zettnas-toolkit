@@ -1,0 +1,8 @@
+.dup-window { width: min(760px, calc(100vw - 32px)); }
+.dup-body { max-height: 70vh; overflow: auto; display: grid; gap: var(--zn-space-3); }
+.dup-group { padding: var(--zn-space-3); border-radius: var(--zn-radius); background: var(--card); }
+.dup-files { list-style: none; margin: var(--zn-space-2) 0 0; padding: 0; display: grid; gap: var(--zn-space-2); }
+.dup-file { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: var(--zn-space-3); }
+.dup-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; background: var(--card-hi); }
+.dup-where { display: grid; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .dup-file { grid-template-columns: auto 1fr; } }

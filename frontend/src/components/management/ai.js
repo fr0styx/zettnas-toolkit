@@ -10,6 +10,7 @@ import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { immichResultsHtml } from '../immich-settings.js';
 import { installDocFilters, selectedTags } from './doc-filters.js';
+import { installDuplicatesButton } from './duplicates.js';
 import { installAiAccess } from './ai-access.js';
 import { formatDateTime, formatNumber, formatTime } from '../../format.js';
 
@@ -1454,6 +1455,7 @@ export function initAiKnowledgeEngine() {
   });
 
   installDocFilters(document, () => runAiVisualSearch()); // document filters (B8)
+  installDuplicatesButton(document); // copies kept more than once (AI-35)
 
   // Sort Selector (#ai-search-sort-select)
   const sortSelect = document.getElementById('ai-search-sort-select');
