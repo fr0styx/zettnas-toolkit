@@ -60,12 +60,28 @@ function _savedLanguage() {
   }
 }
 
-// Start fetching the saved language while the rest of the app loads.
+function _browserLanguage() {
+  if (typeof navigator === 'undefined' || !navigator.language) return null;
+  const lang = navigator.language.split('-')[0].toLowerCase();
+  return LOADERS[lang] ? lang : null;
+}
+
+// Start fetching the language in use while the rest of the app loads. English only when it is
+// that language: every t() call carries its English text and the other languages have every
+// key (the translation lint), so for them English is fetched only if a key is missing (PERF-9).
 (() => {
-  loadLanguage('en');
   const saved = _savedLanguage();
-  if (saved && saved !== 'en' && LOADERS[saved]) loadLanguage(saved);
+  loadLanguage(saved && LOADERS[saved] ? saved : _browserLanguage() || 'en');
 })();
+
+let _englishForMisses = null;
+
+function _fetchEnglishForMisses() {
+  if (_englishForMisses) return;
+  _englishForMisses = loadLanguage('en').then((ok) => {
+    if (ok && typeof document !== 'undefined') applyTranslations();
+  });
+}
 
 let _currentLang = 'en';
 
@@ -135,6 +151,7 @@ export function t(key, fallback = '', params = null) {
       str = enDict[key];
     } else {
       str = fallback || key;
+      if (!enDict && _currentLang !== 'en') _fetchEnglishForMisses();
     }
   }
 
@@ -221,12 +238,7 @@ export function initI18n() {
     saved = localStorage.getItem(STORAGE_KEY);
   } catch (e) {}
 
-  if (!saved && typeof navigator !== 'undefined' && navigator.language) {
-    const browserLang = navigator.language.split('-')[0].toLowerCase();
-    if (isSupportedLanguage(browserLang)) {
-      saved = browserLang;
-    }
-  }
+  if (!saved) saved = _browserLanguage();
 
   const ready = setLanguage(saved || 'en');
 

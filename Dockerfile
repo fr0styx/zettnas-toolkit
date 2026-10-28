@@ -83,7 +83,7 @@ ENV ZETTNAS_IMAGE_VARIANT=${VARIANT}
 RUN if [ "$VARIANT" = "full" ]; then \
     apt-get update && apt-get install -y --no-install-recommends \
         qemu-system-x86 \
-        qemu-system-arm \
+        $( [ "$TARGETARCH" = "arm64" ] && echo qemu-system-arm ) \
         qemu-utils \
         ovmf \
         swtpm \

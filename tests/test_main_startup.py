@@ -67,6 +67,7 @@ class TestStartup:
             quiet["supervised"]
         )
         assert {"BackupScheduler", "TaskScheduler", "BackupWatch"} <= set(quiet["supervised"])  # ARC-10, REL-18
+        dict(quiet["threads"])["RagStart"]()  # the AI index opens in its own thread (PERF-28)
         assert {"rag", "webdav"} <= set(quiet["started"])
         assert "VmAutostart" in [n for n, _ in quiet["threads"]] and quiet["atexit"]
 

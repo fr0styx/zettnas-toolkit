@@ -317,13 +317,18 @@ def startup_system():
 
     supervise("BackupWatch", watch_daemon, beat_every=60)  # backup alerts in their own thread
 
-    try:
-        from backend.services.rag_engine import get_rag_engine
+    def _start_rag() -> None:
+        try:
+            from backend.services.rag_engine import get_rag_engine
 
-        get_rag_engine()
-        logger.info("[ZettAI] Spin-up auto-learner & standby guard daemon initialized.")
-    except Exception as e:
-        logger.warning(f"Could not auto-start ZettAI spin-up watcher: {e}")
+            get_rag_engine()
+            logger.info("[ZettAI] Spin-up auto-learner & standby guard daemon initialized.")
+        except Exception as e:
+            logger.warning(f"Could not auto-start ZettAI spin-up watcher: {e}")
+
+    # the AI index opens beside startup, so the first page doesn't wait for it (PERF-28); a search
+    # that comes first opens it itself (get_rag_engine is locked)
+    threading.Thread(target=_start_rag, name="RagStart", daemon=True).start()
 
     # VM Autostart Background Daemon
     def _autostart_vms():

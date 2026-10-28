@@ -19,6 +19,11 @@
   behaviour.
 - **A dark front panel stays asleep**: while the LCD is off it no longer wakes for every stats
   sample, and updating drops LCD_FPS=10 (the old default) so the current default of 5 applies.
+- **Lighter start in other languages**: the web app no longer downloads the English strings
+  alongside German, French, Spanish or Chinese; it fetches them only if a string is missing.
+- **Smaller amd64 image, faster first page**: the amd64 image no longer carries QEMU's ARM
+  emulators (virtual machines use the x86 one), the AI index opens beside startup instead of
+  before the first answer, and CI checks the image's size and how fast it answers.
 - **File search that doesn't wake disks**: searching by name uses the AI index for a folder on a
   sleeping disk instead of walking it, and says when results may be incomplete. Answers are
   compressed, and very large folder sizes stop at a limit and say "at least".
