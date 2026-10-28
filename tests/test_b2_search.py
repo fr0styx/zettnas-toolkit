@@ -47,7 +47,7 @@ def test_a_slow_embedder_is_retried_and_the_answer_cached(monkeypatch):
 
     calls = []
 
-    def flaky(text, model, host=None, timeout=1.8, target_dim=None, is_query=False, task_prompt=None):
+    def flaky(text, model, host=None, timeout=1.8, target_dim=None, is_query=False, task_prompt=None, deadline=None):
         calls.append(timeout)
         return None if len(calls) == 1 else (b"", [0.1, 0.2])
 
@@ -57,7 +57,8 @@ def test_a_slow_embedder_is_retried_and_the_answer_cached(monkeypatch):
         "embeddinggemma",
         [0.1, 0.2],
     )
-    assert calls == [rag_embeddings.QUERY_EMBED_TIMEOUT] * 2
+    # two tries within one deadline (AI-27)
+    assert len(calls) == 2 and all(0 < t <= rag_embeddings.QUERY_EMBED_TIMEOUT for t in calls)
     rag_embeddings.compute_multimodal_query_embedding("where is my passport", model="embeddinggemma")
     assert len(calls) == 2  # the second time comes from the cache
 

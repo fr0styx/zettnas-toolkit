@@ -1967,6 +1967,12 @@ def _grounding_embedder(cfg: dict[str, Any]) -> Any:
         res = compute_neural_embedding_via_ollama(text=text, model=model, host=host, target_dim=dim, is_query=False)
         return res[1] if res else None
 
+    def many(texts: list[str]) -> list[list[float]] | None:
+        from backend.services.rag_embeddings import embed_for_question
+
+        return embed_for_question(texts, model, host=host, target_dim=dim)
+
+    embed.many = many  # type: ignore[attr-defined]  # one batched call for all of them (AI-27)
     return embed
 
 

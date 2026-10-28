@@ -4,6 +4,12 @@
 
 #### AI
 
+- **Answers start sooner and are said once**: a stuck embedding model costs a search at most six
+  seconds and is then skipped for half a minute (it could stall one for 48); checking an answer
+  against its sources is one batched call. When a model server drops mid-answer, the half answer
+  is withdrawn before the fallback replies, and a question goes to two servers at most. A long
+  question in German or French is no longer cut to fit: the weakest sources are dropped first.
+  Ollama models answer without a long reasoning phase, within the same reply cap as others.
 - **Search inside a folder finds its files**: the keyword matches are now chosen among the files you
   may open in the folder and with the tags you picked, not among all files and filtered after, and a
   small folder is searched file by file. Before, a folder search could miss its best match when many

@@ -380,6 +380,7 @@ def compute_neural_embedding_via_ollama(
     target_dim: int | None = None,
     is_query: bool = False,
     task_prompt: str | None = None,
+    deadline: float | None = None,
 ) -> tuple[bytes, list[float]] | None:
     """
     Computes dense neural vector embeddings via Ollama or local inference endpoint.
@@ -423,8 +424,14 @@ def compute_neural_embedding_via_ollama(
     # or queries and the index end up embedded by different models
     candidates = _embedding_model_candidates(model)
 
+    def _left() -> float:
+        """This request's timeout: the full one, or what the caller's deadline leaves (AI-27)."""
+        return timeout if deadline is None else min(timeout, deadline - time.monotonic())
+
     for target_model in candidates:
         raw_emb = None
+        if _left() < 0.2:
+            return None
         # 1. Try modern Ollama /api/embed endpoint first
         try:
             embed_url = f"{target_host}/api/embed"
@@ -435,7 +442,7 @@ def compute_neural_embedding_via_ollama(
                 headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
                 method="POST",
             )
-            with urllib.request.urlopen(req_embed, timeout=timeout) as resp:
+            with urllib.request.urlopen(req_embed, timeout=_left()) as resp:
                 if resp.status == 200:
                     data = json.loads(resp.read().decode("utf-8"))
                     embs = data.get("embeddings")
@@ -447,7 +454,7 @@ def compute_neural_embedding_via_ollama(
             )
 
         # 2. Fall back to legacy /api/embeddings endpoint if /api/embed was unavailable
-        if raw_emb is None:
+        if raw_emb is None and _left() >= 0.2:
             try:
                 emb_url = f"{target_host}/api/embeddings"
                 payload_legacy = json.dumps({"model": target_model, "prompt": prompt_text}).encode("utf-8")
@@ -457,7 +464,7 @@ def compute_neural_embedding_via_ollama(
                     headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
                     method="POST",
                 )
-                with urllib.request.urlopen(req_legacy, timeout=timeout) as resp:
+                with urllib.request.urlopen(req_legacy, timeout=_left()) as resp:
                     if resp.status == 200:
                         data = json.loads(resp.read().decode("utf-8"))
                         cand_emb = data.get("embedding")
@@ -510,7 +517,7 @@ def _pack_embedding(raw: list[float], target_dim: int | None) -> bytes:
     return struct.pack(f"<{len(vec)}f", *vec)
 
 
-def _embed_one_batch(target_host: str, model: str, batch: list[str]) -> list | None:
+def _embed_one_batch(target_host: str, model: str, batch: list[str], timeout: float | None = None) -> list | None:
     """One /api/embed call (trying the model's aliases); None when it failed."""
     embs = None
     for cand in _embedding_model_candidates(model):
@@ -522,7 +529,7 @@ def _embed_one_batch(target_host: str, model: str, batch: list[str]) -> list | N
                 method="POST",
             )
             with urllib.request.urlopen(
-                req, timeout=15.0 + 4.0 * len(batch)
+                req, timeout=timeout or 15.0 + 4.0 * len(batch)
             ) as resp:  # a 2,048-token text takes ~3 s on an iGPU
                 data = json.loads(resp.read().decode("utf-8"))
             got = data.get("embeddings")
@@ -576,8 +583,35 @@ def compute_neural_embeddings_batch(
     return out
 
 
-QUERY_EMBED_TIMEOUT = 6.0
+QUERY_EMBED_TIMEOUT = 6.0  # one deadline for a question's embedding, all tries included (AI-27)
+QUERY_BREAKER_SECS = 30.0  # after a question's embedding failed, the next ones skip it this long
 QUERY_VEC_CACHE_SIZE = 256
+GROUNDING_EMBED_TIMEOUT = 15.0
+
+
+def embed_for_question(texts: list[str], model: str, host: str | None = None, target_dim: int | None = None):
+    """Vectors for several texts in one call at a question's priority (grounding an answer,
+    AI-27), or None. Shares the breaker with every other embedding."""
+    if not texts or time.time() < _EMBED_BREAKER["until"]:
+        return None
+    target_host = _resolve_ollama_host(host)
+    limit = 6000 if "embeddinggemma" in model.lower() else 4000
+    clean = [(t or " ").strip()[:limit] or " " for t in texts]
+    out: list[list[float]] = []
+    with gpu_queue.use(gpu_queue.QUERY):
+        for start in range(0, len(clean), EMBED_BATCH_SIZE):
+            embs = _embed_one_batch(
+                target_host, model, clean[start : start + EMBED_BATCH_SIZE], GROUNDING_EMBED_TIMEOUT
+            )
+            if embs is None:
+                _EMBED_BREAKER["until"] = max(_EMBED_BREAKER["until"], time.time() + QUERY_BREAKER_SECS)
+                return None
+            for e in embs:
+                blob = _pack_embedding(e, target_dim)
+                out.append(list(struct.unpack(f"<{len(blob) // 4}f", blob)))
+    return out
+
+
 _QUERY_VEC_CACHE: dict[tuple, list[float]] = {}  # the same question twice costs one embedding
 
 
@@ -601,22 +635,31 @@ def compute_multimodal_query_embedding(
         cached = _QUERY_VEC_CACHE.get(key)
         if cached is not None:
             return model, cached
-        # A busy iGPU (chat or captioning running) can take seconds: wait longer and try once
-        # more before falling back to keyword vectors (AI-4)
+        # A busy iGPU (chat or captioning running) can take seconds: try again while the one
+        # deadline lasts (AI-4), then keyword vectors. A stuck embedder trips the breaker it
+        # shares with indexing, so the next questions don't wait for it too (AI-27).
         res = None
-        with gpu_queue.use(gpu_queue.QUERY):  # indexing waits while a question is embedded
-            for timeout in (QUERY_EMBED_TIMEOUT, QUERY_EMBED_TIMEOUT):
-                res = compute_neural_embedding_via_ollama(
-                    text=query,
-                    model=model,
-                    host=ollama_host,
-                    target_dim=target_dim,
-                    is_query=True,
-                    task_prompt=task_prompt,
-                    timeout=timeout,
-                )
-                if res is not None:
-                    break
+        if time.time() >= _EMBED_BREAKER["until"]:
+            deadline = time.monotonic() + QUERY_EMBED_TIMEOUT
+            with gpu_queue.use(gpu_queue.QUERY):  # indexing waits while a question is embedded
+                for _try in range(2):
+                    left = deadline - time.monotonic()
+                    if left < 0.2:
+                        break
+                    res = compute_neural_embedding_via_ollama(
+                        text=query,
+                        model=model,
+                        host=ollama_host,
+                        target_dim=target_dim,
+                        is_query=True,
+                        task_prompt=task_prompt,
+                        timeout=left,
+                        deadline=deadline,
+                    )
+                    if res is not None:
+                        break
+            if res is None:
+                _EMBED_BREAKER["until"] = max(_EMBED_BREAKER["until"], time.time() + QUERY_BREAKER_SECS)
         if res is not None:
             _, vec = res
             if len(_QUERY_VEC_CACHE) >= QUERY_VEC_CACHE_SIZE:

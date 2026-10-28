@@ -246,8 +246,20 @@ def score_answer_grounding(
     src_tokens = [set(text_tokens(t.lower())) for t in texts]
     src_digits = [set(_DIGITS.findall(t)) for t in texts]
     src_vecs: list[Any] | None = None
+    sent_vecs: list[Any] | None = None
     method = "lexical"
-    if embed is not None:
+    many = getattr(embed, "many", None)
+    if callable(many):
+        # the sources and every sentence in one call, at a question's priority (AI-27)
+        vecs: list[Any] | None
+        try:
+            got = many([t[:1500] for t in texts] + list(sentences))
+            vecs = list(got) if isinstance(got, list) else None
+        except Exception:
+            vecs = None
+        if vecs and len(vecs) == len(texts) + len(sentences):
+            src_vecs, sent_vecs, method = vecs[: len(texts)], vecs[len(texts) :], "neural"
+    elif embed is not None:
         try:
             src_vecs = [embed(t[:1500]) for t in texts]
             method = "neural" if all(v for v in src_vecs) else "lexical"
@@ -257,11 +269,11 @@ def score_answer_grounding(
     from backend.services.rag_embeddings import cosine_similarity_vec
 
     rows = []
-    for sent in sentences:
+    for n, sent in enumerate(sentences):
         digits = set(_DIGITS.findall(sent))
         words = [w for w in text_tokens(sent.lower()) if w not in _STOPWORDS and not w.isdigit()]
-        sent_vec = None
-        if method == "neural" and src_vecs and embed is not None:
+        sent_vec = sent_vecs[n] if sent_vecs else None
+        if sent_vec is None and method == "neural" and src_vecs and embed is not None and not callable(many):
             try:
                 sent_vec = embed(sent)
             except Exception:

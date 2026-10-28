@@ -15,6 +15,7 @@ from backend.config import (  # noqa: F401
 )
 from backend.services import gpu_queue
 from backend.services.chat_context import (  # noqa: F401
+    REPLY_TOKENS,
     _context_window_for,
 )
 from backend.services.media_engine import (  # noqa: F401
@@ -196,10 +197,17 @@ class _ThinkSplitter:
         self.buf = ""
 
 
-def _read_llm_stream(resp: Any, runtime_kind: str) -> dict[str, Any]:
+def _read_llm_stream(resp: Any, runtime_kind: str, state: dict[str, Any] | None = None) -> dict[str, Any]:
     """Reads a streamed Ollama (NDJSON) or OpenAI-compatible (SSE) reply, passing pieces to the
-    token sink as they arrive, and returns it in the same shape as a non-streamed reply."""
-    sink = _core()._TOKEN_SINK.get() or (lambda kind, text: None)
+    token sink as they arrive, and returns it in the same shape as a non-streamed reply. `state`
+    learns whether anything reached the person, so a failure after that is not answered twice."""
+    base_sink = _core()._TOKEN_SINK.get() or (lambda kind, text: None)
+
+    def sink(kind: str, text: str) -> None:
+        if state is not None and text:
+            state["streamed"] = True
+        base_sink(kind, text)
+
     splitter = _ThinkSplitter(sink)
     content: list[str] = []
     thinking: list[str] = []
@@ -317,6 +325,10 @@ def _keep_alive() -> str:
     return "-1" if minutes <= 0 else f"{minutes}m"
 
 
+PROMPT_ATTEMPTS = 2  # the model's own server, then one fallback (AI-32)
+TURN_DEADLINE_SECS = 600.0
+
+
 @gpu_queue.holds(gpu_queue.CHAT)
 def _try_local_llm_completion(
     active_model: str,
@@ -405,8 +417,13 @@ def _try_local_llm_completion(
 
     streaming = _core()._TOKEN_SINK.get() is not None
     fallback = _fallback_model() if fallback_model is None else fallback_model.strip()
+    # The prompt goes to at most two servers within one deadline, not to every host found in
+    # turn, each with minutes of patience (AI-32)
+    attempts = 0
+    turn_deadline = time.monotonic() + TURN_DEADLINE_SECS
+    state: dict[str, Any] = {}
     for runtime_kind, url in candidate_endpoints:
-        if _cancelled():
+        if _cancelled() or attempts >= PROMPT_ATTEMPTS or time.monotonic() >= turn_deadline - 5:
             break
         if _core()._ENDPOINT_REGISTRY.is_tripped(url):
             continue
@@ -457,6 +474,11 @@ def _try_local_llm_completion(
                                     f"Installed: {', '.join(sorted(avail)[:8])}."
                                 )
                                 continue
+                except (urllib.error.URLError, TimeoutError, ConnectionError) as probe_err:
+                    # nothing answers there: don't send it a prompt with minutes of patience (AI-32)
+                    logger.debug(f"[AI] {tags_url} did not answer: {probe_err}")
+                    _core()._ENDPOINT_REGISTRY.record_failure(url)
+                    continue
                 except Exception:
                     logger.debug(
                         "backend.services.ai_chat_agent._try_local_llm_completion: ignored error", exc_info=True
@@ -466,7 +488,10 @@ def _try_local_llm_completion(
                     "model": model_to_use,
                     "messages": messages,
                     "stream": streaming,
-                    "options": {"temperature": 0.2, "num_ctx": _context_window_for()},
+                    # a cap on the reply, the same as for OpenAI-compatible servers (AI-33)
+                    "options": {"temperature": 0.2, "num_ctx": _context_window_for(), "num_predict": REPLY_TOKENS},
+                    # answers from the files found: no long reasoning first (AI-33)
+                    "think": False,
                     # unloads after the idle time set in AI settings, giving its memory back (PERF-1)
                     "keep_alive": _keep_alive(),
                 }
@@ -535,10 +560,12 @@ def _try_local_llm_completion(
             # slow CPU, so a 6,000-token document question needs minutes there (AI-7)
             prompt_tokens = len(json.dumps(messages)) / 4
             first_token_wait = min(600.0, 45.0 + prompt_tokens / 50.0)
+            left = turn_deadline - time.monotonic()
+            wait = min(first_token_wait if streaming else max(180.0, first_token_wait), left)
+            attempts += 1
+            state.clear()
             try:
-                resp = urllib.request.urlopen(
-                    req, timeout=first_token_wait if streaming else max(180.0, first_token_wait)
-                )
+                resp = urllib.request.urlopen(req, timeout=wait)
             except urllib.error.HTTPError as http_err:
                 # A model server without tool support refuses the tools: ask again without them
                 if (
@@ -554,14 +581,22 @@ def _try_local_llm_completion(
                         headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
                         method="POST",
                     )
-                    resp = urllib.request.urlopen(
-                        req, timeout=first_token_wait if streaming else max(180.0, first_token_wait)
+                    resp = urllib.request.urlopen(req, timeout=wait)
+                elif http_err.code == 400 and "think" in str(ollama_req_body if "ollama" in runtime_kind else ""):
+                    # an older Ollama refuses the think field: ask again without it
+                    ollama_req_body.pop("think", None)
+                    req = urllib.request.Request(
+                        url,
+                        data=json.dumps(ollama_req_body).encode("utf-8"),
+                        headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-Toolkit/2.0"},
+                        method="POST",
                     )
+                    resp = urllib.request.urlopen(req, timeout=wait)
                 else:
                     raise
             with resp:
                 if streaming:
-                    data = _read_llm_stream(resp, runtime_kind)
+                    data = _read_llm_stream(resp, runtime_kind, state)
                 else:
                     data = json.loads(resp.read().decode("utf-8", errors="replace"))
                 if runtime_kind == "openai_compatible":
@@ -650,6 +685,10 @@ def _try_local_llm_completion(
                         )
         except Exception:
             _core()._ENDPOINT_REGISTRY.record_failure(url)
+            if state.get("streamed"):
+                # part of an answer reached the person: drop it before the fallback answers, so
+                # nothing is said twice (AI-32)
+                (_core()._TOKEN_SINK.get() or (lambda kind, text: None))("reset", "")
             continue
 
     return (None, None, 0, None, None, None)

@@ -328,32 +328,62 @@ def _context_window_for(messages: list[dict[str, Any]] | None = None, tools: lis
 
 
 _CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
+_CYRILLIC_GREEK_RE = re.compile(r"[\u0370-\u03ff\u0400-\u04ff]")
 
 
 def estimate_tokens(text: str) -> int:
-    """Rough token count without a tokenizer: about 4 characters per token for Latin script,
-    one per CJK character."""
+    """Rough token count without a tokenizer, by script (AI-33): one per CJK character, about
+    2.5 characters per token for Cyrillic and Greek, 3.2 for Latin text with accents (German,
+    French, Spanish: tokenizers split those words more), 4 for plain English."""
     t = str(text or "")
     cjk = len(_CJK_RE.findall(t))
-    return cjk + (len(t) - cjk + 3) // 4
+    rest = len(t) - cjk
+    if not rest:
+        return cjk
+    other = len(_CYRILLIC_GREEK_RE.findall(t))
+    accented = sum(1 for c in t if 127 < ord(c) < 0x370 and c.isalpha())
+    if other / rest > 0.3:
+        per = 2.5
+    elif accented / rest > 0.005:
+        per = 3.2
+    else:
+        per = 4.0
+    return cjk + int(-(-rest // per))
 
 
 def _fit_to_window(
     messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None, num_ctx: int
 ) -> list[dict[str, Any]]:
-    """Drops the oldest history, then shortens the last user turn's context, so the prompt and a
-    reply fit in num_ctx (AI-7). The system prompt and the question itself are kept."""
+    """Drops the oldest history, then shortens the evidence, so the prompt and a reply fit in
+    num_ctx (AI-7). The question is shortened only when the evidence alone can't make room
+    (AI-33): the evidence is cut from its end, where the weakest sources are (AI-8)."""
     budget = num_ctx - REPLY_TOKENS - (estimate_tokens(json.dumps(tools)) if tools else 0)
     msgs = [dict(m) for m in messages]
     total = lambda: sum(estimate_tokens(m.get("content") or "") + 4 for m in msgs)  # noqa: E731
     while total() > budget and len(msgs) > 2:
         msgs.pop(1)  # oldest turn after the system prompt
     over = total() - budget
+    if over > 0 and len(msgs) > 1:
+        system = msgs[0]
+        content = str(system.get("content") or "")
+        mark = content.find(EVIDENCE_MARK)
+        if mark >= 0:
+            head, evidence = content[: mark + len(EVIDENCE_MARK)], content[mark + len(EVIDENCE_MARK) :]
+            keep = max(0, estimate_tokens(evidence) - over - 32)  # room for the note and rounding
+            system["content"] = head + _keep_tokens(evidence, keep) + "\n[evidence shortened to fit]"
+            over = total() - budget
     if over > 0 and msgs:
         last = msgs[-1]
         content = str(last.get("content") or "")
         keep_tokens = max(200, estimate_tokens(content) - over)
-        # characters to keep, assuming the same mix of scripts as the whole text
-        ratio = len(content) / max(1, estimate_tokens(content))
-        last["content"] = content[: int(keep_tokens * ratio)] + "\n[context shortened to fit]"
+        last["content"] = _keep_tokens(content, keep_tokens) + "\n[context shortened to fit]"
     return msgs
+
+
+EVIDENCE_MARK = "Live Context:\n"
+
+
+def _keep_tokens(text: str, tokens: int) -> str:
+    """The start of `text` worth about `tokens` tokens."""
+    ratio = len(text) / max(1, estimate_tokens(text))  # the same mix of scripts as the whole text
+    return text[: int(tokens * ratio)]

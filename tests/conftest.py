@@ -518,3 +518,13 @@ def pytest_collection_modifyitems(config, items):
 def pytest_report_header(config):
     seed = getattr(config, "_zn_random_seed", None)
     return f"random order: seed {seed} (re-run with --random-order={seed})" if seed else None
+
+
+@pytest.fixture(autouse=True)
+def _reset_embed_breaker():
+    """A test whose embedder fails trips the shared breaker (AI-27); the next test starts clean."""
+    from backend.services import rag_embeddings
+
+    rag_embeddings._EMBED_BREAKER["until"] = 0.0
+    yield
+    rag_embeddings._EMBED_BREAKER["until"] = 0.0
