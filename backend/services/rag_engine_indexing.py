@@ -824,6 +824,7 @@ class RagIndexingMixin:
             # Spindown-safe and stop-safe cleanup, per folder (AI-34): what a fully scanned folder
             # no longer holds goes from the index, whether or not the run reached the file limit;
             # a folder on a sleeping disk, stopped or left for the next run is not cleaned
+            stale_ids -= seen_file_ids  # moved here later in the same run (AI-35)
             if stale_ids:
                 ids = sorted(stale_ids)
                 with self._write_lock:
@@ -893,6 +894,146 @@ class RagIndexingMixin:
         finally:
             if _reset_control_flags:
                 self._is_indexing = False
+
+    def _reuse_same_content(
+        self,
+        canonical_path: str,
+        file_name: str,
+        size_bytes: int,
+        mtime_ns: int,
+        sha256_hex: str,
+        backing_dev: str,
+        vis_tier: str,
+        owner_user: str,
+        share_name: str,
+        allowed_csv: str,
+    ) -> int | None:
+        """The index entry for this content, if one exists (AI-35). When its old path is gone the
+        entry is moved here (a move or rename); otherwise it is cloned with its chunks, vectors,
+        photo analysis and tags (a copy). None when there is nothing to reuse."""
+        model = str(self.get_config().get("embedding_model") or "zett_lexical_384d")
+        now = time.time()
+        with self._write_lock:
+            conn = self._get_conn(readonly=False)
+            try:
+                src = conn.execute(
+                    """
+                    SELECT * FROM indexed_files
+                    WHERE sha256_hash = ? AND size_bytes = ? AND parse_status = 'ok' AND index_version = ?
+                      AND canonical_path != ? AND embedding_model IN (?, ?)
+                    ORDER BY last_verified_at DESC LIMIT 1
+                    """,
+                    (sha256_hex, size_bytes, _core().CURRENT_INDEX_VERSION, canonical_path, model, "zett_lexical_384d"),
+                ).fetchone()
+                if src is None:
+                    return None
+                old_path, old_name = str(src["canonical_path"]), str(src["file_name"])
+                fields = {
+                    "canonical_path": canonical_path,
+                    "parent_dir": os.path.dirname(canonical_path),
+                    "file_name": file_name,
+                    "mtime_ns": mtime_ns,
+                    "size_bytes": size_bytes,
+                    "backing_dev": backing_dev,
+                    "share_name": share_name,
+                    "visibility_tier": vis_tier,
+                    "owner_username": owner_user,
+                    "allowed_users_csv": allowed_csv,
+                    "last_verified_at": now,
+                }
+                if src["doc_title"] == os.path.splitext(old_name)[0]:
+                    fields["doc_title"] = os.path.splitext(file_name)[0]
+                rbac = (file_name, vis_tier, owner_user, share_name, allowed_csv)
+                if self._path_gone(old_path, str(src["backing_dev"] or "")):
+                    file_id = int(src["file_id"])
+                    sets = ", ".join(f"{k} = ?" for k in fields)
+                    conn.execute(f"UPDATE indexed_files SET {sets} WHERE file_id = ?", [*fields.values(), file_id])
+                    how = "moved"
+                else:
+                    file_id = self._clone_entry(conn, src, {**fields, "indexed_at": now})
+                    how = "copied"
+                if how == "moved":
+                    for table in ("document_chunks", "photo_assets"):
+                        conn.execute(
+                            f"UPDATE {table} SET file_name = ?, visibility_tier = ?, owner_username = ?, share_name = ?,"
+                            " allowed_users_csv = ? WHERE file_id = ?",
+                            (*rbac, file_id),
+                        )
+                conn.commit()
+                logger.info(
+                    f"[RAG] {sanitize_string(canonical_path)}: {how} from {sanitize_string(old_path)}, not read again"
+                )
+                return file_id
+            except sqlite3.Error as e:
+                conn.rollback()
+                logger.debug(f"[RAG] Reuse of known content skipped: {e}")
+                return None
+            finally:
+                conn.close()
+
+    @staticmethod
+    def _path_gone(path: str, backing_dev: str) -> bool:
+        """The old path no longer exists; a sleeping disk counts as still there (no wake-up)."""
+        if backing_dev and rag_standby.is_backing_disk_in_standby(backing_dev):
+            return False
+        return not os.path.lexists(path)
+
+    def _clone_entry(self, conn: sqlite3.Connection, src: sqlite3.Row, fields: dict[str, Any]) -> int:
+        """A new entry for a copy: the source's analysis under the copy's path and permissions."""
+        cols = [k for k in src.keys() if k != "file_id"]
+        vals = {**dict(src), **fields}
+        cur = conn.execute(
+            f"INSERT INTO indexed_files ({', '.join(cols)}) VALUES ({', '.join('?' * len(cols))})",
+            [vals[c] for c in cols],
+        )
+        new_id = int(cur.lastrowid or 0)
+        rbac = {
+            k: fields[k] for k in ("file_name", "visibility_tier", "owner_username", "share_name", "allowed_users_csv")
+        }
+        id_map: dict[int, int] = {}
+        chunks = conn.execute(
+            "SELECT * FROM document_chunks WHERE file_id = ? ORDER BY chunk_level != 'parent', chunk_id",
+            (int(src["file_id"]),),
+        ).fetchall()
+        for ch in chunks:
+            row = {**dict(ch), **rbac, "file_id": new_id}
+            old_cid = row.pop("chunk_id")
+            if row.get("parent_chunk_id") is not None:
+                row["parent_chunk_id"] = id_map.get(int(row["parent_chunk_id"]))
+            names = list(row)
+            cur_c = conn.execute(
+                f"INSERT INTO document_chunks ({', '.join(names)}) VALUES ({', '.join('?' * len(names))})",
+                [row[n] for n in names],
+            )
+            id_map[int(old_cid)] = int(cur_c.lastrowid or 0)
+            dim = int(row.get("embedding_dim") or 0)
+            if (
+                row.get("chunk_level") != "parent"
+                and row.get("embedding_model") != "zett_lexical_384d"
+                and dim == self._vec_table_dim
+            ):
+                self.sync_vector_chunk(
+                    conn, id_map[int(old_cid)], row["embedding_f32"], new_id, rbac["visibility_tier"], dim=dim
+                )
+        photo = conn.execute("SELECT * FROM photo_assets WHERE file_id = ?", (int(src["file_id"]),)).fetchone()
+        if photo is not None:
+            prow = {**dict(photo), **rbac, "file_id": new_id}
+            names = list(prow)
+            conn.execute(
+                f"INSERT INTO photo_assets ({', '.join(names)}) VALUES ({', '.join('?' * len(names))})",
+                [prow[n] for n in names],
+            )
+        for table in ("doc_tags",):
+            conn.execute(
+                f"INSERT OR IGNORE INTO {table} (file_id, tag) SELECT ?, tag FROM {table} WHERE file_id = ?",
+                (new_id, int(src["file_id"])),
+            )
+        conn.execute(
+            "INSERT OR IGNORE INTO doc_tags_done (file_id) SELECT ? WHERE EXISTS "
+            "(SELECT 1 FROM doc_tags_done WHERE file_id = ?)",
+            (new_id, int(src["file_id"])),
+        )
+        return new_id
 
     def _cursor_file(self) -> str:
         return os.path.join(os.path.dirname(os.path.abspath(self.db_path)), "rag_cursors.json")
@@ -1031,6 +1172,24 @@ class RagIndexingMixin:
                     return int(cached_row["file_id"])
                 finally:
                     conn.close()
+
+        # AI-35: a file whose content is already indexed (moved, renamed or copied) is not read and
+        # embedded again: the entry moves with it, or a copy gets the same analysis
+        if cached_row is None:
+            reused = self._reuse_same_content(
+                canonical_path,
+                file_name,
+                size_bytes,
+                mtime_ns,
+                sha256_hex,
+                backing_dev,
+                vis_tier,
+                owner_user,
+                share_name,
+                allowed_csv,
+            )
+            if reused is not None:
+                return reused
 
         is_image = file_ext in IMAGE_EXTENSIONS
         is_video = file_ext in VIDEO_EXTENSIONS

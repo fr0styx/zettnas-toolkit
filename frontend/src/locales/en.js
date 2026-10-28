@@ -2425,6 +2425,7 @@ export default {
   "ai.forget_folder_done": "Forgot {count} file(s) from {folder}. It won't be learned again.",
   "ai.forget_folder_failed": "Could not forget folder",
   "ai.forget_folder_title": "Forget: delete everything the AI learned from this folder",
+  "ai.also_at": "The same file is also at:",
   "ai.enter_folder_path": "Enter or browse a folder path to add.",
   "ai.service_enabled_toast": "ZettAI enabled: learning and search are on.",
   "ai.service_disabled_toast": "ZettAI disabled: unfinished learning is paused.",

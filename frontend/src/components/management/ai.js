@@ -2304,6 +2304,7 @@ export function renderAiPreviewInspector(item) {
     }
     <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:10px; display:flex; flex-direction:column; gap:4px;">
       <div><strong style="color:var(--zn-text-muted);">Location:</strong> <code style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent); word-break:break-all;">${escapeHtml(fPath)}</code></div>
+      ${(item.also_at || []).length ? `<div class="ai-also-at"><strong>${escapeHtml(t('ai.also_at', 'The same file is also at:'))}</strong> ${item.also_at.map((p) => `<code>${escapeHtml(p)}</code>`).join(', ')}</div>` : ''}
       <div><strong style="color:var(--zn-text-muted);">Match Mode:</strong> <span style="color:var(--lt-t-6ee7b7ff, #6ee7b7);">${escapeHtml(item.match_reason || 'Semantic Vector')}</span></div>
       ${item.excerpt ? `<div style="margin-top:4px; padding:8px; border-radius:6px; background:var(--zn-shade-30); font-size:var(--zn-fs-xs); color:var(--zn-text); max-height:90px; overflow-y:auto;">${escapeHtml(item.excerpt)}</div>` : ''}
     </div>

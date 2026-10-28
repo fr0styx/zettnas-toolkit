@@ -46734,6 +46734,54 @@
     ]
    }
   },
+  "/api/v1/media/duplicates": {
+   "get": {
+    "description": "Files kept more than once, photos that look the same included, that this person may open (AI-35).",
+    "operationId": "get_duplicates_api_v1_media_duplicates_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 200,
+       "maximum": 1000,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Duplicates Api V1 Media Duplicates Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Duplicates",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
   "/api/v1/media/favorites": {
    "post": {
     "description": "Adds or removes a file path from ZettAI favorites.",

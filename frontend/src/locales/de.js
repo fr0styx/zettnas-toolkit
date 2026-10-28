@@ -2425,6 +2425,7 @@ export default {
   "ai.forget_folder_done": "{count} Datei(en) aus {folder} vergessen. Der Ordner wird nicht mehr gelernt.",
   "ai.forget_folder_failed": "Ordner konnte nicht vergessen werden",
   "ai.forget_folder_title": "Vergessen: alles löschen, was die KI aus diesem Ordner gelernt hat",
+  "ai.also_at": "Dieselbe Datei liegt auch hier:",
   "ai.enter_folder_path": "Ordnerpfad eingeben oder auswählen.",
   "ai.service_enabled_toast": "ZettAI aktiviert: Lernen und Suche laufen.",
   "ai.service_disabled_toast": "ZettAI deaktiviert: unfertiges Lernen pausiert.",

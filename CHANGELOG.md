@@ -4,6 +4,10 @@
 
 #### AI
 
+- **Moved, renamed and copied files aren't read again**: a file whose content is already in the
+  index keeps what was learned from it when it moves, and a copy gets the same analysis without the
+  AI model working on it again. Copies show as one search result that says where the others are, and
+  /api/media/duplicates lists files kept more than once (photos that look the same included).
 - **Large libraries are learned whole**: an indexing run that reaches its limit of files goes on
   from there next time (it began at the top again, so files past the first 100,000 were never
   learned), and files deleted or moved leave the index folder by folder, also on large libraries.

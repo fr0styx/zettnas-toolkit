@@ -2425,6 +2425,7 @@ export default {
   "ai.forget_folder_done": "Se olvidaron {count} archivo(s) de {folder}. No se volverá a aprender.",
   "ai.forget_folder_failed": "No se pudo olvidar la carpeta",
   "ai.forget_folder_title": "Olvidar: borrar todo lo que la IA aprendió de esta carpeta",
+  "ai.also_at": "El mismo archivo también está en:",
   "ai.enter_folder_path": "Escriba o elija la carpeta que quiere añadir.",
   "ai.service_enabled_toast": "ZettAI activado: aprendizaje y búsqueda activos.",
   "ai.service_disabled_toast": "ZettAI desactivado: el aprendizaje pendiente está en pausa.",

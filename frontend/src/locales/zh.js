@@ -2425,6 +2425,7 @@ export default {
   "ai.forget_folder_done": "已忘记 {folder} 中的 {count} 个文件，此文件夹不会再被学习。",
   "ai.forget_folder_failed": "无法忘记该文件夹",
   "ai.forget_folder_title": "忘记：删除 AI 从此文件夹学到的全部内容",
+  "ai.also_at": "同一文件还位于：",
   "ai.enter_folder_path": "请输入或选择要添加的文件夹路径。",
   "ai.service_enabled_toast": "ZettAI 已启用：学习和搜索已开启。",
   "ai.service_disabled_toast": "ZettAI 已停用：未完成的学习已暂停。",

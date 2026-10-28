@@ -53,6 +53,40 @@ from backend.services.rag_text import (  # noqa: F401
 DIRECT_SCOPE_CHUNKS = 4000  # a scope this small is scored whole, exactly (AI-23)
 
 
+def _collapse_copies(conn: sqlite3.Connection, items: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], set]:
+    """Results with the same content (sha256 and size) kept once, the best scoring, with
+    "also_at" listing the other paths; returns the kept items and the file ids dropped."""
+    ids = [it["file_id"] for it in items if isinstance(it.get("file_id"), int)]
+    if len(ids) < 2:
+        return items, set()
+    key_of: dict[int, tuple[str, int]] = {}
+    for i in range(0, len(ids), 900):
+        part = ids[i : i + 900]
+        for r in conn.execute(
+            f"SELECT file_id, sha256_hash, size_bytes FROM indexed_files WHERE file_id IN ({','.join('?' * len(part))})",
+            part,
+        ).fetchall():
+            if r[1] and int(r[2] or 0) > 0:
+                key_of[int(r[0])] = (str(r[1]), int(r[2]))
+    best: dict[tuple[str, int], dict[str, Any]] = {}
+    for it in sorted(items, key=lambda x: float(x.get("score") or 0.0), reverse=True):
+        key = key_of.get(it.get("file_id"))  # type: ignore[arg-type]
+        if key is None:
+            continue
+        if key not in best:
+            best[key] = it
+            it["also_at"] = []
+        elif it.get("path") and it.get("path") != best[key].get("path"):
+            best[key]["also_at"].append(it.get("path"))
+    keep = {id(it) for it in best.values()}
+    dropped = {it.get("file_id") for it in items if it.get("file_id") in key_of and id(it) not in keep}
+    out = [it for it in items if it.get("file_id") not in key_of or id(it) in keep]
+    for it in out:
+        if not it.get("also_at"):
+            it.pop("also_at", None)
+    return out, dropped
+
+
 def _core():
     """backend.services.rag_engine, read at call time: shared settings live there and tests patch them."""
     from backend.services import rag_engine
@@ -380,6 +414,12 @@ class RagSearchMixin:
                 ]
                 if audio_only:
                     all_candidates = audio_only
+
+            # The same file in several places is one result, which says where the others are (AI-35)
+            all_candidates, dropped = _collapse_copies(conn, all_candidates)
+            if dropped:
+                photo_items = [it for it in photo_items if it.get("file_id") not in dropped]
+                doc_items = [it for it in doc_items if it.get("file_id") not in dropped]
 
             # Build ZettAI Category Summary Groups (Images, Videos, Audio, Documents, Folders)
             cat_images = [it for it in all_candidates if it.get("category_type") == "images"]
@@ -1252,6 +1292,55 @@ class RagSearchMixin:
             "photos": photo_hits[:6],
             "standby_guard": search_res["standby_guard"],
         }
+
+    def duplicates(self, principal: Any = None, limit: int = 200) -> dict[str, Any]:
+        """Files kept more than once, for the duplicate view (AI-35): photos that look the same
+        (the same perceptual hash, so a re-saved copy counts) and other files with the same
+        content. Only what this person may open; largest waste first."""
+        self._ensure_schema()
+        rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
+        readable = self._post_rbac_checker(principal)
+        conn = self._get_conn(readonly=True)
+        try:
+            rows = conn.execute(
+                f"""
+                SELECT f.file_id, f.canonical_path, f.file_name, f.size_bytes, f.sha256_hash, f.modality,
+                       COALESCE(p.phash_hex, '') AS phash
+                FROM indexed_files f LEFT JOIN photo_assets p ON p.file_id = f.file_id
+                WHERE f.parse_status = 'ok' AND {rbac_sql} AND (
+                    (f.sha256_hash, f.size_bytes) IN (
+                        SELECT sha256_hash, size_bytes FROM indexed_files GROUP BY sha256_hash, size_bytes HAVING COUNT(*) > 1)
+                    OR p.phash_hex IN (
+                        SELECT phash_hex FROM photo_assets WHERE phash_hex != '' GROUP BY phash_hex HAVING COUNT(*) > 1))
+                """,
+                rbac_params,
+            ).fetchall()
+        finally:
+            conn.close()
+        groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
+        for r in rows:
+            if not readable(r["canonical_path"]):
+                continue
+            key = ("photo", r["phash"]) if r["phash"] else ("file", f"{r['sha256_hash']}:{r['size_bytes']}")
+            groups.setdefault(key, []).append(
+                {
+                    "file_id": int(r["file_id"]),
+                    "path": r["canonical_path"],
+                    "name": r["file_name"],
+                    "size": int(r["size_bytes"]),
+                }
+            )
+        out = [
+            {
+                "kind": kind,
+                "files": sorted(files, key=lambda f: f["path"]),
+                "wasted_bytes": sum(f["size"] for f in files) - max(f["size"] for f in files),
+            }
+            for (kind, _k), files in groups.items()
+            if len(files) > 1
+        ]
+        out.sort(key=lambda g: g["wasted_bytes"], reverse=True)
+        return {"groups": out[:limit], "total_groups": len(out), "wasted_bytes": sum(g["wasted_bytes"] for g in out)}
 
     def get_thumbnail(self, file_id: int, principal: Any = None) -> tuple[bytes, str]:
         """

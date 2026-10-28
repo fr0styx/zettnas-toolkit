@@ -2425,6 +2425,7 @@ export default {
   "ai.forget_folder_done": "{count} fichier(s) de {folder} oublié(s). Ce dossier ne sera plus appris.",
   "ai.forget_folder_failed": "Impossible d'oublier le dossier",
   "ai.forget_folder_title": "Oublier : supprimer tout ce que l'IA a appris de ce dossier",
+  "ai.also_at": "Le même fichier se trouve aussi ici :",
   "ai.enter_folder_path": "Saisissez ou choisissez un dossier à ajouter.",
   "ai.service_enabled_toast": "ZettAI activé : apprentissage et recherche actifs.",
   "ai.service_disabled_toast": "ZettAI désactivé : l'apprentissage en cours est en pause.",

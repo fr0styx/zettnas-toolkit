@@ -512,6 +512,18 @@ def update_watched_folders(
 
 
 @router.get(
+    "/media/duplicates",
+    dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))],
+)
+async def get_duplicates(
+    limit: int = Query(default=200, ge=1, le=1000),
+    principal: AuthenticatedPrincipal = Depends(get_current_principal),
+) -> dict[str, Any]:
+    """Files kept more than once, photos that look the same included, that this person may open (AI-35)."""
+    return await asyncio.to_thread(get_rag_engine().duplicates, principal, limit)
+
+
+@router.get(
     "/media/models/recommendations",
     dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
 )
