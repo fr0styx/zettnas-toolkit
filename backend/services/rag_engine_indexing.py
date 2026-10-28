@@ -2,6 +2,7 @@
 
 # pyright: reportAttributeAccessIssue=false
 
+import bisect
 import hashlib
 import json
 import os
@@ -21,6 +22,8 @@ from backend.db_crypto import (  # noqa: F401
 from backend.fsutil import (  # noqa: F401
     atomic_write_json,
     is_protected,
+    locked_json,
+    read_json,
 )
 from backend.logging_config import (  # noqa: F401
     sanitize_string,
@@ -573,6 +576,35 @@ class RagIndexingMixin:
                 existing_map: dict[str, sqlite3.Row] = {r["canonical_path"]: r for r in rows}
             finally:
                 conn_ro.close()
+            by_dir: dict[str, list[sqlite3.Row]] = {}
+            for r in rows:
+                by_dir.setdefault(os.path.dirname(r["canonical_path"]), []).append(r)
+            sorted_paths = sorted(existing_map)
+            # AI-34: a run that reached the file limit left a cursor; this one starts there
+            cursor = [self._read_cursor(norm_root).split("/") or None]
+            if cursor[0] == [""]:
+                cursor[0] = None
+            limit_hit_at: list[str] = []
+            stale_ids: set[int] = set()
+
+            def _under(prefix: str) -> list[sqlite3.Row]:
+                lo = bisect.bisect_left(sorted_paths, prefix)
+                hi = bisect.bisect_left(sorted_paths, prefix[:-1] + "0")
+                return [existing_map[p] for p in sorted_paths[lo:hi]]
+
+            def _clean_dir(current_dir: str, kept_names: set[str]) -> None:
+                """The index entries of a fully scanned folder that are gone: its files not seen
+                this run, and everything under subfolders that no longer exist (AI-34)."""
+                for r in by_dir.get(current_dir, []):
+                    if int(r["file_id"]) not in seen_file_ids:
+                        stale_ids.add(int(r["file_id"]))
+                if not kept_names or os.path.normpath(current_dir) in ("/mnt/user", "/mnt/storage"):
+                    return  # an empty listing may be an unmounted pool; a union root, a stopped array
+                prefix = current_dir.rstrip("/") + "/"
+                for r in _under(prefix):
+                    first = r["canonical_path"][len(prefix) :].split("/", 1)[0]
+                    if first not in kept_names and "/" in r["canonical_path"][len(prefix) :]:
+                        stale_ids.add(int(r["file_id"]))
 
             def _wait_if_paused_or_stopped() -> bool:
                 """Returns True if stop was requested, or blocks cooperatively while paused."""
@@ -633,18 +665,32 @@ class RagIndexingMixin:
                     return
 
                 try:
-                    entries = list(os.scandir(current_dir))
+                    entries = sorted(os.scandir(current_dir), key=lambda e: e.name)  # one order, for the cursor
                 except Exception:
                     return
 
                 is_top_union_root = os.path.normpath(current_dir) in ("/mnt/user", "/mnt/storage")
                 excl_set = {os.path.normpath(p) for p in (self.get_config().get("excluded_paths") or []) if p}
+                complete = True  # every entry handled: the folder may be cleaned (AI-34)
+                kept_names = {e.name for e in entries}
 
                 for entry in entries:
                     if _wait_if_paused_or_stopped():
+                        complete = False
                         break
                     if max_files and max_files > 0 and (indexed_new_or_updated + skipped_unchanged) >= max_files:
+                        complete = False
+                        if not limit_hit_at:
+                            limit_hit_at.append(entry.path)
                         break
+                    if cursor[0] is not None:
+                        parts = entry.path.split("/")
+                        on_the_way = cursor[0][: len(parts)] == parts
+                        if parts == cursor[0]:
+                            cursor[0] = None  # reached: everything after it is new to this run
+                        elif not on_the_way and parts < cursor[0]:
+                            complete = False  # done by the run before
+                            continue
                     name = entry.name
                     if name.startswith(".") or name in EXCLUDED_DIRS or name.lower() in EXCLUDED_FILENAMES:
                         continue
@@ -654,6 +700,7 @@ class RagIndexingMixin:
 
                     child_path = os.path.join(current_dir, name)
                     if os.path.normpath(child_path) in excl_set or is_protected(child_path):
+                        kept_names.discard(name)  # excluded now: what was learned there goes
                         continue
 
                     # Before touching a child share/directory, check if its backing disk is in standby
@@ -694,7 +741,7 @@ class RagIndexingMixin:
                         and rag_standby.is_backing_disk_in_standby(dir_dev)
                     ):
                         _record_deferred_subpath(current_dir, dir_dev)
-                        return
+                        return  # not complete: nothing here is cleaned
 
                     try:
                         st = entry.stat(follow_symlinks=False)
@@ -742,10 +789,15 @@ class RagIndexingMixin:
                             self._sync_progress["indexed_files"] = indexed_new_or_updated
                     else:
                         errors_count += 1
+                        if cached_row is not None:
+                            seen_file_ids.add(int(cached_row["file_id"]))  # a failed re-read keeps the old entry
 
                     # Cooperative yield every 25 files
                     if indexed_new_or_updated % 25 == 0:
                         time.sleep(0.002)
+
+                if complete and not stopped_early:
+                    _clean_dir(current_dir, kept_names)
 
             if os.path.isfile(norm_root):
                 if not _wait_if_paused_or_stopped():
@@ -769,26 +821,28 @@ class RagIndexingMixin:
             else:
                 _walk_dir(norm_root)
 
-            # Spindown-Safe & Stop-Safe Tombstone Garbage Collection:
-            # Only remove deleted files if 100% of the subtree was scanned without standby deferral or user stop
-            if (
-                not any_subpath_deferred
-                and not stopped_early
-                and os.path.isdir(norm_root)
-                and os.path.normpath(norm_root) not in ("/mnt/user", "/mnt/storage")
-                and (indexed_new_or_updated + skipped_unchanged) < max_files
-            ):
-                stale_ids = [int(r["file_id"]) for r in existing_map.values() if int(r["file_id"]) not in seen_file_ids]
-                if stale_ids:
-                    with self._write_lock:
-                        conn_del = self._get_conn(readonly=False)
-                        try:
-                            placeholders = ",".join("?" for _ in stale_ids)
-                            self._drop_file_vectors(conn_del, placeholders, stale_ids)
-                            conn_del.execute(f"DELETE FROM indexed_files WHERE file_id IN ({placeholders})", stale_ids)
-                            conn_del.commit()
-                        finally:
-                            conn_del.close()
+            # Spindown-safe and stop-safe cleanup, per folder (AI-34): what a fully scanned folder
+            # no longer holds goes from the index, whether or not the run reached the file limit;
+            # a folder on a sleeping disk, stopped or left for the next run is not cleaned
+            if stale_ids:
+                ids = sorted(stale_ids)
+                with self._write_lock:
+                    conn_del = self._get_conn(readonly=False)
+                    try:
+                        for i in range(0, len(ids), 900):
+                            part = ids[i : i + 900]
+                            placeholders = ",".join("?" for _ in part)
+                            self._drop_file_vectors(conn_del, placeholders, part)
+                            conn_del.execute(f"DELETE FROM indexed_files WHERE file_id IN ({placeholders})", part)
+                        conn_del.commit()
+                    finally:
+                        conn_del.close()
+
+            # AI-34: the file limit continues where it stopped next time
+            if limit_hit_at:
+                self._write_cursor(norm_root, limit_hit_at[0])
+            elif not stopped_early:
+                self._write_cursor(norm_root, "")
 
             # Clear any satisfied deferred queue item (and subpaths) for norm_root
             if not any_subpath_deferred and not stopped_early:
@@ -817,8 +871,12 @@ class RagIndexingMixin:
                         "message": (
                             f"Sync stopped on {norm_root} ({indexed_new_or_updated} indexed)."
                             if stopped_early
+                            else f"Reached the limit of {max_files} files in {norm_root}: {indexed_new_or_updated} indexed, "
+                            f"{skipped_unchanged} unchanged. The next run goes on from {limit_hit_at[0]}."
+                            if limit_hit_at
                             else f"Completed {norm_root}: {indexed_new_or_updated} indexed, {skipped_unchanged} unchanged, {deferred_standby} deferred."
                         ),
+                        "limit_reached": bool(limit_hit_at),
                     }
                 )
             return {
@@ -828,10 +886,36 @@ class RagIndexingMixin:
                 "skipped_unchanged": skipped_unchanged,
                 "deferred_standby": deferred_standby,
                 "errors": errors_count,
+                "removed": len(stale_ids),
+                "limit_reached": bool(limit_hit_at),
+                "resume_from": limit_hit_at[0] if limit_hit_at else None,
             }
         finally:
             if _reset_control_flags:
                 self._is_indexing = False
+
+    def _cursor_file(self) -> str:
+        return os.path.join(os.path.dirname(os.path.abspath(self.db_path)), "rag_cursors.json")
+
+    def _read_cursor(self, root: str) -> str:
+        """Where the last run of `root` stopped at the file limit; "" for the start (AI-34)."""
+        data = read_json(self._cursor_file(), {}) or {}
+        return str(data.get(root) or "") if isinstance(data, dict) else ""
+
+    def _write_cursor(self, root: str, path: str) -> None:
+        with locked_json(self._cursor_file()):
+            data = read_json(self._cursor_file(), {}) or {}
+            data = data if isinstance(data, dict) else {}
+            if (data.get(root) or "") == path:
+                return
+            if path:
+                data[root] = path
+            else:
+                data.pop(root, None)
+            try:
+                atomic_write_json(self._cursor_file(), data)
+            except OSError as e:
+                logger.warning(f"[RAG] Could not save where indexing stopped: {e}")
 
     def _record_deferred_subpath(self, subpath: str, dev: str) -> None:
         """Queues a file or folder on a sleeping disk to be learned when the disk spins up."""

@@ -4,6 +4,11 @@
 
 #### AI
 
+- **Large libraries are learned whole**: an indexing run that reaches its limit of files goes on
+  from there next time (it began at the top again, so files past the first 100,000 were never
+  learned), and files deleted or moved leave the index folder by folder, also on large libraries.
+  The sync status says when the limit was reached. A file that can't be read again keeps what was
+  learned from it before.
 - **Answers start sooner and are said once**: a stuck embedding model costs a search at most six
   seconds and is then skipped for half a minute (it could stall one for 48); checking an answer
   against its sources is one batched call. When a model server drops mid-answer, the half answer
