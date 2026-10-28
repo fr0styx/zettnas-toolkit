@@ -6,12 +6,11 @@
 import { ZettEventBus } from '../event-bus.js';
 import { showToast } from '../toast.js';
 import { openAddDesktopShortcutModal } from './desktop-shortcuts.js';
-import {
-  getWidgetKeyFromElement,
-  getWidgetDisplayName,
-  removeWidget,
-  openWidgetSettings
-} from './widgets.js';
+import { getWidgetKeyFromElement, getWidgetDisplayName } from './widget-names.js';
+
+// the rest of the widgets code loads after the first paint (PERF-9)
+const removeWidget = (key) => import('./widgets.js').then((m) => m.removeWidget(key));
+const openWidgetSettings = () => import('./widgets.js').then((m) => m.openWidgetSettings());
 import { t } from '../i18n.js';
 
 let _contextMenuInitialized = false;

@@ -163,7 +163,7 @@ export function toggleUserProfileFlyout(anchorEl) {
   }
 
   // Refresh current user info
-  import('../users.js').then((m) => m.updateUserInterfaceElements());
+  import('../session.js').then((m) => m.updateUserInterfaceElements());
 
   const rect = anchorEl ? anchorEl.getBoundingClientRect() : { top: 0, bottom: 48, left: 16, width: 30 };
   const flyoutW = 250;

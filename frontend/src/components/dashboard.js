@@ -10,7 +10,7 @@ import { showConfirmToast, hideConfirmToast, showToast } from '../toast.js';
 import { updateFanCurveWorkstation } from './fan-control.js';
 import { syncMiniPreviewTelemetry, applyDashboardLayout, persistDashboardLayout } from './mini-preview.js';
 import { renderEventLog } from './events.js';
-import { checkAndTriggerSetupWizard } from './setup-wizard.js';
+import { checkAndTriggerSetupWizard } from './setup-wizard-gate.js';
 import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);

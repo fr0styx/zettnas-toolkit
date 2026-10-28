@@ -38,9 +38,8 @@ import { initLedControl } from './components/led-control.js';
 import { applyDashboardLayout, fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
 import { initWallpapers, loadWallpapers } from './components/wallpapers.js';
 import { initEvents } from './components/events.js';
-import { initSetupWizard } from './components/setup-wizard.js';
+import { initSetupWizardLauncher } from './components/setup-wizard-gate.js';
 import { initCommandPalette } from './components/command-palette.js';
-import { initWidgets } from './components/widgets.js';
 import { lazyWindow } from './lazy-windows.js';
 import { initJobsCentre } from './components/jobs-centre.js';
 import { initDriveHealth } from './components/drive-health.js';
@@ -360,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   onManagementDom(initEvents);
   loadLater(); // the settings drawer and the users code (B6 first-load budget)
   onManagementDom(() => import('./components/metrics-chart.js').then((m) => m.initMetricsChart())); // with Mission Control
-  initSetupWizard();
+  initSetupWizardLauncher(); // the wizard itself loads when it is needed (PERF-9)
   // Mission Control's markup (FE-04) and code (FE-02) load on first use, or a few seconds
   // after start when the browser is idle
   const ensureManagement = lazyWindow({
@@ -387,7 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
   initRouter();
   initPhoneShell();
   if (!state.isLcdDirect && !state.isVmConsoleDirect) watchServerBuild(); // offer a reload after an update
-  initWidgets();
+  // the desktop widgets (the largest module of the first load) come right after it (PERF-9)
+  import('./components/widgets.js').then((m) => m.initWidgets(), (err) => console.warn('[Widgets] not loaded:', err));
   // File Explorer loads on first use, or right after the first paint (B6 first-load budget)
   const ensureFiles = lazyWindow({
     id: 'file-manager-window',

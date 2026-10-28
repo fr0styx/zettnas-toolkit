@@ -10,6 +10,7 @@ vi.mock('../api.js', () => {
 
 // the user menu loads these lazily; stubs keep the test from outliving its imports
 vi.mock('../components/users.js', () => ({ updateUserInterfaceElements: vi.fn() }));
+vi.mock('../components/session.js', () => ({ updateUserInterfaceElements: vi.fn() }));
 vi.mock('../components/auth.js', () => ({ lockDesktop: vi.fn(), switchUser: vi.fn(), logout: vi.fn() }));
 
 import * as dock from '../components/dock.js';

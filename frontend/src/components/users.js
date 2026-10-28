@@ -4,7 +4,14 @@
  */
 
 import { onManagementDom } from '../management-dom.js';
-import { api, auth, apiFetch, setSessionUserProvider } from '../api.js';
+import { api, auth, apiFetch } from '../api.js';
+import {
+  setCurrentUser,
+  getCurrentUser,
+  fetchCurrentProfile,
+  updateUserInterfaceElements,
+  formatRole,
+} from './session.js';
 import { escapeHtml, trapFocus, copyText } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { t } from '../i18n.js';
@@ -16,79 +23,8 @@ import { formatDateTime } from '../format.js';
 import { setServerAdvanced } from '../advanced.js';
 import { renderInvites } from './invites.js';
 import { emptyRowHtml } from './empty-state.js';
-let _currentUser = null;
-
-export function setCurrentUser(user) {
-  _currentUser = user;
-  setServerAdvanced(user?.advanced); // UX-23: Advanced is the person's own setting
-  updateUserInterfaceElements();
-}
-
-setSessionUserProvider(() => _currentUser?.username || null);
-
-export function getCurrentUser() {
-  return _currentUser;
-}
-
-export async function fetchCurrentProfile() {
-  try {
-    const res = await apiFetch('/api/auth/me', { credentials: 'include' });
-    if (res.ok) {
-      const data = await res.json();
-      setCurrentUser(data);
-      return data;
-    }
-  } catch (err) {
-    console.warn('[USERS] Could not fetch current user profile:', err);
-  }
-  return null;
-}
-
-export function updateUserInterfaceElements() {
-  if (!_currentUser) return;
-  const username = _currentUser.username || 'admin';
-  const displayName = _currentUser.display_name || username;
-  const roleId = _currentUser.role_id || 'share_user';
-  const avatarLetter = (displayName[0] || username[0] || 'U').toUpperCase();
-
-  // Update Topbar User Pill
-  const topbarAvatar = document.getElementById('topbar-user-avatar-initial');
-  if (topbarAvatar) topbarAvatar.textContent = avatarLetter;
-  const topbarName = document.getElementById('topbar-user-display-name');
-  if (topbarName) topbarName.textContent = displayName;
-
-  // Update Dock User Pill (backward compatibility)
-  const dockAvatar = document.getElementById('dock-user-avatar-initial');
-  if (dockAvatar) dockAvatar.textContent = avatarLetter;
-  const dockName = document.getElementById('dock-user-display-name');
-  if (dockName) dockName.textContent = displayName;
-
-  // Update Lock Overlay
-  const lockAvatar = document.getElementById('lock-avatar');
-  if (lockAvatar) lockAvatar.textContent = avatarLetter;
-  const lockName = document.getElementById('lock-display-name');
-  if (lockName) lockName.textContent = displayName;
-  const lockRole = document.getElementById('lock-role-badge');
-  if (lockRole) lockRole.textContent = formatRole(roleId);
-
-  // Update User Flyout
-  const flyoutAvatar = document.getElementById('user-flyout-avatar');
-  if (flyoutAvatar) flyoutAvatar.textContent = avatarLetter;
-  const flyoutName = document.getElementById('user-flyout-name');
-  if (flyoutName) flyoutName.textContent = displayName;
-  const flyoutUser = document.getElementById('user-flyout-username');
-  if (flyoutUser) flyoutUser.textContent = `@${username}`;
-  const flyoutRole = document.getElementById('user-flyout-role');
-  if (flyoutRole) flyoutRole.textContent = formatRole(roleId);
-
-  // Dynamic privilege gating: hide Users tab for non-admins
-  const usersTab = document.getElementById('mgmt-tab-users');
-  if (usersTab) {
-    const isAdmin = ['superadmin', 'storage_admin'].includes(roleId) ||
-                    (_currentUser.scopes && (_currentUser.scopes.includes('*') || _currentUser.scopes.includes('users:read')));
-    usersTab.style.display = isAdmin ? '' : 'none';
-  }
-}
+// The signed-in person's state lives in session.js (PERF-9); re-exported for older imports
+export { setCurrentUser, getCurrentUser, fetchCurrentProfile, updateUserInterfaceElements, formatRole };
 
 export function openModal(modal) {
   if (!modal) return;
@@ -116,17 +52,6 @@ export function closeModal(modal) {
 
 let _usersCache = {};
 
-export function formatRole(roleId) {
-  const map = {
-    superadmin: 'SuperAdmin 👑',
-    storage_admin: 'Storage Admin 💾',
-    app_operator: 'App Operator 📦',
-    backup_operator: 'Backup Operator 🔄',
-    share_user: 'Family & Share User 👤',
-    auditor: 'Auditor & Viewer 👁️'
-  };
-  return map[roleId] || roleId;
-}
 
 export function initUsersManagement() {
   initTopbarUserPill();
@@ -274,7 +199,7 @@ export async function loadUsersList() {
       const letter = (u.display_name?.[0] || u.username?.[0] || 'U').toUpperCase();
       const isActive = u.status === 'active';
       const isMfa = !!u.mfa_enabled;
-      const isSelf = _currentUser && _currentUser.id === u.id;
+      const isSelf = getCurrentUser()?.id === u.id;
       const quotaStr = u.storage_quota_bytes > 0
         ? `${Math.round(u.storage_quota_bytes / (1024 * 1024 * 1024))} GB`
         : 'Unlimited';
@@ -506,7 +431,7 @@ export function showResetPasswordModal(userId, username) {
 
   const form = document.getElementById('form-reset-password');
   // Changing your own password needs the current one (SEC-13).
-  const isSelf = !!_currentUser && _currentUser.id === userId;
+  const isSelf = !!getCurrentUser() && getCurrentUser().id === userId;
   const currentWrap = document.getElementById('reset-pwd-current-wrap');
   const currentInput = document.getElementById('reset-pwd-current');
   if (currentWrap) currentWrap.style.display = isSelf ? '' : 'none';

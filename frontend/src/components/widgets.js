@@ -8,6 +8,7 @@ import { api, auth } from '../api.js';
 import { makeDraggable } from './dock.js';
 
 import { formatDate, formatNumber } from '../format.js';
+import { WIDGET_NAMES, getWidgetKeyFromElement, getWidgetDisplayName } from './widget-names.js';
 const STORAGE_KEY = 'zettnas_widgets_config';
 const WEATHER_CACHE_KEY = 'zettnas_weather_cache';
 
@@ -109,42 +110,10 @@ export function saveWidgetConfig(newConfig) {
 }
 window.saveWidgetConfig = saveWidgetConfig;
 
-export const WIDGET_NAMES = {
-  clock: 'Time Clock',
-  ai_accelerator: 'AI Accelerator',
-  calendar: 'Calendar',
-  weather: 'Local Weather',
-  system: 'System Status',
-  network: 'Network I/O',
-  storage: 'Storage Pool',
-  uptime: 'Host Uptime',
-  drive_temp: 'Disk Temperatures',
-  net_dial: 'Network Dial',
-  ups_gauge: 'UPS Gauge',
-};
-
-export function getWidgetKeyFromElement(el) {
-  if (!el) return null;
-  const widgetNode = el.closest ? el.closest('.desktop-widget') : null;
-  if (!widgetNode || !widgetNode.id) return null;
-  const id = widgetNode.id;
-  if (!id.startsWith('widget-')) return null;
-  const rawKey = id.replace('widget-', '');
-  if (rawKey === 'ai-accelerator' || rawKey === 'ai_accelerator') return 'ai_accelerator';
-  if (rawKey === 'drive-temp' || rawKey === 'drive_temp') return 'drive_temp';
-  if (rawKey === 'net-dial' || rawKey === 'net_dial') return 'net_dial';
-  if (rawKey === 'ups-gauge' || rawKey === 'ups_gauge') return 'ups_gauge';
-  return rawKey;
-}
+// The names live in their own small file, so the desktop's right-click menu has them before
+// this module loads (it loads after the first paint, PERF-9)
+export { WIDGET_NAMES, getWidgetKeyFromElement, getWidgetDisplayName };
 window.getWidgetKeyFromElement = getWidgetKeyFromElement;
-
-export function getWidgetDisplayName(widgetKey) {
-  if (!widgetKey) return 'Widget';
-  const i18nKey = `widget.${widgetKey}`;
-  const translated = t(i18nKey);
-  if (translated && translated !== i18nKey) return translated;
-  return WIDGET_NAMES[widgetKey] || 'Widget';
-}
 window.getWidgetDisplayName = getWidgetDisplayName;
 
 export function removeWidget(widgetKey) {

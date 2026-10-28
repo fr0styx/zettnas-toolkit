@@ -8,8 +8,8 @@ import { t } from '../i18n.js';
 import { state } from '../state.js';
 import { escapeHtml } from '../utils.js';
 import { showToast } from '../toast.js';
-import { fetchCurrentProfile, getCurrentUser, setCurrentUser } from './users.js';
-import { openSetupWizard } from './setup-wizard.js';
+import { fetchCurrentProfile, getCurrentUser, setCurrentUser } from './session.js';
+import { openSetupWizard } from './setup-wizard-gate.js';
 
 import { formatDate, formatTime } from '../format.js';
 let _pendingMfaToken = null;

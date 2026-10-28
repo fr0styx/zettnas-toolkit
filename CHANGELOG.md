@@ -21,6 +21,8 @@
   sample, and updating drops LCD_FPS=10 (the old default) so the current default of 5 applies.
 - **Lighter start in other languages**: the web app no longer downloads the English strings
   alongside German, French, Spanish or Chinese; it fetches them only if a string is missing.
+  The desktop widgets load right after the first paint instead of with it, the Users pane's code
+  and the setup wizard only when they are opened.
 - **Smaller amd64 image, faster first page**: the amd64 image no longer carries QEMU's ARM
   emulators (virtual machines use the x86 one), the AI index opens beside startup instead of
   before the first answer, and CI checks the image's size and how fast it answers.

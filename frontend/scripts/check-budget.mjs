@@ -4,7 +4,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.argv[2] || 'static';
-const BUDGET = Number(process.env.FIRST_LOAD_BUDGET_BYTES || 250_000);
+const BUDGET = Number(process.env.FIRST_LOAD_BUDGET_BYTES || 220_000);
 
 const size = (p) => (existsSync(`${p}.br`) ? statSync(`${p}.br`).size : statSync(p).size);
 const html = readFileSync(join(ROOT, 'index.html'), 'utf8');
