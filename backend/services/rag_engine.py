@@ -633,6 +633,8 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         self._schema_initialized = False
         self._has_sqlite_vec: bool = False
         self._vec_table_active: bool = False
+        self._vec_legacy: str | None = None  # the float index searched until the int8 one is filled (AI-18)
+        self._vec_converting = False
         self._vec_table_dim: int = 768
         self._ensure_schema()
         if os.path.exists(self.db_path):
@@ -964,10 +966,12 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             finally:
                 conn.close()
 
-    def _init_vec_table(self, conn: sqlite3.Connection, dim: int) -> bool:
+    def _init_vec_table(self, conn: sqlite3.Connection, dim: int, background: bool = True) -> bool:
         """The vec0 index for one dimension, with int8 vectors (AI-18). An index made before with
-        float vectors is converted once, in SQL, and dropped: the float vectors stay in
-        document_chunks, so nothing is lost and nothing is read from disk."""
+        float vectors stays in use until the int8 one is filled, in the background and in
+        batches, from the float vectors in document_chunks; then it is dropped. Converting a
+        big index takes minutes, and doing it at start kept the app from answering its health
+        check, so the update was rolled back."""
         dim = int(dim)
         try:
             conn.execute(
@@ -985,20 +989,65 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             return False
         old = f"vec_chunks_{dim}"
         if conn.execute("SELECT 1 FROM sqlite_master WHERE name = ?", (old,)).fetchone():
-            try:
-                t0 = time.time()
-                n = conn.execute(
-                    f"INSERT OR REPLACE INTO {vec_table(dim)}(chunk_id, embedding, file_id, visibility_tier) "
-                    f"SELECT chunk_id, vec_quantize_int8(embedding, 'unit'), file_id, visibility_tier FROM {old}"
-                ).rowcount
-                conn.execute(f"DROP TABLE {old}")
-                conn.commit()
-                logger.info(
-                    f"[RAG] Vector index converted to int8: {max(0, n or 0)} vectors in {time.time() - t0:.1f}s"
-                )
-            except sqlite3.Error as e:
-                logger.warning(f"[RAG] Vector index conversion to int8 failed; trying again next start: {e}")
+            self._vec_legacy = old
+            if background and not self._vec_converting:
+                self._vec_converting = True
+                threading.Thread(target=self.convert_vectors, args=(dim,), daemon=True, name="rag-vec-int8").start()
+        else:
+            self._vec_legacy = None
         return True
+
+    def vec_search_table(self) -> tuple[str, str]:
+        """The index search reads now and how a query vector is put to it: the float index while
+        the int8 one is being filled, then the int8 one."""
+        if self._vec_legacy:
+            return self._vec_legacy, "?"
+        return vec_table(self._vec_table_dim), VEC_QUANTIZE
+
+    def convert_vectors(self, dim: int, batch: int = 500, pause: float = 0.05) -> int:
+        """Fills the int8 index from the float vectors in document_chunks (no file is read), a
+        batch at a time, each under the write lock, so search and indexing go on meanwhile; the
+        float index is dropped at the end. Safe to stop: the next start carries on."""
+        dim = int(dim)
+        old, new = f"vec_chunks_{dim}", vec_table(dim)
+        model = self.get_config().get("embedding_model") or ""
+        last, done, t0 = 0, 0, time.time()
+        try:
+            while True:
+                with self._write_lock:
+                    conn = self._get_conn(readonly=False)
+                    try:
+                        rows = conn.execute(
+                            "SELECT chunk_id, embedding_f32, file_id, visibility_tier FROM document_chunks "
+                            "WHERE chunk_id > ? AND embedding_dim = ? AND embedding_model = ? AND chunk_level != 'parent' "
+                            "AND length(embedding_f32) = ? ORDER BY chunk_id LIMIT ?",
+                            (last, dim, model, dim * 4, batch),
+                        ).fetchall()
+                        if not rows:
+                            conn.execute(f"DROP TABLE IF EXISTS {old}")
+                            conn.commit()
+                            self._vec_legacy = None
+                            break
+                        conn.executemany(
+                            f"INSERT OR REPLACE INTO {new}(chunk_id, embedding, file_id, visibility_tier) "
+                            f"VALUES (?, {VEC_QUANTIZE}, ?, ?)",
+                            [tuple(r) for r in rows],
+                        )
+                        conn.commit()
+                    finally:
+                        conn.close()
+                last = int(rows[-1][0])
+                done += len(rows)
+                if pause:
+                    time.sleep(pause)
+            logger.info(f"[RAG] Vector index converted to int8: {done} vectors in {time.time() - t0:.1f}s")
+        except Exception:
+            logger.warning(
+                "[RAG] Vector index conversion to int8 stopped; it carries on at the next start", exc_info=True
+            )
+        finally:
+            self._vec_converting = False
+        return done
 
     def file_chunks(self, path: str, max_chars: int = 16000) -> dict[str, Any]:
         """One indexed file's text in reading order, from the index (no disk access, AI-22).
@@ -1051,11 +1100,13 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         if not (self._has_sqlite_vec and self._vec_table_active):
             return
         try:
-            conn.execute(
-                f"""DELETE FROM {vec_table(self._vec_table_dim)} WHERE chunk_id IN (
-                    SELECT chunk_id FROM document_chunks WHERE file_id IN ({file_ids_sql}))""",
-                params,
-            )
+            for table in (vec_table(self._vec_table_dim), self._vec_legacy):
+                if table:
+                    conn.execute(
+                        f"""DELETE FROM {table} WHERE chunk_id IN (
+                            SELECT chunk_id FROM document_chunks WHERE file_id IN ({file_ids_sql}))""",
+                        params,
+                    )
         except sqlite3.Error as e:
             logger.debug(f"[RAG] vector cleanup skipped: {e}")
 

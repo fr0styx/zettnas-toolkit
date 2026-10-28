@@ -1802,5 +1802,10 @@ class RagIndexingMixin:
                 f"VALUES (?, {core.VEC_QUANTIZE}, ?, ?)",
                 (chunk_id, embedding_blob, file_id, visibility_tier),
             )
+            if getattr(self, "_vec_legacy", None):  # searched until the int8 index is filled
+                conn.execute(
+                    f"INSERT OR REPLACE INTO {self._vec_legacy}(chunk_id, embedding, file_id, visibility_tier) VALUES (?, ?, ?, ?)",
+                    (chunk_id, embedding_blob, file_id, visibility_tier),
+                )
         except Exception as e:
             logger.debug("Vector table sync deferred for chunk %d: %s", chunk_id, e)

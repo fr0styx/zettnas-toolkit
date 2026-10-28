@@ -297,8 +297,10 @@ class RagLearningMixin:
                     (target_model,),
                 )
                 w.execute("UPDATE indexed_files SET embedding_model = ?", (target_model,))
-                if self._has_sqlite_vec and self._init_vec_table(w, target_dim):
+                if self._has_sqlite_vec and self._init_vec_table(w, target_dim, background=False):
                     table = _core().vec_table(target_dim)
+                    w.execute(f"DROP TABLE IF EXISTS vec_chunks_{int(target_dim)}")  # filled anew below
+                    self._vec_legacy = None
                     w.execute(f"DELETE FROM {table}")
                     w.execute(
                         f"""INSERT INTO {table}(chunk_id, embedding, file_id, visibility_tier)
