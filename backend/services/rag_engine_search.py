@@ -30,6 +30,7 @@ from backend.services.rag_embeddings import (  # noqa: F401
     cosine_similarity_vec,
     embedding_host,
     unpack_embedding,
+    unpack_vector,
 )
 from backend.services.rag_grounding import (  # noqa: F401
     apply_primacy_recency_inversion,
@@ -723,7 +724,7 @@ class RagSearchMixin:
             scene_tags: list[str] = json.loads(r["scene_tags_json"] or "[]")
             palette_swatches: list[str] = json.loads(r["palette_json"] or "[]")
 
-            emb_vec = unpack_embedding(r["vision_embedding_f32"])
+            emb_vec = unpack_vector(r["vision_embedding_f32"])
             s_vec = cosine_similarity_vec(photo_query_vec, emb_vec)
             s_bm25 = bm25_map.get(fid, 0.0)
 
@@ -1059,7 +1060,7 @@ class RagSearchMixin:
         scored_chunks: list[tuple[float, sqlite3.Row, float]] = []
         mismatched_chunks: set[int] = set()
         for r in rows:
-            emb = unpack_embedding(r["embedding_f32"])
+            emb = unpack_vector(r["embedding_f32"])
             file_emb_model = r["embedding_model"] if "embedding_model" in r.keys() else "zett_lexical_384d"
             # the exact model: EmbeddingGemma 1 and 2 vectors live in different spaces (AI-17)
             q_norm = (query_embedding_model or "").lower().removesuffix(":latest")

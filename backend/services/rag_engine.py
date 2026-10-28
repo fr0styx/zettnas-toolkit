@@ -659,17 +659,21 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 logger.debug("backend.services.rag_engine.RagSearchEngine.__init__: ignored error", exc_info=True)
         self._start_spinup_watcher()
 
+    def _open_ro(self) -> sqlite3.Connection:
+        conn = db_crypto.connect(self.db_path, readonly=True, timeout=15.0, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA query_only=ON;")
+        conn.execute("PRAGMA busy_timeout=15000;")
+        conn.execute("PRAGMA temp_store=MEMORY;")
+        conn.execute(f"PRAGMA cache_size=-{READ_CACHE_KIB};")
+        load_sqlite_vec_extension(conn)
+        return conn
+
     def _get_conn(self, readonly: bool = False) -> sqlite3.Connection:
         db_crypto.wait_ready(self.db_path)  # raises while the index is being encrypted
         if readonly and os.path.exists(self.db_path):
             try:
-                conn = db_crypto.connect(self.db_path, readonly=True, timeout=15.0, check_same_thread=False)
-                conn.row_factory = sqlite3.Row
-                conn.execute("PRAGMA query_only=ON;")
-                conn.execute("PRAGMA busy_timeout=15000;")
-                conn.execute("PRAGMA temp_store=MEMORY;")
-                load_sqlite_vec_extension(conn)
-                return conn
+                return self._open_ro()
             except Exception:
                 logger.debug("backend.services.rag_engine.RagSearchEngine._get_conn: ignored error", exc_info=True)
 
@@ -681,6 +685,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         conn.execute("PRAGMA foreign_keys=ON;")
         conn.execute("PRAGMA busy_timeout=15000;")
         conn.execute("PRAGMA temp_store=MEMORY;")
+        conn.execute(f"PRAGMA journal_size_limit={WAL_SIZE_LIMIT_BYTES};")  # the WAL shrinks back (PERF-23)
         load_sqlite_vec_extension(conn)
         return conn
 
@@ -739,6 +744,9 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                     CREATE INDEX IF NOT EXISTS idx_files_modality_type ON indexed_files(modality, doc_type);
                     CREATE INDEX IF NOT EXISTS idx_files_parent ON indexed_files(parent_dir);
                     CREATE INDEX IF NOT EXISTS idx_files_ext ON indexed_files(file_ext);
+                    -- the newest readable files first without sorting the whole index (PERF-24); partial,
+                    -- so it doesn't take the plan from narrower indexes like idx_files_fallback_vectors
+                    CREATE INDEX IF NOT EXISTS idx_files_ok_mtime ON indexed_files(mtime_ns DESC) WHERE parse_status = 'ok';
                     -- auto-tags for the document filters (B8, rag_tags.SCHEMA)
                     CREATE TABLE IF NOT EXISTS doc_tags (file_id INTEGER NOT NULL, tag TEXT NOT NULL, PRIMARY KEY (file_id, tag));
                     CREATE INDEX IF NOT EXISTS idx_doc_tags_tag ON doc_tags(tag, file_id);
@@ -1374,6 +1382,13 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         if stale:
             logger.info(f"[RAG] {len(stale)} file(s) with CJK/Cyrillic text will be learned again (Unicode tokens)")
         return len(stale)
+
+
+# Read connections get a bigger page cache; the WAL is capped and shrinks back (PERF-23). A pool
+# of open read connections was tried and left out: a cursor not read to the end keeps its read
+# snapshot, so a lent-out connection would read stale data and hold back checkpoints.
+READ_CACHE_KIB = 16384
+WAL_SIZE_LIMIT_BYTES = 64 * 1024 * 1024
 
 
 def vec_table(dim: int) -> str:

@@ -9,6 +9,8 @@
   the Power page is open).
 - **Quieter when idle**: the backup scheduler, the event log, the health check, thumbnails and the
   built-in LCD renderer wake and write far less often while nothing changes.
+- **Faster AI search on a big library**: searches score candidates faster and find the newest files
+  through an index, and the AI index is tidied up once a night while nobody chats.
 
 #### Fixes
 

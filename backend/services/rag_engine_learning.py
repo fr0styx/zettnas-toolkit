@@ -1119,6 +1119,41 @@ class RagLearningMixin:
         except sqlite3.Error:
             logger.warning("[RAG] Naming photo places failed; trying again next round", exc_info=True)
 
+    def _maybe_maintain_index(self) -> None:
+        """Once a night, while nobody chats: SQLite's own statistics (PRAGMA optimize), each
+        keyword index merged into one segment (FTS optimize) and the WAL folded back (PERF-23)."""
+        from backend.services import ai_activity
+
+        tonight = time.strftime("%Y-%m-%d", time.localtime())
+        if getattr(self, "_maintained_on", "") == tonight or not ai_activity.upgrade_window_open(time.time()):
+            return
+        self._maintained_on = tonight
+        t0 = time.time()
+        try:
+            with self._write_lock:
+                conn = self._get_conn(readonly=False)
+                try:
+                    tables = {
+                        r[0]
+                        for r in conn.execute(
+                            "SELECT name FROM sqlite_master WHERE type = 'table' AND sql LIKE '%USING fts5%'"
+                        )
+                    }
+                    for table in sorted(tables):
+                        if table == "rag_chunks_cjk":
+                            continue  # contentless_delete tables have no optimize of their own worth it
+                        conn.execute(f"INSERT INTO {table}({table}) VALUES ('optimize')")
+                    conn.commit()
+                    conn.execute("PRAGMA optimize")
+                    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                finally:
+                    conn.close()
+            logger.info(
+                f"[RAG] Nightly index maintenance done in {time.time() - t0:.1f}s ({len(tables)} keyword indexes)"
+            )
+        except sqlite3.Error:
+            logger.warning("[RAG] Nightly index maintenance failed; trying again tomorrow", exc_info=True)
+
     def _maybe_reembed_fallback_files(self) -> None:
         now = time.time()
         if now - self._last_fallback_reembed < _core().FALLBACK_REEMBED_EVERY_SECS:
@@ -1128,3 +1163,4 @@ class RagLearningMixin:
         self._maybe_backfill_tags()  # same five-minute cadence; stops once every older file is tagged
         self._maybe_backfill_photo_dates()  # at night only (AI-24)
         self._maybe_name_photo_places()  # from the index alone, any time (AI-24)
+        self._maybe_maintain_index()  # once a night (PERF-23)

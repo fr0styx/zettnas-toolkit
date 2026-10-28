@@ -5,6 +5,7 @@ embeddings, sqlite-vec loading and vector maths.
 Split out of rag_engine.py (AI-21), which re-exports these names.
 """
 
+import array
 import hashlib
 import json
 import math
@@ -12,9 +13,11 @@ import os
 import re
 import sqlite3
 import struct
+import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Sequence
 
 from backend.config import logger
 from backend.services import gpu_queue
@@ -137,6 +140,18 @@ def unpack_embedding(blob: bytes | None) -> list[float] | None:
         return None
     dim = len(blob) // 4
     return list(struct.unpack(f"<{dim}f", blob))
+
+
+def unpack_vector(blob: bytes | None) -> array.array | None:
+    """A float32 blob as an array: no Python float per value, and the cosine's C path reads it
+    about 40% faster than a list when thousands of candidates are scored (PERF-24)."""
+    if not blob or len(blob) % 4 != 0:
+        return None
+    out = array.array("f")
+    out.frombytes(blob)
+    if sys.byteorder != "little":
+        out.byteswap()
+    return out
 
 
 def load_sqlite_vec_extension(conn: sqlite3.Connection) -> bool:
@@ -690,7 +705,7 @@ _sumprod = getattr(math, "sumprod", None)  # Python 3.12+: dot product in C, ext
 _TINY_NORM_SQ = 1e-280  # below this the squares may have underflowed; use the scaled path
 
 
-def cosine_similarity_vec(v1: list[float], v2: list[float] | None) -> float:
+def cosine_similarity_vec(v1: Sequence[float], v2: Sequence[float] | None) -> float:
     """
     Computes cosine similarity between two vectors with Matryoshka prefix truncation
     and robust scale handling against float overflow/underflow and NaN poisoning.
@@ -718,7 +733,7 @@ def cosine_similarity_vec(v1: list[float], v2: list[float] | None) -> float:
     return _cosine_similarity_scaled(v1, v2)
 
 
-def _cosine_similarity_scaled(v1: list[float], v2: list[float]) -> float:
+def _cosine_similarity_scaled(v1: Sequence[float], v2: Sequence[float]) -> float:
     """Max-abs scaled cosine for vectors the fast path can't take (overflow, underflow, NaN)."""
 
     # Guard against NaN / Inf poisoning
