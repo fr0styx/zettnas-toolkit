@@ -2,6 +2,7 @@
 
 import logging
 
+import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
@@ -15,7 +16,17 @@ def _route(path, exc):
     app.add_api_route(path, boom, methods=["GET"])
 
 
-def test_500s_hide_exception_text_and_log_it(caplog):
+@pytest.fixture
+def test_routes():
+    """The routes added here leave the shared app afterwards: the API schema checks saw them
+    when they ran later (found by the random-order nightly)."""
+    before = len(app.router.routes)
+    yield
+    del app.router.routes[before:]
+    app.openapi_schema = None
+
+
+def test_500s_hide_exception_text_and_log_it(caplog, test_routes):
     _route("/api/_test/leak", HTTPException(status_code=500, detail="Failed: /secret/path/config.json missing"))
     _route("/api/_test/crash", RuntimeError("database at /data/x.db is locked"))
     client = TestClient(app, raise_server_exceptions=False)
@@ -57,7 +68,7 @@ def test_token_clients_on_bare_api_get_deprecation_headers():
     assert api_deprecation_headers("/api/system/info", "session-token") == {}  # the web UI
 
 
-def test_shown_server_errors_keep_their_message():
+def test_shown_server_errors_keep_their_message(test_routes):
     from backend.errors import ShownServerError
 
     _route(

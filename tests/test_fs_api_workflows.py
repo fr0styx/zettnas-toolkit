@@ -12,7 +12,10 @@ import pytest
 
 @pytest.fixture
 def work(pool_tree):
-    """A fresh folder per test inside the allowed pool."""
+    """A fresh folder per test inside the allowed pool, removed afterwards with its recycle bin
+    (a later recycle-bin listing found items left in it: random-order nightly)."""
+    import shutil
+
     d = os.path.join(pool_tree, "wf-" + uuid.uuid4().hex[:8])
     os.makedirs(d)
     with open(os.path.join(d, "a.txt"), "w") as f:
@@ -20,7 +23,8 @@ def work(pool_tree):
     os.makedirs(os.path.join(d, "sub"))
     with open(os.path.join(d, "sub", "b.txt"), "w") as f:
         f.write("bravo")
-    return d
+    yield d
+    shutil.rmtree(d, ignore_errors=True)
 
 
 def ok(r):
@@ -277,7 +281,7 @@ class TestShareLinks:
         assert client.get(f"/api/fs/shared/{token}").status_code in (403, 404, 410)
 
 
-def test_delete_returns_the_recycle_bin_id_for_undo(client, auth_headers, pool_tree, monkeypatch):
+def test_delete_returns_the_recycle_bin_id_for_undo(client, auth_headers, pool_tree, monkeypatch, request):
     """UX-6: the id comes back so Undo can restore it; two items of one name never collide."""
     import os
 
@@ -288,6 +292,11 @@ def test_delete_returns_the_recycle_bin_id_for_undo(client, auth_headers, pool_t
     base = os.path.join(
         pool_tree["root"] if isinstance(pool_tree, dict) and "root" in pool_tree else pool_tree, "undo-test"
     )
+    import shutil
+
+    # the share and its recycle bin go afterwards: a later recycle-bin listing found the item
+    # left in it (found by the random-order nightly)
+    request.addfinalizer(lambda: shutil.rmtree(base, ignore_errors=True))
     ids = []
     for _ in range(2):
         os.makedirs(base, exist_ok=True)

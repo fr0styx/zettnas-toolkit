@@ -170,7 +170,7 @@ def test_openzfs_drive_count_validation():
         adapter.create_pool(name="zpool1", fs_type="zfs", profile="mirror", disks=["sda"], mountpoint="")
 
 
-def test_openzfs_pool_creation_command():
+def test_openzfs_pool_creation_command(tmp_path):
     adapter = GenericLinuxStorageAdapter()
     recorded_commands = []
 
@@ -186,7 +186,9 @@ def test_openzfs_pool_creation_command():
         fs_type="zfs",
         profile="raidz2",
         disks=["sda", "sdb", "sdc", "sdd"],
-        mountpoint="/mnt/storage/tank",
+        # a folder of the test's own: create_pool makes it, and a real /mnt/storage changed what
+        # the file browser shows to later tests (found by the random-order nightly)
+        mountpoint=str(tmp_path / "tank"),
     )
 
     assert res["status"] == "provisioned"

@@ -121,6 +121,23 @@ def test_invalid_curve_falls_back_to_linear():
 # ---- apply_zone_pwm hysteresis ----
 
 
+@pytest.fixture(autouse=True)
+def _no_sweep_left_running():
+    """A background sweep from another test answers "already running" (random-order nightly)."""
+    from backend.hardware import fans
+
+    def stop():
+        fans.stop_acoustic_sweep()
+        if fans._calibration_thread is not None:
+            fans._calibration_thread.join(timeout=5)
+        with fans._calibration_lock:
+            fans._calibration_state["running"] = False
+
+    stop()
+    yield
+    stop()
+
+
 @pytest.fixture
 def fresh_zone():
     Z_STATE.fan_state_tracker.pop("pwm9", None)

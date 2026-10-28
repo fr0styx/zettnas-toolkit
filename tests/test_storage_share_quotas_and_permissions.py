@@ -3,6 +3,7 @@ Unit tests for storage share quotas, user permissions matrix,
 SMART self-test spindown guards, and Docker update policies.
 """
 
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -75,7 +76,9 @@ def test_samba_engine_conf_includes_read_write_lists_and_quota(tmp_path):
 
         share = SambaShareConfig(
             name="projects",
-            path="/mnt/storage/projects",
+            # in the test pool: the engine makes the folder, and a real /mnt/storage changed what
+            # the file browser shows to later tests (found by the random-order nightly)
+            path=os.path.join(os.environ["POOL_PATH"], "projects"),
             quota_gb=100,
             valid_users="dev1 dev2",
             read_list="dev2",

@@ -282,8 +282,9 @@ def test_fetch_disk_smart_detail_wake_triggers_spinup_and_bypasses_standby_guard
         assert res["health"] == "STANDBY"
         assert res["is_standby"] is True
         assert res["model"] == "SATA HDD (Standby)"
-        # smartctl called with -n standby
-        call_args = mock_run.call_args[0][0]
+        # smartctl called with -n standby (its own call: a disk scan an earlier test started in
+        # the background may run lsblk meanwhile, seen in the random-order nightly)
+        call_args = next(c[0][0] for c in mock_run.call_args_list if c[0] and "smartctl" in c[0][0][0])
         assert "-n" in call_args and "standby" in call_args
 
     # Case 2: wake_if_standby=True -> Bypasses standby guard, triggers spinup & returns live details

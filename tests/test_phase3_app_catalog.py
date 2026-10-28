@@ -316,7 +316,7 @@ def test_check_port_detailed_with_docker():
             assert owner == "container 'uptime-kuma'"
 
 
-def test_stream_deploy_catalog_app_aborts_on_conflicting_port():
+def test_stream_deploy_catalog_app_aborts_on_conflicting_port(tmp_path):
     from backend.services.app_catalog import stream_deploy_catalog_app
 
     with (
@@ -326,13 +326,13 @@ def test_stream_deploy_catalog_app_aborts_on_conflicting_port():
             return_value=(False, "container 'rogue-app'"),
         ),
     ):
-        events = list(stream_deploy_catalog_app("uptime-kuma", host_port=3001))
+        events = list(stream_deploy_catalog_app("uptime-kuma", host_port=3001, storage_root=str(tmp_path)))
         error_event = next((e for e in events if e.get("step") == "error"), None)
         assert error_event is not None
         assert "already in use by container 'rogue-app'" in error_event["message"]
 
 
-def test_stream_deploy_catalog_app_replace_existing_proceeds():
+def test_stream_deploy_catalog_app_replace_existing_proceeds(tmp_path):
     from backend.services.app_catalog import stream_deploy_catalog_app
 
     def fake_docker(method, path, *args, **kwargs):
@@ -355,6 +355,7 @@ def test_stream_deploy_catalog_app_replace_existing_proceeds():
             stream_deploy_catalog_app(
                 "uptime-kuma",
                 host_port=3001,
+                storage_root=str(tmp_path),  # not the real /mnt/user/appdata (random-order nightly)
                 container_name="uptime-kuma",
                 replace_existing=True,
             )

@@ -82,7 +82,7 @@ def test_the_nightly_runs_the_shipped_model_and_the_documents_set():
         assert "@sha256:" in image  # pinned
     with open("tests/rag_eval/baseline_nightly_documents.json", encoding="utf-8") as f:
         floor = json.load(f)
-    assert floor["set"] == "documents" and "latency" not in floor and floor["note"].startswith("floor")
+    assert floor["set"] == "documents" and "latency" not in floor and floor["model"] == "embeddinggemma"
 
 
 def test_the_vector_bench_keeps_its_big_files_off_docker():

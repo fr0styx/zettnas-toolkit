@@ -1,64 +1,102 @@
 {
-  "model": "embeddinggemma",
-  "set": "base",
-  "distractors": 0,
-  "overall": {
-    "recall@1": 0.935,
-    "recall@5": 0.955,
-    "mrr@10": 0.945,
-    "queries": 200
+ "note": "recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2)",
+ "model": "embeddinggemma",
+ "set": "base",
+ "distractors": 0,
+ "overall": {
+  "recall@1": 0.985,
+  "recall@5": 1.0,
+  "all@5": 1.0,
+  "mrr@10": 0.993,
+  "queries": 200
+ },
+ "by_language": {
+  "de": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 1.0,
+   "queries": 40
   },
-  "by_language": {
-    "de": {
-      "recall@1": 0.9,
-      "recall@5": 0.9,
-      "mrr@10": 0.9,
-      "queries": 40
-    },
-    "en": {
-      "recall@1": 0.975,
-      "recall@5": 0.975,
-      "mrr@10": 0.975,
-      "queries": 40
-    },
-    "es": {
-      "recall@1": 0.975,
-      "recall@5": 1.0,
-      "mrr@10": 0.988,
-      "queries": 40
-    },
-    "fr": {
-      "recall@1": 0.95,
-      "recall@5": 1.0,
-      "mrr@10": 0.975,
-      "queries": 40
-    },
-    "zh": {
-      "recall@1": 0.875,
-      "recall@5": 0.9,
-      "mrr@10": 0.887,
-      "queries": 40
-    }
+  "en": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 1.0,
+   "queries": 40
   },
-  "by_kind": {
-    "same-language": {
-      "recall@1": 0.935,
-      "recall@5": 0.955,
-      "mrr@10": 0.945,
-      "queries": 200
-    }
+  "es": {
+   "recall@1": 0.975,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.988,
+   "queries": 40
   },
-  "answers": {
-    "model": "qwen3:1.7b",
-    "accuracy": 0.794,
-    "source_hit": 0.938,
-    "model_answered": 1.0,
-    "by_language": {
-      "de": 0.842,
-      "en": 0.84,
-      "es": 0.941,
-      "fr": 0.722,
-      "zh": 0.611
-    }
+  "fr": {
+   "recall@1": 0.975,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.988,
+   "queries": 40
+  },
+  "zh": {
+   "recall@1": 0.975,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.988,
+   "queries": 40
   }
+ },
+ "by_kind": {
+  "same-language": {
+   "recall@1": 0.985,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.993,
+   "queries": 200
+  }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.981,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.991,
+   "queries": 159
+  },
+  "heldout": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 1.0,
+   "queries": 41
+  }
+ },
+ "answers": {
+  "model": "qwen3:4b",
+  "says_not_found": 0.7,
+  "accuracy": 0.99,
+  "source_hit": 1.0,
+  "model_answered": 1.0,
+  "first_token": {
+   "p50_ms": 31392.5,
+   "p95_ms": 46675.2,
+   "measured": 107,
+   "missing": 0
+  },
+  "faithfulness": 0.189,
+  "fully_supported": 0.0,
+  "faithfulness_scored": 97,
+  "by_language": {
+   "de": 1.0,
+   "en": 0.96,
+   "es": 1.0,
+   "fr": 1.0,
+   "zh": 1.0
+  },
+  "by_split": {
+   "dev": 0.987,
+   "heldout": 1.0
+  }
+ }
 }

@@ -56,6 +56,10 @@ def test_chassis_engine_auto_profile_classification():
             return_value={"profile": "auto", "mappings": []},
         ),
         patch("backend.hardware.chassis.ChassisEngine._read_dmi_product_name", return_value=""),
+        # no board, SKU, vendor or device-tree model either: a fake /sys another test filled
+        # (a Zettlab D8, say) would make this an 8-bay chassis (seen in random order)
+        patch("backend.hardware.chassis.ChassisEngine._read_dmi_field", return_value=""),
+        patch("backend.hardware.storage._read_dt_text", return_value=""),
     ):
         status = ChassisEngine.get_chassis_status()
         assert status["profile"] == "tower_desktop"

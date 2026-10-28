@@ -287,7 +287,8 @@ def test_api_samba_endpoints(client, auth_headers, monkeypatch):
     # Create share
     payload = {
         "name": "apishare",
-        "path": "/mnt/storage/apishare",
+        # in the test pool, not the real /mnt/storage (found by the random-order nightly)
+        "path": os.path.join(os.environ["POOL_PATH"], "apishare"),
         "comment": "API Test Share",
         "read_only": False,
         "guest_ok": True,

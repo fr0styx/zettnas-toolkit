@@ -190,6 +190,10 @@ def test_the_weekly_report_says_how_things_are(monkeypatch):
     monkeypatch.setattr("backend.hardware.pal_storage.get_storage_platform", lambda: Adapter())
     monkeypatch.setattr(pool_alerts, "current", lambda max_age=0, now=None: [])
     monkeypatch.setattr("backend.services.backup_watch.overdue_backups", lambda now=None: [])
+    from backend.state import Z_STATE
+
+    # no drive verdicts of its own: none left over from another test (seen in random order)
+    monkeypatch.setattr(Z_STATE, "drive_verdicts", {})
     title, body = pool_alerts.weekly_report()
     assert "weekly" in title.lower() and "Everything looks fine." in body
     assert "tank: 42% used" in body and "3 day(s) ago with 0 errors" in body and "all on time" in body

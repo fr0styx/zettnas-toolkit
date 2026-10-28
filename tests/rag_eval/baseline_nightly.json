@@ -1,63 +1,89 @@
 {
-  "model": "embeddinggemma",
-  "set": "all",
-  "distractors": 2000,
-  "overall": {
-    "recall@1": 0.834,
-    "recall@5": 0.848,
-    "mrr@10": 0.841,
-    "queries": 290
+ "note": "recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2)",
+ "model": "embeddinggemma",
+ "set": "all",
+ "distractors": 2000,
+ "overall": {
+  "recall@1": 0.897,
+  "recall@5": 0.955,
+  "all@5": 0.955,
+  "mrr@10": 0.922,
+  "queries": 446
+ },
+ "by_language": {
+  "de": {
+   "recall@1": 0.932,
+   "recall@5": 0.966,
+   "all@5": 0.966,
+   "mrr@10": 0.944,
+   "queries": 88
   },
-  "by_language": {
-    "de": {
-      "recall@1": 0.821,
-      "recall@5": 0.821,
-      "mrr@10": 0.821,
-      "queries": 56
-    },
-    "en": {
-      "recall@1": 0.75,
-      "recall@5": 0.75,
-      "mrr@10": 0.75,
-      "queries": 72
-    },
-    "es": {
-      "recall@1": 0.87,
-      "recall@5": 0.889,
-      "mrr@10": 0.878,
-      "queries": 54
-    },
-    "fr": {
-      "recall@1": 0.927,
-      "recall@5": 0.964,
-      "mrr@10": 0.945,
-      "queries": 55
-    },
-    "zh": {
-      "recall@1": 0.83,
-      "recall@5": 0.849,
-      "mrr@10": 0.84,
-      "queries": 53
-    }
+  "en": {
+   "recall@1": 0.893,
+   "recall@5": 0.971,
+   "all@5": 0.971,
+   "mrr@10": 0.927,
+   "queries": 103
   },
-  "by_kind": {
-    "cross": {
-      "recall@1": 0.54,
-      "recall@5": 0.56,
-      "mrr@10": 0.55,
-      "queries": 50
-    },
-    "paraphrase": {
-      "recall@1": 0.8,
-      "recall@5": 0.825,
-      "mrr@10": 0.808,
-      "queries": 40
-    },
-    "same-language": {
-      "recall@1": 0.915,
-      "recall@5": 0.925,
-      "mrr@10": 0.92,
-      "queries": 200
-    }
+  "es": {
+   "recall@1": 0.835,
+   "recall@5": 0.894,
+   "all@5": 0.894,
+   "mrr@10": 0.861,
+   "queries": 85
+  },
+  "fr": {
+   "recall@1": 0.92,
+   "recall@5": 0.954,
+   "all@5": 0.954,
+   "mrr@10": 0.936,
+   "queries": 87
+  },
+  "zh": {
+   "recall@1": 0.904,
+   "recall@5": 0.988,
+   "all@5": 0.988,
+   "mrr@10": 0.943,
+   "queries": 83
   }
+ },
+ "by_kind": {
+  "cross": {
+   "recall@1": 0.864,
+   "recall@5": 0.956,
+   "all@5": 0.956,
+   "mrr@10": 0.906,
+   "queries": 206
+  },
+  "paraphrase": {
+   "recall@1": 0.85,
+   "recall@5": 0.95,
+   "all@5": 0.95,
+   "mrr@10": 0.885,
+   "queries": 40
+  },
+  "same-language": {
+   "recall@1": 0.94,
+   "recall@5": 0.955,
+   "all@5": 0.955,
+   "mrr@10": 0.946,
+   "queries": 200
+  }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.891,
+   "recall@5": 0.955,
+   "all@5": 0.955,
+   "mrr@10": 0.918,
+   "queries": 359
+  },
+  "heldout": {
+   "recall@1": 0.92,
+   "recall@5": 0.954,
+   "all@5": 0.954,
+   "mrr@10": 0.938,
+   "queries": 87
+  }
+ }
 }

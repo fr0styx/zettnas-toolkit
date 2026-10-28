@@ -27,17 +27,25 @@ def test_config_env_vars_and_aliases(monkeypatch):
     # Reload config module dynamically to verify env parsing
     import importlib
 
-    cfg = importlib.reload(config)
+    saved = dict(config.__dict__)
+    try:
+        cfg = importlib.reload(config)
 
-    assert cfg.ZERO_RPM_ENABLED is True
-    assert cfg.FAN_ZERO_RPM_DEFAULT_STOP_TEMP == 36
-    assert cfg.FAN_ZERO_RPM_DEFAULT_NVME_CEILING == 52
-    assert cfg.UPS_MODE == "nut"
-    assert cfg.NUT_NAME == "office_ups"
-    assert cfg.VM_ISO_DIR == "/mnt/custom/isos"
-    assert cfg.SFTP_PORT == 22222
-    assert cfg.TAILSCALE_STATE_DIR == "/data/tailscale_custom"
-    assert cfg.UPDATE_CHANNEL == "edge"
+        assert cfg.ZERO_RPM_ENABLED is True
+        assert cfg.FAN_ZERO_RPM_DEFAULT_STOP_TEMP == 36
+        assert cfg.FAN_ZERO_RPM_DEFAULT_NVME_CEILING == 52
+        assert cfg.UPS_MODE == "nut"
+        assert cfg.NUT_NAME == "office_ups"
+        assert cfg.VM_ISO_DIR == "/mnt/custom/isos"
+        assert cfg.SFTP_PORT == 22222
+        assert cfg.TAILSCALE_STATE_DIR == "/data/tailscale_custom"
+        assert cfg.UPDATE_CHANNEL == "edge"
+    finally:
+        # the module exactly as it was: reloading it again would drop what the test setup set
+        # on it directly, and later tests saw the pool and browse roots of a real server
+        # (found by the random-order nightly)
+        config.__dict__.clear()
+        config.__dict__.update(saved)
 
 
 # Self-updater recreate tests live in tests/test_updater_recreate.py.

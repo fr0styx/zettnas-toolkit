@@ -48,10 +48,17 @@ def test_pools_and_shares_as_plain_dicts(monkeypatch):
         def list_snapshots(self, pid):
             return [{"name": "daily", "pool": pid}]
 
+        def is_storage_busy(self):
+            # without it the storage section was an error, and the names were found only in
+            # whatever other sections an earlier test left behind (random-order nightly)
+            return False
+
     monkeypatch.setattr(storage_diagnostics, "get_storage_platform", lambda: Adapter())
     out = storage_diagnostics.collect_storage_diagnostics()
-    blob = json.dumps(out, default=str)
-    assert "pool1" in blob and "media" in blob and "daily" in blob
+    pal = out["pal_storage"]
+    assert "error" not in pal, pal
+    assert pal["pools"][0]["id"] == "pool1" and pal["shares"][0]["name"] == "media"
+    assert "daily" in json.dumps(out, default=str)
 
 
 def test_fan_registers_not_mapped_read_and_write_nothing(monkeypatch, tmp_path):

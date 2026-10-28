@@ -35,6 +35,8 @@ os.environ.update(
         "DATA_DIR": DATA_DIR,
         "POOL_PATH": POOL_DIR,
         "BROWSE_ROOTS": POOL_DIR,
+        # remotes mount here, not under the real /mnt/remotes (found by the random-order nightly)
+        "REMOTES_PATH": os.path.join(SANDBOX, "remotes"),
         "HOST_SYS": FAKE_SYS,
         "HOST_PROC": FAKE_PROC,
         "HOST_DEV": FAKE_DEV,
@@ -196,7 +198,8 @@ def _web_off():
 
 @pytest.fixture(autouse=True)
 def _fresh_hardware_state():
-    """Fan hold trackers, thermal fail-safe flags and standby caches start empty (ARC-13)."""
+    """Fan hold trackers, thermal fail-safe flags, standby caches, the detected chassis model and
+    drive verdicts start empty (ARC-13; the last two found by the random-order nightly)."""
     from backend.services import rag_standby
     from backend.state import Z_STATE
 
@@ -204,6 +207,8 @@ def _fresh_hardware_state():
     Z_STATE.critical_temp_active = False
     Z_STATE.thermal_watchdog_engaged = False
     Z_STATE.cached_smart_data.clear()
+    Z_STATE.cached_chassis_model = None
+    Z_STATE.drive_verdicts.clear()
     rag_standby._SMARTCTL_STANDBY_CACHE.clear()
     rag_standby._UNRAID_INI_CACHE.update({"ts": 0.0, "disks": {}, "shares": {}})
 

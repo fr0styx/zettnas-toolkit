@@ -18,6 +18,7 @@ def test_dockerfile_installs_vm_and_browser_only_in_full():
 def test_core_image_updates_to_core_tags(monkeypatch):
     from backend import config
 
+    saved = dict(config.__dict__)
     monkeypatch.setenv("ZETTNAS_IMAGE_VARIANT", "core")
     importlib.reload(config)
     try:
@@ -25,8 +26,11 @@ def test_core_image_updates_to_core_tags(monkeypatch):
         assert config.variant_tag("edge") == "edge-core"
         assert config.variant_tag("latest-core") == "latest-core"
     finally:
+        # the module exactly as it was, not reloaded again: a reload drops the paths the test
+        # setup set on it (found by the random-order nightly)
         monkeypatch.delenv("ZETTNAS_IMAGE_VARIANT")
-        importlib.reload(config)
+        config.__dict__.clear()
+        config.__dict__.update(saved)
     assert config.variant_tag("latest") == "latest"
 
 
