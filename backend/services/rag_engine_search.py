@@ -285,6 +285,10 @@ class RagSearchMixin:
             eff_sort = "relevance"
 
         chosen_emb_model = embedding_model or cfg.get("embedding_model") or "embeddinggemma"
+        if not (query or "").strip():
+            # browsing by a filter chip: no words to embed, so no model to wait for and no
+            # "the model didn't answer" banner (AI-37)
+            chosen_emb_model = "zett_lexical_384d"
         target_dim = cfg.get("embedding_dim")
         intent_type, task_prefix = classify_query_task_intent(query, modality_hint=effective_mode)
         effective_emb_model, query_vec = compute_multimodal_query_embedding(
@@ -1108,6 +1112,7 @@ class RagSearchMixin:
         path_prefix: str | None = None,
         top_k: int = 5,
         principal: Any = None,
+        tags: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         RAG v3 Grounded Conversational RAG & Structured Synthesis:
@@ -1128,6 +1133,7 @@ class RagSearchMixin:
             path_prefix=path_prefix,
             limit=max(top_k * 2, 10),
             principal=principal,
+            tags=tags,
         )
 
         doc_hits = search_res.get("document_results", [])

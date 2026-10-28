@@ -1252,6 +1252,10 @@ starlette==1.9.0 \
     # via
     #   fastapi
     #   sse-starlette
+tinytag==2.3.2 \
+    --hash=sha256:021d711cdbdbf840d3b67b976cb34dadc58d2fcfd490eb74ef9602b37b991414 \
+    --hash=sha256:ebaf957915266b9c20414a10f8c5170a345aa039a794650d39d66e7d6b96199f
+    # via -r requirements.txt
 tuf==7.0.1 \
     --hash=sha256:5ada1db78da3518fa851e28588f4b2249b8662a28ae528f54afa2a1de541fb31 \
     --hash=sha256:d30434bda6e079ab303fb30d1b3006d939a10ca34783b1573d61cd9b802fa45c

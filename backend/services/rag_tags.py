@@ -336,28 +336,75 @@ RULES: dict[str, tuple[str, ...]] = {
 }
 TAGS = tuple(RULES) + ("recipe",)
 _CJK = re.compile(r"[一-鿿]")
-_PATTERNS = {
-    tag: [
-        (w, re.compile(re.escape(w)) if _CJK.search(w) else re.compile(rf"(?<![\w]){re.escape(w)}(?![\w])"))
-        for w in words
-    ]
-    for tag, words in RULES.items()
-}
+_CJK_NOT_AFTER = {"账单": "对"}  # 账单 is a bill, 对账单 a bank statement (AI-36)
+
+
+def _word_pattern(w: str) -> re.Pattern[str]:
+    if not _CJK.search(w):
+        return re.compile(rf"(?<![\w]){re.escape(w)}(?![\w])")
+    before = _CJK_NOT_AFTER.get(w)
+    return re.compile((f"(?<!{re.escape(before)})" if before else "") + re.escape(w))
+
+
+_PATTERNS = {tag: [(w, _word_pattern(w)) for w in words] for tag, words in RULES.items()}
 _YEAR = re.compile(r"(?<!\d)(19[89]\d|20\d\d)(?!\d)")
+
+# Words that also mean something everyday (a company in German, light in Spanish, a balance in
+# yoga, premium coffee): they count half, so they need company before they tag a file (AI-36)
+AMBIGUOUS = frozenset(
+    {
+        "bill", "vat", "balance", "transaction", "claim", "premium", "coverage", "signature", "firma",
+        "registration", "solde", "saldo", "prima", "receta", "rezept", "praxis", "luz", "itv", "iva",
+        "tax", "patient", "manual", "instructions", "garantie", "booking", "hotel", "reserva", "school",
+        "teacher", "strom", "rent", "gehalt", "beitrag", "salary", "金额", "余额", "税", "保养", "故障",
+        "老师", "学校", "酒店", "工资",
+    }
+)  # fmt: skip
+
+# Words a question uses for a kind of paper ("my bills from 2024", "Rechnungen 2024"): the chat
+# filters on that tag (AI-36). Latin words match whole words, Chinese ones anywhere.
+QUESTION_WORDS: dict[str, tuple[str, ...]] = {
+    "bill": ("bills", "invoices", "receipts", "rechnungen", "quittungen", "belege", "factures", "reçus", "facturas", "recibos", "发票", "账单", "收据"),
+    "bank": ("bank statements", "account statements", "kontoauszüge", "relevés", "extractos", "对账单"),
+    "payslip": ("payslips", "pay slips", "salary slips", "gehaltsabrechnungen", "lohnabrechnungen", "fiches de paie", "bulletins de salaire", "nóminas", "工资单"),
+    "contract": ("contracts", "verträge", "contrats", "contratos", "合同"),
+    "insurance": ("insurance", "versicherungen", "versicherung", "assurances", "assurance", "seguros", "保险"),
+    "tax": ("taxes", "tax return", "tax returns", "steuern", "steuererklärung", "impôts", "impuestos", "报税"),
+    "medical": ("medical", "medical records", "arztbriefe", "befunde", "dossier médical", "historial médico", "病历"),
+    "manual": ("manuals", "user guides", "anleitungen", "bedienungsanleitungen", "modes d'emploi", "manuales", "说明书"),
+    "school": ("school papers", "report cards", "zeugnisse", "bulletins scolaires", "boletines", "成绩单"),
+    "travel": ("travel documents", "boarding passes", "bookings", "reiseunterlagen", "billets", "reservas", "机票"),
+    "home": ("rent", "lease", "utility bills", "mietvertrag", "nebenkosten", "loyer", "alquiler", "房租"),
+    "car": ("car papers", "vehicle documents", "fahrzeugpapiere", "carte grise", "papeles del coche", "行驶证"),
+    "recipe": ("recipes", "rezepte", "recettes", "recetas", "菜谱", "食谱"),
+}  # fmt: skip
+_QUESTION = {tag: [_word_pattern(w) for w in words] for tag, words in QUESTION_WORDS.items()}
+
+
+def tags_in_question(question: str) -> list[str]:
+    """The tags a question asks for: the kinds of paper it names, and its year when it names a
+    kind too ("bills from 2024"). Empty when it names none, so the chat searches as before."""
+    q = (question or "").lower()
+    kinds = [tag for tag, pats in _QUESTION.items() if any(p.search(q) for p in pats)][:2]
+    if not kinds:
+        return []
+    years = _YEAR.findall(q)
+    return kinds + ([f"year:{years[0]}"] if len(set(years)) == 1 else [])
 
 
 def tags_for(name: str, title: str, doc_type: str, text: str, now: float | None = None) -> list[str]:
     """The tags for one document: up to MAX_TAGS kinds, best first, then its year (year:NNNN)."""
     head = f"{name} {title}".lower().replace("_", " ").replace("-", " ")
     body = (text or "")[:TEXT_CHARS].lower()
-    scores: dict[str, int] = {}
+    scores: dict[str, float] = {}
     for tag, pats in _PATTERNS.items():
-        score = 0
-        for _, rx in pats:
+        score = 0.0
+        for word, rx in pats:
+            weight = 0.5 if word in AMBIGUOUS else 1.0
             if rx.search(head):
-                score += 2
+                score += 2 * weight
             elif rx.search(body):
-                score += 1
+                score += weight
         if score >= MIN_SCORE:
             scores[tag] = score
     if doc_type == "recipe":
@@ -424,7 +471,9 @@ def backfill(conn: sqlite3.Connection, batch: int = 200) -> int:
     access). Returns how many it tagged; 0 when none are left."""
     rows = conn.execute(
         "SELECT f.file_id, f.file_name, f.doc_title, f.doc_type FROM indexed_files f "
-        "WHERE f.modality != 'photo' AND f.parse_status = 'ok' "
+        # documents, and photos whose text made them a bill or a recipe ('photo' was never a
+        # modality: photos are 'image', so every photo was read here, AI-36)
+        "WHERE (f.modality IN ('document', 'code') OR f.doc_type IN ('invoice', 'recipe')) AND f.parse_status = 'ok' "
         "AND f.file_id NOT IN (SELECT file_id FROM doc_tags_done) LIMIT ?",
         (batch,),
     ).fetchall()

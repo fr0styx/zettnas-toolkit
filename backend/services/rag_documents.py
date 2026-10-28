@@ -98,18 +98,26 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
         try:
             meta_parts = [f"Audio track: {os.path.basename(file_path)}", f"Format: {ext}"]
             try:
-                import mutagen
+                # tinytag (MIT) reads the tags of MP3, FLAC, M4A, OGG, Opus, WAV and more (AI-38)
+                from tinytag import TinyTag
 
-                audio_info = mutagen.File(file_path)
-                if audio_info:
-                    for k in ("title", "artist", "album", "genre", "date"):
-                        if k in audio_info:
-                            val = audio_info[k]
-                            if isinstance(val, (list, tuple)):
-                                val = ", ".join(str(x) for x in val)
-                            meta_parts.append(f"{k.capitalize()}: {val}")
+                tag = TinyTag.get(file_path)
+                for label, value in (
+                    ("Title", tag.title),
+                    ("Artist", tag.artist),
+                    ("Album", tag.album),
+                    ("Album artist", tag.albumartist),
+                    ("Composer", tag.composer),
+                    ("Genre", tag.genre),
+                    ("Year", tag.year),
+                    ("Comment", tag.comment),
+                ):
+                    if value:
+                        meta_parts.append(f"{label}: {value}")
+                if tag.duration:
+                    meta_parts.append(f"Duration: {int(tag.duration) // 60}:{int(tag.duration) % 60:02d}")
             except Exception:
-                logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
+                logger.debug("backend.services.rag_engine.extract_document_text: no audio tags", exc_info=True)
             return "\n".join(meta_parts)
         except Exception:
             return f"Audio track: {os.path.basename(file_path)}"

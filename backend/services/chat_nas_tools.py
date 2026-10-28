@@ -624,13 +624,23 @@ def tool_search_nas_knowledge(
             for c in chunks
         ]
     else:
+        from backend.services import rag_tags
+
+        # "my bills from 2024": the question's kind and year become filters (AI-36); with nothing
+        # tagged so, the search runs again without them
+        want = rag_tags.tags_in_question(effective_query)
         ask_res = rag.ask(
             query=effective_query,
             scope="all",
             path_prefix=target_folder,
             top_k=6,
             principal=principal,
+            tags=want or None,
         )
+        if want and not (ask_res.get("citations") or ask_res.get("photos")):
+            ask_res = rag.ask(
+                query=effective_query, scope="all", path_prefix=target_folder, top_k=6, principal=principal
+            )
         raw_citations = list(ask_res.get("citations") or [])
         raw_photos = list(ask_res.get("photos") or [])
         answer_summary = ask_res.get("answer") or ""

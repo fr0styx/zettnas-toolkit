@@ -4,6 +4,11 @@
 
 #### AI
 
+- **Document tags you can trust, and Zetty uses them**: words that also mean something everyday
+  ("Firma", "premium", "balance") no longer tag a file on their own; a labelled set in five languages
+  checks every tag. Asking Zetty for "my bills from 2024" searches the bills of 2024. Browsing by a
+  tag no longer claims the AI model didn't answer, and music files are found by title, artist,
+  album and year.
 - **Better chunks for search**: text is cut at sentence ends into pieces sized in tokens, so long
   PDF lines and Chinese or German text no longer make chunks that were cut off or too large to match
   well. Files learned before are re-made overnight (01:00 to 06:00), never while you chat and
