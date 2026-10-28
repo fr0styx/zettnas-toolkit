@@ -292,7 +292,9 @@ def build_recreate_plan(
     labels = {
         k: v
         for k, v in (config.get("Labels") or {}).items()
-        if image_labels.get(k) != v
+        # Unraid's labels belong to the container (its template made them): kept even when the old
+        # image had the same one, since newer images don't carry net.unraid.docker.managed
+        if (image_labels.get(k) != v or k.startswith("net.unraid.docker."))
         and not k.startswith("org.opencontainers.image.")
         and k not in ("com.docker.compose.image", "com.docker.compose.config-hash")
     }

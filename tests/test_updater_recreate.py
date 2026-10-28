@@ -47,6 +47,33 @@ def test_recreate_plan_keeps_user_settings_only():
     assert extra == {"proxynet": {"Aliases": ["zettnas"]}}
 
 
+def test_unraid_labels_stay_on_the_container_when_the_image_drops_them():
+    """Older images carried net.unraid.docker.managed; newer ones don't, so the updater keeps the
+    container's own Unraid labels, or the app would leave Unraid's Docker page on its next update."""
+    old_image = {**OLD_IMAGE_CFG, "Labels": {"net.unraid.docker.managed": "dockerman", "net.unraid.docker.icon": "i"}}
+    inspect = {
+        **INSPECT,
+        "Config": {
+            **INSPECT["Config"],
+            "Labels": {"net.unraid.docker.managed": "dockerman", "net.unraid.docker.icon": "i", "maintainer": "x"},
+        },
+    }
+    body, _extra = self_updater.build_recreate_plan(inspect, old_image, "ghcr.io/x:new")
+    assert body["Labels"] == {
+        "net.unraid.docker.managed": "dockerman",
+        "net.unraid.docker.icon": "i",
+        "maintainer": "x",
+    }
+
+
+def test_the_image_does_not_claim_to_be_unraid_managed():
+    """With the label in the image, every container run from it (the fan watchdog, the SFTP door)
+    is stopped explicitly by Unraid on shutdown and never comes back by --restart unless-stopped."""
+    with open("Dockerfile", encoding="utf-8") as f:
+        labels = [ln for ln in f if ln.startswith("LABEL")]
+    assert labels and not any("net.unraid.docker.managed" in ln for ln in labels)
+
+
 def test_user_overridden_command_is_kept():
     inspect = {**INSPECT, "Config": {**INSPECT["Config"], "Cmd": ["python3", "app.py", "--debug"]}}
     body, _ = self_updater.build_recreate_plan(inspect, OLD_IMAGE_CFG, "img")

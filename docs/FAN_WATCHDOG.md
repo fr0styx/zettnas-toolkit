@@ -27,6 +27,15 @@ docker run -d --name zettnas-fan-watchdog --restart unless-stopped --no-healthch
   --memory 128m ghcr.io/fr0styx/zettnas-toolkit:latest python3 -m backend.fan_watchdog
 ```
 
+After a reboot or an array stop:
+
+- **From the template:** Unraid stops template containers itself and starts again only those with
+  **Autostart** on. Turn it on for the watchdog on the Docker page.
+- **By hand:** `--restart unless-stopped` brings it back. A watchdog created from an image older
+  than this fix carries Unraid's "managed" label, so Unraid stops it on purpose and it stays down:
+  remove it and run the command above again. `docker inspect zettnas-fan-watchdog --format
+  '{{index .Config.Labels "net.unraid.docker.managed"}}'` prints nothing when it is fine.
+
 ## Checking it
 
 ```bash

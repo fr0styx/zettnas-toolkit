@@ -26,7 +26,10 @@ ENV ZFS_MODULE_TIMEOUT=0
 
 LABEL org.opencontainers.image.source="https://github.com/fr0styx/zettnas-toolkit"
 LABEL org.opencontainers.image.description="ZettNAS Toolkit: Hardware telemetry, custom fan curves, ARGB lightbar, and LCD dashboard"
-LABEL net.unraid.docker.managed="dockerman"
+# No net.unraid.docker.managed label here: Unraid adds it to containers it creates from a template,
+# and stops every container that carries it with an explicit `docker stop` on shutdown and array
+# stop, which defeats --restart unless-stopped. The fan watchdog and other containers run from this
+# image by hand would then stay down after every reboot.
 LABEL net.unraid.docker.webui="http://[IP]:[PORT:8082]/"
 LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
 LABEL net.unraid.docker.shell="bash"

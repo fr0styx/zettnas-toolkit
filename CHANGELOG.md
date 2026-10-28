@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+#### Fixes
+
+- **The fan watchdog comes back after a reboot on Unraid**: the image no longer carries Unraid's
+  "managed" label, which made Unraid stop every container run from it on purpose at shutdown and
+  never start it again. The app keeps the label its Unraid template gave it across updates. A
+  watchdog created by hand from an older image needs re-creating once (see docs/FAN_WATCHDOG.md).
+
 #### AI
 
 - **Photos get place names**: the town a photo was taken in is named offline from GeoNames' list
