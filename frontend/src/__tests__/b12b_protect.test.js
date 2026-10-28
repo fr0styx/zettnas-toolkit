@@ -16,8 +16,6 @@ describe('B12b (FEAT-01): Protect this NAS', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     document.body.innerHTML = '';
-    HTMLDialogElement.prototype.showModal = vi.fn();
-    HTMLDialogElement.prototype.close = vi.fn();
   });
 
   it('puts the backup in its own folder of the chosen place', () => {
@@ -54,6 +52,38 @@ describe('B12b (FEAT-01): Protect this NAS', () => {
     await expect(guide.protect(form)).rejects.toThrow('Pick at least one share.');
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     await vi.waitFor(() => expect(toast.showToast).toHaveBeenCalledWith('Pick at least one share.', 'error'));
+  });
+
+  it('opens as a centered window with the usual title bar, and closes', async () => {
+    api.get.mockImplementation(async (url) => (url === '/api/offsite/destinations' ? DEST : SHARES));
+    const host = await guide.openProtectGuide();
+    expect(host.classList.contains('smart-modal-backdrop') && host.classList.contains('open')).toBe(true);
+    const win = host.querySelector('.smart-modal-window');
+    expect(win.querySelector('.smart-modal-header .os-window-controls .close-btn')).not.toBeNull();
+    expect(win.dataset.dockIcon).toBe('#i-shield');
+    host.querySelector('[data-close]').click();
+    expect(host.classList.contains('open')).toBe(false);
+    await guide.openProtectGuide();
+    host.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(host.classList.contains('open')).toBe(false);
+    await guide.openProtectGuide();
+    host.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(host.classList.contains('open')).toBe(false);
+    expect(document.querySelectorAll('#protect-nas').length).toBe(1);
+  });
+
+
+  it('gets the drag handle, minimize and maximize from the shared window frame', async () => {
+    const { upgradeDialog } = await import('../dialog-chrome.js');
+    api.get.mockImplementation(async (url) => (url === '/api/offsite/destinations' ? DEST : SHARES));
+    const host = await guide.openProtectGuide();
+    const win = host.querySelector('.smart-modal-window');
+    upgradeDialog(win);
+    const controls = win.querySelector('.os-window-controls');
+    expect(controls.querySelector('.min-btn')).not.toBeNull();
+    expect(controls.querySelector('.max-btn')).not.toBeNull();
+    expect(controls.querySelector('.close-btn')).not.toBeNull();
+    expect(win.querySelector('.smart-modal-header').classList.contains('dialog-chrome-header')).toBe(true);
   });
 
   it('says why when the places cannot be read', async () => {

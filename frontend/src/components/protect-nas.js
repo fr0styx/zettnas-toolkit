@@ -70,21 +70,49 @@ export async function protect(form) {
   return id;
 }
 
-export async function openProtectGuide() {
-  let dlg = document.getElementById('protect-nas');
-  if (!dlg) {
-    dlg = document.createElement('dialog');
-    dlg.id = 'protect-nas';
-    dlg.className = 'snapshot-browser';
-    document.body.appendChild(dlg);
+/** The window: centered on a dimmed backdrop, with the title bar every pop-up gets from
+ * dialog-chrome.js (drag, minimize to the dock, maximize, close). */
+function guideWindow() {
+  let host = document.getElementById('protect-nas');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'protect-nas';
+    host.className = 'smart-modal-backdrop';
+    host.style.zIndex = '10020'; // above Mission Control
+    host.innerHTML = html`<div class="smart-modal-window" role="dialog" aria-modal="true" aria-labelledby="protect-nas-title" data-dock-icon="#i-shield">
+      <div class="smart-modal-header">
+        <span class="smart-modal-title" id="protect-nas-title"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> ${t('protect.title', 'Protect this NAS')}</span>
+        <div class="os-window-controls">
+          <button type="button" class="win-btn close-btn" data-close title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
+        </div>
+      </div>
+      <div class="smart-modal-body"></div>
+    </div>`;
+    document.body.appendChild(host);
+    host.querySelector('[data-close]').addEventListener('click', () => closeGuide(host));
+    host.addEventListener('click', (e) => {
+      if (e.target === host) closeGuide(host);
+    });
+    host.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeGuide(host);
+    });
   }
-  dlg.innerHTML = html`<header class="snap-head"><h2>${t('protect.title', 'Protect this NAS')}</h2>
-    <button type="button" class="btn-pill-toggle is-ghost is-small" data-close>${t('diagnostics.close_btn', 'Close')}</button></header>
-    <div class="snap-body">${t('ui.loading', 'Loading...')}</div>`;
-  dlg.querySelector('[data-close]').onclick = () => dlg.close();
-  if (typeof dlg.showModal === 'function') dlg.showModal();
-  else dlg.setAttribute('open', '');
-  const body = dlg.querySelector('.snap-body');
+  return host;
+}
+
+export function closeGuide(host = document.getElementById('protect-nas')) {
+  if (!host) return;
+  host.classList.remove('open');
+  host.style.display = 'none';
+}
+
+export async function openProtectGuide() {
+  const host = guideWindow();
+  const body = host.querySelector('.smart-modal-body');
+  body.textContent = t('ui.loading', 'Loading...');
+  host.style.display = '';
+  host.classList.add('open');
+  host.querySelector('[data-close]').focus();
   try {
     const [dest, sh] = await Promise.all([
       api.get('/api/offsite/destinations'),
@@ -94,18 +122,18 @@ export async function openProtectGuide() {
     body.innerHTML = guideHtml(dest, shares);
   } catch (err) {
     body.textContent = err.message || String(err);
-    return dlg;
+    return host;
   }
   body.querySelector('[data-protect-form]').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
       const id = await protect(e.target);
-      dlg.close();
+      closeGuide(host);
       showToast(t('protect.done', 'Protection is set up and the first backup has started; it shows in Jobs. Save the recovery kit now.'), 'success');
       await offerRecoveryKit({ id });
     } catch (err) {
       showToast(err.message || String(err), 'error');
     }
   });
-  return dlg;
+  return host;
 }
