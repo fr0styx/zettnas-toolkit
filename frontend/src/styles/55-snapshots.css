@@ -56,6 +56,9 @@
 .immich-card { margin-bottom: var(--zn-space-4); padding: var(--zn-space-3); border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); }
 .immich-title { margin: 0 0 var(--zn-space-1); font-size: var(--zn-fs); }
 .immich-note { color: var(--muted); font-size: var(--zn-fs-xs); }
+/* AI settings forms without a heading of their own (COMP-03) */
+.ai-form-label { font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-soft); }
+.ai-form-check { display: flex; align-items: center; gap: var(--zn-space-1); font-size: var(--zn-fs-xs); color: var(--muted); }
 /* AI for apps (COMP-07): its keys, and an app's settings shown once */
 .ai-apps-keys { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: flex; flex-direction: column; gap: var(--zn-space-1); font-size: var(--zn-fs-xs); }
 .ai-apps-keys li { display: flex; justify-content: space-between; align-items: center; gap: var(--zn-space-2); }

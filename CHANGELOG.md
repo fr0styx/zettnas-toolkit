@@ -4,6 +4,11 @@
 
 #### AI
 
+- **Voice memos and videos you can search by what is said**: with a Whisper speech server set
+  (`transcribe_endpoint` in AI settings, any server that speaks OpenAI's audio API, such as an
+  OpenVINO Model Server on the iGPU), audio files are indexed with their transcripts; videos too
+  with `transcribe_video`. Files over `transcribe_max_minutes` (30) keep their name only. Off until
+  a server is set.
 - **AI for apps**: Paperless-ngx, Open WebUI, Home Assistant and other apps that speak the OpenAI API
   can use the server's own chat model and embedder at `/api/v1/ai/openai`, each with its own key
   (`POST /api/v1/ai/apps/keys`, which also returns that app's settings filled in). A key can do

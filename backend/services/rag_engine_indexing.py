@@ -1508,8 +1508,16 @@ class RagIndexingMixin:
                 finally:
                     conn.close()
 
-        # Document or Code modality
-        raw_text = extract_document_text(canonical_path, file_ext)
+        # Document or Code modality; voice memos and videos with their spoken text (COMP-03)
+        raw_text = ""
+        if is_audio or is_video:
+            from backend.services import transcribe
+
+            spoken = transcribe.transcript(canonical_path, self.get_config(), is_video)
+            if spoken:
+                raw_text = f"Transcript of {file_name}:\n{spoken}"
+        if not raw_text:
+            raw_text = extract_document_text(canonical_path, file_ext)
         if looks_like_binary(raw_text):  # never index or embed binary data as text
             raw_text = ""
         if file_ext.lower() == ".pdf" and len(raw_text.strip()) < 80:

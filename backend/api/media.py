@@ -168,6 +168,10 @@ class RagConfigUpdateRequest(BaseModel):
     rerank_endpoint: str | None = Field(default=None, max_length=512)
     rerank_model: str | None = Field(default=None, max_length=128)
     rerank_top_n: int | None = Field(default=None, ge=2, le=100)
+    transcribe_endpoint: str | None = Field(default=None, max_length=512)  # COMP-03
+    transcribe_model: str | None = Field(default=None, max_length=128)
+    transcribe_video: bool | None = None
+    transcribe_max_minutes: int | None = Field(default=None, ge=1, le=600)
 
 
 class ModelSelectRequest(BaseModel):
@@ -1466,6 +1470,11 @@ def update_rag_config(req: RagConfigUpdateRequest) -> dict[str, Any]:
 
         if not endpoint_ok(req.embedding_host):
             raise HTTPException(status_code=400, detail="The embedding host must be an http(s) URL.")
+    if req.transcribe_endpoint:
+        from backend.services.rag_rerank import endpoint_ok
+
+        if not endpoint_ok(req.transcribe_endpoint):
+            raise HTTPException(status_code=400, detail="The speech server must be an http(s) URL.")
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
     return get_rag_engine().update_config(updates)
 

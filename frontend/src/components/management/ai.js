@@ -1741,6 +1741,33 @@ export async function fetchAndRenderAiStatus() {
       }
     }
 
+    // Speech to text for voice memos and videos (COMP-03)
+    const speechForm = document.getElementById('ai-transcribe-form');
+    if (speechForm) {
+      const ep = document.getElementById('ai-transcribe-endpoint');
+      const md = document.getElementById('ai-transcribe-model');
+      const vid = document.getElementById('ai-transcribe-video');
+      if (ep) ep.value = cfg.transcribe_endpoint || '';
+      if (md) md.value = cfg.transcribe_model || '';
+      if (vid) vid.checked = !!cfg.transcribe_video;
+      if (!speechForm.dataset.bound) {
+        speechForm.dataset.bound = '1';
+        speechForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          try {
+            await api.post('/api/ai/config', {
+              transcribe_endpoint: ep.value.trim(),
+              transcribe_model: md.value.trim(),
+              transcribe_video: !!vid.checked,
+            });
+            showToast(t('ai.transcribe_saved', 'Speech to text saved. New and changed recordings are transcribed as they are indexed.'), 'success');
+          } catch (err) {
+            showToast(t('sso.save_failed', 'Could not save: {error}', { error: err.message }), 'error');
+          }
+        });
+      }
+    }
+
     // Photo captions (AI-14)
     const visionSel = document.getElementById('ai-vision-captions-select');
     if (visionSel) {

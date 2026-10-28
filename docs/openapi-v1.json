@@ -28908,6 +28908,54 @@
       ],
       "title": "Scope Mode"
      },
+     "transcribe_endpoint": {
+      "anyOf": [
+       {
+        "maxLength": 512,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transcribe Endpoint"
+     },
+     "transcribe_max_minutes": {
+      "anyOf": [
+       {
+        "maximum": 600.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transcribe Max Minutes"
+     },
+     "transcribe_model": {
+      "anyOf": [
+       {
+        "maxLength": 128,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transcribe Model"
+     },
+     "transcribe_video": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transcribe Video"
+     },
      "vision_captions": {
       "anyOf": [
        {

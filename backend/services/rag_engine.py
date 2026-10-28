@@ -1158,6 +1158,10 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "vision_model": "",
             "embedding_host": "",  # Ollama-compatible server for embeddings only; empty = the Ollama host
             "rerank_endpoint": "",  # AI-13: Cohere/OVMS/TEI-style /rerank URL, empty = off
+            "transcribe_endpoint": "",  # COMP-03: OpenAI-style speech server (Whisper), empty = off
+            "transcribe_model": "",
+            "transcribe_video": False,  # videos too, not only voice memos and other audio
+            "transcribe_max_minutes": 30,
             "rerank_model": "",
             "rerank_top_n": 30,
             "ai_role_access": {"kid": False, "guest": False},  # who may ask Zetty (B8, ai_access)
@@ -1228,6 +1232,10 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "rerank_endpoint",
             "rerank_model",
             "rerank_top_n",
+            "transcribe_endpoint",
+            "transcribe_model",
+            "transcribe_video",
+            "transcribe_max_minutes",
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]
