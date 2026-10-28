@@ -465,6 +465,74 @@ def late_interaction_rerank(
     return candidates[:top_k]
 
 
+_CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
+_CYRILLIC_GREEK_RE = re.compile(r"[\u0370-\u03ff\u0400-\u04ff]")
+_SENTENCE_END = re.compile(r"(?<=[.!?;:])\s+|(?<=[。！？；])")
+
+
+def approx_tokens(text: str) -> int:
+    """Tokens without a tokenizer, by script (as in chat_context.estimate_tokens, AI-33): one per
+    CJK character, 2.5 characters per token for Cyrillic and Greek, 3.2 for accented Latin
+    text, 4 for plain English."""
+    t = str(text or "")
+    cjk = len(_CJK_RE.findall(t))
+    rest = len(t) - cjk
+    if rest <= 0:
+        return cjk
+    other = len(_CYRILLIC_GREEK_RE.findall(t))
+    accented = sum(1 for c in t if 127 < ord(c) < 0x370 and c.isalpha())
+    per = 2.5 if other / rest > 0.3 else 3.2 if accented / rest > 0.005 else 4.0
+    return cjk + int(-(-rest // per))
+
+
+def _split_to_size(text: str, max_tokens: int) -> list[str]:
+    """A piece of at most max_tokens: at spaces, and a run without any by length."""
+    if approx_tokens(text) <= max_tokens:
+        return [text]
+    parts: list[str] = []
+    buf = ""
+    for word in text.split(" "):
+        w_tokens = approx_tokens(word)
+        if w_tokens > max_tokens:
+            if buf:
+                parts.append(buf)
+                buf = ""
+            step = max(1, len(word) * max_tokens // max(1, w_tokens))
+            parts.extend(word[i : i + step] for i in range(0, len(word), step))
+            continue
+        cand = f"{buf} {word}" if buf else word
+        if buf and approx_tokens(cand) > max_tokens:
+            parts.append(buf)
+            buf = word
+        else:
+            buf = cand
+    if buf:
+        parts.append(buf)
+    return parts
+
+
+def text_units(lines: list[str], max_tokens: int) -> list[tuple[int, str]]:
+    """(line number, text) units of at most max_tokens each (AI-30): a line as it is when it fits,
+    else its sentences, grouped while they fit; a sentence too long for a unit is cut at spaces."""
+    out: list[tuple[int, str]] = []
+    for no, line in enumerate(lines, start=1):
+        if approx_tokens(line) <= max_tokens:
+            out.append((no, line))
+            continue
+        buf = ""
+        for sentence in (p for p in _SENTENCE_END.split(line) if p and p.strip()):
+            for piece in _split_to_size(sentence.strip(), max_tokens):
+                cand = f"{buf} {piece}" if buf else piece
+                if buf and approx_tokens(cand) > max_tokens:
+                    out.append((no, buf))
+                    buf = piece
+                else:
+                    buf = cand
+        if buf:
+            out.append((no, buf))
+    return out
+
+
 def generate_contextual_hierarchical_chunks(
     file_name: str = "",
     file_ext: str = "",
@@ -684,18 +752,25 @@ def generate_contextual_hierarchical_chunks(
     if is_recipe and doc_metadata.get("ingredients"):
         ingredient_summary = " | Ingredients: " + ", ".join(doc_metadata["ingredients"][:8])
 
-    # 1. Build Parent Chunks (natural section boundaries, ~2500-4500 chars)
+    # Sizes are in tokens, per script (AI-30): the defaults in characters are English-sized, and
+    # a Chinese or German text in characters made chunks two to four times too large. Lines are
+    # cut into sentence-sized units first, so a document extracted as one long line (many PDFs)
+    # no longer becomes one huge chunk the embedder cuts off at 6,000 characters.
+    child_tokens = max(48, child_chunk_chars // 4)
+    parent_tokens = max(child_tokens * 2, parent_chunk_chars // 4)
+    overlap_tokens = max(0, min(child_overlap_chars // 4, child_tokens // 6))
+    units = text_units(lines, child_tokens)
+
+    # 1. Build Parent Chunks (natural section boundaries)
     parent_chunks: list[dict[str, Any]] = []
     current_parent_heading = doc_title
-    current_parent_lines: list[str] = []
+    current_parent_units: list[tuple[int, str]] = []
     current_parent_len = 0
-    parent_start_line = 1
 
-    def _flush_parent(end_line: int) -> None:
-        nonlocal current_parent_lines, current_parent_len, parent_start_line
-        if not current_parent_lines:
-            return
-        p_body = "\n".join(current_parent_lines).strip()
+    def _flush_parent() -> None:
+        nonlocal current_parent_units, current_parent_len
+        units_now, current_parent_units, current_parent_len = current_parent_units, [], 0
+        p_body = "\n".join(u for _n, u in units_now).strip()
         if not p_body:
             return
         p_idx = len(parent_chunks)
@@ -708,102 +783,91 @@ def generate_contextual_hierarchical_chunks(
                 "chunk_text": p_body,
                 "raw_chunk_text": p_body,
                 "text": p_body,
-                "line_start": parent_start_line,
-                "line_end": max(parent_start_line, end_line),
-                "token_count": max(1, len(p_body.split())),
-                "lines": list(current_parent_lines),
+                "line_start": units_now[0][0],
+                "line_end": units_now[-1][0],
+                "token_count": approx_tokens(p_body),
+                "lines": units_now,
             }
         )
 
-    for idx_line, line in enumerate(lines, start=1):
-        stripped = line.strip()
+    for line_no, unit in units:
+        stripped = unit.strip()
+        size = approx_tokens(unit) + 1
         is_major_heading = stripped.startswith(("# ", "## ", "### ")) or (
             file_ext.lower() in CODE_EXTENSIONS and stripped.startswith(("def ", "class "))
         )
-        if is_major_heading and current_parent_len >= min(800, max(200, parent_chunk_chars // 2)):
-            _flush_parent(idx_line - 1)
-            current_parent_lines = []
-            current_parent_len = 0
-            parent_start_line = idx_line
-
+        if is_major_heading and current_parent_len >= min(200, max(50, parent_tokens // 2)):
+            _flush_parent()
         if stripped.startswith("#"):
             current_parent_heading = stripped.lstrip("#").strip() or current_parent_heading
+        if current_parent_units and current_parent_len + size > parent_tokens:
+            _flush_parent()
+        current_parent_units.append((line_no, unit))
+        current_parent_len += size
+    _flush_parent()
 
-        current_parent_lines.append(line)
-        current_parent_len += len(line) + 1
-
-        if current_parent_len >= parent_chunk_chars:
-            _flush_parent(idx_line)
-            current_parent_lines = []
-            current_parent_len = 0
-            parent_start_line = idx_line + 1
-
-    if current_parent_lines:
-        _flush_parent(len(lines))
-
-    # 2. Build Child Chunks from Parent Chunks (high-precision search units)
+    # 2. Build Child Chunks from Parent Chunks (high-precision search units), never larger than
+    # child_tokens, with a little overlap carried from one to the next
     child_chunks: list[dict[str, Any]] = []
 
     for p in parent_chunks:
-        p_lines = p.get("lines", [])
-        if not p_lines:
+        p_units: list[tuple[int, str]] = p.get("lines", [])
+        if not p_units:
             continue
         p_heading = p["heading_context"]
         p_idx = p["parent_index"]
-        c_lines: list[str] = []
+        c_units: list[tuple[int, str]] = []
         c_len = 0
-        c_start_line = p["line_start"]
+        c_new = 0  # units in c_units that are not overlap from the chunk before
 
-        def _flush_child(end_line_num: int) -> None:
-            nonlocal c_lines, c_len, c_start_line
-            if not c_lines:  # noqa: B023
-                return
-            body = "\n".join(c_lines).strip()  # noqa: B023
-            if not body:
-                return
-            breadcrumb = f"[{folder_prefix}Doc: {p_heading}{ingredient_summary}]"  # noqa: B023
-            full_child_text = f"{breadcrumb}\n{body}"
-            child_chunks.append(
-                {
-                    "chunk_index": len(child_chunks),
-                    "parent_index": p_idx,  # noqa: B023
-                    "parent_chunk_id": f"parent_{p_idx}",  # noqa: B023
-                    "chunk_level": "child",
-                    "heading_context": p_heading,  # noqa: B023
-                    "structural_context": breadcrumb,
-                    "chunk_text": full_child_text,
-                    "raw_chunk_text": body,
-                    "raw_text": body,
-                    "text": full_child_text,
-                    "line_start": c_start_line,  # noqa: B023
-                    "line_end": max(c_start_line, end_line_num),  # noqa: B023
-                    "token_count": max(1, len(full_child_text.split())),
-                }
-            )
+        def _flush_child() -> None:
+            nonlocal c_units, c_len, c_new
+            body = "\n".join(u for _n, u in c_units).strip()  # noqa: B023
+            keep: list[tuple[int, str]] = []
+            kept = 0
+            for unit in reversed(c_units):  # noqa: B023
+                t = approx_tokens(unit[1]) + 1
+                if len(keep) >= 2 or kept + t > overlap_tokens:
+                    break
+                keep.insert(0, unit)
+                kept += t
+            if body and c_new:  # noqa: B023
+                breadcrumb = f"[{folder_prefix}Doc: {p_heading}{ingredient_summary}]"  # noqa: B023
+                full_child_text = f"{breadcrumb}\n{body}"
+                child_chunks.append(
+                    {
+                        "chunk_index": len(child_chunks),
+                        "parent_index": p_idx,  # noqa: B023
+                        "parent_chunk_id": f"parent_{p_idx}",  # noqa: B023
+                        "chunk_level": "child",
+                        "heading_context": p_heading,  # noqa: B023
+                        "structural_context": breadcrumb,
+                        "chunk_text": full_child_text,
+                        "raw_chunk_text": body,
+                        "raw_text": body,
+                        "text": full_child_text,
+                        "line_start": c_units[0][0],  # noqa: B023
+                        "line_end": c_units[-1][0],  # noqa: B023
+                        "token_count": approx_tokens(full_child_text),
+                    }
+                )
+            c_units, c_len, c_new = keep, kept, 0
 
-        for rel_idx, line in enumerate(p_lines):
-            curr_abs_line = p["line_start"] + rel_idx
-            stripped = line.strip()
+        for line_no, unit in p_units:
+            stripped = unit.strip()
+            size = approx_tokens(unit) + 1
             is_subheading = stripped.startswith(("#", "def ", "class ", "function ", "export "))
-            if is_subheading and c_len >= min(400, max(100, child_chunk_chars // 2)):
-                _flush_child(curr_abs_line - 1)
-                overlap = c_lines[-3:] if len(c_lines) >= 3 else []
-                c_lines = list(overlap)
-                c_len = sum(len(x) + 1 for x in c_lines)
-                c_start_line = max(p["line_start"], curr_abs_line - len(overlap))
-
-            c_lines.append(line)
-            c_len += len(line) + 1
-
-            if c_len >= child_chunk_chars:
-                _flush_child(curr_abs_line)
-                overlap = c_lines[-3:] if len(c_lines) >= 3 else []
-                c_lines = list(overlap)
-                c_len = sum(len(x) + 1 for x in c_lines)
-                c_start_line = max(p["line_start"], curr_abs_line - len(overlap) + 1)
-
-        if c_lines:
-            _flush_child(p["line_end"])
+            if is_subheading and c_new and c_len >= min(100, max(25, child_tokens // 2)):
+                _flush_child()
+            if c_units and c_len + size > child_tokens:
+                if c_new:
+                    _flush_child()
+                if c_len + size > child_tokens:  # the overlap alone leaves no room: drop it
+                    c_units, c_len = [], 0
+            c_units.append((line_no, unit))
+            c_len += size
+            c_new += 1
+        _flush_child()
 
     # Clean temporary 'lines' list from parent_chunks to save memory
     for p in parent_chunks:

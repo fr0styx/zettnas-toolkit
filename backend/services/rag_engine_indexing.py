@@ -31,6 +31,7 @@ from backend.logging_config import (  # noqa: F401
 from backend.services import (  # noqa: F401
     rag_standby,
 )
+from backend.services.ai_activity import upgrade_window_open
 from backend.services.rag_documents import (  # noqa: F401
     extract_document_text,
     generate_contextual_hierarchical_chunks,
@@ -586,6 +587,7 @@ class RagIndexingMixin:
                 cursor[0] = None
             limit_hit_at: list[str] = []
             stale_ids: set[int] = set()
+            upgrade_waiting = [0]
 
             def _under(prefix: str) -> list[sqlite3.Row]:
                 lo = bisect.bisect_left(sorted_paths, prefix)
@@ -757,13 +759,20 @@ class RagIndexingMixin:
 
                     c_path = os.path.realpath(entry.path)
                     cached_row = existing_map.get(c_path)
-                    if (
+                    unchanged = (
                         cached_row is not None
                         and int(cached_row["mtime_ns"]) == int(st.st_mtime_ns)
                         and int(cached_row["size_bytes"]) == int(st.st_size)
-                        and int(cached_row["index_version"]) == _core().CURRENT_INDEX_VERSION
                         and cached_row["parse_status"] == "ok"
-                    ):
+                    )
+                    old_version = (
+                        unchanged
+                        and cached_row is not None
+                        and int(cached_row["index_version"]) != _core().CURRENT_INDEX_VERSION
+                    )
+                    if old_version and not upgrade_window_open():
+                        upgrade_waiting[0] += 1  # made the old way: re-made overnight (AI-30)
+                    if cached_row is not None and unchanged and (not old_version or not upgrade_window_open()):
                         seen_file_ids.add(int(cached_row["file_id"]))
                         skipped_unchanged += 1
                         if _reset_control_flags:
@@ -876,6 +885,11 @@ class RagIndexingMixin:
                             f"{skipped_unchanged} unchanged. The next run goes on from {limit_hit_at[0]}."
                             if limit_hit_at
                             else f"Completed {norm_root}: {indexed_new_or_updated} indexed, {skipped_unchanged} unchanged, {deferred_standby} deferred."
+                            + (
+                                f" {upgrade_waiting[0]} files wait for the overnight re-index."
+                                if upgrade_waiting[0]
+                                else ""
+                            )
                         ),
                         "limit_reached": bool(limit_hit_at),
                     }
@@ -890,6 +904,7 @@ class RagIndexingMixin:
                 "removed": len(stale_ids),
                 "limit_reached": bool(limit_hit_at),
                 "resume_from": limit_hit_at[0] if limit_hit_at else None,
+                "upgrade_waiting": upgrade_waiting[0],
             }
         finally:
             if _reset_control_flags:

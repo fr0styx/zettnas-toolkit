@@ -13,7 +13,7 @@ from typing import (  # noqa: F401
 from backend.config import (  # noqa: F401
     logger,
 )
-from backend.services import gpu_queue
+from backend.services import ai_activity, gpu_queue
 from backend.services.chat_context import (  # noqa: F401
     REPLY_TOKENS,
     _context_window_for,
@@ -300,17 +300,17 @@ def _fallback_model() -> str:
         return ""
 
 
-CHAT_BUSY_SECS = 120.0
-_LAST_CHAT = {"at": 0.0}
+CHAT_BUSY_SECS = ai_activity.CHAT_BUSY_SECS
+_LAST_CHAT = ai_activity._LAST_CHAT  # one clock, shared with the indexer (AI-30)
 
 
 def mark_chat_activity() -> None:
     """Someone is chatting: background model work (photo captions) waits (AI-14)."""
-    _LAST_CHAT["at"] = time.time()
+    ai_activity.mark_chat_activity()
 
 
 def chat_recently_active(now: float | None = None) -> bool:
-    return (now or time.time()) - _LAST_CHAT["at"] < CHAT_BUSY_SECS
+    return ai_activity.chat_recently_active(now)
 
 
 def _keep_alive() -> str:

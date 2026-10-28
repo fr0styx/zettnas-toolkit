@@ -4,6 +4,10 @@
 
 #### AI
 
+- **Better chunks for search**: text is cut at sentence ends into pieces sized in tokens, so long
+  PDF lines and Chinese or German text no longer make chunks that were cut off or too large to match
+  well. Files learned before are re-made overnight (01:00 to 06:00), never while you chat and
+  without waking a sleeping disk; until then they are found as before.
 - **Moved, renamed and copied files aren't read again**: a file whose content is already in the
   index keeps what was learned from it when it moves, and a copy gets the same analysis without the
   AI model working on it again. Copies show as one search result that says where the others are, and

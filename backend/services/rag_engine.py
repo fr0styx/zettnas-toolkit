@@ -134,7 +134,7 @@ from backend.services.rag_text import (  # noqa: E402, F401
 
 RAG_DB_PATH = os.path.join(DATA_DIR, "rag_index.db")
 RAG_CONFIG_PATH = os.path.join(DATA_DIR, "rag_config.json")
-CURRENT_INDEX_VERSION = 3
+CURRENT_INDEX_VERSION = 4  # 4: sentence-aware, token-sized chunks (AI-30)
 
 
 def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any]:

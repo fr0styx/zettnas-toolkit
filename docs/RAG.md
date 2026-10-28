@@ -22,9 +22,16 @@ describes what the code does today; the numbers come from `tests/rag_eval`, whic
   each, so their text becomes searchable.
   Turn it off under **AI → Describe photos and read their text**; pin a model with
   `vision_model` in the AI config.
-- Each file is split into sections of about 3,500 characters, and those into chunks of
-  about 950 characters with 80 characters of overlap. Each chunk is stored with its file
-  title in front (`title: … | text: …`).
+- Each file is split into sections of about 875 tokens, and those into chunks of at most
+  about 240 tokens, with a little overlap (up to 20 tokens, two sentences at most). Tokens
+  are counted by script: one per Chinese/Japanese/Korean character, about 2.5 characters
+  for Cyrillic and Greek, 3.2 for accented Latin text, 4 for plain English. Lines longer than
+  a chunk are cut at sentence ends, and a sentence longer than a chunk at spaces, so a PDF
+  extracted as one long line becomes normal chunks. Each chunk is stored with its file title
+  in front (`title: … | text: …`).
+- When the way files are chunked changes (index version 4 brought the above), files that
+  didn't change are re-made overnight only, between 01:00 and 06:00, while nobody is chatting,
+  and only on disks that are awake; a file that changed is re-indexed right away.
 - The index lives in `rag_index.db` in the data folder, normally on the SSD cache. Search
   reads only this database, not your array disks.
 - With **Standby-safe learning** on, files on a sleeping disk are queued and indexed when

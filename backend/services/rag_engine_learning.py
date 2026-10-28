@@ -68,6 +68,42 @@ def _is_solid_state(dev: str | None) -> bool:
     return name.startswith("nvme")
 
 
+def upgrade_pass_paths(engine: Any, cfg: dict[str, Any], excluded: set[str], already: list[str]) -> list[str]:
+    """The watched folders on awake disks to pass over tonight for the re-index (AI-30): once a
+    night, inside the upgrade hours, while entries made the old way remain."""
+    from backend.services import ai_activity
+
+    get_conn = getattr(engine, "_get_conn", None)
+    tonight = time.strftime("%Y-%m-%d", time.localtime(time.time()))
+    if (
+        get_conn is None
+        or not ai_activity.upgrade_window_open(time.time())
+        or getattr(engine, "_upgrade_pass_on", "") == tonight
+    ):
+        return []
+    conn = get_conn(readonly=True)
+    try:
+        pending = conn.execute(
+            "SELECT 1 FROM indexed_files WHERE index_version != ? AND parse_status = 'ok' LIMIT 1",
+            (_core().CURRENT_INDEX_VERSION,),
+        ).fetchone()
+    finally:
+        conn.close()
+    if not pending:
+        return []
+    engine._upgrade_pass_on = tonight
+    out = []
+    for wp in cfg.get("watched_paths") or []:
+        norm_wp = os.path.normpath(wp)
+        if norm_wp in already or any(norm_wp == ex or norm_wp.startswith(ex.rstrip("/") + "/") for ex in excluded):
+            continue
+        dev = rag_standby.resolve_path_backing_dev(norm_wp)
+        if rag_standby.is_backing_disk_in_standby(dev or norm_wp):
+            continue  # never woken for it: its files are re-made a night it is awake
+        out.append(norm_wp)
+    return out
+
+
 class RagLearningMixin:
     """Standby-safe learning, the deferred queue, sync control and re-embedding for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
@@ -641,6 +677,11 @@ class RagLearningMixin:
             if now_ts - fresh.get(norm_wp, fresh["_started"]) >= interval:
                 ready_paths.append(norm_wp)
                 fresh[norm_wp] = now_ts
+
+        # 4. The overnight re-index (AI-30): once a night, while entries made the old way remain,
+        # the watched folders on disks that are awake anyway get a pass
+        for wp in upgrade_pass_paths(self, cfg, excluded_set, ready_paths):
+            ready_paths.append(wp)
 
         if not ready_paths:
             return {
