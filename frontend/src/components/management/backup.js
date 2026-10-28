@@ -9,11 +9,29 @@ import { t } from '../../i18n.js';
 import { formatDateTime } from '../../format.js';
 import { emptyStateHtml } from '../empty-state.js';
 import { openSnapshotBrowser, renderSnapshotSchedules } from '../snapshot-browser.js';
-import { renderOffsite } from '../offsite-backup.js';
+import { renderOffsite, offerRecoveryKit } from '../offsite-backup.js';
 
 // =========================================================================
 // Backup jobs (3-2-1)
 // =========================================================================
+
+/** REL-9: a copy job becomes an off-site backup of the same folder on the same remote. */
+export function migrateJob(jobId, onDone = null) {
+  showConfirmToast(
+    t('backup.migrate', 'Move to off-site backup'),
+    t('backup.migrate_confirm', 'The folder will be backed up with versions and encryption to a new folder next to the copy on the same remote. The copy so far stays as it is; this copy job is turned off.'),
+    async () => {
+      try {
+        const res = await api.post(`/api/backup/schedule/${encodeURIComponent(jobId)}/migrate`, {});
+        showToast(t('backup.migrated', 'Now an off-site backup. Save its recovery kit.'), 'success');
+        if (onDone) onDone();
+        await offerRecoveryKit(res.repo);
+      } catch (err) {
+        showToast(t('toast.backup_run_failed', 'Backup run failed: {error}', { error: err.message }), 'error');
+      }
+    },
+  );
+}
 
 export async function fetchAndRenderBackupJobs(mountEl) {
   const mount = mountEl || document.getElementById('backup-jobs-mount');
@@ -49,6 +67,8 @@ export async function fetchAndRenderBackupJobs(mountEl) {
         statusHtml = `<span style="display:inline-flex; align-items:center; gap:4px; color: var(--zn-text-accent); font-size: var(--zn-fs-xs);"><span class="spinner-inline" style="width:10px; height:10px;"></span> Running...</span>`;
       } else if (job.last_status === 'success') {
         statusHtml = `<span style="color: var(--zn-text-ok); font-size: var(--zn-fs-xs); font-weight:600;">✓ Success</span>`;
+      } else if (job.last_status === 'skipped') {
+        statusHtml = `<span class="backup-skipped" title="${escapeHtml(job.last_error || '')}">${escapeHtml(t('backup.skipped', 'Skipped'))}</span>`;
       } else if (job.last_status === 'error') {
         statusHtml = `<span style="color: var(--lt-t-f43f5eff, #f43f5e); font-size: var(--zn-fs-xs); font-weight:600;" title="${escapeHtml(job.last_error || '')}">⚠ Failed</span>`;
       } else {
@@ -78,6 +98,7 @@ export async function fetchAndRenderBackupJobs(mountEl) {
           </td>
           <td style="padding: 10px 12px; text-align: right;">
             <div style="display: inline-flex; gap: 6px;">
+              ${isRemote && !isSettings && !job.migrated_to ? `<button class="btn-rect btn-migrate-backup-job" data-job-id="${escapeHtml(job.id)}" title="${escapeHtml(t('backup.migrate_help', 'Make this an off-site backup: versions of every file, encrypted. The copy so far stays where it is.'))}">${escapeHtml(t('backup.migrate', 'Move to off-site backup'))}</button>` : ''}
               <button class="btn-rect primary btn-run-backup-job" data-job-id="${escapeHtml(job.id)}" title="${t('ui.run_backup_job_now', 'Run Backup Job Now')}">
                 ▶ Run
               </button>
@@ -125,6 +146,10 @@ export async function fetchAndRenderBackupJobs(mountEl) {
           btn.innerHTML = origText;
         }
       });
+    });
+
+    mount.querySelectorAll('.btn-migrate-backup-job').forEach((btn) => {
+      btn.addEventListener('click', () => migrateJob(btn.dataset.jobId, () => fetchAndRenderBackupJobs(mount)));
     });
 
     mount.querySelectorAll('.btn-delete-backup-job').forEach(btn => {

@@ -412,23 +412,28 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
         if code == WARN_EXIT and not count[0]:
             count[0] = 1
         k = repo["keep"]
-        run_restic(
-            repo,
-            [
-                "forget",
-                "--prune",
-                "--tag",
-                "zettnas",
-                "--group-by",
-                "paths,tags",
-                "--keep-daily",
-                str(k["daily"]),
-                "--keep-weekly",
-                str(k["weekly"]),
-                "--keep-monthly",
-                str(k["monthly"]),
-            ],
-        )
+        from backend.services.ransomware_guard import get_guard
+
+        if get_guard().frozen:  # REL-9: during an attack no good version is pruned away
+            logger.warning(f"[Offsite] {repo['name']}: writes are frozen, old versions are kept")
+        else:
+            run_restic(
+                repo,
+                [
+                    "forget",
+                    "--prune",
+                    "--tag",
+                    "zettnas",
+                    "--group-by",
+                    "paths,tags",
+                    "--keep-daily",
+                    str(k["daily"]),
+                    "--keep-weekly",
+                    str(k["weekly"]),
+                    "--keep-monthly",
+                    str(k["monthly"]),
+                ],
+            )
         result = {
             "snapshot": summary.get("snapshot_id", "")[:8],
             "files_new": summary.get("files_new", 0),

@@ -39775,7 +39775,7 @@
     ]
    },
    "post": {
-    "description": "Creates or updates a scheduled backup job.",
+    "description": "Creates or updates a scheduled backup job. New copies of a folder to a cloud remote are made\nas off-site backups instead (REL-9, decision 8); existing copy jobs can still be edited.",
     "operationId": "create_or_update_backup_job_api_v1_backup_schedule_post",
     "requestBody": {
      "content": {
@@ -39853,6 +39853,47 @@
      }
     },
     "summary": "Remove Backup Job",
+    "tags": [
+     "Backup"
+    ]
+   }
+  },
+  "/api/v1/backup/schedule/{job_id}/migrate": {
+   "post": {
+    "description": "Moves a copy job to an off-site (restic) backup: versioned and encrypted (REL-9).",
+    "operationId": "migrate_backup_job_api_v1_backup_schedule__job_id__migrate_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "job_id",
+      "required": true,
+      "schema": {
+       "title": "Job Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Migrate Backup Job",
     "tags": [
      "Backup"
     ]

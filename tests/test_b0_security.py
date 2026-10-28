@@ -317,7 +317,8 @@ def test_success_waits_for_the_upload_and_limits_deletions(backup_source, monkey
     ok = _FakeRclone()
     monkeypatch.setattr(backup_engine, "get_rclone_engine", lambda: ok)
     assert backup_engine.execute_backup_job(_job()["id"])["status"] == "success"
-    assert ok.syncs[0]["extra_flags"] == ["--max-delete", str(backup_engine.MAX_DELETE_PER_RUN)]
+    flags = ok.syncs[0]["extra_flags"]
+    assert flags[:2] == ["--max-delete", str(backup_engine.MAX_DELETE_PER_RUN)] and "--backup-dir" in flags  # REL-9
     failed = _FakeRclone(final="error")
     monkeypatch.setattr(backup_engine, "get_rclone_engine", lambda: failed)
     assert backup_engine.execute_backup_job(_job()["id"])["status"] == "error"

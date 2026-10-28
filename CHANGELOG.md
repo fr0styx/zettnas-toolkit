@@ -124,6 +124,13 @@
   folders, the PostgreSQL, MariaDB/MySQL, Redis and MongoDB apps whose data is there write a dump
   next to their files (.zettnas-dump.*), so the backup has one copy of each that starts; a running
   VM is paused while its disks are copied and resumed after (one that can't be paused isn't copied).
+- **One backup engine for folders** (decision 8): a new copy of a folder to the cloud is made as an
+  off-site backup (versions, encrypted). Copy jobs you have keep running, now safely: a file they
+  would replace is kept in .zettnas-versions at the destination (as many runs as the job keeps),
+  they skip a run while the ransomware guard has frozen writes, and each has **Move to off-site
+  backup**, which backs the same folder up next to the copy and turns the copy job off. A settings
+  backup to a remote reports success only once the upload finished. While writes are frozen,
+  off-site backups keep every old version.
 - **Off-site backups are steadier**: each NAS keeps one name in restic across updates, so a backup
   after an update no longer re-reads every file and old versions are pruned again. Files that could
   not be read no longer fail the whole backup: the rest is saved and the backup says how many were

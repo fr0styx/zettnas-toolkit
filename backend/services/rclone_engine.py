@@ -939,6 +939,27 @@ class RcloneEngine:
         except json.JSONDecodeError:
             return []
 
+    def _run_rclone(self, args: list[str], timeout: int = 300) -> str:
+        cmd = [self._get_rclone_bin(), *args[:1], "--config", self.config_file, *args[1:]]
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        if proc.returncode != 0:
+            raise RuntimeError((proc.stderr.strip().splitlines() or [f"rclone exited {proc.returncode}"])[-1][:300])
+        return proc.stdout
+
+    def list_dirs(self, location: str) -> list[str]:
+        """The folder names directly inside `location` ("remote:path"); [] when it doesn't exist."""
+        try:
+            out = self._run_rclone(["lsf", "--dirs-only", "--", location], timeout=120)
+        except RuntimeError as err:
+            if "not found" in str(err).lower() or "doesn't exist" in str(err).lower():
+                return []
+            raise
+        return [line.rstrip("/") for line in out.splitlines() if line.strip()]
+
+    def purge(self, location: str) -> None:
+        """Deletes `location` ("remote:path") and everything in it."""
+        self._run_rclone(["purge", "--", location], timeout=3600)
+
     _REMOTE_SPEC_RE = re.compile(r"([A-Za-z0-9_][A-Za-z0-9_. -]{0,63}):(.*)", re.S)
 
     def checked_location(self, spec: str, confine_local: bool = True) -> str:

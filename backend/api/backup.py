@@ -212,9 +212,18 @@ def list_backup_jobs():
     "/backup/schedule", dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))]
 )
 def create_or_update_backup_job(job: BackupJobModel):
-    """Creates or updates a scheduled backup job."""
+    """Creates or updates a scheduled backup job. New copies of a folder to a cloud remote are made
+    as off-site backups instead (REL-9, decision 8); existing copy jobs can still be edited."""
+    from backend.services.backup_engine import NO_NEW_COPY_JOBS, checked_subvolume
+
+    data = job.model_dump() if hasattr(job, "model_dump") else job.dict()
     try:
-        saved = save_backup_job(job.model_dump() if hasattr(job, "model_dump") else job.dict())
+        if data.get("kind") != "config":
+            checked_subvolume(data.get("source_subvolume", ""))
+        new = not any(j.get("id") == data.get("id") for j in get_backup_jobs())
+        if new and data.get("kind") != "config" and data.get("destination_type", "remote") == "remote":
+            raise HTTPException(status_code=409, detail=NO_NEW_COPY_JOBS)
+        saved = save_backup_job(data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     return {
@@ -232,6 +241,25 @@ def remove_backup_job(job_id: str):
     if not success:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
     return {"status": "ok", "message": f"Job '{job_id}' deleted."}
+
+
+@router.post(
+    "/backup/schedule/{job_id}/migrate",
+    dependencies=[Depends(require_scope("backup:write", "backup:manage", "system:config"))],
+)
+def migrate_backup_job(job_id: str):
+    """Moves a copy job to an off-site (restic) backup: versioned and encrypted (REL-9)."""
+    from backend.services.backup_migration import migrate_to_offsite
+    from backend.services.offsite_backup import ResticError
+
+    try:
+        return migrate_to_offsite(job_id)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e).strip("'")) from None
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    except ResticError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from None
 
 
 @router.post(

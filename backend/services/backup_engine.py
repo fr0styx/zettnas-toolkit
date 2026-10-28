@@ -8,6 +8,7 @@ and background scheduling.
 import io
 import json
 import os
+import re
 import shutil
 import sqlite3
 import tempfile
@@ -470,6 +471,41 @@ def _source_is_empty(path: str) -> bool:
         return True
 
 
+VERSIONS_DIR = ".zettnas-versions"  # files a copy replaced, by run, at the destination (REL-9)
+NO_NEW_COPY_JOBS = (
+    "Folders now go to the cloud as an off-site backup (Backup, Off-site): it keeps versions and is "
+    "encrypted. Copy jobs you already have keep running, and each can be moved there with one click."
+)
+
+
+def _versions_of(dest: str) -> str:
+    return f"{dest}{VERSIONS_DIR}" if dest.endswith(":") else f"{dest.rstrip('/')}/{VERSIONS_DIR}"
+
+
+def _prune_versions(rclone: Any, dest: str, keep: int) -> list[str]:
+    """Keeps the folders of replaced files of the newest `keep` runs; returns the ones removed."""
+    root = _versions_of(dest)
+    try:
+        runs = sorted(rclone.list_dirs(root))
+        old = runs[: max(0, len(runs) - max(1, keep))]
+        for name in old:
+            rclone.purge(f"{root}/{name}")
+        return old
+    except Exception as e:  # the backup itself is done: old versions go next time
+        logger.warning(f"[HYPER-BACKUP] Could not prune old versions at {root}: {e}")
+        return []
+
+
+def _writes_frozen() -> bool:
+    try:
+        from backend.services.ransomware_guard import get_guard
+
+        return get_guard().frozen
+    except Exception:
+        logger.debug("backup_engine: ransomware guard unreadable", exc_info=True)
+        return False
+
+
 def _wait_for_sync(rclone: Any, sync_id: str) -> dict[str, Any]:
     """Waits for the upload to finish and returns its final state."""
     deadline = time.time() + SYNC_MAX_WAIT_SECONDS
@@ -637,7 +673,11 @@ def _export_settings(job: dict[str, Any], retention: int) -> str:
     for old in sorted(os.listdir(outbox))[:-2]:  # the copy runs in the background: keep the last two
         shutil.rmtree(os.path.join(outbox, old), ignore_errors=True)
     remote_path = str(job.get("remote_path") or "").strip()
-    get_rclone_engine().start_sync_job(src=run_dir, dst=f"{remote}:{remote_path}", action="copy")
+    rclone = get_rclone_engine()
+    sync = rclone.start_sync_job(src=run_dir, dst=f"{remote}:{remote_path}", action="copy")
+    final = _wait_for_sync(rclone, str(sync.get("id")))  # a success only once it is there (REL-9)
+    if final.get("status") != "success":
+        raise ValueError(f"The settings backup did not reach {remote}: {final.get('error') or 'the upload failed'}")
     return f"{remote}:{remote_path.rstrip('/')}/{name}"
 
 
@@ -705,6 +745,17 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
         "rclone_job_id": None,
         "error": None,
     }
+
+    if job.get("kind") != "config" and _writes_frozen():
+        why = (
+            "Skipped: the ransomware guard froze writes, so nothing was copied and the backup keeps "
+            "the files from before. Unfreeze in Security once the shares are checked."
+        )
+        _update_job_status(job_id, last_status="skipped", last_error=why)
+        history_record.update(completed_at=time.time(), status="skipped", error=why)
+        record_backup_history(history_record)
+        logger.warning(f"[HYPER-BACKUP] {job.get('name', job_id)}: {why}")
+        return history_record
 
     pal = get_storage_platform()
     snap_result = None
@@ -783,11 +834,21 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
 
                 # copy, never sync: a file deleted (or encrypted away) at home is never deleted
                 # from the backup. Versions of changed files are what offsite backup (restic) is for.
+                # A file the copy would replace is moved to .zettnas-versions/<run> first, so a file
+                # encrypted at home never overwrites the good copy (REL-9)
+                versions = f"{_versions_of(dest_target)}/{time.strftime('%Y%m%d-%H%M%S')}"
                 sync_job = rclone.start_sync_job(
                     src=source_dir,
                     dst=dest_target,
                     action="copy",
-                    extra_flags=["--max-delete", str(MAX_DELETE_PER_RUN)],
+                    extra_flags=[
+                        "--max-delete",
+                        str(MAX_DELETE_PER_RUN),
+                        "--backup-dir",
+                        versions,
+                        "--exclude",
+                        f"/{VERSIONS_DIR}/**",
+                    ],
                 )
                 history_record["rclone_job_id"] = sync_job.get("id")
                 logger.info(
@@ -804,6 +865,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                             "the run stopped to protect it. Check the source folder."
                         )
                     raise ValueError(f"Upload to {dest_target} did not finish: {detail}")
+                history_record["pruned_versions"] = _prune_versions(rclone, dest_target, int(retention))
 
         # Mark job run success
         job["last_run_at"] = time.time()
