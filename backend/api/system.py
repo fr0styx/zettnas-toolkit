@@ -960,6 +960,14 @@ def put_health_signal(req: HealthSignalIn):
     return status()
 
 
+@router.get("/system/protection", dependencies=[Depends(require_scope("system:view"))])
+def get_protection_status():
+    """The copies outside this NAS, for the Overview (FEAT-01)."""
+    from backend.services.protection_status import status
+
+    return status()
+
+
 @router.get("/system/status-summary", dependencies=[Depends(require_scope("system:view"))])
 def get_status_summary():
     """What needs attention, for the Overview (UX-1)."""

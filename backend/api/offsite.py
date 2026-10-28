@@ -38,6 +38,14 @@ def _errors(fn, *args, **kwargs):
         raise HTTPException(status_code=409, detail=str(e)) from None
 
 
+@router.get("/offsite/destinations", dependencies=[MANAGE])
+def destinations():
+    """Where a new backup could go: USB disks, other NASes mounted here, cloud remotes (FEAT-01)."""
+    from backend.services.protection_status import destinations as found
+
+    return found()
+
+
 @router.get("/offsite", dependencies=[READ])
 def overview():
     return {"available": ob.restic_available(), "repos": ob.list_repos()}

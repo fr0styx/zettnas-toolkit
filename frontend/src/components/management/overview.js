@@ -3,6 +3,8 @@
  * keeps virtual machines, network, hardware, power and activity out of the everyday list (UX-2).
  */
 import { api } from '../../api.js';
+import { html } from '../../html.js';
+import { formatDateTime } from '../../format.js';
 import { t } from '../../i18n.js';
 import { escapeHtml } from '../../utils.js';
 import { ROUTES } from '../../router.js';
@@ -77,6 +79,19 @@ export function statusHtml(summary) {
   return `<div class="ov-status ov-attention"><strong>${escapeHtml(t('overview.attention', '{n, plural, one {# thing needs your attention} other {# things need your attention}}', { n: summary.items.length }))}</strong><ul>${rows}</ul></div>`;
 }
 
+/** FEAT-01: the copies outside this NAS, and a way to make one when there is none lately. */
+export function protectionHtml(p) {
+  if (!p || !p.level) return '';
+  const when = p.last_good ? formatDateTime(p.last_good * 1000) : '';
+  if (p.level === 'good') {
+    return html`<div class="ov-status ov-ok"><strong>🛡 ${t('protect.good', '{n, plural, one {# current copy} other {# current copies}} outside this NAS', { n: p.copies })}</strong>
+      <span>${t('protect.newest', 'The newest is from {when}.', { when })}</span></div>`;
+  }
+  const text = p.level === 'none' ? t('protect.none', 'No copy of your files outside this NAS yet.') : t('protect.stale', 'Your newest copy outside this NAS is from {when}.', { when: when || '?' });
+  return html`<div class="ov-status ov-attention"><strong>${text}</strong>
+    <button type="button" class="btn-pill-toggle" data-ov-protect>${t('protect.title', 'Protect this NAS')}</button></div>`;
+}
+
 export async function renderStatusSummary(root = document) {
   const hub = root.getElementById('management-hub-view');
   if (!hub) return null;
@@ -89,6 +104,10 @@ export async function renderStatusSummary(root = document) {
     box.setAttribute('aria-label', t('overview.status_label', 'Status'));
     hub.insertBefore(box, hub.firstChild);
     box.addEventListener('click', (e) => {
+      if (e.target.closest('[data-ov-protect]')) {
+        import('../protect-nas.js').then((m) => m.openProtectGuide()).catch(() => {});
+        return;
+      }
       const btn = e.target.closest('[data-ov-open]');
       if (btn && ROUTES[btn.dataset.ovOpen]) ROUTES[btn.dataset.ovOpen]();
     });
@@ -100,7 +119,13 @@ export async function renderStatusSummary(root = document) {
     box.hidden = true; // not allowed or not reachable: the Overview still works
     return null;
   }
+  let protection = null;
+  try {
+    protection = await api.get('/api/system/protection');
+  } catch {
+    // not allowed or not reachable: the status alone still shows
+  }
   box.hidden = false;
-  box.innerHTML = statusHtml(summary);
+  box.innerHTML = statusHtml(summary) + protectionHtml(protection);
   return summary;
 }

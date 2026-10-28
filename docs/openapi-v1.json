@@ -49560,6 +49560,26 @@
     ]
    }
   },
+  "/api/v1/offsite/destinations": {
+   "get": {
+    "description": "Where a new backup could go: USB disks, other NASes mounted here, cloud remotes (FEAT-01).",
+    "operationId": "destinations_api_v1_offsite_destinations_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Destinations",
+    "tags": [
+     "Offsite backup"
+    ]
+   }
+  },
   "/api/v1/offsite/repos": {
    "put": {
     "operationId": "put_repo_api_v1_offsite_repos_put",
@@ -54156,6 +54176,26 @@
      }
     },
     "summary": "Set System Profile",
+    "tags": [
+     "System & Storage"
+    ]
+   }
+  },
+  "/api/v1/system/protection": {
+   "get": {
+    "description": "The copies outside this NAS, for the Overview (FEAT-01).",
+    "operationId": "get_protection_status_api_v1_system_protection_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get Protection Status",
     "tags": [
      "System & Storage"
     ]

@@ -124,6 +124,10 @@
   folders, the PostgreSQL, MariaDB/MySQL, Redis and MongoDB apps whose data is there write a dump
   next to their files (.zettnas-dump.*), so the backup has one copy of each that starts; a running
   VM is paused while its disks are copied and resumed after (one that can't be paused isn't copied).
+- **Protect this NAS**: the Overview says how many current copies of your files exist outside this
+  NAS and how new the newest is, or that there is none; one click opens a guide that picks a USB
+  disk, another NAS or a cloud account and makes an off-site backup of the shares (versions,
+  encrypted, nightly), starts the first run and hands you the recovery kit.
 - **One backup engine for folders** (decision 8): a new copy of a folder to the cloud is made as an
   off-site backup (versions, encrypted). Copy jobs you have keep running, now safely: a file they
   would replace is kept in .zettnas-versions at the destination (as many runs as the job keeps),
