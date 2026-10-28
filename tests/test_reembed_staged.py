@@ -155,7 +155,7 @@ def test_indexing_keeps_the_vector_table_in_step(tmp_path, monkeypatch):
             parent_dims = {
                 r[0] for r in c.execute("SELECT embedding_dim FROM document_chunks WHERE chunk_level = 'parent'")
             }
-            vectors = c.execute("SELECT COUNT(*) FROM vec_chunks_768").fetchone()[0]
+            vectors = c.execute("SELECT COUNT(*) FROM vec_chunks_768_i8").fetchone()[0]
             return levels, parent_dims, vectors
         finally:
             c.close()

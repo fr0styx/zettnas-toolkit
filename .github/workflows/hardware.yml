@@ -40,9 +40,22 @@ jobs:
       - name: Spin-down (30-minute watch)
         run: python3 scripts/hardware_spindown.py --minutes 30
 
+  vector-bench:
+    # The vector index at 100,000 and 1,000,000 synthetic chunks: p95 search time and recall of
+    # int8 search with float rescoring (AI-18). A temporary database; no model, no array disk.
+    needs: spindown
+    if: always() && github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
+    runs-on: [zettnas-hardware]
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Vector index at 100k and 1M chunks
+        run: /opt/zn-eval/bin/python scripts/vector_bench.py --chunks 100000 1000000
+
   ai-eval:
     # Search and answers on the model servers this install uses, read-only (AI-16)
-    needs: spindown
+    needs: [spindown, vector-bench]
     if: always() && github.repository == 'fr0styx/zettnas-toolkit' && github.ref == 'refs/heads/main'
     runs-on: [zettnas-hardware]
     timeout-minutes: 60

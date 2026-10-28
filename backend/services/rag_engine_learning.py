@@ -298,11 +298,12 @@ class RagLearningMixin:
                 )
                 w.execute("UPDATE indexed_files SET embedding_model = ?", (target_model,))
                 if self._has_sqlite_vec and self._init_vec_table(w, target_dim):
-                    w.execute(f"DELETE FROM vec_chunks_{target_dim}")
+                    table = _core().vec_table(target_dim)
+                    w.execute(f"DELETE FROM {table}")
                     w.execute(
-                        f"""INSERT INTO vec_chunks_{target_dim}(chunk_id, embedding, file_id, visibility_tier)
-                            SELECT chunk_id, embedding_f32, file_id, visibility_tier FROM document_chunks
-                            WHERE embedding_model = ? AND embedding_dim = ?""",
+                        f"""INSERT INTO {table}(chunk_id, embedding, file_id, visibility_tier)
+                            SELECT chunk_id, vec_quantize_int8(embedding_f32, 'unit'), file_id, visibility_tier
+                            FROM document_chunks WHERE embedding_model = ? AND embedding_dim = ?""",
                         (target_model, target_dim),
                     )
                 w.execute("DELETE FROM reembed_staging")

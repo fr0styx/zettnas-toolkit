@@ -4,6 +4,9 @@
 
 #### AI
 
+- **A smaller, equally exact vector index**: the AI search index keeps its vectors as int8, a
+  quarter of the size; the full vectors are kept once and still decide the order of results.
+  The existing index is converted once at start, without reading your files.
 - **Search speaks your household's languages**: questions in German, French, Spanish and Chinese
   are understood like English ones ("wie", "comment", "怎么" questions, colours and scenes such as
   "rotes Auto" or "海边"), Chinese, Japanese and Korean text is found by keyword too, and photo

@@ -76,11 +76,12 @@ def get_reindex_status() -> dict[str, Any]:
         rag = get_rag_engine()
         with rag._write_lock:
             conn = rag._get_conn(readonly=True)
-            has_vec = conn.execute(
-                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='vec_chunks_768'"
-            ).fetchone()
+            from backend.services.rag_engine import vec_table
+
+            table = vec_table(getattr(rag, "_vec_table_dim", 768))
+            has_vec = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone()
             if has_vec:
-                c_vec = conn.execute("SELECT COUNT(*) FROM vec_chunks_768").fetchone()[0]
+                c_vec = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
                 total = conn.execute("SELECT COUNT(*) FROM document_chunks").fetchone()[0]
                 if 0 < c_vec < total:
                     pct = round((c_vec / total) * 100, 1)

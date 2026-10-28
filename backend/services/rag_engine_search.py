@@ -945,7 +945,9 @@ class RagSearchMixin:
             try:
                 target_dim = self._vec_table_dim
                 query_blob = struct.pack(f"<{target_dim}f", *query_vec)
-                vec_table = f"vec_chunks_{target_dim}"
+                from backend.services.rag_engine import vec_table as _vec_table
+
+                vec_table = _vec_table(target_dim)  # int8 vectors; the float ones score below (AI-18)
                 # Filters apply while fetching: ask for more neighbours until enough of them are
                 # files this person may read under the chosen folder, instead of filtering a
                 # global top 60 afterwards (AI-4).
@@ -954,7 +956,7 @@ class RagSearchMixin:
                 filtered = bool(rbac_params or sub_params)
                 while True:
                     vec_hits = conn.execute(
-                        f"SELECT chunk_id FROM {vec_table} WHERE embedding MATCH ? AND k = ?",
+                        f"SELECT chunk_id FROM {vec_table} WHERE embedding MATCH vec_quantize_int8(?, 'unit') AND k = ?",
                         (query_blob, k),
                     ).fetchall()
                     ids = [int(vh["chunk_id"]) for vh in vec_hits]

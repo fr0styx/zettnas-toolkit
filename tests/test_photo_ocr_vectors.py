@@ -43,7 +43,7 @@ def test_photo_text_gets_neural_vectors_and_enters_the_vector_table(tmp_path, mo
             "SELECT chunk_level, embedding_model, embedding_dim FROM document_chunks WHERE source_modality = 'photo_ocr'"
         ).fetchall()
         file_model = c.execute("SELECT embedding_model FROM indexed_files").fetchone()[0]
-        vectors = c.execute("SELECT COUNT(*) FROM vec_chunks_768").fetchone()[0] if eng._has_sqlite_vec else None
+        vectors = c.execute("SELECT COUNT(*) FROM vec_chunks_768_i8").fetchone()[0] if eng._has_sqlite_vec else None
     finally:
         c.close()
     children = [r for r in rows if r[0] == "child"]

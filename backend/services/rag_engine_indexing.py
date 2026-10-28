@@ -103,7 +103,7 @@ class RagIndexingMixin:
                         )
                     ]
                     for table in vec_tables:
-                        if not re.fullmatch(r"vec_chunks_\d+", table):
+                        if not re.fullmatch(r"vec_chunks_\d+(_i8)?", table):
                             continue
                         for i in range(0, len(chunk_ids), 500):
                             part = chunk_ids[i : i + 500]
@@ -152,7 +152,7 @@ class RagIndexingMixin:
                 # 1. Truncate indexed data tables
                 if self._has_sqlite_vec and self._vec_table_active:
                     try:
-                        conn.execute(f"DELETE FROM vec_chunks_{int(self._vec_table_dim)}")
+                        conn.execute(f"DELETE FROM {_core().vec_table(self._vec_table_dim)}")
                     except sqlite3.Error as e:
                         logger.debug(f"[RAG] vector table reset skipped: {e}")
                 conn.execute("DELETE FROM document_chunks;")
@@ -1796,8 +1796,10 @@ class RagIndexingMixin:
         if not embedding_blob or len(embedding_blob) != target_dim * 4:
             return
         try:
+            core = _core()
             conn.execute(
-                f"INSERT OR REPLACE INTO vec_chunks_{target_dim}(chunk_id, embedding, file_id, visibility_tier) VALUES (?, ?, ?, ?)",
+                f"INSERT OR REPLACE INTO {core.vec_table(target_dim)}(chunk_id, embedding, file_id, visibility_tier) "
+                f"VALUES (?, {core.VEC_QUANTIZE}, ?, ?)",
                 (chunk_id, embedding_blob, file_id, visibility_tier),
             )
         except Exception as e:

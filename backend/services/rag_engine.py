@@ -965,22 +965,40 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 conn.close()
 
     def _init_vec_table(self, conn: sqlite3.Connection, dim: int) -> bool:
-        """Initializes a decoupled vec0 virtual table for the specified dimension."""
+        """The vec0 index for one dimension, with int8 vectors (AI-18). An index made before with
+        float vectors is converted once, in SQL, and dropped: the float vectors stay in
+        document_chunks, so nothing is lost and nothing is read from disk."""
+        dim = int(dim)
         try:
             conn.execute(
                 f"""
-                CREATE VIRTUAL TABLE IF NOT EXISTS vec_chunks_{dim} USING vec0(
+                CREATE VIRTUAL TABLE IF NOT EXISTS {vec_table(dim)} USING vec0(
                     chunk_id INTEGER PRIMARY KEY,
-                    embedding FLOAT[{dim}],
+                    embedding int8[{dim}],
                     file_id INTEGER,
                     visibility_tier TEXT
                 );
                 """
             )
-            return True
         except Exception as e:
             logger.debug("vec0 table creation failed: %s", e)
             return False
+        old = f"vec_chunks_{dim}"
+        if conn.execute("SELECT 1 FROM sqlite_master WHERE name = ?", (old,)).fetchone():
+            try:
+                t0 = time.time()
+                n = conn.execute(
+                    f"INSERT OR REPLACE INTO {vec_table(dim)}(chunk_id, embedding, file_id, visibility_tier) "
+                    f"SELECT chunk_id, vec_quantize_int8(embedding, 'unit'), file_id, visibility_tier FROM {old}"
+                ).rowcount
+                conn.execute(f"DROP TABLE {old}")
+                conn.commit()
+                logger.info(
+                    f"[RAG] Vector index converted to int8: {max(0, n or 0)} vectors in {time.time() - t0:.1f}s"
+                )
+            except sqlite3.Error as e:
+                logger.warning(f"[RAG] Vector index conversion to int8 failed; trying again next start: {e}")
+        return True
 
     def file_chunks(self, path: str, max_chars: int = 16000) -> dict[str, Any]:
         """One indexed file's text in reading order, from the index (no disk access, AI-22).
@@ -1034,7 +1052,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             return
         try:
             conn.execute(
-                f"""DELETE FROM vec_chunks_{int(self._vec_table_dim)} WHERE chunk_id IN (
+                f"""DELETE FROM {vec_table(self._vec_table_dim)} WHERE chunk_id IN (
                     SELECT chunk_id FROM document_chunks WHERE file_id IN ({file_ids_sql}))""",
                 params,
             )
@@ -1305,6 +1323,16 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         if stale:
             logger.info(f"[RAG] {len(stale)} file(s) with CJK/Cyrillic text will be learned again (Unicode tokens)")
         return len(stale)
+
+
+def vec_table(dim: int) -> str:
+    """The vector index for one dimension: int8 vectors (AI-18). The float vectors are kept once,
+    in document_chunks.embedding_f32, and score the nearest neighbours this index finds."""
+    return f"vec_chunks_{int(dim)}_i8"
+
+
+# how a float32 vector blob goes into the index: each value of a unit vector as an int8
+VEC_QUANTIZE = "vec_quantize_int8(?, 'unit')"
 
 
 _RAG_ENGINE: RagSearchEngine | None = None
