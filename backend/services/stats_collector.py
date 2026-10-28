@@ -392,10 +392,17 @@ def _publish(data, disks, fans, net, now):
 
     with Z_STATE.lock:
         Z_STATE.cached_stats = data
-    Z_STATE.lcd_wake.set()  # the built-in LCD renderer redraws with the new numbers
+    if not getattr(Z_STATE, "lcd_blanked", False):
+        Z_STATE.lcd_wake.set()  # the built-in LCD renderer redraws with the new numbers
 
-    # Send only what changed; clients merge it into their copy (see stats_delta.py).
-    broadcaster.broadcast(_delta_encoder.encode(data), full_data=data)
+    # Send only what changed; clients merge it into their copy (see stats_delta.py). With nobody
+    # listening there is nothing to compare against: the next listener starts from a full
+    # snapshot, so the encoder starts over too (PERF-20)
+    if broadcaster.get_subscriber_count():
+        broadcaster.broadcast(_delta_encoder.encode(data), full_data=data)
+    else:
+        _delta_encoder.reset()
+        broadcaster.broadcast(data, full_data=data)
 
     now_ts = int(time.time())
     if not hasattr(stats_collector_daemon, "last_log"):

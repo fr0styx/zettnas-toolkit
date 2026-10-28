@@ -13,6 +13,12 @@
   through an index, and the AI index is tidied up once a night while nobody chats.
 - **Idle budgets for the whole container**: the nightly hardware check counts every process in the
   app's container and the processes it starts; every pull request now runs one idle minute.
+- **Disks can sleep by default**: a spinning disk with no I/O for 10 minutes has its SMART data read
+  every 30 minutes instead of every 45 seconds (SMART_IDLE_ADAPTIVE is now on), and NVMe disks are
+  read every 60 seconds instead of 15. Set SMART_IDLE_ADAPTIVE=0 or SMART_POLL_NVME=15 for the old
+  behaviour.
+- **A dark front panel stays asleep**: while the LCD is off it no longer wakes for every stats
+  sample, and updating drops LCD_FPS=10 (the old default) so the current default of 5 applies.
 - **File search that doesn't wake disks**: searching by name uses the AI index for a folder on a
   sleeping disk instead of walking it, and says when results may be incomplete. Answers are
   compressed, and very large folder sizes stop at a limit and say "at least".

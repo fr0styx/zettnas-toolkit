@@ -142,11 +142,11 @@ class Settings:
         "SMART_POLL_HDD", 45, "Seconds between SMART reads of spinning disks.", lo=5, hi=86400, group="Disks"
     )
     smart_poll_nvme: int = _s(
-        "SMART_POLL_NVME", 15, "Seconds between SMART reads of NVMe disks.", lo=5, hi=86400, group="Disks"
+        "SMART_POLL_NVME", 60, "Seconds between SMART reads of NVMe disks.", lo=5, hi=86400, group="Disks"
     )
     smart_idle_adaptive: bool = _s(
         "SMART_IDLE_ADAPTIVE",
-        False,
+        True,
         "Read SMART less often from spinning disks with no recent activity, so they can spin down.",
         group="Disks",
     )

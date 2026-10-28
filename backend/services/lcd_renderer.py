@@ -484,6 +484,12 @@ class _LayoutPusher:
             logger.debug(f"[LCD] Page layout evaluate error: {e}")
 
 
+def _blanked_wait() -> float:
+    from backend.services.lcd_pil import seconds_to_next_minute
+
+    return min(30.0, seconds_to_next_minute())
+
+
 def _screen_off(fb: "_Framebuffer", blanked: bool) -> bool:
     """Handles brightness 0 / power off / night blanking. Returns the new 'blanked' state."""
     if get_effective_brightness() <= 0:
@@ -509,7 +515,8 @@ def _poll_frames(page, cdp, fb: "_Framebuffer", shot_params: dict, frame_interva
         blanked = _screen_off(fb, blanked)
         if blanked:
             prev_raw_b64 = None
-            if Z_STATE.ui_wake.wait(1.0):
+            # a button, an alert or a setting wakes it; the night schedule turns on the minute (PERF-20)
+            if Z_STATE.ui_wake.wait(_blanked_wait()):
                 Z_STATE.ui_wake.clear()
             continue
         t0 = time.time()

@@ -268,6 +268,11 @@ def narrow_device_rules(rules: list[str] | None) -> list[str] | None:
     return out
 
 
+# Variables older templates wrote with an old default: dropped on update, so the image's own
+# default applies. LCD_FPS=10 was the default before 5 (PERF-20); any other value is kept.
+RETIRED_ENV = frozenset({"LCD_FPS=10"})
+
+
 def build_recreate_plan(
     inspect_data: dict[str, Any], old_image_cfg: dict[str, Any], image: str
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
@@ -286,7 +291,7 @@ def build_recreate_plan(
 
     # Only the variables the user added or changed; the new image supplies its own.
     image_env = set(old_image_cfg.get("Env") or [])
-    body["Env"] = [e for e in (config.get("Env") or []) if e not in image_env]
+    body["Env"] = [e for e in (config.get("Env") or []) if e not in image_env and e not in RETIRED_ENV]
 
     image_labels = old_image_cfg.get("Labels") or {}
     labels = {

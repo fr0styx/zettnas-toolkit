@@ -767,12 +767,35 @@ def _idle_for(dev_name: str, now: float) -> float:
 
 
 def _hdd_interval(dev_name: str, now: float) -> float:
-    """The SMART interval for a spinning disk: longer once it has been idle (PERF-2, opt-in)."""
+    """The SMART interval for a spinning disk: longer once it has been idle (PERF-2, on by default)."""
     from backend import config as _cfg
 
-    if getattr(_cfg, "SMART_IDLE_ADAPTIVE", False) and _idle_for(dev_name, now) >= IDLE_AFTER_SECS:
+    if getattr(_cfg, "SMART_IDLE_ADAPTIVE", True) and _idle_for(dev_name, now) >= IDLE_AFTER_SECS:
         return float(getattr(_cfg, "SMART_IDLE_POLL", 1800))
     return float(SMART_POLL_INTERVAL_HDD)
+
+
+# One pool for every SMART round (PERF-2): its threads wait idle between rounds instead of being
+# started and stopped every time, and a disk whose read is still running isn't queued again.
+_SMART_POOL: concurrent.futures.ThreadPoolExecutor | None = None
+_SMART_POOL_LOCK = threading.Lock()
+_SMART_IN_FLIGHT: set[str] = set()
+
+
+def _smart_pool() -> concurrent.futures.ThreadPoolExecutor:
+    global _SMART_POOL
+    with _SMART_POOL_LOCK:
+        if _SMART_POOL is None:
+            _SMART_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="SmartPoll")
+        return _SMART_POOL
+
+
+def _poll_one(dev_name: str, is_nvme: bool) -> None:
+    try:
+        poll_disk_smart(dev_name, is_nvme)
+    finally:
+        with _SMART_POOL_LOCK:
+            _SMART_IN_FLIGHT.discard(dev_name)
 
 
 def poll_all_disks_smart(force: bool = False):
@@ -791,10 +814,13 @@ def poll_all_disks_smart(force: bool = False):
         if force or (now - last_scan) >= poll_interval or dev_name not in Z_STATE.cached_smart_data:
             targets.append((dev_name, is_nvme))
 
+    with _SMART_POOL_LOCK:
+        targets = [(dev, is_nv) for dev, is_nv in targets if dev not in _SMART_IN_FLIGHT]
+        _SMART_IN_FLIGHT.update(dev for dev, _ in targets)
     if targets:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(targets))) as executor:
-            futures = [executor.submit(poll_disk_smart, dev, is_nv) for dev, is_nv in targets]
-            concurrent.futures.wait(futures, timeout=15.0)
+        pool = _smart_pool()
+        futures = [pool.submit(_poll_one, dev, is_nv) for dev, is_nv in targets]
+        concurrent.futures.wait(futures, timeout=15.0)
 
 
 def read_disk_temps_and_io(allow_sync_poll: bool = False):

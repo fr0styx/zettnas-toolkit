@@ -702,6 +702,7 @@ def run_loop(fb: Any, max_wait_s: float, screen_off, state) -> None:
     blanked = False
     while not state.shutting_down:
         blanked = screen_off(fb, blanked)
+        state.lcd_blanked = blanked  # the stats loop then stops waking it every sample (PERF-20)
         if blanked:
             prev = None
             prev_key = None

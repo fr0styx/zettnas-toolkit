@@ -75,8 +75,8 @@ used keeps its default, and the log says which variable and why.
 | Variable | Default | Meaning |
 |---|---|---|
 | `SMART_POLL_HDD` | `45` | Seconds between SMART reads of spinning disks. (5–86400) |
-| `SMART_POLL_NVME` | `15` | Seconds between SMART reads of NVMe disks. (5–86400) |
-| `SMART_IDLE_ADAPTIVE` | `off` | Read SMART less often from spinning disks with no recent activity, so they can spin down. |
+| `SMART_POLL_NVME` | `60` | Seconds between SMART reads of NVMe disks. (5–86400) |
+| `SMART_IDLE_ADAPTIVE` | `on` | Read SMART less often from spinning disks with no recent activity, so they can spin down. |
 | `SMART_IDLE_POLL` | `1800` | Seconds between SMART reads of an idle spinning disk. (60–86400) |
 | `HDD_WARN_TEMP` | `50` | Hard disk temperature that raises a warning, °C. (20–100) |
 | `HDD_CRITICAL_TEMP` | `55` | Hard disk temperature that forces full fan speed, °C. (20–100) |

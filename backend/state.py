@@ -180,6 +180,7 @@ class ZettState:
         self.smart = SmartState()
         # lcd_wake: set by every ui_wake.set() and by each new stats sample; only the LCD clears it
         self.lcd_wake = threading.Event()
+        self.lcd_blanked = False  # the LCD is off: stats samples don't wake it (PERF-20)
         self.ui_wake = WakeEvent(self.lcd_wake)
         self.prev: dict[str, Any] = {"idle": 0, "total": 0}
         self.prev_net: dict[str, Any] = {"time": 0.0, "rx": 0, "tx": 0, "iface": "bond0"}
