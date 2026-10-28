@@ -39,6 +39,7 @@ def test_health_reads_a_real_table(client, tmp_path, monkeypatch):
         yield empty
 
     monkeypatch.setattr(users_db, "users_db_session", no_tables)
+    system._DB_CHECK.update(at=0.0)  # a good answer is kept for 5 minutes (PERF-30): look again now
     assert system._health_checks()["database"] == "failed"
 
 

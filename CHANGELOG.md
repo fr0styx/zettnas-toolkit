@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+#### Performance
+
+- **Less work when no UPS is connected**: without a UPS set up, ZettNAS looks for one after 1, 5 and
+  then every 15 minutes instead of every 10 seconds (and at once when a USB device is plugged in or
+  the Power page is open).
+- **Quieter when idle**: the backup scheduler, the event log, the health check, thumbnails and the
+  built-in LCD renderer wake and write far less often while nothing changes.
+
 #### Fixes
 
 - **The fan watchdog comes back after a reboot on Unraid**: the image no longer carries Unraid's

@@ -15,7 +15,7 @@ import time
 from collections.abc import Iterable
 from typing import Any
 
-_JSON_CACHE: dict[str, tuple[float, Any, float]] = {}
+_JSON_CACHE: dict[str, tuple[float | None, Any, float]] = {}  # mtime None: the file was missing
 
 # Settings files the app writes itself: atomic_write_json refreshes the cached copy, so hot
 # loops only need to look at the file now and then for edits made outside the app. On hosts
@@ -204,7 +204,8 @@ def read_json_cached(path: str, default: Any = None, max_age: float = 3.0) -> An
         if cached:
             cached_mtime, cached_data, checked_at = cached
             if (now - checked_at) < max_age:
-                return cached_data
+                # a file that was missing stays missing until the next check (PERF-22)
+                return default if cached_mtime is None else cached_data
             stat = os.stat(path)
             if stat.st_mtime == cached_mtime:
                 _JSON_CACHE[path] = (cached_mtime, cached_data, now)
@@ -216,6 +217,11 @@ def read_json_cached(path: str, default: Any = None, max_age: float = 3.0) -> An
         data = read_json(path, default)
         _JSON_CACHE[path] = (stat.st_mtime, data, now)
         return data
+    except FileNotFoundError:
+        # optional settings files are often absent: remember it, instead of a stat on every
+        # call (FUSE on Unraid; PERF-22)
+        _JSON_CACHE[path] = (None, None, time.time())
+        return default
     except (OSError, json.JSONDecodeError):
         return default
 

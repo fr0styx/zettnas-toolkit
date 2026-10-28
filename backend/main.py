@@ -437,6 +437,12 @@ async def lifespan(app: FastAPI):
             logger.debug("backend.main.lifespan: ignored error", exc_info=True)
         if not Z_STATE.fans_locked:
             _shutdown_fans("shutdown")
+        try:
+            from backend.state import flush_events
+
+            flush_events()  # events wait up to a few seconds to be written (PERF-27)
+        except Exception:
+            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
 
 
 app = FastAPI(

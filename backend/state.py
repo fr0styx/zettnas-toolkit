@@ -237,6 +237,41 @@ def _load_events():
 _event_dedup_cache = {}
 
 
+# The event file is written at most every few seconds, not on every event, and an unchanged
+# condition (same level, title and message) is logged again only after an hour (PERF-27).
+EVENT_FLUSH_SECS = 0.0 if os.environ.get("TESTING") else 5.0
+EVENT_REPEAT_SECS = 3600
+_event_last_message: dict[tuple, str] = {}
+_event_flush_timer: threading.Timer | None = None
+_event_flush_lock = threading.Lock()
+
+
+def flush_events() -> None:
+    """Writes the event log now (the debounce timer, shutdown)."""
+    global _event_flush_timer
+    with _event_flush_lock:
+        _event_flush_timer = None
+    with Z_STATE.lock:
+        events = list(Z_STATE.event_log)
+    try:
+        atomic_write_json(EVENTS_FILE, events)
+    except OSError as e:
+        logger.warning(f"Failed to save events: {e}")
+
+
+def _persist_events_soon() -> None:
+    global _event_flush_timer
+    if EVENT_FLUSH_SECS <= 0:
+        flush_events()
+        return
+    with _event_flush_lock:
+        if _event_flush_timer is not None:
+            return
+        _event_flush_timer = threading.Timer(EVENT_FLUSH_SECS, flush_events)
+        _event_flush_timer.daemon = True
+        _event_flush_timer.start()
+
+
 def add_event(level, title, message, details=None):
     global _event_dedup_cache
     now = int(time.time())
@@ -244,11 +279,16 @@ def add_event(level, title, message, details=None):
     with Z_STATE.lock:
         dedup_key = (level, title)
         last_seen = _event_dedup_cache.get(dedup_key, 0)
-        if now - last_seen < 60:
+        quiet = EVENT_REPEAT_SECS if _event_last_message.get(dedup_key) == message else 60
+        if now - last_seen < quiet:
             return
         _event_dedup_cache[dedup_key] = now
+        _event_last_message[dedup_key] = message
         if len(_event_dedup_cache) > 200:
-            _event_dedup_cache = {k: v for k, v in _event_dedup_cache.items() if now - v < 300}
+            _event_dedup_cache = {k: v for k, v in _event_dedup_cache.items() if now - v < EVENT_REPEAT_SECS}
+            for k in list(_event_last_message):
+                if k not in _event_dedup_cache:
+                    _event_last_message.pop(k, None)
 
         entry = {"ts": now, "level": level, "title": title, "message": message}
         if details is not None:
@@ -258,10 +298,7 @@ def add_event(level, title, message, details=None):
         events_to_persist = list(Z_STATE.event_log)
 
     if events_to_persist is not None:
-        try:
-            atomic_write_json(EVENTS_FILE, events_to_persist)
-        except OSError as e:
-            logger.warning(f"Failed to save events: {e}")
+        _persist_events_soon()
 
 
 def _record_damaged_file(path: str, dest: str) -> None:

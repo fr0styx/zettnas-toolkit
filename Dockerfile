@@ -143,7 +143,9 @@ RUN if [ -n "$BUILD_COMMIT" ]; then echo "$BUILD_COMMIT" > /app/.git_commit; fi
 # Overlay freshly built frontend distribution
 COPY --from=frontend-builder /build/static/ ./static/
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD python3 -c 'import urllib.request, sys, os; port = os.environ.get("PORT", "8082"); sys.exit(0 if urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=4).getcode() == 200 else 1)'
+# every 60 s with a bare interpreter (-S -I: no site packages to scan); the app caches its own
+# database check (PERF-30)
+HEALTHCHECK --interval=60s --timeout=5s --start-period=15s --retries=3 \
+    CMD python3 -S -I -c 'import urllib.request, sys, os; port = os.environ.get("PORT", "8082"); sys.exit(0 if urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=4).getcode() == 200 else 1)'
 
 CMD ["python3", "-m", "backend.main"]

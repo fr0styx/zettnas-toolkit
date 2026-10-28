@@ -557,6 +557,7 @@
     "max_dim",
     "path",
     "principal",
+    "request",
     "thumb"
    ],
    "path": "/fs/preview/image",
@@ -2338,7 +2339,7 @@
    "async": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_preview_image": {
-   "async": "(path: str, thumb: int | None = None, max_dim: int | None = None, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+   "async": "(path: str, request: starlette.requests.Request, thumb: int | None = None, max_dim: int | None = None, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "fs_remove_favorite": {
    "function": "(path: str, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"

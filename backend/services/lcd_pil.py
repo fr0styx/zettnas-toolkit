@@ -698,21 +698,30 @@ def run_loop(fb: Any, max_wait_s: float, screen_off, state) -> None:
     """
     wake = getattr(state, "lcd_wake", None) or state.ui_wake
     prev = None
+    prev_key = None
     blanked = False
     while not state.shutting_down:
         blanked = screen_off(fb, blanked)
         if blanked:
             prev = None
-            if wake.wait(1.0):
+            prev_key = None
+            # a button press, a page change or an alert sets the wake event; the blanking schedule
+            # changes on the minute (PERF-16, not a poll every second)
+            if wake.wait(min(max_wait_s, seconds_to_next_minute())):
                 wake.clear()
             continue
         with state.lock:
             stats = dict(state.cached_stats or {})
             page = state.current_lcd_page
-        frame = to_framebuffer(render_frame(stats, page))
-        raw = frame.tobytes()
-        if raw != prev:
-            fb.write_image(frame)
-            prev = raw
+        # the same values on the same page in the same minute draw the same frame: skip the render
+        # (PERF-16); the minute is part of it for the clock
+        key = (page, time.strftime("%Y%m%d%H%M"), repr(sorted(stats.items(), key=lambda kv: str(kv[0]))))
+        if key != prev_key:
+            frame = to_framebuffer(render_frame(stats, page))
+            raw = frame.tobytes()
+            if raw != prev:
+                fb.write_image(frame)
+                prev = raw
+            prev_key = key
         if wake.wait(min(max_wait_s, seconds_to_next_minute())):
             wake.clear()

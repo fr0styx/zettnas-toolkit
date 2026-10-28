@@ -87,6 +87,10 @@ def _daemon_status() -> dict:
 
 
 HEALTH_STARTUP_GRACE_SECS = 60.0
+# the users database is opened at most every 5 minutes for the health probe while it is fine;
+# a failure is looked at again on every probe (PERF-30)
+DB_CHECK_EVERY_SECS = 300.0
+_DB_CHECK: dict = {"state": "", "at": 0.0}
 
 
 def _health_checks() -> dict[str, str]:
@@ -99,14 +103,17 @@ def _health_checks() -> dict[str, str]:
         checks["collector"] = "starting"
     else:
         checks["collector"] = "failed"
-    try:
-        from backend.users_db import users_db_session
+    now = time.time()
+    if now - _DB_CHECK["at"] >= DB_CHECK_EVERY_SECS or _DB_CHECK["state"] != "ok":
+        try:
+            from backend.users_db import users_db_session
 
-        with users_db_session(None) as conn:
-            conn.execute("SELECT count(*) FROM users").fetchone()  # a real table, not just a file
-        checks["database"] = "ok"
-    except Exception:
-        checks["database"] = "failed"
+            with users_db_session(None) as conn:
+                conn.execute("SELECT count(*) FROM users").fetchone()  # a real table, not just a file
+            _DB_CHECK.update(state="ok", at=now)
+        except Exception:
+            _DB_CHECK.update(state="failed", at=now)
+    checks["database"] = _DB_CHECK["state"]
     checks["data_dir"] = "ok" if os.access(config.DATA_DIR, os.W_OK) else "failed"
     return checks
 

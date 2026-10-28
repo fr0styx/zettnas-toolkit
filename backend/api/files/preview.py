@@ -179,6 +179,7 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
 )
 async def fs_preview_image(
     path: str,
+    request: Request,
     thumb: int | None = None,
     max_dim: int | None = None,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
@@ -203,13 +204,16 @@ async def fs_preview_image(
         raise HTTPException(status_code=415, detail="No preview for this file type")
 
     limit = thumbs.THUMB_SIZE if thumb else (min(max_dim, thumbs.MAX_SIZE) if max_dim else 2560)
+    mtime = os.path.getmtime(target)
+    etag = f'"{hashlib.md5(f"{target}:{mtime}:{limit}".encode()).hexdigest()}"'
+    if etag in (request.headers.get("if-none-match") or ""):
+        # the browser already has this picture: no thumbnail read, no bytes sent (PERF-26)
+        return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "private, max-age=86400"})
     data = await asyncio.to_thread(thumbs.get, target, limit)
     if data is None:
         if kind == "image" and not is_heif:
             return FileResponse(target, headers=_user_file_headers(mimetypes.guess_type(target)[0]))
         raise HTTPException(status_code=415, detail="This file can't be previewed")
-    mtime = os.path.getmtime(target)
-    etag = f'"{hashlib.md5(f"{target}:{mtime}:{limit}".encode()).hexdigest()}"'
     return Response(
         content=data,
         media_type="image/webp",

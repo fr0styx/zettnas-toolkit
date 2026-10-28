@@ -54840,7 +54840,7 @@
   },
   "/api/v1/ups": {
    "get": {
-    "description": "Returns real-time UPS telemetry enriched with power flow metrics and voltage data.",
+    "description": "Returns real-time UPS telemetry enriched with power flow metrics and voltage data. Someone\nis looking (the Power pane): with no UPS found, it looks again at the usual pace (PERF-19).",
     "operationId": "get_ups_telemetry_api_v1_ups_get",
     "responses": {
      "200": {

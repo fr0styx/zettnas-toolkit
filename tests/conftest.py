@@ -187,6 +187,15 @@ def _fresh_data_folder():
 
 
 @pytest.fixture(autouse=True)
+def _fresh_health_check():
+    """/api/health caches its database check (PERF-30): each test starts without a cached answer."""
+    from backend.api import system
+
+    system._DB_CHECK.update(state="", at=0.0)
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _web_off():
     """A chat turn sets "web allowed" for its context; each test starts with it off (ARC-13)."""
     from backend.services.chat_web_tools import _WEB_ALLOWED

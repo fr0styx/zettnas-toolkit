@@ -33,6 +33,16 @@ PROC_NET_ROUTE = "/proc/net/route"
 _CACHED_UPS: dict[str, Any] = {}
 _LAST_UPS_POLL = 0.0
 _UPS_CACHE_TTL = 10.0
+
+# No UPS set up and none found (PERF-19): the next look is after 1, then 5, then every 15 minutes,
+# instead of a full probe (USB, apcupsd, NUT, two CLIs, the config recovery tiers) every 10 s. A
+# changed USB device list, the Power pane, or saving a config looks again at once. A UPS that was
+# set up keeps the 10 s polling: an outage of its server must show quickly.
+NOTHING_FOUND_BACKOFF_SECS = (60.0, 300.0, 900.0)
+_NOTHING_FOUND: dict[str, Any] = {"until": 0.0, "step": 0, "usb": None}
+_DEFAULT_CFG_MEMO: dict[str, Any] = {"until": 0.0, "cfg": None, "env": None}
+# the environment variables the last recovery tier reads: a change recovers again
+_UPS_ENV_KEYS = ("UPS_HOST", "UPS_PORT", "NUT_HOST", "NUT_PORT", "UPS_TYPE", "NUT_UPS_NAME")
 # The hidraw UPS found by the last scan: node, device path, ids and parsed report descriptor
 _HID_UPS_CACHE: dict[str, Any] = {}
 
@@ -150,6 +160,28 @@ def _detect_host_nut_config(custom_dirs: list[str] | None = None) -> dict[str, A
     return None
 
 
+def _usb_devices() -> tuple[str, ...]:
+    """The USB device names the host lists (sysfs, no device I/O): a UPS plugged in changes it."""
+    names: list[str] = []
+    for root in USB_DEVICE_ROOTS:
+        try:
+            names += os.listdir(root)
+        except OSError:
+            continue
+    return tuple(sorted(names))
+
+
+def _ups_set_up() -> bool:
+    """A UPS was set up: the saved config names a host or a mode."""
+    stored = read_json_cached(UPS_CONFIG_FILE, None, max_age=SETTINGS_RECHECK_SECS)
+    return isinstance(stored, dict) and bool(stored.get("host") or stored.get("mode"))
+
+
+def _forget_nothing_found() -> None:
+    _NOTHING_FOUND.update(until=0.0, step=0, usb=None)
+    _DEFAULT_CFG_MEMO.update(until=0.0, cfg=None, env=None)
+
+
 def load_ups_config() -> dict[str, Any]:
     """Loads persistent UPS configuration across multi-tier storage:
     1. Primary JSON state (UPS_CONFIG_FILE)
@@ -169,6 +201,13 @@ def load_ups_config() -> dict[str, Any]:
     if isinstance(stored, dict) and (stored.get("host") or stored.get("mode")):
         cfg.update(stored)
         return cfg
+
+    # Nothing to recover the last time: the defaults again, without the database, the pool mirror
+    # on the array and the host NUT search (PERF-19)
+    env_now = tuple(os.getenv(k) or "" for k in _UPS_ENV_KEYS)
+    memo = _DEFAULT_CFG_MEMO.get("cfg")
+    if memo is not None and time.time() < _DEFAULT_CFG_MEMO["until"] and _DEFAULT_CFG_MEMO.get("env") == env_now:
+        return copy.deepcopy(memo)
 
     # Tier 2: SQLite database
     try:
@@ -234,6 +273,10 @@ def load_ups_config() -> dict[str, Any]:
             )
         except Exception as e:
             logger.debug(f"[UPS] Could not write recovered config to file: {e}")
+    else:
+        _DEFAULT_CFG_MEMO.update(
+            until=time.time() + NOTHING_FOUND_BACKOFF_SECS[-1], cfg=copy.deepcopy(cfg), env=env_now
+        )
 
     return cfg
 
@@ -299,6 +342,7 @@ def save_ups_config(new_cfg: dict[str, Any]) -> dict[str, Any]:
     except Exception as e:
         logger.debug(f"[UPS] Error writing pool mirror: {e}")
 
+    _forget_nothing_found()
     _CACHED_UPS = {}
     _LAST_UPS_POLL = 0.0
     return mask_ups_config(merged)
@@ -1342,11 +1386,21 @@ def run_ups_self_test() -> dict[str, Any]:
     }
 
 
-def read_ups_status(force: bool = False) -> dict[str, Any]:
-    """Reads enriched real-time UPS telemetry across configured protocols."""
+def read_ups_status(force: bool = False, reprobe: bool = False) -> dict[str, Any]:
+    """Reads enriched real-time UPS telemetry across configured protocols. With no UPS set up and
+    none found, it looks again only on the back-off schedule (PERF-19); `reprobe` (the Power pane)
+    looks at the usual 10 s pace, `force` at once."""
     global _CACHED_UPS, _LAST_UPS_POLL
     now = time.time()
     if not force and _CACHED_UPS and (now - _LAST_UPS_POLL) < _UPS_CACHE_TTL:
+        return _CACHED_UPS
+    if (
+        not force
+        and not reprobe
+        and _CACHED_UPS.get("protocol") == "offline"
+        and now < _NOTHING_FOUND["until"]
+        and _usb_devices() == _NOTHING_FOUND["usb"]
+    ):
         return _CACHED_UPS
 
     cfg = load_ups_config()
@@ -1482,7 +1536,14 @@ def read_ups_status(force: bool = False) -> dict[str, Any]:
         }
         _CACHED_UPS = status_obj
         _LAST_UPS_POLL = now
+        if _ups_set_up():
+            _NOTHING_FOUND.update(until=0.0, step=0, usb=None)
+        else:
+            step = int(_NOTHING_FOUND["step"])
+            delay = NOTHING_FOUND_BACKOFF_SECS[min(step, len(NOTHING_FOUND_BACKOFF_SECS) - 1)]
+            _NOTHING_FOUND.update(until=now + delay, step=step + 1, usb=_usb_devices())
         return status_obj
+    _NOTHING_FOUND.update(until=0.0, step=0, usb=None)
 
     if raw.get("PERMISSION_ERROR"):
         status_obj = {

@@ -19,7 +19,7 @@ import zipfile
 from typing import Any, BinaryIO, Optional
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within
+from backend.fsutil import atomic_write_json, json_locked, read_json, read_json_cached, resolve_within
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
 from backend.services.rclone_engine import get_rclone_engine
 
@@ -942,6 +942,9 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
 # =========================================================================
 
 _SCHEDULER_RUNNING = False
+# set to stop the scheduler at once; it otherwise wakes once a minute, not every second (PERF-21)
+_SCHEDULER_WAKE = threading.Event()
+SCHEDULER_TICK_SECS = 60.0
 _SCHEDULER_THREAD: threading.Thread | None = None
 
 SCHEDULE_INTERVALS = {
@@ -956,7 +959,9 @@ def _backup_scheduler_loop() -> None:
     logger.info("[HYPER-BACKUP] Scheduler daemon started.")
     while _SCHEDULER_RUNNING:
         try:
-            jobs = get_backup_jobs()
+            # read-only here, so the cached copy (re-read when the file changes; PERF-21)
+            raw_jobs = read_json_cached(BACKUP_JOBS_FILE, [], max_age=SCHEDULER_TICK_SECS)
+            jobs = raw_jobs if isinstance(raw_jobs, list) else []
             now = time.time()
             for job in jobs:
                 if not job.get("enabled", True):
@@ -983,11 +988,9 @@ def _backup_scheduler_loop() -> None:
         from backend.services.supervisor import beat
 
         beat("BackupScheduler")
-        # Sleep in short increments for responsive stopping
-        for _ in range(60):
-            if not _SCHEDULER_RUNNING:
-                break
-            time.sleep(1)
+        # one wait a minute; stop_backup_scheduler sets the event to end it at once (PERF-21)
+        if _SCHEDULER_WAKE.wait(SCHEDULER_TICK_SECS):
+            _SCHEDULER_WAKE.clear()
 
     logger.info("[HYPER-BACKUP] Scheduler daemon stopped.")
 
@@ -1030,3 +1033,4 @@ def stop_backup_scheduler() -> None:
     """Stops the background backup scheduler daemon."""
     global _SCHEDULER_RUNNING
     _SCHEDULER_RUNNING = False
+    _SCHEDULER_WAKE.set()

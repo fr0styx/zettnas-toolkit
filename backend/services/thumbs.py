@@ -67,6 +67,9 @@ def _paths(key: str) -> tuple[str, str]:
     return base + ".webp", base + ".fail"
 
 
+TOUCH_EVERY_SECS = 86400.0
+
+
 def get(path: str, limit: int = THUMB_SIZE) -> bytes | None:
     """WebP bytes no larger than `limit` on the longest side, or None if the file can't be decoded."""
     limit = max(32, min(int(limit), MAX_SIZE))
@@ -76,7 +79,9 @@ def get(path: str, limit: int = THUMB_SIZE) -> bytes | None:
         with open(hit, "rb") as f:
             data = f.read()
         try:
-            os.utime(hit)  # recently used: trimmed last
+            # recently used, so trimmed last: touched at most once a day, not on every hit (PERF-26)
+            if time.time() - os.stat(hit).st_mtime > TOUCH_EVERY_SECS:
+                os.utime(hit)
         except OSError:
             logger.debug("Could not touch %s", hit, exc_info=True)
         return data

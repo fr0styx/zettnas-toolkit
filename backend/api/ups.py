@@ -86,8 +86,9 @@ class UpsSimulateRequest(BaseModel):
 
 @router.get("/ups", dependencies=[Depends(require_scope("hardware:read", "system:view"))])
 async def get_ups_telemetry():
-    """Returns real-time UPS telemetry enriched with power flow metrics and voltage data."""
-    return await asyncio.to_thread(read_ups_status)
+    """Returns real-time UPS telemetry enriched with power flow metrics and voltage data. Someone
+    is looking (the Power pane): with no UPS found, it looks again at the usual pace (PERF-19)."""
+    return await asyncio.to_thread(read_ups_status, reprobe=True)
 
 
 @router.get("/ups/config", dependencies=[Depends(require_scope("system:view"))])
