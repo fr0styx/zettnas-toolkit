@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "fm.search_partial_asleep": "A disk here is asleep, so only files the AI index knows about are shown.",
+  "fm.search_partial_capped": "This folder is very large, so the search stopped early. Search a smaller folder to see everything.",
   "ai.config_group_chat": "Ask Zetty",
   "ai.config_group_chat_desc": "The model that answers, where it runs, and how long chats are kept.",
   "ai.config_group_rag": "AI search",

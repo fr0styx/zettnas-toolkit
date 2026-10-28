@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "fm.search_partial_asleep": "Ein Laufwerk hier schläft, daher werden nur Dateien aus dem KI-Index angezeigt.",
+  "fm.search_partial_capped": "Dieser Ordner ist sehr groß, daher wurde die Suche früh beendet. Durchsuchen Sie einen kleineren Ordner, um alles zu sehen.",
   "ai.config_group_chat": "Ask Zetty",
   "ai.config_group_chat_desc": "Das Modell, das antwortet, wo es läuft und wie lange Chats bleiben.",
   "ai.config_group_rag": "Suche & Wissen (RAG)",

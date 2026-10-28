@@ -289,10 +289,24 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
 async def browse(
     path: str = "",
     dirs_only: str = "0",
+    limit: int | None = None,
+    offset: int = 0,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
+    """A folder's entries. With `limit`, one page of them and the `total` (PERF-25); without it,
+    all of them as before."""
     check_user_path_access(path, principal, allow_list=True)
-    return await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1", principal)
+    result = await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1", principal)
+    if limit is not None and isinstance(result, dict) and isinstance(result.get("dirs"), list):
+        entries = result["dirs"]
+        start = max(0, offset)
+        result = {
+            **result,
+            "dirs": entries[start : start + max(1, min(limit, 5000))],
+            "total": len(entries),
+            "offset": start,
+        }
+    return result
 
 
 @router.get("/fs/roots", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])

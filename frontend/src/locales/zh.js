@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "fm.search_partial_asleep": "此处有磁盘处于休眠状态，因此仅显示 AI 索引中已有的文件。",
+  "fm.search_partial_capped": "此文件夹非常大，搜索已提前停止。请在较小的文件夹中搜索以查看全部结果。",
   "ai.config_group_chat": "Ask Zetty",
   "ai.config_group_chat_desc": "回答所用的模型、运行位置以及聊天保留时长。",
   "ai.config_group_rag": "搜索与知识（RAG）",

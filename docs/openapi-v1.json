@@ -40179,6 +40179,7 @@
   },
   "/api/v1/browse": {
    "get": {
+    "description": "A folder's entries. With `limit`, one page of them and the `total` (PERF-25); without it,\nall of them as before.",
     "operationId": "browse_api_v1_browse_get",
     "parameters": [
      {
@@ -40199,6 +40200,32 @@
        "default": "0",
        "title": "Dirs Only",
        "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Limit"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
       }
      }
     ],

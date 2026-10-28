@@ -25,6 +25,10 @@ class ChecksumRequest(BaseModel):
     algorithm: str = Field("sha256", pattern="^(sha256|sha1|md5)$")
 
 
+FOLDER_SIZE_MAX_ENTRIES = 500_000
+FOLDER_SIZE_MAX_SECS = 60.0
+
+
 class FolderSizeRequest(BaseModel):
     path: str
     force_wake: bool = False
@@ -133,6 +137,7 @@ async def fs_folder_size(
         total_sz = 0
         f_count = 0
         d_count = 0
+        deadline = time.monotonic() + FOLDER_SIZE_MAX_SECS
         for root, dirs, files in os.walk(target):
             prune_protected(root, dirs)
             d_count += len(dirs)
@@ -144,10 +149,14 @@ async def fs_folder_size(
                     f_count += 1
                 except OSError:
                     pass
-        return total_sz, f_count, d_count
+            # a walk over millions of files stops and says "at least" (PERF-25)
+            if f_count + d_count >= FOLDER_SIZE_MAX_ENTRIES or time.monotonic() > deadline:
+                return total_sz, f_count, d_count, True
+        return total_sz, f_count, d_count, False
 
-    total_sz, f_count, d_count = await asyncio.to_thread(_compute_size)
-    _FOLDER_SIZE_CACHE[target] = (now, cur_mtime, total_sz, f_count, d_count)
+    total_sz, f_count, d_count, capped = await asyncio.to_thread(_compute_size)
+    if not capped:
+        _FOLDER_SIZE_CACHE[target] = (now, cur_mtime, total_sz, f_count, d_count)
 
     return {
         "status": "ok",
@@ -157,6 +166,7 @@ async def fs_folder_size(
         "dirs_count": d_count,
         "is_standby": False,
         "cached": False,
+        "at_least": capped,
     }
 
 

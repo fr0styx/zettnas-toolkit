@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "fm.search_partial_asleep": "Un disco de aquí está en reposo, así que solo se muestran los archivos que conoce el índice de IA.",
+  "fm.search_partial_capped": "Esta carpeta es muy grande, así que la búsqueda se detuvo antes. Busca en una carpeta más pequeña para verlo todo.",
   "ai.config_group_chat": "Ask Zetty",
   "ai.config_group_chat_desc": "El modelo que responde, dónde se ejecuta y cuánto tiempo se guardan los chats.",
   "ai.config_group_rag": "Búsqueda y conocimiento (RAG)",

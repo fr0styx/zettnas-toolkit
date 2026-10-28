@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "fm.search_partial_asleep": "Un disque ici est en veille : seuls les fichiers connus de l'index IA sont affichés.",
+  "fm.search_partial_capped": "Ce dossier est très volumineux, la recherche s'est donc arrêtée tôt. Cherchez dans un dossier plus petit pour tout voir.",
   "ai.config_group_chat": "Ask Zetty",
   "ai.config_group_chat_desc": "Le modèle qui répond, où il tourne et combien de temps les discussions sont gardées.",
   "ai.config_group_rag": "Recherche et connaissances (RAG)",

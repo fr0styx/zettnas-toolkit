@@ -8,6 +8,8 @@
    ],
    "params": [
     "dirs_only",
+    "limit",
+    "offset",
     "path",
     "principal"
    ],
@@ -1356,6 +1358,7 @@
   },
   {
    "body": {
+    "at_least": false,
     "cached": false,
     "dirs_count": 7,
     "files_count": 11,
@@ -1536,6 +1539,7 @@
     ],
     "limit": 50,
     "offset": 0,
+    "partial": null,
     "query": "b.txt",
     "total": "<int>"
    },
@@ -1547,6 +1551,7 @@
     "items": [],
     "limit": 50,
     "offset": 0,
+    "partial": null,
     "query": "zzzz-nothing",
     "total": "<int>"
    },
@@ -2276,7 +2281,7 @@
    "async": "(token: str, request: starlette.requests.Request, info: bool = False)"
   },
   "browse": {
-   "async": "(path: str = '', dirs_only: str = '0', principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+   "async": "(path: str = '', dirs_only: str = '0', limit: int | None = None, offset: int = 0, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "create_share_link": {
    "async": "(req: CreateShareLinkRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"

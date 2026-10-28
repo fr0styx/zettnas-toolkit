@@ -211,6 +211,57 @@ def api_deprecation_headers(path: str, token: str) -> dict[str, str]:
     }
 
 
+class JsonGzip:
+    """Gzips JSON answers of 1 KB or more when the browser accepts it (PERF-25). Event streams,
+    files and anything else pass through untouched, so SSE and downloads keep streaming."""
+
+    def __init__(self, app: Any, minimum_size: int = 1024, level: int = 5) -> None:
+        self.app = app
+        self.minimum_size = minimum_size
+        self.level = level
+
+    async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
+        if scope.get("type") != "http" or scope.get("method") == "HEAD":
+            await self.app(scope, receive, send)
+            return
+        accept = b"".join(v for k, v in scope.get("headers") or [] if k == b"accept-encoding")
+        if b"gzip" not in accept:
+            await self.app(scope, receive, send)
+            return
+        held: dict[str, Any] = {"start": None, "body": [], "json": False}
+
+        async def gz_send(message: dict) -> None:
+            if message["type"] == "http.response.start":
+                headers = {k.lower(): v for k, v in message.get("headers") or []}
+                held["json"] = headers.get(b"content-type", b"").startswith(b"application/json") and (
+                    b"content-encoding" not in headers
+                )
+                if not held["json"]:
+                    await send(message)
+                    return
+                held["start"] = message
+                return
+            if message["type"] != "http.response.body" or not held["json"]:
+                await send(message)
+                return
+            held["body"].append(message.get("body", b""))
+            if message.get("more_body"):
+                return
+            body = b"".join(held["body"])
+            start = held["start"]
+            headers = [(k, v) for k, v in start.get("headers") or [] if k.lower() not in (b"content-length",)]
+            if len(body) >= self.minimum_size:
+                import gzip
+
+                body = gzip.compress(body, compresslevel=self.level)
+                headers += [(b"content-encoding", b"gzip"), (b"vary", b"Accept-Encoding")]
+            headers.append((b"content-length", str(len(body)).encode()))
+            await send({**start, "headers": headers})
+            await send({"type": "http.response.body", "body": body})
+
+        await self.app(scope, receive, gz_send)
+
+
 class BodySizeLimit:
     """ASGI middleware that applies body_limit_for() to bodies sent without a Content-Length."""
 

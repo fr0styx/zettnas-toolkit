@@ -1527,7 +1527,7 @@ export class FileManagerWindow {
         return;
       }
       showToast(t('fm.searching', `Searching for "${q}"...`), 'info');
-      const res = await api.get(`/api/fs/search?path=${encodeURIComponent(this.currentPath)}&q=${encodeURIComponent(q)}`, {
+      const res = await api.get(`/api/fs/search?path=${encodeURIComponent(this.currentPath)}&q=${encodeURIComponent(q)}&limit=200`, {
         signal: this.searchAbortController.signal,
       });
       if (res && Array.isArray(res.items)) {
@@ -1535,6 +1535,12 @@ export class FileManagerWindow {
         this.isSearching = true;
         this.renderViewport();
         showToast(t('fm.search_results', `Found ${res.items.length} item(s)`).replace('{count}', res.items.length), 'success');
+        // PERF-25: a sleeping disk is searched through the AI index only, and a huge walk stops early
+        if (res.partial === 'asleep') {
+          showToast(t('fm.search_partial_asleep', 'A disk here is asleep, so only files the AI index knows about are shown.'), 'info');
+        } else if (res.partial === 'capped') {
+          showToast(t('fm.search_partial_capped', 'This folder is very large, so the search stopped early. Search a smaller folder to see everything.'), 'info');
+        }
       }
     } catch (err) {
       if (err.name !== 'AbortError') {

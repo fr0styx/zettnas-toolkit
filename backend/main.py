@@ -526,8 +526,9 @@ async def correlation_id_middleware(request: Request, call_next):
 
 
 # Applies the body size limit to requests sent without a Content-Length (outermost)
-from backend.auth import BodySizeLimit  # noqa: E402
+from backend.auth import BodySizeLimit, JsonGzip  # noqa: E402
 
+app.add_middleware(JsonGzip)  # JSON answers gzipped; streams and files untouched (PERF-25)
 app.add_middleware(BodySizeLimit)
 
 # WebDAV streaming reverse proxy
