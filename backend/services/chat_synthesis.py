@@ -1132,7 +1132,7 @@ def _build_structured_llm_context(tool_results: list[dict[str, Any]]) -> str:
                     for p_idx, p in enumerate(photos[:6], start=1):
                         p_name = p.get("name") or p.get("file_name") or f"photo_{p_idx}"
                         p_path = p.get("path") or p.get("canonical_path") or ""
-                        p_date = p.get("taken_at") or "unknown"
+                        p_date = p.get("taken") or p.get("taken_at") or "unknown"
                         p_tags = (
                             ", ".join(p.get("scene_tags", []))
                             if isinstance(p.get("scene_tags"), list)

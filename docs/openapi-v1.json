@@ -25119,6 +25119,18 @@
       ],
       "title": "Path Prefix"
      },
+     "place": {
+      "anyOf": [
+       {
+        "maxLength": 120,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Place"
+     },
      "q": {
       "anyOf": [
        {
@@ -25183,6 +25195,18 @@
        }
       ],
       "title": "Tags"
+     },
+     "taken": {
+      "anyOf": [
+       {
+        "maxLength": 7,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Taken"
      }
     },
     "title": "MultimodalSearchRequest",
@@ -38159,6 +38183,30 @@
     ]
    }
   },
+  "/api/v1/ai/photo-facets": {
+   "get": {
+    "description": "The photo filters: the years and places of the photos this person may see (AI-24).",
+    "operationId": "get_photo_facets_api_v1_ai_photo_facets_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Photo Facets Api V1 Ai Photo Facets Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get Photo Facets",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
   "/api/v1/ai/reindex": {
    "post": {
     "description": "Triggers background in-place re-embedding without waking sleeping hard drives.",
@@ -38493,6 +38541,40 @@
         }
        ],
        "title": "Tags"
+      }
+     },
+     {
+      "in": "query",
+      "name": "taken",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 7,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Taken"
+      }
+     },
+     {
+      "in": "query",
+      "name": "place",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 120,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Place"
       }
      }
     ],
@@ -47925,6 +48007,40 @@
         }
        ],
        "title": "Tags"
+      }
+     },
+     {
+      "in": "query",
+      "name": "taken",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 7,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Taken"
+      }
+     },
+     {
+      "in": "query",
+      "name": "place",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "maxLength": 120,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Place"
       }
      }
     ],

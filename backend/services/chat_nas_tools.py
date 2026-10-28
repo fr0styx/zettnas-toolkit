@@ -718,6 +718,10 @@ def tool_search_nas_knowledge(
                 "thumbnail_url": p.get("thumbnail_url"),
                 "scene_tags": p.get("scene_tags", []),
                 "colors": p.get("object_colors") or p.get("dominant_colors") or [],
+                # what the picture shows, when and where it was taken (AI-24)
+                "caption": p.get("caption"),
+                "taken": p.get("taken"),
+                "place": p.get("place"),
             }
             for p in raw_photos[:6]
         ],

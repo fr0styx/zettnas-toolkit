@@ -1380,8 +1380,9 @@ class RagIndexingMixin:
                             frame_colors_json, object_colors_text, color_hist_f32,
                             center_color_hist_f32, scene_tags_json, auto_tags_text,
                             caption_text, ocr_text, vision_embedding_f32, thumb_webp,
-                            visibility_tier, owner_username, share_name, allowed_users_csv
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            visibility_tier, owner_username, share_name, allowed_users_csv,
+                            location_label, when_where_done
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
                         """,
                         (
                             file_id,
@@ -1413,6 +1414,7 @@ class RagIndexingMixin:
                             owner_user,
                             share_name,
                             allowed_csv,
+                            photo_data.get("location_label", ""),
                         ),
                     )
 

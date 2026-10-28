@@ -3451,6 +3451,8 @@ export default {
   "tags.title": "Filtrar documentos:",
   "tags.group": "Filtros de documentos",
   "tags.clear": "Quitar",
+  "photo_filters.title": "Fotos de:",
+  "photo_filters.group": "Filtros de fotos",
   "dup.button": "Duplicados",
   "dup.title": "Archivos duplicados",
   "dup.photo_group": "Fotos que se ven iguales",

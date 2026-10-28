@@ -70,6 +70,8 @@ COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
         ("document_chunks", "structural_context", "TEXT NOT NULL DEFAULT ''"),
         ("document_chunks", "raw_chunk_text", "TEXT NOT NULL DEFAULT ''"),
         ("indexed_files", "embedding_model", "TEXT NOT NULL DEFAULT 'zett_lexical_384d'"),
+        # 1 once the photo's EXIF date and position were read (AI-24); older photos get 0
+        ("photo_assets", "when_where_done", "INTEGER NOT NULL DEFAULT 0"),
     ],
 }
 

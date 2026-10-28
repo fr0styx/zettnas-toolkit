@@ -150,6 +150,9 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
          using both spatial pixel layout AND path/EXIF context
       6. Runs two-stage fast OCR / embedded text extraction for text-bearing photos
     """
+    from backend.services import photo_place
+
+    photo_place.ensure_heif()  # iPhone photos (AI-24)
     img_target = io.BytesIO(file_path) if isinstance(file_path, bytes) else file_path
     with Image.open(img_target) as img:
         orig_w, orig_h = img.size
@@ -402,7 +405,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
                     logger.debug("backend.services.rag_engine.analyze_photo_asset: ignored error", exc_info=True)
 
     check_ext = file_path if isinstance(file_path, str) else file_name
-    if check_ext.lower().endswith((".jpg", ".jpeg", ".tiff", ".tif", ".webp")):
+    if check_ext.lower().endswith(photo_place.EXIF_EXTENSIONS):
         try:
             import exifread  # type: ignore
 
@@ -427,6 +430,10 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
         except Exception:
             logger.debug("backend.services.rag_engine.analyze_photo_asset: ignored error", exc_info=True)
 
+    # when and where (AI-24): the capture date and GPS position, and the town for it, offline
+    taken_at, gps_lat, gps_lon = photo_place.when_where(file_path, file_name)
+    location_label = photo_place.place_for(gps_lat, gps_lon)
+
     ocr_text = sanitize_string("\n".join(p for p in ocr_text_parts if p)).strip()
     if ocr_text:
         for w in re.findall(r"[a-z0-9]+", ocr_text.lower()):
@@ -442,6 +449,9 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
         f"Photo ({orig_w}x{orig_h}) featuring {', '.join(scene_tags or ['scene'])} "
         f"with {', '.join(object_colors_list[:3] or frame_colors_list[:3] or ['neutral'])} colors"
     )
+    when_where_text = photo_place.caption_suffix(taken_at, location_label)
+    if when_where_text:
+        caption_text = f"{caption_text}, {when_where_text}"
     if ocr_text:
         caption_text = f"{caption_text}. Text: {ocr_text[:300]}"
 
@@ -463,6 +473,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
         "camera_model": camera_model,
         "gps_lat": gps_lat,
         "gps_lon": gps_lon,
+        "location_label": location_label,
         "phash_hex": phash_hex,
         "dominant_hex": dominant_hex,
         "palette_json": json.dumps(palette_hex),
@@ -850,6 +861,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                         gps_lat REAL,
                         gps_lon REAL,
                         location_label TEXT NOT NULL DEFAULT '',
+                        when_where_done INTEGER NOT NULL DEFAULT 0,
                         phash_hex TEXT NOT NULL DEFAULT '',
                         dominant_hex TEXT NOT NULL DEFAULT '#1e293b',
                         palette_json TEXT NOT NULL DEFAULT '[]',

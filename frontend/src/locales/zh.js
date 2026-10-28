@@ -3451,6 +3451,8 @@ export default {
   "tags.title": "筛选文档：",
   "tags.group": "文档筛选",
   "tags.clear": "清除",
+  "photo_filters.title": "照片来自：",
+  "photo_filters.group": "照片筛选",
   "dup.button": "重复文件",
   "dup.title": "重复文件",
   "dup.photo_group": "看起来相同的照片",

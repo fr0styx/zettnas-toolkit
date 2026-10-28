@@ -153,6 +153,76 @@ class RagSearchMixin:
         )
         return (sql, [*public_params, username, username])
 
+    def _photo_filters(
+        self, query: str, mode: str | None, taken: str | None, place: str | None
+    ) -> tuple[tuple[float, float] | None, str | None]:
+        """The date span and place the photos are filtered on (AI-24): the chips chosen, else what
+        a question about photos names ("photos from Rome in June 2023")."""
+        from backend.services import photo_place
+
+        when = photo_place.span_for(taken)
+        chosen = (place or "").strip()[:120] or None
+        if (query or "").strip() and (
+            (mode or "").lower() in ("photos", "photo", "images", "image", "visual")
+            or photo_place.asks_for_photos(query)
+        ):
+            if when is None:
+                found = photo_place.when_in_question(query)
+                when = (found[0], found[1]) if found else None
+            if chosen is None:
+                chosen = photo_place.place_in_question(query, self._place_labels())
+        return when, chosen
+
+    def _place_labels(self) -> list[str]:
+        """The places photos were taken, for reading them in questions; kept ten minutes."""
+        cached = getattr(self, "_place_labels_cache", None)
+        if cached and time.time() - cached[0] < 600:
+            return cached[1]
+        labels: list[str] = []
+        try:
+            conn = self._get_conn(readonly=True)
+            try:
+                labels = [
+                    r[0]
+                    for r in conn.execute(
+                        "SELECT location_label FROM photo_assets WHERE location_label != '' GROUP BY location_label LIMIT 5000"
+                    )
+                ]
+            finally:
+                conn.close()
+        except sqlite3.Error:
+            logger.debug("[RAG] place labels unavailable", exc_info=True)
+        self._place_labels_cache = (time.time(), labels)
+        return labels
+
+    def photo_facets(self, principal: Any = None) -> dict[str, Any]:
+        """The years and places of the photos this person may see, with counts (the photo filter
+        chips, AI-24)."""
+        self._ensure_schema()
+        rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
+        conn = self._get_conn(readonly=True)
+        try:
+            years = conn.execute(
+                f"SELECT strftime('%Y', p.taken_at, 'unixepoch') AS y, COUNT(*) FROM photo_assets p "
+                f"JOIN indexed_files f ON f.file_id = p.file_id WHERE p.taken_at IS NOT NULL AND f.parse_status = 'ok' "
+                f"AND {rbac_sql} GROUP BY y ORDER BY y DESC LIMIT 40",
+                rbac_params,
+            ).fetchall()
+            places = conn.execute(
+                f"SELECT p.location_label, COUNT(*) AS n FROM photo_assets p JOIN indexed_files f ON f.file_id = p.file_id "
+                f"WHERE p.location_label != '' AND f.parse_status = 'ok' AND {rbac_sql} "
+                f"GROUP BY p.location_label ORDER BY n DESC, p.location_label LIMIT 24",
+                rbac_params,
+            ).fetchall()
+        except sqlite3.OperationalError:
+            return {"years": [], "places": []}
+        finally:
+            conn.close()
+        return {
+            "years": [{"value": str(r[0]), "count": int(r[1])} for r in years if r[0]],
+            "places": [{"value": r[0], "count": int(r[1])} for r in places],
+        }
+
     def tag_counts(self, principal: Any = None) -> dict[str, int]:
         """How many documents this person may see carry each auto-tag (the search filter chips)."""
         from backend.services import rag_tags
@@ -237,6 +307,8 @@ class RagSearchMixin:
         sort_by: str = "relevance",
         embedding_model: str | None = None,
         tags: list[str] | None = None,
+        taken: str | None = None,
+        place: str | None = None,
     ) -> dict[str, Any]:
         """
         100% Zero-Disk-Touch Cross-Modal Search over `/app/data/rag_index.db` (mode=ro).
@@ -249,6 +321,7 @@ class RagSearchMixin:
         from backend.services import rag_tags
 
         want_tags = rag_tags.valid(tags)
+        photo_when, photo_place_name = self._photo_filters(query, mode, taken, place)
         intent = parse_multimodal_query(query)
         cfg = self.get_config()
         fav_set = {os.path.normpath(p) for p in (cfg.get("favorites") or [])}
@@ -341,6 +414,8 @@ class RagSearchMixin:
                     path_prefix=path_prefix,
                     limit=max(limit * 2, 48),
                     principal=principal,
+                    when=photo_when,
+                    place=photo_place_name,
                 )
 
             # 2. Document / Recipe / Code / Audio Transcript Search Branch
@@ -547,9 +622,20 @@ class RagSearchMixin:
         path_prefix: str | None,
         limit: int,
         principal: Any,
+        when: tuple[float, float] | None = None,
+        place: str | None = None,
     ) -> list[dict[str, Any]]:
         rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
         sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
+        # date and place filters (AI-24): a photo without an EXIF date counts by its file date
+        if when:
+            sub_sql += " AND COALESCE(p.taken_at, f.mtime_ns / 1000000000.0) >= ? AND COALESCE(p.taken_at, f.mtime_ns / 1000000000.0) < ?"
+            sub_params = [*sub_params, when[0], when[1]]
+        if place:
+            sub_sql += " AND p.location_label LIKE ? ESCAPE '\\'"
+            esc = place.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            sub_params = [*sub_params, f"%{esc}%"]
+        filtered = bool(when or place)
 
         # FTS5 BM25 lexical lookup on rag_photos_fts, among the photos this person may see in the
         # chosen folder (AI-23)
@@ -562,6 +648,7 @@ class RagSearchMixin:
                            -bm25(rag_photos_fts, 3.0, 5.0, 5.0, 4.0, 2.0, 4.0) AS raw_bm25
                     FROM rag_photos_fts
                     JOIN indexed_files f ON f.file_id = rag_photos_fts.rowid
+                    JOIN photo_assets p ON p.file_id = rag_photos_fts.rowid
                     WHERE rag_photos_fts MATCH ? AND f.parse_status = 'ok' AND {rbac_sql} AND {sub_sql}
                     ORDER BY raw_bm25 DESC
                     LIMIT 250
@@ -579,7 +666,7 @@ class RagSearchMixin:
                 p.taken_at, p.camera_make, p.camera_model, p.dominant_hex, p.palette_json,
                 p.object_colors_json, p.frame_colors_json, p.color_hist_f32, p.center_color_hist_f32,
                 p.scene_tags_json, p.auto_tags_text, p.caption_text, p.ocr_text, p.vision_embedding_f32,
-                f.canonical_path, f.size_bytes, f.mtime_ns, f.backing_dev, f.doc_type, f.doc_metadata_json"""
+                p.location_label, f.canonical_path, f.size_bytes, f.mtime_ns, f.backing_dev, f.doc_type, f.doc_metadata_json"""
         # Candidates: every keyword hit (captions, OCR, tags), then the newest photos for the
         # colour and scene scoring; before, 2,000 photos in no particular order (AI-2)
         rows = []
@@ -602,7 +689,7 @@ class RagSearchMixin:
             FROM photo_assets p
             JOIN indexed_files f ON f.file_id = p.file_id
             WHERE f.parse_status = 'ok' AND {rbac_sql} AND {sub_sql} {exclude_sql}
-            ORDER BY f.mtime_ns DESC
+            ORDER BY {"COALESCE(p.taken_at, f.mtime_ns / 1000000000.0)" if filtered else "f.mtime_ns"} DESC
             LIMIT {PHOTO_RECENT_CANDIDATES}
             """,
             rbac_params + sub_params + seen_photo_ids,
@@ -692,12 +779,13 @@ class RagSearchMixin:
             final_score = min(1.0, (base_score + b_comp) * color_penalty_mult)
 
             # Filter out weak non-matches when a specific query/filter was provided
-            if raw_query.strip() and not req_colors and not req_scenes and s_bm25 <= 0.0:
+            # a photo the date or place filter chose is a match by itself (AI-24)
+            if raw_query.strip() and not req_colors and not req_scenes and s_bm25 <= 0.0 and not filtered:
                 photo_haystack = f"{r['file_name']} {r['auto_tags_text']} {r['caption_text']} {r['ocr_text']}".lower()
                 q_words = [w for w in text_tokens(q_lower) if w not in _STOPWORDS and (len(w) >= 3 or _has_cjk(w))]
                 if q_words and not any(_token_matches_word(w, photo_haystack) for w in q_words) and s_vec < 0.48:
                     continue
-            if (raw_query.strip() or req_colors or req_scenes) and final_score < 0.12:
+            if (raw_query.strip() or req_colors or req_scenes) and final_score < 0.12 and not filtered:
                 continue
 
             backing_dev = r["backing_dev"] or rag_standby.resolve_path_backing_dev(c_path)
@@ -738,6 +826,10 @@ class RagSearchMixin:
                     "width": r["width"],
                     "height": r["height"],
                     "camera_model": r["camera_model"] or None,
+                    "taken_at": r["taken_at"],
+                    "taken": time.strftime("%Y-%m-%d", time.gmtime(r["taken_at"])) if r["taken_at"] else None,
+                    "place": r["location_label"] or None,
+                    "caption": r["caption_text"] or None,
                     "disk_id": backing_dev or "nvme0n1",
                     "disk_state": disk_state,
                     "size_bytes": int(r["size_bytes"]),

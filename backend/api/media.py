@@ -129,6 +129,8 @@ class MultimodalSearchRequest(BaseModel):
     path_prefix: str | None = Field(default=None, max_length=512)
     limit: int = Field(default=24, ge=1, le=100)
     tags: list[str] | None = Field(default=None, max_length=6)  # auto-tag filters (B8)
+    taken: str | None = Field(default=None, max_length=7)  # photos from "2023" or "2023-06" (AI-24)
+    place: str | None = Field(default=None, max_length=120)  # photos taken there (AI-24)
 
 
 class RagAskRequest(BaseModel):
@@ -895,6 +897,8 @@ async def search_multimodal_get(
     path_prefix: str | None = Query(default=None, max_length=512),
     limit: int = Query(default=24, ge=1, le=100),
     tags: str | None = Query(default=None, max_length=128),
+    taken: str | None = Query(default=None, max_length=7),
+    place: str | None = Query(default=None, max_length=120),
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
     """Zero-Disk-Touch Cross-Modal Visual & Document Search (GET)."""
@@ -922,6 +926,8 @@ async def search_multimodal_get(
         match_tab,
         sort_by,
         tags=[t for t in (tags or "").split(",") if t.strip()] or None,
+        taken=taken,
+        place=place,
     )
     ai_access.log_request(principal, "search", "", False, "answered")
     return await _with_immich(res, effective_q, effective_mode, principal, limit)
@@ -972,6 +978,8 @@ async def search_multimodal_post(
         req.match_tab,
         req.sort_by,
         tags=req.tags,
+        taken=req.taken,
+        place=req.place,
     )
     ai_access.log_request(principal, "search", "", False, "answered")
     return await _with_immich(res, effective_q, effective_mode, principal, req.limit)
@@ -990,6 +998,12 @@ def get_search_tags(principal: AuthenticatedPrincipal = Depends(get_current_prin
         reverse=True,
     )
     return {"kinds": kinds, "years": years}
+
+
+@router.get("/ai/photo-facets", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:read"))])
+def get_photo_facets(principal: AuthenticatedPrincipal = Depends(get_current_principal)) -> dict[str, Any]:
+    """The photo filters: the years and places of the photos this person may see (AI-24)."""
+    return get_rag_engine().photo_facets(principal)
 
 
 @router.post(

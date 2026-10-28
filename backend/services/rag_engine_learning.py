@@ -1049,6 +1049,41 @@ class RagLearningMixin:
         else:
             self._tags_backfilled = True
 
+    def _maybe_backfill_photo_dates(self) -> None:
+        """Reads the date and position of photos indexed before AI-24: at night, while nobody
+        chats, a batch per round, only on disks that are awake; stops once none are left."""
+        from backend.services import ai_activity, photo_place
+
+        if getattr(self, "_photo_dates_done", False) or not ai_activity.upgrade_window_open(time.time()):
+            return
+        try:
+            conn = self._get_conn(readonly=True)
+            try:
+                rows = photo_place.pending(conn)
+            finally:
+                conn.close()
+            if not rows:
+                self._photo_dates_done = True
+                return
+
+            def awake(dev: str, path: str) -> bool:
+                return not rag_standby.is_backing_disk_in_standby(
+                    dev or rag_standby.resolve_path_backing_dev(path) or path
+                )
+
+            updates = photo_place.read_pending(rows, awake)  # reads files outside the write lock
+            if updates:
+                with self._write_lock:
+                    w = self._get_conn(readonly=False)
+                    try:
+                        photo_place.apply(w, updates)
+                        w.commit()
+                    finally:
+                        w.close()
+                logger.info(f"[RAG] Read the date and place of {len(updates)} older photo(s)")
+        except sqlite3.Error:
+            logger.warning("[RAG] Reading older photos' dates failed; trying again next round", exc_info=True)
+
     def _maybe_reembed_fallback_files(self) -> None:
         now = time.time()
         if now - self._last_fallback_reembed < _core().FALLBACK_REEMBED_EVERY_SECS:
@@ -1056,3 +1091,4 @@ class RagLearningMixin:
         self._last_fallback_reembed = now
         self.reembed_fallback_files()
         self._maybe_backfill_tags()  # same five-minute cadence; stops once every older file is tagged
+        self._maybe_backfill_photo_dates()  # at night only (AI-24)

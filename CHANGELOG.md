@@ -4,6 +4,10 @@
 
 #### AI
 
+- **Photos by date and place**: the date a photo was taken and where (from its EXIF, iPhone HEIC
+  photos too) are read as it is indexed; older photos are read overnight on disks that are awake.
+  Search has year and place filters, and "photos from Rome in June 2023" filters by itself. Zetty
+  sees each photo's caption, date and place.
 - **See your duplicates**: a Duplicates button next to the search filters shows every set of copies
   (photos that look the same, a resized copy included, and identical files), how much space they
   take, and lets you move a copy to the recycle bin; the last copy of a set stays.

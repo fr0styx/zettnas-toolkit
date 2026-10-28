@@ -10,6 +10,7 @@ import { escapeHtml, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { immichResultsHtml } from '../immich-settings.js';
 import { installDocFilters, selectedTags } from './doc-filters.js';
+import { installPhotoFilters, selectedPhotoFilters, hasPhotoFilters } from './photo-filters.js';
 import { installDuplicatesButton } from './duplicates.js';
 import { installAiAccess } from './ai-access.js';
 import { formatDateTime, formatNumber, formatTime } from '../../format.js';
@@ -1455,6 +1456,7 @@ export function initAiKnowledgeEngine() {
   });
 
   installDocFilters(document, () => runAiVisualSearch()); // document filters (B8)
+  installPhotoFilters(document, () => runAiVisualSearch()); // photos by year and place (AI-24)
   installDuplicatesButton(document); // copies kept more than once (AI-35)
 
   // Sort Selector (#ai-search-sort-select)
@@ -2512,7 +2514,7 @@ export async function runAiVisualSearch(rawQuery = null) {
   const grid = document.getElementById('ai-visual-results-grid');
   if (!grid) return null;
 
-  if (!q && !_aiSelectedColor && !_aiSelectedScene && !selectedTags().length) {
+  if (!q && !_aiSelectedColor && !_aiSelectedScene && !selectedTags().length && !hasPhotoFilters()) {
     renderAiRagInitialEmptyState();
     return { status: 'ok', results: [] };
   }
@@ -2533,6 +2535,7 @@ export async function runAiVisualSearch(rawQuery = null) {
       color: _aiSelectedColor || null,
       scene: _aiSelectedScene || null,
       tags: selectedTags().length ? selectedTags() : undefined, // document filters (B8)
+      ...Object.fromEntries(Object.entries(selectedPhotoFilters()).filter(([, v]) => v)), // AI-24
       limit: 24,
     });
 
