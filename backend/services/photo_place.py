@@ -4,8 +4,9 @@ a place name for the position found offline, and the dates and places a question
 taken_at is the camera's clock read as UTC, so a photo taken at 23:30 on 1 June stays on 1 June
 whatever the server's time zone; the date filters work on the same scale.
 
-Place names come from backend/data/places.tsv.gz (name, region, country, latitude, longitude per
-line), made by scripts/build_places.py from GeoNames (CC BY 4.0). Without the file a photo keeps
+Place names come from backend/geodata/places.tsv.gz (name, region, country, latitude, longitude,
+population per line), made by scripts/build_places.py from GeoNames (geonames.org, CC BY 4.0): the 34,000 towns of
+more than 15,000 people. Without the file a photo keeps
 its position and gets no name; nothing is looked up online.
 """
 
@@ -26,9 +27,17 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 EXIF_EXTENSIONS = (".jpg", ".jpeg", ".tiff", ".tif", ".webp", ".heic", ".heif", ".png", ".dng")
-PLACES_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "places.tsv.gz")
+PLACES_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "geodata", "places.tsv.gz")
 MAX_PLACE_KM = 40.0  # farther from any town than this: no name rather than a wrong one
 _CELL = 1.0  # degrees per grid cell of the place index
+
+
+def town_radius_km(population: int) -> float:
+    """How far a town reaches, roughly, from its point: about 2 km for a small town, 15 km for a
+    city of two million. A photo is named after the town it is nearest to relative to that
+    reach, so central Rome is Rome, not the Vatican next to Rome's point."""
+    return 2.0 + 3.0 * math.sqrt(max(0, population) / 100_000)
+
 
 _heif_ready = False
 
@@ -161,15 +170,15 @@ def when_where(src: str | bytes, name: str = "") -> tuple[float | None, float | 
 
 # --- offline place names -------------------------------------------------------------------------
 
-_places: dict[tuple[int, int], list[tuple[float, float, str]]] | None = None
+_places: dict[tuple[int, int], list[tuple[float, float, str, float]]] | None = None
 _places_lock = threading.Lock()
 
 
-def _load_places(path: str | None = None) -> dict[tuple[int, int], list[tuple[float, float, str]]]:
+def _load_places(path: str | None = None) -> dict[tuple[int, int], list[tuple[float, float, str, float]]]:
     global _places
     if _places is not None and path is None:
         return _places
-    grid: dict[tuple[int, int], list[tuple[float, float, str]]] = {}
+    grid: dict[tuple[int, int], list[tuple[float, float, str, float]]] = {}
     p = path or PLACES_FILE
     if os.path.isfile(p):
         try:
@@ -184,7 +193,10 @@ def _load_places(path: str | None = None) -> dict[tuple[int, int], list[tuple[fl
                     except ValueError:
                         continue
                     label = ", ".join(x for x in (name, region if region != name else "", country) if x)
-                    grid.setdefault((math.floor(lat / _CELL), math.floor(lon / _CELL)), []).append((lat, lon, label))
+                    pop = int(parts[5]) if len(parts) > 5 and parts[5].isdigit() else 15_000
+                    grid.setdefault((math.floor(lat / _CELL), math.floor(lon / _CELL)), []).append(
+                        (lat, lon, label, town_radius_km(pop))
+                    )
         except (OSError, EOFError):
             logger.warning("[PhotoPlace] the place list could not be read", exc_info=True)
     if path is None:
@@ -216,13 +228,13 @@ def place_for(lat: float | None, lon: float | None) -> str:
     if not grid:
         return ""
     cy, cx = math.floor(lat / _CELL), math.floor(lon / _CELL)
-    best, best_km = "", MAX_PLACE_KM
+    best, best_rel = "", math.inf
     for dy in (-1, 0, 1):
         for dx in (-1, 0, 1):
-            for plat, plon, label in grid.get((cy + dy, ((cx + dx + 180) % 360) - 180), ()):
+            for plat, plon, label, reach in grid.get((cy + dy, ((cx + dx + 180) % 360) - 180), ()):
                 d = _km(lat, lon, plat, plon)
-                if d < best_km:
-                    best, best_km = label, d
+                if d < MAX_PLACE_KM and d / reach < best_rel:
+                    best, best_rel = label, d / reach
     return best
 
 
@@ -420,3 +432,33 @@ def backfill(conn: sqlite3.Connection, is_awake, batch: int = BACKFILL_BATCH) ->
     updates = read_pending(rows, is_awake, batch)
     apply(conn, updates)
     return len(updates), len(rows) - len(updates)
+
+
+def places_signature() -> str:
+    """Which place list is in use: photos are named again when it changes."""
+    try:
+        return f"{os.path.getsize(PLACES_FILE)}"
+    except OSError:
+        return ""
+
+
+def name_unnamed(conn: sqlite3.Connection, after_id: int = 0, batch: int = 2000) -> tuple[int, int]:
+    """Names photos that have a position but no place: read before the place list existed, or
+    while it was missing. Uses the stored position only, no file is read. Returns (named, the
+    last file id looked at); the id is 0 once there are none left after `after_id`."""
+    rows = conn.execute(
+        "SELECT file_id, gps_lat, gps_lon, caption_text FROM photo_assets WHERE gps_lat IS NOT NULL "
+        "AND gps_lon IS NOT NULL AND location_label = '' AND file_id > ? ORDER BY file_id LIMIT ?",
+        (after_id, batch),
+    ).fetchall()
+    named = 0
+    for fid, lat, lon, caption in rows:
+        place = place_for(lat, lon)
+        if place:
+            text = caption or ""
+            conn.execute(
+                "UPDATE photo_assets SET location_label = ?, caption_text = ? WHERE file_id = ?",
+                (place, f"{text}, in {place}" if f"in {place}" not in text else text, fid),
+            )
+            named += 1
+    return named, (int(rows[-1][0]) if rows else 0)

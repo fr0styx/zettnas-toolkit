@@ -4,6 +4,8 @@
 
 #### AI
 
+- **Photos get place names**: the town a photo was taken in is named offline from GeoNames' list
+  of 34,000 towns; photos already indexed get theirs overnight.
 - **AI checks closer to what you run**: the nightly AI check answers with Qwen3-4B, the chat model
   ZettNAS ships with, checks long, Office and scanned documents too, and fails when the first word
   of an answer takes much longer to arrive.

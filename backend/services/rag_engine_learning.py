@@ -1085,6 +1085,38 @@ class RagLearningMixin:
         except sqlite3.Error:
             logger.warning("[RAG] Reading older photos' dates failed; trying again next round", exc_info=True)
 
+    def _maybe_name_photo_places(self) -> None:
+        """Gives photos with a position but no place their town's name, from the index alone, a
+        batch per round; once per place list (AI-24)."""
+        from backend.services import photo_place
+
+        sig = photo_place.places_signature()
+        if not sig or getattr(self, "_places_named_for", "") == sig:
+            return
+        try:
+            with self._write_lock:
+                conn = self._get_conn(readonly=False)
+                try:
+                    conn.execute("CREATE TABLE IF NOT EXISTS rag_meta (key TEXT PRIMARY KEY, value TEXT)")
+                    row = conn.execute("SELECT value FROM rag_meta WHERE key = 'photo_places'").fetchone()
+                    if row and row[0] == sig:
+                        self._places_named_for = sig
+                        return
+                    named, last = photo_place.name_unnamed(conn, getattr(self, "_places_cursor", 0))
+                    if last:
+                        self._places_cursor = last
+                    else:
+                        conn.execute("INSERT OR REPLACE INTO rag_meta (key, value) VALUES ('photo_places', ?)", (sig,))
+                        self._places_named_for = sig
+                        self._places_cursor = 0
+                    conn.commit()
+                finally:
+                    conn.close()
+            if named:
+                logger.info(f"[RAG] Named the place of {named} photo(s)")
+        except sqlite3.Error:
+            logger.warning("[RAG] Naming photo places failed; trying again next round", exc_info=True)
+
     def _maybe_reembed_fallback_files(self) -> None:
         now = time.time()
         if now - self._last_fallback_reembed < _core().FALLBACK_REEMBED_EVERY_SECS:
@@ -1093,3 +1125,4 @@ class RagLearningMixin:
         self.reembed_fallback_files()
         self._maybe_backfill_tags()  # same five-minute cadence; stops once every older file is tagged
         self._maybe_backfill_photo_dates()  # at night only (AI-24)
+        self._maybe_name_photo_places()  # from the index alone, any time (AI-24)

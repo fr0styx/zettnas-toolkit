@@ -304,3 +304,37 @@ def test_the_place_list_builder(tmp_path):
         assert photo_place.place_for(41.9, 12.5) == "Rome, Lazio, Italy"
     finally:
         photo_place.use_places(None)
+
+
+def test_the_shipped_place_list_names_real_places():
+    import os
+
+    assert os.path.isfile(photo_place.PLACES_FILE) and os.path.getsize(photo_place.PLACES_FILE) < 2_000_000
+    photo_place.use_places(None)
+    try:
+        assert photo_place.place_for(41.902, 12.483) == "Rome, Lazio, Italy"
+        assert photo_place.place_for(48.857, 2.352).startswith("Paris")
+        assert photo_place.place_for(25.04, 102.72) == "Kunming, Yunnan, China"
+        assert photo_place.place_for(0.0, -30.0) == ""  # the Atlantic
+        assert photo_place.place_for(41.9022, 12.4539).startswith("Vatican")  # St Peter's Square
+        assert photo_place.place_for(48.8352, 2.2410).startswith("Boulogne")  # a suburb keeps its name
+    finally:
+        photo_place.use_places(None)
+
+
+def test_photos_read_before_the_place_list_get_named_from_the_index(library):
+    engine, _root, tmp = library
+    conn = sqlite3.connect(tmp / "rag.db")
+    conn.execute("UPDATE photo_assets SET location_label = '' WHERE gps_lat IS NOT NULL")
+    conn.execute("DELETE FROM rag_meta WHERE key = 'photo_places'")
+    conn.commit()
+    conn.close()
+    engine._places_named_for = ""
+    engine._places_cursor = 0
+    engine._maybe_name_photo_places()  # one batch: both photos
+    rows = _photos(tmp)
+    assert rows["rome.jpg"]["location_label"] == "Rome, Lazio, Italy" and "in Rome" in rows["rome.jpg"]["caption_text"]
+    assert rows["paris.jpg"]["location_label"].startswith("Paris")
+    engine._maybe_name_photo_places()  # nothing left: the list is marked done
+    assert engine._places_named_for == photo_place.places_signature() != ""
+    engine._maybe_name_photo_places()  # and is not looked at again

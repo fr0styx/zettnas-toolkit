@@ -81,6 +81,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and [AGEN
 
 - [torharrington/zettlab-display](https://github.com/torharrington/zettlab-display) — early framebuffer layouts for the Zettlab front screen.
 - [henryxwong/zettlab-ubuntu](https://github.com/henryxwong/zettlab-ubuntu) — reverse engineering of the Zettlab fan, LED and register interfaces.
+- [GeoNames](https://www.geonames.org/) — the town names photos are given from their GPS position, offline ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); see backend/geodata).
 
 ## License
 
