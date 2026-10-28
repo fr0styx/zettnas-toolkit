@@ -71,6 +71,15 @@ class TestStartup:
         assert {"rag", "webdav"} <= set(quiet["started"])
         assert "VmAutostart" in [n for n, _ in quiet["threads"]] and quiet["atexit"]
 
+    def test_an_ai_index_that_fails_to_open_does_not_stop_the_start(self, quiet, monkeypatch, caplog):
+        def broken():
+            raise RuntimeError("index locked")
+
+        monkeypatch.setattr("backend.services.rag_engine.get_rag_engine", broken)
+        main.startup_system()
+        dict(quiet["threads"])["RagStart"]()  # runs in its own thread (PERF-28): logs, doesn't raise
+        assert "rag" not in quiet["started"]
+
     def test_no_button_listener_on_other_hardware(self, quiet, monkeypatch):
         monkeypatch.setattr("backend.hardware.fans.is_zettlab_appliance", lambda: False)
         main.startup_system()
