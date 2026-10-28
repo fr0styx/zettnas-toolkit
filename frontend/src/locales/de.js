@@ -1067,6 +1067,7 @@ export default {
   "protect.newest": "Die neueste ist vom {when}.",
   "protect.none": "Noch keine Kopie Ihrer Dateien außerhalb dieses NAS.",
   "protect.stale": "Ihre neueste Kopie außerhalb dieses NAS ist vom {when}.",
+  "protect.recycle": "Die Papierkörbe enthalten {size}; jedes Element wird nach 30 Tagen gelöscht.",
   "offsite.unreadable": "{n} Dateien konnten nicht gelesen werden",
   "offsite.same_disk": "Auf demselben Speicher wie die gesicherten Ordner: ein defekter Datenträger, ein Diebstahl oder ein Brand trifft beide. Nutzen Sie eine USB-Festplatte, ein anderes NAS oder die Cloud.",
   "offsite.restore_started": "Wird nach {path} wiederhergestellt; es erscheint unter Aufgaben.",

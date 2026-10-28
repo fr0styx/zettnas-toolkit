@@ -176,9 +176,12 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
             except OSError as e:
                 logger.warning(f"[BROWSE] Failed to auto-provision home directory {user_home_path}: {e}")
 
-    # the app's own folders are never listed (SEC-3)
+    # the app's own folders are never listed (SEC-3), nor the Recycle Bins: they have their own view (REL-15)
     scanned_entries = [
-        e for e in scanned_entries if not is_protected(os.path.join(real, e.name if use_scandir else str(e)))
+        e
+        for e in scanned_entries
+        if (e.name if use_scandir else str(e)) != ".RecycleBin"
+        and not is_protected(os.path.join(real, e.name if use_scandir else str(e)))
     ]
     if use_scandir:
         scanned_entries.sort(key=lambda x: x.name.lower())

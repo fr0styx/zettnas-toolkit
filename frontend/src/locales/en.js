@@ -1039,6 +1039,7 @@ export default {
   "protect.newest": "The newest is from {when}.",
   "protect.none": "No copy of your files outside this NAS yet.",
   "protect.stale": "Your newest copy outside this NAS is from {when}.",
+  "protect.recycle": "The Recycle Bins hold {size}; each item goes after 30 days.",
   "offsite.unreadable": "{n} files could not be read",
   "offsite.same_disk": "Same storage as the folders it protects: a failed disk, a theft or a fire takes both. Use a USB disk, another NAS or the cloud.",
   "offsite.restore_started": "Restoring into {path}; it shows in Jobs.",

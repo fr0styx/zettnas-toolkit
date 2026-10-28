@@ -30557,6 +30557,11 @@
       "title": "Read Only",
       "type": "boolean"
      },
+     "recycle_bin": {
+      "default": true,
+      "title": "Recycle Bin",
+      "type": "boolean"
+     },
      "timemachine": {
       "default": false,
       "title": "Timemachine",
@@ -44884,7 +44889,7 @@
   },
   "/api/v1/fs/trash": {
    "get": {
-    "description": "Lists deleted items currently residing in the Recycle Bin with FreeDesktop .trashinfo metadata support.",
+    "description": "What the Recycle Bins hold, newest first; each person sees what they may open.",
     "operationId": "fs_trash_list_api_v1_fs_trash_get",
     "responses": {
      "200": {
@@ -44906,7 +44911,7 @@
   },
   "/api/v1/fs/trash/empty": {
    "delete": {
-    "description": "Permanently purges all items currently in the Recycle Bin across all browse roots.",
+    "description": "Permanently deletes everything in every Recycle Bin.",
     "operationId": "fs_trash_empty_api_v1_fs_trash_empty_delete",
     "responses": {
      "200": {
@@ -44928,7 +44933,7 @@
   },
   "/api/v1/fs/trash/restore": {
    "post": {
-    "description": "Restores an item from the Recycle Bin, reconstructing parent directories as needed.",
+    "description": "Restores an item where it was (or into target_path), never over an existing one.",
     "operationId": "fs_trash_restore_api_v1_fs_trash_restore_post",
     "requestBody": {
      "content": {

@@ -4,7 +4,7 @@
  */
 import { api } from '../../api.js';
 import { html } from '../../html.js';
-import { formatDateTime } from '../../format.js';
+import { formatBytes, formatDateTime } from '../../format.js';
 import { t } from '../../i18n.js';
 import { escapeHtml } from '../../utils.js';
 import { ROUTES } from '../../router.js';
@@ -82,6 +82,16 @@ export function statusHtml(summary) {
 /** FEAT-01: the copies outside this NAS, and a way to make one when there is none lately. */
 export function protectionHtml(p) {
   if (!p || !p.level) return '';
+  return html`${protectionTile(p)}${recycleLine(p)}`;
+}
+
+/** REL-15: what the Recycle Bins hold, from the index (no disk is read). */
+function recycleLine(p) {
+  if (!p.recycle_bytes) return '';
+  return html`<p class="offsite-meta">${t('protect.recycle', 'The Recycle Bins hold {size}; each item goes after 30 days.', { size: formatBytes(p.recycle_bytes) })}</p>`;
+}
+
+function protectionTile(p) {
   const when = p.last_good ? formatDateTime(p.last_good * 1000) : '';
   if (p.level === 'good') {
     return html`<div class="ov-status ov-ok"><strong>🛡 ${t('protect.good', '{n, plural, one {# current copy} other {# current copies}} outside this NAS', { n: p.copies })}</strong>

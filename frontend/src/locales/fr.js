@@ -1077,6 +1077,7 @@ export default {
   "protect.newest": "La plus récente date du {when}.",
   "protect.none": "Aucune copie de vos fichiers hors de ce NAS pour l'instant.",
   "protect.stale": "Votre copie la plus récente hors de ce NAS date du {when}.",
+  "protect.recycle": "Les corbeilles contiennent {size} ; chaque élément est supprimé après 30 jours.",
   "offsite.unreadable": "{n} fichiers n'ont pas pu être lus",
   "offsite.same_disk": "Sur le même stockage que les dossiers protégés : une panne de disque, un vol ou un incendie touche les deux. Utilisez un disque USB, un autre NAS ou le cloud.",
   "offsite.restore_started": "Restauration dans {path} ; elle apparaît dans Tâches.",

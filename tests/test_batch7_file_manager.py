@@ -106,8 +106,9 @@ def test_fs_roots_hierarchy(client, auth_headers, tmp_path):
 def test_freedesktop_trashinfo_lifecycle(client, auth_headers, tmp_path):
     browse_root = tmp_path / "user"
     browse_root.mkdir(parents=True, exist_ok=True)
-    docs = browse_root / "docs"
-    docs.mkdir()
+    share = browse_root / "docs"  # the share keeps its own Recycle Bin (REL-15)
+    docs = share / "2026"
+    docs.mkdir(parents=True)
     sample = docs / "statement.txt"
     sample.write_text("Monthly Financial Statement")
 
@@ -118,17 +119,18 @@ def test_freedesktop_trashinfo_lifecycle(client, auth_headers, tmp_path):
         assert not sample.exists()
 
         # Check FreeDesktop trash structure
-        files_dir = browse_root / ".RecycleBin" / "files"
-        info_dir = browse_root / ".RecycleBin" / "info"
+        files_dir = share / ".RecycleBin" / "files"
+        info_dir = share / ".RecycleBin" / "info"
         assert files_dir.exists()
         assert info_dir.exists()
 
         trashed_files = list(files_dir.iterdir())
         assert len(trashed_files) == 1
-        item_id = trashed_files[0].name
+        item_id = f"docs::{trashed_files[0].name}"
         assert "statement.txt" in item_id
+        assert del_res.json()["trash_id"] == item_id
 
-        trashinfo_file = info_dir / f"{item_id}.trashinfo"
+        trashinfo_file = info_dir / f"{trashed_files[0].name}.trashinfo"
         assert trashinfo_file.exists()
         info_content = trashinfo_file.read_text()
         assert "[Trash Info]" in info_content

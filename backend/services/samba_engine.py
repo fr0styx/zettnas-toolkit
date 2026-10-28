@@ -50,6 +50,7 @@ class SambaShareConfig(BaseModel):
     read_list: str | None = None
     write_list: str | None = None
     previous_versions: bool = False  # Windows Previous Versions from scheduled snapshots
+    recycle_bin: bool = True  # what is deleted over SMB goes to the share's Recycle Bin (REL-15)
 
 
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
@@ -393,17 +394,32 @@ class SambaEngine:
             if share.write_list:
                 conf_lines.append(f"   write list = {share.write_list}")
 
+            vfs = ["catia", "fruit", "streams_xattr"]
             if share.previous_versions:
                 # Windows "Previous Versions" from the scheduled snapshots
                 # (<pool>/@snapshots/<share>@auto-YYYYMMDD-HHMM, see snapshot_service)
                 snapdir = _snapshot_dir_for(share.path)
                 if snapdir:
-                    conf_lines.append("   vfs objects = catia fruit streams_xattr shadow_copy2")
+                    vfs.append("shadow_copy2")
                     conf_lines.append(f"   shadow:snapdir = {snapdir}")
                     conf_lines.append(f"   shadow:basedir = {share.path}")
                     conf_lines.append(f"   shadow:format = {share.name}@auto-%Y%m%d-%H%M")
                     conf_lines.append("   shadow:sort = desc")
                     conf_lines.append("   shadow:localtime = yes")
+
+            if share.recycle_bin:
+                vfs.append("recycle")
+                conf_lines += [
+                    "   recycle:repository = .RecycleBin/files",
+                    "   recycle:keeptree = no",
+                    "   recycle:versions = yes",
+                    "   recycle:touch_mtime = yes",
+                    "   recycle:directory_mode = 0770",
+                    "   recycle:exclude = *.tmp,~$*,.~lock.*",
+                    "   recycle:exclude_dir = .RecycleBin",
+                ]
+            if len(vfs) > 3:
+                conf_lines.append("   vfs objects = " + " ".join(vfs))
 
             if share.timemachine:
                 conf_lines.append("   fruit:time machine = yes")

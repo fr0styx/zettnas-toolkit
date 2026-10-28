@@ -404,7 +404,7 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
         _unlock(repo)
         code, _out = _run(
             repo,
-            ["backup", "--json", "--host", host_id(), "--tag", "zettnas", *repo["paths"]],
+            ["backup", "--json", "--host", host_id(), "--tag", "zettnas", "--exclude", ".RecycleBin", *repo["paths"]],
             track=True,
             ok=(0, WARN_EXIT),
             on_line=line,

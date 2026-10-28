@@ -108,7 +108,7 @@ def test_undoing_a_copy_puts_the_copies_in_the_recycle_bin(root, tmp_path):
     manager = _crashed(root, tmp_path)
     res = manager.undo_interrupted("t1")
     assert res["binned"] == 1 and not (root / "dst" / "album").exists()
-    assert os.listdir(root / ".RecycleBin" / "files")[0].endswith("_album")
+    assert os.listdir(root / "dst" / ".RecycleBin" / "files")[0].endswith("_album")
     assert (root / "src" / "album" / "a.jpg").exists() and manager.get_task("t1") is None
 
 

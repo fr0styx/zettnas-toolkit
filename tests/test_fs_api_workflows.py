@@ -296,7 +296,7 @@ def test_delete_returns_the_recycle_bin_id_for_undo(client, auth_headers, pool_t
         r = client.post("/api/fs/delete", json={"path": os.path.join(base, "same.txt")}, headers=auth_headers)
         assert r.status_code == 200, r.text
         ids.append(r.json()["trash_id"])
-    assert ids == ["1700000000_same.txt", "1700000000-2_same.txt"]
+    assert ids == ["undo-test::1700000000_same.txt", "undo-test::1700000000-2_same.txt"]  # its share bin (REL-15)
     r = client.post("/api/fs/trash/restore", json={"item_id": ids[1]}, headers=auth_headers)
     assert r.status_code == 200, r.text
     assert os.path.exists(os.path.join(base, "same.txt"))

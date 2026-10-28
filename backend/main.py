@@ -301,6 +301,12 @@ def startup_system():
         transfer_manager.load_interrupted()  # copies and moves cut off by the restart (REL-25)
     except Exception as e:
         logger.warning(f"[Main] Could not load the saved transfers: {e}")
+    try:
+        from backend.services.recycle_bin import grace_start
+
+        grace_start()  # D9: what is in a bin now keeps 30 days from this first start
+    except Exception as e:
+        logger.warning(f"[Main] Could not start the Recycle Bin grace period: {e}")
     supervise("BackupScheduler", backup_scheduler_daemon, beat_every=60)
 
     from backend.services.scheduler import scheduler_daemon

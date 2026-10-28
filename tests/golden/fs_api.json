@@ -1356,11 +1356,11 @@
   {
    "body": {
     "cached": false,
-    "dirs_count": 4,
-    "files_count": 7,
+    "dirs_count": 7,
+    "files_count": 11,
     "is_standby": false,
     "path": "<work>",
-    "size": 35,
+    "size": 267,
     "status": "ok"
    },
    "label": "folder size",
@@ -1610,7 +1610,7 @@
    "body": {
     "message": "Item moved to Recycle Bin",
     "status": "ok",
-    "trash_id": "<ts>_up.txt"
+    "trash_id": "<wf>::<ts>_up.txt"
    },
    "label": "delete to trash",
    "status": 200
@@ -1629,32 +1629,32 @@
     "items": [
      {
       "deleted_at": "<int>",
-      "id": "<ts>_a.txt",
+      "id": "<wf>::<ts>_a.txt",
       "is_dir": false,
       "name": "a.txt",
       "original_path": "<work>/sub/a.txt",
-      "path": "<pool>/.RecycleBin/files/<ts>_a.txt",
-      "root_path": "<pool>",
+      "path": "<work>/.RecycleBin/files/<ts>_a.txt",
+      "root_path": "<work>",
       "size": 5
      },
      {
       "deleted_at": "<int>",
-      "id": "<ts>_a.txt",
+      "id": "<wf>::<ts>_a.txt",
       "is_dir": false,
       "name": "a.txt",
       "original_path": "<work>/sub/a.txt",
-      "path": "<pool>/.RecycleBin/files/<ts>_a.txt",
-      "root_path": "<pool>",
+      "path": "<work>/.RecycleBin/files/<ts>_a.txt",
+      "root_path": "<work>",
       "size": 5
      },
      {
       "deleted_at": "<int>",
-      "id": "<ts>_up.txt",
+      "id": "<wf>::<ts>_up.txt",
       "is_dir": false,
       "name": "up.txt",
       "original_path": "<work>/up.txt",
-      "path": "<pool>/.RecycleBin/files/<ts>_up.txt",
-      "root_path": "<pool>",
+      "path": "<work>/.RecycleBin/files/<ts>_up.txt",
+      "root_path": "<work>",
       "size": 8
      }
     ],
@@ -1912,7 +1912,7 @@
   },
   {
    "body": {
-    "purged_count": 4,
+    "purged_count": 2,
     "status": "ok"
    },
    "label": "trash empty",

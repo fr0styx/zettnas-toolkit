@@ -108,12 +108,17 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         if not real_root:
             real_root = ALLOWED_BROWSE_ROOTS[0]  # Fallback
 
-        recycle_dir = os.path.join(real_root, recycle_bin.BIN)
+        # its share's bin, or the root's for an item at the top (REL-15)
+        recycle_dir = recycle_bin.bin_for(target_unresolved) or os.path.join(real_root, recycle_bin.BIN)
         base_name = os.path.basename(target_unresolved)
         dest_name = await asyncio.to_thread(recycle_bin.move_to_bin, target_unresolved, recycle_dir, target_unresolved)
         add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
 
-        return {"status": "ok", "message": "Item moved to Recycle Bin", "trash_id": dest_name}
+        return {
+            "status": "ok",
+            "message": "Item moved to Recycle Bin",
+            "trash_id": recycle_bin.item_id(recycle_dir, dest_name or ""),
+        }
     except Exception as e:
         logger.error(f"[FS] Delete/Recycle failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to process delete request") from e

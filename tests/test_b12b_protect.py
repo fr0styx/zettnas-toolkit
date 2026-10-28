@@ -27,7 +27,16 @@ def test_where_a_copy_is():
 
 def test_no_copy_outside_the_box(monkeypatch):
     _sources(monkeypatch, repos=[{"id": "same", "location": "/mnt/user/backups", "last_backup": NOW}])
-    assert ps.status(NOW) == {"level": "none", "copies": 0, "total": 0, "last_good": None, "where": [], "items": []}
+    monkeypatch.setattr("backend.services.recycle_bin.total_bytes", lambda: 0)
+    assert ps.status(NOW) == {
+        "level": "none",
+        "copies": 0,
+        "total": 0,
+        "last_good": None,
+        "where": [],
+        "items": [],
+        "recycle_bytes": 0,
+    }
 
 
 def test_current_copies_and_where(monkeypatch):

@@ -83,7 +83,18 @@ def status(now: float | None = None) -> dict[str, Any]:
         "last_good": max((float(c["last_ok"]) for c in good), default=None),
         "where": sorted({c["kind"] for c in fresh}),
         "items": found,
+        "recycle_bytes": _recycle_bytes(),
     }
+
+
+def _recycle_bytes() -> int:
+    try:
+        from backend.services.recycle_bin import total_bytes
+
+        return total_bytes()
+    except Exception:
+        logger.debug("protection_status: recycle bin index unreadable", exc_info=True)
+        return 0
 
 
 def _mounted(root: str) -> list[str]:

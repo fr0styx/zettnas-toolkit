@@ -1067,6 +1067,7 @@ export default {
   "protect.newest": "最新的一份来自 {when}。",
   "protect.none": "此 NAS 之外还没有您文件的副本。",
   "protect.stale": "此 NAS 之外最新的副本来自 {when}。",
+  "protect.recycle": "回收站共占用 {size}；每个项目 30 天后删除。",
   "offsite.unreadable": "{n} 个文件无法读取",
   "offsite.same_disk": "与所保护的文件夹位于同一存储：磁盘故障、失窃或火灾会同时损失两者。请使用 USB 磁盘、另一台 NAS 或云端。",
   "offsite.restore_started": "正在恢复到 {path}，可在任务中查看。",

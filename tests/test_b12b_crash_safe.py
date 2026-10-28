@@ -100,9 +100,9 @@ def test_a_crash_at_any_step_of_a_folder_overwrite_loses_nothing(root, tmp_path,
         pytest.fail("the overwrite never finished")
     assert res["status"] == "ok" and kill_at > 5
     assert _contents(root / "photos" / "album") == set(NEW.values())
-    assert {"old a", "old only"} <= _contents(root / ".RecycleBin")
+    assert {"old a", "old only"} <= _contents(root / "photos" / ".RecycleBin")
     assert (action == "move") != (usb / "album").exists()
-    assert not [p for p in os.listdir(root / "photos") if p.startswith(".")]  # no stage left behind
+    assert not [p for p in os.listdir(root / "photos") if p.startswith(".") and p != ".RecycleBin"]  # no stage left
 
 
 @pytest.mark.parametrize("action", ["copy", "move"])
@@ -122,7 +122,7 @@ def test_a_crash_at_any_step_of_a_file_overwrite_loses_nothing(root, tmp_path, m
         assert {"new", "old"} <= _contents(usb) | _contents(root), f"a crash at step {kill_at} lost a file"
         if res is not None:
             break
-    assert (root / "docs" / "a.txt").read_text() == "new" and "old" in _contents(root / ".RecycleBin")
+    assert (root / "docs" / "a.txt").read_text() == "new" and "old" in _contents(root / "docs" / ".RecycleBin")
 
 
 def test_a_move_to_another_disk_flushes_the_copy_before_deleting_the_original(root, tmp_path, monkeypatch):
@@ -170,15 +170,15 @@ def test_a_replaced_file_goes_to_the_recycle_bin_with_where_it_was(root):
     _tree(root, {"src/a.txt": "new", "docs/a.txt": "old"})
     ft.execute_transfer([str(root / "src" / "a.txt")], str(root / "docs"), action="copy", policy="overwrite")
     assert (root / "docs" / "a.txt").read_text() == "new"
-    [info] = os.listdir(root / ".RecycleBin" / "info")
-    assert f"Path={root / 'docs' / 'a.txt'}" in (root / ".RecycleBin" / "info" / info).read_text()
+    [info] = os.listdir(root / "docs" / ".RecycleBin" / "info")
+    assert f"Path={root / 'docs' / 'a.txt'}" in (root / "docs" / ".RecycleBin" / "info" / info).read_text()
 
 
 def test_a_same_disk_folder_move_swaps_in_one_rename(root):
     _tree(root, {"in/album/a.jpg": "new", "photos/album/a.jpg": "old"})
     res = ft.execute_transfer([str(root / "in" / "album")], str(root / "photos"), action="move", policy="overwrite")
     assert res["transferred"] == 1 and (root / "photos" / "album" / "a.jpg").read_text() == "new"
-    assert "old" in _contents(root / ".RecycleBin") and not (root / "in" / "album").exists()
+    assert "old" in _contents(root / "photos" / ".RecycleBin") and not (root / "in" / "album").exists()
 
 
 def test_a_folder_that_cannot_be_moved_away_is_left_as_it_was(root, monkeypatch):
@@ -203,14 +203,19 @@ def test_without_a_recycle_bin_an_overwrite_replaces_as_before(tmp_path, monkeyp
 
 
 def test_the_recycle_bin_knows_where_it_is(root, tmp_path):
-    assert recycle_bin.bin_for(str(root / "a" / "b.txt")) == str(root / ".RecycleBin")
+    assert recycle_bin.bin_for(str(root / "a" / "b.txt")) == str(root / "a" / ".RecycleBin")  # its share's
+    assert recycle_bin.bin_for(str(root / "a")) == str(root / ".RecycleBin")  # a share itself: the root's
     assert recycle_bin.bin_for(str(root / ".RecycleBin" / "files" / "x")) is None
+    assert recycle_bin.bin_for(str(root / "a" / ".RecycleBin" / "files" / "x")) is None
     assert recycle_bin.bin_for(str(tmp_path / "outside")) is None
     assert recycle_bin.move_to_bin(str(tmp_path / "outside")) is None
     _tree(root, {"a.txt": "1", "b/a.txt": "2"})
     first = recycle_bin.move_to_bin(str(root / "a.txt"))
     second = recycle_bin.move_to_bin(str(root / "b" / "a.txt"))
-    assert first != second and first.endswith("_a.txt") and second.endswith("_a.txt")
+    assert first.endswith("_a.txt") and second.endswith("_a.txt")
+    assert (root / ".RecycleBin" / "files" / first).exists() and (
+        root / "b" / ".RecycleBin" / "files" / second
+    ).exists()
 
 
 def test_a_bin_on_another_filesystem_is_not_copied_into(root, monkeypatch):
@@ -249,8 +254,8 @@ def test_a_snapshot_restore_over_the_current_version_keeps_it_in_the_bin(root, t
     pal = _Pal(tmp_path / "snap", root / "photos", root)
     for rel in ("album", "notes.txt"):
         assert snapshot_service.restore("photos@auto-1", rel, overwrite=True, pal=pal, pool_id="tank")["overwrote"]
-    assert _contents(root / "photos") == {"then"}
-    assert {"now", "now extra"} <= _contents(root / ".RecycleBin")
+    assert _contents(root / "photos" / "album") == {"then"} and (root / "photos" / "notes.txt").read_text() == "then"
+    assert {"now", "now extra"} <= _contents(root / "photos" / ".RecycleBin")
 
 
 def test_a_failed_folder_copy_leaves_the_current_version(root, tmp_path, monkeypatch):
@@ -273,4 +278,4 @@ def test_a_file_can_replace_a_folder(root, tmp_path):
     _tree(root / "photos", {"thing/inside.txt": "was a folder"})
     ft.replace_with_copy(str(tmp_path / "snap" / "thing"), str(root / "photos" / "thing"))
     assert (root / "photos" / "thing").read_text() == "a file now"
-    assert "was a folder" in _contents(root / ".RecycleBin")
+    assert "was a folder" in _contents(root / "photos" / ".RecycleBin")

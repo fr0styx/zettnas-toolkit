@@ -848,6 +848,8 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                         versions,
                         "--exclude",
                         f"/{VERSIONS_DIR}/**",
+                        "--exclude",
+                        ".RecycleBin/**",
                     ],
                 )
                 history_record["rclone_job_id"] = sync_job.get("id")

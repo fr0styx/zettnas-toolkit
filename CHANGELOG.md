@@ -112,6 +112,12 @@
 - **A recovery kit that has to be saved**: each off-site backup gives a kit with the key, where the
   backup is, the cloud settings it needs and the restore commands; the Overview says "Recovery kit
   not saved" until it is downloaded or copied. BACKUP_GUIDE explains how to recover on new hardware.
+- **A Recycle Bin per share, emptied by itself** (REL-15): each share keeps its own `.RecycleBin`,
+  and what is deleted over SMB lands there too. An item goes 30 days after it was deleted, the
+  oldest first when a bin holds more than a tenth of its disk. **Nothing already in a Recycle Bin is
+  deleted until 30 days after this update**: those items count their 30 days from the update, and the
+  size limit leaves them alone until then. Bins are emptied when they are used anyway, so no sleeping
+  disk wakes for it; the Overview shows how much they hold. Backups skip the bins.
 - **Copies and moves can't lose files in a crash**: a move to another disk writes the copy to the
   disk before it deletes the original; replacing a folder builds the new one beside it and swaps it
   in only when complete. What an overwrite replaces (in a copy, a move or a snapshot restore) goes
