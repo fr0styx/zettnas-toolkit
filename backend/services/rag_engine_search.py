@@ -50,6 +50,8 @@ from backend.services.rag_text import (  # noqa: F401
     text_tokens,
 )
 
+DIRECT_SCOPE_CHUNKS = 4000  # a scope this small is scored whole, exactly (AI-23)
+
 
 def _core():
     """backend.services.rag_engine, read at call time: shared settings live there and tests patch them."""
@@ -502,28 +504,31 @@ class RagSearchMixin:
         limit: int,
         principal: Any,
     ) -> list[dict[str, Any]]:
-        # FTS5 BM25 lexical lookup on rag_photos_fts
+        rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
+        sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
+
+        # FTS5 BM25 lexical lookup on rag_photos_fts, among the photos this person may see in the
+        # chosen folder (AI-23)
         bm25_map: dict[int, float] = {}
         if fts_query:
             try:
                 fts_rows = conn.execute(
-                    """
-                    SELECT rowid AS file_id, -bm25(rag_photos_fts, 3.0, 5.0, 5.0, 4.0, 2.0, 4.0) AS raw_bm25
+                    f"""
+                    SELECT rag_photos_fts.rowid AS file_id,
+                           -bm25(rag_photos_fts, 3.0, 5.0, 5.0, 4.0, 2.0, 4.0) AS raw_bm25
                     FROM rag_photos_fts
-                    WHERE rag_photos_fts MATCH ?
+                    JOIN indexed_files f ON f.file_id = rag_photos_fts.rowid
+                    WHERE rag_photos_fts MATCH ? AND f.parse_status = 'ok' AND {rbac_sql} AND {sub_sql}
                     ORDER BY raw_bm25 DESC
                     LIMIT 250
                     """,
-                    (fts_query,),
+                    [fts_query, *rbac_params, *sub_params],
                 ).fetchall()
                 for r in fts_rows:
                     raw_val = max(0.0, float(r["raw_bm25"] or 0.0))
                     bm25_map[int(r["file_id"])] = raw_val / (raw_val + 4.0)
             except sqlite3.OperationalError:
                 pass
-
-        rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
-        sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
 
         photo_cols = """
                 p.file_id, p.file_name, p.width, p.height, p.aspect_ratio, p.format,
@@ -717,19 +722,35 @@ class RagSearchMixin:
         intent_type: str = "search",
         tags: list[str] | None = None,
     ) -> list[dict[str, Any]]:
+        rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
+        sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
+        if tags:
+            from backend.services import rag_tags
+
+            tag_sql, tag_params = rag_tags.filter_sql(tags, "f")
+            sub_sql, sub_params = f"({sub_sql}{tag_sql})", [*sub_params, *tag_params]
+        recipe_sql = "AND f.doc_type = 'recipe'" if only_recipes else ""
+        scope_sql = f"f.parse_status = 'ok' AND c.chunk_level != 'parent' {recipe_sql} AND {rbac_sql} AND {sub_sql}"
+        scope_params = rbac_params + sub_params
+
+        # The keyword top 250 is taken among the chunks this person may read in the chosen folder
+        # and tags, not among all of them and filtered after: in a small scope the best matches
+        # are often far below a global top 250 (AI-23)
         bm25_map: dict[int, float] = {}
         bm25_rank: dict[int, int] = {}
         if fts_query:
             try:
                 fts_rows = conn.execute(
-                    """
-                    SELECT rowid AS chunk_id, -bm25(rag_chunks_fts, 5.0, 3.0, 1.0, 2.0) AS raw_bm25
+                    f"""
+                    SELECT rag_chunks_fts.rowid AS chunk_id, -bm25(rag_chunks_fts, 5.0, 3.0, 1.0, 2.0) AS raw_bm25
                     FROM rag_chunks_fts
-                    WHERE rag_chunks_fts MATCH ?
+                    JOIN document_chunks c ON c.chunk_id = rag_chunks_fts.rowid
+                    JOIN indexed_files f ON f.file_id = c.file_id
+                    WHERE rag_chunks_fts MATCH ? AND {scope_sql}
                     ORDER BY raw_bm25 DESC
                     LIMIT 250
                     """,
-                    (fts_query,),
+                    [fts_query, *scope_params],
                 ).fetchall()
                 for rank_idx, r in enumerate(fts_rows, start=1):
                     cid = int(r["chunk_id"])
@@ -739,18 +760,24 @@ class RagSearchMixin:
             except sqlite3.OperationalError:
                 pass
 
-        rbac_sql, rbac_params = self._build_rbac_clause(principal, "f")
-        sub_sql, sub_params = self._build_subtree_clause(path_prefix, "f")
-        if tags:
-            from backend.services import rag_tags
-
-            tag_sql, tag_params = rag_tags.filter_sql(tags, "f")
-            sub_sql, sub_params = f"({sub_sql}{tag_sql})", [*sub_params, *tag_params]
-        recipe_sql = "AND f.doc_type = 'recipe'" if only_recipes else ""
-
         fts_chunk_ids = list(bm25_map.keys())
         vec_ids: set[int] | None = None
-        if self._has_sqlite_vec and self._vec_table_active and query_vec and len(query_vec) == self._vec_table_dim:
+        # A small scope (a folder, a few shares, a tag) is scored whole: every chunk in it, exactly,
+        # instead of nearest neighbours fetched from the whole index (AI-23)
+        scoped = bool(scope_params) or bool(recipe_sql)
+        in_scope = (
+            conn.execute(
+                f"SELECT c.chunk_id FROM document_chunks c JOIN indexed_files f ON f.file_id = c.file_id "
+                f"WHERE {scope_sql} LIMIT {DIRECT_SCOPE_CHUNKS + 1}",
+                scope_params,
+            ).fetchall()
+            if scoped
+            else []
+        )
+        if scoped and len(in_scope) <= DIRECT_SCOPE_CHUNKS:
+            vec_ids = {int(r[0]) for r in in_scope}
+            fts_chunk_ids += [cid for cid in vec_ids if cid not in bm25_map]
+        elif self._has_sqlite_vec and self._vec_table_active and query_vec and len(query_vec) == self._vec_table_dim:
             try:
                 target_dim = self._vec_table_dim
                 query_blob = struct.pack(f"<{target_dim}f", *query_vec)

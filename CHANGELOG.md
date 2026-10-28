@@ -4,6 +4,10 @@
 
 #### AI
 
+- **Search inside a folder finds its files**: the keyword matches are now chosen among the files you
+  may open in the folder and with the tags you picked, not among all files and filtered after, and a
+  small folder is searched file by file. Before, a folder search could miss its best match when many
+  better keyword matches lay elsewhere.
 - **The AI Configuration tab is grouped**: a Chatbot section (the model, where it runs, conversation
   history) and a Search & knowledge section (what ZettAI learns from and when, how it reads files,
   the embedding model, and Immich, moved here from the RAG tab).
