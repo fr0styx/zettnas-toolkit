@@ -56,6 +56,10 @@
 .immich-card { margin-bottom: var(--zn-space-4); padding: var(--zn-space-3); border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); }
 .immich-title { margin: 0 0 var(--zn-space-1); font-size: var(--zn-fs); }
 .immich-note { color: var(--muted); font-size: var(--zn-fs-xs); }
+/* AI for apps (COMP-07): its keys, and an app's settings shown once */
+.ai-apps-keys { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: flex; flex-direction: column; gap: var(--zn-space-1); font-size: var(--zn-fs-xs); }
+.ai-apps-keys li { display: flex; justify-content: space-between; align-items: center; gap: var(--zn-space-2); }
+.ai-apps-settings { margin: var(--zn-space-2) 0; padding: var(--zn-space-2); border-radius: var(--zn-radius-sm); background: var(--zn-shade-30); font-size: var(--zn-fs-xs); white-space: pre-wrap; word-break: break-all; user-select: all; }
 .immich-form { display: flex; flex-wrap: wrap; gap: var(--zn-space-2); align-items: flex-end; margin: var(--zn-space-2) 0; }
 .immich-form label { display: flex; flex-direction: column; gap: 2px; font-size: var(--zn-fs-xs); color: var(--muted); flex: 1; min-width: 240px; }
 .immich-form input { min-height: var(--zn-btn-h); padding: 0 var(--zn-space-2); border-radius: var(--zn-radius-sm); border: 1px solid var(--zn-line-strong); background: var(--zn-shade-30); color: var(--fg); font-size: var(--zn-fs-sm); }

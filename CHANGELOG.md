@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+#### AI
+
+- **AI for apps**: Paperless-ngx, Open WebUI, Home Assistant and other apps that speak the OpenAI API
+  can use the server's own chat model and embedder at `/api/v1/ai/openai`, each with its own key
+  (`POST /api/v1/ai/apps/keys`, which also returns that app's settings filled in). A key can do
+  nothing else, requests take their turn on the GPU like a chat reply, and the owner's AI switch
+  still applies.
+- **Embedding server for the Intel GPU, locked down**: contrib/openvino-embed exports int8 weights by
+  default, runs on the app's Docker network without a published port, and can require a token
+  (`TOKEN` on the server, `EMBEDDING_TOKEN` on ZettNAS).
+
 #### Performance
 
 - **Less work when no UPS is connected**: without a UPS set up, ZettNAS looks for one after 1, 5 and

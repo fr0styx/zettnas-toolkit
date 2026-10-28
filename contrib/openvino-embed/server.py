@@ -8,9 +8,14 @@ ZettNAS (or anything that speaks Ollama's embed API) points its embedding host h
 
 Settings (environment): MODEL_DIR (model.xml, model.bin), TOKENIZER_DIR, MODEL_NAME,
 DEVICE (GPU, CPU), PRECISION (f32; f16 gives broken EmbeddingGemma vectors on Arc),
-BATCH (2), MAX_TOKENS (2048), PORT (11434).
+BATCH (2), MAX_TOKENS (2048), PORT (11434), TOKEN (optional: when set, the embed endpoints
+need "Authorization: Bearer <TOKEN>"; ZettNAS sends its EMBEDDING_TOKEN).
+
+Run it on the app's Docker network with no published port: only containers on that network can
+reach it, and the token keeps the others out too.
 """
 
+import hmac
 import json
 import os
 import threading
@@ -29,6 +34,7 @@ PRECISION = os.environ.get("PRECISION", "f32")
 BATCH = int(os.environ.get("BATCH", "2"))  # small batches were fastest on an Arc iGPU in testing
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "2048"))
 MAX_INPUTS = 256
+TOKEN = os.environ.get("TOKEN", "").strip()
 
 tok = AutoTokenizer.from_pretrained(TOKENIZER_DIR)
 core = ov.Core()
@@ -122,6 +128,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path not in ("/api/embed", "/api/embeddings"):
             return self._send(404, {"error": "not found"})
+        if TOKEN and not hmac.compare_digest(self.headers.get("Authorization", ""), f"Bearer {TOKEN}"):
+            return self._send(401, {"error": "a valid token is needed"})
         try:
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
         except ValueError:

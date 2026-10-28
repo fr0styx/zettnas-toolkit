@@ -827,10 +827,12 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-ai-rag' || paneId === 'mgmt-pane-ai-chat' || paneId === 'mgmt-pane-ai-visual' || paneId === 'mgmt-pane-ai-index') {
       fetchAndRenderAiStatus();
       if (paneId === 'mgmt-pane-ai-index') {
-        Promise.all([import('./immich-settings.js'), import('./users.js')])
-          .then(([m, u]) => {
+        Promise.all([import('./immich-settings.js'), import('./session.js'), import('./ai-apps-settings.js')])
+          .then(([m, u, apps]) => {
             const scopes = (u.getCurrentUser() || {}).scopes || [];
-            m.renderImmichSettings(document.getElementById('immich-settings-mount'), scopes.includes('*') || scopes.includes('system:config'));
+            const isAdmin = scopes.includes('*') || scopes.includes('system:config');
+            m.renderImmichSettings(document.getElementById('immich-settings-mount'), isAdmin);
+            apps.renderAiApps(document.getElementById('ai-apps-mount'), isAdmin); // COMP-07
           })
           .catch(() => {});
       }

@@ -482,6 +482,37 @@
     "title": "AppDeployRequest",
     "type": "object"
    },
+   "AppKeyRequest": {
+    "properties": {
+     "app": {
+      "enum": [
+       "paperless",
+       "openwebui",
+       "homeassistant",
+       "other"
+      ],
+      "title": "App",
+      "type": "string"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "maxLength": 80,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     }
+    },
+    "required": [
+     "app"
+    ],
+    "title": "AppKeyRequest",
+    "type": "object"
+   },
    "AppRestoreRequest": {
     "properties": {
      "recreate_container": {
@@ -36430,6 +36461,106 @@
     ]
    }
   },
+  "/api/v1/ai/apps": {
+   "get": {
+    "description": "The apps that can be set up, and the keys made for them (masked).",
+    "operationId": "list_app_keys_api_v1_ai_apps_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "List App Keys",
+    "tags": [
+     "AI for apps"
+    ]
+   }
+  },
+  "/api/v1/ai/apps/keys": {
+   "post": {
+    "description": "A key for one app, and that app's settings filled in. The key is shown this once.",
+    "operationId": "create_app_key_api_v1_ai_apps_keys_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AppKeyRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create App Key",
+    "tags": [
+     "AI for apps"
+    ]
+   }
+  },
+  "/api/v1/ai/apps/keys/{token_id}": {
+   "delete": {
+    "operationId": "delete_app_key_api_v1_ai_apps_keys__token_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token_id",
+      "required": true,
+      "schema": {
+       "title": "Token Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Delete App Key",
+    "tags": [
+     "AI for apps"
+    ]
+   }
+  },
   "/api/v1/ai/ask": {
    "post": {
     "description": "Grounded Conversational RAG & Structured Recipe/Document Synthesis.",
@@ -38192,6 +38323,63 @@
     "summary": "Delete Model Endpoint",
     "tags": [
      "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
+  "/api/v1/ai/openai/chat/completions": {
+   "post": {
+    "operationId": "openai_chat_api_v1_ai_openai_chat_completions_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Openai Chat",
+    "tags": [
+     "AI for apps"
+    ]
+   }
+  },
+  "/api/v1/ai/openai/embeddings": {
+   "post": {
+    "operationId": "openai_embeddings_api_v1_ai_openai_embeddings_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Openai Embeddings",
+    "tags": [
+     "AI for apps"
+    ]
+   }
+  },
+  "/api/v1/ai/openai/models": {
+   "get": {
+    "operationId": "openai_models_api_v1_ai_openai_models_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Openai Models",
+    "tags": [
+     "AI for apps"
     ]
    }
   },

@@ -352,6 +352,16 @@ def _detected_host_ip() -> str | None:
     return ip
 
 
+def embed_headers() -> dict[str, str]:
+    """Headers for an embedding request. EMBEDDING_TOKEN (environment) is sent as a bearer token,
+    for an embedding server that asks for one, such as contrib/openvino-embed with TOKEN (AI-39)."""
+    headers = {"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"}
+    token = os.environ.get("EMBEDDING_TOKEN", "").strip()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
 def embedding_host(cfg: dict) -> str | None:
     """Where embeddings come from: the AI config's embedding host, else its Ollama host (None = discover)."""
     return (str(cfg.get("embedding_host") or "").strip() or str(cfg.get("ollama_host") or "").strip()) or None
@@ -461,7 +471,7 @@ def compute_neural_embedding_via_ollama(
             req_embed = urllib.request.Request(
                 embed_url,
                 data=payload_embed,
-                headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
+                headers=embed_headers(),
                 method="POST",
             )
             with urllib.request.urlopen(req_embed, timeout=_left()) as resp:
@@ -483,7 +493,7 @@ def compute_neural_embedding_via_ollama(
                 req_legacy = urllib.request.Request(
                     emb_url,
                     data=payload_legacy,
-                    headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
+                    headers=embed_headers(),
                     method="POST",
                 )
                 with urllib.request.urlopen(req_legacy, timeout=_left()) as resp:
@@ -547,7 +557,7 @@ def _embed_one_batch(target_host: str, model: str, batch: list[str], timeout: fl
             req = urllib.request.Request(
                 f"{target_host}/api/embed",
                 data=json.dumps({"model": cand, "input": batch}).encode("utf-8"),
-                headers={"Content-Type": "application/json", "User-Agent": "ZettNAS-RAG-Engine/2.0"},
+                headers=embed_headers(),
                 method="POST",
             )
             with urllib.request.urlopen(

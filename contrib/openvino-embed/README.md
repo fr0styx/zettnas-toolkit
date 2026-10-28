@@ -6,23 +6,30 @@ ZettNAS uses it through the AI config's `embedding_host`. Chat and other models 
 
 ## Model
 
-Export the whole sentence-transformers pipeline (pooling and projection included) in full precision:
+Export the whole sentence-transformers pipeline (pooling and projection included):
 
 ```bash
 python3 contrib/openvino-embed/export.py google/embeddinggemma-2 <dir>
 ```
 
-This writes `<dir>/model` and `<dir>/tokenizer`.
+This writes `<dir>/model` and `<dir>/tokenizer`. The weights are int8 (NNCF INT8_ASYM): about a
+quarter of the size and faster on an Arc iGPU, with the math still in full precision. Add `--fp32`
+to keep full-precision weights.
 
 ## Run
 
+Run it on the app's Docker network with no published port, so only containers on that network
+can reach it. An optional token keeps the other containers out too:
+
 ```bash
 docker build -t zettnas-eg2 contrib/openvino-embed
-docker run -d --name zettnas-eg2 --restart unless-stopped --device /dev/dri -p 11435:11434 -v <dir>:/models:ro zettnas-eg2
+docker run -d --name zettnas-eg2 --restart unless-stopped --device /dev/dri \
+  --network <the app's network> -e TOKEN=<a long random string> -v <dir>:/models:ro zettnas-eg2
 ```
 
-Then re-embed the index onto it (AI settings, or `POST /api/ai/reindex` with
-`{"embedding_model": "embeddinggemma-2-ov", "embedding_dim": 768, "embedding_host": "http://<host>:11435"}`).
+Give the ZettNAS container the same value as `EMBEDDING_TOKEN`; it is sent only with embedding
+requests. Then re-embed the index onto it (AI settings, or `POST /api/ai/reindex` with
+`{"embedding_model": "embeddinggemma-2-ov", "embedding_dim": 768, "embedding_host": "http://zettnas-eg2:11434"}`).
 Search keeps using the old vectors until every chunk is done.
 
 ## Notes
