@@ -170,6 +170,11 @@ def main() -> int:
     ap.add_argument("--dim", type=int, default=DIM)
     ap.add_argument("--recall-chunks", type=int, default=8000)
     ap.add_argument("--results", default=os.environ.get("HW_RESULTS_DIR", "/results"))
+    ap.add_argument(
+        "--tmp",
+        default=os.environ.get("HW_BENCH_TMP") or None,
+        help="where the temporary databases go (1M chunks take about 4 GB; default: the system temp)",
+    )
     ap.add_argument("--print", action="store_true", help="show the numbers (local runs; not in public logs)")
     ap.add_argument("--strict", action="store_true", help="exit 1 when a budget fails")
     args = ap.parse_args()
@@ -181,7 +186,9 @@ def main() -> int:
     values: dict[str, float] = {}
     for n in args.chunks:
         name = {100000: "p95-100k", 1000000: "p95-1m"}.get(n, f"p95-{n}")
-        with tempfile.TemporaryDirectory() as d:
+        if args.tmp:
+            os.makedirs(args.tmp, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=args.tmp) as d:
             t0 = time.time()
             conn = build(os.path.join(d, "v.db"), n, args.dim)
             values[f"build-s-{n}"] = round(time.time() - t0, 1)

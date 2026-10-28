@@ -1,5 +1,6 @@
 """Talking to the local language model: finding the runtime, streaming, reasoning blocks and telemetry (split out of ai_chat_agent.py, ARCH-1)."""
 
+import contextvars
 import json
 import os
 import re
@@ -197,6 +198,18 @@ class _ThinkSplitter:
         self.buf = ""
 
 
+# How long the last model call took to its first token, in ms (AI-16): measured on a streamed
+# reply, or Ollama's own load and prompt times on a whole one; None when the server can't say
+_FIRST_TOKEN_MS: contextvars.ContextVar[float | None] = contextvars.ContextVar("zettnas_first_token_ms", default=None)
+
+
+def _note_first_token(state: dict[str, Any], data: dict[str, Any], streaming: bool) -> None:
+    ms = state.get("first_token_ms") if streaming else None
+    if ms is None and isinstance(data, dict) and ("prompt_eval_duration" in data or "load_duration" in data):
+        ms = (int(data.get("load_duration") or 0) + int(data.get("prompt_eval_duration") or 0)) / 1e6
+    _FIRST_TOKEN_MS.set(round(ms, 1) if ms is not None else None)
+
+
 def _read_llm_stream(resp: Any, runtime_kind: str, state: dict[str, Any] | None = None) -> dict[str, Any]:
     """Reads a streamed Ollama (NDJSON) or OpenAI-compatible (SSE) reply, passing pieces to the
     token sink as they arrive, and returns it in the same shape as a non-streamed reply. `state`
@@ -206,6 +219,8 @@ def _read_llm_stream(resp: Any, runtime_kind: str, state: dict[str, Any] | None 
     def sink(kind: str, text: str) -> None:
         if state is not None and text:
             state["streamed"] = True
+            if "first_token_ms" not in state and state.get("t_sent"):
+                state["first_token_ms"] = (time.monotonic() - state["t_sent"]) * 1000.0  # AI-16
         base_sink(kind, text)
 
     splitter = _ThinkSplitter(sink)
@@ -422,6 +437,7 @@ def _try_local_llm_completion(
     attempts = 0
     turn_deadline = time.monotonic() + TURN_DEADLINE_SECS
     state: dict[str, Any] = {}
+    _FIRST_TOKEN_MS.set(None)
     for runtime_kind, url in candidate_endpoints:
         if _cancelled() or attempts >= PROMPT_ATTEMPTS or time.monotonic() >= turn_deadline - 5:
             break
@@ -564,6 +580,7 @@ def _try_local_llm_completion(
             wait = min(first_token_wait if streaming else max(180.0, first_token_wait), left)
             attempts += 1
             state.clear()
+            state["t_sent"] = time.monotonic()
             try:
                 resp = urllib.request.urlopen(req, timeout=wait)
             except urllib.error.HTTPError as http_err:
@@ -599,6 +616,7 @@ def _try_local_llm_completion(
                     data = _read_llm_stream(resp, runtime_kind, state)
                 else:
                     data = json.loads(resp.read().decode("utf-8", errors="replace"))
+                _note_first_token(state, data, streaming)
                 if runtime_kind == "openai_compatible":
                     choices = data.get("choices") or []
                     if choices and isinstance(choices[0], dict):
@@ -781,6 +799,7 @@ def build_llm_execution_telemetry(
         "elapsed_ms": round(elapsed_ms, 1),
         "tokens_generated": est_tokens,
         "tokens_per_sec": tok_per_sec,
+        "first_token_ms": _FIRST_TOKEN_MS.get() if llm_invoked else None,  # AI-16
         "tools_called": list(tools_called or []),
         "web_sources_count": int(web_sources_count or 0),
     }

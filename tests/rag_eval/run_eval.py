@@ -35,6 +35,7 @@ generalises. --misses lists dev misses only (--show-heldout to see all, e.g. for
 import argparse
 import hashlib
 import json
+import math
 import os
 import random
 import re
@@ -310,6 +311,19 @@ def read_scanned(engine, ocr: str = "standin", host: str | None = None) -> dict:
     return seen
 
 
+def first_token_summary(times_ms: list) -> dict:
+    """p50 and p95 of the answers' first-token times (AI-16); the ones the server didn't report
+    are left out and counted."""
+    got = sorted(float(t) for t in times_ms if t is not None)
+    if not got:
+        return {"measured": 0}
+
+    def pct(q: float) -> float:  # nearest rank
+        return round(got[min(len(got) - 1, max(0, math.ceil(q * len(got)) - 1))], 1)
+
+    return {"p50_ms": pct(0.5), "p95_ms": pct(0.95), "measured": len(got), "missing": len(times_ms) - len(got)}
+
+
 def calibrate(rounds: int = 7) -> float:
     """Milliseconds this machine takes for a fixed piece of work (sorting and hashing), the
     fastest of a few rounds (the least disturbed): search times divided by it compare across
@@ -441,6 +455,8 @@ def evaluate(
                 os.environ.pop("TESTING", None)
                 os.environ.pop("ZETTNAS_TEST_MODE", None)
 
+                # streamed, as the app's chat is: the first token's time is measured (AI-16)
+                sink_token = ai_chat_agent._TOKEN_SINK.set(lambda kind, text: None)
                 with patch.object(ai_chat_agent, "get_rag_engine", return_value=engine):
                     for item in load_qa(which)[: qa_limit or None]:
                         out = ai_chat_agent.run_agentic_chat(
@@ -466,8 +482,10 @@ def evaluate(
                                 ),
                                 "answer": text[:400],
                                 "faithful": (out.get("grounding_detail") or {}).get("score"),
+                                "first_token_ms": tel.get("first_token_ms"),
                             }
                         )
+                ai_chat_agent._TOKEN_SINK.reset(sink_token)
     finally:
         engine.close()
         vec_min = similarity_profile(model, dim).get("vec_min")
@@ -511,6 +529,7 @@ def evaluate(
             "accuracy": round(sum(r["correct"] for r in qa_rows) / n, 3),
             "source_hit": round(sum(r["source_hit"] for r in qa_rows) / n, 3),
             "model_answered": round(sum(r["model_answered"] for r in qa_rows) / n, 3),
+            "first_token": first_token_summary([r.get("first_token_ms") for r in qa_rows + refusals]),
             **faithfulness(qa_rows),
             "by_language": {
                 lang: round(

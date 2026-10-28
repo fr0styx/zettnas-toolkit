@@ -4,6 +4,9 @@
 
 #### AI
 
+- **AI checks closer to what you run**: the nightly AI check answers with Qwen3-4B, the chat model
+  ZettNAS ships with, checks long, Office and scanned documents too, and fails when the first word
+  of an answer takes much longer to arrive.
 - **A smaller, equally exact vector index**: the AI search index keeps its vectors as int8, a
   quarter of the size; the full vectors are kept once and still decide the order of results.
   The existing index is converted once at start, without reading your files.

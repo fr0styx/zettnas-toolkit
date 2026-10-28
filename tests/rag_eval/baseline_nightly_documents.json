@@ -1,0 +1,100 @@
+{
+ "note": "floor: the per-commit lexical result; replace it with a recorded nightly run",
+ "model": "zett_lexical_384d",
+ "set": "documents",
+ "distractors": 0,
+ "overall": {
+  "recall@1": 0.788,
+  "recall@5": 1.0,
+  "all@5": 0.909,
+  "mrr@10": 0.881,
+  "queries": 33
+ },
+ "by_language": {
+  "de": {
+   "recall@1": 0.714,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.857,
+   "queries": 7
+  },
+  "en": {
+   "recall@1": 0.882,
+   "recall@5": 1.0,
+   "all@5": 0.824,
+   "mrr@10": 0.941,
+   "queries": 17
+  },
+  "es": {
+   "recall@1": 0.25,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.521,
+   "queries": 4
+  },
+  "fr": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 1.0,
+   "queries": 4
+  },
+  "zh": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 1.0,
+   "queries": 1
+  }
+ },
+ "by_kind": {
+  "long": {
+   "recall@1": 0.909,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.955,
+   "queries": 11
+  },
+  "multihop": {
+   "recall@1": 1.0,
+   "recall@5": 1.0,
+   "all@5": 0.4,
+   "mrr@10": 1.0,
+   "queries": 5
+  },
+  "office": {
+   "recall@1": 0.8,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.883,
+   "queries": 10
+  },
+  "scanned": {
+   "recall@1": 0.429,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.679,
+   "queries": 7
+  }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.821,
+   "recall@5": 1.0,
+   "all@5": 0.929,
+   "mrr@10": 0.896,
+   "queries": 28
+  },
+  "heldout": {
+   "recall@1": 0.6,
+   "recall@5": 1.0,
+   "all@5": 0.8,
+   "mrr@10": 0.8,
+   "queries": 5
+  }
+ },
+ "scanned_read": {
+  "done": 4,
+  "empty": 1
+ }
+}

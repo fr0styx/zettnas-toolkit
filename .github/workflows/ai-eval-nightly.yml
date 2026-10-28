@@ -2,7 +2,10 @@ name: AI eval (nightly)
 
 # Retrieval and answer quality with a real neural embedder, cross-language and paraphrase
 # queries and 2,000 distractor files (AI-3). CI's per-commit eval uses the built-in lexical
-# vectors; this one uses EmbeddingGemma served by Ollama, and a small chat model for answers.
+# vectors; this one uses EmbeddingGemma served by Ollama, and for answers Qwen3-4B, the chat
+# model ZettNAS ships with (AI-16; it ran Qwen3-1.7B before). Three jobs side by side: on
+# GitHub's CPUs the 97 answers take hours, so they have a job of their own. The answers'
+# first-token time is gated too.
 on:
   schedule:
     - cron: "17 3 * * *"
@@ -16,9 +19,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  eval:
+  retrieval:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 120
     services:
       ollama:
         image: ollama/ollama@sha256:5c6707fcf2e1a30cffe2ecb7e315584fc87747c389327e4bc711c4959aa1eecc
@@ -38,46 +41,112 @@ jobs:
           pip install -r requirements-dev.txt
       - name: Pull the models
         run: |
-          for m in embeddinggemma qwen3:1.7b; do
+          for m in embeddinggemma; do
             curl -sf http://127.0.0.1:11434/api/pull -d "{\"model\": \"$m\", \"stream\": false}" >/dev/null
           done
-      - name: Retrieval (all sets, 2,000 distractors)
+      - name: Retrieval (base and extended sets, 2,000 distractors)
         env:
           TESTING: "1"
         run: |
           python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
             --set all --distractors 2000 --misses --out eval-retrieval.json > /dev/null
           python -m tests.rag_eval.compare eval-retrieval.json tests/rag_eval/baseline_nightly.json
-      - name: Answers (97 questions, scored)
-        if: always()
-        env:
-          TESTING: "1"
-        run: |
-          python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
-            --answers qwen3:1.7b --misses --out eval-answers.json > /dev/null
-          python -m tests.rag_eval.compare eval-answers.json tests/rag_eval/baseline_nightly_answers.json
       - name: Summary
         if: always()
-        run: |
-          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import json, os
-          for name in ("eval-retrieval.json", "eval-answers.json"):
-              if not os.path.exists(name):
-                  continue
-              d = json.load(open(name))
-              print(f"### {name}\n")
-              print("| scope | recall@1 | recall@5 | mrr@10 |\n|---|---|---|---|")
-              rows = [("overall", d["overall"])] + [(k, v) for k, v in d.get("by_kind", {}).items()] + [(k, v) for k, v in d.get("by_language", {}).items()]
-              for k, v in rows:
-                  print(f"| {k} | {v['recall@1']} | {v['recall@5']} | {v['mrr@10']} |")
-              if "answers" in d:
-                  a = d["answers"]
-                  print(f"\nAnswers ({a['model']}): accuracy {a['accuracy']}, right source cited {a['source_hit']}; by language {a['by_language']}\n")
-          PY
+        run: python -m tests.rag_eval.summary eval-retrieval.json >> "$GITHUB_STEP_SUMMARY"
       - name: Keep the results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: ai-eval
-          path: eval-*.json
+          name: ai-eval-retrieval
+          path: eval-retrieval.json
+          retention-days: 30
+
+  documents:
+    # long, Office and scanned documents and multi-hop questions (AI-16); scanned pages are read
+    # by the stand-in, as per commit (the vision model is checked on the hardware runner)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      ollama:
+        image: ollama/ollama@sha256:5c6707fcf2e1a30cffe2ecb7e315584fc87747c389327e4bc711c4959aa1eecc
+        ports:
+          - 11434:11434
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+      - name: Install the hash-locked dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements.lock
+          pip install -r requirements-dev.txt
+      - name: Pull the models
+        run: |
+          for m in embeddinggemma; do
+            curl -sf http://127.0.0.1:11434/api/pull -d "{\"model\": \"$m\", \"stream\": false}" >/dev/null
+          done
+      - name: Documents set
+        env:
+          TESTING: "1"
+        run: |
+          python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
+            --set documents --ocr standin --misses --out eval-documents.json > /dev/null
+          python -m tests.rag_eval.compare eval-documents.json tests/rag_eval/baseline_nightly_documents.json
+      - name: Summary
+        if: always()
+        run: python -m tests.rag_eval.summary eval-documents.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ai-eval-documents
+          path: eval-documents.json
+          retention-days: 30
+
+  answers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    services:
+      ollama:
+        image: ollama/ollama@sha256:5c6707fcf2e1a30cffe2ecb7e315584fc87747c389327e4bc711c4959aa1eecc
+        ports:
+          - 11434:11434
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+      - name: Install the hash-locked dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements.lock
+          pip install -r requirements-dev.txt
+      - name: Pull the models
+        run: |
+          for m in embeddinggemma qwen3:4b; do
+            curl -sf http://127.0.0.1:11434/api/pull -d "{\"model\": \"$m\", \"stream\": false}" >/dev/null
+          done
+      - name: Answers (97 questions, scored; first token within 2 minutes at p95)
+        env:
+          TESTING: "1"
+        run: |
+          python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
+            --answers qwen3:4b --misses --out eval-answers.json > /dev/null
+          python -m tests.rag_eval.compare eval-answers.json tests/rag_eval/baseline_nightly_answers.json \
+            --first-token-p95-ms 120000
+      - name: Summary
+        if: always()
+        run: python -m tests.rag_eval.summary eval-answers.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ai-eval-answers
+          path: eval-answers.json
           retention-days: 30

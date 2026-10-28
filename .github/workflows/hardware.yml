@@ -51,7 +51,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Vector index at 100k and 1M chunks
-        run: /opt/zn-eval/bin/python scripts/vector_bench.py --chunks 100000 1000000
+        # the 1M-chunk database is about 5 GB: on the runner's results folder, not in Docker's image
+        run: /opt/zn-eval/bin/python scripts/vector_bench.py --chunks 100000 1000000 --tmp /results/tmp-vector
 
   ai-eval:
     # Search and answers on the model servers this install uses, read-only (AI-16)
