@@ -31,6 +31,10 @@ const KINDS = [
   },
 ];
 
+/** Shares left unticked at first: Docker's image and VM disks (system), installers (isos). They
+ * are large, change all the time or can be downloaded again; anyone can still tick them. */
+export const UNTICKED_SHARES = new Set(['system', 'isos']);
+
 /** Where the backup goes inside the chosen destination. */
 export function locationFor(kind, target) {
   return kind === 'cloud' ? `rclone:${target}:zettnas-backup` : `${String(target).replace(/\/+$/, '')}/zettnas-backup`;
@@ -45,7 +49,10 @@ export function guideHtml(dest, shares) {
         : html`<p class="offsite-meta">${k.none()}</p>`
     }</fieldset>`;
   });
-  const what = shares.map((s) => html`<label class="offsite-check"><input type="checkbox" name="paths" value="${s.path}" checked> ${s.name}</label>`);
+  const what = shares.map(
+    (s) =>
+      html`<label class="offsite-check"><input type="checkbox" name="paths" value="${s.path}" ${UNTICKED_SHARES.has(String(s.name).toLowerCase()) ? '' : html`checked`}> ${s.name}</label>`,
+  );
   return html`<form class="offsite-form" data-protect-form>
     <p class="snap-help">${t('protect.intro', 'A copy of your shares outside this NAS, with versions and encryption, every night at 2:00.')}</p>
     ${where}

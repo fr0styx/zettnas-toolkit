@@ -10,7 +10,16 @@ const guide = await import('../components/protect-nas.js');
 const ov = await import('../components/management/overview.js');
 
 const DEST = { usb: ['/mnt/disks/usb1'], nas: [], cloud: ['b2'] };
-const SHARES = { shares: [{ name: 'Photos', mountpoint: '/mnt/user/photos' }, { name: 'Docs', mountpoint: '/mnt/user/docs' }, { name: 'nowhere' }] };
+const SHARES = {
+  shares: [
+    { name: 'Photos', mountpoint: '/mnt/user/photos' },
+    { name: 'Docs', mountpoint: '/mnt/user/docs' },
+    { name: 'system', mountpoint: '/mnt/user/system' },
+    { name: 'isos', mountpoint: '/mnt/user/isos' },
+    { name: 'appdata', mountpoint: '/mnt/user/appdata' },
+    { name: 'nowhere' },
+  ],
+};
 
 describe('B12b (FEAT-01): Protect this NAS', () => {
   beforeEach(() => {
@@ -29,13 +38,20 @@ describe('B12b (FEAT-01): Protect this NAS', () => {
     api.post.mockResolvedValue({});
     const dlg = await guide.openProtectGuide();
     expect(dlg.textContent).toContain('No other NAS is mounted here');
-    expect([...dlg.querySelectorAll('input[name="paths"]')].map((i) => i.checked)).toEqual([true, true]);
+    // every share but system and isos (Docker image, VM disks, installers)
+    expect([...dlg.querySelectorAll('input[name="paths"]')].map((i) => [i.value, i.checked])).toEqual([
+      ['/mnt/user/photos', true],
+      ['/mnt/user/docs', true],
+      ['/mnt/user/system', false],
+      ['/mnt/user/isos', false],
+      ['/mnt/user/appdata', true],
+    ]);
     dlg.querySelector('input[value="cloud|b2"]').checked = true;
     dlg.querySelector('[data-protect-form]').dispatchEvent(new Event('submit', { cancelable: true }));
     await vi.waitFor(() => expect(offsite.offerRecoveryKit).toHaveBeenCalled());
     const body = api.put.mock.calls[0][1];
     expect(body.location).toBe('rclone:b2:zettnas-backup');
-    expect(body.paths).toEqual(['/mnt/user/photos', '/mnt/user/docs']);
+    expect(body.paths).toEqual(['/mnt/user/photos', '/mnt/user/docs', '/mnt/user/appdata']);
     expect(body.hour).toBe(2);
     const id = body.id;
     expect(api.post).toHaveBeenCalledWith(`/api/offsite/repos/${id}/init`, {});
