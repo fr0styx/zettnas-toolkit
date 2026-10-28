@@ -293,7 +293,7 @@
   "styles": 12,
   "templates": 5
  },
- "frontend/src/components/setup-wizard.js": {
+ "frontend/src/components/setup-wizard-gate.js": {
   "buttons": 0,
   "globals": 1,
   "styles": 0,
@@ -426,10 +426,10 @@
   "templates": 0
  },
  "frontend/src/modals.js": {
-  "buttons": 1,
-  "globals": 4,
-  "styles": 13,
-  "templates": 7
+  "buttons": 0,
+  "globals": 3,
+  "styles": 0,
+  "templates": 5
  },
  "frontend/src/toast.js": {
   "buttons": 1,

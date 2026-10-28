@@ -201,7 +201,6 @@ export function initWizardStepper(modal) {
 }
 
 export function initSetupWizard() {
-  window.openSetupWizard = openSetupWizard;
   if (_wizardInitialized) return;
   _wizardInitialized = true;
 
