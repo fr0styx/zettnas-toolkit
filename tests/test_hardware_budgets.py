@@ -41,15 +41,17 @@ def test_measures_and_judges(tmp_path, monkeypatch, capsys):
     assert values == {
         "restarted": False,
         "viewers": 0,
+        "processes": 1,
         "idle-cpu": 1.0,
         "wakeups": 600,
+        "spawns": 0.0,
         "backend-memory": 180.0,
         "ai-memory": 3072.0,
     }
     ok = hb.verdicts(values)
-    assert ok == {"idle-cpu": True, "wakeups": True, "backend-memory": True, "ai-memory": False}
+    assert ok == {"idle-cpu": True, "wakeups": True, "spawns": True, "backend-memory": True, "ai-memory": False}
 
-    monkeypatch.setattr(hb, "measure", lambda seconds: values)
+    monkeypatch.setattr(hb, "measure", lambda seconds, **k: values)
     out_dir = tmp_path / "results"
     assert hb.main(["--seconds", "1", "--results", str(out_dir)]) == 0  # warnings, not a red run
     assert hb.main(["--seconds", "1", "--results", str(out_dir), "--strict"]) == 1
@@ -75,7 +77,7 @@ def test_idle_budgets_are_skipped_while_someone_uses_the_app(tmp_path, capsys, m
     (tmp_path / "1" / "net").mkdir()
     header = "  sl  local_address rem_address   st\n"
     (tmp_path / "1" / "net" / "tcp").write_text(
-        header + "   0: 00000000:1F92 0100007F:C350 01 0\n   1: 00000000:1F92 00000000:0000 0A 0\n"
+        header + "   0: 00000000:1F92 0A00000A:C350 01 0\n   1: 00000000:1F92 00000000:0000 0A 0\n"
     )
     (tmp_path / "1" / "net" / "tcp6").write_text(header)
     assert hb.viewers("1", str(tmp_path)) == 1  # one established, one listening
@@ -84,7 +86,13 @@ def test_idle_budgets_are_skipped_while_someone_uses_the_app(tmp_path, capsys, m
     monkeypatch.setattr(
         hb,
         "measure",
-        lambda seconds: {"viewers": 1, "idle-cpu": 9.0, "wakeups": 99999, "backend-memory": 100.0, "ai-memory": 10.0},
+        lambda seconds, **k: {
+            "viewers": 1,
+            "idle-cpu": 9.0,
+            "wakeups": 99999,
+            "backend-memory": 100.0,
+            "ai-memory": 10.0,
+        },
     )
     assert hb.main(["--seconds", "1", "--results", str(tmp_path / "r"), "--strict"]) == 0
     assert "SKIP idle-cpu" in capsys.readouterr().out
@@ -107,9 +115,124 @@ def test_a_restart_during_the_soak_skips_the_backend_budgets(tmp_path, capsys, m
         _proc(tmp_path, 2, "python3 -m backend.main", 5, 10, 150 * 1024)
 
     monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
-    values = hb.measure(60, proc=str(tmp_path), sleep=restart, clock=iter([0.0, 60.0]).__next__)
+    state = {"t": 0.0}
+
+    def sleep(s):
+        if state["t"] == 0.0:
+            restart(s)
+        state["t"] += s
+
+    values = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"])
     assert values["restarted"] is True
-    assert hb.verdicts(values) == {"idle-cpu": None, "wakeups": None, "backend-memory": None, "ai-memory": True}
-    monkeypatch.setattr(hb, "measure", lambda seconds: values)
+    assert hb.verdicts(values) == {
+        "idle-cpu": None,
+        "wakeups": None,
+        "spawns": None,
+        "backend-memory": None,
+        "ai-memory": True,
+    }
+    monkeypatch.setattr(hb, "measure", lambda seconds, **k: values)
     assert hb.main(["--seconds", "1", "--results", str(tmp_path / "r"), "--strict"]) == 0
     assert "SKIP backend-memory (the backend restarted during the soak)" in capsys.readouterr().out
+
+
+def _cg(root, pid, text):
+    (root / str(pid) / "cgroup").write_text(text + "\n")
+
+
+def _set(root, pid, ticks, switches, start="5", ppid="1"):
+    fields = ["S", ppid] + ["0"] * 9 + [str(ticks), "0"] + ["0"] * 6 + [start] + ["0"] * 23
+    (root / str(pid) / "stat").write_text(f"{pid} (python3) " + " ".join(fields))
+    (root / str(pid) / "task" / str(pid) / "status").write_text(
+        f"voluntary_ctxt_switches:\t{switches}\nnonvoluntary_ctxt_switches:\t999\n"
+    )
+
+
+def test_the_whole_container_counts_and_new_processes_are_spawns(tmp_path, monkeypatch):
+    import shutil
+
+    _proc(tmp_path, 10, "python3 -m backend.main", 0, 0, 100 * 1024)
+    _proc(tmp_path, 11, "python3 helper", 0, 0, 1024)
+    _proc(tmp_path, 20, "/usr/bin/other-container", 0, 0, 1024)
+    for pid in (10, 11):
+        _cg(tmp_path, pid, "0::/docker/app")
+        _set(tmp_path, pid, 100, 1000)
+    _cg(tmp_path, 20, "0::/docker/else")
+    _set(tmp_path, 20, 100, 1000)
+    state = {"t": 0.0}
+
+    def sleep(s):
+        state["t"] += s
+        n = int(state["t"])
+        _set(tmp_path, 10, 100 + n, 1000 + 10 * n)
+        _set(tmp_path, 20, 100 + 50 * n, 1000 + 500 * n)  # another container: never counted
+        if n == 10:  # a tool the app starts lives for a few seconds
+            _proc(tmp_path, 30, "smartctl -n standby", 0, 0, 1024)
+            _cg(tmp_path, 30, "0::/docker/app")
+        if 10 <= n < 13:
+            _set(tmp_path, 30, 2 * (n - 9), 5 * (n - 9), start="900")
+        if n == 13:
+            shutil.rmtree(tmp_path / "30")
+
+    monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
+    v = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"])
+    assert v["spawns"] == 1.0
+    assert v["processes"] == 3
+    assert v["idle-cpu"] == round(100 * (60 + 6) / 100 / 60, 2)  # backend + the tool, not the neighbour
+    assert v["wakeups"] == 600 + 15  # voluntary only
+    assert v["restarted"] is False
+
+
+def test_tree_scope_follows_children_only(tmp_path, monkeypatch):
+    _proc(tmp_path, 40, "python3 -m backend.main", 0, 0, 1024)
+    _proc(tmp_path, 41, "child", 0, 0, 1024)
+    _proc(tmp_path, 42, "runner", 0, 0, 1024)
+    _set(tmp_path, 40, 0, 0, start="1", ppid="1")
+    _set(tmp_path, 41, 0, 0, start="2", ppid="40")
+    _set(tmp_path, 42, 0, 0, start="3", ppid="1")
+    state = {"t": 0.0}
+
+    def sleep(s):
+        state["t"] += s
+        _set(tmp_path, 41, int(state["t"]), 0, start="2", ppid="40")
+        _set(tmp_path, 42, 100 * int(state["t"]), 0, start="3", ppid="1")
+
+    monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
+    v = hb.measure(10, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"], pid="40", scope="tree")
+    assert v["processes"] == 2 and v["idle-cpu"] == 1.0  # the child: 10 ticks in 10 s; not the runner
+
+
+def test_loopback_connections_are_not_viewers(tmp_path):
+    net = tmp_path / "7" / "net"
+    net.mkdir(parents=True)
+    head = "  sl  local_address rem_address   st\n"
+    (net / "tcp").write_text(
+        head
+        + "   0: 0100007F:1F92 0100007F:A000 01\n"  # the healthcheck
+        + "   1: 040011AC:1F92 0A00000A:B000 01\n"  # a browser on the LAN
+    )
+    (net / "tcp6").write_text(
+        head + "   0: 00000000000000000000000000000000:1F92 00000000000000000000000001000000:C000 01\n"
+    )
+    assert hb.viewers("7", proc=str(tmp_path), port=8082) == 1
+
+
+def test_strict_can_name_the_budgets_that_gate(monkeypatch, tmp_path, capsys):
+    values = {
+        "restarted": False,
+        "viewers": 0,
+        "processes": 3,
+        "idle-cpu": 5.0,
+        "wakeups": 9000,
+        "spawns": 2.0,
+        "backend-memory": 1.0,
+        "ai-memory": 0.0,
+    }
+    monkeypatch.setattr(hb, "measure", lambda seconds, **k: values)
+    args = ["--seconds", "1", "--results", str(tmp_path), "--only", "spawns,wakeups,idle-cpu"]
+    assert hb.main(args + ["--strict", "spawns"]) == 0  # the over-budget wakeups only warn
+    assert hb.main(args + ["--strict"]) == 1
+    out = capsys.readouterr().out
+    assert "9000" not in out and "PASS spawns" in out and "FAIL wakeups" in out
+    assert hb.main(args + ["--show"]) == 0
+    assert "(9000 / " in capsys.readouterr().out

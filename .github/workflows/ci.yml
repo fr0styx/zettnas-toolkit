@@ -197,6 +197,12 @@ jobs:
               raise SystemExit('Timed out waiting for the test server.')
           " || { annotate 'E2E server' 'Test server did not become healthy'; exit 1; }
 
+          # PERF-10: one idle minute with nobody using the app. Starting more than 10 processes a
+          # minute fails the run; wakeups and CPU are warnings (a shared runner is noisy).
+          HOST_PROC=/proc python3 scripts/hardware_budgets.py --pid "$SERVER_PID" --scope tree --warmup 30 \
+            --seconds 60 --only spawns,wakeups,idle-cpu --strict spawns --show --results /tmp/zn-idle ||
+            { annotate 'Idle minute' 'The idle backend started more than 10 processes a minute'; exit 1; }
+
           # Execute full Playwright E2E Integration Suite; skips count as failures here
           set -o pipefail
           if ! ZETTNAS_E2E_REQUIRED=1 pytest tests/test_e2e_integration.py tests/test_e2e_a11y.py tests/test_e2e_keyboard_german.py -v -rfE 2>&1 | tee /tmp/zn-e2e.log; then

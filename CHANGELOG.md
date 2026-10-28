@@ -11,6 +11,8 @@
   built-in LCD renderer wake and write far less often while nothing changes.
 - **Faster AI search on a big library**: searches score candidates faster and find the newest files
   through an index, and the AI index is tidied up once a night while nobody chats.
+- **Idle budgets for the whole container**: the nightly hardware check counts every process in the
+  app's container and the processes it starts; every pull request now runs one idle minute.
 - **File search that doesn't wake disks**: searching by name uses the AI index for a folder on a
   sleeping disk instead of walking it, and says when results may be incomplete. Answers are
   compressed, and very large folder sizes stop at a limit and say "at least".
