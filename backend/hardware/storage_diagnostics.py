@@ -467,7 +467,7 @@ def collect_storage_diagnostics() -> dict[str, Any]:
     mdstat = get_mdstat_summary()
 
     # 10. Cached SMART summary (Legacy contract preservation)
-    cached_smart = dict(Z_STATE.cached_smart_data) if hasattr(Z_STATE, "cached_smart_data") else {}
+    cached_smart = Z_STATE.smart.snapshot("cached_data") if hasattr(Z_STATE, "cached_smart_data") else {}
 
     # 11. High-level Executive Summary
     standby_count = sum(1 for d in live_disks if d.get("standby"))

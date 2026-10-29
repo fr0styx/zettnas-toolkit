@@ -28,7 +28,7 @@ from backend.hardware.ups import read_ups_status
 from backend.ignored_errors import snapshot as ignored_snapshot
 from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
-from backend.state import Z_STATE
+from backend.state import Z_STATE, events_snapshot
 
 router = APIRouter(tags=["System Diagnostics"])
 
@@ -177,7 +177,7 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
     sanitized_notifs = sanitize_dict(notif_cfg)
 
     # 9. System events (last 100)
-    events = list(Z_STATE.event_log)
+    events = events_snapshot()
     if not events:
         try:
             events = read_json(EVENTS_FILE, [])

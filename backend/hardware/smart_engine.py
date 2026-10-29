@@ -235,7 +235,7 @@ class SmartTelemetryEngine:
         if not is_nvme and not allow_wake:
             if cls.is_device_sleeping(dev_path, protocol=protocol):
                 prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
-                Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
+                Z_STATE.smart.set_reading(dev_name, prev_t, "standby")
                 return {
                     "dev": dev_name,
                     "standby": True,
@@ -274,7 +274,7 @@ class SmartTelemetryEngine:
                 )
                 if is_standby:
                     prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
-                    Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
+                    Z_STATE.smart.set_reading(dev_name, prev_t, "standby")
                     return {
                         "dev": dev_name,
                         "standby": True,
@@ -302,8 +302,8 @@ class SmartTelemetryEngine:
             temp, health, metrics, model, serial, hours = None, "unknown", {}, "Unknown", "Unknown", "Unknown"
 
         if temp is not None or health != "standby":
-            Z_STATE.cached_smart_data[dev_name] = (temp, health if health != "standby" else "ok")
-            Z_STATE.cached_smart_time[dev_name] = now
+            Z_STATE.smart.set_reading(dev_name, temp, health if health != "standby" else "ok")
+            Z_STATE.smart.set_time(dev_name, now)
             poh_val = 0
             if hours and str(hours).isdigit():
                 poh_val = int(hours)

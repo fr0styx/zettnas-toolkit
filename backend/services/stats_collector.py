@@ -68,7 +68,7 @@ from backend.services.fan_control import run_fan_control as _run_fan_control
 from backend.services.notifications import NOTIFICATIONS_FILE, send_notification
 from backend.services.rag_reindex_status import get_reindex_status as get_ai_reindex_status
 from backend.services.stats_delta import StatsDeltaEncoder
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, events_snapshot
 
 logger = logging.getLogger("ZettNAS")
 
@@ -256,7 +256,7 @@ def _build_payload(
     disk_hold_rem = max(get_hold_remaining("pwm1", disk_hold_secs), get_hold_remaining("pwm2", disk_hold_secs))
     cpu_hold_rem = get_hold_remaining("pwm3", cpu_hold_secs)
 
-    events_list = list(Z_STATE.event_log)
+    events_list = events_snapshot()
     docker_list = read_docker_containers()
 
     hw_features = ChassisEngine.detect_hardware_features()
@@ -594,7 +594,7 @@ def collect():
                 "lcd": {"page": Z_STATE.current_lcd_page, "cycle_seconds": Z_STATE.lcd_cycle_seconds},
             }
         )
-        data["events"] = list(Z_STATE.event_log)
+        data["events"] = events_snapshot()
         data["security"] = {"is_default_password": is_using_default_password()}
         if "lcd" not in data:
             data["lcd"] = {"page": Z_STATE.current_lcd_page, "cycle_seconds": Z_STATE.lcd_cycle_seconds}
@@ -635,11 +635,14 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
             pred = v.get("predictive_velocity", {})
             is_accel = bool(pred.get("is_accelerating", False))
             # Shown on the desktop and the front LCD (D6)
-            Z_STATE.disk_risk[dev] = {
-                "risk": risk or "low",
-                "probability": v.get("failure_probability"),
-                "advice": str(v.get("recommendation") or "")[:200],
-            }
+            Z_STATE.smart.set_risk(
+                dev,
+                {
+                    "risk": risk or "low",
+                    "probability": v.get("failure_probability"),
+                    "advice": str(v.get("recommendation") or "")[:200],
+                },
+            )
 
             if shedding or realloc_7d > 0 or risk == "critical" or is_accel:
                 last_alert_time = _SMART_VELOCITY_LAST_ALERT.get(dev, 0)

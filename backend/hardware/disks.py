@@ -666,7 +666,7 @@ def _handle_smart_failure(dev_name: str, now: float):
     else:
         temp = prev_t
         health = prev_h if prev_h != "standby" else "ok"
-    Z_STATE.cached_smart_data[dev_name] = (temp, health)
+    Z_STATE.smart.set_reading(dev_name, temp, health)
 
 
 def poll_disk_smart(dev_name: str, is_nvme: bool):
@@ -683,10 +683,10 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
         logger.debug("backend.hardware.disks.poll_disk_smart: ignored error", exc_info=True)
 
     if is_removable:
-        Z_STATE.cached_smart_data[dev_name] = (None, "ok")
+        Z_STATE.smart.set_reading(dev_name, None, "ok")
         return
 
-    Z_STATE.last_smart_scan[dev_name] = now
+    Z_STATE.smart.set_scanned(dev_name, now)
     try:
         cmd = ["smartctl", "-j"]
         if not is_nvme:
@@ -707,13 +707,13 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
 
         if is_standby:
             prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
-            Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
+            Z_STATE.smart.set_reading(dev_name, prev_t, "standby")
         elif r.stdout and (r.returncode == 0 or (r.returncode & 7) == 0):
             temp, health, metrics = _parse_smart(r.stdout, is_nvme)
             _evaluate_smart_trends(dev_name, metrics)
             log_smart_metrics(int(now), dev_name, temp, metrics)
-            Z_STATE.cached_smart_data[dev_name] = (temp, health)
-            Z_STATE.cached_smart_time[dev_name] = now
+            Z_STATE.smart.set_reading(dev_name, temp, health)
+            Z_STATE.smart.set_time(dev_name, now)
         elif "unrecognized option" in combined_out.lower() or "-j" in combined_out.lower():
             # Graceful fallback for environments with legacy smartctl without -j
             cmd_fallback = [c for c in cmd if c != "-j"]
@@ -729,13 +729,13 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
             )
             if is_fb_standby:
                 prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
-                Z_STATE.cached_smart_data[dev_name] = (prev_t, "standby")
+                Z_STATE.smart.set_reading(dev_name, prev_t, "standby")
             elif r_fb.stdout and (r_fb.returncode == 0 or (r_fb.returncode & 7) == 0):
                 temp, health, metrics = _parse_smart(r_fb.stdout, is_nvme)
                 _evaluate_smart_trends(dev_name, metrics)
                 log_smart_metrics(int(now), dev_name, temp, metrics)
-                Z_STATE.cached_smart_data[dev_name] = (temp, health)
-                Z_STATE.cached_smart_time[dev_name] = now
+                Z_STATE.smart.set_reading(dev_name, temp, health)
+                Z_STATE.smart.set_time(dev_name, now)
             else:
                 _handle_smart_failure(dev_name, now)
         else:
@@ -1154,15 +1154,17 @@ def remember_verdict(dev_name: str, result: dict) -> None:
     except Exception:
         logger.debug("backend.hardware.disks.remember_verdict: alert not sent", exc_info=True)
     top = next((f for f in result.get("findings") or [] if f.get("severity") == result.get("verdict")), None)
-    with Z_STATE.smart.lock:
-        Z_STATE.drive_verdicts[dev_name] = {
+    Z_STATE.smart.set_verdict(
+        dev_name,
+        {
             "verdict": result.get("verdict", "unknown"),
             "kind": (top or {}).get("kind", ""),
             "summary": result.get("summary", ""),
             "summary_key": result.get("summary_key", ""),
             "summary_params": result.get("summary_params") or {},
             "ts": time.time(),
-        }
+        },
+    )
 
 
 # The latest S.M.A.R.T. reading per drive, shared by Drive Health's list, its detail pane and the
@@ -1279,7 +1281,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                 or "STANDBY MODE" in sb_out
                 or "SLEEP MODE" in sb_out
             ):
-                Z_STATE.cached_smart_data[dev_name] = (cached_temp, "standby")
+                Z_STATE.smart.set_reading(dev_name, cached_temp, "standby")
                 return {
                     "dev": dev_name,
                     "is_nvme": False,
@@ -1365,7 +1367,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                 or "DEVICE IS IN STANDBY" in out_sb
                 or "DEVICE IS IN SLEEP" in out_sb
             ):
-                Z_STATE.cached_smart_data[dev_name] = (cached_temp, "standby")
+                Z_STATE.smart.set_reading(dev_name, cached_temp, "standby")
                 return {
                     "dev": dev_name,
                     "is_nvme": False,
@@ -1476,9 +1478,9 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
 
     temp, smart_health, metrics = _parse_smart(doc if doc else raw_text, is_nvme)
     if temp is not None or smart_health != "standby":
-        Z_STATE.cached_smart_data[dev_name] = (temp, smart_health if smart_health != "standby" else "ok")
-        Z_STATE.last_smart_scan[dev_name] = time.time()
-        Z_STATE.cached_smart_time[dev_name] = time.time()
+        Z_STATE.smart.set_reading(dev_name, temp, smart_health if smart_health != "standby" else "ok")
+        Z_STATE.smart.set_scanned(dev_name, time.time())
+        Z_STATE.smart.set_time(dev_name, time.time())
         log_smart_metrics(int(time.time()), dev_name, temp, metrics)
 
     velocity = query_smart_velocity(dev_name)
@@ -1590,8 +1592,7 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
                         break
 
             if action_name == "abort":
-                with Z_STATE.lock:
-                    Z_STATE.active_smart_tests.pop(dev_name, None)
+                Z_STATE.smart.end_test(dev_name)
                 add_event(
                     level="warning",
                     title=f"S.M.A.R.T. Test Aborted: /dev/{dev_name}",
@@ -1605,8 +1606,9 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
                 )
             else:
                 start_temp, _ = Z_STATE.cached_smart_data.get(dev_name, (None, None))
-                with Z_STATE.lock:
-                    Z_STATE.active_smart_tests[dev_name] = {
+                Z_STATE.smart.start_test(
+                    dev_name,
+                    {
                         "dev": dev_name,
                         "test_type": action_name,
                         "start_time": time.time(),
@@ -1616,7 +1618,8 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
                         "is_nvme": is_nvme,
                         "expected_minutes": polling_mins,
                         "last_pct": 0,
-                    }
+                    },
+                )
                 add_event(
                     level="info",
                     title=f"S.M.A.R.T. {action_name.title()} Test Started: /dev/{dev_name}",
@@ -1734,8 +1737,7 @@ def check_active_smart_tests():
     Detects when in-flight self-tests finish on drive firmware, logs reports to DB,
     and publishes completion/failure events into the System Event Ledger.
     """
-    with Z_STATE.lock:
-        active_items = list(Z_STATE.active_smart_tests.items())
+    active_items = list(Z_STATE.smart.snapshot("active_tests").items())
 
     if not active_items:
         return
@@ -1790,8 +1792,7 @@ def check_active_smart_tests():
             if not doc and not log_entries and not progress.get("in_progress") and not progress.get("is_aborted"):
                 if time.time() - test_info.get("start_time", time.time()) < UNREADABLE_TEST_GIVE_UP_S:
                     continue
-                with Z_STATE.lock:
-                    Z_STATE.active_smart_tests.pop(dev_name, None)
+                Z_STATE.smart.end_test(dev_name)
                 add_event(
                     level="warning",
                     title=f"S.M.A.R.T. test result unknown: /dev/{dev_name}",
@@ -1801,14 +1802,11 @@ def check_active_smart_tests():
                 continue
 
             if progress.get("in_progress"):
-                with Z_STATE.lock:
-                    if dev_name in Z_STATE.active_smart_tests:
-                        Z_STATE.active_smart_tests[dev_name]["last_pct"] = progress.get("percent_completed", 0)
+                Z_STATE.smart.update_test(dev_name, last_pct=progress.get("percent_completed", 0))
                 continue
 
             # Test completed, aborted, or finished!
-            with Z_STATE.lock:
-                Z_STATE.active_smart_tests.pop(dev_name, None)
+            Z_STATE.smart.end_test(dev_name)
 
             start_time = test_info.get("start_time", time.time())
             duration_sec = max(1.0, round(time.time() - start_time, 1))

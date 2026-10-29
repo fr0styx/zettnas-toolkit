@@ -112,6 +112,9 @@
 
 #### Fixes
 
+- **Drive readings never written past each other**: the SMART readings, risk estimates, verdicts
+  and running self-tests change only through locked helpers, and lists of them are copied before
+  they are walked; the event log too. A test keeps any module from writing them directly (ARC-33).
 - **The fan watchdog comes back after a reboot on Unraid**: the image no longer carries Unraid's
   "managed" label, which made Unraid stop every container run from it on purpose at shutdown and
   never start it again. The app keeps the label its Unraid template gave it across updates. A

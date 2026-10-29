@@ -183,7 +183,7 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
                 return True
             if spundown_str in ("0", "false", "no"):
                 if cached and len(cached) >= 2 and str(cached[1] or "").lower() in ("standby", "sleep", "spundown"):
-                    Z_STATE.cached_smart_data[dev_name] = (cached[0], "ok")
+                    Z_STATE.smart.set_reading(dev_name, cached[0], "ok")
                 return False
 
     # 2. Check in-memory Z_STATE.cached_smart_data (0ms)
@@ -223,7 +223,7 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
                     or (not open_failed and (r.returncode == 2 or (r.returncode & 2) != 0))
                 )
                 if is_low_power:
-                    Z_STATE.cached_smart_data[dev_name] = (cached[0] if cached else None, "standby")
+                    Z_STATE.smart.set_reading(dev_name, cached[0] if cached else None, "standby")
                     _SMARTCTL_STANDBY_CACHE[dev_name] = (now, True)
                     return True
                 _SMARTCTL_STANDBY_CACHE[dev_name] = (now, False)
@@ -250,9 +250,9 @@ def get_sleeping_disks_list() -> list[str]:
             unraid_awake_devs.add(dev)
             cached = Z_STATE.cached_smart_data.get(dev)
             if cached and len(cached) >= 2 and str(cached[1] or "").lower() in ("standby", "sleep", "spundown"):
-                Z_STATE.cached_smart_data[dev] = (cached[0], "ok")
+                Z_STATE.smart.set_reading(dev, cached[0], "ok")
 
-    for dev, val in list(Z_STATE.cached_smart_data.items()):
+    for dev, val in list(Z_STATE.smart.snapshot("cached_data").items()):
         if dev in unraid_awake_devs:
             continue
         if val and len(val) >= 2 and str(val[1] or "").lower() in ("standby", "sleep", "spundown"):
@@ -264,7 +264,7 @@ def get_running_disks_list() -> list[str]:
     """Returns list of device names currently known to be spinning/active."""
     sleeping = set(get_sleeping_disks_list())
     running: set[str] = set()
-    for dev, val in list(Z_STATE.cached_smart_data.items()):
+    for dev, val in list(Z_STATE.smart.snapshot("cached_data").items()):
         if dev and dev not in sleeping and val and len(val) >= 2:
             if str(val[1] or "").lower() not in ("standby", "sleep", "spundown"):
                 running.add(dev)

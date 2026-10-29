@@ -123,6 +123,45 @@ class SmartState:
     active_tests: dict[str, Any] = field(default_factory=dict)
     verdicts: dict[str, Any] = field(default_factory=dict)  # dev -> latest Drive Health verdict
 
+    # ARC-33: every change goes through these, under the lock; readers that iterate take a copy
+    def set_reading(self, dev: str, temp: Any, health: Any) -> None:
+        with self.lock:
+            self.cached_data[dev] = (temp, health)
+
+    def set_time(self, dev: str, when: float) -> None:
+        with self.lock:
+            self.cached_time[dev] = when
+
+    def set_scanned(self, dev: str, when: float) -> None:
+        with self.lock:
+            self.last_scan[dev] = when
+
+    def set_risk(self, dev: str, risk: dict[str, Any]) -> None:
+        with self.lock:
+            self.disk_risk[dev] = risk
+
+    def set_verdict(self, dev: str, verdict: dict[str, Any]) -> None:
+        with self.lock:
+            self.verdicts[dev] = verdict
+
+    def start_test(self, dev: str, info: dict[str, Any]) -> None:
+        with self.lock:
+            self.active_tests[dev] = info
+
+    def end_test(self, dev: str) -> None:
+        with self.lock:
+            self.active_tests.pop(dev, None)
+
+    def update_test(self, dev: str, **changes: Any) -> None:
+        with self.lock:
+            if dev in self.active_tests:
+                self.active_tests[dev] = {**self.active_tests[dev], **changes}
+
+    def snapshot(self, name: str) -> dict[str, Any]:
+        """A copy of one of the maps above, safe to iterate while the pollers write."""
+        with self.lock:
+            return dict(getattr(self, name))
+
 
 class _Alias[T]:
     """Z_STATE.copy_active reads and writes Z_STATE.copy.active."""
@@ -245,6 +284,17 @@ EVENT_REPEAT_SECS = 3600
 _event_last_message: dict[tuple, str] = {}
 _event_flush_timer: threading.Timer | None = None
 _event_flush_lock = threading.Lock()
+
+
+def events_snapshot() -> list[dict[str, Any]]:
+    """The event log as it is now, safe to iterate (ARC-33)."""
+    with Z_STATE.lock:
+        return list(Z_STATE.event_log)
+
+
+def clear_events() -> None:
+    with Z_STATE.lock:
+        Z_STATE.event_log = []
 
 
 def flush_events() -> None:

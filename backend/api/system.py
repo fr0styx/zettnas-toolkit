@@ -441,8 +441,9 @@ def post_buttons(req: ButtonConfigRequest):
 
 @router.delete("/events/clear", dependencies=[Depends(require_scope("system:config"))])
 def clear_events():
-    with Z_STATE.lock:
-        Z_STATE.event_log = []
+    from backend.state import clear_events as _clear
+
+    _clear()
     if os.path.exists(EVENTS_FILE):
         try:
             os.remove(EVENTS_FILE)

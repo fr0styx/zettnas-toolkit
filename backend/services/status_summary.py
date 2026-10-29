@@ -28,7 +28,9 @@ def _drives() -> list[dict[str, Any]]:
     out = []
     with Z_STATE.smart.lock:
         verdicts = {
-            d: v for d, v in Z_STATE.drive_verdicts.items() if time.time() - float(v.get("ts") or 0) < VERDICT_MAX_AGE
+            d: v
+            for d, v in Z_STATE.smart.snapshot("verdicts").items()
+            if time.time() - float(v.get("ts") or 0) < VERDICT_MAX_AGE
         }
     for dev, v in sorted(verdicts.items()):
         if v.get("verdict") not in ("now", "soon"):
@@ -49,7 +51,7 @@ def _drives() -> list[dict[str, Any]]:
                 "open": "drives",
             }
         )
-    for dev, (_, health) in sorted(dict(Z_STATE.cached_smart_data).items()):
+    for dev, (_, health) in sorted(Z_STATE.smart.snapshot("cached_data").items()):
         if dev in verdicts:
             continue
         if health in ("crit", "warn"):

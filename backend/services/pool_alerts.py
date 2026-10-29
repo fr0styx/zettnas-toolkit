@@ -253,7 +253,7 @@ def weekly_report(now: float | None = None) -> tuple[str, str]:
     except Exception:
         logger.debug("[PoolAlerts] weekly report: pools unavailable", exc_info=True)
     with Z_STATE.smart.lock:
-        verdicts = dict(Z_STATE.drive_verdicts)
+        verdicts = Z_STATE.smart.snapshot("verdicts")
     attention = [d for d, v in verdicts.items() if v.get("verdict") in ("now", "soon")]
     if verdicts:
         lines.append(
