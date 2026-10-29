@@ -38,7 +38,23 @@ export function isFocusableElementVisible(el) {
   return true;
 }
 
-export function trapFocus(element, onClose = null) {
+// Fields where Esc means "stop editing", not "close the window" (UX-30); a search box with a
+// list (role=combobox) or type=search keeps Esc for closing
+const FIELD_RE = /^(INPUT|TEXTAREA|SELECT)$/;
+const NOT_FIELDS = new Set(['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file', 'search']);
+
+export function isEscSafeField(el) {
+  if (!el || !(el.isContentEditable || FIELD_RE.test(el.tagName))) return false;
+  if (el.getAttribute && el.getAttribute('role') === 'combobox') return false;
+  return !(el.tagName === 'INPUT' && NOT_FIELDS.has((el.type || '').toLowerCase()));
+}
+
+/**
+ * Keeps keyboard focus in a dialog and closes it with Esc. options.trap = false for windows
+ * (Mission Control): Tab may leave them, only Esc closes (UX-30). Esc in a text field first
+ * leaves the field, so a half-typed form isn't closed by accident.
+ */
+export function trapFocus(element, onClose = null, options = {}) {
   if (!element) return () => {};
 
   const FOCUSABLE_SELECTOR = 'button:not([disabled]), a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -49,6 +65,12 @@ export function trapFocus(element, onClose = null) {
 
   function onKeyDown(e) {
     if (e.key === 'Escape') {
+      if (isEscSafeField(e.target) && element.contains(e.target)) {
+        e.preventDefault();
+        if (!element.hasAttribute('tabindex')) element.setAttribute('tabindex', '-1');
+        element.focus({ preventScroll: true }); // a second Esc closes
+        return;
+      }
       if (typeof onClose === 'function') {
         e.preventDefault();
         onClose(e);
@@ -56,7 +78,7 @@ export function trapFocus(element, onClose = null) {
       return;
     }
 
-    if (e.key !== 'Tab') return;
+    if (e.key !== 'Tab' || options.trap === false) return;
 
     const focusable = getFocusableElements();
     if (!focusable.length) return;

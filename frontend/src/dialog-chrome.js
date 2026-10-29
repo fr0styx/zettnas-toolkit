@@ -28,6 +28,13 @@ function isAlert(win) {
   return win.dataset.dialogChrome === 'alert';
 }
 
+/** A modal dialog (aria-modal) must be answered, so it can't be minimised (UX-30). A long
+ *  task that happens to be modal (a step-by-step guide) opts in with data-minimizable. */
+function isModal(win) {
+  if (win.hasAttribute('data-minimizable')) return false;
+  return win.getAttribute('aria-modal') === 'true' || Boolean(win.closest('[aria-modal="true"]'));
+}
+
 /** The element shown and hidden as a whole: the backdrop when there is one. */
 export function dialogHost(win) {
   return win.closest(HOST_SEL) || win;
@@ -103,7 +110,7 @@ export function upgradeDialog(win) {
   if (!isAlert(win)) {
     if (!has('max')) controls.insertBefore(makeButton('max', 'Maximize'), close);
     // Minimizing parks the pop-up in the dock, which needs a backdrop to hide and show
-    if (!has('min') && win.closest(HOST_SEL)) {
+    if (!has('min') && win.closest(HOST_SEL) && !isModal(win)) {
       controls.insertBefore(makeButton('min', 'Minimize'), controls.querySelector('.max-btn') || close);
     }
   }

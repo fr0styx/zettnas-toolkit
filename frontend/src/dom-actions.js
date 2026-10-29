@@ -45,10 +45,15 @@ function onClick(e) {
   ACTIONS[el.dataset.action](el, e);
 }
 
+// The one keyboard path for data-action elements that aren't buttons or links (UX-31): those
+// get their click from the browser, and a11y.js leaves data-action elements to this handler.
+const NATIVE = /^(BUTTON|A|INPUT|TEXTAREA|SELECT|SUMMARY)$/;
+
 function onKey(e) {
   if (e.key !== 'Enter' && e.key !== ' ') return;
-  const el = e.target.closest?.('[data-action][role="button"]');
-  if (!el || el.tagName === 'BUTTON' || !ACTIONS[el.dataset.action]) return;
+  const el = e.target.closest?.('[data-action]');
+  if (!el || NATIVE.test(el.tagName) || !ACTIONS[el.dataset.action]) return;
+  if (el !== e.target && NATIVE.test(e.target.tagName)) return; // typing in a field inside it
   e.preventDefault();
   ACTIONS[el.dataset.action](el, e);
 }

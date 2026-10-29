@@ -11,6 +11,7 @@ import { state } from '../state.js';
 import { showToast } from '../toast.js';
 import { bringToFront } from './dock.js';
 import { t } from '../i18n.js';
+import { announceA11y } from '../a11y.js';
 
 let _wizardInitialized = false;
 let _wizardShown = false;
@@ -126,6 +127,18 @@ export async function loadStorageStep() {
  * 4 a first shared folder; 5 people; 6 time zone and alerts. Blocks say their step with
  * data-setup-step; this groups them and adds Back/Next.
  */
+/** Focus the step's heading (or its first field) and say "Step n of m" (UX-34). */
+export function focusStep(els, n, last) {
+  const visible = (els || []).filter(Boolean);
+  const target = visible.map((el) => el.querySelector('h2, h3, h4, legend, .setup-step-title')).find(Boolean)
+    || visible.map((el) => el.querySelector('input, select, textarea, button')).find(Boolean);
+  if (target) {
+    if (!/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(target.tagName)) target.setAttribute('tabindex', '-1');
+    target.focus({ preventScroll: false });
+  }
+  announceA11y(t('setup.step_of', 'Step {n} of {total}', { n, total: last }));
+}
+
 export function initWizardStepper(modal) {
   const body = modal.querySelector('.smart-modal-body');
   const blocks = body ? Array.from(body.children) : [];
@@ -170,7 +183,7 @@ export function initWizardStepper(modal) {
     footer.insertBefore(back, submit);
     footer.insertBefore(next, submit);
   }
-  function show(step) {
+  function show(step, moveFocus = true) {
     current = Math.max(1, Math.min(last, step));
     if (current === 3 && last > 3) loadStorageStep();
     for (const [n, els] of Object.entries(groups)) {
@@ -188,6 +201,7 @@ export function initWizardStepper(modal) {
     back.hidden = current === 1;
     next.hidden = current === last;
     if (submit) submit.hidden = current !== last;
+    if (moveFocus) focusStep(groups[current], current, last); // UX-34
   }
   back.addEventListener('click', () => show(current - 1));
   next.addEventListener('click', () => {
@@ -196,7 +210,7 @@ export function initWizardStepper(modal) {
     if (problem) return;
     show(current + 1);
   });
-  show(1);
+  show(1, false);
   return { show, get current() { return current; } };
 }
 

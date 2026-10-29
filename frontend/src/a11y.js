@@ -108,8 +108,35 @@ if (typeof window !== 'undefined') {
   window.announceA11y = announceA11y;
 }
 
+const MENU_SEL = '[role="menu"], .context-menu, [id$="context-menu"], [id$="ctx-menu"]';
+
+/** Shift+F10 or the Menu key: the focused element's context menu, then focus into it (UX-29). */
+export function onMenuKey(e) {
+  const isMenuKey = e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey);
+  if (!isMenuKey) return;
+  const el = document.activeElement && document.activeElement !== document.documentElement ? document.activeElement : document.body;
+  if (el.closest && el.closest('input, textarea, select, [contenteditable="true"]')) return; // the browser's own menu
+  e.preventDefault();
+  const r = el.getBoundingClientRect ? el.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 };
+  el.dispatchEvent(new MouseEvent('contextmenu', {
+    bubbles: true,
+    cancelable: true,
+    clientX: Math.round(r.left + Math.min(r.width / 2, 24)),
+    clientY: Math.round(r.top + Math.min(r.height / 2, 12)),
+  }));
+  requestAnimationFrame(() => {
+    const menus = Array.from(document.querySelectorAll(MENU_SEL)).filter((m) => m.style.display !== 'none' && !m.hidden && m.getClientRects().length);
+    const first = menus[menus.length - 1]?.querySelector('[role="menuitem"], .context-menu-item, button, [tabindex]');
+    if (first) {
+      if (!first.hasAttribute('tabindex') && !/^(BUTTON|A)$/.test(first.tagName)) first.setAttribute('tabindex', '-1');
+      first.focus();
+    }
+  });
+}
+
 export function initA11y() {
   if (typeof document === 'undefined') return;
+  document.addEventListener('keydown', onMenuKey);
 
   // Global keyboard activation for role="button" and interactive non-semantic elements
   document.addEventListener('keydown', (e) => {
@@ -121,6 +148,8 @@ export function initA11y() {
     if (tag === 'button' || tag === 'input' || tag === 'textarea' || tag === 'select' || tag === 'a') {
       return;
     }
+    // data-action elements are dom-actions.js's: one activation path, so Enter fires once (UX-31)
+    if (target.hasAttribute('data-action')) return;
 
     if (
       target.getAttribute('role') === 'button' ||
@@ -131,8 +160,7 @@ export function initA11y() {
       target.classList.contains('chassis-desktop-icon') ||
       target.classList.contains('mgmt-tab') ||
       target.classList.contains('mgmt-card') ||
-      target.classList.contains('window-control-btn') ||
-      target.hasAttribute('data-action')
+      target.classList.contains('window-control-btn')
     ) {
       e.preventDefault();
       target.click();

@@ -86,7 +86,7 @@ function guideWindow() {
     host.id = 'protect-nas';
     host.className = 'smart-modal-backdrop';
     host.style.zIndex = '10020'; // above Mission Control
-    host.innerHTML = html`<div class="smart-modal-window" role="dialog" aria-modal="true" aria-labelledby="protect-nas-title" data-dock-icon="#i-shield">
+    host.innerHTML = html`<div class="smart-modal-window" role="dialog" aria-modal="true" aria-labelledby="protect-nas-title" data-dock-icon="#i-shield" data-minimizable>
       <div class="smart-modal-header">
         <span class="smart-modal-title" id="protect-nas-title"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg> ${t('protect.title', 'Protect this NAS')}</span>
         <div class="os-window-controls">

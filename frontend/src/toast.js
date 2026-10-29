@@ -42,7 +42,7 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
   toast.className = "top-toast-item";
   toast.style.borderLeft = `4px solid #38bdf8`;
   toast.innerHTML = `
-    <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">↺</div>
+    <div style="font-size: 20px; line-height: 1; flex-shrink: 0;" aria-hidden="true">↺</div>
     <div style="flex: 1; min-width: 0;">
       <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: var(--zn-text-accent);">NOTIFICATION</div>
       <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
@@ -177,7 +177,7 @@ function _showTopNotification(msg, type = "error") {
   // UX-22: a translated error keeps the server's own words under "Details"
   const details = isErr ? detailsFor(msg) : '';
   toast.innerHTML = `
-    <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">${icon}</div>
+    <div style="font-size: 20px; line-height: 1; flex-shrink: 0;" aria-hidden="true">${icon}</div>
     <div style="flex: 1; min-width: 0;">
       <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
       <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>

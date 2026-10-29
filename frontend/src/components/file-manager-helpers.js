@@ -232,6 +232,7 @@ export class FmSidebarTree {
       if (res.ok) {
         const data = await res.json();
         this.roots = data.roots || [];
+        this.array = data.array || null;
         this.remotes = data.remotes || [];
         this.pools = data.pools || [];
         this.special = data.special || [];
@@ -276,25 +277,24 @@ export class FmSidebarTree {
 
     const mountedRemotes = (this.remotes || []).filter((r) => r.is_mounted !== false && r.available !== false);
 
+    // UX-29: places are buttons with names in the person's language, built from where this
+    // server keeps its files (Unraid's /mnt/user, or /mnt/storage, or the first browse root)
+    const base = (this.array && this.array.path) || '/mnt/user';
+    const onUnraid = base === '/mnt/user';
+    const hasRoot = (p) => (this.roots || []).some((r) => (typeof r === 'string' ? r : r && r.path) === p);
+    const place = (path, icon, label, active, cls = '', extra = '') => `
+        <div class="fm-tree-item ${cls} ${active ? 'active' : ''}" data-path="${escapeHtml(path)}" role="button" tabindex="0"${active ? ' aria-current="true"' : ''} title="${escapeHtml(path)}"${extra}>
+          <span class="fm-tree-icon" aria-hidden="true">${icon}</span>
+          <span class="fm-tree-label">${escapeHtml(label)}</span>
+        </div>`;
+    const at = (p) => this.fm.currentPath === p;
     let html = `
       <div class="fm-tree-group">
         <div class="fm-tree-group-title">${t('fm.places', 'Places')}</div>
-        <div class="fm-tree-item ${this.fm.currentPath === '/mnt/user' ? 'active' : ''}" data-path="/mnt/user">
-          <span class="fm-tree-icon">📁</span>
-          <span class="fm-tree-label">User Shares</span>
-        </div>
-        <div class="fm-tree-item ${this.fm.currentPath === '/mnt/user/appdata' ? 'active' : ''}" data-path="/mnt/user/appdata">
-          <span class="fm-tree-icon">⚡</span>
-          <span class="fm-tree-label">AppData</span>
-        </div>
-        <div class="fm-tree-item ${this.fm.currentPath === '/mnt/user/system' ? 'active' : ''}" data-path="/mnt/user/system">
-          <span class="fm-tree-icon">⚙️</span>
-          <span class="fm-tree-label">System</span>
-        </div>
-        <div class="fm-tree-item ${this.fm.currentPath.includes('.RecycleBin') ? 'active' : ''}" data-path="/mnt/user/.RecycleBin">
-          <span class="fm-tree-icon">🗑️</span>
-          <span class="fm-tree-label">${t('dock.recycle_bin', 'Recycle Bin')}</span>
-        </div>
+        ${place(base, '📁', t('fm.place_shares', 'Shared folders'), at(base))}
+        ${onUnraid ? place('/mnt/user/appdata', '⚡', t('fm.place_appdata', 'App data'), at('/mnt/user/appdata')) : ''}
+        ${onUnraid ? place('/mnt/user/system', '⚙️', t('fm.place_system', 'System files'), at('/mnt/user/system')) : ''}
+        ${place(`${base}/.RecycleBin`, '🗑️', t('dock.recycle_bin', 'Recycle Bin'), this.fm.currentPath.includes('.RecycleBin'))}
       </div>
 
       ${favorites().length ? `
@@ -302,24 +302,21 @@ export class FmSidebarTree {
         <div class="fm-tree-group-title">${t('fm.favorites', 'Favorites')}</div>
         ${favorites().map((f) => `
           <div class="fm-tree-item fm-fav-item ${this.fm.currentPath === f.path ? 'active' : ''}${f.available === false ? ' is-missing' : ''}" data-path="${escapeHtml(f.path)}" title="${escapeHtml(f.available === false ? t('fm.fav_missing', 'This folder is no longer available') : f.path)}">
-            <span class="fm-tree-icon">⭐</span>
-            <span class="fm-tree-label">${escapeHtml(f.name)}</span>
+            <span class="fm-tree-icon" aria-hidden="true">⭐</span>
+            <span class="fm-tree-label" role="button" tabindex="0"${this.fm.currentPath === f.path ? ' aria-current="true"' : ''}>${escapeHtml(f.name)}</span>
             <button type="button" class="fm-fav-remove" data-fav-remove="${escapeHtml(f.path)}" title="${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}" aria-label="${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}: ${escapeHtml(f.name)}">✕</button>
           </div>`).join('')}
       </div>` : ''}
 
       <div class="fm-tree-group" style="margin-top: 12px;">
-        <div class="fm-tree-group-title">Storage & Remotes</div>
-        <div class="fm-tree-item ${isCloudActive ? 'active' : ''}" data-path="/mnt/remotes">
-          <span class="fm-tree-icon">☁️</span>
-          <span class="fm-tree-label">Cloud Mounts</span>
-        </div>
+        <div class="fm-tree-group-title">${t('fm.storage_remotes', 'Storage and remotes')}</div>
+        ${place('/mnt/remotes', '☁️', t('fm.cloud_mounts', 'Cloud folders'), isCloudActive)}
         ${mountedRemotes.map((r) => {
           const isRemoteActive = this.fm.currentPath === r.path || this.fm.currentPath.startsWith(r.path + '/');
           const icon = getRemoteIcon(r.type);
           return `
-            <div class="fm-tree-item fm-tree-sub-item ${isRemoteActive ? 'active' : ''}" data-path="${escapeHtml(r.path)}" style="padding-left: 24px;" title="${escapeHtml(r.name)} (${escapeHtml(r.type || 'cloud')})">
-              <span class="fm-tree-icon">${icon}</span>
+            <div class="fm-tree-item fm-tree-sub-item ${isRemoteActive ? 'active' : ''}" data-path="${escapeHtml(r.path)}" role="button" tabindex="0"${isRemoteActive ? ' aria-current="true"' : ''} style="padding-left: 24px;" title="${escapeHtml(r.name)} (${escapeHtml(r.type || 'cloud')})">
+              <span class="fm-tree-icon" aria-hidden="true">${icon}</span>
               <span class="fm-tree-label">${escapeHtml(r.name)}</span>
             </div>
           `;
@@ -328,16 +325,13 @@ export class FmSidebarTree {
           const isPoolActive = this.fm.currentPath === p.path || this.fm.currentPath.startsWith(p.path + '/');
           const icon = p.type === 'disk' ? '💽' : '⚡';
           return `
-            <div class="fm-tree-item ${isPoolActive ? 'active' : ''}" data-path="${escapeHtml(p.path)}" title="${escapeHtml(p.path)}">
-              <span class="fm-tree-icon">${icon}</span>
+            <div class="fm-tree-item ${isPoolActive ? 'active' : ''}" data-path="${escapeHtml(p.path)}" role="button" tabindex="0"${isPoolActive ? ' aria-current="true"' : ''} title="${escapeHtml(p.path)}">
+              <span class="fm-tree-icon" aria-hidden="true">${icon}</span>
               <span class="fm-tree-label">${escapeHtml(p.name)}</span>
             </div>
           `;
         }).join('')}
-        <div class="fm-tree-item ${this.fm.currentPath === '/boot' ? 'active' : ''}" data-path="/boot">
-          <span class="fm-tree-icon">💾</span>
-          <span class="fm-tree-label">Flash Boot</span>
-        </div>
+        ${hasRoot('/boot') ? place('/boot', '💾', t('fm.place_boot', 'Boot drive'), at('/boot')) : ''}
       </div>
     `;
 

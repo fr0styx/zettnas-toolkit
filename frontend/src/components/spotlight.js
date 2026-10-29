@@ -55,11 +55,11 @@ export function initSpotlight() {
     <div id="spotlight-palette-overlay" style="display:none;">
       <div id="spotlight-palette-window" role="dialog" aria-modal="true" aria-label="${t('ui.command_palette', 'Command Palette')}">
         <div class="spotlight-search-bar">
-          <span class="spotlight-search-icon">🔍</span>
-          <input type="text" id="spotlight-input" placeholder="Search apps, containers, actions (>reboot, @container, #file)..." autocomplete="off" spellcheck="false">
+          <span class="spotlight-search-icon" aria-hidden="true">🔍</span>
+          <input type="text" id="spotlight-input" role="combobox" aria-expanded="false" aria-controls="spotlight-results" aria-autocomplete="list" aria-label="${t('spotlight.label', 'Search apps, folders and actions')}" placeholder="Search apps, containers, actions (>reboot, @container, #file)..." autocomplete="off" spellcheck="false">
           <span class="spotlight-kbd-badge">ESC</span>
         </div>
-        <div id="spotlight-results"></div>
+        <div id="spotlight-results" role="listbox" aria-label="${t('spotlight.results', 'Results')}"></div>
         <div class="spotlight-footer">
           <div style="display:flex; gap:10px;">
             <span><kbd class="spotlight-kbd-badge">↑</kbd> <kbd class="spotlight-kbd-badge">↓</kbd> Navigate</span>
@@ -592,6 +592,13 @@ export function filterSpotlightResults(query = '') {
 function renderSpotlightResults() {
   const resultsContainer = document.getElementById('spotlight-results');
   if (!resultsContainer) return;
+  // the search box tells assistive technology which result is chosen (UX-29)
+  const input = document.getElementById('spotlight-input');
+  if (input) {
+    input.setAttribute('aria-expanded', String(_filteredItems.length > 0));
+    if (_filteredItems.length) input.setAttribute('aria-activedescendant', `spotlight-opt-${_selectedIndex}`);
+    else input.removeAttribute('aria-activedescendant');
+  }
 
   if (_filteredItems.length === 0) {
     resultsContainer.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:var(--zn-fs-xs);">No matching results found.</div>';
@@ -602,9 +609,9 @@ function renderSpotlightResults() {
     const isSelected = idx === _selectedIndex;
     const badgeClass = `spotlight-badge-${item.category || 'app'}`;
     return `
-      <div class="spotlight-result-item ${isSelected ? 'active' : ''}" data-idx="${idx}">
+      <div class="spotlight-result-item ${isSelected ? 'active' : ''}" data-idx="${idx}" id="spotlight-opt-${idx}" role="option" aria-selected="${isSelected}">
         <div class="spotlight-item-left">
-          <span class="spotlight-item-icon">${item.icon || '⚡'}</span>
+          <span class="spotlight-item-icon" aria-hidden="true">${item.icon || '⚡'}</span>
           <div>
             <span class="spotlight-item-label">${escapeHtml(item.title)}</span>
             <span class="spotlight-item-sub">${escapeHtml(item.subtitle || '')}</span>

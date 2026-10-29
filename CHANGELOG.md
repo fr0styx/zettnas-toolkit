@@ -10,6 +10,11 @@
   keyboard is on them, and Ctrl/Cmd+Z takes the newest Undo offer (UX-27).
 - **Quieter screen readers**: status panels that refresh on a timer (Overview, jobs, transfers, drive
   health, the phone launcher) announce a short sentence only when something changes (UX-28).
+- **Keyboard**: Shift+F10 or the Menu key opens the focused item's menu; Spotlight is a proper search
+  list for screen readers; File Explorer's places are reachable by keyboard and named for your server
+  (no Unraid paths elsewhere); Mission Control no longer traps Tab, and Esc in a text field leaves the
+  field before it closes anything; dialogs that must be answered can't be minimised; Enter fires a
+  button once; the setup wizard moves focus to each step and says which (UX-29, 30, 31, 34).
 
 #### AI
 

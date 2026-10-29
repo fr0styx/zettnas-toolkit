@@ -1331,10 +1331,11 @@ export function initManagement() {
     setTimeout(() => win.classList.remove('window-focus-pulse'), 850);
 
     if (_unbindMgmtTrap) { _unbindMgmtTrap(); }
+    // a window, not a modal: Tab may leave it; Esc closes it (UX-30)
     _unbindMgmtTrap = trapFocus(win, () => {
       const cBtn = document.getElementById('management-close');
       if (cBtn) cBtn.click();
-    });
+    }, { trap: false });
 
     if (window.DockManager) {
       window.DockManager.render();
