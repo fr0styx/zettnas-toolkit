@@ -112,6 +112,9 @@
 
 #### Fixes
 
+- **Architecture that can only get tidier**: a test holds the layering (core, hardware, services,
+  api), imports of other modules' private names and function length to today's numbers, so new
+  code can't add an upward import or another 300-line function (ARC-22, ARC-23).
 - **Nothing waits forever**: short system commands (unmount, qemu-img, ledctl and others) give up
   after a time limit instead of holding a worker for good; the session check every request makes
   no longer runs on the event loop; and the pool for blocking requests has an explicit size,

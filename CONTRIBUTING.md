@@ -47,6 +47,10 @@ CI also requires:
 - **Coverage**: at least 80% of the backend, and at least 80% of the backend lines your change touches (diff-cover).
 - **Types and error handling**: no file may get worse under Pyright, and the number of silent `except: pass` blocks may not grow.
 - **Browser tests**: sign-in, the main views and an accessibility (axe) check run in headless Chromium.
+- **Architecture**: no new import upwards between layers (core, hardware, services, api), no
+  module importing more private names from others than it does today, and no new function over
+  150 lines (nor a listed one growing); `python scripts/arch_ratchets.py` shows what is over, and
+  `--update` records the numbers after a clean-up.
 - **Dependencies and secrets**: `pip-audit` and `npm audit --audit-level=high` find no known
   vulnerability, and gitleaks finds no secret in the tree (`.gitleaks.toml` allows test data; a
   checked false positive gets a `gitleaks:allow` comment on its line). CodeQL scans the Python and
