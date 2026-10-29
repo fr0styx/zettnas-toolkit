@@ -460,6 +460,7 @@ def compute_neural_embedding_via_ollama(
         """This request's timeout: the full one, or what the caller's deadline leaves (AI-27)."""
         return timeout if deadline is None else min(timeout, deadline - time.monotonic())
 
+    _wake(target_host)
     if is_openai_host(target_host):  # an OpenVINO Model Server or another OpenAI-style server (AI-40)
         candidates = []
         if _left() >= 0.2:
@@ -540,6 +541,14 @@ _EMBED_MODEL_SEEN: dict[str, str] = {}  # configured name -> name the runtime ac
 EMBED_BATCH_SIZE = 32
 
 
+def _wake(host: str | None) -> None:
+    """The AI pack may be stopped for idling: start it before asking it (AI-40)."""
+    if host and "//zettnas-ai:" in host:
+        from backend.services import ai_pack
+
+        ai_pack.wake_for(host)
+
+
 def is_openai_host(host: str | None) -> bool:
     """An OpenAI-style embedding server (an OpenVINO Model Server at .../v3, vLLM or LM Studio at
     .../v1) rather than Ollama: its address ends in /v1 or /v3 (AI-40)."""
@@ -587,6 +596,7 @@ def _pack_embedding(raw: list[float], target_dim: int | None) -> bytes:
 
 def _embed_one_batch(target_host: str, model: str, batch: list[str], timeout: float | None = None) -> list | None:
     """One /api/embed call (trying the model's aliases); None when it failed."""
+    _wake(target_host)
     if is_openai_host(target_host):
         return _openai_embed(target_host, model, batch, timeout or 15.0 + 4.0 * len(batch))
     embs = None

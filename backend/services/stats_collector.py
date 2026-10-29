@@ -689,6 +689,7 @@ def smart_poller_daemon():
 
     last_velocity = time.monotonic()
     last_verdicts = None
+    last_pack = time.monotonic()
     while not Z_STATE.shutting_down:
         try:
             # one 10 s sleep, not twenty 0.5 s slices (PERF-5); per-disk SMART intervals and the
@@ -701,6 +702,16 @@ def smart_poller_daemon():
                 break
             poll_all_disks_smart()
             read_ups_status()
+            if time.monotonic() - last_pack >= 60:  # the AI pack stops when nothing used it (AI-40)
+                last_pack = time.monotonic()
+                try:
+                    from backend.services import ai_pack
+                    from backend.services.rag_engine import get_rag_engine
+
+                    engine = get_rag_engine()
+                    ai_pack.idle_tick(engine.get_config(), indexing=bool(getattr(engine, "_is_indexing", False)))
+                except Exception:
+                    logger.debug("[SMART/UPS Poller] AI pack idle check failed", exc_info=True)
             if time.monotonic() - last_velocity >= SMART_VELOCITY_EVERY_SECS:
                 evaluate_smart_velocity_alerts()  # SMART history changes slowly
                 last_velocity = time.monotonic()

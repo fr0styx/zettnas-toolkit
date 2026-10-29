@@ -150,6 +150,10 @@ def chat_body(body: dict[str, Any], model: str) -> dict[str, Any]:
 
 
 def _open(url: str, payload: dict[str, Any], timeout: float):
+    if "//zettnas-ai:" in url:  # the AI pack, maybe stopped for idling (AI-40)
+        from backend.services import ai_pack
+
+        ai_pack.wake_for(url)
     req = urllib.request.Request(
         url,
         data=json.dumps(payload).encode(),

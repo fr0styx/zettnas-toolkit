@@ -1219,6 +1219,21 @@ MORE_APPS: list[dict[str, Any]] = [
         "logo": "forgejo",
     },
     {
+        # AI-40: installed by backend/services/ai_pack.py (no published port, ZettNAS's network)
+        "id": "ai-pack",
+        "name": "Private AI pack",
+        "category": "ai",
+        "description": "Chat and search on the Intel GPU in one OpenVINO Model Server, set up for ZettNAS. Models follow your memory; no port is opened.",
+        "image": "openvino/model_server:latest-gpu",
+        "default_port": 8000,
+        "webui_path": None,
+        "probe": "tcp",
+        "setup": "ai-pack",
+        "env": {},
+        "volumes": {"models": "/models"},
+        "logo": "openvino",
+    },
+    {
         "id": "ollama",
         "name": "Ollama",
         "category": "ai",

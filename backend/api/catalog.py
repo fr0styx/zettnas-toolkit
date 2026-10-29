@@ -215,6 +215,12 @@ async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None =
     replace_existing = req.replace_existing if req else False
 
     def event_stream():
+        if app_id == "ai-pack":  # AI-40: its own installer, with the preset this box gets
+            from backend.services import ai_pack
+
+            for event in ai_pack.stream_install(None, storage_root):
+                yield json.dumps(event) + "\n"
+            return
         for event in stream_deploy_catalog_app(
             app_id,
             host_port=host_port,

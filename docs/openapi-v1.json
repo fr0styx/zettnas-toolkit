@@ -25808,6 +25808,29 @@
     "title": "OverviewResponse",
     "type": "object"
    },
+   "PackInstallRequest": {
+    "properties": {
+     "preset": {
+      "anyOf": [
+       {
+        "pattern": "^(small|standard|large)$",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preset"
+     },
+     "storage_root": {
+      "default": "/mnt/user/appdata",
+      "title": "Storage Root",
+      "type": "string"
+     }
+    },
+    "title": "PackInstallRequest",
+    "type": "object"
+   },
    "PauseCopyResponse": {
     "additionalProperties": true,
     "description": "POST /copy/pause",
@@ -38428,6 +38451,92 @@
     "summary": "Openai Models",
     "tags": [
      "AI for apps"
+    ]
+   }
+  },
+  "/api/v1/ai/pack": {
+   "get": {
+    "description": "The box, the recommended preset, and the pack's state (absent, warming, ready, stopped).",
+    "operationId": "pack_status_api_v1_ai_pack_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Pack Status",
+    "tags": [
+     "AI pack"
+    ]
+   }
+  },
+  "/api/v1/ai/pack/install": {
+   "post": {
+    "operationId": "pack_install_api_v1_ai_pack_install_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/PackInstallRequest"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Req"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Pack Install",
+    "tags": [
+     "AI pack"
+    ]
+   }
+  },
+  "/api/v1/ai/pack/use": {
+   "post": {
+    "description": "Chat through the pack; the answer says how to move the embeddings.",
+    "operationId": "pack_use_api_v1_ai_pack_use_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Pack Use",
+    "tags": [
+     "AI pack"
     ]
    }
   },

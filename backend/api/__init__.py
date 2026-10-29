@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 from backend.api.ai_apps import router as ai_apps_router
 from backend.api.ai_conversations import router as ai_conversations_router
+from backend.api.ai_pack import router as ai_pack_router
 from backend.api.auth import router as auth_router
 from backend.api.backup import router as backup_router
 from backend.api.calendar import router as calendar_router
@@ -92,6 +93,7 @@ api_router.include_router(vms_router)
 api_router.include_router(snmp_router)
 api_router.include_router(ai_conversations_router)
 api_router.include_router(ai_apps_router)  # COMP-07
+api_router.include_router(ai_pack_router)  # AI-40
 api_router.include_router(calendar_router)
 
 __all__ = [
@@ -123,5 +125,6 @@ __all__ = [
     "vms_router",
     "snmp_router",
     "ai_apps_router",
+    "ai_pack_router",
     "ai_conversations_router",
 ]

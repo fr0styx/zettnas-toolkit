@@ -73,6 +73,7 @@
   "nginx:stable-alpine": "sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951",
   "nodered/node-red:latest": "sha256:e085d4a06591fd0aca2ea2a91364d27f1a0e31e885675f77935e10f95412a963",
   "ollama/ollama:latest": "sha256:dea72d1e22270fe095b68fdf756d2b489d615643c5a2eaebbc5f569181e322d8",
+  "openvino/model_server:latest-gpu": "sha256:a928903fe429f1e3e27107cc45932d30d95febfd2d1159dc50869c3eac76fc58",
   "photoprism/photoprism:latest": "sha256:0f85369636ad99ca9a1c33f2d04df6c590802d16b7c33b4a1ea026b595be06d1",
   "pihole/pihole:latest": "sha256:d34134716fc32038b052a8674c7c6879e0ff21f0e6d8af345166fffa2c27c113",
   "postgres:17": "sha256:b8faeff7712663c2773a190181e1246e37e364b887611c04658c28b44e2408fe",

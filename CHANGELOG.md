@@ -4,6 +4,11 @@
 
 #### AI
 
+- **Private AI pack**: one click in the app catalog (or AI settings) installs an OpenVINO Model Server
+  for chat and search on the Intel GPU, with models chosen for the box's memory, a memory
+  limit and no open port. It stops after the idle time and starts again on the next question.
+  "Use it for chat and search" switches ZettNAS over and re-indexes; containers you built yourself
+  are never touched.
 - **Zetty shows your Immich photos**: a photo question in chat ("photos of the beach last summer")
   also brings the photos Immich's smart search finds, for people who connected their Immich.
 - **Voice memos and videos you can search by what is said**: with a Whisper speech server set
