@@ -21,6 +21,11 @@ def quiet(monkeypatch):
     monkeypatch.setattr(ransomware_guard, "writes_frozen", lambda: False)
     monkeypatch.setattr(ups, "read_ups_status", lambda: {"status": "OL"})
     monkeypatch.setattr(config, "is_using_default_password", lambda: False)
+    # the pool alerts cache their answer for 5 minutes: a "pool full" an earlier test left there
+    # must not reach these tests
+    from backend.services import pool_alerts
+
+    monkeypatch.setattr(pool_alerts, "current", lambda *a, **k: [])
     return monkeypatch
 
 

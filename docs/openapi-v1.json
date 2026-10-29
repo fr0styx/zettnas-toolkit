@@ -28839,6 +28839,30 @@
       ],
       "title": "Llm Model"
      },
+     "photo_vector_host": {
+      "anyOf": [
+       {
+        "maxLength": 512,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Photo Vector Host"
+     },
+     "photo_vector_model": {
+      "anyOf": [
+       {
+        "maxLength": 128,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Photo Vector Model"
+     },
      "rerank_endpoint": {
       "anyOf": [
        {
@@ -38559,6 +38583,30 @@
      }
     },
     "summary": "Get Photo Facets",
+    "tags": [
+     "Smart Media & AI RAG Engine"
+    ]
+   }
+  },
+  "/api/v1/ai/photo-vectors/status": {
+   "get": {
+    "description": "How many photos can be found by meaning (B14).",
+    "operationId": "get_photo_vector_status_api_v1_ai_photo_vectors_status_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Photo Vector Status Api V1 Ai Photo Vectors Status Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Get Photo Vector Status",
     "tags": [
      "Smart Media & AI RAG Engine"
     ]

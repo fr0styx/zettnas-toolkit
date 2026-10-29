@@ -662,6 +662,17 @@ class RagSearchMixin:
             except sqlite3.OperationalError:
                 pass
 
+        # meaning (B14): photos whose SigLIP 2 vector stands out for the question, from every photo;
+        # the SQL below still decides which of them this person may see
+        sem_map: dict[int, float] = {}
+        if raw_query.strip():
+            try:
+                from backend.services import photo_vectors
+
+                sem_map = photo_vectors.matches(conn, self.get_config(), raw_query)
+            except Exception:
+                logger.debug("rag search: photo vectors unavailable", exc_info=True)
+
         photo_cols = """
                 p.file_id, p.file_name, p.width, p.height, p.aspect_ratio, p.format,
                 p.taken_at, p.camera_make, p.camera_model, p.dominant_hex, p.palette_json,
@@ -671,8 +682,8 @@ class RagSearchMixin:
         # Candidates: every keyword hit (captions, OCR, tags), then the newest photos for the
         # colour and scene scoring; before, 2,000 photos in no particular order (AI-2)
         rows = []
-        if bm25_map:
-            hit_ids = list(bm25_map)
+        if bm25_map or sem_map:
+            hit_ids = list(dict.fromkeys([*bm25_map, *sem_map]))
             rows = conn.execute(
                 f"""
                 SELECT {photo_cols}
@@ -727,6 +738,7 @@ class RagSearchMixin:
             emb_vec = unpack_vector(r["vision_embedding_f32"])
             s_vec = cosine_similarity_vec(photo_query_vec, emb_vec)
             s_bm25 = bm25_map.get(fid, 0.0)
+            s_sem = sem_map.get(fid, 0.0)
 
             # Color similarity (center-weighted Bhattacharyya + explicit 12-color fraction)
             s_color = 0.0
@@ -779,12 +791,21 @@ class RagSearchMixin:
 
             if q_lower and _token_matches_word(q_lower, r["file_name"].lower()):
                 base_score += 0.15
+            if s_sem > 0.0:  # the photo shows what was asked, by its picture (B14)
+                base_score = max(base_score, 0.30 + 0.60 * s_sem)
 
             final_score = min(1.0, (base_score + b_comp) * color_penalty_mult)
 
             # Filter out weak non-matches when a specific query/filter was provided
             # a photo the date or place filter chose is a match by itself (AI-24)
-            if raw_query.strip() and not req_colors and not req_scenes and s_bm25 <= 0.0 and not filtered:
+            if (
+                raw_query.strip()
+                and not req_colors
+                and not req_scenes
+                and s_bm25 <= 0.0
+                and s_sem <= 0.0
+                and not filtered
+            ):
                 photo_haystack = f"{r['file_name']} {r['auto_tags_text']} {r['caption_text']} {r['ocr_text']}".lower()
                 q_words = [w for w in text_tokens(q_lower) if w not in stop and (len(w) >= 3 or _has_cjk(w))]
                 if q_words and not any(_token_matches_word(w, photo_haystack) for w in q_words) and s_vec < 0.48:
@@ -817,6 +838,7 @@ class RagSearchMixin:
                     "doc_type": r["doc_type"],
                     "score": round(final_score, 4),
                     "compositional_match": compositional_match,
+                    "meaning_match": s_sem > 0.0,
                     "thumbnail_url": f"/api/media/thumbnail/{fid}",
                     "dominant_hex": r["dominant_hex"],
                     "color_swatches": palette_swatches or [r["dominant_hex"]],

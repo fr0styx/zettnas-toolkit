@@ -4,6 +4,9 @@
 
 #### AI
 
+- **Photo search by meaning without Immich**: with contrib/openvino-clip (SigLIP 2 on the iGPU) set in AI
+  settings, every photo gets an image vector from its stored thumbnail (no disk wakes, only while the
+  server is idle), and searches find photos by what they show, in any language SigLIP 2 learned.
 - **Private AI pack**: one click in the app catalog (or AI settings) installs an OpenVINO Model Server
   for chat and search on the Intel GPU, with models chosen for the box's memory, a memory
   limit and no open port. It stops after the idle time and starts again on the next question.

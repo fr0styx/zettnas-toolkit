@@ -81,6 +81,18 @@ def _start_docker_proxy(supervise) -> None:
     logger.warning("[Main] Docker proxy did not start; using the Docker socket directly")
 
 
+def _photo_vector_daemon() -> None:
+    """Photo vectors in the background (B14), after startup and the caption queue."""
+    import time as _time
+
+    from backend.services import photo_vectors
+    from backend.services.rag_engine import get_rag_engine
+    from backend.services.vision_queue import system_idle
+
+    _time.sleep(90)
+    photo_vectors.get_queue(get_rag_engine(), system_idle).run_forever()
+
+
 def startup_system():
     """System initialization and background services launch."""
     import gc
@@ -275,6 +287,7 @@ def startup_system():
         from backend.services.vision_queue import vision_daemon
 
         supervise("VisionCaptioner", vision_daemon)  # AI-14, idle-only
+        supervise("PhotoVectors", _photo_vector_daemon)  # B14: photo search by meaning, idle-only
         from backend.services.ransomware_guard import guard_daemon
 
         supervise("RansomwareGuard", guard_daemon, beat_every=30)  # M4: guard-file checks

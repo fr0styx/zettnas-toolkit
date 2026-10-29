@@ -172,6 +172,8 @@ class RagConfigUpdateRequest(BaseModel):
     transcribe_model: str | None = Field(default=None, max_length=128)
     transcribe_video: bool | None = None
     transcribe_max_minutes: int | None = Field(default=None, ge=1, le=600)
+    photo_vector_host: str | None = Field(default=None, max_length=512)  # B14: photo search by meaning
+    photo_vector_model: str | None = Field(default=None, max_length=128)
 
 
 class ModelSelectRequest(BaseModel):
@@ -1475,8 +1477,22 @@ def update_rag_config(req: RagConfigUpdateRequest) -> dict[str, Any]:
 
         if not endpoint_ok(req.transcribe_endpoint):
             raise HTTPException(status_code=400, detail="The speech server must be an http(s) URL.")
+    if req.photo_vector_host:
+        from backend.services.rag_rerank import endpoint_ok
+
+        if not endpoint_ok(req.photo_vector_host):
+            raise HTTPException(status_code=400, detail="The photo vector server must be an http(s) URL.")
     updates = {k: v for k, v in req.model_dump().items() if v is not None}
     return get_rag_engine().update_config(updates)
+
+
+@router.get("/ai/photo-vectors/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])
+def get_photo_vector_status() -> dict[str, Any]:
+    """How many photos can be found by meaning (B14)."""
+    from backend.services.photo_vectors import get_queue
+    from backend.services.vision_queue import system_idle
+
+    return get_queue(get_rag_engine(), system_idle).status()
 
 
 @router.get("/ai/vision/status", dependencies=[Depends(require_scope("system:read", "storage:read"))])

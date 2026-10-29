@@ -1162,6 +1162,8 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "transcribe_model": "",
             "transcribe_video": False,  # videos too, not only voice memos and other audio
             "transcribe_max_minutes": 30,
+            "photo_vector_host": "",  # B14: contrib/openvino-clip (SigLIP 2), empty = off
+            "photo_vector_model": "",
             "rerank_model": "",
             "rerank_top_n": 30,
             "ai_role_access": {"kid": False, "guest": False},  # who may ask Zetty (B8, ai_access)
@@ -1236,6 +1238,8 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             "transcribe_model",
             "transcribe_video",
             "transcribe_max_minutes",
+            "photo_vector_host",
+            "photo_vector_model",
         ):
             if k in updates and updates[k] is not None:
                 cfg[k] = updates[k]

@@ -1741,6 +1741,31 @@ export async function fetchAndRenderAiStatus() {
       }
     }
 
+    // Photo search by meaning (B14)
+    const pvForm = document.getElementById('ai-photo-vector-form');
+    if (pvForm) {
+      const host = document.getElementById('ai-photo-vector-host');
+      const progress = document.getElementById('ai-photo-vector-progress');
+      if (host) host.value = cfg.photo_vector_host || '';
+      if (progress && cfg.photo_vector_host) {
+        api.get('/api/ai/photo-vectors/status').then((st) => {
+          progress.textContent = t('ai.photo_vector_progress', '{done} of {total} photos can be found by meaning', { done: st.done, total: st.photos });
+        }, () => {});
+      }
+      if (!pvForm.dataset.bound) {
+        pvForm.dataset.bound = '1';
+        pvForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          try {
+            await api.post('/api/ai/config', { photo_vector_host: host.value.trim() });
+            showToast(t('ai.photo_vector_saved', 'Saved. Photos get their vectors in the background while the server is idle.'), 'success');
+          } catch (err) {
+            showToast(t('sso.save_failed', 'Could not save: {error}', { error: err.message }), 'error');
+          }
+        });
+      }
+    }
+
     // Speech to text for voice memos and videos (COMP-03)
     const speechForm = document.getElementById('ai-transcribe-form');
     if (speechForm) {

@@ -4491,6 +4491,13 @@
                     <input id="ai-rerank-model" class="tz-select-input" type="text" placeholder="bge-reranker-v2-m3" data-i18n-aria-label="ai.rerank_model" aria-label="Reranker model" />
                     <button type="submit" class="btn-pill-toggle" data-i18n="sso.save">Save</button>
                   </form>
+                  <!-- 8. Optional photo search by meaning (B14, contrib/openvino-clip) -->
+                  <form id="ai-photo-vector-form" class="zn-form zn-box">
+                    <span class="ai-form-label" data-i18n="ai.photo_vector_label">Photo search by meaning (optional, contrib/openvino-clip with SigLIP 2)</span>
+                    <input id="ai-photo-vector-host" class="tz-select-input" type="url" placeholder="http://zettnas-clip:11436" data-i18n-aria-label="ai.photo_vector_host" aria-label="Photo vector server URL" />
+                    <span id="ai-photo-vector-progress" class="ai-form-check"></span>
+                    <button type="submit" class="btn-pill-toggle" data-i18n="sso.save">Save</button>
+                  </form>
                   <!-- 7. Optional speech to text for voice memos and videos (COMP-03) -->
                   <form id="ai-transcribe-form" class="zn-form zn-box">
                     <span class="ai-form-label" data-i18n="ai.transcribe_label">Speech to text (optional, a Whisper server with the OpenAI audio API)</span>
