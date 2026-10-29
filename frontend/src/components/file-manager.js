@@ -3218,6 +3218,15 @@ export class FileManagerWindow {
     });
   }
 
+  /** Sorts by a field in a direction, as chosen from the folder's right-click menu. */
+  setSort(col, dir) {
+    this.currentSortBy = ['name', 'size', 'type', 'mtime'].includes(col) ? col : 'name';
+    this.currentSortDir = dir === 'desc' ? 'desc' : 'asc';
+    this.applySorting();
+    this.updateSortHeaderUI();
+    this.renderViewport();
+  }
+
   sortBy(col) {
     if (this.currentSortBy === col) {
       this.currentSortDir = this.currentSortDir === 'asc' ? 'desc' : 'asc';

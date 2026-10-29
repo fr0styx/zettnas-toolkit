@@ -35,6 +35,9 @@
 
 #### Usability
 
+- **Sort a folder from its right-click menu**: right-click empty space in a folder and choose
+  Sort by Name, Size, Type or Date modified, ascending or descending, in list and icon view.
+
 - **Drive Health, expanded**: a line about all drives (total space, the warmest and the oldest,
   how many sleep); **About this drive** with its type, size, connection, firmware, how often
   it was switched on, how much was written to it, and how long it has run; for NVMe drives the

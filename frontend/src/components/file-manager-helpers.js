@@ -17,6 +17,26 @@ import { showToast } from '../toast.js';
 import { formatDateTime } from '../format.js';
 import { transferCenter } from './transfer-center.js';
 import { favorites, loadFavorites, removeFavorite, isFavorite, toggleFavorite } from './fm-favorites.js';
+/** The "Sort by" rows of the menu for empty space in a folder: each field, the current one
+ * ticked, then ascending and descending. */
+export function sortMenuHtml(sortBy, sortDir) {
+  const fields = [
+    ['name', t('fm.sort_name', 'Name')],
+    ['size', t('fm.sort_size', 'Size')],
+    ['type', t('fm.sort_type', 'Type')],
+    ['mtime', t('fm.sort_mtime', 'Date modified')],
+  ];
+  const dirs = [
+    ['asc', t('fm.sort_asc', 'Ascending')],
+    ['desc', t('fm.sort_desc', 'Descending')],
+  ];
+  const row = (act, label, on) =>
+    `<div class="fm-ctx-item${on ? ' is-current' : ''}" data-act="${act}" role="menuitemradio" aria-checked="${on}"><span class="fm-ctx-check">${on ? '✓' : ''}</span>${escapeHtml(label)}</div>`;
+  return `<div class="fm-ctx-group" role="group" aria-label="${escapeHtml(t('fm.sort_by', 'Sort by'))}"><div class="fm-ctx-heading">${escapeHtml(t('fm.sort_by', 'Sort by'))}</div>${fields
+    .map(([k, label]) => row(`sort-${k}`, label, sortBy === k))
+    .join('')}<div class="fm-ctx-divider"></div>${dirs.map(([k, label]) => row(`sort-${k}`, label, sortDir === k)).join('')}</div>`;
+}
+
 export function isGuardedSystemDir(path) {
   if (!path) return false;
   const normalized = String(path).replace(/\\/g, '/').toLowerCase();
@@ -1002,6 +1022,7 @@ export class FmContextMenu {
         ${isSingle && isDir ? `<div class="fm-ctx-item" data-act="fav-toggle">${isFavorite(fileItem.path) ? `☆ ${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add', 'Add to Favorites'))}`}</div>` : ''}
         ${!fileItem ? `<div class="fm-ctx-item" data-act="fav-toggle-here">${isFavorite(this.fm.currentPath) ? `☆ ${escapeHtml(t('fm.fav_remove_here', 'Remove this folder from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add_here', 'Add this folder to Favorites'))}`}</div>` : ''}
       </div>
+      ${!fileItem ? `<div class="fm-ctx-divider"></div>${sortMenuHtml(this.fm.currentSortBy, this.fm.currentSortDir)}` : ''}
       <div class="fm-ctx-divider"></div>
       <div class="fm-ctx-group">
         ${hasSelection ? `<div class="fm-ctx-item text-danger" data-act="trash">🗑️ Move to Trash <span class="fm-ctx-key">Delete</span></div>` : ''}
@@ -1053,6 +1074,16 @@ export class FmContextMenu {
         break;
       case 'open':
         if (item && item.is_dir) this.fm.loadPath(item.path);
+        break;
+      case 'sort-name':
+      case 'sort-size':
+      case 'sort-type':
+      case 'sort-mtime':
+        this.fm.setSort(act.slice(5), this.fm.currentSortDir);
+        break;
+      case 'sort-asc':
+      case 'sort-desc':
+        this.fm.setSort(this.fm.currentSortBy, act.slice(5));
         break;
       case 'new-window':
         window.openNewFileManagerWindow?.(item && item.is_dir ? item.path : this.fm.currentPath);

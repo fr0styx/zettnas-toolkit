@@ -230,3 +230,8 @@
 }
 
 
+
+/* "Sort by" in the folder's right-click menu */
+.fm-ctx-heading { padding: 4px 12px 2px; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.fm-ctx-check { display: inline-block; width: 1.1em; }
+.fm-ctx-item.is-current { font-weight: 600; }
