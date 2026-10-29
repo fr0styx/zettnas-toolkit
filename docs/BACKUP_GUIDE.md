@@ -113,6 +113,24 @@ both directions, every few hours.
 - A sync is not a backup: a file you delete on purpose is deleted on both sides. Keep an
   off-site backup as well.
 
+## Keep a PC or phone in sync with the NAS
+
+For a folder that should be the same on a laptop, a phone and the NAS (not a backup: changes
+and deletions go everywhere), install one of these from the **App Catalog**:
+
+- **Syncthing**: peer to peer, no account and nothing in a cloud. Install it, open its page,
+  and add the NAS as a device in Syncthing on the PC (Windows, macOS, Linux) or Android phone.
+  On the NAS, keep the synced folders under `/data1`: that is the app's own folder, which you
+  can open in Files under **App data → syncthing → data1**. A file changed on two devices
+  before they met is kept twice, as `name.sync-conflict-<date>-<device>.ext`. Turn on
+  **File Versioning** for the folder in Syncthing so a deleted or overwritten file can be
+  brought back.
+- **Nextcloud**: files plus calendars and contacts, with apps for iPhone and Android and a
+  desktop client. Its client keeps a file changed on both sides as `name (conflicted copy).ext`.
+
+Either way, keep the share in a snapshot schedule or a backup too: a sync passes a mistake on
+to every device.
+
 ## Protecting the backups themselves
 
 - Use a separate ZettNAS account for backups, not your admin account, and give it
