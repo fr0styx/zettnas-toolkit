@@ -154,13 +154,13 @@ export async function loadUsersPane(focusPart = 'users-pane-list') {
 export async function loadUsersList() {
   const container = document.getElementById('users-table-body');
   if (!container) return;
-  container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">' + escapeHtml(t('users.loading', 'Loading people…')) + '</td></tr>';
+  container.innerHTML = '<tr><td colspan="7" class="zn-datatable-msg">' + escapeHtml(t('users.loading', 'Loading people…')) + '</td></tr>';
 
   try {
     const res = await apiFetch('/api/users', { credentials: 'include' });
     if (!res.ok) {
       if (res.status === 403) {
-        container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--crit);">' + escapeHtml(t('users.admin_only', 'Only administrators can see the list of people.')) + '</td></tr>';
+        container.innerHTML = '<tr><td colspan="7" class="zn-datatable-msg is-crit">' + escapeHtml(t('users.admin_only', 'Only administrators can see the list of people.')) + '</td></tr>';
         return;
       }
       throw new Error(`Server returned ${res.status}`);
@@ -193,35 +193,35 @@ export async function loadUsersList() {
         : t('users.no_limit', 'No limit');
 
       return `
-        <tr style="border-bottom: 1px solid var(--zn-line-6); transition: background 0.15s ease;">
-          <td style="padding: 12px; display:flex; align-items:center; gap: 10px;">
+        <tr class="zn-row-hover">
+          <td class="zn-inline" style="gap: 10px;">
             <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size: var(--zn-fs-sm); border: 1px solid var(--zn-line-20);">
               ${escapeHtml(letter)}
             </div>
             <div>
               <div style="font-weight:700; color:var(--zn-text-strong); font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(14,165,233,0.2); color:var(--zn-text-accent); padding:2px 6px; border-radius:4px; margin-left:4px;">' + escapeHtml(t('users.you', 'You')) + '</span>' : ''}</div>
-              <div style="font-size: var(--zn-fs-xs); color:var(--muted);">@${escapeHtml(u.username)}</div>
+              <div class="zn-sub">@${escapeHtml(u.username)}</div>
             </div>
           </td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--zn-text-soft);">${escapeHtml(u.email || '--')}</td>
-          <td style="padding: 12px;">
+          <td class="is-soft">${escapeHtml(u.email || '--')}</td>
+          <td>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 8px; border-radius: 6px; background: var(--zn-glaze-8); border: 1px solid var(--zn-line-12); color:var(--zn-text-strong);">
               ${escapeHtml(formatRole(u.role_id))}
             </span>
           </td>
-          <td style="padding: 12px;">
+          <td>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${isActive ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isActive ? 'var(--ok2)' : 'var(--crit)'}; border: 1px solid ${isActive ? 'rgba(37,194,160,0.3)' : 'rgba(239,68,68,0.3)'};">
               ${escapeHtml(isActive ? t('users.status_active', 'Active') : t('users.status_disabled', 'Turned off'))}
             </span>
           </td>
-          <td style="padding: 12px;">
+          <td>
             <span style="font-size: var(--zn-fs-xs); display:inline-flex; align-items:center; gap: 4px; color: ${isMfa ? 'var(--ok2)' : 'var(--muted)'};">
               <span aria-hidden="true">${isMfa ? '🛡️' : '⚪'}</span> ${escapeHtml(isMfa ? t('users.mfa_on', 'On') : t('users.mfa_off', 'Off'))}
             </span>
           </td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color: var(--zn-text-muted);">${quotaStr}</td>
-          <td style="padding: 12px; text-align:right;">
-            <div style="display:inline-flex; gap: 6px;">
+          <td class="is-dim">${quotaStr}</td>
+          <td class="is-end">
+            <div class="zn-actions">
               <button class="suite-toolkit-btn sm btn-edit-user" data-id="${u.id}" title="${t('ui.edit_user', 'Edit User')}">✏️</button>
               <button class="suite-toolkit-btn sm btn-pwd-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="${t('ui.reset_password', 'Reset Password')}">🔑</button>
               ${!isSelf ? `
@@ -266,7 +266,7 @@ export async function loadUsersList() {
     });
 
   } catch (err) {
-    container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--crit);">' + escapeHtml(t('users.load_failed', 'The list of people couldn\'t be loaded: {error}', { error: err.message })) + '</td></tr>';
+    container.innerHTML = '<tr><td colspan="7" class="zn-datatable-msg is-crit">' + escapeHtml(t('users.load_failed', 'The list of people couldn\'t be loaded: {error}', { error: err.message })) + '</td></tr>';
   }
 }
 
@@ -518,7 +518,7 @@ export function confirmDeleteUser(userId, username) {
 export async function loadSessionsList() {
   const container = document.getElementById('sessions-table-body');
   if (!container) return;
-  container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--muted);">' + escapeHtml(t('users.sessions_loading', 'Loading sign-ins…')) + '</td></tr>';
+  container.innerHTML = '<tr><td colspan="5" class="zn-datatable-msg">' + escapeHtml(t('users.sessions_loading', 'Loading sign-ins…')) + '</td></tr>';
 
   try {
     const res = await apiFetch('/api/auth/sessions', { credentials: 'include' });
@@ -527,7 +527,7 @@ export async function loadSessionsList() {
     const sessions = data.sessions || [];
 
     if (sessions.length === 0) {
-      container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--muted);">' + escapeHtml(t('users.sessions_none', 'No other sign-ins.')) + '</td></tr>';
+      container.innerHTML = '<tr><td colspan="5" class="zn-datatable-msg">' + escapeHtml(t('users.sessions_none', 'No other sign-ins.')) + '</td></tr>';
       return;
     }
 
@@ -537,19 +537,19 @@ export async function loadSessionsList() {
       const isCurrent = !!s.is_current;
 
       return `
-        <tr style="border-bottom: 1px solid var(--zn-line-6);">
-          <td style="padding: 12px; font-weight:700; color:var(--zn-text-strong);">
+        <tr>
+          <td class="is-bold">
             <span aria-hidden="true">${isCurrent ? '💻' : '🌐'}</span> ${escapeHtml(isCurrent ? t('users.this_browser', 'This browser') : t('users.other_device', 'Another device'))}
             ${isCurrent ? '<span style="font-size: var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">' + escapeHtml(t('users.this_device', 'This device')) + '</span>' : ''}
-            <div style="font-size: var(--zn-fs-xs); font-weight:normal; color:var(--muted); margin-top:2px;">${escapeHtml(s.user_agent || t('users.unknown_browser', 'Unknown browser'))}</div>
+            <div class="zn-sub is-spaced">${escapeHtml(s.user_agent || t('users.unknown_browser', 'Unknown browser'))}</div>
           </td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--zn-text-soft); font-family:monospace;">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--zn-text-muted);">${createdStr}</td>
-          <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--zn-text-muted);">${lastStr}</td>
-          <td style="padding: 12px; text-align:right;">
+          <td class="is-soft is-mono">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
+          <td class="is-dim">${createdStr}</td>
+          <td class="is-dim">${lastStr}</td>
+          <td class="is-end">
             ${!isCurrent ? `
               <button class="suite-toolkit-btn sm danger btn-revoke-session" data-id="${s.id}">${escapeHtml(t('users.sign_out', 'Sign out'))}</button>
-            ` : '<span style="font-size: var(--zn-fs-xs); color:var(--muted);">' + escapeHtml(t('users.in_use', 'In use')) + '</span>'}
+            ` : '<span class="zn-sub">' + escapeHtml(t('users.in_use', 'In use')) + '</span>'}
           </td>
         </tr>
       `;
@@ -564,7 +564,7 @@ export async function loadSessionsList() {
     });
 
   } catch (err) {
-    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--crit);">' + escapeHtml(t('users.sessions_failed', 'The sign-ins couldn\'t be loaded: {error}', { error: err.message })) + '</td></tr>';
+    container.innerHTML = '<tr><td colspan="5" class="zn-datatable-msg is-crit">' + escapeHtml(t('users.sessions_failed', 'The sign-ins couldn\'t be loaded: {error}', { error: err.message })) + '</td></tr>';
   }
 }
 

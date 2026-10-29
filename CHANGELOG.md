@@ -4,6 +4,10 @@
 
 #### Usability
 
+- **Lists drawn by the design system**: the people, sign-in and backup lists use shared table, tag
+  and state classes instead of about 90 inline styles, checked against before-and-after screenshots
+  in both themes; `!important` is now held per CSS file and the use of the UI primitives may only
+  grow (UX-32).
 - **Tested by keyboard and in German**: CI now adds a person, signs in with a recovery code, opens a
   folder in Files and brings a deleted file back, all by keyboard alone, and fails when the German
   sign-in, People or Backups screens show English at tablet or phone width (UX-38).

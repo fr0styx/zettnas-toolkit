@@ -2,6 +2,8 @@
 // inline style attributes and emoji without an icon may only go down; new markup uses classes,
 // the shared tokens and the SVG sprite. Emoji with an entry in src/icons/emoji-icons.json are
 // drawn as icons by icons.js; any other emoji in the sources, translations included, counts. Run with --update after lowering them to record the new baseline.
+// UX-32: !important is also held per file (a new file starts at zero), and the number of places
+// that build markup with the UI primitives (uiButton, uiField, uiCard, uiPaneHeader) may only go up.
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -25,9 +27,16 @@ let emojiIcons = 0;
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/gu;
 const ICONS = JSON.parse(readFileSync(join(ROOT, 'src', 'icons', 'emoji-icons.json'), 'utf8'));
 const buttonClasses = new Set();
+const importantPerFile = {};
+let primitiveUses = 0;
 for (const f of files) {
   const src = readFileSync(f, 'utf8');
-  important += (src.match(/!important/g) || []).length;
+  const imp = (src.match(/!important/g) || []).length;
+  important += imp;
+  if (imp) importantPerFile[f.replaceAll('\\', '/')] = imp;
+  if (f.endsWith('.js') && !f.replaceAll('\\', '/').endsWith('ui/primitives.js')) {
+    primitiveUses += (src.match(/\bui(?:Button|Field|Card|PaneHeader)\(/g) || []).length;
+  }
   if (!f.endsWith('.css')) inlineStyles += (src.match(/\sstyle=["'`]|\.style\.cssText\s*=/g) || []).length;
   if (!f.endsWith('.css') && !f.endsWith('.json')) {
     for (const m of src.matchAll(EMOJI)) if (!ICONS[m[0]]) emojiIcons += 1;
@@ -38,12 +47,27 @@ for (const f of files) {
 }
 const now = { important, buttonClasses: buttonClasses.size, inlineStyles, emojiIcons };
 if (process.argv.includes('--update')) {
-  writeFileSync(BASELINE, JSON.stringify(now, null, 2) + '\n');
-  console.log('css budget baseline updated:', now);
+  const sorted = Object.fromEntries(Object.entries(importantPerFile).sort(([a], [b]) => a.localeCompare(b)));
+  writeFileSync(BASELINE, JSON.stringify({ ...now, primitiveUses, importantPerFile: sorted }, null, 2) + '\n');
+  console.log('css budget baseline updated:', { ...now, primitiveUses });
   process.exit(0);
 }
 const base = JSON.parse(readFileSync(BASELINE, 'utf8'));
 let failed = false;
+if (base.importantPerFile) {
+  for (const [f, n] of Object.entries(importantPerFile)) {
+    if (n > (base.importantPerFile[f] ?? 0)) {
+      console.error(`✗ ${f}: ${n} !important (budget ${base.importantPerFile[f] ?? 0}). Use a more specific selector or a token instead.`);
+      failed = true;
+    }
+  }
+}
+if (primitiveUses < (base.primitiveUses ?? 0)) {
+  console.error(`✗ primitiveUses: ${primitiveUses} (at least ${base.primitiveUses}). Markup built with uiButton/uiField/uiCard/uiPaneHeader was replaced by hand-written markup.`);
+  failed = true;
+} else {
+  console.log(`✓ primitiveUses: ${primitiveUses} (at least ${base.primitiveUses ?? 0})`);
+}
 for (const k of Object.keys(now)) {
   if (now[k] > (base[k] ?? 0)) {
     console.error(`✗ ${k}: ${now[k]} (budget ${base[k] ?? 0}). Use a component class, a token or a more specific selector instead.`);

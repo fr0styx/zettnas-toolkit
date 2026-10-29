@@ -19,6 +19,24 @@ Button variants: `is-primary` (the one main action), `is-danger` (deletes and ot
 destructive actions), `is-ghost` (quiet, e.g. tabs and toolbar actions), plus `is-small` and
 `is-block`. With no variant it is the secondary button.
 
+### Lists, tags and states
+
+For a list of things with columns (people, backup jobs, snapshots), in `50-components.css`:
+
+| Class | What it is |
+|---|---|
+| `.zn-datatable-wrap` | the scrolling, rounded box around a list |
+| `.zn-datatable` | the table: an uppercase header row, 10 px cells, a line between rows; `--compact` (8 px) and `--roomy` (12 px, the row's own text size) |
+| `.is-end`, `.is-strong`, `.is-bold`, `.is-muted`, `.is-soft`, `.is-dim`, `.is-mono` | on a cell: right-aligned, emphasised, quiet or monospaced |
+| `.zn-datatable-msg` (`.is-crit`) | the one-row "loading" or "couldn't load" message |
+| `.zn-sub` (`.is-spaced`) | the small grey line under a name |
+| `.zn-actions` | the buttons at the end of a row |
+| `.zn-tag` + `--info`, `--ok`, `--warn`, `--crit`, `--plain` | a small coloured label |
+| `.zn-state--ok`, `--crit`, `--idle`, `--busy` | the result of the last run, in words |
+| `.zn-load-error` | a list that couldn't be loaded |
+
+(`.zn-table` is the older, denser table of the AI access and protection cards.)
+
 ## Colour tokens
 
 Defined in `frontend/src/styles/50-components.css`; their light-theme values are generated
@@ -40,3 +58,6 @@ there is one, and into a light-theme wrapper otherwise.
 `python scripts/ui_ratchets.py` reports files with more inline styles or unstyled buttons
 than `tests/ui_ratchets.json` records; `--update` records the lower counts after a clean-up.
 `python scripts/ui_buttons.py --write` moves buttons styled inline onto `.btn-pill-toggle`.
+
+`npm run lint:css` holds `!important` per file (a new file starts at zero) and the number of
+places that build markup with the primitives above, which may only go up (UX-32).

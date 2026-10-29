@@ -194,7 +194,7 @@
  "frontend/src/components/management/backup.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 69,
+  "styles": 3,
   "templates": 8
  },
  "frontend/src/components/management/disks.js": {
@@ -338,8 +338,8 @@
  "frontend/src/components/users.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 34,
-  "templates": 3
+  "styles": 11,
+  "templates": 0
  },
  "frontend/src/components/vm-manager.js": {
   "buttons": 0,
@@ -446,13 +446,13 @@
  "frontend/src/windows/drawer.html": {
   "buttons": 0,
   "globals": 0,
-  "styles": 149,
+  "styles": 148,
   "templates": 0
  },
  "frontend/src/windows/management-window.html": {
   "buttons": 6,
   "globals": 0,
-  "styles": 1798,
+  "styles": 1793,
   "templates": 0
  }
 }
