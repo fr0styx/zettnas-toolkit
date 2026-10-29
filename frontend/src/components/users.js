@@ -154,6 +154,8 @@ export async function loadUsersPane(focusPart = 'users-pane-list') {
   initUsersManagement();
   await fetchCurrentProfile();
   loadUsersList();
+  const ff = document.getElementById('family-filter-mount');
+  if (ff) import('./family-filter.js').then((m) => m.renderFamilyFilter(ff)); // COMP-13
   loadSessionsList();
   load2FAStatus();
   switchUsersSubtab(focusPart);

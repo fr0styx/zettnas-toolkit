@@ -35,6 +35,11 @@
 
 #### Usability
 
+- **Filter the kids' devices**: with AdGuard Home from the App Catalog answering your network's
+  DNS, Users -> Filter the kids' devices gives a family account's phones and tablets parental
+  control, safe search and safe browsing, and blocks the services you pick (TikTok, YouTube,
+  Roblox and more). Everyone else is unchanged.
+
 - **Camera alerts from Frigate**: Frigate NVR in the App Catalog records your cameras and finds
   people, cars and pets on the Intel iGPU (OpenVINO). Under Notifications -> Camera alerts,
   ZettNAS can send what it sees through your alert channels: which objects, which cameras, how

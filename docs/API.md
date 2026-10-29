@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-621 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+625 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -104,6 +104,10 @@ request and response schemas.
 | `POST` | `/api/v1/auth/ticket` | signed in | Generate a single-use, 60-second ticket for SSE or WebSocket connections |
 | `GET` | `/api/v1/auth/users-list` | public | User tiles for the login screen, only when the admin turned them on (SEC-19) |
 | `POST` | `/api/v1/confirmations` | signed in | Issues a single-use token for one destructive action (see backend/confirmations.py) |
+| `GET` | `/api/v1/family-filter` | `users:read` | The AdGuard Home connection (never its password), each filtered account's devices and blocked services, the family accounts that can be f… |
+| `POST` | `/api/v1/family-filter/check` | `users:write` | Whether AdGuard Home answers with the saved user and password, and its version |
+| `PUT` | `/api/v1/family-filter/connection` | `users:write` | Put Family Filter Connection |
+| `PUT` | `/api/v1/family-filter/people/{username}` | `users:write` | Filters this account's devices in AdGuard Home; no devices stops filtering them |
 | `GET` | `/api/v1/security` | any of `system:view`, `users:read`, `system:config` | Get Security |
 | `POST` | `/api/v1/security` | any of `users:manage`, `system:config` ⏱ | Post Security |
 | `GET` | `/api/v1/security/advisor` | any of `system:view`, `users:read` | Runs automated zero-wake security checks across identity, passwords, and sessions |

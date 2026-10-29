@@ -2715,6 +2715,48 @@
     "title": "ConnectMeResponse",
     "type": "object"
    },
+   "ConnectionIn": {
+    "properties": {
+     "password": {
+      "anyOf": [
+       {
+        "maxLength": 256,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Password"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     },
+     "user": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User"
+     }
+    },
+    "title": "ConnectionIn",
+    "type": "object"
+   },
    "ContainerExecRequest": {
     "properties": {
      "cmd": {
@@ -29356,6 +29398,28 @@
     "title": "PermissionsUpdateRequest",
     "type": "object"
    },
+   "PersonIn": {
+    "properties": {
+     "blocked": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Blocked",
+      "type": "array"
+     },
+     "devices": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 32,
+      "title": "Devices",
+      "type": "array"
+     }
+    },
+    "title": "PersonIn",
+    "type": "object"
+   },
    "PhoneIn": {
     "properties": {
      "done": {
@@ -49405,6 +49469,177 @@
     ],
     "x-required-scopes": [
      "system:config"
+    ]
+   }
+  },
+  "/api/v1/family-filter": {
+   "get": {
+    "description": "The AdGuard Home connection (never its password), each filtered account's devices and\nblocked services, the family accounts that can be filtered and the services AdGuard can block.",
+    "operationId": "get_family_filter_api_v1_family_filter_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Family Filter Api V1 Family Filter Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Family Filter",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-required-scopes": [
+     "users:read"
+    ]
+   }
+  },
+  "/api/v1/family-filter/check": {
+   "post": {
+    "description": "Whether AdGuard Home answers with the saved user and password, and its version.",
+    "operationId": "check_family_filter_api_v1_family_filter_check_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Check Family Filter Api V1 Family Filter Check Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Check Family Filter",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
+  "/api/v1/family-filter/connection": {
+   "put": {
+    "operationId": "put_family_filter_connection_api_v1_family_filter_connection_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ConnectionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Family Filter Connection Api V1 Family Filter Connection Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Family Filter Connection",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
+  "/api/v1/family-filter/people/{username}": {
+   "put": {
+    "description": "Filters this account's devices in AdGuard Home; no devices stops filtering them.",
+    "operationId": "put_family_filter_person_api_v1_family_filter_people__username__put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "username",
+      "required": true,
+      "schema": {
+       "title": "Username",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PersonIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Family Filter Person Api V1 Family Filter People  Username  Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Family Filter Person",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-required-scopes": [
+     "users:write"
     ]
    }
   },

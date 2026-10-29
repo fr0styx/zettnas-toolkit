@@ -727,6 +727,8 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {},
         "volumes": {"conf": "/opt/adguardhome/conf", "work": "/opt/adguardhome/work"},
+        # on ZettNAS's own network, so the kids' filter (COMP-13) reaches http://adguardhome:3000
+        "join_zettnas_network": True,
         "logo": "adguard-home",
     },
     {
