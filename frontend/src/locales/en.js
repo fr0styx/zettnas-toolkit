@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "fm.restore": "Restore",
   "fm.sort_by": "Sort by",
   "fm.sort_name": "Name",
   "fm.sort_size": "Size",

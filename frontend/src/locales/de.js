@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "fm.restore": "Wiederherstellen",
   "fm.sort_by": "Sortieren nach",
   "fm.sort_name": "Name",
   "fm.sort_size": "Größe",

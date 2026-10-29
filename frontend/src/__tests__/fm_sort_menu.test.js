@@ -37,3 +37,23 @@ describe('Sort by in the folder right-click menu', () => {
     expect(fm.renderViewport).toHaveBeenCalledTimes(3);
   });
 });
+
+describe('Restore from the Recycle Bin view', () => {
+  it('restores the selected items by their bin ids', async () => {
+    const { api } = await import('../api.js');
+    const post = vi.spyOn(api, 'post').mockResolvedValue({});
+    const fm = Object.create(FileManagerWindow.prototype);
+    fm.currentPath = '/mnt/user/.RecycleBin';
+    fm.fileList = [
+      { name: 'a.jpg', path: '/mnt/user/vault/.RecycleBin/files/a.jpg', trash_id: 'vault::a.jpg' },
+      { name: 'b.txt', path: '/mnt/user/b.txt' },
+    ];
+    fm.loadPath = vi.fn();
+    expect(await fm.restoreFromBin(['/mnt/user/vault/.RecycleBin/files/a.jpg', '/mnt/user/b.txt'])).toBe(1);
+    expect(post).toHaveBeenCalledWith('/api/fs/trash/restore', { item_id: 'vault::a.jpg' });
+    expect(fm.loadPath).toHaveBeenCalledWith('/mnt/user/.RecycleBin');
+    post.mockRejectedValueOnce(new Error('gone'));
+    expect(await fm.restoreFromBin(['/mnt/user/vault/.RecycleBin/files/a.jpg'])).toBe(0);
+    post.mockRestore();
+  });
+});

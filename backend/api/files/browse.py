@@ -79,7 +79,34 @@ def _scan_remote_dir_isolated(real: str, dirs_only: bool) -> list[dict[str, Any]
         ) from None
 
 
+def _bin_view(real: str, principal: AuthenticatedPrincipal | None) -> dict[str, Any]:
+    """A Recycle Bin opened in the File Explorer shows every bin's items this person may open,
+    newest first: each share has its own bin, and the sidebar's is only the top one (REL-15)."""
+    from backend.api.files.trash import bin_listing
+
+    out = []
+    for item in bin_listing(principal)["items"] if principal else []:
+        out.append(
+            {
+                "name": item["name"],
+                "path": item["path"],
+                "is_dir": item["is_dir"],
+                "size": item["size"],
+                "mtime": float(item["deleted_at"]),
+                "mode": "0755" if item["is_dir"] else "0644",
+                "is_symlink": False,
+                "ext": "" if item["is_dir"] else os.path.splitext(item["name"])[1].lower(),
+                "trash_id": item["id"],
+                "original_path": item["original_path"] or "",
+            }
+        )
+    return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out, "recycle_bin": True}
+
+
 def _handle_browse_logic(path: str, dirs_only: bool, principal: AuthenticatedPrincipal | None = None):
+    real = _contained(path or ALLOWED_BROWSE_ROOTS[0])
+    if os.path.basename(real.rstrip("/")) == ".RecycleBin" and not dirs_only:
+        return _bin_view(real, principal)
     result = _handle_browse_logic_unfiltered(path, dirs_only, principal)
     if principal is None or _is_files_admin(principal) or not isinstance(result, dict):
         return result

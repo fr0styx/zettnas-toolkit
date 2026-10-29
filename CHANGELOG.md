@@ -228,6 +228,11 @@
 
 #### Fixes
 
+- **The Recycle Bin shows everything you deleted**: each shared folder keeps its own Recycle
+  Bin, but the File Explorer's Recycle Bin only showed the top one, so a file deleted inside a
+  share was kept but couldn't be found there. It now lists the deleted items of every share you
+  can open, newest first, and right-click -> Restore puts one back where it was.
+
 - **Deleting a file says which one**: the confirmation showed a raw template ("Move {count,
   plural, …} to the Recycle Bin?") instead of a sentence; it now names the file when one is
   selected, counts several, and says when items in the Recycle Bin will be deleted for good.

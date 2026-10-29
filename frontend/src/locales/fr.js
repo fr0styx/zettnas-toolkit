@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "fm.restore": "Restaurer",
   "fm.sort_by": "Trier par",
   "fm.sort_name": "Nom",
   "fm.sort_size": "Taille",

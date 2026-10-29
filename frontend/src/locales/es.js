@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "fm.restore": "Restaurar",
   "fm.sort_by": "Ordenar por",
   "fm.sort_name": "Nombre",
   "fm.sort_size": "Tamaño",

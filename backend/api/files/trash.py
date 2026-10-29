@@ -59,6 +59,11 @@ def _listing(principal: AuthenticatedPrincipal) -> dict:
     return {"items": out, "total": len(out)}
 
 
+def bin_listing(principal: AuthenticatedPrincipal) -> dict:
+    """Every bin's items this person may open, newest first (the File Explorer's bin view)."""
+    return _listing(principal)
+
+
 @router.get("/fs/trash", dependencies=[Depends(require_scope("shares:read", "storage:read", "system:view"))])
 async def fs_trash_list(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """What the Recycle Bins hold, newest first; each person sees what they may open."""

@@ -3181,6 +3181,26 @@ export class FileManagerWindow {
     return { success, failed: errors.length };
   }
 
+  /** Puts items from the Recycle Bin view back where they were deleted from. */
+  async restoreFromBin(paths) {
+    const ids = paths
+      .map((p) => (this.fileList || []).find((f) => f.path === p))
+      .filter((f) => f && f.trash_id)
+      .map((f) => f.trash_id);
+    let restored = 0;
+    for (const id of ids) {
+      try {
+        await api.post('/api/fs/trash/restore', { item_id: id });
+        restored++;
+      } catch (err) {
+        showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');
+      }
+    }
+    if (restored) showToast(t('fm.restored_count', '{count, plural, one {Restored # item} other {Restored # items}}', { count: restored }), 'success');
+    this.loadPath(this.currentPath);
+    return restored;
+  }
+
   /** UX-6: a toast with Undo that brings the items back from the Recycle Bin. */
   offerUndo(trashIds) {
     showActionToast(

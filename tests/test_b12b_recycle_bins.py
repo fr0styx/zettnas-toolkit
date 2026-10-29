@@ -146,3 +146,30 @@ def test_a_name_with_a_time_counts_from_it_and_one_without_from_its_date(root):
     _binned(b, "plain.txt", 1793091600, info=False)
     found = {i["name"]: i["deleted_at"] for i in rb.items(str(b))}
     assert found == {"1793000000_a.txt": 1793000000.0, "plain.txt": 1793091600.0}
+
+
+def test_the_bin_view_shows_every_shares_bin(client, auth_headers):
+    """Deleting inside a share fills that share's bin; the File Explorer's Recycle Bin (the top
+    one) used to show only its own folder, so the item couldn't be seen or restored there."""
+    root = config.ALLOWED_BROWSE_ROOTS[0]
+    share = os.path.join(root, f"binview{int(time.time() * 1000) % 10**8}")
+    photos = os.path.join(share, "Media", "Photos")
+    os.makedirs(photos)
+    src = os.path.join(photos, "IMG_0412.HEIC")
+    with open(src, "w") as f:
+        f.write("photo")
+    assert client.post("/api/fs/delete", json={"path": src}, headers=auth_headers).status_code == 200
+    assert not os.path.exists(src) and os.path.isdir(os.path.join(share, ".RecycleBin", "files"))
+
+    view = client.get(f"/api/browse?path={root}/.RecycleBin", headers=auth_headers).json()
+    assert view["recycle_bin"] is True
+    item = next(d for d in view["dirs"] if d.get("original_path") == src)
+    assert item["name"] == "IMG_0412.HEIC" and item["size"] == 5 and item["ext"] == ".heic"
+    assert item["path"].startswith(os.path.join(share, ".RecycleBin", "files"))
+    # a folder picker (dirs only) still sees the plain folder
+    assert (
+        "recycle_bin" not in client.get(f"/api/browse?path={root}/.RecycleBin&dirs_only=1", headers=auth_headers).json()
+    )
+
+    res = client.post("/api/fs/trash/restore", json={"item_id": item["trash_id"]}, headers=auth_headers)
+    assert res.status_code == 200 and os.path.exists(src)

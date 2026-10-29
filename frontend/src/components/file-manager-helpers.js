@@ -1001,6 +1001,7 @@ export class FmContextMenu {
       <div class="fm-ctx-group">
         ${fileItem && !isDir ? `<div class="fm-ctx-item" data-act="preview">👁️ QuickLook <span class="fm-ctx-key">Space</span></div>` : ''}
         ${fileItem && isDir ? `<div class="fm-ctx-item" data-act="open">📂 Open <span class="fm-ctx-key">Enter</span></div>` : ''}
+        ${fileItem && fileItem.trash_id ? `<div class="fm-ctx-item" data-act="restore">↩️ ${escapeHtml(t('fm.restore', 'Restore'))}</div>` : ''}
         <div class="fm-ctx-item" data-act="new-window">🪟 Open in New Window</div>
       </div>
       <div class="fm-ctx-divider"></div>
@@ -1074,6 +1075,9 @@ export class FmContextMenu {
         break;
       case 'open':
         if (item && item.is_dir) this.fm.loadPath(item.path);
+        break;
+      case 'restore':
+        this.fm.restoreFromBin(paths.length ? paths : [item?.path].filter(Boolean));
         break;
       case 'sort-name':
       case 'sort-size':
