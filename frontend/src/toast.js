@@ -152,24 +152,25 @@ function _showTopNotification(msg, type = "error") {
   let borderColor = "#38bdf8";
   let icon = "ℹ️";
   let tagText = t('toast.info', "Information");
-  let tagColor = "#38bdf8";
+  // heading colours from the theme: the light theme needs darker ones for 4.5:1 (UX-27)
+  let tagColor = "var(--zn-toast-info)";
 
   if (isErr) {
     borderColor = "#ef4444";
     icon = "⚠️";
     // Security wording only for security events; an ordinary failure is just an error.
     tagText = isSecurity ? t('toast.security_alert', "Security alert") : t('toast.error_heading', "Error");
-    tagColor = "#ef4444";
+    tagColor = "var(--zn-toast-err)";
   } else if (isWarn) {
     borderColor = "#f59e0b";
     icon = "⚠️";
     tagText = t('toast.warning', "Warning");
-    tagColor = "#f59e0b";
+    tagColor = "var(--zn-toast-warn)";
   } else if (isSucc) {
     borderColor = "#22c55e";
     icon = "✅";
     tagText = t('toast.success', "Done");
-    tagColor = "#22c55e";
+    tagColor = "var(--zn-toast-ok)";
   }
 
   toast.style.borderLeft = `4px solid ${borderColor}`;

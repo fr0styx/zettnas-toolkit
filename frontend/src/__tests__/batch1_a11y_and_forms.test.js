@@ -6,6 +6,9 @@ import { getThermalLevel } from '../components/chassis-visualizer.js';
 import { syncDesktopThemeUI, initDesktopThemeControls } from '../components/settings.js';
 import { state } from '../state.js';
 
+// each test parses the whole index.html; on a busy machine that alone can pass vitest's 10 s hook limit
+vi.setConfig({ hookTimeout: 30000 });
+
 describe('Batch 1: Accessibility, Form Label Linking & ARIA Radiogroups', () => {
   let htmlDoc;
 

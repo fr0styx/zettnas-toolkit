@@ -1,6 +1,10 @@
 /* =========================================================================
    TOP-CENTERED TOAST NOTIFICATIONS & CONFIRM DIALOGS
    ========================================================================= */
+/* Toast headings: readable on both themes (at least 4.5:1 on the toast background) */
+:root { --zn-toast-err: #ef4444; --zn-toast-warn: #f59e0b; --zn-toast-ok: #22c55e; --zn-toast-info: #38bdf8; }
+body.theme-light { --zn-toast-err: #b91c1c; --zn-toast-warn: #b45309; --zn-toast-ok: #15803d; --zn-toast-info: #0369a1; }
+
 /* UX-22: the server's own words under a translated error */
 .top-toast-details { margin-top: var(--zn-space-1); font-size: var(--zn-fs-xs); color: var(--zn-text-muted); }
 .top-toast-details summary { cursor: pointer; }
