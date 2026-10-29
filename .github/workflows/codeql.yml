@@ -39,3 +39,14 @@ jobs:
         uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           category: /language:${{ matrix.language }}
+          output: sarif-results
+      # The findings as a file too, for triage with a token that can read Actions but not
+      # code scanning (kept a week)
+      - name: Keep the results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: codeql-${{ matrix.language }}
+          path: sarif-results
+          retention-days: 7
+          if-no-files-found: ignore
