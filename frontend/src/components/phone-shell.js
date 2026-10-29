@@ -19,6 +19,7 @@ import { PHONE_QUERY } from '../device.js';
 import { api } from '../api.js';
 import { statusHtml as healthHtml } from './management/overview.js';
 import { advancedOn, isAdvancedRoute } from '../advanced.js';
+import { announceChange } from '../a11y.js';
 
 const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window';
 // A page on its way out is not open any more
@@ -62,7 +63,7 @@ export function statusHtml() {
 }
 
 export function launcherHtml() {
-  const health = `<section class="phone-health" aria-live="polite" aria-label="${escapeHtml(t('overview.status_label', 'Status'))}" hidden></section>`;
+  const health = `<section class="phone-health" aria-label="${escapeHtml(t('overview.status_label', 'Status'))}" hidden></section>`;
   return `${health}${statusHtml()}<nav class="phone-launcher-grid" aria-label="${escapeHtml(t('phone.home', 'Home'))}">${TILES()
     .map(
       ([route, name, icon]) =>
@@ -249,6 +250,7 @@ export async function refreshHealth(force = false, root = document) {
     const summary = await api.get('/api/system/status-summary');
     box.innerHTML = healthHtml(summary);
     box.hidden = false;
+    import('./management/overview.js').then((m) => announceChange('phone-health', m.statusSentence(summary)), () => {});
     return summary;
   } catch {
     box.hidden = true; // not allowed or not reachable: the launcher still works

@@ -10,6 +10,7 @@ import { escapeHtml } from '../../utils.js';
 import { ROUTES } from '../../router.js';
 import { ADVANCED_SECTIONS, advancedOn, saveAdvanced } from '../../advanced.js';
 import { ZettEventBus } from '../../event-bus.js';
+import { announceChange } from '../../a11y.js';
 
 export { ADVANCED_SECTIONS, advancedOn };
 
@@ -102,6 +103,14 @@ function protectionTile(p) {
     <button type="button" class="btn-pill-toggle" data-ov-protect>${t('protect.title', 'Protect this NAS')}</button></div>`;
 }
 
+/** The status in one sentence, for screen readers (UX-28). */
+export function statusSentence(summary) {
+  const n = ((summary && summary.items) || []).length;
+  return n
+    ? t('a11y.status_items', '{n, plural, one {# thing needs attention} other {# things need attention}}', { n })
+    : t('a11y.status_ok', 'All is well.');
+}
+
 export async function renderStatusSummary(root = document) {
   const hub = root.getElementById('management-hub-view');
   if (!hub) return null;
@@ -110,7 +119,6 @@ export async function renderStatusSummary(root = document) {
     box = document.createElement('section');
     box.id = 'mgmt-status-summary';
     box.className = 'mgmt-status-summary';
-    box.setAttribute('aria-live', 'polite');
     box.setAttribute('aria-label', t('overview.status_label', 'Status'));
     hub.insertBefore(box, hub.firstChild);
     box.addEventListener('click', (e) => {
@@ -137,5 +145,6 @@ export async function renderStatusSummary(root = document) {
   }
   box.hidden = false;
   box.innerHTML = statusHtml(summary) + protectionHtml(protection);
+  announceChange('status-summary', statusSentence(summary)); // UX-28: only when it changes
   return summary;
 }

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+#### Usability
+
+- **Errors in your language**: in German, French, Spanish or Chinese an error now says what happened in
+  that language, with the server's own words under "Details" (UX-22).
+- **Toasts you can read**: errors stay until you close them, other messages wait while the pointer or
+  keyboard is on them, and Ctrl/Cmd+Z takes the newest Undo offer (UX-27).
+- **Quieter screen readers**: status panels that refresh on a timer (Overview, jobs, transfers, drive
+  health, the phone launcher) announce a short sentence only when something changes (UX-28).
+
 #### AI
 
 - **Photo search by meaning without Immich**: with contrib/openvino-clip (SigLIP 2 on the iGPU) set in AI

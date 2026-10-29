@@ -5,6 +5,7 @@
 import { ZettEventBus } from './event-bus.js';
 import { state } from './state.js';
 import { t } from './i18n.js';
+import { detailsFor } from './error-text.js';
 import { escapeHtml, sanitizeModalHtml } from './utils.js';
 import { triggerHaptic } from './haptics.js';
 
@@ -46,10 +47,11 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
       <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: var(--zn-text-accent);">NOTIFICATION</div>
       <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
     </div>
-    <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;">${escapeHtml(actionText)}</button>
+    <button class="top-toast-action-btn" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; padding: 4px 10px; border-radius: 4px; margin-right: 6px;"${UNDO_RE.test(actionText) ? ' aria-keyshortcuts="Control+Z Meta+Z"' : ''}>${escapeHtml(actionText)}</button>
     <button class="top-toast-close" style="background: transparent; border: none; color: var(--zn-text-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
 
+  if (UNDO_RE.test(actionText)) toast.dataset.undo = '1';
   container.appendChild(toast);
 
   const actionBtn = toast.querySelector(".top-toast-action-btn");
@@ -69,10 +71,7 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
     toast.classList.add("show");
   });
 
-  const timer = setTimeout(() => {
-    _dismissToastItem(toast);
-  }, durationMs);
-  toast._dismissTimer = timer;
+  _armDismiss(toast, durationMs);
 }
 
 // Words that mark an action as destructive (the button turns red), in the five UI languages
@@ -175,11 +174,14 @@ function _showTopNotification(msg, type = "error") {
 
   toast.style.borderLeft = `4px solid ${borderColor}`;
   if (isErr) toast.setAttribute("role", "alert");
+  // UX-22: a translated error keeps the server's own words under "Details"
+  const details = isErr ? detailsFor(msg) : '';
   toast.innerHTML = `
     <div style="font-size: 20px; line-height: 1; flex-shrink: 0;">${icon}</div>
     <div style="flex: 1; min-width: 0;">
       <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 2px; color: ${tagColor};">${escapeHtml(tagText)}</div>
       <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-bright); line-height: 1.4; word-break: break-word;">${escapeHtml(msg)}</div>
+      ${details ? `<details class="top-toast-details"><summary>${escapeHtml(t('toast.details', 'Details'))}</summary><div class="top-toast-details-text">${escapeHtml(details)}</div></details>` : ''}
     </div>
     <button class="top-toast-close" style="background: transparent; border: none; color: var(--zn-text-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; line-height: 1; border-radius: 4px;" title="${escapeHtml(t('toast.dismiss', 'Dismiss'))}" aria-label="${escapeHtml(t('toast.dismiss', 'Dismiss'))}">&times;</button>
   `;
@@ -197,10 +199,51 @@ function _showTopNotification(msg, type = "error") {
     toast.classList.add("show");
   });
 
-  const timer = setTimeout(() => {
-    _dismissToastItem(toast);
-  }, 6500);
-  toast._dismissTimer = timer;
+  // UX-27: an error stays until it is closed; anything else goes after a while, but not while
+  // the pointer or the keyboard is on it
+  if (!isErr) _armDismiss(toast, TOAST_MS);
+}
+
+export const TOAST_MS = 6500;
+
+/** Dismisses the toast after ms, paused while it is hovered or focused (UX-27). */
+function _armDismiss(toast, ms) {
+  toast._remaining = ms;
+  const start = () => {
+    if (toast._dismissTimer || !toast.isConnected) return;
+    toast._startedAt = Date.now();
+    toast._dismissTimer = setTimeout(() => _dismissToastItem(toast), toast._remaining);
+  };
+  const pause = () => {
+    if (!toast._dismissTimer) return;
+    clearTimeout(toast._dismissTimer);
+    toast._dismissTimer = null;
+    toast._remaining = Math.max(1500, toast._remaining - (Date.now() - toast._startedAt));
+  };
+  toast.addEventListener('mouseenter', pause);
+  toast.addEventListener('focusin', pause);
+  toast.addEventListener('mouseleave', () => { if (!toast.contains(document.activeElement)) start(); });
+  toast.addEventListener('focusout', (e) => { if (!toast.contains(e.relatedTarget) && !toast.matches(':hover')) start(); });
+  start();
+}
+
+// UX-27: Ctrl/Cmd+Z takes the newest Undo offer (outside text fields, where it undoes typing)
+const UNDO_RE = /undo|rückgängig|deshacer|annuler|撤销|↺/i;
+
+function _onUndoKey(e) {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || String(e.key).toLowerCase() !== 'z') return;
+  const el = document.activeElement;
+  if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+  const offers = document.querySelectorAll('#top-toast-container .top-toast-item[data-undo] .top-toast-action-btn');
+  const newest = offers[offers.length - 1];
+  if (!newest) return;
+  e.preventDefault();
+  newest.click();
+}
+
+if (typeof document !== 'undefined' && !document._znUndoKey) {
+  document._znUndoKey = true;
+  document.addEventListener('keydown', _onUndoKey);
 }
 
 function _dismissToastItem(toast) {

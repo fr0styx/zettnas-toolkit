@@ -92,6 +92,18 @@ export function announceA11y(message) {
   }
 }
 
+const _lastSaid = new Map();
+
+/**
+ * UX-28: a region that re-renders on a timer says its summary only when it changes: not when
+ * it first appears, and not again while it stays the same.
+ */
+export function announceChange(key, text) {
+  const said = _lastSaid.get(key);
+  _lastSaid.set(key, text);
+  if (said !== undefined && said !== text && text) announceA11y(text);
+}
+
 if (typeof window !== 'undefined') {
   window.announceA11y = announceA11y;
 }

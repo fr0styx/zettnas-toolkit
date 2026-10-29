@@ -8,6 +8,7 @@ import { formatDateTime } from '../format.js';
 import { t } from '../i18n.js';
 import { applyWindowSnap, bringToFront, makeDraggable, restoreWindowSnap } from './dock.js';
 import { showToast } from '../toast.js';
+import { announceChange } from '../a11y.js';
 
 const BADGE_POLL_MS = 15000;
 const OPEN_POLL_MS = 2000;
@@ -73,6 +74,10 @@ export function renderJobs(data, root = document) {
       : `<li class="jobs-empty">${escapeHtml(t('jobs.none_recent', 'No finished jobs yet.'))}</li>`;
   }
   setJobsBadge(active.length);
+  // UX-28: say when the number of running jobs changes, not each progress update
+  announceChange('jobs-running', active.length
+    ? t('a11y.jobs_running', '{n, plural, one {# job running} other {# jobs running}}', { n: active.length })
+    : t('a11y.jobs_none', 'No jobs running.'));
 }
 
 export function setJobsBadge(n) {
@@ -119,7 +124,7 @@ function ensureWindow() {
       </div>
       <div class="jobs-body">
         <h3 class="jobs-heading">${escapeHtml(t('jobs.running', 'Running'))}</h3>
-        <ul id="jobs-active-list" class="jobs-list" aria-live="polite"></ul>
+        <ul id="jobs-active-list" class="jobs-list"></ul>
         <h3 class="jobs-heading">${escapeHtml(t('jobs.recent', 'Recent'))}</h3>
         <ul id="jobs-history-list" class="jobs-list"></ul>
       </div>`;

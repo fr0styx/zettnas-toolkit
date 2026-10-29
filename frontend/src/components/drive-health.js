@@ -12,6 +12,7 @@ import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { bringToFront, makeDraggable } from './dock.js';
 import { showToast } from '../toast.js';
+import { announceChange } from '../a11y.js';
 
 const DOCK_ID = 'drive-health';
 const LIST_POLL_MS = 60000;
@@ -180,7 +181,10 @@ function renderList() {
   if (!_win) return;
   const list = _win.querySelector('#dh-list');
   const overall = _win.querySelector('#dh-overall');
-  if (overall) overall.innerHTML = overallHtml({ drives: _drives, counts: _counts() });
+  if (overall) {
+    overall.innerHTML = overallHtml({ drives: _drives, counts: _counts() });
+    announceChange('drive-health', overall.textContent.trim()); // UX-28: only when it changes
+  }
   if (list) list.innerHTML = _drives.map((d) => driveCardHtml(d, d.dev === _selected)).join('');
 }
 
@@ -278,7 +282,7 @@ function windowHtml() {
     </div>
     <div class="dh-body">
       <aside class="dh-side">
-        <div id="dh-overall" aria-live="polite"></div>
+        <div id="dh-overall"></div>
         <ul id="dh-list" class="dh-list" aria-label="${escapeHtml(t('dh.drives', 'Drives'))}"></ul>
       </aside>
       <section id="dh-detail" class="dh-detail" aria-live="polite"></section>

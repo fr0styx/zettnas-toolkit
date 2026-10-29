@@ -1,6 +1,11 @@
 /* =========================================================================
    TOP-CENTERED TOAST NOTIFICATIONS & CONFIRM DIALOGS
    ========================================================================= */
+/* UX-22: the server's own words under a translated error */
+.top-toast-details { margin-top: var(--zn-space-1); font-size: var(--zn-fs-xs); color: var(--zn-text-muted); }
+.top-toast-details summary { cursor: pointer; }
+.top-toast-details-text { margin-top: 2px; word-break: break-word; user-select: text; }
+
 #top-toast-container {
   position: fixed;
   top: 64px;

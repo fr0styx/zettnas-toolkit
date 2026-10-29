@@ -99,7 +99,7 @@ class TransferCenter {
               </div>
             </div>
           </div>
-          <div class="smart-modal-body fm-cockpit-body" aria-live="polite"></div>
+          <div class="smart-modal-body fm-cockpit-body"></div>
         </div>`;
       document.body.appendChild(host);
     }
