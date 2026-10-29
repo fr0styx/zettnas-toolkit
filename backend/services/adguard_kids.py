@@ -59,13 +59,19 @@ def public() -> dict[str, Any]:
     return {"url": s["url"], "user": s["user"], "has_password": bool(s["password"]), "people": s["people"]}
 
 
+def _ip(value: str) -> str | None:
+    try:
+        return str(ipaddress.ip_address(value))
+    except ValueError:
+        return None  # not an IP address; the caller tries MAC and client ID
+
+
 def device_id(value: str) -> str:
     """One device as AdGuard knows it: an IP address, a MAC address or a client ID."""
     v = str(value or "").strip()
-    try:
-        return str(ipaddress.ip_address(v))
-    except ValueError:
-        pass
+    ip = _ip(v)
+    if ip:
+        return ip
     if _MAC.match(v):
         return v.lower().replace("-", ":")
     if _CLIENT_ID.match(v):
