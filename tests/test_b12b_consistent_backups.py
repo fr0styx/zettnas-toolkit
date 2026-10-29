@@ -159,6 +159,7 @@ def test_an_offsite_backup_dumps_its_databases_first(tmp_path, monkeypatch):
     monkeypatch.setattr(ob, "_unlock", lambda repo: order.append(("unlock",)))
     monkeypatch.setattr(ob, "_run", lambda repo, args, **kw: order.append(("backup",)) or (0, ""))
     monkeypatch.setattr(ob, "run_restic", lambda *a, **k: "")
+    monkeypatch.setattr(ob, "_run_full", lambda *a, **k: (0, "", ""))  # the retention step
     assert ob.backup("usb")["dumps"] == [{"name": "pg", "ok": True}]
     assert order[0] == ("dumps", [str(storage / "appdata")]) and order[1:] == [("unlock",), ("backup",)]
 

@@ -4,6 +4,12 @@
 
 #### Usability
 
+- **Be a friend's off-site backup**: the App Catalog has a backup target, an append-only restic
+  REST server where another NAS or a friend's computer can add encrypted versions but never
+  delete them, one private folder per account. Off-site backups can now go to such a server
+  (`rest:http://…`), with the server's password kept encrypted on this NAS and in the recovery
+  kit; when the server refuses to prune, ZettNAS stops asking and says the versions stay there
+  (FEAT-08).
 - **Sign-in hours for kids**: an administrator can give a kid's or guest's account the days and
   times it may be used, for example Monday to Friday 07:00 to 20:00 (server time). Outside them
   the person can't sign in and an open session pauses until the hours start again; spans past

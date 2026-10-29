@@ -49,6 +49,27 @@ restic -r sftp:<user>@<nas-address>:/backups/laptop backup ~ --exclude ~/.cache
 Run the backup from a systemd timer or cron, and `restic forget --keep-daily 7
 --keep-weekly 4 --prune` once a week.
 
+## Another NAS or a friend: be each other's off-site copy
+
+Install **Backup target (restic REST server)** from the App Catalog on the NAS that keeps the
+copy. It is append-only: the sending side can add versions but can't delete or overwrite them,
+so ransomware or a mistake there can't wipe the copies. Each account sees only its own folder.
+The deploy dialog shows the first account (user `backup` and a generated password); add one per
+person with `docker exec -it rest-server create_user <name>`.
+
+On the sending ZettNAS, add an off-site backup (Backup → Off-site) with the destination
+`rest:http://<target-address>:8000/backup/` and that user name and password. restic encrypts
+everything before it leaves, so the target's owner can't read your files. Over the internet,
+reach the target through a VPN such as Tailscale or WireGuard rather than opening port 8000:
+the address uses plain HTTP, so the password would otherwise cross the internet unencrypted.
+
+The sender can't prune an append-only target, so ZettNAS notices the refusal after the first
+backup, stops asking, and shows that old versions stay there. The target's owner decides how
+long to keep them: `--max-size` in the app's `OPTIONS` caps a folder's size.
+
+From any other computer with restic: `restic -r rest:http://<target-address>:8000/<name>/ init`,
+with `RESTIC_REST_USERNAME` and `RESTIC_REST_PASSWORD` set.
+
 ## Protecting the backups themselves
 
 - Use a separate ZettNAS account for backups, not your admin account, and give it

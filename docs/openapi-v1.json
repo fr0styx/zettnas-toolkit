@@ -29659,6 +29659,18 @@
       "minItems": 1,
       "title": "Paths",
       "type": "array"
+     },
+     "rest_password": {
+      "default": "",
+      "maxLength": 256,
+      "title": "Rest Password",
+      "type": "string"
+     },
+     "rest_user": {
+      "default": "",
+      "maxLength": 64,
+      "title": "Rest User",
+      "type": "string"
      }
     },
     "required": [

@@ -75,6 +75,9 @@ def rotate_secret_key() -> dict[str, Any]:
                 resealed_backups += 1
         if resealed_backups:
             atomic_write_json(BACKUP_JOBS_FILE, jobs)
+    from backend.services.offsite_backup import reseal_rest_passwords
+
+    resealed_backups += reseal_rest_passwords()
 
     os.remove(previous_key_file())
     result = {"rotated_at": time.time(), "mfa_secrets": resealed_mfa, "backup_passphrases": resealed_backups}

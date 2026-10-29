@@ -1,7 +1,9 @@
 """Versioned, deduplicated, encrypted offsite backup with restic (Batch 6).
 
-A repository is a folder (a USB disk, another NAS) or an rclone remote ("rclone:name:path",
-using ZettNAS's rclone config, so every cloud rclone supports works). restic encrypts
+A repository is a folder (a USB disk, another NAS), an rclone remote ("rclone:name:path",
+using ZettNAS's rclone config, so every cloud rclone supports works) or a restic REST server
+("rest:http://host:8000/name/", for example another ZettNAS running the backup-target app,
+FEAT-08). restic encrypts
 everything with the repository key, stores each file once however many versions exist, and
 keeps the versions the retention rules ask for. The key lives in the data folder; without it
 the backup can't be read, so the interface offers it for safe keeping.
@@ -32,6 +34,8 @@ _BUSY: set[str] = set()  # repos with a backup or restore started, before restic
 WARN_EXIT = 3  # restic backup: the snapshot was made, but some files could not be read
 OFF_BOX_ROOTS = ("/mnt/disks/", "/mnt/remotes/", "/mnt/addons/")  # USB and network disks
 _HOST = re.compile(r"^zettnas-[0-9a-f]{8}$")
+# rest:http(s)://host[:port][/path]; user and password go in their own fields, never the address
+_REST = re.compile(r"^rest:https?://[A-Za-z0-9.\-\[\]:]+(/[A-Za-z0-9._~\-/]*)?$")
 
 
 class ResticError(RuntimeError):
@@ -98,8 +102,46 @@ def _key_file(repo_id: str) -> str:
     return os.path.join(KEY_DIR, f"{repo_id}.key")
 
 
+def _public(repo: dict[str, Any]) -> dict[str, Any]:
+    """A repository as the interface sees it: the REST password stays on the server."""
+    out = {k: v for k, v in repo.items() if k != "rest_password"}
+    out["has_rest_password"] = bool(repo.get("rest_password"))
+    out["same_disk"] = same_disk(repo.get("location") or "", repo.get("paths") or [])
+    return out
+
+
 def list_repos() -> list[dict[str, Any]]:
-    return [{**r, "same_disk": same_disk(r.get("location") or "", r.get("paths") or [])} for r in _repos().values()]
+    return [_public(r) for r in _repos().values()]
+
+
+def _check_location(location: str) -> None:
+    if location.startswith("rest:"):
+        if not _REST.match(location):
+            raise ValueError(
+                "A REST server address looks like rest:http://friend-nas:8000/yourname/ "
+                "(put the user name and password in their own fields)."
+            )
+        return
+    if not location or not location.startswith(("/", "rclone:")):
+        raise ValueError(
+            "The destination is a folder (/mnt/disks/usb/backup), an rclone remote (rclone:name:path) "
+            "or a restic REST server (rest:http://host:8000/name/)."
+        )
+    if location.startswith("/") and not _in_storage(location):
+        raise ValueError("A folder destination must be on the storage (for example a USB disk under /mnt/disks).")
+
+
+def _rest_fields(location: str, old: dict[str, Any], user: str, password: str) -> dict[str, Any]:
+    """The REST sign-in kept with a repository: the password sealed, an empty one keeps the last."""
+    if not location.startswith("rest:"):
+        return {}
+    from backend import secret_box
+
+    user = (user or "").strip()
+    if user and not re.fullmatch(r"[A-Za-z0-9._@-]{1,64}", user):
+        raise ValueError("Use letters, digits, dots, dashes and @ for the REST user name.")
+    sealed = secret_box.seal(password) if password else old.get("rest_password", "")
+    return {"rest_user": user, "rest_password": sealed}
 
 
 def get_repo(repo_id: str) -> dict[str, Any]:
@@ -110,14 +152,18 @@ def get_repo(repo_id: str) -> dict[str, Any]:
 
 
 def save_repo(
-    repo_id: str, name: str, location: str, paths: list[str], keep: dict[str, int] | None = None, hour: int | None = 2
+    repo_id: str,
+    name: str,
+    location: str,
+    paths: list[str],
+    keep: dict[str, int] | None = None,
+    hour: int | None = 2,
+    rest_user: str = "",
+    rest_password: str = "",
 ) -> dict[str, Any]:
     if not _ID.match(repo_id or ""):
         raise ValueError("Use lowercase letters, digits and dashes for the id.")
-    if not location or not (location.startswith("/") or location.startswith("rclone:")):
-        raise ValueError("The destination is a folder (/mnt/disks/usb/backup) or an rclone remote (rclone:name:path).")
-    if location.startswith("/") and not _in_storage(location):
-        raise ValueError("A folder destination must be on the storage (for example a USB disk under /mnt/disks).")
+    _check_location(location or "")
     clean_paths = [p for p in (paths or []) if p.startswith("/") and ".." not in p.split("/") and _in_storage(p)]
     if not clean_paths:
         raise ValueError("Choose at least one folder on the storage to back up.")
@@ -140,9 +186,29 @@ def save_repo(
             "last_drill_result": old.get("last_drill_result", ""),
             "created_at": old.get("created_at") or time.time(),
             "kit_saved_at": old.get("kit_saved_at"),
+            # the server refused deletes once (append-only); a new address is asked again
+            "append_only": bool(old.get("append_only")) and old.get("location") == location,
+            **_rest_fields(location, old, rest_user, rest_password),
         }
         _save(repos)
-    return {**repos[repo_id], "same_disk": same_disk(location, clean_paths)}
+    return _public(repos[repo_id])
+
+
+def reseal_rest_passwords() -> int:
+    """Seals the REST passwords again with a new secret key (services/key_rotation.py)."""
+    from backend import secret_box
+
+    with _LOCK:
+        repos = _repos()
+        count = 0
+        for repo in repos.values():
+            value = str(repo.get("rest_password") or "")
+            if secret_box.is_sealed(value):
+                repo["rest_password"] = secret_box.seal(secret_box.unseal(value))
+                count += 1
+        if count:
+            _save(repos)
+    return count
 
 
 def delete_repo(repo_id: str) -> bool:
@@ -167,6 +233,15 @@ def _env(repo: dict[str, Any]) -> dict[str, str]:
         }
     )
     env.pop("RESTIC_PASSWORD", None)
+    for name in ("RESTIC_REST_USERNAME", "RESTIC_REST_PASSWORD"):
+        env.pop(name, None)
+    if repo["location"].startswith("rest:"):
+        from backend import secret_box
+
+        if repo.get("rest_user"):
+            env["RESTIC_REST_USERNAME"] = repo["rest_user"]
+        if repo.get("rest_password"):
+            env["RESTIC_REST_PASSWORD"] = secret_box.unseal(repo["rest_password"])
     return env
 
 
@@ -210,6 +285,19 @@ def _run(
     on_line: Callable[[str], Any] | None = None,
 ) -> tuple[int, str]:
     """Runs restic; returns its exit code (one of `ok`) and output."""
+    code, out, _err = _run_full(repo, args, timeout=timeout, track=track, ok=ok, on_line=on_line)
+    return code, out
+
+
+def _run_full(
+    repo: dict[str, Any],
+    args: list[str],
+    timeout: int = 6 * 3600,
+    track: bool = False,
+    ok: tuple[int, ...] = (0,),
+    on_line: Callable[[str], Any] | None = None,
+) -> tuple[int, str, str]:
+    """Runs restic; returns its exit code (one of `ok`), output and error output."""
     if not restic_available():
         raise ResticError("restic is not installed in this image.")
     cmd = ["restic", *args]
@@ -225,7 +313,7 @@ def _run(
         _RUNNING.pop(repo["id"], None)
     if proc.returncode not in ok:
         raise ResticError((err or out or f"restic exited with {proc.returncode}").strip().splitlines()[-1][:300])
-    return proc.returncode, out
+    return proc.returncode, out, err or ""
 
 
 def run_restic(repo: dict[str, Any], args: list[str], timeout: int = 6 * 3600, track: bool = False) -> str:
@@ -331,6 +419,14 @@ def recovery_kit(repo_id: str) -> str:
     if rclone_conf:
         lines += ["  2. Save the cloud settings below as rclone.conf, then: export RCLONE_CONFIG=./rclone.conf"]
     step = 3 if rclone_conf else 2
+    if loc.startswith("rest:") and repo.get("rest_user"):
+        from backend import secret_box
+
+        password = secret_box.unseal(repo["rest_password"]) if repo.get("rest_password") else ""
+        lines += [
+            f"  {step}. export RESTIC_REST_USERNAME='{repo['rest_user']}' RESTIC_REST_PASSWORD='{password}'",
+        ]
+        step += 1
     lines += [
         f"  {step}. export RESTIC_PASSWORD='{key}'",
         f"  {step + 1}. See the versions: restic -r '{loc}' snapshots",
@@ -417,23 +513,7 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
         if get_guard().frozen:  # REL-9: during an attack no good version is pruned away
             logger.warning(f"[Offsite] {repo['name']}: writes are frozen, old versions are kept")
         else:
-            run_restic(
-                repo,
-                [
-                    "forget",
-                    "--prune",
-                    "--tag",
-                    "zettnas",
-                    "--group-by",
-                    "paths,tags",
-                    "--keep-daily",
-                    str(k["daily"]),
-                    "--keep-weekly",
-                    str(k["weekly"]),
-                    "--keep-monthly",
-                    str(k["monthly"]),
-                ],
-            )
+            _forget(repo, k)
         result = {
             "snapshot": summary.get("snapshot_id", "")[:8],
             "files_new": summary.get("files_new", 0),
@@ -454,6 +534,41 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
         _update(repo_id, last_result=f"failed: {e}"[:300])
         job_manager.finish(job.id, "error", error=str(e))
         raise
+
+
+def _forget(repo: dict[str, Any], k: dict[str, int]) -> None:
+    """Applies the retention rules. An append-only server (FEAT-08) refuses every delete with
+    HTTP 403: restic exits 0 when only snapshots were to go and fails when packs were, so the
+    refusal is read from its messages either way. The backup is then marked append-only and
+    later runs leave pruning to the server's owner."""
+    if repo.get("append_only"):
+        return
+    try:
+        err = _run_full(repo, _forget_args(k))[2]
+    except ResticError as e:
+        if "(403)" not in str(e):
+            raise
+        err = str(e)
+    if "(403)" in err:
+        logger.info("[Offsite] %s: the server is append-only; old versions stay there", repo["name"])
+        _update(repo["id"], append_only=True)
+
+
+def _forget_args(k: dict[str, int]) -> list[str]:
+    return [
+        "forget",
+        "--prune",
+        "--tag",
+        "zettnas",
+        "--group-by",
+        "paths,tags",
+        "--keep-daily",
+        str(k["daily"]),
+        "--keep-weekly",
+        str(k["weekly"]),
+        "--keep-monthly",
+        str(k["monthly"]),
+    ]
 
 
 def _start(repo_id: str, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> None:

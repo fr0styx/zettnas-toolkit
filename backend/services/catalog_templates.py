@@ -341,6 +341,44 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "logo": "duplicati",
     },
     {
+        # FEAT-08: be the off-site copy of another NAS or a friend's computer
+        "id": "rest-server",
+        "name": "Backup target (restic REST server)",
+        "category": "cloud",
+        "description": (
+            "Lets another NAS or a friend back up to this one with restic. Append-only: they can add "
+            "versions but never delete them, so ransomware on their side can't wipe the copies here."
+        ),
+        "image": "restic/rest-server:latest",
+        "default_port": 8000,
+        "webui_path": None,
+        "probe": "tcp",
+        # the first account is made once, with a bcrypt password; add more with create_user
+        "command": [
+            "sh",
+            "-c",
+            '[ -s "$PASSWORD_FILE" ] || htpasswd -B -b -c "$PASSWORD_FILE" "$REST_USER" "$REST_PASSWORD"; '
+            "exec /entrypoint.sh",
+        ],
+        "env": {
+            "OPTIONS": "--append-only --private-repos",
+            "REST_USER": "backup",
+            "REST_PASSWORD": "{{secret:password}}",
+        },
+        "volumes": {"data": "/data"},
+        "credentials": {
+            "user": "backup",
+            "password": "{{secret:password}}",
+            "note": (
+                "On the other ZettNAS: Backup → Off-site, destination rest:http://<this NAS>:8000/backup/ "
+                "with this user and password. Each account sees only its own folder. Add one per person "
+                "with: docker exec -it rest-server create_user <name>"
+            ),
+        },
+        "tags": ["backup", "restic", "append-only", "off-site"],
+        "logo": "restic",
+    },
+    {
         "id": "pairdrop",
         "name": "PairDrop",
         "category": "cloud",

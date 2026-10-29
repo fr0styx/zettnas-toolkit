@@ -195,6 +195,7 @@ def test_offsite_backups_keep_every_version_while_frozen(tmp_path, monkeypatch):
     monkeypatch.setattr(ob, "_unlock", lambda repo: None)
     monkeypatch.setattr(ob, "_run", lambda repo, args, **kw: (0, ""))
     monkeypatch.setattr(ob, "run_restic", lambda repo, args, **kw: restic.append(args[0]) or "")
+    monkeypatch.setattr(ob, "_run_full", lambda repo, args, **kw: restic.append(args[0]) or (0, "", ""))
     monkeypatch.setattr(ransomware_guard, "get_guard", lambda: SimpleNamespace(frozen=True))
     ob.backup("usb")
     assert "forget" not in restic

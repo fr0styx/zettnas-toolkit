@@ -34,6 +34,7 @@
 .offsite-form label { display: flex; flex-direction: column; gap: 2px; font-size: var(--zn-fs-xs); color: var(--muted); }
 .offsite-form input:not([type="checkbox"]) { min-height: var(--zn-btn-h); padding: 0 var(--zn-space-2); border-radius: var(--zn-radius-sm); border: 1px solid var(--zn-line-strong); background: var(--zn-shade-30); color: var(--fg); font-size: var(--zn-fs-sm); }
 .offsite-form input[type="number"] { width: 90px; }
+.offsite-rest:not([hidden]) { display: contents; }
 .offsite-form fieldset { border: 1px solid var(--zn-line); border-radius: var(--zn-radius-sm); padding: var(--zn-space-1) var(--zn-space-2); display: flex; flex-wrap: wrap; gap: var(--zn-space-2); }
 .offsite-form legend { font-size: var(--zn-fs-xs); color: var(--muted); }
 .offsite-form .offsite-check { flex-direction: row; align-items: center; gap: 4px; color: var(--fg); }

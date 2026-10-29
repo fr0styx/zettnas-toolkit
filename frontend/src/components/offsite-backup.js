@@ -26,6 +26,7 @@ export function reposHtml(data) {
         }${r.initialized && !r.kit_saved_at ? ` · <strong class="offsite-kit-missing">${escapeHtml(t('offsite.kit_missing', 'Recovery kit not saved'))}</strong>` : ''}${
           r.last_unreadable ? ` · <strong>${escapeHtml(t('offsite.unreadable', '{n} files could not be read', { n: r.last_unreadable }))}</strong>` : ''
         }</span>
+        ${r.append_only ? `<span class="offsite-meta">${escapeHtml(t('offsite.append_only', 'The backup server only adds versions (append-only), so old ones stay there until its owner removes them.'))}</span>` : ''}
         ${r.same_disk ? `<span class="offsite-meta"><strong>${escapeHtml(t('offsite.same_disk', 'Same storage as the folders it protects: a failed disk, a theft or a fire takes both. Use a USB disk, another NAS or the cloud.'))}</strong></span>` : ''}
       </div>
       <div class="offsite-actions">
@@ -44,7 +45,11 @@ export function reposHtml(data) {
 export function formHtml(shares) {
   return `<form class="offsite-form" data-off-form>
     <label>${escapeHtml(t('offsite.name', 'Name'))}<input name="name" required maxlength="80" placeholder="${escapeHtml(t('offsite.name_ph', 'USB disk at the office'))}"></label>
-    <label>${escapeHtml(t('offsite.destination', 'Destination'))}<input name="location" required placeholder="/mnt/disks/usb/zettnas · rclone:mycloud:zettnas"></label>
+    <label>${escapeHtml(t('offsite.destination', 'Destination'))}<input name="location" required placeholder="/mnt/disks/usb/zettnas · rclone:mycloud:zettnas · rest:http://friend-nas:8000/backup/"></label>
+    <div class="offsite-rest" data-off-rest hidden>
+      <label>${escapeHtml(t('offsite.rest_user', 'User name on the backup server'))}<input name="rest_user" maxlength="64" autocomplete="off"></label>
+      <label>${escapeHtml(t('offsite.rest_password', 'Password on the backup server'))}<input name="rest_password" type="password" maxlength="256" autocomplete="new-password"></label>
+    </div>
     <fieldset><legend>${escapeHtml(t('offsite.what', 'Folders to back up'))}</legend>${shares
       .map((s) => `<label class="offsite-check"><input type="checkbox" name="paths" value="${escapeHtml(s.path)}"> ${escapeHtml(s.name)}</label>`)
       .join('')}</fieldset>
@@ -54,6 +59,16 @@ export function formHtml(shares) {
     <label>${escapeHtml(t('offsite.hour', 'Every day at'))}<input name="hour" type="number" min="0" max="23" value="2"></label>
     <button type="submit" class="btn-pill-toggle is-primary">${escapeHtml(t('offsite.add', 'Add offsite backup'))}</button>
   </form>`;
+}
+
+export function isRestLocation(value) {
+  return String(value || '').trim().startsWith('rest:');
+}
+
+/** The REST server's user and password, sent only for a rest: destination. */
+export function restSignIn(f) {
+  if (!isRestLocation(f.get('location'))) return {};
+  return { rest_user: String(f.get('rest_user') || '').trim(), rest_password: String(f.get('rest_password') || '') };
 }
 
 function slug(name) {
@@ -138,9 +153,18 @@ export async function renderOffsite(mount) {
     return;
   }
   mount.innerHTML = reposHtml(data) + (data.available ? formHtml(shares) : '');
-  mount.querySelector('[data-off-form]')?.addEventListener('submit', async (e) => {
+  const form = mount.querySelector('[data-off-form]');
+  const location = /** @type {HTMLInputElement | null} */ (form?.querySelector('[name="location"]') || null);
+  const restBox = /** @type {HTMLElement | null} */ (form?.querySelector('[data-off-rest]') || null);
+  if (location && restBox) {
+    // FEAT-08: a restic REST server (another ZettNAS's backup-target app) takes a sign-in
+    location.addEventListener('input', () => {
+      restBox.hidden = !isRestLocation(location.value);
+    });
+  }
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const f = new FormData(e.target);
+    const f = new FormData(/** @type {HTMLFormElement} */ (e.target));
     const body = {
       id: slug(f.get('name')),
       name: f.get('name'),
@@ -148,6 +172,7 @@ export async function renderOffsite(mount) {
       paths: f.getAll('paths'),
       keep: { daily: Number(f.get('daily')), weekly: Number(f.get('weekly')), monthly: Number(f.get('monthly')) },
       hour: Number(f.get('hour')),
+      ...restSignIn(f),
     };
     try {
       await api.put('/api/offsite/repos', body);

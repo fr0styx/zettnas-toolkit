@@ -18,6 +18,8 @@ class RepoIn(BaseModel):
     paths: list[str] = Field(min_length=1, max_length=50)
     keep: dict[str, int] = Field(default_factory=dict)
     hour: int | None = Field(default=2, ge=0, le=23)
+    rest_user: str = Field(default="", max_length=64)
+    rest_password: str = Field(default="", max_length=256)
 
 
 class RestoreIn(BaseModel):
@@ -53,7 +55,9 @@ def overview():
 
 @router.put("/offsite/repos", dependencies=[MANAGE])
 def put_repo(req: RepoIn):
-    return _errors(ob.save_repo, req.id, req.name, req.location, req.paths, req.keep, req.hour)
+    return _errors(
+        ob.save_repo, req.id, req.name, req.location, req.paths, req.keep, req.hour, req.rest_user, req.rest_password
+    )
 
 
 @router.delete("/offsite/repos/{repo_id}", dependencies=[MANAGE])
