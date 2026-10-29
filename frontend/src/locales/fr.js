@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "ai.licence_unknown": "Licence non indiquée",
+  "ai.licence_non_commercial": "Pas d'usage commercial",
   "compress.off": "Désactivée",
   "compress.level": "{algo} (niveau {level})",
   "compress.ratio_none": "Rien d'économisé pour l'instant",

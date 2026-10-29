@@ -462,13 +462,11 @@ def evaluate_model_hardware_fit(
         accel_desc = f"{npu_label} + {gpu_label}" if (has_npu and has_igpu) else (npu_label if has_npu else gpu_label)
         warning_message = (
             f"Hardware Warning: Requires ~{est_ram_gb:.1f} GB dedicated GPU VRAM ({max(16, int(req_dgpu_vram_gb))} GB+ dGPU). "
-            f"Exceeds onboard {accel_desc} shared aperture ({npu_igpu_ceiling_gb:.0f} GB max) and will run at <2 tok/s on CPU."
+            f"Exceeds onboard {accel_desc} shared aperture ({npu_igpu_ceiling_gb:.0f} GB max) and would be very slow on the CPU."
         )
         fit_reason = warning_message
     elif (
-        has_npu
-        and model.get("recommended_for_npu")
-        and model.get("category") in ("builtin_npu", "npu_edge_llm", "vision_multimodal")
+        has_npu and model.get("recommended_for_npu") and model.get("category") in ("edge_llm", "vision_multimodal")
     ) or (has_gpu and model.get("recommended_for_gpu") and str(model.get("ollama_tag", "")).lower() == primary_rec):
         fit_status = "best_match"
         target_acc = model.get("target_accelerator", "NPU" if has_npu else "GPU")
@@ -497,6 +495,56 @@ def evaluate_model_hardware_fit(
         "fit_badge": fit_badge,
         "fit_reason": fit_reason,
     }
+
+
+_CATALOG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resources", "ai_models.json")
+_CATALOG: dict[str, Any] | None = None
+
+
+def model_catalog() -> dict[str, Any]:
+    """The models ZettNAS suggests, with licences and the hardware they suit (AI-29)."""
+    global _CATALOG
+    data = _CATALOG
+    if data is None:
+        with open(_CATALOG_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        _CATALOG = data
+    return data
+
+
+def hardware_class(accel: dict[str, Any]) -> str:
+    """dgpu, npu, igpu or cpu: what this box has, best first."""
+    if accel.get("has_cuda") or accel.get("has_rocm"):
+        return "dgpu"
+    if accel.get("has_npu"):
+        return "npu"
+    if accel.get("has_igpu"):
+        return "igpu"
+    return "cpu"
+
+
+def catalog_entry(m: dict[str, Any], hw: dict[str, Any]) -> dict[str, Any]:
+    """A catalog model with where it would run here. Ollama runs on a GPU or the CPU, never the
+    NPU; only OpenVINO Model Server models can use the NPU. No speeds: those are measured (AI-02)."""
+    e = dict(m)
+    if e.get("requires_dgpu_vram_gb"):
+        acc = "GPU" if hw["has_dgpu"] else "Discrete GPU"
+        dev = hw["gpu_label"] if hw["has_dgpu"] else f"Needs a discrete GPU with {int(e['requires_dgpu_vram_gb'])} GB"
+    elif e.get("runtime") == "ovms" and hw["has_npu"]:
+        acc, dev = "NPU", hw["npu_label"]
+    elif hw["has_gpu"]:
+        acc, dev = "GPU", hw["gpu_label"]
+    else:
+        acc, dev = "CPU", "CPU"
+    e["target_accelerator"] = acc
+    e["target_device"] = dev
+    e["est_speed"] = None
+    e["recommended_for_npu"] = e.get("runtime") == "ovms"
+    e["suits_this_box"] = hw.get("class") in (e.get("classes") or [])
+    if e.get("license_kind") == "non_commercial":
+        e["license_note"] = "Research licence: not for commercial use"
+    e["hf_url"] = f"https://huggingface.co/{e['hf_repo']}"
+    return e
 
 
 def build_llm_recommendations(
@@ -538,509 +586,33 @@ def build_llm_recommendations(
     if has_npu and has_gpu:
         tier_headline = f"{npu_label} + {gpu_label} ({eff_ram:.1f} GB RAM)"
         advisor_summary = (
-            "Dual-accelerator topology detected: Tier 1 NPU handles continuous <8W multi-modal indexing & "
-            "INT4/INT8 edge inference, while Tier 2 GPU accelerates 7B–14B conversational RAG synthesis."
+            f"Chat models run in Ollama on the {gpu_label}; models served by OpenVINO Model Server "
+            f"can use the {npu_label}."
         )
         primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
     elif has_npu:
         tier_headline = f"{npu_label} ({eff_ram:.1f} GB RAM)"
         advisor_summary = (
-            "Onboard NPU Tier 1 active: INT4/INT8 quantized 1B–4B models and OpenVINO multi-modal embeddings "
-            "are recommended for maximum throughput and ultra-low thermal/power footprint."
+            f"Ollama models run on the CPU here; models served by OpenVINO Model Server can use the {npu_label}."
         )
         primary_rec = "deepseek-r1-distill-qwen-1.5b-npu-ov"
     elif has_gpu:
         tier_headline = f"{gpu_label} ({eff_ram:.1f} GB RAM)"
-        advisor_summary = "Hardware GPU Tier 2 active: 3B–8B Q4_K_M models are recommended for fast local RAG synthesis and visual search."
+        advisor_summary = f"Chat models run in Ollama on the {gpu_label}; 3B–8B models fit well."
         primary_rec = "qwen2.5:7b" if eff_ram >= 16.0 else "qwen2.5:3b"
     else:
         tier_headline = f"CPU AVX2/NEON Execution ({eff_ram:.1f} GB RAM)"
         advisor_summary = (
-            "Software CPU execution active: Built-in lightweight 384-d embeddings and 1.5B–3B Q4 quantized models "
-            "are recommended to preserve NAS responsiveness."
+            "No GPU or NPU found: chat runs on the CPU, so small (1.5B–4B) models keep the NAS responsive."
         )
-        primary_rec = "qwen2.5:3b" if eff_ram >= 8.0 else "builtin-npu"
+        primary_rec = "qwen2.5:3b" if eff_ram >= 8.0 else ""  # too little memory for a chat model
 
-    catalog: list[dict[str, Any]] = [
-        # --- Tier 1: NPU / Low-Power Edge Models (0.4B - 4B) ---
-        {
-            "id": "builtin-npu",
-            "ollama_tag": "builtin-npu",
-            "hf_repo": "OpenVINO/clip-vit-base-patch16-int8-ov",
-            "hf_url": "https://huggingface.co/OpenVINO/clip-vit-base-patch16-int8-ov",
-            "name": "ZettAI Built-in Multi-Modal Engine (CLIP + MiniLM INT8)",
-            "family": "OpenVINO / ONNX Native",
-            "license": "MIT (CLIP) / Apache-2.0 (MiniLM)",
-            "category": "builtin_npu",
-            "role": "Instant Semantic Search, Visual Photo Indexing & Extractive QA",
-            "params": "0.4B INT8",
-            "quantization": "INT8 Native",
-            "est_ram_gb": 0.6,
-            "min_ram_gb": 4.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2024-05-15T00:00:00Z",
-            "release_date": "2024-05-15",
-            "release_date_str": "May 15, 2024",
-            "release_timestamp": 1715731200.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else (gpu_label if has_gpu else "CPU AVX2/NEON"),
-            "est_speed": "~120 docs/s · <12ms query" if has_npu else "~60 docs/s · <20ms query",
-            "power_profile": "Ultra-Low (< 5W)",
-            "capabilities": ["semantic_search", "visual_photo_search", "ocr", "extractive_qa"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "qwen2.5-3b-npu",
-            "ollama_tag": "qwen2.5:3b",
-            "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
-            "hf_url": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF",
-            "name": "Qwen2.5 3B Instruct (NPU INT4 Edge)",
-            "family": "Qwen2.5",
-            "license": "Qwen Research License (non-commercial)",
-            "category": "npu_edge_llm",
-            "role": "Fast Knowledge QA, Summarization & Multilingual Chat (EN/ZH/DE/FR/ES)",
-            "params": "3.1B",
-            "quantization": "INT4 / Q4_K_M",
-            "est_ram_gb": 2.1,
-            "min_ram_gb": 8.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2024-09-19T00:00:00Z",
-            "release_date": "2024-09-19",
-            "release_date_str": "Sep 19, 2024",
-            "release_timestamp": 1726704000.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~48 tok/s (NPU)" if has_npu else ("~40 tok/s (GPU)" if has_gpu else "~16 tok/s (CPU)"),
-            "power_profile": "Low Power (< 8W NPU)" if has_npu else "Balanced (~15W)",
-            "capabilities": ["rag_qa", "chat", "summarization", "multilingual"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": False,
-        },
-        {
-            "id": "llama3.2-3b-npu",
-            "ollama_tag": "llama3.2:3b",
-            "hf_repo": "meta-llama/Llama-3.2-3B-Instruct",
-            "hf_url": "https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct",
-            "name": "Llama 3.2 3B Instruct (NPU / iGPU Optimized)",
-            "family": "Meta Llama 3.2",
-            "license": "Llama 3.2 Community License",
-            "category": "npu_edge_llm",
-            "role": "Low-Latency Conversational Assistant & File Tagging",
-            "params": "3.2B",
-            "quantization": "INT4 / Q4_K_M",
-            "est_ram_gb": 2.0,
-            "min_ram_gb": 8.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2024-09-25T00:00:00Z",
-            "release_date": "2024-09-25",
-            "release_date_str": "Sep 25, 2024",
-            "release_timestamp": 1727222400.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~50 tok/s (NPU)" if has_npu else ("~42 tok/s (GPU)" if has_gpu else "~18 tok/s (CPU)"),
-            "power_profile": "Low Power (< 8W NPU)" if has_npu else "Balanced (~15W)",
-            "capabilities": ["rag_qa", "chat", "fast_tagging"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": False,
-        },
-        {
-            "id": "phi3.5-mini-npu",
-            "ollama_tag": "phi3.5:3.8b",
-            "hf_repo": "OpenVINO/Phi-3.5-mini-instruct-int4-ov",
-            "hf_url": "https://huggingface.co/OpenVINO/Phi-3.5-mini-instruct-int4-ov",
-            "name": "Phi-3.5 Mini 3.8B Instruct (128K Context)",
-            "family": "Microsoft Phi-3.5",
-            "license": "MIT",
-            "category": "npu_edge_llm",
-            "role": "Long-Context PDF/Contract Analysis & Recipe Extraction on NPU/iGPU",
-            "params": "3.8B",
-            "quantization": "INT4 / OpenVINO",
-            "est_ram_gb": 2.4,
-            "min_ram_gb": 8.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2024-08-20T00:00:00Z",
-            "release_date": "2024-08-20",
-            "release_date_str": "Aug 20, 2024",
-            "release_timestamp": 1724112000.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~42 tok/s (NPU)" if has_npu else "~35 tok/s (GPU)",
-            "power_profile": "Low Power (< 10W)",
-            "capabilities": ["rag_qa", "long_context", "structured_extraction"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "gemma3-4b-npu",
-            "ollama_tag": "gemma3:4b",
-            "hf_repo": "google/gemma-3-4b-it-qat-q4_0-gguf",
-            "hf_url": "https://huggingface.co/google/gemma-3-4b-it-qat-q4_0-gguf",
-            "name": "Google Gemma 3 4B Instruct QAT (Multimodal Edge)",
-            "family": "Google Gemma 3",
-            "license": "Gemma Terms of Use",
-            "category": "npu_edge_llm",
-            "role": "Quantization-Aware Vision & Document QA with 128K Context Window",
-            "params": "4.0B VL",
-            "quantization": "QAT Q4_0",
-            "est_ram_gb": 3.1,
-            "min_ram_gb": 8.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2025-03-04T00:00:00Z",
-            "release_date": "2025-03-04",
-            "release_date_str": "Mar 04, 2025",
-            "release_timestamp": 1741046400.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~38 tok/s (NPU/iGPU)" if (has_npu or has_gpu) else "~14 tok/s (CPU)",
-            "power_profile": "Low Power (< 10W)",
-            "capabilities": ["rag_qa", "vision_qa", "long_context", "multilingual"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-        {
-            # A 4B multilingual model under a permissive licence (AI-7): answers in the
-            # question's language for the five UI languages and many more.
-            "id": "qwen3-4b",
-            "ollama_tag": "qwen3:4b",
-            "hf_repo": "Qwen/Qwen3-4B-GGUF",
-            "hf_url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF",
-            "name": "Qwen3 4B (multilingual)",
-            "family": "Qwen3",
-            "license": "Apache 2.0",
-            "category": "npu_edge_llm",
-            "role": "Multilingual answers about your documents (EN/DE/FR/ES/ZH and 100+ more)",
-            "params": "4.0B",
-            "quantization": "Q4_K_M",
-            "est_ram_gb": 3.3,
-            "min_ram_gb": 8.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2025-04-29T00:00:00Z",
-            "release_date": "2025-04-29",
-            "release_date_str": "Apr 29, 2025",
-            "release_timestamp": 1745884800.0,
-            "target_accelerator": "GPU" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else "CPU AVX2/NEON",
-            "est_speed": "Run Benchmark to measure on this NAS",
-            "power_profile": "Balanced (~15W)",
-            "capabilities": ["rag_qa", "chat", "summarization", "multilingual"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        # --- Tier 2: Onboard iGPU / Balanced GPU Models (7B - 14B) ---
-        {
-            "id": "qwen2.5-7b-gpu",
-            "ollama_tag": "qwen2.5:7b",
-            "hf_repo": "Qwen/Qwen2.5-7B-Instruct-GGUF",
-            "hf_url": "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF",
-            "name": "Qwen2.5 7B Instruct (iGPU / Hybrid Workhorse)",
-            "family": "Qwen2.5",
-            "license": "Apache-2.0",
-            "category": "gpu_balanced_llm",
-            "role": "High-Accuracy Grounded RAG, Code & Complex Document Synthesis",
-            "params": "7.6B",
-            "quantization": "Q4_K_M",
-            "est_ram_gb": 4.7,
-            "min_ram_gb": 16.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2024-09-19T00:00:00Z",
-            "release_date": "2024-09-19",
-            "release_date_str": "Sep 19, 2024",
-            "release_timestamp": 1726704000.0,
-            "target_accelerator": "GPU" if has_gpu else ("NPU" if has_npu else "CPU"),
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~30 tok/s (iGPU/GPU)" if has_gpu else "~22 tok/s (NPU)",
-            "power_profile": "Balanced (~18–25W iGPU)",
-            "capabilities": ["rag_qa", "chat", "code", "multilingual", "citations"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "qwen2.5-vl-7b",
-            "ollama_tag": "qwen2.5vl:7b",
-            "hf_repo": "Qwen/Qwen2.5-VL-7B-Instruct",
-            "hf_url": "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct",
-            "name": "Qwen2.5-VL 7B Vision-Language (NPU + iGPU Hybrid)",
-            "family": "Qwen2.5-VL",
-            "license": "Apache-2.0",
-            "category": "vision_multimodal",
-            "role": "Deep Photo Scene Understanding, Receipt/Invoice OCR & Visual Q&A",
-            "params": "7.8B VL",
-            "quantization": "INT4 / Q4_K_M",
-            "est_ram_gb": 5.6,
-            "min_ram_gb": 16.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2025-01-27T00:00:00Z",
-            "release_date": "2025-01-27",
-            "release_date_str": "Jan 27, 2025",
-            "release_timestamp": 1737936000.0,
-            "target_accelerator": "NPU+GPU" if (has_npu and has_gpu) else ("GPU" if has_gpu else "NPU"),
-            "target_device": f"{npu_label} + {gpu_label}"
-            if (has_npu and has_gpu)
-            else (gpu_label if has_gpu else npu_label),
-            "est_speed": "~26 tok/s (Hybrid NPU+iGPU)",
-            "power_profile": "Hybrid (~20W)",
-            "capabilities": ["vision_qa", "ocr", "scene_captioning", "invoice_parsing"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "mistral-nemo-12b",
-            "ollama_tag": "mistral-nemo:12b",
-            "hf_repo": "mistralai/Mistral-Nemo-Instruct-2407-GGUF",
-            "hf_url": "https://huggingface.co/mistralai/Mistral-Nemo-Instruct-2407-GGUF",
-            "name": "Mistral NeMo 12B Instruct (128K Context RAG)",
-            "family": "Mistral AI / NVIDIA",
-            "license": "Apache-2.0",
-            "category": "gpu_balanced_llm",
-            "role": "Enterprise Document Synthesis, Legal/Financial Summarization & Tekken Tokenizer",
-            "params": "12.2B",
-            "quantization": "Q4_K_M",
-            "est_ram_gb": 7.5,
-            "min_ram_gb": 16.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2024-07-18T00:00:00Z",
-            "release_date": "2024-07-18",
-            "release_date_str": "Jul 18, 2024",
-            "release_timestamp": 1721260800.0,
-            "target_accelerator": "GPU" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~21 tok/s (iGPU/GPU)" if has_gpu else "~10 tok/s (CPU)",
-            "power_profile": "Balanced (~24W)",
-            "capabilities": ["rag_qa", "long_context", "citations", "multilingual"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "deepseek-r1-14b",
-            "ollama_tag": "deepseek-r1:14b",
-            "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B-GGUF",
-            "hf_url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B-GGUF",
-            "name": "DeepSeek-R1 Distill Qwen 14B (Reasoning Workstation)",
-            "family": "DeepSeek-R1",
-            "license": "MIT (Qwen 2.5 base licence also applies)",
-            "category": "high_capacity_llm",
-            "role": "Deep Chain-of-Thought Reasoning & Multi-Document Cross-Verification",
-            "params": "14.8B",
-            "quantization": "Q4_K_M",
-            "est_ram_gb": 9.0,
-            "min_ram_gb": 24.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2025-01-20T00:00:00Z",
-            "release_date": "2025-01-20",
-            "release_date_str": "Jan 20, 2025",
-            "release_timestamp": 1737331200.0,
-            "target_accelerator": "GPU" if has_gpu else "CPU",
-            "target_device": gpu_label if has_gpu else npu_label,
-            "est_speed": "~18 tok/s (iGPU Shared Memory)" if has_gpu else "~9 tok/s",
-            "power_profile": "Performance (~28W)",
-            "capabilities": ["deep_reasoning", "rag_qa", "multi_doc_synthesis"],
-            "recommended_for_npu": False,
-            "recommended_for_gpu": True,
-        },
-        {
-            "id": "deepseek-r1-distill-qwen-1.5b-npu-ov",
-            "ollama_tag": "DeepSeek-R1-Distill-Qwen-1.5B",
-            "hf_repo": "OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-gq-ov",
-            "hf_url": "https://huggingface.co/OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-gq-ov",
-            "name": "DeepSeek-R1 1.5B Reasoning (OpenVINO NPU ~3W Silent)",
-            "family": "DeepSeek-R1",
-            "license": "MIT (Qwen 2.5 base licence also applies)",
-            "category": "npu_edge_llm",
-            "role": "Ultra-Low Power (<3W) Hardware Copilot & Chain-of-Thought Reasoning on Intel AI Boost NPU",
-            "params": "1.5B INT4-GQ",
-            "quantization": "OpenVINO INT4 Group-Quant",
-            "est_ram_gb": 1.1,
-            "min_ram_gb": 4.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2026-02-10T00:00:00Z",
-            "release_date": "2026-02-10",
-            "release_date_str": "Feb 10, 2026",
-            "release_timestamp": 1770681600.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "~75 tok/s (NPU)" if has_npu else "~45 tok/s (GPU)",
-            "power_profile": "Silent / Zero Fan (< 3W NPU)",
-            "capabilities": ["reasoning", "rag_qa", "chat", "telemetry", "multilingual"],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": False,
-        },
-        {
-            "id": "embeddinggemma",
-            "ollama_tag": "embeddinggemma",
-            "hf_repo": "google/embeddinggemma-300m",
-            "hf_url": "https://huggingface.co/google/embeddinggemma-300m",
-            "name": "Google EmbeddingGemma 300M (text embeddings)",
-            "family": "Google Gemma",
-            "license": "Gemma Terms of Use",
-            "category": "embeddings_rag",
-            "role": "Text embeddings for document search; 2,048-token input, Matryoshka sizes 768/512/256/128",
-            "params": "0.3B",
-            "quantization": "BF16",
-            "est_ram_gb": 0.6,
-            "min_ram_gb": 1.0,
-            "requires_dgpu_vram_gb": 0.0,
-            "created_at": "2025-09-04T00:00:00Z",
-            "release_date": "2025-09-04",
-            "release_date_str": "Sep 04, 2025",
-            "release_timestamp": 1756944000.0,
-            "target_accelerator": "NPU" if has_npu else ("GPU" if has_gpu else "CPU"),
-            "target_device": npu_label if has_npu else gpu_label,
-            "est_speed": "",
-            "power_profile": "Low",
-            "capabilities": [
-                "feature-extraction",
-                "embeddings",
-                "rag_qa",
-                "semantic_search",
-                "code_search",
-                "matryoshka_mrl",
-            ],
-            "recommended_for_npu": True,
-            "recommended_for_gpu": True,
-        },
-    ]
+    hw = {"has_npu": has_npu, "has_gpu": has_gpu, "has_dgpu": has_dgpu, "npu_label": npu_label, "gpu_label": gpu_label}
+    hw["class"] = hardware_class(accel)
+    data = model_catalog()
+    catalog: list[dict[str, Any]] = [catalog_entry(m, hw) for m in data["models"]]
     if include_incompatible:
-        catalog.extend(
-            [
-                # --- Tier 3: Heavy Discrete GPU / Datacenter Release Models (Hardware Warning on Standard NAS) ---
-                {
-                    "id": "gemma3-27b-dgpu",
-                    "ollama_tag": "gemma3:27b",
-                    "hf_repo": "google/gemma-3-27b-it-qat-q4_0-gguf",
-                    "hf_url": "https://huggingface.co/google/gemma-3-27b-it-qat-q4_0-gguf",
-                    "name": "Google Gemma 3 27B Instruct QAT (Discrete GPU Class)",
-                    "family": "Google Gemma 3",
-                    "license": "Gemma Terms of Use",
-                    "category": "high_capacity_llm",
-                    "role": "Heavy Multimodal Vision-Language & Research Reasoning (Requires 24GB+ dGPU)",
-                    "params": "27.0B VL",
-                    "quantization": "QAT Q4_0",
-                    "est_ram_gb": 17.5,
-                    "min_ram_gb": 36.0,
-                    "requires_dgpu_vram_gb": 24.0,
-                    "created_at": "2025-03-04T00:00:00Z",
-                    "release_date": "2025-03-04",
-                    "release_date_str": "Mar 04, 2025",
-                    "release_timestamp": 1741046400.0,
-                    "target_accelerator": "dGPU (24GB+ VRAM)",
-                    "target_device": gpu_label if has_dgpu else "Requires 24GB+ Discrete GPU",
-                    "est_speed": "~32 tok/s (24GB dGPU) · <3 tok/s (iGPU/CPU)",
-                    "power_profile": "High Power (180W+ dGPU)",
-                    "capabilities": ["vision_qa", "deep_reasoning", "rag_qa", "long_context"],
-                    "recommended_for_npu": False,
-                    "recommended_for_gpu": has_dgpu,
-                },
-                {
-                    "id": "qwen2.5-32b-dgpu",
-                    "ollama_tag": "qwen2.5:32b",
-                    "hf_repo": "Qwen/Qwen2.5-32B-Instruct-GGUF",
-                    "hf_url": "https://huggingface.co/Qwen/Qwen2.5-32B-Instruct-GGUF",
-                    "name": "Qwen2.5 32B Instruct (24GB+ Discrete GPU Workstation)",
-                    "family": "Qwen2.5",
-                    "license": "Apache-2.0",
-                    "category": "high_capacity_llm",
-                    "role": "Repository-Scale Code Architecture & Complex Multi-Hop Synthesis",
-                    "params": "32.5B",
-                    "quantization": "Q4_K_M",
-                    "est_ram_gb": 20.5,
-                    "min_ram_gb": 48.0,
-                    "requires_dgpu_vram_gb": 24.0,
-                    "created_at": "2024-09-19T00:00:00Z",
-                    "release_date": "2024-09-19",
-                    "release_date_str": "Sep 19, 2024",
-                    "release_timestamp": 1726704000.0,
-                    "target_accelerator": "dGPU (24GB+ VRAM)",
-                    "target_device": gpu_label if has_dgpu else "Requires 24GB+ Discrete GPU",
-                    "est_speed": "~28 tok/s (24GB dGPU) · <2.5 tok/s (iGPU/CPU)",
-                    "power_profile": "High Power (200W+ dGPU)",
-                    "capabilities": ["code", "deep_reasoning", "rag_qa", "multilingual"],
-                    "recommended_for_npu": False,
-                    "recommended_for_gpu": has_dgpu,
-                },
-                {
-                    "id": "llama3.3-70b-datacenter",
-                    "ollama_tag": "llama3.3:70b",
-                    "hf_repo": "meta-llama/Llama-3.3-70B-Instruct-GGUF",
-                    "hf_url": "https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct-GGUF",
-                    "name": "Meta Llama 3.3 70B Instruct (48GB+ VRAM Server Class)",
-                    "family": "Meta Llama 3.3",
-                    "license": "Llama 3.3 Community License",
-                    "category": "high_capacity_llm",
-                    "role": "Frontier-Grade Knowledge Synthesis (Exceeds Standard NAS Memory & NPU/iGPU)",
-                    "params": "70.6B",
-                    "quantization": "Q4_K_M",
-                    "est_ram_gb": 43.5,
-                    "min_ram_gb": 96.0,
-                    "requires_dgpu_vram_gb": 48.0,
-                    "created_at": "2024-12-06T00:00:00Z",
-                    "release_date": "2024-12-06",
-                    "release_date_str": "Dec 06, 2024",
-                    "release_timestamp": 1733443200.0,
-                    "target_accelerator": "Multi-GPU (48GB+ VRAM)",
-                    "target_device": "Requires 48GB+ VRAM / 96GB+ RAM",
-                    "est_speed": "~18 tok/s (Dual 24GB GPU) · <0.8 tok/s (Swap/CPU)",
-                    "power_profile": "Server Class (350W+)",
-                    "capabilities": ["deep_reasoning", "rag_qa", "multilingual", "code"],
-                    "recommended_for_npu": False,
-                    "recommended_for_gpu": False,
-                },
-                {
-                    "id": "deepseek-r1-70b-datacenter",
-                    "ollama_tag": "deepseek-r1:70b",
-                    "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-GGUF",
-                    "hf_url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-70B-GGUF",
-                    "name": "DeepSeek-R1 Distill Llama 70B (48GB+ VRAM Server Class)",
-                    "family": "DeepSeek-R1",
-                    "license": "MIT (Llama 3.3 base licence also applies)",
-                    "category": "high_capacity_llm",
-                    "role": "Frontier Chain-of-Thought Mathematical & Scientific Verification",
-                    "params": "70.6B",
-                    "quantization": "Q4_K_M",
-                    "est_ram_gb": 44.0,
-                    "min_ram_gb": 96.0,
-                    "requires_dgpu_vram_gb": 48.0,
-                    "created_at": "2025-01-20T00:00:00Z",
-                    "release_date": "2025-01-20",
-                    "release_date_str": "Jan 20, 2025",
-                    "release_timestamp": 1737331200.0,
-                    "target_accelerator": "Multi-GPU (48GB+ VRAM)",
-                    "target_device": "Requires 48GB+ VRAM / 96GB+ RAM",
-                    "est_speed": "~16 tok/s (48GB VRAM) · <0.7 tok/s (Swap/CPU)",
-                    "power_profile": "Server Class (350W+)",
-                    "capabilities": ["deep_reasoning", "rag_qa", "multi_doc_synthesis"],
-                    "recommended_for_npu": False,
-                    "recommended_for_gpu": False,
-                },
-                {
-                    "id": "llama3.1-405b-datacenter",
-                    "ollama_tag": "llama3.1:405b",
-                    "hf_repo": "meta-llama/Llama-3.1-405B-Instruct-FP8",
-                    "hf_url": "https://huggingface.co/meta-llama/Llama-3.1-405B-Instruct-FP8",
-                    "name": "Meta Llama 3.1 405B Instruct FP8 (Datacenter Cluster Only)",
-                    "family": "Meta Llama 3.1",
-                    "license": "Llama 3.1 Community License",
-                    "category": "high_capacity_llm",
-                    "role": "405-Billion Parameter Datacenter Frontier Model (Requires 8x H100 / 256GB+ VRAM)",
-                    "params": "405B",
-                    "quantization": "FP8",
-                    "est_ram_gb": 245.0,
-                    "min_ram_gb": 512.0,
-                    "requires_dgpu_vram_gb": 256.0,
-                    "created_at": "2024-07-23T00:00:00Z",
-                    "release_date": "2024-07-23",
-                    "release_date_str": "Jul 23, 2024",
-                    "release_timestamp": 1721692800.0,
-                    "target_accelerator": "8x GPU Cluster (256GB+ VRAM)",
-                    "target_device": "Requires 256GB+ VRAM / 512GB+ RAM",
-                    "est_speed": "Cannot fit in NAS memory",
-                    "power_profile": "Datacenter (> 1200W)",
-                    "capabilities": ["deep_reasoning", "frontier_llm"],
-                    "recommended_for_npu": False,
-                    "recommended_for_gpu": False,
-                },
-            ]
-        )
+        catalog.extend(catalog_entry(m, hw) for m in data["large_models"])
 
     # Merge any user-pulled custom Hugging Face models so they persist in the catalog
     seen_ids = {m["ollama_tag"].lower() for m in catalog} | {m["hf_repo"].lower() for m in catalog}
@@ -1101,7 +673,7 @@ def build_llm_recommendations(
         enriched["why_recommended"] = fit_eval["fit_reason"]
         enriched["use_case"] = m.get("role", "Hugging Face Release Model")
         enriched["vram_or_ram_gb"] = m.get("est_ram_gb", 2.0)
-        enriched["estimated_speed"] = m.get("est_speed", "~20 tok/s")
+        enriched["estimated_speed"] = m.get("est_speed")  # measured only (AI-02, AI-29)
         enriched["recommended"] = fit_eval["fit_status"] == "best_match" or (
             m.get("ollama_tag") == "deepseek-r1:14b" and eff_ram >= 32.0 and (has_npu or has_gpu)
         )
@@ -1173,6 +745,7 @@ def build_llm_recommendations(
             "tier_headline": tier_headline,
             "advisor_summary": advisor_summary,
             "primary_recommendation": primary_rec,
+            "hardware_class": hardware_class(accel),
             "active_model": active_model or "qwen2.5:3b",
         },
         "models": enriched_models,
@@ -1235,33 +808,22 @@ def _format_hf_api_item(
         gguf_total=gguf_total,
         pipeline_tag=pipeline_tag,
     )
-    has_npu = bool(accel.get("has_npu"))
     has_dgpu = bool(accel.get("has_cuda") or accel.get("has_rocm"))
     has_gpu = bool(has_dgpu or accel.get("has_igpu"))
-    npu_label = accel.get("device_label", "Onboard NPU") if has_npu else "CPU"
     gpu_label = accel.get("secondary_gpu") or accel.get("device_label") or "GPU"
 
+    # Hugging Face models are pulled into Ollama (hf.co/…), which runs on a GPU or the CPU and
+    # never on the NPU (AI-29). No speed or power figures: those are measured, not guessed.
     params_b = specs["params_b"]
-    if params_b <= 4.2 and has_npu:
-        target_accel = "NPU"
-        target_dev = npu_label
-        est_speed = "~40–50 tok/s (NPU)"
-        power = "Low Power (< 10W)"
-    elif params_b <= 15.0 and has_gpu:
-        target_accel = "GPU"
-        target_dev = gpu_label
-        est_speed = "~18–30 tok/s (iGPU/GPU)"
-        power = "Balanced (~20–28W)"
-    elif params_b > 15.0:
+    if params_b > 15.0:
         target_accel = "dGPU (24GB+ VRAM)" if params_b <= 35.0 else "Multi-GPU (48GB+ VRAM)"
         target_dev = gpu_label if has_dgpu else f"Requires {max(24, int(specs['est_ram_gb']))}GB+ Discrete GPU"
-        est_speed = "~20 tok/s (dGPU) · <2 tok/s (NAS CPU/iGPU)"
-        power = "High Power (180W–350W+)"
+    elif has_gpu:
+        target_accel, target_dev = "GPU", gpu_label
     else:
-        target_accel = "CPU"
-        target_dev = "CPU AVX2/NEON"
-        est_speed = "~10–16 tok/s (CPU)"
-        power = "Balanced (~15W)"
+        target_accel, target_dev = "CPU", "CPU"
+    est_speed = None
+    power = None
 
     author = repo_id.split("/")[0] if "/" in repo_id else "HuggingFace"
     downloads = int(item.get("downloads") or 0)
@@ -1692,12 +1254,12 @@ def remove_llm_model(model_id: str) -> dict[str, Any]:
     eff_ram = max(4.0, round(ram_bytes / (1024**3), 1))
     accel = detect_hardware_accelerator()
 
-    fallback_active = None
+    fallback_active: str | None = None
     if current_active in (norm_target, tag_norm) or current_active.replace("hf.co/", "") == tag_norm:
         temp_recs = build_llm_recommendations(
             accel=accel,
             ram_gb=eff_ram,
-            active_model="builtin-npu",
+            active_model="",
             custom_models=updated_custom,
             removed_models=sorted(list(new_removed)),
         )
@@ -1705,13 +1267,13 @@ def remove_llm_model(model_id: str) -> dict[str, Any]:
         if remaining:
             fallback_active = remaining[0].get("id")
         else:
-            fallback_active = "builtin-npu"
+            fallback_active = ""
 
     updates: dict[str, Any] = {
         "custom_hf_models": updated_custom,
         "removed_models": sorted(list(new_removed)),
     }
-    if fallback_active:
+    if fallback_active is not None:  # "" when nothing is left: no chat model
         updates["active_model"] = fallback_active
         updates["llm_model"] = fallback_active
 
@@ -1720,7 +1282,7 @@ def remove_llm_model(model_id: str) -> dict[str, Any]:
     recs = build_llm_recommendations(
         accel=accel,
         ram_gb=eff_ram,
-        active_model=updated_cfg.get("active_model") or fallback_active or "builtin-npu",
+        active_model=updated_cfg.get("active_model") or fallback_active or "",
         custom_models=updated_cfg.get("custom_hf_models", []),
         removed_models=updated_cfg.get("removed_models", []),
     )

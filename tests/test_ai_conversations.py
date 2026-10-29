@@ -398,27 +398,26 @@ def test_tool_get_storage_and_network_status():
     assert "default_gateway" in net_res
 
 
-def test_resolve_model_runtime_accelerator():
-    """Verifies accurate tier and device resolution between Intel AI Boost NPU, Intel Arc GPU, and CPU."""
+def test_resolve_model_runtime_accelerator(monkeypatch):
+    """The device comes from the model's server, never from its name (AI-29)."""
+    from backend.services import ai_device
     from backend.services.ai_chat_agent import resolve_model_runtime_accelerator
 
-    host_accel = {"has_npu": True, "has_igpu": True, "active_tier": 1}
+    host_accel = {"has_npu": True, "has_igpu": True, "active_tier": 1, "device_label": "Intel AI Boost NPU"}
+    reported = {}
+    monkeypatch.setattr(ai_device, "device_for", lambda ep, model: reported.get(model))
 
-    # NPU-targeted model (OpenVINO Model Server)
-    npu_model_res = resolve_model_runtime_accelerator("DeepSeek-R1-Distill-Qwen-1.5B", host_accel)
-    assert npu_model_res["active_tier"] == 1
-    assert npu_model_res["tier_code"] == "NPU_TIER_1"
-    assert "NPU" in npu_model_res["name"]
+    # A name that says "NPU" proves nothing: not reported means not reported
+    res = resolve_model_runtime_accelerator("DeepSeek-R1-Distill-Qwen-1.5B", host_accel, endpoint="http://ovms:8000/v3")
+    assert res["active_tier"] == 0 and res["device_label"] == "Not reported by OpenVINO Model Server"
 
-    # Ollama models (run on Intel Arc GPU)
-    underdog_res = resolve_model_runtime_accelerator("hf.co/ConwayResearch/Underdog-Bark-3.0-Pro", host_accel)
-    assert underdog_res["active_tier"] == 2
-    assert underdog_res["tier_code"] == "GPU_TIER_2"
-    assert "GPU" in underdog_res["name"] or "Graphics" in underdog_res["name"]
+    reported["DeepSeek-R1-Distill-Qwen-1.5B"] = "NPU"
+    res = resolve_model_runtime_accelerator("DeepSeek-R1-Distill-Qwen-1.5B", host_accel, endpoint="http://ovms:8000/v3")
+    assert res["tier_code"] == "NPU_TIER_1" and res["name"] == "Intel AI Boost NPU"
 
-    qwen_res = resolve_model_runtime_accelerator("qwen2.5:3b", host_accel)
-    assert qwen_res["active_tier"] == 2
-    assert qwen_res["tier_code"] == "GPU_TIER_2"
+    reported["qwen2.5:3b"] = "GPU"
+    res = resolve_model_runtime_accelerator("qwen2.5:3b", host_accel, endpoint="http://ollama:11434")
+    assert res["tier_code"] == "GPU_TIER_2" and res["runtime_engine"] == "Ollama (GPU)"
 
 
 def test_math_query_bypasses_web_and_disk_tools():

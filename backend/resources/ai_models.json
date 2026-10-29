@@ -1,0 +1,472 @@
+{
+ "_about": "Models ZettNAS suggests, with their licences (AI-29). runtime: ollama or ovms (OpenVINO Model Server). classes: the hardware each one is a sensible choice for (cpu, igpu, npu, dgpu). Speeds are not listed: ZettNAS shows what it measures on this box.",
+ "models": [
+  {
+   "id": "qwen2.5-3b-npu",
+   "ollama_tag": "qwen2.5:3b",
+   "hf_repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+   "name": "Qwen2.5 3B Instruct",
+   "family": "Qwen2.5",
+   "license": "Qwen Research License (non-commercial)",
+   "category": "edge_llm",
+   "role": "Short answers, summaries and chat in English, Chinese, German, French and Spanish",
+   "params": "3.1B",
+   "quantization": "INT4 / Q4_K_M",
+   "est_ram_gb": 2.1,
+   "min_ram_gb": 8.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2024-09-19",
+   "capabilities": [
+    "rag_qa",
+    "chat",
+    "summarization",
+    "multilingual"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ollama",
+   "license_kind": "non_commercial",
+   "classes": [
+    "cpu",
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "llama3.2-3b-npu",
+   "ollama_tag": "llama3.2:3b",
+   "hf_repo": "meta-llama/Llama-3.2-3B-Instruct",
+   "name": "Llama 3.2 3B Instruct",
+   "family": "Meta Llama 3.2",
+   "license": "Llama 3.2 Community License",
+   "category": "edge_llm",
+   "role": "Quick conversation and file tagging",
+   "params": "3.2B",
+   "quantization": "INT4 / Q4_K_M",
+   "est_ram_gb": 2.0,
+   "min_ram_gb": 8.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2024-09-25",
+   "capabilities": [
+    "rag_qa",
+    "chat",
+    "fast_tagging"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ollama",
+   "license_kind": "community",
+   "classes": [
+    "cpu",
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "phi3.5-mini-npu",
+   "ollama_tag": "phi3.5:3.8b",
+   "hf_repo": "microsoft/Phi-3.5-mini-instruct",
+   "name": "Phi-3.5 Mini Instruct (3.8B, 128K context)",
+   "family": "Microsoft Phi-3.5",
+   "license": "MIT",
+   "category": "edge_llm",
+   "role": "Long documents (128K context): contracts, manuals, recipes",
+   "params": "3.8B",
+   "quantization": "INT4 / OpenVINO",
+   "est_ram_gb": 2.4,
+   "min_ram_gb": 8.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2024-08-20",
+   "capabilities": [
+    "rag_qa",
+    "long_context",
+    "structured_extraction"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "cpu",
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "gemma3-4b-npu",
+   "ollama_tag": "gemma3:4b",
+   "hf_repo": "google/gemma-3-4b-it-qat-q4_0-gguf",
+   "name": "Gemma 3 4B Instruct (QAT)",
+   "family": "Google Gemma 3",
+   "license": "Gemma Terms of Use",
+   "category": "edge_llm",
+   "role": "Questions about documents and pictures, 128K context",
+   "params": "4.0B VL",
+   "quantization": "QAT Q4_0",
+   "est_ram_gb": 3.1,
+   "min_ram_gb": 8.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2025-03-04",
+   "capabilities": [
+    "rag_qa",
+    "vision_qa",
+    "long_context",
+    "multilingual"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "community",
+   "classes": [
+    "cpu",
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "qwen3-4b",
+   "ollama_tag": "qwen3:4b",
+   "hf_repo": "Qwen/Qwen3-4B-GGUF",
+   "name": "Qwen3 4B",
+   "family": "Qwen3",
+   "license": "Apache 2.0",
+   "category": "edge_llm",
+   "role": "Multilingual answers about your documents (EN/DE/FR/ES/ZH and 100+ more)",
+   "params": "4.0B",
+   "quantization": "Q4_K_M",
+   "est_ram_gb": 3.3,
+   "min_ram_gb": 8.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2025-04-29",
+   "capabilities": [
+    "rag_qa",
+    "chat",
+    "summarization",
+    "multilingual"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "cpu",
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "qwen2.5-7b-gpu",
+   "ollama_tag": "qwen2.5:7b",
+   "hf_repo": "Qwen/Qwen2.5-7B-Instruct-GGUF",
+   "name": "Qwen2.5 7B Instruct",
+   "family": "Qwen2.5",
+   "license": "Apache-2.0",
+   "category": "gpu_balanced_llm",
+   "role": "More careful answers from documents, and code",
+   "params": "7.6B",
+   "quantization": "Q4_K_M",
+   "est_ram_gb": 4.7,
+   "min_ram_gb": 16.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2024-09-19",
+   "capabilities": [
+    "rag_qa",
+    "chat",
+    "code",
+    "multilingual",
+    "citations"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "qwen2.5-vl-7b",
+   "ollama_tag": "qwen2.5vl:7b",
+   "hf_repo": "Qwen/Qwen2.5-VL-7B-Instruct",
+   "name": "Qwen2.5-VL 7B (vision and language)",
+   "family": "Qwen2.5-VL",
+   "license": "Apache-2.0",
+   "category": "vision_multimodal",
+   "role": "Photos, receipts and invoices: describes and reads them",
+   "params": "7.8B VL",
+   "quantization": "INT4 / Q4_K_M",
+   "est_ram_gb": 5.6,
+   "min_ram_gb": 16.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2025-01-27",
+   "capabilities": [
+    "vision_qa",
+    "ocr",
+    "scene_captioning",
+    "invoice_parsing"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "mistral-nemo-12b",
+   "ollama_tag": "mistral-nemo:12b",
+   "hf_repo": "mistralai/Mistral-Nemo-Instruct-2407-GGUF",
+   "name": "Mistral NeMo 12B Instruct (128K context)",
+   "family": "Mistral AI / NVIDIA",
+   "license": "Apache-2.0",
+   "category": "gpu_balanced_llm",
+   "role": "Long documents and summaries (128K context)",
+   "params": "12.2B",
+   "quantization": "Q4_K_M",
+   "est_ram_gb": 7.5,
+   "min_ram_gb": 16.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2024-07-18",
+   "capabilities": [
+    "rag_qa",
+    "long_context",
+    "citations",
+    "multilingual"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "deepseek-r1-14b",
+   "ollama_tag": "deepseek-r1:14b",
+   "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B-GGUF",
+   "name": "DeepSeek-R1 Distill Qwen 14B (reasoning)",
+   "family": "DeepSeek-R1",
+   "license": "MIT (Qwen 2.5 base licence also applies)",
+   "category": "high_capacity_llm",
+   "role": "Step-by-step reasoning across several documents",
+   "params": "14.8B",
+   "quantization": "Q4_K_M",
+   "est_ram_gb": 9.0,
+   "min_ram_gb": 24.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2025-01-20",
+   "capabilities": [
+    "deep_reasoning",
+    "rag_qa",
+    "multi_doc_synthesis"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "deepseek-r1-distill-qwen-1.5b-npu-ov",
+   "ollama_tag": "DeepSeek-R1-Distill-Qwen-1.5B",
+   "hf_repo": "OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-gq-ov",
+   "name": "DeepSeek-R1 Distill Qwen 1.5B (OpenVINO INT4)",
+   "family": "DeepSeek-R1",
+   "license": "MIT (Qwen 2.5 base licence also applies)",
+   "category": "edge_llm",
+   "role": "Small step-by-step reasoning model for OpenVINO Model Server (NPU, iGPU or CPU)",
+   "params": "1.5B INT4-GQ",
+   "quantization": "OpenVINO INT4 Group-Quant",
+   "est_ram_gb": 1.1,
+   "min_ram_gb": 4.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2026-02-10",
+   "capabilities": [
+    "reasoning",
+    "rag_qa",
+    "chat",
+    "telemetry",
+    "multilingual"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ovms",
+   "license_kind": "open",
+   "classes": [
+    "npu",
+    "cpu",
+    "igpu",
+    "dgpu"
+   ]
+  },
+  {
+   "id": "embeddinggemma",
+   "ollama_tag": "embeddinggemma",
+   "hf_repo": "google/embeddinggemma-300m",
+   "name": "EmbeddingGemma 300M (text embeddings)",
+   "family": "Google Gemma",
+   "license": "Gemma Terms of Use",
+   "category": "embeddings_rag",
+   "role": "Text embeddings for document search; 2,048-token input, Matryoshka sizes 768/512/256/128",
+   "params": "0.3B",
+   "quantization": "BF16",
+   "est_ram_gb": 0.6,
+   "min_ram_gb": 1.0,
+   "requires_dgpu_vram_gb": 0.0,
+   "release_date": "2025-09-04",
+   "capabilities": [
+    "feature-extraction",
+    "embeddings",
+    "rag_qa",
+    "semantic_search",
+    "code_search",
+    "matryoshka_mrl"
+   ],
+   "recommended_for_gpu": true,
+   "runtime": "ollama",
+   "license_kind": "community",
+   "classes": [
+    "cpu",
+    "igpu",
+    "dgpu"
+   ]
+  }
+ ],
+ "large_models": [
+  {
+   "id": "gemma3-27b-dgpu",
+   "ollama_tag": "gemma3:27b",
+   "hf_repo": "google/gemma-3-27b-it-qat-q4_0-gguf",
+   "name": "Gemma 3 27B Instruct (QAT)",
+   "family": "Google Gemma 3",
+   "license": "Gemma Terms of Use",
+   "category": "high_capacity_llm",
+   "role": "Pictures and research questions; needs a discrete GPU with 24 GB",
+   "params": "27.0B VL",
+   "quantization": "QAT Q4_0",
+   "est_ram_gb": 17.5,
+   "min_ram_gb": 36.0,
+   "requires_dgpu_vram_gb": 24.0,
+   "release_date": "2025-03-04",
+   "capabilities": [
+    "vision_qa",
+    "deep_reasoning",
+    "rag_qa",
+    "long_context"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ollama",
+   "license_kind": "community",
+   "classes": [
+    "dgpu"
+   ]
+  },
+  {
+   "id": "qwen2.5-32b-dgpu",
+   "ollama_tag": "qwen2.5:32b",
+   "hf_repo": "Qwen/Qwen2.5-32B-Instruct-GGUF",
+   "name": "Qwen2.5 32B Instruct",
+   "family": "Qwen2.5",
+   "license": "Apache-2.0",
+   "category": "high_capacity_llm",
+   "role": "Large code bases and multi-step questions; needs a discrete GPU",
+   "params": "32.5B",
+   "quantization": "Q4_K_M",
+   "est_ram_gb": 20.5,
+   "min_ram_gb": 48.0,
+   "requires_dgpu_vram_gb": 24.0,
+   "release_date": "2024-09-19",
+   "capabilities": [
+    "code",
+    "deep_reasoning",
+    "rag_qa",
+    "multilingual"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "dgpu"
+   ]
+  },
+  {
+   "id": "llama3.3-70b-datacenter",
+   "ollama_tag": "llama3.3:70b",
+   "hf_repo": "meta-llama/Llama-3.3-70B-Instruct-GGUF",
+   "name": "Llama 3.3 70B Instruct",
+   "family": "Meta Llama 3.3",
+   "license": "Llama 3.3 Community License",
+   "category": "high_capacity_llm",
+   "role": "Too large for a NAS: needs 48 GB of GPU memory",
+   "params": "70.6B",
+   "quantization": "Q4_K_M",
+   "est_ram_gb": 43.5,
+   "min_ram_gb": 96.0,
+   "requires_dgpu_vram_gb": 48.0,
+   "release_date": "2024-12-06",
+   "capabilities": [
+    "deep_reasoning",
+    "rag_qa",
+    "multilingual",
+    "code"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ollama",
+   "license_kind": "community",
+   "classes": [
+    "dgpu"
+   ]
+  },
+  {
+   "id": "deepseek-r1-70b-datacenter",
+   "ollama_tag": "deepseek-r1:70b",
+   "hf_repo": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-GGUF",
+   "name": "DeepSeek-R1 Distill Llama 70B",
+   "family": "DeepSeek-R1",
+   "license": "MIT (Llama 3.3 base licence also applies)",
+   "category": "high_capacity_llm",
+   "role": "Too large for a NAS: needs 48 GB of GPU memory",
+   "params": "70.6B",
+   "quantization": "Q4_K_M",
+   "est_ram_gb": 44.0,
+   "min_ram_gb": 96.0,
+   "requires_dgpu_vram_gb": 48.0,
+   "release_date": "2025-01-20",
+   "capabilities": [
+    "deep_reasoning",
+    "rag_qa",
+    "multi_doc_synthesis"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ollama",
+   "license_kind": "open",
+   "classes": [
+    "dgpu"
+   ]
+  },
+  {
+   "id": "llama3.1-405b-datacenter",
+   "ollama_tag": "llama3.1:405b",
+   "hf_repo": "meta-llama/Llama-3.1-405B-Instruct-FP8",
+   "name": "Llama 3.1 405B Instruct (FP8)",
+   "family": "Meta Llama 3.1",
+   "license": "Llama 3.1 Community License",
+   "category": "high_capacity_llm",
+   "role": "Too large for a NAS: needs a GPU server with 256 GB of GPU memory",
+   "params": "405B",
+   "quantization": "FP8",
+   "est_ram_gb": 245.0,
+   "min_ram_gb": 512.0,
+   "requires_dgpu_vram_gb": 256.0,
+   "release_date": "2024-07-23",
+   "capabilities": [
+    "deep_reasoning",
+    "frontier_llm"
+   ],
+   "recommended_for_gpu": false,
+   "runtime": "ollama",
+   "license_kind": "community",
+   "classes": [
+    "dgpu"
+   ]
+  }
+ ]
+}

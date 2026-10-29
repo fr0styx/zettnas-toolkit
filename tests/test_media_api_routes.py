@@ -335,9 +335,11 @@ def test_model_recommendations_mark_installed_models(client, auth_headers, rag, 
     monkeypatch.setattr(
         media_engine,
         "build_llm_recommendations",
-        lambda **kw: {"models": [{"ollama_tag": "qwen3:4b"}, {"id": "builtin-npu"}, {"ollama_tag": "x:1b"}]},
+        lambda **kw: {"models": [{"ollama_tag": "qwen3:4b"}, {"ollama_tag": "qwen3:4b-q8"}, {"ollama_tag": "x:1b"}]},
     )
-    monkeypatch.setattr(model_installer, "installed_models", lambda: {"reachable": True, "models": ["qwen3:4b"]})
+    monkeypatch.setattr(
+        model_installer, "installed_models", lambda: {"reachable": True, "models": ["qwen3:4b", "qwen3:4b-q8"]}
+    )
     monkeypatch.setattr(model_installer, "is_installed", lambda tag, models: tag in models)
     recs = client.get("/api/ai/models/recommendations", headers=auth_headers).json()["llm_recommendations"]
     assert [m["installed"] for m in recs["models"]] == [True, True, False]

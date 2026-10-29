@@ -315,10 +315,10 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
           </div>
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:5px; font-size:var(--zn-fs-xs);">
-          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device || 'NPU / GPU')}</span>
+          ${m.target_device ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fca5a5' : '#6ee7b7'};">⚡ ${escapeHtml(m.target_device)}</span>` : ''}
           <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:${hasWarn ? '#fdba74' : '#bae6fd'};">💾 ~${m.vram_or_ram_gb ?? m.est_ram_gb ?? 2.0} GB Model${m.min_ram_gb ? ` (${m.min_ram_gb}GB+ Host)` : ''}</span>
           <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-f8fafcff, #f8fafc);" title="Hugging Face Release Date: ${escapeHtml(releaseDateText)}">📅 ${escapeHtml(releaseDateText)}</span>
-          <span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-fde68aff, #fde68a);">🚀 ${escapeHtml(m.estimated_speed || '')}</span>
+          ${m.estimated_speed ? `<span style="padding:1px 6px; border-radius:4px; background:var(--zn-shade-30); color:var(--lt-t-fde68aff, #fde68a);">🚀 ${escapeHtml(m.estimated_speed)}</span>` : ''}
         </div>
         ${hasWarn ? `
           <div class="ai-model-hw-warning-banner" style="padding:6px 8px; border-radius:6px; background:${isCritical ? 'rgba(239,68,68,0.16)' : 'rgba(245,158,11,0.15)'}; border:1px solid ${isCritical ? 'rgba(248,113,113,0.45)' : 'rgba(251,191,36,0.45)'}; color:${isCritical ? '#fecaca' : '#fef08a'}; font-size:var(--zn-fs-xs); line-height:1.35; display:flex; align-items:flex-start; gap:6px;">
@@ -331,11 +331,11 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
           </div>
         `}
         <div style="margin-top:auto; padding-top:5px; border-top:1px solid var(--zn-line-6); display:flex; justify-content:space-between; align-items:center; gap:6px;">
-          <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);">🔋 ${escapeHtml(m.power_profile || 'Low Power')} • 📅 ${escapeHtml(releaseDateText)}</span>
+          <span class="ai-model-licence" style="font-size:var(--zn-fs-xs); color:${m.license_kind === 'non_commercial' ? '#fcd34d' : 'var(--zn-text-muted)'};" title="${escapeHtml(m.license_note || m.license || '')}">📜 ${escapeHtml(m.license || t('ai.licence_unknown', 'Licence not listed'))}${m.license_note ? ` • ${escapeHtml(t('ai.licence_non_commercial', 'Not for commercial use'))}` : ''}</span>
           <div style="display:flex; align-items:center; gap:5px;">
             ${isAct
               ? `<span style="font-size:var(--zn-fs-xs); font-weight:800; color:${hasWarn ? '#fbbf24' : '#34d399'}; padding:2px 8px; border-radius:6px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.45)' : 'rgba(16,185,129,0.4)'};">${hasWarn ? '⚠️ Active (Exceeds HW)' : '✓ Active'}</span>`
-              : (m.installed === false && m.ollama_tag && m.ollama_tag !== 'builtin-npu')
+              : (m.installed === false && m.ollama_tag)
                 ? `<button type="button" class="btn-pill-toggle btn-ai-install-model is-small" data-model-id="${escapeHtml(m.id)}" data-model-tag="${escapeHtml(m.ollama_tag)}" title="${escapeHtml(t('ai.install_model_title', 'Download this model into Ollama'))}" style="background: var(--lt-b-facc152e, rgba(250,204,21,0.18)); border: 1px solid var(--lt-r-facc157a, rgba(250,204,21,0.48)); color: var(--lt-t-fde047ff, #fde047);">⬇️ ${escapeHtml(t('ai.install_model', 'Install'))}</button>`
               : isLiveHfResult
                 ? `<button type="button" class="btn-pill-toggle btn-ai-pull-hf-card" data-hf-repo="${escapeHtml(hfRepo)}" style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 9px; background:${hasWarn ? 'rgba(245,158,11,0.18)' : 'rgba(250,204,21,0.18)'}; border:1px solid ${hasWarn ? 'rgba(245,158,11,0.5)' : 'rgba(250,204,21,0.48)'}; color:${hasWarn ? '#fbbf24' : '#fde047'}; cursor:pointer;">${hasWarn ? '⚠️ Pull Anyway (Unfit)' : '⬇️ Pull from HF'}</button>`

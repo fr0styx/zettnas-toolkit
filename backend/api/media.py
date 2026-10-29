@@ -569,7 +569,7 @@ async def get_model_recommendations(
         if inst.get("reachable"):
             for m in recs.get("models", []):
                 tag = str(m.get("ollama_tag") or m.get("id") or "")
-                m["installed"] = tag == "builtin-npu" or is_installed(tag, inst["models"])
+                m["installed"] = is_installed(tag, inst["models"])
         recs["runtime_reachable"] = bool(inst.get("reachable"))
     except Exception:
         ignored("backend.api.media.get_model_recommendations")

@@ -479,13 +479,17 @@ def test_hardware_aware_npu_gpu_llm_recommendations(tmp_path):
     assert "NPU + GPU" in rec_npu["headline"]
     assert rec_npu["active_model"] == "qwen2.5:3b"
     models_by_id = {m["id"]: m for m in rec_npu["models"]}
-    assert models_by_id["qwen2.5:3b"]["recommended"] is True
     assert models_by_id["qwen2.5:3b"]["active"] is True
     assert models_by_id["qwen2.5:3b"]["fits_hardware"] is True
     assert models_by_id["qwen2.5:3b"]["hardware_warning"] is False
     assert models_by_id["qwen2.5:3b"]["hf_repo"] == "Qwen/Qwen2.5-3B-Instruct-GGUF"
-    assert "NPU" in models_by_id["qwen2.5:3b"]["fit_badge"]
-    assert models_by_id["qwen2.5vl:7b"]["recommended"] is True
+    # Ollama never runs on the NPU, so an Ollama model is never sold as "best for the NPU" (AI-29);
+    # the OpenVINO Model Server model is the one that can use it
+    assert "NPU" not in models_by_id["qwen2.5:3b"]["fit_badge"]
+    assert models_by_id["qwen2.5:3b"]["target_accelerator"] == "GPU"
+    ov = models_by_id["DeepSeek-R1-Distill-Qwen-1.5B"]
+    assert ov["recommended"] is True and "NPU" in ov["fit_badge"] and ov["target_accelerator"] == "NPU"
+    assert models_by_id["qwen2.5:7b"]["recommended"] is True  # the primary GPU model with 16 GB+
     assert models_by_id["deepseek-r1:14b"]["recommended"] is True
     assert models_by_id["deepseek-r1:14b"]["fits_hardware"] is True
 

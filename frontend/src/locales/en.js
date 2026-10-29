@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "ai.licence_unknown": "Licence not listed",
+  "ai.licence_non_commercial": "Not for commercial use",
   "compress.off": "Off",
   "compress.level": "{algo} (level {level})",
   "compress.ratio_none": "Nothing saved yet",

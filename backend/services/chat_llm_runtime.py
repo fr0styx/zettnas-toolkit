@@ -15,7 +15,7 @@ from backend.config import (  # noqa: F401
     logger,
 )
 from backend.ignored_errors import ignored
-from backend.services import ai_activity, gpu_queue
+from backend.services import ai_activity, ai_device, gpu_queue
 from backend.services.chat_context import (  # noqa: F401
     REPLY_TOKENS,
     _context_window_for,
@@ -64,82 +64,33 @@ def extract_and_strip_reasoning(text: str) -> tuple[str, str]:
     return "\n\n".join(think_parts).strip(), cleaned.strip()
 
 
-def resolve_model_runtime_accelerator(active_model: str, host_accel: dict[str, Any] | None = None) -> dict[str, Any]:
-    """
-    Resolves the actual hardware compute tier and device for a given AI model.
-    Differentiates between:
-      - Tier 1 (NPU): OpenVINO Model Server / Intel AI Boost NPU models (e.g. DeepSeek-R1-Distill-Qwen-1.5B, builtin-npu)
-      - Tier 2 (GPU): Ollama models running on a GPU (e.g. qwen2.5, embeddinggemma)
-      - Tier 3 (CPU): Models running on CPU execution provider
-    """
+def _chat_endpoint(active_model: str) -> str | None:
+    """The chat server in use: the configured one, else the one that answered last."""
+    try:
+        ep = str(_core().get_rag_engine().get_config().get("llm_endpoint") or "").strip()
+    except Exception:
+        ep = ""
+    if ep:
+        return ep
+    cached = _core()._ACTIVE_ENDPOINT_CACHE.get(f"{active_model}:")
+    return cached[1] if cached else None
+
+
+def resolve_model_runtime_accelerator(
+    active_model: str, host_accel: dict[str, Any] | None = None, endpoint: str | None = None
+) -> dict[str, Any]:
+    """The device the model's server reports it runs on: Ollama's GPU memory in use, or the device
+    OpenVINO Model Server was started with. Nothing is read from the model's name; when the server
+    doesn't say, the record says "not reported" (AI-29)."""
     if not host_accel:
         try:
             host_accel = detect_hardware_accelerator()
-        except Exception:
-            host_accel = {"has_npu": True, "has_igpu": True, "active_tier": 1}
-
-    act_low = str(active_model or "").lower().strip()
-    is_npu_model = any(
-        k in act_low
-        for k in (
-            "deepseek-r1-distill-qwen-1.5b",
-            "deepseek-r1:1.5b",
-            "builtin-npu",
-            "openvino",
-            "ov-",
-            "-ov",
-            "npu",
-        )
-    )
-
-    has_npu = bool(host_accel.get("has_npu") or os.path.exists("/dev/accel/accel0"))
-    has_gpu = bool(
-        host_accel.get("has_igpu")
-        or host_accel.get("has_cuda")
-        or host_accel.get("has_rocm")
-        or host_accel.get("has_gpu")
-        or os.path.exists("/dev/dri/renderD128")
-    )
-
-    if is_npu_model and has_npu:
-        return {
-            "active_tier": 1,
-            "tier_number": 1,
-            "tier": "NPU_TIER_1",
-            "tier_code": "NPU_TIER_1",
-            "tier_name": "NPU",
-            "name": "Intel AI Boost NPU",
-            "device_label": "Intel AI Boost NPU (/dev/accel/accel0)",
-            "runtime_engine": "OpenVINO Model Server (NPU)",
-            "has_npu": True,
-            "has_gpu": False,
-        }
-    elif has_gpu:
-        return {
-            "active_tier": 2,
-            "tier_number": 2,
-            "tier": "GPU_TIER_2",
-            "tier_code": "GPU_TIER_2",
-            "tier_name": "GPU",
-            "name": "Intel Arc Graphics (GPU)",
-            "device_label": "Intel Arc Graphics (/dev/dri/renderD128)",
-            "runtime_engine": "Ollama Local Neural Engine (Intel Arc GPU)",
-            "has_npu": False,
-            "has_gpu": True,
-        }
-    else:
-        return {
-            "active_tier": 3,
-            "tier_number": 3,
-            "tier": "CPU_TIER_3",
-            "tier_code": "CPU_TIER_3",
-            "tier_name": "CPU",
-            "name": "CPU Execution Provider",
-            "device_label": "CPU Execution Provider",
-            "runtime_engine": "CPU Execution Provider",
-            "has_npu": False,
-            "has_gpu": False,
-        }
+        except (OSError, ValueError, RuntimeError):
+            host_accel = {}
+    if endpoint is None:
+        endpoint = _chat_endpoint(active_model)
+    kind = ai_device.endpoint_kind(endpoint)
+    return ai_device.device_info(kind, ai_device.device_for(endpoint, active_model), host_accel)
 
 
 def _cancelled() -> bool:
@@ -634,8 +585,8 @@ def _try_local_llm_completion(
                                 content = f"<think>\n{str(reasoning).strip()}\n</think>"
                         toks = int((data.get("usage") or {}).get("completion_tokens") or 0)
                         if is_ovms or ":8000" in url:
-                            # Which device OVMS runs the model on is its own configuration; don't claim NPU.
-                            ovms_accel = None
+                            # The device OVMS was started with, read from its container (AI-29)
+                            ovms_accel = ai_device.device_info("ovms", ai_device.device_for(url, model_to_use))
                             runtime_label = f"OpenVINO Model Server ({data.get('model') or model_to_use})"
                         else:
                             ovms_accel = None
@@ -661,34 +612,8 @@ def _try_local_llm_completion(
                     if toks and eval_duration_ns and eval_duration_ns > 0:
                         measured_tok_sec = round(toks / (eval_duration_ns / 1e9), 1)
 
-                    # Probe Ollama /api/ps to determine whether inference ran on GPU (VRAM > 0) or CPU
-                    ollama_accel: dict[str, Any] | None = None
-                    try:
-                        ps_url = url.replace("/api/chat", "/api/ps")
-                        p_req = urllib.request.Request(ps_url, headers={"User-Agent": "ZettNAS-Toolkit/2.0"})
-                        with urllib.request.urlopen(p_req, timeout=0.8) as p_resp:
-                            p_data = json.loads(p_resp.read().decode("utf-8", errors="replace"))
-                            has_vram = any((m.get("size_vram") or 0) > 0 for m in p_data.get("models", []))
-                            if has_vram:
-                                ollama_accel = {
-                                    "active_tier": 2,
-                                    "tier_number": 2,
-                                    "name": "GPU",
-                                    "device_label": "GPU (Ollama reports VRAM in use)",
-                                    "has_gpu": True,
-                                    "has_npu": False,
-                                }
-                            else:
-                                ollama_accel = {
-                                    "active_tier": 3,
-                                    "tier_number": 3,
-                                    "name": "CPU",
-                                    "device_label": "CPU",
-                                    "has_gpu": False,
-                                    "has_npu": False,
-                                }
-                    except Exception:
-                        ignored("backend.services.ai_chat_agent._try_local_llm_completion")
+                    # Where Ollama holds the model: GPU memory in use, or the CPU (AI-29)
+                    ollama_accel = ai_device.device_info("ollama", ai_device.ollama_device(url, model_to_use))
 
                     if content or raw_tool_calls:
                         _core()._ACTIVE_ENDPOINT_CACHE[cache_key] = (runtime_kind, url, time.time() + 60.0)
@@ -768,8 +693,8 @@ def build_llm_execution_telemetry(
         ),
         None,
     )
-    tier_num = int(accel.get("active_tier") or accel.get("tier_number") or (1 if accel.get("has_npu") else 2))
-    dev_label = accel.get("device_label") or accel.get("name") or "Intel Arc Graphics"
+    tier_num = int(accel.get("active_tier") or accel.get("tier_number") or 0)  # 0: not reported (AI-29)
+    dev_label = accel.get("device_label") or accel.get("name") or "Not reported"
     compact_dev = re.sub(r"\s*\([^)]*\)", "", str(dev_label)).strip() or dev_label
 
     # Only measured values (AI-02): no estimated speeds or token counts.
@@ -789,8 +714,8 @@ def build_llm_execution_telemetry(
         "hardware_warning": bool(model_info.get("hardware_warning", False)) if model_info else False,
         "warning_message": model_info.get("warning_message") if model_info else None,
         "accelerator_tier": tier_num,
-        "accelerator_label": f"Tier {tier_num}: {compact_dev}",
-        "hardware_tier": f"Tier {tier_num}: {accel.get('tier_name', 'NPU' if tier_num == 1 else 'GPU')}",
+        "accelerator_label": f"Tier {tier_num}: {compact_dev}" if tier_num else compact_dev,
+        "hardware_tier": f"Tier {tier_num}: {accel.get('tier_name', '')}" if tier_num else "Not reported",
         "tier_code": accel.get("tier_code", f"TIER_{tier_num}"),
         "hardware_device": dev_label,
         "hardware_device_compact": compact_dev,

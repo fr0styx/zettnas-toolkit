@@ -19,6 +19,13 @@
 
 #### Usability
 
+- **An honest model catalog**: the "built-in CLIP + MiniLM NPU engine" is gone (nothing ran it),
+  as are the guessed speeds and power figures and the "NPU" labels on models that run in Ollama,
+  which never uses the NPU. Every model shows its licence, with research-only licences marked
+  "Not for commercial use", and which hardware it suits (CPU, integrated GPU, NPU, discrete GPU).
+  The device a chat ran on now comes from the AI server: the GPU memory Ollama reports, or the
+  device OpenVINO Model Server was started with; when it doesn't say, ZettNAS says "not
+  reported" instead of guessing from the model's name (AI-29). The default model is unchanged.
 - **Compression per share**: a share card's **Compression** button shows what the share's data
   really uses and, on ZFS, how much it saves, and changes it for data written from then on
   (zstd, lz4 or gzip on ZFS; zstd, lzo or zlib on btrfs). A ZFS share must be its own dataset,
