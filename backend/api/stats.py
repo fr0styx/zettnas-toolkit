@@ -1,12 +1,15 @@
 import asyncio
+import json
 import os
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from backend.auth import require_scope
+from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import ENABLE_FB, LCD_FPS, logger
 from backend.db import query_history
+from backend.fast_json import dumps as fast_dumps
 from backend.hardware.screen import (
     find_fb_device,
     get_effective_brightness,
@@ -36,16 +39,62 @@ def get_lcd_status():
     }
 
 
+# SEC-33: people without the system view (kids and guests) see the desktop, not the machine:
+# its name, status, storage use, uptime and their own layout and look. No addresses, disks,
+# containers, events, the copy in progress or whether the default password is still set.
+_FAMILY_KEYS = ("name", "status", "uptime", "layout", "client_preferences")
+_FAMILY_STORAGE = ("used", "total", "pct")
+_FAMILY_SYSTEM = ("uptime_str", "uptime_sec", "hostname")
+
+
+def sees_full_stats(principal: AuthenticatedPrincipal) -> bool:
+    return principal.is_system or principal.has_any_scope("system:view", "hardware:read")
+
+
+def family_view(data: dict[str, Any]) -> dict[str, Any]:
+    """The part of a stats payload (full or delta) a kid or guest may see."""
+    out: dict[str, Any] = {k: data[k] for k in _FAMILY_KEYS if k in data}
+    if isinstance(data.get("storage"), dict):
+        out["storage"] = {k: data["storage"][k] for k in _FAMILY_STORAGE if k in data["storage"]}
+    if isinstance(data.get("system"), dict):
+        out["system"] = {k: data["system"][k] for k in _FAMILY_SYSTEM if k in data["system"]}
+    if isinstance(data.get("remotes_event"), dict):
+        # Only the signal that mounts changed, so the file manager refreshes
+        out["remotes_event"] = {"timestamp": data["remotes_event"].get("timestamp")}
+    return out
+
+
+_last_family: tuple[str, str | None] = ("", None)
+
+
+def family_payload(payload: str) -> str | None:
+    """One SSE frame cut down to the family view; None when nothing in it is theirs."""
+    global _last_family
+    if not payload.startswith("data: "):
+        return payload
+    if _last_family[0] == payload:
+        return _last_family[1]
+    try:
+        data = json.loads(payload[6:])
+    except ValueError:
+        return None
+    view = family_view(data) if isinstance(data, dict) else {}
+    out = f"data: {fast_dumps(view)}\n\n" if view else None
+    _last_family = (payload, out)
+    return out
+
+
 @router.get("/stats")
-def get_stats():
-    return collect()
+def get_stats(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    data = collect()
+    return data if sees_full_stats(principal) else family_view(data)
 
 
 MAX_SSE_SUBSCRIBERS = 32
 
 
 @router.get("/stats/stream")
-async def stats_stream(request: Request):
+async def stats_stream(request: Request, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     if broadcaster.get_subscriber_count() >= MAX_SSE_SUBSCRIBERS:
         raise HTTPException(
             status_code=429,
@@ -61,6 +110,7 @@ async def stats_stream(request: Request):
     initial = Z_STATE.cached_stats
     if not initial:
         initial = await asyncio.to_thread(collect)
+    full = sees_full_stats(principal)
     q = await broadcaster.subscribe(initial)
     from backend.auth import extract_token, is_internal_token
     from backend.hardware import docker_stats
@@ -80,6 +130,10 @@ async def stats_stream(request: Request):
                     payload = await asyncio.wait_for(q.get(), timeout=10.0)
                     if payload is None:
                         break
+                    if not full:
+                        payload = family_payload(payload)
+                        if payload is None:
+                            continue
                     yield payload
                 except TimeoutError:
                     yield ": keepalive\n\n"

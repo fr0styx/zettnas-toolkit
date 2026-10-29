@@ -31,8 +31,8 @@ ANY_SIGNED_IN = {
     "/api/v1/fs/stream": "files they may open",
     "/api/v1/fs/transfers/stream": "their own transfers",
     # the desktop everyone sees
-    "/api/v1/stats": "the desktop (a reduced view for family roles is still open)",
-    "/api/v1/stats/stream": "the desktop (a reduced view for family roles is still open)",
+    "/api/v1/stats": "the desktop (kids and guests get a reduced view, SEC-33)",
+    "/api/v1/stats/stream": "the desktop (kids and guests get a reduced view, SEC-33)",
     "/api/v1/layout": "the desktop layout, clock and time zone",
     "/api/v1/system/client-preferences": "the desktop look",
     "/api/v1/system/about": "the version",

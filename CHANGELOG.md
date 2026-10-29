@@ -4,6 +4,10 @@
 
 #### Security
 
+- **Kids and guests see the desktop, not the machine**: the live stats behind the desktop now
+  give accounts without the system view only the server's name, status, storage use and uptime.
+  Network addresses, disks, containers, the event log, copies in progress and the
+  default-password warning stay with the people who manage the NAS (SEC-33).
 - **WebDAV and SFTP behind ZettNAS**: rclone now listens on loopback only, and ZettNAS answers
   on the WebDAV port (8084) and the SFTP port itself, so blocked addresses are refused there
   too, failed WebDAV sign-ins count towards blocking an address, and WebDAV writes on 8084 reach

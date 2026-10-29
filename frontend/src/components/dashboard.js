@@ -1085,8 +1085,9 @@ export function applyStats(raw) {
       }
     }
 
+    // Kids and guests get no disks in their stats (SEC-33)
     let anyWarn = [stLvl, cpuLvl, utilLvl, memLvl].includes('crit') ||
-      s.disks.some((d) => {
+      (s.disks || []).some((d) => {
         if (d.standby || d.health === 'standby') return false;
         const h = d.health || lvlDisk(d.temp);
         return h !== 'ok' && h !== 'standby';
