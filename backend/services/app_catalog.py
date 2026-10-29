@@ -750,6 +750,18 @@ def resolve_app_port_conflict(app_id: str) -> dict[str, Any]:
     }
 
 
+_GITHUB_REPO = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+
+
+def github_repo(url: str) -> str | None:
+    """owner/name of a https://github.com/owner/name[.git] link; None for any other host."""
+    parts = urllib.parse.urlparse(str(url or "").strip())
+    if parts.scheme not in ("https", "http") or (parts.hostname or "").lower() not in ("github.com", "www.github.com"):
+        return None
+    repo = "/".join(parts.path.strip("/").split("/")[:2]).removesuffix(".git")
+    return repo if _GITHUB_REPO.match(repo) and ".." not in repo else None
+
+
 def generate_compose_for_app(
     app_id: str,
     host_port: int | None = None,
@@ -781,8 +793,8 @@ def generate_compose_for_app(
     if repo and isinstance(repo, dict):
         repo_url = repo.get("url", "")
         stackfile = repo.get("stackfile", "")
-        if repo_url and stackfile and "github.com/" in repo_url:
-            clean_repo = repo_url.split("github.com/")[1].strip("/").rstrip(".git")
+        clean_repo = github_repo(repo_url) if stackfile else None
+        if clean_repo:
             for branch in ("main", "master"):
                 raw_url = f"https://raw.githubusercontent.com/{clean_repo}/{branch}/{stackfile.lstrip('/')}"
                 try:

@@ -178,3 +178,21 @@ def test_stack_env_files_are_private(tmp_path, monkeypatch):
     assert stat.S_IMODE(os.stat(tmp_path / ".env").st_mode) == 0o600
     baks = [p for p in os.listdir(tmp_path) if ".bak." in p]
     assert baks and stat.S_IMODE(os.stat(tmp_path / baks[0]).st_mode) == 0o600
+
+
+def test_catalog_stackfiles_come_only_from_github():
+    """py/incomplete-url-substring-sanitization: "github.com/" anywhere in the link was enough,
+    and .rstrip(".git") cut repo names ending in g, i, t or a dot (my-digit -> my-di)."""
+    from backend.services.app_catalog import github_repo
+
+    assert github_repo("https://github.com/Lissy93/portainer-templates") == "Lissy93/portainer-templates"
+    assert github_repo("https://github.com/acme/my-digit.git") == "acme/my-digit"
+    assert github_repo("https://github.com/acme/tools/tree/main") == "acme/tools"
+    for bad in (
+        "https://evil.example/github.com/a/b",
+        "https://github.com.evil.example/a/b",
+        "ftp://github.com/a/b",
+        "https://github.com/a",
+        "",
+    ):
+        assert github_repo(bad) is None, bad
