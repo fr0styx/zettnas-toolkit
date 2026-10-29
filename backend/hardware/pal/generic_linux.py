@@ -29,6 +29,7 @@ from backend.hardware.pal.base import (
     StoragePool,
     _whole_disk,
 )
+from backend.hardware.share_compression import md_compression, pool_compression
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
 from backend.ignored_errors import ignored
 from backend.settings import test_mode
@@ -344,7 +345,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     members=members,
                     parity_protected=parity,
                     autotrim="nvme" in str(members),
-                    compression="zstd" if "btrfs" in str(resolved_fstype or mounts) else "off",
+                    compression=md_compression(str(resolved_fstype or mounts), mount_path),
                 )
             )
 
@@ -459,7 +460,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                             members=z_members,
                             parity_protected=z_profile in ("raidz1", "raidz2", "raidz3", "mirror"),
                             autotrim=True,
-                            compression="zstd",
+                            compression=pool_compression("zfs", z_mount, zp_name),
                         )
                     )
 
@@ -516,7 +517,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         members=members,
                         parity_protected=parity_protected,
                         autotrim=True,
-                        compression="zstd:1",
+                        compression=pool_compression("btrfs", self._pool_path),
                     ),
                 )
         elif not pools:

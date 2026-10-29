@@ -19,6 +19,12 @@
 
 #### Usability
 
+- **Compression per share**: a share card's **Compression** button shows what the share's data
+  really uses and, on ZFS, how much it saves, and changes it for data written from then on
+  (zstd, lz4 or gzip on ZFS; zstd, lzo or zlib on btrfs). A ZFS share must be its own dataset,
+  so one change can't reach other shares; a sleeping disk is not woken to read a folder's setting;
+  where Unraid or TrueNAS manages the storage, the setting is shown and changed there. Pool rows
+  now show the compression read from the pool instead of assuming zstd (FEAT-15).
 - **Use from anywhere**: a card in Network → Tailscale & WireGuard joins Tailscale, or a
   Headscale server of your own (no account anywhere), with the sign-in link as a QR code. Then
   **Turn on HTTPS** gives ZettNAS and Immich https addresses under the node's MagicDNS name,

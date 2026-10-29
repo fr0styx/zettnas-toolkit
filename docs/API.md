@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-599 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+601 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -681,6 +681,8 @@ request and response schemas.
 | `GET` | `/api/v1/storage/shares` | any of `storage:read`, `shares:read`, `system:view` | Returns network shares (Samba, NFS, WebDAV) with comment, security level, cache tiering settings, and live disk usage statistics |
 | `POST` | `/api/v1/storage/shares` | `shares:manage` | Creates a new network share |
 | `DELETE` | `/api/v1/storage/shares/{name}` | `shares:manage` | Deletes a network share configuration |
+| `GET` | `/api/v1/storage/shares/{name}/compression` | any of `storage:read`, `shares:manage` | What compression a share's data uses now, the ratio where the filesystem reports one, and what can be chosen (FEAT-15) |
+| `PUT` | `/api/v1/storage/shares/{name}/compression` | any of `shares:manage`, `storage:admin` | Change a share's compression; it applies to data written from now on (FEAT-15) |
 | `GET` | `/api/v1/storage/smart/failure-predictions` | any of `storage:read`, `system:view` | Scrutiny-style failure probability analytics and historical attribute velocity for all discovered storage drives |
 | `GET` | `/api/v1/storage/smart/schedule` | any of `storage:read`, `system:view` | Returns current SMART test schedule, intervals, and last execution timestamps |
 | `POST` | `/api/v1/storage/smart/schedule` | `storage:admin` | Configures automated Short and Extended SMART test schedules |

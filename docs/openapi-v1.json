@@ -31452,6 +31452,21 @@
     "title": "ShareAccessUpdate",
     "type": "object"
    },
+   "ShareCompressionRequest": {
+    "properties": {
+     "value": {
+      "description": "off, lz4, zstd, zstd-fast, gzip (ZFS) or off, zstd, lzo, zlib (btrfs)",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,15}$",
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "value"
+    ],
+    "title": "ShareCompressionRequest",
+    "type": "object"
+   },
    "SmartScheduleUpdateRequest": {
     "properties": {
      "enabled": {
@@ -57403,6 +57418,116 @@
     ],
     "x-required-scopes": [
      "shares:manage"
+    ]
+   }
+  },
+  "/api/v1/storage/shares/{name}/compression": {
+   "get": {
+    "description": "What compression a share's data uses now, the ratio where the filesystem reports one, and\nwhat can be chosen (FEAT-15). A sleeping disk is not woken to read a btrfs folder's setting.",
+    "operationId": "get_share_compression_api_v1_storage_shares__name__compression_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Share Compression Api V1 Storage Shares  Name  Compression Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Get Share Compression",
+    "tags": [
+     "Storage Subsystem & PAL"
+    ],
+    "x-required-scopes": [
+     "storage:read",
+     "shares:manage"
+    ]
+   },
+   "put": {
+    "description": "Change a share's compression; it applies to data written from now on (FEAT-15).",
+    "operationId": "set_share_compression_api_v1_storage_shares__name__compression_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ShareCompressionRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Set Share Compression Api V1 Storage Shares  Name  Compression Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Set Share Compression",
+    "tags": [
+     "Storage Subsystem & PAL"
+    ],
+    "x-required-scopes": [
+     "shares:manage",
+     "storage:admin"
     ]
    }
   },

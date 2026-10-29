@@ -1308,6 +1308,9 @@ function buildShareCardInner(s, canManageShares) {
         📂 Open in File Explorer
       </button>
       ${canManageShares ? `
+        <button class="btn-share-compress btn-pill-toggle is-small" data-share-name="${escapeHtml(s.name)}" title="${t('compress.button_title', 'Compression for this share')}">
+          ${t('compress.button', 'Compression')}
+        </button>
         <button class="btn-share-delete btn-pill-toggle is-danger is-small" data-share-name="${escapeHtml(s.name)}" title="${t('ui.delete_network_share', 'Delete network share')}">
           🗑️ Delete
         </button>
@@ -1345,6 +1348,13 @@ function bindSharesGridEvents(grid, container) {
       playChirp(720, 0.08, 'triangle');
       ZettEventBus.emit('window:open', { id: 'file-manager-window', path });
       showToast(t('mgmt.opened_share', `Opened share in File Explorer: ${path}`), 'info');
+      return;
+    }
+
+    const compressBtn = e.target.closest('.btn-share-compress');
+    if (compressBtn) {
+      e.stopPropagation();
+      import('./share-compression.js').then((m) => m.openShareCompression(compressBtn.dataset.shareName)); // FEAT-15
       return;
     }
 

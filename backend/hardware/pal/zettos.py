@@ -28,6 +28,7 @@ from backend.hardware.pal.base import (
     _whole_disk,
 )
 from backend.hardware.pal.observer import ObserverStorageAdapter
+from backend.hardware.share_compression import md_compression
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
 from backend.ignored_errors import ignored
 
@@ -341,7 +342,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                     members=members,
                     parity_protected=parity,
                     autotrim="nvme" in str(members),
-                    compression="zstd" if "btrfs" in str(resolved_fstype or mounts) else "off",
+                    compression=md_compression(str(resolved_fstype or mounts), mount_path),
                 )
             )
 

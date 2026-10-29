@@ -20,6 +20,7 @@ from backend.hardware.pal_storage import (
     PlatformCapabilityError,
     get_storage_platform,
 )
+from backend.ignored_errors import ignored
 
 logger = logging.getLogger(__name__)
 
@@ -412,6 +413,63 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
     except Exception as e:
         logger.warning(f"[Storage] No default snapshots for {req.name}: {e}")
     return created
+
+
+class ShareCompressionRequest(BaseModel):
+    value: str = Field(
+        ...,
+        pattern=r"^[a-z0-9][a-z0-9-]{0,15}$",
+        description="off, lz4, zstd, zstd-fast, gzip (ZFS) or off, zstd, lzo, zlib (btrfs)",
+    )
+
+
+def _share_path(name: str) -> tuple[Any, str]:
+    adapter = get_storage_platform()
+    for share in adapter.list_shares():
+        if share.name == name and share.mountpoint:
+            return adapter, share.mountpoint
+    raise HTTPException(status_code=404, detail=f"No share named {name}")
+
+
+def _share_asleep(path: str) -> bool:
+    try:
+        from backend.services.rag_standby import is_backing_disk_in_standby
+
+        return bool(is_backing_disk_in_standby(path))
+    except (OSError, RuntimeError, ValueError, KeyError, TypeError):
+        ignored("backend.api.storage._share_asleep")
+        return False
+
+
+@router.get("/shares/{name}/compression", dependencies=[Depends(require_scope("storage:read", "shares:manage"))])
+def get_share_compression(name: str) -> dict[str, Any]:
+    """What compression a share's data uses now, the ratio where the filesystem reports one, and
+    what can be chosen (FEAT-15). A sleeping disk is not woken to read a btrfs folder's setting."""
+    from backend.hardware import share_compression
+
+    adapter, path = _share_path(name)
+    info = share_compression.read(path, asleep=_share_asleep)
+    if adapter.get_capabilities().is_observer_mode:
+        info["read_only"] = True
+        info["reason"] = f"Set compression in {adapter.get_platform_type().value}'s own settings"
+    return info
+
+
+@router.put("/shares/{name}/compression", dependencies=[Depends(require_scope("shares:manage", "storage:admin"))])
+def set_share_compression(name: str, req: ShareCompressionRequest) -> dict[str, Any]:
+    """Change a share's compression; it applies to data written from now on (FEAT-15)."""
+    from backend.hardware import share_compression
+
+    adapter, path = _share_path(name)
+    if adapter.get_capabilities().is_observer_mode:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Compression is managed by {adapter.get_platform_type().value}; change it in its own settings",
+        )
+    try:
+        return share_compression.set_value(path, req.value, asleep=_share_asleep)
+    except share_compression.CompressionError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
 
 
 @router.post("/pools/{pool_id}/rename", dependencies=[Depends(require_scope("storage:admin"))])

@@ -29,8 +29,14 @@ from backend.hardware.pal.base import (
     StoragePool,
     _parse_ini_sections,
 )
+from backend.hardware.share_compression import pool_compression
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
 from backend.ignored_errors import ignored
+
+
+def _cache_pool_compression(meta: dict, pool_key: str) -> str | None:
+    """What a cache pool really uses, read when it is mounted here (FEAT-15)."""
+    return pool_compression(meta.get("fs_type", "btrfs"), meta.get("mountpoint", f"/mnt/{pool_key}"), pool_key)
 
 
 class UnraidStorageAdapter(StoragePlatformAdapter):
@@ -230,7 +236,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
                 members=array_members,
                 parity_protected=has_parity,
                 autotrim=False,
-                compression="off",
+                compression=None if "btrfs" in primary_fs or "zfs" in primary_fs else "off",
             )
         )
 
@@ -258,7 +264,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
                     members=members,
                     parity_protected=meta.get("fs_profile") in ("raid1", "raid10", "raid5", "raid6", "mirror"),
                     autotrim=meta.get("autotrim", False),
-                    compression="off",
+                    compression=_cache_pool_compression(meta, pool_key),
                 )
             )
 
