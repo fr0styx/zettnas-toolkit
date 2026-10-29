@@ -233,3 +233,25 @@ def test_the_watchdog_raises_fsd_first(monkeypatch):
     monkeypatch.setattr(wd, "_failsafe_engaged", False)
     wd.execute_atomic_failsafe_shutdown(10, 2, "battery low")
     assert order[:2] == ["fsd", "apps"]
+
+
+def test_a_pc_that_drops_the_line_is_let_go(cfg):
+    """A client that vanishes mid-read is closed and logged, not raised (ARC-01)."""
+    import asyncio
+
+    class Reader:
+        async def readline(self):
+            raise ConnectionResetError("gone")
+
+    class Writer:
+        closed = False
+
+        def get_extra_info(self, key):
+            return ("127.0.0.1", 50000)
+
+        def close(self):
+            self.closed = True
+
+    w = Writer()
+    asyncio.run(ns.NutServer()._client(Reader(), w, {**cfg, "networks": ["127.0.0.0/8"]}, lambda: ON_MAINS))
+    assert w.closed and not ns._LOGINS

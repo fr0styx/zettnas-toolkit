@@ -175,6 +175,17 @@ def test_blocked_checks(monkeypatch):
     monkeypatch.setattr(rag_standby, "is_backing_disk_in_standby", lambda p: False)
     assert REAL_BLOCKED(pair) is None
 
+    # a check that can't answer doesn't block the sync (ARC-01: logged, not silent)
+    def broken(*a):
+        raise OSError("no such device")
+
+    def missing():
+        raise ImportError("no guard")
+
+    monkeypatch.setattr(rag_standby, "is_backing_disk_in_standby", broken)
+    monkeypatch.setattr(ransomware_guard, "writes_frozen", missing)
+    assert REAL_BLOCKED(pair) is None
+
 
 def test_api(client, auth_headers, store, monkeypatch):
     from backend.services import rclone_engine
