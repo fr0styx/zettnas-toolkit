@@ -56,3 +56,14 @@
   .dh-body { grid-template-columns: 1fr; }
   .dh-side { border-right: 0; border-bottom: 1px solid var(--track); max-height: 40vh; }
 }
+
+/* Drive Health revamp: the fleet line, the outlook notes, the schedule and the history charts */
+.dh-fleet-line { margin: 0 0 var(--zn-space-2); font-size: var(--zn-fs-xs); color: var(--muted); }
+.dh-schedule { margin: calc(-1 * var(--zn-space-1)) 0 var(--zn-space-2); font-size: var(--zn-fs-xs); color: var(--muted); }
+.dh-schedule:empty { display: none; }
+.dh-life { margin: var(--zn-space-1) 0 0; font-size: var(--zn-fs-sm); }
+.dh-chart-label { margin: var(--zn-space-2) 0 2px; font-size: var(--zn-fs-xs); color: var(--muted); }
+.dh-chart { display: block; color: var(--accent, var(--zn-text-accent)); }
+.dh-chart.is-rising { color: var(--warn, #f59e0b); }
+.dh-chart-line { stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.dh-chart-dot { fill: currentColor; }

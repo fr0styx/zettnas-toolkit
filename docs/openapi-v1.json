@@ -49235,6 +49235,64 @@
     ]
    }
   },
+  "/api/v1/drives/history": {
+   "get": {
+    "description": "A drive's temperature and error counters over time, and its age and wear outlook, from the\nstored readings: a sleeping drive is not touched (Drive Health revamp).",
+    "operationId": "drive_history_api_v1_drives_history_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "dev",
+      "required": true,
+      "schema": {
+       "title": "Dev",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "days",
+      "required": false,
+      "schema": {
+       "default": 30,
+       "title": "Days",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Drive History Api V1 Drives History Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Drive History",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:read",
+     "system:view"
+    ]
+   }
+  },
   "/api/v1/events/clear": {
    "delete": {
     "operationId": "clear_events_api_v1_events_clear_delete",

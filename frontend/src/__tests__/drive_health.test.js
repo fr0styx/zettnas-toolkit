@@ -114,7 +114,9 @@ describe('Drive Health', () => {
     document.querySelector('[data-dh-wake]').click();
     await new Promise((r) => setTimeout(r, 0));
     await new Promise((r) => setTimeout(r, 0));
-    expect(api.get).toHaveBeenLastCalledWith('/api/disk/smart_tests?dev=sdb&limit=10');
+    // the detail is read again without waking the drive (the history after it comes from storage)
+    const details = api.get.mock.calls.map(([u]) => u).filter((u) => u.startsWith('/api/disk_detail'));
+    expect(details[details.length - 1]).toBe('/api/disk_detail?dev=sdb');
     expect(document.querySelector('#dh-detail').textContent).not.toContain('Could not read this drive');
   });
 

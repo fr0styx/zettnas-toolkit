@@ -4,10 +4,15 @@
  * everything that opened that one (the dashboard, the drive bays, the storage list, Spotlight)
  * opens this. A sleeping drive is shown from its last reading and is only woken when someone
  * presses "Read now". The rules live in backend/services/drive_health.py.
+ *
+ * Also: the fleet at a glance, each drive's make-up, age and wear outlook, 30 days of
+ * temperature and error counters from the stored readings (no drive is woken for them), the
+ * self-test schedule, and a report to save (Drive Health revamp).
  */
 import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
-import { formatDateTime } from '../format.js';
+import { formatBytes, formatDateTime } from '../format.js';
+import { lineChart } from './drive-charts.js';
 import { t } from '../i18n.js';
 import { ZettEventBus } from '../event-bus.js';
 import { bringToFront, makeDraggable } from './dock.js';
@@ -171,6 +176,15 @@ export function detailHtml(drive, detail, tests) {
       </div>
       <ul class="dh-tests">${testRowsHtml(tests && tests.history)}</ul>
     </section>
+    <div class="dh-schedule" id="dh-schedule"></div>
+    <section class="dh-section" id="dh-about">
+      <h4>${escapeHtml(t('dh.about', 'About this drive'))}</h4>
+      ${aboutHtml((health && health.identity) || {}, null)}
+    </section>
+    <details class="dh-section dh-more" id="dh-history">
+      <summary>${escapeHtml(t('dh.history', 'History (30 days)'))}</summary>
+      <div class="dh-history-body"><p class="dh-hint">${escapeHtml(t('dh.loading', 'Loading…'))}</p></div>
+    </details>
     <details class="dh-section dh-more">
       <summary>${escapeHtml(t('dh.all_readings', 'All readings'))}</summary>
       ${detail ? readingsHtml(detail) : `<p class="dh-hint">${escapeHtml(t('dh.loading', 'Loading…'))}</p>`}
@@ -186,6 +200,8 @@ function renderList() {
     announceChange('drive-health', overall.textContent.trim()); // UX-28: only when it changes
   }
   if (list) list.innerHTML = _drives.map((d) => driveCardHtml(d, d.dev === _selected)).join('');
+  const fleet = _win.querySelector('#dh-fleet');
+  if (fleet) fleet.innerHTML = fleetHtml(_drives);
 }
 
 function _counts() {
@@ -222,6 +238,7 @@ async function loadDetail(dev, wake = false) {
     ]);
     if (_selected !== dev) return; // another drive was chosen meanwhile
     pane.innerHTML = detailHtml(drive || { dev }, detail, tests);
+    loadExtras(dev, (detail && detail.drive_health && detail.drive_health.identity) || {});
     clearInterval(_testTimer);
     if (tests && tests.active_test) _testTimer = setInterval(() => refreshTests(dev), TEST_POLL_MS);
   } catch (e) {
@@ -275,6 +292,7 @@ function windowHtml() {
     <div class="os-window-header">
       <div class="os-window-title" id="drive-health-title">${escapeHtml(t('dh.title', 'Drive Health'))}</div>
       <div class="os-window-controls">
+        <button class="win-btn refresh-btn" id="drive-health-export" title="${escapeHtml(t('dh.export', 'Save a report'))}" aria-label="${escapeHtml(t('dh.export', 'Save a report'))}">⤓</button>
         <button class="win-btn refresh-btn" id="drive-health-refresh" title="${escapeHtml(t('dh.refresh', 'Check again'))}" aria-label="${escapeHtml(t('dh.refresh', 'Check again'))}">↻</button>
         <button class="win-btn min-btn" id="drive-health-min" title="${escapeHtml(t('window.minimize', 'Minimize'))}" aria-label="${escapeHtml(t('window.minimize', 'Minimize'))}"></button>
         <button class="win-btn close-btn" id="drive-health-close" title="${escapeHtml(t('window.close', 'Close'))}" aria-label="${escapeHtml(t('window.close', 'Close'))}"></button>
@@ -283,6 +301,7 @@ function windowHtml() {
     <div class="dh-body">
       <aside class="dh-side">
         <div id="dh-overall"></div>
+        <div id="dh-fleet" class="dh-fleet"></div>
         <ul id="dh-list" class="dh-list" aria-label="${escapeHtml(t('dh.drives', 'Drives'))}"></ul>
       </aside>
       <section id="dh-detail" class="dh-detail" aria-live="polite"></section>
@@ -308,6 +327,7 @@ function ensureWindow() {
     });
   on('#drive-health-close', closeDriveHealth);
   on('#drive-health-min', () => window.DockManager?.minimize?.(DOCK_ID));
+  on('#drive-health-export', () => saveReport(_drives));
   on('#drive-health-refresh', async () => {
     await loadDrives(true);
     if (_selected) loadDetail(_selected);
@@ -375,12 +395,179 @@ export function initDriveHealth() {
   });
 }
 
+// --- the fleet, a drive's make-up and outlook, its history, the schedule, the report ---
+
+const years = (hours) => (hours ? Math.round((hours / 8766) * 10) / 10 : null);
+
+/** One line about all drives: space, the hottest one now, the oldest one, how many sleep. */
+export function fleetHtml(drives) {
+  if (!drives || !drives.length) return '';
+  const bits = [];
+  const space = drives.reduce((a, d) => a + (Number(d.capacity_bytes) || 0), 0);
+  if (space) bits.push(t('dh.fleet_space', '{size} in all', { size: formatBytes(space) }));
+  const warm = drives.filter((d) => d.temp != null).sort((a, b) => b.temp - a.temp)[0];
+  if (warm) bits.push(t('dh.fleet_hottest', 'warmest {name} at {temp} °C', { name: warm.dev, temp: Math.round(warm.temp) }));
+  const old = drives.filter((d) => d.power_on_hours).sort((a, b) => b.power_on_hours - a.power_on_hours)[0];
+  if (old) bits.push(t('dh.fleet_oldest', 'oldest {name}, {y, plural, one {# year} other {# years}} on', { name: old.dev, y: years(old.power_on_hours) }));
+  const asleep = drives.filter((d) => d.asleep).length;
+  if (asleep) bits.push(t('dh.fleet_asleep', '{n, plural, one {# asleep} other {# asleep}}', { n: asleep }));
+  return bits.length ? `<p class="dh-fleet-line">${escapeHtml(bits.join(' · '))}</p>` : '';
+}
+
+/** What kind of drive it is, in words. */
+export function kindText(id) {
+  if (id.protocol === 'nvme') return t('dh.kind_nvme', 'NVMe SSD');
+  if (id.rotation_rpm === 0) return t('dh.kind_ssd', 'SATA SSD');
+  if (id.rotation_rpm > 0) return t('dh.kind_hdd', 'Hard drive, {rpm} rpm', { rpm: id.rotation_rpm });
+  return '';
+}
+
+/** "About this drive": make-up from the live reading, age and wear from the stored history. */
+export function aboutHtml(id, life) {
+  const rows = [
+    [t('dh.a_kind', 'Type'), kindText(id || {})],
+    [t('dh.a_size', 'Size'), id && id.capacity_bytes ? formatBytes(id.capacity_bytes) : ''],
+    [t('dh.a_link', 'Connection'), id && id.link],
+    [t('dh.a_form', 'Form factor'), id && id.form_factor],
+    [t('dh.a_firmware', 'Firmware'), id && id.firmware],
+    [t('dh.a_cycles', 'Times switched on'), id && id.power_cycles != null ? String(id.power_cycles) : ''],
+    [t('dh.a_written', 'Written over its life'), id && id.written_bytes ? formatBytes(id.written_bytes) : ''],
+    [t('dh.a_age', 'Powered on'), life && life.age_years != null ? t('dh.a_years', '{y, plural, one {# year} other {# years}}', { y: life.age_years }) : ''],
+  ].filter(([, v]) => v);
+  const notes = [];
+  if (life && life.wear_pct != null) {
+    notes.push(
+      life.years_left != null
+        ? t('dh.wear_rate', '{p}% of its rated writes used; at the pace of the last weeks, about {y, plural, one {# year} other {# years}} left.', { p: life.wear_pct, y: life.years_left })
+        : t('dh.wear_flat', '{p}% of its rated writes used; too little change yet to say how long it lasts.', { p: life.wear_pct }),
+    );
+  }
+  if (life && life.age_years >= 5 && id && id.rotation_rpm > 0) {
+    notes.push(t('dh.old_hdd', 'Older than the five years most hard drives are built for. It may run for years, but keep its backup current.'));
+  }
+  if (!rows.length && !notes.length) return `<p class="dh-hint">${escapeHtml(t('dh.about_later', 'Shown after the drive has been read while awake.'))}</p>`;
+  const table = rows.map(([k, v]) => `<tr><th scope="row">${escapeHtml(k)}</th><td>${escapeHtml(String(v))}</td></tr>`).join('');
+  return `<table class="dh-readings">${table}</table>${notes.map((n) => `<p class="dh-life">${escapeHtml(n)}</p>`).join('')}`;
+}
+
+const COUNTER_NAMES = {
+  reallocated_sectors: () => t('dh.r_realloc', 'Replaced sectors'),
+  pending_sectors: () => t('dh.r_pending', 'Sectors waiting to be replaced'),
+  offline_uncorrectable: () => t('dh.r_offline', 'Unreadable sectors'),
+  crc_errors: () => t('dh.r_crc', 'Cable transfer errors'),
+  command_timeouts: () => t('dh.r_timeouts', 'Command timeouts'),
+  spin_retries: () => t('dh.r_spin', 'Spin-up retries'),
+  nvme_media_errors: () => t('dh.r_media', 'Media errors'),
+};
+
+/** The History body: temperature line and one line per error counter that ever moved. */
+export function historyBody(h) {
+  const box = document.createElement('div');
+  if (!h || !h.samples) {
+    const p = document.createElement('p');
+    p.className = 'dh-hint';
+    p.textContent = t('dh.history_none', 'No readings stored yet; they build up over the next days.');
+    box.append(p);
+    return box;
+  }
+  const head = (text) => {
+    const p = document.createElement('p');
+    p.className = 'dh-chart-label';
+    p.textContent = text;
+    return p;
+  };
+  if (h.temp) {
+    const label = t('dh.h_temp', 'Temperature: {min}–{max} °C, average {avg} °C', { min: Math.round(h.temp.min), max: Math.round(h.temp.max), avg: h.temp.avg });
+    box.append(head(label), lineChart(h.temp.points, { label, className: 'is-temp' }));
+  }
+  const names = Object.keys(h.counters || {});
+  for (const key of names) {
+    const c = h.counters[key];
+    const name = (COUNTER_NAMES[key] || (() => key))();
+    const label = c.last > c.first
+      ? t('dh.h_rose', '{name}: rose from {a} to {b}', { name, a: c.first, b: c.last })
+      : t('dh.h_steady', '{name}: steady at {b}', { name, b: c.last });
+    box.append(head(label), lineChart(c.points, { label, height: 48, className: c.last > c.first ? 'is-rising' : '' }));
+  }
+  if (!names.length) {
+    const p = document.createElement('p');
+    p.className = 'dh-allgood';
+    p.textContent = t('dh.h_clean', 'No error counter has moved in this time.');
+    box.append(p);
+  }
+  return box;
+}
+
+export function aboutSectionHtml(id, life) {
+  return `<h4>${escapeHtml(t('dh.about', 'About this drive'))}</h4>${aboutHtml(id, life)}`;
+}
+
+/** "Automatic tests: …" from /api/smart/schedule. */
+export function scheduleText(cfg) {
+  if (!cfg) return '';
+  if (cfg.enabled === false) return t('dh.sched_off', 'Automatic self-tests are off.');
+  const part = (kind) => {
+    const every = cfg[`${kind}_test_interval`];
+    if (!every || every === 'disabled') return null;
+    const name = kind === 'long' ? t('dh.test_long', 'Long test') : t('dh.test_short', 'Short test');
+    const freq = { daily: t('dh.every_day', 'every day'), weekly: t('dh.every_week', 'every week'), monthly: t('dh.every_month', 'every month') }[every] || every;
+    return `${name} ${freq}, ${String(cfg[`${kind}_test_hour`] ?? 2).padStart(2, '0')}:00`;
+  };
+  const parts = [part('short'), part('long')].filter(Boolean);
+  return parts.length ? t('dh.sched', 'Automatic tests: {list}. Sleeping drives are skipped.', { list: parts.join(' · ') }) : t('dh.sched_off', 'Automatic self-tests are off.');
+}
+
+let _schedule = null;
+
+async function loadExtras(dev, id) {
+  const pane = _win?.querySelector('#dh-detail');
+  if (!pane) return;
+  try {
+    if (!_schedule) _schedule = await api.get('/api/smart/schedule').catch(() => ({}));
+    const sched = pane.querySelector('#dh-schedule');
+    if (sched) sched.textContent = scheduleText(_schedule);
+    const data = await api.get(`/api/drives/history?dev=${encodeURIComponent(dev)}&days=30`);
+    if (_selected !== dev) return;
+    const about = pane.querySelector('#dh-about');
+    if (about) about.innerHTML = aboutSectionHtml(id, data.life);
+    const body = pane.querySelector('#dh-history .dh-history-body');
+    if (body) body.replaceChildren(historyBody(data.history));
+  } catch (e) {
+    const body = pane.querySelector('#dh-history .dh-history-body');
+    if (body) body.textContent = t('dh.history_failed', 'Could not load the history.');
+  }
+}
+
+const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+/** A CSV report of every drive: for your records or a warranty claim. */
+export function reportCsv(drives) {
+  const head = ['device', 'model', 'serial', 'role', 'verdict', 'summary', 'temperature_c', 'power_on_hours', 'size_bytes', 'asleep', 'findings'];
+  const rows = (drives || []).map((d) => [
+    d.dev, d.model, d.serial, d.role, labelText(d), summaryText(d), d.temp ?? '', d.power_on_hours ?? '', d.capacity_bytes ?? '', d.asleep ? 'yes' : 'no',
+    (d.findings || []).filter((f) => f.severity !== 'ok').map((f) => findingText(f, 'title')).join('; '),
+  ]);
+  return [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
+}
+
+function saveReport(drives) {
+  const blob = new Blob([reportCsv(drives)], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `drive-health-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 export const _test = {
   reset() {
     _win?.remove();
     _win = null;
     _drives = [];
     _selected = null;
+    _schedule = null;
     clearInterval(_listTimer);
     clearInterval(_testTimer);
   },

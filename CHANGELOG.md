@@ -19,6 +19,14 @@
 
 #### Usability
 
+- **Drive Health, expanded**: a line about all drives (total space, the warmest and the oldest,
+  how many sleep); **About this drive** with its type, size, connection, firmware, how often
+  it was switched on, how much was written to it, and how long it has run; for NVMe drives the
+  share of rated writes used and, once it has moved for a week, about how many years are left
+  at that pace; a note when a hard drive is past the five years most are built for; **History
+  (30 days)** with temperature and every error counter that moved, drawn from the stored
+  readings so no sleeping drive is woken; the automatic self-test schedule; and **Save a
+  report**, a CSV of every drive for your records or a warranty claim.
 - **Two-way sync with the cloud**: Backup → Two-way sync keeps a folder here and a cloud folder
   the same both ways (rclone bisync). A file changed on both sides is kept twice
   (`name..path1` and `name..path2`) instead of one overwriting the other. Nothing runs until you

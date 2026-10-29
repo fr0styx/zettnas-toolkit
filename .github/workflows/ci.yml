@@ -63,6 +63,9 @@ jobs:
 
       - name: Pyright type check, no file may get worse (OPS-24)
         run: python scripts/pyright_ratchet.py
+        env:
+          # a fixed Node for pyright: nodeenv cannot read the newest entries in Node's release list
+          PYRIGHT_PYTHON_NODE_VERSION: "24.11.1"
 
       - name: Silent except/pass may not grow (ARC-01)
         run: python scripts/silent_except.py

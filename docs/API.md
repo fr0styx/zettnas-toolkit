@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-617 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+618 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -219,6 +219,7 @@ request and response schemas.
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/drives/health` | any of `storage:read`, `system:view` | Every drive with its verdict, reason and what to do; worst first |
+| `GET` | `/api/v1/drives/history` | any of `storage:read`, `system:view` | A drive's temperature and error counters over time, and its age and wear outlook, from the stored readings: a sleeping drive is not touch… |
 
 ### File System & Shares
 

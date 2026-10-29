@@ -61,6 +61,13 @@ def read_smartctl(doc: dict[str, Any] | None) -> dict[str, Any]:
         "power_on_hours": (doc.get("power_on_time") or {}).get("hours"),
         "attributes": {},
         "failing_attributes": [],
+        # who the drive is, for "About this drive" (Drive Health revamp)
+        "firmware": doc.get("firmware_version") or "",
+        "power_cycles": doc.get("power_cycle_count"),
+        "form_factor": (doc.get("form_factor") or {}).get("name") or "",
+        "link": ((doc.get("interface_speed") or {}).get("current") or {}).get("string")
+        or (doc.get("sata_version") or {}).get("string")
+        or "",
     }
     for a in ((doc.get("ata_smart_attributes") or {}).get("table")) or []:
         aid = a.get("id")
@@ -86,6 +93,10 @@ def read_smartctl(doc: dict[str, Any] | None) -> dict[str, Any]:
         }
         if r["temp_c"] is None and nv.get("temperature") is not None:
             r["temp_c"] = nv.get("temperature")
+        if r["power_cycles"] is None:
+            r["power_cycles"] = nv.get("power_cycles")
+        if nv.get("data_units_written") is not None:
+            r["written_bytes"] = int(nv["data_units_written"]) * 512000  # NVMe counts 1000 x 512 bytes
     scsi_defects = doc.get("scsi_grown_defect_list")
     if scsi_defects is not None:
         r["attributes"][5] = {"name": "Grown_defect_list", "value": None, "thresh": None, "raw": int(scsi_defects)}
@@ -669,4 +680,87 @@ def assess(
         "findings": findings,
         "from_history": bool(readings.get("from_history_ts")),
         "reading_ts": readings.get("from_history_ts"),
+        "identity": identity(readings),
     }
+
+
+IDENTITY_KEYS = (
+    "protocol",
+    "capacity_bytes",
+    "rotation_rpm",
+    "firmware",
+    "power_cycles",
+    "form_factor",
+    "link",
+    "written_bytes",
+)
+
+
+def identity(readings: dict[str, Any]) -> dict[str, Any]:
+    """The drive's make-up from a live reading: interface, size, speed, firmware (empty from history)."""
+    if readings.get("from_history_ts"):
+        return {}
+    return {k: readings[k] for k in IDENTITY_KEYS if readings.get(k) not in (None, "")}
+
+
+COUNTERS = (
+    "reallocated_sectors",
+    "pending_sectors",
+    "offline_uncorrectable",
+    "crc_errors",
+    "command_timeouts",
+    "spin_retries",
+    "nvme_media_errors",
+)
+
+
+def history_view(samples: list[dict[str, Any]]) -> dict[str, Any]:
+    """Temperature and error counters over the stored samples, for the History charts. Only
+    counters that were ever above zero are sent."""
+    temps = [(int(s["ts"]), float(s["temp"])) for s in samples if s.get("temp") not in (None, 0)]
+    temp = None
+    if temps:
+        values = [v for _, v in temps]
+        temp = {
+            "points": temps,
+            "min": min(values),
+            "max": max(values),
+            "avg": round(sum(values) / len(values), 1),
+            "now": values[-1],
+        }
+    counters = {}
+    for key in COUNTERS:
+        series = [(int(s["ts"]), int(s.get(key) or 0)) for s in samples]
+        if any(v for _, v in series):
+            counters[key] = {"points": series, "first": series[0][1], "last": series[-1][1]}
+    span = (samples[-1]["ts"] - samples[0]["ts"]) / 86400 if len(samples) > 1 else 0
+    return {"temp": temp, "counters": counters, "days": round(span, 1), "samples": len(samples)}
+
+
+HOURS_PER_YEAR = 8766
+
+
+def life_outlook(samples: list[dict[str, Any]], min_days: float = 7.0) -> dict[str, Any]:
+    """Age, and for NVMe drives how fast their rated writes are used up, from measurements only:
+    no estimate until the wear figure has moved over at least a week."""
+    if not samples:
+        return {"age_years": None}
+    hours = max(int(s.get("power_on_hours") or 0) for s in samples)
+    out: dict[str, Any] = {
+        "power_on_hours": hours or None,
+        "age_years": round(hours / HOURS_PER_YEAR, 1) if hours else None,
+    }
+    worn = [s for s in samples if s.get("nvme_pct_used") is not None]
+    if worn and any(s.get("nvme_pct_used") for s in worn):
+        first, last = worn[0], worn[-1]
+        used = int(last.get("nvme_pct_used") or 0)
+        out["wear_pct"] = used
+        span_years = (last["ts"] - first["ts"]) / (365.25 * 86400)
+        moved = used - int(first.get("nvme_pct_used") or 0)
+        if span_years * 365.25 >= min_days and moved > 0:
+            per_year = moved / span_years
+            out["wear_per_year"] = round(per_year, 1)
+            out["years_left"] = round(max(0, 100 - used) / per_year, 1)
+        else:
+            out["years_left"] = None
+    return out

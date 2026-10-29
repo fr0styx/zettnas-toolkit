@@ -11,12 +11,13 @@ then asks again with refresh=1, which joins that read instead of starting anothe
 """
 
 import asyncio
+import re
 import time
 from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from backend.auth import require_scope
 from backend.hardware.disks import _discover_disks, cached_smart_detail, read_smart_detail
@@ -47,6 +48,7 @@ def _summary(disk: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
         "asleep": bool(detail.get("is_standby")),
         "temp": detail.get("temp"),
         "power_on_hours": detail.get("power_on_hours") if not detail.get("is_standby") else None,
+        "capacity_bytes": (health.get("identity") or {}).get("capacity_bytes") or disk.get("size_bytes"),
         "verdict": health.get("verdict", "unknown"),
         "label": health.get("label", "Not read yet"),
         "label_key": health.get("label_key", "unknown"),
@@ -124,3 +126,23 @@ async def drives_health(refresh: bool = False) -> dict[str, Any]:
         older["stale"] = True
         return older
     return await asyncio.to_thread(_read_all, CACHE_SECS)
+
+
+@router.get("/drives/history", dependencies=[Depends(require_scope("storage:read", "system:view"))])
+def drive_history(dev: str, days: int = 30) -> dict[str, Any]:
+    """A drive's temperature and error counters over time, and its age and wear outlook, from the
+    stored readings: a sleeping drive is not touched (Drive Health revamp)."""
+    from backend.db import get_smart_history_samples
+    from backend.services import drive_health
+
+    dev = dev.removeprefix("/dev/")
+    if not re.fullmatch(r"(sd[a-z]{1,2}|nvme[0-9]+n[0-9]+)", dev):
+        raise HTTPException(status_code=400, detail="Invalid device parameter.")
+    days = max(1, min(int(days), 45))
+    samples = get_smart_history_samples(dev, days=days, bucket_secs=max(3600, days * 86400 // 120))
+    return {
+        "dev": dev,
+        "days": days,
+        "history": drive_health.history_view(samples),
+        "life": drive_health.life_outlook(samples),
+    }
