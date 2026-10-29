@@ -169,9 +169,11 @@ jobs:
           ZETTNAS_E2E_PASSWORD: "e2e-Test-Pass-1"  # the tests read this (tests/conftest.py resets WEB_PASSWORD)
           DATA_DIR: "${{ github.workspace }}/data"
           # A browsable folder for the explorer and viewer accessibility checks (sample photos go here)
-          POOL_PATH: "${{ github.workspace }}/e2e-pool"
-          BROWSE_ROOTS: "${{ github.workspace }}/e2e-pool"
-          ZETTNAS_E2E_MEDIA_DIR: "${{ github.workspace }}/e2e-pool"
+          # outside the checkout: the folder that holds the data folder and a compose file is the
+          # install folder, which ZettNAS hides from every file feature
+          POOL_PATH: "${{ runner.temp }}/e2e-pool"
+          BROWSE_ROOTS: "${{ runner.temp }}/e2e-pool"
+          ZETTNAS_E2E_MEDIA_DIR: "${{ runner.temp }}/e2e-pool"
         run: |
           mkdir -p "$ZETTNAS_E2E_MEDIA_DIR"
           annotate() {

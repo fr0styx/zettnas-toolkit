@@ -608,7 +608,7 @@ export async function load2FAStatus() {
     if (badge) {
       badge.textContent = isEnabled ? t('users.2fa_badge_on', 'On') : t('users.2fa_badge_off', 'Off');
       badge.style.background = isEnabled ? 'rgba(37,194,160,0.18)' : 'rgba(239,68,68,0.18)';
-      badge.style.color = isEnabled ? 'var(--ok2)' : 'var(--crit)';
+      badge.style.color = isEnabled ? 'var(--ok2)' : 'var(--lt-t-fca5a5ff, #fca5a5)'; // readable on its red tint in both themes
       badge.style.border = `1px solid ${isEnabled ? 'rgba(37,194,160,0.35)' : 'rgba(239,68,68,0.35)'}`;
     }
 

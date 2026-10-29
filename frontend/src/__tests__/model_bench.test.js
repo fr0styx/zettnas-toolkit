@@ -18,7 +18,8 @@ vi.mock('../api.js', () => ({
     }),
   },
 }));
-vi.mock('../toast.js', () => ({ showToast: vi.fn() }));
+const showToast = vi.fn();
+vi.mock('../toast.js', () => ({ showToast }));
 
 describe('model benchmark card (D2)', () => {
   beforeEach(() => {
@@ -40,5 +41,9 @@ describe('model benchmark card (D2)', () => {
     const use = [...card.querySelectorAll('.zn-row button')].find((b) => b.textContent.includes('balanced'));
     use.click();
     await vi.waitFor(() => expect(posts).toContainEqual(['/api/ai/models/benchmark/apply', { tier: 'balanced' }]));
+    // the click handler finishes with its message; let that and anything it logs settle before the
+    // worker closes (a log still in flight at teardown fails the whole run)
+    await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith(expect.stringContaining('gemma3:12b'), 'success'));
+    await new Promise((r) => setTimeout(r, 50));
   });
 });
