@@ -86,7 +86,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
     const about = await api.get('/api/system/about');
     if (about) {
       const commitTag = about.commit ? ` (${about.commit})` : '';
-      const channelLabel = channel === 'edge' ? 'Edge (Rolling)' : channel === 'beta' ? t('updates.channel_beta_label', 'Beta (7-day test)') : (about.release_channel || 'Stable');
+      const channelLabel = channel === 'edge' ? 'Edge (Rolling)' : channel === 'beta' ? t('updates.channel_beta_label', 'Beta (3-day test)') : (about.release_channel || 'Stable');
       if (versionBadge) versionBadge.textContent = `${about.tag || 'v' + about.version}${commitTag} • ${channelLabel}`;
       if (chassisEl) chassisEl.textContent = about.chassis_model || 'Standard / DIY';
       if (hostEl) hostEl.textContent = `${about.hostname || 'NAS'} (${about.platform || 'Linux'})`;

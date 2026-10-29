@@ -38,7 +38,7 @@ def _pick(tmp_path, releases, want="", skip="false", hold="", event="", today=""
         "WANT": want,
         "SKIP": skip,
         "HOLD": hold,
-        "SOAK_DAYS": "7",
+        "SOAK_DAYS": "3",
         "EVENT": event,
         "TRAIN_TODAY": today,
     }
@@ -72,8 +72,8 @@ def test_held_betas_are_skipped(tmp_path):
 def test_warns_when_stable_is_stale(tmp_path):
     out, stdout = _pick(tmp_path, [_rel("v1.9.6", 2), _rel("v1.9.3", 50, pre=False)])
     assert out["go"] == "false" and "Stable is stale" in stdout
-    out, stdout = _pick(tmp_path / "b", [_rel("v1.9.6", 2), _rel("v1.9.3", 30, pre=False)])
-    assert "Stable is stale" not in stdout  # one monthly train missed is normal
+    out, stdout = _pick(tmp_path / "b", [_rel("v1.9.6", 2), _rel("v1.9.3", 10, pre=False)])
+    assert "Stable is stale" not in stdout  # a missed weekly train is normal
 
 
 def test_manual_security_promotion_skips_the_soak(tmp_path):
@@ -81,17 +81,27 @@ def test_manual_security_promotion_skips_the_soak(tmp_path):
     assert out["go"] == "true" and out["tag"] == "v1.9.4"
 
 
-# --- the monthly train (COMP-10) ---
+# --- the weekly train (COMP-10) ---
 
 READY = [_rel("v1.9.5", 9), _rel("v1.9.3", 40, pre=False)]
 
 
-def test_the_schedule_promotes_on_the_first_tuesday(tmp_path):
-    out, _ = _pick(tmp_path, READY, event="schedule", today="2026-11-03")  # a Tuesday, the 3rd
+@pytest.mark.parametrize("today", ["2026-11-03", "2026-11-10", "2026-11-24"])  # Tuesdays
+def test_the_schedule_promotes_every_tuesday(tmp_path, today):
+    out, _ = _pick(tmp_path, READY, event="schedule", today=today)
     assert out["go"] == "true" and out["tag"] == "v1.9.5"
 
 
-@pytest.mark.parametrize("today", ["2026-11-10", "2026-11-04", "2026-12-08"])
+def test_three_days_on_beta_is_enough(tmp_path):
+    out, _ = _pick(tmp_path, [_rel("v1.9.6", 3), _rel("v1.9.3", 40, pre=False)], event="schedule", today="2026-11-10")
+    assert out["go"] == "true" and out["tag"] == "v1.9.6"
+    out, _ = _pick(
+        tmp_path / "b", [_rel("v1.9.6", 2), _rel("v1.9.3", 40, pre=False)], event="schedule", today="2026-11-10"
+    )
+    assert out["go"] == "false"
+
+
+@pytest.mark.parametrize("today", ["2026-11-04", "2026-11-09", "2026-12-07"])
 def test_the_schedule_waits_for_the_train_on_other_days(tmp_path, today):
     out, stdout = _pick(tmp_path, READY, event="schedule", today=today)
     assert out["go"] == "false" and "next stable train" in stdout
@@ -99,9 +109,9 @@ def test_the_schedule_waits_for_the_train_on_other_days(tmp_path, today):
 
 def test_the_next_train_is_named(tmp_path):
     _, stdout = _pick(tmp_path, READY, event="schedule", today="2026-11-04")
-    assert "2026-12-01" in stdout
+    assert "2026-11-10" in stdout
 
 
 def test_a_run_by_hand_is_not_held_for_the_train(tmp_path):
-    out, _ = _pick(tmp_path, READY, event="workflow_dispatch", today="2026-11-10")
+    out, _ = _pick(tmp_path, READY, event="workflow_dispatch", today="2026-11-11")
     assert out["go"] == "true" and out["tag"] == "v1.9.5"

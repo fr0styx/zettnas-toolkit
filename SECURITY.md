@@ -4,7 +4,7 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 1.10.x (latest patch) | ✅ On beta now; Stable once it finishes its 7-day soak |
+| 1.10.x (latest patch) | ✅ On beta now; Stable on the Tuesday after its 3-day soak |
 | 1.9.4 | ✅ Until 1.10 reaches Stable |
 | < 1.9.2 | ❌ Upgrade: earlier versions have known critical issues (see below). |
 

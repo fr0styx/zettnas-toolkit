@@ -1,4 +1,4 @@
-"""OPS-07: version tags publish :beta, promoted to :latest/:stable after a 7-day soak; the app's beta channel."""
+"""OPS-07: version tags publish :beta, promoted to :latest/:stable after a 3-day soak; the app's beta channel."""
 
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -83,7 +83,7 @@ def test_promotion_waits_seven_days_honours_holds_and_can_be_skipped():
     wf = yaml.safe_load((ROOT / ".github" / "workflows" / "promote.yml").read_text())
     on = wf.get("on") or wf.get(True)
     assert "schedule" in on and "skip_soak" in on["workflow_dispatch"]["inputs"]
-    assert wf["env"]["SOAK_DAYS"] == "7"
+    assert wf["env"]["SOAK_DAYS"] == "3"
     steps = "\n".join(str(s.get("run", "")) for s in wf["jobs"]["promote"]["steps"])
     assert "HOLD" in steps and "cosign verify" in steps
     assert ':latest${suffix}" -t "$IMAGE:stable${suffix}' in steps

@@ -53,7 +53,7 @@ def test_config_env_vars_and_aliases(monkeypatch):
 
 def test_ci_workflow_tagging_rules():
     """CI publishes :edge on main and :beta on release tags; :latest only comes from the
-    promote workflow after the 7-day soak (OPS-07, tests/test_release_soak.py)."""
+    promote workflow after the 3-day soak (OPS-07, tests/test_release_soak.py)."""
     import re
 
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

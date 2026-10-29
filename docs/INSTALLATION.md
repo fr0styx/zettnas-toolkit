@@ -505,7 +505,7 @@ ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgrou
 | `ZETTNAS_DOCKER_PROXY` | `on` | ZettNAS reaches Docker through an allow-list proxy that forwards only the calls it uses; `off` gives it the socket directly |
 | `ZETTNAS_TRUSTED_IPS` | *(empty)* | Comma-separated addresses or networks (CIDR) that are never blocked, neither after failed sign-ins nor by the ransomware guard, so you can always reach the console |
 | `LCD_RENDERER` | `auto` | What draws the front LCD: `pil` (built in, no browser), `chromium` (the web dashboard) or `auto` (Chromium when the image has it) |
-| `UPDATE_CHANNEL` | `stable` | Update channel: `stable` (releases after a 7-day beta, `:latest`), `beta` (new releases right away, `:beta`) or `edge` (every commit on main); see docs/RELEASING.md |
+| `UPDATE_CHANNEL` | `stable` | Update channel: `stable` (releases after a 3-day beta, `:latest`), `beta` (new releases right away, `:beta`) or `edge` (every commit on main); see docs/RELEASING.md |
 | `ZETTNAS_OBSERVER_ADAPTER` | `auto` | Force storage adapter mode (`auto`, `generic`, `fygoos`, `zettos`, `ugos`, `truenas`, `proxmox`, `unraid`) |
 | `ZETTNAS_LCD_CAPTURE` | `screencast` | With the Chromium LCD renderer: `screencast` (a frame only when the screen changes) or `poll` (a screenshot every frame) |
 | `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos browsers can't play with Intel Quick Sync when `/dev/dri` is passed to the container (`--device /dev/dri`); `off` uses the CPU |
@@ -561,7 +561,7 @@ The Security Advisor warns when an AI container publishes a port on all interfac
 Administrators can check for updates and trigger 1-click container self-updates directly from the Web Desktop:
 1. Open **Mission Control** → **Settings** → **About & Updates**.
 2. Select your preferred channel:
-   - **Stable** (default): tagged releases, after 7 days on Beta.
+   - **Stable** (default): tagged releases, after 3 days on Beta, once a week.
    - **Beta**: each tagged release as soon as it passes CI.
    - **Edge**: every tested commit on the GitHub `main` branch.
 3. If an update is available, click **Install Update Now**. ZettNAS downloads the image, checks that this project's CI signed exactly that image (`UPDATE_SIGNATURES`), snapshots its data, and recreates the container. The old version keeps running until the new one has reported healthy for 60 seconds; if it doesn't, ZettNAS goes back on its own and tells you why.

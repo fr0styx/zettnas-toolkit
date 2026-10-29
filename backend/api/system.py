@@ -921,7 +921,7 @@ CHANNEL_IMAGE_TAG = {"stable": "latest", "beta": "beta", "edge": "edge"}
 
 
 def _channel(name: str | None) -> str:
-    """stable (promoted releases, :latest), beta (new releases during their 7-day soak, :beta)
+    """stable (promoted releases, :latest), beta (new releases during their 3-day soak, :beta)
     or edge (every commit on main, :edge). Anything else is stable."""
     n = str(name or "").lower()
     return n if n in CHANNEL_IMAGE_TAG else "stable"
@@ -1327,7 +1327,7 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
         return fallback
 
     # Stable: GitHub's "latest release" skips pre-releases, so a release only shows up here
-    # once it has been promoted after its 7-day soak (OPS-07). Beta: the newest release.
+    # once it has been promoted after its 3-day soak (OPS-07). Beta: the newest release.
     if channel_key == "beta":
         url = "https://api.github.com/repos/fr0styx/zettnas-toolkit/releases?per_page=10"
     else:

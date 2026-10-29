@@ -27,6 +27,12 @@
   execute bit, so rclone refused every WebDAV client and SFTP sign-in ("permission denied");
   ZettNAS now runs the helper with Python.
 
+#### Updates
+
+- **Stable comes weekly**: a release now spends three days on Beta instead of seven, and
+  Stable moves every Tuesday instead of on the first Tuesday of the month, so stable users
+  get at most one update a week. Security fixes can still skip the wait.
+
 #### Usability
 
 - **Drive Health, expanded**: a line about all drives (total space, the warmest and the oldest,

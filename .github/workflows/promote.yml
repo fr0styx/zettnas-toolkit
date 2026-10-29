@@ -1,11 +1,11 @@
 name: Promote release
 
-# OPS-07: a version tag publishes :beta (ci.yml). After a 7-day soak this moves :latest,
+# OPS-07: a version tag publishes :beta (ci.yml). After a 3-day soak this moves :latest,
 # :stable and MAJOR.MINOR (and the -core variants) to that same signed image and marks the
 # GitHub release as the latest. Nothing is rebuilt: stable users get exactly what beta ran.
 #
-# COMP-10: Stable is a monthly train. The schedule promotes only on the first Tuesday of the
-# month (UTC), taking the newest beta that has soaked by then. A run by hand works any day.
+# COMP-10: Stable is a weekly train. The schedule promotes only on Tuesdays (UTC), taking the
+# newest beta that has soaked by then. A run by hand works any day.
 #
 # Stop a promotion: set the repository variable HOLD_RELEASES (Settings > Secrets and
 #   variables > Actions > Variables) to the version, e.g. v1.9.3, or to "all".
@@ -22,7 +22,7 @@ on:
         required: false
         default: ""
       skip_soak:
-        description: "Promote now without waiting 7 days (security fixes)"
+        description: "Promote now without waiting 3 days (security fixes)"
         type: boolean
         default: false
 
@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SOAK_DAYS: "7"
+  SOAK_DAYS: "3"
   IMAGE: ghcr.io/${{ github.repository }}
 
 jobs:
@@ -53,12 +53,12 @@ jobs:
           EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          # Monthly train (COMP-10): a scheduled run promotes only on the first Tuesday of the month.
+          # Weekly train (COMP-10): a scheduled run promotes only on Tuesdays.
           today=${TRAIN_TODAY:-$(date -u +%F)}
-          train_day() { [ "$(date -u -d "$1" +%u)" = 2 ] && [ "$(date -u -d "$1" +%-d)" -le 7 ]; }
+          train_day() { [ "$(date -u -d "$1" +%u)" = 2 ]; }
           if [ "${EVENT:-}" = "schedule" ] && ! train_day "$today"; then
             next=""
-            for i in $(seq 1 38); do d=$(date -u -d "$today + $i day" +%F); if train_day "$d"; then next=$d; break; fi; done
+            for i in $(seq 1 7); do d=$(date -u -d "$today + $i day" +%F); if train_day "$d"; then next=$d; break; fi; done
             echo "Not a train day; the next stable train is $next." | tee -a "$GITHUB_STEP_SUMMARY"
             echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
@@ -90,7 +90,7 @@ jobs:
             if [ -z "$rel" ]; then
               echo "No beta ready to promote." | tee -a "$GITHUB_STEP_SUMMARY"
               last=$(echo "$releases" | jq -r 'map(select((.prerelease | not) and (.draft | not))) | first | .published_at // empty')
-              if [ -n "$last" ] && [ "$(age_of "$last")" -ge 45 ]; then
+              if [ -n "$last" ] && [ "$(age_of "$last")" -ge 21 ]; then
                 echo "::warning title=Stable is stale::Nothing has been promoted to Stable for $(age_of "$last") days."
               fi
               echo "go=false" >> "$GITHUB_OUTPUT"; exit 0

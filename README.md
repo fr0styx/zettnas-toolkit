@@ -47,7 +47,7 @@ On Unraid, use the template in [`unraid/zettnas-toolkit.xml`](unraid/zettnas-too
 
 | Image tag | What it is |
 |---|---|
-| `latest` | Stable: a monthly train on the first Tuesday, with the newest release that has had 7 days on beta. The default. |
+| `latest` | Stable: a weekly train every Tuesday, with the newest release that has had 3 days on beta. The default. |
 | `beta` | A new release as soon as its tests pass. |
 | `edge` | Every commit on `main` that passes CI. |
 | `…-core` | Any of the above without virtual machines or Chromium, about 500 MB instead of 1.7 GB. |

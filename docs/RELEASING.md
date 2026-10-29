@@ -1,12 +1,12 @@
 # Releasing ZettNAS Toolkit
 
-Every release spends seven days on the **beta** channel before it reaches **stable**
+Every release spends three days on the **beta** channel before it reaches **stable**
 (OPS-07). Stable users get exactly the image beta users ran: promotion moves tags to the
 same signed digest, it never rebuilds.
 
-**Stable is a monthly train** (COMP-10): on the first Tuesday of each month the newest beta
-that has had its seven days becomes Stable, so stable users get one update a month with one
-set of dated notes. Security fixes don't wait for the train (see below).
+**Stable is a weekly train** (COMP-10): every Tuesday the newest beta that has had its three
+days becomes Stable, so stable users get at most one update a week with one set of dated
+notes. Security fixes don't wait for the train (see below).
 
 | Image tag | What it is | Who gets it |
 |---|---|---|
@@ -36,11 +36,11 @@ Each tag also exists with `-core` for the core image.
    release is created as a pre-release named "… (beta)".
 3. Run the beta on a real server (Mission Control → Settings → About & Updates → Beta, or
    `UPDATE_CHANNEL=beta`).
-4. On the first Tuesday of the month (06:00 UTC), the **Promote release** workflow takes the
-   newest release that is at least seven days old, verifies its image signature, moves
+4. Every Tuesday (06:00 UTC), the **Promote release** workflow takes the
+   newest release that is at least three days old, verifies its image signature, moves
    `:latest`, `:stable` and `:1.9` to it, and marks the GitHub release as the latest, so the
    app's Stable channel offers it. On other days the scheduled run only names the next train
-   date in its summary. It warns when nothing has reached Stable for 45 days.
+   date in its summary. It warns when nothing has reached Stable for 21 days.
 
 ## Stopping a release
 
@@ -51,4 +51,4 @@ in the workflow summary. Remove the variable to let it continue; fix forward wit
 ## Skipping the wait (security fixes)
 
 Actions > **Promote release** > Run workflow: enter the version and tick **skip_soak**. The
-same checks run (signature, hold), just without the seven days.
+same checks run (signature, hold), just without the three days.
