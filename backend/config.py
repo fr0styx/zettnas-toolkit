@@ -73,6 +73,7 @@ else:
     POOL_PATH = _env_pool
 DISKS = SETTINGS.disks
 OS_NVME = SETTINGS.os_nvme
+SYNC_ROUTE_THREADS = SETTINGS.sync_route_threads
 STATIC_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"))
 
 # ---- Runtime & tuning ----

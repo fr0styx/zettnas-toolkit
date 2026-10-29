@@ -319,7 +319,10 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
         qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
         try:
             subprocess.run(
-                [qemu_img, "create", "-f", "qcow2", disk_path, f"{size_gb}G"], check=True, capture_output=True
+                [qemu_img, "create", "-f", "qcow2", disk_path, f"{size_gb}G"],
+                check=True,
+                capture_output=True,
+                timeout=120,
             )
         except Exception as e:
             err_msg = f"Failed to initialize primary disk: {e}"
@@ -526,7 +529,9 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
                 try:
                     qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
                     subprocess.run(
-                        [qemu_img, "create", "-f", "qcow2", sd_path, f"{sdisk.get('size_gb', 20)}G"], check=True
+                        [qemu_img, "create", "-f", "qcow2", sd_path, f"{sdisk.get('size_gb', 20)}G"],
+                        check=True,
+                        timeout=120,
                     )
                 except Exception:
                     logger.debug("backend.api.vms._start_qemu._build_cmd: ignored error", exc_info=True)

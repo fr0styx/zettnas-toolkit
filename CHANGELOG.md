@@ -112,6 +112,10 @@
 
 #### Fixes
 
+- **Nothing waits forever**: short system commands (unmount, qemu-img, ledctl and others) give up
+  after a time limit instead of holding a worker for good; the session check every request makes
+  no longer runs on the event loop; and the pool for blocking requests has an explicit size,
+  `SYNC_ROUTE_THREADS` (ARC-21).
 - **CI that can't hang**: every CI job has a time limit, and the coverage floors rose to 80% of the
   backend and 62/60/53/49% of the frontend (lines, statements, functions, branches) (ARC-26).
 - **Drive readings never written past each other**: the SMART readings, risk estimates, verdicts

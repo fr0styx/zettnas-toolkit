@@ -16,6 +16,7 @@ from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, 
 from backend.db import log_copy_event
 from backend.fsutil import prune_protected, resolve_within
 from backend.hardware.led import send_led_packet
+from backend.proc import run_bounded
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
 
@@ -632,7 +633,7 @@ async def _do_copy(cfg):
             mounted_path = "/tmp/sd_copy_mount"
             os.makedirs(mounted_path, exist_ok=True)
             cmd = ["mount", "-r", "-o", "noatime,nodiratime", os.path.join(HOST_DEV, part_dev), mounted_path]
-            r = subprocess.run(cmd, capture_output=True)
+            r = run_bounded(cmd, timeout=60, capture_output=True)
             if r.returncode != 0:
                 raise Exception(f"Failed to mount {part_dev}")
             tmp_mount = True
@@ -732,7 +733,7 @@ async def _do_copy(cfg):
             pass
     finally:
         if tmp_mount and mounted_path:
-            subprocess.run(["umount", mounted_path])
+            run_bounded(["umount", mounted_path], timeout=60)
         # Record into copy history
         try:
             log_copy_event(

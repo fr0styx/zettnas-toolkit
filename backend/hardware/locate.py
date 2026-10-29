@@ -13,6 +13,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.led import find_led_port, send_led_packet
+from backend.proc import run_bounded
 
 
 def locate_drive_multitier(
@@ -36,7 +37,7 @@ def locate_drive_multitier(
                 def _turn_off_ses():
                     time.sleep(duration)
                     try:
-                        subprocess.run(["ledctl", f"locate_off={dev_path}"], capture_output=True)
+                        run_bounded(["ledctl", f"locate_off={dev_path}"], timeout=15, capture_output=True)
                     except Exception:
                         logger.debug(
                             "backend.hardware.locate.locate_drive_multitier._turn_off_ses: ignored error", exc_info=True

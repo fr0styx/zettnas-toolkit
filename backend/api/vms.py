@@ -1354,6 +1354,7 @@ def resize_vm_disk(
                     [qemu_img, "create", "-f", disk_fmt, disk_path, f"{req.new_size_gb}G"],
                     check=True,
                     capture_output=True,
+                    timeout=300,
                 )
             else:
                 with open(disk_path, "wb") as f:
@@ -1368,6 +1369,7 @@ def resize_vm_disk(
                     [qemu_img, "resize", "-f", disk_fmt, disk_path, f"{req.new_size_gb}G"],
                     check=True,
                     capture_output=True,
+                    timeout=300,
                     text=True,
                 )
             except subprocess.CalledProcessError as e:

@@ -15,6 +15,7 @@ used keeps its default, and the log says which variable and why.
 | `OS_NVME` | `nvme1n1` | The NVMe device the operating system runs from, hidden from data disks. |
 | `SHOW_OS_DISK` | `on` | Show the operating-system disk in the disk list. |
 | `REMOTES_PATH` | `/mnt/remotes` | Where cloud and network remotes are mounted. |
+| `SYNC_ROUTE_THREADS` | `40` | Threads for API requests that wait on files, disks or Docker; more serve more people at once and use more memory. (8–256) |
 | `APP_MEMORY_WARN_MB` | `1536` | Warn when ZettNAS itself uses more memory than this, in MB (virtual machines not counted); 0 = off. (0–1.04858e+06) |
 
 ## Web

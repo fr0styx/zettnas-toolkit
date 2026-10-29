@@ -57,6 +57,14 @@ class Settings:
     )
     show_os_disk: bool = _s("SHOW_OS_DISK", True, "Show the operating-system disk in the disk list.", group="Host")
     remotes_path: str = _s("REMOTES_PATH", "/mnt/remotes", "Where cloud and network remotes are mounted.", group="Host")
+    sync_route_threads: int = _s(
+        "SYNC_ROUTE_THREADS",
+        40,
+        "Threads for API requests that wait on files, disks or Docker; more serve more people at once and use more memory.",
+        lo=8,
+        hi=256,
+        group="Host",
+    )
     app_memory_warn_mb: int = _s(
         "APP_MEMORY_WARN_MB",
         1536,

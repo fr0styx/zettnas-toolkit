@@ -1,3 +1,4 @@
+import asyncio
 import contextvars
 import hashlib
 import hmac
@@ -580,7 +581,8 @@ async def auth_middleware(request: Request, call_next):
 
         token = extract_token(request)
 
-        sess = get_current_session(token)
+        # a database read: off the event loop, so a slow disk can't stall every other request (ARC-21)
+        sess = await asyncio.to_thread(get_current_session, token)
         if not sess:
             if path in ("/api/stats", "/api/stats/stream", "/api/metrics"):
                 logger.debug(f"Auth failed for client {client_host} accessing polling route {path}")

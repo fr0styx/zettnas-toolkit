@@ -179,6 +179,23 @@ bodies for host-level settings. See SECURITY.md for the policy.
 | `vm_guest.py` | VM IP discovery (ARP, guest agent) |
 | `vm_qemu.py` | QEMU command line, start/stop, QMP, vms.json |
 
+### 2.15 Thread pools and time limits (ARC-21)
+
+| Pool | Size | Used for |
+|---|---|---|
+| AnyIO's thread pool | `SYNC_ROUTE_THREADS` (40) | API routes that are plain functions and block on files, disks or Docker |
+| `ZettAsyncWorker` (asyncio's default executor) | 4 per core, 16 to 64 | `asyncio.to_thread` work from async code, including each request's session lookup |
+| `SmartPoll` | 8 | SMART reads |
+| `DockerInspect` | 4 | container inspection for the stats |
+| `zett_notify` | 2 | sending alerts |
+
+The two big pools are separate, so a burst of slow API calls can't starve the services' own
+background work, and the session lookup that every request makes never runs on the event loop.
+Short external commands always have a time limit: `subprocess.run` and friends get `timeout=`, or
+go through `backend.proc.run_bounded`, where a hang counts as a failure (exit code 124);
+`tests/test_arc21_bounded.py` refuses a new call without one. Long-running children (the Docker
+proxy, WebDAV, SFTP, rclone mounts) are `Popen` and watched by their supervisors.
+
 ## 3. Data Persistence & State Model
 
 1. **SQLite Database (`data/history.db`)**:

@@ -20,6 +20,7 @@ import uuid
 from typing import Any, Optional
 
 import backend.config as config
+from backend.proc import run_bounded
 from backend.services.webdav_engine import ensure_fuse_device
 
 logger = logging.getLogger("ZettNAS.Rclone")
@@ -797,7 +798,9 @@ class RcloneEngine:
             except OSError as err:
                 if err.errno in (errno.ENOTCONN, errno.ECONNABORTED, errno.EIO, errno.EPIPE):
                     logger.warning(f"[RCLONE] Detected hung mount at {mount_path} ({err}); lazy unmounting...")
-                    subprocess.run(["umount", "-l", mount_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    run_bounded(
+                        ["umount", "-l", mount_path], timeout=30, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
                     time.sleep(0.3)
 
             if self._check_is_mounted(name, mount_path):
@@ -883,13 +886,13 @@ class RcloneEngine:
             fuser = shutil.which("fusermount3") or shutil.which("fusermount")
             unmounted = False
             if fuser and os.path.exists(mount_path):
-                res = subprocess.run([fuser, "-u", mount_path], capture_output=True)
+                res = run_bounded([fuser, "-u", mount_path], timeout=30, capture_output=True)
                 if res.returncode == 0:
                     unmounted = True
 
             # 2. Try generic umount
             if not unmounted and os.path.exists(mount_path):
-                res = subprocess.run(["umount", "-l", mount_path], capture_output=True)
+                res = run_bounded(["umount", "-l", mount_path], timeout=30, capture_output=True)
                 if res.returncode == 0:
                     unmounted = True
 

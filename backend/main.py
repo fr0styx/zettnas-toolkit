@@ -68,7 +68,7 @@ def _start_docker_proxy(supervise) -> None:
     def run() -> None:
         env = {**os.environ, "ZETTNAS_DOCKER_PROXY_SOCK": sock}
         env.pop("ZETTNAS_DOCKER_SOCK", None)
-        rc = subprocess.run([sys.executable, "-m", "backend.docker_proxy"], env=env).returncode
+        rc = subprocess.run([sys.executable, "-m", "backend.docker_proxy"], env=env).returncode  # runs until stopped
         raise RuntimeError(f"docker proxy exited with code {rc}")
 
     supervise("DockerProxy", run)
@@ -413,6 +413,18 @@ def _shutdown_fans(reason: str):
         logger.error(f"[FANS] Failsafe on {reason} failed: {e}")
 
 
+def configure_thread_limits() -> int:
+    """ARC-21: requests to blocking routes run in AnyIO's thread pool; its size is set here
+    (SYNC_ROUTE_THREADS), apart from the asyncio pool the services use (ZettAsyncWorker)."""
+    import anyio.to_thread
+
+    from backend import config as _config
+
+    limiter = anyio.to_thread.current_default_thread_limiter()
+    limiter.total_tokens = _config.SYNC_ROUTE_THREADS
+    return limiter.total_tokens
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     import concurrent.futures
@@ -427,6 +439,7 @@ async def lifespan(app: FastAPI):
     loop.set_default_executor(
         concurrent.futures.ThreadPoolExecutor(max_workers=worker_count, thread_name_prefix="ZettAsyncWorker")
     )
+    configure_thread_limits()
     broadcaster.set_loop(loop)
     startup_system()
     try:

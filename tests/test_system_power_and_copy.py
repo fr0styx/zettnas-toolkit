@@ -1,6 +1,9 @@
 """System API: reboot/power-off triggers (the kernel fallback flushes disks first), SMART
 self-test routes and the front-panel copy controls."""
 
+import threading
+import types
+
 import pytest
 
 from backend.api import system as system_api
@@ -199,11 +202,12 @@ def test_cancel_during_a_copy_leaves_the_status_to_the_copier(client, auth_heade
 def test_copy_start(client, auth_headers, copy_state, monkeypatch):
     started = []
     monkeypatch.setattr(system_api, "_load_buttons", lambda: {"source": "sd", "dest": "/mnt/a", "use_exif": False})
-    monkeypatch.setattr(
-        system_api.threading,
-        "Thread",
-        lambda target, args, daemon: type("T", (), {"start": lambda self: started.append(args[0])})(),
-    )
+    # only the system module's threads: the server's own worker threads keep the real class
+    fake_threading = types.SimpleNamespace(**vars(threading))
+    fake_threading.Thread = lambda target, args, daemon: type(
+        "T", (), {"start": lambda self: started.append(args[0])}
+    )()
+    monkeypatch.setattr(system_api, "threading", fake_threading)
     r = client.post("/api/copy/start", json={"source": "usb", "dest": "/mnt/b", "use_exif": True}, headers=auth_headers)
     assert r.json() == {"status": "started"} and copy_state.copy_active is True
     assert started == [{"source": "usb", "dest": "/mnt/b", "use_exif": True}]

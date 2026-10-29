@@ -6,6 +6,7 @@ import subprocess
 import threading
 import time
 
+from backend.proc import run_bounded
 from backend.state import Z_STATE
 
 logger = logging.getLogger("ZettNAS")
@@ -307,8 +308,9 @@ def _get_serial_connection(port: str):
     _close_serial_connection()
 
     if port not in _configured_ports:
-        subprocess.run(
+        run_bounded(
             ["stty", "-F", port, "115200", "cs8", "-cstopb", "-parenb", "raw", "-echo", "-hupcl"],
+            timeout=10,
             check=False,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
