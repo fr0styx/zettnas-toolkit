@@ -112,6 +112,11 @@
 
 #### Fixes
 
+- **An API description you can build on**: `/openapi.json` now has the one error body every
+  failure returns, the bearer token, token header and session cookie, which operations are public,
+  the scopes each one needs (`x-required-scopes`), and the 401, 403, 404, 422 and 429 answers with
+  their limits (`x-rate-limit`). The endpoint list in docs/API.md is generated from it, so it lists
+  all 594 operations with the access they really need (ARC-25).
 - **Type-checked frontend, as a ratchet**: TypeScript now checks the frontend's JavaScript in CI
   (`npm run lint:types`); each file is held to today's number of type errors, so new code can't
   add more (ARC-31).

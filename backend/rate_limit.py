@@ -62,4 +62,5 @@ def rate_limit(name: str, limit: int, window: float, per: str = "user"):
                 headers={"Retry-After": str(wait)},
             )
 
+    _dep.rate_limit = (limit, window)  # type: ignore[attr-defined]  # read by the OpenAPI document (ARC-25)
     return _dep

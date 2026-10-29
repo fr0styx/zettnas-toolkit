@@ -1177,7 +1177,7 @@ async def audit_folder_endpoint(
     dependencies=[Depends(require_scope("system:read", "shares:read", "storage:read"))],
 )
 def get_ai_chat_tools() -> dict[str, Any]:
-    """Returns the list of NAS hardware & web browsing tools available to the ZettAI Chatbot."""
+    """The server and web search tools Ask Zetty can use."""
     rag_cfg = get_rag_engine().get_config()
     return {
         "status": "ok",
@@ -1206,10 +1206,7 @@ async def chat_with_zettai_agent(
     req: AiChatRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ) -> dict[str, Any]:
-    """
-    Conversational ZettAI Local Chatbot & NAS Hardware Copilot with live internet browsing
-    and hardware/Docker/storage tool execution.
-    """
+    """Ask Zetty: answers about your files and your server, with web search and the server tools."""
     history = req.history
     uid = (principal.user_id or principal.username or "admin").strip().lower()
     focus = _checked_focus(req, principal)

@@ -584,9 +584,11 @@ app.include_router(api_router, prefix="/api", include_in_schema=False)
 app.include_router(api_router, prefix="/api/v1")
 
 # Response schemas in the OpenAPI document for the routes without a response_model (ARCH-11)
-from backend.api_docs import document_responses  # noqa: E402
+from backend.api_docs import document_responses, install_openapi  # noqa: E402
 
 document_responses(app)
+# Error schema, security schemes and the 401/403/404/429 answers in /openapi.json (ARC-25)
+install_openapi(app)
 
 
 @app.api_route(

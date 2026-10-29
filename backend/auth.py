@@ -381,6 +381,21 @@ _PUBLIC_API_PATHS = {
     "/redfish/v1",
     "/redfish/v1/",
 }
+
+
+def is_public_path(path: str) -> bool:
+    """API paths that need no session or token. The OpenAPI document marks the same ones (ARC-25)."""
+    return (
+        path in _PUBLIC_API_PATHS
+        or path.startswith(("/api/wallpapers/download/", "/api/v1/wallpapers/download/"))
+        # Public share links authenticate with their own token (+ password) (SEC-21)
+        or path.startswith(("/api/fs/shared/", "/api/shared/", "/api/v1/fs/shared/", "/api/v1/shared/"))
+        # Invite links: the token is the credential; accepting creates the invited account (Batch 6)
+        or path.startswith(("/api/invite/", "/api/v1/invite/"))
+        or (path.startswith("/api/vms/") and (path.endswith("/console/ws") or path.endswith("/serial/ws")))
+    )
+
+
 _DOCS_PATHS = {"/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"}
 
 
@@ -507,16 +522,7 @@ async def auth_middleware(request: Request, call_next):
 
     is_api = path.startswith("/api/") or path.startswith("/redfish")
     is_docs = path in _DOCS_PATHS
-    is_exempt = (
-        path in _PUBLIC_API_PATHS
-        or path.startswith("/api/wallpapers/download/")
-        # Public share links authenticate with their own token (+ password) (SEC-21)
-        or path.startswith(("/api/fs/shared/", "/api/shared/", "/api/v1/fs/shared/", "/api/v1/shared/"))
-        or path.startswith("/api/v1/wallpapers/download/")
-        # Invite links: the token is the credential; accepting creates the invited account (Batch 6)
-        or path.startswith(("/api/invite/", "/api/v1/invite/"))
-        or (path.startswith("/api/vms/") and (path.endswith("/console/ws") or path.endswith("/serial/ws")))
-    )
+    is_exempt = is_public_path(path)
 
     if is_docs and not config.ENABLE_API_DOCS:
         return error_response(404, "Not found.")
@@ -719,6 +725,7 @@ def require_scope(*required_scopes: str):
             )
         return principal
 
+    _dependency.required_scopes = required_scopes  # type: ignore[attr-defined]  # read by the OpenAPI document (ARC-25)
     return _dependency
 
 
