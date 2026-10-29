@@ -18,8 +18,17 @@ export function immichResultsHtml(items) {
       .join('')}</ul></section>`;
 }
 
+/** Opens Settings → Backups at the "Back up my phone" card. */
+export function openPhoneBackup() {
+  if (typeof window.openManagementWindow !== 'function') return;
+  window.openManagementWindow('mgmt-pane-backups');
+  setTimeout(() => document.getElementById('phone-backup-mount')?.scrollIntoView?.({ block: 'start' }), 300);
+}
+
 export function settingsHtml(s, isAdmin) {
   return `<p class="immich-note">${escapeHtml(t('immich.desc', 'When Immich runs next to ZettNAS, photo searches also show your Immich photos. Each person connects their own Immich account.'))}</p>
+    <p class="immich-note">${escapeHtml(t('immich.phone_backup_hint', "To back up a phone's photos here, follow the steps under Backups."))}
+      <button type="button" class="btn-pill-toggle is-small" data-immich-phone-backup>${escapeHtml(t('immich.phone_backup_open', 'Back up my phone'))}</button></p>
     ${
       isAdmin
         ? `<form class="immich-form" data-immich-url><label>${escapeHtml(t('immich.address', 'Immich address'))}<input name="url" value="${escapeHtml(s.url || s.detected || '')}" placeholder="http://192.168.1.10:2283"></label>
@@ -44,6 +53,8 @@ export async function renderImmichSettings(mount, isAdmin = false) {
     return;
   }
   mount.innerHTML = settingsHtml(s, isAdmin);
+  // one place to back up a phone, under Backups (UX-25)
+  mount.querySelector('[data-immich-phone-backup]')?.addEventListener('click', () => openPhoneBackup());
   mount.querySelector('[data-immich-url]')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {

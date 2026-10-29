@@ -81,34 +81,11 @@
       <div class="draggable-card drawer-card" data-layout-card-id="sec-clock">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-clock"/></svg><span data-i18n="settings.clock_tz_title">Clock & Timezone</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <button id="clock-format-btn" class="btn-pill-toggle">24 Hours</button>
         </div>
-        <div class="card-instruction" data-i18n="settings.clock_tz_desc">Override the screen time display and timezone / city.</div>
-        
-        <div class="tz-controls-row">
-          <select id="tz-select" aria-label="Time zone" data-i18n-aria-label="a11y.time_zone" class="tz-select-input">
-            <optgroup label="Americas">
-              <option value="America/New_York">New York / Eastern (EDT/EST)</option>
-              <option value="America/Chicago">Chicago / Central (CDT/CST)</option>
-              <option value="America/Denver">Denver / Mountain (MDT/MST)</option>
-              <option value="America/Los_Angeles">Los Angeles / Pacific (PDT/PST)</option>
-            </optgroup>
-            <optgroup label="Europe">
-              <option value="Europe/London">London / GMT / BST</option>
-              <option value="Europe/Madrid">Madrid / Paris / Berlin (CEST/CET)</option>
-            </optgroup>
-            <optgroup label="Asia">
-              <option value="Asia/Tokyo">Tokyo / Seoul (JST/KST)</option>
-              <option value="Asia/Singapore">Singapore / Hong Kong / Taipei (SGT/HKT)</option>
-              <option value="Asia/Bangkok">Bangkok / Jakarta / Hanoi (ICT)</option>
-              <option value="Asia/Dubai">Dubai / Gulf Standard Time (GST)</option>
-            </optgroup>
-            <optgroup label="Universal & Custom">
-              <option value="UTC">UTC - Universal Coordinated Time</option>
-              <option value="custom">Custom IANA Identifier...</option>
-            </optgroup>
-          </select>
-          <input type="text" id="tz-custom-input" class="tz-text-input" placeholder="e.g. Asia/Seoul" style="display:none;" aria-label="e.g. Asia/Seoul">
+        <div class="card-instruction" data-i18n="settings.clock_one_place">The time zone and the 12- or 24-hour clock are set in one place, for the desktop, this screen and the server.</div>
+        <div class="clock-one-place">
+          <span id="clock-summary" class="clock-summary" data-sample>Local time · 24-hour</span>
+          <button type="button" id="btn-clock-open-settings" class="btn-pill-toggle is-small" data-i18n="settings.clock_change">Change in Settings</button>
         </div>
       </div>
 

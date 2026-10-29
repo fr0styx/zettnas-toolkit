@@ -62,14 +62,6 @@ export function initUsersManagement() {
 
 // The Users pane lives in Mission Control, which is inserted when first needed (FE-04)
 function bindUsersPane() {
-  // Sub-tabs in Users Pane
-  const subtabs = document.querySelectorAll('.users-nav-btn');
-  subtabs.forEach((btn) => {
-    btn.onclick = () => {
-      switchUsersSubtab(btn.dataset.tab);
-    };
-  });
-
   // Modal triggers
   const btnAddUser = document.getElementById('btn-add-user');
   if (btnAddUser) btnAddUser.onclick = showAddUserModal;
@@ -144,23 +136,19 @@ function bindUserModals() {
   });
 }
 
+/** People, sign-ins and two-step sign-in are one page (UX-25); a link to a part scrolls to it. */
 export function switchUsersSubtab(targetId) {
-  const subtabs = document.querySelectorAll('.users-nav-btn');
-  subtabs.forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.tab === targetId);
-  });
-  document.querySelectorAll('.users-subpane').forEach((pane) => {
-    pane.style.display = pane.id === targetId ? 'block' : 'none';
-  });
-  if (targetId === 'users-pane-list') loadUsersList();
-  if (targetId === 'users-pane-sessions') loadSessionsList();
-  if (targetId === 'users-pane-2fa') load2FAStatus();
+  const part = document.getElementById(targetId);
+  if (part && targetId !== 'users-pane-list') part.scrollIntoView?.({ block: 'start' });
 }
 
-export async function loadUsersPane(defaultSubtab = 'users-pane-list') {
+export async function loadUsersPane(focusPart = 'users-pane-list') {
   initUsersManagement();
   await fetchCurrentProfile();
-  switchUsersSubtab(defaultSubtab);
+  loadUsersList();
+  loadSessionsList();
+  load2FAStatus();
+  switchUsersSubtab(focusPart);
 }
 
 export async function loadUsersList() {

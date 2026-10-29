@@ -7,7 +7,7 @@ import { api, auth, ApiError, apiFetch } from '../api.js';
 import { state, ZOOM_PROFILES } from '../state.js';
 import { ZettEventBus } from '../event-bus.js';
 import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle, hexToRgb, getContrastRatio, syncDesktopTwinPreview } from './dashboard.js';
-import { applyDashboardLayout, persistDashboardLayout, fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
+import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../utils.js';
@@ -143,6 +143,16 @@ export function closeDrawer() {
 }
 window.closeDrawer = closeDrawer;
 
+/** The clock card's one line: which zone and which clock the screen uses (UX-25). */
+export function renderClockSummary() {
+  const el = $('clock-summary');
+  if (!el) return;
+  el.textContent = t('settings.clock_summary', '{zone} · {format}', {
+    zone: state.currentTimezone || t('tz.local', 'Local time'),
+    format: state.clockFormat === '12' ? t('tz.h12', '12-hour') : t('tz.h24', '24-hour'),
+  });
+}
+
 export function initSettings() {
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) {
     return;
@@ -225,50 +235,13 @@ export function initSettings() {
   initThemeControls();
   initLcdStyleControls();
 
-  // --- Clock Format & Timezone ---
-  const clockFmtBtn = $('clock-format-btn');
-  if (clockFmtBtn) {
-    clockFmtBtn.addEventListener('click', () => {
-      state.clockFormat = state.clockFormat === '24' ? '12' : '24';
-      clockFmtBtn.textContent = state.clockFormat === '12' ? '12 Hours' : '24 Hours';
-      applyDashboardLayout();
-      persistDashboardLayout();
-    });
-  }
-
-  const tzSelect = $('tz-select') || $('tz-select-input');
-  const tzCustomInput = $('tz-custom-input');
-  if (tzSelect) {
-    if (state.currentTimezone) tzSelect.value = state.currentTimezone;
-    tzSelect.addEventListener('change', (e) => {
-      const val = e.target.value;
-      if (val === 'custom') {
-        if (tzCustomInput) {
-          tzCustomInput.style.display = 'block';
-          tzCustomInput.focus();
-        }
-      } else {
-        if (tzCustomInput) tzCustomInput.style.display = 'none';
-        state.currentTimezone = val;
-        applyDashboardLayout();
-        persistDashboardLayout();
-      }
-    });
-  }
-
-  if (tzCustomInput) {
-    let tzTimeout = null;
-    tzCustomInput.addEventListener('input', (e) => {
-      clearTimeout(tzTimeout);
-      tzTimeout = setTimeout(() => {
-        if (e.target.value.trim()) {
-          state.currentTimezone = e.target.value.trim();
-          applyDashboardLayout();
-          persistDashboardLayout();
-        }
-      }, 500);
-    });
-  }
+  // --- Clock: shown here, changed in one place, Settings → Time & language (UX-25) ---
+  renderClockSummary();
+  ZettEventBus.on?.('clock:changed', renderClockSummary);
+  $('btn-clock-open-settings')?.addEventListener('click', () => {
+    if (typeof window.openTimezoneModal === 'function') window.openTimezoneModal();
+    else window.openManagementWindow?.('timezone');
+  });
 
   // --- Universal Drawer Card Reordering & Locking ---
   const _cardReorderUpdaters = [];

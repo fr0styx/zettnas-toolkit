@@ -2245,6 +2245,41 @@ export const TIMEZONES_CATALOG = [
   { id: 'Pacific/Guam', name: 'Guam', region: 'Pacific', country: 'Guam' },
 ];
 
+/** The one time-zone control (UX-25): the desktop clock, the front screen's clock and, for an
+ *  administrator who leaves the box ticked, the server's own zone all follow it. */
+export function applyClockEverywhere(tz, format) {
+  const zone = tz === 'auto' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : tz;
+  state.currentTimezone = zone;
+  state.clockFormat = format === '12' ? '12' : '24';
+  import('./mini-preview.js')
+    .then((m) => {
+      m.applyDashboardLayout();
+      return m.persistDashboardLayout();
+    })
+    .catch(() => {});
+  ZettEventBus.emit('clock:changed', { zone, format: state.clockFormat });
+  const row = document.getElementById('tz-server-row');
+  const box = document.getElementById('tz-apply-server');
+  if (row && !row.hidden && box?.checked) {
+    return api.put('/api/system/identity', { timezone: zone }).catch((err) => {
+      showToast(t('tz.server_failed', "The server's time zone wasn't changed: {error}", { error: err.message }), 'error');
+    });
+  }
+  return Promise.resolve();
+}
+
+async function showServerZoneChoice() {
+  const row = document.getElementById('tz-server-row');
+  if (!row) return;
+  try {
+    const { getCurrentUser } = await import('./session.js');
+    const scopes = (getCurrentUser() || {}).scopes || [];
+    row.hidden = !(scopes.includes('*') || scopes.includes('system:config'));
+  } catch {
+    row.hidden = true;
+  }
+}
+
 export async function openTimezoneModal() {
   if (typeof window.openManagementWindow === 'function') {
     window.openManagementWindow('mgmt-sec-wallpaper', 'mgmt-pane-language');
@@ -2258,6 +2293,7 @@ export async function openTimezoneModal() {
   if (!modal) return;
 
   setupTimezoneModalEvents();
+  showServerZoneChoice();
 
   const cfg = _config || loadWidgetConfig();
   _tempSelectedTz = cfg.clockTimezone || 'auto';
@@ -2599,7 +2635,8 @@ export function setupTimezoneModalEvents() {
         clockFormat: _tempSelectedFormat,
       });
       updateClock();
-      const tzName = _tempSelectedTz === 'auto' ? 'Local System Time' : _tempSelectedTz;
+      applyClockEverywhere(_tempSelectedTz, _tempSelectedFormat);
+      const tzName = _tempSelectedTz === 'auto' ? t('tz.local', 'Local time') : _tempSelectedTz;
       const msg = (t('tz.updated_toast') || 'Timezone updated to {tz}').replace('{tz}', tzName);
       showToast(msg, 'success');
       closeTimezoneModal();

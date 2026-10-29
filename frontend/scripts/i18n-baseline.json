@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 2127,
+  "hardcoded_ui": 2091,
   "per_file": {
     "frontend/index.html": 86,
     "frontend/src/components/chassis-visualizer.js": 182,
@@ -48,7 +48,7 @@
     "frontend/src/main.js": 6,
     "frontend/src/modals.js": 9,
     "frontend/src/toast.js": 5,
-    "frontend/src/windows/drawer.html": 97,
-    "frontend/src/windows/management-window.html": 643
+    "frontend/src/windows/drawer.html": 84,
+    "frontend/src/windows/management-window.html": 620
   }
 }

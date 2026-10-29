@@ -1463,6 +1463,11 @@
                   <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="margin: 0;">Apply</button>
                 </div>
 
+                <label class="tz-server-row" id="tz-server-row" hidden>
+                  <input type="checkbox" id="tz-apply-server" checked>
+                  <span data-i18n="tz.apply_server">Also the server's time zone, for schedules, logs and alerts</span>
+                </label>
+
                 <!-- Save Actions -->
                 <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--zn-line-8); padding-top: 14px;">
                   <button type="button" id="modal-clock-tz-cancel-btn" class="btn-pill-toggle is-small">Reset Changes</button>
@@ -3357,20 +3362,10 @@
 
           <div class="mgmt-detail-body">
             <!-- Sub-navigation Pills -->
-            <div class="users-nav-bar" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 12px;">
-              <button type="button" class="btn-pill-toggle users-nav-btn active" data-tab="users-pane-list" data-i18n="users.tab_people">
-                People
-              </button>
-              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-sessions" data-i18n="users.tab_sessions">
-                Where you're signed in
-              </button>
-              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-2fa" data-i18n="users.tab_2fa">
-                Two-step sign-in
-              </button>
-            </div>
+            <!-- People, sign-ins and two-step sign-in on one page: no tabs inside the tab (UX-25) -->
 
             <!-- Subpane 1: User Inventory -->
-            <div id="users-pane-list" class="users-subpane" style="display: block;">
+            <div id="users-pane-list" class="users-subpane">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
                 <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;" data-i18n="users.list_title">People with an account</div>
                 <div style="display:flex; gap: 8px;">
@@ -3411,7 +3406,7 @@
             </div>
 
             <!-- Subpane 2: Active Sessions -->
-            <div id="users-pane-sessions" class="users-subpane" style="display: none;">
+            <div id="users-pane-sessions" class="users-subpane">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
                 <div>
                   <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;" data-i18n="users.sessions_title">Signed-in browsers and devices</div>
@@ -3445,7 +3440,7 @@
             </div>
 
             <!-- Subpane 3: 2FA Self-Service -->
-            <div id="users-pane-2fa" class="users-subpane" style="display: none;">
+            <div id="users-pane-2fa" class="users-subpane">
               <div id="mfa-status-card" class="drawer-card" style="padding: 18px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: 12px; margin-bottom: 14px;">
                   <div style="display:flex; align-items:center; gap: 12px;">
@@ -5600,82 +5595,85 @@
       </div>
     </div>
     <form id="create-backup-job-form" class="smart-modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <h4 class="backup-step" data-i18n="backup.step_what">1. What</h4>
       <div>
-        <label for="backup-job-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Task Name</label>
+        <label for="backup-job-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_name">Name</label>
         <input type="text" id="backup-job-name" class="tz-select-input" placeholder="e.g. Daily Documents & Photos Sync" data-i18n-placeholder="ui.e_g_daily_documents_photos" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
       </div>
 
       <div>
-        <label for="backup-job-kind" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">What to back up</label>
+        <label for="backup-job-kind" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_kind">What to back up</label>
         <select id="backup-job-kind" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
-          <option value="data" selected>A folder in the pool</option>
-          <option value="config">ZettNAS settings (users, shares, apps; encrypted)</option>
+          <option value="data" selected data-i18n="backup.kind_folder">A folder in the pool</option>
+          <option value="config" data-i18n="backup.kind_config">ZettNAS settings (people, shares, apps; encrypted)</option>
         </select>
       </div>
 
       <div id="backup-config-fields" hidden style="display: flex; flex-direction: column; gap: 6px;">
-        <label for="backup-job-passphrase" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Backup passphrase</label>
+        <label for="backup-job-passphrase" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_passphrase">Backup passphrase</label>
         <input type="password" id="backup-job-passphrase" minlength="8" autocomplete="new-password" placeholder="At least 8 characters" data-i18n-placeholder="ui.at_least_8_characters" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Needed to restore. Keep it somewhere other than this server, with your AI data key if you set one.</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="backup.passphrase_help">Needed to restore. Keep it somewhere other than this server, with your AI data key if you set one.</div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div>
         <div id="backup-subvolume-wrap">
-          <label for="backup-job-subvolume" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Source Share / Subvolume</label>
+          <label for="backup-job-subvolume" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_folder">Folder or share</label>
           <input type="text" id="backup-job-subvolume" class="tz-select-input" placeholder="e.g. shares, documents" data-i18n-placeholder="ph.share_folder" required style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
-        <div>
-          <label for="backup-job-dest-type" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Destination Pipeline</label>
-          <select id="backup-job-dest-type" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
-            <option value="remote" selected>Snapshot + Cloud Sync (3-2-1)</option>
-            <option value="local_snapshot">Local Snapshot Only</option>
-            <option value="local_folder" hidden>Folder in the pool</option>
-          </select>
-        </div>
       </div>
 
+      <h4 class="backup-step" data-i18n="backup.step_where">2. Where to</h4>
+      <div>
+        <label for="backup-job-dest-type" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_dest">Where the copies go</label>
+        <select id="backup-job-dest-type" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
+          <option value="remote" selected data-i18n="backup.dest_remote">Snapshots here, plus a copy in a cloud</option>
+          <option value="local_snapshot" data-i18n="backup.dest_local">Snapshots on this server only</option>
+          <option value="local_folder" hidden data-i18n="backup.dest_folder">A folder in the pool</option>
+        </select>
+      </div>
       <div id="backup-local-fields" hidden>
-        <label for="backup-job-local-path" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Folder in the pool</label>
+        <label for="backup-job-local-path" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_local_path">Folder in the pool</label>
         <input type="text" id="backup-job-local-path" placeholder="e.g. /mnt/user/backups/zettnas" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
       </div>
 
       <div id="backup-remote-fields" style="display: flex; flex-direction: column; gap: 12px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label for="backup-job-remote-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Rclone Remote</label>
+            <label for="backup-job-remote-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_remote">Cloud (rclone remote)</label>
             <input type="text" id="backup-job-remote-name" class="tz-select-input" placeholder="e.g. b2-backup, gdrive" data-i18n-placeholder="ph.cloud_remote" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
           </div>
           <div>
-            <label for="backup-job-remote-path" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Remote Bucket / Folder</label>
+            <label for="backup-job-remote-path" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_remote_path">Folder in the cloud</label>
             <input type="text" id="backup-job-remote-path" class="tz-select-input" placeholder="e.g. backup-bucket/nas" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
           </div>
         </div>
       </div>
 
+      <h4 class="backup-step" data-i18n="backup.step_when">3. When</h4>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         <div>
-          <label for="backup-job-schedule" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Frequency Schedule</label>
+          <label for="backup-job-schedule" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_schedule">How often</label>
           <select id="backup-job-schedule" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
-            <option value="daily" selected>Daily (Every 24 Hours)</option>
-            <option value="hourly">Hourly</option>
-            <option value="weekly">Weekly</option>
-            <option value="manual">Manual Execution Only</option>
+            <option value="daily" selected data-i18n="backup.sched_daily">Every day</option>
+            <option value="hourly" data-i18n="backup.sched_hourly">Every hour</option>
+            <option value="weekly" data-i18n="backup.sched_weekly">Every week</option>
+            <option value="manual" data-i18n="backup.sched_manual">Only when I start it</option>
           </select>
         </div>
         <div>
-          <label for="backup-job-retention" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;">Snapshot Retention Count</label>
+          <label for="backup-job-retention" style="display: block; font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 6px;" data-i18n="backup.f_retention">How many to keep</label>
           <input type="number" id="backup-job-retention" min="1" max="100" value="7" class="tz-select-input" style="width: 100%; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 8px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
         </div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
         <input type="checkbox" id="backup-job-enabled" checked style="width: 16px; height: 16px; cursor: pointer;" />
-        <label for="backup-job-enabled" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;">Enable automatic scheduling</label>
+        <label for="backup-job-enabled" style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;" data-i18n="backup.f_enabled">Run on its schedule</label>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modal-backup-job-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
-        <button type="submit" class="btn-pill-toggle is-primary is-small">Save Pipeline</button>
+        <button type="button" id="modal-backup-job-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" class="btn-pill-toggle is-primary is-small" data-i18n="backup.save_job">Save backup job</button>
       </div>
     </form>
   </div>

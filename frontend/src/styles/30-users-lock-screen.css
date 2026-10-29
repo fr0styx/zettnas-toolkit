@@ -169,6 +169,12 @@ body.desktop-locked #os-dock-container {
   animation: fadeInPane 0.2s ease;
 }
 
+.users-subpane + .users-subpane {
+  margin-top: var(--zn-space-5, 24px);
+  padding-top: var(--zn-space-4, 16px);
+  border-top: 1px solid var(--zn-line-8);
+}
+
 @keyframes fadeInPane {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }

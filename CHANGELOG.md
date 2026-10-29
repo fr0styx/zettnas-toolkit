@@ -4,6 +4,12 @@
 
 #### Usability
 
+- **One place for each job**: the time zone and 12/24-hour clock are set only in Settings → Time and
+  language, and the desktop clock, the front screen's clock and (for an administrator, unless
+  unticked) the server follow it; the hardware drawer shows the clock and links there. People,
+  where you're signed in and two-step sign-in are one page instead of tabs inside a tab. A new
+  backup job asks what, then where to, then when. The photos (Immich) card sends you to Backups to
+  back up a phone (UX-25).
 - **Sign-in, people and backups in your language**: the sign-in and two-step screens, the lock
   screen, the people list and its dialogs, and the backup pane are translated in full, in plainer
   words (UX-21). The translation lint now also sees text between tags, ALL-CAPS labels and text

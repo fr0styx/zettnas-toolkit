@@ -20,13 +20,10 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
 
       <!-- Users pane -->
       <div id="mgmt-pane-users">
-        <button class="users-nav-btn active" data-tab="users-pane-list">Users</button>
-        <button class="users-nav-btn" data-tab="users-pane-sessions">Sessions</button>
-        <button class="users-nav-btn" data-tab="users-pane-2fa">2FA</button>
 
         <div id="users-pane-list" class="users-subpane" style="display: block;"></div>
-        <div id="users-pane-sessions" class="users-subpane" style="display: none;"></div>
-        <div id="users-pane-2fa" class="users-subpane" style="display: none;"></div>
+        <div id="users-pane-sessions" class="users-subpane"></div>
+        <div id="users-pane-2fa" class="users-subpane"></div>
       </div>
     `;
   });
@@ -149,20 +146,15 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     expect(document.documentElement.classList.contains('auth-required')).toBe(true);
   });
 
-  it('switchUsersSubtab switches active subtab and subpane visibility', async () => {
+  it('people, sign-ins and two-step sign-in are one page; a link scrolls to its part (UX-25)', async () => {
     const { switchUsersSubtab } = await import('../components/users.js');
+    const part = document.getElementById('users-pane-2fa');
+    part.scrollIntoView = vi.fn();
 
     switchUsersSubtab('users-pane-2fa');
-    expect(document.getElementById('users-pane-2fa').style.display).toBe('block');
-    expect(document.getElementById('users-pane-list').style.display).toBe('none');
-
-    const activeBtn = document.querySelector('.users-nav-btn.active');
-    expect(activeBtn).not.toBeNull();
-    expect(activeBtn.dataset.tab).toBe('users-pane-2fa');
-
-    switchUsersSubtab('users-pane-list');
-    expect(document.getElementById('users-pane-list').style.display).toBe('block');
-    expect(document.getElementById('users-pane-2fa').style.display).toBe('none');
+    expect(part.scrollIntoView).toHaveBeenCalled();
+    expect(part.style.display).not.toBe('none');
+    expect(document.getElementById('users-pane-list').style.display).not.toBe('none');
   });
 
   it('toggleUserProfileFlyout triggers openManagementWindow for users and 2FA tabs', async () => {

@@ -15,6 +15,10 @@
 .snap-entry { flex: 1; display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--fg); font-size: var(--zn-fs-sm); text-align: left; padding: 0; }
 .snap-entry.is-dir { cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .snap-body { overflow: auto; max-height: 60vh; }
+.backup-step { margin: var(--zn-space-2) 0 0; font-size: var(--zn-fs-sm); color: var(--zn-text-strong); }
+.clock-one-place { display: flex; align-items: center; justify-content: space-between; gap: var(--zn-space-2); flex-wrap: wrap; }
+.clock-summary { font-family: var(--font-mono, monospace); font-size: var(--zn-fs-sm); color: var(--zn-text-strong); }
+.tz-server-row { display: flex; align-items: center; gap: var(--zn-space-2); margin: 0 0 var(--zn-space-3); font-size: var(--zn-fs-xs); color: var(--zn-text-soft); }
 .snap-subhead { margin: var(--zn-space-3) 0 var(--zn-space-2); font-size: var(--zn-fs-sm); color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* Offsite backup (Batch 6) */
