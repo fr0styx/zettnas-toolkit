@@ -212,6 +212,14 @@
 
 #### Security and privacy
 
+- **App logos without third parties**: the app catalog's logos are fetched once by ZettNAS (only
+  from the dashboard-icons set or GitHub, only small raster images) and served from the NAS, so
+  opening the catalog no longer tells jsDelivr which apps you look at. PRIVACY.md now names every
+  outside host, including Web Push and webhooks to your own network, and a test fails when the code
+  gains one the page doesn't mention; THREAT_MODEL.md describes SFTP's own accounts (SEC-38).
+- **Docs that match the code**: AGENTS.md's file tree and the paths and names in AGENTS.md,
+  CONTRIBUTING.md and ARCHITECTURE.md are checked by a test; ADRs 0002 to 0005 record the
+  decisions on storage tools, Recycle Bin retention, UPS shutdown and memory limits (ARC-27).
 - **Your data, yours to take or erase**: everyone can download their chats, Zetty log and what
   search learned from their folder, or erase it; deleting an account erases it too.
 - SFTP and WebDAV accounts and SMB shares can no longer reach ZettNAS's own data folder.

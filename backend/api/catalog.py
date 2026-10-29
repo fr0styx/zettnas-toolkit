@@ -48,6 +48,24 @@ async def get_docker_catalog():
     return await asyncio.to_thread(get_all_catalog_apps)
 
 
+@router.get("/docker/catalog/logo", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])
+def get_catalog_logo(url: str):
+    """An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38)."""
+    from fastapi import Response
+
+    from backend.services.catalog_logos import logo
+
+    found = logo(url)
+    if not found:
+        raise HTTPException(status_code=404, detail="No logo.")
+    data, ctype = found
+    return Response(
+        content=data,
+        media_type=ctype,
+        headers={"Cache-Control": "private, max-age=604800", "X-Content-Type-Options": "nosniff"},
+    )
+
+
 @router.get("/docker/catalog/sources", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])
 async def get_docker_catalog_sources():
     from backend.services.app_catalog import get_catalog_sources

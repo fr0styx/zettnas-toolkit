@@ -102,7 +102,8 @@ describe('App Catalog Sources (Portainer v2/v3 & Custom Sources)', () => {
     expect(grid.textContent).toContain('Stack');
 
     // Verify image/logo
-    const imgEl = grid.querySelector('img[src="https://example.com/adguard.png"]');
+    // logos come through ZettNAS, not straight from the web (SEC-38)
+    const imgEl = grid.querySelector(`img[src="/api/docker/catalog/logo?url=${encodeURIComponent('https://example.com/adguard.png')}"]`);
     expect(imgEl).toBeTruthy();
 
     // Verify count badges

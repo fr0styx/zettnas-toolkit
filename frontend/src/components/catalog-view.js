@@ -78,11 +78,16 @@ function badge(cls, text, title = '') {
   return `<span class="cat-badge ${cls}"${title ? ` title="${escapeHtml(title)}"` : ''}>${escapeHtml(text)}</span>`;
 }
 
+/** A logo from the web goes through ZettNAS, so the browser never asks a third party (SEC-38). */
+export function logoSrc(url) {
+  return /^https?:\/\//i.test(url || '') ? `/api/docker/catalog/logo?url=${encodeURIComponent(url)}` : url || '';
+}
+
 /** One app card. Keeps the .catalog-app-card / .btn-deploy-app hooks other code relies on. */
 export function catalogCardHtml(app, { installed = false } = {}) {
   const icon = categoryIcon(app.category);
   const logo = app.logo
-    ? `<img src="${escapeHtml(app.logo)}" alt="" loading="lazy" data-img-fallback="hide-show-next:inline" /><span class="cat-card-emoji" style="display:none;">${icon}</span>`
+    ? `<img src="${escapeHtml(logoSrc(app.logo))}" alt="" loading="lazy" data-img-fallback="hide-show-next:inline" /><span class="cat-card-emoji" style="display:none;">${icon}</span>`
     : `<span class="cat-card-emoji">${icon}</span>`;
   const builtin = !app.source_name || app.source_name === 'Built-in';
   const badges = [badge('cat-badge-category', categoryLabel(app.category))];

@@ -36,12 +36,13 @@ or the apps you install.
 | Boundary | Defences |
 | -------- | -------- |
 | Browser → web app (port 8082) | Session cookie (HttpOnly, SameSite) or Bearer tokens; CSRF origin check on cookie writes; enforced Content-Security-Policy; must-change default password; login lockout and IP blocking (20 failures in 15 min); optional TOTP 2FA |
-| Clients → WebDAV (8084) and SFTP | Only real ZettNAS accounts; per-user share access; same lockout and IP blocking |
+| Clients → WebDAV (8084) and SFTP | WebDAV: only ZettNAS accounts, per-user share access, the same lockout and IP blocking. SFTP: its own accounts, made by an admin in the SFTP settings, with a password or a public key and a list of shares; they can't sign in to the web app |
 | User → files | Every path is resolved inside the allowed roots (no `..` or symlink escape); non-admins reach only their home folder and shares they were given, at the level they were given |
 | User → admin functions | Scoped permissions on every endpoint; root-equivalent permissions listed in SECURITY.md; destructive actions need confirmation |
 | Web app → Docker | Allow-list proxy: no swarm, plugins, secrets, image build/import, commit or export; containers with host-level access only from confirmed flows, each logged |
-| Web app → network (SSRF) | Outbound fetches (web search, previews, webhooks) only to public addresses; AI runtimes only on this machine or its Docker network, never the LAN router |
+| Web app → network (SSRF) | Outbound fetches for web search and previews only to public addresses; notification webhooks also to your own network (Home Assistant, Gotify), never to this machine or a cloud metadata address; catalog logos only from two fixed hosts, as raster images; AI runtimes only on this machine or its Docker network, never the LAN router |
 | Indexed content → Ask Zetty | File and web text is passed as quoted data, never as instructions; tools that change the system need your click on Confirm; web access only in chats where you turned it on; answers are limited to what your account may read |
+| Alerts → phones (Web Push) | Encrypted per browser (RFC 8291) and signed with this NAS's VAPID key; the push service sees only ciphertext; only signed-in admins' devices subscribe |
 | Update channel → host | The updater installs only images from this project's registry; images are signed (cosign) and scanned (Trivy) in CI, and promotion to Stable verifies the signature. The in-app updater verifies the image's Sigstore signature before installing it: issued to this repository's CI workflow (main or a version tag) and naming the exact digest (`UPDATE_SIGNATURES`, default enforce); data is snapshotted before each in-app update and can be rolled back |
 | Files → shares (ransomware) | Ransomware guard: mass renames or deletes, ransomware extensions, ransom notes or a changed guard file freeze writes, snapshot where supported, block the source and alert |
 

@@ -41747,6 +41747,47 @@
     ]
    }
   },
+  "/api/v1/docker/catalog/logo": {
+   "get": {
+    "description": "An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38).",
+    "operationId": "get_catalog_logo_api_v1_docker_catalog_logo_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "url",
+      "required": true,
+      "schema": {
+       "title": "Url",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Catalog Logo",
+    "tags": [
+     "Docker App Catalog"
+    ]
+   }
+  },
   "/api/v1/docker/catalog/sideload": {
    "post": {
     "description": "Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content.",

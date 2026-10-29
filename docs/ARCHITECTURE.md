@@ -50,7 +50,7 @@ The application starts four persistent background daemon threads upon startup vi
   3. Reads Unraid telemetry (`var.ini`, `mover.ini`) with atomic retry backoff loops (`max_retries=3`, `retry_delay=0.05s`) to prevent false alerts during uncommitted array status writes.
   4. Evaluates active thermal fan curves and calculates duty cycles (`calc_curve_pwm`) with floor clamps and a full-speed override when a hard disk reaches `HDD_CRITICAL_TEMP` (55 °C), an NVMe drive `NVME_CRITICAL_TEMP` (75 °C) or the CPU 80 °C.
   5. Writes PWM values to `/host/sys/class/hwmon/hwmon*/pwm*` and prunes stale fan trackers via `cleanup_stale_fan_trackers()`.
-  6. Persists telemetry snapshots to SQLite via `backend.db.log_metrics()` utilizing WAL journal mode and a 5000ms `busy_timeout`.
+  6. Persists telemetry snapshots to SQLite via `backend.db.log_metrics()` utilizing WAL journal mode and a 15000 ms `busy_timeout`.
   7. Updates `Z_STATE.collector_heartbeat` to signal liveness to the watchdog.
   8. Dispatches telemetry to connected Server-Sent Events (SSE) subscribers.
 
@@ -183,7 +183,7 @@ bodies for host-level settings. See SECURITY.md for the policy.
 
 1. **SQLite Database (`data/history.db`)**:
    - Stores time-series system telemetry (CPU temperature, CPU load, memory utilization, disk temperatures, and fan tachometers) for interactive historical charts.
-   - Configured with Write-Ahead Logging (`PRAGMA journal_mode=WAL;`) and `PRAGMA busy_timeout=5000;` to ensure concurrent, non-locking reads and writes across API routes and the stats collector daemon.
+   - Configured with Write-Ahead Logging (`PRAGMA journal_mode=WAL;`) and `PRAGMA busy_timeout=15000;` to ensure concurrent, non-locking reads and writes across API routes and the stats collector daemon.
    - Automatically pruned via retention policies.
 
 2. **Backup & Restore Engine (`backend/services/backup_engine.py`)**:
@@ -194,8 +194,9 @@ bodies for host-level settings. See SECURITY.md for the policy.
    - `fan_state.json`: Custom fan curves, manual overrides, minimum floors, and hysteresis.
    - `led_state.json`: Active ARGB lightbar effects, colors, speed, and schedule.
    - `dash_layout.json`: Custom dashboard module order, sizes, and visibility toggles.
-   - `security.json`: Administrator credentials (salted `scrypt` hash), username, and contact.
-   - `sessions.json`: Active WebUI authorization tokens.
+   - People, roles, sessions and API tokens live in `data/users.db` (SQLite, WAL); the older
+     `security.json`, `sessions.json` and `api_tokens.json` are read once and migrated
+     (`backend/users_db.py`).
    - `events.json`: System audit and security event log.
    - *All JSON writes utilize atomic staging (`tmp` file + `os.replace` via `backend.fsutil.atomic_write_json`)*.
 
