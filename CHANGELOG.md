@@ -225,6 +225,10 @@
 
 #### Fixes
 
+- **The calendar widget fits again**: the month and its arrows no longer cover the country
+  badge and the title, the word "Calendar" makes room when the widget is too narrow for it,
+  and a long holiday name ends in "…" instead of being cut off at both ends.
+
 - **An API description you can build on**: `/openapi.json` now has the one error body every
   failure returns, the bearer token, token header and session cookie, which operations are public,
   the scopes each one needs (`x-required-scopes`), and the 401, 403, 404, 422 and 429 answers with

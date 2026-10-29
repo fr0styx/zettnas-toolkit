@@ -169,7 +169,12 @@ body.theme-yak .desktop-widget.clickable:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
   margin-bottom: 10px;
+}
+/* the controls on the right keep their size; a long title gives way with an ellipsis */
+.widget-header > div {
+  flex-shrink: 0;
 }
 .widget-title {
   font-size: var(--zn-fs-xs);
@@ -182,6 +187,12 @@ body.theme-yak .desktop-widget.clickable:hover {
   gap: 6px;
   white-space: nowrap;
   min-width: 0;
+  overflow: hidden;
+}
+.widget-title > span:not(.widget-badge) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .widget-badge {
   font-size: var(--zn-fs-xs);
@@ -193,6 +204,16 @@ body.theme-yak .desktop-widget.clickable:hover {
   border: 1px solid rgba(37, 194, 160, 0.3);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* A narrow calendar keeps its country, month and arrows and drops the word "Calendar" */
+#widget-calendar {
+  container-type: inline-size;
+}
+@container (max-width: 236px) {
+  #widget-calendar .widget-title > span[data-i18n] {
+    display: none;
+  }
 }
 
 /* Calendar Widget Grid */
@@ -372,6 +393,13 @@ body.theme-yak .cal-day.cal-holiday:hover {
 }
 .cal-glance-bar-icon {
   font-size: var(--zn-fs-xs);
+  flex-shrink: 0;
+}
+/* centred when it fits; a long holiday name ends in an ellipsis instead of being cut on both sides */
+.cal-glance-bar > span:not(.cal-glance-bar-icon) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* =========================================================================
