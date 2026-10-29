@@ -186,5 +186,14 @@ def stamp_versions(data_dir: str = "") -> None:
             continue
         try:
             migrate(name, path)
-        except (sqlite3.Error, DataKeyError) as e:
-            logger.warning(f"[DB Schema] Could not migrate {name}: {e}")
+        except DataKeyError as e:
+            # an encrypted AI database without its key: the AI features wait for the key
+            logger.warning(f"[DB Schema] Could not open {name} to migrate it: {e}")
+        except sqlite3.Error as e:
+            # ARC-30: never run on a half-migrated database; the migration rolled back, so
+            # starting the previous version (or restoring the pre-update snapshot) is safe
+            raise RuntimeError(
+                f"The {name} database could not be updated to this version ({e}). ZettNAS stops "
+                "instead of running on an old layout: revert the update in the container settings, "
+                "or restore the data folder from the snapshot taken before it."
+            ) from e

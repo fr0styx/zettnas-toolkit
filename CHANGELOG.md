@@ -112,6 +112,9 @@
 
 #### Fixes
 
+- **Databases opened one way**: every database connects through one helper with one profile per
+  database, and a database update that fails at startup now stops ZettNAS with instructions
+  instead of carrying on with the old layout (ARC-30).
 - **Architecture that can only get tidier**: a test holds the layering (core, hardware, services,
   api), imports of other modules' private names and function length to today's numbers, so new
   code can't add an upward import or another 300-line function (ARC-22, ARC-23).

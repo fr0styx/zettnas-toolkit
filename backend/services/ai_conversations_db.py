@@ -32,15 +32,10 @@ def get_db_path() -> str:
 @contextlib.contextmanager
 def get_conv_db_connection(db_path: str | None = None):
     """Context manager returning a configured SQLite WAL connection with foreign keys enabled."""
-    path = db_path or get_db_path()
-    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    conn = db_crypto.connect(path, timeout=15.0, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
+    from backend.sqlite_conn import connect
+
+    conn = connect("ai_conversations", db_path or get_db_path())
     try:
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA synchronous=NORMAL;")
-        conn.execute("PRAGMA busy_timeout=15000;")
-        conn.execute("PRAGMA foreign_keys=ON;")
         yield conn
         conn.commit()
     except Exception:

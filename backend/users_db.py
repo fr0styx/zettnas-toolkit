@@ -37,14 +37,9 @@ _TOKEN_CACHE_LOCK = threading.RLock()
 
 
 def get_users_db_connection(db_path: str | None = None) -> sqlite3.Connection:
-    target_path = db_path or getattr(config, "USERS_DB_PATH", USERS_DB_PATH)
-    os.makedirs(os.path.dirname(target_path), exist_ok=True)
-    conn = sqlite3.connect(target_path, timeout=15.0, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA synchronous=NORMAL;")
-    conn.execute("PRAGMA foreign_keys=ON;")
-    conn.execute("PRAGMA busy_timeout=15000;")
-    return conn
+    from backend.sqlite_conn import connect
+
+    return connect("users", db_path or getattr(config, "USERS_DB_PATH", USERS_DB_PATH))
 
 
 @contextmanager

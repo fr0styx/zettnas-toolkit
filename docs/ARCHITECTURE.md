@@ -198,6 +198,12 @@ proxy, WebDAV, SFTP, rclone mounts) are `Popen` and watched by their supervisors
 
 ## 3. Data Persistence & State Model
 
+Every SQLite database opens through `backend.sqlite_conn.connect`, which applies that
+database's profile (`users`, `history`, `ai_conversations`, `rag_index`: the pragmas, and
+whether it goes through the SQLCipher driver). A migration that fails at startup stops ZettNAS
+with a message instead of letting it run on a half-updated layout; an AI database whose key is
+missing only waits for the key (ARC-30).
+
 1. **SQLite Database (`data/history.db`)**:
    - Stores time-series system telemetry (CPU temperature, CPU load, memory utilization, disk temperatures, and fan tachometers) for interactive historical charts.
    - Configured with Write-Ahead Logging (`PRAGMA journal_mode=WAL;`) and `PRAGMA busy_timeout=15000;` to ensure concurrent, non-locking reads and writes across API routes and the stats collector daemon.

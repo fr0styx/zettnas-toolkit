@@ -12,13 +12,9 @@ _DB_LOCK = threading.RLock()
 
 
 def get_db_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH, timeout=15.0, check_same_thread=False)
-    conn.execute("PRAGMA synchronous=NORMAL;")
-    conn.execute("PRAGMA busy_timeout=15000;")
-    conn.execute("PRAGMA mmap_size=268435456;")
-    conn.execute("PRAGMA cache_size=-64000;")
-    conn.execute("PRAGMA temp_store=MEMORY;")
-    return conn
+    from backend.sqlite_conn import connect
+
+    return connect("history", DB_PATH, row_factory=False)
 
 
 @contextmanager

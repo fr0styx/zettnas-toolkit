@@ -660,11 +660,10 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         self._start_spinup_watcher()
 
     def _open_ro(self) -> sqlite3.Connection:
-        conn = db_crypto.connect(self.db_path, readonly=True, timeout=15.0, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
+        from backend.sqlite_conn import connect
+
+        conn = connect("rag_index", self.db_path, readonly=True)
         conn.execute("PRAGMA query_only=ON;")
-        conn.execute("PRAGMA busy_timeout=15000;")
-        conn.execute("PRAGMA temp_store=MEMORY;")
         conn.execute(f"PRAGMA cache_size=-{READ_CACHE_KIB};")
         load_sqlite_vec_extension(conn)
         return conn
@@ -677,14 +676,9 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             except Exception:
                 logger.debug("backend.services.rag_engine.RagSearchEngine._get_conn: ignored error", exc_info=True)
 
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        conn = db_crypto.connect(self.db_path, timeout=15.0, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA synchronous=NORMAL;")
-        conn.execute("PRAGMA foreign_keys=ON;")
-        conn.execute("PRAGMA busy_timeout=15000;")
-        conn.execute("PRAGMA temp_store=MEMORY;")
+        from backend.sqlite_conn import connect
+
+        conn = connect("rag_index", self.db_path)
         conn.execute(f"PRAGMA journal_size_limit={WAL_SIZE_LIMIT_BYTES};")  # the WAL shrinks back (PERF-23)
         load_sqlite_vec_extension(conn)
         return conn
