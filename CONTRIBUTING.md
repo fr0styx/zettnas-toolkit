@@ -44,7 +44,7 @@ at zero. How to write each language, plurals and numbers: [docs/TRANSLATING.md](
 
 CI also requires:
 
-- **Coverage**: at least 76% of the backend, and at least 80% of the backend lines your change touches (diff-cover).
+- **Coverage**: at least 80% of the backend, and at least 80% of the backend lines your change touches (diff-cover).
 - **Types and error handling**: no file may get worse under Pyright, and the number of silent `except: pass` blocks may not grow.
 - **Browser tests**: sign-in, the main views and an accessibility (axe) check run in headless Chromium.
 

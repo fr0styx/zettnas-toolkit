@@ -25,6 +25,7 @@ jobs:
   lint-and-test:
     name: Lint & Pytest Unit Suite
     runs-on: ubuntu-latest
+    timeout-minutes: 25  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -64,7 +65,7 @@ jobs:
         # Failing tests are also posted as an annotation, readable without log access
         run: |
           set -o pipefail
-          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=76 -v -rfE 2>&1 | tee /tmp/zn-unit.log; then
+          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=80 -v -rfE 2>&1 | tee /tmp/zn-unit.log; then
             body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/zn-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Unit tests::$body"
             exit 1
@@ -92,6 +93,7 @@ jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -129,6 +131,7 @@ jobs:
     name: Headless Playwright E2E Integration
     needs: [lint-and-test, frontend]
     runs-on: ubuntu-latest
+    timeout-minutes: 25  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -222,6 +225,7 @@ jobs:
     needs: [lint-and-test, frontend, e2e-integration]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     outputs:
       latest: ${{ steps.check.outputs.latest }}
     steps:
@@ -250,6 +254,7 @@ jobs:
             suffix: "-core"
     if: github.event_name == 'push' && needs.still-latest.outputs.latest == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/stable')
     runs-on: ubuntu-latest
+    timeout-minutes: 45  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     permissions:
       contents: read
       packages: write # push images to GHCR
@@ -424,6 +429,7 @@ jobs:
     needs: [build-and-push]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # ARC-26: a hung step fails the run instead of holding a runner for 6 hours
     permissions:
       contents: write # create the GitHub release
     steps:

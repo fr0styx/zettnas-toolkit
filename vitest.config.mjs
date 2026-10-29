@@ -11,8 +11,9 @@ export default defineConfig({
       reporter: ['text', 'json', 'html', 'lcov'],
       include: ['frontend/src/**/*.js'],
       exclude: ['frontend/src/__tests__/**'],
-      // OPS-16: floors a little under today's numbers; raise them as coverage grows
-      thresholds: { lines: 59, statements: 57, functions: 49, branches: 45 },
+      // OPS-16, ARC-26: floors a little under today's numbers (62.7 / 60.3 / 53.9 / 49.4 on 29 Oct
+      // 2026); raise them as coverage grows, towards 70 lines and 60 branches
+      thresholds: { lines: 62, statements: 60, functions: 53, branches: 49 },
     },
   },
 });

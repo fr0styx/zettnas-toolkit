@@ -112,6 +112,8 @@
 
 #### Fixes
 
+- **CI that can't hang**: every CI job has a time limit, and the coverage floors rose to 80% of the
+  backend and 62/60/53/49% of the frontend (lines, statements, functions, branches) (ARC-26).
 - **Drive readings never written past each other**: the SMART readings, risk estimates, verdicts
   and running self-tests change only through locked helpers, and lists of them are copied before
   they are walked; the event log too. A test keeps any module from writing them directly (ARC-33).
