@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-595 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+599 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -369,6 +369,10 @@ request and response schemas.
 | `GET` | `/api/v1/network/port/{iface_name}` | any of `system:view`, `system:config` | Retrieve configuration, live capabilities, and alias for a specific interface |
 | `POST` | `/api/v1/network/port/{iface_name}` | `system:config` | Update interface configuration (alias, MTU, WOL, negotiation speed) |
 | `GET` | `/api/v1/network/ports/listening` | any of `system:config`, `system:read` | Returns active listening TCP and UDP ports and mapped container services |
+| `GET` | `/api/v1/network/remote-access` | `system:view` | Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open |
+| `POST` | `/api/v1/network/remote-access/connect` | `system:config` | Joins Tailscale, or a Headscale server; answers with the sign-in link when one is needed |
+| `POST` | `/api/v1/network/remote-access/disconnect` | `system:config` | Post Remote Access Disconnect |
+| `POST` | `/api/v1/network/remote-access/publish` | `system:config` | HTTPS addresses in the tailnet for ZettNAS and Immich |
 | `GET` | `/api/v1/network/topology` | any of `system:view`, `system:config` | Retrieve full host network topology, physical NICs, bridges, bonds, and Docker networks |
 | `POST` | `/api/v1/network/vlan/create` | `system:config` | Create a new 802.1Q VLAN tagged sub-interface (e.g |
 | `DELETE` | `/api/v1/network/vlan/{vlan_iface}` | `system:config` | Delete an existing 802.1Q VLAN tagged sub-interface |

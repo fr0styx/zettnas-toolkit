@@ -29277,6 +29277,46 @@
     "title": "RagWatchedFoldersRequest",
     "type": "object"
    },
+   "RemoteAccessConnectRequest": {
+    "properties": {
+     "auth_key": {
+      "default": "",
+      "description": "A pre-auth key, to sign in without a browser",
+      "maxLength": 512,
+      "title": "Auth Key",
+      "type": "string"
+     },
+     "login_server": {
+      "default": "",
+      "description": "A Headscale server; empty for Tailscale",
+      "maxLength": 255,
+      "title": "Login Server",
+      "type": "string"
+     }
+    },
+    "title": "RemoteAccessConnectRequest",
+    "type": "object"
+   },
+   "RemoteAccessPublishRequest": {
+    "properties": {
+     "app_port": {
+      "anyOf": [
+       {
+        "maximum": 65535.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "The port ZettNAS is opened on here",
+      "title": "App Port"
+     }
+    },
+    "title": "RemoteAccessPublishRequest",
+    "type": "object"
+   },
    "RemoteCreateRequest": {
     "properties": {
      "name": {
@@ -52001,6 +52041,147 @@
     "x-required-scopes": [
      "system:config",
      "system:read"
+    ]
+   }
+  },
+  "/api/v1/network/remote-access": {
+   "get": {
+    "description": "Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open.",
+    "operationId": "get_remote_access_api_v1_network_remote_access_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Remote Access",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/network/remote-access/connect": {
+   "post": {
+    "description": "Joins Tailscale, or a Headscale server; answers with the sign-in link when one is needed.",
+    "operationId": "post_remote_access_connect_api_v1_network_remote_access_connect_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RemoteAccessConnectRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Remote Access Connect",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/remote-access/disconnect": {
+   "post": {
+    "operationId": "post_remote_access_disconnect_api_v1_network_remote_access_disconnect_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Post Remote Access Disconnect",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/network/remote-access/publish": {
+   "post": {
+    "description": "HTTPS addresses in the tailnet for ZettNAS and Immich.",
+    "operationId": "post_remote_access_publish_api_v1_network_remote_access_publish_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RemoteAccessPublishRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Remote Access Publish",
+    "tags": [
+     "Network & Switching"
+    ],
+    "x-required-scopes": [
+     "system:config"
     ]
    }
   },

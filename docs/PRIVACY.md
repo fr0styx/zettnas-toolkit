@@ -36,6 +36,7 @@ health report below, which is off unless you turn it on.
 | Phone notifications (Web Push) | the push service of the phone's browser maker (Google, Mozilla, Apple or Microsoft) | the alert, encrypted for that phone: the push service sees only ciphertext and when it was sent | when an alert fires, to phones where you turned notifications on |
 | Cloud remotes and backups | the providers you connect (S3, B2, OneDrive, Google Drive, …) | the files you choose to sync | as you configure |
 | Remote access | Tailscale (login.tailscale.com) | what Tailscale needs to connect your devices | if you turn it on |
+| Remote access | the Headscale server you name instead of Tailscale | the same, sent to your own server | if you choose Headscale |
 | Anonymous health report | the ZettNAS project's receiver (a Cloudflare Worker) | app version, platform, processor type, image variant, a drive-count range, features in use, a random id ([details](HEALTH_SIGNAL.md)) | weekly, only if you turn on **Help improve ZettNAS** (off by default) |
 
 Your browser also loads ZettNAS itself from the NAS; the desktop does not load fonts,

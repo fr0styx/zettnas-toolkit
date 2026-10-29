@@ -269,6 +269,57 @@ class TailscaleDeployRequest(BaseModel):
     state_dir: str | None = Field(default=None, description="Custom persistent state directory on host")
 
 
+class RemoteAccessConnectRequest(BaseModel):
+    login_server: str = Field(default="", max_length=255, description="A Headscale server; empty for Tailscale")
+    auth_key: str = Field(default="", max_length=512, description="A pre-auth key, to sign in without a browser")
+
+
+class RemoteAccessPublishRequest(BaseModel):
+    app_port: int | None = Field(default=None, ge=1, le=65535, description="The port ZettNAS is opened on here")
+
+
+def _remote(fn, *args):
+    from backend.services.remote_access import RemoteAccessError
+
+    try:
+        return fn(*args)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    except RemoteAccessError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from None
+
+
+@router.get("/network/remote-access", dependencies=[Depends(require_scope("system:view"))])
+async def get_remote_access():
+    """Use from anywhere (COMP-01): tailnet state, sign-in link, and the addresses to open."""
+    from backend.services import remote_access
+
+    return await asyncio.to_thread(remote_access.status)
+
+
+@router.post("/network/remote-access/connect", dependencies=[Depends(require_scope("system:config"))])
+async def post_remote_access_connect(req: RemoteAccessConnectRequest):
+    """Joins Tailscale, or a Headscale server; answers with the sign-in link when one is needed."""
+    from backend.services import remote_access
+
+    return await asyncio.to_thread(_remote, remote_access.connect, req.login_server, req.auth_key)
+
+
+@router.post("/network/remote-access/publish", dependencies=[Depends(require_scope("system:config"))])
+async def post_remote_access_publish(req: RemoteAccessPublishRequest):
+    """HTTPS addresses in the tailnet for ZettNAS and Immich."""
+    from backend.services import remote_access
+
+    return await asyncio.to_thread(_remote, remote_access.publish, req.app_port)
+
+
+@router.post("/network/remote-access/disconnect", dependencies=[Depends(require_scope("system:config"))])
+async def post_remote_access_disconnect():
+    from backend.services import remote_access
+
+    return await asyncio.to_thread(remote_access.disconnect)
+
+
 @router.get("/network/mesh-vpn", dependencies=[Depends(require_scope("system:view"))])
 async def get_mesh_vpn_endpoint():
     """Retrieves Zero-Trust Mesh VPN telemetry and status for Tailscale and WireGuard."""

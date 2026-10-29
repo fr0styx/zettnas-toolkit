@@ -104,6 +104,7 @@ NOT_CONTACTED = {
     "nas.example.com",
     "auth.example.com",
     "nextcloud.example.com",
+    "headscale.example.com",  # the placeholder of the Headscale address (COMP-01)
     "rclone.org",
     "restic.net",
     "caddyserver.com",

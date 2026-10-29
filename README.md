@@ -63,6 +63,7 @@ Images are signed in CI; ZettNAS verifies the signature before it installs an up
 | HTTPS with Nginx, Caddy, Traefik | [REVERSE_PROXY.md](docs/REVERSE_PROXY.md) |
 | Sign-in with OpenID Connect or LDAP | [SSO.md](docs/SSO.md) |
 | Backing up your computers; disaster recovery | [BACKUP_GUIDE.md](docs/BACKUP_GUIDE.md) |
+| Using ZettNAS and Immich away from home (Tailscale, Headscale) | [REMOTE_ACCESS.md](docs/REMOTE_ACCESS.md) |
 | Ask Zetty and document search | [RAG.md](docs/RAG.md) |
 | How well search works, measured | [SEARCH_QUALITY.md](docs/SEARCH_QUALITY.md) |
 | What the AI may and may not do | [SAFE_AI.md](docs/SAFE_AI.md) |

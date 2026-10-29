@@ -3,14 +3,65 @@
 Part of backend/hardware/network.py, split out by ARC-5."""
 
 import os
+import re
 import shutil
 import subprocess
 from datetime import UTC
 from typing import Any
 
-from backend.config import logger
+from backend.config import DATA_DIR, logger
+from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.net import common
 from backend.ignored_errors import ignored
+
+SETTINGS_FILE = os.path.join(DATA_DIR, "remote_access.json")
+# a Headscale (or other control) server: https, a host and maybe a port, nothing after it
+LOGIN_SERVER = re.compile(r"^https://[A-Za-z0-9.-]+(:\d{1,5})?/?$")
+
+
+def settings() -> dict[str, Any]:
+    """Remote access settings (COMP-01): the login server and the port ZettNAS is served from."""
+    data = read_json(SETTINGS_FILE, {})
+    return data if isinstance(data, dict) else {}
+
+
+def update_settings(**fields: Any) -> dict[str, Any]:
+    data = {**settings(), **fields}
+    atomic_write_json(SETTINGS_FILE, data)
+    return data
+
+
+def login_server() -> str:
+    """The control server this node signs in to; "" is Tailscale's own."""
+    return str(settings().get("login_server") or "")
+
+
+def set_login_server(url: str) -> str:
+    url = (url or "").strip().rstrip("/")
+    if url and not LOGIN_SERVER.match(url):
+        raise ValueError("A Headscale address is https://<your server>, with a port if it needs one and no path.")
+    update_settings(login_server=url)
+    return url
+
+
+def login_args() -> list[str]:
+    """Every `tailscale up` repeats the login server: with --reset, leaving it out would move
+    the node back to Tailscale's servers."""
+    server = login_server()
+    return [f"--login-server={server}"] if server else []
+
+
+def auth_url_in(text: str) -> str:
+    """The sign-in link `tailscale up` printed, from Tailscale or from the login server."""
+    m = re.search(r"https://login\.tailscale\.com/a/[A-Za-z0-9_-]+", text or "")
+    if m:
+        return m.group(0)
+    server = login_server()
+    if server:
+        m = re.search(re.escape(server) + r"/\S+", text or "")
+        if m:
+            return m.group(0)
+    return ""
 
 
 def _find_tailscale_bin() -> str | None:
@@ -47,6 +98,19 @@ def _get_tailscale_container_info() -> dict[str, Any]:
     except Exception:
         ignored("backend.hardware.network._get_tailscale_container_info")
     return {"exists": False, "running": False, "id": "", "status": "not_found"}
+
+
+def container_info() -> dict[str, Any]:
+    return _get_tailscale_container_info()
+
+
+def installed() -> bool:
+    """A tailscale container (running or not) or the tailscale program on the host."""
+    return bool(_get_tailscale_container_info().get("exists") or _find_tailscale_bin())
+
+
+def run_cli(args: list[str], timeout: float = 10.0) -> tuple[int, str]:
+    return _run_tailscale_cmd(args, timeout=timeout)
 
 
 def _as_text(value: str | bytes | None) -> str:
@@ -366,9 +430,8 @@ def execute_tailscale_reauth() -> dict[str, Any]:
     """Forces Tailscale node re-authentication, returning interactive login URL."""
     import re
 
-    code, out = _run_tailscale_cmd(["up", "--force-reauth", "--reset"], timeout=8.0)
-    m = re.search(r"https://login\.tailscale\.com/a/[a-zA-Z0-9_-]+", out)
-    auth_url = m.group(0) if m else ""
+    code, out = _run_tailscale_cmd(["up", "--force-reauth", "--reset", *login_args()], timeout=8.0)
+    auth_url = auth_url_in(out)
     if not auth_url:
         s_code, s_out = _run_tailscale_cmd(["status", "--json"], timeout=4.0)
         if s_code == 0 and s_out.strip().startswith("{"):

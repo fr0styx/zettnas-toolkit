@@ -716,6 +716,8 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-network' || paneId === 'mgmt-pane-network-physical') {
       fetchAndRenderNetworkTopology();
     } else if (paneId === 'mgmt-pane-network-wireguard') {
+      // COMP-01: the guided "Use from anywhere" card above the Tailscale details
+      import('./remote-access.js').then((m) => m.installRemoteAccess(document.getElementById('remote-access-mount'))).catch(() => {});
       fetchAndRenderWireguard();
     } else if (paneId === 'mgmt-pane-network-docker') {
       fetchAndRenderNetworkTopology();

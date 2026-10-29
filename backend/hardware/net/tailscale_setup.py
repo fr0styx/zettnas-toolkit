@@ -28,7 +28,7 @@ def execute_tailscale_up(
         except Exception as e:
             logger.debug(f"[Tailscale] Failed to start container before tailscale up: {e}")
 
-    cmd = ["up", "--reset"]
+    cmd = ["up", "--reset", *tailscale.login_args()]
     if auth_key:
         cmd.extend(["--authkey", auth_key])
     if hostname:
@@ -41,11 +41,8 @@ def execute_tailscale_up(
     code, out = tailscale._run_tailscale_cmd(cmd, timeout=15.0)
 
     # Check for interactive authentication URL in output
-    auth_url = None
-    m = re.search(r"https://login\.tailscale\.com/a/[a-zA-Z0-9_-]+", out)
-    if m:
-        auth_url = m.group(0)
-    elif "login.tailscale.com" in out:
+    auth_url = tailscale.auth_url_in(out) or None
+    if not auth_url and "login.tailscale.com" in out:
         m2 = re.search(r"https://\S+", out)
         if m2:
             auth_url = m2.group(0)
@@ -212,10 +209,8 @@ def deploy_tailscale_container(
         env_vars.append(f"TS_HOSTNAME={hostname.strip()}")
     if auth_key:
         env_vars.append(f"TS_AUTHKEY={auth_key.strip()}")
-    if accept_routes:
-        env_vars.append("TS_EXTRA_ARGS=--reset --accept-routes")
-    else:
-        env_vars.append("TS_EXTRA_ARGS=--reset")
+    extra = ["--reset", *tailscale.login_args()] + (["--accept-routes"] if accept_routes else [])
+    env_vars.append("TS_EXTRA_ARGS=" + " ".join(extra))
 
     # 5. Device and capabilities handling
     devices = []

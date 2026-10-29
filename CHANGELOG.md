@@ -15,6 +15,11 @@
 
 #### Usability
 
+- **Use from anywhere**: a card in Network → Tailscale & WireGuard joins Tailscale, or a
+  Headscale server of your own (no account anywhere), with the sign-in link as a QR code. Then
+  **Turn on HTTPS** gives ZettNAS and Immich https addresses under the node's MagicDNS name,
+  and a second QR code opens ZettNAS on the phone. Nothing is opened on the router. A Headscale
+  address is kept on every later sign-in. docs/REMOTE_ACCESS.md (COMP-01).
 - **Be a friend's off-site backup**: the App Catalog has a backup target, an append-only restic
   REST server where another NAS or a friend's computer can add encrypted versions but never
   delete them, one private folder per account. Off-site backups can now go to such a server
