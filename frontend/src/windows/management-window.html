@@ -3347,10 +3347,10 @@
             <div>
               <div class="mgmt-card-intro-title">
                 <svg class="ic"><use href="#i-users"/></svg>
-                <span>User Accounts & Role-Based Access Control</span>
+                <span data-i18n="users.title">People and sign-in</span>
               </div>
-              <div class="mgmt-card-intro-desc">
-                Manage system users, assign role-based permissions, monitor active login sessions, and configure two-factor authentication.
+              <div class="mgmt-card-intro-desc" data-i18n="users.desc">
+                Who can sign in, what each person may do, where they are signed in, and two-step sign-in.
               </div>
             </div>
           </div>
@@ -3358,30 +3358,30 @@
           <div class="mgmt-detail-body">
             <!-- Sub-navigation Pills -->
             <div class="users-nav-bar" style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 12px;">
-              <button type="button" class="btn-pill-toggle users-nav-btn active" data-tab="users-pane-list">
-                👥 User Accounts
+              <button type="button" class="btn-pill-toggle users-nav-btn active" data-tab="users-pane-list" data-i18n="users.tab_people">
+                People
               </button>
-              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-sessions">
-                💻 Active Sessions
+              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-sessions" data-i18n="users.tab_sessions">
+                Where you're signed in
               </button>
-              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-2fa">
-                🛡️ Two-Factor Authentication (2FA)
+              <button type="button" class="btn-pill-toggle users-nav-btn" data-tab="users-pane-2fa" data-i18n="users.tab_2fa">
+                Two-step sign-in
               </button>
             </div>
 
             <!-- Subpane 1: User Inventory -->
             <div id="users-pane-list" class="users-subpane" style="display: block;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
-                <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE USER ACCOUNTS</div>
+                <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;" data-i18n="users.list_title">People with an account</div>
                 <div style="display:flex; gap: 8px;">
-                  <button type="button" id="btn-refresh-users" class="btn-pill-toggle">
+                  <button type="button" id="btn-refresh-users" class="btn-pill-toggle" data-i18n="common.refresh">
                     🔄 Refresh
                   </button>
-                  <button type="button" id="btn-share-access" class="btn-pill-toggle" title="Choose which users can use which shares" data-i18n-title="ui.choose_which_users_can_use">
-                    🔐 Share access
+                  <button type="button" id="btn-share-access" class="btn-pill-toggle" title="Choose which users can use which shares" data-i18n-title="ui.choose_which_users_can_use" data-i18n="users.share_access">
+                    Shared folders
                   </button>
-                  <button type="button" id="btn-add-user" class="btn-save-preset" style="padding: 6px 14px; font-size: var(--zn-fs-sm);">
-                    ➕ Add User
+                  <button type="button" id="btn-add-user" class="btn-save-preset" style="padding: 6px 14px; font-size: var(--zn-fs-sm);" data-i18n="users.add">
+                    Add a person
                   </button>
                 </div>
               </div>
@@ -3389,13 +3389,13 @@
                 <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 760px;">
                   <thead>
                     <tr style="background: var(--zn-glaze-3); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                      <th style="padding: 10px 12px;">User</th>
-                      <th style="padding: 10px 12px;">Email</th>
-                      <th style="padding: 10px 12px;">Role</th>
-                      <th style="padding: 10px 12px;">Status</th>
-                      <th style="padding: 10px 12px;">2FA</th>
-                      <th style="padding: 10px 12px;">Storage Quota</th>
-                      <th style="padding: 10px 12px; text-align: right;">Actions</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_person">Person</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_email">Email</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_role">Role</th>
+                      <th style="padding: 10px 12px;" data-i18n="common.status">Status</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_2fa">Two-step</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_quota">Storage limit</th>
+                      <th style="padding: 10px 12px; text-align: right;" data-i18n="users.col_actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="users-table-body">
@@ -3414,15 +3414,15 @@
             <div id="users-pane-sessions" class="users-subpane" style="display: none;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
                 <div>
-                  <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;">ACTIVE LOGIN SESSIONS</div>
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;">Review browser and client sessions authorized on this NAS.</div>
+                  <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;" data-i18n="users.sessions_title">Signed-in browsers and devices</div>
+                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="users.sessions_desc">Sign out anything you don't recognise.</div>
                 </div>
                 <div style="display:flex; gap: 8px;">
-                  <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle">
+                  <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle" data-i18n="common.refresh">
                     🔄 Refresh
                   </button>
-                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger" style="padding: 6px 14px; font-size: var(--zn-fs-xs);">
-                    Revoke Other Sessions
+                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger" style="padding: 6px 14px; font-size: var(--zn-fs-xs);" data-i18n="users.sign_out_others">
+                    Sign out everywhere else
                   </button>
                 </div>
               </div>
@@ -3430,11 +3430,11 @@
                 <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;">
                   <thead>
                     <tr style="background: var(--zn-glaze-3); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                      <th style="padding: 10px 12px;">Device / Client</th>
-                      <th style="padding: 10px 12px;">IP Address</th>
-                      <th style="padding: 10px 12px;">First Login</th>
-                      <th style="padding: 10px 12px;">Last Active</th>
-                      <th style="padding: 10px 12px; text-align: right;">Action</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_device">Browser or device</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_ip">IP address</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_first">Signed in</th>
+                      <th style="padding: 10px 12px;" data-i18n="users.col_last">Last active</th>
+                      <th style="padding: 10px 12px; text-align: right;" data-i18n="users.col_actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="sessions-table-body">
@@ -3453,28 +3453,28 @@
                       🛡️
                     </div>
                     <div>
-                      <div style="font-size: var(--zn-fs); font-weight: 700; color: var(--zn-text-strong);">Two-Factor Authentication (RFC 6238 TOTP)</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Authenticator app verification for enhanced sign-in security.</div>
+                      <div style="font-size: var(--zn-fs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="users.2fa_card_title">Two-step sign-in</div>
+                      <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="users.2fa_card_desc">After the password, a code from an app on your phone.</div>
                     </div>
                   </div>
                   <div>
-                    <span id="mfa-status-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--crit); border: 1px solid rgba(239,68,68,0.3);">DISABLED</span>
+                    <span id="mfa-status-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 20px; background: rgba(239,68,68,0.15); color: var(--crit); border: 1px solid rgba(239,68,68,0.3);" data-i18n="users.2fa_badge_off">Off</span>
                   </div>
                 </div>
-                <div id="mfa-status-desc" style="font-size: var(--zn-fs-sm); line-height: 1.5; color: var(--zn-text-soft); margin-bottom: 16px;">
-                  Two-factor authentication is currently disabled. Add an extra layer of defense against password theft with an authenticator app (Google Authenticator, Aegis, 1Password, Bitwarden).
+                <div id="mfa-status-desc" style="font-size: var(--zn-fs-sm); line-height: 1.5; color: var(--zn-text-soft); margin-bottom: 16px;" data-i18n="users.2fa_desc_off">
+                  Two-step sign-in is off. Turn it on, and a stolen password alone can't open your account.
                 </div>
                 <div style="display: flex; gap: 10px;">
-                  <button type="button" id="btn-enable-2fa" class="btn-save-preset" style="padding: 8px 16px; font-size: var(--zn-fs-sm);">
-                    🛡️ Set Up Two-Factor Authentication
+                  <button type="button" id="btn-enable-2fa" class="btn-save-preset" style="padding: 8px 16px; font-size: var(--zn-fs-sm);" data-i18n="users.2fa_set_up">
+                    Set up two-step sign-in
                   </button>
-                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: var(--zn-fs-sm); display: none;">
-                    Disable 2FA
+                  <button type="button" id="btn-disable-2fa" class="suite-toolkit-btn danger" style="padding: 8px 16px; font-size: var(--zn-fs-sm); display: none;" data-i18n="users.2fa_turn_off">
+                    Turn off two-step sign-in
                   </button>
                 </div>
                 <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--zn-line-8); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Looking to change your admin username, password, or API automation keys?</div>
-                  <button type="button" class="btn-pill-toggle" id="btn-jump-to-security" style="color: var(--zn-text-strong);">Admin Credentials & Password →</button>
+                  <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="users.2fa_more">Change your username, password or API keys?</div>
+                  <button type="button" class="btn-pill-toggle" id="btn-jump-to-security" style="color: var(--zn-text-strong);" data-i18n="users.2fa_more_btn">Account and password →</button>
                 </div>
               </div>
             </div>
@@ -3731,10 +3731,10 @@
                 <div>
                   <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span aria-hidden="true">🛡️</span>
-                    <span>Backup jobs</span>
+                    <span data-i18n="backup.jobs_title">Backup jobs</span>
                   </span>
-                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;">
-                    Automated local filesystem snapshot scheduling with offsite cloud synchronization via Rclone and rotation retention policies.
+                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;" data-i18n="backup.jobs_desc">
+                    Copies of your folders on a schedule: as snapshots on this server, to a folder or disk, or to a cloud.
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
@@ -3742,12 +3742,12 @@
                     🔄 Refresh
                   </button>
                   <button class="btn-pill-toggle" id="btn-open-create-backup-job" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
-                    <svg class="ic"><use href="#i-plus"/></svg> Add Backup Task
+                    <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> <span data-i18n="backup.add_job">Add a backup job</span>
                   </button>
                 </div>
               </div>
               <div id="backup-jobs-mount">
-                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;">Loading backup jobs…</div>
+                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;" data-i18n="backup.jobs_loading">Loading backup jobs…</div>
               </div>
             </div>
 
@@ -3757,10 +3757,10 @@
                 <div>
                   <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                     <span aria-hidden="true">📸</span>
-                    <span>Storage Pool Snapshots & Rollback</span>
+                    <span data-i18n="backup.snaps_title">Snapshots</span>
                   </span>
-                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;">
-                    Atomic copy-on-write subvolume snapshots with instant point-in-time rollback and retention pruning.
+                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;" data-i18n="backup.snaps_desc">
+                    A snapshot freezes a folder in seconds; you can open it or go back to it later.
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
@@ -3768,7 +3768,7 @@
                     🔄 Refresh
                   </button>
                   <button class="btn-pill-toggle" id="btn-open-create-snapshot" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
-                    <svg class="ic"><use href="#i-camera"/></svg> Take Snapshot
+                    <svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> <span data-i18n="backup.snaps_take">Take a snapshot</span>
                   </button>
                 </div>
               </div>
@@ -3776,7 +3776,7 @@
               <div id="snapshot-schedules-mount"></div>
               <h4 class="snap-subhead" data-i18n="snap.all_title">All snapshots</h4>
               <div id="system-snapshots-mount">
-                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;">Loading snapshots...</div>
+                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;" data-i18n="backup.snaps_loading">Loading snapshots…</div>
               </div>
             </div>
 
@@ -3809,7 +3809,7 @@
                 </div>
               </div>
               <div id="app-backups-mount">
-                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;">Loading application backups...</div>
+                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;" data-i18n="backup.apps_loading">Loading app backups…</div>
               </div>
             </div>
 

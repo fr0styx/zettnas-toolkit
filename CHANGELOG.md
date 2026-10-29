@@ -4,6 +4,11 @@
 
 #### Usability
 
+- **Sign-in, people and backups in your language**: the sign-in and two-step screens, the lock
+  screen, the people list and its dialogs, and the backup pane are translated in full, in plainer
+  words (UX-21). The translation lint now also sees text between tags, ALL-CAPS labels and text
+  around `${}`, and holds every file to its own count, so translating one screen can't hide new
+  English in another.
 - **Plainer names**: the management window is called Settings, the product ZettNAS (no more "Mission
   Control" or "Workbench"), and roles have one set of names everywhere (Administrator, Family member,
   Viewer and so on, without emoji); drive temperatures, the network dial and the UPS gauge on the

@@ -76,11 +76,11 @@ describe('Batch 4: Hyper-Backup Orchestrator & Snapshot Manager UI', () => {
     expect(mount.innerHTML).toContain('Daily Photo Offsite Sync');
     expect(mount.innerHTML).toContain('b2-vault:backups/photos');
     expect(mount.innerHTML).toContain('Local Hourly Snapshot');
-    expect(mount.innerHTML).toContain('Local Snapshot');
+    expect(mount.innerHTML).toContain('Snapshot on this server');
     expect(mount.innerHTML).toContain('Keep 7');
     expect(mount.innerHTML).toContain('Keep 24');
-    expect(mount.innerHTML).toContain('Success');
-    expect(mount.innerHTML).toContain('Running...');
+    expect(mount.innerHTML).toContain('Done');
+    expect(mount.innerHTML).toContain('Running…');
 
     const runButtons = mount.querySelectorAll('.btn-run-backup-job');
     const deleteButtons = mount.querySelectorAll('.btn-delete-backup-job');

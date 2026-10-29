@@ -454,7 +454,7 @@ function showMfaChallengeView(username) {
 
   if (credsStep) credsStep.style.display = 'none';
   if (mfaStep) mfaStep.style.display = 'block';
-  if (mfaUserTxt) mfaUserTxt.textContent = `Authenticating @${username}`;
+  if (mfaUserTxt) mfaUserTxt.textContent = t('signin.mfa_for', 'Signing in as @{username}', { username });
   if (codeInput) {
     codeInput.value = '';
     codeInput.focus();
@@ -485,7 +485,7 @@ async function submitMfaChallenge() {
 
   if (btnSubmit) {
     btnSubmit.disabled = true;
-    btnSubmit.textContent = 'VERIFYING...';
+    btnSubmit.textContent = t('signin.verifying', 'Checking…');
   }
 
   try {
@@ -536,7 +536,7 @@ async function submitMfaChallenge() {
   } finally {
     if (btnSubmit) {
       btnSubmit.disabled = false;
-      btnSubmit.textContent = 'VERIFY & SIGN IN';
+      btnSubmit.textContent = t('signin.verify', 'Verify and sign in');
     }
   }
 }

@@ -4,12 +4,14 @@
 //  - a language is missing a key, or has keys en.js doesn't;
 //  - a translation drops or invents a {placeholder};
 //  - more toasts show hard-coded text than the recorded baseline (it can only go down);
-//  - more titles, placeholders, aria-labels or textContent writes are hard-coded English than
-//    the recorded baseline (UX-9, UX-12; it can only go down).
-// Run with --update-baseline after converting strings to t() or data-i18n-*.
+//  - a file has more hard-coded English than its recorded baseline (UX-9, UX-12, UX-21; it can only
+//    go down): titles, placeholders, aria-labels, textContent writes, and the text between tags in
+//    HTML and in JS templates, ALL-CAPS labels and text around ${} included.
+// Run with --update-baseline after converting strings to t() or data-i18n-*; --list prints them.
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { readable, textNodes } from './i18n-text.mjs';
 
 const ROOT = process.cwd();
 const BASELINE = join(ROOT, 'frontend/scripts/i18n-baseline.json');
@@ -26,18 +28,10 @@ function* walk(dir) {
   }
 }
 
-// Text a person reads, as opposed to examples like 192.168.1.2, file names or ids.
-function visible(text) {
-  const v = text.trim();
-  if (!/[a-z]/.test(v)) return false;
-  if (/:\/\/|^[\w.+-]+@[\w.-]+$|^\/|^~|^[\w.-]+\.(?:conf|json|ya?ml|sh|py|js|local|lan)$/.test(v)) return false;
-  if (/^e\.g\.?\s*[^\s]+$/.test(v)) return false;
-  if (!/\s/.test(v) && /^[a-z0-9_.:-]+$/.test(v)) return false;
-  if (/^[\d\s.,:%xX×/+-]+[a-zA-Z]{0,3}$/.test(v)) return false;
-  return true;
-}
-const UI_ATTR = /\s(title|placeholder|aria-label)="([^"$<>{}]*)"/g;
-const UI_ASSIGN = /\.(?:textContent|innerText|title|placeholder)\s*=\s*(['"`])((?:(?!\1)[^\\$]|\\.)*)\1\s*;/g;
+const visible = readable; // text a person reads, as opposed to ids, file names or acronyms
+const UI_ATTR = /\s(title|placeholder|aria-label)="((?:[^"<>{}$]|\$\{[^{}]*\})*)"/g;
+const UI_ASSIGN = /\.(?:textContent|innerText|title|placeholder)\s*=\s*(['"`])((?:(?!\1)[^\\$]|\\.|\$\{[^{}`]*\})*)\1\s*;/g;
+const holes = (text) => text.replace(/\$\{[^{}]*\}/g, '\u0000'); // ${...} is not text
 const LIST = process.argv.includes('--list'); // print each hard-coded string
 
 function hardcodedUi(src, rel = '') {
@@ -51,9 +45,11 @@ function hardcodedUi(src, rel = '') {
     const tag = before.slice(before.lastIndexOf('<')) + src.slice(m.index, src.indexOf('>', m.index));
     if (/\bt\(\s*['"]/.test(m[2])) continue; // a string that calls t() mid-way
     if (/\sdata-sample\b/.test(tag)) continue; // a sample value, the same in every language
-    if (!tag.includes(`data-i18n-${m[1]}`) && visible(m[2])) hit(m[0]);
+    if (/^\$\{[^{}]*\}$/.test(m[2])) continue; // the whole value comes from code
+    if (!tag.includes(`data-i18n-${m[1]}`) && visible(holes(m[2]))) hit(m[0]);
   }
-  for (const m of src.matchAll(UI_ASSIGN)) if (visible(m[2])) hit(m[0]);
+  for (const m of src.matchAll(UI_ASSIGN)) if (visible(holes(m[2]))) hit(m[0]);
+  for (const text of textNodes(src, rel)) hit(text);
   return n;
 }
 
@@ -62,6 +58,7 @@ const files = [...walk(join(ROOT, 'frontend/src')), join(ROOT, 'frontend/index.h
   ...readdirSync(windowsDir).filter((f) => f.endsWith('.html')).map((f) => join(windowsDir, f))];
 let rawToasts = 0;
 let rawUi = 0;
+const perFile = {};
 for (const file of files) {
   const src = readFileSync(file, 'utf8');
   const rel = file.slice(ROOT.length + 1);
@@ -74,7 +71,9 @@ for (const file of files) {
     if (!(key in en)) errors.push(`${rel}: key "${key}" is not defined in locales/en.js`);
   }
   rawToasts += [...src.matchAll(/showToast\(\s*['"`]/g)].length;
-  rawUi += hardcodedUi(src, rel);
+  const ui = hardcodedUi(src, rel);
+  rawUi += ui;
+  if (ui) perFile[rel] = ui;
   if (!rel.endsWith('format.js')) {
     for (const m of src.matchAll(/\.toLocale(?:Date|Time)?String\(/g)) {
       const line = src.slice(0, m.index).split('\n').length;
@@ -96,21 +95,26 @@ for (const [lang, dict] of Object.entries(ALL_TRANSLATIONS)) {
   for (const key of Object.keys(dict)) if (!(key in en)) errors.push(`locales/${lang}.js: "${key}" is not in en.js`);
 }
 
-let baseline = { raw_toasts: Infinity, hardcoded_ui: Infinity };
+let baseline = { raw_toasts: Infinity, hardcoded_ui: Infinity, per_file: null };
 try {
   baseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
 } catch (e) {
   /* first run */
 }
 if (process.argv.includes('--update-baseline')) {
-  writeFileSync(BASELINE, JSON.stringify({ raw_toasts: rawToasts, hardcoded_ui: rawUi }, null, 2) + '\n');
+  const sorted = Object.fromEntries(Object.entries(perFile).sort(([x], [y]) => x.localeCompare(y)));
+  writeFileSync(BASELINE, JSON.stringify({ raw_toasts: rawToasts, hardcoded_ui: rawUi, per_file: sorted }, null, 2) + '\n');
   console.log(`baseline: ${rawToasts} toasts and ${rawUi} UI strings with hard-coded text`);
 } else {
   if (rawToasts > baseline.raw_toasts) {
     errors.push(`${rawToasts} toasts use hard-coded text (baseline ${baseline.raw_toasts}); use t('key', 'English text')`);
   }
-  if (rawUi > (baseline.hardcoded_ui ?? Infinity)) {
-    errors.push(`${rawUi} titles, placeholders, aria-labels or text writes are hard-coded English (baseline ${baseline.hardcoded_ui}); use t('key', 'English text') or data-i18n-title / -placeholder / -aria-label`);
+  // per file, so translating one screen can't hide new English in another (UX-21)
+  for (const [rel, n] of Object.entries(perFile)) {
+    const allowed = baseline.per_file ? baseline.per_file[rel] ?? 0 : Infinity;
+    if (n > allowed) {
+      errors.push(`${rel}: ${n} hard-coded English strings (baseline ${allowed}); use t('key', 'English text'), data-i18n, or data-i18n-title / -placeholder / -aria-label (npm run lint:i18n -- --list shows them)`);
+    }
   }
 }
 

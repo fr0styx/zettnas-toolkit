@@ -75,11 +75,11 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
     // Verify table contents
     expect(mount.innerHTML).toContain('uptime-kuma');
     expect(mount.innerHTML).toContain('monitoring');
-    expect(mount.innerHTML).toContain('Auto-Archive (Uninstall)');
+    expect(mount.innerHTML).toContain('When removed');
     expect(mount.innerHTML).toContain('15.4 MB');
 
     expect(mount.innerHTML).toContain('plex');
-    expect(mount.innerHTML).toContain('On-Demand');
+    expect(mount.innerHTML).toContain('By hand');
     expect(mount.innerHTML).toContain('2.1 MB');
 
     // Verify action buttons
@@ -91,7 +91,7 @@ describe('Application Backups & Recovery UI (21a, 21b, 21c)', () => {
     expect(deleteBtns.length).toBe(2);
 
     // Verify filter select options
-    expect(filterSelect.innerHTML).toContain('All Applications (Box-Wide)');
+    expect(filterSelect.innerHTML).toContain('All apps');
     expect(filterSelect.innerHTML).toContain('uptime-kuma');
     expect(filterSelect.innerHTML).toContain('plex');
   });

@@ -29,10 +29,18 @@ docker compose -f docker-compose.dev.yml --profile test run --rm zettnas-test
 npm run lint          # Ruff lint and format check (Python)
 npm test              # frontend tests (Vitest)
 npm run lint:js       # ESLint
-npm run lint:i18n     # every text in all five languages
+npm run lint:i18n     # every key in all five languages; hard-coded English may only go down, per file
 npm run lint:css      # !important rules, button classes and emoji icons may only go down
 npm run build && npm run budget   # first-load size budget
 ```
+
+Text people read goes through `t('key', 'English')` in scripts and `data-i18n` (or
+`data-i18n-title`, `-placeholder`, `-aria-label`) in markup, with the key in all five files under
+`frontend/src/locales/`. The translation lint counts the English that doesn't, file by file:
+titles, placeholders, labels and the text between tags, ALL-CAPS and text around `${}` included.
+`npm run lint:i18n -- --list` prints each one; after translating some, `npm run lint:i18n --
+--update-baseline` lowers the numbers in `frontend/scripts/i18n-baseline.json`. A new file starts
+at zero.
 
 CI also requires:
 

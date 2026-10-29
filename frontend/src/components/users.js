@@ -166,7 +166,7 @@ export async function loadUsersPane(defaultSubtab = 'users-pane-list') {
 export async function loadUsersList() {
   const container = document.getElementById('users-table-body');
   if (!container) return;
-  container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">Loading users...</td></tr>';
+  container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--muted);">' + escapeHtml(t('users.loading', 'Loading people…')) + '</td></tr>';
 
   try {
     const res = await apiFetch('/api/users', { credentials: 'include' });
@@ -202,7 +202,7 @@ export async function loadUsersList() {
       const isSelf = getCurrentUser()?.id === u.id;
       const quotaStr = u.storage_quota_bytes > 0
         ? `${Math.round(u.storage_quota_bytes / (1024 * 1024 * 1024))} GB`
-        : 'Unlimited';
+        : t('users.no_limit', 'No limit');
 
       return `
         <tr style="border-bottom: 1px solid var(--zn-line-6); transition: background 0.15s ease;">
@@ -211,7 +211,7 @@ export async function loadUsersList() {
               ${escapeHtml(letter)}
             </div>
             <div>
-              <div style="font-weight:700; color:var(--zn-text-strong); font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(14,165,233,0.2); color:var(--zn-text-accent); padding:2px 6px; border-radius:4px; margin-left:4px;">YOU</span>' : ''}</div>
+              <div style="font-weight:700; color:var(--zn-text-strong); font-size: var(--zn-fs-sm);">${escapeHtml(u.display_name || u.username)} ${isSelf ? '<span style="font-size: var(--zn-fs-xs); background:rgba(14,165,233,0.2); color:var(--zn-text-accent); padding:2px 6px; border-radius:4px; margin-left:4px;">' + escapeHtml(t('users.you', 'You')) + '</span>' : ''}</div>
               <div style="font-size: var(--zn-fs-xs); color:var(--muted);">@${escapeHtml(u.username)}</div>
             </div>
           </td>
@@ -223,12 +223,12 @@ export async function loadUsersList() {
           </td>
           <td style="padding: 12px;">
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${isActive ? 'rgba(37,194,160,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isActive ? 'var(--ok2)' : 'var(--crit)'}; border: 1px solid ${isActive ? 'rgba(37,194,160,0.3)' : 'rgba(239,68,68,0.3)'};">
-              ${isActive ? 'ACTIVE' : 'DISABLED'}
+              ${escapeHtml(isActive ? t('users.status_active', 'Active') : t('users.status_disabled', 'Turned off'))}
             </span>
           </td>
           <td style="padding: 12px;">
             <span style="font-size: var(--zn-fs-xs); display:inline-flex; align-items:center; gap: 4px; color: ${isMfa ? 'var(--ok2)' : 'var(--muted)'};">
-              ${isMfa ? '🛡️ Enabled' : '⚪ Off'}
+              <span aria-hidden="true">${isMfa ? '🛡️' : '⚪'}</span> ${escapeHtml(isMfa ? t('users.mfa_on', 'On') : t('users.mfa_off', 'Off'))}
             </span>
           </td>
           <td style="padding: 12px; font-size: var(--zn-fs-sm); color: var(--zn-text-muted);">${quotaStr}</td>
@@ -237,7 +237,7 @@ export async function loadUsersList() {
               <button class="suite-toolkit-btn sm btn-edit-user" data-id="${u.id}" title="${t('ui.edit_user', 'Edit User')}">✏️</button>
               <button class="suite-toolkit-btn sm btn-pwd-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="${t('ui.reset_password', 'Reset Password')}">🔑</button>
               ${!isSelf ? `
-                <button class="suite-toolkit-btn sm btn-toggle-user" data-id="${u.id}" data-status="${u.status}" title="${isActive ? 'Disable User' : 'Enable User'}">
+                <button class="suite-toolkit-btn sm btn-toggle-user" data-id="${u.id}" data-status="${u.status}" title="${escapeHtml(isActive ? t('users.turn_off', 'Turn off this account') : t('users.turn_on', 'Turn on this account'))}">
                   ${isActive ? '🚫' : '✅'}
                 </button>
                 <button class="suite-toolkit-btn sm danger btn-delete-user" data-id="${u.id}" data-user="${escapeHtml(u.username)}" title="${t('ui.delete_user', 'Delete User')}">🗑️</button>
@@ -278,7 +278,7 @@ export async function loadUsersList() {
     });
 
   } catch (err) {
-    container.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--crit);">Failed to load users: ${escapeHtml(err.message)}</td></tr>`;
+    container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--crit);">' + escapeHtml(t('users.load_failed', 'The list of people couldn\'t be loaded: {error}', { error: err.message })) + '</td></tr>';
   }
 }
 
@@ -330,7 +330,7 @@ export function showAddUserModal() {
 
       const submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      submitBtn.textContent = 'CREATING...';
+      submitBtn.textContent = t('users.creating', 'Adding…');
 
       try {
         const res = await apiFetch('/api/users', {
@@ -359,7 +359,7 @@ export function showAddUserModal() {
         showToast(t('toast.request_failed', 'Request failed: {error}', { error: err.message }), 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'CREATE USER';
+        submitBtn.textContent = t('users.create', 'Add person');
       }
     };
   }
@@ -417,7 +417,7 @@ export function showEditUserModal(user) {
         showToast(t('toast.request_failed', 'Request failed: {error}', { error: err.message }), 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'SAVE CHANGES';
+        submitBtn.textContent = t('users.save_changes', 'Save changes');
       }
     };
   }
@@ -450,7 +450,7 @@ export function showResetPasswordModal(userId, username) {
 
       const submitBtn = form.querySelector('button[type="submit"]');
       submitBtn.disabled = true;
-      submitBtn.textContent = 'UPDATING...';
+      submitBtn.textContent = t('users.updating', 'Changing…');
 
       try {
         const res = await apiFetch(`/api/users/${userId}/password`, {
@@ -464,7 +464,7 @@ export function showResetPasswordModal(userId, username) {
           )
         });
         if (res.ok) {
-          showToast(isSelf ? 'Password updated. Your other sessions were signed out.' : 'Password updated. That user was signed out everywhere.', 'success');
+          showToast(isSelf ? t('users.pwd_changed_self', 'Password changed. Your other sessions were signed out.') : t('users.pwd_changed_other', 'Password changed. They were signed out everywhere.'), 'success');
           closeModal(modal);
         } else {
           const err = await res.json();
@@ -474,7 +474,7 @@ export function showResetPasswordModal(userId, username) {
         showToast(t('toast.request_failed', 'Request failed: {error}', { error: err.message }), 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'UPDATE PASSWORD';
+        submitBtn.textContent = t('users.update_password', 'Change password');
       }
     };
   }
@@ -502,8 +502,8 @@ async function toggleUserStatus(userId, newStatus) {
 
 export function confirmDeleteUser(userId, username) {
   showConfirmToast(
-    'Delete User',
-    `Are you sure you want to permanently delete user @${username}? This will remove their account and revoke all sessions.`,
+    t('users.delete_title', 'Delete this person?'),
+    t('users.delete_msg', '@{username} loses their account and is signed out everywhere. Their files stay where they are.', { username }),
     async () => {
       try {
         const res = await apiFetch(`/api/users/${userId}`, {
@@ -530,7 +530,7 @@ export function confirmDeleteUser(userId, username) {
 export async function loadSessionsList() {
   const container = document.getElementById('sessions-table-body');
   if (!container) return;
-  container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--muted);">Loading sessions...</td></tr>';
+  container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--muted);">' + escapeHtml(t('users.sessions_loading', 'Loading sign-ins…')) + '</td></tr>';
 
   try {
     const res = await apiFetch('/api/auth/sessions', { credentials: 'include' });
@@ -539,7 +539,7 @@ export async function loadSessionsList() {
     const sessions = data.sessions || [];
 
     if (sessions.length === 0) {
-      container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--muted);">No active sessions found.</td></tr>';
+      container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--muted);">' + escapeHtml(t('users.sessions_none', 'No other sign-ins.')) + '</td></tr>';
       return;
     }
 
@@ -551,17 +551,17 @@ export async function loadSessionsList() {
       return `
         <tr style="border-bottom: 1px solid var(--zn-line-6);">
           <td style="padding: 12px; font-weight:700; color:var(--zn-text-strong);">
-            ${isCurrent ? '💻 Current Browser' : '🌐 Remote Device'}
-            ${isCurrent ? '<span style="font-size: var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">THIS DEVICE</span>' : ''}
-            <div style="font-size: var(--zn-fs-xs); font-weight:normal; color:var(--muted); margin-top:2px;">${escapeHtml(s.user_agent || 'Unknown Browser')}</div>
+            <span aria-hidden="true">${isCurrent ? '💻' : '🌐'}</span> ${escapeHtml(isCurrent ? t('users.this_browser', 'This browser') : t('users.other_device', 'Another device'))}
+            ${isCurrent ? '<span style="font-size: var(--zn-fs-xs); background:rgba(37,194,160,0.2); color:var(--ok2); padding:2px 6px; border-radius:4px; margin-left:6px;">' + escapeHtml(t('users.this_device', 'This device')) + '</span>' : ''}
+            <div style="font-size: var(--zn-fs-xs); font-weight:normal; color:var(--muted); margin-top:2px;">${escapeHtml(s.user_agent || t('users.unknown_browser', 'Unknown browser'))}</div>
           </td>
           <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--zn-text-soft); font-family:monospace;">${escapeHtml(s.ip_address || '127.0.0.1')}</td>
           <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--zn-text-muted);">${createdStr}</td>
           <td style="padding: 12px; font-size: var(--zn-fs-sm); color:var(--zn-text-muted);">${lastStr}</td>
           <td style="padding: 12px; text-align:right;">
             ${!isCurrent ? `
-              <button class="suite-toolkit-btn sm danger btn-revoke-session" data-id="${s.id}">Revoke</button>
-            ` : '<span style="font-size: var(--zn-fs-xs); color:var(--muted);">Active</span>'}
+              <button class="suite-toolkit-btn sm danger btn-revoke-session" data-id="${s.id}">${escapeHtml(t('users.sign_out', 'Sign out'))}</button>
+            ` : '<span style="font-size: var(--zn-fs-xs); color:var(--muted);">' + escapeHtml(t('users.in_use', 'In use')) + '</span>'}
           </td>
         </tr>
       `;
@@ -576,14 +576,14 @@ export async function loadSessionsList() {
     });
 
   } catch (err) {
-    container.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--crit);">Failed to load sessions: ${escapeHtml(err.message)}</td></tr>`;
+    container.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--crit);">' + escapeHtml(t('users.sessions_failed', 'The sign-ins couldn\'t be loaded: {error}', { error: err.message })) + '</td></tr>';
   }
 }
 
 export function revokeAllOtherSessions() {
   showConfirmToast(
-    'Revoke Other Sessions',
-    'Revoke all other login sessions on other devices and browsers?',
+    t('users.sign_out_others', 'Sign out everywhere else'),
+    t('users.sign_out_others_msg', 'Sign out every other browser and device? You stay signed in here.'),
     async () => {
       try {
         const res = await apiFetch('/api/auth/sessions', { method: 'DELETE', credentials: 'include' });
@@ -598,7 +598,7 @@ export function revokeAllOtherSessions() {
       }
     },
     null,
-    { okText: 'Revoke Sessions', cancelText: 'Cancel' }
+    { okText: t('users.sign_out_others', 'Sign out everywhere else'), cancelText: t('common.cancel', 'Cancel') }
   );
 }
 
@@ -618,7 +618,7 @@ export async function load2FAStatus() {
     const desc = document.getElementById('mfa-status-desc');
 
     if (badge) {
-      badge.textContent = isEnabled ? 'ENABLED' : 'DISABLED';
+      badge.textContent = isEnabled ? t('users.2fa_badge_on', 'On') : t('users.2fa_badge_off', 'Off');
       badge.style.background = isEnabled ? 'rgba(37,194,160,0.18)' : 'rgba(239,68,68,0.18)';
       badge.style.color = isEnabled ? 'var(--ok2)' : 'var(--crit)';
       badge.style.border = `1px solid ${isEnabled ? 'rgba(37,194,160,0.35)' : 'rgba(239,68,68,0.35)'}`;
@@ -626,8 +626,8 @@ export async function load2FAStatus() {
 
     if (desc) {
       desc.textContent = isEnabled
-        ? 'Your account is protected by Two-Factor Authentication (TOTP). An authenticator app code is required at sign in.'
-        : 'Two-factor authentication is currently disabled. Add an extra layer of defense against password theft with an authenticator app (Google Authenticator, Aegis, 1Password, Bitwarden).';
+        ? t('users.2fa_desc_on', 'Two-step sign-in is on: signing in asks for a code from your authenticator app.')
+        : t('users.2fa_desc_off', 'Two-step sign-in is off. Turn it on, and a stolen password alone can\'t open your account.');
     }
 
     if (btnEnable) btnEnable.style.display = isEnabled ? 'none' : 'inline-flex';
@@ -650,7 +650,7 @@ async function start2FASetup() {
 
   stepVerify.style.display = 'block';
   stepSuccess.style.display = 'none';
-  qrContainer.innerHTML = '<div style="color:var(--muted); padding:30px;">Generating secure TOTP key...</div>';
+  qrContainer.innerHTML = '<div style="color:var(--muted); padding:30px;">' + escapeHtml(t('users.2fa_preparing', 'Preparing the key…')) + '</div>';
 
   try {
     const res = await apiFetch('/api/auth/mfa/setup', {
@@ -672,7 +672,7 @@ async function start2FASetup() {
         const currentPassword = document.getElementById('mfa-current-password')?.value || '';
         const verifyBtn = form.querySelector('button[type="submit"]');
         verifyBtn.disabled = true;
-        verifyBtn.textContent = 'VERIFYING...';
+        verifyBtn.textContent = t('signin.verifying', 'Checking…');
 
         try {
           const verifyRes = await apiFetch('/api/auth/mfa/enable', {
@@ -703,8 +703,8 @@ async function start2FASetup() {
               if (copyBtn) {
                 copyBtn.onclick = () => {
                   copyText(verifyData.recovery_codes.join('\n'));
-                  copyBtn.textContent = 'COPIED TO CLIPBOARD! ✅';
-                  setTimeout(() => { copyBtn.textContent = 'COPY ALL CODES'; }, 2000);
+                  copyBtn.textContent = t('users.2fa_copied', 'Copied');
+                  setTimeout(() => { copyBtn.textContent = t('users.2fa_copy_codes', 'Copy all codes'); }, 2000);
                 };
               }
             }
@@ -717,13 +717,13 @@ async function start2FASetup() {
           showToast(t('toast.error_2', 'Error: {error}', { error: err.message }), 'error');
         } finally {
           verifyBtn.disabled = false;
-          verifyBtn.textContent = 'VERIFY & ACTIVATE 2FA';
+          verifyBtn.textContent = t('users.2fa_activate', 'Check the code and turn on');
         }
       };
     }
 
   } catch (err) {
-    qrContainer.innerHTML = `<div style="color:var(--crit); padding:20px;">Error: ${escapeHtml(err.message)}</div>`;
+    qrContainer.innerHTML = '<div style="color:var(--crit); padding:20px;">' + escapeHtml(t('users.2fa_error', 'Two-step sign-in couldn\'t be set up: {error}', { error: err.message })) + '</div>';
   }
 }
 

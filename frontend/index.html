@@ -286,12 +286,12 @@
       <div id="login-user-selected-card" role="button" tabindex="0" title="Click to change account" data-i18n-title="ui.click_to_change_account" style="display: none; align-items: center; gap: 12px; background: rgba(14,165,233,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; cursor: pointer; transition: all 0.18s ease; user-select: none;">
         <div id="login-selected-initial" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 13px;">A</div>
         <div style="text-align: left; flex: 1; min-width: 0;">
-          <div id="login-selected-name" style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+          <div id="login-selected-name" data-sample style="font-weight: 700; color: var(--zn-text-strong); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); display: flex; align-items: center; gap: 4px;">
-            <span>Change user</span> <span style="font-size: var(--zn-fs-xs);">▼</span>
+            <span data-i18n="signin.change_user">Change user</span> <span style="font-size: var(--zn-fs-xs);">▼</span>
           </div>
         </div>
-        <button type="button" id="login-change-user-btn" class="btn-pill-toggle is-small">Switch</button>
+        <button type="button" id="login-change-user-btn" class="btn-pill-toggle is-small" data-i18n="signin.switch">Switch</button>
       </div>
 
       <!-- Mode B: Manual Username Input (Hidden in Chooser mode) -->
@@ -307,18 +307,18 @@
       <!-- Remember Me -->
       <div style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; margin-bottom: 18px; font-size: var(--zn-fs-xs); color: var(--muted); cursor: pointer;">
         <input type="checkbox" id="login-remember-me" checked style="accent-color: var(--ok2); cursor: pointer;">
-        <label for="login-remember-me" style="cursor: pointer; user-select: none;">Keep me signed in</label>
+        <label for="login-remember-me" style="cursor: pointer; user-select: none;" data-i18n="signin.keep_signed_in">Keep me signed in</label>
       </div>
 
       <button type="button" id="login-btn" class="suite-toolkit-btn" style="width: 100%; padding: 12px; font-size: 14px; font-weight: 700;" data-i18n="login.btn">Sign in</button>
-      <button type="button" id="login-sso-btn" class="suite-toolkit-btn login-sso-btn" hidden>Sign in with SSO</button>
+      <button type="button" id="login-sso-btn" class="suite-toolkit-btn login-sso-btn" hidden data-i18n="signin.sso">Sign in with SSO</button>
       <p id="login-error" class="login-sso-error" role="alert" hidden></p>
       <p id="login-sso-error" class="login-sso-error" role="alert" hidden></p>
 
       <!-- Toggle Links -->
       <div style="margin-top: 16px; font-size: var(--zn-fs-xs);">
-        <a href="#" id="login-toggle-manual" style="color: var(--muted); text-decoration: none;">Sign in with different account</a>
-        <a href="#" id="login-toggle-chooser" style="color: var(--muted); text-decoration: none; display: none;">← Back to account list</a>
+        <a href="#" id="login-toggle-manual" style="color: var(--muted); text-decoration: none;" data-i18n="signin.other_account">Sign in with a different account</a>
+        <a href="#" id="login-toggle-chooser" style="color: var(--muted); text-decoration: none; display: none;" data-i18n="signin.back_to_list">← Back to the list of accounts</a>
       </div>
     </form>
 
@@ -327,17 +327,17 @@
       <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.35); display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px auto;">
         🛡️
       </div>
-      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 1px; color: var(--zn-text-strong);">TWO-FACTOR AUTH</h2>
-      <p id="mfa-user-target" style="margin: 0 0 20px 0; font-size: var(--zn-fs-xs); color: var(--muted);">Enter verification code from your authenticator app</p>
+      <h2 style="margin: 0 0 6px 0; font-size: 16px; letter-spacing: 1px; color: var(--zn-text-strong);" data-i18n="signin.mfa_title">Two-step sign-in</h2>
+      <p id="mfa-user-target" style="margin: 0 0 20px 0; font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="signin.mfa_prompt">Enter the code from your authenticator app</p>
 
       <form id="form-mfa-challenge">
         <input type="text" id="mfa-challenge-code" placeholder="6-Digit Code" data-i18n-placeholder="ui.6_digit_code" maxlength="6" autocomplete="one-time-code" style="width: 100%; padding: 12px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid rgba(56,189,248,0.4); color: var(--zn-text-accent); border-radius: 6px; margin-bottom: 16px; box-sizing: border-box; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px; outline: none; font-family: monospace;" aria-label="6-Digit Code" data-i18n-aria-label="ui.6_digit_code">
-        <button type="submit" id="btn-submit-mfa" class="suite-toolkit-btn ok" style="width: 100%; padding: 12px; font-size: 13.5px; font-weight: 700;">VERIFY & SIGN IN</button>
+        <button type="submit" id="btn-submit-mfa" class="suite-toolkit-btn ok" style="width: 100%; padding: 12px; font-size: 13.5px; font-weight: 700;" data-i18n="signin.verify">Verify and sign in</button>
       </form>
 
       <div style="margin-top: 16px; font-size: var(--zn-fs-xs); display: flex; flex-direction: column; gap: 8px;">
-        <a href="#" id="mfa-toggle-recovery" style="color: var(--zn-text-accent); text-decoration: none;">Use 8-character recovery code</a>
-        <a href="#" id="mfa-back-btn" style="color: var(--muted); text-decoration: none;">← Back to credentials</a>
+        <a href="#" id="mfa-toggle-recovery" data-i18n="ui.use_8_character_recovery_code" style="color: var(--zn-text-accent); text-decoration: none;">Use 8-character recovery code</a>
+        <a href="#" id="mfa-back-btn" style="color: var(--muted); text-decoration: none;" data-i18n="signin.back_to_password">← Back to the password</a>
       </div>
     </div>
 
@@ -348,19 +348,19 @@
 <div id="lock-overlay" style="display: none; position: fixed; inset: 0; z-index: 999990; background: var(--lt-b-080c10bf, rgba(8,12,16,0.75)); backdrop-filter: blur(28px) saturate(180%) brightness(0.65); align-items: center; justify-content: center;">
   <div style="background: var(--lt-b-141b24d9, rgba(20,27,36,0.85)); padding: 40px 36px; border-radius: 16px; text-align: center; border: 1px solid var(--zn-line-14); width: 340px; box-shadow: 0 30px 80px rgba(0,0,0,0.9);">
     <div id="lock-clock" style="font-size: 42px; font-weight: 800; color: var(--zn-text-strong); letter-spacing: -1px; font-family: var(--font-mono, monospace);">12:00</div>
-    <div id="lock-date" style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px;">Monday, October 9</div>
+    <div id="lock-date" data-sample style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 24px;">Monday, October 9</div>
 
     <div style="display: flex; align-items: center; justify-content: center; gap: 12px; background: var(--zn-glaze-5); border: 1px solid var(--zn-line-10); border-radius: 10px; padding: 12px; margin-bottom: 20px;">
       <div id="lock-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25));">A</div>
       <div style="text-align: left; min-width: 0; flex: 1;">
-        <div id="lock-display-name" style="font-weight: 700; color: var(--zn-text-strong); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
+        <div id="lock-display-name" data-sample style="font-weight: 700; color: var(--zn-text-strong); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
         <div id="lock-role-badge" style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-weight: 600;" data-i18n="role.superadmin">Administrator</div>
       </div>
     </div>
 
     <div style="position: relative; margin-bottom: 12px;">
       <input type="password" id="lock-password" placeholder="Enter password to unlock" data-i18n-placeholder="ui.enter_password_to_unlock" autocomplete="current-password" style="width: 100%; padding: 12px 42px 12px 14px; background: var(--lt-b-00000080, rgba(0,0,0,0.5)); border: 1px solid var(--zn-line-20); color: var(--zn-text-strong); border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none;" aria-label="Enter password to unlock" data-i18n-aria-label="ui.enter_password_to_unlock">
-      <button id="lock-unlock-btn" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: var(--zn-text-strong); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
+      <button id="lock-unlock-btn" aria-label="Unlock" data-i18n-aria-label="lock.unlock" style="position: absolute; right: 6px; top: 6px; bottom: 6px; width: 32px; background: var(--ok2, #25c2a0); border: none; border-radius: 6px; color: var(--zn-text-strong); font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center;">➔</button>
     </div>
 
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: var(--zn-fs-xs); color: var(--muted); padding: 0 2px;">
@@ -378,9 +378,9 @@
       </select>
     </div>
 
-    <div id="lock-error" style="display: none; font-size: var(--zn-fs-xs); color: var(--crit, #ff6b6b); margin-bottom: 12px;">Incorrect password</div>
+    <div id="lock-error" style="display: none; font-size: var(--zn-fs-xs); color: var(--crit, #ff6b6b); margin-bottom: 12px;" data-i18n="lock.wrong_password">Wrong password</div>
 
-    <button id="lock-switch-btn" style="background: transparent; border: none; color: var(--muted); font-size: var(--zn-fs-xs); cursor: pointer; text-decoration: underline;">Switch Account</button>
+    <button id="lock-switch-btn" style="background: transparent; border: none; color: var(--muted); font-size: var(--zn-fs-xs); cursor: pointer; text-decoration: underline;" data-i18n="lock.switch_account">Switch account</button>
   </div>
 </div>
 
@@ -1430,29 +1430,29 @@
   <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
     <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
-        <svg class="ic ic-sm"><use href="#i-users"/></svg> <span>Create New User</span>
+        <svg class="ic ic-sm"><use href="#i-users"/></svg> <span data-i18n="users.dlg_add_title">Add a person</span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <form id="form-add-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <div>
-        <label for="add-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME (REQUIRED)</label>
+        <label for="add-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_username_required">Username (required)</label>
         <input type="text" id="add-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. john" pattern="^[a-zA-Z0-9_\.-]{3,32}$" required>
       </div>
       <div>
-        <label for="add-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
+        <label for="add-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_display_name">Display name</label>
         <input type="text" id="add-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
-        <label for="add-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
+        <label for="add-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_email">Email address</label>
         <input type="email" id="add-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="john@example.com">
       </div>
       <div>
-        <label for="add-user-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">PASSWORD (REQUIRED)</label>
+        <label for="add-user-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_password_required">Password (required)</label>
         <input type="password" id="add-user-password" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
-        <label for="add-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
+        <label for="add-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_role">Role</label>
         <select id="add-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
           <option value="share_user" selected data-i18n="role.share_user_option">Family member: their own folder and the shared folders you choose</option>
           <option value="app_operator" data-i18n="role.app_operator_option">App manager: installs and runs apps</option>
@@ -1468,12 +1468,12 @@
         <div id="add-user-shares" class="add-user-shares-list"></div>
       </div>
       <div>
-        <label for="add-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
+        <label for="add-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_quota">Storage limit in GB (0 = no limit)</label>
         <input type="number" id="add-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
-        <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
-        <button type="submit" class="btn-save-preset" style="padding:8px 18px;">CREATE USER</button>
+        <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.create">Add person</button>
       </div>
     </form>
   </div>
@@ -1484,26 +1484,26 @@
   <div class="smart-modal-window" style="width: 440px; max-width: 90vw;">
     <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
-        <svg class="ic ic-sm"><use href="#i-users"/></svg> <span>Edit User Profile</span>
+        <svg class="ic ic-sm"><use href="#i-users"/></svg> <span data-i18n="users.dlg_edit_title">Edit person</span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <form id="form-edit-user" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <input type="hidden" id="edit-user-id">
       <div>
-        <label for="edit-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">USERNAME</label>
+        <label for="edit-user-username" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_username">Username</label>
         <input type="text" id="edit-user-username" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-8); background:var(--zn-glaze-5); padding:8px 10px; color:var(--muted); cursor:not-allowed;" disabled>
       </div>
       <div>
-        <label for="edit-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">DISPLAY NAME</label>
+        <label for="edit-user-display" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_display_name">Display name</label>
         <input type="text" id="edit-user-display" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="e.g. John Doe" data-i18n-placeholder="ui.e_g_john_doe">
       </div>
       <div>
-        <label for="edit-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">EMAIL ADDRESS</label>
+        <label for="edit-user-email" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_email">Email address</label>
         <input type="email" id="edit-user-email" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="john@example.com">
       </div>
       <div>
-        <label for="edit-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
+        <label for="edit-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_role">Role</label>
         <select id="edit-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
           <option value="share_user" data-i18n="role.share_user_option">Family member: their own folder and the shared folders you choose</option>
           <option value="app_operator" data-i18n="role.app_operator_option">App manager: installs and runs apps</option>
@@ -1514,12 +1514,12 @@
         </select>
       </div>
       <div>
-        <label for="edit-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">STORAGE QUOTA (GB, 0 = UNLIMITED)</label>
+        <label for="edit-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_quota">Storage limit in GB (0 = no limit)</label>
         <input type="number" id="edit-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
-        <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
-        <button type="submit" class="btn-save-preset" style="padding:8px 18px;">SAVE CHANGES</button>
+        <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.save_changes">Save changes</button>
       </div>
     </form>
   </div>
@@ -1530,26 +1530,26 @@
   <div class="smart-modal-window" style="width: 400px; max-width: 90vw;">
     <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:15px;">🔑</span> <span>Reset Password for <strong id="reset-pwd-username">@user</strong></span>
+        <span style="font-size:15px;">🔑</span> <span><span data-i18n="users.dlg_pwd_title">New password for</span> <strong id="reset-pwd-username">@user</strong></span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <form id="form-reset-password" class="smart-modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
       <div id="reset-pwd-current-wrap" style="display:none;">
-        <label for="reset-pwd-current" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CURRENT PASSWORD</label>
+        <label for="reset-pwd-current" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_current_password">Current password</label>
         <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Your current password" data-i18n-placeholder="ui.your_current_password" autocomplete="current-password">
       </div>
       <div>
-        <label for="reset-pwd-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">NEW PASSWORD</label>
+        <label for="reset-pwd-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_new_password">New password</label>
         <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">
       </div>
       <div>
-        <label for="reset-pwd-confirm" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;">CONFIRM NEW PASSWORD</label>
+        <label for="reset-pwd-confirm" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_confirm_password">New password again</label>
         <input type="password" id="reset-pwd-confirm" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Repeat new password" data-i18n-placeholder="mgmt.sec_confirm_placeholder" minlength="8" required autocomplete="new-password">
       </div>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
-        <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
-        <button type="submit" class="btn-save-preset" style="padding:8px 18px;">UPDATE PASSWORD</button>
+        <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.update_password">Change password</button>
       </div>
     </form>
   </div>
@@ -1560,34 +1560,34 @@
   <div class="smart-modal-window" style="width: 460px; max-width: 90vw;">
     <div class="smart-modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
       <div class="smart-modal-title" style="display:flex; align-items:center; gap:6px;">
-        <span style="font-size:15px;">🛡️</span> <span>Setup Two-Factor Authentication</span>
+        <span style="font-size:15px;">🛡️</span> <span data-i18n="users.dlg_2fa_title">Set up two-step sign-in</span>
       </div>
       <button type="button" class="win-btn close-btn modal-close-btn" title="Close" data-i18n-title="diagnostics.close_btn" aria-label="Close" data-i18n-aria-label="diagnostics.close_btn"></button>
     </div>
     <div class="smart-modal-body" style="padding: 18px;">
       <!-- Step 1: Scan & Verify -->
       <div id="mfa-step-verify">
-        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:12px; line-height:1.45;">
-          Scan the QR code below using your authenticator app (such as Google Authenticator, Aegis, 1Password, or Bitwarden):
+        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-bottom:12px; line-height:1.45;" data-i18n="users.2fa_scan">
+          Scan this QR code with an authenticator app, such as Aegis, 1Password, Bitwarden or Google Authenticator:
         </div>
         <div id="mfa-qr-container" style="background:#fff; border-radius:8px; padding:12px; display:flex; justify-content:center; align-items:center; margin:0 auto 14px; width:220px; height:220px; box-shadow:0 4px 14px rgba(0,0,0,0.4);">
           <!-- QR SVG injected here -->
         </div>
         <div style="font-size:var(--zn-fs-xs); color:var(--muted); text-align:center; margin-bottom:14px;">
-          Or enter this key manually: <code id="mfa-secret-key" style="font-weight:700; color:var(--zn-text-accent); background:var(--zn-shade-40); padding:2px 6px; border-radius:4px; letter-spacing:1px; user-select:all;">--</code>
+          <span data-i18n="users.2fa_manual">Or type this key into the app:</span> <code id="mfa-secret-key" style="font-weight:700; color:var(--zn-text-accent); background:var(--zn-shade-40); padding:2px 6px; border-radius:4px; letter-spacing:1px; user-select:all;">--</code>
         </div>
         <form id="form-verify-2fa" style="display:flex; flex-direction:column; gap:10px;">
           <div>
-            <label for="mfa-current-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">CURRENT PASSWORD</label>
+            <label for="mfa-current-password" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_current_password">Current password</label>
             <input type="password" id="mfa-current-password" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--zn-shade-30); padding:10px; color:var(--zn-text-strong);" required autocomplete="current-password">
           </div>
           <div>
-            <label for="mfa-verify-code" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">6-DIGIT VERIFICATION CODE</label>
+            <label for="mfa-verify-code" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_2fa_code">6-digit code from the app</label>
             <input type="text" id="mfa-verify-code" class="tz-select-input" style="width:100%; border:1px solid rgba(56,189,248,0.4); background:var(--zn-shade-30); padding:10px; color:var(--zn-text-strong); font-size:18px; font-family:monospace; text-align:center; letter-spacing:4px;" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
           </div>
           <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
-            <button type="button" class="btn-pill-toggle modal-close-btn">Cancel</button>
-            <button type="submit" class="btn-save-preset" style="padding:8px 18px;">VERIFY & ACTIVATE 2FA</button>
+            <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
+            <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.2fa_activate">Check the code and turn on</button>
           </div>
         </form>
       </div>
@@ -1596,20 +1596,20 @@
       <div id="mfa-step-success" style="display: none;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; color:var(--ok2);">
           <span style="font-size:20px;">✅</span>
-          <strong style="font-size:14px;">Two-Factor Authentication Activated!</strong>
+          <strong style="font-size:14px;" data-i18n="users.2fa_on_title">Two-step sign-in is on</strong>
         </div>
-        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.45; margin-bottom:12px;">
-          Save these <strong>Emergency Recovery Codes</strong> in a secure password manager. Each single-use code can be used to sign in if you lose access to your authenticator device:
+        <div style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); line-height:1.45; margin-bottom:12px;" data-i18n="users.2fa_codes_help">
+          Keep these recovery codes in a password manager. Each one signs you in once if you lose the phone with the authenticator app.
         </div>
         <div id="mfa-recovery-codes-list" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
           <!-- Populated via users.js -->
         </div>
         <div style="display:flex; justify-content:space-between; gap:10px;">
-          <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.35); color: var(--zn-text-accent);">
-            📋 COPY ALL CODES
+          <button type="button" id="btn-copy-recovery-codes" class="btn-pill-toggle" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.35); color: var(--zn-text-accent);" data-i18n="users.2fa_copy_codes">
+            Copy all codes
           </button>
-          <button type="button" class="btn-save-preset modal-close-btn" style="padding:8px 18px;">
-            DONE
+          <button type="button" class="btn-save-preset modal-close-btn" style="padding:8px 18px;" data-i18n="common.done">
+            Done
           </button>
         </div>
       </div>
