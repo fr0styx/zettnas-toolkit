@@ -109,6 +109,33 @@ def test_extended_retrieval_does_not_regress():
     assert not drops, "Retrieval got worse: " + "; ".join(drops)
 
 
+def test_id_retrieval_does_not_regress():
+    """Codes, long numbers, versions and quoted phrases (AI-12): the right one of several almost
+    identical files comes first. The B13 gate asks exact-ID recall@5 >= 0.90."""
+    with open(os.path.join(HERE, "baseline_ids.json"), encoding="utf-8") as f:
+        baseline = json.load(f)
+    got = evaluate(which="ids")
+    assert got["overall"]["recall@5"] >= 0.90
+    drops = []
+    scopes = [("overall", baseline["overall"], got["overall"])]
+    scopes += [(lang, b, got["by_language"][lang]) for lang, b in baseline["by_language"].items()]
+    for scope, base, now in scopes:
+        for metric in ("recall@1", "recall@5", "mrr@10"):
+            if now[metric] < base[metric] - TOLERANCE:
+                drops.append(f"{scope} {metric}: {base[metric]} -> {now[metric]}")
+    assert not drops, "ID retrieval got worse: " + "; ".join(drops)
+
+
+def test_the_id_set_points_at_files_it_writes(tmp_path):
+    from tests.rag_eval import id_docs
+
+    written = set(id_docs.build(str(tmp_path)))
+    queries = load_queries("ids")
+    assert len(queries) == 30 and {q["kind"] for q in queries} == {"id"}
+    for q in queries:
+        assert set(q["relevant"]) <= written, q["id"]
+
+
 # --- AI-16: long, Office and scanned documents, multi-hop questions, a held-out split ----------
 
 

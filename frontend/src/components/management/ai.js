@@ -2852,7 +2852,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     ? `
       <details class="ai-chat-doc-citations" style="margin-top: 4px; font-size: var(--zn-fs-xs);">
         <summary style="cursor: pointer; color: var(--zn-text-accent); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.32); width: fit-content; user-select: none;">
-          <span>📚 Verified Citations (${citations.length})</span>
+          <span>📚 ${escapeHtml(t('ai.sources_count', 'Sources ({n})', { n: citations.length }))}</span>
         </summary>
         <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
           ${citations.map((c, idx) => {

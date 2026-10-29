@@ -28,7 +28,7 @@ from backend.services import chat_tool_registry as reg
         ({"tool": "list_docker_containers", "running": 2, "total": 3}, "2/3 containers running"),
         ({"tool": "control_docker_container", "action": "restart", "container": "plex"}, "restart plex"),
         ({"tool": "trigger_ai_sync", "action": "pause"}, "Sync pause (Standby Safe)"),
-        ({"tool": "browse_internet", "sources": [1, 2]}, "2 web source(s) verified"),
+        ({"tool": "browse_internet", "sources": [1, 2]}, "2 web source(s) found"),
         ({"tool": "calculate", "expression": "2+2", "formatted": "4"}, "2+2 = 4"),
         ({"tool": "get_storage_status", "free_tib": 3.5}, "3.5 TiB free"),
         ({"tool": "get_network_status", "ip_address": "192.0.2.5"}, "IP: 192.0.2.5"),

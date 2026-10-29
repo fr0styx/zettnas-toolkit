@@ -1,0 +1,272 @@
+[
+ {
+  "id": "ids/invoices/invoice_0471.md#1",
+  "lang": "en",
+  "query": "INV-2025-0471",
+  "relevant": [
+   "ids/invoices/invoice_0471.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/invoices/invoice_0417.md#1",
+  "lang": "en",
+  "query": "invoice INV-2025-0417 total",
+  "relevant": [
+   "ids/invoices/invoice_0417.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/invoices/invoice_0423.md#1",
+  "lang": "de",
+  "query": "Rechnung INV-2025-0423",
+  "relevant": [
+   "ids/invoices/invoice_0423.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/invoices/invoice_0432.md#1",
+  "lang": "fr",
+  "query": "facture INV-2025-0432",
+  "relevant": [
+   "ids/invoices/invoice_0432.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/invoices/invoice_0714.md#1",
+  "lang": "es",
+  "query": "factura INV-2025-0714",
+  "relevant": [
+   "ids/invoices/invoice_0714.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/invoices/invoice_0741.md#1",
+  "lang": "en",
+  "query": "how much is invoice INV-2025-0741",
+  "relevant": [
+   "ids/invoices/invoice_0741.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/invoices/invoice_1047.md#1",
+  "lang": "zh",
+  "query": "发票 INV-2025-1047",
+  "relevant": [
+   "ids/invoices/invoice_1047.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/invoices/invoice_1074.md#1",
+  "lang": "en",
+  "query": "what do I owe on INV-2025-1074",
+  "relevant": [
+   "ids/invoices/invoice_1074.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/devices/warranty_sn-7xk2-90qb.md#1",
+  "lang": "en",
+  "query": "warranty for serial SN-7XK2-90QB",
+  "relevant": [
+   "ids/devices/warranty_sn-7xk2-90qb.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/devices/warranty_sn-7xk2-90qa.md#1",
+  "lang": "en",
+  "query": "SN-7XK2-90QA",
+  "relevant": [
+   "ids/devices/warranty_sn-7xk2-90qa.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/devices/warranty_sn-7xk2-09qa.md#1",
+  "lang": "de",
+  "query": "Garantie Seriennummer SN-7XK2-09QA",
+  "relevant": [
+   "ids/devices/warranty_sn-7xk2-09qa.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/devices/warranty_sn-7kx2-90qa.md#1",
+  "lang": "fr",
+  "query": "garantie numéro de série SN-7KX2-90QA",
+  "relevant": [
+   "ids/devices/warranty_sn-7kx2-90qa.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/devices/warranty_sn-x7k2-90qa.md#1",
+  "lang": "en",
+  "query": "drive with serial number SN-X7K2-90QA",
+  "relevant": [
+   "ids/devices/warranty_sn-x7k2-90qa.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/devices/warranty_sn-7xk2-90aq.md#1",
+  "lang": "es",
+  "query": "garantía SN-7XK2-90AQ",
+  "relevant": [
+   "ids/devices/warranty_sn-7xk2-90aq.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/orders/order_58213310.md#1",
+  "lang": "en",
+  "query": "order 58213310",
+  "relevant": [
+   "ids/orders/order_58213310.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/orders/order_58213301.md#1",
+  "lang": "en",
+  "query": "order confirmation 58213301",
+  "relevant": [
+   "ids/orders/order_58213301.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/orders/order_58231301.md#1",
+  "lang": "de",
+  "query": "Bestellung 58231301",
+  "relevant": [
+   "ids/orders/order_58231301.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/orders/order_85213301.md#1",
+  "lang": "en",
+  "query": "when does order 85213301 ship",
+  "relevant": [
+   "ids/orders/order_85213301.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/orders/order_58213031.md#1",
+  "lang": "fr",
+  "query": "commande 58213031",
+  "relevant": [
+   "ids/orders/order_58213031.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/orders/order_58213300.md#1",
+  "lang": "zh",
+  "query": "订单 58213300",
+  "relevant": [
+   "ids/orders/order_58213300.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/firmware/release_v2_3_10.md#1",
+  "lang": "en",
+  "query": "what changed in firmware v2.3.10",
+  "relevant": [
+   "ids/firmware/release_v2_3_10.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/firmware/release_v2_3_1.md#1",
+  "lang": "en",
+  "query": "firmware v2.3.1 release notes",
+  "relevant": [
+   "ids/firmware/release_v2_3_1.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/firmware/release_v2_13_1.md#1",
+  "lang": "de",
+  "query": "Was ist neu in Firmware v2.13.1",
+  "relevant": [
+   "ids/firmware/release_v2_13_1.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/firmware/release_v3_2_1.md#1",
+  "lang": "es",
+  "query": "novedades del firmware v3.2.1",
+  "relevant": [
+   "ids/firmware/release_v3_2_1.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/letters/lantern_a.md#1",
+  "lang": "en",
+  "query": "\"keep the blue lantern lit\"",
+  "relevant": [
+   "ids/letters/lantern_a.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/letters/lantern_b.md#1",
+  "lang": "en",
+  "query": "note that says \"the blue gate is open\"",
+  "relevant": [
+   "ids/letters/lantern_b.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/letters/lantern_c.md#1",
+  "lang": "en",
+  "query": "\"the blue lantern stays home\"",
+  "relevant": [
+   "ids/letters/lantern_c.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/letters/lantern_d.md#1",
+  "lang": "de",
+  "query": "Notiz „please keep it lit until we are home“",
+  "relevant": [
+   "ids/letters/lantern_d.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/letters/lantern_c.md#2",
+  "lang": "fr",
+  "query": "« keep the gate lit, please »",
+  "relevant": [
+   "ids/letters/lantern_c.md"
+  ],
+  "kind": "id"
+ },
+ {
+  "id": "ids/letters/lantern_b.md#2",
+  "lang": "zh",
+  "query": "「keep the lantern lit, the blue gate」",
+  "relevant": [
+   "ids/letters/lantern_b.md"
+  ],
+  "kind": "id"
+ }
+]

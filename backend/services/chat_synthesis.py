@@ -374,7 +374,7 @@ def _synthesize_web_grounded_answer(
             else:
                 first_snip = _clean_complete_snippet(srcs[0].get("snippet") or direct_ans, max_chars=450)
                 answer_paragraphs.append(
-                    f"Regarding education for **{article_title}**, verified sources note:\n\n{first_snip} [1]"
+                    f"Regarding education for **{article_title}**, the sources say:\n\n{first_snip} [1]"
                 )
 
     # 2. Intent: Head of State / President / Prime Minister / Leader
@@ -541,7 +541,7 @@ def _synthesize_rag_grounded_answer(
                 cite_bullets.append(f'{idx}. **`{cname}`**{bcrumb}:\n   > "{clean_excerpt}" [{idx}]')
         if cite_bullets:
             sections.append(
-                f'Regarding your query **"{clean_msg}"**, the following verified sections were retrieved from your local knowledge base:\n\n'
+                f'Regarding your query **"{clean_msg}"**, these sections of your files match:\n\n'
                 + "\n\n".join(cite_bullets)
             )
 
@@ -1103,7 +1103,7 @@ def _build_structured_llm_context(tool_results: list[dict[str, Any]]) -> str:
                     '<retrieved_documents count="0">\nNo matching documents or records found in the indexed knowledge base for this query.\n</retrieved_documents>'
                 )
             else:
-                rag_lines.append("## Verified Local NAS Knowledge Base:")
+                rag_lines.append("## From the files indexed on this NAS:")
                 confidence = f"{score}%" if score is not None else "unverified"
                 rag_lines.append(f"[Scope: {fpath or 'Entire Knowledge Base'} | Confidence: {confidence} ({grade})]")
                 if str(grade).lower() == "low":

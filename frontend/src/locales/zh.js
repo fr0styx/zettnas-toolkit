@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "ai.sources_count": "来源（{n}）",
   "ai.licence_unknown": "未注明许可证",
   "ai.licence_non_commercial": "不可用于商业用途",
   "compress.off": "关闭",

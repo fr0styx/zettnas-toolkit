@@ -41,6 +41,7 @@ from pydantic import BaseModel, Field
 from backend.config import FAN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.ignored_errors import ignored
+from backend.services import chat_reask
 from backend.services.ai_safeguards import compose_warning_for_reply, model_web_query
 from backend.services.chat_context import (  # noqa: E402, F401
     _CJK_RE,
@@ -1670,6 +1671,47 @@ def _turn_fallback_reply(
     return (llm_reply,)
 
 
+def _turn_reask(
+    *,
+    active_model,
+    cfg,
+    citations,
+    grounding_detail,
+    grounding_score,
+    llm_endpoint,
+    llm_messages,
+    llm_reply,
+    web_sources,
+):
+    """One re-ask when fewer than half of an answer's facts are backed by the documents (AI-28).
+    The second answer is asked without streaming; it replaces the first on screen only when its
+    sentences are better supported."""
+    if grounding_detail is None or web_sources or not citations or not chat_reask.needs_reask(grounding_detail):
+        return llm_reply, grounding_detail, grounding_score
+    sink = _TOKEN_SINK.get()
+    quiet = _TOKEN_SINK.set(None)
+    try:
+        second = _try_local_llm_completion(
+            active_model=active_model,
+            llm_endpoint=llm_endpoint,
+            messages=chat_reask.reask_messages(llm_messages, llm_reply, grounding_detail),
+            tools=None,
+        )[0]
+    finally:
+        _TOKEN_SINK.reset(quiet)
+    if not second:
+        return llm_reply, grounding_detail, grounding_score
+    second = str(tidy_citations(second, len(citations)) or second)
+    second += compose_warning_for_reply(second)
+    second_detail = score_answer_grounding(second, citations, embed=_grounding_embedder(cfg))
+    if not second_detail or not chat_reask.better(grounding_detail, second_detail):
+        return llm_reply, {**grounding_detail, "reasked": True}, grounding_score
+    if sink:
+        sink("reset", "")
+        sink("token", second)
+    return second, {**second_detail, "reasked": True}, second_detail["score"]
+
+
 def _turn_trace(
     *,
     act_accel,
@@ -1677,6 +1719,7 @@ def _turn_trace(
     cfg,
     citations,
     eval_tokens,
+    llm_messages=(),
     llm_reply,
     measured_tok_sec,
     runtime_accel,
@@ -1722,7 +1765,7 @@ def _turn_trace(
         elif tname == "trigger_ai_sync":
             summary = f"Sync {tr.get('action', 'start')} (Standby Safe)"
         elif tname == "browse_internet":
-            summary = f"{len(tr.get('sources') or [])} web source(s) verified"
+            summary = f"{len(tr.get('sources') or [])} web source(s) found"
         else:
             summary = str(tr.get("status", "ok"))
         if tr.get("status") == "confirmation_required":
@@ -1760,6 +1803,17 @@ def _turn_trace(
         grounding_detail = score_answer_grounding(llm_reply, citations, embed=_grounding_embedder(cfg))
         if grounding_detail:
             grounding_score = grounding_detail["score"]
+        llm_reply, grounding_detail, grounding_score = _turn_reask(
+            active_model=active_model,
+            cfg=cfg,
+            citations=citations,
+            grounding_detail=grounding_detail,
+            grounding_score=grounding_score,
+            llm_endpoint=str(cfg.get("llm_endpoint") or "").strip(),
+            llm_messages=list(llm_messages),
+            llm_reply=llm_reply,
+            web_sources=web_sources,
+        )
     return (
         crag_grade,
         elapsed_ms,
@@ -1845,7 +1899,6 @@ def _run_agentic_chat_turn(
     active_model = str(model_override or cfg.get("active_model") or cfg.get("llm_model") or "qwen2.5:3b").strip()
     llm_endpoint = str(cfg.get("llm_endpoint") or "").strip()
     accel = detect_hardware_accelerator()
-
     msg_lower = clean_msg.lower()
     clean_norm = clean_msg.strip().lower().rstrip("!.?,")
     is_conversational_affirmation = bool(
@@ -1962,6 +2015,7 @@ def _run_agentic_chat_turn(
         cfg=cfg,
         citations=citations,
         eval_tokens=eval_tokens,
+        llm_messages=llm_messages,
         llm_reply=llm_reply,
         measured_tok_sec=measured_tok_sec,
         runtime_accel=runtime_accel,

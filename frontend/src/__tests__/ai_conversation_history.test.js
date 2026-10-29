@@ -224,9 +224,9 @@ describe('ZettAI Conversation History & Dual-Pane UI Suite', () => {
     window.__forceAiStreamingTest = true;
 
     const ssePayload = [
-      'event: tool_done\ndata: {"tool":"browse_internet","summary":"5 web source(s) verified"}\n\n',
+      'event: tool_done\ndata: {"tool":"browse_internet","summary":"5 web source(s) found"}\n\n',
       'event: token\ndata: {"token":"I was trained on a large dataset."}\n\n',
-      'event: done\ndata: {"status":"ok","reply":"I was trained on a large dataset.","tools_called":[{"tool":"browse_internet","summary":"5 web source(s) verified"}],"llm_telemetry":{"active_model":"hf.co/ConwayResearch/Underdog-Bark-3.0-Pro","tokens_per_sec":12.6,"elapsed_ms":23067}}\n\n'
+      'event: done\ndata: {"status":"ok","reply":"I was trained on a large dataset.","tools_called":[{"tool":"browse_internet","summary":"5 web source(s) found"}],"llm_telemetry":{"active_model":"hf.co/ConwayResearch/Underdog-Bark-3.0-Pro","tokens_per_sec":12.6,"elapsed_ms":23067}}\n\n'
     ].join('');
 
     const encoder = new TextEncoder();
@@ -257,7 +257,7 @@ describe('ZettAI Conversation History & Dual-Pane UI Suite', () => {
       // MUST be exactly 1 assistant bubble, never 2!
       expect(botMsgs.length).toBe(1);
       expect(botMsgs[0].textContent).toContain('I was trained on a large dataset');
-      expect(botMsgs[0].textContent).toContain('browse_internet: 5 web source(s) verified');
+      expect(botMsgs[0].textContent).toContain('browse_internet: 5 web source(s) found');
       expect(botMsgs[0].textContent).toContain("12.6 tok/s");
     } finally {
       delete window.__forceAiStreamingTest;

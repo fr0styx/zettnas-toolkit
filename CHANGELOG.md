@@ -19,6 +19,16 @@
 
 #### Usability
 
+- **Codes, numbers and quoted phrases find the right file**: a search with an invoice number,
+  a serial, an order number, a version like v2.3.10 or a phrase in quotes ("…", „…“, «…», 「…」)
+  now lets keyword matching lead, and a file holding that exact text ranks first; v2.3.1 no longer
+  matches v2.3.10. A new test set of 30 such questions over near-identical files puts the right
+  file first in 30 of 30 (27 before); the other test sets are unchanged (AI-12).
+- **Answers that stick to your files**: when fewer than half of an answer's facts are backed by
+  the documents it cites, Ask Zetty asks the model once more to answer only from them and say
+  what they don't contain, and keeps whichever answer is better supported. The list under an
+  answer is now called **Sources**, not "Verified Citations", and web results are "found", not
+  "verified" (AI-28).
 - **An honest model catalog**: the "built-in CLIP + MiniLM NPU engine" is gone (nothing ran it),
   as are the guessed speeds and power figures and the "NPU" labels on models that run in Ollama,
   which never uses the NPU. Every model shows its licence, with research-only licences marked

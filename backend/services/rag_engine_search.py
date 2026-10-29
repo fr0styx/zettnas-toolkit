@@ -18,6 +18,7 @@ from backend.db_crypto import (  # noqa: F401
     sqlite3,
 )
 from backend.services import (  # noqa: F401
+    rag_exact,
     rag_standby,
 )
 from backend.services.rag_documents import (  # noqa: F401
@@ -128,6 +129,30 @@ class _SystemPrincipal:
 
 
 SYSTEM_PRINCIPAL = _SystemPrincipal()
+
+
+def fusion_weights(intent_type: str, n_tokens: int, exact: bool) -> tuple[float, float, float]:
+    """Vector, keyword and rank-fusion weights for one query (Batch 2 item 2.3). A code or a
+    quoted phrase means that exact text, so the keyword side leads (AI-12, AI-31)."""
+    if exact:
+        return 0.15, 0.60, 0.25
+    if intent_type == "code":
+        return 0.25, 0.55, 0.20
+    if intent_type == "qa":
+        return 0.60, 0.20, 0.20
+    if n_tokens <= 2:
+        return 0.35, 0.45, 0.20
+    return 0.50, 0.30, 0.20
+
+
+def exact_score(score: float, found: int, wanted: int) -> float:
+    """A hit that holds every code and quoted phrase of the query goes first; one holding some of
+    them comes next; one holding none drops below both (AI-12)."""
+    if found >= wanted:
+        return min(1.0, score + 0.30)
+    if found:
+        return min(1.0, score + 0.12 * found / wanted)
+    return score * 0.6
 
 
 class RagSearchMixin:
@@ -1127,6 +1152,7 @@ class RagSearchMixin:
         vec_rank: dict[int, int] = {int(tup[1]["chunk_id"]): idx for idx, tup in enumerate(scored_chunks, start=1)}
 
         q_tokens = [t for t in text_tokens((raw_query or "").lower()) if t not in _STOPWORDS]
+        exact = rag_exact.exact_terms(raw_query or "")  # codes, IDs and quoted phrases (AI-12)
         prof = _core().similarity_profile(query_embedding_model, query_embedding_dim)
         per_file_best: dict[int, dict[str, Any]] = {}
         readable = self._post_rbac_checker(principal)  # one check per file, no disk access
@@ -1169,20 +1195,14 @@ class RagSearchMixin:
                 (1.0 / (60.0 + r_v)) + (1.0 / (60.0 + r_b) if (cid in bm25_rank and has_lexical_hit) else 0.0)
             )
             effective_rrf = s_rrf if (has_lexical_hit or s_vec >= prof["vec_min"]) else 0.0
-            # Dynamic Token-Density-Aware Hybrid RRF Scoring (Batch 2 Item 2.3)
-            if intent_type == "code":
-                w_vec, w_bm25, w_rrf = 0.25, 0.55, 0.20
-            elif intent_type == "qa":
-                w_vec, w_bm25, w_rrf = 0.60, 0.20, 0.20
-            elif len(q_tokens) <= 2:
-                w_vec, w_bm25, w_rrf = 0.35, 0.45, 0.20
-            else:
-                w_vec, w_bm25, w_rrf = 0.50, 0.30, 0.20
-
+            w_vec, w_bm25, w_rrf = fusion_weights(intent_type, len(q_tokens), bool(exact))
             if prof["ranker"] == "vector":
                 score = min(1.0, prof["w_vec"] * s_vec + prof["w_bm25"] * s_bm25)
             else:
                 score = min(1.0, w_vec * s_vec + w_bm25 * s_bm25 + w_rrf * effective_rrf + lex_boost)
+            if exact:
+                found = rag_exact.matched(exact, f"{title_lower} {(r['raw_chunk_text'] or chunk_lower).lower()}")
+                score = exact_score(score, found, len(exact))
             if cid in mismatched_chunks and has_lexical_hit:
                 # Embedded with another model (a fallback while the embedder was away): its vector
                 # can't be compared, so its keyword match decides, ranked below good vector hits (AI-5)

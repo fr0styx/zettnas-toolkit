@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "ai.sources_count": "Quellen ({n})",
   "ai.licence_unknown": "Lizenz nicht angegeben",
   "ai.licence_non_commercial": "Nicht für kommerzielle Nutzung",
   "compress.off": "Aus",

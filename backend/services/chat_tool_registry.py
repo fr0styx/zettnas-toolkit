@@ -190,7 +190,7 @@ def _format_tool_trace_summary(tr: dict[str, Any], tool_name: str) -> str:
     elif tname == "trigger_ai_sync":
         return f"Sync {tr.get('action', 'start')} (Standby Safe)"
     elif tname == "browse_internet":
-        return f"{len(tr.get('sources') or [])} web source(s) verified"
+        return f"{len(tr.get('sources') or [])} web source(s) found"
     elif tname == "calculate":
         return str(tr.get("summary") or f"{tr.get('expression')} = {tr.get('formatted')}")
     elif tname == "get_storage_status":

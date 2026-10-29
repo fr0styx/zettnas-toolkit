@@ -9,6 +9,8 @@ tuned to the engine.
 - queries_extended.json: 50 cross-language queries (asked in one language about a file in
   another) and 40 paraphrases that share few or no words with the file.
 - qa.json: 97 questions with the facts a correct answer must contain, for answer quality.
+- queries_ids.json (AI-12): codes, long numbers, versions and quoted phrases in files that are
+  otherwise the same (id_docs.py writes them), so only exact matching finds the right one
 - queries_documents.json, qa_documents.json (AI-16): long, Office and scanned documents and
   multi-hop questions that need two files. The files are generated (documents.py) and indexed
   with the corpus; scanned ones are read by the vision model (--ocr vision) or, per commit, by a
@@ -27,6 +29,7 @@ generalises. --misses lists dev misses only (--show-heldout to see all, e.g. for
     python -m tests.rag_eval.run_eval --model embeddinggemma --host http://127.0.0.1:11434 \\
         --set all --distractors 2000                                   # nightly: neural model, 2,000 extra files
     python -m tests.rag_eval.run_eval --model embeddinggemma --answers qwen3:4b   # answers, scored
+    python -m tests.rag_eval.run_eval --set ids                                    # codes, IDs, quoted phrases
     python -m tests.rag_eval.run_eval --set documents                              # long, Office, scanned, multi-hop
     python -m tests.rag_eval.run_eval --set documents --model embeddinggemma --host http://127.0.0.1:11434 \\
         --ocr vision --answers qwen3:4b                                            # with the real vision model
@@ -46,7 +49,12 @@ from unittest.mock import patch
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORPUS = os.path.join(HERE, "corpus")
 FIXED_MTIME_NS = 1_700_000_000_000_000_000
-SETS = {"base": "queries.json", "extended": "queries_extended.json", "documents": "queries_documents.json"}
+SETS = {
+    "base": "queries.json",
+    "extended": "queries_extended.json",
+    "documents": "queries_documents.json",
+    "ids": "queries_ids.json",  # codes, numbers and exact phrases (AI-12)
+}
 ALL = ("base", "extended")  # "all": what the nightly compares; documents run as their own set
 HELDOUT_EVERY = 5
 
@@ -389,7 +397,15 @@ def evaluate(
     measure_cut_off: bool = True,
 ) -> dict:
     from backend.services import rag_calibration
+    from backend.services import rag_engine_search as search_mod
     from backend.services.rag_engine import RagSearchEngine, similarity_profile
+
+    real_rbac = search_mod.RagSearchMixin._build_rbac_clause
+
+    def as_system(principal, table_alias="f"):
+        # ranking, not permissions: the eval searches as ZettNAS itself (since SEC-37 a search
+        # without a principal finds nothing, which made the command-line and nightly runs score 0)
+        return real_rbac(search_mod.SYSTEM_PRINCIPAL if principal is None else principal, table_alias)
 
     tmp = tempfile.mkdtemp(prefix="zettnas-rag-eval-")
     engine = RagSearchEngine(db_path=os.path.join(tmp, "eval.db"))
@@ -425,6 +441,7 @@ def evaluate(
         with (
             patch.object(engine, "get_config", return_value=cfg),
             patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=False),
+            patch.object(search_mod.RagSearchMixin, "_build_rbac_clause", staticmethod(as_system)),
         ):
             _index_tree(engine, CORPUS)
             scanned = None
@@ -434,6 +451,11 @@ def evaluate(
                 documents.build(docs_root)
                 _index_tree(engine, docs_root)
                 scanned = read_scanned(engine, ocr, host)
+            if which == "ids":
+                from tests.rag_eval import id_docs
+
+                id_docs.build(docs_root)
+                _index_tree(engine, docs_root)
             if distractors:
                 noise = os.path.join(tmp, "distractors")
                 write_distractors(noise, distractors)
@@ -560,7 +582,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="zett_lexical_384d")
     ap.add_argument("--dim", type=int, default=None)
-    ap.add_argument("--set", default="base", choices=["base", "extended", "all", "documents"])
+    ap.add_argument("--set", default="base", choices=["base", "extended", "all", "documents", "ids"])
     ap.add_argument("--distractors", type=int, default=0, help="extra generated files to search through")
     ap.add_argument("--host", default=None, help="Ollama-compatible host for the embedder and the answer model")
     ap.add_argument(
