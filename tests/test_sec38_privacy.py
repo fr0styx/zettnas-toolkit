@@ -96,6 +96,8 @@ def test_the_route(cache, monkeypatch, client, auth_headers):
 # Hosts in the code that ZettNAS never contacts by itself: links people may click, documentation,
 # XML namespaces, examples and placeholders, and addresses on the person's own network.
 NOT_CONTACTED = {
+    "in-toto.io",  # identifiers in signed statements, not addresses
+    "sigstore.dev",
     "www.w3.org",
     "schemas.openxmlformats.org",
     "example.com",

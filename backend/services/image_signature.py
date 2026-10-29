@@ -173,6 +173,10 @@ def _verifier():
         return verifier
 
 
+STATEMENT_TYPE = "https://in-toto.io/Statement/v1"
+PREDICATE_TYPE = "https://sigstore.dev/cosign/sign/v1"
+
+
 def verify_bundle(bundle_json: bytes, digest: str, verifier=None) -> str:
     """Verifies one bundle for a digest. Returns the signer identity; raises on any problem."""
     from sigstore.models import Bundle
@@ -182,6 +186,10 @@ def verify_bundle(bundle_json: bytes, digest: str, verifier=None) -> str:
     if payload_type != "application/vnd.in-toto+json":
         raise SignatureError(f"unexpected signed content ({payload_type})")
     statement = json.loads(payload)
+    # SEC-37: only the statement `cosign sign` makes; another signed claim about the same image
+    # (an SBOM, a scan result) is not a signature of the image
+    if statement.get("_type") != STATEMENT_TYPE or statement.get("predicateType") != PREDICATE_TYPE:
+        raise SignatureError(f"unexpected signed statement ({statement.get('predicateType')})")
     want = digest.split(":", 1)[1]
     if not any((s.get("digest") or {}).get("sha256") == want for s in statement.get("subject") or []):
         raise SignatureError("the signature is for a different image")

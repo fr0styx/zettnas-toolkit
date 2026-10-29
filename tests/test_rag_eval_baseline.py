@@ -22,6 +22,9 @@ from tests.rag_eval.run_eval import (
     write_distractors,
 )
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 TOLERANCE = 0.01
 
 

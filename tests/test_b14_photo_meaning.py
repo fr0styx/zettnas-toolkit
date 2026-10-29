@@ -11,6 +11,9 @@ from backend.services import photo_vectors as pv
 from backend.services import rag_engine as re_mod
 from backend.services.rag_engine import RagSearchEngine
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 DIM = 4
 
 

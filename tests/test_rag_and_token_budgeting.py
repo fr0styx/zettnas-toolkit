@@ -39,6 +39,10 @@ from backend.services.rag_engine import (
 # ---------------------------------------------------------------------------
 
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
+
 @pytest.fixture
 def temp_conv_db(tmp_path, monkeypatch):
     db_file = str(tmp_path / "test_ai_conversations_batch2.db")

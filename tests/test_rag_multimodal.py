@@ -34,6 +34,9 @@ from backend.services.rag_engine import (
 from backend.state import Z_STATE
 from tests._index_html import read_index_html
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 
 def _make_pool_photo(path: str) -> None:
     """Creates a synthetic swimming pool photo (cyan/aqua + bright blue water) with a generic filename."""

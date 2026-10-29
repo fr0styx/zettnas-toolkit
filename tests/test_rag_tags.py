@@ -1,3 +1,5 @@
+import pytest
+
 """Auto-tags and the document filters (B8): what kind of paper a file is, and its year."""
 
 import os
@@ -5,6 +7,9 @@ import sqlite3
 import time
 
 from backend.services import rag_tags
+
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
 
 NOW = time.mktime((2026, 10, 1, 0, 0, 0, 0, 0, -1))
 

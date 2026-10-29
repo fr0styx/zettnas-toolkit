@@ -9,6 +9,9 @@ import pytest
 from backend.services import rag_engine_search
 from backend.services.rag_engine import RagSearchEngine
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 
 @pytest.fixture(scope="module")
 def index(tmp_path_factory):

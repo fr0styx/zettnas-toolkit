@@ -214,6 +214,10 @@
 
 #### Security and privacy
 
+- **Fail closed**: an AI search that arrives without a signed-in person finds nothing instead of
+  everything; an update to an older version is refused unless you ask for a revert; only the
+  signature statement cosign makes counts as an image signature; stacks and Ask Zetty no longer
+  fall back to the docker command line, so everything goes through the Docker allow-list (SEC-37).
 - **App logos without third parties**: the app catalog's logos are fetched once by ZettNAS (only
   from the dashboard-icons set or GitHub, only small raster images) and served from the NAS, so
   opening the catalog no longer tells jsDelivr which apps you look at. PRIVACY.md now names every

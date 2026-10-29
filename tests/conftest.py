@@ -542,3 +542,18 @@ def _reset_embed_breaker():
     rag_embeddings._EMBED_BREAKER["until"] = 0.0
     yield
     rag_embeddings._EMBED_BREAKER["until"] = 0.0
+
+
+@pytest.fixture
+def search_as_system(monkeypatch):
+    """For tests of ranking and indexing, not of permissions: a search without a principal sees
+    every file, as it did before SEC-37 (in the app it now sees nothing). Permission tests pass
+    real principals."""
+    from backend.services import rag_engine_search as res
+
+    real = res.RagSearchMixin._build_rbac_clause
+
+    def as_system(principal, table_alias="f"):
+        return real(res.SYSTEM_PRINCIPAL if principal is None else principal, table_alias)
+
+    monkeypatch.setattr(res.RagSearchMixin, "_build_rbac_clause", staticmethod(as_system))

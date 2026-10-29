@@ -14,6 +14,9 @@ from backend.services.rag_embeddings import TASK_PREFIX_QA, classify_query_task_
 from backend.services.rag_engine import RagSearchEngine
 from backend.services.rag_text import build_safe_fts5_query, parse_multimodal_query
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 
 @pytest.mark.parametrize(
     ("text", "lang"),

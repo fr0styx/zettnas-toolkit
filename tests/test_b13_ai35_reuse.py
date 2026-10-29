@@ -10,6 +10,9 @@ import pytest
 from backend.services import rag_engine_indexing
 from backend.services.rag_engine import RagSearchEngine
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 TEXT = "Warranty for the Zephyrine dishwasher, model ZX-48, valid until 2031 with free repairs.\n"
 
 

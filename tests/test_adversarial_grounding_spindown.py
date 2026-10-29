@@ -35,6 +35,9 @@ from backend.services.rag_engine import (
 )
 from backend.state import Z_STATE
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 # ============================================================================
 # 1. Thought Token & Reasoning Extraction Stress Tests
 # ============================================================================

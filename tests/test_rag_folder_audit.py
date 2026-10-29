@@ -33,6 +33,9 @@ from backend.services.rag_engine import (
     grade_rag_retrieval,
 )
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 
 @pytest.fixture
 def temp_rag_env():

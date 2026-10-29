@@ -4,7 +4,6 @@ import ast
 import contextvars
 import os
 import re
-import subprocess
 import time
 from typing import (  # noqa: F401
     Any,
@@ -296,32 +295,6 @@ def tool_list_docker_containers(limit: int = 40) -> dict[str, Any]:
     except Exception as e:
         logger.debug(f"[AIChatAgent] read_docker_containers error: {e}")
 
-    if not containers:
-        try:
-            proc = subprocess.run(
-                ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Image}}\t{{.State}}\t{{.Status}}\t{{.Ports}}"],
-                capture_output=True,
-                text=True,
-                timeout=4.0,
-                check=False,
-            )
-            if proc.returncode == 0 and proc.stdout:
-                for line in proc.stdout.strip().splitlines():
-                    parts = line.split("\t")
-                    if len(parts) >= 4:
-                        containers.append(
-                            {
-                                "name": parts[0].strip(),
-                                "image": parts[1].strip(),
-                                "state": parts[2].strip(),
-                                "status": parts[3].strip(),
-                                "ports": parts[4].strip() if len(parts) > 4 else "",
-                                "created": 0,
-                            }
-                        )
-        except Exception as e:
-            logger.debug(f"[AIChatAgent] docker ps fallback error: {e}")
-
     running = [c for c in containers if c.get("state") == "running"]
 
     def _created_sort_key(item: dict[str, Any]) -> float:
@@ -417,31 +390,14 @@ def tool_control_docker_container(
     except Exception as e:
         logger.debug(f"[AIChatAgent] container_action exception: {e}")
 
-    try:
-        proc = subprocess.run(
-            ["docker", clean_action, clean_name],
-            capture_output=True,
-            text=True,
-            timeout=12.0,
-            check=False,
-        )
-        if proc.returncode == 0:
-            return {
-                "tool": "control_docker_container",
-                "status": "ok",
-                "container": clean_name,
-                "action": clean_action,
-                "message": f"Container '{clean_name}' {clean_action}ed successfully.",
-            }
-        return {
-            "tool": "control_docker_container",
-            "status": "error",
-            "container": clean_name,
-            "action": clean_action,
-            "error": (proc.stderr or proc.stdout or "Docker command failed").strip(),
-        }
-    except Exception as e:
-        return {"tool": "control_docker_container", "status": "error", "error": str(e)}
+    # SEC-37: only through the Docker API proxy, never the docker command line
+    return {
+        "tool": "control_docker_container",
+        "status": "error",
+        "container": clean_name,
+        "action": clean_action,
+        "error": "The container could not be changed through ZettNAS's Docker connection.",
+    }
 
 
 # The file or folder a question is about ("Ask Zetty about this"); set per chat turn
@@ -650,7 +606,7 @@ def tool_search_nas_knowledge(
         crag_grade = str(ask_res.get("crag_grade") or "high")
 
         if target_folder and not folder_manifest:
-            folder_manifest = rag.get_folder_manifest(target_folder)
+            folder_manifest = rag.get_folder_manifest(target_folder, principal)
 
     neural_scores = not similarity_profile(rag.get_config().get("embedding_model"))["strict_terms"]
     if strict_relevance and neural_scores and not target_folder:

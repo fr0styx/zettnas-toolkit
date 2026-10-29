@@ -13,6 +13,9 @@ from PIL import Image
 from backend.services import photo_place
 from backend.services.rag_engine import RagSearchEngine
 
+# ranking and indexing, not permissions: a search without a principal sees every file
+pytestmark = pytest.mark.usefixtures("search_as_system")
+
 PLACES = [
     ("Rome", "Lazio", "Italy", 41.89193, 12.51133),
     ("Tivoli", "Lazio", "Italy", 41.95952, 12.80160),

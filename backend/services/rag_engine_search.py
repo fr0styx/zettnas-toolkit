@@ -116,14 +116,32 @@ def _readable_share_names(username: str) -> set[str] | None:
         return None
 
 
+class _SystemPrincipal:
+    """ZettNAS itself, for its own background work (indexing checks, maintenance): sees every file."""
+
+    username = "zettnas-system"
+    role_id = "superadmin"
+
+    @staticmethod
+    def has_any_scope(*scopes: str) -> bool:
+        return True
+
+
+SYSTEM_PRINCIPAL = _SystemPrincipal()
+
+
 class RagSearchMixin:
     """Search, ask and thumbnails for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
     @staticmethod
     def _build_rbac_clause(principal: Any, table_alias: str = "f") -> tuple[str, list[Any]]:
-        """Builds parameterized SQLite WHERE predicate for multi-user RBAC path isolation."""
+        """Builds parameterized SQLite WHERE predicate for multi-user RBAC path isolation.
+
+        Fails closed (SEC-37): without a principal nothing matches. ZettNAS's own background work
+        passes SYSTEM_PRINCIPAL, on purpose."""
         if principal is None:
-            return ("1=1", [])
+            logger.warning("rag search: called without a principal; returning nothing (SEC-37)")
+            return ("0", [])
         role_id = str(getattr(principal, "role_id", "") or "").lower()
         has_any = getattr(principal, "has_any_scope", None)
         is_admin = role_id in ("superadmin", "storage_admin") or (

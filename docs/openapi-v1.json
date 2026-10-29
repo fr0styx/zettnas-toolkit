@@ -892,6 +892,11 @@
       "title": "Channel",
       "type": "string"
      },
+     "revert": {
+      "default": false,
+      "title": "Revert",
+      "type": "boolean"
+     },
      "target_image": {
       "anyOf": [
        {

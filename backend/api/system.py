@@ -1314,6 +1314,25 @@ async def _check_system_updates_by_version(force: bool = False, channel: str = "
 class ApplySystemUpdateRequest(BaseModel):
     channel: str = "stable"
     target_image: str | None = None
+    revert: bool = False  # SEC-37: installing an older version must be asked for by name
+
+
+_VERSION_TAG = re.compile(r"^v?\d+(?:\.\d+){1,3}$")
+
+
+def older_than_running(version: str) -> bool:
+    """True for a version string (v1.9.4, 1.9.4) older than the one running now."""
+    v = (version or "").strip()
+    return bool(_VERSION_TAG.match(v)) and _is_newer_version(__version__, v.lstrip("v"))
+
+
+def _image_version_label(image_ref: str) -> str:
+    from backend.services.container_mutator import _docker_request
+
+    st, img = _docker_request("GET", f"/images/{image_ref}/json")
+    if st != 200 or not isinstance(img, dict):
+        return ""
+    return str(((img.get("Config") or {}).get("Labels") or {}).get("org.opencontainers.image.version") or "")
 
 
 @router.post(
@@ -1337,6 +1356,12 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         if not _is_official_image_ref(req.target_image):
             raise HTTPException(status_code=400, detail=f"Updates can only install {_IMAGE_REPO} images.")
         target_img = req.target_image
+        tag = target_img.rsplit(":", 1)[1] if ":" in target_img.split("/")[-1] else ""
+        if older_than_running(tag) and not req.revert:
+            raise HTTPException(
+                status_code=409,
+                detail=f"{tag} is older than this version ({__version__}). To go back, ask for a revert.",
+            )
     else:
         from backend.config import variant_tag
 
@@ -1377,6 +1402,17 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         raise HTTPException(
             status_code=409,
             detail="The image changed while it was downloading (a new build was published). Check for updates again.",
+        )
+
+    # 1b'. Nor an older version under a newer name, unless a revert was asked for (SEC-37)
+    try:
+        label = await asyncio.to_thread(_image_version_label, target_img)
+    except Exception:
+        label = ""
+    if older_than_running(label) and not req.revert:
+        raise HTTPException(
+            status_code=409,
+            detail=f"The downloaded image is version {label}, older than this one ({__version__}). Not updating.",
         )
 
     # 1c. The image must be signed by this project's CI (cosign keyless, Sigstore bundle)

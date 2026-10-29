@@ -181,3 +181,18 @@ def test_update_endpoint_follows_the_signature_mode(update_env, monkeypatch, mod
         assert "signature" in r.json()["detail"]
     else:
         assert r.json()["signature"]["checked"] is (mode != "off")
+
+
+def test_only_the_cosign_signature_statement_counts(verifier, monkeypatch):
+    """SEC-37: a signed SBOM or scan about the same image is not a signature of it."""
+    real = verifier.verify_dsse
+
+    def other_predicate(bundle, policy):
+        payload_type, payload = real(bundle, policy)
+        statement = json.loads(payload)
+        statement["predicateType"] = "https://spdx.dev/Document"
+        return payload_type, json.dumps(statement).encode()
+
+    monkeypatch.setattr(verifier, "verify_dsse", other_predicate)
+    with pytest.raises(sig.SignatureError, match="unexpected signed statement"):
+        sig.verify_bundle(_bundle(), DIGEST, verifier)
