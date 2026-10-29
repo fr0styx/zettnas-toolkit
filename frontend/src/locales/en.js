@@ -2069,7 +2069,7 @@ export default {
   "login.error": "Something went wrong",
   "setup.title": "ZettNAS Setup Wizard",
   "setup.welcome_title": "Welcome to your ZettNAS Toolkit!",
-  "setup.welcome_desc": "Your NAS hardware environment has been initialized. Complete this initial setup to secure your console and review connected peripherals.",
+  "setup.welcome_desc": "Find any file by what is in it, and ask Zetty about your files. The search runs on this server, and your files and their index stay here. No account, no subscription. First, set your password and name the server.",
   "setup.step1_title": "Your hardware",
   "setup.chassis_model": "Model",
   "setup.lcd_screen": "Front screen",

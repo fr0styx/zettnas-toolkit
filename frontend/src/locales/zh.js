@@ -2069,7 +2069,7 @@ export default {
   "login.error": "错误",
   "setup.title": "ZettNAS 设置向导",
   "setup.welcome_title": "欢迎使用你的 ZettNAS 工具箱！",
-  "setup.welcome_desc": "你的 NAS 硬件环境已初始化完成。请完成此初始设置以保护控制台安全并检查连接的外设。",
+  "setup.welcome_desc": "按内容找到任何文件，并向 Zetty 询问你的文件。搜索在这台服务器上运行，你的文件和索引都留在这里。无需账户，无需订阅。首先，设置你的密码并为服务器命名。",
   "setup.step1_title": "你的硬件",
   "setup.chassis_model": "型号",
   "setup.lcd_screen": "前面板屏幕",

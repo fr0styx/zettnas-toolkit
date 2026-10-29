@@ -18,10 +18,11 @@ def _iso(days_ago):
     return (dt.datetime.now(dt.UTC) - dt.timedelta(days=days_ago)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _pick(tmp_path, releases, want="", skip="false", hold=""):
+def _pick(tmp_path, releases, want="", skip="false", hold="", event="", today=""):
     with open(WF, encoding="utf-8") as f:
         steps = yaml.safe_load(f)["jobs"]["promote"]["steps"]
     script = next(s for s in steps if s.get("id") == "pick")["run"].replace("${{ github.repository }}", "o/r")
+    tmp_path.mkdir(exist_ok=True)
     bindir = tmp_path / "bin"
     bindir.mkdir()
     gh = bindir / "gh"
@@ -38,6 +39,8 @@ def _pick(tmp_path, releases, want="", skip="false", hold=""):
         "SKIP": skip,
         "HOLD": hold,
         "SOAK_DAYS": "7",
+        "EVENT": event,
+        "TRAIN_TODAY": today,
     }
     p = subprocess.run(["bash", "-c", script], env=env, capture_output=True, text=True)
     assert p.returncode == 0, p.stderr
@@ -67,10 +70,38 @@ def test_held_betas_are_skipped(tmp_path):
 
 
 def test_warns_when_stable_is_stale(tmp_path):
-    out, stdout = _pick(tmp_path, [_rel("v1.9.6", 2), _rel("v1.9.3", 20, pre=False)])
+    out, stdout = _pick(tmp_path, [_rel("v1.9.6", 2), _rel("v1.9.3", 50, pre=False)])
     assert out["go"] == "false" and "Stable is stale" in stdout
+    out, stdout = _pick(tmp_path / "b", [_rel("v1.9.6", 2), _rel("v1.9.3", 30, pre=False)])
+    assert "Stable is stale" not in stdout  # one monthly train missed is normal
 
 
 def test_manual_security_promotion_skips_the_soak(tmp_path):
     out, _ = _pick(tmp_path, [_rel("v1.9.4", 0), _rel("v1.9.3", 30, pre=False)], want="v1.9.4", skip="true")
     assert out["go"] == "true" and out["tag"] == "v1.9.4"
+
+
+# --- the monthly train (COMP-10) ---
+
+READY = [_rel("v1.9.5", 9), _rel("v1.9.3", 40, pre=False)]
+
+
+def test_the_schedule_promotes_on_the_first_tuesday(tmp_path):
+    out, _ = _pick(tmp_path, READY, event="schedule", today="2026-11-03")  # a Tuesday, the 3rd
+    assert out["go"] == "true" and out["tag"] == "v1.9.5"
+
+
+@pytest.mark.parametrize("today", ["2026-11-10", "2026-11-04", "2026-12-08"])
+def test_the_schedule_waits_for_the_train_on_other_days(tmp_path, today):
+    out, stdout = _pick(tmp_path, READY, event="schedule", today=today)
+    assert out["go"] == "false" and "next stable train" in stdout
+
+
+def test_the_next_train_is_named(tmp_path):
+    _, stdout = _pick(tmp_path, READY, event="schedule", today="2026-11-04")
+    assert "2026-12-01" in stdout
+
+
+def test_a_run_by_hand_is_not_held_for_the_train(tmp_path):
+    out, _ = _pick(tmp_path, READY, event="workflow_dispatch", today="2026-11-10")
+    assert out["go"] == "true" and out["tag"] == "v1.9.5"

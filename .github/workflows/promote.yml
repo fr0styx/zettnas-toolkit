@@ -4,6 +4,9 @@ name: Promote release
 # :stable and MAJOR.MINOR (and the -core variants) to that same signed image and marks the
 # GitHub release as the latest. Nothing is rebuilt: stable users get exactly what beta ran.
 #
+# COMP-10: Stable is a monthly train. The schedule promotes only on the first Tuesday of the
+# month (UTC), taking the newest beta that has soaked by then. A run by hand works any day.
+#
 # Stop a promotion: set the repository variable HOLD_RELEASES (Settings > Secrets and
 #   variables > Actions > Variables) to the version, e.g. v1.9.3, or to "all".
 # Skip the wait (security fix): Actions > Promote release > Run workflow, with
@@ -47,8 +50,18 @@ jobs:
           WANT: ${{ inputs.version }}
           SKIP: ${{ inputs.skip_soak }}
           HOLD: ${{ vars.HOLD_RELEASES }}
+          EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
+          # Monthly train (COMP-10): a scheduled run promotes only on the first Tuesday of the month.
+          today=${TRAIN_TODAY:-$(date -u +%F)}
+          train_day() { [ "$(date -u -d "$1" +%u)" = 2 ] && [ "$(date -u -d "$1" +%-d)" -le 7 ]; }
+          if [ "${EVENT:-}" = "schedule" ] && ! train_day "$today"; then
+            next=""
+            for i in $(seq 1 38); do d=$(date -u -d "$today + $i day" +%F); if train_day "$d"; then next=$d; break; fi; done
+            echo "Not a train day; the next stable train is $next." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
           releases=$(gh api "repos/${{ github.repository }}/releases?per_page=50")
           held() { for h in $(echo "${HOLD:-}" | tr ',' ' '); do [ "$h" = "all" ] || [ "$h" = "$1" ] && return 0; done; return 1; }
           age_of() { echo $(( ( $(date +%s) - $(date -d "$1" +%s) ) / 86400 )); }
@@ -77,7 +90,7 @@ jobs:
             if [ -z "$rel" ]; then
               echo "No beta ready to promote." | tee -a "$GITHUB_STEP_SUMMARY"
               last=$(echo "$releases" | jq -r 'map(select((.prerelease | not) and (.draft | not))) | first | .published_at // empty')
-              if [ -n "$last" ] && [ "$(age_of "$last")" -ge 14 ]; then
+              if [ -n "$last" ] && [ "$(age_of "$last")" -ge 45 ]; then
                 echo "::warning title=Stable is stale::Nothing has been promoted to Stable for $(age_of "$last") days."
               fi
               echo "go=false" >> "$GITHUB_OUTPUT"; exit 0

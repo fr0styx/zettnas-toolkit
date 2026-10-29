@@ -4,6 +4,14 @@
 
 #### Usability
 
+- **Private search first**: the README and the setup wizard's welcome now lead with what sets
+  ZettNAS apart: finding files by what is in them, on your own server, with no account and no
+  subscription. Two new pages: **Search quality** (docs/SEARCH_QUALITY.md), generated from the
+  public test set's scores so it can't drift, and **Safe AI** (docs/SAFE_AI.md), what Ask Zetty
+  and MCP clients may and may not do, each point tied to a test (COMP-04, COMP-05, COMP-16).
+- **Stable once a month**: the Stable channel now updates on the first Tuesday of each month,
+  with the newest release that has had its seven days on beta; security fixes still go out at
+  once (COMP-10).
 - **Lists drawn by the design system**: the people, sign-in and backup lists use shared table, tag
   and state classes instead of about 90 inline styles, checked against before-and-after screenshots
   in both themes; `!important` is now held per CSS file and the use of the UI primitives may only

@@ -4,6 +4,10 @@ Every release spends seven days on the **beta** channel before it reaches **stab
 (OPS-07). Stable users get exactly the image beta users ran: promotion moves tags to the
 same signed digest, it never rebuilds.
 
+**Stable is a monthly train** (COMP-10): on the first Tuesday of each month the newest beta
+that has had its seven days becomes Stable, so stable users get one update a month with one
+set of dated notes. Security fixes don't wait for the train (see below).
+
 | Image tag | What it is | Who gets it |
 |---|---|---|
 | `:edge`, `:main` | every commit on `main` that passes CI | `UPDATE_CHANNEL=edge` |
@@ -32,9 +36,11 @@ Each tag also exists with `-core` for the core image.
    release is created as a pre-release named "… (beta)".
 3. Run the beta on a real server (Mission Control → Settings → About & Updates → Beta, or
    `UPDATE_CHANNEL=beta`).
-4. Seven days after the release was created, the **Promote release** workflow (daily, 06:00
-   UTC) verifies the image signature, moves `:latest`, `:stable` and `:1.9` to it, and marks
-   the GitHub release as the latest, so the app's Stable channel offers it.
+4. On the first Tuesday of the month (06:00 UTC), the **Promote release** workflow takes the
+   newest release that is at least seven days old, verifies its image signature, moves
+   `:latest`, `:stable` and `:1.9` to it, and marks the GitHub release as the latest, so the
+   app's Stable channel offers it. On other days the scheduled run only names the next train
+   date in its summary. It warns when nothing has reached Stable for 45 days.
 
 ## Stopping a release
 

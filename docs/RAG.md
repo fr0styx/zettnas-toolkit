@@ -91,16 +91,8 @@ window.
 
 `tests/rag_eval` has 40 home-NAS files in English, German, Chinese, French and Spanish
 and 200 hand-written questions, 5 per file. They go through the real indexer and search.
-Built-in lexical vectors, today:
-
-| Language | Right file first | Right file in top 5 | MRR@10 |
-|---|---|---|---|
-| English | 0.80 | 0.80 | 0.80 |
-| German | 0.70 | 0.82 | 0.75 |
-| French | 0.65 | 0.85 | 0.73 |
-| Spanish | 0.75 | 0.90 | 0.79 |
-| Chinese | 0.85 | 0.85 | 0.85 |
-| **All** | **0.75** | **0.84** | **0.79** |
+Today's scores, per language and per kind of question, are on [Search quality](SEARCH_QUALITY.md),
+generated from `tests/rag_eval/baseline*.json`.
 
 Chinese, Japanese and Korean text is split into overlapping character pairs, so words
 match without spaces between them (Chinese was 0.03 before this).
@@ -114,9 +106,8 @@ python -m tests.rag_eval.run_eval --model embeddinggemma --set all
 Two more sets measure what lexical vectors can't do: 50 **cross-language** questions
 (asked in one language about a file in another) and 40 **paraphrases** that share few
 words with the file. Lexical vectors score low on these by nature; the nightly run measures
-them with EmbeddingGemma (on GitHub's runners, with 2,000 extra distractor files, the right
-file is in the top 5 for 0.93 of the same-language questions, 0.83 of the paraphrases and
-0.56 of the cross-language ones). Plain reciprocal-rank fusion and the title and word boosts
+them with EmbeddingGemma on GitHub's runners, with 2,000 extra distractor files (scores on
+[Search quality](SEARCH_QUALITY.md)). Plain reciprocal-rank fusion and the title and word boosts
 were measured too and scored lower for neural models, so they are not used.
 
 **Nightly.** `.github/workflows/ai-eval-nightly.yml` runs all sets with EmbeddingGemma
@@ -124,7 +115,7 @@ served by Ollama and 2,000 distractors, and answers the 97 questions in `qa.json
 small chat model. An answer counts as right when it contains the fact
 (`answer_any`); the report also says how often the right file was cited and how often a
 model answered at all. Results are kept as workflow artifacts and compared with
-`tests/rag_eval/baseline_nightly*.json` once those are recorded.
+`tests/rag_eval/baseline_nightly*.json`.
 
 Asking for the answer first, in the question's language, without a stock "could not find"
 sentence to copy, raised the share of right answers clearly with small models; most remaining
@@ -143,14 +134,7 @@ fact is written down there.
 
 Per commit, scanned pages go through the real vision queue with a stand-in that returns
 each page's known text: everything from the scan to the search result is checked except the
-model itself. With the built-in lexical vectors:
-
-| Kind | Questions | Right file first | Right file in top 5 | All files needed in top 5 |
-|---|---|---|---|---|
-| Long documents | 11 | 0.91 | 1.00 | 1.00 |
-| Office files | 10 | 0.80 | 1.00 | 1.00 |
-| Scanned | 7 | 0.43 | 1.00 | 1.00 |
-| Multi-hop | 5 | 1.00 | 1.00 | 0.40 |
+model itself. The scores by kind are on [Search quality](SEARCH_QUALITY.md).
 
 Multi-hop is the weak spot: the second file is often in another language or shares few
 words with the question, which neural vectors handle. CI fails if any of these drops. With
@@ -171,8 +155,7 @@ reordering questions moves nobody between the halves. Ranking and prompts are tu
 rest: `--misses` lists only those misses (`--show-heldout` shows all, for a release review),
 and every result reports both halves (`by_split`). A change that helps the tuning half but
 not the held-out half has been fitted to the questions, not improved. CI keeps both from
-getting worse; on the base set today the held-out half finds the right file in the top 5 for
-0.78 of its 41 questions, against 0.87 for the other 159.
+getting worse; [Search quality](SEARCH_QUALITY.md) shows both halves.
 
 ## How answers are checked
 

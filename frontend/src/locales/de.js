@@ -2069,7 +2069,7 @@ export default {
   "login.error": "FEHLER",
   "setup.title": "ZettNAS Einrichtungsassistent",
   "setup.welcome_title": "Willkommen bei Ihrem ZettNAS Toolkit!",
-  "setup.welcome_desc": "Ihre NAS-Hardwareumgebung wurde initialisiert. Schließen Sie diese Ersteinrichtung ab, um Ihre Konsole zu sichern und Peripheriegeräte zu überprüfen.",
+  "setup.welcome_desc": "Finden Sie jede Datei über ihren Inhalt und fragen Sie Zetty zu Ihren Dateien. Die Suche läuft auf diesem Server, Ihre Dateien und ihr Index bleiben hier. Kein Konto, kein Abo. Legen Sie zuerst Ihr Passwort fest und benennen Sie den Server.",
   "setup.step1_title": "Ihre Hardware",
   "setup.chassis_model": "Modell",
   "setup.lcd_screen": "Frontdisplay",

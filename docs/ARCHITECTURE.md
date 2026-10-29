@@ -103,7 +103,7 @@ The application starts four persistent background daemon threads upon startup vi
   6. Filesystem-Accurate Capacity: Calculates pool used space from active filesystem mount statistics (`statvfs`) rather than raw block device allocation tables to prevent capacity inflation on mdraid and LVM.
 
 ### 2.8 In-App Self-Updater & Release Orchestration
-- **Three channels**: `stable` (each release after 7 days on beta, `:latest`), `beta` (new releases at once) and `edge` (every commit on `main` that passes CI). The updater stays on the image variant you run (full or `-core`).
+- **Three channels**: `stable` (a monthly train: on the first Tuesday, the newest release with 7 days on beta, `:latest`), `beta` (new releases at once) and `edge` (every commit on `main` that passes CI). The updater stays on the image variant you run (full or `-core`).
 - **Responsibilities**:
   1. Finds the newest image for the channel and pins it by digest.
   2. Verifies that this project's CI signed exactly that digest (Sigstore bundle, `backend/services/image_signature.py`) before installing; `UPDATE_SIGNATURES=warn|off` relaxes this.

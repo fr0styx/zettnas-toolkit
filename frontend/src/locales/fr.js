@@ -2069,7 +2069,7 @@ export default {
   "login.error": "ERREUR",
   "setup.title": "Assistant de configuration ZettNAS",
   "setup.welcome_title": "Bienvenue dans votre boîte à outils ZettNAS !",
-  "setup.welcome_desc": "Votre environnement matériel NAS a été initialisé. Complétez cette configuration initiale pour sécuriser votre console et vérifier les périphériques connectés.",
+  "setup.welcome_desc": "Trouvez n’importe quel fichier par son contenu et posez vos questions à Zetty sur vos fichiers. La recherche tourne sur ce serveur, et vos fichiers et leur index restent ici. Sans compte, sans abonnement. D’abord, choisissez votre mot de passe et nommez le serveur.",
   "setup.step1_title": "Votre matériel",
   "setup.chassis_model": "Modèle",
   "setup.lcd_screen": "Écran en façade",
