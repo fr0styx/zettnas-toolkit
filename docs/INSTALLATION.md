@@ -425,6 +425,26 @@ For developers, homelab maintainers, and air-gapped homelabs building custom ima
 
 ---
 
+## Memory
+
+ZettNAS sets no memory limit by default. A container that reaches its limit is killed at once,
+which can happen in the middle of a database write or a file copy; on a NAS a warning is the
+safer default. ZettNAS warns instead when it uses more than `APP_MEMORY_WARN_MB` (1536 MB by
+default, `0` turns it off), counting its own processes and not virtual machines. The warning shows
+in the event log and goes to your notification channels.
+
+If you want a hard cap anyway, set it on the container (`mem_limit:` in Compose, `--memory` with
+`docker run`, Extra Parameters on Unraid). Leave room:
+
+| What runs | Recommended limit |
+|---|---|
+| ZettNAS alone (core image, or full image without VMs) | 1 GB (it usually holds 250–450 MB) |
+| With the front LCD's browser renderer | 1.5 GB |
+| With virtual machines | the memory of every VM you run at once, plus 1 GB |
+
+Virtual machines run inside the ZettNAS container, so its limit is theirs too: a VM that needs
+more than the limit leaves is killed with it.
+
 ## Hardware Device & Capability Mappings
 
 ZettNAS Toolkit accesses physical hardware through Linux device nodes and `cgroup` rules:

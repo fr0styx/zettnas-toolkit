@@ -57,6 +57,14 @@ class Settings:
     )
     show_os_disk: bool = _s("SHOW_OS_DISK", True, "Show the operating-system disk in the disk list.", group="Host")
     remotes_path: str = _s("REMOTES_PATH", "/mnt/remotes", "Where cloud and network remotes are mounted.", group="Host")
+    app_memory_warn_mb: int = _s(
+        "APP_MEMORY_WARN_MB",
+        1536,
+        "Warn when ZettNAS itself uses more memory than this, in MB (virtual machines not counted); 0 = off.",
+        lo=0,
+        hi=1048576,
+        group="Host",
+    )
     # Web server
     port: int = _s("PORT", 8082, "Port of the web interface.", lo=1, hi=65535, group="Web")
     trusted_proxies: tuple[str, ...] = _s(

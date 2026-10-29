@@ -82,6 +82,7 @@ SMART_POLL_INTERVAL_HDD = SETTINGS.smart_poll_hdd
 SMART_IDLE_ADAPTIVE = SETTINGS.smart_idle_adaptive
 SMART_IDLE_POLL = SETTINGS.smart_idle_poll
 SMART_POLL_INTERVAL_NVME = SETTINGS.smart_poll_nvme
+APP_MEMORY_WARN_MB = SETTINGS.app_memory_warn_mb
 LCD_RENDERER = SETTINGS.lcd_renderer
 UPDATE_SIGNATURES = SETTINGS.update_signatures
 LCD_FORMAT = SETTINGS.lcd_format  # jpeg: cheaper to encode than png (PERF-2)

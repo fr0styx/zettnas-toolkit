@@ -20,6 +20,10 @@
 
 #### Performance
 
+- **A memory warning instead of a limit**: ZettNAS warns when it uses more than `APP_MEMORY_WARN_MB`
+  (1536 MB; virtual machines not counted). No memory limit is set by default, since Docker kills a
+  container at its limit; docs/INSTALLATION.md recommends values for those who want one.
+
 - **Less work when no UPS is connected**: without a UPS set up, ZettNAS looks for one after 1, 5 and
   then every 15 minutes instead of every 10 seconds (and at once when a USB device is plugged in or
   the Power page is open).
