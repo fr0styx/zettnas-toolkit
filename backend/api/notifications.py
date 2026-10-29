@@ -153,3 +153,38 @@ def put_my_alerts(req: MyAlertsIn, principal: AuthenticatedPrincipal = Depends(g
         return {"route": set_route(principal.username, req.ntfy_topic, req.email, req.events, req.min_level)}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
+
+
+class FrigateEventsIn(BaseModel):
+    enabled: bool | None = None
+    url: str | None = Field(default=None, max_length=200)
+    labels: list[str] | None = Field(default=None, max_length=10)
+    cameras: list[str] | None = Field(default=None, max_length=64)
+    min_score: float | None = Field(default=None, ge=0, le=1)
+    cooldown_min: int | None = Field(default=None, ge=1, le=240)
+
+
+@router.get("/frigate", dependencies=[Depends(require_scope("system:view", "system:config"))])
+def get_frigate_events() -> dict[str, Any]:
+    """Frigate's detections as camera alerts (COMP-11): on or off, which objects and cameras."""
+    from backend.services import frigate_events
+
+    return {**frigate_events.public(), "choices": list(frigate_events.LABELS)}
+
+
+@router.put("/frigate", dependencies=[Depends(require_scope("system:config"))])
+def put_frigate_events(req: FrigateEventsIn) -> dict[str, Any]:
+    from backend.services import frigate_events
+
+    try:
+        return frigate_events.save_settings(**req.model_dump(exclude_none=True))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.post("/frigate/test", dependencies=[Depends(require_scope("system:config"))])
+def test_frigate_events() -> dict[str, Any]:
+    """Whether Frigate answers at the saved address, its version and its cameras."""
+    from backend.services import frigate_events
+
+    return frigate_events.check_connection()

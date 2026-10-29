@@ -156,6 +156,12 @@ def _run_usb_disks() -> None:
         two_way_sync.run_due()
     except (OSError, ValueError, KeyError, RuntimeError) as e:
         logger.warning("[Scheduler] Two-way sync failed: %s", e)
+    try:
+        from backend.services import frigate_events
+
+        frigate_events.tick()  # camera detections as alerts (COMP-11); nothing to do when off
+    except (OSError, ValueError, KeyError, RuntimeError) as e:
+        logger.warning("[Scheduler] Frigate events failed: %s", e)
 
 
 def _run_scheduled_tasks():

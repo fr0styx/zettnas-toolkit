@@ -42,6 +42,51 @@ CADDYFILE = """\
 }
 """
 
+FRIGATE_YML = """\
+# Frigate for ZettNAS (COMP-11): objects are found on the Intel iGPU with OpenVINO.
+# Add your cameras below (copy the example, set its address, enabled: true) and restart Frigate.
+# ZettNAS reads Frigate's detections and sends them as camera alerts: Notifications -> Camera alerts.
+mqtt:
+  enabled: false
+
+detectors:
+  ov:
+    type: openvino
+    device: GPU
+
+model:
+  width: 300
+  height: 300
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  path: /openvino-model/ssdlite_mobilenet_v2.xml
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+ffmpeg:
+  hwaccel_args: preset-vaapi
+
+objects:
+  track: [person, car, dog, cat]
+
+record:
+  enabled: true
+
+snapshots:
+  enabled: true
+
+cameras:
+  example:
+    enabled: false
+    ffmpeg:
+      inputs:
+        - path: rtsp://user:password@camera-address:554/stream1
+          roles: [detect, record]
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+"""
+
 NGINX_INDEX = """\
 <!doctype html><html><head><meta charset="utf-8"><title>It works</title></head>
 <body style="font-family:system-ui;margin:3rem">
@@ -577,6 +622,25 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "env": {},
         "volumes": {"server-volume": "/server/volume"},
         "logo": "scrypted",
+    },
+    {
+        "id": "frigate",
+        "name": "Frigate NVR",
+        "category": "automation",
+        "description": "Records your cameras and finds people, cars and pets on the Intel iGPU (OpenVINO); ZettNAS can send what it sees as camera alerts. The admin password is in Frigate's log on first start.",
+        "image": "ghcr.io/blakeblackshear/frigate:stable",
+        "default_port": 8971,
+        "ports": ["8971:8971"],
+        "webui_path": "/",
+        "webui_scheme": "https",
+        "env": {"TZ": "UTC"},
+        "devices": ["/dev/dri"],
+        "shm_size": 268435456,
+        "volumes": {"config": "/config", "media": "/media/frigate"},
+        "seed_files": {"config": {"config.yml": FRIGATE_YML}},
+        # on ZettNAS's own network, so ZettNAS reads http://frigate:5000 and that port stays unpublished
+        "join_zettnas_network": True,
+        "logo": "frigate",
     },
     {
         "id": "zigbee2mqtt",

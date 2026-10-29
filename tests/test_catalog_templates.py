@@ -128,3 +128,13 @@ def test_templates_that_run_as_a_user_own_their_folders():
     assert by_id["nodered"]["volume_owner"] == "1000:1000"
     assert by_id["n8n"]["volume_owner"] == "1000:1000"
     assert by_id["grafana"]["volume_owner"] == "472:0"
+
+
+def test_installing_a_builtin_app_gets_its_starter_files():
+    """The catalog listing drops seed_files; get_catalog_app (used by the install) must not, or
+    Caddy, nginx, Glance and Frigate start without their config."""
+    from backend.services import app_catalog
+
+    listed = next(a for a in app_catalog.get_all_catalog_apps() if a["id"] == "caddy")
+    assert "seed_files" not in listed
+    assert "Caddyfile" in app_catalog.get_catalog_app("caddy")["seed_files"]["etc"]

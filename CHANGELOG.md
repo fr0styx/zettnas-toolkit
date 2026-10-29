@@ -35,6 +35,12 @@
 
 #### Usability
 
+- **Camera alerts from Frigate**: Frigate NVR in the App Catalog records your cameras and finds
+  people, cars and pets on the Intel iGPU (OpenVINO). Under Notifications -> Camera alerts,
+  ZettNAS can send what it sees through your alert channels: which objects, which cameras, how
+  sure, and a quiet time per camera so one visitor is one alert. Alerts about cameras can be
+  routed to your own phone under My alerts.
+
 - **Sort a folder from its right-click menu**: right-click empty space in a folder and choose
   Sort by Name, Size, Type or Date modified, ascending or descending, in list and icon view.
 
@@ -227,6 +233,9 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **Apps from the catalog get their starter files**: Caddy, the nginx web server and Glance
+  were installed without the Caddyfile, start page or config they come with; they get them now.
 
 - **The Recycle Bin shows everything you deleted**: each shared folder keeps its own Recycle
   Bin, but the File Explorer's Recycle Bin only showed the top one, so a file deleted inside a

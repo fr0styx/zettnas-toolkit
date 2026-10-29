@@ -17,6 +17,7 @@ const EVENT_NAMES = () => ({
   fan: t('alerts.ev_fan', 'Fans'),
   copy: t('alerts.ev_copy', 'Copies and imports'),
   container: t('alerts.ev_container', 'Apps'),
+  camera: t('alerts.ev_camera', 'Cameras'),
   general: t('alerts.ev_general', 'Everything else'),
 });
 

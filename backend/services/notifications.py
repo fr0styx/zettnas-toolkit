@@ -109,6 +109,7 @@ ROUTABLE_EVENTS = (
     "backup",
     "security",
     "health",
+    "camera",
     "general",
 )
 _LEVEL_RANK = {"info": 0, "normal": 0, "warning": 1, "warn": 1, "critical": 2, "alert": 2, "error": 2}

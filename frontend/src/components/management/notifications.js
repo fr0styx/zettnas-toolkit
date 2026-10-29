@@ -34,6 +34,8 @@ export function renderNotificationConfigUI() {
   const weekly = document.getElementById('notif-weekly-report');
   if (weekly) weekly.checked = cfg.weekly_report !== false;
   renderMyAlerts(document.getElementById('my-alerts-mount'));
+  const frigate = document.getElementById('frigate-events-mount');
+  if (frigate) import('../frigate-events.js').then((m) => m.renderFrigateEvents(frigate)); // COMP-11
 
   // Master switch
   const masterSwitch = document.getElementById('notif-master-enabled');

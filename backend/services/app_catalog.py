@@ -666,8 +666,12 @@ def get_catalog_app(app_id: str) -> dict[str, Any] | None:
 
     for app in get_all_catalog_apps():
         if app["id"] == app_id:
+            if app.get("source_id") != "builtin":
+                return dict(app)
+            # the listing leaves out starter files (seed_files); the install needs them
+            full = next((b for b in CURATED_APP_CATALOG if b["id"] == app_id), {})
             # built-in apps install the exact image that shipped with this version
-            return pin_app(app) if app.get("source_id") == "builtin" else dict(app)
+            return pin_app({**app, "seed_files": full.get("seed_files") or {}})
     return None
 
 
@@ -1126,6 +1130,22 @@ def _host_access_check(app: dict[str, Any], create_body: dict[str, Any]) -> tupl
     }
 
 
+def _zettnas_network() -> str | None:
+    """The user-defined Docker network ZettNAS itself is on, for apps ZettNAS talks to by name
+    (COMP-11); None on the default bridge, where names don't resolve."""
+    import socket
+
+    try:
+        st, me = _docker_request("GET", f"/containers/{socket.gethostname()}/json")
+    except (OSError, ValueError):
+        logger.debug("app_catalog: own network unknown", exc_info=True)
+        return None
+    if st != 200 or not isinstance(me, dict):
+        return None
+    nets = ((me.get("NetworkSettings") or {}).get("Networks") or {}).keys()
+    return next((n for n in nets if n not in ("host", "none", "bridge")), None)
+
+
 def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> None:
     """Command, capabilities, kernel settings and devices a template asks for."""
     host = create_body.setdefault("HostConfig", {})
@@ -1135,6 +1155,12 @@ def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> 
         host["CapAdd"] = [str(c) for c in app["cap_add"]]
     if isinstance(app.get("sysctls"), dict) and app["sysctls"]:
         host["Sysctls"] = {str(k): str(v) for k, v in app["sysctls"].items()}
+    if app.get("shm_size"):
+        host["ShmSize"] = int(app["shm_size"])
+    if app.get("join_zettnas_network") and not host.get("NetworkMode"):
+        net = _zettnas_network()  # reachable from ZettNAS by name, no port published
+        if net:
+            host["NetworkMode"] = net
     devices = [
         d for d in (app.get("devices") or []) if isinstance(d, str) and d.startswith("/dev/") and os.path.exists(d)
     ]

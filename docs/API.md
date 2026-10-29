@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-618 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+621 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -385,6 +385,9 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/notifications/config` | any of `system:view`, `system:config` | Retrieve current notification settings with sensitive credentials masked |
 | `POST` | `/api/v1/notifications/config` | `system:config` | Save notification settings, preserving existing secrets when masked |
+| `GET` | `/api/v1/notifications/frigate` | any of `system:view`, `system:config` | Frigate's detections as camera alerts (COMP-11): on or off, which objects and cameras |
+| `PUT` | `/api/v1/notifications/frigate` | `system:config` | Put Frigate Events |
+| `POST` | `/api/v1/notifications/frigate/test` | `system:config` | Whether Frigate answers at the saved address, its version and its cameras |
 | `GET` | `/api/v1/notifications/notifications/me` | signed in | This person's own alerts: where they go and which kinds (Batch 6) |
 | `PUT` | `/api/v1/notifications/notifications/me` | signed in | Put My Alerts |
 | `POST` | `/api/v1/notifications/test` | `system:config` | Dispatch an immediate test alert across all configured channels |

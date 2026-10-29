@@ -7430,6 +7430,91 @@
     "title": "ForgetFolderRequest",
     "type": "object"
    },
+   "FrigateEventsIn": {
+    "properties": {
+     "cameras": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 64,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cameras"
+     },
+     "cooldown_min": {
+      "anyOf": [
+       {
+        "maximum": 240.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cooldown Min"
+     },
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "labels": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 10,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Labels"
+     },
+     "min_score": {
+      "anyOf": [
+       {
+        "maximum": 1.0,
+        "minimum": 0.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Min Score"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "title": "FrigateEventsIn",
+    "type": "object"
+   },
    "FsActivityResponse": {
     "additionalProperties": true,
     "description": "GET /fs/activity",
@@ -56918,6 +57003,116 @@
      }
     },
     "summary": "Update Notifications",
+    "tags": [
+     "Notifications & Alerts"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/notifications/frigate": {
+   "get": {
+    "description": "Frigate's detections as camera alerts (COMP-11): on or off, which objects and cameras.",
+    "operationId": "get_frigate_events_api_v1_notifications_frigate_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Frigate Events Api V1 Notifications Frigate Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Frigate Events",
+    "tags": [
+     "Notifications & Alerts"
+    ],
+    "x-required-scopes": [
+     "system:view",
+     "system:config"
+    ]
+   },
+   "put": {
+    "operationId": "put_frigate_events_api_v1_notifications_frigate_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/FrigateEventsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Frigate Events Api V1 Notifications Frigate Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Frigate Events",
+    "tags": [
+     "Notifications & Alerts"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/notifications/frigate/test": {
+   "post": {
+    "description": "Whether Frigate answers at the saved address, its version and its cameras.",
+    "operationId": "test_frigate_events_api_v1_notifications_frigate_test_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Test Frigate Events Api V1 Notifications Frigate Test Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Test Frigate Events",
     "tags": [
      "Notifications & Alerts"
     ],
