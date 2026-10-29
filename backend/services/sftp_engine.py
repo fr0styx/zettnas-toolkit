@@ -11,6 +11,7 @@ import os
 import re
 import socket
 import subprocess
+import sys
 import time
 from typing import Any, Optional
 
@@ -24,6 +25,13 @@ SFTP_DIR = os.path.join(DATA_DIR, "sftp")
 SFTP_CONFIG_FILE = os.path.join(SFTP_DIR, "config.json")
 SFTP_USERS_FILE = os.path.join(SFTP_DIR, "users.json")
 SFTP_CONF_FILE = os.path.join(SFTP_DIR, "sshd_config")
+FRONT_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sftp_front.py")
+SIDECAR_FRONT = "/app/backend/services/sftp_front.py"
+
+
+def _front_cmd(port: int) -> list[str]:
+    """The sidecar's command: the front on the SFTP port, rclone behind it on loopback."""
+    return ["python3", SIDECAR_FRONT, str(port), "/app/data/sftp/cache"]
 
 
 class SFTPUser(BaseModel):
@@ -259,12 +267,13 @@ Match Group sftpusers
             code, c_data = _docker_request("GET", "/containers/zettnas-sftp/json")
             if code == 200:
                 is_running = bool(c_data.get("State", {}).get("Running", False))
-                cmd = c_data.get("Config", {}).get("Cmd", [])
-                if is_running and f":{port}" in cmd:
+                # same port and command; an older sidecar ran rclone on the open port (SEC-34)
+                current = c_data.get("Config", {}).get("Cmd", []) == _front_cmd(port)
+                if is_running and current:
                     logger.info(f"[SFTP] Sidecar zettnas-sftp already running on port {port}")
                     return True
 
-                if not is_running and f":{port}" in cmd:
+                if current:
                     code_st, _ = _docker_request("POST", "/containers/zettnas-sftp/start")
                     if code_st in (204, 200, 304):
                         logger.info(f"[SFTP] Existing sidecar zettnas-sftp started on port {port}")
@@ -315,22 +324,8 @@ Match Group sftpusers
 
             payload = {
                 "Image": image,
-                "Cmd": [
-                    "rclone",
-                    "serve",
-                    "sftp",
-                    "--addr",
-                    f":{port}",
-                    "--vfs-cache-mode",
-                    "writes",
-                    "--dir-cache-time",
-                    "10s",
-                    "--cache-dir",
-                    "/app/data/sftp/cache",
-                    "--auth-proxy",
-                    "/app/backend/services/rclone_auth_proxy.py",
-                    *protected_rclone_excludes(POOL_PATH),
-                ],
+                # SEC-34: rclone on loopback, the front on the SFTP port refuses blocked addresses
+                "Cmd": _front_cmd(port),
                 "HostConfig": {
                     "NetworkMode": "host",
                     "Binds": binds,
@@ -360,26 +355,10 @@ Match Group sftpusers
             return False
 
     def _start_subprocess(self, port: int) -> bool:
-        """Starts local rclone SFTP server process as a fallback."""
-        auth_proxy = os.path.abspath(os.path.join(os.path.dirname(__file__), "rclone_auth_proxy.py"))
+        """Starts the SFTP front and its rclone here, as a fallback (SEC-34)."""
         cache_dir = os.path.join(SFTP_DIR, "cache")
         os.makedirs(cache_dir, exist_ok=True)
-        cmd = [
-            "rclone",
-            "serve",
-            "sftp",
-            "--addr",
-            f":{port}",
-            "--vfs-cache-mode",
-            "writes",
-            "--dir-cache-time",
-            "10s",
-            "--cache-dir",
-            cache_dir,
-            "--auth-proxy",
-            auth_proxy,
-            *protected_rclone_excludes(POOL_PATH),
-        ]
+        cmd = [sys.executable, FRONT_SCRIPT, str(port), cache_dir]
         try:
             self._proc = subprocess.Popen(
                 cmd,

@@ -344,28 +344,7 @@ def _get_webdav_portal_user(request: Request, cfg: dict[str, Any]) -> dict[str, 
     return None
 
 
-def _observe_webdav_write(request: Request, path: str) -> None:
-    """Feeds WebDAV renames, deletes and writes to the ransomware guard (M4)."""
-    kind = {"MOVE": "rename", "DELETE": "delete", "PUT": "write"}.get(request.method)
-    if not kind:
-        return
-    from backend.auth import client_ip
-    from backend.services.ransomware_guard import get_guard
-
-    dest = request.headers.get("destination", "")
-    new_path = urllib.parse.unquote(dest.split("/webdav/", 1)[1]) if "/webdav/" in dest else ""
-    user = ""
-    auth = request.headers.get("authorization", "")
-    if auth.lower().startswith("basic "):
-        try:
-            user = base64.b64decode(auth[6:]).decode("utf-8", "replace").split(":", 1)[0]
-        except ValueError:
-            user = ""
-    get_guard().observe(kind, path, user=user, ip=client_ip(request), new_path=new_path)
-
-
 async def _proxy_webdav(request: Request, path: str = ""):
-    _observe_webdav_write(request, path)
     engine = get_webdav_engine()
     if not engine.is_running():
         cfg = engine.load_config()
@@ -377,68 +356,10 @@ async def _proxy_webdav(request: Request, path: str = ""):
                 detail="WebDAV server is currently stopped or unavailable.",
             )
 
-    cfg = engine.load_config()
-    port = int(cfg.get("port", config.WEBDAV_PORT))
-    clean_path = path.lstrip("/")
-    target_url = f"http://127.0.0.1:{port}/{clean_path}"
-    if request.url.query:
-        target_url = f"{target_url}?{request.url.query}"
+    from backend.services.webdav_engine import gate
+    from backend.services.webdav_front import forward
 
-    headers = dict(request.headers)
-    headers["host"] = f"127.0.0.1:{port}"
-
-    # Handle Destination header rewriting for COPY / MOVE
-    if "destination" in headers:
-        dest = headers["destination"]
-        if "/webdav/" in dest:
-            dest_suffix = dest.split("/webdav/", 1)[1]
-            headers["destination"] = f"http://127.0.0.1:{port}/{dest_suffix}"
-
-    client = httpx.AsyncClient(timeout=None)
-    try:
-        req = client.build_request(
-            method=request.method,
-            url=target_url,
-            headers=headers,
-            content=request.stream(),
-        )
-        resp = await client.send(req, stream=True)
-
-        resp_headers = {}
-        hop_by_hop = {
-            "connection",
-            "keep-alive",
-            "proxy-authenticate",
-            "proxy-authorization",
-            "te",
-            "trailers",
-            "transfer-encoding",
-            "upgrade",
-        }
-        for k, v in resp.headers.items():
-            if k.lower() not in hop_by_hop:
-                resp_headers[k] = v
-
-        async def body_stream():
-            try:
-                async for chunk in resp.aiter_raw():
-                    yield chunk
-            finally:
-                await resp.aclose()
-                await client.aclose()
-
-        return StreamingResponse(
-            body_stream(),
-            status_code=resp.status_code,
-            headers=resp_headers,
-        )
-    except httpx.ConnectError:
-        await client.aclose()
-        raise HTTPException(status_code=502, detail="Unable to connect to internal WebDAV daemon.") from None
-    except Exception as e:
-        await client.aclose()
-        logger.error(f"[WEBDAV PROXY] Error proxying {request.method} {path}: {e}")
-        raise HTTPException(status_code=500, detail=f"WebDAV proxy error: {e}") from e
+    return await forward(request, path, engine.internal_port(), gate(), prefix="/webdav")
 
 
 @proxy_router.api_route("/webdav", methods=WEBDAV_METHODS)

@@ -45,7 +45,7 @@ def test_env():
                 config.USERS_DB_PATH = old_db_path
 
 
-def test_totp_core_generation_and_drift():
+def test_totp_core_generation_and_drift(monkeypatch):
     secret = generate_totp_secret()
     assert len(secret) >= 32
 
@@ -58,6 +58,7 @@ def test_totp_core_generation_and_drift():
     # Drift tolerance (-1 step = -30 seconds) on a fresh secret
     secret_past = generate_totp_secret()
     now = time.time()
+    monkeypatch.setattr("backend.totp.time.time", lambda: now)  # no 30 s step may pass mid-check
     past_code = generate_totp_code(secret_past, for_time=now - 30)
     assert verify_totp_code(secret_past, past_code)
 

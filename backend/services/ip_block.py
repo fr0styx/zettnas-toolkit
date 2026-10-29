@@ -4,7 +4,8 @@ IP block-list (M5).
 An address is blocked for a while when it keeps failing to sign in (web or WebDAV),
 or at once when the ransomware guard sees an attack from it. Blocked addresses get
 403 on the web app and WebDAV, and are listed under `hosts deny` in ZettNAS's own
-Samba config. Loopback and the addresses in ZETTNAS_TRUSTED_IPS are never blocked,
+Samba config, and the WebDAV and SFTP ports refuse them (SEC-34). Loopback and the
+addresses in ZETTNAS_TRUSTED_IPS are never blocked,
 so the admin can't lock themselves out of the console.
 """
 
@@ -24,7 +25,7 @@ FAIL_LIMIT = 20
 FAIL_BLOCK_S = 60 * 60
 _lock = threading.Lock()
 _failures: dict[str, list[float]] = {}
-_cache: dict[str, Any] = {"loaded": False, "blocks": {}}
+_cache: dict[str, Any] = {"loaded": False, "blocks": {}, "mtime": None}
 
 
 def _trusted(ip: str) -> bool:
@@ -43,8 +44,19 @@ def _trusted(ip: str) -> bool:
     return False
 
 
+def _mtime() -> int | None:
+    try:
+        return os.stat(STORE).st_mtime_ns
+    except OSError:
+        return None
+
+
 def _load() -> dict[str, dict[str, Any]]:
-    if not _cache["loaded"]:
+    """The block-list, read again when the file changed: the SFTP sidecar is another
+    process and sees the web app's blocks this way (SEC-34)."""
+    mtime = _mtime()
+    if not _cache["loaded"] or mtime != _cache["mtime"]:
+        _cache["mtime"] = mtime
         try:
             with open(STORE, encoding="utf-8") as f:
                 data = json.load(f)
@@ -58,6 +70,7 @@ def _load() -> dict[str, dict[str, Any]]:
 def _save(blocks: dict[str, dict[str, Any]]) -> None:
     try:
         atomic_write_json(STORE, blocks, indent=1)
+        _cache["mtime"] = _mtime()
     except OSError:
         logger.warning("[IPBlock] Could not save the block-list", exc_info=True)
 

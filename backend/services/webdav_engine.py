@@ -1,6 +1,7 @@
 """
 ZettNAS Toolkit - Universal WebDAV Engine
-Manages embedded line-rate rclone WebDAV daemon on Port 8084 with zero-conflict routing.
+Runs rclone's WebDAV server on a loopback port; clients reach it through ZettNAS, on the
+WebDAV port (8084) and on the web app's /webdav path, so IP blocks apply there (SEC-34).
 """
 
 import json
@@ -34,6 +35,21 @@ def ensure_fuse_device() -> bool:
     return False
 
 
+def gate() -> Any:
+    """How the WebDAV front reaches the rest of ZettNAS (backend.services.webdav_front.Gate):
+    looked up on each call, so a test can stand in for any of them."""
+    from backend import auth
+    from backend.services import ip_block, ransomware_guard
+    from backend.services.webdav_front import Gate
+
+    return Gate(
+        client_ip=lambda request: auth.client_ip(request),
+        blocked=lambda ip: ip_block.is_blocked(ip),
+        failed=lambda ip: ip_block.record_auth_failure(ip, "WebDAV"),
+        observe=lambda *a, **k: ransomware_guard.get_guard().observe(*a, **k),
+    )
+
+
 class WebdavEngine:
     """Orchestrates the rclone WebDAV server process and lifecycle."""
 
@@ -42,6 +58,9 @@ class WebdavEngine:
         self._proc: subprocess.Popen | None = None
         self._started_at: float | None = None
         self._last_error: str | None = None
+        from backend.services.webdav_front import Front
+
+        self._front = Front()
         self.ensure_config_defaults()
 
     def get_default_config(self) -> dict[str, Any]:
@@ -160,6 +179,9 @@ class WebdavEngine:
 
             cfg = self.load_config()
             port = int(cfg.get("port", config.WEBDAV_PORT))
+            from backend.services.webdav_front import auth_proxy_command, internal_port
+
+            internal = internal_port(port)
             root = str(cfg.get("root_path", config.POOL_PATH))
 
             if not os.path.exists(root):
@@ -176,13 +198,13 @@ class WebdavEngine:
                     "serve",
                     "webdav",
                     "--addr",
-                    f":{port}",
+                    f"127.0.0.1:{internal}",
                     "--vfs-cache-mode",
                     "writes",
                     "--dir-cache-time",
                     "10s",
                     "--auth-proxy",
-                    proxy_script,
+                    auth_proxy_command(proxy_script),
                 ]
             else:
                 cmd = [
@@ -191,7 +213,7 @@ class WebdavEngine:
                     "webdav",
                     root,
                     "--addr",
-                    f":{port}",
+                    f"127.0.0.1:{internal}",
                     "--vfs-cache-mode",
                     "writes",
                     "--dir-cache-time",
@@ -234,7 +256,7 @@ class WebdavEngine:
                     self._proc = None
                     self._started_at = None
                 else:
-                    logger.info(f"[WEBDAV] Daemon successfully running on port {port} (PID: {self._proc.pid})")
+                    self._start_front(port, internal)
             except Exception as e:
                 logger.error(f"[WEBDAV] Exception launching daemon: {e}")
                 self._last_error = str(e)
@@ -243,9 +265,29 @@ class WebdavEngine:
 
             return self.get_status()
 
+    def _start_front(self, port: int, internal: int) -> None:
+        """ZettNAS answers on the WebDAV port; without it rclone can't be reached, so it stops."""
+        try:
+            self._front.start(port, internal, gate())
+            logger.info("[WEBDAV] Running on port %s (rclone PID %s)", port, self._proc.pid if self._proc else None)
+        except OSError as e:
+            self._last_error = f"Port {port} is in use: {e}"
+            logger.error("[WEBDAV] %s", self._last_error)
+            if self._proc is not None:
+                self._proc.terminate()
+                self._proc = None
+                self._started_at = None
+
+    def internal_port(self) -> int:
+        """Where rclone listens: a loopback port only ZettNAS forwards to."""
+        from backend.services.webdav_front import internal_port
+
+        return internal_port(int(self.load_config().get("port", config.WEBDAV_PORT)))
+
     def stop(self) -> dict[str, Any]:
         """Stops the rclone serve webdav background process."""
         with self._lock:
+            self._front.stop()
             if self._proc is not None:
                 pid = self._proc.pid
                 logger.info(f"[WEBDAV] Stopping daemon (PID: {pid})...")

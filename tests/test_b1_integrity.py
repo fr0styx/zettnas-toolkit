@@ -174,6 +174,7 @@ def test_the_freeze_makes_nfs_and_webdav_read_only(monkeypatch):
     monkeypatch.setattr(webdav_engine.subprocess, "Popen", lambda cmd, **k: started.append(cmd) or _Proc())
     monkeypatch.setattr(webdav_engine.time, "sleep", lambda s: None)
     eng = webdav_engine.WebdavEngine()
+    monkeypatch.setattr(eng._front, "start", lambda *a, **k: None)  # no real port (SEC-34)
     eng.start()
     assert "--read-only" in started[-1]
     eng._proc = None

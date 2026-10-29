@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+#### Security
+
+- **WebDAV and SFTP behind ZettNAS**: rclone now listens on loopback only, and ZettNAS answers
+  on the WebDAV port (8084) and the SFTP port itself, so blocked addresses are refused there
+  too, failed WebDAV sign-ins count towards blocking an address, and WebDAV writes on 8084 reach
+  the ransomware guard. Clients keep the same addresses; an SFTP sidecar from an older version
+  is recreated on the next start (SEC-34).
+- **WebDAV and SFTP sign-ins work again**: the image ships rclone's sign-in helper without the
+  execute bit, so rclone refused every WebDAV client and SFTP sign-in ("permission denied");
+  ZettNAS now runs the helper with Python.
+
 #### Usability
 
 - **Be a friend's off-site backup**: the App Catalog has a backup target, an append-only restic

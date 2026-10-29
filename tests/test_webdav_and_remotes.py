@@ -80,9 +80,10 @@ class TestWebdavAndRemotes(unittest.TestCase):
         self.assertIn("ios", qc)
         self.assertIn("linux", qc)
 
+    @patch("backend.services.webdav_front.Front.start")  # no real port (SEC-34)
     @patch("shutil.which", return_value="/usr/bin/rclone")
     @patch("subprocess.Popen")
-    def test_webdav_start_stop(self, mock_popen, mock_which):
+    def test_webdav_start_stop(self, mock_popen, mock_which, mock_front):
         mock_proc = MagicMock()
         mock_proc.poll.return_value = None
         mock_proc.pid = 99999
