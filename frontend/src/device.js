@@ -6,8 +6,14 @@
 // touch: the main pointer is a finger, at any width; controls get touch-sized targets
 //   (styles/61-touch.css). A portrait tablet is not compact, but it is touch.
 
+// The three widths every layout uses (UX-37): phone up to 600 px, compact up to 768, tablet up to
+// 1024; frontend/src/__tests__/b16_phone.test.js keeps the CSS on these.
+export const PHONE_MAX = 600;
 export const COMPACT_MAX = 768;
+export const TABLET_MAX = 1024;
+export const BREAKPOINTS = [PHONE_MAX, COMPACT_MAX, TABLET_MAX];
 export const PHONE_QUERY = '(max-width: 600px)';
+export const COMPACT_QUERY = '(max-width: 768px)';
 export const TOUCH_QUERY = '(pointer: coarse)';
 
 const body = () => (typeof document !== 'undefined' ? document.body : null);

@@ -792,7 +792,7 @@ body.theme-yak .mgmt-back-btn:hover {
   border-color: #e6ad65;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   .management-hub-grid {
     grid-template-columns: 1fr;
   }

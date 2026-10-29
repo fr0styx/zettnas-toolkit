@@ -33,6 +33,14 @@ body.phone-shell .file-manager-window { background-color: var(--bg); backdrop-fi
 .phone-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--zn-space-1); min-height: 92px; border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); background: var(--card); color: var(--fg); font-size: var(--zn-fs-sm); font-weight: 600; text-align: center; }
 .phone-tile .ic { width: 28px; height: 28px; }
 
+/* The Alerts tab: what needs attention (UX-37) */
+.phone-alerts-page { position: fixed; inset: 48px 0 calc(60px + env(safe-area-inset-bottom)) 0; z-index: 600; overflow-y: auto; padding: var(--zn-space-3); background: var(--bg); display: flex; flex-direction: column; gap: var(--zn-space-3); }
+.phone-alerts-page[hidden] { display: none; }
+.phone-alerts-head { display: flex; justify-content: space-between; align-items: center; }
+.phone-alerts-head h2 { margin: 0; font-size: var(--zn-fs-lg, 18px); }
+.phone-alerts-close { min-width: 44px; min-height: 44px; border: none; background: none; color: var(--fg); font-size: 24px; }
+.phone-alerts-log { align-self: flex-start; }
+
 /* What the desktop widgets showed, in one line of numbers */
 .phone-health { margin-bottom: var(--zn-space-3); }
 .phone-health .ov-item .btn-pill-toggle { flex-shrink: 0; }

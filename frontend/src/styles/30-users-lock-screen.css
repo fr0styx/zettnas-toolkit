@@ -88,7 +88,7 @@
   line-height: 1;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .topbar-user-name,
   .topbar-user-caret {
     display: none;

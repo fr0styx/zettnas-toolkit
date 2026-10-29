@@ -29,6 +29,6 @@
 .setup-steps li { flex: 1; padding-top: 6px; border-top: 3px solid var(--zn-line-12); }
 .setup-steps li.is-current { color: var(--fg); border-top-color: var(--brand); font-weight: 700; }
 .setup-steps li.is-done { border-top-color: rgba(var(--brand-rgb), 0.5); }
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .getting-started-card { left: 16px; right: 16px; width: auto; }
 }

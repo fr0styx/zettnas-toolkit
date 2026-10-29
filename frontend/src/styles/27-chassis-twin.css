@@ -124,7 +124,7 @@
   grid-template-columns: repeat(6, 1fr);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .chassis-bay-grid.mode-rackmount.octa-cols {
     grid-template-columns: repeat(3, 1fr);
   }

@@ -15,6 +15,10 @@
   (no Unraid paths elsewhere); Mission Control no longer traps Tab, and Esc in a text field leaves the
   field before it closes anything; dialogs that must be answered can't be minimised; Enter fires a
   button once; the setup wizard moves focus to each step and says which (UX-29, 30, 31, 34).
+- **Phones and tablets**: the Alerts tab shows what needs attention (with the activity log one tap
+  away); Back in Files goes back a folder first; the browser's Back closes windows at 601-768 px too;
+  every layout uses the same three widths (600, 768, 1024 px) (UX-37). The LCD replica's small text
+  is the real screen's size, documented as such (UX-36).
 
 #### AI
 

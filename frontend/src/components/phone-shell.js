@@ -11,17 +11,18 @@
  * numbers and the tiles.
  */
 import { escapeHtml } from '../utils.js';
+import { html } from '../html.js';
 import { t } from '../i18n.js';
 import { ROUTES } from '../router.js';
 import { ZettEventBus } from '../event-bus.js';
 import { watchDom } from '../dom-watch.js';
-import { PHONE_QUERY } from '../device.js';
+import { COMPACT_QUERY, PHONE_QUERY } from '../device.js';
 import { api } from '../api.js';
 import { statusHtml as healthHtml } from './management/overview.js';
 import { advancedOn, isAdvancedRoute } from '../advanced.js';
 import { announceChange } from '../a11y.js';
 
-const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window';
+const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window, #phone-alerts-page';
 // A page on its way out is not open any more
 const CLOSING = /\b(window-closing|closing|window-minimized|is-closing|minimized)\b/;
 
@@ -48,8 +49,8 @@ const TABS = () => [
   ['settings', t('mgmt.sidebar_system', 'Settings'), '#i-shield'],
 ];
 
-// What each tab opens (alerts: the activity log, a full page like the others)
-const TAB_ROUTES = { files: 'files', apps: 'apps', alerts: 'activity', settings: 'settings' };
+// What each tab opens (alerts: what needs attention, with the full activity log one tap away)
+const TAB_ROUTES = { files: 'files', apps: 'apps', settings: 'settings' };
 
 export function statusHtml() {
   const cell = (key, label) =>
@@ -117,7 +118,7 @@ export function tabForPage(page) {
   if (!page) return 'home';
   if (page.matches('.file-manager-window')) return 'files';
   if (page.id === 'containers-manager-window') return 'apps';
-  if (page.id === 'notif-center-panel') return 'alerts';
+  if (page.id === 'notif-center-panel' || page.id === 'phone-alerts-page') return 'alerts';
   if (page.id === 'management-window') return ['settings', 'alerts'].includes(openedFrom) ? openedFrom : 'home';
   return 'home';
 }
@@ -135,13 +136,52 @@ function closeAllPages() {
 
 function openTab(id) {
   openedFrom = id;
-  if (id === 'home') {
-    closeAllPages();
-  } else {
-    closeAllPages();
-    ROUTES[TAB_ROUTES[id]]?.();
+  closeAllPages();
+  if (id === 'alerts') openAlertsPage();
+  else if (id !== 'home') ROUTES[TAB_ROUTES[id]]?.();
+  schedule();
+}
+
+/** The Alerts tab: what needs attention now, each with its Open button, and the activity log
+ *  one tap away (UX-37). */
+export async function openAlertsPage() {
+  let page = document.getElementById('phone-alerts-page');
+  if (!page) {
+    page = document.createElement('section');
+    page.id = 'phone-alerts-page';
+    page.className = 'phone-alerts-page';
+    page.setAttribute('aria-labelledby', 'phone-alerts-title');
+    page.innerHTML = html`<header class="phone-alerts-head"><h2 id="phone-alerts-title">${t('phone.attention', 'Needs attention')}</h2>
+      <button type="button" class="close-btn phone-alerts-close" aria-label="${t('common.close', 'Close')}">×</button></header>
+      <div class="phone-alerts-body"></div>
+      <button type="button" class="btn-pill-toggle phone-alerts-log" data-phone-log>${t('phone.all_activity', 'All activity')}</button>`;
+    document.body.appendChild(page);
+    page.addEventListener('click', (e) => {
+      if (e.target.closest('.phone-alerts-close')) {
+        page.hidden = true;
+      } else if (e.target.closest('[data-phone-log]')) {
+        ROUTES.activity?.();
+      } else {
+        const open = e.target.closest('[data-ov-open]');
+        if (open && ROUTES[open.dataset.ovOpen]) ROUTES[open.dataset.ovOpen]();
+      }
+      schedule();
+    });
+  }
+  page.hidden = false;
+  const body = page.querySelector('.phone-alerts-body');
+  try {
+    body.innerHTML = healthHtml(await api.get('/api/system/status-summary'));
+  } catch {
+    body.textContent = t('phone.attention_unreadable', "The status couldn't be read just now.");
   }
   schedule();
+  return page;
+}
+
+/** A page with its own way back (File Explorer's folder history) goes back there first. */
+function stepBack(page) {
+  return Boolean(page && typeof page.zettBack === 'function' && page.zettBack());
 }
 
 // UX-15: one history entry stands for "a page is open", so the phone's own Back closes it
@@ -176,12 +216,12 @@ export function onPhoneBack() {
     ignorePop = false;
     return;
   }
-  if (!document.body.classList.contains('phone-shell')) return;
+  if (!backTracking()) return;
   backEntry = false; // the browser just used it
   if (dialogOpen()) {
     // Back closes the dialog first, as on any phone app
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-  } else {
+  } else if (!stepBack(topPage())) {
     const page = topPage();
     closePage(page);
     if (page && topPage() === page) page.style.display = 'none';
@@ -192,6 +232,7 @@ export function onPhoneBack() {
 function sync() {
   const page = topPage();
   followBackEntry(page);
+  if (!document.body.classList.contains('phone-shell')) return; // 601-768 px: only Back
   const back = document.getElementById('phone-back');
   // only real changes: rewriting the same value would wake the observer again
   if (back && back.hidden !== !page) back.hidden = !page;
@@ -215,7 +256,7 @@ function schedule() {
   pending = true;
   (window.requestAnimationFrame || ((fn) => setTimeout(fn, 16)))(() => {
     pending = false;
-    if (document.body.classList.contains('phone-shell')) sync();
+    if (backTracking()) sync();
   });
 }
 
@@ -260,6 +301,30 @@ export async function refreshHealth(force = false, root = document) {
 
 let unwatch = null;
 
+// UX-37: between the phone (600 px) and compact (768 px) widths there is no phone shell, but
+// windows fill the screen all the same: the browser's Back closes them there too
+let compactBack = false;
+let unwatchCompact = null;
+
+function backTracking() {
+  return document.body.classList.contains('phone-shell') || compactBack;
+}
+
+export function setCompactBack(on) {
+  if (on === compactBack) return;
+  compactBack = on;
+  if (on) {
+    window.addEventListener('popstate', onPhoneBack);
+    unwatchCompact = watchDom({ attributes: ['style', 'class', 'hidden', 'aria-hidden'], onRecords: schedule });
+    schedule();
+  } else {
+    window.removeEventListener('popstate', onPhoneBack);
+    unwatchCompact?.();
+    unwatchCompact = null;
+    backEntry = false;
+  }
+}
+
 export function enablePhoneShell(on) {
   document.body.classList.toggle('phone-shell', on);
   let shell = document.getElementById('phone-shell');
@@ -285,6 +350,7 @@ export function enablePhoneShell(on) {
     const tile = e.target.closest('[data-phone-open]');
     if (e.target.closest('#phone-back')) {
       const page = topPage();
+      if (stepBack(page)) return;
       closePage(page);
       if (page && topPage() === page) page.style.display = 'none';
       schedule();
@@ -308,9 +374,16 @@ export function enablePhoneShell(on) {
 
 export function initPhoneShell() {
   const mq = window.matchMedia ? window.matchMedia(PHONE_QUERY) : null;
-  const apply = () => enablePhoneShell(Boolean(mq && mq.matches) && !document.documentElement.classList.contains('auth-required'));
+  const cq = window.matchMedia ? window.matchMedia(COMPACT_QUERY) : null;
+  const apply = () => {
+    const signedIn = !document.documentElement.classList.contains('auth-required');
+    const phone = Boolean(mq && mq.matches) && signedIn;
+    enablePhoneShell(phone);
+    setCompactBack(Boolean(cq && cq.matches) && !phone && signedIn);
+  };
   apply();
   mq?.addEventListener?.('change', apply);
+  cq?.addEventListener?.('change', apply);
   // signing in or out switches the shell at once (the desktop never shows in between)
   new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   ZettEventBus.on('stats:updated', (stats) => {

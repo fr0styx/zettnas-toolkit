@@ -478,6 +478,14 @@ export class FileManagerWindow {
     this.selectAllCheckbox = this.windowEl.querySelector('.fm-select-all-checkbox');
     this.titleFolderSpan = this.windowEl.querySelector('.fm-title-folder');
     this.backBtn = this.windowEl.querySelector('.fm-back-btn');
+    // a phone's or tablet's Back goes back a folder before it leaves Files (UX-37)
+    this.windowEl.zettBack = () => {
+      if (this.historyIndex > 0) {
+        this.goBack();
+        return true;
+      }
+      return false;
+    };
     this.fwdBtn = this.windowEl.querySelector('.fm-fwd-btn');
     this.upBtn = this.windowEl.querySelector('.fm-up-btn');
     this.locationsBtn = this.windowEl.querySelector('.fm-locations-btn');

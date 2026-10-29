@@ -1,7 +1,7 @@
 /* =========================================================================
    MOBILE RESPONSIVE VIEW (STUDIO ONLY)
    ========================================================================= */
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .suite-navbar { padding: 0 12px; }
   .suite-telemetry-pills { gap: 8px; }
   .suite-pill, .suite-badge { display: none !important; }

@@ -743,6 +743,10 @@ body.mobile-mode #desktop-widgets-container .cal-glance-bar {
     z-index: 10 !important;
   }
 
+  /* UX-36: everything under #console-window below is the on-screen replica of the 640x172 front
+     LCD and the chassis lettering around it, drawn at the real screen's scale. Its 7-12 px text is
+     the LCD's own size, so it is exempt from the type scale; b16_phone.test.js keeps small text
+     in this sheet to that replica. */
   body.mobile-mode #console-window .chassis-engraved-text {
     font-size: 8.5px !important;
     letter-spacing: 1px !important;
