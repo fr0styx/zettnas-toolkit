@@ -244,6 +244,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -414,6 +415,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -605,6 +607,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -765,6 +768,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -919,6 +923,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -1070,6 +1075,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -1230,6 +1236,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -1390,6 +1397,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -1552,6 +1560,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -1706,6 +1715,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -1871,6 +1881,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -2062,6 +2073,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -2224,6 +2236,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -2384,6 +2397,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -2535,6 +2549,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -2691,6 +2706,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -2851,6 +2867,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -3000,6 +3017,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -3181,6 +3199,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -3341,6 +3360,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -3503,6 +3523,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -3673,6 +3694,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -3864,6 +3886,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -4024,6 +4047,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -4178,6 +4202,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -4329,6 +4354,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -4489,6 +4515,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -4649,6 +4676,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -4811,6 +4839,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -4965,6 +4994,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -5130,6 +5160,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -5321,6 +5352,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -5483,6 +5515,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -5643,6 +5676,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -5794,6 +5828,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -5950,6 +5985,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -6110,6 +6146,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -6259,6 +6296,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -6440,6 +6478,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -6600,6 +6639,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -6762,6 +6802,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -6922,6 +6963,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -7084,6 +7126,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -7244,6 +7287,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -7398,6 +7442,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -7549,6 +7594,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -7709,6 +7755,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -7869,6 +7916,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -8031,6 +8079,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -8185,6 +8234,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -8350,6 +8400,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -8541,6 +8592,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -8703,6 +8755,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -8863,6 +8916,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -9014,6 +9068,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -9170,6 +9225,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -9330,6 +9386,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -9479,6 +9536,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -9660,6 +9718,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -9820,6 +9879,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -9982,6 +10042,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -10142,6 +10203,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -10304,6 +10366,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -10464,6 +10527,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -10618,6 +10682,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -10769,6 +10834,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -10929,6 +10995,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -11089,6 +11156,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -11251,6 +11319,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -11405,6 +11474,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -11570,6 +11640,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -11761,6 +11832,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -11923,6 +11995,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -12083,6 +12156,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -12234,6 +12308,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -12390,6 +12465,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -12550,6 +12626,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -12699,6 +12776,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -12880,6 +12958,7 @@
     "folder_path": null,
     "grounding_confidence_score": 0,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,
@@ -13040,6 +13119,7 @@
     "folder_path": null,
     "grounding_confidence_score": null,
     "grounding_detail": null,
+    "immich_results": [],
     "llm_telemetry": {
      "accelerator_label": "Tier 3: CPU Execution Provider",
      "accelerator_tier": 3,

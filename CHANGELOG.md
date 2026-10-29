@@ -4,6 +4,8 @@
 
 #### AI
 
+- **Zetty shows your Immich photos**: a photo question in chat ("photos of the beach last summer")
+  also brings the photos Immich's smart search finds, for people who connected their Immich.
 - **Voice memos and videos you can search by what is said**: with a Whisper speech server set
   (`transcribe_endpoint` in AI settings, any server that speaks OpenAI's audio API, such as an
   OpenVINO Model Server on the iGPU), audio files are indexed with their transcripts; videos too

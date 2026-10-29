@@ -2907,6 +2907,7 @@ function _buildAiAssistantMessageHtml(res, defaultModel) {
     </div>
     ${docCitationsHtml}
     ${photosHtml}
+    ${immichResultsHtml(res.immich_results)}
     ${webSourcesHtml}
   `;
 }

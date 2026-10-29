@@ -1772,6 +1772,50 @@ def _turn_trace(
     )
 
 
+# Photo questions in chat also get the person's Immich photos (COMP-03), in the languages the UI has
+PHOTO_WORDS = frozenset(
+    (
+        "photo",
+        "photos",
+        "picture",
+        "pictures",
+        "pic",
+        "pics",
+        "image",
+        "images",
+        "selfie",
+        "selfies",
+        "foto",
+        "fotos",
+        "bild",
+        "bilder",
+        "imagen",
+        "imagenes",
+        "imágenes",
+        "photographie",
+    )
+)
+PHOTO_WORDS_CJK = ("照片", "图片", "相片")
+
+
+def is_photo_question(msg_lower: str) -> bool:
+    words = set(re.findall(r"\w+", msg_lower))
+    return bool(words & PHOTO_WORDS) or any(w in msg_lower for w in PHOTO_WORDS_CJK)
+
+
+def immich_photos_for(question: str, msg_lower: str, principal: Any, limit: int = 12) -> list[dict[str, Any]]:
+    """This person's Immich photos for a photo question ([] for other questions, or without Immich)."""
+    if not is_photo_question(msg_lower):
+        return []
+    try:
+        from backend.services.immich_photos import smart_search
+
+        return smart_search(str(getattr(principal, "username", "") or ""), question, limit)
+    except Exception:
+        logger.debug("ai_chat_agent: Immich search failed", exc_info=True)
+        return []
+
+
 def _run_agentic_chat_turn(
     message: str,
     history: list[dict[str, Any]] | None = None,
@@ -1927,11 +1971,14 @@ def _run_agentic_chat_turn(
         web_sources=web_sources,
     )
 
+    immich_results = immich_photos_for(clean_msg, msg_lower, principal) if allow_nas_tools else []
+
     return {
         "status": "ok",
         "message": clean_msg,
         "reply": llm_reply,
         "reply_markdown": llm_reply,
+        "immich_results": immich_results,
         "active_model": active_model,
         "elapsed_ms": round(elapsed_ms, 1),
         "llm_telemetry": telemetry,
