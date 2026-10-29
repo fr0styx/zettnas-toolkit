@@ -2466,7 +2466,7 @@ export default {
   "ai.index_folder_desc": "Choisissez les partages dont ZettAI apprend. Les fichiers des disques en veille sont appris à leur réveil.",
   "ai.filter_fits_hardware": "✅ Adapté au matériel",
   "toast.is_already_on_your_desktop": "« {name} » est déjà sur le bureau.",
-  "toast.env_copied_to_clipboard": ".env copié dans le presse-papiers",
+  "toast.env_copied_to_clipboard": ".env copié dans le presse-papiers", // a sentence, not a secret: gitleaks:allow
   "toast.2fa_verification_failed": "Échec de la vérification 2FA : {detail}",
   "toast.ai_benchmark_completed_successfully": "Benchmark IA terminé",
   "toast.action_failed": "Échec de l'action : {errorDetail}",

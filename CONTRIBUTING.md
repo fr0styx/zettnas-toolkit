@@ -47,6 +47,10 @@ CI also requires:
 - **Coverage**: at least 80% of the backend, and at least 80% of the backend lines your change touches (diff-cover).
 - **Types and error handling**: no file may get worse under Pyright, and the number of silent `except: pass` blocks may not grow.
 - **Browser tests**: sign-in, the main views and an accessibility (axe) check run in headless Chromium.
+- **Dependencies and secrets**: `pip-audit` and `npm audit --audit-level=high` find no known
+  vulnerability, and gitleaks finds no secret in the tree (`.gitleaks.toml` allows test data; a
+  checked false positive gets a `gitleaks:allow` comment on its line). CodeQL scans the Python and
+  JavaScript on every push to main and weekly; its findings are under Security -> Code scanning.
 
 ## Rules
 

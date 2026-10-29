@@ -48,6 +48,16 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends restic  # offsite backup restore drill (Batch 6)
           python scripts/check_lock_versions.py
 
+      - name: Known vulnerabilities in the Python dependencies (ARC-32)
+        run: pip-audit -r requirements.lock --no-deps --disable-pip --progress-spinner off
+
+      - name: Secrets in the tree (ARC-32)
+        # .gitleaks.toml allows test data; a checked false positive carries a gitleaks:allow comment
+        run: >-
+          docker run --rm -v "$PWD:/repo:ro"
+          ghcr.io/gitleaks/gitleaks@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854
+          dir /repo --no-banner --redact --config /repo/.gitleaks.toml
+
       - name: Run Ruff Lint
         run: ruff check app.py backend tests scripts
 
@@ -108,6 +118,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Known vulnerabilities in the npm dependencies (ARC-32)
+        run: npm audit --audit-level=high
 
       - name: Run Frontend Tests (Vitest with Coverage)
         run: npm run test:coverage
@@ -265,6 +278,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false  # ARC-32: the build never pushes with git
       - name: Optimize Runner Network (Disable IPv6 & Configure DNS)
         run: |
           sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 || true
@@ -435,6 +450,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false  # ARC-32: release notes and the release use the API, not git push
       - name: Extract Release Notes and Title from CHANGELOG.md
         id: extract_notes
         run: python3 scripts/extract_release_notes.py

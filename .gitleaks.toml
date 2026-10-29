@@ -1,0 +1,15 @@
+# Secret scan (ARC-32): gitleaks' default rules, minus test data that is fake on purpose.
+# A checked false positive in real code gets a `gitleaks:allow` comment on its line.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "test data and build output"
+paths = [
+  '''(^|/)tests/''',
+  '''(^|/)__pycache__/''',
+  '''(^|/)frontend/src/__tests__/''',
+  '''(^|/)node_modules/''',
+  '''(^|/)static/''',
+  '''(^|/)frontend/dist/''',
+]

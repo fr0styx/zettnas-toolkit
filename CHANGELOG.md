@@ -214,6 +214,9 @@
 
 #### Security and privacy
 
+- **Security checks in CI**: every push now runs a dependency audit for Python (pip-audit) and npm,
+  a secret scan (gitleaks) and CodeQL static analysis, and the build and release jobs no longer
+  keep the checkout's credentials (ARC-32).
 - **Fail closed**: an AI search that arrives without a signed-in person finds nothing instead of
   everything; an update to an older version is refused unless you ask for a revert; only the
   signature statement cosign makes counts as an image signature; stacks and Ask Zetty no longer

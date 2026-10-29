@@ -16,7 +16,7 @@ export let clearedEventsTs = parseFloat(localStorage.getItem('zettnas_cleared_ev
 let currentNotifFilter = 'all';
 
 export const CHECKED_EVENTS_KEY = 'zettnas_checked_events_v1';
-export const DOCK_PINNED_KEY = 'zettnas_dock_pinned_apps_v1';
+export const DOCK_PINNED_KEY = 'zettnas_dock_pinned_apps_v1'; // a storage key name, not a secret: gitleaks:allow
 
 let checkedEventKeys = new Set();
 try {
