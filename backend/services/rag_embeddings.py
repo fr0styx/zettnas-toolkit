@@ -460,6 +460,14 @@ def compute_neural_embedding_via_ollama(
         """This request's timeout: the full one, or what the caller's deadline leaves (AI-27)."""
         return timeout if deadline is None else min(timeout, deadline - time.monotonic())
 
+    if is_openai_host(target_host):  # an OpenVINO Model Server or another OpenAI-style server (AI-40)
+        candidates = []
+        if _left() >= 0.2:
+            got = _openai_embed(target_host, model, [prompt_text], _left())
+            if got:
+                blob = _pack_embedding(got[0], target_dim)
+                return blob, unpack_embedding(blob) or []
+
     for target_model in candidates:
         raw_emb = None
         if _left() < 0.2:
@@ -532,6 +540,34 @@ _EMBED_MODEL_SEEN: dict[str, str] = {}  # configured name -> name the runtime ac
 EMBED_BATCH_SIZE = 32
 
 
+def is_openai_host(host: str | None) -> bool:
+    """An OpenAI-style embedding server (an OpenVINO Model Server at .../v3, vLLM or LM Studio at
+    .../v1) rather than Ollama: its address ends in /v1 or /v3 (AI-40)."""
+    path = (host or "").rstrip("/").rsplit("/", 1)[-1]
+    return path in ("v1", "v3")
+
+
+def _openai_embed(target_host: str, model: str, batch: list[str], timeout: float) -> list | None:
+    """One POST <host>/embeddings; the vectors in input order, or None."""
+    try:
+        req = urllib.request.Request(
+            f"{target_host}/embeddings",
+            data=json.dumps({"model": model, "input": batch}).encode("utf-8"),
+            headers=embed_headers(),
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        rows = sorted(data.get("data") or [], key=lambda d: int(d.get("index", 0)))
+        got = [r.get("embedding") for r in rows]
+        if len(got) == len(batch) and all(isinstance(e, list) and e for e in got):
+            _EMBED_MODEL_SEEN[model] = model
+            return got
+    except Exception:
+        logger.debug("rag_embeddings: OpenAI-style embeddings failed", exc_info=True)
+    return None
+
+
 def _embedding_model_candidates(model: str) -> list[str]:
     """The configured model and, without a tag, its ":latest" tag. Nothing else: falling back
     to another model (EmbeddingGemma 1 for 2, say) silently mixes embedding spaces."""
@@ -551,6 +587,8 @@ def _pack_embedding(raw: list[float], target_dim: int | None) -> bytes:
 
 def _embed_one_batch(target_host: str, model: str, batch: list[str], timeout: float | None = None) -> list | None:
     """One /api/embed call (trying the model's aliases); None when it failed."""
+    if is_openai_host(target_host):
+        return _openai_embed(target_host, model, batch, timeout or 15.0 + 4.0 * len(batch))
     embs = None
     for cand in _embedding_model_candidates(model):
         try:
