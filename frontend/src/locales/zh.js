@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "fm.confirm_delete_one": "将“{name}”移到回收站？",
+  "fm.confirm_delete_one_permanent": "“{name}”将被永久删除，无法撤销。",
   "dh.about": "关于此硬盘",
   "dh.history": "历史（30 天）",
   "dh.export": "保存报告",

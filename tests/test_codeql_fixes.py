@@ -196,3 +196,42 @@ def test_catalog_stackfiles_come_only_from_github():
         "",
     ):
         assert github_repo(bad) is None, bad
+
+
+def test_a_catalog_stackfile_is_read_from_raw_github(monkeypatch):
+    from backend.services import app_catalog
+
+    app = {
+        "id": "demo",
+        "default_port": 8080,
+        "repository": {"url": "https://github.com/acme/my-digit.git", "stackfile": "/stacks/demo.yml"},
+    }
+    monkeypatch.setattr(app_catalog, "get_catalog_app", lambda app_id: dict(app))
+    asked = []
+
+    class Resp:
+        def __init__(self, body):
+            self.body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return self.body
+
+    def fake_urlopen(req, timeout=0):
+        asked.append(req.full_url)
+        if "/main/" in req.full_url:
+            raise OSError("404")
+        return Resp(b"services:\n  demo: {image: demo}\n")
+
+    monkeypatch.setattr(app_catalog.urllib.request, "urlopen", fake_urlopen)
+    out = app_catalog.generate_compose_for_app("demo")
+    assert out["compose_yaml"].startswith("services:")
+    assert asked == [
+        "https://raw.githubusercontent.com/acme/my-digit/main/stacks/demo.yml",
+        "https://raw.githubusercontent.com/acme/my-digit/master/stacks/demo.yml",
+    ]

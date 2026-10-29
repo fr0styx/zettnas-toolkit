@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "fm.confirm_delete_one": "„{name}“ in den Papierkorb verschieben?",
+  "fm.confirm_delete_one_permanent": "„{name}“ wird endgültig gelöscht. Das lässt sich nicht rückgängig machen.",
   "dh.about": "Über dieses Laufwerk",
   "dh.history": "Verlauf (30 Tage)",
   "dh.export": "Bericht speichern",

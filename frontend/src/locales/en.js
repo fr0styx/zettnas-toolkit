@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "fm.confirm_delete_one": "Move “{name}” to the Recycle Bin?",
+  "fm.confirm_delete_one_permanent": "“{name}” will be deleted for good. This can't be undone.",
   "dh.about": "About this drive",
   "dh.history": "History (30 days)",
   "dh.export": "Save a report",

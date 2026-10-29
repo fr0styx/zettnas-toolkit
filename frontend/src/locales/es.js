@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "fm.confirm_delete_one": "¿Mover «{name}» a la papelera?",
+  "fm.confirm_delete_one_permanent": "«{name}» se eliminará para siempre. No se puede deshacer.",
   "dh.about": "Acerca de esta unidad",
   "dh.history": "Historial (30 días)",
   "dh.export": "Guardar un informe",

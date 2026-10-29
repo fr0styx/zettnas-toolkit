@@ -91,6 +91,22 @@ function selectionBarHtml(withIds) {
     </div>`;
 }
 
+
+/** What a delete asks: the file's own name for one item, the count for several. Items already
+ * in a Recycle Bin are deleted for good, and the question says so. */
+export function binConfirmText(paths) {
+  const inBin = paths.length > 0 && paths.every((p) => String(p).includes('/.RecycleBin/'));
+  if (paths.length === 1) {
+    const name = String(paths[0]).replace(/\/+$/, '').split('/').pop() || String(paths[0]);
+    return inBin
+      ? t('fm.confirm_delete_one_permanent', "“{name}” will be deleted for good. This can't be undone.", { name })
+      : t('fm.confirm_delete_one', 'Move “{name}” to the Recycle Bin?', { name });
+  }
+  return inBin
+    ? t('fm.confirm_bulk_delete_permanent', "{count, plural, one {# item will be deleted for good. This can't be undone.} other {# items will be deleted for good. This can't be undone.}}", { count: paths.length })
+    : t('fm.confirm_bulk_delete', 'Move {count, plural, one {# item} other {# items}} to the Recycle Bin?', { count: paths.length });
+}
+
 export class FileManagerWindow {
   constructor(id, dockId, initialPath, isPrimary = false) {
     this.id = id;
@@ -1206,7 +1222,7 @@ export class FileManagerWindow {
     this.bulkDeleteBtn?.addEventListener('click', () => {
       const count = this.selectedPaths.size;
       if (count === 0) return;
-      const confirmMsg = t('fm.confirm_bulk_delete', `Are you sure you want to delete ${count} selected item(s)?`).replace('{count}', count);
+      const confirmMsg = binConfirmText(Array.from(this.selectedPaths));
       showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
         const targets = Array.from(this.selectedPaths);
         this.selectedPaths.clear();
@@ -1245,7 +1261,7 @@ export class FileManagerWindow {
         this.handleAction('download', paths[0], paths[0].split('/').pop());
         return;
       }
-      showToast(t('fm.downloading_items', `Downloading ${paths.length} item(s)...`).replace('{count}', paths.length), 'info');
+      showToast(t('fm.downloading_items', 'Downloading {count, plural, one {# item} other {# items}}…', { count: paths.length }), 'info');
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
       const qs = paths.map((p) => `paths=${encodeURIComponent(p)}`).join('&');
       window.open(`/api/fs/download-zip?${qs}`, '_blank');
@@ -1529,7 +1545,7 @@ export class FileManagerWindow {
         this.fileList = items;
         this.isSearching = true;
         this.renderViewport();
-        showToast(t('fm.search_results', `Found ${items.length} item(s)`).replace('{count}', items.length), 'success');
+        showToast(t('fm.search_results', 'Found {count, plural, one {# item} other {# items}}', { count: items.length }), 'success');
         if (aiRes?.degraded) {
           showToast(t('ai.search_degraded', "The AI search model didn't answer, so these results match words only. Try again in a moment."), 'warning');
         }
@@ -1543,7 +1559,7 @@ export class FileManagerWindow {
         this.fileList = res.items;
         this.isSearching = true;
         this.renderViewport();
-        showToast(t('fm.search_results', `Found ${res.items.length} item(s)`).replace('{count}', res.items.length), 'success');
+        showToast(t('fm.search_results', 'Found {count, plural, one {# item} other {# items}}', { count: res.items.length }), 'success');
         // PERF-25: a sleeping disk is searched through the AI index only, and a huge walk stops early
         if (res.partial === 'asleep') {
           showToast(t('fm.search_partial_asleep', 'A disk here is asleep, so only files the AI index knows about are shown.'), 'info');
@@ -1647,11 +1663,11 @@ export class FileManagerWindow {
           totalBytes += f.size;
         }
       });
-      const label = t('fm.selected_count', `${count} selected`).replace('{count}', count);
+      const label = t('fm.selected_count', '{count} selected', { count: count });
       this.selectedCount.innerHTML = escapeHtml(label) + (totalBytes > 0 ? `<span class="fm-sel-size"> · ${escapeHtml(formatBytes(totalBytes))}</span>` : '');
       if (this.bulkShareBtn) this.bulkShareBtn.hidden = count !== 1; // a share link is for one item
       if (this.bulkDeleteBtn) {
-        const del = count > 1 ? t('fm.bulk_delete', `Delete (${count})`).replace('{count}', count) : t('fm.delete', 'Delete');
+        const del = count > 1 ? t('fm.bulk_delete', 'Delete ({count})', { count: count }) : t('fm.delete', 'Delete');
         this.bulkDeleteBtn.title = del;
         this.bulkDeleteBtn.setAttribute('aria-label', del);
       }
@@ -2488,11 +2504,7 @@ export class FileManagerWindow {
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
       window.open(`/api/fs/download?path=${encodeURIComponent(path)}`, '_blank');
     } else if (act === 'delete') {
-      const confirmTemplate = t(
-        'fm.confirm_delete',
-        'Are you sure you want to move {name} to the Recycle Bin? (If it is already in the Recycle Bin, it will be permanently deleted)'
-      );
-      const confirmMsg = confirmTemplate.replace('{name}', oldName);
+      const confirmMsg = binConfirmText([path]);
       showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
         await this.deleteWithProgress([path]);
       });
@@ -2629,7 +2641,7 @@ export class FileManagerWindow {
         e.preventDefault();
         e.stopPropagation();
         _clipboard = { items: Array.from(this.selectedPaths), action: 'copy', sourceInstanceId: this.id };
-        const msg = t('fm.copied_clipboard', `Copied ${this.selectedPaths.size} item(s) to clipboard`).replace('{count}', this.selectedPaths.size);
+        const msg = t('fm.copied_clipboard', 'Copied {count, plural, one {# item} other {# items}}', { count: this.selectedPaths.size });
         showToast(msg, 'info');
       }
     } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'x') {
@@ -2637,7 +2649,7 @@ export class FileManagerWindow {
         e.preventDefault();
         e.stopPropagation();
         _clipboard = { items: Array.from(this.selectedPaths), action: 'move', sourceInstanceId: this.id };
-        const msg = t('fm.cut_clipboard', `Cut ${this.selectedPaths.size} item(s) to clipboard`).replace('{count}', this.selectedPaths.size);
+        const msg = t('fm.cut_clipboard', 'Cut {count, plural, one {# item} other {# items}}', { count: this.selectedPaths.size });
         showToast(msg, 'info');
         this.updateRowSelectionUI();
       }
@@ -2968,8 +2980,11 @@ export class FileManagerWindow {
   handleClipboardAction(action) {
     if (this.selectedPaths.size === 0) return;
     _clipboard = { items: Array.from(this.selectedPaths), action, sourceInstanceId: this.id };
-    const label = action === 'move' ? 'Cut' : 'Copied';
-    showToast(t(`fm.${action}_clipboard`, `${label} ${this.selectedPaths.size} item(s) to clipboard`).replace('{count}', this.selectedPaths.size), 'info');
+    const count = this.selectedPaths.size;
+    const msg = action === 'move'
+      ? t('fm.cut_clipboard', 'Cut {count, plural, one {# item} other {# items}}', { count })
+      : t('fm.copied_clipboard', 'Copied {count, plural, one {# item} other {# items}}', { count });
+    showToast(msg, 'info');
     this.updateRowSelectionUI();
   }
 
@@ -3192,7 +3207,7 @@ export class FileManagerWindow {
     if (count === 0) return;
     const confirmMsg = isPermanent
       ? t('fm.confirm_bulk_delete_permanent', "{count, plural, one {# item will be deleted for good. This can't be undone.} other {# items will be deleted for good. This can't be undone.}}", { count })
-      : t('fm.confirm_bulk_delete', `Are you sure you want to delete ${count} selected item(s)?`).replace('{count}', count);
+      : binConfirmText(Array.from(this.selectedPaths));
     showConfirmToast(t('fm.delete_title', '{count, plural, one {Delete # item?} other {Delete # items?}}', { count }), confirmMsg, async () => {
       const targets = Array.from(this.selectedPaths);
       this.clearSelection();
@@ -3264,7 +3279,7 @@ export class FileManagerWindow {
   async uploadExtractedEntries(entries, targetPath = null) {
     if (!entries || entries.length === 0) return;
     const baseDir = targetPath || this.currentPath;
-    showToast(t('fm.uploading_toast', `Uploading ${entries.length} file(s)...`).replace('{count}', entries.length), 'info');
+    showToast(t('fm.uploading_toast', 'Uploading {count, plural, one {# file} other {# files}}…', { count: entries.length }), 'info');
     let success = 0;
     const createdDirs = new Set();
 

@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "fm.confirm_delete_one": "Placer « {name} » dans la corbeille ?",
+  "fm.confirm_delete_one_permanent": "« {name} » sera supprimé définitivement. Cette action est irréversible.",
   "dh.about": "À propos de ce disque",
   "dh.history": "Historique (30 jours)",
   "dh.export": "Enregistrer un rapport",

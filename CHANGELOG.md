@@ -225,6 +225,11 @@
 
 #### Fixes
 
+- **Deleting a file says which one**: the confirmation showed a raw template ("Move {count,
+  plural, …} to the Recycle Bin?") instead of a sentence; it now names the file when one is
+  selected, counts several, and says when items in the Recycle Bin will be deleted for good.
+  The download, search, copy, cut and upload messages show their numbers again too.
+
 - **The calendar widget fits again**: the month and its arrows no longer cover the country
   badge and the title, the word "Calendar" makes room when the widget is too narrow for it,
   and a long holiday name ends in "…" instead of being cut off at both ends.
