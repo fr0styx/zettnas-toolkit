@@ -106,8 +106,9 @@ def test_rclone_engine_start_sync_job_streaming(tmp_path):
         assert job["failed_files"][0]["file"] == "restricted.log"
         assert len(job["transfer_log"]) >= 4
 
-        # Verify command flags passed to Popen
-        cmd_args = mock_popen.call_args[0][0]
+        # Verify command flags passed to Popen (the rclone call: a drive-locate timer left by
+        # another test can call the patched Popen too, e.g. ledctl locate_off)
+        cmd_args = next(c[0][0] for c in mock_popen.call_args_list if str(c[0][0][0]).endswith("rclone"))
         assert "--ignore-errors" in cmd_args
         assert "-v" in cmd_args
         assert "--use-json-log" in cmd_args
