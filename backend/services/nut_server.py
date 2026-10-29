@@ -297,8 +297,8 @@ class NutServer:
                 await writer.drain()
                 if close:
                     break
-        except (TimeoutError, ConnectionError, OSError):
-            pass
+        except (TimeoutError, ConnectionError, OSError) as e:
+            logger.debug("[NUT] %s disconnected: %s", peer, e)
         finally:
             session.close()
             writer.close()

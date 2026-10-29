@@ -177,14 +177,14 @@ def _blocked(pair: dict[str, Any]) -> str | None:
         if writes_frozen():
             return "Writes are frozen by the ransomware guard"
     except ImportError:
-        pass
+        logger.debug("two_way_sync: no ransomware guard", exc_info=True)
     try:
         from backend.services.rag_standby import is_backing_disk_in_standby
 
         if is_backing_disk_in_standby(pair["local"]):
             return "The folder's disk is asleep; the sync waits until it wakes"
     except (ImportError, OSError, ValueError):
-        pass
+        logger.debug("two_way_sync: standby check failed", exc_info=True)
     return None
 
 
