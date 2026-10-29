@@ -27,6 +27,7 @@ from backend.hardware.pal.base import (
 )
 from backend.hardware.pal.observer import ObserverStorageAdapter
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
+from backend.settings import test_mode
 
 
 def _api_configured() -> bool:
@@ -143,7 +144,7 @@ class TrueNASStorageAdapter(ObserverStorageAdapter):
     _busy_cache_val: bool = False
 
     def is_storage_busy(self) -> bool:
-        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        if test_mode():
             return self._check_is_storage_busy_uncached()
         now = time.time()
         if now - getattr(self, "_busy_cache_ts", 0.0) < 10.0:

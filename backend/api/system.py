@@ -66,6 +66,7 @@ from backend.paging import PageParams
 from backend.services.broadcaster import broadcaster
 from backend.services.copy_engine import _do_copy
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
+from backend.settings import test_mode
 from backend.state import Z_STATE, add_event
 
 router = APIRouter(tags=["System & Storage"])
@@ -754,7 +755,7 @@ def trigger_power_action(action: str) -> bool:
     Triggers host system reboot or shutdown.
     Checks host trigger scripts, container-host volume mounts, and system power commands.
     """
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         logger.info(f"[Power] Test mode active; harmlessly mocked host trigger for '{action}'")
         return True
 
@@ -837,7 +838,7 @@ def _get_current_build_info_cached() -> dict[str, Any]:
 
 
 def _get_current_build_info() -> dict[str, Any]:
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         return _get_current_build_info_impl()
     return _get_current_build_info_cached()
 

@@ -22,6 +22,7 @@ from typing import Any, Optional
 from backend.config import logger
 from backend.db import log_ups_event
 from backend.hardware.ups import load_ups_config, read_ups_status
+from backend.settings import test_mode
 from backend.state import Z_STATE, add_event
 
 _outage_start_ts: float | None = None
@@ -268,7 +269,7 @@ def host_shutdown_paths() -> list[str]:
 
 def signal_host_powerdown() -> bool:
     """Shuts the host down; True only when a host shutdown command ran and reported success."""
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         logger.info("[UPS FAILSAFE] Test mode active; skipping host powerdown.")
         return True
     import subprocess

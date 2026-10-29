@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import POOL_PATH, logger
 from backend.fsutil import prune_protected
+from backend.settings import test_mode
 
 VIDEO_EXTENSIONS = {".mkv", ".mp4", ".avi", ".m4v", ".ts", ".mov", ".webm"}
 
@@ -212,7 +213,7 @@ def _get_allowed_media_roots() -> list[str]:
     from backend.config import ALLOWED_BROWSE_ROOTS
 
     roots = list(ALLOWED_BROWSE_ROOTS)
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         for cand in ("/tmp", "/var/tmp"):
             if os.path.exists(cand) and cand not in roots:
                 roots.append(cand)

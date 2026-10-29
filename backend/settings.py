@@ -12,6 +12,29 @@ import os
 import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+
+# Written by the release image's build (Dockerfile); environment variables can't create it.
+RELEASE_MARKER = "/etc/zettnas-release"
+
+
+def test_mode() -> bool:
+    """TESTING=1 or ZETTNAS_TEST_MODE=1, honoured only outside the released image (ARC-29).
+
+    The test switches make password hashing fast, allow the shared default password and turn the
+    Docker proxy off, so in the image people install they do nothing, whatever a container
+    template sets."""
+    if os.path.exists(RELEASE_MARKER):
+        return False
+    return os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1"
+
+
+def fast_hash() -> bool:
+    """Cheap password hashing for test runs only (ZETTNAS_FAST_HASH=1 or test mode)."""
+    if os.path.exists(RELEASE_MARKER):
+        return False
+    return test_mode() or os.environ.get("ZETTNAS_FAST_HASH") == "1"
+
+
 from typing import Any
 
 _TRUE = ("1", "true", "yes", "on")

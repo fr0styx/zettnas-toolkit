@@ -16,6 +16,7 @@ import urllib.request
 from typing import Any
 
 from backend.config import logger
+from backend.settings import test_mode
 
 
 def _is_safe_public_url(url_str: str) -> bool:
@@ -380,7 +381,7 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
         return {"tool": "browse_internet", "status": "blocked", "sources": [], "error": f"Web search refused: {why}."}
     clean_q = scrubbed
 
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         return {
             "tool": "browse_internet",
             "status": "ok",
@@ -1062,7 +1063,7 @@ def tool_get_weather(location: str) -> dict[str, Any]:
         }
 
     # Deterministic test mode
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         loc_low = clean_loc.lower()
         if "santo domingo" in loc_low and not any(c in loc_low for c in ("dominican", "chile", "dr", "cl")):
             return {

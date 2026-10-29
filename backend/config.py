@@ -5,6 +5,8 @@ import secrets
 import socket
 import time
 
+from backend.settings import test_mode
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ZettNAS")
 
@@ -280,9 +282,7 @@ LOGIN_USER_CHOOSER = SETTINGS.login_user_chooser
 # for reverse proxies that don't pass the original Host. Comma-separated.
 CSRF_TRUSTED_ORIGINS = list(SETTINGS.csrf_trusted_origins)
 
-ENFORCE_PASSWORD_CHANGE = not (
-    os.environ.get("TESTING") == "1" and os.environ.get("ZETTNAS_ENFORCE_PASSWORD_CHANGE") == "0"
-)
+ENFORCE_PASSWORD_CHANGE = not (test_mode() and os.environ.get("ZETTNAS_ENFORCE_PASSWORD_CHANGE") == "0")
 
 
 def initial_password_file() -> str:

@@ -33,6 +33,7 @@ from backend.services.rag_embeddings import (  # noqa: F401
 from backend.services.rag_text import (  # noqa: F401
     text_for_embedding,
 )
+from backend.settings import test_mode
 
 
 def _core():
@@ -354,7 +355,7 @@ class RagLearningMixin:
         (without ever touching or waking sleeping drives) and automatically triggers learning
         when a sleeping disk spins up.
         """
-        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        if test_mode():
             return
         if self.db_path != _core().RAG_DB_PATH:
             return

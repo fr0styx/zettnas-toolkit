@@ -27,12 +27,13 @@ from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.confirmations import require_confirmation
 from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.services.vm_engine import QmpEngine
+from backend.settings import test_mode
 from backend.state import Z_STATE, add_event
 
 
 def _resolve_vm_ip_by_mac(mac: str) -> str | None:
     """Inspects host ARP tables to find guest IP address matching its MAC."""
-    if os.environ.get("ZETTNAS_TEST_MODE") == "1" or os.environ.get("TESTING") == "1":
+    if test_mode():
         return f"192.168.1.{100 + (hash(mac) % 150)}" if mac else "192.168.1.100"
     clean_mac = (mac or "").lower().strip()
     if not clean_mac:

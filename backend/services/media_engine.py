@@ -25,6 +25,7 @@ from backend.services.rag_engine import (
     get_running_disks_list,
     get_sleeping_disks_list,
 )
+from backend.settings import test_mode
 
 MEDIA_STATUS_FILE = os.path.join(DATA_DIR, "media_indexing_status.json")
 MIN_RAM_REQUIRED_BYTES = 8 * 1024 * 1024 * 1024  # 8GB strict gating threshold
@@ -1342,7 +1343,7 @@ def search_huggingface_models(
     source_mode = "huggingface_live"
     exact_match_item: dict[str, Any] | None = None
 
-    if os.environ.get("TESTING") != "1" and os.environ.get("ZETTNAS_TEST_MODE") != "1":
+    if not test_mode():
         try:
             # If user pasted an exact `org/repo` or full huggingface.co URL, fetch that exact model first
             if "/" in clean_q and " " not in clean_q:
@@ -1530,7 +1531,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> dict[str, Any
     active_norm = str(rag_cfg.get("active_model") or "qwen2.5:3b").lower()
 
     fetched_item: dict[str, Any] | None = None
-    if os.environ.get("TESTING") != "1" and os.environ.get("ZETTNAS_TEST_MODE") != "1" and "/" in clean_repo:
+    if not test_mode() and "/" in clean_repo:
         try:
             exact_url = f"https://huggingface.co/api/models/{urllib.parse.quote(clean_repo, safe='/')}"
             req = urllib.request.Request(
@@ -1749,7 +1750,7 @@ class MediaEngine:
         accel = detect_hardware_accelerator()
         persisted = read_json(MEDIA_STATUS_FILE, {})
         rag = get_rag_engine()
-        if os.environ.get("TESTING") != "1" and os.environ.get("ZETTNAS_TEST_MODE") != "1":
+        if not test_mode():
             try:
                 rag.sync_watched_deferred_queue()
                 rag.check_and_trigger_spinup_auto_learn(background=True)

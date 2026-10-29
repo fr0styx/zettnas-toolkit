@@ -25,6 +25,7 @@ from backend.services.media_engine import (  # noqa: F401
     is_embedding_only_model,
     read_total_ram_bytes,
 )
+from backend.settings import test_mode
 
 
 def _core():
@@ -364,7 +365,7 @@ def _try_local_llm_completion(
     if reachable on the NAS or configured endpoint.
     Returns `(reply_text, runtime_name, eval_tokens, measured_tok_sec, runtime_accel, raw_tool_calls)` or `(None, None, 0, None, None, None)` if no external daemon is listening.
     """
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         return (None, None, 0, None, None, None)
 
     if active_model in ("OpenVINO/clip-vit-base-patch16-int8-ov",) or is_embedding_only_model(active_model):

@@ -179,6 +179,7 @@ class TestDockerProxy:
         raw.write_text("")
         proxy = tmp_path / "proxy.sock"
         monkeypatch.delenv("TESTING", raising=False)
+        monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)  # both are test mode (ARC-29)
         monkeypatch.setenv("ZETTNAS_DOCKER_PROXY_SOCK", str(proxy))
         monkeypatch.delenv("ZETTNAS_DOCKER_SOCK", raising=False)
         monkeypatch.setattr("backend.config.RAW_DOCKER_SOCK", str(raw))
@@ -195,6 +196,7 @@ class TestDockerProxy:
         raw = tmp_path / "docker.sock"
         raw.write_text("")
         monkeypatch.delenv("TESTING", raising=False)
+        monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)  # both are test mode (ARC-29)
         monkeypatch.setenv("ZETTNAS_DOCKER_PROXY_SOCK", str(tmp_path / "never.sock"))
         monkeypatch.delenv("ZETTNAS_DOCKER_SOCK", raising=False)
         monkeypatch.setattr("backend.config.RAW_DOCKER_SOCK", str(raw))

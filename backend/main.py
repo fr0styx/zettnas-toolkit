@@ -49,6 +49,7 @@ from backend.services.lcd_renderer import render_lcd_loop
 from backend.services.notifications import close_notification_client
 from backend.services.stats_collector import smart_poller_daemon, stats_collector_daemon
 from backend.services.webdav_engine import get_webdav_engine
+from backend.settings import test_mode
 from backend.state import Z_STATE, _load_events, add_event
 
 
@@ -59,7 +60,7 @@ def _start_docker_proxy(supervise) -> None:
 
     from backend.config import RAW_DOCKER_SOCK
 
-    if os.environ.get("ZETTNAS_DOCKER_PROXY", "on") == "off" or os.environ.get("TESTING") == "1":
+    if os.environ.get("ZETTNAS_DOCKER_PROXY", "on") == "off" or test_mode():
         return
     if not os.path.exists(RAW_DOCKER_SOCK):
         return
@@ -283,7 +284,7 @@ def startup_system():
         logger.debug("[Main] Non-appliance hardware detected; skipping ButtonListener daemon.")
     supervise("LcdRenderer", render_lcd_loop)
     supervise("FanWatchdog", fan_watchdog_daemon, beat_every=10)
-    if os.environ.get("TESTING") != "1":
+    if not test_mode():
         from backend.services.vision_queue import vision_daemon
 
         supervise("VisionCaptioner", vision_daemon)  # AI-14, idle-only

@@ -22,6 +22,7 @@ from typing import Any, Optional
 from backend import config
 from backend.config import DATA_DIR, logger
 from backend.passwords import hash_password, needs_rehash, verify_password
+from backend.settings import test_mode
 
 USERS_DB_PATH = getattr(config, "USERS_DB_PATH", os.path.join(DATA_DIR, "users.db"))
 _db_lock = threading.RLock()
@@ -271,7 +272,7 @@ def init_users_db(db_path: str | None = None) -> None:
 
 def _shared_default_allowed() -> bool:
     """Only the test suite may bootstrap with the published 'admin' password."""
-    return os.environ.get("TESTING") == "1" and os.environ.get("ZETTNAS_ALLOW_DEFAULT_PASSWORD", "1") == "1"
+    return test_mode() and os.environ.get("ZETTNAS_ALLOW_DEFAULT_PASSWORD", "1") == "1"
 
 
 def _first_time_password() -> str:

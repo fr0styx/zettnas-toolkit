@@ -221,6 +221,9 @@
 
 #### Security and privacy
 
+- **Test switches can't weaken an install**: `TESTING`, `ZETTNAS_TEST_MODE` and `ZETTNAS_FAST_HASH`,
+  which make password hashing fast, allow the default password and turn the Docker proxy off, now
+  do nothing in the released image, whatever a container template sets (ARC-29).
 - **No way around the Docker allow-list through dockhand**: redeploying a stack restarts its
   containers through ZettNAS's Docker proxy instead of running `docker compose` in dockhand in a
   folder that container labels could choose (SEC-25).

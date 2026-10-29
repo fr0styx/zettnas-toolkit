@@ -30,6 +30,7 @@ from backend.services.rag_engine import (  # noqa: F401
     get_sleeping_disks_list,
     similarity_profile,
 )
+from backend.settings import test_mode
 from backend.state import (  # noqa: F401
     Z_STATE,
 )
@@ -218,7 +219,7 @@ def tool_set_fan_profile(
     if zero_rpm_enabled is not None:
         cfg["zero_rpm_enabled"] = bool(zero_rpm_enabled)
 
-    if os.environ.get("TESTING") != "1" and os.environ.get("ZETTNAS_TEST_MODE") != "1":
+    if not test_mode():
         atomic_write_json(FAN_STATE_FILE, cfg)
 
     return {
@@ -233,7 +234,7 @@ def tool_set_fan_profile(
 
 def tool_list_docker_containers(limit: int = 40) -> dict[str, Any]:
     """Lists Docker containers on the NAS with state, image, uptime, and identifies longest-running container."""
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         return {
             "tool": "list_docker_containers",
             "status": "ok",
@@ -364,7 +365,7 @@ def tool_control_docker_container(
             "error": f"Safety guard: Refusing to {clean_action} critical system container '{clean_name}' from inside AI assistant.",
         }
 
-    if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         return {
             "tool": "control_docker_container",
             "status": "ok",
@@ -711,7 +712,7 @@ def tool_trigger_ai_sync(action: str = "start", principal: Any = None) -> dict[s
     else:
         cfg = rag.get_config()
         watched = cfg.get("watched_paths") or ["/mnt/user"]
-        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        if test_mode():
             res = {"status": "started", "watched_paths": watched, "respect_standby": True}
         else:
             res = rag.start_background_sync(paths=watched, recursive=True, respect_standby=True)

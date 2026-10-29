@@ -60,6 +60,9 @@ COPY requirements.txt requirements.lock requirements-dev.txt ./
 ARG DEV_BUILD=0
 RUN --mount=type=cache,target=/root/.cache/pip pip install --require-hashes -r requirements.lock \
     && if [ "$DEV_BUILD" = "1" ]; then pip install -r requirements-dev.txt; fi
+# ARC-29: in the image people install, the test switches (TESTING, ZETTNAS_TEST_MODE,
+# ZETTNAS_FAST_HASH) do nothing (backend/settings.py: test_mode); the dev build keeps them
+RUN if [ "$DEV_BUILD" != "1" ]; then echo "release image: test switches are off" > /etc/zettnas-release; fi
 
 # Intel Quick Sync for converting videos browsers can't play (iPhone HEVC): the VA-API
 # driver and the oneVPL GPU runtime. Used only when /dev/dri is passed to the container.

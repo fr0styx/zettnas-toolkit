@@ -30,6 +30,7 @@ from backend.hardware.pal.base import (
     _whole_disk,
 )
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
+from backend.settings import test_mode
 
 
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
@@ -154,7 +155,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
     def is_storage_busy(self) -> bool:
         """Checks if a scrub or balance is actively running across Btrfs or OpenZFS pools (10s TTL cache)."""
-        if os.environ.get("TESTING") == "1" or os.environ.get("ZETTNAS_TEST_MODE") == "1":
+        if test_mode():
             return self._check_is_storage_busy_uncached()
         now = time.time()
         if now - getattr(self, "_busy_cache_ts", 0.0) < 10.0:

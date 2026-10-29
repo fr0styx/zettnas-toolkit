@@ -15,12 +15,14 @@ import hashlib
 import hmac
 import secrets
 
+from backend.settings import fast_hash
+
 try:
     from argon2 import PasswordHasher
     from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
     _ARGON2_AVAILABLE = True
-    if os.environ.get("ZETTNAS_FAST_HASH") == "1" or os.environ.get("TESTING") == "1":
+    if fast_hash():
         _PH = PasswordHasher(
             time_cost=1,
             memory_cost=1024,
