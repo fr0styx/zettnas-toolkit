@@ -478,4 +478,8 @@ def _do_mkdir(path: str):
 )
 def mkdir(req: MkdirRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     check_user_path_access(req.path, principal, write=True)
-    return _do_mkdir(req.path)
+    res = _do_mkdir(req.path)
+    from backend.api.files.common import record_activity
+
+    record_activity("mkdir", res.get("path") or req.path, principal)
+    return res

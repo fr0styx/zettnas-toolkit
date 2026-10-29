@@ -3316,6 +3316,7 @@
               <div id="sec-guard-card" class="zn-card zn-card--divided" aria-live="polite"></div>
               <div id="sec-sso-card" class="zn-card zn-card--divided"></div>
               <div id="sec-ldap-card" class="zn-card zn-card--divided"></div>
+              <div id="file-activity-mount" class="zn-card zn-card--divided" hidden></div>
 
               <!-- Scoped API Tokens -->
               <div style="border-top: 1px solid var(--zn-line-6); margin-top: 14px; padding-top: 14px;">
@@ -3332,6 +3333,9 @@
                   <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" data-i18n-placeholder="ui.token_name_e_g_home" class="tz-select-input" style="flex:1; background: var(--zn-shade-25); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); padding: 7px 12px; font-size: var(--zn-fs-sm); border-radius: 6px;" aria-label="Token Name (e.g. Home Assistant)" data-i18n-aria-label="ui.token_name_e_g_home">
                   <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">Generate</button>
                 </div>
+                <label for="new-token-folders" class="zn-sub is-spaced" data-i18n="tokens.folders_label">Only these folders (optional, one per line)</label>
+                <textarea id="new-token-folders" class="tz-select-input zn-token-folders" rows="2" placeholder="/mnt/user/Documents" data-i18n-placeholder="tokens.folders_placeholder"></textarea>
+                <div id="api-token-created" class="zn-token-created" role="status" hidden></div>
               </div>
 
               <!-- Two-Factor Authentication Quick Access -->

@@ -142,6 +142,15 @@ class RagSearchMixin:
         if principal is None:
             logger.warning("rag search: called without a principal; returning nothing (SEC-37)")
             return ("0", [])
+        folders = list(getattr(principal, "folders", None) or [])
+        if folders:
+            # COMP-06: a token limited to folders searches only inside them
+            from backend.services.path_access import without_folders
+
+            base_sql, base_params = RagSearchMixin._build_rbac_clause(without_folders(principal), table_alias)
+            parts = [RagSearchMixin._build_subtree_clause(f, table_alias) for f in folders]
+            inside = " OR ".join(p[0] for p in parts)
+            return (f"(({base_sql}) AND ({inside}))", [*base_params, *[a for p in parts for a in p[1]]])
         role_id = str(getattr(principal, "role_id", "") or "").lower()
         has_any = getattr(principal, "has_any_scope", None)
         is_admin = role_id in ("superadmin", "storage_admin") or (

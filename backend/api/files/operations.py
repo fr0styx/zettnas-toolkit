@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.api.files.common import _observe, _safe_fs_target
+from backend.api.files.common import _observe, _safe_fs_target, record_activity
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
 from backend.fsutil import resolve_within, root_for
@@ -70,6 +70,7 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
     _observe("rename", target_unresolved, principal, new_path=dst)
     try:
         await asyncio.to_thread(os.rename, target_unresolved, dst)
+        record_activity("rename", target_unresolved, principal, target=dst)
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"[FS] Rename failed: {e}")
@@ -101,6 +102,7 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
                 await asyncio.to_thread(shutil.rmtree, target_unresolved)
             else:
                 await asyncio.to_thread(os.remove, target_unresolved)
+            record_activity("delete_permanent", target_unresolved, principal)
             return {"status": "ok", "message": "Item permanently deleted"}
 
         # Recycle Bin logic instead of hard delete
@@ -113,6 +115,7 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         base_name = os.path.basename(target_unresolved)
         dest_name = await asyncio.to_thread(recycle_bin.move_to_bin, target_unresolved, recycle_dir, target_unresolved)
         add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
+        record_activity("delete", target_unresolved, principal, detail="to the Recycle Bin")
 
         return {
             "status": "ok",
@@ -175,6 +178,8 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
             raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
 
     res = await asyncio.to_thread(execute_transfer, req.sources, dest_canonical, req.action, req.collision_policy)
+    for src in req.sources:
+        record_activity(req.action, src, principal, target=dest_canonical)
     add_event(
         "info",
         "File Explorer",
@@ -258,6 +263,8 @@ async def fs_transfer_async(
         "File Explorer",
         f"Queued background {req.action} of {len(clean_sources)} item(s) to {os.path.basename(dest_canonical)}",
     )
+    for src in clean_sources:
+        record_activity(req.action, src, principal, target=dest_canonical, detail="in the background")
     return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
 
 

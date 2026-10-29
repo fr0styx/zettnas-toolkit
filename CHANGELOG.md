@@ -245,6 +245,14 @@
 
 #### Security and privacy
 
+- **AI clients on a short leash**: an API token can be limited to a few folders, and then
+  searches and opens nothing else, even for an administrator. The token list shows when each
+  token was last used, from where and by which AI client, with Revoke next to it; tokens used
+  to show "never used" because use wasn't recorded. A new token comes with ready settings for
+  Claude Code, Cursor and Claude Desktop (COMP-06).
+- **File activity**: Settings → Security lists who deleted, moved, renamed, copied, restored or
+  uploaded what, from the File Explorer or through the API, with the address and whether an API
+  token did it. Search by file, person or action; entries are kept for 90 days (FEAT-12).
 - **Sign-in hygiene**: "keep me signed in" now lasts as promised before a restart too; changing your
   own password can also revoke your API tokens; the 10,000 most common passwords are refused for
   people, invites, the admin password and SFTP accounts; failed WebDAV portal sign-ins now lock the

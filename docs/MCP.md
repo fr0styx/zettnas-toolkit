@@ -9,6 +9,20 @@ status, search your indexed files and propose changes.
   `Authorization: Bearer <token>`. The client gets the permissions of the token's
   account, so a token for a non-admin account only sees that account's tools and files.
 
+## Limit what a client can reach
+
+- **Folders.** When you make the token, list the folders it may reach under **Only these
+  folders**. A client with that token can then search and open nothing outside them, even
+  if the token belongs to an administrator; leave the list empty for every folder the
+  account can open. The folders are checked by path, without waking sleeping drives.
+- **What it can do.** A token never has more rights than its account, and you can make one
+  with fewer.
+- **What is connected.** Security → API Tokens shows, for each token, when it was last used,
+  from which address and, for MCP clients, which client (for example "Cursor 1.4", as the
+  client names itself). **Revoke** cuts a client off at once.
+- **Settings to paste.** When a token is made, ZettNAS shows it once together with ready
+  settings for Claude Code, Cursor and Claude Desktop, filled in with this server's address.
+
 ## What a client can do
 
 The client sees the same tools as Ask Zetty, minus web search and weather:

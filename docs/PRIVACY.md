@@ -12,7 +12,8 @@ If something here is wrong, please open an issue.
   router or other LAN hosts.
 - Photos sent for captions and text reading. They go to the vision model on this NAS,
   at most 896 pixels on the long side, and nowhere else.
-- Hardware readings, logs and settings.
+- Hardware readings, logs and settings, and the file activity log (who changed which file,
+  kept 90 days).
 
 ZettNAS has no analytics and does not phone home. The one exception is the anonymous weekly
 health report below, which is off unless you turn it on.

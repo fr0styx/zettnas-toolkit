@@ -590,6 +590,8 @@ class TokenCreateRequest(BaseModel):
     scopes: list[str] | None = None
     role_id: str | None = None
     expires_in_days: int | None = None
+    # COMP-06: only these folders (and what is inside them); empty means every folder the account may open
+    folders: list[str] | None = None
 
 
 @router.get("/tokens", dependencies=[Depends(require_scope("users:read", "system:config"))])
@@ -619,6 +621,9 @@ def list_tokens(principal: AuthenticatedPrincipal = Depends(get_current_principa
                         "created": t.get("created_at"),
                         "expires_at": t.get("expires_at"),
                         "last_used_at": t.get("last_used_at"),
+                        "last_used_ip": t.get("last_used_ip") or "",
+                        "last_client": t.get("last_client") or "",
+                        "folders": t.get("folders") or [],
                     }
                 )
             return res
@@ -638,6 +643,20 @@ def list_tokens(principal: AuthenticatedPrincipal = Depends(get_current_principa
             }
         )
     return res
+
+
+def _token_folders_for(folders: list[str] | None, principal: Any) -> list[str]:
+    """The folder allow-list for a new token (COMP-06): only folders its creator may read, checked
+    from the paths alone so no sleeping drive is woken."""
+    from backend.services.path_access import indexed_path_checker
+    from backend.users_db import normalize_token_folders
+
+    clean = normalize_token_folders(folders)  # ValueError -> 400
+    readable = indexed_path_checker(principal)
+    refused = [f for f in clean if not readable(f)]
+    if refused:
+        raise HTTPException(status_code=403, detail=f"You can't open {refused[0]}, so a token can't either.")
+    return clean
 
 
 @router.post("/tokens", dependencies=[Depends(require_scope("users:write", "system:config"))])
@@ -660,11 +679,13 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
 
         # No scopes chosen: the token gets what its creator holds, never more (SEC-4)
         scopes = req.scopes or list(getattr(principal, "scopes", None) or [])
+        folders = _token_folders_for(req.folders, principal)
         raw_token, meta = create_scoped_api_token(
             user_id=user_id,
             name=req.name,
             scopes=scopes,
             expires_in_days=req.expires_in_days,
+            folders=folders,
         )
         add_event("success", "Security", f"Generated new scoped API token: {req.name}")
         try:
@@ -675,7 +696,7 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
                 "success",
                 actor_id=getattr(principal, "user_id", None),
                 actor_username=getattr(principal, "username", None),
-                details={"name": req.name, "scopes": meta.get("scopes")},
+                details={"name": req.name, "scopes": meta.get("scopes"), "folders": meta.get("folders")},
             )
         except Exception:
             ignored("backend.api.system.create_token")
@@ -684,6 +705,7 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
             "name": req.name,
             "token_id": meta["token_id"],
             "scopes": meta["scopes"],
+            "folders": meta.get("folders") or [],
             "masked_token": meta["masked_token"],
         }
     except HTTPException:

@@ -99,6 +99,28 @@ def _call_tool(name: str, args: dict[str, Any], principal: Any, base_url: str) -
     return {"content": [{"type": "text", "text": json.dumps(res, default=str, ensure_ascii=False)}], "isError": False}
 
 
+def client_label(info: Any) -> str:
+    """'Claude Code 2.1' from MCP clientInfo; '' when there is none."""
+    if not isinstance(info, dict):
+        return ""
+    name = str(info.get("title") or info.get("name") or "").strip()
+    version = str(info.get("version") or "").strip()
+    label = f"{name} {version}".strip() if name else ""
+    return "".join(ch for ch in label if ch.isprintable())[:120]
+
+
+def _note_client(principal: Any, info: Any) -> None:
+    """The connected-clients list in Security (COMP-06) shows which AI client used each token."""
+    token_id = getattr(principal, "token_id", "")
+    label = client_label(info)
+    if not token_id or not label:
+        return
+    from backend.auth import CLIENT_IP_CTX
+    from backend.users_db import note_token_use
+
+    note_token_use(token_id, CLIENT_IP_CTX.get(), client=label)  # never raises for the db
+
+
 def handle_message(msg: Any, principal: Any, base_url: str) -> dict[str, Any] | None:
     if not isinstance(msg, dict) or msg.get("jsonrpc") != "2.0" or not isinstance(msg.get("method"), str):
         return _error(msg.get("id") if isinstance(msg, dict) else None, -32600, "Invalid request")
@@ -106,6 +128,7 @@ def handle_message(msg: Any, principal: Any, base_url: str) -> dict[str, Any] | 
     if "id" not in msg:
         return None  # a notification, e.g. notifications/initialized
     if method == "initialize":
+        _note_client(principal, params.get("clientInfo"))
         asked = params.get("protocolVersion")
         return _result(
             req_id,

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-594 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+595 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -225,6 +225,7 @@ request and response schemas.
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/browse` | signed in | A folder's entries |
+| `GET` | `/api/v1/fs/activity` | `audit:read` | Who deleted, moved, renamed, restored or uploaded what, newest first (90 days are kept) |
 | `POST` | `/api/v1/fs/archive/create` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Fs Archive Create |
 | `POST` | `/api/v1/fs/archive/extract` | any of `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` ⏱ | Fs Archive Extract |
 | `POST` | `/api/v1/fs/checksum` | any of `shares:read`, `storage:read`, `system:view` | Fs Checksum |

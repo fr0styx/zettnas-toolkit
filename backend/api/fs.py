@@ -9,8 +9,8 @@ import time  # noqa: F401
 
 from fastapi import APIRouter
 
-from backend.api.files import browse as browse_area  # the module; `browse` is the route
 from backend.api.files import (
+    activity,
     common,
     details,
     favorites,
@@ -22,6 +22,7 @@ from backend.api.files import (
     trash,
     uploads,
 )
+from backend.api.files import browse as browse_area  # the module; `browse` is the route
 from backend.api.files.browse import (
     _do_mkdir,
     _handle_browse_logic,
@@ -164,7 +165,19 @@ from backend.services.path_access import (
 
 router = APIRouter(tags=["File System & Shares"])
 # the areas' routes, in the order the single module registered them (paths are matched in order)
-for _area in (browse_area, operations, tasks, details, uploads, search, trash, preview, share_links, favorites):
+for _area in (
+    browse_area,
+    operations,
+    tasks,
+    details,
+    uploads,
+    search,
+    trash,
+    preview,
+    share_links,
+    favorites,
+    activity,
+):
     router.include_router(_area.router)
 
 __all__ = [

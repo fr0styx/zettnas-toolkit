@@ -208,7 +208,9 @@ def init_users_db(db_path: str | None = None) -> None:
                 created_at REAL NOT NULL,
                 expires_at REAL,
                 last_used_at REAL,
-                last_used_ip TEXT DEFAULT ''
+                last_used_ip TEXT DEFAULT '',
+                folders_json TEXT DEFAULT '[]',
+                last_client TEXT DEFAULT ''
             );
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_api_tokens_token_hash ON api_tokens(token_hash);")
@@ -987,6 +989,7 @@ def create_scoped_api_token(
     scopes: list[str] | None = None,
     expires_in_days: int | None = None,
     db_path: str | None = None,
+    folders: list[str] | None = None,
 ) -> tuple[str, dict[str, Any]]:
     raw_token = "zat_" + secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
@@ -999,16 +1002,27 @@ def create_scoped_api_token(
     granted_scopes = [s for s in (scopes or []) if isinstance(s, str) and s.strip()]
     if not granted_scopes:
         raise ValueError("Choose what the token may do (at least one scope).")
+    allowed = normalize_token_folders(folders)
 
     with users_db_session(db_path) as conn:
         conn.execute(
             """
             INSERT INTO api_tokens (
                 token_id, user_id, name, token_hash, masked_token, scopes_json,
-                created_at, expires_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                created_at, expires_at, folders_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-            (token_id, user_id, name.strip(), token_hash, masked, json.dumps(granted_scopes), now, expires_at),
+            (
+                token_id,
+                user_id,
+                name.strip(),
+                token_hash,
+                masked,
+                json.dumps(granted_scopes),
+                now,
+                expires_at,
+                json.dumps(allowed),
+            ),
         )
 
     token_meta = {
@@ -1016,10 +1030,63 @@ def create_scoped_api_token(
         "name": name,
         "masked_token": masked,
         "scopes": granted_scopes,
+        "folders": allowed,
         "created_at": now,
         "expires_at": expires_at,
     }
     return raw_token, token_meta
+
+
+MAX_TOKEN_FOLDERS = 20
+
+
+def normalize_token_folders(folders: list[str] | None) -> list[str]:
+    """A token's folder allow-list (COMP-06): absolute, normalised, no duplicates or nested repeats."""
+    out: list[str] = []
+    for raw in folders or []:
+        if not isinstance(raw, str) or not raw.strip():
+            continue
+        p = raw.strip().replace("\\", "/")
+        if not p.startswith("/") or ".." in p.split("/"):
+            raise ValueError(f"Folders are absolute paths on the NAS, such as /mnt/user/Documents ({raw!r}).")
+        p = os.path.normpath(p)
+        if p == "/":
+            raise ValueError("Leave the folder list empty to allow every folder the account may open.")
+        out.append(p)
+    out = sorted(set(out))
+    # /a/b is already covered by /a
+    out = [p for p in out if not any(p != q and p.startswith(q + "/") for q in out)]
+    if len(out) > MAX_TOKEN_FOLDERS:
+        raise ValueError(f"A token can be limited to at most {MAX_TOKEN_FOLDERS} folders.")
+    return out
+
+
+_TOKEN_USE: dict[str, float] = {}
+_TOKEN_USE_EVERY = 60.0
+
+
+def note_token_use(token_id: str, ip: str = "", client: str = "", db_path: str | None = None) -> bool:
+    """Records when, from where and (for MCP) by which client a token was used; at most once a
+    minute per token unless the client changes. Returns whether it wrote."""
+    if not token_id:
+        return False
+    now = time.time()
+    with _TOKEN_CACHE_LOCK:
+        last = _TOKEN_USE.get(token_id, 0.0)
+        if not client and now - last < _TOKEN_USE_EVERY:
+            return False
+        _TOKEN_USE[token_id] = now
+    sets, args = ["last_used_at = ?", "last_used_ip = ?"], [now, (ip or "")[:64]]
+    if client:
+        sets.append("last_client = ?")
+        args.append(client[:120])
+    try:
+        with users_db_session(db_path) as conn:
+            conn.execute(f"UPDATE api_tokens SET {', '.join(sets)} WHERE token_id = ?", (*args, token_id))
+    except sqlite3.Error:  # recording use never blocks the request it came with
+        ignored("backend.users_db.note_token_use")
+        return False
+    return True
 
 
 def cap_token_scopes(token_scopes: list[str], role_scopes: list[str]) -> list[str]:
@@ -1076,6 +1143,7 @@ def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dic
             ),
             "name": row["name"],
             "expires_at": row["expires_at"],
+            "folders": _folders_of(row),
             "is_api_token": True,
         }
 
@@ -1085,11 +1153,20 @@ def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dic
         return token_data
 
 
+def _folders_of(row: Any) -> list[str]:
+    try:
+        value = json.loads(row["folders_json"] or "[]")
+    except (IndexError, KeyError, ValueError, TypeError):
+        return []
+    return [p for p in value if isinstance(p, str)] if isinstance(value, list) else []
+
+
 def list_user_api_tokens(user_id: str, db_path: str | None = None) -> list[dict[str, Any]]:
     with users_db_session(db_path, readonly=True) as conn:
         rows = conn.execute(
             """
-            SELECT token_id, name, masked_token, scopes_json, created_at, expires_at, last_used_at, last_used_ip
+            SELECT token_id, name, masked_token, scopes_json, created_at, expires_at, last_used_at, last_used_ip,
+                   folders_json, last_client
             FROM api_tokens
             WHERE user_id = ?
             ORDER BY created_at DESC
@@ -1101,6 +1178,8 @@ def list_user_api_tokens(user_id: str, db_path: str | None = None) -> list[dict[
         for r in rows:
             d = dict(r)
             d["scopes"] = json.loads(d.pop("scopes_json", "[]"))
+            d["folders"] = _folders_of(r)
+            d.pop("folders_json", None)
             res.append(d)
         return res
 

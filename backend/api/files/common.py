@@ -66,6 +66,13 @@ def _observe(kind: str, path: str, principal: Any, new_path: str = "") -> None:
     )
 
 
+def record_activity(action: str, path: str, principal: Any, target: str = "", detail: str = "") -> None:
+    """Adds the change to the file activity log (FEAT-12)."""
+    from backend.services import file_activity
+
+    file_activity.record(action, path, principal, target=target, detail=detail)
+
+
 def _safe_fs_target(req_path: str):
     raw = str(req_path or "").strip()
     if not raw or "\x00" in raw:

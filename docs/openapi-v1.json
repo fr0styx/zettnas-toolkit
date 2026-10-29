@@ -33416,6 +33416,20 @@
       ],
       "title": "Expires In Days"
      },
+     "folders": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Folders"
+     },
      "name": {
       "title": "Name",
       "type": "string"
@@ -45107,6 +45121,114 @@
     ],
     "x-required-scopes": [
      "hardware:fans"
+    ]
+   }
+  },
+  "/api/v1/fs/activity": {
+   "get": {
+    "description": "Who deleted, moved, renamed, restored or uploaded what, newest first (90 days are kept).",
+    "operationId": "fs_activity_api_v1_fs_activity_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 200,
+       "title": "Q",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "user",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 64,
+       "title": "User",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "action",
+      "required": false,
+      "schema": {
+       "default": "",
+       "maxLength": 32,
+       "title": "Action",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "days",
+      "required": false,
+      "schema": {
+       "default": 90,
+       "maximum": 90,
+       "minimum": 1,
+       "title": "Days",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 100,
+       "maximum": 500,
+       "minimum": 1,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "before",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "minimum": 1,
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Before"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Fs Activity",
+    "tags": [
+     "File System & Shares"
+    ],
+    "x-required-scopes": [
+     "audit:read"
     ]
    }
   },

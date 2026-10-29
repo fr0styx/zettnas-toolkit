@@ -428,3 +428,19 @@
   cursor: not-allowed;
 }
 
+
+/* API tokens: rows, the folder list and the one-time token with client settings (COMP-06) */
+.zn-token-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px; border-radius: 6px; background: var(--zn-shade-20); border: 1px solid var(--zn-line-6); }
+.zn-token-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.zn-token-main .zn-tag { margin-right: 4px; }
+.zn-token-folders { width: 100%; margin-top: 4px; font-family: var(--zn-font-mono, monospace); font-size: var(--zn-fs-xs); resize: vertical; }
+.zn-token-created { margin-top: 12px; padding: 12px; border-radius: 8px; border: 1px solid var(--zn-line-12); background: var(--zn-shade-25); display: flex; flex-direction: column; gap: 6px; }
+.zn-token-created[hidden] { display: none; }
+.zn-token-copy { display: flex; gap: 8px; align-items: flex-start; }
+.zn-token-copy code, .zn-token-copy pre { flex: 1; margin: 0; padding: 6px 8px; border-radius: 6px; background: var(--zn-shade-30); font-size: var(--zn-fs-xs); white-space: pre-wrap; word-break: break-all; user-select: all; }
+
+/* File activity (FEAT-12) */
+.zn-activity-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.zn-activity-filters input { flex: 1 1 160px; }
+.zn-activity-filters select { flex: 0 0 auto; }
+#file-activity-mount[hidden] { display: none; }

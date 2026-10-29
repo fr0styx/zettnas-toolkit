@@ -22,7 +22,10 @@ names the test or the page that holds it, so you can check it yourself.
 - **Results and answers include only files from shares the signed-in person can open.** A
   search that doesn't say who is asking finds nothing (`tests/test_sec37_fail_closed.py`).
 - **The chat gets only the tools the person's role allows**, the same permissions as the
-  matching pages. An AI client over MCP gets the permissions of its API token's account.
+  matching pages. An AI client over MCP gets the permissions of its API token's account,
+  and a token limited to folders reaches nothing outside them, even an administrator's
+  (`tests/test_comp06_token_safety.py`). Security → API Tokens shows which client used each
+  token last, and **Revoke** cuts it off.
 - **Text from files and web pages is data, not instructions.** It is passed to the model
   marked as such, and the model is told not to follow instructions inside it.
 

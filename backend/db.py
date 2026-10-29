@@ -197,6 +197,22 @@ def init_db():
                     updated_at REAL NOT NULL
                 )
             """)
+            # Who did what to which file, kept 90 days (FEAT-12, backend/services/file_activity.py)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS file_activity (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts REAL NOT NULL,
+                    username TEXT NOT NULL DEFAULT '',
+                    ip TEXT NOT NULL DEFAULT '',
+                    action TEXT NOT NULL,
+                    path TEXT NOT NULL,
+                    target TEXT NOT NULL DEFAULT '',
+                    detail TEXT NOT NULL DEFAULT '',
+                    via TEXT NOT NULL DEFAULT ''
+                )
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_file_activity_ts ON file_activity(ts)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_file_activity_user ON file_activity(username, id)")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
 

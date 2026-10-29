@@ -56,6 +56,26 @@ def _is_files_admin(principal: AuthenticatedPrincipal | None) -> bool:
     )
 
 
+def token_folders(principal: Any) -> list[str]:
+    """The folders an API token is limited to (COMP-06); empty when it isn't."""
+    return list(getattr(principal, "folders", None) or [])
+
+
+def within_token_folders(path: str, folders: list[str], allow_list: bool = False) -> bool:
+    """Inside one of the folders; with allow_list, also a folder above one (to browse down to it)."""
+    if not folders:
+        return True
+    norm = os.path.normpath(str(path or "")).replace("\\", "/")
+    if not norm.startswith("/"):
+        return False
+    for f in folders:
+        if norm == f or norm.startswith(f.rstrip("/") + "/"):
+            return True
+        if allow_list and (norm == "/" or f.startswith(norm.rstrip("/") + "/")):
+            return True
+    return False
+
+
 def check_user_path_access(
     req_path: str, principal: AuthenticatedPrincipal | None, write: bool = False, allow_list: bool = False
 ) -> None:
@@ -64,9 +84,16 @@ def check_user_path_access(
     A folder above a granted share (the pool root, "homes") has level "list": it can be
     browsed to reach the share, but it is not readable. Only listing-type callers pass
     allow_list=True; anything that reads, copies, zips or shares content does not.
+    An API token limited to folders (COMP-06) reaches nothing else, even an admin's.
     """
     if not principal:
         raise HTTPException(status_code=401, detail="Authentication required.")
+    folders = token_folders(principal)
+    if folders:
+        raw = str(req_path or "").strip()
+        paths = [raw] + ([os.path.realpath(raw)] if os.path.isabs(raw) else [])
+        if not all(within_token_folders(p, folders, allow_list) for p in paths):
+            raise HTTPException(status_code=403, detail="This API token is limited to other folders.")
     if _is_files_admin(principal):
         return
     raw_path = str(req_path or "").strip()
@@ -108,6 +135,11 @@ def check_user_path_access(
         raise HTTPException(status_code=403, detail="You have read-only access to this folder.")
 
 
+def without_folders(principal: Any) -> Any:
+    """The same principal without its folder limit, to apply the other rules on their own."""
+    return AuthenticatedPrincipal({**getattr(principal, "raw_data", {}), "folders": []})
+
+
 def indexed_path_checker(principal: AuthenticatedPrincipal | None) -> Any:
     """Read access for file paths taken from the AI index, without touching the disks.
 
@@ -116,6 +148,10 @@ def indexed_path_checker(principal: AuthenticatedPrincipal | None) -> Any:
     """
     if not principal:
         return lambda _path: False
+    folders = token_folders(principal)
+    if folders:
+        inner = indexed_path_checker(without_folders(principal))
+        return lambda path: within_token_folders(path, folders) and inner(path)
     if _is_files_admin(principal):
         return lambda _path: True
     from backend.services.share_access import file_level, grants_for

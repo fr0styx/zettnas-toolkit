@@ -830,6 +830,26 @@
    "path": "/fs/favorites",
    "response_model": null,
    "status": null
+  },
+  {
+   "deps": [
+    "require_scope"
+   ],
+   "endpoint": "fs_activity",
+   "methods": [
+    "GET"
+   ],
+   "params": [
+    "action",
+    "before",
+    "days",
+    "limit",
+    "q",
+    "user"
+   ],
+   "path": "/fs/activity",
+   "response_model": null,
+   "status": null
   }
  ],
  "session": [

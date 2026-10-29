@@ -810,6 +810,7 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-security') {
       import('./settings.js').then((m) => m.renderApiTokens && m.renderApiTokens()).catch(() => {});
       import('./guard-panel.js').then((m) => m.renderGuardPanel()).catch(() => {});
+      import('./file-activity.js').then((m) => m.renderFileActivity()).catch(() => {}); // FEAT-12
       import('./sso.js').then((m) => { m.renderSsoPanel(); m.renderLdapPanel(); }).catch(() => {});
       import('./management/user-data.js').then((m) => m.installMyData()).catch(() => {}); // your data (B8)
       fetchAndRenderSecurityPosture();

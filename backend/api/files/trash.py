@@ -10,7 +10,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from backend.api.files.common import _contained
+from backend.api.files.common import _contained, record_activity
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
 from backend.confirmations import require_confirmation
@@ -121,6 +121,7 @@ async def fs_trash_restore(
         logger.error(f"[FS] Restore failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to restore item") from e
     add_event("success", "File Explorer", f"Restored {req.item_id} from Recycle Bin")
+    record_activity("restore", str(res.get("path") or req.item_id), principal, detail="from the Recycle Bin")
     return res
 
 
@@ -151,4 +152,5 @@ async def fs_trash_empty(principal: AuthenticatedPrincipal = Depends(get_current
     """Permanently deletes everything in every Recycle Bin."""
     res = await asyncio.to_thread(_empty)
     add_event("info", "File Explorer", f"Recycle Bin emptied ({res['purged_count']} items permanently deleted)")
+    record_activity("empty_bin", "", principal, detail=f"{res['purged_count']} items")
     return res

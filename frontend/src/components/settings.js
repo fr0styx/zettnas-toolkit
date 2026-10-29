@@ -10,7 +10,8 @@ import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle, hex
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
-import { escapeHtml } from '../utils.js';
+import { formatDateTime } from '../format.js';
+import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { showToast, showActionToast, showPromptToast, showConfirmToast } from '../toast.js';
 import { applyGlassSettings, applyWallpaperReadability } from './wallpapers.js';
 import { applyDockSettings } from './dock.js';
@@ -1909,67 +1910,148 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+/** One token's row: name, what it may reach, and when and by which client it was last used (COMP-06). */
+export function tokenRowHtml(tok) {
+  const folders = Array.isArray(tok.folders) ? tok.folders : [];
+  const reach = folders.length
+    ? `${escapeHtml(t('tokens.only_folders', 'Only:'))} ${folders.map((f) => `<span class="zn-tag zn-tag--info is-mono">${escapeHtml(f)}</span>`).join(' ')}`
+    : escapeHtml(t('tokens.all_folders', 'All folders the account can open'));
+  let used = t('tokens.never_used', 'Never used');
+  if (tok.last_used_at) {
+    used = t('tokens.last_used', 'Last used {when}', { when: formatDateTime(tok.last_used_at) });
+    if (tok.last_used_ip) used += ' ' + t('tokens.last_used_from', 'from {ip}', { ip: tok.last_used_ip });
+    if (tok.last_client) used += ' ' + t('tokens.last_client', 'by {client}', { client: tok.last_client });
+  }
+  return `
+    <div class="zn-token-main">
+      <div class="is-strong">${escapeHtml(tok.name)}</div>
+      <div class="zn-sub is-mono">${escapeHtml(tok.masked_token)}</div>
+      <div class="zn-sub">${reach}</div>
+      <div class="zn-sub" data-token-used>${escapeHtml(used)}</div>
+    </div>
+    <div class="zn-actions"><button type="button" class="btn-rect danger" data-id="${escapeHtml(tok.id)}">${escapeHtml(t('tokens.revoke', 'Revoke'))}</button></div>`;
+}
+
 export async function renderApiTokens() {
   const list = document.getElementById('api-tokens-list');
   if (!list) return;
-  
+
   try {
     const tokens = await api.get('/api/tokens');
-    
+
     if (tokens.length === 0) {
-      list.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--muted); text-align:center;">No API tokens generated.</div>`;
+      list.innerHTML = `<div class="zn-datatable-msg">${escapeHtml(t('tokens.none', 'No API tokens yet.'))}</div>`;
       return;
     }
-    
+
     list.innerHTML = '';
-    tokens.forEach(t => {
+    tokens.forEach((tok) => {
       const row = document.createElement('div');
-      row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);';
-      row.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:2px;">
-          <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);">${escapeHtml(t.name)}</div>
-          <div style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:monospace;">${escapeHtml(t.masked_token)}</div>
-        </div>
-        <button class="btn-rect danger" data-id="${escapeHtml(t.id)}">Revoke</button>
-      `;
-      
+      row.className = 'zn-token-row';
+      row.innerHTML = tokenRowHtml(tok);
       row.querySelector('button').addEventListener('click', async () => {
-        showConfirmToast('Revoke Token', `Revoke token "${t.name}"?`, async () => {
-          try {
-            await api.delete(`/api/tokens/${t.id}`);
-            renderApiTokens();
-          } catch (err) {
-            showToast(err.message, 'error');
+        showConfirmToast(
+          t('tokens.revoke_title', 'Revoke token'),
+          t('tokens.revoke_confirm', 'Revoke the token "{name}"? Anything using it stops working.', { name: tok.name }),
+          async () => {
+            try {
+              await api.delete(`/api/tokens/${tok.id}`);
+              renderApiTokens();
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
           }
-        });
+        );
       });
       list.appendChild(row);
     });
   } catch (err) {
-    list.innerHTML = `<div style="font-size:var(--zn-fs-xs); color:var(--crit); text-align:center;">Failed to load tokens</div>`;
+    list.innerHTML = `<div class="zn-datatable-msg is-crit">${escapeHtml(t('tokens.load_failed', "Couldn't load the tokens."))}</div>`;
   }
+}
+
+/** The folders typed into the token form: one per line or separated by commas. */
+export function parseTokenFolders(text) {
+  return String(text || '')
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Ready-to-paste settings for AI clients, with this server's address and the new token (COMP-06). */
+export function mcpSnippets(origin, token) {
+  const url = `${origin}/api/mcp`;
+  const header = `Authorization: Bearer ${token}`;
+  return [
+    {
+      id: 'claude-code',
+      label: t('tokens.snippet_claude_code', 'Claude Code (terminal)'),
+      text: `claude mcp add --transport http zettnas ${url} --header "${header}"`,
+    },
+    {
+      id: 'cursor',
+      label: t('tokens.snippet_cursor', 'Cursor (~/.cursor/mcp.json)'),
+      text: JSON.stringify({ mcpServers: { zettnas: { url, headers: { Authorization: `Bearer ${token}` } } } }, null, 2),
+    },
+    {
+      id: 'desktop',
+      label: t('tokens.snippet_desktop', 'Claude Desktop and other local-only clients (mcp-remote)'),
+      text: JSON.stringify(
+        { mcpServers: { zettnas: { command: 'npx', args: ['mcp-remote', url, '--header', header] } } },
+        null,
+        2
+      ),
+    },
+  ];
+}
+
+function showCreatedToken(box, token) {
+  const parts = mcpSnippets(window.location.origin, token);
+  box.innerHTML = `
+    <div class="is-strong">${escapeHtml(t('tokens.created_title', 'Copy the token now'))}</div>
+    <div class="zn-sub is-spaced">${escapeHtml(t('tokens.created_hint', 'It is shown only once. Paste it into the app, or use one of these to connect an AI client.'))}</div>
+    <div class="zn-token-copy"><code class="is-mono" data-copy-src>${escapeHtml(token)}</code>
+      <button type="button" class="btn-pill-toggle" data-copy="token">${escapeHtml(t('tokens.copy', 'Copy'))}</button></div>
+    ${parts
+      .map(
+        (p) => `<div class="zn-sub is-spaced">${escapeHtml(p.label)}</div>
+    <div class="zn-token-copy"><pre class="is-mono">${escapeHtml(p.text)}</pre>
+      <button type="button" class="btn-pill-toggle" data-copy="${p.id}">${escapeHtml(t('tokens.copy', 'Copy'))}</button></div>`
+      )
+      .join('')}
+    <button type="button" class="btn-pill-toggle" data-token-done>${escapeHtml(t('tokens.done', 'Done'))}</button>`;
+  const texts = { token, ...Object.fromEntries(parts.map((p) => [p.id, p.text])) };
+  box.querySelectorAll('[data-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (await copyTextToClipboard(texts[btn.dataset.copy])) btn.textContent = t('tokens.copied', 'Copied');
+    });
+  });
+  box.querySelector('[data-token-done]').addEventListener('click', () => {
+    box.hidden = true;
+    box.innerHTML = '';
+  });
+  box.hidden = false;
 }
 
 // The API token form is in Mission Control, inserted when first needed (FE-04)
 document.addEventListener('DOMContentLoaded', () => onManagementDom(() => {
   const btnGen = document.getElementById('btn-generate-token');
-  const inputName = document.getElementById('new-token-name');
-  
+  const inputName = /** @type {HTMLInputElement | null} */ (document.getElementById('new-token-name'));
+  const inputFolders = /** @type {HTMLTextAreaElement | null} */ (document.getElementById('new-token-folders'));
+  const created = document.getElementById('api-token-created');
+
   if (btnGen && inputName) {
     btnGen.addEventListener('click', async () => {
       const name = inputName.value.trim();
       if (!name) return;
-      
+      const folders = parseTokenFolders(inputFolders?.value);
+
       try {
-        const res = await api.post('/api/tokens', { name });
+        const res = await api.post('/api/tokens', folders.length ? { name, folders } : { name });
         inputName.value = '';
+        if (inputFolders) inputFolders.value = '';
         renderApiTokens();
-        
-        showConfirmToast('Token Generated', `Your new token is:
-
-${res.token}
-
-Copy it now. You won't be able to see it again!`, () => {});
+        if (created) showCreatedToken(created, res.token);
       } catch (err) {
         showToast(err.message, 'error');
       }

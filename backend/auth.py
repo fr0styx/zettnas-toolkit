@@ -95,11 +95,16 @@ def get_current_session(token: str) -> dict[str, Any] | None:
     if token.startswith("zat_"):
         tok = validate_scoped_api_token(token)
         if tok:
+            from backend.users_db import note_token_use
+
+            note_token_use(tok.get("token_id", ""), CLIENT_IP_CTX.get())  # COMP-06; never raises for the db
             return {
                 "user_id": tok["user_id"],
                 "username": tok["username"],
                 "role_id": tok["role_id"],
                 "scopes": tok["scopes"],
+                "token_id": tok.get("token_id", ""),
+                "folders": list(tok.get("folders") or []),
                 "is_api_token": True,
             }
 
@@ -677,6 +682,9 @@ class AuthenticatedPrincipal:
         self.scopes: list[str] = payload.get("scopes", [])
         self.is_api_token: bool = payload.get("is_api_token", False)
         self.is_system: bool = payload.get("is_system", False)
+        # COMP-06: an API token limited to these folders reaches nothing outside them, whatever its scopes
+        self.folders: list[str] = list(payload.get("folders") or [])
+        self.token_id: str = payload.get("token_id", "")
         self.raw_data: dict[str, Any] = payload
 
     def has_scope(self, scope: str) -> bool:

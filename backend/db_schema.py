@@ -54,6 +54,9 @@ COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
         ("users", "mfa_recovery_codes_json", "TEXT DEFAULT '[]'"),
         ("users", "idp_type", "TEXT DEFAULT 'local'"),
         ("users", "idp_sub", "TEXT DEFAULT ''"),
+        # COMP-06: the folders a token may reach (empty: all its owner may), the AI client it was last used by
+        ("api_tokens", "folders_json", "TEXT DEFAULT '[]'"),
+        ("api_tokens", "last_client", "TEXT DEFAULT ''"),
     ],
     "history.db": [
         ("metrics", "net_rx_bytes_sec", "REAL DEFAULT 0.0"),

@@ -24,7 +24,7 @@ def test_ensure_columns_adds_what_an_old_table_lacks_once():
     conn = sqlite3.connect(":memory:")
     conn.execute("CREATE TABLE users (user_id TEXT PRIMARY KEY, username TEXT)")
     added = db_schema.ensure_columns(conn, "users.db")
-    assert added == [f"users.{c}" for _, c, _ in db_schema.COLUMN_UPGRADES["users.db"]]
+    assert added == [f"users.{c}" for t, c, _ in db_schema.COLUMN_UPGRADES["users.db"] if t == "users"]
     cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
     assert {"mfa_enabled", "idp_type", "idp_sub"} <= cols
     assert db_schema.ensure_columns(conn, "users.db") == []  # a second start adds nothing

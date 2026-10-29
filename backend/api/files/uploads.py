@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from backend.api.files.common import _contained, _observe, _safe_fs_target, _user_file_headers
+from backend.api.files.common import _contained, _observe, _safe_fs_target, _user_file_headers, record_activity
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import POOL_PATH, logger
 from backend.fsutil import resolve_within
@@ -84,6 +84,7 @@ async def fs_inbox_upload(
         if os.path.exists(staging):
             os.remove(staging)
     _observe("write", target, principal)
+    record_activity("upload", target, principal, detail="to the Inbox")
     add_event("success", "File Explorer", f"Received {os.path.basename(target)} in Inbox")
     return {"status": "ok", "path": target, "name": os.path.basename(target)}
 
@@ -135,6 +136,7 @@ async def fs_upload(
                     await f_out.write(chunk)
 
         os.replace(staging_file, file_path)
+        record_activity("upload", file_path, principal)
         add_event("success", "File Explorer", f"Uploaded {filename} to {path}")
         return {"status": "ok", "message": "File uploaded"}
     except QuotaExceeded:
@@ -364,6 +366,7 @@ async def fs_upload_complete(
             _CHUNKED_UPLOADS.pop(req.upload_id, None)
 
         final_size = os.path.getsize(final_target)
+        record_activity("upload", final_target, principal)
         add_event("success", "File Explorer", f"Completed chunked upload of {filename}")
         return {
             "status": "ok",
