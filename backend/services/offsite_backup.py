@@ -23,6 +23,7 @@ from typing import Any
 from backend import config
 from backend.config import DATA_DIR, RCLONE_CONFIG_FILE, logger
 from backend.fsutil import atomic_write_json, atomic_write_text, read_json, resolve_within
+from backend.services import object_lock
 
 REPOS_FILE = os.path.join(DATA_DIR, "offsite_repos.json")
 KEY_DIR = os.path.join(DATA_DIR, "offsite_keys")
@@ -107,6 +108,7 @@ def _public(repo: dict[str, Any]) -> dict[str, Any]:
     out = {k: v for k, v in repo.items() if k != "rest_password"}
     out["has_rest_password"] = bool(repo.get("rest_password"))
     out["same_disk"] = same_disk(repo.get("location") or "", repo.get("paths") or [])
+    out["locked_until"] = object_lock.locked_until(repo)  # FEAT-03
     return out
 
 
@@ -160,6 +162,7 @@ def save_repo(
     hour: int | None = 2,
     rest_user: str = "",
     rest_password: str = "",
+    lock_days: int = 0,
 ) -> dict[str, Any]:
     if not _ID.match(repo_id or ""):
         raise ValueError("Use lowercase letters, digits and dashes for the id.")
@@ -168,6 +171,7 @@ def save_repo(
     if not clean_paths:
         raise ValueError("Choose at least one folder on the storage to back up.")
     k = {**DEFAULT_KEEP, **{x: max(0, min(int(v), 1000)) for x, v in (keep or {}).items() if x in DEFAULT_KEEP}}
+    days = object_lock.lock_days(lock_days) if location.startswith("rclone:") else 0
     with _LOCK:
         repos = _repos()
         old = repos.get(repo_id, {})
@@ -189,6 +193,9 @@ def save_repo(
             # the server refused deletes once (append-only); a new address is asked again
             "append_only": bool(old.get("append_only")) and old.get("location") == location,
             **_rest_fields(location, old, rest_user, rest_password),
+            # a bucket with Object Lock keeps every write this many days (FEAT-03)
+            "lock_days": days,
+            "lock_check": old.get("lock_check") if old.get("location") == location else None,
         }
         _save(repos)
     return _public(repos[repo_id])
@@ -544,7 +551,7 @@ def _forget(repo: dict[str, Any], k: dict[str, int]) -> None:
     if repo.get("append_only"):
         return
     try:
-        err = _run_full(repo, _forget_args(k))[2]
+        err = _run_full(repo, _forget_args(k, int(repo.get("lock_days") or 0)))[2]
     except ResticError as e:
         if "(403)" not in str(e):
             raise
@@ -554,8 +561,11 @@ def _forget(repo: dict[str, Any], k: dict[str, int]) -> None:
         _update(repo["id"], append_only=True)
 
 
-def _forget_args(k: dict[str, int]) -> list[str]:
-    return [
+def _forget_args(k: dict[str, int], lock_days: int = 0) -> list[str]:
+    """restic forget for the retention rules; with a locked bucket every version inside the lock
+    stays too (deleting it would only hide it, FEAT-03)."""
+    within = ["--keep-within", f"{lock_days}d"] if lock_days else []
+    return within + [
         "forget",
         "--prune",
         "--tag",
@@ -821,6 +831,18 @@ def drill(repo_id: str) -> dict[str, Any]:
     if not ok:
         raise ResticError("the restored test file differs from the backup")
     return {"ok": True, "file": pick["path"], "size": int(pick["size"]), "sha256": digest, "verified": verified}
+
+
+def check_lock(repo_id: str) -> dict[str, Any]:
+    """Asks the cloud provider whether this backup's bucket keeps every write (FEAT-03)."""
+    repo = get_repo(repo_id)
+    try:
+        result = object_lock.check(repo["location"])
+    except object_lock.LockCheckError as e:
+        result = {"ok": False, "error": str(e)}
+    result["at"] = time.time()
+    _update(repo_id, lock_check=result)
+    return result
 
 
 def _update(repo_id: str, **fields: Any) -> None:

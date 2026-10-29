@@ -70,6 +70,30 @@ long to keep them: `--max-size` in the app's `OPTIONS` caps a folder's size.
 From any other computer with restic: `restic -r rest:http://<target-address>:8000/<name>/ init`,
 with `RESTIC_REST_USERNAME` and `RESTIC_REST_PASSWORD` set.
 
+## A locked cloud copy: nobody can delete it for a while
+
+A cloud bucket with **Object Lock** (Backblaze calls it **File Lock**) keeps every file written
+to it for a set number of days. Deleting, by restic, by ransomware or by someone with this
+NAS's keys, only hides the newest version; the locked versions stay and can be brought back
+until the period ends. It works with Backblaze B2, Wasabi, Amazon S3 and other S3 services.
+
+1. Create the bucket with Object Lock turned on. Most services only allow this when the bucket
+   is created; it also turns on versioning.
+2. Set a default retention in **Compliance** mode, for example 30 days. Governance mode can be
+   lifted by a key with the bypass right, so it protects less.
+3. Add a lifecycle rule that removes old (noncurrent or hidden) versions a day after the lock
+   ends, or they are kept and billed forever.
+4. Add the bucket in Cloud Drives (an `s3` remote, or `b2` for Backblaze) with a key limited to
+   that bucket, and add an off-site backup to `rclone:<remote>:<bucket>/zettnas` with the same
+   number of days under **Days the bucket locks each copy**.
+5. Press **Check the lock**. ZettNAS reads the bucket's settings from the provider and shows
+   whether it is locked, in which mode and for how long; the list then shows **Cloud copy
+   locked until** the date the newest copy's lock ends.
+
+ZettNAS keeps every version younger than the lock period (pruning them would only hide them)
+and prunes the rest as usual. Each backup's new data is locked from the moment it is uploaded,
+so the protection covers the last *n* days of backups at any time.
+
 ## Protecting the backups themselves
 
 - Use a separate ZettNAS account for backups, not your admin account, and give it

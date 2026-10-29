@@ -19,6 +19,12 @@
 
 #### Usability
 
+- **A locked cloud copy**: an off-site backup to a cloud bucket with Object Lock (Backblaze B2
+  File Lock, Wasabi, Amazon S3 or another S3 service) takes the bucket's lock period. ZettNAS
+  then never prunes versions inside it, **Check the lock** asks the provider whether the bucket
+  really locks each copy (mode and days; nothing is written), and the list shows **Cloud copy
+  locked until** the date the newest copy's lock ends. A delete, even with this NAS's keys, only
+  hides a locked version. Setup in BACKUP_GUIDE.md (FEAT-03, COMP-09).
 - **Codes, numbers and quoted phrases find the right file**: a search with an invoice number,
   a serial, an order number, a version like v2.3.10 or a phrase in quotes ("…", „…“, «…», 「…」)
   now lets keyword matching lead, and a file holding that exact text ranks first; v2.3.1 no longer

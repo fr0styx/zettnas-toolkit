@@ -20,6 +20,7 @@ class RepoIn(BaseModel):
     hour: int | None = Field(default=2, ge=0, le=23)
     rest_user: str = Field(default="", max_length=64)
     rest_password: str = Field(default="", max_length=256)
+    lock_days: int = Field(default=0, ge=0, le=3650, description="Object Lock period of the bucket, in days (FEAT-03)")
 
 
 class RestoreIn(BaseModel):
@@ -56,8 +57,31 @@ def overview():
 @router.put("/offsite/repos", dependencies=[MANAGE])
 def put_repo(req: RepoIn):
     return _errors(
-        ob.save_repo, req.id, req.name, req.location, req.paths, req.keep, req.hour, req.rest_user, req.rest_password
+        ob.save_repo,
+        req.id,
+        req.name,
+        req.location,
+        req.paths,
+        req.keep,
+        req.hour,
+        req.rest_user,
+        req.rest_password,
+        req.lock_days,
     )
+
+
+@router.get("/offsite/lock-presets", dependencies=[READ])
+def lock_presets():
+    """Cloud services that can lock a copy, with the steps to set a bucket up (FEAT-03)."""
+    from backend.services import object_lock
+
+    return {"presets": object_lock.presets()}
+
+
+@router.post("/offsite/repos/{repo_id}/lock-check", dependencies=[MANAGE])
+def lock_check(repo_id: str):
+    """Reads the bucket's Object Lock settings from the provider; nothing is written there."""
+    return _errors(ob.check_lock, repo_id)
 
 
 @router.delete("/offsite/repos/{repo_id}", dependencies=[MANAGE])

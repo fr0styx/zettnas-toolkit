@@ -29685,6 +29685,14 @@
       "title": "Location",
       "type": "string"
      },
+     "lock_days": {
+      "default": 0,
+      "description": "Object Lock period of the bucket, in days (FEAT-03)",
+      "maximum": 3650.0,
+      "minimum": 0.0,
+      "title": "Lock Days",
+      "type": "integer"
+     },
      "name": {
       "default": "",
       "maxLength": 80,
@@ -52654,6 +52662,37 @@
     ]
    }
   },
+  "/api/v1/offsite/lock-presets": {
+   "get": {
+    "description": "Cloud services that can lock a copy, with the steps to set a bucket up (FEAT-03).",
+    "operationId": "lock_presets_api_v1_offsite_lock_presets_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Lock Presets",
+    "tags": [
+     "Offsite backup"
+    ],
+    "x-required-scopes": [
+     "backup:read",
+     "backup:manage",
+     "system:config"
+    ]
+   }
+  },
   "/api/v1/offsite/repos": {
    "put": {
     "operationId": "put_repo_api_v1_offsite_repos_put",
@@ -53026,6 +53065,53 @@
      }
     },
     "summary": "Kit Saved",
+    "tags": [
+     "Offsite backup"
+    ],
+    "x-required-scopes": [
+     "backup:manage",
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/offsite/repos/{repo_id}/lock-check": {
+   "post": {
+    "description": "Reads the bucket's Object Lock settings from the provider; nothing is written there.",
+    "operationId": "lock_check_api_v1_offsite_repos__repo_id__lock_check_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "repo_id",
+      "required": true,
+      "schema": {
+       "title": "Repo Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Lock Check",
     "tags": [
      "Offsite backup"
     ],

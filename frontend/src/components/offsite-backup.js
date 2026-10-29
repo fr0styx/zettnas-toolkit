@@ -26,6 +26,7 @@ export function reposHtml(data) {
         }${r.initialized && !r.kit_saved_at ? ` · <strong class="offsite-kit-missing">${escapeHtml(t('offsite.kit_missing', 'Recovery kit not saved'))}</strong>` : ''}${
           r.last_unreadable ? ` · <strong>${escapeHtml(t('offsite.unreadable', '{n} files could not be read', { n: r.last_unreadable }))}</strong>` : ''
         }</span>
+        ${lockLine(r)}
         ${r.append_only ? `<span class="offsite-meta">${escapeHtml(t('offsite.append_only', 'The backup server only adds versions (append-only), so old ones stay there until its owner removes them.'))}</span>` : ''}
         ${r.same_disk ? `<span class="offsite-meta"><strong>${escapeHtml(t('offsite.same_disk', 'Same storage as the folders it protects: a failed disk, a theft or a fire takes both. Use a USB disk, another NAS or the cloud.'))}</strong></span>` : ''}
       </div>
@@ -33,6 +34,7 @@ export function reposHtml(data) {
         <button type="button" class="btn-pill-toggle is-small is-primary" data-off="backup" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.backup_now', 'Back up now'))}</button>
         <button type="button" class="btn-pill-toggle is-small" data-off="versions" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.versions', 'Versions'))}</button>
         <button type="button" class="btn-pill-toggle is-small" data-off="check" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.verify', 'Verify'))}</button>
+        ${r.lock_days ? `<button type="button" class="btn-pill-toggle is-small" data-off="lockcheck" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.lock_check', 'Check the lock'))}</button>` : ''}
         <button type="button" class="btn-pill-toggle is-small" data-off="kit" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.kit', 'Recovery kit'))}</button>
         <button type="button" class="btn-pill-toggle is-small is-danger" data-off="forget" data-id="${escapeHtml(r.id)}">${escapeHtml(t('offsite.forget', 'Forget'))}</button>
       </div>
@@ -50,6 +52,10 @@ export function formHtml(shares) {
       <label>${escapeHtml(t('offsite.rest_user', 'User name on the backup server'))}<input name="rest_user" maxlength="64" autocomplete="off"></label>
       <label>${escapeHtml(t('offsite.rest_password', 'Password on the backup server'))}<input name="rest_password" type="password" maxlength="256" autocomplete="new-password"></label>
     </div>
+    <div class="offsite-lock" data-off-lock hidden>
+      <label>${escapeHtml(t('offsite.lock_days', 'Days the bucket locks each copy (0 = not locked)'))}<input name="lock_days" type="number" min="0" max="3650" value="0"></label>
+      <p class="offsite-note">${escapeHtml(t('offsite.lock_help', 'To lock a cloud copy so nobody can delete it, not even with this NAS\'s keys: create the bucket with Object Lock (Backblaze: File Lock) on, set a default retention in Compliance mode, for example 30 days, add a lifecycle rule that removes old versions once the lock ends, and enter the same number of days here. Works with Backblaze B2, Wasabi, Amazon S3 and other S3 services.'))}</p>
+    </div>
     <fieldset><legend>${escapeHtml(t('offsite.what', 'Folders to back up'))}</legend>${shares
       .map((s) => `<label class="offsite-check"><input type="checkbox" name="paths" value="${escapeHtml(s.path)}"> ${escapeHtml(s.name)}</label>`)
       .join('')}</fieldset>
@@ -59,6 +65,32 @@ export function formHtml(shares) {
     <label>${escapeHtml(t('offsite.hour', 'Every day at'))}<input name="hour" type="number" min="0" max="23" value="2"></label>
     <button type="submit" class="btn-pill-toggle is-primary">${escapeHtml(t('offsite.add', 'Add offsite backup'))}</button>
   </form>`;
+}
+
+/** The lock of a cloud copy (FEAT-03): how long the newest copy is locked, and what the bucket said. */
+export function lockLine(r) {
+  if (!r.lock_days) return '';
+  const parts = [
+    r.locked_until
+      ? t('offsite.locked_until', 'Cloud copy locked until {date}', { date: formatDateTime(r.locked_until * 1000) })
+      : t('offsite.locked_days_after', 'Each copy is locked for {n, plural, one {# day} other {# days}}', { n: r.lock_days }),
+  ];
+  const c = r.lock_check;
+  let warn = false;
+  if (!c) parts.push(t('offsite.lock_not_checked', 'the bucket\'s lock is not checked yet'));
+  else if (c.error || !c.ok) {
+    warn = true;
+    parts.push(t('offsite.lock_failed', 'the bucket is not confirmed as locked: {why}', { why: c.error || c.note || t('offsite.lock_off', 'Object Lock is off') }));
+  } else if (c.days < r.lock_days) {
+    warn = true;
+    parts.push(t('offsite.lock_short', 'but the bucket locks for only {n, plural, one {# day} other {# days}}', { n: c.days }));
+  } else parts.push(t('offsite.lock_ok', 'bucket checked {when}: {mode}, {n, plural, one {# day} other {# days}}', { when: when(c.at), mode: c.mode || '', n: c.days }));
+  const text = escapeHtml(parts.join(' · '));
+  return `<span class="offsite-meta">${warn ? `<strong>${text}</strong>` : text}</span>`;
+}
+
+export function isLockable(value) {
+  return String(value || '').trim().startsWith('rclone:');
 }
 
 export function isRestLocation(value) {
@@ -156,10 +188,13 @@ export async function renderOffsite(mount) {
   const form = mount.querySelector('[data-off-form]');
   const location = /** @type {HTMLInputElement | null} */ (form?.querySelector('[name="location"]') || null);
   const restBox = /** @type {HTMLElement | null} */ (form?.querySelector('[data-off-rest]') || null);
-  if (location && restBox) {
-    // FEAT-08: a restic REST server (another ZettNAS's backup-target app) takes a sign-in
+  const lockBox = /** @type {HTMLElement | null} */ (form?.querySelector('[data-off-lock]') || null);
+  if (location && restBox && lockBox) {
+    // FEAT-08: a restic REST server (another ZettNAS's backup-target app) takes a sign-in;
+    // FEAT-03: a cloud remote can be a locked bucket
     location.addEventListener('input', () => {
       restBox.hidden = !isRestLocation(location.value);
+      lockBox.hidden = !isLockable(location.value);
     });
   }
   form?.addEventListener('submit', async (e) => {
@@ -173,6 +208,7 @@ export async function renderOffsite(mount) {
       keep: { daily: Number(f.get('daily')), weekly: Number(f.get('weekly')), monthly: Number(f.get('monthly')) },
       hour: Number(f.get('hour')),
       ...restSignIn(f),
+      lock_days: isLockable(f.get('location')) ? Number(f.get('lock_days') || 0) : 0,
     };
     try {
       await api.put('/api/offsite/repos', body);
@@ -195,6 +231,12 @@ export async function renderOffsite(mount) {
       } else if (act === 'check') {
         await api.post(`/api/offsite/repos/${id}/check`, {});
         showToast(t('offsite.verified', 'The backup is readable and complete.'), 'success');
+      } else if (act === 'lockcheck') {
+        const c = await api.post(`/api/offsite/repos/${id}/lock-check`, {});
+        showToast(
+          c.ok ? t('offsite.lock_confirmed', 'The bucket locks every copy for {n, plural, one {# day} other {# days}} ({mode}).', { n: c.days, mode: c.mode || '' }) : (c.error || c.note || t('offsite.lock_off', 'Object Lock is off')),
+          c.ok ? 'success' : 'error',
+        );
       } else if (act === 'kit') {
         await offerRecoveryKit({ id: b.dataset.id }, () => renderOffsite(mount));
         return;

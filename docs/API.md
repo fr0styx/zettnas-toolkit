@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-601 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+603 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -395,6 +395,7 @@ request and response schemas.
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/offsite` | any of `backup:read`, `backup:manage`, `system:config` | Overview |
 | `GET` | `/api/v1/offsite/destinations` | any of `backup:manage`, `system:config` | Where a new backup could go: USB disks, other NASes mounted here, cloud remotes (FEAT-01) |
+| `GET` | `/api/v1/offsite/lock-presets` | any of `backup:read`, `backup:manage`, `system:config` | Cloud services that can lock a copy, with the steps to set a bucket up (FEAT-03) |
 | `PUT` | `/api/v1/offsite/repos` | any of `backup:manage`, `system:config` | Put Repo |
 | `DELETE` | `/api/v1/offsite/repos/{repo_id}` | any of `backup:manage`, `system:config` | Delete Repo |
 | `POST` | `/api/v1/offsite/repos/{repo_id}/backup` | any of `backup:manage`, `system:config` | Starts the backup as a job (REL-16); its progress and result show in Jobs |
@@ -403,6 +404,7 @@ request and response schemas.
 | `GET` | `/api/v1/offsite/repos/{repo_id}/key` | any of `backup:manage`, `system:config` | The repository key: without it nobody, including you, can read the backup |
 | `GET` | `/api/v1/offsite/repos/{repo_id}/kit` | any of `backup:manage`, `system:config` | The full recovery kit (REL-17): key, location, cloud settings and restore commands |
 | `POST` | `/api/v1/offsite/repos/{repo_id}/kit-saved` | any of `backup:manage`, `system:config` | Kit Saved |
+| `POST` | `/api/v1/offsite/repos/{repo_id}/lock-check` | any of `backup:manage`, `system:config` | Reads the bucket's Object Lock settings from the provider; nothing is written there |
 | `GET` | `/api/v1/offsite/repos/{repo_id}/snapshots` | any of `backup:read`, `backup:manage`, `system:config` | List Versions |
 | `GET` | `/api/v1/offsite/repos/{repo_id}/snapshots/{snapshot_id}/browse` | any of `backup:read`, `backup:manage`, `system:config` | Browse |
 | `POST` | `/api/v1/offsite/repos/{repo_id}/snapshots/{snapshot_id}/restore` | any of `backup:manage`, `system:config` | Starts the restore as a job (REL-16); never over the live files |
