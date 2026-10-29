@@ -77,7 +77,7 @@ function dialogHost() {
     host.id = 'share-compression';
     host.className = 'smart-modal-backdrop';
     host.style.zIndex = '10020';
-    host.innerHTML = html`<div class="smart-modal-window" role="dialog" aria-modal="true" aria-labelledby="share-compression-title">
+    host.innerHTML = /** @type {any} */ (html`<div class="smart-modal-window" role="dialog" aria-modal="true" aria-labelledby="share-compression-title">
       <div class="smart-modal-header">
         <span class="smart-modal-title" id="share-compression-title"></span>
         <div class="os-window-controls">
@@ -85,7 +85,7 @@ function dialogHost() {
         </div>
       </div>
       <div class="smart-modal-body"></div>
-    </div>`;
+    </div>`);
     document.body.appendChild(host);
     const close = () => {
       host.classList.remove('open');
@@ -116,7 +116,7 @@ export async function openShareCompression(name) {
     if (!form) return;
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const value = form.elements.value.value;
+      const value = /** @type {HTMLSelectElement} */ (form.querySelector('select[name="value"]')).value;
       try {
         render(await api.put(url, { value }));
         showToast(t('compress.saved', 'Compression for {name} is now {value}.', { name, value: describeValue(value) }), 'success');
