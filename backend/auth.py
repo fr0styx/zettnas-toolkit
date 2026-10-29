@@ -109,7 +109,13 @@ def get_current_session(token: str) -> dict[str, Any] | None:
             }
 
     # Only the users DB decides: a revoked, expired or disabled user's session is gone.
-    return validate_user_session(token)
+    sess = validate_user_session(token)
+    if sess and sess.get("signin_hours"):
+        from backend.signin_hours import allowed
+
+        if not allowed(sess["signin_hours"]):
+            return None  # outside the account's sign-in hours (COMP-13); works again when they start
+    return sess
 
 
 def validate_session(token: str) -> bool:

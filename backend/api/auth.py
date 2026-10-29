@@ -370,9 +370,30 @@ def verify_mfa_token(token: str) -> dict | None:
         return None
 
 
+def _outside_signin_hours(user: dict[str, Any]) -> JSONResponse | None:
+    """403 when the account may not be signed in now (COMP-13)."""
+    from backend.signin_hours import allowed, describe, from_json
+
+    hours = from_json(user.get("signin_hours_json"))
+    if allowed(hours):
+        return None
+    log_security_event(
+        "auth.login.outside_hours", "failure", actor_id=user.get("id"), actor_username=user.get("username")
+    )
+    return error_response(
+        403,
+        f"This account can be signed in {describe(hours)} (server time).",
+        error="outside_signin_hours",
+        signin_hours=hours,
+    )
+
+
 def _build_session_response(
     user: dict[str, Any], remember_me: bool, request: Request, method: str = "password"
 ) -> JSONResponse:
+    refused = _outside_signin_hours(user)
+    if refused is not None:
+        return refused
     ip = _client_ip(request)
     ua = request.headers.get("user-agent", "")
     token = create_session(user["username"], is_remembered=remember_me, ip=ip, user_agent=ua)
@@ -1029,6 +1050,9 @@ def _sanitize_user_dict(u: dict[str, Any] | None) -> dict[str, Any] | None:
     res.pop("mfa_secret", None)
     res.pop("mfa_recovery_codes_json", None)
     res.pop("token_hash", None)
+    from backend.signin_hours import from_json
+
+    res["signin_hours"] = from_json(res.pop("signin_hours_json", None))
     return res
 
 
@@ -1043,6 +1067,13 @@ def get_user_detail(user_id: str, request: Request):
     if not target:
         raise HTTPException(status_code=404, detail="User not found.")
     return _sanitize_user_dict(target)
+
+
+def _role_scopes(role_id: str | None) -> list[str]:
+    from backend.users_db import get_role
+
+    role = get_role(role_id) if role_id else None
+    return json.loads(role.get("scopes_json") or "[]") if role else []
 
 
 def _role_within(caller_scopes: list[str], role_id: str | None) -> bool:
@@ -1078,6 +1109,23 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
 
     before = get_user_by_id(user_id) or {}
     caller_scopes = current.get("scopes") or []
+    hours_to_set: dict[str, Any] | None | bool = False
+    if data.signin_hours is not None:
+        if not is_user_admin:
+            return error_response(403, "Only an administrator can set sign-in hours.", error="forbidden")
+        from backend.signin_hours import normalize
+
+        try:
+            hours_to_set = normalize(data.signin_hours)
+        except ValueError as e:
+            return error_response(400, str(e), error="bad_signin_hours")
+        role_after = role_to_set or before.get("role_id")
+        if hours_to_set and has_scope(_role_scopes(role_after), "users:write"):
+            return error_response(
+                400,
+                "Sign-in hours are for family accounts, not for people who manage accounts.",
+                error="bad_signin_hours",
+            )
     if role_to_set and not _role_within(caller_scopes, role_to_set):
         return error_response(403, "You can't give someone more permissions than you have.", error="forbidden")
     if (role_to_set or status_to_set) and not _role_within(caller_scopes, before.get("role_id")):
@@ -1090,9 +1138,22 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
         status=status_to_set,
         storage_quota_bytes=quota_to_set,
         preferences=data.preferences,
+        signin_hours=hours_to_set,
     )
     if not ok:
         raise HTTPException(status_code=404, detail="User not found.")
+    if hours_to_set is not False:
+        from backend.users_db import forget_cached_sessions
+
+        forget_cached_sessions(user_id)
+        log_security_event(
+            "user.signin_hours.changed",
+            "success",
+            actor_id=current["id"],
+            actor_username=current["username"],
+            actor_ip=_client_ip(request),
+            details={"username": before.get("username"), "signin_hours": hours_to_set},
+        )
     if role_to_set and role_to_set != before.get("role_id"):
         log_security_event(
             "user.role.changed",

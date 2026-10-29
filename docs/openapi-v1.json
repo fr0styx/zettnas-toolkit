@@ -35516,6 +35516,18 @@
       ],
       "title": "Role Id"
      },
+     "signin_hours": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Signin Hours"
+     },
      "status": {
       "anyOf": [
        {

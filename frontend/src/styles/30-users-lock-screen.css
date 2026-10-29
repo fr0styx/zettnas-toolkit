@@ -189,3 +189,13 @@ body.desktop-locked #os-dock-container {
 .reset-pwd-tokens { display: flex; align-items: flex-start; gap: var(--zn-space-2, 8px); font-size: var(--zn-fs-xs); color: var(--zn-text-soft); line-height: 1.4; }
 
 .reset-pwd-tokens[hidden] { display: none; }
+
+/* Sign-in hours in the edit-person dialog (COMP-13) */
+.zn-hours-box { border: 1px solid var(--zn-line-12); border-radius: 8px; padding: 8px 10px; margin: 0; }
+.zn-hours-box[hidden] { display: none; }
+.zn-hours-box legend { font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); padding: 0 4px; }
+.zn-hours { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.zn-hours[hidden] { display: none; }
+.zn-hours-days { display: flex; flex-wrap: wrap; gap: 6px; }
+.zn-hours-day { display: inline-flex; align-items: center; gap: 3px; font-size: var(--zn-fs-xs); }
+.zn-hours-times { display: flex; flex-wrap: wrap; gap: 12px; font-size: var(--zn-fs-xs); }

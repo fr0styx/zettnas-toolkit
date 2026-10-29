@@ -174,7 +174,8 @@ def init_users_db(db_path: str | None = None) -> None:
                 created_at REAL NOT NULL,
                 updated_at REAL NOT NULL,
                 last_login_at REAL,
-                last_login_ip TEXT DEFAULT ''
+                last_login_ip TEXT DEFAULT '',
+                signin_hours_json TEXT DEFAULT ''
             );
         """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);")
@@ -663,7 +664,9 @@ def update_user_profile(
     storage_quota_bytes: int | None = None,
     preferences: dict[str, Any] | None = None,
     db_path: str | None = None,
+    signin_hours: dict[str, Any] | None | bool = False,
 ) -> bool:
+    """signin_hours: a dict sets them, None removes them, False (the default) leaves them as they are."""
     now = time.time()
     with users_db_session(db_path) as conn:
         if status is not None and status != "active":
@@ -692,6 +695,9 @@ def update_user_profile(
         if preferences is not None:
             updates.append("preferences_json = ?")
             params.append(json.dumps(preferences))
+        if signin_hours is not False:
+            updates.append("signin_hours_json = ?")
+            params.append(json.dumps(signin_hours) if signin_hours else "")
 
         params.append(user_id)
         res = conn.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
@@ -853,6 +859,22 @@ def _idle_too_long(last_active: float, remembered: bool, now: float) -> bool:
     return bool(last_active) and now - float(last_active) > idle
 
 
+def _signin_hours_of(row: Any) -> dict[str, Any] | None:
+    from backend.signin_hours import from_json
+
+    try:
+        return from_json(row["signin_hours_json"])
+    except (IndexError, KeyError):
+        return None
+
+
+def forget_cached_sessions(user_id: str) -> None:
+    """Drops a person's cached sessions, so the next request reads their account again."""
+    with _SESSION_CACHE_LOCK:
+        for k in [k for k, v in _SESSION_CACHE.items() if v.get("user_id") == user_id]:
+            _SESSION_CACHE.pop(k, None)
+
+
 def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[str, Any] | None:
     if not raw_token:
         return None
@@ -882,7 +904,7 @@ def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[st
     with users_db_session(db_path) as conn:
         row = conn.execute(
             """
-            SELECT s.*, u.status, u.role_id, u.must_change_password, r.scopes_json
+            SELECT s.*, u.status, u.role_id, u.must_change_password, u.signin_hours_json, r.scopes_json
             FROM sessions s
             JOIN users u ON s.user_id = u.id
             JOIN roles r ON u.role_id = r.id
@@ -918,6 +940,7 @@ def validate_user_session(raw_token: str, db_path: str | None = None) -> dict[st
             "user_agent": row["user_agent"],
             "must_change_password": bool(row["must_change_password"]),
             "is_remembered": bool(row["is_remembered"]),
+            "signin_hours": _signin_hours_of(row),
         }
 
         with _SESSION_CACHE_LOCK:

@@ -25,7 +25,7 @@ ZettNAS runs as one container next to your existing system: Unraid, Debian, Ubun
 - **Apps** — 78 tested one-click apps (Immich, Jellyfin and more), Docker Compose stacks, logs, a web terminal and update checks.
 - **Storage** — pools, disks and SMART health on ZFS, Btrfs, mdadm and Unraid arrays; disks that are likely to fail turn amber before SMART calls them failed; sleeping disks stay asleep.
 - **Snapshots and backup** — per-share snapshot schedules with file restore and Windows "Previous Versions", encrypted offsite backup with restic, and scheduled backups of ZettNAS's own settings.
-- **People** — accounts with roles, private folders and space quotas, invite links, guest and kid roles, two-factor sign-in, and sign-in with OpenID Connect or LDAP.
+- **People** — accounts with roles, private folders and space quotas, invite links, guest and kid roles with sign-in hours, two-factor sign-in, and sign-in with OpenID Connect or LDAP.
 - **Virtual machines** — KVM with UEFI and TPM 2.0, an ISO catalog, and a console in the browser.
 - **Hardware** — fan curves, UPS monitoring with safe shutdown, the front LCD and light bar, and alerts by e-mail, Telegram, Discord, ntfy and more.
 - **Safety** — a ransomware guard that freezes writes and snapshots the pool, an allow-list in front of Docker, and updates that check the image signature and roll back on their own.

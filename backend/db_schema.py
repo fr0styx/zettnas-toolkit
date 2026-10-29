@@ -57,6 +57,8 @@ COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
         # COMP-06: the folders a token may reach (empty: all its owner may), the AI client it was last used by
         ("api_tokens", "folders_json", "TEXT DEFAULT '[]'"),
         ("api_tokens", "last_client", "TEXT DEFAULT ''"),
+        # COMP-13: when a family account may be signed in (backend/signin_hours.py)
+        ("users", "signin_hours_json", "TEXT DEFAULT ''"),
     ],
     "history.db": [
         ("metrics", "net_rx_bytes_sec", "REAL DEFAULT 0.0"),

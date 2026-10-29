@@ -47,6 +47,8 @@ class UserUpdateRequest(BaseModel):
     status: str | None = None
     storage_quota_bytes: int | None = None
     preferences: dict | None = None
+    # COMP-13: {"days": [0-6], "start": "HH:MM", "end": "HH:MM"}; {} removes the limit
+    signin_hours: dict | None = None
 
 
 class UserPasswordChangeRequest(BaseModel):

@@ -367,6 +367,16 @@ export function showEditUserModal(user) {
   document.getElementById('edit-user-quota').value = quotaGb || '';
 
   import('./management/user-data.js').then((m) => m.installUserDataFor(modal, user)).catch(() => {}); // B8
+  // COMP-13: sign-in hours, for accounts that don't manage people
+  const hoursBox = document.getElementById('edit-user-hours');
+  const limitable = (role) => !['superadmin', 'storage_admin'].includes(role);
+  let hoursChanged = () => false;
+  let readHours = null;
+  import('./signin-hours.js').then((m) => {
+    hoursChanged = m.installSigninHours(hoursBox, user, { canBeLimited: limitable(user.role_id) });
+    hoursBox?.closest('fieldset')?.toggleAttribute('hidden', !limitable(user.role_id));
+    readHours = m.readHours;
+  }).catch(() => {});
   const form = document.getElementById('form-edit-user');
   if (form) {
     form.onsubmit = async (e) => {
@@ -389,7 +399,8 @@ export function showEditUserModal(user) {
             display_name: displayName,
             email,
             role_id: roleId,
-            storage_quota_bytes: qVal > 0 ? qVal * 1024 * 1024 * 1024 : 0
+            storage_quota_bytes: qVal > 0 ? qVal * 1024 * 1024 * 1024 : 0,
+            ...(hoursBox && readHours && hoursChanged() ? { signin_hours: readHours(hoursBox) } : {})
           })
         });
         if (res.ok) {

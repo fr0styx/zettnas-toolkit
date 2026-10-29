@@ -1517,6 +1517,10 @@
         <label for="edit-user-quota" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_quota">Storage limit in GB (0 = no limit)</label>
         <input type="number" id="edit-user-quota" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="0" min="0">
       </div>
+      <fieldset class="zn-hours-box">
+        <legend data-i18n="hours.title">Sign-in hours</legend>
+        <div id="edit-user-hours"></div>
+      </fieldset>
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
         <button type="button" class="btn-pill-toggle modal-close-btn" data-i18n="common.cancel">Cancel</button>
         <button type="submit" class="btn-save-preset" style="padding:8px 18px;" data-i18n="users.save_changes">Save changes</button>

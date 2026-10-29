@@ -4,6 +4,10 @@
 
 #### Usability
 
+- **Sign-in hours for kids**: an administrator can give a kid's or guest's account the days and
+  times it may be used, for example Monday to Friday 07:00 to 20:00 (server time). Outside them
+  the person can't sign in and an open session pauses until the hours start again; spans past
+  midnight work, and accounts that manage people can't be limited (COMP-13).
 - **Private search first**: the README and the setup wizard's welcome now lead with what sets
   ZettNAS apart: finding files by what is in them, on your own server, with no account and no
   subscription. Two new pages: **Search quality** (docs/SEARCH_QUALITY.md), generated from the
