@@ -4,6 +4,7 @@ REST endpoints for multi-cloud integration, FUSE mounts, and backup sync.
 """
 
 import asyncio
+import html
 import json
 import logging
 import os
@@ -632,14 +633,14 @@ async def get_mobile_oauth_page(sid: str):
         )
 
     provider = session.get("provider_type", "cloud")
-    provider_name = (
+    provider_name = html.escape(
         "Microsoft OneDrive"
         if provider == "onedrive"
         else ("Google Drive" if provider == "drive" else provider.capitalize())
     )
     auth_url = session.get("auth_url", "")
-    safe_auth_url = auth_url.replace('"', "&quot;")
-    safe_sid = urllib.parse.quote(sid)
+    safe_auth_url = html.escape(auth_url, quote=True)
+    safe_sid = html.escape(urllib.parse.quote(sid, safe=""), quote=True)
 
     html_content = f"""<!DOCTYPE html>
 <html>
@@ -887,7 +888,7 @@ async def get_mobile_oauth_page(sid: str):
                 statusBox.style.background = 'rgba(239, 68, 68, 0.2)';
                 statusBox.style.border = '1px solid rgba(239, 68, 68, 0.4)';
                 statusBox.style.color = '#f87171';
-                statusBox.innerHTML = '❌ ' + (err.message || 'Error sending code to NAS');
+                statusBox.textContent = '❌ ' + (err.message || 'Error sending code to NAS');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<span>🚀 Submit to NAS</span>';
             }}

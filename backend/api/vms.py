@@ -279,7 +279,7 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
         if os.path.exists(tmp_path):
             os.replace(tmp_path, final_path)
             try:
-                os.chmod(final_path, 0o666)
+                os.chmod(final_path, 0o644)  # QEMU only reads it
             except OSError:
                 pass
 

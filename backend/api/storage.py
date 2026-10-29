@@ -7,20 +7,22 @@ and network shares (Samba/NFS/WebDAV).
 import asyncio
 import logging
 import os
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
 
 from backend import config
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.confirmations import require_confirmation
 from backend.errors import error_response
+from backend.fsutil import single_name
 from backend.hardware.pal_storage import (
     PlatformCapabilityError,
     get_storage_platform,
 )
 from backend.ignored_errors import ignored
+from backend.logging_config import one_line
 
 logger = logging.getLogger(__name__)
 
@@ -91,9 +93,12 @@ class StoragePoolRenameRequest(BaseModel):
     new_name: str = Field(..., min_length=1, max_length=64, description="New name for storage pool")
 
 
+SingleName = Annotated[str, AfterValidator(single_name)]
+
+
 class StorageSnapshotCreateRequest(BaseModel):
-    subvolume: str = "@shares"
-    snapshot_name: str
+    subvolume: SingleName = "@shares"
+    snapshot_name: SingleName
     readonly: bool = True
     worm_mode: str | None = Field(default=None, description="Two-Tier WORM mode: 'governance' or 'compliance'")
     retention_days: int | None = Field(
@@ -102,15 +107,15 @@ class StorageSnapshotCreateRequest(BaseModel):
 
 
 class StorageSnapshotBreakGlassDeleteRequest(BaseModel):
-    snapshot_name: str
+    snapshot_name: SingleName
     reason: str = Field(
         ..., min_length=5, description="Mandatory audit justification for breaking governance WORM lock"
     )
 
 
 class StorageSnapshotRestoreRequest(BaseModel):
-    snapshot_name: str
-    target_subvol: str = ""
+    snapshot_name: SingleName
+    target_subvol: Annotated[str, AfterValidator(lambda v: single_name(v) if v else v)] = ""
 
 
 @router.get("/platform", dependencies=[Depends(require_scope("storage:read", "shares:read", "system:view"))])
@@ -318,7 +323,9 @@ def create_storage_pool(
             problems=problems,
             erasable=all(p.get("erasable") == "true" for p in problems),
         )
-    logger.warning(f"[Storage] Creating pool '{req.name}' ({req.fs_type}) on {', '.join(disks)}")
+    logger.warning(
+        f"[Storage] Creating pool '{one_line(req.name)}' ({one_line(req.fs_type)}) on {one_line(', '.join(disks))}"
+    )
     try:
         return adapter.create_pool(
             name=req.name,
@@ -330,7 +337,7 @@ def create_storage_pool(
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
     except RuntimeError as e:
-        logger.error(f"[Storage] Pool '{req.name}' was not created: {e}")
+        logger.error(f"[Storage] Pool '{one_line(req.name)}' was not created: {one_line(e)}")
         raise HTTPException(status_code=500, detail=f"The pool was not created: {e}") from e
 
 
@@ -411,7 +418,7 @@ def create_storage_share(req: StorageShareCreateRequest) -> dict[str, Any]:
 
         snapshot_service.ensure_default(req.name)  # snapshots on by default (FEAT-02)
     except Exception as e:
-        logger.warning(f"[Storage] No default snapshots for {req.name}: {e}")
+        logger.warning(f"[Storage] No default snapshots for {one_line(req.name)}: {one_line(e)}")
     return created
 
 
@@ -541,7 +548,7 @@ def export_storage_pool(pool_id: str, req: StoragePoolExportRequest = StoragePoo
     except RuntimeError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"[StorageAPI] Error exporting pool '{pool_id}': {e}")
+        logger.error(f"[StorageAPI] Error exporting pool '{one_line(pool_id)}': {one_line(e)}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -582,7 +589,7 @@ def import_storage_pool(req: StoragePoolImportRequest) -> dict[str, Any]:
     except PlatformCapabilityError as e:
         raise HTTPException(status_code=403, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"[StorageAPI] Error importing pool '{req.pool_id}': {e}")
+        logger.error(f"[StorageAPI] Error importing pool '{one_line(req.pool_id)}': {one_line(e)}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -656,6 +663,10 @@ def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> dict[str, Any]:
             status_code=403,
             detail=f"Forbidden in Observer Mode on {adapter.get_platform_type().value}.",
         )
+    try:
+        single_name(snapshot_name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
     try:
         return adapter.delete_snapshot(pool_id=pool_id, snapshot_name=snapshot_name)
     except PlatformCapabilityError as e:

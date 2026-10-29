@@ -277,7 +277,7 @@ def _estimate_hf_model_specs(
     and accelerator requirements from Hugging Face Hub model metadata.
     """
     tags_list = [str(t).lower() for t in (tags or [])]
-    repo_lower = repo_id.lower()
+    repo_lower = repo_id.lower()[:256]  # model names are short; bounds the size patterns below
     name_part = repo_id.split("/")[-1] if "/" in repo_id else repo_id
 
     # 1. Detect parameter count (in Billions)
@@ -752,9 +752,17 @@ def build_llm_recommendations(
     }
 
 
+# a Hugging Face model id: owner/name, each starting with a letter or digit (so never . or ..)
+_HF_REPO_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}/[A-Za-z0-9][A-Za-z0-9._-]{0,95}$")
+
+
+def is_hf_repo_id(value: str) -> bool:
+    return bool(_HF_REPO_ID.match(value or ""))
+
+
 def _normalize_hf_repo_input(raw_input: str) -> str:
     """Normalizes a Hugging Face URL or repo string into `org/model` or search query."""
-    cleaned = str(raw_input or "").strip()
+    cleaned = str(raw_input or "").strip()[:512]  # ids and URLs are short; this bounds the regexes below
     cleaned = re.sub(r"^https?://(?:www\.)?huggingface\.co/", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"/(?:tree|blob|resolve)/.*$", "", cleaned)
     return cleaned.strip("/")
@@ -909,7 +917,7 @@ def search_huggingface_models(
     if not test_mode():
         try:
             # If user pasted an exact `org/repo` or full huggingface.co URL, fetch that exact model first
-            if "/" in clean_q and " " not in clean_q:
+            if is_hf_repo_id(clean_q):
                 exact_url = f"https://huggingface.co/api/models/{urllib.parse.quote(clean_q, safe='/')}"
                 req_exact = urllib.request.Request(
                     exact_url,
@@ -1092,7 +1100,7 @@ def pull_huggingface_model(repo_id: str, activate: bool = True) -> dict[str, Any
     active_norm = str(rag_cfg.get("active_model") or "qwen2.5:3b").lower()
 
     fetched_item: dict[str, Any] | None = None
-    if not test_mode() and "/" in clean_repo:
+    if not test_mode() and is_hf_repo_id(clean_repo):
         try:
             exact_url = f"https://huggingface.co/api/models/{urllib.parse.quote(clean_repo, safe='/')}"
             req = urllib.request.Request(

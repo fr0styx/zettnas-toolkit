@@ -806,7 +806,7 @@ def set_route(
     if topic and not _re.fullmatch(r"[A-Za-z0-9_-]{1,64}", topic):
         raise ValueError("An ntfy topic uses letters, digits, - and _.")
     addr = (email or "").strip()
-    if addr and not _re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", addr):
+    if addr and (len(addr) > 254 or not _re.fullmatch(r"[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+", addr)):
         raise ValueError("That doesn't look like an e-mail address.")
     route = {
         "ntfy_topic": topic,

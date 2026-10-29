@@ -31,7 +31,7 @@ def _inline_script_hashes() -> list[str]:
     except OSError:
         return []
     hashes = []
-    for m in re.finditer(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S | re.I):
+    for m in re.finditer(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, re.S | re.I):
         digest = hashlib.sha256(m.group(1).encode("utf-8")).digest()
         hashes.append("'sha256-" + base64.b64encode(digest).decode() + "'")
     return hashes

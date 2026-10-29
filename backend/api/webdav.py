@@ -22,6 +22,7 @@ import backend.config as config
 from backend.auth import require_scope
 from backend.confirmations import require_confirmation
 from backend.fsutil import resolve_within
+from backend.logging_config import one_line
 from backend.passwords import verify_password
 from backend.services.webdav_engine import get_webdav_engine
 from backend.services.webdav_portal import render_webdav_login, render_webdav_portal
@@ -413,7 +414,7 @@ async def webdav_proxy_subpath(request: Request, path: str):
 
     # Security: Canonical path traversal & symlink escape protection
     if resolve_within(abs_target, [root_path]) is None:
-        logger.warning(f"[WEBDAV] Directory traversal attempt rejected: {path} -> {abs_target}")
+        logger.warning(f"[WEBDAV] Directory traversal attempt rejected: {one_line(path)} -> {one_line(abs_target)}")
         raise HTTPException(status_code=403, detail="Access denied: path traversal detected.")
 
     # Target directory -> Render ZettNAS WebDAV Cloud Portal UI

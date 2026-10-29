@@ -48,7 +48,7 @@ from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.ups import read_ups_status
 from backend.ignored_errors import ignored
-from backend.logging_config import get_recent_logs, in_this_request, sanitize_dict, sanitize_string
+from backend.logging_config import get_recent_logs, in_this_request, one_line, sanitize_dict, sanitize_string
 from backend.models.schemas import (
     ButtonConfigRequest,
     CopyConfirmRequest,
@@ -1124,10 +1124,15 @@ _MANIFEST_ACCEPT = ", ".join(
 )
 
 
+_TAG = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$")  # Docker's tag grammar
+
+
 async def _registry_digest(tag: str) -> str | None:
     """Digest GHCR currently serves for a tag of our image (anonymous pull token)."""
     import httpx
 
+    if not _TAG.match(tag or ""):
+        return None  # only a real image tag goes into the registry URL
     repo = _IMAGE_REPO.split("/", 1)[1]
     async with httpx.AsyncClient(timeout=6.0) as client:
         tok = await client.get("https://ghcr.io/token", params={"scope": f"repository:{repo}:pull"})
@@ -1190,13 +1195,15 @@ async def _check_update_signature(target_img: str, expected_digest: str | None, 
         digest = expected_digest or (pulled[0] if pulled else "")
     result = await asyncio.to_thread(verify_image, digest) if digest else SignatureResult(False, "no digest")
     if result.ok:
-        logger.info(f"[System Update] Signature verified for {digest} ({result.identity}).")
+        logger.info(f"[System Update] Signature verified for {one_line(digest)} ({one_line(result.identity)}).")
         return {"checked": True, **result.as_dict()}
     if mode == "warn":
-        logger.warning(f"[System Update] Installing {digest} although its signature failed: {result.reason}")
+        logger.warning(
+            f"[System Update] Installing {one_line(digest)} although its signature failed: {one_line(result.reason)}"
+        )
         add_event("warning", "Update signature not verified", result.reason)
         return {"checked": True, **result.as_dict()}
-    logger.error(f"[System Update] Refusing {digest}: {result.reason}")
+    logger.error(f"[System Update] Refusing {one_line(digest)}: {one_line(result.reason)}")
     raise HTTPException(
         status_code=502,
         detail=f"Not updating: the image's signature could not be verified ({result.reason}). "
@@ -1467,7 +1474,9 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     _last_update_check[channel]["data"] = None
     _last_update_check[channel]["ts"] = 0.0
 
-    logger.info(f"[System Update] User initiated system update on '{channel}' channel using image '{target_img}'...")
+    logger.info(
+        f"[System Update] User initiated system update on '{one_line(channel)}' channel using image '{one_line(target_img)}'..."
+    )
 
     # 0. The digest the registry serves for this tag right now: the pulled image must be exactly
     #    that one, so the tag can't move between the check and the download (OPS-1)
@@ -1477,7 +1486,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
         try:
             expected_digest = await _registry_digest(tag)
         except Exception as exc:
-            logger.warning(f"[System Update] Could not look up the digest for '{tag}': {exc}")
+            logger.warning(f"[System Update] Could not look up the digest for '{one_line(tag)}': {one_line(exc)}")
 
     # 1. Pull the image
     try:

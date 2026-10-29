@@ -329,6 +329,16 @@ def align_admin_password_mirror() -> None:  # the old name, kept for callers
     retire_admin_password_copy()
 
 
+_MFA_FALLBACK_KEY = os.urandom(32)
+
+
+def _mfa_key() -> bytes:
+    """The key that signs the five-minute "password ok, now the code" token: the app's secret key,
+    or without one a random key of this process, never a value written in the source."""
+    secret = getattr(config, "SECRET_KEY", "")
+    return secret.encode("utf-8") if secret else _MFA_FALLBACK_KEY
+
+
 def create_mfa_token(user_id: str, username: str, remember_me: bool) -> str:
     payload = {
         "uid": user_id,
@@ -338,10 +348,7 @@ def create_mfa_token(user_id: str, username: str, remember_me: bool) -> str:
     }
     raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     b64 = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
-    key = (
-        getattr(config, "SECRET_KEY", "") or getattr(config, "STORED_PASSWORD_HASH", "") or "zettnas-mfa-default-key"
-    ).encode("utf-8")
-    sig = hmac.new(key, b64.encode("ascii"), hashlib.sha256).hexdigest()
+    sig = hmac.new(_mfa_key(), b64.encode("ascii"), hashlib.sha256).hexdigest()
     return f"mfa_{b64}.{sig}"
 
 
@@ -351,12 +358,7 @@ def verify_mfa_token(token: str) -> dict | None:
     try:
         body = token[4:]
         b64, sig = body.split(".", 1)
-        key = (
-            getattr(config, "SECRET_KEY", "")
-            or getattr(config, "STORED_PASSWORD_HASH", "")
-            or "zettnas-mfa-default-key"
-        ).encode("utf-8")
-        expected_sig = hmac.new(key, b64.encode("ascii"), hashlib.sha256).hexdigest()
+        expected_sig = hmac.new(_mfa_key(), b64.encode("ascii"), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(sig, expected_sig):
             return None
         missing = len(b64) % 4

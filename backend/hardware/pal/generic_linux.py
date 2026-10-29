@@ -17,7 +17,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, logger
-from backend.fsutil import atomic_write_json
+from backend.fsutil import atomic_write_json, child_path
 from backend.hardware import fs_quota
 from backend.hardware.pal import base as pal_base
 from backend.hardware.pal.base import (
@@ -1081,16 +1081,16 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
         retention_days: int | None = None,
     ) -> dict[str, Any]:
         """Creates an atomic Btrfs subvolume snapshot with optional Two-Tier WORM immutability."""
-        src_path = os.path.join(self._pool_path, "@shares", subvol_name)
+        src_path = child_path(os.path.join(self._pool_path, "@shares"), subvol_name)
         if not os.path.exists(src_path):
-            src_path = os.path.join(self._pool_path, subvol_name)
+            src_path = child_path(self._pool_path, subvol_name)
 
         snaps_dir = os.path.join(self._pool_path, "@snapshots")
         try:
             os.makedirs(snaps_dir, exist_ok=True)
         except OSError as e:
             logger.warning(f"[PAL] Could not pre-create snapshots dir {snaps_dir}: {e}")
-        dest_path = os.path.join(snaps_dir, snapshot_name)
+        dest_path = child_path(snaps_dir, snapshot_name)
 
         # Force readonly for WORM snapshots
         if worm_mode in ("compliance", "governance"):
@@ -1177,7 +1177,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     ) -> dict[str, Any]:
         """Deletes a Btrfs subvolume snapshot, strictly enforcing Two-Tier WORM immutability."""
         snaps_dir = os.path.join(self._pool_path, "@snapshots")
-        target_path = os.path.join(snaps_dir, snapshot_name)
+        target_path = child_path(snaps_dir, snapshot_name)  # never a live subvolume via ../ (WORM)
         meta_path = os.path.join(snaps_dir, f".{snapshot_name}.worm.json")
 
         if os.path.isfile(meta_path):
@@ -1230,7 +1230,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
     def restore_snapshot(self, pool_id: str, snapshot_name: str, target_subvol: str = "") -> dict[str, Any]:
         """Restores or rolls back a Btrfs subvolume snapshot into active subvolume path."""
-        snap_path = os.path.join(self._pool_path, "@snapshots", snapshot_name)
+        snap_path = child_path(os.path.join(self._pool_path, "@snapshots"), snapshot_name)
         if not os.path.exists(snap_path):
             return {"status": "error", "message": f"Snapshot {snapshot_name} not found at {snap_path}", "code": 1}
 
@@ -1243,7 +1243,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             os.makedirs(dest_dir, exist_ok=True)
         except OSError:
             pass
-        dest_path = os.path.join(dest_dir, subvol)
+        dest_path = child_path(dest_dir, subvol)
 
         archived_path = None
         if os.path.exists(dest_path):

@@ -13,6 +13,16 @@
   too, failed WebDAV sign-ins count towards blocking an address, and WebDAV writes on 8084 reach
   the ransomware guard. Clients keep the same addresses; an SFTP sidecar from an older version
   is recreated on the next start (SEC-34).
+- **Code scanning findings fixed**: snapshot and subvolume names must be a single name, so a
+  name like `../@shares/media` can no longer reach a folder outside the snapshots (deleting one
+  that way skipped its WORM lock); the five-minute sign-in token between password and code is
+  never signed with a key from the source; a stack's `.env` and its compose backups are
+  readable by root only; downloaded ISOs are no longer world-writable; Tailscale's sign-in link
+  comes only from login.tailscale.com (or your own login server); the phone sign-in page for
+  cloud drives, a few container and network messages, and the VM console escape what they
+  show; values from requests are kept on one line in the log; Hugging Face model ids and image
+  tags are checked before they go into a URL; and some patterns that could be made slow with a
+  long input are bounded. CodeQL no longer scans the tests and developer scripts.
 - **WebDAV and SFTP sign-ins work again**: the image ships rclone's sign-in helper without the
   execute bit, so rclone refused every WebDAV client and SFTP sign-in ("permission denied");
   ZettNAS now runs the helper with Python.

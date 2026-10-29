@@ -121,6 +121,10 @@ def test_add_a_person_by_keyboard():
         page.focus("#btn-add-user")
         page.keyboard.press("Enter")
         page.wait_for_selector("#modal-add-user", state="visible", timeout=5000)
+        # the dialog moves focus inside itself a moment after it opens; Tab before that wanders the page
+        page.wait_for_function(
+            "() => document.getElementById('modal-add-user').contains(document.activeElement)", timeout=5000
+        )
         _tab_to(page, "add-user-username")
         page.keyboard.type("kbjourney")
         _tab_to(page, "add-user-display")

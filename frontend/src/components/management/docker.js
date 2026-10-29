@@ -1700,7 +1700,7 @@ export async function openAppDeployModal(appId) {
           banner.style.background = 'rgba(235, 87, 87, 0.12)';
           banner.style.border = '1px solid var(--err, #eb5757)';
           portInput.style.borderColor = '';
-          banner.innerHTML = `<span style="color:var(--lt-t-ff8080ff, #ff8080); font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Port ${val} is currently bound by <strong>${cName}</strong>, which will be stopped and replaced.`;
+          banner.innerHTML = `<span style="color:var(--lt-t-ff8080ff, #ff8080); font-weight:bold;">⚠️ Stop &amp; Replace Mode:</span> Port ${escapeHtml(String(val))} is currently bound by <strong>${escapeHtml(cName)}</strong>, which will be stopped and replaced.`;
           if (deployConfirmBtn) {
             deployConfirmBtn.disabled = false;
             deployConfirmBtn.style.opacity = '1';
@@ -1712,8 +1712,8 @@ export async function openAppDeployModal(appId) {
         banner.style.background = 'rgba(245, 166, 35, 0.15)';
         banner.style.border = '1px solid var(--warn, #f5a623)';
         portInput.style.borderColor = 'var(--warn, #f5a623)';
-        const inUse = check.in_use_by ? ` (in use by ${check.in_use_by})` : '';
-        banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${val} is already busy${inUse}. Please choose an available port before deploying.`;
+        const inUse = check.in_use_by ? ` (in use by ${escapeHtml(check.in_use_by)})` : '';
+        banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${escapeHtml(String(val))} is already busy${inUse}. Please choose an available port before deploying.`;
         if (deployConfirmBtn) {
           deployConfirmBtn.disabled = true;
           deployConfirmBtn.style.opacity = '0.5';
@@ -1724,7 +1724,7 @@ export async function openAppDeployModal(appId) {
         banner.style.border = '1px solid var(--ok2, #25c2a0)';
         portInput.style.borderColor = '';
         const cName = nameInput ? nameInput.value.trim() : appId;
-        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${val} is free and ready for container <strong>${cName}</strong>.`;
+        banner.innerHTML = `<span style="color:var(--ok2, #25c2a0); font-weight:bold;">✓ Ready to Deploy:</span> Port ${escapeHtml(String(val))} is free and ready for container <strong>${escapeHtml(cName)}</strong>.`;
         if (deployConfirmBtn) {
           deployConfirmBtn.disabled = false;
           deployConfirmBtn.style.opacity = '1';
@@ -1924,7 +1924,7 @@ export async function openAppDeployModal(appId) {
           banner.style.background = 'rgba(245, 166, 35, 0.15)';
           banner.style.border = '1px solid var(--warn, #f5a623)';
           if (nameInput) nameInput.style.borderColor = 'var(--warn, #f5a623)';
-          banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Container Name In Use:</span> A container named <strong>${cName}</strong> already exists. Please choose a unique name or select 'Stop &amp; Replace Existing'.`;
+          banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Container Name In Use:</span> A container named <strong>${escapeHtml(cName)}</strong> already exists. Please choose a unique name or select 'Stop &amp; Replace Existing'.`;
           showToast(t('toast.container_already_exists_please_rename_or', 'Container \'{cName}\' already exists. Please rename or select Replace.', { cName: cName }), 'warn');
           return;
         }
@@ -1937,7 +1937,7 @@ export async function openAppDeployModal(appId) {
           banner.style.background = 'rgba(245, 166, 35, 0.15)';
           banner.style.border = '1px solid var(--warn, #f5a623)';
           portInput.style.borderColor = 'var(--warn, #f5a623)';
-          const inUse = check.in_use_by ? ` (in use by ${check.in_use_by})` : '';
+          const inUse = check.in_use_by ? ` (in use by ${escapeHtml(check.in_use_by)})` : '';
           banner.innerHTML = `<span style="color:var(--warn, #f5a623); font-weight:bold;">⚠️ Port Conflict:</span> Port ${p} is already busy${inUse}. Please choose an available port before deploying.`;
           showToast(t('toast.port_is_already_in_use_please', 'Port {p} is already in use{inUse}. Please change the port.', { p: p, inUse: inUse }), 'warn');
           return;

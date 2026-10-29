@@ -17,6 +17,7 @@ from typing import Any, Optional
 import yaml
 
 from backend.config import docker_sock, logger
+from backend.fsutil import atomic_write_text
 from backend.hardware.docker_stats import (
     UnixHTTPConnection,
     _classify_stack,
@@ -543,16 +544,14 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: str | Non
             bak_path = f"{config_file}.bak.{int(time.time())}"
             if os.path.exists(config_file):
                 with open(config_file, encoding="utf-8") as orig:
-                    with open(bak_path, "w", encoding="utf-8") as bak:
-                        bak.write(orig.read())
+                    atomic_write_text(bak_path, orig.read(), mode=0o600)  # may carry secrets
 
             with open(config_file, "w", encoding="utf-8") as f:
                 f.write(compose_yaml)
 
             if env_content is not None and working_dir:
-                env_path = os.path.join(working_dir, ".env")
-                with open(env_path, "w", encoding="utf-8") as f:
-                    f.write(env_content)
+                # the .env holds the stack's passwords: only its owner (root) reads it
+                atomic_write_text(os.path.join(working_dir, ".env"), env_content, mode=0o600)
 
             return {"success": True, "message": "Stack configuration saved to host filesystem"}
         except Exception as e:
@@ -578,8 +577,7 @@ def save_stack_config(stack_name: str, compose_yaml: str, env_content: str | Non
         with open(target_file, "w", encoding="utf-8") as f:
             f.write(compose_yaml)
         if env_content is not None:
-            with open(os.path.join(default_dir, ".env"), "w", encoding="utf-8") as f:
-                f.write(env_content)
+            atomic_write_text(os.path.join(default_dir, ".env"), env_content, mode=0o600)
         return {"success": True, "message": f"Stack configuration saved to {target_file}"}
     except Exception as e:
         return {"success": False, "error": f"Failed creating stack directory: {e}"}

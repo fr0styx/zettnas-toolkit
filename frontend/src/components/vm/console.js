@@ -386,7 +386,7 @@ function initGuiDesktopSimulation(canvas, vmName) {
 export let _activeRfb = null;
 export let _activeSerialWs = null;
 export let _reconnectTimer = null;
-export let _serialBuffers = {};
+export const _serialBuffers = new Map(); // keyed by VM id; a Map, so an id can't reach Object's own properties
 let _serialView = null;
 let _serialViewVmId = null;
 const SERIAL_TRANSCRIPT_MAX = 256 * 1024;
@@ -419,7 +419,8 @@ export function serialKeyToData(e) {
 }
 
 function rememberSerialChunk(vmId, chunk) {
-  const list = _serialBuffers[vmId] || (_serialBuffers[vmId] = []);
+  let list = _serialBuffers.get(vmId);
+  if (!list) _serialBuffers.set(vmId, (list = []));
   list.push(chunk);
   let total = list.reduce((n, c) => n + (c.length || c.byteLength || 0), 0);
   while (total > SERIAL_TRANSCRIPT_MAX && list.length > 1) {
@@ -441,7 +442,7 @@ function ensureSerialView(host, vmId) {
   });
   _serialViewVmId = vmId;
   // Replay this VM's earlier output so a reconnect keeps the screen history.
-  for (const chunk of _serialBuffers[vmId] || []) _serialView.write(chunk);
+  for (const chunk of _serialBuffers.get(vmId) || []) _serialView.write(chunk);
   return _serialView;
 }
 
@@ -953,7 +954,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
     rememberSerialChunk(vmId, chunk);
     if (view) view.write(chunk);
   };
-  if (!(_serialBuffers[vmId] || []).length) {
+  if (!(_serialBuffers.get(vmId) || []).length) {
     appendOutput(`\x1b[36m[ZettNAS Serial Terminal - Connecting to ${vmName}...]\x1b[0m\r\n`);
   }
 
@@ -965,7 +966,7 @@ async function initRealSerialTerminal(container, vmId, vmName) {
     const ticket = tokenRes?.ticket || '';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = window.location.host || '127.0.0.1:8082';
-    const wsUrl = `${protocol}//${wsHost}/api/vms/${vmId}/serial/ws?ticket=${ticket}`;
+    const wsUrl = `${protocol}//${wsHost}/api/vms/${encodeURIComponent(vmId)}/serial/ws?ticket=${encodeURIComponent(ticket)}`;
 
     if (typeof WebSocket !== 'undefined') {
       const ws = new WebSocket(wsUrl);

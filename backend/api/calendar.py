@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.fsutil import atomic_write_json, read_json
+from backend.logging_config import one_line
 from backend.services.ssrf_guard import validate_public_url
 
 logger = logging.getLogger(__name__)
@@ -224,7 +225,7 @@ async def _sync_single_feed(feed: dict[str, Any]) -> list[dict[str, Any]]:
         feed["error"] = None
         return events
     except Exception as exc:
-        logger.warning(f"[Calendar] Sync failed for feed {feed.get('name')}: {exc}")
+        logger.warning(f"[Calendar] Sync failed for feed {one_line(feed.get('name'))}: {one_line(exc)}")
         feed["error"] = f"Failed fetching calendar: {str(exc)[:120]}"
         return []
 

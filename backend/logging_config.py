@@ -68,6 +68,12 @@ KEY_VALUE_IN_TEXT_PATTERN = re.compile(
 )
 
 
+def one_line(value: Any) -> str:
+    """A value for a log line, its line breaks shown as \\r and \\n, so text from a request
+    can't start a fake log entry of its own."""
+    return str(value).replace("\r", "\\r").replace("\n", "\\n")
+
+
 def sanitize_string(text: str) -> str:
     """Redacts passwords, tokens, webhooks, hashes, and private keys from strings."""
     if not text or not isinstance(text, str):

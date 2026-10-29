@@ -41,11 +41,8 @@ def execute_tailscale_up(
     code, out = tailscale._run_tailscale_cmd(cmd, timeout=15.0)
 
     # Check for interactive authentication URL in output
+    # only a link on Tailscale's sign-in page or the chosen login server is shown (CodeQL #382)
     auth_url = tailscale.auth_url_in(out) or None
-    if not auth_url and "login.tailscale.com" in out:
-        m2 = re.search(r"https://\S+", out)
-        if m2:
-            auth_url = m2.group(0)
 
     # If auth_url was not in stdout, query status --json fallback for AuthURL
     if not auth_url and not auth_key:
@@ -55,8 +52,7 @@ def execute_tailscale_up(
                 import json
 
                 s_doc = json.loads(s_out.strip())
-                if s_doc.get("AuthURL"):
-                    auth_url = s_doc["AuthURL"]
+                auth_url = tailscale.auth_url_in(str(s_doc.get("AuthURL") or "")) or None
         except Exception as e:
             logger.debug(f"[Network] Fallback status json check: {e}")
 

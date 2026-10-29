@@ -3456,7 +3456,7 @@ export function _formatChatMarkdown(rawText, sources = null) {
   // Strip out any trailing verbose "Verified Web Sources" section
   text = text.replace(/#{2,4}\s*🌐?\s*Verified\s+Web\s+Sources[\s\S]*$/i, '').trim();
   // Strip out duplicate trailing text-based "Sources:\n[1] ... \n[2] ..." list
-  text = text.replace(/(?:\r?\n)+\s*(?:\*\*)?Sources:?(?:\*\*)?\s*(?:\r?\n)+(?:\s*\[\d+\][^\n]*\r?\n?)+$/i, '').trim();
+  text = text.replace(/(?:\r?\n)+\s*(?:\*\*)?Sources:?(?:\*\*)?\s*(?:\r?\n)+(?:\s*\[\d+\][^\n]*(?:\n|$))+$/i, '').trim();
 
   // Extract <think>...</think> if present
   let thoughtHtml = '';

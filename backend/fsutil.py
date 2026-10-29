@@ -371,11 +371,33 @@ def resolve_within(path: str, roots: Iterable[str] | str) -> str | None:
     real = os.path.realpath(path)
     for root in roots:
         real_root = os.path.realpath(root)
-        if real == real_root or real.startswith(real_root.rstrip(os.sep) + os.sep):
-            if any(_inside(real, d) and not _inside(real_root, d) for d in protected_dirs()):
-                return None
-            return real
+        if real == real_root:
+            return real_root
+        # a separate prefix check on the resolved path, the shape code scanners recognise as a guard
+        if not real.startswith(real_root.rstrip(os.sep) + os.sep):
+            continue
+        if any(_inside(real, d) and not _inside(real_root, d) for d in protected_dirs()):
+            return None
+        return real
     return None
+
+
+def single_name(name: str) -> str:
+    """`name` when it is one file or folder name; ValueError for a /, '.', '..' or an empty name,
+    which would put a snapshot or subvolume somewhere other than its own folder."""
+    if not name or "/" in name or "\x00" in name or name in (".", ".."):
+        raise ValueError("Use a single name, without / and not . or ..")
+    return name
+
+
+def child_path(parent: str, name: str) -> str:
+    """parent/name for a single name (see single_name); never a path outside `parent`."""
+    single_name(name)
+    base = os.path.normpath(parent)
+    path = os.path.normpath(os.path.join(base, name))
+    if not path.startswith(base.rstrip(os.sep) + os.sep):
+        raise ValueError("Use a single name, without / and not . or ..")
+    return path
 
 
 def root_for(path: str, roots: Iterable[str] | str) -> str | None:

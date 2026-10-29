@@ -1,0 +1,9 @@
+# What CodeQL scans (ARC-32): the app itself. Tests build hostile paths and loose file modes on
+# purpose, and the scripts are developer tools run by hand, so their findings are noise.
+name: ZettNAS CodeQL
+paths-ignore:
+  - tests
+  - scripts
+  - frontend/scripts
+  - frontend/src/__tests__
+  - e2e

@@ -3,17 +3,17 @@ import os
 import tempfile
 import time
 import zipfile
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import AfterValidator, BaseModel, Field
 
 from backend.auth import require_scope
 from backend.config import CLIENT_PREFS_FILE, logger
 from backend.confirmations import require_confirmation
-from backend.fsutil import atomic_write_json, read_json
+from backend.fsutil import atomic_write_json, read_json, single_name
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
 from backend.logging_config import in_this_request
 from backend.paging import PageParams
@@ -54,17 +54,20 @@ class BackupJobModel(BaseModel):
     encryption_password: str | None = Field(None, description="Password for client-side encryption")
 
 
+SingleName = Annotated[str, AfterValidator(single_name)]
+
+
 class SnapshotCreateModel(BaseModel):
     pool_id: str = "default"
-    subvol_name: str
-    snapshot_name: str | None = None
+    subvol_name: SingleName
+    snapshot_name: SingleName | None = None
     readonly: bool = True
 
 
 class SnapshotRestoreModel(BaseModel):
     pool_id: str = "default"
-    snapshot_name: str
-    target_subvol: str | None = ""
+    snapshot_name: SingleName
+    target_subvol: Annotated[str, AfterValidator(lambda v: single_name(v) if v else v)] | None = ""
 
 
 # -------------------------------------------------------------------------

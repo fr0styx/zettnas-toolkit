@@ -18,7 +18,7 @@ export async function fetchListeningPorts() {
     console.debug('[NetworkManager] Error fetching listening ports:', err);
     const tbody = document.getElementById('net-listening-ports-tbody');
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--crit); padding: 18px;">Failed to load listening ports: ${err.message || err}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--crit); padding: 18px;">Failed to load listening ports: ${escapeHtml(String(err.message || err))}</td></tr>`;
     }
     return [];
   }
