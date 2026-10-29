@@ -112,6 +112,9 @@
 
 #### Fixes
 
+- **Type-checked frontend, as a ratchet**: TypeScript now checks the frontend's JavaScript in CI
+  (`npm run lint:types`); each file is held to today's number of type errors, so new code can't
+  add more (ARC-31).
 - **Errors handled in the open**: the 300 places that knowingly carry on after an error call
   `ignored()` directly instead of relying on a patched logger; a request's correlation ID is taken
   from the client only as a short plain token and follows the work the request starts in the

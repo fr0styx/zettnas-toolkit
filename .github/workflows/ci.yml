@@ -134,6 +134,9 @@ jobs:
       - name: Translation lint (FE-13)
         run: npm run lint:i18n
 
+      - name: Type errors may only go down, per file (ARC-31)
+        run: npm run lint:types
+
       - name: CSS budget (!important and button classes may only go down)
         run: npm run lint:css
 

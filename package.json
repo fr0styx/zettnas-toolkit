@@ -10,6 +10,7 @@
     "dev": "node ./node_modules/vite/bin/vite.js",
     "budget": "node frontend/scripts/check-budget.mjs static",
     "lint:i18n": "node frontend/scripts/i18n-lint.mjs",
+    "lint:types": "node frontend/scripts/checkjs-ratchet.mjs",
     "lint:css": "node frontend/scripts/css-budget.mjs",
     "lint:js": "eslint frontend vite.config.mjs vitest.config.mjs eslint.config.mjs --max-warnings 71",
     "lint:py": "ruff check app.py backend tests",
@@ -39,6 +40,7 @@
     "jsdom": "^30.1.3",
     "lucide-static": "1.61.0",
     "parse5": "^8.0.1",
+    "typescript": "5.9.3",
     "vite": "^8.3.5",
     "vitest": "^5.0.3"
   },

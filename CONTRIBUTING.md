@@ -30,6 +30,7 @@ npm run lint          # Ruff lint and format check (Python)
 npm test              # frontend tests (Vitest)
 npm run lint:js       # ESLint
 npm run lint:i18n     # every key in all five languages; hard-coded English may only go down, per file
+npm run lint:types    # TypeScript checks the JavaScript; no file may get more type errors
 npm run lint:css      # !important rules, button classes and emoji icons may only go down
 npm run build && npm run budget   # first-load size budget
 ```
