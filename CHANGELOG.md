@@ -4,6 +4,9 @@
 
 #### Usability
 
+- **Tested by keyboard and in German**: CI now adds a person, signs in with a recovery code, opens a
+  folder in Files and brings a deleted file back, all by keyboard alone, and fails when the German
+  sign-in, People or Backups screens show English at tablet or phone width (UX-38).
 - **One voice per language**: German says "Sie", French "vous", Spanish "tú" and Chinese "你"
   everywhere (32 German and 32 Chinese strings changed), and the translation lint keeps it so.
   Counts like "1 files" have plural rules in every language, the weather is described in your
