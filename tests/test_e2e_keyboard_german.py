@@ -84,13 +84,13 @@ def test_a_keyboard_only_journey():
         page.evaluate(
             "() => { const m = document.getElementById('setup-wizard-modal'); if (m) m.classList.remove('open'); }"
         )
-        # Mission Control opens from the keyboard, takes focus, and Escape gives it back
+        # Settings opens from the keyboard, takes focus, and Escape gives it back
         page.focus("#management-desktop-icon")
         page.keyboard.press("Enter")
         page.wait_for_selector("#management-window", state="visible", timeout=8000)
         page.wait_for_timeout(800)
         assert page.evaluate("() => document.getElementById('management-window').contains(document.activeElement)"), (
-            "focus did not move into Mission Control"
+            "focus did not move into Settings"
         )
         page.keyboard.press("Escape")
         page.wait_for_timeout(800)

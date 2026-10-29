@@ -6,6 +6,7 @@ import { t } from '../../i18n.js';
 import { html } from '../../html.js';
 import { formatDateTime } from '../../format.js';
 import { uiCard } from '../../ui/primitives.js';
+import { formatRole } from '../role-names.js';
 
 const CARD_ID = 'ai-access-card';
 const LOG_ROWS = 50;
@@ -28,7 +29,7 @@ export function rolesHtml(roles) {
   return html`<table class="zn-table ai-access-roles"><thead><tr><th></th>
       <th>${t('ai.access_ask', 'Ask Zetty')}</th><th>${t('ai.access_search', 'AI search')}</th></tr></thead>
     <tbody>${roles.map(
-      (r) => html`<tr><td>${r.name}${r.locked ? html` <span class="zn-muted">${t('ai.access_always', 'Always on')}</span>` : ''}</td>
+      (r) => html`<tr><td>${formatRole(r.id, r.name)}${r.locked ? html` <span class="zn-muted">${t('ai.access_always', 'Always on')}</span>` : ''}</td>
         <td><input type="checkbox" role="switch" aria-label="${t('ai.access_ask', 'Ask Zetty')}: ${r.name}" data-ai-role="${r.id}" data-ai-feature="roles" ${r.on ? 'checked' : ''} ${r.locked ? 'disabled' : ''}></td>
         <td><input type="checkbox" role="switch" aria-label="${t('ai.access_search', 'AI search')}: ${r.name}" data-ai-role="${r.id}" data-ai-feature="search_roles" ${r.search !== false ? 'checked' : ''} ${r.locked ? 'disabled' : ''}></td></tr>`,
     )}</tbody></table>`;

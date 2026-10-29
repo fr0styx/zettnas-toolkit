@@ -126,7 +126,7 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
         if (statusDesc) {
           statusDesc.textContent = isEdge
             ? `Newer commit features are available on the main branch.`
-            : `A newer release of ZettNAS Workbench is available on GitHub.`;
+            : `A newer release of ZettNAS is available on GitHub.`;
         }
         if (detailsBox) detailsBox.style.display = 'block';
         if (releaseTitle) releaseTitle.textContent = data.release_name || `Release ${data.latest_tag}`;
@@ -143,8 +143,8 @@ export async function fetchAndRenderSystemAbout(force = false, channelOverride =
         if (statusIcon) statusIcon.textContent = '✅';
         if (statusTitle) {
           statusTitle.textContent = isEdge
-            ? `ZettNAS Workbench is up to date with main`
-            : `ZettNAS Workbench is up to date`;
+            ? `ZettNAS is up to date with main`
+            : `ZettNAS is up to date`;
           statusTitle.style.color = 'var(--ok2, #25c2a0)';
         }
         if (statusDesc) {
@@ -306,7 +306,7 @@ export async function applySystemUpdate() {
     t('updates.confirm_title', 'Apply System Update'),
     t(
       'updates.confirm_msg',
-      `Update ZettNAS Workbench to ${targetTag} now? The container will pull the updated image and restart. Your data and settings are safely preserved.`
+      `Update ZettNAS to ${targetTag} now? The container will pull the updated image and restart. Your data and settings are safely preserved.`
     ),
     async () => {
       if (applyBtn) applyBtn.disabled = true;
@@ -344,7 +344,7 @@ export async function applySystemUpdate() {
             if (h.ok && (hasGoneDown || attempts >= 8)) {
               clearInterval(interval);
               if (progressTitle) progressTitle.textContent = t('ui.update_complete', '🎉 Update Complete!');
-              if (progressDesc) progressDesc.textContent = t('ui.reloading_zettnas_workbench', 'Reloading ZettNAS Workbench...');
+              if (progressDesc) progressDesc.textContent = t('ui.reloading_zettnas_workbench', 'Reloading ZettNAS…');
               showToast(t('updates.updated_success', 'ZettNAS updated successfully!'), 'success');
               setTimeout(() => window.location.reload(), 1200);
             }

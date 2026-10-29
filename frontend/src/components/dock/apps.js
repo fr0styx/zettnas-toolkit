@@ -33,7 +33,7 @@ export const KNOWN_APPS = {
   management: {
     id: 'management',
     icon: '#i-management',
-    getTitle: () => t('dock.management', 'Mission Control'),
+    getTitle: () => t('dock.management', 'Settings'),
     launch: (pane = null) => {
       if (typeof window.openManagementWindow === 'function') {
         window.openManagementWindow(pane === 'hub' ? null : pane);

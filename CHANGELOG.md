@@ -4,6 +4,14 @@
 
 #### Usability
 
+- **Plainer names**: the management window is called Settings, the product ZettNAS (no more "Mission
+  Control" or "Workbench"), and roles have one set of names everywhere (Administrator, Family member,
+  Viewer and so on, without emoji); drive temperatures, the network dial and the UPS gauge on the
+  desktop are behind Advanced (UX-24).
+- **Colours that mean the same in every theme**: OK, warning and critical stay green, amber and red
+  in the accent themes (Crimson's OK was pink next to its red); Sapphire's grey text is readable on
+  its cards; the light theme lightens a dark wallpaper; Windows high-contrast mode keeps focus
+  rings and status dots visible (UX-33).
 - **Errors in your language**: in German, French, Spanish or Chinese an error now says what happened in
   that language, with the server's own words under "Details" (UX-22).
 - **Toasts you can read**: errors stay until you close them, other messages wait while the pointer or

@@ -172,7 +172,7 @@ export async function loadUsersList() {
     const res = await apiFetch('/api/users', { credentials: 'include' });
     if (!res.ok) {
       if (res.status === 403) {
-        container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--crit);">Requires SuperAdmin or users:read permission.</td></tr>';
+        container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--crit);">' + escapeHtml(t('users.admin_only', 'Only administrators can see the list of people.')) + '</td></tr>';
         return;
       }
       throw new Error(`Server returned ${res.status}`);

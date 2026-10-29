@@ -315,7 +315,7 @@ export function initDraggableDesktopIcons() {
       </div>
       <div class="ctx-item" id="ctx-open-mc">
         <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🖥️</span>
-        <span>Mission Control</span>
+        <span>${escapeHtml(t('dock.management', 'Settings'))}</span>
       </div>
       <div class="ctx-item" id="ctx-open-fm">
         <span style="font-size:var(--zn-fs-xs); margin-right:6px;">📁</span>

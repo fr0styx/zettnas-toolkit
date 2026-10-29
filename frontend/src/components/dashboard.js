@@ -526,8 +526,8 @@ export function applyDesktopTheme(themeName, customAccent = null) {
   const icon = $('suite-brand-icon');
 
   if (title) title.textContent = isYak ? 'YAK EXPRESS' : 'ZETTNAS';
-  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'NAS Workbench');
-  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'NAS Workbench');
+  if (badge) badge.textContent = isYak ? 'RELIABILITY CULT' : t('nav.toolkit', 'Toolkit');
+  if (drawerSub) drawerSub.textContent = isYak ? 'LOGISTICS LAB' : t('settings.drawer_badge', 'Toolkit');
   if (icon) icon.innerHTML = isYak ? '<use href="#i-yak"/>' : '<use href="#i-chip"/>';
 
   updateChassisImageForTheme();

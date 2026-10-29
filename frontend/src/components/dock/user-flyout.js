@@ -2,6 +2,8 @@
 // Part of dock.js, split out by ARC-5.
 
 import { ZettEventBus } from '../../event-bus.js';
+import { escapeHtml } from '../../utils.js';
+import { t } from '../../i18n.js';
 
 export function initTopbarUserPill() {
   const topbarPill = document.getElementById('topbar-user-pill');
@@ -36,7 +38,7 @@ export function toggleUserProfileFlyout(anchorEl) {
         <div style="flex:1; min-width:0;">
           <div id="user-flyout-name" style="font-weight:700; color:var(--zn-text-strong); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Administrator</div>
           <div id="user-flyout-username" style="font-size:var(--zn-fs-xs); color:var(--muted);">@admin</div>
-          <span id="user-flyout-role" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">SuperAdmin 👑</span>
+          <span id="user-flyout-role" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); background:rgba(56,189,248,0.12); padding:2px 6px; border-radius:4px; display:inline-block; margin-top:4px;">${escapeHtml(t('role.superadmin', 'Administrator'))}</span>
         </div>
       </div>
       <div class="user-flyout-actions" style="padding:8px;">

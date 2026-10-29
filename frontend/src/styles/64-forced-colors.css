@@ -1,0 +1,12 @@
+/* Windows high contrast and other forced-colour modes (UX-33): the system picks the colours, so
+   what carries meaning by colour alone gets an outline or keeps its own colour, and focus stays
+   visible. */
+@media (forced-colors: active) {
+  :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  /* status dots and bars mean something by their colour: keep it */
+  .dot-ok, .dot-warn, .dot-crit, .dot-standby, .bg-ok, .bg-warn, .bg-crit, .bg-standby { forced-color-adjust: none; }
+  .btn-pill-toggle, .win-btn, .phone-tab, .phone-tile, .context-menu-item { border: 1px solid ButtonText; }
+  .top-toast-item, .smart-modal-window, .os-window { border: 1px solid CanvasText; }
+  .fm-tree-item.active, .spotlight-result-item.active, .phone-tab.is-current { outline: 2px solid Highlight; }
+  #desktop-wallpaper, #desktop-wallpaper-dimmer { display: none; }
+}

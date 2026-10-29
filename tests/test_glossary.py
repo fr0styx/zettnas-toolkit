@@ -11,6 +11,9 @@ RETIRED = [
     r"\bnas[- ](hardware[- ])?copilot\b",
     r"\bdigital twin\b",
     r"\bsystem trash\b",
+    r"\bmission control\b",  # the window is Settings (UX-24)
+    r"(?<![\w-])workbench(?![\w-])",  # not class names like chassis-workbench-stage
+    r"(?-i:SuperAdmin|App Operator|Auditor & Viewer|Family & Share User)",  # roles: one map, session.js
 ]
 SOURCES = [
     "frontend/index.html",
@@ -38,7 +41,9 @@ def _files():
 
 def _shown_text(line: str) -> str:
     """The part of a source line people can read: strings and markup text, not ids or code names."""
-    line = re.sub(r"\b(id|class|data-[\w-]+|for|href)=\"[^\"]*\"", "", line)
+    line = re.sub(r"\b(id|class|data-[\w-]+|for|href|value)=\"[^\"]*\"", "", line)
+    line = re.sub(r"\s//\s.*$", "", line)  # a comment after code
+    line = re.sub(r"<!--.*?-->|/\*.*?\*/", "", line)  # comments inside a line
     line = re.sub(r"#[\w-]+", "", line)  # selectors like '#btn-create-hyper-backup'
     line = re.sub(r"['\"][\w-]+['\"]\s*:", "", line)  # object keys in code (search aliases like 'chatbot')
     line = re.sub(r"\b[\w.]+_hyper_backup[\w]*\b|\bhyper_backup[\w.]*", "", line)  # translation keys
@@ -61,5 +66,13 @@ def test_the_glossary_lists_what_the_test_enforces():
     with open(os.path.join(ROOT, "docs", "GLOSSARY.md"), encoding="utf-8") as f:
         glossary = f.read()
     assert "Hyper-Backup" in glossary and "test_glossary.py" in glossary
-    for name in ("Chatbot", "ZettAI Studio", "NAS Copilot", "digital twin", "System Trash"):
+    for name in (
+        "Chatbot",
+        "ZettAI Studio",
+        "NAS Copilot",
+        "digital twin",
+        "System Trash",
+        "Mission Control",
+        "Workbench",
+    ):
         assert name in glossary, name

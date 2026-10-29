@@ -33,6 +33,11 @@
   transition: background 0.2s ease;
 }
 
+/* The light theme lightens whatever wallpaper is under it instead of darkening it (UX-33) */
+body.theme-light #desktop-wallpaper-dimmer {
+  background: rgba(248, 250, 252, calc(var(--wallpaper-dim, 0.15) + 0.35));
+}
+
 html.has-wallpaper-blur #desktop-wallpaper-dimmer {
   backdrop-filter: blur(var(--wallpaper-blur, 0px));
   -webkit-backdrop-filter: blur(var(--wallpaper-blur, 0px));

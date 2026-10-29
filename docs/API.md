@@ -47,7 +47,7 @@ Persistent scoped tokens can be provisioned and managed via `/api/tokens`.
 | `/api/auth/users` | `POST` | `users:write` | Provision a new user account with role, home directory, and storage quota. |
 | `/api/auth/users/{id}` | `PUT` | `users:write` | Update user details, role assignment, quota, or disable account. |
 | `/api/auth/users/{id}` | `DELETE` | `users:delete` | Delete user account and revoke all associated sessions. |
-| `/api/auth/roles` | `GET` | `users:read` | List system RBAC roles (`SuperAdmin`, `StorageAdmin`, `AppOperator`, `ShareUser`, `Auditor`). |
+| `/api/auth/roles` | `GET` | `users:read` | List system RBAC roles (`superadmin`, `storage_admin`, `app_operator`, `shareUser`, `Auditor`). |
 | `/api/auth/sessions` | `GET` | Yes | List active login sessions and devices for the current or specified user. |
 | `/api/auth/sessions/{id}` | `DELETE` | Yes | Revoke a specific active login session. |
 | `/api/auth/totp/setup` | `POST` | Yes | Generate RFC 6238 TOTP secret, provisioning URI (`otpauth://`), and QR code. |

@@ -1,3 +1,7 @@
+/* UX-33: accent themes change the accent (--brand), never the status colours: OK, warning and
+   critical stay green, amber and red in every dark theme (styles/00-tokens.css); the light theme
+   has its own darker set. b16_themes.test.js checks contrast and hue over every theme. */
+
 /* =========================================================================
    LIGHT THEME: HIGH-CONTRAST CLEAN MODERN DESKTOP (WCAG 2.2 AA)
    ========================================================================= */
@@ -27,10 +31,7 @@ body.theme-amber {
   --card-hi: #2b200b;
   --fg: #fef3c7;
   --muted: #a67c29;
-  --ok: #ffbe40;
   --ok2: #e09b20;
-  --warn: #ff8c00;
-  --crit: #ff6b6b;
   --track: #2a1f0a;
   --brand: #ffbe40;
   --focus-ring: #ffbe40;
@@ -48,10 +49,7 @@ body.theme-emerald {
   --card-hi: #0c2e1a;
   --fg: #e6fced;
   --muted: #34c776;
-  --ok: #3bf58b;
   --ok2: #24d673;
-  --warn: #eab308;
-  --crit: #ef4444;
   --track: #0e331f;
   --brand: #3bf58b;
   --focus-ring: #3bf58b;
@@ -68,11 +66,8 @@ body.theme-sapphire {
   --card: #0c1929;
   --card-hi: #132438;
   --fg: #f0f7ff;
-  --muted: #6482a6;
-  --ok: #38bdf8;
+  --muted: #6e8db4;
   --ok2: #0ea5e9;
-  --warn: #f59e0b;
-  --crit: #ef4444;
   --track: #15263d;
   --brand: #38bdf8;
   --focus-ring: #38bdf8;
@@ -90,10 +85,7 @@ body.theme-amethyst {
   --card-hi: #24153b;
   --fg: #fbf7ff;
   --muted: #b399cf;
-  --ok: #c084fc;
   --ok2: #a855f7;
-  --warn: #fb923c;
-  --crit: #f43f5e;
   --track: #26163d;
   --brand: #c084fc;
   --focus-ring: #c084fc;
@@ -111,10 +103,7 @@ body.theme-crimson {
   --card-hi: #30131b;
   --fg: #fff1f2;
   --muted: #c48995;
-  --ok: #fb7185;
   --ok2: #f43f5e;
-  --warn: #f59e0b;
-  --crit: #ef4444;
   --track: #36141e;
   --brand: #f43f5e;
   --focus-ring: #f43f5e;
@@ -132,10 +121,7 @@ body.theme-oled {
   --card-hi: #121212;
   --fg: #ffffff;
   --muted: #888888;
-  --ok: #00f0ff;
   --ok2: #0ea5e9;
-  --warn: #ffb800;
-  --crit: #ff3333;
   --track: #181818;
   --brand: #00f0ff;
   --focus-ring: #00f0ff;

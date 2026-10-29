@@ -82,7 +82,7 @@ describe('System About & Software Updates Frontend Component', () => {
     expect(document.getElementById('about-system-uptime').textContent).toBe('1d 1h 1m');
 
     expect(document.getElementById('update-status-icon').textContent).toBe('✅');
-    expect(document.getElementById('update-status-title').textContent).toBe('ZettNAS Workbench is up to date');
+    expect(document.getElementById('update-status-title').textContent).toBe('ZettNAS is up to date');
     expect(document.getElementById('update-details-box').style.display).toBe('none');
     expect(document.getElementById('btn-check-updates-text').textContent).toBe('Check for Updates');
   });

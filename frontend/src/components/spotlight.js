@@ -119,7 +119,7 @@ function _buildDefaultSpotlightItems() {
     // Applications
     {
       id: 'app-mc',
-      title: 'Mission Control',
+      title: t('dock.management', 'Settings'),
       subtitle: 'System dashboard, metrics, and services',
       icon: '🖥️',
       category: 'app',

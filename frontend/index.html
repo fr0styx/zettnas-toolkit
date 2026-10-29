@@ -354,7 +354,7 @@
       <div id="lock-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 14px; border: 1px solid var(--lt-r-ffffff40, rgba(255,255,255,0.25));">A</div>
       <div style="text-align: left; min-width: 0; flex: 1;">
         <div id="lock-display-name" style="font-weight: 700; color: var(--zn-text-strong); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Administrator</div>
-        <div id="lock-role-badge" style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-weight: 600;">SuperAdmin 👑</div>
+        <div id="lock-role-badge" style="font-size: var(--zn-fs-xs); color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); font-weight: 600;" data-i18n="role.superadmin">Administrator</div>
       </div>
     </div>
 
@@ -565,7 +565,7 @@
     <div class="suite-brand">
       <svg class="ic" id="suite-brand-icon" style="width:16px;height:16px;"><use href="#i-chip"/></svg>
       <span class="suite-title" id="suite-brand-title">ZETTNAS</span>
-      <span class="suite-badge" id="suite-brand-badge" data-i18n="nav.toolkit">NAS Workbench</span>
+      <span class="suite-badge" id="suite-brand-badge" data-i18n="nav.toolkit">Toolkit</span>
       <div id="topbar-user-pill" class="topbar-user-pill" title="User Account & Security" data-i18n-title="ui.user_account_security" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
         <div id="topbar-user-avatar" class="topbar-user-avatar">
           <span id="topbar-user-avatar-initial">A</span>
@@ -864,11 +864,11 @@
     </div>
 
     <div class="desktop-icons-container" id="desktop-icons-container">
-      <div class="chassis-hero-box management-desktop-icon" id="management-desktop-icon" role="button" tabindex="0" title="Click to open Mission Control" data-i18n-title="dock.management">
+      <div class="chassis-hero-box management-desktop-icon" id="management-desktop-icon" role="button" tabindex="0" title="Open Settings" data-i18n-title="dock.management">
         <img id="chassis-hero-img" src="img/chassis-d6u.webp" class="chassis-hero-img" alt="NAS Hardware Management">
         <div class="desktop-icon-label">
           <span class="icon-dot-status icon-dot-mgmt"></span>
-          <span class="icon-text" data-i18n="dock.management">Mission Control</span>
+          <span class="icon-text" data-i18n="dock.management">Settings</span>
         </div>
       </div>
 
@@ -1454,12 +1454,12 @@
       <div>
         <label for="add-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
         <select id="add-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
-          <option value="share_user" selected>Family & Share User 👤 (Files & WebDAV only)</option>
-          <option value="app_operator">App Operator 📦 (Docker & App management)</option>
-          <option value="storage_admin">Storage Administrator 💾 (Disks & Pools)</option>
-          <option value="backup_operator">Backup Operator 🔄 (Backups & Cloud Sync)</option>
-          <option value="auditor">Auditor & Viewer 👁️ (Read-only telemetry)</option>
-          <option value="superadmin">SuperAdmin 👑 (Full unrestricted control)</option>
+          <option value="share_user" selected data-i18n="role.share_user_option">Family member: their own folder and the shared folders you choose</option>
+          <option value="app_operator" data-i18n="role.app_operator_option">App manager: installs and runs apps</option>
+          <option value="storage_admin" data-i18n="role.storage_admin_option">Storage admin: drives, pools and shares</option>
+          <option value="backup_operator" data-i18n="role.backup_operator_option">Backup manager: backups and cloud copies</option>
+          <option value="auditor" data-i18n="role.auditor_option">Viewer: can look, can't change</option>
+          <option value="superadmin" data-i18n="role.superadmin_option">Administrator: everything</option>
         </select>
       </div>
       <div id="add-user-shares-wrap" hidden>
@@ -1505,12 +1505,12 @@
       <div>
         <label for="edit-user-role" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; letter-spacing:0.5px;">ROLE & PERMISSIONS</label>
         <select id="edit-user-role" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);">
-          <option value="share_user">Family & Share User 👤 (Files & WebDAV only)</option>
-          <option value="app_operator">App Operator 📦 (Docker & App management)</option>
-          <option value="storage_admin">Storage Administrator 💾 (Disks & Pools)</option>
-          <option value="backup_operator">Backup Operator 🔄 (Backups & Cloud Sync)</option>
-          <option value="auditor">Auditor & Viewer 👁️ (Read-only telemetry)</option>
-          <option value="superadmin">SuperAdmin 👑 (Full unrestricted control)</option>
+          <option value="share_user" data-i18n="role.share_user_option">Family member: their own folder and the shared folders you choose</option>
+          <option value="app_operator" data-i18n="role.app_operator_option">App manager: installs and runs apps</option>
+          <option value="storage_admin" data-i18n="role.storage_admin_option">Storage admin: drives, pools and shares</option>
+          <option value="backup_operator" data-i18n="role.backup_operator_option">Backup manager: backups and cloud copies</option>
+          <option value="auditor" data-i18n="role.auditor_option">Viewer: can look, can't change</option>
+          <option value="superadmin" data-i18n="role.superadmin_option">Administrator: everything</option>
         </select>
       </div>
       <div>

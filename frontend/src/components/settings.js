@@ -795,7 +795,7 @@ export function initSettings() {
           disableAdminBtn.style.opacity = canDisable ? '1' : '0.5';
           disableAdminBtn.style.cursor = canDisable ? 'pointer' : 'not-allowed';
           if (!canDisable) {
-            disableAdminBtn.title = t('sec.disable_admin_need_superadmin', "Create another active SuperAdmin account first before disabling 'admin'.");
+            disableAdminBtn.title = t('sec.disable_admin_need_superadmin', "Create another administrator account first, then turn off 'admin'.");
           } else {
             disableAdminBtn.title = t('sec.disable_admin_btn', "Disable Default Admin");
           }
@@ -812,7 +812,7 @@ export function initSettings() {
   if (disableAdminBtn && !disableAdminBtn.dataset.bound) {
     disableAdminBtn.dataset.bound = 'true';
     disableAdminBtn.addEventListener('click', () => {
-      const confirmMsg = t('sec.disable_admin_confirm', "Are you sure you want to disable the default 'admin' account? You must use an alternative SuperAdmin to manage this server.");
+      const confirmMsg = t('sec.disable_admin_confirm', "Turn off the default 'admin' account? Another administrator account then manages this server.");
       showConfirmToast(t('common.confirm', 'Confirm Action'), confirmMsg, async () => {
         try {
           const res = await api.post('/api/users/admin/disable', {});

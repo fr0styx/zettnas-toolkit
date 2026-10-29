@@ -4,6 +4,8 @@
  */
 import { apiFetch, setSessionUserProvider } from '../api.js';
 import { setServerAdvanced } from '../advanced.js';
+import { t } from '../i18n.js';
+import { formatRole } from './role-names.js';
 
 let _currentUser = null;
 
@@ -79,14 +81,5 @@ export function updateUserInterfaceElements() {
   }
 }
 
-export function formatRole(roleId) {
-  const map = {
-    superadmin: 'SuperAdmin 👑',
-    storage_admin: 'Storage Admin 💾',
-    app_operator: 'App Operator 📦',
-    backup_operator: 'Backup Operator 🔄',
-    share_user: 'Family & Share User 👤',
-    auditor: 'Auditor & Viewer 👁️'
-  };
-  return map[roleId] || roleId;
-}
+// Role names live in role-names.js (UX-24); re-exported for older imports
+export { formatRole, ROLE_IDS } from './role-names.js';

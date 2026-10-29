@@ -2,7 +2,7 @@
 
 Fails on any "serious" or "critical" WCAG 2.2 A/AA issue, which includes target-size (touch
 targets of at least 24px or enough space around them). Covers the main windows, the setup
-wizard, every Mission Control pane, the light theme, the file explorer with photos, the photo
+wizard, every Settings pane, the light theme, the file explorer with photos, the photo
 viewer and the Docker cleanup dialog, on desktop and on a phone (UX-9). Needs the live test
 server (ZETTNAS_E2E_BASE, default :8082, like test_e2e_integration.py) and
 node_modules/axe-core (npm ci). With ZETTNAS_E2E_MEDIA_DIR set to a folder the server can
@@ -43,7 +43,7 @@ VIEWS = [
 ]
 
 
-# Mission Control panes, opened one by one (UX-9)
+# Settings panes, opened one by one (UX-9)
 PANES = [
     "mgmt-pane-storage-shares",
     "mgmt-pane-storage-disks",

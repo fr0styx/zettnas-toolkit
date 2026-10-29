@@ -211,7 +211,7 @@ def test_e2e_live_desktop_session_and_badge():
         # and a reload keeps the session
         page.reload(wait_until="domcontentloaded")
 
-        # Check suite badge has NAS WORKBENCH
+        # The suite badge names the toolkit (UX-24)
         def _wait(sel):
             try:
                 return page.wait_for_selector(sel, timeout=5000)
@@ -220,7 +220,7 @@ def test_e2e_live_desktop_session_and_badge():
 
         badge = _wait("#suite-brand-badge")
         assert badge is not None
-        assert "NAS WORKBENCH" in badge.inner_text().upper()  # the words, whatever the case
+        assert "TOOLKIT" in badge.inner_text().upper()  # the words, whatever the case
 
         # The hardware settings button is in the page, but only shown on supported
         # appliance hardware, which a CI runner doesn't have.

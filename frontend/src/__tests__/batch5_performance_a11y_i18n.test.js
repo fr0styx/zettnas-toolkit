@@ -168,8 +168,8 @@ describe('Batch 5: Performance, WAI-ARIA, Keyboard Ergonomics & i18n Verificatio
     expect(css).toContain('--font-sans:');
     expect(css).toContain('--font-mono:');
 
-    // Amber & Yak theme critical token
-    expect(css).toMatch(/body\.theme-amber\s*\{[^}]*?--crit:\s*#ff6b6b;/);
+    // UX-33: accent themes keep the standard status colours; the Yak theme has its own
+    expect(css).not.toMatch(/body\.theme-amber\s*\{[^}]*?--crit:/);
     expect(css).toMatch(/body\.theme-yak\s*\{[^}]*?--crit:\s*#ff6b6b;/);
 
     // .window-dragging compositing rules

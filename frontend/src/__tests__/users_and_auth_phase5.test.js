@@ -31,13 +31,14 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     `;
   });
 
-  it('formats role IDs into human-readable labels with security badges', () => {
-    expect(formatRole('superadmin')).toContain('SuperAdmin');
-    expect(formatRole('storage_admin')).toContain('Storage Admin');
-    expect(formatRole('app_operator')).toContain('App Operator');
-    expect(formatRole('backup_operator')).toContain('Backup Operator');
-    expect(formatRole('share_user')).toContain('Family & Share User');
-    expect(formatRole('auditor')).toContain('Auditor & Viewer');
+  it('names roles from the one map, in plain words (UX-24)', () => {
+    expect(formatRole('superadmin')).toBe('Administrator');
+    expect(formatRole('storage_admin')).toBe('Storage admin');
+    expect(formatRole('app_operator')).toBe('App manager');
+    expect(formatRole('backup_operator')).toBe('Backup manager');
+    expect(formatRole('share_user')).toBe('Family member');
+    expect(formatRole('auditor')).toBe('Viewer');
+    expect(formatRole('my_custom_role', 'Kids')).toBe('Kids'); // a custom role keeps its own name
   });
 
   it('updates interface elements across dock, lock screen, and flyout when current user is set', () => {
@@ -57,7 +58,7 @@ describe('Phase 5: Multi-User Identity, RBAC & Desktop Lock UI', () => {
     expect(document.getElementById('dock-user-avatar-initial').textContent).toBe('J');
     expect(document.getElementById('dock-user-display-name').textContent).toBe('John Doe');
     expect(document.getElementById('lock-display-name').textContent).toBe('John Doe');
-    expect(document.getElementById('lock-role-badge').textContent).toContain('SuperAdmin');
+    expect(document.getElementById('lock-role-badge').textContent).toBe('Administrator');
     expect(document.getElementById('user-flyout-name').textContent).toBe('John Doe');
     expect(document.getElementById('user-flyout-username').textContent).toBe('@johndoe');
 

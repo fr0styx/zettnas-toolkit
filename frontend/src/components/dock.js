@@ -64,7 +64,7 @@ export function initDockSystem() {
       DockManager.windows['console'].title = t('dock.zettnas', 'ZettNAS');
     }
     if (DockManager.windows['management']) {
-      DockManager.windows['management'].title = t('dock.management', 'Mission Control');
+      DockManager.windows['management'].title = t('dock.management', 'Settings');
     }
     DockManager.render();
   });
@@ -232,7 +232,7 @@ export function initDockSystem() {
       DockManager.windows['console'].title = t('dock.zettnas', 'ZettNAS');
     }
     if (DockManager.windows['management']) {
-      DockManager.windows['management'].title = t('dock.management', 'Mission Control');
+      DockManager.windows['management'].title = t('dock.management', 'Settings');
     }
     DockManager.render();
   });

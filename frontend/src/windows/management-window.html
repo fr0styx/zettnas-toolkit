@@ -6,7 +6,7 @@
       <div class="mgmt-header-left">
         <span class="smart-modal-title mgmt-header-title">
           <svg class="ic mgmt-title-ic"><use href="#i-management"/></svg>
-          <span id="management-header-title-text" data-i18n="mgmt.title">Mission Control</span>
+          <span id="management-header-title-text" data-i18n="mgmt.title">Settings</span>
         </span>
       </div>
 
@@ -340,7 +340,7 @@
                     <span class="dt-win-dot dt-dot-yellow"></span>
                     <span class="dt-win-dot dt-dot-green"></span>
                   </div>
-                  <div class="dt-window-title">ZettNAS Workbench</div>
+                  <div class="dt-window-title">ZettNAS</div>
                 </div>
                 <div class="dt-window-body">
                   <div class="dt-mock-chip"></div>
@@ -3841,7 +3841,7 @@
           <div class="mgmt-card-intro">
             <div class="mgmt-card-intro-title">
               <svg class="ic"><use href="#i-globe"/></svg>
-              <span data-i18n="mgmt.about_title">About ZettNAS Workbench & Updates</span>
+              <span data-i18n="mgmt.about_title">About ZettNAS and updates</span>
             </div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.about_desc">
               A web desktop for your home server: files, apps, backups and hardware in one place.
@@ -3857,7 +3857,7 @@
                     ⚡
                   </div>
                   <div>
-                    <div style="font-size:16px; font-weight:800; color:var(--zn-text-strong); letter-spacing:0.5px;">ZettNAS Workbench</div>
+                    <div style="font-size:16px; font-weight:800; color:var(--zn-text-strong); letter-spacing:0.5px;">ZettNAS</div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted);">All-in-One NAS Hardware & Container Orchestration Suite</div>
                   </div>
                 </div>
@@ -3937,7 +3937,7 @@
                   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:12px; padding:12px 14px; background:linear-gradient(135deg, rgba(37,194,160,0.12), rgba(14,165,233,0.12)); border:1px solid rgba(37,194,160,0.35); border-radius:6px;">
                     <div>
                       <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);" data-i18n="updates.in_app_title">Direct In-App Upgrade</div>
-                      <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;" data-i18n="updates.in_app_desc">Download the latest container image and restart the workbench automatically.</div>
+                      <div style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:1px;" data-i18n="updates.in_app_desc">Download the latest latest version and restart ZettNAS automatically.</div>
                     </div>
                     <button id="btn-apply-system-update" type="button" class="btn-pill-toggle is-primary" style="box-shadow: 0 4px 14px rgba(37,194,160,0.35);">
                       <span id="btn-apply-update-icon">⚡</span>
@@ -3953,7 +3953,7 @@
                   <div id="update-progress-overlay" style="display:none; margin-top:12px; padding:14px 16px; background:var(--lt-b-0f1622f2, rgba(15,22,34,0.95)); border:1px solid rgba(14,165,233,0.4); border-radius:8px; text-align:center;">
                     <div style="font-size:22px; animation:spin 1.5s linear infinite; display:inline-block;">🔄</div>
                     <div id="update-progress-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong); margin-top:6px;" data-i18n="updates.installing">Downloading & Applying Update...</div>
-                    <div id="update-progress-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Pulling latest container image layers from GHCR and restarting workbench.</div>
+                    <div id="update-progress-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Downloading the new version and restarting ZettNAS.</div>
                     <div style="width:100%; height:4px; background:var(--zn-glaze-10); border-radius:2px; margin-top:10px; overflow:hidden;">
                       <div id="update-progress-bar" style="width:60%; height:100%; background:linear-gradient(90deg, #25c2a0, #0ea5e9); animation:pulse 1.2s infinite ease-in-out;"></div>
                     </div>

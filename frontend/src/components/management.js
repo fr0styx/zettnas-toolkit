@@ -653,7 +653,7 @@ export function initManagement() {
     if (detailContainer) detailContainer.style.display = 'none';
     if (headerNav) headerNav.style.display = 'none';
     if (backBtn) backBtn.style.display = 'none';
-    if (titleText) titleText.textContent = t('mgmt.title', 'Mission Control');
+    if (titleText) titleText.textContent = t('mgmt.title', 'Settings');
     document.querySelectorAll('.mgmt-category-tab').forEach((t) => t.classList.remove('active'));
     document.querySelectorAll('.mgmt-sidebar-item').forEach((b) => {
       b.classList.toggle('active', b.dataset.mgmtTarget === 'management-hub-view');
@@ -1035,7 +1035,7 @@ export function initManagement() {
         `;
       }
     } catch (err) {
-      console.warn('Failed to load VM telemetry in Mission Control:', err);
+      console.warn('Failed to load VM telemetry in Settings:', err);
     }
   }
 
@@ -1106,7 +1106,7 @@ export function initManagement() {
       }
     });
 
-    let sectionName = t('mgmt.title', 'Mission Control');
+    let sectionName = t('mgmt.title', 'Settings');
     if (targetId === 'mgmt-sec-wallpaper') {
       sectionName = t('mgmt.appearance_title', 'Appearance');
     } else if (targetId === 'mgmt-sec-activity') {

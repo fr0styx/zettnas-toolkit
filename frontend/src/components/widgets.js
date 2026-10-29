@@ -6,6 +6,7 @@ import { escapeHtml } from '../utils.js';
 import { t } from '../i18n.js';
 import { api, auth } from '../api.js';
 import { makeDraggable } from './dock.js';
+import { advancedOn } from '../advanced.js';
 
 import { formatDate, formatNumber } from '../format.js';
 import { WIDGET_NAMES, getWidgetKeyFromElement, getWidgetDisplayName } from './widget-names.js';
@@ -139,6 +140,21 @@ export function openWidgetSettings() {
   }
 }
 window.openWidgetSettings = openWidgetSettings;
+
+// UX-24: hardware read-outs (drive temperatures, the network dial, the UPS gauge) are for people
+// who turned Advanced on; without it they and their switches in widget settings stay hidden
+export const HARDWARE_WIDGETS = { drive_temp: 'widget-drive-temp', net_dial: 'widget-net-dial', ups_gauge: 'widget-ups-gauge' };
+
+export function applyAdvancedToWidgets(on = advancedOn(), root = document) {
+  for (const [key, id] of Object.entries(HARDWARE_WIDGETS)) {
+    const el = root.getElementById(id);
+    if (el && !on) el.style.display = 'none';
+    const row = root.querySelector(`.widget-sortable-item[data-widget-id="${key}"]`);
+    if (row) row.hidden = !on;
+  }
+}
+
+ZettEventBus.on?.('advanced:changed', () => applyWidgetConfig());
 
 export function applyWidgetConfig() {
   const container = document.getElementById('desktop-widgets-container');
@@ -512,6 +528,7 @@ export function applyWidgetConfig() {
   if (config.widgets.clock) updateClock();
   if (config.widgets.calendar) renderCalendar();
   if (config.widgets.weather) fetchWeather();
+  applyAdvancedToWidgets(); // UX-24
 }
 
 export function syncWidgetSettingsUI() {
@@ -574,6 +591,7 @@ export function syncWidgetSettingsUI() {
       }
     });
   }
+  applyAdvancedToWidgets(); // UX-24
 }
 
 /* =========================================================================
