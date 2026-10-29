@@ -20,6 +20,7 @@ import { openVmCreateModal } from './vm/create-modal.js';
 import { openQemuErrorModal, openVmEditModal } from './vm/edit-modal.js';
 import { openIsoManagerModal } from './vm/iso-manager.js';
 import { openVmSnapshotsModal } from './vm/snapshots.js';
+import '../styles/vm-lazy.css'; // the VM windows' own sheet loads with this code (PERF-9)
 export { openKvmDiagnosticsModal, openVmConnectModal } from './vm/connect-modal.js';
 export { applyTerminalStream, formatAnsiToHtml, parseAnsiToHtml } from './vm/console-ansi.js';
 export { _activeRfb, _activeSerialWs, _consoleReconnectAttempts, _handleRfbKeyFallback, _reconnectTimer, _scheduleConsoleReconnect, _sendCtrlCToRfb, _sendKeyToRfb, _serialBuffers, cancelConsoleReconnect, clearConsoleReconnectTimer, copyToClipboard, focusActiveConsole, getActiveConsoleTarget, hideConsoleBanner, openVmConsole, openVmConsoleSeparateWindow, pasteTextToGuestConsole, serialKeyToData, setConsoleFocus, showConsoleBanner } from './vm/console.js';

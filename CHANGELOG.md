@@ -52,7 +52,8 @@
 - **Lighter start in other languages**: the web app no longer downloads the English strings
   alongside German, French, Spanish or Chinese; it fetches them only if a string is missing.
   The desktop widgets load right after the first paint instead of with it, the Users pane's code
-  and the setup wizard only when they are opened.
+  and the setup wizard only when they are opened. The stylesheets of the VM windows, the file
+  explorer, the viewer, and Mission Control's UPS, AI and duplicates panes load with them too.
 - **Smaller amd64 image, faster first page**: the amd64 image no longer carries QEMU's ARM
   emulators (virtual machines use the x86 one), the AI index opens beside startup instead of
   before the first answer, and CI checks the image's size and how fast it answers.

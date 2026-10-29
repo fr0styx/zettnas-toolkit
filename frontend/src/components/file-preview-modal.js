@@ -20,6 +20,8 @@ import {
   setResume,
   attachGestures,
 } from './viewer-kit.js';
+import '../styles/files-lazy.css'; // shared with the explorer (PERF-9)
+import '../styles/viewer-lazy.css'; // the viewer's own sheet loads with this code (PERF-9)
 let _activePreviewModal = null;
 let _previewAbortController = null;
 let _previewKeydownListener = null;

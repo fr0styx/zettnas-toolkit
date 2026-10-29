@@ -1,0 +1,4 @@
+/* Files (explorer, transfers, viewer)'s own stylesheet (B15, PERF-9): it loads with that code, not on first paint.
+   Only sheets whose rules no later global sheet can override in a different order belong
+   here; tests/test_lazy_css.py checks that (lazy CSS lands after every global sheet). */
+@import './49-file-explorer-layout.css';

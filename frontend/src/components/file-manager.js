@@ -19,6 +19,7 @@ import { thumbKind, thumbUrl } from './viewer-kit.js';
 
 import { formatBytes as formatSize, formatDateTime } from '../format.js';
 import { isCompact } from '../device.js';
+import '../styles/files-lazy.css'; // the explorer's own sheet loads with this code (PERF-9)
 // Virtualized DOM constants
 const ROW_HEIGHT = 42;
 const BUFFER = 5;

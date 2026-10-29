@@ -12,8 +12,13 @@ import re
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STYLES = os.path.join(ROOT, "frontend", "src", "styles")
 GLOBAL = os.path.join(ROOT, "frontend", "src", "style.css")
+COMPONENTS = os.path.join(ROOT, "frontend", "src", "components")
+# each lazy sheet, and the modules that load it (the first one to load brings it)
 LAZY = {
-    "management-lazy.css": os.path.join(ROOT, "frontend", "src", "components", "management.js"),
+    "management-lazy.css": [os.path.join(COMPONENTS, "management.js")],
+    "vm-lazy.css": [os.path.join(COMPONENTS, "vm-manager.js")],
+    "files-lazy.css": [os.path.join(COMPONENTS, "file-manager.js"), os.path.join(COMPONENTS, "file-preview-modal.js")],
+    "viewer-lazy.css": [os.path.join(COMPONENTS, "file-preview-modal.js")],
 }
 # state classes shared by unrelated components; a rule pair must share another class to collide
 GENERIC = {"active", "open", "show", "visible", "hidden", "collapsed", "disabled", "danger", "ok", "warn", "crit"}
@@ -62,12 +67,13 @@ def collisions(moved, later):
 
 def test_lazy_sheets_are_not_also_global():
     global_sheets = set(imports(GLOBAL))
-    for lazy, module in LAZY.items():
+    for lazy, modules in LAZY.items():
         assert lazy not in global_sheets
         for sheet in imports(os.path.join(STYLES, lazy)):
             assert sheet not in global_sheets, f"{sheet} is loaded both globally and with a window"
-        with open(module, encoding="utf-8") as f:
-            assert f"styles/{lazy}'" in f.read(), f"{os.path.basename(module)} must import {lazy}"
+        for module in modules:
+            with open(module, encoding="utf-8") as f:
+                assert f"styles/{lazy}'" in f.read(), f"{os.path.basename(module)} must import {lazy}"
 
 
 def test_moved_sheets_keep_their_cascade_order():
