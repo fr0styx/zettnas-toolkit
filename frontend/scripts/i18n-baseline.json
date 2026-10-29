@@ -1,6 +1,9 @@
 {
   "raw_toasts": 0,
   "hardcoded_ui": 2091,
+  "missing_plurals": 0,
+  "to_fixed": 70,
+  "emoji_strings": 137,
   "per_file": {
     "frontend/index.html": 86,
     "frontend/src/components/chassis-visualizer.js": 182,

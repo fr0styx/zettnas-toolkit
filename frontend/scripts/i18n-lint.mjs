@@ -7,6 +7,10 @@
 //  - a file has more hard-coded English than its recorded baseline (UX-9, UX-12, UX-21; it can only
 //    go down): titles, placeholders, aria-labels, textContent writes, and the text between tags in
 //    HTML and in JS templates, ALL-CAPS labels and text around ${} included.
+//  - a language speaks to people in the wrong form: German uses Sie, French vous, Spanish tú,
+//    Chinese 你 (UX-35; docs/TRANSLATING.md);
+//  - more English strings count something without a plural rule, more UI code formats numbers
+//    with toFixed(), or more strings carry emoji than the baseline (UX-35; they can only go down).
 // Run with --update-baseline after converting strings to t() or data-i18n-*; --list prints them.
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -95,6 +99,30 @@ for (const [lang, dict] of Object.entries(ALL_TRANSLATIONS)) {
   for (const key of Object.keys(dict)) if (!(key in en)) errors.push(`locales/${lang}.js: "${key}" is not in en.js`);
 }
 
+// One form of address per language (UX-35)
+// (?<!\p{L}) and (?!\p{L}) instead of \b, which takes accented letters for word breaks
+const words = (alts) => new RegExp(`(?<!\\p{L})(?:${alts})(?!\\p{L})`, 'u');
+const ADDRESS = {
+  de: [words('du|Du|dein\\p{L}*|Dein\\p{L}*|dich|Dich|dir|Dir|euch|euer|eure\\p{L}*'), 'German speaks to people as "Sie"'],
+  fr: [words("tu|Tu|ton|Ton|ta|tes|toi|te|t'(?=\\p{L})"), 'French speaks to people as "vous"'],
+  es: [words('usted|Usted|ustedes|Ustedes'), 'Spanish speaks to people as "tú"'],
+  zh: [/您/, 'Chinese uses 你, not 您'],
+};
+for (const [lang, [re, rule]] of Object.entries(ADDRESS)) {
+  for (const [key, value] of Object.entries(ALL_TRANSLATIONS[lang] || {})) {
+    if (re.test(String(value))) errors.push(`locales/${lang}.js: "${key}": ${rule}: ${String(value).slice(0, 80)}`);
+  }
+}
+// "{count} files" reads wrong for one file in English and wrong in most languages: use
+// "{count, plural, one {# file} other {# files}}"
+const COUNTED = /\{(?:count|n|num|total|\w+_count|\w+Count)\}\s+[A-Za-z-]+(?:s|\(s\))(?![A-Za-z])/;
+const missingPlurals = Object.values(en).filter((v) => !String(v).includes(', plural,') && COUNTED.test(String(v))).length;
+const emojiStrings = Object.values(en).filter((v) => /\p{Extended_Pictographic}/u.test(String(v))).length;
+let toFixed = 0;
+for (const file of files) {
+  if (file.endsWith('.js') && !file.endsWith('format.js')) toFixed += (readFileSync(file, 'utf8').match(/\.toFixed\(/g) || []).length;
+}
+
 let baseline = { raw_toasts: Infinity, hardcoded_ui: Infinity, per_file: null };
 try {
   baseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
@@ -103,11 +131,21 @@ try {
 }
 if (process.argv.includes('--update-baseline')) {
   const sorted = Object.fromEntries(Object.entries(perFile).sort(([x], [y]) => x.localeCompare(y)));
-  writeFileSync(BASELINE, JSON.stringify({ raw_toasts: rawToasts, hardcoded_ui: rawUi, per_file: sorted }, null, 2) + '\n');
+  writeFileSync(BASELINE, JSON.stringify({
+    raw_toasts: rawToasts, hardcoded_ui: rawUi, missing_plurals: missingPlurals, to_fixed: toFixed,
+    emoji_strings: emojiStrings, per_file: sorted,
+  }, null, 2) + '\n');
   console.log(`baseline: ${rawToasts} toasts and ${rawUi} UI strings with hard-coded text`);
 } else {
   if (rawToasts > baseline.raw_toasts) {
     errors.push(`${rawToasts} toasts use hard-coded text (baseline ${baseline.raw_toasts}); use t('key', 'English text')`);
+  }
+  for (const [name, now, why] of [
+    ['missing_plurals', missingPlurals, 'English strings count something without a plural rule; use {count, plural, one {# file} other {# files}}'],
+    ['to_fixed', toFixed, 'toFixed() calls format numbers outside format.js; use formatNumber() so each language gets its own separators'],
+    ['emoji_strings', emojiStrings, 'strings carry emoji; put the icon in the markup (aria-hidden) and keep the words plain'],
+  ]) {
+    if (now > (baseline[name] ?? Infinity)) errors.push(`${now} ${why} (baseline ${baseline[name]})`);
   }
   // per file, so translating one screen can't hide new English in another (UX-21)
   for (const [rel, n] of Object.entries(perFile)) {
@@ -123,4 +161,4 @@ if (errors.length) {
   console.error(`\n${errors.length} translation problem(s).`);
   process.exit(1);
 }
-console.log(`i18n lint: ${Object.keys(en).length} keys in 5 languages, all used keys defined; ${rawToasts} hard-coded toasts (baseline ${baseline.raw_toasts}); ${rawUi} hard-coded UI strings (baseline ${baseline.hardcoded_ui}).`);
+console.log(`i18n lint: ${Object.keys(en).length} keys in 5 languages, all used keys defined, one form of address each; ${rawToasts} hard-coded toasts (baseline ${baseline.raw_toasts}); ${rawUi} hard-coded UI strings (baseline ${baseline.hardcoded_ui}); ${missingPlurals} counts without plurals, ${toFixed} toFixed(), ${emojiStrings} strings with emoji.`);

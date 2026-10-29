@@ -6,7 +6,7 @@ import { api } from '../../api.js';
 import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
-import { formatDateTime } from '../../format.js';
+import { formatBytes, formatDateTime } from '../../format.js';
 import { emptyStateHtml } from '../empty-state.js';
 import { openSnapshotBrowser, renderSnapshotSchedules } from '../snapshot-browser.js';
 import { renderOffsite, offerRecoveryKit } from '../offsite-backup.js';
@@ -331,7 +331,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
         : `<span class="badge" style="background: rgba(249, 115, 22, 0.15); color: var(--lt-t-fb923cff, #fb923c); border: 1px solid rgba(249, 115, 22, 0.35); font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px;">💾 ${escapeHtml(t('backup.app_reason_manual', 'By hand'))}</span>`;
 
       const createdDate = formatDateTime(b.created_at_epoch || b.created_at, undefined, 'N/A');
-      const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? `${(b.archive_size_bytes / (1024 * 1024)).toFixed(1)} MB` : '--');
+      const sizeStr = b.archive_size_formatted || (b.archive_size_bytes ? formatBytes(b.archive_size_bytes) : '--');
       const stackHtml = b.stack ? `<span style="font-size: var(--zn-fs-xs); color:var(--muted); margin-left:6px;">(${escapeHtml(t('backup.app_stack', 'Stack:'))} <code>${escapeHtml(b.stack)}</code>)</span>` : '';
       const mountsCount = b.mounts_count || (b.mounts ? b.mounts.length : 0);
 
@@ -420,7 +420,7 @@ export async function fetchAndRenderAppBackups(mountEl, filterApp = '') {
             try {
               showToast(t('toast.restoring', 'Restoring {appName}...', { appName: appName }), 'info');
               const res = await api.post(`/api/backup/apps/${encodeURIComponent(backupId)}/restore`);
-              showToast(t('toast.app_successfully_restored_paths_restored', 'App "{appName}" successfully restored ({extracted_count} paths restored)!', { appName: appName, extracted_count: res.extracted_count || 'all' }), 'success');
+              showToast(t('toast.app_successfully_restored_paths_restored', 'App "{appName}" successfully restored ({extracted_count} paths restored)!', { appName: appName, extracted_count: res.extracted_count || 0 }), 'success');
               fetchAndRenderAppBackups(mount, document.getElementById('app-backups-filter-app')?.value || '');
             } catch (err) {
               showToast(t('toast.restore_failed', 'Restore failed: {error}', { error: err.message }), 'error');

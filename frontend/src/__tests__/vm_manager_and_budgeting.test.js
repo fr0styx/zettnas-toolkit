@@ -727,7 +727,7 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
         expect(promptSpy).not.toHaveBeenCalled();
         expect(showPromptToast).toHaveBeenCalled();
         expect(showToast).toHaveBeenCalledWith(
-          expect.stringContaining('Pasted 5 characters into guest'),
+          expect.stringContaining('Sent 5 characters to the VM'),
           'success'
         );
       });
@@ -940,11 +940,11 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       win._activeMode = 'gui';
 
       await pasteTextToGuestConsole('hello guest\n');
-      expect(showToast).toHaveBeenCalledWith(expect.stringContaining('Pasted 12 characters'), 'success');
+      expect(showToast).toHaveBeenCalledWith(expect.stringContaining('Sent 12 characters to the VM'), 'success');
 
       win._activeMode = 'cli';
       await pasteTextToGuestConsole('ls -la\n');
-      expect(showToast).toHaveBeenCalledWith(expect.stringContaining('characters to terminal'), 'success');
+      expect(showToast).toHaveBeenCalledWith(expect.stringContaining('characters to the terminal'), 'success');
     });
   });
 

@@ -40,7 +40,7 @@ Text people read goes through `t('key', 'English')` in scripts and `data-i18n` (
 titles, placeholders, labels and the text between tags, ALL-CAPS and text around `${}` included.
 `npm run lint:i18n -- --list` prints each one; after translating some, `npm run lint:i18n --
 --update-baseline` lowers the numbers in `frontend/scripts/i18n-baseline.json`. A new file starts
-at zero.
+at zero. How to write each language, plurals and numbers: [docs/TRANSLATING.md](docs/TRANSLATING.md).
 
 CI also requires:
 

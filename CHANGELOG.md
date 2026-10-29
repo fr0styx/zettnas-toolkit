@@ -4,6 +4,11 @@
 
 #### Usability
 
+- **One voice per language**: German says "Sie", French "vous", Spanish "tú" and Chinese "你"
+  everywhere (32 German and 32 Chinese strings changed), and the translation lint keeps it so.
+  Counts like "1 files" have plural rules in every language, the weather is described in your
+  language, and new strings may not add `toFixed()` numbers or emoji. docs/TRANSLATING.md is the
+  style guide (UX-35).
 - **One place for each job**: the time zone and 12/24-hour clock are set only in Settings → Time and
   language, and the desktop clock, the front screen's clock and (for an administrator, unless
   unticked) the server follow it; the hardware drawer shows the clock and links there. People,

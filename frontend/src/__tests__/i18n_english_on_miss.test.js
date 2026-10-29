@@ -14,7 +14,7 @@ describe("English only for missing keys (PERF-9)", () => {
     await m.setLanguage("de");
     expect(m.TRANSLATIONS.de).toBeDefined();
     expect(m.TRANSLATIONS.en).toBeUndefined();
-    expect(m.t("fm.search_results", "Found {count} item(s)", { count: 2 })).toBe("2 Element(e) gefunden");
+    expect(m.t("fm.search_results", "Found {count} item(s)", { count: 2 })).toBe("2 Elemente gefunden");
     expect(m.TRANSLATIONS.en).toBeUndefined(); // a key German has: still no English
     expect(m.t("no.such.key", "Fallback text")).toBe("Fallback text");
     await vi.waitFor(() => expect(m.TRANSLATIONS.en).toBeDefined());

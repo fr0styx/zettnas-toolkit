@@ -95,7 +95,8 @@ describe('Batch 5: Frontend Desktop OS & UX Excellence', () => {
   it('i18n t() supports parameterized template interpolation', () => {
     setLanguage('en');
     const res = t('fm.uploading_toast', 'Uploading {count} file(s)...', { count: 3 });
-    expect(res).toBe('Uploading 3 file(s)...');
+    expect(res).toBe('Uploading 3 files…'); // a plural rule (UX-35)
+    expect(t('fm.uploading_toast', '', { count: 1 })).toBe('Uploading 1 file…');
 
     const remoteRes = t('remotes.deleted', "Remote '{name}' deleted successfully.", { name: 'G陀Drive' });
     expect(remoteRes).toContain('G陀Drive');

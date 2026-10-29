@@ -25,8 +25,8 @@ describe('transfer center', () => {
   });
 
   it('describes a running copy in words', () => {
-    expect(taskLabel(running)).toBe('Copying 2 item(s) to Movies');
-    expect(taskLabel({ ...running, action: 'move' })).toBe('Moving 2 item(s) to Movies');
+    expect(taskLabel(running)).toBe('Copying 2 items to Movies');
+    expect(taskLabel({ ...running, action: 'move' })).toBe('Moving 2 items to Movies');
     const s = taskStatus(running);
     expect(s).toContain('12 of 40 files');
     expect(s).toContain('1 GB of 4 GB');
@@ -55,7 +55,7 @@ describe('transfer center', () => {
     expect(bar.getAttribute("aria-valuenow")).toBe("25");
 
     transferCenter.update({ id: 't1', status: 'completed', percent: 100, result: { skipped: 0 } });
-    expect(showToast).toHaveBeenCalledWith('Copying 2 item(s) to Movies: done', 'success');
+    expect(showToast).toHaveBeenCalledWith('Copying 2 items to Movies: done', 'success');
     expect(refresh).toHaveBeenCalled();
     expect(onDone).toHaveBeenCalled();
   });

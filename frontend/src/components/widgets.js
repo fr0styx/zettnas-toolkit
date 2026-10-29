@@ -1215,18 +1215,18 @@ export function renderCalendar() {
    Weather Widget Logic
    ========================================================================= */
 export function getWeatherInfo(code) {
-  if (code === 0) return { icon: '☀️', desc: 'Clear Sky' };
-  if (code === 1) return { icon: '🌤️', desc: 'Mainly Clear' };
-  if (code === 2) return { icon: '⛅', desc: 'Partly Cloudy' };
-  if (code === 3) return { icon: '☁️', desc: 'Overcast' };
-  if (code === 45 || code === 48) return { icon: '🌫️', desc: 'Foggy' };
-  if (code >= 51 && code <= 55) return { icon: '🌦️', desc: 'Drizzle' };
-  if (code >= 61 && code <= 65) return { icon: '🌧️', desc: 'Rain' };
-  if (code >= 71 && code <= 77) return { icon: '🌨️', desc: 'Snow' };
-  if (code >= 80 && code <= 82) return { icon: '🌧️', desc: 'Showers' };
-  if (code >= 85 && code <= 86) return { icon: '🌨️', desc: 'Snow Showers' };
-  if (code >= 95) return { icon: '⛈️', desc: 'Thunderstorm' };
-  return { icon: '⛅', desc: 'Partly Cloudy' };
+  if (code === 0) return { icon: '☀️', desc: t('weather.clear', 'Clear Sky') };
+  if (code === 1) return { icon: '🌤️', desc: t('weather.mainly_clear', 'Mainly Clear') };
+  if (code === 2) return { icon: '⛅', desc: t('weather.partly_cloudy', 'Partly Cloudy') };
+  if (code === 3) return { icon: '☁️', desc: t('weather.overcast', 'Overcast') };
+  if (code === 45 || code === 48) return { icon: '🌫️', desc: t('weather.fog', 'Foggy') };
+  if (code >= 51 && code <= 55) return { icon: '🌦️', desc: t('weather.drizzle', 'Drizzle') };
+  if (code >= 61 && code <= 65) return { icon: '🌧️', desc: t('weather.rain', 'Rain') };
+  if (code >= 71 && code <= 77) return { icon: '🌨️', desc: t('weather.snow', 'Snow') };
+  if (code >= 80 && code <= 82) return { icon: '🌧️', desc: t('weather.showers', 'Showers') };
+  if (code >= 85 && code <= 86) return { icon: '🌨️', desc: t('weather.snow_showers', 'Snow Showers') };
+  if (code >= 95) return { icon: '⛈️', desc: t('weather.thunderstorm', 'Thunderstorm') };
+  return { icon: '⛅', desc: t('weather.partly_cloudy', 'Partly Cloudy') };
 }
 
 function renderWeatherUI(weatherData) {
