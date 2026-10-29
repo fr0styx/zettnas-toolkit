@@ -214,6 +214,9 @@
 
 #### Security and privacy
 
+- **No way around the Docker allow-list through dockhand**: redeploying a stack restarts its
+  containers through ZettNAS's Docker proxy instead of running `docker compose` in dockhand in a
+  folder that container labels could choose (SEC-25).
 - **Security checks in CI**: every push now runs a dependency audit for Python (pip-audit) and npm,
   a secret scan (gitleaks) and CodeQL static analysis, and the build and release jobs no longer
   keep the checkout's credentials (ARC-32).

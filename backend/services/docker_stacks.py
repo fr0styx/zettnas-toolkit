@@ -23,7 +23,6 @@ from backend.hardware.docker_stats import (
     _parse_ports_and_webui,
 )
 from backend.services.compose_synthesizer import (
-    execute_in_container,
     fetch_container_raw_inspect,
     synthesize_compose_spec,
 )
@@ -688,30 +687,21 @@ def execute_stack_action(stack_name: str, action: str) -> dict[str, Any]:
         return {"success": False, "error": f"No containers found for stack '{stack_name}'"}
 
     if action == "redeploy":
-        # SEC-37: no docker command line here; a dockhand stack is redeployed by dockhand, any
-        # other stack restarts its containers through the Docker API proxy
-        if location_type == "dockhand" and working_dir:
-            cmd = f"cd {shlex.quote(working_dir)} && docker compose up -d"
-            res = execute_in_container("dockhand", cmd)
-            return {
-                "success": res.get("success", False),
-                "action": "redeploy",
-                "output": res.get("output", res.get("error", "")),
-            }
-        else:
-            # Fallback: sequential restart of all containers in dependency order
-            restarted = []
-            ordered = topological_sort_stack_containers(containers, compose_yaml, reverse=False)
-            for c in ordered:
-                cid = c["id"]
-                st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
-                if st in (204, 200):
-                    restarted.append(c["name"])
-            return {
-                "success": len(restarted) > 0,
-                "action": "redeploy",
-                "output": f"Re-started {len(restarted)} services: {', '.join(restarted)}",
-            }
+        # SEC-25, SEC-37: a redeploy restarts the stack's containers in dependency order through the
+        # Docker API proxy. No docker command line, and no `docker compose up` in dockhand: its folder
+        # comes from container labels anyone who can create a container can set.
+        restarted = []
+        ordered = topological_sort_stack_containers(containers, compose_yaml, reverse=False)
+        for c in ordered:
+            cid = c["id"]
+            st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
+            if st in (204, 200):
+                restarted.append(c["name"])
+        return {
+            "success": len(restarted) > 0,
+            "action": "redeploy",
+            "output": f"Re-started {len(restarted)} services: {', '.join(restarted)}",
+        }
 
     # Order containers based on DAG dependencies
     if action in ("restart", "start"):
