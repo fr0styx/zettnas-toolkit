@@ -597,6 +597,25 @@ Do **not** run `chmod 666` on the socket: that gives every local user and every 
 #### Q: Hard drive temperatures are not showing or reading `--`
 **A**: Ensure `/dev` and `/sys` are mounted as specified in the compose file and that `cap_add: [SYS_RAWIO, SYS_ADMIN]` is present. ZettNAS uses `smartctl` with the `-n standby` flag to read drive temperatures safely without waking sleeping platters.
 
+#### Q: How do my other computers shut down when the UPS battery runs low?
+**A**: Turn on **UPS for your other computers (NUT server)** in the UPS settings. ZettNAS then
+offers the UPS it reads over the Network UPS Tools protocol on port 3493 to the home network.
+**Setup for a PC** shows the line for the PC's `upsmon.conf`
+(`MONITOR ups@NAS-ADDRESS:3493 1 monuser PASSWORD secondary`); WinNUT and other NUT clients take the
+same address, user and password. The PCs shut down when the battery runs low, and when ZettNAS
+starts its own low-battery shutdown it raises the forced-shutdown flag and waits up to 15
+seconds for them first. The port must reach the container: add `-p 3493:3493` (or
+`- "3493:3493"` under `ports:`), or pick another port if the host already runs a NUT server
+there (on Unraid, its own NUT settings can serve the PCs instead).
+
+#### Q: Can a USB disk back up the NAS, or bring photos in, when I plug it in?
+**A**: Yes. When a USB disk appears under `/mnt/disks` (Unraid's Unassigned Devices, or your
+own mount there), ZettNAS offers to bring the off-site backups that live on it up to date, and
+to import the photos and videos of a camera or phone disk (its `DCIM` folder) into dated
+folders, each file checked after copying. In Backup → Off-site you can have it back up to such
+a disk by itself as soon as it is plugged in. New disks are noticed from the mount table, so a
+sleeping disk is never woken.
+
 #### Q: How do I access WebDAV from Windows / macOS / iOS?
 **A**: Port `8084` provides zero-conflict WebDAV access:
 - **Windows**: File Explorer → Map Network Drive → `http://<server-ip>:8084`.

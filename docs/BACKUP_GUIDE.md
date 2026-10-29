@@ -94,6 +94,25 @@ ZettNAS keeps every version younger than the lock period (pruning them would onl
 and prunes the rest as usual. Each backup's new data is locked from the moment it is uploaded,
 so the protection covers the last *n* days of backups at any time.
 
+## Two-way sync with a cloud folder
+
+A backup keeps versions; a sync keeps two places the same. **Backup → Two-way sync** pairs a
+folder here with a cloud folder (any remote set up in Cloud Drives) and keeps them the same in
+both directions, every few hours.
+
+- **Preview first.** A new pair, or one whose folders changed, does nothing until you press
+  **Preview** and then **Turn on**. The preview is a dry run listing what would go to the cloud,
+  what would come here, what would be deleted and what changed on both sides.
+- **The first run only copies.** Files that exist on one side are copied to the other; nothing
+  is deleted.
+- **Changed on both sides?** Both are kept, as `name..path1` (this NAS) and `name..path2` (the
+  cloud). Keep the one you want and delete the other.
+- **A mass delete stops it.** If more than a quarter of the files would be deleted (a mistake,
+  or ransomware on a PC that syncs into the folder), the run stops, nothing is deleted on the
+  other side, and you get an alert; check the preview before turning it on again.
+- A sync is not a backup: a file you delete on purpose is deleted on both sides. Keep an
+  off-site backup as well.
+
 ## Protecting the backups themselves
 
 - Use a separate ZettNAS account for backups, not your admin account, and give it

@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-603 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+617 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -480,6 +480,12 @@ request and response schemas.
 | `POST` | `/api/v1/remotes/{name}/mount` | any of `storage:admin`, `storage:write` | Mounts remote cloud storage into /mnt/remotes/{name} via FUSE |
 | `POST` | `/api/v1/remotes/{name}/test` | any of `storage:admin`, `storage:write` | Tests connectivity and credentials of an existing configured remote |
 | `POST` | `/api/v1/remotes/{name}/unmount` | any of `storage:admin`, `storage:write` | Unmounts /mnt/remotes/{name} |
+| `GET` | `/api/v1/sync/pairs` | any of `backup:read`, `storage:read`, `storage:admin` | Two-way syncs between a folder here and a cloud folder (FEAT-06) |
+| `PUT` | `/api/v1/sync/pairs` | any of `backup:write`, `storage:write`, `storage:admin` | Adds or changes a two-way sync; it does nothing until its dry run was seen and approved |
+| `DELETE` | `/api/v1/sync/pairs/{pair_id}` | any of `backup:write`, `storage:write`, `storage:admin` | Delete Sync Pair |
+| `POST` | `/api/v1/sync/pairs/{pair_id}/approve` | any of `backup:write`, `storage:write`, `storage:admin` | Approve Sync Pair |
+| `POST` | `/api/v1/sync/pairs/{pair_id}/preview` | any of `backup:write`, `storage:write`, `storage:admin` | The dry run: what would be copied each way, deleted, and kept twice as a conflict |
+| `POST` | `/api/v1/sync/pairs/{pair_id}/run` | any of `backup:write`, `storage:write`, `storage:admin` | Run Sync Pair |
 
 ### SFTP File Sharing
 
@@ -744,6 +750,11 @@ request and response schemas.
 | `POST` | `/api/v1/tokens` | any of `users:write`, `system:config` | Create Token |
 | `DELETE` | `/api/v1/tokens/{token_id}` | any of `users:write`, `system:config` | Delete Token |
 | `GET` | `/api/v1/unraid` | any of `system:view`, `storage:read` | Get Unraid Telemetry |
+| `POST` | `/api/v1/usb/backup` | any of `backup:manage`, `system:config` | Backs the NAS up to this USB disk now: every off-site backup that lives on it (FEAT-07) |
+| `GET` | `/api/v1/usb/disks` | any of `storage:read`, `system:view` | USB disks mounted under /mnt/disks: space, the backups that go to each, camera media (FEAT-07) |
+| `POST` | `/api/v1/usb/dismiss` | any of `storage:write`, `storage:admin`, `backup:manage` | Usb Dismiss |
+| `POST` | `/api/v1/usb/import` | any of `storage:write`, `storage:admin` | Copies a USB disk's photos and videos (its DCIM folder, else the whole disk) into dated folders, verified file by file like the card read… |
+| `PUT` | `/api/v1/usb/settings` | `system:config` | Usb Settings |
 
 ### System Diagnostics
 
@@ -785,6 +796,9 @@ request and response schemas.
 | `POST` | `/api/v1/ups/config` | `system:config` | Saves persistent UPS configuration and reloads power watchdog parameters |
 | `POST` | `/api/v1/ups/discover` | `system:config` | Auto-discovers connected USB HID power devices and active LAN power daemons |
 | `GET` | `/api/v1/ups/events` | any of `hardware:read`, `system:view` | Returns historical power events, outages, brownouts, and diagnostic logs from SQLite |
+| `GET` | `/api/v1/ups/nut-server` | `system:view` | The NUT server for the family's PCs: on or off, port, monitor user, PCs watching (FEAT-11) |
+| `PUT` | `/api/v1/ups/nut-server` | `system:config` | Put Nut Server |
+| `GET` | `/api/v1/ups/nut-server/client` | `system:config` | The monitor password and the upsmon.conf line for a PC (admins only) |
 | `POST` | `/api/v1/ups/self-test` | `system:config` | Issues 10-second battery self-test diagnostic command to the configured UPS |
 | `POST` | `/api/v1/ups/simulate` | `system:config` | Triggers simulated power outage drill for desktop UI testing |
 | `POST` | `/api/v1/ups/test-connection` | `system:config` | Validates connection to a UPS daemon without altering persistent configuration |

@@ -397,6 +397,78 @@ def start_copy(req: StartCopyRequest | None = None):
     return {"status": "started"}
 
 
+class UsbDiskRequest(BaseModel):
+    path: str = Field(..., min_length=2, max_length=1024)
+    dest: str | None = Field(default=None, max_length=1024)
+
+
+class UsbSettingsRequest(BaseModel):
+    offer: bool | None = None
+    auto_backup: bool | None = None
+
+
+@router.get("/usb/disks", dependencies=[Depends(require_scope("storage:read", "system:view"))])
+def usb_disks():
+    """USB disks mounted under /mnt/disks: space, the backups that go to each, camera media (FEAT-07)."""
+    from backend.services import usb_copy
+
+    return {"disks": usb_copy.disks(), "settings": usb_copy.settings()}
+
+
+@router.put("/usb/settings", dependencies=[Depends(require_scope("system:config"))])
+def usb_settings(req: UsbSettingsRequest):
+    from backend.services import usb_copy
+
+    return usb_copy.save_settings(**req.model_dump())
+
+
+@router.post("/usb/import", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
+def usb_import(req: UsbDiskRequest):
+    """Copies a USB disk's photos and videos (its DCIM folder, else the whole disk) into dated
+    folders, verified file by file like the card reader (FEAT-07)."""
+    from backend.services import usb_copy
+
+    try:
+        usb_copy.find(req.path)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e).strip("'")) from None
+    if Z_STATE.copy_active:
+        raise HTTPException(status_code=409, detail="Copy operation already in progress")
+    cfg = {**_load_buttons(), "source": "usb", "source_path": req.path}
+    if req.dest:
+        cfg["dest"] = req.dest
+    Z_STATE.pending_usb = None
+    Z_STATE.copy_active = True
+    Z_STATE.copy_status = "copying"
+    Z_STATE.ui_wake.set()
+    add_event("info", "Copy Started", f"Importing from USB disk {os.path.basename(req.path)}...")
+    threading.Thread(target=in_this_request(lambda c: asyncio.run(_do_copy(c))), args=(cfg,), daemon=True).start()
+    return {"status": "started"}
+
+
+@router.post("/usb/backup", dependencies=[Depends(require_scope("backup:manage", "system:config"))])
+def usb_backup(req: UsbDiskRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Backs the NAS up to this USB disk now: every off-site backup that lives on it (FEAT-07)."""
+    from backend.services import usb_copy
+
+    try:
+        started = usb_copy.start_backups(req.path, owner=principal.username)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e).strip("'")) from None
+    except LookupError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from None
+    usb_copy.dismiss()
+    return {"status": "started", "backups": started}
+
+
+@router.post("/usb/dismiss", dependencies=[Depends(require_scope("storage:write", "storage:admin", "backup:manage"))])
+def usb_dismiss():
+    from backend.services import usb_copy
+
+    usb_copy.dismiss()
+    return {"status": "dismissed"}
+
+
 @router.post(
     "/copy/dismiss-ingest", dependencies=[Depends(require_scope("storage:write", "shares:user_write", "storage:admin"))]
 )

@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, logger
 from backend.fsutil import atomic_write_json
+from backend.hardware import fs_quota
 from backend.hardware.pal import base as pal_base
 from backend.hardware.pal.base import (
     NetworkShare,
@@ -971,6 +972,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             os.makedirs(full_path, exist_ok=True)
         except OSError as e:
             logger.warning(f"[PAL] Could not pre-create share dir {full_path}: {e}")
+        quota = fs_quota.apply(full_path, quota_gb * 1024**3) if quota_gb > 0 else None  # FEAT-10
 
         user_perms = user_permissions or {}
         valid_users = None
@@ -1045,6 +1047,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             "export_smb": export_smb,
             "export_nfs": export_nfs,
             "quota_gb": quota_gb,
+            "quota_enforcement": quota,
             "user_permissions": user_perms,
         }
 

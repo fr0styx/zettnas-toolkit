@@ -1736,6 +1736,9 @@ export function handlePendingIngest(pendingIngest) {
 
 export function updateCopyToast(copyState) {
   handlePendingIngest(copyState ? copyState.pending_ingest : null);
+  if (copyState && copyState.pending_usb) {
+    import('./usb-offer.js').then((m) => m.handlePendingUsb(copyState.pending_usb)); // FEAT-07
+  }
 
   const toast = $('copy-toast');
   const backdrop = $('copy-toast-backdrop');

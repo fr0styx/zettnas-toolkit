@@ -326,6 +326,7 @@ def get_media_slots_telemetry() -> dict[str, Any]:
             "scsi_polling_msecs": polling_states,
             "auto_ingest_enabled": btn_cfg.get("auto_ingest", False),
             "pending_ingest": getattr(Z_STATE, "pending_ingest", None),
+            "pending_usb": getattr(Z_STATE, "pending_usb", None),
             "copy_active": getattr(Z_STATE, "copy_active", False),
         }
     except Exception as e:

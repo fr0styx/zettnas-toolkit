@@ -89,6 +89,15 @@ export function lockLine(r) {
   return `<span class="offsite-meta">${warn ? `<strong>${text}</strong>` : text}</span>`;
 }
 
+/** What happens when a USB disk with a backup on it is plugged in (FEAT-07). */
+export function usbSettingsHtml(settings) {
+  if (!settings) return '';
+  return `<div class="offsite-usb" data-off-usb>
+    <label class="offsite-check"><input type="checkbox" name="usb_offer"${settings.offer ? ' checked' : ''}> ${escapeHtml(t('usb.setting_offer', 'When a USB disk is plugged in, offer to back up to it or import its photos'))}</label>
+    <label class="offsite-check"><input type="checkbox" name="usb_auto_backup"${settings.auto_backup ? ' checked' : ''}> ${escapeHtml(t('usb.setting_auto', 'Back up to a USB disk by itself as soon as it is plugged in'))}</label>
+  </div>`;
+}
+
 export function isLockable(value) {
   return String(value || '').trim().startsWith('rclone:');
 }
@@ -176,15 +185,27 @@ export async function renderOffsite(mount) {
   if (!mount) return;
   let data;
   let shares;
+  let usb;
   try {
     data = await api.get('/api/offsite');
     const sh = await api.get('/api/storage/shares').catch(() => ({ shares: [] }));
+    usb = await api.get('/api/usb/disks').catch(() => null);
     shares = (sh.shares || []).filter((s) => s.mountpoint).map((s) => ({ name: s.name, path: s.mountpoint }));
   } catch (e) {
     mount.textContent = e.message || String(e);
     return;
   }
-  mount.innerHTML = reposHtml(data) + (data.available ? formHtml(shares) : '');
+  mount.innerHTML = reposHtml(data) + (data.available ? formHtml(shares) + usbSettingsHtml(usb && usb.settings) : '');
+  mount.querySelector('[data-off-usb]')?.addEventListener('change', async (e) => {
+    const box = /** @type {HTMLInputElement} */ (e.target);
+    const key = box.name === 'usb_auto_backup' ? 'auto_backup' : 'offer';
+    try {
+      await api.put('/api/usb/settings', { [key]: box.checked });
+    } catch (err) {
+      box.checked = !box.checked;
+      showToast(err.message || String(err), 'error');
+    }
+  });
   const form = mount.querySelector('[data-off-form]');
   const location = /** @type {HTMLInputElement | null} */ (form?.querySelector('[name="location"]') || null);
   const restBox = /** @type {HTMLElement | null} */ (form?.querySelector('[data-off-rest]') || null);

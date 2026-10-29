@@ -181,6 +181,8 @@ export async function fetchAndRenderSystemSnapshots(mountEl) {
   if (!mount) return;
   renderSnapshotSchedules(document.getElementById('snapshot-schedules-mount'));
   renderOffsite(document.getElementById('offsite-backup-mount'));
+  const sync2 = document.getElementById('two-way-sync-mount');
+  if (sync2) import('../two-way-sync.js').then((m) => m.renderTwoWaySync(sync2)); // FEAT-06
 
   try {
     const data = await api.get('/api/backup/snapshots');

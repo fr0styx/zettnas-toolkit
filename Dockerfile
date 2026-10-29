@@ -34,10 +34,11 @@ LABEL net.unraid.docker.webui="http://[IP]:[PORT:8082]/"
 LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
 LABEL net.unraid.docker.shell="bash"
 
-# Core: disks, SMART, UPS, USB, cloud remotes (OPS-11), and btrfs and software RAID (REL-4, D2)
+# Core: disks, SMART, UPS, USB, cloud remotes (OPS-11), btrfs and software RAID (REL-4, D2), XFS project quotas (FEAT-10)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
     btrfs-progs \
+    xfsprogs \
     mdadm \
     nvme-cli \
     apcupsd \

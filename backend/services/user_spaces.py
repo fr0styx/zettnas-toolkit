@@ -1,8 +1,10 @@
 """Per-person spaces and their quotas (Batch 6).
 
 Each person gets a private folder, <pool>/homes/<username> (only they and administrators
-can open it; see path_access). On Btrfs it is a subvolume with a quota group, so the limit
-holds over SMB, NFS and WebDAV too; elsewhere ZettNAS checks it on uploads it receives.
+can open it; see path_access). On Btrfs it is a subvolume with a quota group, on ZFS (when the
+homes folder is a dataset) a child dataset with a refquota, and on XFS with project quotas a
+project: then the limit holds over SMB, NFS and WebDAV too (FEAT-10). Elsewhere ZettNAS checks
+it on uploads it receives, and says so.
 """
 
 import os
@@ -13,6 +15,8 @@ from typing import Any
 
 from backend import config
 from backend.config import logger
+from backend.fsutil import atomic_write_json, json_locked, read_json
+from backend.hardware import fs_quota
 
 _USAGE_TTL = 60.0
 _usage_cache: dict[str, tuple[float, int]] = {}
@@ -23,6 +27,15 @@ class QuotaExceeded(Exception):
     def __init__(self, used: int, quota: int, incoming: int) -> None:
         super().__init__(f"This would go over your {quota // (1024**3)} GB space ({used // (1024**2)} MB used).")
         self.used, self.quota, self.incoming = used, quota, incoming
+
+
+def _enforcement_file() -> str:
+    return os.path.join(config.DATA_DIR, "quota_enforcement.json")
+
+
+def enforcement(home: str) -> dict[str, Any] | None:
+    """How the last limit set on a home folder is held: by the filesystem, or on uploads only."""
+    return (read_json(_enforcement_file(), {}) or {}).get(home)
 
 
 def homes_root() -> str:
@@ -56,22 +69,40 @@ def ensure_home(username: str, quota_bytes: int = 0) -> dict[str, Any]:
     if not os.path.isdir(home):
         os.makedirs(os.path.dirname(home), exist_ok=True)
         created = _btrfs(["subvolume", "create", home]) or False
+        if not created:  # a ZFS dataset of its own when the homes folder is one (FEAT-10)
+            created = bool(fs_quota.zfs_child_dataset(os.path.dirname(home), os.path.basename(home)))
         if not created:
             os.makedirs(home, exist_ok=True)
         try:
             os.chmod(home, 0o770)
         except OSError:
             logger.debug("user_spaces: chmod failed", exc_info=True)
-    fs_quota = apply_fs_quota(home, quota_bytes) if quota_bytes else False
-    return {"home": home, "subvolume": created, "fs_quota": fs_quota}
+    held = apply_fs_quota(home, quota_bytes) if quota_bytes else False
+    return {"home": home, "subvolume": created, "fs_quota": held}
 
 
 def apply_fs_quota(home: str, quota_bytes: int) -> bool:
-    """A filesystem-level limit when the home is a Btrfs subvolume (best effort)."""
+    """The filesystem's own limit on the home (btrfs, ZFS or XFS); True when it holds there."""
+    result = fs_quota.apply(home, quota_bytes)
+    _record(home, {**result, "quota_bytes": int(quota_bytes or 0)})
+    if not result["enforced"] and quota_bytes:
+        logger.info("[Spaces] %s: limit checked on uploads only (%s)", home, result["reason"])
+    return bool(result["enforced"])
+
+
+@json_locked(lambda *a, **k: _enforcement_file())
+def _record(home: str, result: dict[str, Any]) -> None:
+    saved = read_json(_enforcement_file(), {}) or {}
+    saved[home] = result
+    atomic_write_json(_enforcement_file(), saved)
+
+
+def set_quota(username: str, quota_bytes: int) -> bool:
+    """A changed limit reaches the filesystem too, not only the account (FEAT-10)."""
+    home = home_of(username)
     if not os.path.isdir(home):
-        return False
-    _btrfs(["quota", "enable", home])
-    return _btrfs(["qgroup", "limit", str(quota_bytes) if quota_bytes else "none", home])
+        return bool(ensure_home(username, quota_bytes)["fs_quota"])
+    return apply_fs_quota(home, quota_bytes)
 
 
 def usage(username: str, fresh: bool = False) -> int:
@@ -112,4 +143,5 @@ def check_upload(username: str, target_path: str, incoming: int) -> int | None:
 
 def summary(username: str) -> dict[str, Any]:
     quota = quota_of(username)
-    return {"home": home_of(username), "used_bytes": usage(username), "quota_bytes": quota}
+    home = home_of(username)
+    return {"home": home, "used_bytes": usage(username), "quota_bytes": quota, "enforcement": enforcement(home)}

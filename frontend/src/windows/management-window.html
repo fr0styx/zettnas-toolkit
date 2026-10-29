@@ -2820,6 +2820,9 @@
                   </div>
                 </div>
 
+                <!-- NUT server for the family's PCs (FEAT-11) -->
+                <div class="drawer-card nut-server" id="nut-server-mount"></div>
+
                 <!-- Toggle Manual Parameters button (visible when USB is active) -->
                 <div id="ups-toggle-params-container" style="display:none; justify-content:flex-end; margin-top:2px;">
                   <button type="button" id="btn-toggle-ups-conn-params" class="btn-pill-toggle is-small" style="background: transparent; border-color: var(--zn-line-15); color: var(--muted);">
@@ -3785,6 +3788,13 @@
               <h3 id="offsite-title" class="offsite-title" data-i18n="offsite.title">Offsite backup</h3>
               <p class="offsite-note" data-i18n="offsite.desc">Versioned, deduplicated and encrypted copies of your folders on a USB disk, another NAS or any cloud rclone can reach.</p>
               <div id="offsite-backup-mount"></div>
+            </section>
+
+            <!-- Two-way sync with a cloud folder (FEAT-06) -->
+            <section class="drawer-card offsite-card" aria-labelledby="two-way-sync-title">
+              <h3 id="two-way-sync-title" class="offsite-title" data-i18n="sync2.title">Two-way sync with the cloud</h3>
+              <p class="offsite-note" data-i18n="sync2.desc">Keeps a folder here and a cloud folder the same both ways. A file changed on both sides is kept twice. Nothing runs until you have seen a preview.</p>
+              <div id="two-way-sync-mount"></div>
             </section>
 
             <!-- Application Backups & Disaster Recovery (Per-App & Box-Wide) -->

@@ -219,6 +219,14 @@ def _update_leds(is_crit, is_warn):
     stats_collector_daemon._last_led_night = in_led_night
 
 
+def _pending_offers() -> dict:
+    """A card waiting to be copied, and a USB disk offered for a backup or an import (FEAT-07)."""
+    return {
+        "pending_ingest": getattr(Z_STATE, "pending_ingest", None),
+        "pending_usb": getattr(Z_STATE, "pending_usb", None),
+    }
+
+
 def _build_payload(
     active_pwm1,
     active_pwm2,
@@ -304,7 +312,7 @@ def _build_payload(
             "active": Z_STATE.copy_active,
             "status": Z_STATE.copy_status,
             "progress": Z_STATE.copy.snapshot(),  # a copy: the copy thread keeps changing it (ARC-9)
-            "pending_ingest": getattr(Z_STATE, "pending_ingest", None),
+            **_pending_offers(),
         },
         "media_slots": (lambda s: (check_media_slot_transitions(s), s)[1])(read_media_slots()),
         "fan_control": {

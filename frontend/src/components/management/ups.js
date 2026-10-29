@@ -193,6 +193,8 @@ export function openUpsDrawer() {
   drawer.classList.add('open');
   overlay.classList.add('open');
   loadUpsConfigToDrawer();
+  const nut = document.getElementById('nut-server-mount');
+  if (nut) import('../nut-server.js').then((m) => m.renderNutServer(nut)); // FEAT-11
 }
 if (typeof window !== 'undefined') window.openUpsDrawer = openUpsDrawer;
 

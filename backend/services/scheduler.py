@@ -141,6 +141,23 @@ def _run_pool_checks(now: float) -> None:
         logger.warning(f"[Scheduler] Monthly scrub failed: {e}")
 
 
+def _run_usb_disks() -> None:
+    """A newly plugged-in USB disk is offered for a backup or a photo import (FEAT-07), and
+    two-way cloud syncs run when due (FEAT-06)."""
+    try:
+        from backend.services import usb_copy
+
+        usb_copy.tick()
+    except (OSError, ValueError, KeyError, LookupError, RuntimeError) as e:
+        logger.warning("[Scheduler] USB disk check failed: %s", e)
+    try:
+        from backend.services import two_way_sync
+
+        two_way_sync.run_due()
+    except (OSError, ValueError, KeyError, RuntimeError) as e:
+        logger.warning("[Scheduler] Two-way sync failed: %s", e)
+
+
 def _run_scheduled_tasks():
     logger.info("[Scheduler] System background scheduler started.")
     from backend.services.supervisor import beat
@@ -174,6 +191,7 @@ def _run_scheduled_tasks():
         _run_pool_checks(now)
         _run_alert_retries(now)
         _run_replication(now)
+        _run_usb_disks()
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

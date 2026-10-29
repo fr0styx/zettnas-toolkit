@@ -22,6 +22,7 @@ from typing import Any, Optional
 from backend.config import logger
 from backend.db import log_ups_event
 from backend.hardware.ups import load_ups_config, read_ups_status
+from backend.services.nut_server import forced_shutdown as nut_forced_shutdown
 from backend.settings import test_mode
 from backend.state import Z_STATE, add_event
 
@@ -314,6 +315,9 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         action_taken="Atomic safe shutdown sequence initiated.",
         details=f"Reason: {reason}",
     )
+
+    # Step 0: the PCs watching this UPS over NUT get the forced-shutdown flag and go first (FEAT-11)
+    nut_forced_shutdown()
 
     # Step 1: Disarm I/O
     global _copy_paused_by_failsafe

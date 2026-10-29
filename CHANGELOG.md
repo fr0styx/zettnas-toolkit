@@ -19,6 +19,28 @@
 
 #### Usability
 
+- **Two-way sync with the cloud**: Backup → Two-way sync keeps a folder here and a cloud folder
+  the same both ways (rclone bisync). A file changed on both sides is kept twice
+  (`name..path1` and `name..path2`) instead of one overwriting the other. Nothing runs until you
+  have seen its preview, a dry run listing what goes each way, what is deleted and what is kept
+  twice; the first run only copies. A run that would delete more than a quarter of the files
+  stops and asks again, and syncs wait while the ransomware guard has frozen writes or the
+  folder's disk sleeps (FEAT-06).
+- **Space limits that hold everywhere**: a person's or a share's limit is now set on the
+  filesystem itself where it can be (a btrfs subvolume's quota group, a ZFS dataset's refquota,
+  an XFS project quota), so it holds over SMB, NFS and WebDAV too; on ZFS each person's home
+  becomes its own dataset when the homes folder is one. Changing a limit later now reaches the
+  filesystem (it used to change only the account). People shows "held by the disk" or "checked
+  on uploads only" next to each limit. The image gains xfsprogs (FEAT-10, REL-19).
+- **A UPS for the whole family**: turn on the NUT server in the UPS settings and the PCs at home
+  (upsmon, WinNUT or any NUT client) watch the UPS ZettNAS reads and shut down when the battery
+  runs low. When ZettNAS starts its own low-battery shutdown it raises the forced-shutdown flag
+  and gives them up to 15 seconds to go first. Only the home network is answered, sign-in takes
+  a monitor user and a generated password, and nothing can be switched from a PC (FEAT-11).
+- **Plug in a USB disk, one touch**: when a USB disk is plugged in, ZettNAS offers to bring the
+  off-site backups on it up to date, or to import the photos and videos of a camera or phone disk
+  into dated folders with the card reader's verified copy; it can also back up to such a disk by
+  itself as soon as it appears (FEAT-07).
 - **A locked cloud copy**: an off-site backup to a cloud bucket with Object Lock (Backblaze B2
   File Lock, Wasabi, Amazon S3 or another S3 service) takes the bucket's lock period. ZettNAS
   then never prunes versions inside it, **Check the lock** asks the provider whether the bucket

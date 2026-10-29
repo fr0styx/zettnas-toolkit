@@ -92,6 +92,40 @@ async def get_ups_telemetry():
     return await asyncio.to_thread(read_ups_status, reprobe=True)
 
 
+class NutServerRequest(BaseModel):
+    enabled: bool | None = None
+    port: int | None = Field(default=None, ge=1, le=65535)
+    user: str | None = Field(default=None, max_length=32)
+    new_password: bool = False
+
+
+@router.get("/ups/nut-server", dependencies=[Depends(require_scope("system:view"))])
+def get_nut_server():
+    """The NUT server for the family's PCs: on or off, port, monitor user, PCs watching (FEAT-11)."""
+    from backend.services import nut_server
+
+    return nut_server.public()
+
+
+@router.put("/ups/nut-server", dependencies=[Depends(require_scope("system:config"))])
+def put_nut_server(req: NutServerRequest):
+    from backend.services import nut_server
+
+    try:
+        nut_server.save_settings(req.enabled, req.port, req.user, req.new_password)
+        return nut_server.apply()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+
+
+@router.get("/ups/nut-server/client", dependencies=[Depends(require_scope("system:config"))])
+def nut_server_client():
+    """The monitor password and the upsmon.conf line for a PC (admins only)."""
+    from backend.services import nut_server
+
+    return nut_server.public(show_password=True)
+
+
 @router.get("/ups/config", dependencies=[Depends(require_scope("system:view"))])
 async def get_ups_configuration():
     """Returns persistent UPS configuration with secret passwords masked."""

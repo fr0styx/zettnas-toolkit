@@ -95,6 +95,17 @@ def _photo_vector_daemon() -> None:
     photo_vectors.get_queue(get_rag_engine(), system_idle).run_forever()
 
 
+def _start_network_services() -> None:
+    """WebDAV and the NUT server for the family's PCs (FEAT-11), when they are turned on."""
+    try:
+        get_webdav_engine().start_if_enabled()
+    except Exception as e:
+        logger.warning(f"Could not auto-start WebDAV engine: {e}")
+    from backend.services.nut_server import start_if_enabled as start_nut_server
+
+    start_nut_server()
+
+
 def startup_system():
     """System initialization and background services launch."""
     import gc
@@ -297,10 +308,7 @@ def startup_system():
 
         supervise("DataGuard", data_guard_daemon, beat_every=3600)  # REL-2: daily data snapshot
 
-    try:
-        get_webdav_engine().start_if_enabled()
-    except Exception as e:
-        logger.warning(f"Could not auto-start WebDAV engine: {e}")
+    _start_network_services()
 
     # Schedulers run supervised, so a crash is restarted and shows in health (ARC-10); each beats
     # once a loop, so one that hangs shows as stalled (REL-18)

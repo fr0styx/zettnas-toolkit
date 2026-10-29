@@ -37,6 +37,7 @@ class CopyState:
     overwrite_choice: str = "cancel"
     abort_flag: bool = False
     pending_ingest: Any = None
+    pending_usb: Any = None  # a USB disk offered for a backup or a photo import (FEAT-07)
 
     # The copy thread changes progress while the stats loop serialises it for the live view:
     # both go through these, under the lock (ARC-9), so a reader never sees the dict mid-change.
@@ -188,6 +189,7 @@ class ZettState:
     copy_overwrite_choice = _Alias[str]("copy", "overwrite_choice")
     copy_abort_flag = _Alias[bool]("copy", "abort_flag")
     pending_ingest = _Alias[Any]("copy", "pending_ingest")
+    pending_usb = _Alias[Any]("copy", "pending_usb")
     fan_state_tracker = _Alias[dict]("fans", "tracker")
     known_active_fans = _Alias[set]("fans", "known_active")
     fans_released = _Alias[bool]("fans", "released")

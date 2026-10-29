@@ -949,10 +949,29 @@ def get_current_user_profile(request: Request):
         "avatar_url": user.get("avatar_url", ""),
         "home_directory": user.get("home_directory", ""),
         "storage_quota_bytes": user.get("storage_quota_bytes", 0),
+        "quota_enforcement": _quota_enforcement(user),
         "preferences": user.get("preferences", {}),
         "advanced": advanced_for(user),
         "is_default_password": is_def_pwd,
     }
+
+
+def _quota_enforcement(user: dict[str, Any]) -> dict[str, Any] | None:
+    """Whether the person's limit is held by the filesystem or checked on uploads (FEAT-10)."""
+    if not user.get("storage_quota_bytes"):
+        return None
+    from backend.services.user_spaces import enforcement, home_of
+
+    return enforcement(user.get("home_directory") or home_of(user.get("username") or ""))
+
+
+def _apply_quota(username: str, quota_bytes: int) -> None:
+    from backend.services.user_spaces import set_quota
+
+    try:
+        set_quota(username, quota_bytes)
+    except OSError as e:
+        logger.warning("[Users] %s: the new limit didn't reach the filesystem: %s", username, e)
 
 
 @router.get("/auth/users-list")
@@ -1142,6 +1161,8 @@ def update_user_endpoint(user_id: str, data: UserUpdateRequest, request: Request
     )
     if not ok:
         raise HTTPException(status_code=404, detail="User not found.")
+    if quota_to_set is not None and quota_to_set != before.get("storage_quota_bytes"):
+        _apply_quota(before.get("username") or "", int(quota_to_set or 0))
     if hours_to_set is not False:
         from backend.users_db import forget_cached_sessions
 

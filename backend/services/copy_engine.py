@@ -578,6 +578,64 @@ async def copy_one_file(src_f: str, dst_f: str, verify_checksum: bool = True) ->
             os.remove(tmp)
 
 
+def usb_source(path: str) -> str:
+    """The folder to copy from a USB disk: its camera folder (DCIM) when it has one."""
+    from backend.services.protection_status import USB_ROOT
+
+    real = os.path.realpath(path)
+    if not real.startswith(USB_ROOT.rstrip("/") + "/") or not os.path.isdir(real):
+        raise Exception(f"{path} is not a USB disk under {USB_ROOT}.")
+    dcim = os.path.join(real, "DCIM")
+    return dcim if os.path.isdir(dcim) else real
+
+
+def _slot_source(src_mode: str) -> tuple[str, bool]:
+    """The card in the SD or TF slot, mounted read-only when nothing mounted it yet."""
+    tmp_mount = False
+    mounted_path = None
+    target_lun = "1" if src_mode == "sd" else "0"
+    found_dev = None
+    for p in glob.glob(os.path.join(HOST_SYS, "block/sd*")):
+        try:
+            target = os.readlink(p)
+            if "usb" in target:
+                if target.split("/")[-3].endswith(f":{target_lun}"):
+                    dev = os.path.basename(p)
+                    size = int(open(os.path.join(HOST_SYS, f"block/{dev}/size")).read().strip())  # noqa: SIM115
+                    if size > 0:
+                        found_dev = dev
+                        break
+        except (OSError, ValueError):
+            pass
+
+    if not found_dev:
+        raise Exception(f"No media detected in {src_mode.upper()} slot.")
+
+    part_dev = f"{found_dev}1"
+    if not os.path.exists(os.path.join(HOST_DEV, part_dev)):
+        part_dev = found_dev
+
+    try:
+        with open(os.path.join(HOST_PROC, "mounts")) as f:
+            for line in f:
+                if f"/{part_dev}" in line or f"/{found_dev}" in line:
+                    mounted_path = line.split()[1]
+                    break
+    except (OSError, IndexError):
+        pass
+
+    if not mounted_path:
+        mounted_path = "/tmp/sd_copy_mount"
+        os.makedirs(mounted_path, exist_ok=True)
+        cmd = ["mount", "-r", "-o", "noatime,nodiratime", os.path.join(HOST_DEV, part_dev), mounted_path]
+        r = run_bounded(cmd, timeout=60, capture_output=True)
+        if r.returncode != 0:
+            raise Exception(f"Failed to mount {part_dev}")
+        tmp_mount = True
+
+    return mounted_path, tmp_mount
+
+
 async def _do_copy(cfg):
     src_mode = cfg.get("source", "sd").strip()
     dst = cfg.get("dest", "/mnt/user/").strip()
@@ -599,46 +657,12 @@ async def _do_copy(cfg):
     tmp_mount = False
     mounted_path = None
     try:
-        target_lun = "1" if src_mode == "sd" else "0"
-        found_dev = None
-        for p in glob.glob(os.path.join(HOST_SYS, "block/sd*")):
-            try:
-                target = os.readlink(p)
-                if "usb" in target:
-                    if target.split("/")[-3].endswith(f":{target_lun}"):
-                        dev = os.path.basename(p)
-                        size = int(open(os.path.join(HOST_SYS, f"block/{dev}/size")).read().strip())  # noqa: SIM115
-                        if size > 0:
-                            found_dev = dev
-                            break
-            except (OSError, ValueError):
-                pass
-
-        if not found_dev:
-            raise Exception(f"No media detected in {src_mode.upper()} slot.")
-
-        part_dev = f"{found_dev}1"
-        if not os.path.exists(os.path.join(HOST_DEV, part_dev)):
-            part_dev = found_dev
-
-        try:
-            with open(os.path.join(HOST_PROC, "mounts")) as f:
-                for line in f:
-                    if f"/{part_dev}" in line or f"/{found_dev}" in line:
-                        mounted_path = line.split()[1]
-                        break
-        except (OSError, IndexError):
-            pass
-
-        if not mounted_path:
-            mounted_path = "/tmp/sd_copy_mount"
-            os.makedirs(mounted_path, exist_ok=True)
-            cmd = ["mount", "-r", "-o", "noatime,nodiratime", os.path.join(HOST_DEV, part_dev), mounted_path]
-            r = run_bounded(cmd, timeout=60, capture_output=True)
-            if r.returncode != 0:
-                raise Exception(f"Failed to mount {part_dev}")
-            tmp_mount = True
-
+        usb = cfg.get("source_path")
+        if usb:
+            # a USB disk mounted under /mnt/disks (FEAT-07): read where it is, never remounted
+            mounted_path = usb_source(usb)
+        else:
+            mounted_path, tmp_mount = _slot_source(src_mode)
         src_path = mounted_path.rstrip("/") + "/"
         real_dst = resolve_copy_destination(dst)
         if real_dst is None:

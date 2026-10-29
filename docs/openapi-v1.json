@@ -1728,12 +1728,34 @@
       "title": "Dirs",
       "type": "array"
      },
+     "offset": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Offset"
+     },
      "roots": {
       "items": {
        "type": "string"
       },
       "title": "Roots",
       "type": "array"
+     },
+     "total": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total"
      }
     },
     "required": [
@@ -2967,6 +2989,129 @@
     "title": "CopyConfirmResponse",
     "type": "object"
    },
+   "CreateAppKeyResponse": {
+    "additionalProperties": true,
+    "description": "POST /ai/apps/keys",
+    "properties": {
+     "app": {
+      "title": "App",
+      "type": "string"
+     },
+     "how": {
+      "title": "How",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "string"
+     },
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "settings": {
+      "$ref": "#/components/schemas/CreateAppKeyResponseSettings"
+     }
+    },
+    "required": [
+     "app",
+     "how",
+     "id",
+     "key",
+     "label",
+     "settings"
+    ],
+    "title": "CreateAppKeyResponse",
+    "type": "object"
+   },
+   "CreateAppKeyResponseSettings": {
+    "additionalProperties": true,
+    "properties": {
+     "PAPERLESS_AI_ENABLED": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paperless Ai Enabled"
+     },
+     "PAPERLESS_AI_LLM_API_KEY": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paperless Ai Llm Api Key"
+     },
+     "PAPERLESS_AI_LLM_BACKEND": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paperless Ai Llm Backend"
+     },
+     "PAPERLESS_AI_LLM_EMBEDDING_BACKEND": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paperless Ai Llm Embedding Backend"
+     },
+     "PAPERLESS_AI_LLM_EMBEDDING_MODEL": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paperless Ai Llm Embedding Model"
+     },
+     "PAPERLESS_AI_LLM_ENDPOINT": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paperless Ai Llm Endpoint"
+     },
+     "PAPERLESS_AI_LLM_MODEL": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paperless Ai Llm Model"
+     }
+    },
+    "title": "CreateAppKeyResponseSettings",
+    "type": "object"
+   },
    "CreateCalendarNoteResponse": {
     "additionalProperties": true,
     "description": "POST /calendar/notes",
@@ -3520,6 +3665,17 @@
       ],
       "title": "Scopes"
      },
+     "signin_hours_json": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Signin Hours Json"
+     },
      "status": {
       "anyOf": [
        {
@@ -3579,27 +3735,17 @@
     "description": "POST /backup/schedule",
     "properties": {
      "job": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/CreateOrUpdateBackupJobResponseJob"
-       },
-       {
-        "type": "null"
-       }
-      ]
+      "$ref": "#/components/schemas/CreateOrUpdateBackupJobResponseJob"
      },
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      }
     },
+    "required": [
+     "job",
+     "status"
+    ],
     "title": "CreateOrUpdateBackupJobResponse",
     "type": "object"
    },
@@ -4082,10 +4228,153 @@
     "title": "CreateShareLinkResponse",
     "type": "object"
    },
+   "CreateShareLinkResponse2": {
+    "additionalProperties": true,
+    "description": "POST /share-links",
+    "properties": {
+     "created_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created At"
+     },
+     "created_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created By"
+     },
+     "download_count": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Download Count"
+     },
+     "expires_at": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expires At"
+     },
+     "filename": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Filename"
+     },
+     "has_password": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Has Password"
+     },
+     "is_dir": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Dir"
+     },
+     "label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Label"
+     },
+     "max_downloads": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Max Downloads"
+     },
+     "path": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Path"
+     },
+     "token": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Token"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "title": "CreateShareLinkResponse2",
+    "type": "object"
+   },
    "CreateTokenResponse": {
     "additionalProperties": true,
     "description": "POST /tokens",
     "properties": {
+     "folders": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Folders",
+      "type": "array"
+     },
      "masked_token": {
       "title": "Masked Token",
       "type": "string"
@@ -4111,6 +4400,7 @@
      }
     },
     "required": [
+     "folders",
      "masked_token",
      "name",
      "scopes",
@@ -4541,6 +4831,21 @@
      }
     },
     "title": "DeleteAppBackupEndpointResponse",
+    "type": "object"
+   },
+   "DeleteAppKeyResponse": {
+    "additionalProperties": true,
+    "description": "DELETE /ai/apps/keys/{token_id}",
+    "properties": {
+     "status": {
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "status"
+    ],
+    "title": "DeleteAppKeyResponse",
     "type": "object"
    },
    "DeleteCalendarFeedResponse": {
@@ -5284,6 +5589,52 @@
     "title": "DeleteWallpaperResponse",
     "type": "object"
    },
+   "DestinationsResponse": {
+    "additionalProperties": true,
+    "description": "GET /offsite/destinations",
+    "properties": {
+     "cloud": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Cloud"
+     },
+     "nas": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nas"
+     },
+     "usb": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Usb"
+     }
+    },
+    "title": "DestinationsResponse",
+    "type": "object"
+   },
    "DisableDefaultAdminEndpointResponse": {
     "additionalProperties": true,
     "description": "POST /users/admin/disable",
@@ -5383,56 +5734,26 @@
     "additionalProperties": true,
     "description": "GET /disk_detail",
     "properties": {
-     "degradation": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Degradation"
-     },
      "dev": {
       "anyOf": [
-       {},
+       {
+        "type": "string"
+       },
        {
         "type": "null"
        }
       ],
       "title": "Dev"
      },
-     "error": {
+     "drive_health": {
       "anyOf": [
        {
-        "type": "string"
+        "$ref": "#/components/schemas/DiskDetailResponseDriveHealth"
        },
        {
         "type": "null"
        }
-      ],
-      "title": "Error"
-     },
-     "health": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Health"
-     },
-     "is_nvme": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Is Nvme"
+      ]
      },
      "is_standby": {
       "anyOf": [
@@ -5445,25 +5766,6 @@
       ],
       "title": "Is Standby"
      },
-     "latest_report": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Latest Report"
-     },
-     "metrics": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/DiskDetailResponseMetrics"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
      "model": {
       "anyOf": [
        {
@@ -5475,15 +5777,6 @@
       ],
       "title": "Model"
      },
-     "nvme_endurance": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Nvme Endurance"
-     },
      "power_on_hours": {
       "anyOf": [
        {
@@ -5494,48 +5787,6 @@
        }
       ],
       "title": "Power On Hours"
-     },
-     "raw": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Raw"
-     },
-     "self_test_log": {
-      "anyOf": [
-       {
-        "items": {},
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Self Test Log"
-     },
-     "self_test_progress": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/DiskDetailResponseSelfTestProgress"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "self_test_status": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Self Test Status"
      },
      "serial": {
       "anyOf": [
@@ -5550,7 +5801,9 @@
      },
      "temp": {
       "anyOf": [
-       {},
+       {
+        "type": "number"
+       },
        {
         "type": "null"
        }
@@ -5561,16 +5814,56 @@
     "title": "DiskDetailResponse",
     "type": "object"
    },
-   "DiskDetailResponseMetrics": {
+   "DiskDetailResponseDriveHealth": {
     "additionalProperties": true,
-    "properties": {},
-    "title": "DiskDetailResponseMetrics",
-    "type": "object"
-   },
-   "DiskDetailResponseSelfTestProgress": {
-    "additionalProperties": true,
-    "properties": {},
-    "title": "DiskDetailResponseSelfTestProgress",
+    "properties": {
+     "findings": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Findings"
+     },
+     "label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Label"
+     },
+     "summary": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Summary"
+     },
+     "verdict": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Verdict"
+     }
+    },
+    "title": "DiskDetailResponseDriveHealth",
     "type": "object"
    },
    "DiskLocateEndpointResponse": {
@@ -5589,17 +5882,24 @@
       "title": "Error"
      },
      "success": {
+      "title": "Success",
+      "type": "boolean"
+     },
+     "tier": {
       "anyOf": [
        {
-        "type": "boolean"
+        "type": "string"
        },
        {
         "type": "null"
        }
       ],
-      "title": "Success"
+      "title": "Tier"
      }
     },
+    "required": [
+     "success"
+    ],
     "title": "DiskLocateEndpointResponse",
     "type": "object"
    },
@@ -5663,17 +5963,7 @@
    "DiskWakeResponseDetail": {
     "additionalProperties": true,
     "properties": {
-     "degradation": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/DiskWakeResponseDetailDegradation"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "dev": {
+     "error": {
       "anyOf": [
        {
         "type": "string"
@@ -5682,134 +5972,7 @@
         "type": "null"
        }
       ],
-      "title": "Dev"
-     },
-     "health": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Health"
-     },
-     "is_nvme": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Is Nvme"
-     },
-     "latest_report": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Latest Report"
-     },
-     "metrics": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/DiskWakeResponseDetailMetrics"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "model": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Model"
-     },
-     "nvme_endurance": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Nvme Endurance"
-     },
-     "power_on_hours": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Power On Hours"
-     },
-     "raw": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Raw"
-     },
-     "self_test_log": {
-      "anyOf": [
-       {
-        "items": {},
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Self Test Log"
-     },
-     "self_test_progress": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/DiskWakeResponseDetailSelfTestProgress"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "self_test_status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Self Test Status"
-     },
-     "serial": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Serial"
+      "title": "Error"
      },
      "smart": {
       "anyOf": [
@@ -5821,409 +5984,9 @@
        }
       ],
       "title": "Smart"
-     },
-     "temp": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Temp"
      }
     },
     "title": "DiskWakeResponseDetail",
-    "type": "object"
-   },
-   "DiskWakeResponseDetailDegradation": {
-    "additionalProperties": true,
-    "properties": {
-     "dev": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Dev"
-     },
-     "failure_probability": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Failure Probability"
-     },
-     "failure_risk": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Failure Risk"
-     },
-     "key_attributes": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/DiskWakeResponseDetailDegradationKeyAttributes"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "realloc_30d_delta": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Realloc 30D Delta"
-     },
-     "realloc_7d_delta": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Realloc 7D Delta"
-     },
-     "realloc_current": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Realloc Current"
-     },
-     "recommendation": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Recommendation"
-     },
-     "shedding_sectors": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Shedding Sectors"
-     },
-     "sparkline_points": {
-      "anyOf": [
-       {
-        "items": {},
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Sparkline Points"
-     },
-     "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
-     },
-     "stuck_pending": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Stuck Pending"
-     }
-    },
-    "title": "DiskWakeResponseDetailDegradation",
-    "type": "object"
-   },
-   "DiskWakeResponseDetailDegradationKeyAttributes": {
-    "additionalProperties": true,
-    "properties": {
-     "crc_errors": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Crc Errors"
-     },
-     "pending_sectors": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Pending Sectors"
-     },
-     "reallocated_sectors": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Reallocated Sectors"
-     },
-     "uncorrectable_sectors": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Uncorrectable Sectors"
-     }
-    },
-    "title": "DiskWakeResponseDetailDegradationKeyAttributes",
-    "type": "object"
-   },
-   "DiskWakeResponseDetailMetrics": {
-    "additionalProperties": true,
-    "properties": {
-     "crc": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Crc"
-     },
-     "critical_warning": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Critical Warning"
-     },
-     "nvme_media_err": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Nvme Media Err"
-     },
-     "nvme_spare": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Nvme Spare"
-     },
-     "nvme_spare_thresh": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Nvme Spare Thresh"
-     },
-     "nvme_used": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Nvme Used"
-     },
-     "offline": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Offline"
-     },
-     "pending": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Pending"
-     },
-     "power_cycles": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Power Cycles"
-     },
-     "realloc": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Realloc"
-     },
-     "tbr_tb": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Tbr Tb"
-     },
-     "tbw_tb": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Tbw Tb"
-     }
-    },
-    "title": "DiskWakeResponseDetailMetrics",
-    "type": "object"
-   },
-   "DiskWakeResponseDetailSelfTestProgress": {
-    "additionalProperties": true,
-    "properties": {
-     "in_progress": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "In Progress"
-     },
-     "is_aborted": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Is Aborted"
-     },
-     "percent_completed": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Percent Completed"
-     },
-     "percent_remaining": {
-      "anyOf": [
-       {},
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Percent Remaining"
-     },
-     "polling_minutes": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/DiskWakeResponseDetailSelfTestProgressPollingMinutes"
-       },
-       {
-        "type": "null"
-       }
-      ]
-     },
-     "status_text": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status Text"
-     }
-    },
-    "title": "DiskWakeResponseDetailSelfTestProgress",
-    "type": "object"
-   },
-   "DiskWakeResponseDetailSelfTestProgressPollingMinutes": {
-    "additionalProperties": true,
-    "properties": {},
-    "title": "DiskWakeResponseDetailSelfTestProgressPollingMinutes",
     "type": "object"
    },
    "DismissPendingIngestResponse": {
@@ -6777,6 +6540,426 @@
     "title": "ExecuteVmActionResponse",
     "type": "object"
    },
+   "ExportUserDataResponse": {
+    "additionalProperties": true,
+    "description": "GET /users/{user_id}/export",
+    "properties": {
+     "account": {
+      "$ref": "#/components/schemas/ExportUserDataResponseAccount"
+     },
+     "ai_requests": {
+      "items": {},
+      "title": "Ai Requests",
+      "type": "array"
+     },
+     "alert_route": {
+      "$ref": "#/components/schemas/ExportUserDataResponseAlertRoute"
+     },
+     "api_tokens": {
+      "items": {},
+      "title": "Api Tokens",
+      "type": "array"
+     },
+     "calendar": {
+      "$ref": "#/components/schemas/ExportUserDataResponseCalendar"
+     },
+     "chats": {
+      "$ref": "#/components/schemas/ExportUserDataResponseChats"
+     },
+     "exported_at": {
+      "title": "Exported At",
+      "type": "number"
+     },
+     "favorites": {
+      "items": {},
+      "title": "Favorites",
+      "type": "array"
+     },
+     "format": {
+      "title": "Format",
+      "type": "number"
+     },
+     "immich": {
+      "$ref": "#/components/schemas/ExportUserDataResponseImmich"
+     },
+     "phone_devices": {
+      "items": {},
+      "title": "Phone Devices",
+      "type": "array"
+     },
+     "search_index": {
+      "$ref": "#/components/schemas/ExportUserDataResponseSearchIndex"
+     },
+     "security_events": {
+      "items": {
+       "$ref": "#/components/schemas/ExportUserDataResponseSecurityEventsItem"
+      },
+      "title": "Security Events",
+      "type": "array"
+     },
+     "share_links": {
+      "items": {},
+      "title": "Share Links",
+      "type": "array"
+     }
+    },
+    "required": [
+     "account",
+     "ai_requests",
+     "alert_route",
+     "api_tokens",
+     "calendar",
+     "chats",
+     "exported_at",
+     "favorites",
+     "format",
+     "immich",
+     "phone_devices",
+     "search_index",
+     "security_events",
+     "share_links"
+    ],
+    "title": "ExportUserDataResponse",
+    "type": "object"
+   },
+   "ExportUserDataResponseAccount": {
+    "additionalProperties": true,
+    "properties": {
+     "created_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created At"
+     },
+     "display_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Display Name"
+     },
+     "email": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Email"
+     },
+     "home_directory": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Home Directory"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "last_login_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Login At"
+     },
+     "preferences": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ExportUserDataResponseAccountPreferences"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "role_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role Id"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     },
+     "storage_quota_bytes": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Storage Quota Bytes"
+     },
+     "username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Username"
+     }
+    },
+    "title": "ExportUserDataResponseAccount",
+    "type": "object"
+   },
+   "ExportUserDataResponseAccountPreferences": {
+    "additionalProperties": true,
+    "properties": {},
+    "title": "ExportUserDataResponseAccountPreferences",
+    "type": "object"
+   },
+   "ExportUserDataResponseAlertRoute": {
+    "additionalProperties": true,
+    "properties": {},
+    "title": "ExportUserDataResponseAlertRoute",
+    "type": "object"
+   },
+   "ExportUserDataResponseCalendar": {
+    "additionalProperties": true,
+    "properties": {
+     "feed_events": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Feed Events"
+     },
+     "feeds": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Feeds"
+     },
+     "notes": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Notes"
+     }
+    },
+    "title": "ExportUserDataResponseCalendar",
+    "type": "object"
+   },
+   "ExportUserDataResponseChats": {
+    "additionalProperties": true,
+    "properties": {
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     }
+    },
+    "title": "ExportUserDataResponseChats",
+    "type": "object"
+   },
+   "ExportUserDataResponseImmich": {
+    "additionalProperties": true,
+    "properties": {
+     "connected": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Connected"
+     },
+     "phone_backup_done": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone Backup Done"
+     }
+    },
+    "title": "ExportUserDataResponseImmich",
+    "type": "object"
+   },
+   "ExportUserDataResponseSearchIndex": {
+    "additionalProperties": true,
+    "properties": {
+     "files": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Files"
+     },
+     "folder": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Folder"
+     }
+    },
+    "title": "ExportUserDataResponseSearchIndex",
+    "type": "object"
+   },
+   "ExportUserDataResponseSecurityEventsItem": {
+    "additionalProperties": true,
+    "properties": {
+     "details": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ExportUserDataResponseSecurityEventsItemDetails"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "event": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Event"
+     },
+     "ip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ip"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     },
+     "ts": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ts"
+     }
+    },
+    "title": "ExportUserDataResponseSecurityEventsItem",
+    "type": "object"
+   },
+   "ExportUserDataResponseSecurityEventsItemDetails": {
+    "additionalProperties": true,
+    "properties": {
+     "method": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Method"
+     }
+    },
+    "title": "ExportUserDataResponseSecurityEventsItemDetails",
+    "type": "object"
+   },
    "FanAcousticSweepRequest": {
     "properties": {
      "pwm_step": {
@@ -7247,6 +7430,168 @@
     "title": "ForgetFolderRequest",
     "type": "object"
    },
+   "FsActivityResponse": {
+    "additionalProperties": true,
+    "description": "GET /fs/activity",
+    "properties": {
+     "actions": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actions"
+     },
+     "items": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/FsActivityResponseItemsItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Items"
+     },
+     "next_before": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Before"
+     },
+     "retention_days": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Retention Days"
+     }
+    },
+    "title": "FsActivityResponse",
+    "type": "object"
+   },
+   "FsActivityResponseItemsItem": {
+    "additionalProperties": true,
+    "properties": {
+     "action": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Action"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "ip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ip"
+     },
+     "path": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Path"
+     },
+     "target": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Target"
+     },
+     "ts": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ts"
+     },
+     "username": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Username"
+     },
+     "via": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Via"
+     }
+    },
+    "title": "FsActivityResponseItemsItem",
+    "type": "object"
+   },
    "FsAddFavoriteResponse": {
     "additionalProperties": true,
     "description": "POST /fs/favorites",
@@ -7304,38 +7649,22 @@
     "description": "POST /fs/archive/create",
     "properties": {
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      },
      "task": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/FsArchiveCreateResponseTask"
-       },
-       {
-        "type": "null"
-       }
-      ]
+      "$ref": "#/components/schemas/FsArchiveCreateResponseTask"
      },
      "task_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Task Id"
+      "title": "Task Id",
+      "type": "string"
      }
     },
+    "required": [
+     "status",
+     "task",
+     "task_id"
+    ],
     "title": "FsArchiveCreateResponse",
     "type": "object"
    },
@@ -7352,6 +7681,17 @@
        }
       ],
       "title": "Action"
+     },
+     "can_undo": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Can Undo"
      },
      "collision_policy": {
       "anyOf": [
@@ -7526,7 +7866,9 @@
      },
      "started_at": {
       "anyOf": [
-       {},
+       {
+        "type": "number"
+       },
        {
         "type": "null"
        }
@@ -7575,38 +7917,22 @@
     "description": "POST /fs/archive/extract",
     "properties": {
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      },
      "task": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/FsArchiveExtractResponseTask"
-       },
-       {
-        "type": "null"
-       }
-      ]
+      "$ref": "#/components/schemas/FsArchiveExtractResponseTask"
      },
      "task_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Task Id"
+      "title": "Task Id",
+      "type": "string"
      }
     },
+    "required": [
+     "status",
+     "task",
+     "task_id"
+    ],
     "title": "FsArchiveExtractResponse",
     "type": "object"
    },
@@ -7623,6 +7949,17 @@
        }
       ],
       "title": "Action"
+     },
+     "can_undo": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Can Undo"
      },
      "collision_policy": {
       "anyOf": [
@@ -7797,7 +8134,9 @@
      },
      "started_at": {
       "anyOf": [
-       {},
+       {
+        "type": "number"
+       },
        {
         "type": "null"
        }
@@ -7964,28 +8303,18 @@
     "description": "DELETE /fs/transfers/completed",
     "properties": {
      "cleared_count": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Cleared Count"
+      "title": "Cleared Count",
+      "type": "number"
      },
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      }
     },
+    "required": [
+     "cleared_count",
+     "status"
+    ],
     "title": "FsClearCompletedTransfersResponse",
     "type": "object"
    },
@@ -8015,42 +8344,26 @@
     "description": "POST /fs/conflict-check",
     "properties": {
      "conflict_count": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Conflict Count"
+      "title": "Conflict Count",
+      "type": "number"
      },
      "conflicts": {
-      "anyOf": [
-       {
-        "items": {
-         "$ref": "#/components/schemas/FsConflictCheckResponseConflictsItem"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Conflicts"
+      "items": {
+       "$ref": "#/components/schemas/FsConflictCheckResponseConflictsItem"
+      },
+      "title": "Conflicts",
+      "type": "array"
      },
      "has_conflict": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Has Conflict"
+      "title": "Has Conflict",
+      "type": "boolean"
      }
     },
+    "required": [
+     "conflict_count",
+     "conflicts",
+     "has_conflict"
+    ],
     "title": "FsConflictCheckResponse",
     "type": "object"
    },
@@ -8174,10 +8487,62 @@
     "title": "FsDeleteResponse",
     "type": "object"
    },
+   "FsDismissTransferResponse": {
+    "additionalProperties": true,
+    "description": "POST /fs/transfers/{task_id}/dismiss",
+    "properties": {
+     "kept": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kept"
+     },
+     "removed": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Removed"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "FsDismissTransferResponse",
+    "type": "object"
+   },
    "FsFolderSizeResponse": {
     "additionalProperties": true,
     "description": "POST /fs/folder-size",
     "properties": {
+     "at_least": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "At Least"
+     },
      "cached": {
       "title": "Cached",
       "type": "boolean"
@@ -8309,7 +8674,9 @@
     "properties": {
      "path": {
       "anyOf": [
-       {},
+       {
+        "type": "string"
+       },
        {
         "type": "null"
        }
@@ -8439,6 +8806,17 @@
        }
       ],
       "title": "Action"
+     },
+     "can_undo": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Can Undo"
      },
      "collision_policy": {
       "anyOf": [
@@ -9144,17 +9522,13 @@
     "description": "POST /fs/rename",
     "properties": {
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      }
     },
+    "required": [
+     "status"
+    ],
     "title": "FsRenameResponse",
     "type": "object"
    },
@@ -9183,9 +9557,263 @@
        }
       ],
       "title": "Status"
+     },
+     "task": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/FsResumeTransferResponseTask"
+       },
+       {
+        "type": "null"
+       }
+      ]
      }
     },
     "title": "FsResumeTransferResponse",
+    "type": "object"
+   },
+   "FsResumeTransferResponseTask": {
+    "additionalProperties": true,
+    "properties": {
+     "action": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Action"
+     },
+     "can_undo": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Can Undo"
+     },
+     "collision_policy": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Collision Policy"
+     },
+     "completed_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Completed At"
+     },
+     "created_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created At"
+     },
+     "current_file": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Current File"
+     },
+     "destination": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Destination"
+     },
+     "error": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "eta_seconds": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Eta Seconds"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind"
+     },
+     "owner": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owner"
+     },
+     "percent": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Percent"
+     },
+     "processed_bytes": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Processed Bytes"
+     },
+     "processed_files": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Processed Files"
+     },
+     "result": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result"
+     },
+     "sources": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sources"
+     },
+     "speed_bps": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Speed Bps"
+     },
+     "started_at": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     },
+     "total_bytes": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Bytes"
+     },
+     "total_files": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Files"
+     }
+    },
+    "title": "FsResumeTransferResponseTask",
     "type": "object"
    },
    "FsRootsResponse": {
@@ -9468,6 +10096,15 @@
       "title": "Offset",
       "type": "number"
      },
+     "partial": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Partial"
+     },
      "query": {
       "title": "Query",
       "type": "string"
@@ -9586,6 +10223,17 @@
        }
       ],
       "title": "Action"
+     },
+     "can_undo": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Can Undo"
      },
      "collision_policy": {
       "anyOf": [
@@ -10105,6 +10753,60 @@
     "title": "FsTrashRestoreResponse",
     "type": "object"
    },
+   "FsUndoTransferResponse": {
+    "additionalProperties": true,
+    "description": "POST /fs/transfers/{task_id}/undo",
+    "properties": {
+     "binned": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Binned"
+     },
+     "kept": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kept"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     },
+     "tasks": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tasks"
+     }
+    },
+    "title": "FsUndoTransferResponse",
+    "type": "object"
+   },
    "FsUpdatePermissionsResponse": {
     "additionalProperties": true,
     "description": "PUT /fs/permissions",
@@ -10215,28 +10917,18 @@
     "description": "POST /fs/upload",
     "properties": {
      "message": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Message"
+      "title": "Message",
+      "type": "string"
      },
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      }
     },
+    "required": [
+     "message",
+     "status"
+    ],
     "title": "FsUploadResponse",
     "type": "object"
    },
@@ -10758,6 +11450,567 @@
     "title": "GetCatalogDownloadTasksResponseItem",
     "type": "object"
    },
+   "GetChassisConfigResponse": {
+    "additionalProperties": true,
+    "description": "GET /chassis/config",
+    "properties": {
+     "available_drives": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/GetChassisConfigResponseAvailableDrivesItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Available Drives"
+     },
+     "bays": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/GetChassisConfigResponseBaysItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bays"
+     },
+     "chassis_label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Chassis Label"
+     },
+     "chassis_model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Chassis Model"
+     },
+     "nvme_slots": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/GetChassisConfigResponseNvmeSlotsItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Nvme Slots"
+     },
+     "profile": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Profile"
+     },
+     "total_bays": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Bays"
+     }
+    },
+    "title": "GetChassisConfigResponse",
+    "type": "object"
+   },
+   "GetChassisConfigResponseAvailableDrivesItem": {
+    "additionalProperties": true,
+    "properties": {
+     "canonical_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Canonical Id"
+     },
+     "dev": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dev"
+     },
+     "is_rotational": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Rotational"
+     },
+     "model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model"
+     },
+     "serial": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Serial"
+     },
+     "size_formatted": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Size Formatted"
+     }
+    },
+    "title": "GetChassisConfigResponseAvailableDrivesItem",
+    "type": "object"
+   },
+   "GetChassisConfigResponseBaysItem": {
+    "additionalProperties": true,
+    "properties": {
+     "custom_label": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Custom Label"
+     },
+     "disk": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetChassisConfigResponseBaysItemDisk"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "is_populated": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Populated"
+     },
+     "slot_index": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Slot Index"
+     }
+    },
+    "title": "GetChassisConfigResponseBaysItem",
+    "type": "object"
+   },
+   "GetChassisConfigResponseBaysItemDisk": {
+    "additionalProperties": true,
+    "properties": {
+     "canonical_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Canonical Id"
+     },
+     "controller_driver": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Controller Driver"
+     },
+     "dev": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dev"
+     },
+     "health": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Health"
+     },
+     "is_nvme": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Nvme"
+     },
+     "model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "serial": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Serial"
+     },
+     "size_bytes": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Size Bytes"
+     },
+     "size_formatted": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Size Formatted"
+     },
+     "standby": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Standby"
+     },
+     "temp": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temp"
+     },
+     "transport": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transport"
+     },
+     "vendor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor"
+     }
+    },
+    "title": "GetChassisConfigResponseBaysItemDisk",
+    "type": "object"
+   },
+   "GetChassisConfigResponseNvmeSlotsItem": {
+    "additionalProperties": true,
+    "properties": {
+     "disk": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetChassisConfigResponseNvmeSlotsItemDisk"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "slot_index": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Slot Index"
+     }
+    },
+    "title": "GetChassisConfigResponseNvmeSlotsItem",
+    "type": "object"
+   },
+   "GetChassisConfigResponseNvmeSlotsItemDisk": {
+    "additionalProperties": true,
+    "properties": {
+     "canonical_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Canonical Id"
+     },
+     "controller_driver": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Controller Driver"
+     },
+     "dev": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dev"
+     },
+     "health": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Health"
+     },
+     "is_nvme": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Nvme"
+     },
+     "model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "serial": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Serial"
+     },
+     "size_bytes": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Size Bytes"
+     },
+     "size_formatted": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Size Formatted"
+     },
+     "standby": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Standby"
+     },
+     "temp": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temp"
+     },
+     "transport": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Transport"
+     },
+     "vendor": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Vendor"
+     }
+    },
+    "title": "GetChassisConfigResponseNvmeSlotsItemDisk",
+    "type": "object"
+   },
    "GetCheckContainerNameResponse": {
     "additionalProperties": true,
     "description": "GET /docker/check_container_name",
@@ -11194,6 +12447,10 @@
     "additionalProperties": true,
     "description": "GET /auth/me",
     "properties": {
+     "advanced": {
+      "title": "Advanced",
+      "type": "boolean"
+     },
      "avatar_url": {
       "title": "Avatar Url",
       "type": "string"
@@ -11233,6 +12490,15 @@
      "preferences": {
       "$ref": "#/components/schemas/GetCurrentUserProfileResponsePreferences"
      },
+     "quota_enforcement": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quota Enforcement"
+     },
      "role": {
       "title": "Role",
       "type": "string"
@@ -11262,6 +12528,7 @@
      }
     },
     "required": [
+     "advanced",
      "avatar_url",
      "display_name",
      "email",
@@ -11284,7 +12551,19 @@
    },
    "GetCurrentUserProfileResponsePreferences": {
     "additionalProperties": true,
-    "properties": {},
+    "properties": {
+     "advanced": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Advanced"
+     }
+    },
     "title": "GetCurrentUserProfileResponsePreferences",
     "type": "object"
    },
@@ -12614,6 +13893,17 @@
       ],
       "title": "Repository"
      },
+     "setup": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Setup"
+     },
      "source_id": {
       "anyOf": [
        {
@@ -13401,6 +14691,28 @@
      "id"
     ],
     "title": "GetDockerContainerDetailsResponse",
+    "type": "object"
+   },
+   "GetDockerContainerLogsResponse": {
+    "additionalProperties": true,
+    "description": "GET /docker/containers/{container_id}/logs",
+    "properties": {
+     "lines": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lines"
+     }
+    },
+    "title": "GetDockerContainerLogsResponse",
     "type": "object"
    },
    "GetDockerNetworkTopologyResponse": {
@@ -14841,6 +16153,36 @@
     "title": "GetKeyResponse",
     "type": "object"
    },
+   "GetKitResponse": {
+    "additionalProperties": true,
+    "description": "GET /offsite/repos/{repo_id}/kit",
+    "properties": {
+     "filename": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Filename"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     }
+    },
+    "title": "GetKitResponse",
+    "type": "object"
+   },
    "GetKvmDiagnoseResponse": {
     "additionalProperties": true,
     "description": "GET /vms/kvm/diagnose",
@@ -15109,112 +16451,72 @@
     "description": "GET /layout",
     "properties": {
      "clock_format": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Clock Format"
+      "title": "Clock Format",
+      "type": "string"
      },
      "order": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "string"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Order"
+      "items": {
+       "type": "string"
+      },
+      "title": "Order",
+      "type": "array"
      },
      "sizes": {
-      "anyOf": [
-       {
-        "additionalProperties": {
-         "anyOf": [
-          {
-           "type": "string"
-          },
-          {
-           "type": "number"
-          },
-          {
-           "type": "boolean"
-          }
-         ]
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "string"
         },
-        "type": "object"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Sizes"
+        {
+         "type": "number"
+        },
+        {
+         "type": "boolean"
+        }
+       ]
+      },
+      "title": "Sizes",
+      "type": "object"
      },
      "style": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Style"
+      "title": "Style",
+      "type": "string"
      },
      "timezone": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Timezone"
+      "title": "Timezone",
+      "type": "string"
      },
      "version": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Version"
+      "title": "Version",
+      "type": "number"
      },
      "vis": {
-      "anyOf": [
-       {
-        "additionalProperties": {
-         "anyOf": [
-          {
-           "type": "string"
-          },
-          {
-           "type": "number"
-          },
-          {
-           "type": "boolean"
-          }
-         ]
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "string"
         },
-        "type": "object"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Vis"
+        {
+         "type": "number"
+        },
+        {
+         "type": "boolean"
+        }
+       ]
+      },
+      "title": "Vis",
+      "type": "object"
      }
     },
+    "required": [
+     "clock_format",
+     "order",
+     "sizes",
+     "style",
+     "timezone",
+     "version",
+     "vis"
+    ],
     "title": "GetLayoutResponse",
     "type": "object"
    },
@@ -15729,116 +17031,193 @@
     "description": "GET /notifications/config",
     "properties": {
      "apprise_urls": {
-      "anyOf": [
-       {
-        "items": {},
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Apprise Urls"
+      "items": {
+       "type": "string"
+      },
+      "title": "Apprise Urls",
+      "type": "array"
      },
      "cooldown_seconds": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Cooldown Seconds"
+      "title": "Cooldown Seconds",
+      "type": "number"
      },
      "cpu_temp_threshold": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Cpu Temp Threshold"
+      "title": "Cpu Temp Threshold",
+      "type": "number"
      },
      "digest_hour": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Digest Hour"
+      "title": "Digest Hour",
+      "type": "number"
      },
      "digest_mode": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Digest Mode"
+      "title": "Digest Mode",
+      "type": "string"
      },
      "discord_enabled": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Discord Enabled"
+      "title": "Discord Enabled",
+      "type": "boolean"
      },
      "discord_webhook_url": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Discord Webhook Url"
+      "title": "Discord Webhook Url",
+      "type": "string"
      },
      "email_enabled": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Email Enabled"
+      "title": "Email Enabled",
+      "type": "boolean"
      },
      "email_from": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Email From"
+      "title": "Email From",
+      "type": "string"
      },
      "email_to": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Email To"
+      "title": "Email To",
+      "type": "string"
      },
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     },
+     "hdd_temp_threshold": {
+      "title": "Hdd Temp Threshold",
+      "type": "number"
+     },
+     "notify_on_backup": {
+      "title": "Notify On Backup",
+      "type": "boolean"
+     },
+     "notify_on_container": {
+      "title": "Notify On Container",
+      "type": "boolean"
+     },
+     "notify_on_copy": {
+      "title": "Notify On Copy",
+      "type": "boolean"
+     },
+     "notify_on_fan": {
+      "title": "Notify On Fan",
+      "type": "boolean"
+     },
+     "notify_on_smart": {
+      "title": "Notify On Smart",
+      "type": "boolean"
+     },
+     "notify_on_temp": {
+      "title": "Notify On Temp",
+      "type": "boolean"
+     },
+     "notify_on_ups": {
+      "title": "Notify On Ups",
+      "type": "boolean"
+     },
+     "ntfy_enabled": {
+      "title": "Ntfy Enabled",
+      "type": "boolean"
+     },
+     "ntfy_token": {
+      "title": "Ntfy Token",
+      "type": "string"
+     },
+     "ntfy_topic": {
+      "title": "Ntfy Topic",
+      "type": "string"
+     },
+     "ntfy_url": {
+      "title": "Ntfy Url",
+      "type": "string"
+     },
+     "smtp_host": {
+      "title": "Smtp Host",
+      "type": "string"
+     },
+     "smtp_pass": {
+      "title": "Smtp Pass",
+      "type": "string"
+     },
+     "smtp_port": {
+      "title": "Smtp Port",
+      "type": "number"
+     },
+     "smtp_tls": {
+      "title": "Smtp Tls",
+      "type": "boolean"
+     },
+     "smtp_user": {
+      "title": "Smtp User",
+      "type": "string"
+     },
+     "telegram_bot_token": {
+      "title": "Telegram Bot Token",
+      "type": "string"
+     },
+     "telegram_chat_id": {
+      "title": "Telegram Chat Id",
+      "type": "string"
+     },
+     "telegram_enabled": {
+      "title": "Telegram Enabled",
+      "type": "boolean"
+     },
+     "unraid_notify": {
+      "title": "Unraid Notify",
+      "type": "boolean"
+     },
+     "webhook_enabled": {
+      "title": "Webhook Enabled",
+      "type": "boolean"
+     },
+     "webhook_url": {
+      "title": "Webhook Url",
+      "type": "string"
+     },
+     "weekly_report": {
+      "title": "Weekly Report",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "apprise_urls",
+     "cooldown_seconds",
+     "cpu_temp_threshold",
+     "digest_hour",
+     "digest_mode",
+     "discord_enabled",
+     "discord_webhook_url",
+     "email_enabled",
+     "email_from",
+     "email_to",
+     "enabled",
+     "hdd_temp_threshold",
+     "notify_on_backup",
+     "notify_on_container",
+     "notify_on_copy",
+     "notify_on_fan",
+     "notify_on_smart",
+     "notify_on_temp",
+     "notify_on_ups",
+     "ntfy_enabled",
+     "ntfy_token",
+     "ntfy_topic",
+     "ntfy_url",
+     "smtp_host",
+     "smtp_pass",
+     "smtp_port",
+     "smtp_tls",
+     "smtp_user",
+     "telegram_bot_token",
+     "telegram_chat_id",
+     "telegram_enabled",
+     "unraid_notify",
+     "webhook_enabled",
+     "webhook_url",
+     "weekly_report"
+    ],
+    "title": "GetNotificationsResponse",
+    "type": "object"
+   },
+   "GetNutServerResponse": {
+    "additionalProperties": true,
+    "description": "GET /ups/nut-server",
+    "properties": {
      "enabled": {
       "anyOf": [
        {
@@ -15850,7 +17229,29 @@
       ],
       "title": "Enabled"
      },
-     "hdd_temp_threshold": {
+     "fsd": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fsd"
+     },
+     "has_password": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Has Password"
+     },
+     "logins": {
       "anyOf": [
        {
         "type": "number"
@@ -15859,152 +17260,23 @@
         "type": "null"
        }
       ],
-      "title": "Hdd Temp Threshold"
+      "title": "Logins"
      },
-     "notify_on_backup": {
+     "networks": {
       "anyOf": [
        {
-        "type": "boolean"
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
        },
        {
         "type": "null"
        }
       ],
-      "title": "Notify On Backup"
+      "title": "Networks"
      },
-     "notify_on_container": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Notify On Container"
-     },
-     "notify_on_copy": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Notify On Copy"
-     },
-     "notify_on_fan": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Notify On Fan"
-     },
-     "notify_on_smart": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Notify On Smart"
-     },
-     "notify_on_temp": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Notify On Temp"
-     },
-     "notify_on_ups": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Notify On Ups"
-     },
-     "ntfy_enabled": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Ntfy Enabled"
-     },
-     "ntfy_token": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Ntfy Token"
-     },
-     "ntfy_topic": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Ntfy Topic"
-     },
-     "ntfy_url": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Ntfy Url"
-     },
-     "smtp_host": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Smtp Host"
-     },
-     "smtp_pass": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Smtp Pass"
-     },
-     "smtp_port": {
+     "port": {
       "anyOf": [
        {
         "type": "number"
@@ -16013,9 +17285,9 @@
         "type": "null"
        }
       ],
-      "title": "Smtp Port"
+      "title": "Port"
      },
-     "smtp_tls": {
+     "running": {
       "anyOf": [
        {
         "type": "boolean"
@@ -16024,9 +17296,9 @@
         "type": "null"
        }
       ],
-      "title": "Smtp Tls"
+      "title": "Running"
      },
-     "smtp_user": {
+     "user": {
       "anyOf": [
        {
         "type": "string"
@@ -16035,76 +17307,10 @@
         "type": "null"
        }
       ],
-      "title": "Smtp User"
-     },
-     "telegram_bot_token": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Telegram Bot Token"
-     },
-     "telegram_chat_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Telegram Chat Id"
-     },
-     "telegram_enabled": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Telegram Enabled"
-     },
-     "unraid_notify": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Unraid Notify"
-     },
-     "webhook_enabled": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Webhook Enabled"
-     },
-     "webhook_url": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Webhook Url"
+      "title": "User"
      }
     },
-    "title": "GetNotificationsResponse",
+    "title": "GetNutServerResponse",
     "type": "object"
    },
    "GetOauthSessionStatusResponse": {
@@ -16669,6 +17875,36 @@
     "title": "GetPreviousVersionsResponsePreviousItem",
     "type": "object"
    },
+   "GetProtectionStatusResponse": {
+    "additionalProperties": true,
+    "description": "GET /system/protection",
+    "properties": {
+     "copies": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Copies"
+     },
+     "level": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Level"
+     }
+    },
+    "title": "GetProtectionStatusResponse",
+    "type": "object"
+   },
    "GetPruneJobStatusResponse": {
     "additionalProperties": true,
     "description": "GET /docker/system/prune/jobs/{job_id}",
@@ -16962,13 +18198,140 @@
     "title": "GetPruneJobStatusResponseJobStepsItem",
     "type": "object"
    },
+   "GetRemoteAccessResponse": {
+    "additionalProperties": true,
+    "description": "GET /network/remote-access",
+    "properties": {
+     "addresses": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetRemoteAccessResponseAddresses"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "auth_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auth Url"
+     },
+     "https": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Https"
+     },
+     "ips": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ips"
+     },
+     "login_server": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Login Server"
+     },
+     "magic_dns": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Magic Dns"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     }
+    },
+    "title": "GetRemoteAccessResponse",
+    "type": "object"
+   },
+   "GetRemoteAccessResponseAddresses": {
+    "additionalProperties": true,
+    "properties": {},
+    "title": "GetRemoteAccessResponseAddresses",
+    "type": "object"
+   },
    "GetSchedulesResponse": {
     "additionalProperties": true,
     "description": "GET /snapshots/schedules",
     "properties": {
+     "available": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Available"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
      "schedules": {
       "anyOf": [
-       {},
+       {
+        "items": {},
+        "type": "array"
+       },
        {
         "type": "null"
        }
@@ -17371,6 +18734,434 @@
     "title": "GetSnmpStatusResponse",
     "type": "object"
    },
+   "GetStatsResponse": {
+    "additionalProperties": true,
+    "description": "GET /stats",
+    "properties": {
+     "client_preferences": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetStatsResponseClientPreferences"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "copy_state": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetStatsResponseCopyState"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "disks": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/GetStatsResponseDisksItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Disks"
+     },
+     "docker": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetStatsResponseDocker"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "events": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/GetStatsResponseEventsItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Events"
+     },
+     "ip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ip"
+     },
+     "layout": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetStatsResponseLayout"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "remotes_event": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetStatsResponseRemotesEvent"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "security": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/GetStatsResponseSecurity"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "storage": {
+      "$ref": "#/components/schemas/GetStatsResponseStorage"
+     },
+     "system": {
+      "$ref": "#/components/schemas/GetStatsResponseSystem"
+     },
+     "uptime": {
+      "title": "Uptime",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "status",
+     "storage",
+     "system",
+     "uptime"
+    ],
+    "title": "GetStatsResponse",
+    "type": "object"
+   },
+   "GetStatsResponseClientPreferences": {
+    "additionalProperties": true,
+    "properties": {
+     "lcd_theme": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lcd Theme"
+     }
+    },
+    "title": "GetStatsResponseClientPreferences",
+    "type": "object"
+   },
+   "GetStatsResponseCopyState": {
+    "additionalProperties": true,
+    "properties": {
+     "active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active"
+     }
+    },
+    "title": "GetStatsResponseCopyState",
+    "type": "object"
+   },
+   "GetStatsResponseDisksItem": {
+    "additionalProperties": true,
+    "properties": {
+     "serial": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Serial"
+     }
+    },
+    "title": "GetStatsResponseDisksItem",
+    "type": "object"
+   },
+   "GetStatsResponseDocker": {
+    "additionalProperties": true,
+    "properties": {
+     "running": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Running"
+     }
+    },
+    "title": "GetStatsResponseDocker",
+    "type": "object"
+   },
+   "GetStatsResponseEventsItem": {
+    "additionalProperties": true,
+    "properties": {
+     "msg": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Msg"
+     }
+    },
+    "title": "GetStatsResponseEventsItem",
+    "type": "object"
+   },
+   "GetStatsResponseLayout": {
+    "additionalProperties": true,
+    "properties": {
+     "order": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Order"
+     }
+    },
+    "title": "GetStatsResponseLayout",
+    "type": "object"
+   },
+   "GetStatsResponseRemotesEvent": {
+    "additionalProperties": true,
+    "properties": {
+     "mountpoint": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Mountpoint"
+     },
+     "remote": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Remote"
+     },
+     "timestamp": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Timestamp"
+     }
+    },
+    "title": "GetStatsResponseRemotesEvent",
+    "type": "object"
+   },
+   "GetStatsResponseSecurity": {
+    "additionalProperties": true,
+    "properties": {
+     "is_default_password": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Is Default Password"
+     }
+    },
+    "title": "GetStatsResponseSecurity",
+    "type": "object"
+   },
+   "GetStatsResponseStorage": {
+    "additionalProperties": true,
+    "properties": {
+     "engine": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Engine"
+     },
+     "pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pct"
+     },
+     "pools": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pools"
+     },
+     "total": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total"
+     },
+     "used": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Used"
+     }
+    },
+    "title": "GetStatsResponseStorage",
+    "type": "object"
+   },
+   "GetStatsResponseSystem": {
+    "additionalProperties": true,
+    "properties": {
+     "distro": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Distro"
+     },
+     "hostname": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hostname"
+     },
+     "kernel": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kernel"
+     },
+     "uptime_sec": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Uptime Sec"
+     },
+     "uptime_str": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Uptime Str"
+     }
+    },
+    "title": "GetStatsResponseSystem",
+    "type": "object"
+   },
    "GetStatusResponse": {
     "additionalProperties": true,
     "description": "GET /immich",
@@ -17392,6 +19183,24 @@
        }
       ],
       "title": "Detected"
+     },
+     "phone_done": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone Done"
+     },
+     "sso": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sso"
      },
      "url": {
       "anyOf": [
@@ -17630,160 +19439,78 @@
     "description": "GET /system/about",
     "properties": {
      "build_date": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Build Date"
+      "title": "Build Date",
+      "type": "string"
      },
      "chassis_model": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Chassis Model"
+      "title": "Chassis Model",
+      "type": "string"
      },
      "chassis_slug": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Chassis Slug"
+      "title": "Chassis Slug",
+      "type": "string"
      },
      "commit": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Commit"
+      "title": "Commit",
+      "type": "string"
      },
      "containerized": {
-      "anyOf": [
-       {
-        "type": "boolean"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Containerized"
+      "title": "Containerized",
+      "type": "boolean"
      },
      "github_repo": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Github Repo"
+      "title": "Github Repo",
+      "type": "string"
      },
      "hostname": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Hostname"
+      "title": "Hostname",
+      "type": "string"
      },
      "name": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Name"
+      "title": "Name",
+      "type": "string"
      },
      "platform": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Platform"
+      "title": "Platform",
+      "type": "string"
      },
      "python_version": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Python Version"
+      "title": "Python Version",
+      "type": "string"
      },
      "release_channel": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Release Channel"
+      "title": "Release Channel",
+      "type": "string"
      },
      "tag": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Tag"
+      "title": "Tag",
+      "type": "string"
      },
      "uptime_secs": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Uptime Secs"
+      "title": "Uptime Secs",
+      "type": "number"
      },
      "version": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Version"
+      "title": "Version",
+      "type": "string"
      }
     },
+    "required": [
+     "build_date",
+     "chassis_model",
+     "chassis_slug",
+     "commit",
+     "containerized",
+     "github_repo",
+     "hostname",
+     "name",
+     "platform",
+     "python_version",
+     "release_channel",
+     "tag",
+     "uptime_secs",
+     "version"
+    ],
     "title": "GetSystemAboutResponse",
     "type": "object"
    },
@@ -18367,40 +20094,19 @@
     "description": "GET /ups/events",
     "properties": {
      "count": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Count"
+      "title": "Count",
+      "type": "number"
      },
      "events": {
-      "anyOf": [
-       {
-        "items": {
-         "$ref": "#/components/schemas/GetUpsEventHistoryResponseEventsItem"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Events"
+      "items": {
+       "$ref": "#/components/schemas/GetUpsEventHistoryResponseEventsItem"
+      },
+      "title": "Events",
+      "type": "array"
      },
      "limit": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Limit"
+      "title": "Limit",
+      "type": "number"
      },
      "next_offset": {
       "anyOf": [
@@ -18412,17 +20118,16 @@
       "title": "Next Offset"
      },
      "offset": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Offset"
+      "title": "Offset",
+      "type": "number"
      }
     },
+    "required": [
+     "count",
+     "events",
+     "limit",
+     "offset"
+    ],
     "title": "GetUpsEventHistoryResponse",
     "type": "object"
    },
@@ -18999,6 +20704,15 @@
        }
       ],
       "title": "Scopes"
+     },
+     "signin_hours": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Signin Hours"
      },
      "status": {
       "anyOf": [
@@ -20813,6 +22527,13 @@
       "title": "Lcd Renderer Active",
       "type": "boolean"
      },
+     "stalled": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Stalled",
+      "type": "array"
+     },
      "status": {
       "title": "Status",
       "type": "string"
@@ -20830,6 +22551,7 @@
      "fans_released",
      "image_variant",
      "lcd_renderer_active",
+     "stalled",
      "status",
      "version"
     ],
@@ -21318,6 +23040,25 @@
      "api_key"
     ],
     "title": "KeyIn",
+    "type": "object"
+   },
+   "KitSavedResponse": {
+    "additionalProperties": true,
+    "description": "POST /offsite/repos/{repo_id}/kit-saved",
+    "properties": {
+     "kit_saved_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kit Saved At"
+     }
+    },
+    "title": "KitSavedResponse",
     "type": "object"
    },
    "LayoutRequest": {
@@ -22108,6 +23849,144 @@
     "title": "ListAppBackupsEndpointResponseBackupsItemMountsItem",
     "type": "object"
    },
+   "ListAppKeysResponse": {
+    "additionalProperties": true,
+    "description": "GET /ai/apps",
+    "properties": {
+     "apps": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/ListAppKeysResponseAppsItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Apps"
+     },
+     "base_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Base Url"
+     },
+     "keys": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/ListAppKeysResponseKeysItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Keys"
+     }
+    },
+    "title": "ListAppKeysResponse",
+    "type": "object"
+   },
+   "ListAppKeysResponseAppsItem": {
+    "additionalProperties": true,
+    "properties": {
+     "app": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "App"
+     },
+     "label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Label"
+     }
+    },
+    "title": "ListAppKeysResponseAppsItem",
+    "type": "object"
+   },
+   "ListAppKeysResponseKeysItem": {
+    "additionalProperties": true,
+    "properties": {
+     "created": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "last_used_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Used At"
+     },
+     "masked_key": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Masked Key"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     }
+    },
+    "title": "ListAppKeysResponseKeysItem",
+    "type": "object"
+   },
    "ListBackupHistoryResponse": {
     "additionalProperties": true,
     "description": "GET /backup/history",
@@ -22870,6 +24749,127 @@
     "title": "ListShareLinksResponseItem",
     "type": "object"
    },
+   "ListTokensResponseItem": {
+    "additionalProperties": true,
+    "properties": {
+     "created": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created"
+     },
+     "expires_at": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Expires At"
+     },
+     "folders": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Folders"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "last_client": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Client"
+     },
+     "last_used_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Used At"
+     },
+     "last_used_ip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Used Ip"
+     },
+     "masked_token": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Masked Token"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "scopes": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scopes"
+     }
+    },
+    "title": "ListTokensResponseItem",
+    "type": "object"
+   },
    "ListVersionsResponse": {
     "additionalProperties": true,
     "description": "GET /offsite/repos/{repo_id}/snapshots",
@@ -23407,6 +25407,145 @@
      }
     },
     "title": "ListWallpapersResponse",
+    "type": "object"
+   },
+   "LockCheckResponse": {
+    "additionalProperties": true,
+    "description": "POST /offsite/repos/{repo_id}/lock-check",
+    "properties": {
+     "at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "At"
+     },
+     "days": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days"
+     },
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "mode": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Mode"
+     },
+     "ok": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ok"
+     }
+    },
+    "title": "LockCheckResponse",
+    "type": "object"
+   },
+   "LockPresetsResponse": {
+    "additionalProperties": true,
+    "description": "GET /offsite/lock-presets",
+    "properties": {
+     "presets": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/LockPresetsResponsePresetsItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Presets"
+     }
+    },
+    "title": "LockPresetsResponse",
+    "type": "object"
+   },
+   "LockPresetsResponsePresetsItem": {
+    "additionalProperties": true,
+    "properties": {
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "rclone_type": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rclone Type"
+     },
+     "steps": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Steps"
+     }
+    },
+    "title": "LockPresetsResponsePresetsItem",
     "type": "object"
    },
    "LoginRequest": {
@@ -25035,6 +27174,283 @@
     "title": "MfaEnableRequest",
     "type": "object"
    },
+   "MigrateBackupJobResponse": {
+    "additionalProperties": true,
+    "description": "POST /backup/schedule/{job_id}/migrate",
+    "properties": {
+     "job_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Job Id"
+     },
+     "repo": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MigrateBackupJobResponseRepo"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "MigrateBackupJobResponse",
+    "type": "object"
+   },
+   "MigrateBackupJobResponseRepo": {
+    "additionalProperties": true,
+    "properties": {
+     "append_only": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Append Only"
+     },
+     "created_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created At"
+     },
+     "hour": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hour"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "initialized": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Initialized"
+     },
+     "keep": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/MigrateBackupJobResponseRepoKeep"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "kit_saved_at": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kit Saved At"
+     },
+     "last_backup": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Backup"
+     },
+     "last_check": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Check"
+     },
+     "last_drill": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Drill"
+     },
+     "last_drill_result": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Drill Result"
+     },
+     "last_result": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Result"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "lock_check": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lock Check"
+     },
+     "lock_days": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lock Days"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "paths": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paths"
+     },
+     "same_disk": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Same Disk"
+     }
+    },
+    "title": "MigrateBackupJobResponseRepo",
+    "type": "object"
+   },
+   "MigrateBackupJobResponseRepoKeep": {
+    "additionalProperties": true,
+    "properties": {
+     "daily": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daily"
+     },
+     "monthly": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Monthly"
+     },
+     "weekly": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Weekly"
+     }
+    },
+    "title": "MigrateBackupJobResponseRepoKeep",
+    "type": "object"
+   },
    "MkdirRequest": {
     "properties": {
      "path": {
@@ -25643,6 +28059,174 @@
     "title": "NotificationConfigModel",
     "type": "object"
    },
+   "NutServerClientResponse": {
+    "additionalProperties": true,
+    "description": "GET /ups/nut-server/client",
+    "properties": {
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "fsd": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fsd"
+     },
+     "has_password": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Has Password"
+     },
+     "logins": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Logins"
+     },
+     "networks": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Networks"
+     },
+     "password": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Password"
+     },
+     "port": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Port"
+     },
+     "running": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Running"
+     },
+     "upsmon": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Upsmon"
+     },
+     "user": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User"
+     }
+    },
+    "title": "NutServerClientResponse",
+    "type": "object"
+   },
+   "NutServerRequest": {
+    "properties": {
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "new_password": {
+      "default": false,
+      "title": "New Password",
+      "type": "boolean"
+     },
+     "port": {
+      "anyOf": [
+       {
+        "maximum": 65535.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Port"
+     },
+     "user": {
+      "anyOf": [
+       {
+        "maxLength": 32,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User"
+     }
+    },
+    "title": "NutServerRequest",
+    "type": "object"
+   },
    "OAuthExchangeRequest": {
     "properties": {
      "redirect_url": {
@@ -25885,13 +28469,283 @@
     "title": "OidcSettings",
     "type": "object"
    },
+   "OpenaiChatResponse": {
+    "additionalProperties": true,
+    "description": "POST /ai/openai/chat/completions",
+    "properties": {
+     "choices": {
+      "items": {
+       "$ref": "#/components/schemas/OpenaiChatResponseChoicesItem"
+      },
+      "title": "Choices",
+      "type": "array"
+     },
+     "model": {
+      "title": "Model",
+      "type": "string"
+     }
+    },
+    "required": [
+     "choices",
+     "model"
+    ],
+    "title": "OpenaiChatResponse",
+    "type": "object"
+   },
+   "OpenaiChatResponseChoicesItem": {
+    "additionalProperties": true,
+    "properties": {
+     "message": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OpenaiChatResponseChoicesItemMessage"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "OpenaiChatResponseChoicesItem",
+    "type": "object"
+   },
+   "OpenaiChatResponseChoicesItemMessage": {
+    "additionalProperties": true,
+    "properties": {
+     "content": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Content"
+     }
+    },
+    "title": "OpenaiChatResponseChoicesItemMessage",
+    "type": "object"
+   },
+   "OpenaiEmbeddingsResponse": {
+    "additionalProperties": true,
+    "description": "POST /ai/openai/embeddings",
+    "properties": {
+     "data": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/OpenaiEmbeddingsResponseDataItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Data"
+     },
+     "model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model"
+     },
+     "object": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Object"
+     },
+     "usage": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OpenaiEmbeddingsResponseUsage"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "OpenaiEmbeddingsResponse",
+    "type": "object"
+   },
+   "OpenaiEmbeddingsResponseDataItem": {
+    "additionalProperties": true,
+    "properties": {
+     "embedding": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Embedding"
+     },
+     "index": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Index"
+     },
+     "object": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Object"
+     }
+    },
+    "title": "OpenaiEmbeddingsResponseDataItem",
+    "type": "object"
+   },
+   "OpenaiEmbeddingsResponseUsage": {
+    "additionalProperties": true,
+    "properties": {
+     "prompt_tokens": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Prompt Tokens"
+     },
+     "total_tokens": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Tokens"
+     }
+    },
+    "title": "OpenaiEmbeddingsResponseUsage",
+    "type": "object"
+   },
+   "OpenaiModelsResponse": {
+    "additionalProperties": true,
+    "description": "GET /ai/openai/models",
+    "properties": {
+     "data": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/OpenaiModelsResponseDataItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Data"
+     },
+     "object": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Object"
+     }
+    },
+    "title": "OpenaiModelsResponse",
+    "type": "object"
+   },
+   "OpenaiModelsResponseDataItem": {
+    "additionalProperties": true,
+    "properties": {
+     "created": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "object": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Object"
+     },
+     "owned_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Owned By"
+     }
+    },
+    "title": "OpenaiModelsResponseDataItem",
+    "type": "object"
+   },
    "OverviewResponse": {
     "additionalProperties": true,
     "description": "GET /offsite",
     "properties": {
      "available": {
       "anyOf": [
-       {},
+       {
+        "type": "boolean"
+       },
        {
         "type": "null"
        }
@@ -25900,7 +28754,12 @@
      },
      "repos": {
       "anyOf": [
-       {},
+       {
+        "items": {
+         "$ref": "#/components/schemas/OverviewResponseReposItem"
+        },
+        "type": "array"
+       },
        {
         "type": "null"
        }
@@ -25909,6 +28768,274 @@
      }
     },
     "title": "OverviewResponse",
+    "type": "object"
+   },
+   "OverviewResponseReposItem": {
+    "additionalProperties": true,
+    "properties": {
+     "append_only": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Append Only"
+     },
+     "created_at": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created At"
+     },
+     "has_rest_password": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Has Rest Password"
+     },
+     "hour": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Hour"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "initialized": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Initialized"
+     },
+     "keep": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/OverviewResponseReposItemKeep"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "kit_saved_at": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kit Saved At"
+     },
+     "last_backup": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Backup"
+     },
+     "last_check": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Check"
+     },
+     "last_drill": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Drill"
+     },
+     "last_drill_result": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Drill Result"
+     },
+     "last_result": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Result"
+     },
+     "location": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Location"
+     },
+     "lock_check": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lock Check"
+     },
+     "lock_days": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lock Days"
+     },
+     "locked_until": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Locked Until"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "paths": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paths"
+     },
+     "rest_user": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rest User"
+     },
+     "same_disk": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Same Disk"
+     }
+    },
+    "title": "OverviewResponseReposItem",
+    "type": "object"
+   },
+   "OverviewResponseReposItemKeep": {
+    "additionalProperties": true,
+    "properties": {
+     "daily": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daily"
+     },
+     "monthly": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Monthly"
+     },
+     "weekly": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Weekly"
+     }
+    },
+    "title": "OverviewResponseReposItemKeep",
     "type": "object"
    },
    "PackInstallRequest": {
@@ -25932,6 +29059,146 @@
      }
     },
     "title": "PackInstallRequest",
+    "type": "object"
+   },
+   "PackInstallResponse": {
+    "additionalProperties": true,
+    "description": "POST /ai/pack/install",
+    "properties": {
+     "preset": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preset"
+     },
+     "step": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Step"
+     }
+    },
+    "title": "PackInstallResponse",
+    "type": "object"
+   },
+   "PackStatusResponse": {
+    "additionalProperties": true,
+    "description": "GET /ai/pack",
+    "properties": {
+     "installed": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Installed"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     }
+    },
+    "title": "PackStatusResponse",
+    "type": "object"
+   },
+   "PackUseResponse": {
+    "additionalProperties": true,
+    "description": "POST /ai/pack/use",
+    "properties": {
+     "llm_endpoint": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Llm Endpoint"
+     },
+     "reindex": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PackUseResponseReindex"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "PackUseResponse",
+    "type": "object"
+   },
+   "PackUseResponseReindex": {
+    "additionalProperties": true,
+    "properties": {
+     "embedding_dim": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Embedding Dim"
+     },
+     "embedding_host": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Embedding Host"
+     },
+     "embedding_model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Embedding Model"
+     }
+    },
+    "title": "PackUseResponseReindex",
     "type": "object"
    },
    "PauseCopyResponse": {
@@ -26623,6 +29890,34 @@
      }
     },
     "title": "PostDockerCatalogComposeResponseComposeDictServicesItem",
+    "type": "object"
+   },
+   "PostDockerCatalogDeployResponse": {
+    "additionalProperties": true,
+    "description": "POST /docker/catalog/{app_id}/deploy",
+    "properties": {
+     "preset": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preset"
+     },
+     "step": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Step"
+     }
+    },
+    "title": "PostDockerCatalogDeployResponse",
     "type": "object"
    },
    "PostDockerCatalogSourceSyncResponse": {
@@ -27468,6 +30763,210 @@
      }
     },
     "title": "PostLedResponse",
+    "type": "object"
+   },
+   "PostRemoteAccessConnectResponse": {
+    "additionalProperties": true,
+    "description": "POST /network/remote-access/connect",
+    "properties": {
+     "addresses": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PostRemoteAccessConnectResponseAddresses"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "auth_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auth Url"
+     },
+     "https": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Https"
+     },
+     "ips": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ips"
+     },
+     "login_server": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Login Server"
+     },
+     "magic_dns": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Magic Dns"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     }
+    },
+    "title": "PostRemoteAccessConnectResponse",
+    "type": "object"
+   },
+   "PostRemoteAccessConnectResponseAddresses": {
+    "additionalProperties": true,
+    "properties": {},
+    "title": "PostRemoteAccessConnectResponseAddresses",
+    "type": "object"
+   },
+   "PostRemoteAccessDisconnectResponse": {
+    "additionalProperties": true,
+    "description": "POST /network/remote-access/disconnect",
+    "properties": {
+     "addresses": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PostRemoteAccessDisconnectResponseAddresses"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "auth_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auth Url"
+     },
+     "https": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Https"
+     },
+     "ips": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ips"
+     },
+     "login_server": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Login Server"
+     },
+     "magic_dns": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Magic Dns"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     }
+    },
+    "title": "PostRemoteAccessDisconnectResponse",
+    "type": "object"
+   },
+   "PostRemoteAccessDisconnectResponseAddresses": {
+    "additionalProperties": true,
+    "properties": {},
+    "title": "PostRemoteAccessDisconnectResponseAddresses",
     "type": "object"
    },
    "PostRevertSystemUpdateResponse": {
@@ -28443,6 +31942,15 @@
       ],
       "title": "Expires In Sec"
      },
+     "shutdown_path": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shutdown Path"
+     },
      "simulation_active": {
       "anyOf": [
        {
@@ -28675,6 +32183,356 @@
      }
     },
     "title": "PutMyAlertsResponse",
+    "type": "object"
+   },
+   "PutMyPreferencesResponse": {
+    "additionalProperties": true,
+    "description": "PUT /auth/me/preferences",
+    "properties": {
+     "advanced": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Advanced"
+     },
+     "preferences": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/PutMyPreferencesResponsePreferences"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "PutMyPreferencesResponse",
+    "type": "object"
+   },
+   "PutMyPreferencesResponsePreferences": {
+    "additionalProperties": true,
+    "properties": {
+     "advanced": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Advanced"
+     }
+    },
+    "title": "PutMyPreferencesResponsePreferences",
+    "type": "object"
+   },
+   "PutNutServerResponse": {
+    "additionalProperties": true,
+    "description": "PUT /ups/nut-server",
+    "properties": {
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "fsd": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fsd"
+     },
+     "has_password": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Has Password"
+     },
+     "logins": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Logins"
+     },
+     "networks": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Networks"
+     },
+     "port": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Port"
+     },
+     "running": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Running"
+     },
+     "user": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User"
+     }
+    },
+    "title": "PutNutServerResponse",
+    "type": "object"
+   },
+   "PutPhoneResponse": {
+    "additionalProperties": true,
+    "description": "PUT /immich/phone",
+    "properties": {
+     "done": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Done"
+     }
+    },
+    "title": "PutPhoneResponse",
+    "type": "object"
+   },
+   "PutRepoResponse": {
+    "additionalProperties": true,
+    "description": "PUT /offsite/repos",
+    "properties": {
+     "append_only": {
+      "title": "Append Only",
+      "type": "boolean"
+     },
+     "created_at": {
+      "title": "Created At",
+      "type": "number"
+     },
+     "has_rest_password": {
+      "title": "Has Rest Password",
+      "type": "boolean"
+     },
+     "hour": {
+      "title": "Hour",
+      "type": "number"
+     },
+     "id": {
+      "title": "Id",
+      "type": "string"
+     },
+     "initialized": {
+      "title": "Initialized",
+      "type": "boolean"
+     },
+     "keep": {
+      "$ref": "#/components/schemas/PutRepoResponseKeep"
+     },
+     "kit_saved_at": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kit Saved At"
+     },
+     "last_backup": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Backup"
+     },
+     "last_check": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Check"
+     },
+     "last_drill": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Drill"
+     },
+     "last_drill_result": {
+      "title": "Last Drill Result",
+      "type": "string"
+     },
+     "last_result": {
+      "title": "Last Result",
+      "type": "string"
+     },
+     "location": {
+      "title": "Location",
+      "type": "string"
+     },
+     "lock_check": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Lock Check"
+     },
+     "lock_days": {
+      "title": "Lock Days",
+      "type": "number"
+     },
+     "locked_until": {
+      "anyOf": [
+       {},
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Locked Until"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "paths": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Paths",
+      "type": "array"
+     },
+     "rest_user": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rest User"
+     },
+     "same_disk": {
+      "title": "Same Disk",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "append_only",
+     "created_at",
+     "has_rest_password",
+     "hour",
+     "id",
+     "initialized",
+     "keep",
+     "last_drill_result",
+     "last_result",
+     "location",
+     "lock_days",
+     "name",
+     "paths",
+     "same_disk"
+    ],
+    "title": "PutRepoResponse",
+    "type": "object"
+   },
+   "PutRepoResponseKeep": {
+    "additionalProperties": true,
+    "properties": {
+     "daily": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daily"
+     },
+     "monthly": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Monthly"
+     },
+     "weekly": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Weekly"
+     }
+    },
+    "title": "PutRepoResponseKeep",
     "type": "object"
    },
    "PutServerIdentityResponse": {
@@ -30167,6 +34025,36 @@
    },
    "RestoreResponse": {
     "additionalProperties": true,
+    "description": "POST /offsite/repos/{repo_id}/snapshots/{snapshot_id}/restore",
+    "properties": {
+     "job": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Job"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "RestoreResponse",
+    "type": "object"
+   },
+   "RestoreResponse2": {
+    "additionalProperties": true,
     "description": "POST /snapshots/{name}/restore",
     "properties": {
      "overwrote": {
@@ -30188,7 +34076,7 @@
       "title": "Restored"
      }
     },
-    "title": "RestoreResponse",
+    "title": "RestoreResponse2",
     "type": "object"
    },
    "RestoreVersionIn": {
@@ -30482,6 +34370,36 @@
     "title": "RevokeShareLinkResponse2",
     "type": "object"
    },
+   "RollbackResponse": {
+    "additionalProperties": true,
+    "description": "POST /snapshots/{name}/rollback",
+    "properties": {
+     "safety_snapshot": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Safety Snapshot"
+     },
+     "share": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Share"
+     }
+    },
+    "title": "RollbackResponse",
+    "type": "object"
+   },
    "RotateSecretKeyRouteResponse": {
     "additionalProperties": true,
     "description": "POST /security/rotate-secret-key",
@@ -30598,6 +34516,36 @@
      "client_errors"
     ],
     "title": "RouteMetrics",
+    "type": "object"
+   },
+   "RunBackupResponse": {
+    "additionalProperties": true,
+    "description": "POST /offsite/repos/{repo_id}/backup",
+    "properties": {
+     "job": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Job"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "RunBackupResponse",
     "type": "object"
    },
    "RunNowResponse": {
@@ -32580,6 +36528,55 @@
     "title": "SyncAllCalendarFeedsResponse",
     "type": "object"
    },
+   "SyncPairIn": {
+    "properties": {
+     "every_hours": {
+      "default": 6,
+      "maximum": 168.0,
+      "minimum": 1.0,
+      "title": "Every Hours",
+      "type": "integer"
+     },
+     "id": {
+      "maxLength": 41,
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+     },
+     "local": {
+      "maxLength": 1024,
+      "minLength": 2,
+      "title": "Local",
+      "type": "string"
+     },
+     "max_delete": {
+      "default": 25,
+      "maximum": 100.0,
+      "minimum": 1.0,
+      "title": "Max Delete",
+      "type": "integer"
+     },
+     "name": {
+      "default": "",
+      "maxLength": 80,
+      "title": "Name",
+      "type": "string"
+     },
+     "remote": {
+      "maxLength": 1024,
+      "minLength": 2,
+      "title": "Remote",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "local",
+     "remote"
+    ],
+    "title": "SyncPairIn",
+    "type": "object"
+   },
    "SystemNetworkTopologyResponse": {
     "additionalProperties": true,
     "description": "GET /system/network-topology",
@@ -32784,83 +36781,90 @@
     "title": "SystemRebootResponse",
     "type": "object"
    },
+   "SystemSecurityFixResponse": {
+    "additionalProperties": true,
+    "description": "POST /system/security-posture/fix/{fix_id}",
+    "properties": {
+     "fix": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fix"
+     },
+     "message": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Message"
+     },
+     "ok": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ok"
+     }
+    },
+    "title": "SystemSecurityFixResponse",
+    "type": "object"
+   },
    "SystemSecurityPostureResponse": {
     "additionalProperties": true,
     "description": "GET /system/security-posture",
     "properties": {
      "checks": {
-      "anyOf": [
-       {
-        "items": {
-         "$ref": "#/components/schemas/SystemSecurityPostureResponseChecksItem"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Checks"
+      "items": {
+       "$ref": "#/components/schemas/SystemSecurityPostureResponseChecksItem"
+      },
+      "title": "Checks",
+      "type": "array"
      },
      "evaluated_at": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Evaluated At"
+      "title": "Evaluated At",
+      "type": "number"
      },
      "grade": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Grade"
+      "title": "Grade",
+      "type": "string"
      },
      "issues": {
-      "anyOf": [
-       {
-        "items": {
-         "$ref": "#/components/schemas/SystemSecurityPostureResponseIssuesItem"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Issues"
+      "items": {
+       "$ref": "#/components/schemas/SystemSecurityPostureResponseIssuesItem"
+      },
+      "title": "Issues",
+      "type": "array"
      },
      "score": {
-      "anyOf": [
-       {
-        "type": "number"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Score"
+      "title": "Score",
+      "type": "number"
      },
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      }
     },
+    "required": [
+     "checks",
+     "evaluated_at",
+     "grade",
+     "issues",
+     "score",
+     "status"
+    ],
     "title": "SystemSecurityPostureResponse",
     "type": "object"
    },
@@ -32888,6 +36892,28 @@
        }
       ],
       "title": "Details"
+     },
+     "fix": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fix"
+     },
+     "fix_label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fix Label"
      },
      "id": {
       "anyOf": [
@@ -32972,6 +36998,17 @@
        }
       ],
       "title": "Description"
+     },
+     "fix": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fix"
      },
      "id": {
       "anyOf": [
@@ -33963,27 +38000,17 @@
     "description": "POST /notifications/config",
     "properties": {
      "config": {
-      "anyOf": [
-       {
-        "$ref": "#/components/schemas/UpdateNotificationsResponseConfig"
-       },
-       {
-        "type": "null"
-       }
-      ]
+      "$ref": "#/components/schemas/UpdateNotificationsResponseConfig"
      },
      "status": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Status"
+      "title": "Status",
+      "type": "string"
      }
     },
+    "required": [
+     "config",
+     "status"
+    ],
     "title": "UpdateNotificationsResponse",
     "type": "object"
    },
@@ -33993,7 +38020,9 @@
      "apprise_urls": {
       "anyOf": [
        {
-        "items": {},
+        "items": {
+         "type": "string"
+        },
         "type": "array"
        },
        {
@@ -34364,6 +38393,17 @@
        }
       ],
       "title": "Webhook Url"
+     },
+     "weekly_report": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Weekly Report"
      }
     },
     "title": "UpdateNotificationsResponseConfig",
@@ -34646,6 +38686,16 @@
       ],
       "title": "Scopes"
      },
+     "signin_hours": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/UpdateUserEndpointResponseUserSigninHours"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "status": {
       "anyOf": [
        {
@@ -34698,6 +38748,49 @@
     "additionalProperties": true,
     "properties": {},
     "title": "UpdateUserEndpointResponseUserPreferences",
+    "type": "object"
+   },
+   "UpdateUserEndpointResponseUserSigninHours": {
+    "additionalProperties": true,
+    "properties": {
+     "days": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Days"
+     },
+     "end": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "End"
+     },
+     "start": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Start"
+     }
+    },
+    "title": "UpdateUserEndpointResponseUserSigninHours",
     "type": "object"
    },
    "UpdateVmResponse": {
@@ -35458,6 +39551,297 @@
      "url"
     ],
     "title": "UrlIn",
+    "type": "object"
+   },
+   "UsbBackupResponse": {
+    "additionalProperties": true,
+    "description": "POST /usb/backup",
+    "properties": {
+     "backups": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Backups"
+     },
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "UsbBackupResponse",
+    "type": "object"
+   },
+   "UsbDiskRequest": {
+    "properties": {
+     "dest": {
+      "anyOf": [
+       {
+        "maxLength": 1024,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dest"
+     },
+     "path": {
+      "maxLength": 1024,
+      "minLength": 2,
+      "title": "Path",
+      "type": "string"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "title": "UsbDiskRequest",
+    "type": "object"
+   },
+   "UsbDisksResponse": {
+    "additionalProperties": true,
+    "description": "GET /usb/disks",
+    "properties": {
+     "disks": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/UsbDisksResponseDisksItem"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Disks"
+     },
+     "settings": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/UsbDisksResponseSettings"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "title": "UsbDisksResponse",
+    "type": "object"
+   },
+   "UsbDisksResponseDisksItem": {
+    "additionalProperties": true,
+    "properties": {
+     "backups": {
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Backups"
+     },
+     "free_bytes": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Free Bytes"
+     },
+     "media": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Media"
+     },
+     "name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Name"
+     },
+     "path": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Path"
+     },
+     "total_bytes": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Total Bytes"
+     }
+    },
+    "title": "UsbDisksResponseDisksItem",
+    "type": "object"
+   },
+   "UsbDisksResponseSettings": {
+    "additionalProperties": true,
+    "properties": {
+     "auto_backup": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Backup"
+     },
+     "offer": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Offer"
+     }
+    },
+    "title": "UsbDisksResponseSettings",
+    "type": "object"
+   },
+   "UsbDismissResponse": {
+    "additionalProperties": true,
+    "description": "POST /usb/dismiss",
+    "properties": {
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "UsbDismissResponse",
+    "type": "object"
+   },
+   "UsbImportResponse": {
+    "additionalProperties": true,
+    "description": "POST /usb/import",
+    "properties": {
+     "status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Status"
+     }
+    },
+    "title": "UsbImportResponse",
+    "type": "object"
+   },
+   "UsbSettingsRequest": {
+    "properties": {
+     "auto_backup": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Backup"
+     },
+     "offer": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Offer"
+     }
+    },
+    "title": "UsbSettingsRequest",
+    "type": "object"
+   },
+   "UsbSettingsResponse": {
+    "additionalProperties": true,
+    "description": "PUT /usb/settings",
+    "properties": {
+     "auto_backup": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Backup"
+     },
+     "offer": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Offer"
+     }
+    },
+    "title": "UsbSettingsResponse",
     "type": "object"
    },
    "UserCreateRequest": {
@@ -36775,7 +41159,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/ListAppKeysResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -36814,7 +41200,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/CreateAppKeyResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -36856,7 +41244,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/DeleteAppKeyResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -38913,7 +43303,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/OpenaiChatResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -38941,7 +43333,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/OpenaiEmbeddingsResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -38969,7 +43363,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/OpenaiModelsResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -38998,7 +43394,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PackStatusResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -39043,7 +43441,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PackInstallResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -39075,7 +43475,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PackUseResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -40069,7 +44471,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PutMyPreferencesResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -41146,7 +45550,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/MigrateBackupJobResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -42006,7 +46412,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/GetChassisConfigResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -43142,7 +47550,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PostDockerCatalogDeployResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -43811,7 +48221,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/GetDockerContainerLogsResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -45295,7 +49707,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/FsActivityResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -46904,7 +51318,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/FsDismissTransferResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -47053,7 +51469,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/FsUndoTransferResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -47589,7 +52007,11 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "items": {},
+         "title": "Response 200 Get History Api V1 History Get",
+         "type": "array"
+        }
        }
       },
       "description": "Successful Response"
@@ -47724,7 +52146,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PutPhoneResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -52075,7 +56499,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/GetRemoteAccessResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -52114,7 +56540,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PostRemoteAccessConnectResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -52145,7 +56573,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PostRemoteAccessDisconnectResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -52640,7 +57070,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/DestinationsResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -52670,7 +57102,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/LockPresetsResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -52710,7 +57144,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/PutRepoResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -52802,7 +57238,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/RunBackupResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -53000,7 +57438,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/GetKitResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -53046,7 +57486,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/KitSavedResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -53093,7 +57535,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/LockCheckResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -53276,7 +57720,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/RestoreResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -55378,7 +59824,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/CreateShareLinkResponse2"
+        }
        }
       },
       "description": "Successful Response"
@@ -55820,7 +60268,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/RestoreResponse"
+         "$ref": "#/components/schemas/RestoreResponse2"
         }
        }
       },
@@ -55868,7 +60316,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/RollbackResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -56119,7 +60569,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/GetStatsResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -57766,6 +62218,268 @@
     ]
    }
   },
+  "/api/v1/sync/pairs": {
+   "get": {
+    "description": "Two-way syncs between a folder here and a cloud folder (FEAT-06).",
+    "operationId": "list_sync_pairs_api_v1_sync_pairs_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "List Sync Pairs",
+    "tags": [
+     "Remote Storage"
+    ],
+    "x-required-scopes": [
+     "backup:read",
+     "storage:read",
+     "storage:admin"
+    ]
+   },
+   "put": {
+    "description": "Adds or changes a two-way sync; it does nothing until its dry run was seen and approved.",
+    "operationId": "put_sync_pair_api_v1_sync_pairs_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SyncPairIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Sync Pair",
+    "tags": [
+     "Remote Storage"
+    ],
+    "x-required-scopes": [
+     "backup:write",
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/sync/pairs/{pair_id}": {
+   "delete": {
+    "operationId": "delete_sync_pair_api_v1_sync_pairs__pair_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pair_id",
+      "required": true,
+      "schema": {
+       "title": "Pair Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Delete Sync Pair",
+    "tags": [
+     "Remote Storage"
+    ],
+    "x-required-scopes": [
+     "backup:write",
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/sync/pairs/{pair_id}/approve": {
+   "post": {
+    "operationId": "approve_sync_pair_api_v1_sync_pairs__pair_id__approve_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pair_id",
+      "required": true,
+      "schema": {
+       "title": "Pair Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Approve Sync Pair",
+    "tags": [
+     "Remote Storage"
+    ],
+    "x-required-scopes": [
+     "backup:write",
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/sync/pairs/{pair_id}/preview": {
+   "post": {
+    "description": "The dry run: what would be copied each way, deleted, and kept twice as a conflict.",
+    "operationId": "preview_sync_pair_api_v1_sync_pairs__pair_id__preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pair_id",
+      "required": true,
+      "schema": {
+       "title": "Pair Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Preview Sync Pair",
+    "tags": [
+     "Remote Storage"
+    ],
+    "x-required-scopes": [
+     "backup:write",
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/sync/pairs/{pair_id}/run": {
+   "post": {
+    "operationId": "run_sync_pair_api_v1_sync_pairs__pair_id__run_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "pair_id",
+      "required": true,
+      "schema": {
+       "title": "Pair Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Run Sync Pair",
+    "tags": [
+     "Remote Storage"
+    ],
+    "x-required-scopes": [
+     "backup:write",
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
   "/api/v1/system/about": {
    "get": {
     "description": "Returns high-level system information, current version, chassis twin, and runtime stats.",
@@ -58267,7 +62981,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/GetProtectionStatusResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -58402,7 +63118,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/SystemSecurityFixResponse"
+        }
        }
       },
       "description": "Successful Response"
@@ -58709,7 +63427,9 @@
       "content": {
        "application/json": {
         "schema": {
-         "items": {},
+         "items": {
+          "$ref": "#/components/schemas/ListTokensResponseItem"
+         },
          "title": "Response 200 List Tokens Api V1 Tokens Get",
          "type": "array"
         }
@@ -59052,6 +63772,109 @@
     ]
    }
   },
+  "/api/v1/ups/nut-server": {
+   "get": {
+    "description": "The NUT server for the family's PCs: on or off, port, monitor user, PCs watching (FEAT-11).",
+    "operationId": "get_nut_server_api_v1_ups_nut_server_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/GetNutServerResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Nut Server",
+    "tags": [
+     "UPS & Power Integrity"
+    ],
+    "x-required-scopes": [
+     "system:view"
+    ]
+   },
+   "put": {
+    "operationId": "put_nut_server_api_v1_ups_nut_server_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NutServerRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PutNutServerResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Nut Server",
+    "tags": [
+     "UPS & Power Integrity"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/ups/nut-server/client": {
+   "get": {
+    "description": "The monitor password and the upsmon.conf line for a PC (admins only).",
+    "operationId": "nut_server_client_api_v1_ups_nut_server_client_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/NutServerClientResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Nut Server Client",
+    "tags": [
+     "UPS & Power Integrity"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
   "/api/v1/ups/self-test": {
    "post": {
     "description": "Issues 10-second battery self-test diagnostic command to the configured UPS.",
@@ -59165,6 +63988,203 @@
     "summary": "Post Ups Test Connection",
     "tags": [
      "UPS & Power Integrity"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/usb/backup": {
+   "post": {
+    "description": "Backs the NAS up to this USB disk now: every off-site backup that lives on it (FEAT-07).",
+    "operationId": "usb_backup_api_v1_usb_backup_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UsbDiskRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UsbBackupResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Usb Backup",
+    "tags": [
+     "System & Storage"
+    ],
+    "x-required-scopes": [
+     "backup:manage",
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/usb/disks": {
+   "get": {
+    "description": "USB disks mounted under /mnt/disks: space, the backups that go to each, camera media (FEAT-07).",
+    "operationId": "usb_disks_api_v1_usb_disks_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UsbDisksResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Usb Disks",
+    "tags": [
+     "System & Storage"
+    ],
+    "x-required-scopes": [
+     "storage:read",
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/usb/dismiss": {
+   "post": {
+    "operationId": "usb_dismiss_api_v1_usb_dismiss_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UsbDismissResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Usb Dismiss",
+    "tags": [
+     "System & Storage"
+    ],
+    "x-required-scopes": [
+     "storage:write",
+     "storage:admin",
+     "backup:manage"
+    ]
+   }
+  },
+  "/api/v1/usb/import": {
+   "post": {
+    "description": "Copies a USB disk's photos and videos (its DCIM folder, else the whole disk) into dated\nfolders, verified file by file like the card reader (FEAT-07).",
+    "operationId": "usb_import_api_v1_usb_import_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UsbDiskRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UsbImportResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Usb Import",
+    "tags": [
+     "System & Storage"
+    ],
+    "x-required-scopes": [
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/usb/settings": {
+   "put": {
+    "operationId": "usb_settings_api_v1_usb_settings_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UsbSettingsRequest"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UsbSettingsResponse"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Usb Settings",
+    "tags": [
+     "System & Storage"
     ],
     "x-required-scopes": [
      "system:config"
@@ -59489,7 +64509,9 @@
      "200": {
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/ExportUserDataResponse"
+        }
        }
       },
       "description": "Successful Response"

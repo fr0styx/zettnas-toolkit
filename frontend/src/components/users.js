@@ -26,6 +26,14 @@ import { emptyRowHtml } from './empty-state.js';
 // The signed-in person's state lives in session.js (PERF-9); re-exported for older imports
 export { setCurrentUser, getCurrentUser, fetchCurrentProfile, updateUserInterfaceElements, formatRole };
 
+/** Whether a person's limit is held by the disk or only checked on uploads (FEAT-10). */
+export function quotaHow(enf) {
+  if (!enf) return '';
+  return enf.enforced
+    ? ` · ${t('users.quota_enforced', 'held by the disk')}`
+    : ` · ${t('users.quota_advisory', 'checked on uploads only')}`;
+}
+
 export function openModal(modal) {
   if (!modal) return;
   modal.classList.add('open');
@@ -189,7 +197,7 @@ export async function loadUsersList() {
       const isMfa = !!u.mfa_enabled;
       const isSelf = getCurrentUser()?.id === u.id;
       const quotaStr = u.storage_quota_bytes > 0
-        ? `${Math.round(u.storage_quota_bytes / (1024 * 1024 * 1024))} GB`
+        ? `${Math.round(u.storage_quota_bytes / (1024 * 1024 * 1024))} GB${quotaHow(u.quota_enforcement)}`
         : t('users.no_limit', 'No limit');
 
       return `

@@ -208,6 +208,76 @@ async def list_remote_files(name: str, path: str = ""):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+class SyncPairIn(BaseModel):
+    id: str = Field(min_length=1, max_length=41)
+    name: str = Field(default="", max_length=80)
+    local: str = Field(min_length=2, max_length=1024)
+    remote: str = Field(min_length=2, max_length=1024)
+    every_hours: int = Field(default=6, ge=1, le=168)
+    max_delete: int = Field(default=25, ge=1, le=100)
+
+
+def _sync_errors(fn, *args):
+    try:
+        return fn(*args)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e).strip("'")) from None
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+
+
+SYNC_SCOPE = Depends(require_scope("backup:write", "storage:write", "storage:admin"))
+
+
+@router.get("/sync/pairs", dependencies=[Depends(require_scope("backup:read", "storage:read", "storage:admin"))])
+def list_sync_pairs():
+    """Two-way syncs between a folder here and a cloud folder (FEAT-06)."""
+    from backend.services import two_way_sync
+
+    return {"pairs": two_way_sync.list_pairs()}
+
+
+@router.put("/sync/pairs", dependencies=[SYNC_SCOPE])
+def put_sync_pair(req: SyncPairIn):
+    """Adds or changes a two-way sync; it does nothing until its dry run was seen and approved."""
+    from backend.services import two_way_sync
+
+    return _sync_errors(
+        two_way_sync.save_pair, req.id, req.name, req.local, req.remote, req.every_hours, req.max_delete
+    )
+
+
+@router.delete("/sync/pairs/{pair_id}", dependencies=[SYNC_SCOPE])
+def delete_sync_pair(pair_id: str):
+    from backend.services import two_way_sync
+
+    if not two_way_sync.delete_pair(pair_id):
+        raise HTTPException(status_code=404, detail="No such sync.")
+    return {"status": "deleted", "id": pair_id}
+
+
+@router.post("/sync/pairs/{pair_id}/preview", dependencies=[SYNC_SCOPE])
+async def preview_sync_pair(pair_id: str):
+    """The dry run: what would be copied each way, deleted, and kept twice as a conflict."""
+    from backend.services import two_way_sync
+
+    return await asyncio.to_thread(_sync_errors, two_way_sync.preview, pair_id)
+
+
+@router.post("/sync/pairs/{pair_id}/approve", dependencies=[SYNC_SCOPE])
+def approve_sync_pair(pair_id: str):
+    from backend.services import two_way_sync
+
+    return _sync_errors(two_way_sync.approve, pair_id)
+
+
+@router.post("/sync/pairs/{pair_id}/run", dependencies=[SYNC_SCOPE])
+async def run_sync_pair(pair_id: str):
+    from backend.services import two_way_sync
+
+    return await asyncio.to_thread(_sync_errors, two_way_sync.run_now, pair_id)
+
+
 @router.post("/remotes/sync", dependencies=[Depends(require_scope("backup:write", "storage:write", "storage:admin"))])
 async def start_remote_sync(req: RemoteSyncRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Triggers an asynchronous cloud sync/copy/move operation."""
