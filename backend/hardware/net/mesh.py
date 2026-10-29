@@ -7,6 +7,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import tailscale, wireguard
+from backend.ignored_errors import ignored
 
 
 def get_mesh_vpn_status() -> dict[str, Any]:
@@ -94,7 +95,7 @@ def get_mesh_vpn_status() -> dict[str, Any]:
                     delta = (exp_dt - now_dt).days
                     key_days = max(0, delta)
                 except Exception:
-                    logger.debug("backend.hardware.network.get_mesh_vpn_status: ignored error", exc_info=True)
+                    ignored("backend.hardware.network.get_mesh_vpn_status")
             ts_info["key_expiry_days"] = key_days
             ts_info["key_expired"] = (key_days == 0) if key_days is not None else False
 
@@ -107,7 +108,7 @@ def get_mesh_vpn_status() -> dict[str, Any]:
                     ts_info["ssh_enabled"] = bool(p_doc.get("RunSSH", False))
                     p_routes = p_doc.get("AdvertiseRoutes") or []
                 except Exception:
-                    logger.debug("backend.hardware.network.get_mesh_vpn_status: ignored error", exc_info=True)
+                    ignored("backend.hardware.network.get_mesh_vpn_status")
 
             # Exit Node Gateway options
             has_exit_route = any(r in ("0.0.0.0/0", "::/0") for r in p_routes)

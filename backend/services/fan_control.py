@@ -25,6 +25,7 @@ from backend.fsutil import SETTINGS_RECHECK_SECS, read_json_cached
 from backend.hardware.fans import apply_zone_pwm, calc_curve_pwm, set_fan_pwm
 from backend.hardware.storage import detect_chassis_model
 from backend.hardware.unraid import read_unraid_status
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE, add_event
 
 
@@ -158,7 +159,7 @@ def run_fan_control(
         if hasattr(pal_adapter, "is_storage_busy"):
             pal_busy = bool(pal_adapter.is_storage_busy())
     except Exception:
-        logger.debug("backend.services.fan_control.run_fan_control: ignored error", exc_info=True)
+        ignored("backend.services.fan_control.run_fan_control")
     storage_busy = mover_active or parity_active or pal_busy
 
     curve_points = fan_cfg.get("curve_points")

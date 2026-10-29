@@ -19,6 +19,7 @@ from backend.hardware.docker_stats import (
     _extract_hardware_badges,
     _parse_ports_and_webui,
 )
+from backend.ignored_errors import ignored
 
 SECRET_KEY_PATTERNS = ["PASS", "SECRET", "TOKEN", "KEY", "AUTH", "CREDENTIAL", "PRIVATE"]
 
@@ -508,9 +509,7 @@ def get_container_logs_chunk(cid_or_name: str, tail: int = 200) -> dict[str, Any
             try:
                 conn.close()
             except Exception:
-                logger.debug(
-                    "backend.services.compose_synthesizer.get_container_logs_chunk: ignored error", exc_info=True
-                )
+                ignored("backend.services.compose_synthesizer.get_container_logs_chunk")
 
 
 def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
@@ -592,7 +591,7 @@ def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
                 insp_data = json.loads(insp_res.read().decode("utf-8", errors="replace"))
                 exit_code = insp_data.get("ExitCode", 0)
         except Exception:
-            logger.debug("backend.services.compose_synthesizer.execute_in_container: ignored error", exc_info=True)
+            ignored("backend.services.compose_synthesizer.execute_in_container")
 
         return {
             "success": True,
@@ -609,4 +608,4 @@ def execute_in_container(cid_or_name: str, cmd: Any) -> dict[str, Any]:
             try:
                 conn.close()
             except Exception:
-                logger.debug("backend.services.compose_synthesizer.execute_in_container: ignored error", exc_info=True)
+                ignored("backend.services.compose_synthesizer.execute_in_container")

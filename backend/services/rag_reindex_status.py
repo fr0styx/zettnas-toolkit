@@ -4,6 +4,7 @@ import os
 from typing import Any
 
 from backend.config import logger
+from backend.ignored_errors import ignored
 from backend.services.rag_engine import get_rag_engine
 
 REINDEX_STATUS: dict[str, Any] = {
@@ -63,7 +64,7 @@ def get_reindex_status() -> dict[str, Any]:
             _REINDEX_CACHE_TIME = now
             return data
         except Exception:
-            logger.debug("backend.services.rag_reindex_status.get_reindex_status: ignored error", exc_info=True)
+            ignored("backend.services.rag_reindex_status.get_reindex_status")
 
     # 2. Check in-memory task status
     if REINDEX_STATUS.get("status") == "running":
@@ -102,7 +103,7 @@ def get_reindex_status() -> dict[str, Any]:
                     return res
             conn.close()
     except Exception:
-        logger.debug("backend.services.rag_reindex_status.get_reindex_status: ignored error", exc_info=True)
+        ignored("backend.services.rag_reindex_status.get_reindex_status")
 
     _REINDEX_CACHE = dict(REINDEX_STATUS)
     _REINDEX_CACHE_TIME = now

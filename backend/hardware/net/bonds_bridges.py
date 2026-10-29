@@ -9,6 +9,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import canary, common, topology
+from backend.ignored_errors import ignored
 
 
 def get_bond_config(bond_name: str) -> dict[str, Any]:
@@ -184,7 +185,7 @@ def update_bond_config(bond_name: str, updates: dict[str, Any]) -> dict[str, Any
                 with open(miimon_path, "w") as f:
                     f.write(str(miimon))
             except Exception:
-                logger.debug("backend.hardware.network.update_bond_config: ignored error", exc_info=True)
+                ignored("backend.hardware.network.update_bond_config")
 
     mode_info = common.BONDING_MODES.get(mode_code, common.BONDING_MODES["1"])
     try:
@@ -196,7 +197,7 @@ def update_bond_config(bond_name: str, updates: dict[str, Any]) -> dict[str, Any
             f"Bond {bond_name} updated to {mode_info['title']} with slaves: {', '.join(slaves)} (miimon: {miimon}ms).",
         )
     except Exception:
-        logger.debug("backend.hardware.network.update_bond_config: ignored error", exc_info=True)
+        ignored("backend.hardware.network.update_bond_config")
 
     return {
         "status": "ok",
@@ -353,14 +354,14 @@ def update_bridge_config(br_name: str, updates: dict[str, Any]) -> dict[str, Any
                 with open(stp_path, "w") as f:
                     f.write("1" if stp else "0")
             except Exception:
-                logger.debug("backend.hardware.network.update_bridge_config: ignored error", exc_info=True)
+                ignored("backend.hardware.network.update_bridge_config")
         fd_path = os.path.join(sys_net_dir, br_name, "bridge/forward_delay")
         if os.path.isfile(fd_path):
             try:
                 with open(fd_path, "w") as f:
                     f.write(str(forward_delay * 100))
             except Exception:
-                logger.debug("backend.hardware.network.update_bridge_config: ignored error", exc_info=True)
+                ignored("backend.hardware.network.update_bridge_config")
 
     try:
         from backend.state import add_event
@@ -371,7 +372,7 @@ def update_bridge_config(br_name: str, updates: dict[str, Any]) -> dict[str, Any
             f"Bridge {br_name} updated: STP {'Enabled' if stp else 'Disabled'}, Forward Delay {forward_delay}s, Members: {', '.join(members) or 'None'}.",
         )
     except Exception:
-        logger.debug("backend.hardware.network.update_bridge_config: ignored error", exc_info=True)
+        ignored("backend.hardware.network.update_bridge_config")
 
     return {
         "status": "ok",

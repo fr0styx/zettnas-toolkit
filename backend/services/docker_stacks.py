@@ -22,6 +22,7 @@ from backend.hardware.docker_stats import (
     _classify_stack,
     _parse_ports_and_webui,
 )
+from backend.ignored_errors import ignored
 from backend.services.compose_synthesizer import (
     fetch_container_raw_inspect,
     synthesize_compose_spec,
@@ -101,7 +102,7 @@ def _extract_depends_on_from_labels(labels: dict[str, str]) -> list[str]:
             if isinstance(parsed, dict):
                 return [str(k) for k in parsed.keys()]
         except Exception:
-            logger.debug("backend.services.docker_stacks._extract_depends_on_from_labels: ignored error", exc_info=True)
+            ignored("backend.services.docker_stacks._extract_depends_on_from_labels")
     deps: list[str] = []
     for item in raw.split(","):
         part = item.strip().split(":")[0].strip()
@@ -392,7 +393,7 @@ def get_stack_details(stack_name: str) -> dict[str, Any]:
                     resolved_location_type = "host_fs"
                     break
                 except Exception:
-                    logger.debug("backend.services.docker_stacks.get_stack_details: ignored error", exc_info=True)
+                    ignored("backend.services.docker_stacks.get_stack_details")
 
     # Read .env on host filesystem if found
     if resolved_location_type == "host_fs":
@@ -402,7 +403,7 @@ def get_stack_details(stack_name: str) -> dict[str, Any]:
                 with open(cand_env, encoding="utf-8") as f:
                     env_content = f.read()
             except Exception:
-                logger.debug("backend.services.docker_stacks.get_stack_details: ignored error", exc_info=True)
+                ignored("backend.services.docker_stacks.get_stack_details")
 
     # 2. Attempt reading from dockhand container volume if dockhand is running
     if not compose_yaml and config_file.startswith("/app/data/"):

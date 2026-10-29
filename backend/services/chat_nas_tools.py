@@ -18,6 +18,7 @@ from backend.fsutil import (  # noqa: F401
     json_locked,
     read_json,
 )
+from backend.ignored_errors import ignored
 from backend.services.chat_context import (  # noqa: F401
     _grounding_or_none,
 )
@@ -57,7 +58,7 @@ def tool_get_system_telemetry() -> dict[str, Any]:
                         ram_avail_gb = round(kb / (1024**2), 1)
                         break
     except Exception:
-        logger.debug("backend.services.ai_chat_agent.tool_get_system_telemetry: ignored error", exc_info=True)
+        ignored("backend.services.ai_chat_agent.tool_get_system_telemetry")
     ram_used_gb = round(max(0.1, ram_total_gb - ram_avail_gb), 1)
     ram_pct = round((ram_used_gb / max(1.0, ram_total_gb)) * 100.0, 1)
 

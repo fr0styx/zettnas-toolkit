@@ -29,6 +29,7 @@ from backend.hardware.pal.base import (
 )
 from backend.hardware.pal.observer import ObserverStorageAdapter
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
+from backend.ignored_errors import ignored
 
 
 class ZettOSStorageAdapter(ObserverStorageAdapter):
@@ -121,10 +122,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                                 "sync_action": "check",
                             }
                         except Exception:
-                            logger.debug(
-                                "backend.hardware.pal_storage.ZettOSStorageAdapter.trigger_scrub: ignored error",
-                                exc_info=True,
-                            )
+                            ignored("backend.hardware.pal_storage.ZettOSStorageAdapter.trigger_scrub")
                 return {
                     "platform": "zettos",
                     "pool_id": pool_id,
@@ -163,10 +161,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                                 "sync_action": "idle",
                             }
                         except Exception:
-                            logger.debug(
-                                "backend.hardware.pal_storage.ZettOSStorageAdapter.trigger_scrub: ignored error",
-                                exc_info=True,
-                            )
+                            ignored("backend.hardware.pal_storage.ZettOSStorageAdapter.trigger_scrub")
                 return {"platform": "zettos", "pool_id": pool_id, "action": action, "status": "idle"}
             else:
                 return {
@@ -276,9 +271,7 @@ class ZettOSStorageAdapter(ObserverStorageAdapter):
                             md_devices.add(f"/dev/{h}")
                             md_devices.add(f"/dev/mapper/{h}")
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.pal_storage.ZettOSStorageAdapter.list_pools: ignored error", exc_info=True
-                        )
+                        ignored("backend.hardware.pal_storage.ZettOSStorageAdapter.list_pools")
 
             # Check container mounts for matching block device or subvolume
             for m in mounts:

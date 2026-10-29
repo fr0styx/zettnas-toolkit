@@ -7,6 +7,7 @@ import threading
 import time
 
 from backend.config import BUTTON_CFG_FILE, HOST_DEV, logger
+from backend.ignored_errors import ignored
 from backend.services.copy_engine import _do_copy
 from backend.state import Z_STATE, add_event
 
@@ -34,7 +35,7 @@ def button_listener_daemon():
             logger.debug(f"[button_listener] Chassis {model} does not use MMIO button mapping.")
             return
     except Exception:
-        logger.debug("backend.services.button_listener.button_listener_daemon: ignored error", exc_info=True)
+        ignored("backend.services.button_listener.button_listener_daemon")
 
     MMIO_BASE = 0xE0D20000
     COPY_OFFSET = 0x6C0

@@ -18,6 +18,7 @@ from backend.api.files.common import _contained
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
 from backend.fsutil import is_protected, resolve_within, root_for
+from backend.ignored_errors import ignored
 from backend.models.schemas import MkdirRequest
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, _is_files_admin, check_user_path_access
 
@@ -280,7 +281,7 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
                         }
                     )
         except Exception:
-            logger.debug("backend.api.fs._handle_browse_logic_unfiltered: ignored error", exc_info=True)
+            ignored("backend.api.fs._handle_browse_logic_unfiltered")
 
     return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 

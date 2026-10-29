@@ -50,20 +50,17 @@ def test_snapshot_lists_the_busiest_places_first():
     assert len(ie._describe(RuntimeError(long))) == 300
 
 
-def test_the_old_debug_calls_are_routed_on_any_logger(caplog):
-    ie.reset()
-    caplog.set_level(logging.WARNING, logger="ZettNAS")
-    child = logging.getLogger("ZettNAS.WebDAVApi")
-    try:
-        raise OSError("share gone")
-    except OSError:
-        child.debug("backend.api.webdav.mount: ignored error", exc_info=True)
-    assert ie.snapshot()["top"][0]["where"] == "backend.api.webdav.mount"
-    assert "[ignored] backend.api.webdav.mount: OSError: share gone" in caplog.text
-    # other debug calls are untouched
-    logging.getLogger("ZettNAS").debug("plain %s", "message")
-    logging.getLogger("ZettNAS").debug("x: ignored error")  # no exc_info: an ordinary message
-    assert ie.snapshot()["places"] == 1
+def test_ignored_errors_are_explicit_and_logger_debug_is_not_patched():
+    """ARC-24: ignored("<where>") is called directly; Logger.debug is the standard library's."""
+    assert logging.Logger.debug.__module__ == "logging"
+    for f in glob.glob(os.path.join(ROOT, "backend", "**", "*.py"), recursive=True):
+        if f.endswith("ignored_errors.py"):
+            continue
+        with open(f, encoding="utf-8") as fh:
+            text = fh.read()
+        assert not re.search(r'\.debug\(\s*"[^"\n]+: ignored error",\s*exc_info=True', text), (
+            f'{f}: use ignored("<where>") instead of a debug call'
+        )
 
 
 def test_the_number_of_places_that_ignore_errors_only_goes_down():

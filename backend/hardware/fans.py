@@ -19,6 +19,7 @@ from backend.config import (
     logger,
 )
 from backend.hardware.cpu import _find_hwmon
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 logger = logging.getLogger("ZettNAS")
@@ -55,7 +56,7 @@ def _detect_zettlab_appliance() -> bool:
         if model in ("d4", "d6u", "d8u"):
             return True
     except Exception:
-        logger.debug("backend.hardware.fans.is_zettlab_appliance: ignored error", exc_info=True)
+        ignored("backend.hardware.fans.is_zettlab_appliance")
     try:
         from backend.hardware.unraid import read_unraid_status
 
@@ -80,7 +81,7 @@ def _detect_zettlab_appliance() -> bool:
             ):
                 return True
     except Exception:
-        logger.debug("backend.hardware.fans.is_zettlab_appliance: ignored error", exc_info=True)
+        ignored("backend.hardware.fans.is_zettlab_appliance")
     try:
         from backend.hardware.chassis import ChassisEngine
 
@@ -145,7 +146,7 @@ def is_zettlab_mmio_supported() -> bool:
         if model in ("d4", "generic", "diy"):
             return False
     except Exception:
-        logger.debug("backend.hardware.fans.is_zettlab_mmio_supported: ignored error", exc_info=True)
+        ignored("backend.hardware.fans.is_zettlab_mmio_supported")
 
     # 3. Unraid model check
     try:
@@ -159,7 +160,7 @@ def is_zettlab_mmio_supported() -> bool:
             if any(k in u_model for k in ("d4", "d4u", "d4 ultra")):
                 return False
     except Exception:
-        logger.debug("backend.hardware.fans.is_zettlab_mmio_supported: ignored error", exc_info=True)
+        ignored("backend.hardware.fans.is_zettlab_mmio_supported")
 
     # 4. DMI / motherboard string check: must specifically match D8U, D6U, or WY120
     try:
@@ -173,7 +174,7 @@ def is_zettlab_mmio_supported() -> bool:
         if any(k in dmi_str for k in ("wy120", "d8 ultra", "d8u", "d6 ultra", "d6u")):
             return True
     except Exception:
-        logger.debug("backend.hardware.fans.is_zettlab_mmio_supported: ignored error", exc_info=True)
+        ignored("backend.hardware.fans.is_zettlab_mmio_supported")
 
     return False
 
@@ -269,28 +270,19 @@ class ZettlabMmioFanController:
                                 "Please add --device-cgroup-rule='c 1:1 rwm' to your container's Extra Parameters in Unraid.",
                             )
                         except Exception:
-                            logger.debug(
-                                "backend.hardware.fans.ZettlabMmioFanController._ensure_mapped: ignored error",
-                                exc_info=True,
-                            )
+                            ignored("backend.hardware.fans.ZettlabMmioFanController._ensure_mapped")
                     if fd is not None:
                         try:
                             os.close(fd)
                         except Exception:
-                            logger.debug(
-                                "backend.hardware.fans.ZettlabMmioFanController._ensure_mapped: ignored error",
-                                exc_info=True,
-                            )
+                            ignored("backend.hardware.fans.ZettlabMmioFanController._ensure_mapped")
                 except Exception as e:
                     logger.debug(f"[FANS-MMIO] Failed mapping {cand}: {e}")
                     if fd is not None:
                         try:
                             os.close(fd)
                         except Exception:
-                            logger.debug(
-                                "backend.hardware.fans.ZettlabMmioFanController._ensure_mapped: ignored error",
-                                exc_info=True,
-                            )
+                            ignored("backend.hardware.fans.ZettlabMmioFanController._ensure_mapped")
 
             self._last_failed_time = now
             return False
@@ -346,13 +338,13 @@ class ZettlabMmioFanController:
                 try:
                     self._mm.close()
                 except Exception:
-                    logger.debug("backend.hardware.fans.ZettlabMmioFanController.close: ignored error", exc_info=True)
+                    ignored("backend.hardware.fans.ZettlabMmioFanController.close")
                 self._mm = None
             if self._fd is not None:
                 try:
                     os.close(self._fd)
                 except Exception:
-                    logger.debug("backend.hardware.fans.ZettlabMmioFanController.close: ignored error", exc_info=True)
+                    ignored("backend.hardware.fans.ZettlabMmioFanController.close")
                 self._fd = None
             self._failed_previously = False
 
@@ -500,7 +492,7 @@ def read_fans():
                         if rpm > 0:
                             fans.append(rpm)
                     except Exception:
-                        logger.debug("backend.hardware.fans.read_fans: ignored error", exc_info=True)
+                        ignored("backend.hardware.fans.read_fans")
     # Sanitize fan readings (e.g. spurious 8000 RPM or 65535 spikes from I2C bugs)
     for i in range(len(fans)):
         if fans[i] >= 6000:
@@ -900,7 +892,7 @@ def stop_acoustic_sweep() -> dict[str, Any]:
         try:
             set_fan_pwm("auto")
         except Exception:
-            logger.debug("backend.hardware.fans.stop_acoustic_sweep: ignored error", exc_info=True)
+            ignored("backend.hardware.fans.stop_acoustic_sweep")
     return {"success": True, "message": "Acoustic sweep stopped"}
 
 
@@ -989,7 +981,7 @@ def _run_acoustic_sweep_worker(step_duration: float, pwm_step: int, pwms: list[i
         try:
             set_fan_pwm("auto")
         except Exception:
-            logger.debug("backend.hardware.fans._run_acoustic_sweep_worker: ignored error", exc_info=True)
+            ignored("backend.hardware.fans._run_acoustic_sweep_worker")
         with _calibration_lock:
             _calibration_state["running"] = False
             if not _calibration_stop_event.is_set():

@@ -9,6 +9,7 @@ from typing import (  # noqa: F401
 from backend.config import (  # noqa: F401
     logger,
 )
+from backend.ignored_errors import ignored
 from backend.services.chat_context import (  # noqa: F401
     _grounding_label,
 )
@@ -37,20 +38,20 @@ def _safe_parse_tool_call_json(raw_args: Any) -> dict[str, Any]:
     try:
         return json.loads(s)
     except Exception:
-        logger.debug("backend.services.ai_chat_agent._safe_parse_tool_call_json: ignored error", exc_info=True)
+        ignored("backend.services.ai_chat_agent._safe_parse_tool_call_json")
     # Strip trailing commas before } or ]
     s_fixed = re.sub(r",\s*([}\]])", r"\1", s)
     try:
         return json.loads(s_fixed)
     except Exception:
-        logger.debug("backend.services.ai_chat_agent._safe_parse_tool_call_json: ignored error", exc_info=True)
+        ignored("backend.services.ai_chat_agent._safe_parse_tool_call_json")
     # Extract outermost JSON object if wrapped in explanatory prose
     match = re.search(r"(\{.*\})", s_fixed, flags=re.DOTALL)
     if match:
         try:
             return json.loads(match.group(1))
         except Exception:
-            logger.debug("backend.services.ai_chat_agent._safe_parse_tool_call_json: ignored error", exc_info=True)
+            ignored("backend.services.ai_chat_agent._safe_parse_tool_call_json")
     return {}
 
 

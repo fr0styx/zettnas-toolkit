@@ -30,6 +30,7 @@ from backend.hardware.pal.base import (
     _whole_disk,
 )
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
+from backend.ignored_errors import ignored
 from backend.settings import test_mode
 
 
@@ -297,10 +298,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                             md_devices.add(f"/dev/{h}")
                             md_devices.add(f"/dev/mapper/{h}")
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_pools: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_pools")
 
             for m in mounts:
                 dev = m.get("device", "")
@@ -472,9 +470,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 u = shutil.disk_usage(self._pool_path if os.path.exists(self._pool_path) else "/")
                 total, used, free = u.total, u.used, u.free
             except Exception:
-                logger.debug(
-                    "backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_pools: ignored error", exc_info=True
-                )
+                ignored("backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_pools")
             pct = round(used / total * 100, 1) if total > 0 else 0.0
 
             members = list(hal_disks.values()) if hal_disks else self._discover_hal_disks()
@@ -781,10 +777,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     try:
                         os.rmdir(old_mnt)
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.pal_storage.GenericLinuxStorageAdapter.rename_pool: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.hardware.pal_storage.GenericLinuxStorageAdapter.rename_pool")
                 if not os.path.exists(old_mnt):
                     os.symlink(new_mnt, old_mnt)
                     logger.info(f"[PAL] Created compatibility symlink {old_mnt} -> {new_mnt}")
@@ -1165,10 +1158,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                                 item["retention_until"] = meta.get("retention_until")
                                 item["is_immutable"] = (meta.get("retention_until") or 0) > time.time()
                             except Exception:
-                                logger.debug(
-                                    "backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_snapshots: ignored error",
-                                    exc_info=True,
-                                )
+                                ignored("backend.hardware.pal_storage.GenericLinuxStorageAdapter.list_snapshots")
                         snapshots.append(item)
             except Exception as e:
                 logger.debug(f"[PAL] Snapshot list error: {e}")

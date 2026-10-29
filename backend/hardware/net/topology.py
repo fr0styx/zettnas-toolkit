@@ -15,6 +15,7 @@ from backend.hardware.net import canary, common
 # get_network_topology has locals named listening_ports and vlans, hence the aliases
 from backend.hardware.net import listening_ports as listening_mod
 from backend.hardware.net import vlans as vlan_mod
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 
@@ -425,7 +426,7 @@ def read_network_rates():
                 with open(bonding_slaves_path, encoding="utf-8") as bf:
                     bond_slaves.update(bf.read().split())
         except Exception:
-            logger.debug("backend.hardware.network.read_network_rates: ignored error", exc_info=True)
+            ignored("backend.hardware.network.read_network_rates")
 
     for iface_name, (cur_rx, cur_tx) in ifaces.items():
         if iface_name == "lo" or iface_name.startswith(("veth", "docker", "br-", "shim-", "tunl", "tailscale", "wg")):
@@ -550,6 +551,6 @@ def read_ip():
                             Z_STATE.discovered_host_ip = candidate_ip
                             return candidate_ip
         except Exception:
-            logger.debug("backend.hardware.network.read_ip: ignored error", exc_info=True)
+            ignored("backend.hardware.network.read_ip")
 
     return "?"

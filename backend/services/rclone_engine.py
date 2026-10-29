@@ -20,6 +20,7 @@ import uuid
 from typing import Any, Optional
 
 import backend.config as config
+from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 from backend.services.webdav_engine import ensure_fuse_device
 
@@ -851,9 +852,7 @@ class RcloneEngine:
                                 lines = lf.readlines()
                                 err_msg = "".join(lines[-15:]).strip()
                         except Exception:
-                            logger.debug(
-                                "backend.services.rclone_engine.RcloneEngine.mount_remote: ignored error", exc_info=True
-                            )
+                            ignored("backend.services.rclone_engine.RcloneEngine.mount_remote")
                     raise RuntimeError(
                         f"Mount exited immediately: {err_msg if err_msg else 'code ' + str(proc.returncode)}"
                     )

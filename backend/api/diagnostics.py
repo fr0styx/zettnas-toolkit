@@ -25,6 +25,7 @@ from backend.hardware.pal_storage import get_storage_platform
 from backend.hardware.screen import get_screen_state
 from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name
 from backend.hardware.ups import read_ups_status
+from backend.ignored_errors import ignored
 from backend.ignored_errors import snapshot as ignored_snapshot
 from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
 from backend.services.notifications import DEFAULT_NOTIFICATION_CONFIG, NOTIFICATIONS_FILE
@@ -53,7 +54,7 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
     try:
         ram_stats = read_mem()
     except Exception:
-        logger.debug("backend.api.diagnostics._build_bundle_sync: ignored error", exc_info=True)
+        ignored("backend.api.diagnostics._build_bundle_sync")
 
     try:
         pal_adapter = get_storage_platform()
@@ -350,7 +351,7 @@ def _build_summary_sync() -> dict[str, Any]:
     try:
         ram = read_mem()
     except Exception:
-        logger.debug("backend.api.diagnostics._build_summary_sync: ignored error", exc_info=True)
+        ignored("backend.api.diagnostics._build_summary_sync")
 
     used_gb = ram.get("used_gb")
     total_gb = ram.get("total_gb")
@@ -415,7 +416,7 @@ def _build_summary_sync() -> dict[str, Any]:
         kt = collect_kernel_telemetry()
         has_cpu_throttle = kt.get("cpu_telemetry", {}).get("thermal_throttling_detected", False)
     except Exception:
-        logger.debug("backend.api.diagnostics._build_summary_sync: ignored error", exc_info=True)
+        ignored("backend.api.diagnostics._build_summary_sync")
 
     # UPS telemetry
     ups_tel = {}
@@ -424,7 +425,7 @@ def _build_summary_sync() -> dict[str, Any]:
 
         ups_tel = get_ups_diagnostic_telemetry()
     except Exception:
-        logger.debug("backend.api.diagnostics._build_summary_sync: ignored error", exc_info=True)
+        ignored("backend.api.diagnostics._build_summary_sync")
     ups_mode = ups_tel.get("mode", "disabled")
     ups_connected = ups_tel.get("connected", False)
     ups_permission_blocked = ups_tel.get("direct_usb_access", {}).get("permission_blocked", False)

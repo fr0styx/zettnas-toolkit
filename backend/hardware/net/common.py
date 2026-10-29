@@ -17,6 +17,7 @@ from backend.config import (
 )
 from backend.config import docker_sock as _docker_sock_path  # noqa: F401  (likewise)
 from backend.fsutil import atomic_write_json, read_json
+from backend.ignored_errors import ignored
 
 # Host files read or written here (module constants so tests can point them elsewhere)
 UNRAID_NETWORK_CFG = ("/boot/config/network.cfg", "/host/boot/config/network.cfg")
@@ -173,7 +174,7 @@ def _get_dns_servers() -> list[str]:
                             if match and match.group(1) not in servers:
                                 servers.append(match.group(1))
             except Exception:
-                logger.debug("backend.hardware.network._get_dns_servers: ignored error", exc_info=True)
+                ignored("backend.hardware.network._get_dns_servers")
         if servers:
             break
     return servers
@@ -217,7 +218,7 @@ def _get_unraid_descriptions() -> dict[str, str]:
                                 desc_map["br0"] = desc
                                 desc_map["bond0"] = desc
             except Exception:
-                logger.debug("backend.hardware.network._get_unraid_descriptions: ignored error", exc_info=True)
+                ignored("backend.hardware.network._get_unraid_descriptions")
             break
     return desc_map
 

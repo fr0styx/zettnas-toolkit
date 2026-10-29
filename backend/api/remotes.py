@@ -23,6 +23,8 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.ignored_errors import ignored
+from backend.logging_config import in_this_request
 from backend.services.rclone_engine import get_rclone_engine
 
 logger = logging.getLogger("ZettNAS.RemotesApi")
@@ -271,7 +273,7 @@ def _cleanup_old_oauth_sessions(force_all: bool = False):
                 try:
                     proc.kill()
                 except Exception:
-                    logger.debug("backend.api.remotes._cleanup_old_oauth_sessions: ignored error", exc_info=True)
+                    ignored("backend.api.remotes._cleanup_old_oauth_sessions")
             _ACTIVE_OAUTH_SESSIONS.pop(sid, None)
 
 
@@ -286,7 +288,7 @@ async def start_oauth_session(req: OAuthStartRequest):
             lambda: subprocess.run(["pkill", "-9", "-f", "rclone authorize"], capture_output=True, timeout=2)
         )
     except Exception:
-        logger.debug("backend.api.remotes.start_oauth_session: ignored error", exc_info=True)
+        ignored("backend.api.remotes.start_oauth_session")
     await asyncio.sleep(0.15)
 
     rclone_bin = shutil.which("rclone") or "/usr/bin/rclone"
@@ -332,7 +334,7 @@ async def start_oauth_session(req: OAuthStartRequest):
                     local_url = m.group(0)
                     break
         except Exception:
-            logger.debug("backend.api.remotes.start_oauth_session: ignored error", exc_info=True)
+            ignored("backend.api.remotes.start_oauth_session")
         await asyncio.sleep(0.1)
 
     if not local_url:
@@ -390,7 +392,7 @@ async def start_oauth_session(req: OAuthStartRequest):
         except Exception as e:
             session_data["error"] = str(e)
 
-    t = threading.Thread(target=_read_stdout, daemon=True)
+    t = threading.Thread(target=in_this_request(_read_stdout), daemon=True)
     t.start()
 
     return {
@@ -858,5 +860,5 @@ async def cancel_oauth_session(session_id: str):
             try:
                 proc.kill()
             except Exception:
-                logger.debug("backend.api.remotes.cancel_oauth_session: ignored error", exc_info=True)
+                ignored("backend.api.remotes.cancel_oauth_session")
     return {"status": "ok"}

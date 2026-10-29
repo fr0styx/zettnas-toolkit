@@ -6,6 +6,7 @@ import subprocess
 import threading
 import time
 
+from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 from backend.state import Z_STATE
 
@@ -291,7 +292,7 @@ def _close_serial_connection():
         try:
             _serial_handle.close()
         except Exception:
-            logger.debug("backend.hardware.led._close_serial_connection: ignored error", exc_info=True)
+            ignored("backend.hardware.led._close_serial_connection")
         _serial_handle = None
         _serial_port = None
 
@@ -343,7 +344,7 @@ def find_led_port():
                 if os.path.exists(real):
                     return real
             except Exception:
-                logger.debug("backend.hardware.led.find_led_port: ignored error", exc_info=True)
+                ignored("backend.hardware.led.find_led_port")
             return b
 
     # Avoid capturing arbitrary serial devices (Zigbee dongles, 3D printers) on generic PCs

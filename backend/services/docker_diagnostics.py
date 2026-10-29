@@ -12,6 +12,7 @@ import time
 from typing import Any, Optional
 
 from backend.config import docker_sock, logger
+from backend.ignored_errors import ignored
 from backend.logging_config import sanitize_dict, sanitize_string
 from backend.services.docker_client import UnixHTTPConnection  # noqa: E402,F401  (one client, ARCH-3)
 
@@ -37,7 +38,7 @@ def _docker_api_get(endpoint: str, timeout: float = 2.5) -> Any | None:
             try:
                 conn.close()
             except Exception:
-                logger.debug("backend.services.docker_diagnostics._docker_api_get: ignored error", exc_info=True)
+                ignored("backend.services.docker_diagnostics._docker_api_get")
 
 
 def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
@@ -76,7 +77,7 @@ def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
             try:
                 conn.close()
             except Exception:
-                logger.debug("backend.services.docker_diagnostics._docker_api_get_logs: ignored error", exc_info=True)
+                ignored("backend.services.docker_diagnostics._docker_api_get_logs")
 
 
 def collect_docker_diagnostics() -> dict[str, Any]:
@@ -177,9 +178,7 @@ def collect_docker_diagnostics() -> dict[str, Any]:
                     if StoragePlatformDetector.detect() != PlatformType.GENERIC_LINUX:
                         is_troubled = False
                 except Exception:
-                    logger.debug(
-                        "backend.services.docker_diagnostics.collect_docker_diagnostics: ignored error", exc_info=True
-                    )
+                    ignored("backend.services.docker_diagnostics.collect_docker_diagnostics")
 
             if is_troubled:
                 troubled_names.append(name)
@@ -199,9 +198,7 @@ def collect_docker_diagnostics() -> dict[str, Any]:
                         finished_at = c_state.get("FinishedAt")
                         restart_count = c_inspect.get("RestartCount", 0)
                 except Exception:
-                    logger.debug(
-                        "backend.services.docker_diagnostics.collect_docker_diagnostics: ignored error", exc_info=True
-                    )
+                    ignored("backend.services.docker_diagnostics.collect_docker_diagnostics")
 
                 troubled_containers.append(
                     {

@@ -20,6 +20,7 @@ import urllib.request
 from collections.abc import Sequence
 
 from backend.config import logger
+from backend.ignored_errors import ignored
 from backend.services import gpu_queue
 from backend.services.rag_text import (
     _STOPWORDS,
@@ -490,9 +491,7 @@ def compute_neural_embedding_via_ollama(
                     if embs and isinstance(embs, list) and len(embs) > 0 and isinstance(embs[0], list):
                         raw_emb = embs[0]
         except Exception:
-            logger.debug(
-                "backend.services.rag_engine.compute_neural_embedding_via_ollama: ignored error", exc_info=True
-            )
+            ignored("backend.services.rag_engine.compute_neural_embedding_via_ollama")
 
         # 2. Fall back to legacy /api/embeddings endpoint if /api/embed was unavailable
         if raw_emb is None and _left() >= 0.2:
@@ -512,9 +511,7 @@ def compute_neural_embedding_via_ollama(
                         if cand_emb and isinstance(cand_emb, list):
                             raw_emb = cand_emb
             except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.compute_neural_embedding_via_ollama: ignored error", exc_info=True
-                )
+                ignored("backend.services.rag_engine.compute_neural_embedding_via_ollama")
 
         if raw_emb:
             # L2 normalization

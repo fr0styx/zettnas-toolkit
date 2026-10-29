@@ -27,6 +27,7 @@ import logging
 
 from backend import config
 from backend.fsutil import safe_serve_root
+from backend.ignored_errors import ignored
 from backend.passwords import verify_password
 from backend.services import login_lockout
 from backend.users_db import get_user_by_username
@@ -133,7 +134,7 @@ def main():
                                 target_root = os.path.join(pool_path, "homes", username.lower())
                             break
         except Exception:
-            logger.debug("backend.services.rclone_auth_proxy.main: ignored error", exc_info=True)
+            ignored("backend.services.rclone_auth_proxy.main")
 
     # 2. Check user in SQLite users.db
     if not authenticated:

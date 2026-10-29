@@ -1,5 +1,7 @@
 """Architecture ratchets (ARC-22, ARC-23): layering, private-name imports and function size.
 
+Also held per module (ARC-24): broad `except` clauses and log calls with f-strings.
+
 Layers, lowest first: core (backend/*.py), hardware, services, api, app (backend/main.py). A
 module may import its own layer or a lower one; an import upwards (a service reaching into the
 API, a hardware module calling a service) is recorded in tests/arch_baseline.json, and a new one
@@ -54,6 +56,8 @@ def _function_sizes(tree: ast.AST, prefix: str = ""):
 def measure() -> dict:
     upward: set[str] = set()
     private: dict[str, int] = {}
+    broad: dict[str, int] = {}
+    fstring_logs: dict[str, int] = {}
     long_functions: dict[str, int] = {}
     for path in sorted((ROOT / "backend").rglob("*.py")):
         mod = _module_of(path)
@@ -73,13 +77,40 @@ def measure() -> dict:
                     them = layer(a.name)
                     if me and them and RANK[them] > RANK[me]:
                         upward.add(f"{mod} -> {a.name}")
+        n_broad = n_fstr = 0
+        for node in ast.walk(tree):
+            # except: / except Exception: / except BaseException: (ARC-24)
+            if isinstance(node, ast.ExceptHandler) and (
+                node.type is None
+                or (isinstance(node.type, ast.Name) and node.type.id in ("Exception", "BaseException"))
+            ):
+                n_broad += 1
+            # logger.info(f"...") formats even when the level is off and can't be grouped (ARC-24)
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr in ("debug", "info", "warning", "error", "critical", "exception")
+                and node.args
+                and isinstance(node.args[0], ast.JoinedStr)
+            ):
+                n_fstr += 1
+        if n_broad:
+            broad[mod] = n_broad
+        if n_fstr:
+            fstring_logs[mod] = n_fstr
         for name, size in _function_sizes(tree):
             if size > MAX_LINES:
                 key = f"{mod}.{name}"
                 long_functions[key] = max(size, long_functions.get(key, 0))
         if n_private:
             private[mod] = n_private
-    return {"upward_imports": sorted(upward), "private_imports": private, "long_functions": long_functions}
+    return {
+        "upward_imports": sorted(upward),
+        "private_imports": private,
+        "long_functions": long_functions,
+        "broad_excepts": broad,
+        "fstring_logs": fstring_logs,
+    }
 
 
 def problems(now: dict, base: dict) -> list[str]:
@@ -91,6 +122,14 @@ def problems(now: dict, base: dict) -> list[str]:
             out.append(
                 f"{mod} imports {n} private names (baseline {base.get('private_imports', {}).get(mod, 0)}): export what is shared"
             )
+    for key, what, fix in (
+        ("broad_excepts", "broad except clauses", "catch the errors you expect, or call ignored()"),
+        ("fstring_logs", "f-string log calls", 'log with logger.info("... %s", value)'),
+    ):
+        for mod, n in now.get(key, {}).items():
+            allowed = base.get(key, {}).get(mod, 0)
+            if n > allowed:
+                out.append(f"{mod} has {n} {what} (baseline {allowed}): {fix}")
     for fn, n in now["long_functions"].items():
         allowed = base.get("long_functions", {}).get(fn, MAX_LINES)
         if n > allowed:

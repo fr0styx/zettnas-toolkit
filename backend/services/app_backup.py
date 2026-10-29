@@ -18,6 +18,7 @@ from typing import Any, Optional
 
 from backend.config import DATA_DIR, POOL_PATH, logger
 from backend.fsutil import atomic_write_json, read_json
+from backend.ignored_errors import ignored
 from backend.services.compose_synthesizer import format_compose_yaml, synthesize_compose_spec
 from backend.services.container_mutator import _docker_request
 
@@ -646,7 +647,7 @@ def create_vm_backup(
             try:
                 os.remove(archive_filepath)
             except Exception:
-                logger.debug("backend.services.app_backup.create_vm_backup: ignored error", exc_info=True)
+                ignored("backend.services.app_backup.create_vm_backup")
         logger.error(f"[VM Backup] Failed to create backup for {vname}: {e}")
         raise
     finally:

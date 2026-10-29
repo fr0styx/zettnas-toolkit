@@ -16,6 +16,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.config import docker_sock, logger
 from backend.confirmations import require_confirmation
 from backend.hardware.docker_stats import container_action, read_docker_containers
+from backend.ignored_errors import ignored
 from backend.models.schemas import DockerActionRequest
 
 router = APIRouter(tags=["Docker Containers & Stacks"])
@@ -299,9 +300,7 @@ async def stream_docker_container_logs(
                     writer.close()
                     await writer.wait_closed()
                 except Exception:
-                    logger.debug(
-                        "backend.api.docker.stream_docker_container_logs.event_generator: ignored error", exc_info=True
-                    )
+                    ignored("backend.api.docker.stream_docker_container_logs.event_generator")
 
     return StreamingResponse(
         event_generator(),

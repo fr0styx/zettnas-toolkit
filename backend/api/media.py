@@ -16,6 +16,8 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
+from backend.ignored_errors import ignored
+
 logger = logging.getLogger(__name__)
 
 from backend.api.system import check_user_path_access
@@ -570,7 +572,7 @@ async def get_model_recommendations(
                 m["installed"] = tag == "builtin-npu" or is_installed(tag, inst["models"])
         recs["runtime_reachable"] = bool(inst.get("reachable"))
     except Exception:
-        logger.debug("backend.api.media.get_model_recommendations: ignored error", exc_info=True)
+        ignored("backend.api.media.get_model_recommendations")
     return {
         "status": "ok",
         "acceleration": status["acceleration"],

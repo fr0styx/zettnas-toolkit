@@ -17,6 +17,8 @@ import urllib.request
 import uuid
 from typing import Any, Optional
 
+from backend.ignored_errors import ignored
+
 logger = logging.getLogger("ZettNAS")
 
 _NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-/:@]{0,199}$")
@@ -180,7 +182,7 @@ def _run(job_id: str) -> None:
         try:
             detail = json.loads(e.read().decode("utf-8")).get("error", "")
         except Exception:
-            logger.debug("backend.services.model_installer._run: ignored error", exc_info=True)
+            ignored("backend.services.model_installer._run")
         _update(job_id, state="failed", status="Failed", error=detail or f"HTTP {e.code}", finished_at=time.time())
     except Exception as e:
         _update(job_id, state="failed", status="Failed", error=str(e), finished_at=time.time())

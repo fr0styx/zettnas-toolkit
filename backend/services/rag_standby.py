@@ -12,6 +12,7 @@ import time
 from typing import Any
 
 from backend.config import logger
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 _UNRAID_INI_CACHE: dict[str, Any] = {"ts": 0.0, "disks": {}, "shares": {}}
@@ -39,7 +40,7 @@ def _parse_ini_sections(ini_path: str) -> dict[str, dict[str, str]]:
                     k, v = line.split("=", 1)
                     result[current_sec][k.strip()] = v.strip().strip('"')
     except Exception:
-        logger.debug("backend.services.rag_engine._parse_ini_sections: ignored error", exc_info=True)
+        ignored("backend.services.rag_engine._parse_ini_sections")
     return result
 
 
@@ -82,7 +83,7 @@ def resolve_path_backing_dev(path: str) -> str:
     try:
         path = os.path.realpath(path)
     except Exception:
-        logger.debug("backend.services.rag_engine.resolve_path_backing_dev: ignored error", exc_info=True)
+        ignored("backend.services.rag_engine.resolve_path_backing_dev")
     norm = os.path.normpath(path).replace("\\", "/")
     if norm.startswith(("/app/data", "/mnt/cache", "/mnt/nvme", "/mnt/ssd", "/tmp")):
         return "nvme0n1"
@@ -228,7 +229,7 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
                     return True
                 _SMARTCTL_STANDBY_CACHE[dev_name] = (now, False)
             except Exception:
-                logger.debug("backend.services.rag_engine.is_backing_disk_in_standby: ignored error", exc_info=True)
+                ignored("backend.services.rag_engine.is_backing_disk_in_standby")
 
     return False
 

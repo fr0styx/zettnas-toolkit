@@ -41,7 +41,8 @@ from backend.hardware.fans import failsafe_release_fans
 from backend.hardware.led import apply_led_state
 from backend.hardware.network import read_ip
 from backend.hardware.storage import detect_chassis_model
-from backend.logging_config import correlation_id_ctx, setup_structured_logging
+from backend.ignored_errors import ignored
+from backend.logging_config import correlation_id_ctx, correlation_id_from, setup_structured_logging
 from backend.services.backup_engine import stop_backup_scheduler
 from backend.services.broadcaster import broadcaster
 from backend.services.button_listener import button_listener_daemon
@@ -455,18 +456,18 @@ async def lifespan(app: FastAPI):
 
             stop_scheduler()
         except Exception:
-            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
+            ignored("backend.main.lifespan")
         stop_backup_scheduler()
         try:
             get_webdav_engine().stop()
         except Exception:
-            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
+            ignored("backend.main.lifespan")
         try:
             from backend.services.sftp_engine import get_sftp_engine
 
             get_sftp_engine().stop()
         except Exception:
-            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
+            ignored("backend.main.lifespan")
         if not Z_STATE.fans_locked:
             _shutdown_fans("shutdown")
         try:
@@ -474,7 +475,7 @@ async def lifespan(app: FastAPI):
 
             flush_events()  # events wait up to a few seconds to be written (PERF-27)
         except Exception:
-            logger.debug("backend.main.lifespan: ignored error", exc_info=True)
+            ignored("backend.main.lifespan")
 
 
 app = FastAPI(
@@ -538,7 +539,7 @@ from backend.request_metrics import REQUEST_METRICS, route_template  # noqa: E40
 
 @app.middleware("http")
 async def correlation_id_middleware(request: Request, call_next):
-    corr_id = request.headers.get("X-Correlation-ID") or secrets.token_hex(8)
+    corr_id = correlation_id_from(request.headers.get("X-Correlation-ID"))
     token = correlation_id_ctx.set(corr_id)
     started = time.perf_counter()
     status = 500

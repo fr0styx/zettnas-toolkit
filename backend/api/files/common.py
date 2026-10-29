@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from backend.auth import AuthenticatedPrincipal
 from backend.config import logger
 from backend.fsutil import resolve_within
+from backend.ignored_errors import ignored
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, _is_files_admin
 
 try:
@@ -17,7 +18,7 @@ try:
 
     pillow_heif.register_heif_opener()
 except Exception:
-    logger.debug("backend.api.fs.<module>: ignored error", exc_info=True)
+    ignored("backend.api.fs.<module>")
 
 
 def _contained(path, must_exist=True):

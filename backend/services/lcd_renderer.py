@@ -18,6 +18,7 @@ from backend.hardware.screen import (
     set_fb_blank,
     set_screen_brightness,
 )
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 
@@ -316,7 +317,7 @@ def render_lcd_loop():
                         try:
                             fb_mem.close()
                         except Exception:
-                            logger.debug("backend.services.lcd_renderer.render_lcd_loop: ignored error", exc_info=True)
+                            ignored("backend.services.lcd_renderer.render_lcd_loop")
 
             if Z_STATE.shutting_down:
                 break

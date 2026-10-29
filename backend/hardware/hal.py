@@ -14,6 +14,7 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 from backend.config import HOST_DEV, HOST_SYS, OS_NVME, logger
+from backend.ignored_errors import ignored
 
 
 class PhysicalDiskRecord(BaseModel):
@@ -132,7 +133,7 @@ class DiskDiscoveryHAL:
                 if "ahci" in part or "ata" in part:
                     return "ahci"
         except Exception:
-            logger.debug("backend.hardware.hal.DiskDiscoveryHAL._probe_controller_driver: ignored error", exc_info=True)
+            ignored("backend.hardware.hal.DiskDiscoveryHAL._probe_controller_driver")
         return "ahci"
 
     @classmethod

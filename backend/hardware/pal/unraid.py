@@ -30,6 +30,7 @@ from backend.hardware.pal.base import (
     _parse_ini_sections,
 )
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
+from backend.ignored_errors import ignored
 
 
 class UnraidStorageAdapter(StoragePlatformAdapter):
@@ -415,9 +416,7 @@ class UnraidStorageAdapter(StoragePlatformAdapter):
             u = shutil.disk_usage(pal_base.POOL_PATH or "/mnt/user")
             total, used, free = u.total, u.used, u.free
         except Exception:
-            logger.debug(
-                "backend.hardware.pal_storage.UnraidStorageAdapter._fallback_pools: ignored error", exc_info=True
-            )
+            ignored("backend.hardware.pal_storage.UnraidStorageAdapter._fallback_pools")
         pct = round(used / total * 100, 1) if total > 0 else 0.0
         return [
             StoragePool(

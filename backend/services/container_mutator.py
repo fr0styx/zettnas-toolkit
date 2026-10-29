@@ -15,6 +15,7 @@ import urllib.parse
 from typing import Any, Optional
 
 from backend.config import docker_sock, logger
+from backend.ignored_errors import ignored
 from backend.services.compose_synthesizer import fetch_container_raw_inspect
 from backend.services.docker_client import UnixHTTPConnection  # noqa: F401
 
@@ -65,7 +66,7 @@ def check_port_available_detailed(port: int, proto: str = "tcp", host: str = "0.
                     if pub == port and p_type == proto_lower:
                         return False, f"container '{c_name}'"
     except Exception:
-        logger.debug("backend.services.container_mutator.check_port_available_detailed: ignored error", exc_info=True)
+        ignored("backend.services.container_mutator.check_port_available_detailed")
 
     # 2. Inspect host and container procfs network tables
     hex_port = f"{port:04X}"
@@ -107,9 +108,7 @@ def check_port_available_detailed(port: int, proto: str = "tcp", host: str = "0.
                             if len(fields) >= 2 and fields[1].endswith(f":{hex_port}"):
                                 return False, "host service"
             except Exception:
-                logger.debug(
-                    "backend.services.container_mutator.check_port_available_detailed: ignored error", exc_info=True
-                )
+                ignored("backend.services.container_mutator.check_port_available_detailed")
 
     # 3. Direct socket bind attempt
     sock_type = socket.SOCK_STREAM if proto_lower == "tcp" else socket.SOCK_DGRAM
@@ -217,7 +216,7 @@ def pull_container_image(image: str, timeout: float = 180.0) -> bool:
         try:
             conn.close()
         except Exception:
-            logger.debug("backend.services.container_mutator.pull_container_image: ignored error", exc_info=True)
+            ignored("backend.services.container_mutator.pull_container_image")
 
 
 class ElevationNeeded(Exception):

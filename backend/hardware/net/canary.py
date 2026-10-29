@@ -10,6 +10,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import common
+from backend.ignored_errors import ignored
 
 
 class CanaryWatchdog:
@@ -52,7 +53,7 @@ class CanaryWatchdog:
                 try:
                     self._timer.cancel()
                 except Exception:
-                    logger.debug("backend.hardware.network.CanaryWatchdog.arm: ignored error", exc_info=True)
+                    ignored("backend.hardware.network.CanaryWatchdog.arm")
                 self._timer = None
 
             canary_id = secrets.token_hex(8)
@@ -81,7 +82,7 @@ class CanaryWatchdog:
                 try:
                     self._timer.cancel()
                 except Exception:
-                    logger.debug("backend.hardware.network.CanaryWatchdog.confirm: ignored error", exc_info=True)
+                    ignored("backend.hardware.network.CanaryWatchdog.confirm")
                 self._timer = None
             self.is_active = False
             return True
@@ -96,7 +97,7 @@ class CanaryWatchdog:
                 try:
                     self._timer.cancel()
                 except Exception:
-                    logger.debug("backend.hardware.network.CanaryWatchdog.revert: ignored error", exc_info=True)
+                    ignored("backend.hardware.network.CanaryWatchdog.revert")
                 self._timer = None
             orig = dict(self.original_config)
             self.is_active = False
@@ -125,7 +126,7 @@ class CanaryWatchdog:
                     "Canary rollback watchdog expired after 60s without confirmation! Host network automatically restored to prevent lockout.",
                 )
             except Exception:
-                logger.debug("backend.hardware.network.CanaryWatchdog._on_timeout: ignored error", exc_info=True)
+                ignored("backend.hardware.network.CanaryWatchdog._on_timeout")
 
 
 _CANARY_WATCHDOG = CanaryWatchdog()

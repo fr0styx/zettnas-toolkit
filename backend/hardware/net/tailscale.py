@@ -10,6 +10,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import common
+from backend.ignored_errors import ignored
 
 
 def _find_tailscale_bin() -> str | None:
@@ -44,7 +45,7 @@ def _get_tailscale_container_info() -> dict[str, Any]:
                 "status": state.get("Status", "unknown"),
             }
     except Exception:
-        logger.debug("backend.hardware.network._get_tailscale_container_info: ignored error", exc_info=True)
+        ignored("backend.hardware.network._get_tailscale_container_info")
     return {"exists": False, "running": False, "id": "", "status": "not_found"}
 
 
@@ -179,7 +180,7 @@ def get_taildrop_inbox_files() -> list[dict[str, Any]]:
                         }
                     )
                 except Exception:
-                    logger.debug("backend.hardware.network.get_taildrop_inbox_files: ignored error", exc_info=True)
+                    ignored("backend.hardware.network.get_taildrop_inbox_files")
     except Exception as e:
         logger.debug(f"[Tailscale] Failed to read taildrop inbox: {e}")
     files.sort(key=lambda x: x["name"].lower())
@@ -377,7 +378,7 @@ def execute_tailscale_reauth() -> dict[str, Any]:
                 s_doc = json.loads(s_out.strip())
                 auth_url = s_doc.get("AuthURL", "")
             except Exception:
-                logger.debug("backend.hardware.network.execute_tailscale_reauth: ignored error", exc_info=True)
+                ignored("backend.hardware.network.execute_tailscale_reauth")
     return {
         "status": "needs_login" if auth_url else ("ok" if code == 0 else "error"),
         "auth_url": auth_url,

@@ -21,6 +21,7 @@ from backend.db import db_session, get_latest_smart_test_result, query_smart_vel
 from backend.hardware.disks import _discover_disks, read_disk_temps_and_io
 from backend.hardware.pal_storage import get_storage_platform
 from backend.hardware.unraid import read_unraid_status
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 
@@ -283,9 +284,7 @@ def get_btrfs_allocation_breakdown(mounts: list[dict[str, Any]]) -> list[dict[st
                     }
                 )
         except Exception:
-            logger.debug(
-                "backend.hardware.storage_diagnostics.get_btrfs_allocation_breakdown: ignored error", exc_info=True
-            )
+            ignored("backend.hardware.storage_diagnostics.get_btrfs_allocation_breakdown")
 
     return btrfs_reports
 
@@ -374,14 +373,14 @@ def get_recycle_bin_audit() -> dict[str, Any]:
                 trashinfo_files = glob.glob(os.path.join(info_dir, "*.trashinfo"))
                 total_items += len(trashinfo_files)
             except Exception:
-                logger.debug("backend.hardware.storage_diagnostics.get_recycle_bin_audit: ignored error", exc_info=True)
+                ignored("backend.hardware.storage_diagnostics.get_recycle_bin_audit")
         if os.path.isdir(files_dir):
             try:
                 for entry in os.scandir(files_dir):
                     if entry.is_file(follow_symlinks=False):
                         total_bytes += entry.stat().st_size
             except Exception:
-                logger.debug("backend.hardware.storage_diagnostics.get_recycle_bin_audit: ignored error", exc_info=True)
+                ignored("backend.hardware.storage_diagnostics.get_recycle_bin_audit")
 
     return {
         "total_items": total_items,
@@ -435,9 +434,7 @@ def collect_storage_diagnostics() -> dict[str, Any]:
                         [s.model_dump() if hasattr(s, "model_dump") else s for s in snaps]  # pyright: ignore[reportAttributeAccessIssue]
                     )
                 except Exception:
-                    logger.debug(
-                        "backend.hardware.storage_diagnostics.collect_storage_diagnostics: ignored error", exc_info=True
-                    )
+                    ignored("backend.hardware.storage_diagnostics.collect_storage_diagnostics")
 
         pal_info = {
             "capabilities": caps,
@@ -453,7 +450,7 @@ def collect_storage_diagnostics() -> dict[str, Any]:
     try:
         unraid_status = read_unraid_status()
     except Exception:
-        logger.debug("backend.hardware.storage_diagnostics.collect_storage_diagnostics: ignored error", exc_info=True)
+        ignored("backend.hardware.storage_diagnostics.collect_storage_diagnostics")
 
     # 7. Btrfs Chunk Allocations & ZFS Status
     btrfs_alloc = get_btrfs_allocation_breakdown(mounts)

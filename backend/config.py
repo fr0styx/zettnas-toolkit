@@ -5,6 +5,7 @@ import secrets
 import socket
 import time
 
+from backend.ignored_errors import ignored
 from backend.settings import test_mode
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -437,7 +438,7 @@ def get_server_hostname() -> str:
                         _cached_server_hostname_ts = now
                         return d_name
         except Exception:
-            logger.debug("backend.config.get_server_hostname: ignored error", exc_info=True)
+            ignored("backend.config.get_server_hostname")
 
     # 5. Local socket hostname (if not a raw container ID)
     try:
@@ -447,7 +448,7 @@ def get_server_hostname() -> str:
             _cached_server_hostname_ts = now
             return raw_sock
     except Exception:
-        logger.debug("backend.config.get_server_hostname: ignored error", exc_info=True)
+        ignored("backend.config.get_server_hostname")
 
     # 6. Fallback to env_name if set to "NAS", otherwise "ZettNAS"
     fallback = env_name if env_name and not _is_container_id(env_name) else "ZettNAS"

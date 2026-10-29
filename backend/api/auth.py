@@ -30,6 +30,7 @@ from backend.config import SECURITY_FILE, is_using_default_password, logger
 from backend.confirmations import require_confirmation
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json, read_json
+from backend.ignored_errors import ignored
 from backend.models.schemas import (
     LoginRequest,
     MfaChallengeRequest,
@@ -184,7 +185,7 @@ def _register_failure(key: str, is_ip: bool = False) -> None:
         try:
             log_security_event("auth.lockout", "warning", details={"key": key, "failures": entry["count"]})
         except Exception:
-            logger.debug("backend.api.auth._register_failure: ignored error", exc_info=True)
+            ignored("backend.api.auth._register_failure")
 
 
 def _clear_failures(key: str) -> None:

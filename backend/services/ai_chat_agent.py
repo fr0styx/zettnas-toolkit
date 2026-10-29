@@ -40,6 +40,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import FAN_STATE_FILE, logger
 from backend.fsutil import atomic_write_json, read_json
+from backend.ignored_errors import ignored
 from backend.services.ai_safeguards import compose_warning_for_reply, model_web_query
 from backend.services.chat_context import (  # noqa: E402, F401
     _CJK_RE,
@@ -2203,7 +2204,7 @@ async def stream_agentic_chat(
                     telemetry={"cancelled": True},
                 )
             except Exception:
-                logger.debug("backend.services.ai_chat_agent.stream_agentic_chat: ignored error", exc_info=True)
+                ignored("backend.services.ai_chat_agent.stream_agentic_chat")
         raise
     except Exception as ex:
         logger.error(f"[ZettAI] Streaming exception: {ex}")

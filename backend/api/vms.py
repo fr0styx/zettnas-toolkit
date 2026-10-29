@@ -27,6 +27,8 @@ from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.confirmations import require_confirmation
 from backend.errors import ShownServerError
 from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.ignored_errors import ignored
+from backend.logging_config import in_this_request
 from backend.services.vm_engine import QmpEngine
 from backend.state import Z_STATE, add_event
 
@@ -347,7 +349,7 @@ def collect_vm_diagnostics() -> dict[str, Any]:
                         if lines and vm_id:
                             recent_errors[vm_id] = [line.strip() for line in lines[-50:]]
                 except Exception:
-                    logger.debug("backend.api.vms.collect_vm_diagnostics: ignored error", exc_info=True)
+                    ignored("backend.api.vms.collect_vm_diagnostics")
 
     return {
         "hypervisor_telemetry": telemetry,
@@ -442,7 +444,7 @@ async def upload_iso_file(
                 elif any(sig in sector for sig in [b"BEA01", b"NSR02", b"NSR03"]):
                     format_verified = "udf"
         except Exception:
-            logger.debug("backend.api.vms.upload_iso_file: ignored error", exc_info=True)
+            ignored("backend.api.vms.upload_iso_file")
 
     try:
         os.replace(tmp_path, out_path)
@@ -547,7 +549,7 @@ def download_official_iso(
         "started_at": time.time(),
     }
 
-    t = threading.Thread(target=_download_iso_worker, args=(task_id, item, target_dir), daemon=True)
+    t = threading.Thread(target=in_this_request(_download_iso_worker), args=(task_id, item, target_dir), daemon=True)
     t.start()
 
     return {"status": "started", "task_id": task_id, "catalog_id": catalog_id}
@@ -694,7 +696,7 @@ def get_host_iommu_groups():
                             with open(cfile) as f:
                                 dev_class = f.read().strip().replace("0x", "")
                     except Exception:
-                        logger.debug("backend.api.vms.get_host_iommu_groups: ignored error", exc_info=True)
+                        ignored("backend.api.vms.get_host_iommu_groups")
                     devs.append(
                         {
                             "slot": pci_slot,
@@ -992,7 +994,7 @@ def _validate_console_ticket(ticket: str | None, vm_id: str) -> bool:
             if principal.has_any_scope(*allowed_console_scopes):
                 return True
     except Exception:
-        logger.debug("backend.api.vms._validate_console_ticket: ignored error", exc_info=True)
+        ignored("backend.api.vms._validate_console_ticket")
     try:
         from backend.api.auth import validate_and_consume_stream_ticket
         from backend.auth import AuthenticatedPrincipal
@@ -1003,7 +1005,7 @@ def _validate_console_ticket(ticket: str | None, vm_id: str) -> bool:
             if principal.has_any_scope(*allowed_console_scopes):
                 return True
     except Exception:
-        logger.debug("backend.api.vms._validate_console_ticket: ignored error", exc_info=True)
+        ignored("backend.api.vms._validate_console_ticket")
     return False
 
 
@@ -1442,7 +1444,7 @@ def _get_vm_snapshots_metadata(vm_id: str) -> dict[str, Any]:
             with open(meta_path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
-            logger.debug("backend.api.vms._get_vm_snapshots_metadata: ignored error", exc_info=True)
+            ignored("backend.api.vms._get_vm_snapshots_metadata")
     return {}
 
 

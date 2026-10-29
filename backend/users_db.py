@@ -21,6 +21,7 @@ from typing import Any, Optional
 
 from backend import config
 from backend.config import DATA_DIR, logger
+from backend.ignored_errors import ignored
 from backend.passwords import hash_password, needs_rehash, verify_password
 from backend.settings import test_mode
 
@@ -580,7 +581,7 @@ def create_user(
 
             get_samba_engine().sync_samba_user(username=username_clean, password=password)
         except Exception:
-            logger.debug("backend.users_db.create_user: ignored error", exc_info=True)
+            ignored("backend.users_db.create_user")
     return ret
 
 
@@ -623,7 +624,7 @@ def update_user_password(
 
                 get_samba_engine().sync_samba_user(username=user["username"], password=new_password)
         except Exception:
-            logger.debug("backend.users_db.update_user_password: ignored error", exc_info=True)
+            ignored("backend.users_db.update_user_password")
     return res.rowcount > 0
 
 
@@ -718,7 +719,7 @@ def delete_user(user_id: str, db_path: str | None = None) -> bool:
 
                 get_samba_engine().sync_samba_user(username=target_user["username"], delete=True)
             except Exception:
-                logger.debug("backend.users_db.delete_user: ignored error", exc_info=True)
+                ignored("backend.users_db.delete_user")
     _evict_user_caches(user_id)
     return True
 
@@ -1193,7 +1194,7 @@ def log_security_event(
 
             maybe_alert(event_type, status, actor_username, actor_ip, details)
         except Exception:
-            logger.debug("backend.users_db.log_security_event: ignored error", exc_info=True)
+            ignored("backend.users_db.log_security_event")
     except Exception as e:
         logger.error(f"Failed to record security audit event: {e}")
 

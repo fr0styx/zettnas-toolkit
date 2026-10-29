@@ -11,6 +11,7 @@ import httpx
 
 from backend.config import logger
 from backend.hardware.net import common, topology
+from backend.ignored_errors import ignored
 
 
 def _query_ethtool(iface: str) -> str:
@@ -22,7 +23,7 @@ def _query_ethtool(iface: str) -> str:
         if res.returncode == 0 or "Settings for" in res.stdout:
             return res.stdout
     except Exception:
-        logger.debug("backend.hardware.network._query_ethtool: ignored error", exc_info=True)
+        ignored("backend.hardware.network._query_ethtool")
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -35,7 +36,7 @@ def _query_ethtool(iface: str) -> str:
             if res.returncode == 0 or "Settings for" in res.stdout:
                 return res.stdout
         except Exception:
-            logger.debug("backend.hardware.network._query_ethtool: ignored error", exc_info=True)
+            ignored("backend.hardware.network._query_ethtool")
 
     return ""
 
@@ -53,7 +54,7 @@ def _apply_mtu(iface: str, mtu_val: int) -> bool:
         if res.returncode == 0:
             return True
     except Exception:
-        logger.debug("backend.hardware.network._apply_mtu: ignored error", exc_info=True)
+        ignored("backend.hardware.network._apply_mtu")
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -65,7 +66,7 @@ def _apply_mtu(iface: str, mtu_val: int) -> bool:
             if res.returncode == 0:
                 return True
         except Exception:
-            logger.debug("backend.hardware.network._apply_mtu: ignored error", exc_info=True)
+            ignored("backend.hardware.network._apply_mtu")
 
     for sys_base in [common.HOST_SYS, "/host/sys", "/sys"]:
         mtu_path = os.path.join(sys_base, "class/net", iface, "mtu")
@@ -75,7 +76,7 @@ def _apply_mtu(iface: str, mtu_val: int) -> bool:
                     f.write(str(mtu_val))
                 return True
             except Exception:
-                logger.debug("backend.hardware.network._apply_mtu: ignored error", exc_info=True)
+                ignored("backend.hardware.network._apply_mtu")
     return False
 
 
@@ -89,7 +90,7 @@ def _apply_wol(iface: str, enabled: bool) -> bool:
         if res.returncode == 0:
             return True
     except Exception:
-        logger.debug("backend.hardware.network._apply_wol: ignored error", exc_info=True)
+        ignored("backend.hardware.network._apply_wol")
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -101,7 +102,7 @@ def _apply_wol(iface: str, enabled: bool) -> bool:
             if res.returncode == 0:
                 return True
         except Exception:
-            logger.debug("backend.hardware.network._apply_wol: ignored error", exc_info=True)
+            ignored("backend.hardware.network._apply_wol")
     return False
 
 
@@ -120,7 +121,7 @@ def _apply_negotiation(iface: str, autoneg: bool, speed: int | None = None, dupl
         if res.returncode == 0:
             return True
     except Exception:
-        logger.debug("backend.hardware.network._apply_negotiation: ignored error", exc_info=True)
+        ignored("backend.hardware.network._apply_negotiation")
 
     if os.path.exists("/host/proc/1/ns/net"):
         try:
@@ -132,7 +133,7 @@ def _apply_negotiation(iface: str, autoneg: bool, speed: int | None = None, dupl
             if res.returncode == 0:
                 return True
         except Exception:
-            logger.debug("backend.hardware.network._apply_negotiation: ignored error", exc_info=True)
+            ignored("backend.hardware.network._apply_negotiation")
     return False
 
 

@@ -26,6 +26,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.confirmations import require_confirmation
 from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.ignored_errors import ignored
 from backend.services.vm_engine import QmpEngine
 from backend.settings import test_mode
 from backend.state import Z_STATE, add_event
@@ -51,7 +52,7 @@ def _resolve_vm_ip_by_mac(mac: str) -> str | None:
                         if ip and ip != "0.0.0.0":
                             return ip
             except Exception:
-                logger.debug("backend.api.vms._resolve_vm_ip_by_mac: ignored error", exc_info=True)
+                ignored("backend.api.vms._resolve_vm_ip_by_mac")
     return None
 
 

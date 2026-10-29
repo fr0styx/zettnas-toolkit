@@ -33,6 +33,7 @@ from backend import db_crypto
 from backend.config import ALLOWED_BROWSE_ROOTS, DATA_DIR, HOST_DEV, HOST_PROC, HOST_SYS, logger
 from backend.db_crypto import sqlite3  # SQLCipher module: the index can be encrypted at rest (AI-20)
 from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.ignored_errors import ignored
 from backend.logging_config import sanitize_string
 from backend.state import Z_STATE, add_event
 
@@ -409,7 +410,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
                     with open(sidecar_path, encoding="utf-8", errors="replace") as sf:
                         ocr_text_parts.append(sf.read(4096).strip())
                 except Exception:
-                    logger.debug("backend.services.rag_engine.analyze_photo_asset: ignored error", exc_info=True)
+                    ignored("backend.services.rag_engine.analyze_photo_asset")
 
     check_ext = file_path if isinstance(file_path, str) else file_name
     if check_ext.lower().endswith(photo_place.EXIF_EXTENSIONS):
@@ -435,7 +436,7 @@ def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any
                 if ucomm and not ucomm.startswith("ASCII\x00"):
                     ocr_text_parts.append(ucomm)
         except Exception:
-            logger.debug("backend.services.rag_engine.analyze_photo_asset: ignored error", exc_info=True)
+            ignored("backend.services.rag_engine.analyze_photo_asset")
 
     # when and where (AI-24): the capture date and GPS position, and the town for it, offline
     taken_at, gps_lat, gps_lon = photo_place.when_where(file_path, file_name)
@@ -656,7 +657,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 finally:
                     conn_init.close()
             except Exception:
-                logger.debug("backend.services.rag_engine.RagSearchEngine.__init__: ignored error", exc_info=True)
+                ignored("backend.services.rag_engine.RagSearchEngine.__init__")
         self._start_spinup_watcher()
 
     def _open_ro(self) -> sqlite3.Connection:
@@ -674,7 +675,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
             try:
                 return self._open_ro()
             except Exception:
-                logger.debug("backend.services.rag_engine.RagSearchEngine._get_conn: ignored error", exc_info=True)
+                ignored("backend.services.rag_engine.RagSearchEngine._get_conn")
 
         from backend.sqlite_conn import connect
 

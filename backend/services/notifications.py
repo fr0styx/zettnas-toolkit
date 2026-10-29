@@ -8,6 +8,8 @@ from typing import Any
 import apprise
 import httpx
 
+from backend.ignored_errors import ignored
+
 _http_client: httpx.Client | None = None
 
 
@@ -28,7 +30,7 @@ def close_notification_client() -> None:
         try:
             _http_client.close()
         except Exception:
-            logger.debug("backend.services.notifications.close_notification_client: ignored error", exc_info=True)
+            ignored("backend.services.notifications.close_notification_client")
         _http_client = None
 
 

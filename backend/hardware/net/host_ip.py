@@ -9,6 +9,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import canary, common, topology
+from backend.ignored_errors import ignored
 
 
 def _validate_ipv4(val: str, field_name: str) -> str:
@@ -231,7 +232,7 @@ def apply_host_ip_config_canary(updates: dict[str, Any], timeout_sec: int = 60) 
             f"Testing new host network settings ({target_display}). Rollback watchdog active for {timeout_sec}s.",
         )
     except Exception:
-        logger.debug("backend.hardware.network.apply_host_ip_config_canary: ignored error", exc_info=True)
+        ignored("backend.hardware.network.apply_host_ip_config_canary")
 
     target_ip = target_cfg.get("ip_address") or original_cfg.get("ip_address") or ""
     return {
@@ -272,7 +273,7 @@ def confirm_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
             f"Host network settings confirmed permanently: {target_cfg.get('mode', 'static').upper()} {target_cfg.get('ip_address', '')}",
         )
     except Exception:
-        logger.debug("backend.hardware.network.confirm_host_ip_config: ignored error", exc_info=True)
+        ignored("backend.hardware.network.confirm_host_ip_config")
 
     return {
         "status": "confirmed",
@@ -302,7 +303,7 @@ def revert_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
             f"Host network configuration manually reverted to {orig.get('ip_address', 'original')}.",
         )
     except Exception:
-        logger.debug("backend.hardware.network.revert_host_ip_config: ignored error", exc_info=True)
+        ignored("backend.hardware.network.revert_host_ip_config")
 
     return {
         "status": "reverted",

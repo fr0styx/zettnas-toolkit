@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from typing import Any, Optional, cast
 
 from backend.config import DB_PATH, logger
+from backend.ignored_errors import ignored
 
 _DB_LOCK = threading.RLock()
 
@@ -868,7 +869,7 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection | None = None) -> di
                     f"failed with surface defect at LBA {lba_err}. Plan disk replacement immediately."
                 )
         except Exception:
-            logger.debug("backend.db.query_smart_velocity._eval_velocity: ignored error", exc_info=True)
+            ignored("backend.db.query_smart_velocity._eval_velocity")
 
         # Compute Failure Probability Telemetry (Scrutiny-style degradation assessment)
         if status == "critical" or shedding:

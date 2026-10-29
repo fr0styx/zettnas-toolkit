@@ -23,6 +23,7 @@ from collections.abc import Callable
 from typing import Any, Optional
 
 from backend.config import logger
+from backend.ignored_errors import ignored
 
 EventCallback = Callable[[str, str, dict[str, Any]], None]
 
@@ -114,7 +115,7 @@ class PersistentQmpClient:
             try:
                 self._writer.close()
             except Exception:
-                logger.debug("backend.services.vm_engine.PersistentQmpClient._drop: ignored error", exc_info=True)
+                ignored("backend.services.vm_engine.PersistentQmpClient._drop")
         self._reader = self._writer = None
         for fut in self._pending.values():
             if not fut.done():
@@ -158,7 +159,7 @@ class PersistentQmpClient:
             try:
                 await self._listener
             except (asyncio.CancelledError, Exception):
-                logger.debug("backend.services.vm_engine.PersistentQmpClient.close: ignored error", exc_info=True)
+                ignored("backend.services.vm_engine.PersistentQmpClient.close")
             self._listener = None
         self._drop()
 
@@ -231,10 +232,7 @@ class QmpEngine:
                         await client.connect()
                         return
                     except Exception:
-                        logger.debug(
-                            "backend.services.vm_engine.QmpEngine.watch.connect_when_ready: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.services.vm_engine.QmpEngine.watch.connect_when_ready")
                 await asyncio.sleep(interval)
             logger.debug(f"[QMP-{vm_id}] monitor socket did not become ready for event watching")
 
@@ -248,7 +246,7 @@ class QmpEngine:
         try:
             asyncio.run_coroutine_threadsafe(client.close(), self._loop).result(3)
         except Exception:
-            logger.debug("backend.services.vm_engine.QmpEngine.close: ignored error", exc_info=True)
+            ignored("backend.services.vm_engine.QmpEngine.close")
 
     def is_connected(self, vm_id: str) -> bool:
         client = self._clients.get(vm_id)

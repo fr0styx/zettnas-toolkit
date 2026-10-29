@@ -10,6 +10,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import common
+from backend.ignored_errors import ignored
 
 
 def _parse_proc_net_vlan() -> dict[str, dict[str, Any]]:
@@ -258,7 +259,7 @@ def create_vlan(parent: str, vlan_id: int, alias: str = "") -> dict[str, Any]:
             f"802.1Q VLAN sub-interface {vname} (Tag ID: {vid}) created on {parent}.",
         )
     except Exception:
-        logger.debug("backend.hardware.network.create_vlan: ignored error", exc_info=True)
+        ignored("backend.hardware.network.create_vlan")
 
     return {
         "status": "ok",
@@ -335,7 +336,7 @@ def delete_vlan(vlan_name: str) -> dict[str, Any]:
             f"802.1Q VLAN sub-interface {vlan_name} removed.",
         )
     except Exception:
-        logger.debug("backend.hardware.network.delete_vlan: ignored error", exc_info=True)
+        ignored("backend.hardware.network.delete_vlan")
 
     return {
         "status": "ok",

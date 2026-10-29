@@ -29,6 +29,7 @@ from typing import Any, Optional
 
 from backend import config
 from backend.fsutil import atomic_write_json, read_json
+from backend.ignored_errors import ignored
 
 logger = logging.getLogger("ZettNAS")
 
@@ -103,7 +104,7 @@ def known_shares() -> list[dict[str, Any]]:
             if s.mountpoint:
                 shares[s.name] = {"name": s.name, "path": os.path.realpath(s.mountpoint), "samba": None}
     except Exception:
-        logger.debug("backend.services.share_access.known_shares: ignored error", exc_info=True)
+        ignored("backend.services.share_access.known_shares")
     try:
         from backend.services.samba_engine import get_samba_engine
 
@@ -119,7 +120,7 @@ def known_shares() -> list[dict[str, Any]]:
                 },
             }
     except Exception:
-        logger.debug("backend.services.share_access.known_shares: ignored error", exc_info=True)
+        ignored("backend.services.share_access.known_shares")
     result = list(shares.values())
     with _lock:
         _cache.update(ts=now, shares=result)

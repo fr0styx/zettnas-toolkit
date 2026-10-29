@@ -13,6 +13,7 @@ from typing import Any, Optional
 
 from backend.config import HDD_CRITICAL_TEMP, HDD_WARN_TEMP, NVME_CRITICAL_TEMP, NVME_WARN_TEMP, logger
 from backend.db import log_smart_metrics
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 
@@ -42,9 +43,7 @@ class SmartTelemetryEngine:
             if "STANDBY" in out or "SLEEP" in out:
                 return True
         except Exception:
-            logger.debug(
-                "backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping: ignored error", exc_info=True
-            )
+            ignored("backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping")
 
         # 2. Secondary fallback: hdparm -C (ATA only)
         try:
@@ -53,9 +52,7 @@ class SmartTelemetryEngine:
             if r.returncode == 0 and ("standby" in r.stdout.lower() or "sleeping" in r.stdout.lower()):
                 return True
         except Exception:
-            logger.debug(
-                "backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping: ignored error", exc_info=True
-            )
+            ignored("backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping")
 
         return False
 
@@ -289,10 +286,7 @@ class SmartTelemetryEngine:
                         raw_text = r.stdout
                         break
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.smart_engine.SmartTelemetryEngine.query_smart_telemetry: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.hardware.smart_engine.SmartTelemetryEngine.query_smart_telemetry")
             except Exception:
                 continue
 

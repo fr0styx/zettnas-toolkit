@@ -5,10 +5,13 @@ thread-safe in-memory log buffer, and credential redaction for diagnostic bundle
 """
 
 import collections
+import contextvars
+import functools
 import json
 import logging
 import os
 import re
+import secrets
 from contextvars import ContextVar
 from datetime import UTC, datetime, timezone
 from typing import Any, Optional
@@ -239,3 +242,20 @@ def get_recent_logs(max_lines: int = 500) -> list[str]:
     """Returns the most recent log records from the in-memory ring buffer."""
     lines = list(LOG_RING_BUFFER)
     return lines[-max_lines:] if len(lines) > max_lines else lines
+
+
+# A client may name its request (X-Correlation-ID) so its logs can be found; only a short plain
+# token is taken, anything else is replaced, so a header can't put text into the logs (ARC-24)
+_CORRELATION_ID = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
+
+
+def correlation_id_from(header_value: str | None) -> str:
+    value = (header_value or "").strip()
+    return value if _CORRELATION_ID.match(value) else secrets.token_hex(8)
+
+
+def in_this_request(target):
+    """`target`, run in a copy of the current context: a thread a request starts (a copy, a
+    backup run, a download) logs with that request\'s correlation ID (ARC-24)."""
+    ctx = contextvars.copy_context()
+    return functools.partial(ctx.run, target)

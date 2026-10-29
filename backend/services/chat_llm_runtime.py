@@ -14,6 +14,7 @@ from typing import (  # noqa: F401
 from backend.config import (  # noqa: F401
     logger,
 )
+from backend.ignored_errors import ignored
 from backend.services import ai_activity, gpu_queue
 from backend.services.chat_context import (  # noqa: F401
     REPLY_TOKENS,
@@ -501,9 +502,7 @@ def _try_local_llm_completion(
                     _core()._ENDPOINT_REGISTRY.record_failure(url)
                     continue
                 except Exception:
-                    logger.debug(
-                        "backend.services.ai_chat_agent._try_local_llm_completion: ignored error", exc_info=True
-                    )
+                    ignored("backend.services.ai_chat_agent._try_local_llm_completion")
 
                 ollama_req_body: dict[str, Any] = {
                     "model": model_to_use,
@@ -548,9 +547,7 @@ def _try_local_llm_completion(
                                 continue
                             model_to_use = matched
                 except Exception:
-                    logger.debug(
-                        "backend.services.ai_chat_agent._try_local_llm_completion: ignored error", exc_info=True
-                    )
+                    ignored("backend.services.ai_chat_agent._try_local_llm_completion")
 
                 openai_req_body: dict[str, Any] = {
                     "model": model_to_use,
@@ -691,9 +688,7 @@ def _try_local_llm_completion(
                                     "has_npu": False,
                                 }
                     except Exception:
-                        logger.debug(
-                            "backend.services.ai_chat_agent._try_local_llm_completion: ignored error", exc_info=True
-                        )
+                        ignored("backend.services.ai_chat_agent._try_local_llm_completion")
 
                     if content or raw_tool_calls:
                         _core()._ACTIVE_ENDPOINT_CACHE[cache_key] = (runtime_kind, url, time.time() + 60.0)

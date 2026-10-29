@@ -23,6 +23,7 @@ from backend.hardware.pal.base import (
     PlatformType,
 )
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
+from backend.ignored_errors import ignored
 
 
 class StoragePlatformDetector:
@@ -93,9 +94,7 @@ class StoragePlatformDetector:
                         if "/zettos" in m_content:
                             return PlatformType.ZETTOS
                 except Exception:
-                    logger.debug(
-                        "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
-                    )
+                    ignored("backend.hardware.pal_storage.StoragePlatformDetector.detect")
 
         # Check kernel cmdline for ZettOS signatures
         for cmd_file in [
@@ -109,9 +108,7 @@ class StoragePlatformDetector:
                         if "zettos" in cmd_text or "zettlab" in cmd_text:
                             return PlatformType.ZETTOS
                 except Exception:
-                    logger.debug(
-                        "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
-                    )
+                    ignored("backend.hardware.pal_storage.StoragePlatformDetector.detect")
 
         # 3. FygoOS Detection
         fygoos_candidates = [
@@ -154,9 +151,7 @@ class StoragePlatformDetector:
                     if "truenas" in ver_text:
                         return PlatformType.TRUENAS
             except Exception:
-                logger.debug(
-                    "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
-                )
+                ignored("backend.hardware.pal_storage.StoragePlatformDetector.detect")
 
         # 6. /etc/os-release checks
         os_release_paths = ["/etc/os-release", "/host/etc/os-release"]
@@ -178,9 +173,7 @@ class StoragePlatformDetector:
                         if "proxmox" in text:
                             return PlatformType.PROXMOX
                 except Exception:
-                    logger.debug(
-                        "backend.hardware.pal_storage.StoragePlatformDetector.detect: ignored error", exc_info=True
-                    )
+                    ignored("backend.hardware.pal_storage.StoragePlatformDetector.detect")
 
         # 7. Other Appliance NAS (Synology, QNAP, Asustor, CasaOS) or Observer Mode env
         other_nas_candidates = [

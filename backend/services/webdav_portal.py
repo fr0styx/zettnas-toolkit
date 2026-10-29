@@ -9,6 +9,8 @@ import time
 import urllib.parse
 from typing import Any, Optional
 
+from backend.ignored_errors import ignored
+
 
 def format_size(bytes_val: int) -> str:
     if bytes_val < 1024:
@@ -242,7 +244,7 @@ def render_webdav_portal(current_subpath: str, root_path: str, username: str) ->
                     except (PermissionError, FileNotFoundError):
                         continue
         except Exception:
-            logger.debug("backend.services.webdav_portal.render_webdav_portal: ignored error", exc_info=True)
+            ignored("backend.services.webdav_portal.render_webdav_portal")
 
     # Sort folders first, then alphabetically
     items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))

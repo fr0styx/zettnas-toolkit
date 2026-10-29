@@ -5,6 +5,7 @@ import time
 
 from backend.config import HOST_DEV, HOST_SYS, SCREEN_STATE_FILE, logger
 from backend.fsutil import SETTINGS_RECHECK_SECS, atomic_write_json
+from backend.ignored_errors import ignored
 
 
 def find_fb_device(writable_only: bool = True) -> str | None:
@@ -201,7 +202,7 @@ def _apply_bl_power(bl_dir: str, power_on: bool):
             with open(bl_power_path, "w") as f:
                 f.write("0\n" if power_on else "4\n")
         except Exception:
-            logger.debug("backend.hardware.screen._apply_bl_power: ignored error", exc_info=True)
+            ignored("backend.hardware.screen._apply_bl_power")
 
 
 _LAST_BRIGHTNESS = {"pct": None, "at": 0.0}
@@ -277,7 +278,7 @@ def save_screen_state(updates: dict):
 
         Z_STATE.ui_wake.set()
     except Exception:
-        logger.debug("backend.hardware.screen.save_screen_state: ignored error", exc_info=True)
+        ignored("backend.hardware.screen.save_screen_state")
     return dict(state)
 
 
@@ -304,7 +305,7 @@ def is_auxiliary_lcd_present() -> bool:
         if is_zettlab_appliance():
             return True
     except Exception:
-        logger.debug("backend.hardware.screen.is_auxiliary_lcd_present: ignored error", exc_info=True)
+        ignored("backend.hardware.screen.is_auxiliary_lcd_present")
 
     for base in (
         os.path.join(HOST_SYS, "class/graphics/fb0") if HOST_SYS else None,
@@ -322,5 +323,5 @@ def is_auxiliary_lcd_present() -> bool:
                         w, h = max(parts), min(parts)
                         return w <= 800 and h <= 480
             except Exception:
-                logger.debug("backend.hardware.screen.is_auxiliary_lcd_present: ignored error", exc_info=True)
+                ignored("backend.hardware.screen.is_auxiliary_lcd_present")
     return False

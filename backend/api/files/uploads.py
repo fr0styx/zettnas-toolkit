@@ -20,6 +20,7 @@ from backend.api.files.common import _contained, _observe, _safe_fs_target, _use
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import POOL_PATH, logger
 from backend.fsutil import resolve_within
+from backend.ignored_errors import ignored
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access
 from backend.state import add_event
 
@@ -145,7 +146,7 @@ async def fs_upload(
             try:
                 os.remove(staging_file)
             except Exception:
-                logger.debug("backend.api.fs.fs_upload: ignored error", exc_info=True)
+                ignored("backend.api.fs.fs_upload")
         logger.error(f"[FS] Upload failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file") from e
 
@@ -377,6 +378,6 @@ async def fs_upload_complete(
             try:
                 os.remove(temp_assembly)
             except Exception:
-                logger.debug("backend.api.fs.fs_upload_complete: ignored error", exc_info=True)
+                ignored("backend.api.fs.fs_upload_complete")
         logger.error(f"[FS] Chunked assembly failed: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to assemble uploaded chunks: {e}") from e

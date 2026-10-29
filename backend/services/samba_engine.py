@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.config import docker_sock as _docker_sock_path
 from backend.fsutil import atomic_write_json, atomic_write_text
+from backend.ignored_errors import ignored
 
 SAMBA_DIR = os.path.join(DATA_DIR, "samba")
 SAMBA_CONF_FILE = os.path.join(SAMBA_DIR, "smb.conf")
@@ -212,9 +213,7 @@ class SambaEngine:
                 try:
                     os.remove(marker_file)
                 except Exception:
-                    logger.debug(
-                        "backend.services.samba_engine.SambaEngine.sync_sidecar_policy: ignored error", exc_info=True
-                    )
+                    ignored("backend.services.samba_engine.SambaEngine.sync_sidecar_policy")
         return can_run, reason
 
     def can_run_sidecar(self) -> tuple[bool, str]:
@@ -258,10 +257,7 @@ class SambaEngine:
                                 share = SambaShareConfig(**item)
                                 self._shares[share.name] = share
                             except Exception:
-                                logger.debug(
-                                    "backend.services.samba_engine.SambaEngine._load_shares: ignored error",
-                                    exc_info=True,
-                                )
+                                ignored("backend.services.samba_engine.SambaEngine._load_shares")
             except Exception as e:
                 logger.debug(f"[SambaEngine] Failed loading shares JSON: {e}")
 
@@ -446,7 +442,7 @@ class SambaEngine:
                 with open(SAMBA_CONF_FILE, encoding="utf-8") as f:
                     return f.read()
             except Exception:
-                logger.debug("backend.services.samba_engine.SambaEngine.get_config_text: ignored error", exc_info=True)
+                ignored("backend.services.samba_engine.SambaEngine.get_config_text")
         return self.generate_and_save_conf()
 
     def check_port_445(self) -> bool:
@@ -459,7 +455,7 @@ class SambaEngine:
             if host_ip and host_ip not in targets:
                 targets.append(host_ip)
         except Exception:
-            logger.debug("backend.services.samba_engine.SambaEngine.check_port_445: ignored error", exc_info=True)
+            ignored("backend.services.samba_engine.SambaEngine.check_port_445")
         for target in targets:
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -469,7 +465,7 @@ class SambaEngine:
                 if res == 0:
                     return True
             except Exception:
-                logger.debug("backend.services.samba_engine.SambaEngine.check_port_445: ignored error", exc_info=True)
+                ignored("backend.services.samba_engine.SambaEngine.check_port_445")
         return False
 
     def check_sidecar(self) -> dict[str, Any]:
@@ -524,7 +520,7 @@ class SambaEngine:
                         logger.info("[SambaEngine] zettnas-samba sidecar restarted successfully")
                         return True
             except Exception:
-                logger.debug("backend.services.samba_engine.SambaEngine.reload_service: ignored error", exc_info=True)
+                ignored("backend.services.samba_engine.SambaEngine.reload_service")
 
         return False
 

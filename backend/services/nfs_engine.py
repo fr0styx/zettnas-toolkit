@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json
+from backend.ignored_errors import ignored
 
 NFS_DIR = os.path.join(DATA_DIR, "nfs")
 NFS_EXPORTS_FILE = os.path.join(NFS_DIR, "exports.json")
@@ -278,7 +279,7 @@ class NfsEngine:
             with open(audit_file, "w", encoding="utf-8") as f:
                 f.write(content)
         except Exception:
-            logger.debug("backend.services.nfs_engine.NfsEngine.apply_exports: ignored error", exc_info=True)
+            ignored("backend.services.nfs_engine.NfsEngine.apply_exports")
 
         # 4. Invoke exportfs -ra or service reload
         try:
@@ -304,7 +305,7 @@ class NfsEngine:
             port_open = result == 0
             sock.close()
         except Exception:
-            logger.debug("backend.services.nfs_engine.NfsEngine.get_status: ignored error", exc_info=True)
+            ignored("backend.services.nfs_engine.NfsEngine.get_status")
 
         kernel_supported = os.path.exists("/proc/fs/nfsd") or os.path.exists("/proc/net/rpc/nfsd")
 

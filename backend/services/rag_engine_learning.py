@@ -20,6 +20,7 @@ from backend.db_crypto import (  # noqa: F401
 from backend.fsutil import (  # noqa: F401
     atomic_write_json,
 )
+from backend.ignored_errors import ignored
 from backend.logging_config import (  # noqa: F401
     sanitize_string,
 )
@@ -574,10 +575,7 @@ class RagLearningMixin:
                                 existing_deferred_paths.add(wp)
                                 enqueued += 1
             except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.sync_watched_deferred_queue: ignored error",
-                    exc_info=True,
-                )
+                ignored("backend.services.rag_engine.RagSearchEngine.sync_watched_deferred_queue")
             finally:
                 conn_ro.close()
 
@@ -952,7 +950,7 @@ class RagLearningMixin:
                 cfg["active_sync_session"] = None
                 atomic_write_json(_core().RAG_CONFIG_PATH, cfg)
         except Exception:
-            logger.debug("backend.services.rag_engine.RagSearchEngine.stop_sync: ignored error", exc_info=True)
+            ignored("backend.services.rag_engine.RagSearchEngine.stop_sync")
         return self.get_sync_progress()
 
     def reembed_fallback_files(self, max_files: int = 20) -> dict[str, Any]:

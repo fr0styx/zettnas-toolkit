@@ -7,6 +7,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import common
+from backend.ignored_errors import ignored
 
 
 def get_active_listening_ports() -> list[dict[str, Any]]:
@@ -51,9 +52,7 @@ def get_active_listening_ports() -> list[dict[str, Any]]:
                 raw_bytes = b"".join(bytes.fromhex(p)[::-1] for p in parts)
                 return socket.inet_ntop(socket.AF_INET6, raw_bytes)
         except Exception:
-            logger.debug(
-                "backend.hardware.network.get_active_listening_ports._parse_hex_ip: ignored error", exc_info=True
-            )
+            ignored("backend.hardware.network.get_active_listening_ports._parse_hex_ip")
         return "0.0.0.0"
 
     container_map = {}
@@ -72,7 +71,7 @@ def get_active_listening_ports() -> list[dict[str, Any]]:
                         "container_id": c.get("id", "")[:12],
                     }
     except Exception:
-        logger.debug("backend.hardware.network.get_active_listening_ports: ignored error", exc_info=True)
+        ignored("backend.hardware.network.get_active_listening_ports")
 
     proc_bases = [common.HOST_PROC, "/proc"]
     results = []

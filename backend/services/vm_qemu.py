@@ -27,6 +27,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.confirmations import require_confirmation
 from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.ignored_errors import ignored
 from backend.services import vm_guest, vm_host, vm_store
 from backend.services.vm_engine import QmpEngine
 from backend.state import Z_STATE, add_event
@@ -130,7 +131,7 @@ def _drain_stderr(proc: subprocess.Popen, log_path: str, err_log_path: str, vm_i
                 ef.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")
             vm_store._LAST_QEMU_ERRORS[vm_id] = err_msg
     except Exception:
-        logger.debug("backend.api.vms._drain_stderr: ignored error", exc_info=True)
+        ignored("backend.api.vms._drain_stderr")
 
 
 def _reconcile_vm_states(vms: list[dict[str, Any]]) -> bool:
@@ -248,7 +249,7 @@ def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
             try:
                 proc.kill()
             except Exception:
-                logger.debug("backend.api.vms._prepare_vtpm: ignored error", exc_info=True)
+                ignored("backend.api.vms._prepare_vtpm")
             return []
         time.sleep(0.05)
 
@@ -534,7 +535,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
                         timeout=120,
                     )
                 except Exception:
-                    logger.debug("backend.api.vms._start_qemu._build_cmd: ignored error", exc_info=True)
+                    ignored("backend.api.vms._start_qemu._build_cmd")
             safe_sd = vm_store._confined(sd_path, vm_store._vm_disk_roots(), "file")
             sbus = str(sdisk.get("bus", "virtio"))
             sfmt = str(sdisk.get("format") or ("raw" if str(sd_path).endswith((".raw", ".img")) else "qcow2"))
@@ -657,7 +658,7 @@ def _sync_cleanup_qemu_process(vm_id: str, force: bool = False):
                 with open(pid_file) as f:
                     pid = int(f.read().strip())
             except Exception:
-                logger.debug("backend.api.vms._sync_cleanup_qemu_process: ignored error", exc_info=True)
+                ignored("backend.api.vms._sync_cleanup_qemu_process")
 
     if proc and proc.poll() is None:
         if force:

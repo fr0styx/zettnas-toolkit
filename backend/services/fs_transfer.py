@@ -21,6 +21,7 @@ from typing import Any, Optional
 
 from backend.config import DATA_DIR, logger
 from backend.fsutil import atomic_write_json, is_protected, prune_protected, read_json
+from backend.ignored_errors import ignored
 from backend.services import recycle_bin
 
 TRANSFERS_FILE = os.path.join(DATA_DIR, "transfers.json")  # copies and moves, kept across restarts (REL-25)
@@ -971,9 +972,7 @@ class TransferTaskManager:
                 if not loop.is_closed():
                     loop.call_soon_threadsafe(q.put_nowait, payload)
             except Exception:
-                logger.debug(
-                    "backend.services.fs_transfer.TransferTaskManager._notify_update: ignored error", exc_info=True
-                )
+                ignored("backend.services.fs_transfer.TransferTaskManager._notify_update")
 
     def get_task(self, task_id: str) -> dict[str, Any] | None:
         with self._lock:

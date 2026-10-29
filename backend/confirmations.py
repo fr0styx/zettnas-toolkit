@@ -22,6 +22,7 @@ from typing import Any, Optional
 from fastapi import Depends, Request
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal
+from backend.ignored_errors import ignored
 
 logger = logging.getLogger("ZettNAS")
 
@@ -142,7 +143,7 @@ def confirm_or_raise(request: Request, principal: Any, action: str, target: str 
             details={"target": target, "path": request.url.path},
         )
     except Exception:
-        logger.debug("backend.confirmations.confirm_or_raise: ignored error", exc_info=True)
+        ignored("backend.confirmations.confirm_or_raise")
 
 
 async def confirmation_required_handler(request: Request, exc: ConfirmationRequired):

@@ -15,6 +15,7 @@ from backend.config import (  # noqa: F401
 from backend.db_crypto import (  # noqa: F401
     sqlite3,
 )
+from backend.ignored_errors import ignored
 from backend.services import (  # noqa: F401
     rag_standby,
 )
@@ -111,10 +112,7 @@ class RagManifestMixin:
                             }
                         )
                 except Exception:
-                    logger.debug(
-                        "backend.services.rag_engine.RagSearchEngine.discover_available_folders: ignored error",
-                        exc_info=True,
-                    )
+                    ignored("backend.services.rag_engine.RagSearchEngine.discover_available_folders")
 
         # Also include any custom watched_paths that weren't in top-level shares
         for wp in cfg.get("watched_paths") or []:
@@ -393,9 +391,7 @@ class RagManifestMixin:
             try:
                 conn.close()
             except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.get_folder_manifest: ignored error", exc_info=True
-                )
+                ignored("backend.services.rag_engine.RagSearchEngine.get_folder_manifest")
 
     def list_folder_manifests(
         self, path_prefix: str | None = None, principal: Any = None, limit: int = 100, **kwargs: Any

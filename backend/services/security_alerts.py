@@ -12,6 +12,8 @@ import logging
 import threading
 from typing import Any, Optional
 
+from backend.ignored_errors import ignored
+
 logger = logging.getLogger("ZettNAS")
 
 # event_type -> (title, level)
@@ -72,7 +74,7 @@ def maybe_alert(
                 dedup_key=f"sec:{event_type}:{actor_username or ''}:{actor_ip or ''}",
             )
         except Exception:
-            logger.debug("backend.services.security_alerts.maybe_alert._send: ignored error", exc_info=True)
+            ignored("backend.services.security_alerts.maybe_alert._send")
 
     threading.Thread(target=_send, name="security-alert", daemon=True).start()
     return True

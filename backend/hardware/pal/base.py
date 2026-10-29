@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, logger
 from backend.fsutil import atomic_write_json
 from backend.hardware.unraid import _find_emhttp_dir, read_unraid_status
+from backend.ignored_errors import ignored
 
 
 class PlatformType(StrEnum):
@@ -367,10 +368,7 @@ class StoragePlatformAdapter(ABC):
                                         if dev.startswith(("/dev/mmcblk", "mmcblk")):
                                             return True
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc")
 
             # 2. Check if host rootfs is an OS overlay and path is on that same device
             is_root_overlay_or_emmc = False
@@ -395,10 +393,7 @@ class StoragePlatformAdapter(ABC):
                                     ):
                                         is_root_overlay_or_emmc = True
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc")
 
             if is_root_overlay_or_emmc:
                 try:
@@ -407,15 +402,9 @@ class StoragePlatformAdapter(ABC):
                         if u.total < 128 * 1024 * 1024 * 1024:
                             return True
                 except Exception:
-                    logger.debug(
-                        "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
-                        exc_info=True,
-                    )
+                    ignored("backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc")
         except Exception:
-            logger.debug(
-                "backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc: ignored error",
-                exc_info=True,
-            )
+            ignored("backend.hardware.pal_storage.StoragePlatformAdapter._is_os_overlay_or_emmc")
         return False
 
     def _parse_mounts(self) -> list[dict[str, str]]:
@@ -548,10 +537,7 @@ class StoragePlatformAdapter(ABC):
                                 info["size_bytes"] = int(open(sz_p).read().strip()) * 512  # noqa: SIM115
                                 break
                             except Exception:
-                                logger.debug(
-                                    "backend.hardware.pal_storage.StoragePlatformAdapter._parse_mdstat: ignored error",
-                                    exc_info=True,
-                                )
+                                ignored("backend.hardware.pal_storage.StoragePlatformAdapter._parse_mdstat")
         except Exception as e:
             logger.debug(f"[PAL] Error reading mdstat from {target}: {e}")
         return result
@@ -724,10 +710,7 @@ class StoragePlatformAdapter(ABC):
                         pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
                         return tot, usd, fre, pct, None
             except Exception:
-                logger.debug(
-                    "backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage: ignored error",
-                    exc_info=True,
-                )
+                ignored("backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage")
 
         # Tier 2: Superblock direct parsing on device candidates and holder/partitions
         dev_candidates = []
@@ -754,10 +737,7 @@ class StoragePlatformAdapter(ABC):
                                 if os.path.exists(cand) and cand not in dev_candidates:
                                     dev_candidates.append(cand)
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage")
 
         for dev_node in dev_candidates:
             sb = self._parse_fs_superblock(dev_node)
@@ -804,10 +784,7 @@ class StoragePlatformAdapter(ABC):
                                 pct = round(usd / tot * 100, 1) if tot > 0 else 0.0
                                 return tot, usd, fre, pct, fstype
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage: ignored error",
-                            exc_info=True,
-                        )
+                        ignored("backend.hardware.pal_storage.StoragePlatformAdapter._get_mount_or_device_usage")
 
         # Tier 5: Fallback
         tot = fallback_total
@@ -901,10 +878,7 @@ class StoragePlatformAdapter(ABC):
                         try:
                             real_dev = os.path.basename(os.path.realpath(name_token))
                         except Exception:
-                            logger.debug(
-                                "backend.hardware.pal_storage.StoragePlatformAdapter._parse_zpool_members: ignored error",
-                                exc_info=True,
-                            )
+                            ignored("backend.hardware.pal_storage.StoragePlatformAdapter._parse_zpool_members")
 
                     clean_dev = _whole_disk(real_dev)
 

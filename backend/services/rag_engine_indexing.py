@@ -25,6 +25,7 @@ from backend.fsutil import (  # noqa: F401
     locked_json,
     read_json,
 )
+from backend.ignored_errors import ignored
 from backend.logging_config import (  # noqa: F401
     sanitize_string,
 )
@@ -205,7 +206,7 @@ class RagIndexingMixin:
                     cfg["active_sync_session"] = None
                     atomic_write_json(_core().RAG_CONFIG_PATH, cfg)
             except Exception:
-                logger.debug("backend.services.rag_engine.RagSearchEngine.flush_index: ignored error", exc_info=True)
+                ignored("backend.services.rag_engine.RagSearchEngine.flush_index")
             return {
                 "status": "ok",
                 "message": "RAG index and vector database successfully flushed clean.",
@@ -266,9 +267,7 @@ class RagIndexingMixin:
             }
             atomic_write_json(_core().RAG_CONFIG_PATH, cfg)
         except Exception:
-            logger.debug(
-                "backend.services.rag_engine.RagSearchEngine.start_background_sync: ignored error", exc_info=True
-            )
+            ignored("backend.services.rag_engine.RagSearchEngine.start_background_sync")
 
         if is_spinup:
             try:
@@ -278,9 +277,7 @@ class RagIndexingMixin:
                     f"Disk spin-up detected on {dev_label}. Syncing {len(paths)} watched folder(s)...",
                 )
             except Exception:
-                logger.debug(
-                    "backend.services.rag_engine.RagSearchEngine.start_background_sync: ignored error", exc_info=True
-                )
+                ignored("backend.services.rag_engine.RagSearchEngine.start_background_sync")
 
         def _worker() -> None:
             try:
@@ -307,10 +304,7 @@ class RagIndexingMixin:
                             cfg["active_sync_session"] = None
                             atomic_write_json(_core().RAG_CONFIG_PATH, cfg)
                 except Exception:
-                    logger.debug(
-                        "backend.services.rag_engine.RagSearchEngine.start_background_sync._worker: ignored error",
-                        exc_info=True,
-                    )
+                    ignored("backend.services.rag_engine.RagSearchEngine.start_background_sync._worker")
 
         t = threading.Thread(target=_worker, name="zettnas-rag-sync", daemon=True)
         self._sync_thread = t
@@ -436,9 +430,7 @@ class RagIndexingMixin:
                         f"Indexed {total_indexed} files ({total_skipped} unchanged, {total_deferred} deferred) on {dev_label}.",
                     )
                 except Exception:
-                    logger.debug(
-                        "backend.services.rag_engine.RagSearchEngine.index_paths: ignored error", exc_info=True
-                    )
+                    ignored("backend.services.rag_engine.RagSearchEngine.index_paths")
             return {
                 "status": final_status,
                 "path": ", ".join(clean_paths),

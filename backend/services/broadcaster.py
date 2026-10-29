@@ -4,6 +4,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.fast_json import dumps as fast_dumps
+from backend.ignored_errors import ignored
 
 
 class StatsBroadcaster:
@@ -52,7 +53,7 @@ class StatsBroadcaster:
                         pass
                 q.put_nowait(None)
             except Exception:
-                logger.debug("backend.services.broadcaster.StatsBroadcaster.shutdown: ignored error", exc_info=True)
+                ignored("backend.services.broadcaster.StatsBroadcaster.shutdown")
         self._subscribers.clear()
 
     async def unsubscribe(self, q: asyncio.Queue) -> None:

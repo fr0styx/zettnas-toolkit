@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.fsutil import atomic_write_json, protected_rclone_excludes, read_json
+from backend.ignored_errors import ignored
 
 SFTP_DIR = os.path.join(DATA_DIR, "sftp")
 SFTP_CONFIG_FILE = os.path.join(SFTP_DIR, "config.json")
@@ -148,7 +149,7 @@ Match Group sftpusers
                             candidates.append(gw_ip)
                         break
         except Exception:
-            logger.debug("backend.services.sftp_engine.SFTPEngine._check_port: ignored error", exc_info=True)
+            ignored("backend.services.sftp_engine.SFTPEngine._check_port")
 
         # Check primary host IP
         try:
@@ -165,7 +166,7 @@ Match Group sftpusers
                     if hip and hip not in candidates:
                         candidates.append(hip)
             except Exception:
-                logger.debug("backend.services.sftp_engine.SFTPEngine._check_port: ignored error", exc_info=True)
+                ignored("backend.services.sftp_engine.SFTPEngine._check_port")
 
         for ip in candidates:
             try:
@@ -412,7 +413,7 @@ Match Group sftpusers
                     sidecar_detected = True
                     sidecar_status = "running" if c_data.get("State", {}).get("Running") else "stopped"
             except Exception:
-                logger.debug("backend.services.sftp_engine.SFTPEngine.get_status: ignored error", exc_info=True)
+                ignored("backend.services.sftp_engine.SFTPEngine.get_status")
 
         subprocess_running = bool(hasattr(self, "_proc") and self._proc and self._proc.poll() is None)
         running = enabled and (port_open or sidecar_status == "running" or subprocess_running)
@@ -440,7 +441,7 @@ Match Group sftpusers
                     s.connect(("1.1.1.1", 80))
                     host_ip = s.getsockname()[0]
             except Exception:
-                logger.debug("backend.services.sftp_engine.SFTPEngine.get_status: ignored error", exc_info=True)
+                ignored("backend.services.sftp_engine.SFTPEngine.get_status")
 
         users = self.list_users()
         sample_user = users[0]["username"] if users else "username"
@@ -519,7 +520,7 @@ Match Group sftpusers
                 try:
                     self._proc.kill()
                 except Exception:
-                    logger.debug("backend.services.sftp_engine.SFTPEngine.stop: ignored error", exc_info=True)
+                    ignored("backend.services.sftp_engine.SFTPEngine.stop")
             self._proc = None
 
         time.sleep(0.3)

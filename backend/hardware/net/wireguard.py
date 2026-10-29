@@ -10,6 +10,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import common
+from backend.ignored_errors import ignored
 
 
 def _get_wireguard_status() -> dict[str, Any]:
@@ -95,7 +96,7 @@ def generate_wireguard_keypair() -> tuple[str, str]:
             if r2.returncode == 0:
                 return priv, r2.stdout.strip()
     except Exception:
-        logger.debug("backend.hardware.network.generate_wireguard_keypair: ignored error", exc_info=True)
+        ignored("backend.hardware.network.generate_wireguard_keypair")
 
     # Pure Python fallback using 32 cryptographically secure random bytes
     import base64
@@ -148,7 +149,7 @@ def get_ip_forwarding_status() -> bool:
                 with open(p) as f:
                     return f.read().strip() == "1"
             except Exception:
-                logger.debug("backend.hardware.network.get_ip_forwarding_status: ignored error", exc_info=True)
+                ignored("backend.hardware.network.get_ip_forwarding_status")
     return False
 
 
@@ -162,7 +163,7 @@ def set_ip_forwarding(enable: bool) -> bool:
                     f.write(f"{val}\n")
                 return True
             except Exception:
-                logger.debug("backend.hardware.network.set_ip_forwarding: ignored error", exc_info=True)
+                ignored("backend.hardware.network.set_ip_forwarding")
     try:
         subprocess.run(["sysctl", "-w", f"net.ipv4.ip_forward={val}"], capture_output=True, timeout=5)
         return True

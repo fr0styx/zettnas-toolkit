@@ -11,6 +11,7 @@ from typing import Any, Optional
 from backend.config import DATA_DIR, docker_sock, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.docker_stats import UnixHTTPConnection
+from backend.ignored_errors import ignored
 from backend.services.catalog_templates import CURATED_APP_CATALOG
 from backend.services.container_mutator import _docker_request, check_port_available, check_port_available_detailed
 from backend.services.image_ref import FOLLOW_TAG_LABEL
@@ -695,7 +696,7 @@ def resolve_app_port_conflict(app_id: str) -> dict[str, Any]:
                 "running": bool(c_info.get("State", {}).get("Running", False)),
             }
     except Exception:
-        logger.debug("backend.services.app_catalog.resolve_app_port_conflict: ignored error", exc_info=True)
+        ignored("backend.services.app_catalog.resolve_app_port_conflict")
 
     suggested_container_name = service_name
     if existing_container:
@@ -799,7 +800,7 @@ def generate_compose_for_app(
                                 "compose_yaml": raw_stack,
                             }
                 except Exception:
-                    logger.debug("backend.services.app_catalog.generate_compose_for_app: ignored error", exc_info=True)
+                    ignored("backend.services.app_catalog.generate_compose_for_app")
 
     # Build volumes list with volume_overrides or default storage_slug
     volumes_list = []
@@ -1490,7 +1491,7 @@ def stream_deploy_catalog_app(
                             "done": False,
                         }
                 except Exception:
-                    logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
+                    ignored("backend.services.app_catalog.stream_deploy_catalog_app")
 
             yield {
                 "step": "pull",
@@ -1512,7 +1513,7 @@ def stream_deploy_catalog_app(
                 try:
                     pull_conn.close()
                 except Exception:
-                    logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
+                    ignored("backend.services.app_catalog.stream_deploy_catalog_app")
 
     # 3b. Companion containers (database, cache, …) on a private network (M3)
     secrets_map = _stack_secrets(app_dir)
@@ -1661,7 +1662,7 @@ def stream_deploy_catalog_app(
     try:
         add_event("info", "AppCatalog", f"Deployed {app['name']} stack on port {port}")
     except Exception:
-        logger.debug("backend.services.app_catalog.stream_deploy_catalog_app: ignored error", exc_info=True)
+        ignored("backend.services.app_catalog.stream_deploy_catalog_app")
 
     webui_url = f"{app.get('webui_scheme', 'http')}://[HOST]:{port}{(app.get('webui_path') or '/')}"
     credentials = None

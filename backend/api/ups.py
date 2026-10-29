@@ -25,6 +25,7 @@ from backend.hardware.ups import (
     save_ups_config,
     test_ups_connection,
 )
+from backend.ignored_errors import ignored
 from backend.paging import PageParams
 from backend.services.ups_watchdog import trigger_outage_simulation
 
@@ -48,7 +49,7 @@ def _is_forbidden_ups_host(host_str: str) -> bool:
                 if ipaddress.ip_address(info[4][0]).is_link_local:
                     return True
         except Exception:
-            logger.debug("backend.api.ups._is_forbidden_ups_host: ignored error", exc_info=True)
+            ignored("backend.api.ups._is_forbidden_ups_host")
     return False
 
 

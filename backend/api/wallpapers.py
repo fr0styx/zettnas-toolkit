@@ -13,6 +13,7 @@ from backend.auth import require_scope
 from backend.config import MAX_WALLPAPER_BYTES, WALLPAPER_CONFIG_FILE, WALLPAPERS_DIR, logger
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json, read_json
+from backend.ignored_errors import ignored
 from backend.models.schemas import WallpaperRenameRequest, WallpaperSelectRequest
 
 router = APIRouter(tags=["Wallpapers"])
@@ -81,7 +82,7 @@ def _clean_cache_for(safe: str):
             if os.path.isfile(cache_path):
                 os.remove(cache_path)
         except Exception:
-            logger.debug("backend.api.wallpapers._clean_cache_for: ignored error", exc_info=True)
+            ignored("backend.api.wallpapers._clean_cache_for")
 
 
 def _get_thumbnail_wallpaper_path(safe: str, wp_path: str) -> tuple[str, str]:

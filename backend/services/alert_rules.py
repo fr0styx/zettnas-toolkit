@@ -3,6 +3,7 @@ import threading
 import time
 
 from backend.config import logger
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE, add_event
 
 _active_alerts = {}
@@ -109,7 +110,7 @@ def evaluate_system_alerts(unraid_data, ups_data):
             if is_simulation_active():
                 return
         except Exception:
-            logger.debug("backend.services.alert_rules.evaluate_system_alerts: ignored error", exc_info=True)
+            ignored("backend.services.alert_rules.evaluate_system_alerts")
 
         status = ups_data.get("status", "").upper()
         charge = ups_data.get("battery_charge_pct")

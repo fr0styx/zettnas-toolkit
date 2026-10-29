@@ -16,6 +16,7 @@ from backend.config import ALLOWED_BROWSE_ROOTS, HOST_DEV, HOST_PROC, HOST_SYS, 
 from backend.db import log_copy_event
 from backend.fsutil import prune_protected, resolve_within
 from backend.hardware.led import send_led_packet
+from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
@@ -314,14 +315,14 @@ def eject_media_slot(slot: str = "sd"):
     try:
         subprocess.run(["sync"], timeout=5.0)
     except Exception:
-        logger.debug("backend.services.copy_engine.eject_media_slot: ignored error", exc_info=True)
+        ignored("backend.services.copy_engine.eject_media_slot")
 
     # Unmount if mounted under /mnt/disks or /media
     for mount_check in glob.glob(f"/mnt/disks/{slot}*") + glob.glob(f"/media/{slot}*"):
         try:
             subprocess.run(["umount", mount_check], timeout=3.0)
         except Exception:
-            logger.debug("backend.services.copy_engine.eject_media_slot: ignored error", exc_info=True)
+            ignored("backend.services.copy_engine.eject_media_slot")
 
     _EJECTED_SLOTS.add(slot)
 

@@ -15,6 +15,7 @@ from backend.api.files.common import _contained
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import logger
 from backend.fsutil import prune_protected
+from backend.ignored_errors import ignored
 from backend.services.path_access import check_user_path_access
 
 router = APIRouter()
@@ -98,7 +99,7 @@ async def fs_folder_size(
 
         is_standby = is_backing_disk_in_standby(target)
     except Exception:
-        logger.debug("backend.api.fs.fs_folder_size: ignored error", exc_info=True)
+        ignored("backend.api.fs.fs_folder_size")
     if is_standby and req.force_wake:  # waking the drive to count is the person's call
         from backend.confirmations import confirm_or_raise
 
@@ -192,13 +193,13 @@ def fs_get_permissions(
 
         owner_name = pwd.getpwuid(st.st_uid).pw_name
     except Exception:
-        logger.debug("backend.api.fs.fs_get_permissions: ignored error", exc_info=True)
+        ignored("backend.api.fs.fs_get_permissions")
     try:
         import grp
 
         group_name = grp.getgrgid(st.st_gid).gr_name
     except Exception:
-        logger.debug("backend.api.fs.fs_get_permissions: ignored error", exc_info=True)
+        ignored("backend.api.fs.fs_get_permissions")
 
     return {
         "status": "ok",

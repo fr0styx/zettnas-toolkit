@@ -16,6 +16,7 @@ from typing import Any, Optional
 
 from backend.config import docker_sock, logger
 from backend.hardware import cgroup_stats
+from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 _CACHED_CONTAINERS: list[dict[str, Any]] = []
@@ -343,7 +344,7 @@ def _fetch_container_inspect(cid_short: str, conn: UnixHTTPConnection | None = N
             try:
                 conn.close()
             except Exception:
-                logger.debug("backend.hardware.docker_stats._fetch_container_inspect: ignored error", exc_info=True)
+                ignored("backend.hardware.docker_stats._fetch_container_inspect")
     return {}
 
 
@@ -439,9 +440,7 @@ def _docker_telemetry_worker():
                     try:
                         conn.close()
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.docker_stats._docker_telemetry_worker: ignored error", exc_info=True
-                        )
+                        ignored("backend.hardware.docker_stats._docker_telemetry_worker")
 
             if not running:
                 time.sleep(BACKOFF_SECS)  # one sleep, not ten slices (PERF-5)
@@ -461,9 +460,7 @@ def _docker_telemetry_worker():
                             with _TELEMETRY_LOCK:
                                 _CONTAINER_METRICS[short_id] = telemetry
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.docker_stats._docker_telemetry_worker: ignored error", exc_info=True
-                        )
+                        ignored("backend.hardware.docker_stats._docker_telemetry_worker")
             for gone in set(_PREV_CPU) - set(cids):
                 _PREV_CPU.pop(gone, None)
             cgroup_stats.forget(set(cids))
@@ -612,7 +609,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
             try:
                 conn.close()
             except Exception:
-                logger.debug("backend.hardware.docker_stats.read_docker_containers: ignored error", exc_info=True)
+                ignored("backend.hardware.docker_stats.read_docker_containers")
 
 
 def container_action(container_id: str, action: str) -> dict[str, Any]:

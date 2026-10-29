@@ -13,6 +13,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.led import find_led_port, send_led_packet
+from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 
 
@@ -39,9 +40,7 @@ def locate_drive_multitier(
                     try:
                         run_bounded(["ledctl", f"locate_off={dev_path}"], timeout=15, capture_output=True)
                     except Exception:
-                        logger.debug(
-                            "backend.hardware.locate.locate_drive_multitier._turn_off_ses: ignored error", exc_info=True
-                        )
+                        ignored("backend.hardware.locate.locate_drive_multitier._turn_off_ses")
 
                 threading.Thread(target=_turn_off_ses, daemon=True, name=f"ses-off-{dev_name}").start()
                 return {"success": True, "tier": "ses", "method": "ledctl", "dev": dev_name, "duration": duration}
@@ -60,9 +59,7 @@ def locate_drive_multitier(
                 try:
                     send_led_packet(1, 255, 255, 255, speed=5)  # Return to static calm
                 except Exception:
-                    logger.debug(
-                        "backend.hardware.locate.locate_drive_multitier._reset_argb: ignored error", exc_info=True
-                    )
+                    ignored("backend.hardware.locate.locate_drive_multitier._reset_argb")
 
             threading.Thread(target=_reset_argb, daemon=True, name=f"argb-reset-{dev_name}").start()
             return {"success": True, "tier": "argb", "method": "microcontroller", "dev": dev_name, "duration": duration}

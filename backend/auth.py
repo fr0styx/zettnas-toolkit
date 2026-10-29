@@ -16,6 +16,7 @@ from backend import config
 from backend.config import SESSION_TTL, SESSIONS_FILE, logger
 from backend.errors import error_response
 from backend.fsutil import atomic_write_json
+from backend.ignored_errors import ignored
 from backend.users_db import (
     create_user_session,
     get_user_by_username,
@@ -163,7 +164,7 @@ def query_credential_allowed(value: str) -> str:
         if value in CONSOLE_TICKETS:
             return value
     except Exception:
-        logger.debug("backend.auth.query_credential_allowed: ignored error", exc_info=True)
+        ignored("backend.auth.query_credential_allowed")
     return ""
 
 

@@ -9,6 +9,7 @@ from typing import Any
 
 from backend.config import logger
 from backend.hardware.net import common, tailscale
+from backend.ignored_errors import ignored
 
 
 def execute_tailscale_up(
@@ -187,7 +188,7 @@ def deploy_tailscale_container(
                 try:
                     pull_conn.close()
                 except Exception:
-                    logger.debug("backend.hardware.network.deploy_tailscale_container: ignored error", exc_info=True)
+                    ignored("backend.hardware.network.deploy_tailscale_container")
 
     # 3. Resolve persistent host storage directory
     if not state_dir:

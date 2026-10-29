@@ -11,6 +11,8 @@ import re
 import xml.etree.ElementTree as ET
 import zipfile
 
+from backend.ignored_errors import ignored
+
 MAX_EXPANDED_BYTES = 64 * 1024 * 1024  # most a document may expand to while its text is read
 import zlib
 from typing import Any
@@ -149,7 +151,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
                         else:
                             meta_parts.append(f"NFO Summary: {nfo_text[:1000]}")
                 except Exception:
-                    logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
+                    ignored("backend.services.rag_engine.extract_document_text")
             return "\n".join(meta_parts)
         except Exception:
             return f"Video: {os.path.basename(file_path)}"
@@ -172,7 +174,7 @@ def extract_document_text(file_path: str, file_ext: str) -> str:
             if extracted.strip():
                 return extracted
         except Exception:
-            logger.debug("backend.services.rag_engine.extract_document_text: ignored error", exc_info=True)
+            ignored("backend.services.rag_engine.extract_document_text")
 
         try:
             with open(file_path, "rb") as f:

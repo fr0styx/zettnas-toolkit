@@ -112,6 +112,11 @@
 
 #### Fixes
 
+- **Errors handled in the open**: the 300 places that knowingly carry on after an error call
+  `ignored()` directly instead of relying on a patched logger; a request's correlation ID is taken
+  from the client only as a short plain token and follows the work the request starts in the
+  background; new broad `except` clauses and f-string log calls are held to today's numbers
+  (ARC-24).
 - **Databases opened one way**: every database connects through one helper with one profile per
   database, and a database update that fails at startup now stops ZettNAS with instructions
   instead of carrying on with the old layout (ARC-30).

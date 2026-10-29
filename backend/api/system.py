@@ -47,7 +47,8 @@ from backend.hardware.screen import get_screen_state, save_screen_state
 from backend.hardware.storage import detect_chassis_model, get_chassis_friendly_name, get_current_layout
 from backend.hardware.unraid import read_unraid_status
 from backend.hardware.ups import read_ups_status
-from backend.logging_config import get_recent_logs, sanitize_dict, sanitize_string
+from backend.ignored_errors import ignored
+from backend.logging_config import get_recent_logs, in_this_request, sanitize_dict, sanitize_string
 from backend.models.schemas import (
     ButtonConfigRequest,
     CopyConfirmRequest,
@@ -392,7 +393,7 @@ def start_copy(req: StartCopyRequest | None = None):
     Z_STATE.ui_wake.set()
     src_label = str(cfg.get("source", "media slot")).upper()
     add_event("info", "Copy Started", f"Starting ingest from {src_label}...")
-    threading.Thread(target=lambda c: asyncio.run(_do_copy(c)), args=(cfg,), daemon=True).start()
+    threading.Thread(target=in_this_request(lambda c: asyncio.run(_do_copy(c))), args=(cfg,), daemon=True).start()
     return {"status": "started"}
 
 
@@ -677,7 +678,7 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
                 details={"name": req.name, "scopes": meta.get("scopes")},
             )
         except Exception:
-            logger.debug("backend.api.system.create_token: ignored error", exc_info=True)
+            ignored("backend.api.system.create_token")
         return {
             "token": raw_token,
             "name": req.name,
@@ -868,7 +869,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
                             if not created:
                                 created = img_labels.get("org.opencontainers.image.created", "")
                     except Exception:
-                        logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
+                        ignored("backend.api.system._get_current_build_info_impl")
 
                 # 2. Container labels fallback
                 if not commit:
@@ -877,7 +878,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
                     if not created:
                         created = labels.get("org.opencontainers.image.created", "")
         except Exception:
-            logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
+            ignored("backend.api.system._get_current_build_info_impl")
 
     if not commit:
         for p in ("/app/.git_commit", "data/.git_commit", ".git_commit"):
@@ -886,7 +887,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
                     with open(p) as f:
                         commit = f.read().strip()
                 except Exception:
-                    logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
+                    ignored("backend.api.system._get_current_build_info_impl")
 
     if not commit:
         try:
@@ -896,7 +897,7 @@ def _get_current_build_info_impl() -> dict[str, Any]:
             if res.returncode == 0 and res.stdout.strip():
                 commit = res.stdout.strip()
         except Exception:
-            logger.debug("backend.api.system._get_current_build_info_impl: ignored error", exc_info=True)
+            ignored("backend.api.system._get_current_build_info_impl")
 
     return {
         "commit": commit[:7] if commit else "",
@@ -1432,7 +1433,7 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
             if self_info and self_info.get("Name"):
                 target_container = self_info["Name"].lstrip("/")
         except Exception:
-            logger.debug("backend.api.system.post_apply_system_update: ignored error", exc_info=True)
+            ignored("backend.api.system.post_apply_system_update")
 
         spawned = await asyncio.to_thread(spawn_self_updater, target_img, target_container, 2.5)
         if spawned:
@@ -1536,7 +1537,7 @@ async def post_revert_system_update(
         if self_info and self_info.get("Name"):
             target_container = self_info["Name"].lstrip("/")
     except Exception:
-        logger.debug("backend.api.system.post_revert_system_update: ignored error", exc_info=True)
+        ignored("backend.api.system.post_revert_system_update")
 
     logger.warning(f"[System Update] Reverting to {match['version'] or match['image']} (snapshot {match['id']})")
     spawned = await asyncio.to_thread(spawn_self_updater, match["image"], target_container, 2.5, match["id"])

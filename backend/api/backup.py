@@ -15,6 +15,7 @@ from backend.config import CLIENT_PREFS_FILE, logger
 from backend.confirmations import require_confirmation
 from backend.fsutil import atomic_write_json, read_json
 from backend.hardware.pal_storage import PlatformCapabilityError, get_storage_platform
+from backend.logging_config import in_this_request
 from backend.paging import PageParams
 from backend.services.backup_engine import (
     delete_backup_job,
@@ -284,7 +285,7 @@ def trigger_backup_job(job_id: str):
         except Exception as e:
             logger.error(f"[HYPER-BACKUP] Manual execution failed: {e}")
 
-    threading.Thread(target=_run, daemon=True, name=f"BackupJob-{job_id}").start()
+    threading.Thread(target=in_this_request(_run), daemon=True, name=f"BackupJob-{job_id}").start()
     return {"status": "started", "message": "The backup started. You'll get a notification when it finishes."}
 
 
