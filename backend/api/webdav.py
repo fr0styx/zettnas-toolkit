@@ -218,6 +218,8 @@ async def webdav_portal_login(request: Request):
         from backend.services import ip_block
 
         ip_block.record_auth_failure(client_ip(request), "WebDAV")  # M5
+        # and per account (SEC-34): the same counter direct WebDAV and SFTP sign-ins use
+        login_lockout.register_failure(lock_key)
         return HTMLResponse(
             render_webdav_login(error_msg="Invalid WebDAV username or password."),
             status_code=200,

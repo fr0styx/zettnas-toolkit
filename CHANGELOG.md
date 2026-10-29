@@ -221,6 +221,14 @@
 
 #### Security and privacy
 
+- **Sign-in hygiene**: "keep me signed in" now lasts as promised before a restart too; changing your
+  own password can also revoke your API tokens; the 10,000 most common passwords are refused for
+  people, invites, the admin password and SFTP accounts; failed WebDAV portal sign-ins now lock the
+  account, the same counter direct WebDAV and SFTP use (SEC-36, SEC-34).
+- **Secrets kept apart**: an unencrypted settings backup leaves out the secret key and the Web Push
+  key (an encrypted one keeps them); the key can come from `SECRET_KEY_FILE` or a systemd
+  credential instead of the data folder; the first sign-in password is no longer written to the
+  log; and the front screen's token travels in a header, never in a URL (SEC-35).
 - **Test switches can't weaken an install**: `TESTING`, `ZETTNAS_TEST_MODE` and `ZETTNAS_FAST_HASH`,
   which make password hashing fast, allow the default password and turn the Docker proxy off, now
   do nothing in the released image, whatever a container template sets (ARC-29).

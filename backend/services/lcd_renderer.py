@@ -219,7 +219,7 @@ def render_lcd_loop():
         return
 
     time.sleep(2)
-    url = f"http://127.0.0.1:{PORT}/?mode=lcd&lcd_token={config.LCD_INTERNAL_TOKEN}"
+    url = f"http://127.0.0.1:{PORT}/?mode=lcd"  # the token goes in a header and a cookie, never the URL (SEC-35)
 
     eff_bri = get_effective_brightness()
     set_fb_blank(eff_bri > 0)

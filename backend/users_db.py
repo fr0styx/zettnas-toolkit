@@ -296,10 +296,10 @@ def _first_time_password() -> str:
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(password + "\n")
+    # SEC-35: never in the log (logs are shared, shipped and kept); read it from the file
     logger.warning(
-        "First-time admin sign-in: user 'admin', password '%s' (also saved in %s). "
+        "First-time admin sign-in: user 'admin', with the password saved in %s (readable by root only). "
         "You will be asked to choose your own password.",
-        password,
         path,
     )
     return password
@@ -832,6 +832,8 @@ def create_user_session(
         "ip_address": ip,
         "user_agent": user_agent,
         "must_change_password": must_change,
+        # without it a remembered session got the short idle limit until the next restart (SEC-36)
+        "is_remembered": bool(is_remembered),
     }
     with _SESSION_CACHE_LOCK:
         _SESSION_CACHE[token_hash] = session_data

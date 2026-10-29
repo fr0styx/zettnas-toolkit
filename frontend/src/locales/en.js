@@ -2497,6 +2497,7 @@ export default {
   "phone.attention": "Needs attention",
   "phone.all_activity": "All activity",
   "phone.attention_unreadable": "The status couldn't be read just now.",
+  "users.revoke_tokens": "Also revoke my API tokens (scripts and apps that use them stop working)",
   "weather.clear": "Clear Sky",
   "weather.mainly_clear": "Mainly Clear",
   "weather.partly_cloudy": "Partly Cloudy",

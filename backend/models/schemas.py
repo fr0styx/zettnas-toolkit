@@ -52,6 +52,7 @@ class UserUpdateRequest(BaseModel):
 class UserPasswordChangeRequest(BaseModel):
     new_password: str = Field(..., min_length=8)
     current_password: str | None = None  # required when changing your own password
+    revoke_tokens: bool = False  # also revoke your own API tokens (SEC-36); always done for someone else
 
 
 class SecurityUpdateRequest(BaseModel):

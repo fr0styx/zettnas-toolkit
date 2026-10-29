@@ -31,6 +31,7 @@ from backend.services.rclone_engine import get_rclone_engine
 # Top-level files never exported: histories, live state, legacy credential
 # stores and the AI search index (large and rebuildable).
 BACKUP_EXCLUSIONS = {
+    "initial-admin-password",
     "history.db",
     "history.db-shm",
     "history.db-wal",
@@ -151,13 +152,19 @@ def decrypt_backup(blob: bytes, passphrase: str) -> bytes:
         raise ValueError("Wrong passphrase, or the backup file is damaged") from e
 
 
+# Keys that unlock what the backup holds (2FA secrets, backup passphrases, Web Push): only in an
+# encrypted backup, never next to users.db in a plain zip (SEC-35)
+KEY_FILES = {"secret.key", "vapid.json"}
+
+
 def generate_backup_zip_stream(passphrase: str = "") -> Any:
     """Builds the configuration backup (zip, or encrypted when a passphrase is given).
 
     Includes users (password hashes, roles, 2FA) without sessions or API tokens,
     settings, share/NFS/SFTP/rclone configuration, compose stacks, VM definitions
-    and firmware state, and the install's secret key (needed to read encrypted
-    2FA secrets). Excludes histories, caches, the AI search index, VM disks and ISOs.
+    and firmware state, and, in an encrypted backup only, the install's secret key (needed to
+    read encrypted 2FA secrets) and Web Push key. Excludes histories, caches, the AI search
+    index, VM disks and ISOs, and always the first-run password file.
     """
     from backend import __version__
 
@@ -182,6 +189,8 @@ def generate_backup_zip_stream(passphrase: str = "") -> Any:
                     continue
                 if not _wanted(rel_path, size):
                     continue
+                if rel_path in KEY_FILES and not passphrase:
+                    continue
                 if name.endswith(".db"):
                     try:
                         clear = ("sessions", "api_tokens") if rel_path == "users.db" else ()
@@ -198,6 +207,7 @@ def generate_backup_zip_stream(passphrase: str = "") -> Any:
             "created_at": time.time(),
             "schema_versions": {k: v[0] for k, v in SCHEMA_VERSIONS.items()},
             "encrypted": bool(passphrase),
+            "keys_included": bool(passphrase),
             "files": files,
         }
         z.writestr(MANIFEST_NAME, json.dumps(manifest, indent=2))

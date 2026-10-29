@@ -181,8 +181,26 @@ LCD_INTERNAL_TOKEN = secrets.token_urlsafe(32)
 SECRET_KEY_FILE = os.path.join(DATA_DIR, "secret.key")
 
 
+def _secret_key_from_file() -> str:
+    """SECRET_KEY_FILE (a Docker or Compose secret) or $CREDENTIALS_DIRECTORY/secret_key (a systemd
+    credential): the key kept apart from the data it protects (SEC-35)."""
+    paths = [os.environ.get("SECRET_KEY_FILE", "").strip()]
+    creds = os.environ.get("CREDENTIALS_DIRECTORY", "").strip()
+    if creds:
+        paths.append(os.path.join(creds, "secret_key"))
+    for path in filter(None, paths):
+        try:
+            with open(path, encoding="utf-8") as f:
+                key = f.read().strip()
+        except OSError as e:
+            raise RuntimeError(f"Cannot read the secret key from {path} ({e}).") from e
+        if key:
+            return key
+    return ""
+
+
 def _get_or_create_secret_key() -> str:
-    env_key = os.environ.get("SECRET_KEY", "").strip()
+    env_key = os.environ.get("SECRET_KEY", "").strip() or _secret_key_from_file()
     if env_key:
         return env_key
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL  # never over an existing key (ARC-20)

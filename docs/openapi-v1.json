@@ -35344,6 +35344,11 @@
       "minLength": 8,
       "title": "New Password",
       "type": "string"
+     },
+     "revoke_tokens": {
+      "default": false,
+      "title": "Revoke Tokens",
+      "type": "boolean"
      }
     },
     "required": [

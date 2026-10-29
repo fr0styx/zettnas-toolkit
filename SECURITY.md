@@ -89,9 +89,11 @@ Unraid's job), blocks the source address for 24 hours, and sends a critical aler
 every notification channel. Unraid's own SMB shares aren't changed: use guard files
 for early warning there. An admin lifts the freeze under Security.
 
-**Blocked addresses.** An address with 20 failed sign-ins (web or WebDAV) in 15
-minutes is blocked for an hour. Blocked addresses get 403 from the web app and WebDAV
-and are denied by ZettNAS's Samba. Loopback and the networks in `ZETTNAS_TRUSTED_IPS`
+**Blocked addresses.** An address with 20 failed sign-ins (web or the WebDAV portal) in 15
+minutes is blocked for an hour. Blocked addresses get 403 from the web app and the WebDAV
+portal and are denied by ZettNAS's Samba. Direct WebDAV on port 8084 and SFTP don't see the
+client's address, so there each account is locked after repeated failures instead (shared
+with the portal), but an address is not blocked: keep 8084 and SFTP to your own network. Loopback and the networks in `ZETTNAS_TRUSTED_IPS`
 (comma-separated, for example `192.168.1.10,10.0.0.0/24`) are never blocked. If you
 lock yourself out, run
 `docker exec zettnas-toolkit python3 -m backend.services.ip_block --unblock <address>`.

@@ -93,6 +93,12 @@ async def list_sftp_users():
 async def create_sftp_user(req: SFTPUserCreateRequest):
     """Creates a new dedicated SFTP user with designated share access."""
     engine = get_sftp_engine()
+    if req.password:
+        from backend.password_policy import password_problem
+
+        problem = password_problem(req.password)
+        if problem:
+            raise HTTPException(status_code=400, detail=problem)
     try:
         user = await asyncio.to_thread(engine.add_user, req.model_dump())
         item = dict(user)

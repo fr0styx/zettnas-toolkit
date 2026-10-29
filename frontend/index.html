@@ -1539,6 +1539,10 @@
         <label for="reset-pwd-current" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_current_password">Current password</label>
         <input type="password" id="reset-pwd-current" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Your current password" data-i18n-placeholder="ui.your_current_password" autocomplete="current-password">
       </div>
+      <label id="reset-pwd-tokens-wrap" class="reset-pwd-tokens" hidden>
+        <input type="checkbox" id="reset-pwd-revoke-tokens">
+        <span data-i18n="users.revoke_tokens">Also revoke my API tokens (scripts and apps that use them stop working)</span>
+      </label>
       <div>
         <label for="reset-pwd-input" style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--warn); margin-bottom:4px; letter-spacing:0.5px;" data-i18n="users.f_new_password">New password</label>
         <input type="password" id="reset-pwd-input" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-30); padding:8px 10px; color:var(--zn-text-strong);" placeholder="Min. 8 characters" data-i18n-placeholder="ui.min_8_characters" minlength="8" required autocomplete="new-password">

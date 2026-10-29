@@ -12,4 +12,5 @@ paths = [
   '''(^|/)node_modules/''',
   '''(^|/)static/''',
   '''(^|/)frontend/dist/''',
+  '''(^|/)backend/resources/common-passwords\.txt$''',  # a list of passwords to refuse, not secrets
 ]

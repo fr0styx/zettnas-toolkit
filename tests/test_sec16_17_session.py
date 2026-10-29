@@ -20,7 +20,7 @@ def test_session_tokens_are_not_accepted_in_urls(client):
     assert client.get(f"/api/auth/me?ticket={token}").status_code == 401
     assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code == 200
     assert query_credential_allowed(token) == ""
-    assert query_credential_allowed(config.LCD_INTERNAL_TOKEN) == config.LCD_INTERNAL_TOKEN
+    assert query_credential_allowed(config.LCD_INTERNAL_TOKEN) == ""  # in a header only (SEC-35)
     assert query_credential_allowed("zst_abc") == "zst_abc"
 
 

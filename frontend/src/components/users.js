@@ -424,6 +424,10 @@ export function showResetPasswordModal(userId, username) {
   const currentInput = document.getElementById('reset-pwd-current');
   if (currentWrap) currentWrap.style.display = isSelf ? '' : 'none';
   if (currentInput) currentInput.required = isSelf;
+  const tokensWrap = document.getElementById('reset-pwd-tokens-wrap');
+  const revokeTokens = document.getElementById('reset-pwd-revoke-tokens');
+  if (tokensWrap) tokensWrap.hidden = !isSelf; // someone else's tokens are always revoked (SEC-36)
+  if (revokeTokens) revokeTokens.checked = false;
   if (form) {
     form.reset();
     form.onsubmit = async (e) => {
@@ -447,7 +451,7 @@ export function showResetPasswordModal(userId, username) {
           credentials: 'include',
           body: JSON.stringify(
             isSelf
-              ? { new_password: newPassword, current_password: currentInput?.value || '' }
+              ? { new_password: newPassword, current_password: currentInput?.value || '', revoke_tokens: Boolean(revokeTokens?.checked) }
               : { new_password: newPassword }
           )
         });

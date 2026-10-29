@@ -2497,6 +2497,7 @@ export default {
   "phone.attention": "需要注意",
   "phone.all_activity": "全部活动",
   "phone.attention_unreadable": "暂时无法读取状态。",
+  "users.revoke_tokens": "同时撤销我的 API 密钥（使用它们的脚本和应用将停止工作）",
   "weather.clear": "晴朗",
   "weather.mainly_clear": "大部晴朗",
   "weather.partly_cloudy": "局部多云",

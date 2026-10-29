@@ -119,7 +119,7 @@ def test_e2e_live_ui_and_lcd_geometry():
         context = browser.new_context(viewport={"width": 172, "height": 640})
         page = context.new_page()
         page.goto(
-            f"http://127.0.0.1:8082/?mode=lcd&lcd_token={config.LCD_INTERNAL_TOKEN}",
+            "http://127.0.0.1:8082/?mode=lcd",
             wait_until="domcontentloaded",
             timeout=10000,
         )

@@ -36,7 +36,7 @@ or the apps you install.
 | Boundary | Defences |
 | -------- | -------- |
 | Browser → web app (port 8082) | Session cookie (HttpOnly, SameSite) or Bearer tokens; CSRF origin check on cookie writes; enforced Content-Security-Policy; must-change default password; login lockout and IP blocking (20 failures in 15 min); optional TOTP 2FA |
-| Clients → WebDAV (8084) and SFTP | WebDAV: only ZettNAS accounts, per-user share access, the same lockout and IP blocking. SFTP: its own accounts, made by an admin in the SFTP settings, with a password or a public key and a list of shares; they can't sign in to the web app |
+| Clients → WebDAV (8084) and SFTP | WebDAV: only ZettNAS accounts and per-user share access; the portal has the account lockout and IP blocking, direct WebDAV on 8084 the account lockout only (it doesn't see the client's address). SFTP: its own accounts, made by an admin in the SFTP settings, with a password or a public key and a list of shares; they can't sign in to the web app |
 | User → files | Every path is resolved inside the allowed roots (no `..` or symlink escape); non-admins reach only their home folder and shares they were given, at the level they were given |
 | User → admin functions | Scoped permissions on every endpoint; root-equivalent permissions listed in SECURITY.md; destructive actions need confirmation |
 | Web app → Docker | Allow-list proxy: no swarm, plugins, secrets, image build/import, commit or export; containers with host-level access only from confirmed flows, each logged |

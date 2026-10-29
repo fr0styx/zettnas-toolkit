@@ -149,13 +149,13 @@ def query_credential_allowed(value: str) -> str:
     """A credential in a URL is accepted only if it is short-lived or internal (SEC-16).
 
     URLs end up in logs, browser history and Referer headers, so long-lived session
-    and API tokens are never read from them: only single-use stream tickets (zst_),
-    VM console tickets and the LCD renderer's internal token.
+    and API tokens are never read from them: only single-use stream tickets (zst_) and VM
+    console tickets. The LCD renderer's internal token comes in a header (SEC-35).
     """
     value = (value or "").strip()
     if not value:
         return ""
-    if value.startswith("zst_") or is_internal_token(value):
+    if value.startswith("zst_"):
         return value
     try:
         from backend.tickets import CONSOLE_TICKETS
@@ -180,11 +180,7 @@ def extract_token(request: Request) -> str:
         return cookie_token
 
     # 3. Single-use tickets / internal token only
-    return query_credential_allowed(
-        request.query_params.get("ticket", "")
-        or request.query_params.get("token", "")
-        or request.query_params.get("lcd_token", "")
-    )
+    return query_credential_allowed(request.query_params.get("ticket", "") or request.query_params.get("token", ""))
 
 
 _STREAMING_ENDPOINTS = ("/api/fs/upload", "/api/vms/isos/upload", "/api/system/restore", "/api/backup/upload")

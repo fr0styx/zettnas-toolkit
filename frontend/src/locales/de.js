@@ -2497,6 +2497,7 @@ export default {
   "phone.attention": "Braucht Aufmerksamkeit",
   "phone.all_activity": "Alle Aktivitäten",
   "phone.attention_unreadable": "Der Status konnte gerade nicht gelesen werden.",
+  "users.revoke_tokens": "Auch meine API-Schlüssel widerrufen (Skripte und Apps, die sie nutzen, funktionieren dann nicht mehr)",
   "weather.clear": "Klarer Himmel",
   "weather.mainly_clear": "Überwiegend klar",
   "weather.partly_cloudy": "Teilweise bewölkt",

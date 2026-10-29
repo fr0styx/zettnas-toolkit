@@ -60,7 +60,6 @@ def test_export_contents(data):
     for wanted in (
         "users.db",
         "security.json",
-        "secret.key",
         "vms.json",
         "vms/vm1/OVMF_VARS.fd",
         "stacks/app/docker-compose.yml",
@@ -68,8 +67,17 @@ def test_export_contents(data):
         backup_engine.MANIFEST_NAME,
     ):
         assert wanted in names, wanted
-    for unwanted in ("rag_index.db", "auth_lockout.json", "vms/vm1/disk.qcow2", "rclone/vfs_cache/blob"):
+    # the secret key only in an encrypted backup, never next to users.db in a plain zip (SEC-35)
+    for unwanted in ("rag_index.db", "auth_lockout.json", "vms/vm1/disk.qcow2", "rclone/vfs_cache/blob", "secret.key"):
         assert unwanted not in names, unwanted
+
+
+def test_an_encrypted_export_carries_the_secret_key(data):
+    import io
+
+    blob = backup_engine.generate_backup_zip_stream("a long backup passphrase").read()
+    names = _names(io.BytesIO(backup_engine.decrypt_backup(blob, "a long backup passphrase")))
+    assert "secret.key" in names and "users.db" in names
 
 
 def test_exported_users_db_has_no_sessions_or_tokens(data, tmp_path):

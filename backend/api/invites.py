@@ -89,6 +89,11 @@ def check_invite(token: str, request: Request):
 def accept(token: str, req: AcceptIn, request: Request):
     """Public: creates the account an invite allows, and the person's private folder."""
     _limit(request)
+    from backend.password_policy import password_problem
+
+    problem = password_problem(req.password)
+    if problem:
+        raise HTTPException(status_code=400, detail=problem)
     try:
         user = accept_invite(token, req.username, req.display_name or req.username, req.password)
     except LookupError:

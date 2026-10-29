@@ -41,6 +41,7 @@ from backend.models.schemas import (
     UserUpdateRequest,
 )
 from backend.paging import PageParams
+from backend.password_policy import password_problem
 from backend.passwords import hash_password, is_legacy_hash, needs_rehash, verify_password
 from backend.totp import (
     generate_qr_svg,
@@ -985,6 +986,9 @@ def create_new_user(
     existing = get_user_by_username(data.username)
     if existing:
         return error_response(409, f"User '{data.username}' already exists.", error="user_exists")
+    problem = password_problem(data.password)
+    if problem:
+        return error_response(400, problem, error="weak_password")
     if not _role_within(principal.scopes, data.role_id):
         return error_response(403, "You can't give someone more permissions than you have.", error="forbidden")
 
@@ -1135,10 +1139,9 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
                 403, "You can't change the password of someone with more rights than you.", error="role_too_high"
             )
 
-    if len(data.new_password) < config.MIN_PASSWORD_LENGTH:
-        return error_response(400, f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters.")
-    if data.new_password.lower() == "admin":
-        return error_response(400, "Please choose a password other than the default.", error="weak_password")
+    problem = password_problem(data.new_password)
+    if problem:
+        return error_response(400, problem, error="weak_password")
 
     if is_self:
         # Re-authenticate: a stolen session alone must not be able to take over the account (SEC-13).
@@ -1158,7 +1161,7 @@ async def change_user_password(user_id: str, data: UserPasswordChangeRequest, re
         user_id,
         data.new_password,
         keep_token=getattr(request.state, "token", None) if is_self else None,
-        revoke_tokens=not is_self,
+        revoke_tokens=(not is_self) or data.revoke_tokens,
     )
     if not ok:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -1414,12 +1417,9 @@ async def post_security(data: SecurityUpdateRequest, request: Request):
 
     new_pwd = data.new_password
     if new_pwd:
-        if len(new_pwd) < config.MIN_PASSWORD_LENGTH:
-            return error_response(
-                400, f"Password must be at least {config.MIN_PASSWORD_LENGTH} characters.", error="weak_password"
-            )
-        if new_pwd.lower() == "admin":
-            return error_response(400, "Please choose a password other than the default.", error="weak_password")
+        problem = password_problem(new_pwd)
+        if problem:
+            return error_response(400, problem, error="weak_password")
         config.STORED_PASSWORD_HASH = await run_in_threadpool(hash_password, new_pwd)
         invalidate_all_sessions()
 
