@@ -4,6 +4,10 @@
 
 #### Security
 
+- **The token list says what each token may do**: "Read files", "Read and change files",
+  "monitoring", "an AI assistant" or "everything", or how many rights a token chosen by hand
+  holds, with the rights themselves on hover (NSEC-2).
+
 - **Code scanning findings checked** (CodeQL, 289 open on main): the real ones are fixed here:
   - an app's data folder can't be a system folder or ZettNAS's own data or install folder, and
     a folder that can't be made stops the install instead of quietly using ZettNAS's data folder;

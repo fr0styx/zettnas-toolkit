@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "tokens.may": "May: {what}",
+  "tokens.kind_custom": "{n, plural, one {# chosen right} other {# chosen rights}}",
   "ff.pick_devices": "Choose from the network",
   "ff.pick_loading": "Looking for devices…",
   "ff.pick_none": "AdGuard Home hasn't seen any devices yet.",

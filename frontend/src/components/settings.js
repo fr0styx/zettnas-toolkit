@@ -1914,6 +1914,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 /** One token's row: name, what it may reach, and when and by which client it was last used (COMP-06). */
+// The kinds a token can be made as (backend/api/system.py TOKEN_PRESETS), to say in the list what
+// each one may do (NSEC-2)
+/** @type {Array<[string, string[], () => string]>} */
+const TOKEN_KINDS = [
+  ['files-read', ['shares:read', 'files:read'], () => t('tokens.kind_files_read', 'Read files')],
+  ['files-write', ['shares:read', 'files:read', 'shares:user_write', 'files:write'], () => t('tokens.kind_files_write', 'Read and change files')],
+  ['monitoring', ['system:view', 'hardware:read', 'storage:read'], () => t('tokens.kind_monitoring', 'See how the server is doing (monitoring)')],
+  ['mcp', ['ai:knowledge:read', 'shares:read', 'files:read', 'system:view'], () => t('tokens.kind_mcp', 'An AI assistant (MCP): search and read files')],
+];
+
+/** What a token may do, in words: its kind when its rights are one, else how many it holds. */
+export function tokenRights(scopes) {
+  const have = [...new Set(scopes || [])].sort();
+  if (have.includes('*')) return t('tokens.kind_full', 'Everything you can do (only for a tool you trust completely)');
+  for (const [, rights, label] of TOKEN_KINDS) {
+    if (have.length === rights.length && [...rights].sort().every((r, i) => r === have[i])) return label();
+  }
+  return t('tokens.kind_custom', '{n, plural, one {# chosen right} other {# chosen rights}}', { n: have.length });
+}
+
 export function tokenRowHtml(tok) {
   const folders = Array.isArray(tok.folders) ? tok.folders : [];
   const reach = folders.length
@@ -1929,6 +1949,7 @@ export function tokenRowHtml(tok) {
     <div class="zn-token-main">
       <div class="is-strong">${escapeHtml(tok.name)}</div>
       <div class="zn-sub is-mono">${escapeHtml(tok.masked_token)}</div>
+      <div class="zn-sub" title="${escapeHtml((tok.scopes || []).join(', '))}">${escapeHtml(t('tokens.may', 'May: {what}', { what: tokenRights(tok.scopes) }))}</div>
       <div class="zn-sub">${reach}</div>
       <div class="zn-sub" data-token-used>${escapeHtml(used)}</div>
     </div>

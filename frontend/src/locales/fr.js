@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "tokens.may": "Peut : {what}",
+  "tokens.kind_custom": "{n, plural, one {# droit choisi} other {# droits choisis}}",
   "ff.pick_devices": "Choisir sur le réseau",
   "ff.pick_loading": "Recherche des appareils…",
   "ff.pick_none": "AdGuard Home n’a encore vu aucun appareil.",

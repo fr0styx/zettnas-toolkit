@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "tokens.may": "Darf: {what}",
+  "tokens.kind_custom": "{n, plural, one {# gewähltes Recht} other {# gewählte Rechte}}",
   "ff.pick_devices": "Aus dem Netzwerk wählen",
   "ff.pick_loading": "Geräte werden gesucht…",
   "ff.pick_none": "AdGuard Home hat noch keine Geräte gesehen.",

@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "tokens.may": "Puede: {what}",
+  "tokens.kind_custom": "{n, plural, one {# permiso elegido} other {# permisos elegidos}}",
   "ff.pick_devices": "Elegir de la red",
   "ff.pick_loading": "Buscando dispositivos…",
   "ff.pick_none": "AdGuard Home aún no ha visto ningún dispositivo.",

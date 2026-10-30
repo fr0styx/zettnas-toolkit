@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "tokens.may": "可以：{what}",
+  "tokens.kind_custom": "{n, plural, other {已选 # 项权限}}",
   "ff.pick_devices": "从网络中选择",
   "ff.pick_loading": "正在查找设备…",
   "ff.pick_none": "AdGuard Home 还没有发现任何设备。",
