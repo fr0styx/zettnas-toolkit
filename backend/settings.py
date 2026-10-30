@@ -154,6 +154,22 @@ class Settings:
         choices=("text", "json"),
         group="Logs",
     )
+    audit_retention_days: int = _s(
+        "ZETTNAS_AUDIT_RETENTION_DAYS",
+        365,
+        "Days the security audit log keeps an event; 0 keeps everything.",
+        lo=0,
+        hi=36500,
+        group="Logs",
+    )
+    gil_switch_secs: float = _s(
+        "ZETTNAS_GIL_SWITCH_SECS",
+        0.02,
+        "How long a Python thread runs before handing over to another, in seconds; longer means fewer wakeups.",
+        lo=0.001,
+        hi=1.0,
+        group="Host",
+    )
     # Power
     ups_mode: str = _s("UPS_MODE", "auto", "How to reach the UPS (auto, nut, usb, ...).", group="Power")
     nut_host: str = _s("NUT_HOST", "127.0.0.1", "Network UPS Tools server.", group="Power")

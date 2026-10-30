@@ -27,6 +27,7 @@ from backend.config import (
     COLLECTOR_WATCHDOG_SECS,
     DATA_DIR,
     LED_STATE_FILE,
+    SETTINGS,
     STATIC_DIR,
     _load_security,
     is_using_default_password,
@@ -113,7 +114,7 @@ def startup_system():
     gc.set_threshold(50000, 10, 10)
     # Background threads (stats, LCD, pollers) hand the GIL back and forth every 5 ms by default
     # while two of them run; 20 ms cuts those wakeups at no visible cost (PERF-5)
-    sys.setswitchinterval(float(os.environ.get("ZETTNAS_GIL_SWITCH_SECS", "0.02")))
+    sys.setswitchinterval(SETTINGS.gil_switch_secs)  # a typo keeps the default (NARC-8)
     setup_structured_logging()
     from backend.services.supervisor import install_os_thread_names
 

@@ -483,6 +483,10 @@
 
 #### Fixes
 
+- **A typo in two settings no longer stops ZettNAS from starting**: ZETTNAS_AUDIT_RETENTION_DAYS
+  and ZETTNAS_GIL_SWITCH_SECS are declared with the other settings, so a value that can't be used
+  keeps its default with a warning, and both are in docs/CONFIGURATION.md (NARC-8).
+
 - **One answer to "is this disk asleep?"**: the AI index, the File Explorer, Drive Health, the
   wake confirmation and the ransomware guard now ask the same way, with one rule and one shared
   10-second memory, so two features no longer start two checks of the same disk. A disk that

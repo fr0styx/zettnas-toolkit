@@ -52,6 +52,13 @@ used keeps its default, and the log says which variable and why.
 | Variable | Default | Meaning |
 |---|---|---|
 | `LOG_FORMAT` | `text` | Log lines as plain text, or as one JSON object per line (with a request id) for log collectors. (one of `text`, `json`) |
+| `ZETTNAS_AUDIT_RETENTION_DAYS` | `365` | Days the security audit log keeps an event; 0 keeps everything. (0–36500) |
+
+## Host
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `ZETTNAS_GIL_SWITCH_SECS` | `0.02` | How long a Python thread runs before handing over to another, in seconds; longer means fewer wakeups. (0.001–1) |
 
 ## Power
 
