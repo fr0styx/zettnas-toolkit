@@ -15,7 +15,7 @@ import shutil
 import time
 from typing import Any
 
-from backend.config import DATA_DIR, logger
+from backend.config import BUTTON_CFG_FILE, DATA_DIR, logger
 from backend.fsutil import atomic_write_json, read_json
 from backend.services.protection_status import USB_ROOT
 
@@ -73,7 +73,15 @@ def describe(path: str) -> dict[str, Any]:
         "free_bytes": free,
         "media": os.path.isdir(os.path.join(path, "DCIM")),
         "backups": _backups_on(path),
+        "import_dest": import_dest(),
     }
+
+
+def import_dest() -> str:
+    """Where an import copies photos to: the copy button's destination (NUX-24)."""
+    saved = read_json(BUTTON_CFG_FILE, {})
+    dest = saved.get("dest") if isinstance(saved, dict) else ""
+    return str(dest or "/mnt/user/")  # the button's own default (api/system.py BUTTON_DEFAULTS)
 
 
 def disks() -> list[dict[str, Any]]:

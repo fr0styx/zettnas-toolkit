@@ -24,7 +24,9 @@ function ask(disk, kind, rest) {
   const title = kind === 'backup' ? t('usb.backup_title', 'Back up the NAS to this disk?') : t('usb.import_title', 'Import photos from this disk?');
   const msg = kind === 'backup'
     ? t('usb.backup_msg', '{name} holds these backups: {list}. Bring them up to date now?', { name, list: backups })
-    : t('usb.import_msg', '{name} has a camera folder. Copy its photos and videos into dated folders, each file checked after copying?', { name });
+    : disk.import_dest
+      ? t('usb.import_msg_to', '{name} has a camera folder. Copy its photos and videos into dated folders in {dest}, each file checked after copying?', { name, dest: escapeHtml(disk.import_dest) })
+      : t('usb.import_msg', '{name} has a camera folder. Copy its photos and videos into dated folders, each file checked after copying?', { name });
   const next = () => {
     if (rest.length) ask(disk, rest[0], rest.slice(1));
   };

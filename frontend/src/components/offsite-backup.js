@@ -55,7 +55,16 @@ export function formHtml(shares) {
     </div>
     <div class="offsite-lock" data-off-lock hidden>
       <label>${escapeHtml(t('offsite.lock_days', 'Days the bucket locks each copy (0 = not locked)'))}<input name="lock_days" type="number" min="0" max="3650" value="0"></label>
-      <p class="offsite-note">${escapeHtml(t('offsite.lock_help', 'To lock a cloud copy so nobody can delete it, not even with this NAS\'s keys: create the bucket with Object Lock (Backblaze: File Lock) on, set a default retention in Compliance mode, for example 30 days, add a lifecycle rule that removes old versions once the lock ends, and enter the same number of days here. Works with Backblaze B2, Wasabi, Amazon S3 and other S3 services.'))}</p>
+      <div class="offsite-note">
+        <p>${escapeHtml(t('offsite.lock_intro', "To lock a cloud copy so nobody can delete it, not even with this NAS's keys:"))}</p>
+        <ol>
+          <li>${escapeHtml(t('offsite.lock_step1', 'Create the bucket with Object Lock on (Backblaze calls it File Lock).'))}</li>
+          <li>${escapeHtml(t('offsite.lock_step2', 'Set a default retention in Compliance mode, for example 30 days.'))}</li>
+          <li>${escapeHtml(t('offsite.lock_step3', 'Add a lifecycle rule that removes old versions once the lock ends.'))}</li>
+          <li>${escapeHtml(t('offsite.lock_step4', 'Enter the same number of days here.'))}</li>
+        </ol>
+        <p>${escapeHtml(t('offsite.lock_works', 'Works with Backblaze B2, Wasabi, Amazon S3 and other S3 services.'))}</p>
+      </div>
     </div>
     <fieldset><legend>${escapeHtml(t('offsite.what', 'Folders to back up'))}</legend>${shares
       .map((s) => `<label class="offsite-check"><input type="checkbox" name="paths" value="${escapeHtml(s.path)}"> ${escapeHtml(s.name)}</label>`)

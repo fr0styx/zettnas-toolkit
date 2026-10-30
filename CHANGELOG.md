@@ -95,6 +95,11 @@
 
 #### Usability
 
+- **Clearer small texts** (NUX-24): the USB photo import says which folder the photos go to; an
+  app install with no shares to pick from has an "Open Shares" button; the time-zone warning says
+  nightly work runs by London winter time (UTC), which may be daytime where you are; the cloud
+  lock help is four short steps instead of one long paragraph.
+
 - **Drive alerts in the family's language**: Notifications has "Write alerts in" (English,
   Deutsch, Español, Français, 中文). A drive that needs replacing, gets better, runs hot or is too
   hot is reported in that language on phones, e-mail and the other channels, with the drive's

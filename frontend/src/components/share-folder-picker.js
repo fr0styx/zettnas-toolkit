@@ -65,6 +65,11 @@ export async function renderShareFolders(mount, appId, onChange) {
     ? t('catalog.sf_hint', 'The app sees everything in the share you pick, and the files stay there if you remove the app.')
     : t('catalog.sf_none', 'No shares yet. Create one under Shares to keep these files on it.');
   mount.append(el('div', { className: 'adm-hint', textContent: hint }));
+  if (!shares.length) {
+    const go = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('catalog.sf_open_shares', 'Open Shares') });
+    go.addEventListener('click', () => /** @type {any} */ (window).openManagementSection?.('mgmt-pane-storage-shares'));
+    mount.append(go);
+  }
 }
 
 /** {app folder: share name} for the shares picked; an empty object keeps the app's own folders. */
