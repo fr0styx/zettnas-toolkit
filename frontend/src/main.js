@@ -40,7 +40,6 @@ import { initFanControl } from './components/fan-control.js';
 import { initLedControl } from './components/led-control.js';
 import { applyDashboardLayout, fetchDashboardLayout, fitMiniPreviewScale } from './components/mini-preview.js';
 import { initWallpapers, loadWallpapers } from './components/wallpapers.js';
-import { initEvents } from './components/events.js';
 import { initSetupWizardLauncher } from './components/setup-wizard-gate.js';
 import { initCommandPalette } from './components/command-palette.js';
 import { lazyWindow } from './lazy-windows.js';
@@ -372,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
     initLedControl();
   });
   initWallpapers();
-  onManagementDom(initEvents);
+  onManagementDom(() => import('./components/events.js').then((m) => m.initEvents())); // not in the first load (FE-01)
   loadLater(); // the settings drawer and the users code (B6 first-load budget)
   onManagementDom(() => import('./components/metrics-chart.js').then((m) => m.initMetricsChart())); // with Mission Control
   initSetupWizardLauncher(); // the wizard itself loads when it is needed (PERF-9)

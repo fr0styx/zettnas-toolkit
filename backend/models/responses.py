@@ -1619,6 +1619,7 @@ class GetNotificationsResponse(_Doc):
     webhook_enabled: bool
     webhook_url: str
     weekly_report: bool
+    language: str = "en"
 
 
 class GetMyAlertsResponse(_Doc):

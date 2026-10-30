@@ -95,6 +95,12 @@
 
 #### Usability
 
+- **Drive alerts in the family's language**: Notifications has "Write alerts in" (English,
+  Deutsch, Español, Français, 中文). A drive that needs replacing, gets better, runs hot or is too
+  hot is reported in that language on phones, e-mail and the other channels, with the drive's
+  verdict and reason translated too. The Activity log shows those entries in the language of
+  whoever reads it (NUX-3, first part).
+
 - **A drive's own temperature limit**: next to its purchase and warranty details, a drive can have
   the temperature above which it counts as warm (30–90 °C; too hot is 10 °C more). Its "runs warm"
   finding and its temperature alert use it instead of the usual 50 °C for hard drives and 70 °C

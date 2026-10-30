@@ -2,6 +2,7 @@
  * ZettNAS Toolkit Hardware Events Logger
  * Renders system alerts, diagnostic events, and handles event log clearing.
  */
+import { eventText } from '../event-text.js';
 import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
 import { escapeHtml } from '../utils.js';
@@ -57,12 +58,13 @@ export function renderEventLog(events) {
     row.onmouseover = () => { row.style.background = 'rgba(255,255,255,0.02)'; };
     row.onmouseout = () => { row.style.background = 'transparent'; };
 
+    const text = eventText(e); // in the reader's language when the entry says how (NUX-3)
     const topHtml = `
       <div style="display: flex; gap: 10px; align-items: flex-start;">
         <span style="font-size: 14px; margin-top: 2px;">${icon}</span>
         <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
-          <div style="font-size: var(--zn-fs-xs); color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${escapeHtml(e.title)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">${escapeHtml(e.message)}</div>
+          <div style="font-size: var(--zn-fs-xs); color: ${color}; font-weight: 700; letter-spacing: 0.3px;">${escapeHtml(text.title)}</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-strong);">${escapeHtml(text.message)}</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(timeStr)}</div>
         </div>
         <div style="display: flex; gap: 6px; align-items: center; padding-top: 2px;">

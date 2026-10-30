@@ -2,6 +2,7 @@
  * Mission Control: Notification channels.
  * Split out of management.js (ARCH-1); management.js re-exports everything here.
  */
+import { SUPPORTED_LANGUAGES } from '../../i18n.js';
 import { api } from '../../api.js';
 import { showToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
@@ -33,6 +34,14 @@ export function renderNotificationConfigUI() {
   if (digestHour) digestHour.value = String(cfg.digest_hour ?? 8);
   const weekly = document.getElementById('notif-weekly-report');
   if (weekly) weekly.checked = cfg.weekly_report !== false;
+  const lang = /** @type {HTMLSelectElement | null} */ (document.getElementById('notif-language'));
+  if (lang) {
+    // the household's language for pushes and e-mails (NUX-3); each language under its own name
+    if (!lang.options.length) {
+      for (const l of SUPPORTED_LANGUAGES) lang.append(Object.assign(document.createElement('option'), { value: l.code, textContent: l.name, lang: l.code }));
+    }
+    lang.value = cfg.language || 'en';
+  }
   renderMyAlerts(document.getElementById('my-alerts-mount'));
   const frigate = document.getElementById('frigate-events-mount');
   if (frigate) import('../frigate-events.js').then((m) => m.renderFrigateEvents(frigate)); // COMP-11
@@ -117,6 +126,8 @@ export async function saveNotificationsConfig() {
   if (!isNaN(dh)) cfg.digest_hour = Math.max(0, Math.min(23, dh));
   const weekly = document.getElementById('notif-weekly-report');
   if (weekly) cfg.weekly_report = weekly.checked;
+  const lang = /** @type {HTMLSelectElement | null} */ (document.getElementById('notif-language'));
+  if (lang && lang.value) cfg.language = lang.value;
 
   try {
     const res = await api.post('/api/notifications/config', cfg);

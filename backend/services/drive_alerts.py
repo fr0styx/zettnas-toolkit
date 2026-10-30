@@ -38,6 +38,22 @@ def _send(**kwargs: Any) -> None:
     threading.Thread(target=send_notification, kwargs=kwargs, daemon=True, name="DriveAlert").start()
 
 
+def _verdict_params(dev: str, result: dict) -> dict:
+    """The values of a verdict alert: the drive's label and summary as translatable references."""
+    from backend import i18n
+
+    label = str(result.get("label") or result.get("verdict") or "")
+    summary = str(result.get("summary") or "")
+    lk, sk = result.get("label_key"), result.get("summary_key")
+    return {
+        "dev": dev,
+        "label": i18n.ref(f"dh.label.{lk}", label) if lk else label,
+        "summary": i18n.ref(f"dh.f.{sk}.title", summary, result.get("summary_params") or {})
+        if sk and summary
+        else summary,
+    }
+
+
 def on_verdict(
     dev: str, result: dict, key: str | None = None, now: float | None = None, send: Callable[..., None] | None = None
 ) -> str:
@@ -67,17 +83,27 @@ def on_verdict(
         entry["notified"] = now if action in ("alert", "reminder") else prev.get("notified", 0)
         state[key] = entry
         atomic_write_json(_state_file(), state)
-    label = result.get("label") or verdict
-    summary = result.get("summary") or ""
+    from backend import i18n
+
+    params = _verdict_params(dev, result)
+    msg_id = "alert.drive_verdict.msg" if result.get("summary") else "alert.drive_verdict.msg_plain"
+    title_en = i18n.text("alert.drive_verdict.title", "Drive {dev}: {label}", params)
     if action in ("alert", "reminder"):
+        from backend.services.notifications import alert_language
         from backend.state import add_event
 
-        title = f"Drive {dev}: {label}"
-        message = f"{summary}. Open Drive Health for what to do." if summary else "Open Drive Health for what to do."
-        add_event("error" if verdict in ("soon", "now") else "warning", title, message)
+        message_en = i18n.text(msg_id, "{summary}. Open Drive Health for what to do.", params)
+        # the activity log shows it in the reader's language (details), the push in the household's
+        add_event(
+            "error" if verdict in ("soon", "now") else "warning",
+            title_en,
+            message_en,
+            details={"title_key": "alert.drive_verdict.title", "msg_key": msg_id, "params": params},
+        )
+        lang = alert_language()
         send(
-            title=title,
-            message=message,
+            title=i18n.text("alert.drive_verdict.title", "Drive {dev}: {label}", params, lang),
+            message=i18n.text(msg_id, "{summary}. Open Drive Health for what to do.", params, lang),
             level=LEVEL.get(verdict, "warning"),
             event_type="smart",
             dedup_key=f"drive_verdict_{key}_{verdict}_{int(now // REMIND_SECS) if action == 'reminder' else 0}",
@@ -85,7 +111,13 @@ def on_verdict(
     elif action == "better":
         from backend.state import add_event
 
-        add_event("info", f"Drive {dev}: {label}", summary or "The drive looks better than before.")
+        msg_id = "alert.drive_better.summary" if result.get("summary") else "alert.drive_better.msg"
+        add_event(
+            "info",
+            title_en,
+            i18n.text(msg_id, "{summary}" if result.get("summary") else "The drive looks better than before.", params),
+            details={"title_key": "alert.drive_verdict.title", "msg_key": msg_id, "params": params},
+        )
     return action
 
 
@@ -112,9 +144,19 @@ def check_temperatures(
         if level and (not prev or (level == "crit" and prev == "warn")):
             _hot[dev] = level
             alerted.append(dev)
+            from backend import i18n
+            from backend.services.notifications import alert_language
+
+            lang, p = alert_language(), {"dev": dev, "temp": temp}
+            hot_en = f"Drive {dev} is {'too hot' if level == 'crit' else 'running hot'} ({temp}°C)"
             send(
-                title=f"Drive {dev} is {'too hot' if level == 'crit' else 'running hot'} ({temp}°C)",
-                message=f"Drive {dev} reached {temp}°C. Check that the fans run and the vents are free.",
+                title=i18n.t(f"alert.drive_temp.{level}.title", hot_en, p, lang),
+                message=i18n.t(
+                    "alert.drive_temp.msg",
+                    "Drive {dev} reached {temp}°C. Check that the fans run and the vents are free.",
+                    p,
+                    lang,
+                ),
                 level="critical" if level == "crit" else "warning",
                 event_type="temp",
                 dedup_key=f"drive_temp_{dev}_{level}",

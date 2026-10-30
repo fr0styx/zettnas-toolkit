@@ -17421,6 +17421,11 @@
       "title": "Hdd Temp Threshold",
       "type": "number"
      },
+     "language": {
+      "default": "en",
+      "title": "Language",
+      "type": "string"
+     },
      "notify_on_backup": {
       "title": "Notify On Backup",
       "type": "boolean"
@@ -28288,6 +28293,18 @@
       "minimum": 30.0,
       "title": "Hdd Temp Threshold",
       "type": "integer"
+     },
+     "language": {
+      "default": "en",
+      "enum": [
+       "en",
+       "de",
+       "es",
+       "fr",
+       "zh"
+      ],
+      "title": "Language",
+      "type": "string"
      },
      "notify_on_backup": {
       "default": true,

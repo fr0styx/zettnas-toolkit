@@ -89,6 +89,7 @@ DEFAULT_NOTIFICATION_CONFIG: dict[str, Any] = {
     "digest_mode": "off",  # "off" or "daily"
     "digest_hour": 8,
     "weekly_report": True,  # a health summary on Sunday mornings (B12a, FEAT-05)
+    "language": "en",  # the language alerts are written in (NUX-3)
 }
 
 DIGEST_FILE = os.path.join(DATA_DIR, "notification_digest.json")
@@ -116,6 +117,14 @@ _LEVEL_RANK = {"info": 0, "normal": 0, "warning": 1, "warn": 1, "critical": 2, "
 
 # Alert tracking for deduplication: key -> {"last_sent": float, "last_level": str}
 _alert_history: dict[str, dict[str, Any]] = {}
+
+
+def alert_language() -> str:
+    """The language the household's alerts are written in (NUX-3): English unless set."""
+    from backend.i18n import LANGS
+
+    lang = str(load_notification_config().get("language") or "en")
+    return lang if lang in LANGS else "en"
 
 
 def load_notification_config() -> dict[str, Any]:

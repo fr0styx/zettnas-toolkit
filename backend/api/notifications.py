@@ -78,6 +78,8 @@ class NotificationConfigModel(BaseModel):
     digest_mode: Literal["off", "daily"] = "off"
     digest_hour: int = Field(default=8, ge=0, le=23)
     weekly_report: bool = True
+    # the language alerts are written in (NUX-3)
+    language: Literal["en", "de", "es", "fr", "zh"] = "en"
 
 
 class TestChannelRequest(BaseModel):
