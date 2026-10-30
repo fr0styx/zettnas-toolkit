@@ -68,6 +68,8 @@ COLUMN_UPGRADES: dict[str, list[tuple[str, str, str]]] = {
         ("smart_history", "power_on_hours", "INTEGER DEFAULT 0"),
         ("smart_history", "command_timeouts", "INTEGER DEFAULT 0"),
         ("smart_history", "spin_retries", "INTEGER DEFAULT 0"),
+        # the drive a row came from, so its history follows it to another device name
+        ("smart_history", "serial", "TEXT DEFAULT NULL"),
     ],
     "rag_index.db": [
         ("document_chunks", "parent_chunk_id", "INTEGER DEFAULT NULL"),

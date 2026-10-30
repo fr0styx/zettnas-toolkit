@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
 from backend.hardware.disks import _discover_disks, cached_smart_detail, read_smart_detail
@@ -146,3 +147,30 @@ def drive_history(dev: str, days: int = 30) -> dict[str, Any]:
         "history": drive_health.history_view(samples),
         "life": drive_health.life_outlook(samples),
     }
+
+
+class DriveNotes(BaseModel):
+    serial: str = Field(min_length=1, max_length=64)
+    bought: str = Field(default="", max_length=10)
+    warranty_until: str = Field(default="", max_length=10)
+    note: str = Field(default="", max_length=1000)
+
+
+@router.get("/drives/notes", dependencies=[Depends(require_scope("storage:read", "system:view"))])
+def drive_notes() -> dict[str, Any]:
+    """When each drive was bought, until when its warranty runs and a note, by serial number."""
+    from backend.services import drive_notes as notes
+
+    return {"notes": notes.all_notes()}
+
+
+@router.put("/drives/notes", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
+def save_drive_notes(req: DriveNotes) -> dict[str, Any]:
+    """Stores a drive's purchase date, warranty end and note; all empty removes them."""
+    from backend.services import drive_notes as notes
+
+    try:
+        saved = notes.save(req.serial, req.bought, req.warranty_until, req.note)
+    except notes.BadNotes as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    return {"serial": req.serial.strip(), "notes": saved}

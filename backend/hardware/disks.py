@@ -620,15 +620,21 @@ def _parse_smart_text(text: str, is_nvme: bool):
     return temp, health, metrics
 
 
+def _json_with_serial(doc: dict, is_nvme: bool):
+    temp, health, metrics = _parse_smart_json(doc, is_nvme)
+    metrics["serial"] = str(doc.get("serial_number") or "")  # the history follows the drive by it
+    return temp, health, metrics
+
+
 def _parse_smart(data, is_nvme: bool):
     """Parses SMART telemetry from JSON dict, JSON string (smartctl -j), or legacy text."""
     if isinstance(data, dict):
-        return _parse_smart_json(data, is_nvme)
+        return _json_with_serial(data, is_nvme)
     if isinstance(data, str) and data.strip().startswith("{"):
         try:
             doc = json.loads(data)
             if isinstance(doc, dict):
-                return _parse_smart_json(doc, is_nvme)
+                return _json_with_serial(doc, is_nvme)
         except Exception:
             ignored("backend.hardware.disks._parse_smart")
     return _parse_smart_text(data, is_nvme)

@@ -6530,6 +6530,39 @@
     "title": "DownloadOfficialIsoResponse",
     "type": "object"
    },
+   "DriveNotes": {
+    "properties": {
+     "bought": {
+      "default": "",
+      "maxLength": 10,
+      "title": "Bought",
+      "type": "string"
+     },
+     "note": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Note",
+      "type": "string"
+     },
+     "serial": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Serial",
+      "type": "string"
+     },
+     "warranty_until": {
+      "default": "",
+      "maxLength": 10,
+      "title": "Warranty Until",
+      "type": "string"
+     }
+    },
+    "required": [
+     "serial"
+    ],
+    "title": "DriveNotes",
+    "type": "object"
+   },
    "EjectMediaRequest": {
     "properties": {
      "slot": {
@@ -49666,6 +49699,85 @@
     "x-required-scopes": [
      "storage:read",
      "system:view"
+    ]
+   }
+  },
+  "/api/v1/drives/notes": {
+   "get": {
+    "description": "When each drive was bought, until when its warranty runs and a note, by serial number.",
+    "operationId": "drive_notes_api_v1_drives_notes_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Drive Notes Api V1 Drives Notes Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Drive Notes",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:read",
+     "system:view"
+    ]
+   },
+   "put": {
+    "description": "Stores a drive's purchase date, warranty end and note; all empty removes them.",
+    "operationId": "save_drive_notes_api_v1_drives_notes_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DriveNotes"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Save Drive Notes Api V1 Drives Notes Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Save Drive Notes",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:write",
+     "storage:admin"
     ]
    }
   },

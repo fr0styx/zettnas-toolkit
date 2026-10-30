@@ -8,6 +8,9 @@
  * Also: the fleet at a glance, each drive's make-up, age and wear outlook, 30 days of
  * temperature and error counters from the stored readings (no drive is woken for them), the
  * self-test schedule, and a report to save (Drive Health revamp).
+ *
+ * Reports are saved into a NAS folder from ZettNAS's own dialog, and each drive can carry when it
+ * was bought, its warranty and a note (drive-health-report.js).
  */
 import { api } from '../api.js';
 import { escapeHtml } from '../utils.js';
@@ -18,6 +21,9 @@ import { ZettEventBus } from '../event-bus.js';
 import { bringToFront, makeDraggable } from './dock.js';
 import { showToast } from '../toast.js';
 import { announceChange } from '../a11y.js';
+import { findingText, labelText, summaryText, reportCsv, openReportDialog, notesRows, notesForm, underWarranty } from './drive-health-report.js';
+
+export { labelText, summaryText, reportCsv };
 
 const DOCK_ID = 'drive-health';
 const LIST_POLL_MS = 60000;
@@ -28,15 +34,12 @@ let _drives = [];
 let _selected = null;
 let _listTimer = null;
 let _testTimer = null;
+let _notes = {}; // serial -> {bought, warranty_until, note}
+let _current = null; // the chosen drive as last read: {drive, detail, tests, history, identity, life}
 
 const VERDICT_CLASS = { ok: 'is-ok', watch: 'is-watch', soon: 'is-soon', now: 'is-now', unknown: 'is-unknown' };
 const verdictClass = (v) => VERDICT_CLASS[v] || 'is-unknown';
 
-// The server sends each text with a message key and its values; show it in the reader's language,
-// with the server's English as the fallback
-const findingText = (f, part) => t(`dh.f.${f.key || f.code}.${part}`, f[part] || '', f.params || {});
-export const labelText = (d) => (d.label_key ? t(`dh.label.${d.label_key}`, d.label || '') : d.label || '');
-export const summaryText = (d) => (d.summary_key ? t(`dh.f.${d.summary_key}.title`, d.summary || '', d.summary_params || {}) : d.summary || '');
 
 function when(ts) {
   return ts ? formatDateTime(ts * 1000, undefined, '') : '';
@@ -148,6 +151,12 @@ export function detailHtml(drive, detail, tests) {
         active.percent_remaining != null ? ` · ${escapeHtml(t('dh.left', '{p}% left', { p: active.percent_remaining }))}` : ''
       }</div>`
     : '';
+  const serial = (detail && detail.serial) || drive.serial || '';
+  const notes = _notes[serial] || null;
+  const claim =
+    ['soon', 'now'].includes(health.verdict) && underWarranty(notes)
+      ? `<div class="dh-note">${escapeHtml(t('dh.claim', 'It is still under warranty until {date}: the maker may replace it. Save a full report for the claim.', { date: notes.warranty_until }))} <button type="button" class="btn-pill-toggle is-small" data-dh-report="drive">${escapeHtml(t('dh.export', 'Save a report'))}</button></div>`
+      : '';
   return `
     <div class="dh-head">
       <div>
@@ -156,7 +165,7 @@ export function detailHtml(drive, detail, tests) {
       </div>
       <span class="dh-pill ${verdictClass(health.verdict)}">${escapeHtml(labelText(health))}</span>
     </div>
-    ${sleepNote}
+    ${sleepNote}${claim}
     <section class="dh-section">
       <h4>${escapeHtml(t('dh.verdict', 'What we found'))}</h4>
       ${
@@ -177,10 +186,7 @@ export function detailHtml(drive, detail, tests) {
       <ul class="dh-tests">${testRowsHtml(tests && tests.history)}</ul>
     </section>
     <div class="dh-schedule" id="dh-schedule"></div>
-    <section class="dh-section" id="dh-about">
-      <h4>${escapeHtml(t('dh.about', 'About this drive'))}</h4>
-      ${aboutHtml((health && health.identity) || {}, null)}
-    </section>
+    <section class="dh-section" id="dh-about">${aboutSectionHtml((health && health.identity) || {}, null, serial)}</section>
     <details class="dh-section dh-more" id="dh-history">
       <summary>${escapeHtml(t('dh.history', 'History (30 days)'))}</summary>
       <div class="dh-history-body"><p class="dh-hint">${escapeHtml(t('dh.loading', 'Loading…'))}</p></div>
@@ -212,7 +218,11 @@ function _counts() {
 
 export async function loadDrives(refresh = false) {
   try {
-    const data = await api.get(`/api/drives/health${refresh ? '?refresh=1' : ''}`);
+    const [data, notes] = await Promise.all([
+      api.get(`/api/drives/health${refresh ? '?refresh=1' : ''}`),
+      api.get('/api/drives/notes').catch(() => null),
+    ]);
+    if (notes && notes.notes) _notes = notes.notes;
     _drives = (data && data.drives) || [];
     if (!_selected || !_drives.some((d) => d.dev === _selected)) _selected = _drives[0]?.dev || null;
     renderList();
@@ -237,6 +247,7 @@ async function loadDetail(dev, wake = false) {
       api.get(`/api/disk/smart_tests?dev=${encodeURIComponent(dev)}&limit=10`).catch(() => null),
     ]);
     if (_selected !== dev) return; // another drive was chosen meanwhile
+    _current = { drive: drive || { dev }, detail, tests, history: null, life: null, identity: {}, serial: (detail && detail.serial) || drive?.serial || '' };
     pane.innerHTML = detailHtml(drive || { dev }, detail, tests);
     loadExtras(dev, (detail && detail.drive_health && detail.drive_health.identity) || {});
     clearInterval(_testTimer);
@@ -327,20 +338,24 @@ function ensureWindow() {
     });
   on('#drive-health-close', closeDriveHealth);
   on('#drive-health-min', () => window.DockManager?.minimize?.(DOCK_ID));
-  on('#drive-health-export', () => saveReport(_drives));
+  on('#drive-health-export', () => openReport('all'));
   on('#drive-health-refresh', async () => {
     await loadDrives(true);
     if (_selected) loadDetail(_selected);
   });
   el.addEventListener('click', (e) => {
-    const card = e.target.closest('[data-dh-dev]');
+    const target = /** @type {HTMLElement} */ (e.target);
+    const win = /** @type {any} */ (window);
+    const card = /** @type {HTMLElement | null} */ (target.closest('[data-dh-dev]'));
     if (card) return void selectDrive(card.dataset.dhDev);
-    const test = e.target.closest('[data-dh-test]');
+    const test = /** @type {HTMLElement | null} */ (target.closest('[data-dh-test]'));
     if (test) return void runTest(test.dataset.dhTest);
-    if (e.target.closest('[data-dh-wake]')) return void loadDetail(_selected, true);
-    const open = e.target.closest('[data-dh-open]');
-    if (open?.dataset.dhOpen === 'fans') window.openDrawer?.('tab-fans');
-    if (open?.dataset.dhOpen === 'bays') window.openManagementSection?.('mgmt-sec-storage');
+    if (target.closest('[data-dh-wake]')) return void loadDetail(_selected, true);
+    if (target.closest('[data-dh-report]')) return void openReport('drive');
+    if (target.closest('[data-dh-notes]')) return void editNotes();
+    const open = /** @type {HTMLElement | null} */ (target.closest('[data-dh-open]'));
+    if (open?.dataset.dhOpen === 'fans') win.openDrawer?.('tab-fans');
+    if (open?.dataset.dhOpen === 'bays') win.openManagementSection?.('mgmt-sec-storage');
   });
   try {
     makeDraggable(el, el.querySelector('.os-window-header'));
@@ -423,7 +438,7 @@ export function kindText(id) {
 }
 
 /** "About this drive": make-up from the live reading, age and wear from the stored history. */
-export function aboutHtml(id, life) {
+export function aboutHtml(id, life, notes = null) {
   const rows = [
     [t('dh.a_kind', 'Type'), kindText(id || {})],
     [t('dh.a_size', 'Size'), id && id.capacity_bytes ? formatBytes(id.capacity_bytes) : ''],
@@ -434,20 +449,21 @@ export function aboutHtml(id, life) {
     [t('dh.a_written', 'Written over its life'), id && id.written_bytes ? formatBytes(id.written_bytes) : ''],
     [t('dh.a_age', 'Powered on'), life && life.age_years != null ? t('dh.a_years', '{y, plural, one {# year} other {# years}}', { y: life.age_years }) : ''],
   ].filter(([, v]) => v);
-  const notes = [];
+  rows.push(...notesRows(notes));
+  const lines = [];
   if (life && life.wear_pct != null) {
-    notes.push(
+    lines.push(
       life.years_left != null
         ? t('dh.wear_rate', '{p}% of its rated writes used; at the pace of the last weeks, about {y, plural, one {# year} other {# years}} left.', { p: life.wear_pct, y: life.years_left })
         : t('dh.wear_flat', '{p}% of its rated writes used; too little change yet to say how long it lasts.', { p: life.wear_pct }),
     );
   }
   if (life && life.age_years >= 5 && id && id.rotation_rpm > 0) {
-    notes.push(t('dh.old_hdd', 'Older than the five years most hard drives are built for. It may run for years, but keep its backup current.'));
+    lines.push(t('dh.old_hdd', 'Older than the five years most hard drives are built for. It may run for years, but keep its backup current.'));
   }
-  if (!rows.length && !notes.length) return `<p class="dh-hint">${escapeHtml(t('dh.about_later', 'Shown after the drive has been read while awake.'))}</p>`;
+  if (!rows.length && !lines.length) return `<p class="dh-hint">${escapeHtml(t('dh.about_later', 'Shown after the drive has been read while awake.'))}</p>`;
   const table = rows.map(([k, v]) => `<tr><th scope="row">${escapeHtml(k)}</th><td>${escapeHtml(String(v))}</td></tr>`).join('');
-  return `<table class="dh-readings">${table}</table>${notes.map((n) => `<p class="dh-life">${escapeHtml(n)}</p>`).join('')}`;
+  return `<table class="dh-readings">${table}</table>${lines.map((n) => `<p class="dh-life">${escapeHtml(n)}</p>`).join('')}`;
 }
 
 const COUNTER_NAMES = {
@@ -498,8 +514,31 @@ export function historyBody(h) {
   return box;
 }
 
-export function aboutSectionHtml(id, life) {
-  return `<h4>${escapeHtml(t('dh.about', 'About this drive'))}</h4>${aboutHtml(id, life)}`;
+export function aboutSectionHtml(id, life, serial = '') {
+  const notes = serial ? _notes[serial] || null : null;
+  const edit = serial
+    ? `<button type="button" class="btn-pill-toggle is-small dh-notes-edit" data-dh-notes>${escapeHtml(notes ? t('dh.n_edit', 'Edit purchase and warranty') : t('dh.n_add', 'Add purchase and warranty'))}</button>`
+    : '';
+  return `<h4>${escapeHtml(t('dh.about', 'About this drive'))}</h4>${aboutHtml(id, life, notes)}${edit}`;
+}
+
+/** The report dialog, with what is on screen now. */
+function openReport(preset) {
+  if (!_win) return;
+  openReportDialog(_win, () => ({ drives: _drives, notes: _notes, current: _current && _current.drive?.dev === _selected ? { ..._current, counterName: (k) => (COUNTER_NAMES[k] || (() => k))() } : null }), preset);
+}
+
+/** The purchase and warranty form in place of "About this drive". */
+function editNotes() {
+  const about = _win?.querySelector('#dh-about');
+  const serial = _current?.serial;
+  if (!about || !serial) return;
+  notesForm(about, serial, _notes[serial] || null, (saved) => {
+    if (saved) _notes[serial] = saved;
+    else delete _notes[serial];
+    about.innerHTML = aboutSectionHtml(_current?.identity || {}, _current?.life || null, serial);
+    if (_selected) loadDetail(_selected); // the warranty note under the verdict
+  });
 }
 
 /** "Automatic tests: …" from /api/smart/schedule. */
@@ -529,36 +568,14 @@ async function loadExtras(dev, id) {
     const data = await api.get(`/api/drives/history?dev=${encodeURIComponent(dev)}&days=30`);
     if (_selected !== dev) return;
     const about = pane.querySelector('#dh-about');
-    if (about) about.innerHTML = aboutSectionHtml(id, data.life);
+    if (_current && _current.drive?.dev === dev) Object.assign(_current, { history: data.history, life: data.life, identity: id });
+    if (about) about.innerHTML = aboutSectionHtml(id, data.life, _current?.serial || '');
     const body = pane.querySelector('#dh-history .dh-history-body');
     if (body) body.replaceChildren(historyBody(data.history));
   } catch (e) {
     const body = pane.querySelector('#dh-history .dh-history-body');
     if (body) body.textContent = t('dh.history_failed', 'Could not load the history.');
   }
-}
-
-const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-
-/** A CSV report of every drive: for your records or a warranty claim. */
-export function reportCsv(drives) {
-  const head = ['device', 'model', 'serial', 'role', 'verdict', 'summary', 'temperature_c', 'power_on_hours', 'size_bytes', 'asleep', 'findings'];
-  const rows = (drives || []).map((d) => [
-    d.dev, d.model, d.serial, d.role, labelText(d), summaryText(d), d.temp ?? '', d.power_on_hours ?? '', d.capacity_bytes ?? '', d.asleep ? 'yes' : 'no',
-    (d.findings || []).filter((f) => f.severity !== 'ok').map((f) => findingText(f, 'title')).join('; '),
-  ]);
-  return [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n') + '\n';
-}
-
-function saveReport(drives) {
-  const blob = new Blob([reportCsv(drives)], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `drive-health-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 export const _test = {
@@ -568,6 +585,8 @@ export const _test = {
     _drives = [];
     _selected = null;
     _schedule = null;
+    _notes = {};
+    _current = null;
     clearInterval(_listTimer);
     clearInterval(_testTimer);
   },

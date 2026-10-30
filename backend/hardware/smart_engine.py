@@ -293,7 +293,7 @@ class SmartTelemetryEngine:
             if hours and str(hours).isdigit():
                 poh_val = int(hours)
             metrics["power_on_hours"] = poh_val
-            log_smart_metrics(int(now), dev_name, temp, metrics, power_on_hours=poh_val)
+            log_smart_metrics(int(now), dev_name, temp, metrics, power_on_hours=poh_val, serial=serial)
 
         return {
             "dev": dev_name,

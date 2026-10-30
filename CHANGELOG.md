@@ -95,6 +95,20 @@
 
 #### Usability
 
+- **Drive Health saves reports into a NAS folder**: "Save a report" opens ZettNAS's own dialog
+  instead of the browser's download. Pick a folder on the NAS (the folder picker, or the last one
+  used) and a file name; it is saved with your folder rights and space limit, never over an
+  existing file, and "Show in File Explorer" opens it. Two reports: every drive as a spreadsheet,
+  or one drive in full as text (findings, self-tests, 30 days of history and the full S.M.A.R.T.
+  output) for a warranty claim. Spreadsheet cells can't be read as formulas.
+- **A drive's purchase date, warranty and a note**: "About this drive" takes when it was bought,
+  until when the warranty runs (with 2, 3 and 5 year buttons) and a note such as its bay or order
+  number. They are kept by serial number, go into the reports, and a drive that needs replacing
+  while still under warranty says so, with a button to save the report for the claim.
+- **History stays with the drive**: when device names change (a reboot, a drive added or swapped),
+  each drive keeps its own temperature and error history, found by its serial number; a drive
+  taken out and put back later gets its history back.
+
 - **Pick instead of typing**: after "Check Frigate", camera alerts list Frigate's cameras as
   checkboxes; two-way sync has a "Choose…" button for the folder and suggests the cloud remotes
   already set up (NUX-12, part).

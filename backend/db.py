@@ -151,6 +151,7 @@ def init_db():
 
             ensure_columns(conn, "history.db")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_dev_ts ON smart_history(dev, ts DESC)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_serial ON smart_history(serial, ts DESC)")
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ups_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -512,6 +513,45 @@ SMART_HISTORY_EVERY_SECS = 600  # a row at least this often while nothing change
 SMART_HISTORY_TEMP_STEP = 3.0  # a temperature move this large (°C) is stored at once
 _SMART_STORED: dict[tuple[str, str], tuple[int, tuple, float | None]] = {}
 _SMART_PRUNED: dict[str, int] = {}
+_SERIAL_AT: dict[tuple[str, str], str] = {}  # (db, dev) -> the serial its rows belong to
+PARKED = "~"  # rows of a drive that left its device name wait under "~<serial>" until it is seen again
+NO_SERIAL = ("", "unknown", "n/a", "none", "0")
+
+
+def _newest_serial(conn: sqlite3.Connection, dev: str) -> str | None:
+    row = conn.execute(
+        "SELECT serial FROM smart_history WHERE dev = ? AND serial IS NOT NULL AND serial != '' "
+        "ORDER BY ts DESC LIMIT 1",
+        (dev,),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def _move_rows(conn: sqlite3.Connection, src: str, dst: str) -> None:
+    conn.execute("UPDATE OR REPLACE smart_history SET dev = ? WHERE dev = ?", (dst, src))
+    for d in (src, dst):
+        _SMART_STORED.pop((DB_PATH, d), None)
+        _SERIAL_AT.pop((DB_PATH, d), None)
+
+
+def follow_drive(conn: sqlite3.Connection, dev: str, serial: str) -> None:
+    """Keeps a drive's history with the drive, not its device name: device names (sdb, sdc) can
+    change at a reboot or when drives are added. When `dev` now holds another drive, the rows
+    there are set aside under the old drive's serial, and this drive's own rows (set aside
+    earlier, or still under the name it had before) come to `dev`."""
+    key = (DB_PATH, dev)
+    if _SERIAL_AT.get(key) == serial:
+        return
+    before = _newest_serial(conn, dev)
+    if before and before != serial:
+        _move_rows(conn, dev, PARKED + before)
+    if before != serial:
+        row = conn.execute(
+            "SELECT dev FROM smart_history WHERE serial = ? AND dev != ? ORDER BY ts DESC LIMIT 1", (serial, dev)
+        ).fetchone()
+        if row and (row[0].startswith(PARKED) or _newest_serial(conn, row[0]) == serial):
+            _move_rows(conn, row[0], dev)
+    _SERIAL_AT[key] = serial
 
 
 def _smart_counters(metrics: dict) -> tuple:
@@ -553,12 +593,17 @@ def _smart_row_due(conn: sqlite3.Connection, ts: int, dev: str, temp: float | No
     return ts - last_ts >= SMART_HISTORY_EVERY_SECS or ts < last_ts
 
 
-def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, power_on_hours: int = 0):
-    """Stores a SMART sample when it adds something (see _smart_row_due); prunes rows older than 90 days hourly."""
+def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, power_on_hours: int = 0, serial: str = ""):
+    """Stores a SMART sample when it adds something (see _smart_row_due); prunes rows older than 90 days hourly.
+    With the drive's serial (given, or in metrics), its history follows it to another device name."""
     poh = power_on_hours or metrics.get("power_on_hours", 0) or 0
+    serial = str(serial or metrics.get("serial") or "").strip()[:64]
+    serial = "" if serial.lower() in NO_SERIAL else serial
     counters = _smart_counters(metrics)
     try:
         with history_session() as conn:
+            if serial:
+                follow_drive(conn, dev, serial)
             if not _smart_row_due(conn, ts, dev, temp, counters):
                 return
             conn.execute(
@@ -566,8 +611,8 @@ def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, powe
                 INSERT OR REPLACE INTO smart_history (
                     ts, dev, temp, reallocated_sectors, pending_sectors,
                     offline_uncorrectable, crc_errors, nvme_pct_used, nvme_media_errors, power_on_hours,
-                    command_timeouts, spin_retries
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    command_timeouts, spin_retries, serial
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     ts,
@@ -582,6 +627,7 @@ def log_smart_metrics(ts: int, dev: str, temp: float | None, metrics: dict, powe
                     int(poh) if str(poh).isdigit() else 0,
                     metrics.get("timeouts", 0) or 0,
                     metrics.get("spin_retries", 0) or 0,
+                    serial or None,
                 ),
             )
             _SMART_STORED[(DB_PATH, dev)] = (ts, counters, round(temp, 1) if temp is not None else None)
@@ -1027,9 +1073,9 @@ def query_all_smart_velocities() -> dict:
             conn.row_factory = sqlite3.Row
             skip_scan_sql = """
                 WITH RECURSIVE cte AS (
-                    SELECT MIN(dev) AS dev FROM smart_history WHERE dev IS NOT NULL
+                    SELECT MIN(dev) AS dev FROM smart_history WHERE dev IS NOT NULL AND dev < '~'
                     UNION ALL
-                    SELECT (SELECT MIN(dev) FROM smart_history WHERE dev > cte.dev AND dev IS NOT NULL)
+                    SELECT (SELECT MIN(dev) FROM smart_history WHERE dev > cte.dev AND dev < '~')
                     FROM cte WHERE dev IS NOT NULL
                 )
                 SELECT dev FROM cte WHERE dev IS NOT NULL;

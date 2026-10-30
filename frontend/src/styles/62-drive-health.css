@@ -67,3 +67,27 @@
 .dh-chart.is-rising { color: var(--warn, #f59e0b); }
 .dh-chart-line { stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .dh-chart-dot { fill: currentColor; }
+
+/* Saving a report into a NAS folder, and a drive's purchase and warranty (drive-health-report.js) */
+.dh-dialog-wrap {
+  position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: color-mix(in srgb, var(--card) 70%, transparent); backdrop-filter: blur(3px); border-radius: inherit;
+}
+.dh-dialog {
+  width: min(480px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+  padding: 18px 20px; border-radius: 14px; background: var(--card-hi); border: 1px solid var(--track);
+}
+.dh-dialog h3 { margin: 0 0 4px; font-size: 16px; }
+.dh-choice { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--track); cursor: pointer; }
+.dh-choice:has(input:checked) { border-color: var(--accent, var(--ok2)); }
+.dh-choice:has(input:disabled) { opacity: 0.55; cursor: default; }
+.dh-choice span { display: flex; flex-direction: column; gap: 2px; }
+.dh-choice small { color: var(--muted); }
+.dh-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.dh-field > label { color: var(--muted); }
+.dh-field input, .dh-field textarea { width: 100%; box-sizing: border-box; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--track); background: var(--card); color: var(--zn-text); font: inherit; }
+.dh-dir-row { display: flex; gap: 8px; align-items: center; }
+.dh-dir-row input { flex: 1; min-width: 0; }
+.dh-notes-form { display: flex; flex-direction: column; gap: 10px; }
+.dh-years { display: flex; gap: 6px; flex-wrap: wrap; }
+.dh-notes-edit { margin-top: 8px; }
