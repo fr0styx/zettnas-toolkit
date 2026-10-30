@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "overview.timezone_unset": "The server's time zone isn't set, so nightly work (backups, checks, AI indexing) runs at night in UTC.",
   "catalog.sf_title": "Keep on a share",
   "catalog.sf_own": "In the app's own folder",
   "catalog.sf_hint": "The app sees everything in the share you pick, and the files stay there if you remove the app.",

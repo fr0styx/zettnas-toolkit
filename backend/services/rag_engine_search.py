@@ -127,6 +127,10 @@ class _SystemPrincipal:
     def has_any_scope(*scopes: str) -> bool:
         return True
 
+    @staticmethod
+    def has_scope(scope: str) -> bool:
+        return True  # path_access asks this for every result; without it every result was refused
+
 
 SYSTEM_PRINCIPAL = _SystemPrincipal()
 

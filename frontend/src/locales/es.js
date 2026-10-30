@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "overview.timezone_unset": "La zona horaria del servidor no está configurada, así que las tareas nocturnas (copias de seguridad, comprobaciones, indexación de IA) se ejecutan de noche en UTC.",
   "catalog.sf_title": "Guardar en una carpeta compartida",
   "catalog.sf_own": "En la carpeta propia de la aplicación",
   "catalog.sf_hint": "La aplicación ve todo lo que hay en la carpeta compartida que elijas, y los archivos se quedan ahí si quitas la aplicación.",

@@ -18,6 +18,7 @@ export const ROUTES = {
   ai: () => window.openManagementSection?.('mgmt-sec-ai'),
   vms: () => window.openManagementSection?.('mgmt-sec-vms'),
   settings: () => window.openManagementSection?.('mgmt-sec-system-group'),
+  time: () => window.openTimezoneModal?.(),
   alerts: () => window.openManagementSection?.('mgmt-pane-notifications'),
   activity: () => window.openManagementSection?.('mgmt-pane-events'),
 };

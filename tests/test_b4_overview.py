@@ -26,6 +26,9 @@ def quiet(monkeypatch):
     from backend.services import pool_alerts
 
     monkeypatch.setattr(pool_alerts, "current", lambda *a, **k: [])
+    from backend.services import identity
+
+    monkeypatch.setattr(identity, "get_identity", lambda: {"server_name": "", "timezone": "Europe/Berlin"})
     return monkeypatch
 
 

@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "overview.timezone_unset": "尚未设置服务器的时区，因此夜间任务（备份、检查、AI 索引）按 UTC 时间的夜里运行。",
   "catalog.sf_title": "保存在共享中",
   "catalog.sf_own": "在应用自己的文件夹中",
   "catalog.sf_hint": "应用可以看到所选共享中的全部内容；删除应用后，文件仍保留在那里。",

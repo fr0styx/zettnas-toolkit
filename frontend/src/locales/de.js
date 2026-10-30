@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "overview.timezone_unset": "Die Zeitzone des Servers ist nicht eingestellt, daher laufen nächtliche Aufgaben (Sicherungen, Prüfungen, KI-Indexierung) nachts nach UTC.",
   "catalog.sf_title": "Auf einer Freigabe speichern",
   "catalog.sf_own": "Im eigenen Ordner der App",
   "catalog.sf_hint": "Die App sieht alles in der gewählten Freigabe, und die Dateien bleiben dort, wenn Sie die App entfernen.",

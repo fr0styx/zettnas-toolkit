@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "overview.timezone_unset": "Le fuseau horaire du serveur n'est pas réglé : les tâches de nuit (sauvegardes, vérifications, indexation IA) s'exécutent la nuit en UTC.",
   "catalog.sf_title": "Garder sur un partage",
   "catalog.sf_own": "Dans le dossier propre à l'application",
   "catalog.sf_hint": "L'application voit tout le contenu du partage choisi, et les fichiers y restent si vous supprimez l'application.",

@@ -258,6 +258,15 @@
 
 #### Fixes
 
+- **ZettNAS's own searches find files again**: the identity ZettNAS uses for its own work
+  lacked one permission question the final access check asks, so every result it searched for
+  was refused and it found nothing. People's searches were not affected.
+- **The Overview asks for the server's time zone**: on a server whose time zone was never set
+  (an install from before the setup wizard asked, without TZ in the container), "night" was night
+  in UTC, so the nightly backups, checks and the AI's re-index ran in the evening or the
+  morning for most families. The Overview now says so, and Open goes to the time zone, where
+  an administrator can use the same zone for the server.
+
 - **Apps from the catalog get their starter files**: Caddy, the nginx web server and Glance
   were installed without the Caddyfile, start page or config they come with; they get them now.
 

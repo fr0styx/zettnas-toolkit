@@ -185,7 +185,17 @@ def _password() -> list[dict[str, Any]]:
     return []
 
 
-CHECKS = (_drives, _pools, _storage, _backups, _protection, _kits, _stalled, _frozen, _power, _password)
+def _timezone() -> list[dict[str, Any]]:
+    """No time zone chosen and none from the container: "night" (backups, scrubs, the AI's
+    re-index) is night in UTC, which is the evening or the morning for most families."""
+    from backend.services.identity import get_identity
+
+    if get_identity().get("timezone"):
+        return []
+    return [{"id": "server:timezone", "level": "warning", "kind": "timezone_unset", "subject": "", "open": "time"}]
+
+
+CHECKS = (_drives, _pools, _storage, _backups, _protection, _kits, _stalled, _frozen, _power, _password, _timezone)
 
 
 def summary() -> dict[str, Any]:
