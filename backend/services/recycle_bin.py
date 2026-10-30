@@ -73,6 +73,22 @@ def bin_for(path: str) -> str | None:
     return os.path.join(root, parts[0], BIN) if len(parts) > 1 else os.path.join(root, BIN)
 
 
+def same_disk_bin(path: str) -> str | None:
+    """A bin at the top of the filesystem `path` is on, for when its share's bin is on another one:
+    a delete is then a rename there, never a copy across disks (NREL-13)."""
+    real = os.path.realpath(path)
+    try:
+        dev = os.lstat(real).st_dev
+        top = os.path.dirname(real)
+        while top not in ("", os.sep) and os.stat(os.path.dirname(top)).st_dev == dev:
+            top = os.path.dirname(top)
+    except OSError:
+        return None
+    if top in ("", os.sep) or os.stat(top).st_dev != dev:
+        return None
+    return os.path.join(top, BIN)
+
+
 def all_bins() -> list[str]:
     """Every bin that exists: each root's, each share's, and those the index knows."""
     found: list[str] = []

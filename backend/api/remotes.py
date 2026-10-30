@@ -216,6 +216,7 @@ class SyncPairIn(BaseModel):
     remote: str = Field(min_length=2, max_length=1024)
     every_hours: int = Field(default=6, ge=1, le=168)
     max_delete: int = Field(default=25, ge=1, le=100)
+    new: bool = False  # adding, not changing: a taken id gets a free one (NUX-6)
 
 
 def _sync_errors(fn, *args):
@@ -244,7 +245,7 @@ def put_sync_pair(req: SyncPairIn):
     from backend.services import two_way_sync
 
     return _sync_errors(
-        two_way_sync.save_pair, req.id, req.name, req.local, req.remote, req.every_hours, req.max_delete
+        two_way_sync.save_pair, req.id, req.name, req.local, req.remote, req.every_hours, req.max_delete, None, req.new
     )
 
 

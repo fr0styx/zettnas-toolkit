@@ -117,9 +117,14 @@ def _mount(cipher: str, plain: str, password: str, read_only: bool = False) -> N
         raise EncryptedFolderError(f"The folder couldn't be opened: {out.strip()[:200] or code}")
 
 
+MIN_PASSWORD = 12  # its encrypted files sit in the share, where they can be tried offline (NSEC-4)
+
+
 def _check_password(password: str) -> None:
     from backend.password_policy import password_problem
 
+    if len(password or "") < MIN_PASSWORD:
+        raise ValueError(f"Use at least {MIN_PASSWORD} characters: a few words make a good one.")
     problem = password_problem(password)
     if problem:
         raise ValueError(problem)
@@ -174,12 +179,34 @@ def adopt(share: str, name: str, password: str) -> dict[str, Any]:
     return {"name": name, "path": plain_path(name)}
 
 
+# After this many wrong passwords for one folder in GUESS_WINDOW, it can't be opened for a while,
+# whoever asks (NSEC-4)
+GUESS_LIMIT, GUESS_WINDOW = 10, 15 * 60
+_wrong: dict[str, list[float]] = {}
+
+
+def _guarded(name: str) -> None:
+    now = time.time()
+    recent = [t for t in _wrong.get(name, []) if now - t < GUESS_WINDOW]
+    _wrong[name] = recent
+    if len(recent) >= GUESS_LIMIT:
+        wait = int(GUESS_WINDOW - (now - recent[0])) // 60 + 1
+        raise EncryptedFolderError(f"Too many wrong passwords for this folder. Try again in {wait} minutes.")
+
+
 def unlock(name: str, password: str) -> dict[str, Any]:
     f = _settings()["folders"].get(name)
     if not f:
         raise KeyError(name)
     if not is_unlocked(name):
-        _mount(cipher_path(_share_path(f["share"]), name), plain_path(name), password)
+        _guarded(name)
+        try:
+            _mount(cipher_path(_share_path(f["share"]), name), plain_path(name), password)
+        except EncryptedFolderError as e:
+            if "wrong" in str(e):
+                _wrong.setdefault(name, []).append(time.time())
+            raise
+        _wrong.pop(name, None)
     return {"name": name, "unlocked": True}
 
 

@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
+from backend.rate_limit import rate_limit
 
 router = APIRouter(prefix="/encrypted-folders", tags=["Storage"])
 MANAGE = Depends(require_scope("shares:manage"))
@@ -95,7 +96,7 @@ async def post_adopt_encrypted_folder(req: CreateIn) -> dict[str, Any]:
     return await asyncio.to_thread(_errors, ef.adopt, req.share, req.name, req.password)
 
 
-@router.post("/{name}/unlock", dependencies=[WRITE])
+@router.post("/{name}/unlock", dependencies=[WRITE, Depends(rate_limit("ef.unlock", 5, 60))])
 async def post_unlock(
     name: str, req: PasswordIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)
 ) -> dict[str, Any]:

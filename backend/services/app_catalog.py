@@ -1084,15 +1084,26 @@ def share_folder_choices(app: dict[str, Any]) -> list[dict[str, str]]:
     ]
 
 
+# Unraid's system shares: apps' settings, VM disks and images, never a family's files
+SYSTEM_SHARES = {"appdata", "system", "domains", "isos"}
+
+
 def share_mounts() -> dict[str, str]:
     """{share name: its folder} for the shares this server has."""
+    from backend.fsutil import protected_dirs
     from backend.hardware.pal_storage import get_storage_platform
 
+    app_folders = protected_dirs()
     out: dict[str, str] = {}
     for sh in get_storage_platform().list_shares():
         mp = str(getattr(sh, "mountpoint", "") or "")
-        if getattr(sh, "name", "") and mp and os.path.isdir(mp):
-            out[str(sh.name)] = mp
+        name = str(getattr(sh, "name", "") or "")
+        if not name or not mp or not os.path.isdir(mp) or name.lower() in SYSTEM_SHARES:
+            continue
+        real = os.path.realpath(mp)
+        if any(d == real or d.startswith(real.rstrip("/") + "/") for d in app_folders):
+            continue  # it holds ZettNAS's own data (NSEC-9)
+        out[name] = mp
     return out
 
 

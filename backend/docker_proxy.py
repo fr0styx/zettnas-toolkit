@@ -161,6 +161,8 @@ def _risky_host_path(src: str) -> str | None:
         return src
     if any(src == d or src.startswith(d.rstrip("/") + "/") for d in _app_folders()):
         return src
+    if any(d.startswith(src.rstrip("/") + "/") for d in _app_folders()):
+        return src  # a folder that contains ZettNAS's data (NSEC-9)
     if any(src == s or src.startswith(s + "/") for s in SAFE_HOST_PATHS):
         return None
     for p in HOST_PATHS:

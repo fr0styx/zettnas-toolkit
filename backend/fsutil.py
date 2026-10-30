@@ -27,6 +27,19 @@ def clear_json_cache() -> None:
     _JSON_CACHE.clear()
 
 
+def _fsync_dir(directory: str) -> None:
+    try:
+        dfd = os.open(directory, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(dfd)
+    except OSError:
+        logger.debug("fsutil: folder sync failed for %s", directory, exc_info=True)
+    finally:
+        os.close(dfd)
+
+
 def atomic_write_json(path: str, data: Any, indent: int | None = None) -> None:
     """Write JSON to `path` atomically (temp file + fsync + os.replace).
 
@@ -51,6 +64,7 @@ def atomic_write_json(path: str, data: Any, indent: int | None = None) -> None:
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp_path, path)
+        _fsync_dir(directory)  # the rename itself survives a power cut (NARC-7)
         now = time.time()
         _JSON_CACHE[path] = (now, data, now)
     except BaseException:
@@ -331,7 +345,8 @@ def prune_protected(dirpath: str, dirnames: list[str]) -> None:
 def protected_rclone_excludes(base: str) -> list[str]:
     """rclone filter flags hiding the app folders that lie under `base` (an rclone serve root)."""
     base_real = os.path.realpath(base) if base else ""
-    flags: list[str] = []
+    # the encrypted files of encrypted folders, wherever they are (NSEC-5)
+    flags: list[str] = ["--exclude", f"**/{ENCRYPTED_HIDDEN}/**", "--exclude", f"**/{ENCRYPTED_HIDDEN}"]
     for d in protected_dirs():
         if base_real and _inside(d, base_real) and d != base_real:
             rel = os.path.relpath(d, base_real).replace(os.sep, "/")
@@ -442,13 +457,16 @@ def child_path(parent: str, name: str) -> str:
 
 
 def root_for(path: str, roots: Iterable[str] | str) -> str | None:
-    """Return the canonical root that contains `path` (already canonical)."""
+    """Return the canonical root that contains `path` (already canonical): the most specific one,
+    so a file on /mnt/disks/<usb> belongs to /mnt/disks, not to /mnt (NREL-13)."""
     if not path or not roots:
         return None
     if isinstance(roots, (str, bytes)):
         roots = [roots]
+    best: str | None = None
     for root in roots:
         real_root = os.path.realpath(root)
         if path == real_root or path.startswith(real_root.rstrip(os.sep) + os.sep):
-            return real_root
-    return None
+            if best is None or len(real_root) > len(best):
+                best = real_root
+    return best

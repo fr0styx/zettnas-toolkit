@@ -614,6 +614,10 @@ def mfa_challenge(req: MfaChallengeRequest, request: Request):
     remaining_user = _lockout_remaining(f"user:{target_username}@{ip}")
     if remaining_user > 0:
         return _rate_limited(remaining_user)
+    # codes guessed from many addresses count against the account too, as passwords do (NSEC-14)
+    remaining_account = _lockout_remaining(f"account:{target_username}")
+    if remaining_account > 0:
+        return _rate_limited(remaining_account)
 
     user = get_user_by_id(token_data.get("uid", ""))
     if not user or user.get("status") != "active":

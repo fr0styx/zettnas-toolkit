@@ -44,7 +44,9 @@ class PlatformCapabilities(BaseModel):
     can_destroy_pools: bool = False
     can_manage_shares: bool = False
     can_trigger_scrub: bool = True
-    can_snapshot: bool = True
+    # only hosts whose adapter really takes snapshots say so (generic Linux, TrueNAS); the observers
+    # refuse in create_snapshot, and saying yes made the Advisor schedule snapshots that fail hourly (NREL-6)
+    can_snapshot: bool = False
     storage_tools: dict[str, bool] = Field(default_factory=dict)  # btrfs / zfs / mdadm found (REL-4)
     can_export_pools: bool = True
     can_import_pools: bool = True

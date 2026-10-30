@@ -41,8 +41,8 @@ describe('two-way sync (FEAT-06)', () => {
     form.querySelector('[name="local"]').value = '/mnt/user/docs';
     form.querySelector('[name="remote"]').value = 'gdrive:docs';
     form.dispatchEvent(new Event('submit', { cancelable: true }));
-    await vi.waitFor(() => expect(api.put).toHaveBeenCalledWith('/api/sync/pairs', { id: 'my-docs', name: 'My Docs', local: '/mnt/user/docs', remote: 'gdrive:docs', every_hours: 6 }));
-    api.get.mockResolvedValue({ pairs: [{ id: 'my-docs', name: 'My Docs', local: '/a', remote: 'r:b', state: 'new' }] });
+    await vi.waitFor(() => expect(api.put).toHaveBeenCalledWith('/api/sync/pairs', { id: 'my-docs', new: true, name: 'My Docs', local: '/mnt/user/docs', remote: 'gdrive:docs', every_hours: 6 }));
+    api.get.mockResolvedValue({ pairs: [{ id: 'my-docs', new: true, name: 'My Docs', local: '/a', remote: 'r:b', state: 'new' }] });
     await renderTwoWaySync(mount);
     api.post.mockRejectedValue(new Error('remote not found'));
     mount.querySelector('[data-sync="preview"]').click();

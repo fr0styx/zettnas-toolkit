@@ -71,8 +71,10 @@ def save_pair(
     every_hours: int = 6,
     max_delete: int = 25,
     check: Callable[[str], str] | None = None,
+    new: bool = False,
 ) -> dict[str, Any]:
-    """Adds or changes a pair. New places mean a new dry run and a new first run."""
+    """Adds or changes a pair. New places mean a new dry run and a new first run. A new pair whose
+    id is taken gets a free one (sync-2, sync-3, ...): it never replaces another (NUX-6)."""
     if not _ID.match(pair_id or ""):
         raise ValueError("Use lowercase letters, digits and dashes for the id.")
     if check is None:
@@ -85,6 +87,10 @@ def save_pair(
     if remote_ok.startswith("/"):
         raise ValueError("The second side is a cloud folder (remote:path).")
     pairs = _pairs()
+    if new:
+        base, n = pair_id[:36], 2
+        while pair_id in pairs:
+            pair_id, n = f"{base}-{n}", n + 1
     old = pairs.get(pair_id, {})
     same = old.get("local") == local_ok and old.get("remote") == remote_ok
     pairs[pair_id] = {
@@ -129,7 +135,7 @@ def command(pair: dict[str, Any], dry_run: bool) -> list[str]:
         "-v",
     ]
     if not pair.get("baseline"):
-        cmd.append("--resync")  # the first run only copies what each side lacks
+        cmd.append("--resync")  # the first run: _newer_wins has made both sides equal before it
     if dry_run:
         cmd.append("--dry-run")
     return cmd
@@ -188,8 +194,27 @@ def _blocked(pair: dict[str, Any]) -> str | None:
     return None
 
 
+def _newer_wins(pair: dict[str, Any], run: Callable) -> str | None:
+    """Before a first run (or one after bisync lost track): each side's newer files are copied to
+    the other, nothing is deleted. bisync --resync then finds them equal, so it can't overwrite edits
+    made in the cloud with this NAS's older copy, which it would otherwise do (NREL-12; the rclone in
+    the image predates --resync-mode newer). Returns why it failed, or None."""
+    for src, dst in ((pair["local"], pair["remote"]), (pair["remote"], pair["local"])):
+        cmd = ["rclone", "copy", src, dst, "--update", "--config", RCLONE_CONFIG_FILE, "-v"]
+        res = run(cmd, timeout=RUN_TIMEOUT, capture_output=True, text=True)
+        if res.returncode != 0:
+            text = (res.stdout or "") + (res.stderr or "")
+            tail = [line for line in text.splitlines() if "ERROR" in line]
+            return (tail[-1] if tail else f"rclone copy exited with {res.returncode}")[-300:]
+    return None
+
+
 def _run(pair: dict[str, Any], dry_run: bool, run: Callable = run_bounded) -> dict[str, Any]:
     os.makedirs(WORKDIR, exist_ok=True)
+    if not dry_run and not pair.get("baseline"):
+        failed = _newer_wins(pair, run)
+        if failed:
+            return {**parse(""), "ok": False, "error": failed}
     res = run(command(pair, dry_run), timeout=RUN_TIMEOUT if not dry_run else 1800, capture_output=True, text=True)
     text = (res.stdout or "") + (res.stderr or "")
     summary = parse(text)

@@ -221,13 +221,45 @@ def _get_or_create_secret_key() -> str:
 
     new_key = secrets.token_hex(32)
     try:
-        os.makedirs(DATA_DIR, exist_ok=True)
-        fd = os.open(SECRET_KEY_FILE, flags, 0o600)
-        with open(fd, "w", encoding="utf-8") as f:
-            f.write(new_key)
+        _persist_key(new_key, replace=bool(flags & os.O_TRUNC))
     except OSError as e:
-        logger.warning(f"Failed to persist {SECRET_KEY_FILE}: {e}")
+        # a key that lives only in memory seals two-factor secrets and passphrases that the next
+        # start can't open (NARC-7): don't run like that
+        if test_mode():
+            logger.warning(f"Failed to persist {SECRET_KEY_FILE}: {e}")
+        else:
+            raise RuntimeError(
+                f"Cannot save the secret key to {SECRET_KEY_FILE} ({e}). Make the data folder writable "
+                "and start ZettNAS again."
+            ) from e
     return new_key
+
+
+def _persist_key(key: str, replace: bool) -> None:
+    """Written to a temporary file, synced, then put in place and the folder synced, so a power cut
+    right after the first start can't leave an empty key behind (NARC-7). Never over a key that
+    exists, unless that file was empty (replace)."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    tmp = f"{SECRET_KEY_FILE}.tmp-{os.getpid()}"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        with open(fd, "w", encoding="utf-8") as f:
+            f.write(key)
+            f.flush()
+            os.fsync(f.fileno())
+        if replace:
+            os.replace(tmp, SECRET_KEY_FILE)
+        else:
+            os.link(tmp, SECRET_KEY_FILE)  # fails if another process made one meanwhile (ARC-20)
+            os.unlink(tmp)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+    dfd = os.open(os.path.dirname(os.path.abspath(SECRET_KEY_FILE)) or ".", os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
 
 
 SECRET_KEY = _get_or_create_secret_key()

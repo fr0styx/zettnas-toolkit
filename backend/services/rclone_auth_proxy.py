@@ -149,6 +149,12 @@ def main():
             and not user.get("mfa_enabled")
         ):
             if password and verify_password(password, user.get("password_hash", "")):
+                from backend.signin_hours import allowed, from_json
+
+                if not allowed(from_json(user.get("signin_hours_json") or "")):
+                    # outside the account's sign-in hours (COMP-13, NSEC-7): refused, but the right
+                    # password isn't a failed sign-in, so the address isn't blocked
+                    sys.exit(1)
                 authenticated = True
                 is_admin = user.get("role_id") in ("superadmin", "storage_admin")
                 is_read_only = user.get("role_id") == "guest"

@@ -79,6 +79,11 @@ def _restore(req: TrashRestoreRequest, principal: AuthenticatedPrincipal) -> dic
     if not os.path.lexists(source):
         source = os.path.join(b, name)
     orig = recycle_bin.original_path(b, name)
+    # the .trashinfo is in the share and anyone who can write there can change it: a restore only
+    # goes back inside the share (or root) this bin belongs to (NSEC-8)
+    scope = os.path.realpath(os.path.dirname(b))
+    if orig and not (os.path.realpath(orig) == scope or os.path.realpath(orig).startswith(scope + os.sep)):
+        orig = ""
     head = name.split("_", 1)
     orig_name = (
         os.path.basename(orig) if orig else (head[1] if len(head) == 2 and head[0].replace("-", "").isdigit() else name)

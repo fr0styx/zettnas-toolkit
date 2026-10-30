@@ -26,24 +26,34 @@ DAILY_EVERY_SECS = 24 * 3600
 CHECK_EVERY_SECS = 3600
 
 
+# What SQLite says only about a damaged file; anything else (permissions, a slow or failing disk,
+# a lock) means it couldn't be read, and then nothing is moved or replaced (NREL-9)
+DAMAGED_WORDS = ("malformed", "not a database", "disk image")
+
+
 def _db_ok(path: str) -> bool:
     """True if SQLite reads the file and quick_check finds nothing wrong."""
+    return _db_state(path) == "ok"
+
+
+def _db_state(path: str) -> str:
+    """ "ok", "damaged" (SQLite reads it and finds it broken) or "unreadable" (it couldn't be read)."""
     from backend import db_crypto
 
     try:
         if db_crypto.applies_to(path) and db_crypto.is_encrypted(path) and not db_crypto.enabled():
-            return True  # no key here to check it with; the app reports the missing key itself
+            return "ok"  # no key here to check it with; the app reports the missing key itself
         if db_crypto.applies_to(path) and db_crypto.is_encrypted(path) and key_problem(path):
-            return True  # the key doesn't open it: locked, not damaged (ARC-19); startup reports it
+            return "ok"  # the key doesn't open it: locked, not damaged (ARC-19); startup reports it
         conn = db_crypto.connect(path, readonly=True)
         try:
             row = conn.execute("PRAGMA quick_check").fetchone()
         finally:
             conn.close()
-        return bool(row) and str(row[0]).lower() == "ok"
-    except Exception:
+        return "ok" if row and str(row[0]).lower() == "ok" else "damaged"
+    except Exception as e:
         logger.warning(f"[DataHealth] {os.path.basename(path)} could not be checked", exc_info=True)
-        return False
+        return "damaged" if any(w in str(e).lower() for w in DAMAGED_WORDS) else "unreadable"
 
 
 def key_problem(path: str) -> str:
@@ -162,7 +172,7 @@ def check_json_files(data_dir: str) -> dict[str, list[str]]:
 def check_and_repair(data_dir: str) -> dict[str, Any]:
     """Checks every database in the data folder; moves damaged ones aside and restores the newest
     good copy. Run at start, before the databases are opened."""
-    result: dict[str, Any] = {"checked": [], "repaired": {}, "lost": []}
+    result: dict[str, Any] = {"checked": [], "repaired": {}, "lost": [], "unreadable": []}
     try:
         names = sorted(n for n in os.listdir(data_dir) if n.endswith(".db") and n not in SKIP_DBS)
     except OSError:
@@ -170,7 +180,17 @@ def check_and_repair(data_dir: str) -> dict[str, Any]:
     for name in names:
         path = os.path.join(data_dir, name)
         result["checked"].append(name)
-        if _db_ok(path):
+        state = _db_state(path)
+        if state == "ok":
+            continue
+        if state == "unreadable":
+            # not damaged: replacing it with an older or empty copy would lose accounts (NREL-9)
+            result["unreadable"].append(name)
+            logger.critical(
+                "[DataHealth] %s could not be opened (permissions or the disk?). Nothing was moved; "
+                "fix the data folder and start ZettNAS again.",
+                name,
+            )
             continue
         stamp = time.strftime("%Y%m%d-%H%M%S")
         for suffix in ("", "-wal", "-shm"):
@@ -183,7 +203,7 @@ def check_and_repair(data_dir: str) -> dict[str, Any]:
         else:
             result["lost"].append(name)
             logger.critical(f"[DataHealth] {name} was damaged and no good copy exists; it starts empty")
-    if result["repaired"] or result["lost"]:
+    if result["repaired"] or result["lost"] or result["unreadable"]:
         _record_event(result)
     return result
 
@@ -194,6 +214,7 @@ def _record_event(result: dict[str, Any]) -> None:
 
         parts = [f"{n} restored from the copy of {s}" for n, s in result["repaired"].items()]
         parts += [f"{n} could not be restored and started empty" for n in result["lost"]]
+        parts += [f"{n} could not be opened and was left as it is" for n in result.get("unreadable", [])]
         add_event(
             "error",
             "Damaged data repaired",

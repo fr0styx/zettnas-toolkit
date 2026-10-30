@@ -669,7 +669,7 @@ request and response schemas.
 | `POST` | `/api/v1/encrypted-folders/adopt` | `shares:manage` | Adds back one whose encrypted files are already in the share |
 | `DELETE` | `/api/v1/encrypted-folders/{name}` | `shares:manage` | Takes a locked folder off ZettNAS; its encrypted files stay in the share |
 | `POST` | `/api/v1/encrypted-folders/{name}/lock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Post Lock |
-| `POST` | `/api/v1/encrypted-folders/{name}/unlock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Post Unlock |
+| `POST` | `/api/v1/encrypted-folders/{name}/unlock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` ⏱ | Post Unlock |
 | `PUT` | `/api/v1/encrypted-folders/{name}/unlock-at-start` | `shares:manage` | Put Unlock At Start |
 
 ### Storage Replication

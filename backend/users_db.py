@@ -1141,7 +1141,7 @@ def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dic
     with users_db_session(db_path, readonly=True) as conn:
         row = conn.execute(
             """
-            SELECT t.*, u.username, u.status, u.role_id, r.scopes_json AS role_scopes_json
+            SELECT t.*, u.username, u.status, u.role_id, u.signin_hours_json, r.scopes_json AS role_scopes_json
             FROM api_tokens t
             JOIN users u ON t.user_id = u.id
             LEFT JOIN roles r ON u.role_id = r.id
@@ -1167,6 +1167,7 @@ def validate_scoped_api_token(raw_token: str, db_path: str | None = None) -> dic
             "name": row["name"],
             "expires_at": row["expires_at"],
             "folders": _folders_of(row),
+            "signin_hours": _signin_hours_of(row),  # the account's sign-in hours apply to its tokens (NSEC-7)
             "is_api_token": True,
         }
 

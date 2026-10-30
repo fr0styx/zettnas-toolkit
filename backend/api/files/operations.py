@@ -115,7 +115,24 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
         # its share's bin, or the root's for an item at the top (REL-15)
         recycle_dir = recycle_bin.bin_for(target_unresolved) or os.path.join(real_root, recycle_bin.BIN)
         base_name = os.path.basename(target_unresolved)
-        dest_name = await asyncio.to_thread(recycle_bin.move_to_bin, target_unresolved, recycle_dir, target_unresolved)
+        # a rename, never a copy: deleting a big folder must not first copy it to another disk (NREL-13)
+        dest_name = await asyncio.to_thread(
+            recycle_bin.move_to_bin, target_unresolved, recycle_dir, target_unresolved, True
+        )
+        if dest_name is None:
+            recycle_dir = recycle_bin.same_disk_bin(target_unresolved) or ""
+            dest_name = (
+                await asyncio.to_thread(
+                    recycle_bin.move_to_bin, target_unresolved, recycle_dir, target_unresolved, True
+                )
+                if recycle_dir
+                else None
+            )
+        if dest_name is None:
+            raise HTTPException(
+                status_code=409,
+                detail="This disk has no Recycle Bin of its own, so this can only be deleted permanently.",
+            )
         add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
         record_activity("delete", target_unresolved, principal, detail="to the Recycle Bin")
 
@@ -124,6 +141,8 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
             "message": "Item moved to Recycle Bin",
             "trash_id": recycle_bin.item_id(recycle_dir, dest_name or ""),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"[FS] Delete/Recycle failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to process delete request") from e

@@ -36857,6 +36857,11 @@
       "title": "Name",
       "type": "string"
      },
+     "new": {
+      "default": false,
+      "title": "New",
+      "type": "boolean"
+     },
      "remote": {
       "maxLength": 1024,
       "minLength": 2,
@@ -49924,12 +49929,19 @@
      },
      "422": {
       "$ref": "#/components/responses/ValidationFailed"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
      }
     },
     "summary": "Post Unlock",
     "tags": [
      "Storage"
     ],
+    "x-rate-limit": {
+     "requests": 5,
+     "seconds": 60
+    },
     "x-required-scopes": [
      "files:write",
      "shares:manage",

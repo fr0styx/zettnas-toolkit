@@ -355,12 +355,14 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.variant }}
 
       # The image that will be published must start and serve the app (OPS-08).
-      # It also must answer within 45 s of starting and stay within its download size (PERF-28, 29)
+      # It also must answer within 45 s of starting and stay within its download size (PERF-28, 29).
+      # The core budget went from 340 to 345 MB on 30 Oct 2026 for gocryptfs (encrypted folders,
+      # FEAT-13), which added 2 MB; raise it only with the reason here.
       - name: Smoke-test the built image (amd64, ${{ matrix.variant }})
         env:
           IMAGE: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
           STARTUP_BUDGET_SECS: "45"
-          IMAGE_BUDGET_MB: ${{ matrix.variant == 'core' && '340' || '700' }}
+          IMAGE_BUDGET_MB: ${{ matrix.variant == 'core' && '345' || '700' }}
         run: sh scripts/smoke_test.sh "$IMAGE" linux/amd64 18082 120
 
       # arm64 is built and published, so start it too (under QEMU, hence the longer wait).

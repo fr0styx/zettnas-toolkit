@@ -46,7 +46,8 @@ BAD_MEMBER = {
     "DEGRADED",
 }
 
-_cache: dict[str, Any] = {"at": 0.0, "items": []}
+_cache: dict[str, Any] = {"at": 0.0, "items": [], "ok": True, "failures": 0}
+READ_FAILURES_ALERT = 3  # failed reads in a row before one warning
 _cache_lock = threading.Lock()
 _last_check = {"at": 0.0}
 
@@ -149,12 +150,15 @@ def current(max_age: float = CACHE_S, now: float | None = None) -> list[dict[str
             return list(_cache["items"])
     try:
         pools, scrubs = _read()
-        items = problems(pools, scrubs)
+        items, ok = problems(pools, scrubs), True
     except Exception:
+        # a read that failed says nothing about the pools: keep what was known (NREL-8)
         logger.debug("[PoolAlerts] could not read the pools", exc_info=True)
-        items = []
+        with _cache_lock:
+            items = list(_cache["items"])
+        ok = False
     with _cache_lock:
-        _cache.update(at=now, items=items)
+        _cache.update(at=now, items=items, ok=ok, failures=0 if ok else int(_cache.get("failures") or 0) + 1)
     return list(items)
 
 
@@ -191,6 +195,19 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
         from backend.services.notifications import send_notification as send
     items = {i["id"]: i for i in current(max_age=0, now=now)}
     sent: dict[str, list[str]] = {"new": [], "reminded": [], "fixed": []}
+    if not _cache.get("ok", True):
+        # nothing is "fixed" on a failed read; a read that keeps failing is said once (NREL-8)
+        if int(_cache.get("failures") or 0) == READ_FAILURES_ALERT:
+            send(
+                title="ZettNAS can't read the storage health",
+                message="Checking the pools failed several times in a row, so problems may go unnoticed. "
+                "Restart ZettNAS; if this stays, look at the storage page.",
+                level="warning",
+                event_type="storage",
+                dedup_key="pool:unreadable",
+            )
+            sent["new"].append("pool:unreadable")
+        return sent
     with locked_json(_state_file()):
         state = read_json(_state_file(), {}) or {}
         for pid, item in items.items():

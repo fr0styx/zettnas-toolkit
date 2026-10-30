@@ -90,7 +90,7 @@ export async function renderTwoWaySync(mount) {
     e.preventDefault();
     const f = new FormData(/** @type {HTMLFormElement} */ (e.target));
     try {
-      await api.put('/api/sync/pairs', { id: slug(f.get('name')), name: f.get('name'), local: f.get('local'), remote: f.get('remote'), every_hours: Number(f.get('every_hours') || 6) });
+      await api.put('/api/sync/pairs', { id: slug(f.get('name')), new: true, name: f.get('name'), local: f.get('local'), remote: f.get('remote'), every_hours: Number(f.get('every_hours') || 6) });
       renderTwoWaySync(mount);
     } catch (err) {
       showToast(err.message || String(err), 'error');

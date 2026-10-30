@@ -94,6 +94,11 @@ def get_current_session(token: str) -> dict[str, Any] | None:
 
     if token.startswith("zat_"):
         tok = validate_scoped_api_token(token)
+        if tok and tok.get("signin_hours"):
+            from backend.signin_hours import allowed
+
+            if not allowed(tok["signin_hours"]):
+                return None  # the account's sign-in hours hold for its tokens too (COMP-13, NSEC-7)
         if tok:
             from backend.users_db import note_token_use
 

@@ -4,6 +4,17 @@
 
 #### Security
 
+- **Sign-in hours hold everywhere**: a family account's sign-in hours now apply to its API
+  tokens, WebDAV and SFTP and the office suite as well as the web desktop (NSEC-7).
+- **Encrypted folders resist guessing**: opening one is limited to a few tries a minute per
+  person, ten wrong passwords lock it for a quarter of an hour, and new ones need at least 12
+  characters. WebDAV and SFTP no longer show their hidden folder of encrypted files (NSEC-4).
+- **A restore stays in its share**: restoring from the Recycle Bin can no longer be steered
+  into another folder by editing the bin's record of where an item came from (NSEC-8).
+- **Apps can't be given ZettNAS's own data**: mounting a folder that holds ZettNAS's data
+  (such as all of /mnt/user or appdata) counts as host access, and "Keep on a share" no longer
+  offers Unraid's system shares (NSEC-9).
+
 - **API tokens get only what their app needs**: making a token now asks what it may do (read
   files, read and change files, monitoring, an AI assistant, or everything), and read-only
   files is the default; before, every token got all of its maker's rights. A token limited to
@@ -280,6 +291,24 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **A database that can't be opened is left alone**: at start, ZettNAS took a database it
+  couldn't open (for example after a permission change) for a damaged one and replaced it with an
+  older copy, or an empty one, which could reopen the setup wizard. It now leaves it as it is
+  and says so (NREL-9).
+- **No snapshot schedules that can only fail**: on Unraid and other hosts that keep snapshots
+  themselves, ZettNAS no longer says it can take them, so the Security Advisor stops asking for
+  them and its fix stops making schedules that fail every hour (NREL-6).
+- **No false "fixed" for storage problems**: when reading the pools failed for a moment,
+  every open storage problem was announced as fixed; it now stays, and reads that keep failing
+  send one warning instead (NREL-8).
+- **A first two-way sync keeps the newer files**: the first run (and one after it lost track)
+  could overwrite newer files in the cloud with this NAS's copies; it now copies the newer
+  version of each file both ways first (NREL-12).
+- **Deleting from a USB disk doesn't copy it first**: the item goes to a Recycle Bin on its own
+  disk; before, it was copied to another one and then deleted (NREL-13).
+- **Two-way syncs with similar names stay apart**: a second pair whose name gave the same id
+  (two names in Chinese, say) quietly replaced the first; it now gets its own (NUX-6).
 
 - **A drive that stops answering is no longer shown as asleep**: when smartctl couldn't open a
   drive or it didn't identify itself, ZettNAS took it for a sleeping drive and stayed quiet. It
