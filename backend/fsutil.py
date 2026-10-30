@@ -359,6 +359,45 @@ def safe_serve_root(path: str, pool_path: str) -> str | None:
     return real
 
 
+ENCRYPTED_ROOT = "/mnt/encrypted"  # open encrypted folders (FEAT-13), inside the container only
+ENCRYPTED_HIDDEN = ".zettnas-encrypted"  # their encrypted files, in a share
+
+
+def open_encrypted() -> set[str]:
+    """Mount points of the encrypted folders that are open now."""
+    out: set[str] = set()
+    try:
+        with open("/proc/self/mounts", encoding="utf-8") as fh:
+            for line in fh:
+                parts = line.split()
+                if len(parts) > 2 and parts[2].startswith("fuse.gocryptfs"):
+                    out.add(parts[1].replace("\\040", " "))
+    except OSError:
+        logger.debug("fsutil: mounts unreadable", exc_info=True)
+    return out
+
+
+def encrypted_refused(real: str) -> bool:
+    """The encrypted files themselves, and anything under /mnt/encrypted that isn't inside an open
+    folder, are never reached through a path: a write there would land unencrypted in the
+    container, and lost at the next update (NREL-2, NREL-3)."""
+    if ENCRYPTED_HIDDEN in real.split(os.sep):
+        return True
+    if real.startswith(ENCRYPTED_ROOT + os.sep):
+        top = os.path.join(ENCRYPTED_ROOT, real[len(ENCRYPTED_ROOT) + 1 :].split(os.sep)[0])
+        return top not in open_encrypted()
+    return False
+
+
+def is_encrypted_mount(real: str) -> bool:
+    """An open encrypted folder itself: it is locked or taken off, never deleted or moved."""
+    return (
+        bool(real)
+        and os.path.dirname(real.rstrip(os.sep)) == ENCRYPTED_ROOT
+        and real.rstrip(os.sep) in open_encrypted()
+    )
+
+
 def resolve_within(path: str, roots: Iterable[str] | str) -> str | None:
     """Return the canonical (symlink-resolved) path if it lies inside one of
     `roots`, otherwise None. Defeats `..` segments and symlink escapes.
@@ -377,6 +416,8 @@ def resolve_within(path: str, roots: Iterable[str] | str) -> str | None:
         if not real.startswith(real_root.rstrip(os.sep) + os.sep):
             continue
         if any(_inside(real, d) and not _inside(real_root, d) for d in protected_dirs()):
+            return None
+        if encrypted_refused(real):
             return None
         return real
     return None

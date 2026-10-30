@@ -135,6 +135,18 @@ def check_user_path_access(
         raise HTTPException(status_code=403, detail="You have read-only access to this folder.")
 
 
+def refuse_encrypted_mount(path: str) -> None:
+    """An open encrypted folder is locked or taken off in Shares, never deleted, renamed or moved:
+    its readable files would go to a Recycle Bin outside the encryption (NREL-2)."""
+    from backend.fsutil import is_encrypted_mount
+
+    if path and is_encrypted_mount(os.path.realpath(path)):
+        raise HTTPException(
+            status_code=400,
+            detail="This is an encrypted folder. Lock it or take it off in Shares -> Encrypted folders instead.",
+        )
+
+
 def without_folders(principal: Any) -> Any:
     """The same principal without its folder limit, to apply the other rules on their own."""
     return AuthenticatedPrincipal({**getattr(principal, "raw_data", {}), "folders": []})

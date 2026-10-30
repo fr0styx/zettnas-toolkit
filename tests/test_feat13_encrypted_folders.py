@@ -268,3 +268,89 @@ def test_people_reach_only_folders_in_their_shares(box, monkeypatch):
     assert api._can_use(who("leo"), "Family", False) and not api._can_use(who("leo"), "Family", True)
     assert not api._can_use(who("kid"), "Family", False)
     assert api._can_use(SimpleNamespace(username="admin", has_scope=lambda s: s == "*"), "Family", True)
+
+
+# --- the audit's fixes (NREL-1 to NREL-4) -------------------------------------------------------
+
+
+def test_the_recovery_key_is_read_over_two_lines(box, monkeypatch):
+    two_lines = (
+        "Your master key is:\n\n    0123abcd-0123abcd-0123abcd-0123abcd-\n    0123abcd-0123abcd-0123abcd-0123abcd\n"
+    )
+
+    def init_two_lines(args, password):
+        if "-init" in args:
+            box.run(args, password)
+            assert "-q" not in args  # quiet would leave the key out
+            return 0, two_lines
+        return box.run(args, password)
+
+    monkeypatch.setattr(ef, "_run", init_two_lines)
+    assert ef.create("Family", "Keys", "correct horse battery staple")["recovery_key"] == KEY
+
+
+def test_a_mount_does_not_keep_our_pipes(box):
+    ef.create("Family", "Pipes", "correct horse battery staple")
+    mounts = [c for c in box.calls if "-init" not in c]
+    assert mounts and all("-nosyslog" not in c for c in mounts)
+
+
+def test_a_locked_folder_leaves_nothing_to_write_into(box):
+    ef.create("Family", "Taxes", "correct horse battery staple")
+    assert os.path.isdir(ef.plain_path("Taxes"))
+    ef.lock("Taxes")
+    assert not os.path.exists(ef.plain_path("Taxes"))
+    os.makedirs(ef.plain_path("Taxes"))  # left from before a restart
+    assert ef.unlock_at_start() == 0 and not os.path.exists(ef.plain_path("Taxes"))
+
+
+def test_paths_into_locked_folders_and_encrypted_files_are_refused(monkeypatch):
+    from backend import fsutil
+
+    monkeypatch.setattr(fsutil, "open_encrypted", lambda: {"/mnt/encrypted/Open"})
+    assert fsutil.encrypted_refused("/mnt/encrypted/Locked/x.txt")
+    assert fsutil.encrypted_refused("/mnt/encrypted/new-folder")
+    assert not fsutil.encrypted_refused("/mnt/encrypted/Open/x.txt")
+    assert not fsutil.encrypted_refused("/mnt/encrypted/Open")
+    assert fsutil.encrypted_refused("/mnt/user/Family/.zettnas-encrypted/Taxes/gocryptfs.conf")
+    assert not fsutil.encrypted_refused("/mnt/user/Family/Taxes.txt")
+    assert fsutil.is_encrypted_mount("/mnt/encrypted/Open")
+    assert not fsutil.is_encrypted_mount("/mnt/encrypted/Open/x.txt")
+    assert not fsutil.is_encrypted_mount("/mnt/encrypted/Locked")
+
+
+def test_resolve_within_applies_the_guard(tmp_path, monkeypatch):
+    from backend import fsutil
+
+    hidden = tmp_path / "Family" / ".zettnas-encrypted" / "Taxes"
+    hidden.mkdir(parents=True)
+    (tmp_path / "Family" / "ok.txt").write_text("x")
+    monkeypatch.setattr(fsutil, "protected_dirs", lambda: [])
+    assert fsutil.resolve_within(str(tmp_path / "Family" / "ok.txt"), [str(tmp_path)])
+    assert fsutil.resolve_within(str(hidden), [str(tmp_path)]) is None
+
+
+def test_an_open_folder_is_not_deleted_or_moved(monkeypatch):
+    from fastapi import HTTPException
+
+    from backend import fsutil
+    from backend.services.path_access import refuse_encrypted_mount
+
+    monkeypatch.setattr(fsutil, "open_encrypted", lambda: {"/mnt/encrypted/Open"})
+    with pytest.raises(HTTPException) as e:
+        refuse_encrypted_mount("/mnt/encrypted/Open")
+    assert e.value.status_code == 400 and "Lock it" in e.value.detail
+    refuse_encrypted_mount("/mnt/encrypted/Open/file.txt")  # files inside can go
+    refuse_encrypted_mount("")
+
+
+def test_the_kernel_mount_list_is_read(tmp_path, monkeypatch):
+    from backend import fsutil
+
+    mounts = tmp_path / "mounts"
+    mounts.write_text("/c /mnt/encrypted/My\\040Taxes fuse.gocryptfs rw 0 0\n")
+    real_open = open
+    monkeypatch.setattr(
+        "builtins.open", lambda p, *a, **k: real_open(mounts if p == "/proc/self/mounts" else p, *a, **k)
+    )
+    assert fsutil.open_encrypted() == {"/mnt/encrypted/My Taxes"}

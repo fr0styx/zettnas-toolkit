@@ -11,7 +11,8 @@
   files, a file deleted inside goes to the folder's own Recycle Bin, and the AI index skips it.
   Its recovery key is shown once, when it is made. "Open when ZettNAS starts" keeps the
   password sealed with this server's key, which is easier and weaker, and says so. A folder
-  taken off ZettNAS keeps its encrypted files in the share and can be added back (FEAT-13).
+  taken off ZettNAS keeps its encrypted files in the share and can be added back (FEAT-13) While it is locked nothing can be written where it was, an open one can't be deleted or
+  moved by mistake, and its hidden folder of encrypted files can't be touched from Files.
 
 - **Kids and guests see the desktop, not the machine**: the live stats behind the desktop now
   give accounts without the system view only the server's name, status, storage use and uptime.

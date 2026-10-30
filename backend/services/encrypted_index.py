@@ -6,10 +6,10 @@ import os
 from typing import Any
 
 from backend.config import DATA_DIR
-from backend.fsutil import read_json
+from backend.fsutil import ENCRYPTED_ROOT, read_json
 
 SETTINGS_FILE = f"{DATA_DIR}/encrypted_folders.json"
-ROOT = "/mnt/encrypted"  # readable views, inside the container only
+ROOT = ENCRYPTED_ROOT  # readable views, inside the container only
 BIN = ".RecycleBin"
 
 

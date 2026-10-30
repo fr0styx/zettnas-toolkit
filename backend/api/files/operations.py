@@ -17,7 +17,7 @@ from backend.config import logger
 from backend.fsutil import resolve_within, root_for
 from backend.rate_limit import rate_limit
 from backend.services import recycle_bin
-from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access
+from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access, refuse_encrypted_mount
 from backend.state import add_event
 
 router = APIRouter()
@@ -50,6 +50,7 @@ class FsTransferRequest(BaseModel):
 )
 async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     check_user_path_access(req.path, principal, write=True)
+    refuse_encrypted_mount(req.path)
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     new_name = str(req.new_name or "").strip()
     if not new_name or "/" in new_name or "\\" in new_name or new_name in (".", ".."):
@@ -83,6 +84,7 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
 )
 async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     check_user_path_access(req.path, principal, write=True)
+    refuse_encrypted_mount(req.path)
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     is_admin = (
         principal.role_id in ("superadmin", "storage_admin")
@@ -143,6 +145,7 @@ async def fs_conflict_check(
 
     for src in req.sources:
         src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
         check_user_path_access(src, principal)
@@ -170,6 +173,7 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
 
     for src in req.sources:
         src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
         check_user_path_access(src, principal, write=req.action == "move")
@@ -234,6 +238,7 @@ async def fs_transfer_async(
     clean_sources = []
     for src in req.sources:
         src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
         check_user_path_access(src, principal, write=req.action == "move")
@@ -290,6 +295,7 @@ async def fs_archive_create(
     clean_sources = []
     for src in req.sources:
         src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
+        refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
         check_user_path_access(src, principal)

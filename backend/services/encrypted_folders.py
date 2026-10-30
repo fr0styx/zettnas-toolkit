@@ -21,13 +21,13 @@ import time
 from typing import Any
 
 from backend.config import logger
-from backend.fsutil import atomic_write_json, json_locked
+from backend.fsutil import ENCRYPTED_HIDDEN, atomic_write_json, json_locked
 from backend.services import encrypted_index as ei
 from backend.services.encrypted_index import bin_for, grant_paths, plain_path
 
 __all__ = ["bin_for", "grant_paths", "plain_path"]  # kept here too, beside the rest
 
-HIDDEN = ".zettnas-encrypted"  # in the share: the encrypted files
+HIDDEN = ENCRYPTED_HIDDEN  # in the share: the encrypted files
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 _.-]{0,47}$")
 MASTER_KEY_RE = re.compile(r"((?:[0-9a-f]{8}-){7}[0-9a-f]{8})")
 TOOL_SECS = 120  # gocryptfs derives the key with scrypt: a few seconds on a slow CPU
@@ -51,16 +51,9 @@ def cipher_path(share_path: str, name: str) -> str:
 
 def _mounted() -> set[str]:
     """Mount points of gocryptfs folders that are open now."""
-    out: set[str] = set()
-    try:
-        with open("/proc/self/mounts", encoding="utf-8") as fh:
-            for line in fh:
-                parts = line.split()
-                if len(parts) > 2 and parts[2].startswith("fuse.gocryptfs"):
-                    out.add(parts[1].replace("\\040", " "))
-    except OSError:
-        logger.debug("encrypted_folders: mounts unreadable", exc_info=True)
-    return out
+    from backend.fsutil import open_encrypted
+
+    return open_encrypted()
 
 
 def is_unlocked(name: str) -> bool:
@@ -115,7 +108,9 @@ def _run(args: list[str], password: str) -> tuple[int, str]:
 
 def _mount(cipher: str, plain: str, password: str, read_only: bool = False) -> None:
     os.makedirs(plain, exist_ok=True)
-    code, out = _run(["-q", "-nosyslog", *(["-ro"] if read_only else []), cipher, plain], password)
+    # no -nosyslog: the mount runs on in the background, and with it the background process would
+    # keep our output pipes open, so this call would wait out its time limit (NREL-4)
+    code, out = _run(["-q", *(["-ro"] if read_only else []), cipher, plain], password)
     if code == 12:
         raise EncryptedFolderError("That password is wrong.")
     if code != 0:
@@ -146,10 +141,10 @@ def create(share: str, name: str, password: str, unlock_at_start: bool = False) 
     if os.path.exists(cipher) and os.listdir(cipher):
         raise ValueError(f"{share} already has encrypted files for {name}; add it back instead.")
     os.makedirs(cipher, exist_ok=True)
-    code, out = _run(["-init", "-q", "-nosyslog", cipher], password)
+    code, out = _run(["-init", cipher], password)  # not -q: it prints the master key
     if code != 0:
         raise EncryptedFolderError(f"The folder couldn't be made: {out.strip()[:200] or code}")
-    key = MASTER_KEY_RE.search(out)
+    key = MASTER_KEY_RE.search(re.sub(r"\s+", "", out))  # it is printed over two lines (NREL-1)
     s["folders"][name] = {
         "share": share,
         "created": time.time(),
@@ -197,7 +192,16 @@ def lock(name: str) -> dict[str, Any]:
         r = run_bounded(["fusermount3", "-u", plain_path(name)], timeout=30, capture_output=True, text=True)
         if r.returncode != 0:
             raise EncryptedFolderError("Something still has a file open in it. Close it and lock the folder again.")
+    _drop_mount_point(name)
     return {"name": name, "unlocked": False}
+
+
+def _drop_mount_point(name: str) -> None:
+    """No folder is left where a locked one was, so nothing can be written there (NREL-3)."""
+    try:
+        os.rmdir(plain_path(name))
+    except OSError:
+        logger.debug("encrypted_folders: %s mount point not removed", name, exc_info=True)
 
 
 @json_locked(lambda *a, **k: ei.SETTINGS_FILE)
@@ -258,6 +262,8 @@ def unlock_at_start() -> int:
 
     opened = 0
     for name, f in _settings()["folders"].items():
+        if not is_unlocked(name):
+            _drop_mount_point(name)  # an empty folder left from before a restart
         if not f.get("password") or is_unlocked(name):
             continue
         try:
