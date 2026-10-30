@@ -387,6 +387,15 @@ def startup_system():
     atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))
 
 
+def _open_encrypted_folders() -> None:
+    """Encrypted folders whose password is kept open when ZettNAS starts (FEAT-13)."""
+    from backend.services.encrypted_folders import unlock_at_start
+
+    opened = unlock_at_start()
+    if opened:
+        logger.info("[Main] %d encrypted folder(s) opened", opened)
+
+
 def fan_watchdog_daemon():
     """Hand fans back to firmware if the stats collector stops updating.
 
@@ -452,6 +461,7 @@ async def lifespan(app: FastAPI):
     configure_thread_limits()
     broadcaster.set_loop(loop)
     startup_system()
+    threading.Thread(target=_open_encrypted_folders, name="EncryptedFolders", daemon=True).start()
     try:
         yield
     finally:

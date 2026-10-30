@@ -48,6 +48,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rclone \
     restic \
     fuse3 \
+    gocryptfs \
     && rm -rf /var/lib/apt/lists/*
 
 # Multi-arch Playwright support (linux/amd64 and linux/arm64)

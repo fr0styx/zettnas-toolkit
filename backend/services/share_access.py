@@ -167,6 +167,7 @@ def grants_for(username: str) -> list[tuple[str, str]]:
     home = _home_for(username, user)
     if home:
         grants.append((home, "write"))
+    by_share: dict[str, str] = {}
     for share in known_shares():
         entry = cfg["shares"].get(share["name"], {})
         level = (
@@ -177,6 +178,12 @@ def grants_for(username: str) -> list[tuple[str, str]]:
             or cfg["default_level"]
         )
         grants.append((share["path"], level))
+        by_share[share["name"]] = level
+    # an open encrypted folder (FEAT-13) is reached as its share is
+    from backend.services.encrypted_index import grant_paths
+
+    for plain, share_name in grant_paths().items():
+        grants.append((plain, by_share.get(share_name, "none")))
     grants.sort(key=lambda g: len(g[0]), reverse=True)
     return grants
 

@@ -793,6 +793,8 @@ export function initManagement() {
     } else if (paneId === 'mgmt-pane-storage-shares') {
       const mount = document.getElementById('mgmt-storage-shares-mount');
       if (mount) fetchAndRenderNetworkShares(mount);
+      const ef = document.getElementById('encrypted-folders-mount');
+      if (ef) import('./encrypted-folders.js').then((m) => m.renderEncryptedFolders(ef)); // FEAT-13
     } else if (paneId === 'mgmt-pane-storage-remotes') {
       const mount = document.getElementById('mgmt-storage-remotes-mount');
       if (mount) fetchAndRenderRemoteStorage(mount);

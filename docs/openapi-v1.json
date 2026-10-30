@@ -3504,6 +3504,38 @@
     "title": "CreateFanPresetResponsePreset",
     "type": "object"
    },
+   "CreateIn": {
+    "properties": {
+     "name": {
+      "maxLength": 48,
+      "title": "Name",
+      "type": "string"
+     },
+     "password": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Password",
+      "type": "string"
+     },
+     "share": {
+      "maxLength": 128,
+      "title": "Share",
+      "type": "string"
+     },
+     "unlock_at_start": {
+      "default": false,
+      "title": "Unlock At Start",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "share",
+     "name",
+     "password"
+    ],
+    "title": "CreateIn",
+    "type": "object"
+   },
    "CreateNewUserResponse": {
     "additionalProperties": true,
     "description": "POST /users",
@@ -29397,6 +29429,21 @@
     "title": "PackUseResponseReindex",
     "type": "object"
    },
+   "PasswordIn": {
+    "properties": {
+     "password": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Password",
+      "type": "string"
+     }
+    },
+    "required": [
+     "password"
+    ],
+    "title": "PasswordIn",
+    "type": "object"
+   },
    "PauseCopyResponse": {
     "additionalProperties": true,
     "description": "POST /copy/pause",
@@ -36160,6 +36207,24 @@
      }
     },
     "title": "StartCopyResponse",
+    "type": "object"
+   },
+   "StartIn": {
+    "properties": {
+     "password": {
+      "anyOf": [
+       {
+        "maxLength": 256,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Password"
+     }
+    },
+    "title": "StartIn",
     "type": "object"
    },
    "StartOauthSessionResponse": {
@@ -49555,6 +49620,358 @@
     "x-required-scopes": [
      "storage:read",
      "system:view"
+    ]
+   }
+  },
+  "/api/v1/encrypted-folders": {
+   "get": {
+    "description": "The encrypted folders in the shares this person can open, and whether this server can.",
+    "operationId": "get_encrypted_folders_api_v1_encrypted_folders_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Encrypted Folders Api V1 Encrypted Folders Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Encrypted Folders",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "files:read",
+     "shares:read",
+     "shares:user_write",
+     "storage:read",
+     "storage:admin"
+    ]
+   },
+   "post": {
+    "description": "Makes one and opens it; the answer carries its recovery key, shown this once.",
+    "operationId": "post_encrypted_folder_api_v1_encrypted_folders_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Encrypted Folder Api V1 Encrypted Folders Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Encrypted Folder",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "shares:manage"
+    ]
+   }
+  },
+  "/api/v1/encrypted-folders/adopt": {
+   "post": {
+    "description": "Adds back one whose encrypted files are already in the share.",
+    "operationId": "post_adopt_encrypted_folder_api_v1_encrypted_folders_adopt_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CreateIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Adopt Encrypted Folder Api V1 Encrypted Folders Adopt Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Adopt Encrypted Folder",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "shares:manage"
+    ]
+   }
+  },
+  "/api/v1/encrypted-folders/{name}": {
+   "delete": {
+    "description": "Takes a locked folder off ZettNAS; its encrypted files stay in the share.",
+    "operationId": "delete_encrypted_folder_api_v1_encrypted_folders__name__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Delete Encrypted Folder Api V1 Encrypted Folders  Name  Delete",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Delete Encrypted Folder",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "shares:manage"
+    ]
+   }
+  },
+  "/api/v1/encrypted-folders/{name}/lock": {
+   "post": {
+    "operationId": "post_lock_api_v1_encrypted_folders__name__lock_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Lock Api V1 Encrypted Folders  Name  Lock Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Lock",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "files:write",
+     "shares:manage",
+     "shares:user_write",
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/encrypted-folders/{name}/unlock": {
+   "post": {
+    "operationId": "post_unlock_api_v1_encrypted_folders__name__unlock_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PasswordIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Post Unlock Api V1 Encrypted Folders  Name  Unlock Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Unlock",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "files:write",
+     "shares:manage",
+     "shares:user_write",
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/encrypted-folders/{name}/unlock-at-start": {
+   "put": {
+    "operationId": "put_unlock_at_start_api_v1_encrypted_folders__name__unlock_at_start_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StartIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put Unlock At Start Api V1 Encrypted Folders  Name  Unlock At Start Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put Unlock At Start",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "shares:manage"
     ]
    }
   },

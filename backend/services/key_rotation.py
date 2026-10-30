@@ -81,6 +81,9 @@ def rotate_secret_key() -> dict[str, Any]:
     from backend.services.adguard_kids import reseal as reseal_adguard
 
     resealed_backups += reseal_adguard()  # the AdGuard Home password (COMP-13)
+    from backend.services.encrypted_folders import reseal as reseal_encrypted
+
+    resealed_backups += reseal_encrypted()  # kept encrypted-folder passwords (FEAT-13)
 
     os.remove(previous_key_file())
     result = {"rotated_at": time.time(), "mfa_secrets": resealed_mfa, "backup_passphrases": resealed_backups}

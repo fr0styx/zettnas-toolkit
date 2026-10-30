@@ -61,6 +61,10 @@ def bin_for(path: str) -> str | None:
     """The Recycle Bin for `path`: its share's, or the root's for an item at the top. None
     outside the storage roots or inside a bin already."""
     real = os.path.realpath(path)
+    from backend.services import encrypted_index
+
+    if real.startswith(encrypted_index.ROOT + "/"):
+        return encrypted_index.bin_for(real)  # inside the folder, so it stays encrypted (FEAT-13)
     root = root_for(real, config.ALLOWED_BROWSE_ROOTS)
     rel = real[len(root) :].strip("/") if root else ""
     if not root or not rel or BIN in rel.split("/"):

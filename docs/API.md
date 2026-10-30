@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-627 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+634 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -659,6 +659,18 @@ request and response schemas.
 | `GET` | `/api/v1/snapshots/{name}/browse` | any of `backup:read`, `storage:read` | Browse |
 | `POST` | `/api/v1/snapshots/{name}/restore` | any of `backup:manage`, `storage:admin` | Restore |
 | `POST` | `/api/v1/snapshots/{name}/rollback` | any of `backup:manage`, `storage:admin` | Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot |
+
+### Storage
+
+| Method | Path | Access | What it does |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/encrypted-folders` | any of `files:read`, `shares:read`, `shares:user_write`, `storage:read`, `storage:admin` | The encrypted folders in the shares this person can open, and whether this server can |
+| `POST` | `/api/v1/encrypted-folders` | `shares:manage` | Makes one and opens it; the answer carries its recovery key, shown this once |
+| `POST` | `/api/v1/encrypted-folders/adopt` | `shares:manage` | Adds back one whose encrypted files are already in the share |
+| `DELETE` | `/api/v1/encrypted-folders/{name}` | `shares:manage` | Takes a locked folder off ZettNAS; its encrypted files stay in the share |
+| `POST` | `/api/v1/encrypted-folders/{name}/lock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Post Lock |
+| `POST` | `/api/v1/encrypted-folders/{name}/unlock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Post Unlock |
+| `PUT` | `/api/v1/encrypted-folders/{name}/unlock-at-start` | `shares:manage` | Put Unlock At Start |
 
 ### Storage Replication
 

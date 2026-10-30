@@ -16,6 +16,7 @@ from backend.api.chassis import router as chassis_router
 from backend.api.diagnostics import router as diagnostics_router
 from backend.api.docker import router as docker_router
 from backend.api.drives import router as drives_router
+from backend.api.encrypted_folders import router as encrypted_folders_router
 from backend.api.family_filter import router as family_filter_router
 from backend.api.fans import router as fans_router
 from backend.api.file_versions import router as file_versions_router  # noqa: E402
@@ -89,6 +90,7 @@ api_router.include_router(ups_router)
 api_router.include_router(network_router)
 api_router.include_router(replication_router)
 api_router.include_router(family_filter_router)
+api_router.include_router(encrypted_folders_router)
 api_router.include_router(media_router)
 api_router.include_router(sftp_router)
 api_router.include_router(vms_router)
@@ -123,6 +125,7 @@ __all__ = [
     "network_router",
     "replication_router",
     "family_filter_router",
+    "encrypted_folders_router",
     "media_router",
     "sftp_router",
     "vms_router",

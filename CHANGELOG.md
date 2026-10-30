@@ -4,6 +4,15 @@
 
 #### Security
 
+- **Encrypted folders**: Shares -> Encrypted folders makes a folder inside a share whose files
+  are stored encrypted (gocryptfs). Open it with its password and it appears in Files, WebDAV
+  and SFTP for the people who may use that share; lock it, or restart ZettNAS, and only the
+  encrypted files are left. SMB from the host, snapshots and backups only ever see the encrypted
+  files, a file deleted inside goes to the folder's own Recycle Bin, and the AI index skips it.
+  Its recovery key is shown once, when it is made. "Open when ZettNAS starts" keeps the
+  password sealed with this server's key, which is easier and weaker, and says so. A folder
+  taken off ZettNAS keeps its encrypted files in the share and can be added back (FEAT-13).
+
 - **Kids and guests see the desktop, not the machine**: the live stats behind the desktop now
   give accounts without the system view only the server's name, status, storage use and uptime.
   Network addresses, disks, containers, the event log, copies in progress and the

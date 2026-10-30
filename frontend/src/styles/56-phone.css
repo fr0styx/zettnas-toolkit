@@ -143,3 +143,21 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 .mgmt-advanced-row { display: flex; align-items: flex-start; gap: 8px; margin: 12px 8px 4px; padding-top: 10px; border-top: 1px solid var(--track); cursor: pointer; font-size: var(--zn-fs-xs); color: var(--fg); }
 .mgmt-advanced-row small { display: block; color: var(--muted); font-size: var(--zn-fs-xs); line-height: 1.35; margin-top: 2px; }
 .mgmt-sidebar-item[hidden], .mgmt-app-card[hidden] { display: none; }
+
+/* FEAT-13: encrypted folders */
+.ef-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.ef-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 8px 10px; border: 1px solid var(--track); border-radius: 8px; font-size: var(--zn-fs-xs); }
+.ef-where { grid-column: 1; }
+.ef-actions { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.ef-state { font-size: var(--zn-fs-xs); padding: 1px 6px; border-radius: 999px; background: var(--card-hi); }
+.ef-open { color: var(--ok2, #25c2a0); }
+.ef-locked { color: var(--muted); }
+.ef-create { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--track); border-radius: 8px; padding: 10px; font-size: var(--zn-fs-xs); }
+.ef-create .ef-actions { grid-column: auto; grid-row: auto; justify-content: flex-start; }
+.ef-field { display: grid; grid-template-columns: minmax(110px, 30%) 1fr; gap: 8px; align-items: center; }
+.ef-keep { display: inline-flex; gap: 4px; align-items: center; }
+.ef-hint { margin: 0; line-height: 1.4; }
+.ef-adopt { margin-top: 8px; font-size: var(--zn-fs-xs); }
+.ef-recovery { display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--warn, #f5a623); border-radius: 8px; font-size: var(--zn-fs-xs); }
+.ef-key { font-family: var(--font-mono, monospace); word-break: break-all; padding: 6px 8px; background: var(--card-hi); border-radius: 6px; user-select: all; }
+@media (max-width: 600px) { .ef-row { grid-template-columns: 1fr; } .ef-actions { grid-column: 1; grid-row: auto; justify-content: flex-start; } .ef-field { grid-template-columns: 1fr; } }
