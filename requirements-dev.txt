@@ -1,8 +1,10 @@
 -r requirements.txt
-pytest>=9.1.1
-pytest-asyncio>=1.4.0
-pytest-cov>=7.1.0
-ruff>=0.17.2
-pip-audit>=2.10.1
+# exact versions (NARC-10): the same as the local gate's test image, so a new release of a tool
+# can't fail CI with no code change; raise them on purpose, in both places
+pytest==9.2.0
+pytest-asyncio==1.4.1
+pytest-cov==7.1.0
+ruff==0.17.3
+pip-audit==2.10.1
 pyright==1.1.414
 diff-cover==10.6.0

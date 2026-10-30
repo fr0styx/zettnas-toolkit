@@ -45,7 +45,9 @@ jobs:
           # The exact, hash-checked set the image ships, then the test tools (ARCH-13)
           pip install --require-hashes -r requirements.lock
           pip install -r requirements-dev.txt
-          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends restic  # offsite backup restore drill (Batch 6)
+          # restic: the offsite backup restore drill (Batch 6); rclone: the two-way sync tests, which
+          # skip without it (NARC-10)
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends restic rclone
           python scripts/check_lock_versions.py
 
       - name: Known vulnerabilities in the Python dependencies (ARC-32)
@@ -79,7 +81,7 @@ jobs:
         # Failing tests are also posted as an annotation, readable without log access
         run: |
           set -o pipefail
-          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=81 -v -rfE 2>&1 | tee /tmp/zn-unit.log; then
+          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=81 -v -rfEs 2>&1 | tee /tmp/zn-unit.log; then
             body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/zn-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Unit tests::$body"
             exit 1
@@ -113,6 +115,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          fetch-depth: 0 # the changed-lines check compares with the previous commit
 
       - name: Set up Node.js (version from .nvmrc)
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
@@ -128,6 +131,23 @@ jobs:
 
       - name: Run Frontend Tests (Vitest with Coverage)
         run: npm run test:coverage
+
+      # The frontend lines a push or pull request changes are covered by tests too (NARC-10), like
+      # the backend's 80 % check; 60 % to start, as the frontend's floor is lower.
+      - name: Changed frontend lines are tested (diff coverage)
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then BASE=HEAD~1; fi
+          pipx run --spec diff-cover==10.6.0 diff-cover coverage/lcov.info --compare-branch="$BASE" --fail-under=60 \
+            --include 'frontend/src/*.js' 'frontend/src/components/*.js' 'frontend/src/components/**/*.js' \
+            --exclude 'frontend/src/__tests__/*' 'frontend/src/locales/*' \
+            --markdown-report diff-cover-js.md || status=$?
+          cat diff-cover-js.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          if [ "${status:-0}" != 0 ]; then
+            echo "::error title=Changed frontend lines are not tested::Fewer than 60% of the frontend lines this change touches are covered by tests. See the step summary."
+            exit 1
+          fi
 
       - name: Build frontend
         run: npm run build
@@ -404,14 +424,13 @@ jobs:
       # back). Blocking, and run before any tag is published, so a build that breaks updating or
       # rolling back never reaches edge/main (OPS-9, audit batch 1).
       - name: Upgrade and rollback test
-        if: matrix.variant == 'full'
         run: |
           NEW="ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}"
           docker pull -q "$NEW"
           RECENT=$(git ls-remote --tags --refs "https://github.com/${{ github.repository }}" 'v*' \
             | sed 's#.*refs/tags/v##' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1n -k2,2n -k3,3n | tail -2)
           for tag in latest $RECENT; do
-            OLD="ghcr.io/${{ github.repository }}:$tag"
+            OLD="ghcr.io/${{ github.repository }}:$tag${{ matrix.suffix }}"  # core images end in -core (NARC-10)
             docker pull -q "$OLD" || { echo "no image $OLD, skipped"; continue; }
             echo "### from $tag"
             if ! sh scripts/upgrade_rollback_test.sh "$OLD" "$NEW"; then
