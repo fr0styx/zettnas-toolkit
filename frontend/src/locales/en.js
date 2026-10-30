@@ -2522,7 +2522,7 @@ export default {
   "tz.region_pacific": "Pacific",
   "tz.custom": "Other zone (IANA name):",
   "tz.use_zone": "Use it",
-  "tz.undo": "Undo changes",
+  "tz.undo": "Discard changes",
   "tz.save": "Save",
   "tz.auto": "This device's time zone (automatic)",
   "tz.active": "In use",

@@ -62,9 +62,10 @@ describe('File Explorer menu by keyboard (NUX-7)', () => {
     };
     Object.assign(fm, { colName: make(), colType: make(), colSize: make(), colMtime: make(), currentSortBy: 'size', currentSortDir: 'desc' });
     fm.updateSortHeaderUI();
-    expect(fm.colSize.getAttribute('aria-sort')).toBe('descending');
-    expect(fm.colName.getAttribute('aria-sort')).toBe('none');
-    expect(fm.colName.getAttribute('role')).toBe('columnheader');
+    expect(fm.colSize.getAttribute('aria-label')).toBe('Name (Descending)');
+    expect(fm.colSize.getAttribute('aria-pressed')).toBe('true');
+    expect(fm.colName.getAttribute('aria-label')).toBe('Name');
+    expect(fm.colName.getAttribute('role')).toBe('button');
     expect(fm.colName.getAttribute('tabindex')).toBe('0');
     expect(fm.colSize.querySelector('.fm-sort-icon').getAttribute('aria-hidden')).toBe('true');
   });

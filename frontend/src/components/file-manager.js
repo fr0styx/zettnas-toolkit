@@ -3320,11 +3320,16 @@ export class FileManagerWindow {
       const icon = el.querySelector('.fm-sort-icon');
       if (icon) {
         icon.textContent = isCurrent ? (this.currentSortDir === 'asc' ? ' ▲' : ' ▼') : '';
-        icon.setAttribute('aria-hidden', 'true'); // aria-sort says it (NUX-7)
+        icon.setAttribute('aria-hidden', 'true'); // the label says it (NUX-7)
       }
-      el.setAttribute('role', 'columnheader');
+      // a button that sorts, whose name says how: the header row isn't part of a grid, so no
+      // columnheader role (axe: aria-required-parent)
+      el.setAttribute('role', 'button');
       el.setAttribute('tabindex', '0');
-      el.setAttribute('aria-sort', isCurrent ? (this.currentSortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+      const name = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.nodeValue).join('').trim();
+      const dir = this.currentSortDir === 'asc' ? t('fm.sort_asc', 'Ascending') : t('fm.sort_desc', 'Descending');
+      el.setAttribute('aria-label', isCurrent ? `${name} (${dir})` : name);
+      el.setAttribute('aria-pressed', isCurrent ? 'true' : 'false');
     });
   }
 
