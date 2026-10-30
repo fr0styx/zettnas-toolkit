@@ -6,7 +6,7 @@
 //   npm run lint:types -- --list FILE  show the errors in one file
 //   npm run lint:types -- --update     record the lower numbers after a clean-up
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.cwd();
@@ -29,8 +29,14 @@ export function over(now, base) {
 }
 
 function run() {
+  const tsc = join(ROOT, 'node_modules/.bin/tsc');
+  if (!existsSync(tsc)) {
+    // without tsc there is nothing to count, and "0 errors" would pass the gate (NARC-5)
+    console.error('✗ TypeScript is not installed (node_modules/.bin/tsc): the type check did not run.');
+    process.exit(2);
+  }
   try {
-    return execFileSync(join(ROOT, 'node_modules/.bin/tsc'), ['-p', 'jsconfig.json', '--pretty', 'false'], {
+    return execFileSync(tsc, ['-p', 'jsconfig.json', '--pretty', 'false'], {
       encoding: 'utf8',
       maxBuffer: 64 * 1024 * 1024,
     });
@@ -56,12 +62,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   }
   const base = JSON.parse(readFileSync(BASELINE, 'utf8'));
+  const baseTotal = Object.values(base).reduce((a, b) => a + b, 0);
+  if (total === 0 && baseTotal > 100) {
+    // thousands of errors don't vanish at once: tsc didn't really check anything (NARC-5)
+    console.error(`✗ tsc reported no errors at all against a baseline of ${baseTotal}: it did not run properly.`);
+    console.error(out.slice(0, 2000));
+    process.exit(2);
+  }
   const problems = over(now, base);
   for (const p of problems) console.error(`✗ ${p}`);
   if (problems.length) {
     console.error('Add JSDoc types or fix the code; npm run lint:types -- --list <file> shows the errors.');
     process.exit(1);
   }
-  const baseTotal = Object.values(base).reduce((a, b) => a + b, 0);
   console.log(`✓ type errors: ${total} (baseline ${baseTotal}); no file got worse`);
 }

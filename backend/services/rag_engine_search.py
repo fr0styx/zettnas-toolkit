@@ -117,6 +117,15 @@ def _readable_share_names(username: str) -> set[str] | None:
         return None
 
 
+def degraded_text() -> str:
+    """Why a search used words only: the AI pack warming up after an idle stop, or no answer (NAI-1)."""
+    from backend.services import ai_pack
+
+    if ai_pack.warming():
+        return "AI search is warming up; these results match words only for now."
+    return "The AI search model didn't answer; these results match words only."
+
+
 class _SystemPrincipal:
     """ZettNAS itself, for its own background work (indexing checks, maintenance): sees every file."""
 
@@ -724,9 +733,7 @@ class RagSearchMixin:
                 "status": "ok",
                 "query": query,
                 "degraded": search_degraded,
-                "degraded_reason": "The AI search model didn't answer; these results match words only."
-                if search_degraded
-                else "",
+                "degraded_reason": degraded_text() if search_degraded else "",
                 "mode": effective_mode,
                 "match_tab": eff_tab,
                 "sort_by": eff_sort,

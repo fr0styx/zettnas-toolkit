@@ -1381,6 +1381,8 @@ def _turn_call_model(
             with Z_STATE.lock:
                 Z_STATE.ai_accelerator = "gpu"
 
+        done_by_args: dict[tuple[str, str], Any] = {}  # (tool, its arguments) -> result (NAI-5)
+        read_text = False
         while raw_tool_calls and tool_recursions < MAX_TOOL_RECURSIONS:
             tool_recursions += 1
             logger.info(f"[ZettAI] ReAct loop iteration {tool_recursions} executing {len(raw_tool_calls)} tool call(s)")
@@ -1435,21 +1437,14 @@ def _turn_call_model(
                             t_name, {**t_args, "query": q_safe, "_allow_fetch": may_fetch}, principal=principal
                         )
                 else:
-                    already_done = next(
-                        (
-                            tr
-                            for tr in tool_results
-                            if tr.get("tool") == t_name
-                            and (t_name != "calculate" or tr.get("expression") == t_args.get("expression"))
-                        ),
-                        None,
-                    )
-                    if already_done:
-                        t_res = already_done
-                    else:
-                        t_res = execute_nas_tool(t_name, t_args, principal=principal)
-                        tool_results.append(t_res)
-                        tools_called.append(t_name)
+                    key = (t_name, json.dumps(t_args, sort_keys=True, default=str))
+                    if key not in done_by_args:  # the same tool with other arguments runs again (NAI-5)
+                        done_by_args[key] = execute_nas_tool(t_name, t_args, principal=principal)
+                    t_res = done_by_args[key]
+                if not any(tr is t_res for tr in tool_results):
+                    tool_results.append(t_res)  # every result reaches the trace: Confirm buttons too (NAI-4)
+                    tools_called.append(t_name)
+                read_text = read_text or t_name in ("search_nas_knowledge", "browse_internet")
 
                 llm_messages.append(
                     {
@@ -1465,7 +1460,8 @@ def _turn_call_model(
                     active_model=active_model,
                     llm_endpoint=llm_endpoint,
                     messages=llm_messages,
-                    tools=llm_tools,
+                    # after reading files or the web, no tools: their text can't steer a tool (NAI-6)
+                    tools=None if read_text else llm_tools,
                 )
             )
     finally:

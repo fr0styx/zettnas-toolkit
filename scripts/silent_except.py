@@ -19,8 +19,9 @@ def silent_handlers(path):
         src = f.read()
     try:
         tree = ast.parse(src)
-    except SyntaxError:
-        return []
+    except SyntaxError as e:
+        # a file this can't read isn't a file without silent handlers (NARC-5)
+        raise SystemExit(f"silent_except: can't parse {path}: {e}") from e
     out = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ExceptHandler) and len(node.body) == 1 and isinstance(node.body[0], ast.Pass):

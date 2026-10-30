@@ -116,6 +116,9 @@ def _one_reembed_at_a_time(fn: Any) -> Any:
     @functools.wraps(fn)
     async def wrapper(self: Any, *args: Any, **kwargs: Any) -> dict[str, Any]:
         if not self._reembed_lock.acquire(blocking=False):
+            if getattr(self, "_reembed_keep", None) is not None:
+                self._text_upgrade_stop = True  # the nightly one makes way for this one (NAI-7)
+                return {"status": "busy", "message": "The nightly re-embed is stopping. Start this again in a minute."}
             return {"status": "busy", "message": "A re-embed is already running."}
         try:
             return await fn(self, *args, **kwargs)
@@ -127,6 +130,17 @@ def _one_reembed_at_a_time(fn: Any) -> Any:
 
 class RagLearningMixin:
     """Standby-safe learning, the deferred queue, sync control and re-embedding for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
+
+    # set by the nightly text upgrade: it re-embeds only while this says so (NAI-7)
+    _reembed_keep: Any = None
+    _reembed_why = ""
+
+    def _reembed_go(self) -> bool:
+        keep = self._reembed_keep
+        if keep is None or keep():
+            return True
+        self._reembed_why = "Paused: it goes on tonight, in the hours set for it."
+        return False
 
     @_one_reembed_at_a_time
     async def in_place_reembed_collection(
@@ -201,11 +215,9 @@ class RagLearningMixin:
                 ).fetchall()
             finally:
                 c.close()
+            mk = chunk_embedding_text
             return [
-                (
-                    int(r["chunk_id"]),
-                    chunk_embedding_text(r["doc_title"], r["file_name"] or "", dict(r), r["file_ext"] or ""),
-                )
+                (int(r["chunk_id"]), mk(r["doc_title"], r["file_name"] or "", dict(r), r["file_ext"] or ""))
                 for r in rows
             ]
 
@@ -254,6 +266,8 @@ class RagLearningMixin:
                 rows = texts_for(ids[i : i + 256])
                 for j in range(0, len(rows), batch_size):
                     part = rows[j : j + batch_size]
+                    if not self._reembed_go():
+                        return False  # the nightly upgrade outside its hours, or asked to stop (NAI-7)
                     while True:
                         blobs = await asyncio.to_thread(
                             _core().compute_neural_embeddings_batch,
@@ -294,7 +308,7 @@ class RagLearningMixin:
             if not ids:
                 break
             if not await embed_and_stage(ids):
-                msg = f"Paused: '{target_model}' stopped answering. Start the re-embed again to continue."
+                msg = self._reembed_why or f"Paused: '{target_model}' stopped answering. Start it again to continue."
                 report("paused", message=msg)
                 return {"status": "paused", "total": total, "completed": staged_count(), "message": msg}
 
@@ -302,7 +316,7 @@ class RagLearningMixin:
         with self._write_lock:
             late = pending_ids()
             if late and not await embed_and_stage(late):
-                msg = f"Paused: '{target_model}' stopped answering. Start the re-embed again to continue."
+                msg = self._reembed_why or f"Paused: '{target_model}' stopped answering. Start it again to continue."
                 report("paused", message=msg)
                 return {"status": "paused", "total": total, "completed": staged_count(), "message": msg}
             w = self._get_conn(readonly=False)
@@ -1180,6 +1194,10 @@ class RagLearningMixin:
         progress: dict[str, Any] = {"status": "running", "reason": "embedding_text", "completed": 0, "total": 0}
         self.text_upgrade_progress = progress
 
+        self._text_upgrade_stop = False
+        self._reembed_why = ""
+        self._reembed_keep = lambda: upgrade_window_open() and not self._text_upgrade_stop
+
         def run() -> None:
             try:
                 res = asyncio.run(
@@ -1196,6 +1214,8 @@ class RagLearningMixin:
             except (OSError, RuntimeError, ValueError, sqlite3.Error) as e:
                 logger.warning("[RAG] The nightly re-embed stopped: %s", e)
                 progress["status"] = "error"
+            finally:
+                self._reembed_keep = None
 
         logger.info("[RAG] Re-embedding the index as clean chunk text (AI-41), from the index, no disk reads")
         self._text_upgrade_thread = threading.Thread(target=run, daemon=True, name="RagTextUpgrade")

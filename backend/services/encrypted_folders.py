@@ -106,6 +106,26 @@ def _run(args: list[str], password: str) -> tuple[int, str]:
     return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
+def _master_key(cipher: str, password: str) -> str:
+    """The folder's master key, its recovery key: gocryptfs -init shows it only on a terminal
+    ("suppressing master key display"), so gocryptfs-xray reads it with the password (NREL-1).
+    In groups of eight, as gocryptfs -masterkey takes it."""
+    from backend.proc import run_bounded
+
+    exe = shutil.which("gocryptfs-xray")
+    if not exe:
+        return ""
+    conf = os.path.join(cipher, "gocryptfs.conf")
+    r = run_bounded(
+        [exe, "-dumpmasterkey", conf], timeout=TOOL_SECS, input=password + "\n", capture_output=True, text=True
+    )
+    raw = (r.stdout or "").strip().lower()
+    if r.returncode != 0 or not re.fullmatch(r"[0-9a-f]{64}", raw):
+        logger.warning("[Encrypted folders] the recovery key couldn't be read for %s", os.path.basename(cipher))
+        return ""
+    return "-".join(raw[i : i + 8] for i in range(0, 64, 8))
+
+
 def _mount(cipher: str, plain: str, password: str, read_only: bool = False) -> None:
     os.makedirs(plain, exist_ok=True)
     # no -nosyslog: the mount runs on in the background, and with it the background process would
@@ -149,7 +169,7 @@ def create(share: str, name: str, password: str, unlock_at_start: bool = False) 
     code, out = _run(["-init", cipher], password)  # not -q: it prints the master key
     if code != 0:
         raise EncryptedFolderError(f"The folder couldn't be made: {out.strip()[:200] or code}")
-    key = MASTER_KEY_RE.search(re.sub(r"\s+", "", out))  # it is printed over two lines (NREL-1)
+    key = MASTER_KEY_RE.search(re.sub(r"\s+", "", out))  # printed only on a terminal: see _master_key
     s["folders"][name] = {
         "share": share,
         "created": time.time(),
@@ -158,7 +178,8 @@ def create(share: str, name: str, password: str, unlock_at_start: bool = False) 
     atomic_write_json(ei.SETTINGS_FILE, s)
     _mount(cipher, plain_path(name), password)
     logger.info("[Encrypted folders] %s made in %s", name, share)
-    return {"name": name, "path": plain_path(name), "recovery_key": key.group(1) if key else ""}
+    recovery = key.group(1) if key else _master_key(cipher, password)
+    return {"name": name, "path": plain_path(name), "recovery_key": recovery}
 
 
 @json_locked(lambda *a, **k: ei.SETTINGS_FILE)

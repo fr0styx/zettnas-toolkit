@@ -354,3 +354,28 @@ def test_the_kernel_mount_list_is_read(tmp_path, monkeypatch):
         "builtins.open", lambda p, *a, **k: real_open(mounts if p == "/proc/self/mounts" else p, *a, **k)
     )
     assert fsutil.open_encrypted() == {"/mnt/encrypted/My Taxes"}
+
+
+def test_the_recovery_key_comes_from_xray_when_init_hides_it(box, monkeypatch):
+    """gocryptfs -init prints "suppressing master key display" when not on a terminal (seen on the
+    real binary): the key is read with gocryptfs-xray instead (NREL-1)."""
+    import subprocess as sp
+
+    def init_quiet(args, password):
+        out = box.run(args, password)
+        return (0, "Not running on a terminal, suppressing master key display") if "-init" in args else out
+
+    monkeypatch.setattr(ef, "_run", init_quiet)
+    monkeypatch.setattr(ef.shutil, "which", lambda name: "/usr/bin/" + name)
+    seen = {}
+
+    def xray(cmd, **kw):
+        if cmd[0].endswith("gocryptfs-xray"):
+            seen.update(cmd=cmd, input=kw.get("input"))
+            return sp.CompletedProcess(cmd, 0, "0123abcd" * 8 + "\n", "")
+        return box.fusermount(cmd, **kw)
+
+    monkeypatch.setattr("backend.proc.run_bounded", xray)
+    out = ef.create("Family", "Quiet", "correct horse battery staple")
+    assert out["recovery_key"] == KEY
+    assert seen["cmd"][1] == "-dumpmasterkey" and seen["input"] == "correct horse battery staple\n"

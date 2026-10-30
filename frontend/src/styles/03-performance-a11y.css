@@ -61,7 +61,6 @@ body.lcd-direct.lcd-theme-amber {
   --fg: #fef3c7;
   --muted: #a67c29;
   --ok: #ffbe40;
-  --ok2: #e09b20;
   --warn: #ff8c00;
   --crit: #e63946;
   --track: #2a1f0a;
@@ -78,7 +77,6 @@ body.lcd-direct.lcd-theme-emerald {
   --fg: #e6fced;
   --muted: #38b56f;
   --ok: #3bf58b;
-  --ok2: #24d673;
   --warn: #eab308;
   --crit: #ef4444;
   --track: #0e331f;
@@ -95,7 +93,6 @@ body.lcd-direct.lcd-theme-sapphire {
   --fg: #f0f7ff;
   --muted: #6482a6;
   --ok: #38bdf8;
-  --ok2: #0ea5e9;
   --warn: #f59e0b;
   --crit: #ef4444;
   --track: #15263d;
@@ -112,7 +109,6 @@ body.lcd-direct.lcd-theme-amethyst {
   --fg: #fbf7ff;
   --muted: #b399cf;
   --ok: #c084fc;
-  --ok2: #a855f7;
   --warn: #fb923c;
   --crit: #f43f5e;
   --track: #26163d;
@@ -129,7 +125,6 @@ body.lcd-direct.lcd-theme-crimson {
   --fg: #fff1f2;
   --muted: #c48995;
   --ok: #fb7185;
-  --ok2: #f43f5e;
   --warn: #f59e0b;
   --crit: #ef4444;
   --track: #36141e;
@@ -163,7 +158,6 @@ body.lcd-direct.lcd-theme-yak {
   --fg: #eaf1f8;
   --muted: #7b9483;
   --ok: #e6a254;
-  --ok2: #d48a37;
   --warn: #e07a38;
   --crit: #e63946;
   --track: #17291c;

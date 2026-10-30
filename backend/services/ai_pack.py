@@ -314,8 +314,16 @@ def use_pack(engine: Any) -> dict[str, Any]:
 
 WARM_TIMEOUT_SECS = 180.0
 RUNNING_CACHE_SECS = 15.0
+NOT_READY_SECS = 60.0  # a pack that didn't come up isn't waited for again for this long (NAI-1)
 _LAST_USE = {"at": time.monotonic()}
 _RUNNING = {"at": -1e9, "value": False}
+_STARTED = {"at": -1e9}
+_NOT_READY = {"at": -1e9}
+
+
+def warming(clock=time.monotonic) -> bool:
+    """The pack was started for a request and hasn't answered yet: a search says "warming up"."""
+    return clock() - _STARTED["at"] < WARM_TIMEOUT_SECS and not _RUNNING["value"]
 
 
 def mark_used() -> None:
@@ -332,26 +340,36 @@ def _ours_running() -> tuple[bool, bool]:
     return ours, running
 
 
-def wake_for(url: str | None, sleep=time.sleep, clock=time.monotonic) -> bool:
+def wake_for(url: str | None, sleep=time.sleep, clock=time.monotonic, wait: float | None = None) -> bool:
     """Before a request to url: when it is the pack and the pack was stopped for idling, start it
-    and wait until its models are loaded. True when the pack answers (or url isn't the pack)."""
+    and wait until its models are loaded, at most `wait` seconds (a search passes what its own
+    deadline leaves; indexing waits the full warm-up). True when the pack answers (or url isn't
+    the pack). A search never waits minutes for a pack that is warming up or broken (NAI-1)."""
     if not url or f"//{CONTAINER}:" not in url:
         return True
     mark_used()
     if clock() - _RUNNING["at"] < RUNNING_CACHE_SECS and _RUNNING["value"]:
         return True
+    limit = WARM_TIMEOUT_SECS if wait is None else max(0.0, min(wait, WARM_TIMEOUT_SECS))
+    if wait is not None and clock() - _NOT_READY["at"] < NOT_READY_SECS:
+        limit = 0.0  # it didn't come up a moment ago: don't hold this search for it
     ours, running = _ours_running()
     if not ours:
         return True  # not ours to start: the request goes as it would have
     if not running:
         logger.info("[AI pack] starting the AI container for a request (warming up)")
         _docker("POST", f"/containers/{CONTAINER}/start")
-    deadline = clock() + WARM_TIMEOUT_SECS
-    while clock() < deadline:
+        _STARTED["at"] = clock()
+    deadline = clock() + limit
+    while True:
         if models_ready():
             _RUNNING.update(at=clock(), value=True)
             return True
+        if clock() + 2.0 > deadline:
+            break
         sleep(2.0)
+    if limit >= WARM_TIMEOUT_SECS:
+        _NOT_READY["at"] = clock()  # waited the whole warm-up: broken, not warming
     return False
 
 

@@ -44,6 +44,7 @@ describe('UX-33: every theme is readable and its status colours mean the same', 
 
     it(`${name}: OK and critical are clearly different colours`, () => {
       expect(hueGap(t.ok, t.crit)).toBeGreaterThanOrEqual(60);
+      expect(hueGap(t.ok2, t.crit)).toBeGreaterThanOrEqual(60); // "healthy" is never red-ish (NUX-4)
       expect(hueGap(t.warn, t.crit)).toBeGreaterThanOrEqual(20);
     });
   }
@@ -51,7 +52,7 @@ describe('UX-33: every theme is readable and its status colours mean the same', 
   it('accent themes keep the standard status colours', () => {
     for (const [name, t] of Object.entries(themes)) {
       if (name === 'light' || name === 'default') continue;
-      expect([t.ok, t.warn, t.crit]).toEqual([root.ok, root.warn, root.crit]);
+      expect([t.ok, t.ok2, t.warn, t.crit]).toEqual([root.ok, root.ok2, root.warn, root.crit]); // NUX-4: ok2 too
     }
   });
 

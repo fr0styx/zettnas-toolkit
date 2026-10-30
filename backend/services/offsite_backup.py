@@ -358,8 +358,29 @@ def _progress(job_id: str, msg: dict[str, Any], done_key: str) -> None:
     job_manager.update(job_id, percent=round(float(pct) * 100, 1), detail=detail)
 
 
+# Folders under these hold one mounted disk each (Unraid Unassigned Devices, ZettOS): a backup there
+# needs that disk, not a folder made inside the container in its place (NREL-11)
+DISK_PARENTS = ("/mnt/disks", "/mnt/remotes", "/mnt/addons")
+
+
+def disk_missing(location: str) -> str | None:
+    """Why a folder destination's disk isn't there, or None. Checks the mount table only, so no
+    disk is woken."""
+    real = os.path.normpath(location)
+    for parent in DISK_PARENTS:
+        if real.startswith(parent + "/"):
+            top = os.path.join(parent, real[len(parent) + 1 :].split("/")[0])
+            if not os.path.ismount(top):
+                return f"The disk for this backup ({top}) isn't connected. Plug it in and try again."
+    return None
+
+
 def init(repo_id: str) -> dict[str, Any]:
     repo = get_repo(repo_id)
+    if repo["location"].startswith("/"):
+        missing = disk_missing(repo["location"])
+        if missing:
+            raise ResticError(missing)
     os.makedirs(KEY_DIR, mode=0o700, exist_ok=True)
     key = _key_file(repo_id)
     if not os.path.exists(key):
@@ -478,6 +499,9 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
     """Backs up the repository's folders, then applies the retention rules. Files that could not
     be read (restic exit 3) leave a backup of everything else and a warning, not a failure."""
     repo = get_repo(repo_id)
+    missing = disk_missing(repo["location"]) if repo["location"].startswith("/") else None
+    if missing:
+        raise ResticError(missing)  # not a backup into the container where the disk should be (NREL-11)
     if not repo.get("initialized"):
         init(repo_id)
     from backend.services.jobs import job_manager

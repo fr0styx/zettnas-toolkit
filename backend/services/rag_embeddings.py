@@ -494,7 +494,7 @@ def compute_neural_embedding_via_ollama(
         """This request's timeout: the full one, or what the caller's deadline leaves (AI-27)."""
         return timeout if deadline is None else min(timeout, deadline - time.monotonic())
 
-    _wake(target_host)
+    _wake(target_host, None if deadline is None else deadline - time.monotonic())
     if is_openai_host(target_host):  # an OpenVINO Model Server or another OpenAI-style server (AI-40)
         candidates = []
         if _left() >= 0.2:
@@ -571,12 +571,19 @@ _EMBED_MODEL_SEEN: dict[str, str] = {}  # configured name -> name the runtime ac
 EMBED_BATCH_SIZE = 32
 
 
-def _wake(host: str | None) -> None:
-    """The AI pack may be stopped for idling: start it before asking it (AI-40)."""
+def _wake(host: str | None, wait: float | None = None) -> None:
+    """The AI pack may be stopped for idling: start it before asking it (AI-40), waiting no longer
+    than `wait` when the request has a deadline (NAI-1)."""
     if host and "//zettnas-ai:" in host:
         from backend.services import ai_pack
 
-        ai_pack.wake_for(host)
+        ai_pack.wake_for(host, wait=wait)
+
+
+def _pack_warming() -> bool:
+    from backend.services import ai_pack
+
+    return ai_pack.warming()
 
 
 def is_openai_host(host: str | None) -> bool:
@@ -768,7 +775,8 @@ def compute_multimodal_query_embedding(
                     )
                     if res is not None:
                         break
-            if res is None:
+            if res is None and not _pack_warming():
+                # a pack that is warming up isn't stuck: the next search tries it again (NAI-1)
                 _EMBED_BREAKER["until"] = max(_EMBED_BREAKER["until"], time.time() + QUERY_BREAKER_SECS)
         if res is not None:
             _, vec = res

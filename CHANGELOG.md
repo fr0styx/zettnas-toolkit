@@ -62,6 +62,9 @@
 
 #### Usability
 
+- **Healthy is green in every theme**: the Crimson theme showed healthy drives and running apps
+  in red, and other accent themes in purple, blue or amber; the healthy colour now stays green
+  everywhere, on the front screen too (NUX-4).
 - **An office suite in the App Catalog**: "Office suite (Nextcloud + Collabora)" installs
   Nextcloud with Collabora's built-in office server, so documents, spreadsheets and
   presentations open and are edited in the browser, by several people at once. The family signs
@@ -221,6 +224,16 @@
 
 #### AI
 
+- **The first search after a quiet spell doesn't hang**: when the AI pack had stopped for
+  idling, a search could wait up to three minutes for it. It now waits only a few seconds,
+  shows "AI search is warming up" with word matches meanwhile, and the next search uses the
+  model as soon as it is ready (NAI-1).
+- **Zetty's tools behave**: a container action it proposes always shows its Confirm button,
+  asking about two places gets two answers, and after reading files or web pages it can't call
+  more tools in the same answer (NAI-4, NAI-5, NAI-6).
+- **The nightly re-embed keeps to the night**: it stops at the end of its hours and goes on the
+  next night, and a re-embed you start from AI settings takes over (NAI-7).
+
 - **Search finds the right file more often, and faster**: compared with DigUp, which uses the
   same EmbeddingGemma 2, three things held our results back and are fixed. Each piece of a
   document was embedded together with a "[Folder: .. | Doc: ..]" label, which made them all look
@@ -291,6 +304,10 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **No backup into thin air**: a backup to a USB disk that isn't plugged in now fails with
+  "the disk isn't connected" instead of writing into the container, where it would be lost
+  (NREL-11).
 
 - **A database that can't be opened is left alone**: at start, ZettNAS took a database it
   couldn't open (for example after a permission change) for a damaged one and replaced it with an
