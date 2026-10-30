@@ -1048,8 +1048,8 @@ export class FmContextMenu {
     // every label in the person's language, keys as their keyboard has them (NUX-7)
     let itemsHtml = [
       group([
-        fileItem && !isDir && it('preview', '👁️', t('fm.ctx_preview', 'Quick look'), t('fm.key_space', 'Space')),
-        fileItem && isDir && it('open', '📂', t('fm.ctx_open', 'Open'), t('fm.key_enter', 'Enter')),
+        fileItem && !isDir && it('preview', '👁️', t('fm.ctx_preview', 'Quick look'), t('fm.kbd_space', 'Space')),
+        fileItem && isDir && it('open', '📂', t('fm.ctx_open', 'Open'), t('fm.kbd_enter', 'Enter')),
         fileItem && fileItem.trash_id && it('restore', '↩️', t('fm.restore', 'Restore')),
         it('new-window', '🪟', t('fm.ctx_new_window', 'Open in a new window')),
       ]),
@@ -1075,8 +1075,8 @@ export class FmContextMenu {
       !fileItem ? `${line}${sortMenuHtml(this.fm.currentSortBy, this.fm.currentSortDir)}` : '',
       line,
       group([
-        hasSelection && it('trash', '🗑️', t('fm.ctx_to_bin', 'Move to the Recycle Bin'), t('fm.key_delete', 'Delete'), 'text-danger'),
-        hasSelection && it('delete-perm', '⚠️', t('fm.ctx_delete_forever', 'Delete permanently'), t('fm.key_shift_delete', 'Shift+Delete'), 'text-danger'),
+        hasSelection && it('trash', '🗑️', t('fm.ctx_to_bin', 'Move to the Recycle Bin'), t('fm.kbd_delete', 'Delete'), 'text-danger'),
+        hasSelection && it('delete-perm', '⚠️', t('fm.ctx_delete_forever', 'Delete permanently'), t('fm.kbd_shift_delete', 'Shift+Delete'), 'text-danger'),
       ]),
     ].join('');
     this._returnFocus = /** @type {HTMLElement | null} */ (document.activeElement);
