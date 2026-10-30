@@ -79,6 +79,12 @@ def test_a_running_transfer_is_saved_and_comes_back_interrupted(root, tmp_path, 
     assert _TRANSFER_STATUS["interrupted"] == "error"
     gate.set()
     assert _wait(manager, task.id)["status"] == "completed"
+    # the file is written right after the status changes in memory: wait for it, don't race it
+    deadline = time.time() + 10
+    while time.time() < deadline:
+        if json.loads((tmp_path / "transfers.json").read_text())["tasks"][-1]["status"] == "completed":
+            break
+        time.sleep(0.05)
     assert json.loads((tmp_path / "transfers.json").read_text())["tasks"][-1]["status"] == "completed"
 
 
