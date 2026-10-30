@@ -48,7 +48,7 @@ def test_recovery_codes_generation_and_hashing():
         assert len(c) == 9  # xxxx-xxxx
         assert "-" in c
         h = hash_recovery_code(c)
-        assert len(h) == 64  # SHA-256 hex string
+        assert h.startswith(("$argon2", "scrypt$"))  # hashed like a password, not a fast hash
 
 
 def test_generate_qr_svg_structure():

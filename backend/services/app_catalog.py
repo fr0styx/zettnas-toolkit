@@ -1126,6 +1126,29 @@ def share_folder_paths(app: dict[str, Any], picks: dict[str, str] | None) -> tup
     return {k: mounts[v] for k, v in picks.items()}, None
 
 
+def app_dir_for(storage_root: str, slug: str) -> tuple[str, str]:
+    """The folder an app keeps its data in, under the folder asked for, or why it can't be
+    (CodeQL path injection): an absolute folder outside the system folders and outside
+    ZettNAS's own data and install folders, since it is mounted into the app read-write.
+    There is no fallback: a folder that can't be made is an error."""
+    from backend.fsutil import is_protected
+    from backend.services.samba_engine import FORBIDDEN_PREFIXES
+
+    raw = (storage_root or "").strip()
+    if not os.path.isabs(raw) or any(c in raw for c in "\x00\r\n"):
+        return "", "Choose a full folder path for the app's data, such as /mnt/user/appdata."
+    root = os.path.realpath(raw)
+    app_dir = os.path.realpath(os.path.join(root, slug))
+    system = root == "/" or any(root == p or root.startswith(p + "/") for p in FORBIDDEN_PREFIXES)
+    if system or is_protected(root) or is_protected(app_dir) or not app_dir.startswith(root.rstrip("/") + "/"):
+        return "", f"Apps can't keep their data in {raw}: it is a system folder or ZettNAS's own."
+    try:
+        os.makedirs(app_dir, exist_ok=True)
+    except OSError as e:
+        return "", f"The folder {app_dir} couldn't be made: {e.strerror or e}"
+    return app_dir, ""
+
+
 def app_binds(app: dict[str, Any], app_dir: str, on_shares: dict[str, str]) -> list[str]:
     """Binds for the app's folders: a share picked at install, the media share, or its own folder."""
     library = media_library_bind(app)
@@ -1393,12 +1416,10 @@ def stream_deploy_catalog_app(
         "done": False,
     }
 
-    resolved_root = storage_root
-    try:
-        os.makedirs(resolved_root, exist_ok=True)
-    except Exception:
-        resolved_root = os.environ.get("DATA_DIR", "/tmp/zettnas-appdata")
-        os.makedirs(resolved_root, exist_ok=True)
+    app_dir, root_problem = app_dir_for(storage_root, storage_slug)
+    if root_problem:
+        yield {"step": "error", "percent": 0, "message": root_problem, "error": "Unsafe folder", "done": True}
+        return
 
     on_shares, bad_share = share_folder_paths(app, share_folders)
     if bad_share:
@@ -1415,7 +1436,6 @@ def stream_deploy_catalog_app(
         }
         return
 
-    app_dir = os.path.join(resolved_root, storage_slug)
     binds = []
     try:
         os.makedirs(app_dir, exist_ok=True)
@@ -1424,7 +1444,7 @@ def stream_deploy_catalog_app(
         _own_volumes(app, app_dir)
 
         comp_info = generate_compose_for_app(
-            app_id, port, resolved_root, service_name, volume_overrides=on_shares or None
+            app_id, port, os.path.dirname(app_dir), service_name, volume_overrides=on_shares or None
         )
         if "compose_yaml" in comp_info:
             compose_file = os.path.join(app_dir, "docker-compose.yml")
@@ -1665,9 +1685,9 @@ def stream_deploy_catalog_app(
             if os.path.exists(compose_file):
                 with open(compose_file, encoding="utf-8") as f:
                     filled = _fill_secrets(f.read(), secrets_map)
-                with open(compose_file, "w", encoding="utf-8") as f:
-                    f.write(filled)
-                os.chmod(compose_file, 0o600)
+                from backend.fsutil import atomic_write_text
+
+                atomic_write_text(compose_file, filled, mode=0o600)  # never readable with its secrets
         except OSError:
             logger.debug("app_catalog: compose file not updated", exc_info=True)
 

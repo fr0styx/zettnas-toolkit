@@ -202,7 +202,13 @@ def stream_install(preset: str | None = None, storage_root: str = "/mnt/user/app
     if not ok:
         yield {"step": "error", "percent": 0, "message": f"Could not download {IMAGE}: {err}", "done": True}
         return
-    models_dir = os.path.join(storage_root, CONTAINER, "models")
+    from backend.services.app_catalog import app_dir_for
+
+    app_dir, problem = app_dir_for(storage_root, CONTAINER)  # not a system or ZettNAS folder
+    if problem:
+        yield {"step": "error", "percent": 0, "message": problem, "done": True}
+        return
+    models_dir = os.path.join(app_dir, "models")
     os.makedirs(models_dir, exist_ok=True)
     try:
         os.chown(models_dir, OVMS_UID, OVMS_UID)

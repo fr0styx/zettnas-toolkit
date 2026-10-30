@@ -125,10 +125,29 @@ def normalize_recovery_code(code: str) -> str:
     return code.strip().replace("-", "").replace(" ", "").lower()
 
 
+def _recovery_material(code: str) -> str:
+    return f"zettnas:recovery:{normalize_recovery_code(code)}"
+
+
 def hash_recovery_code(code: str) -> str:
-    """Hash a normalized recovery code using SHA-256 with domain separation."""
-    normalized = normalize_recovery_code(code)
-    return hashlib.sha256(f"zettnas:recovery:{normalized}".encode()).hexdigest()
+    """A recovery code hashed like a password (Argon2id): a code has about 40 bits, which a fast
+    hash would give up in minutes to anyone holding the user database (CodeQL weak hashing)."""
+    from backend.passwords import hash_password
+
+    return hash_password(_recovery_material(code))
+
+
+def _legacy_recovery_hash(code: str) -> str:
+    """How codes made before were stored (SHA-256); still accepted, and replaced when used."""
+    return hashlib.sha256(_recovery_material(code).encode()).hexdigest()
+
+
+def _recovery_matches(stored: str, code: str) -> bool:
+    from backend.passwords import verify_password
+
+    if len(stored) == 64 and all(ch in "0123456789abcdef" for ch in stored):
+        return hmac.compare_digest(stored, _legacy_recovery_hash(code))
+    return verify_password(_recovery_material(code), stored)
 
 
 def verify_and_consume_recovery_code(
@@ -142,10 +161,9 @@ def verify_and_consume_recovery_code(
     if not candidate_code or not stored_hashes:
         return False, stored_hashes
 
-    candidate_hash = hash_recovery_code(candidate_code)
     matched_idx = None
     for idx, stored in enumerate(stored_hashes):
-        if hmac.compare_digest(stored, candidate_hash):
+        if _recovery_matches(str(stored), candidate_code):
             matched_idx = idx
             break
 

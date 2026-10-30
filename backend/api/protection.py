@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from backend.api.storage import PoolId
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.confirmations import confirm_or_raise
 from backend.services import protection_jobs
@@ -25,7 +26,7 @@ async def list_protection_jobs() -> dict[str, Any]:
 
 @router.put("/protection/scrub/{pool_id}", dependencies=[Depends(require_scope("storage:admin"))])
 async def set_monthly_scrub(
-    pool_id: str,
+    pool_id: PoolId,
     req: ScrubSwitch,
     request: Request,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),

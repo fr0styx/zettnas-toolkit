@@ -4,6 +4,19 @@
 
 #### Security
 
+- **Code scanning findings checked** (CodeQL, 289 open on main): the real ones are fixed here:
+  - an app's data folder can't be a system folder or ZettNAS's own data or install folder, and
+    a folder that can't be made stops the install instead of quietly using ZettNAS's data folder;
+  - a pool name in an address can't start with a dash, so it can't be read as a zpool option
+    (`-a` would have exported every pool);
+  - a pool's new name is one folder name: a name with `../` could have moved the pool's folder;
+  - importing a pool takes a plain pool name and mounts it only under /mnt, /srv or /media, never
+    over a system folder or ZettNAS's own; a virtual machine's id in an address is checked too;
+  - two-factor recovery codes are stored like passwords (Argon2id), not with a fast hash; codes
+    saved before still work;
+  - a filled-in app compose file is written with its final permissions, never readable in between;
+  - paths in one log line can't add forged lines.
+
 - **Password guessing over SFTP blocks the address**: failed SFTP sign-ins now count against the
   address they came from, as they do for the web and WebDAV, so trying many accounts from one
   place gets it blocked (NSEC-15).

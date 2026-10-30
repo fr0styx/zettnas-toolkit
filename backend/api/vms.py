@@ -16,9 +16,9 @@ import threading
 import time
 import urllib.request
 import uuid
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -31,6 +31,9 @@ from backend.ignored_errors import ignored
 from backend.logging_config import in_this_request
 from backend.services.vm_engine import QmpEngine
 from backend.state import Z_STATE, add_event
+
+# A VM id in an address, as the store makes them: it is used in folder names (CodeQL path injection)
+VmId = Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
 
 router = APIRouter(prefix="/vms", tags=["Virtual Machines"])
 
@@ -785,7 +788,7 @@ async def delete_virtual_machine_backup(backup_id: str):
 
 
 @router.get("/{vm_id}", dependencies=[Depends(require_scope("system:view", "storage:read"))])
-def get_vm_detail(vm_id: str):
+def get_vm_detail(vm_id: VmId):
     """Retrieves detailed virtual machine configuration, attachments, and runtime state."""
     vms = vm_qemu._load_vms()
     target = next((v for v in vms if v["id"] == vm_id), None)
@@ -811,7 +814,7 @@ def get_vm_detail(vm_id: str):
 @router.put("/{vm_id}", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 @router.patch("/{vm_id}", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def update_vm(
-    vm_id: str,
+    vm_id: VmId,
     req: VmUpdateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
@@ -882,7 +885,7 @@ def update_vm(
 
 @router.get("/{vm_id}/connection-info", dependencies=[Depends(require_scope("system:view", "storage:read"))])
 def get_vm_connection_info(
-    vm_id: str,
+    vm_id: VmId,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Returns multi-protocol access credentials (SSH, VNC, Web Console) for a target VM."""
@@ -923,7 +926,7 @@ def get_vm_connection_info(
     "/{vm_id}/console/token", dependencies=[Depends(require_scope("vms:write", "vms:manage", "system:config"))]
 )
 def create_console_token(
-    vm_id: str,
+    vm_id: VmId,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Issues single-use ephemeral ticket for noVNC / serial console WebSocket streaming."""
@@ -1028,7 +1031,7 @@ def _ws_credential(websocket: WebSocket) -> tuple[str | None, bool]:
 
 
 @router.websocket("/{vm_id}/console/ws")
-async def websocket_vm_console(websocket: WebSocket, vm_id: str):
+async def websocket_vm_console(websocket: WebSocket, vm_id: VmId):
     """WebSocket proxy bridging browser to QEMU RFB VNC display socket."""
     ticket, is_cookie_auth = _ws_credential(websocket)
     if not _validate_console_ticket(ticket, vm_id):
@@ -1062,7 +1065,7 @@ async def websocket_vm_console(websocket: WebSocket, vm_id: str):
 
 
 @router.websocket("/{vm_id}/serial/ws")
-async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
+async def websocket_vm_serial(websocket: WebSocket, vm_id: VmId):
     """WebSocket proxy bridging browser to QEMU serial PTY / UNIX domain socket."""
     ticket, is_cookie_auth = _ws_credential(websocket)
     if not _validate_console_ticket(ticket, vm_id):
@@ -1102,7 +1105,7 @@ async def websocket_vm_serial(websocket: WebSocket, vm_id: str):
 
 @router.post("/{vm_id}/action", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def execute_vm_action(
-    vm_id: str,
+    vm_id: VmId,
     req: VmActionRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
@@ -1186,7 +1189,7 @@ async def execute_vm_action(
 
 @router.post("/{vm_id}/start", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def start_vm(
-    vm_id: str,
+    vm_id: VmId,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Starts the target virtual machine."""
@@ -1195,7 +1198,7 @@ async def start_vm(
 
 @router.post("/{vm_id}/stop", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def stop_vm(
-    vm_id: str,
+    vm_id: VmId,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Stops the target virtual machine."""
@@ -1204,7 +1207,7 @@ async def stop_vm(
 
 @router.post("/{vm_id}/restart", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 async def restart_vm(
-    vm_id: str,
+    vm_id: VmId,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """Restarts the target virtual machine."""
@@ -1212,7 +1215,7 @@ async def restart_vm(
 
 
 @router.get("/{vm_id}/error", dependencies=[Depends(require_scope("system:view", "storage:read"))])
-def get_vm_error(vm_id: str):
+def get_vm_error(vm_id: VmId):
     """Returns the last recorded QEMU error or startup failure log for a virtual machine."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
@@ -1238,7 +1241,7 @@ def get_vm_error(vm_id: str):
 
 
 @router.get("/{vm_id}/status", dependencies=[Depends(require_scope("system:view", "storage:read"))])
-def get_vm_qmp_status(vm_id: str):
+def get_vm_qmp_status(vm_id: VmId):
     """Queries live QMP monitor socket for hypervisor execution state and vCPU threads."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
@@ -1269,7 +1272,7 @@ def get_vm_qmp_status(vm_id: str):
 
 
 @router.get("/{vm_id}/screenshot", dependencies=[Depends(require_scope("system:view", "storage:read"))])
-def get_vm_screenshot(vm_id: str):
+def get_vm_screenshot(vm_id: VmId):
     """Captures and returns a live graphical screendump of the VM via QMP screendump."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
@@ -1311,7 +1314,7 @@ def get_vm_screenshot(vm_id: str):
 @router.post("/{vm_id}/disk/resize", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 @router.post("/{vm_id}/resize-disk", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
 def resize_vm_disk(
-    vm_id: str,
+    vm_id: VmId,
     req: VmDiskResizeRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
@@ -1408,7 +1411,7 @@ def resize_vm_disk(
     dependencies=[Depends(require_scope("vms:manage", "system:config")), Depends(require_confirmation("vm.delete"))],
 )
 def delete_vm(
-    vm_id: str,
+    vm_id: VmId,
     purge_disks: bool = True,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
@@ -1508,7 +1511,7 @@ def _list_qcow2_snapshots(disk_path: str) -> list[dict[str, Any]]:
 
 
 @router.get("/{vm_id}/snapshots", dependencies=[Depends(require_scope("system:view", "storage:read"))])
-async def get_vm_snapshots(vm_id: str):
+async def get_vm_snapshots(vm_id: VmId):
     """Lists snapshots for target virtual machine with QCOW2 internal and saved metadata."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
@@ -1552,7 +1555,7 @@ async def get_vm_snapshots(vm_id: str):
 
 
 @router.post("/{vm_id}/snapshots", dependencies=[Depends(require_scope("vms:manage", "system:config"))])
-async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
+async def create_vm_snapshot(vm_id: VmId, req: VmSnapshotCreateRequest):
     """Creates a live snapshot (savevm via QMP if running, qemu-img if stopped)."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
@@ -1604,7 +1607,7 @@ async def create_vm_snapshot(vm_id: str, req: VmSnapshotCreateRequest):
     "/{vm_id}/snapshots/{snapshot_name}/revert",
     dependencies=[Depends(require_scope("vms:manage", "system:config"))],
 )
-async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
+async def revert_vm_snapshot(vm_id: VmId, snapshot_name: str):
     """Reverts virtual machine state to a named snapshot."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
@@ -1650,7 +1653,7 @@ async def revert_vm_snapshot(vm_id: str, snapshot_name: str):
         Depends(require_confirmation("storage.snapshot.delete")),
     ],
 )
-async def delete_vm_snapshot(vm_id: str, snapshot_name: str):
+async def delete_vm_snapshot(vm_id: VmId, snapshot_name: str):
     """Deletes a named snapshot."""
     vms = vm_qemu._load_vms()
     target_vm = next((v for v in vms if v["id"] == vm_id), None)
@@ -1702,7 +1705,7 @@ class VmBackupRequest(BaseModel):
     "/{vm_id}/backup",
     dependencies=[Depends(require_scope("vms:manage", "system:config"))],
 )
-async def backup_virtual_machine(vm_id: str, req: VmBackupRequest | None = None):
+async def backup_virtual_machine(vm_id: VmId, req: VmBackupRequest | None = None):
     """Takes a full backup of VM configuration and virtual disks."""
     from backend.services.app_backup import create_vm_backup
 
@@ -1722,7 +1725,7 @@ async def backup_virtual_machine(vm_id: str, req: VmBackupRequest | None = None)
     "/{vm_id}/backups",
     dependencies=[Depends(require_scope("system:view", "storage:read"))],
 )
-async def list_virtual_machine_backups(vm_id: str):
+async def list_virtual_machine_backups(vm_id: VmId):
     """Lists saved backup archives for target VM."""
     from backend.services.app_backup import list_vm_backups
 

@@ -71,6 +71,7 @@ _FORBIDDEN_PREFIXES = (
     "/sbin",
     "/lib",
 )
+FORBIDDEN_PREFIXES = _FORBIDDEN_PREFIXES  # system folders no share or app data may be in
 
 
 def _allowed_share_roots() -> list[str]:

@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Annotated, Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from pydantic import AfterValidator, BaseModel, Field
 
 from backend import config
@@ -27,6 +27,31 @@ from backend.logging_config import one_line
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/storage", tags=["Storage Subsystem & PAL"])
+
+
+# A pool's name as it reaches zpool/btrfs as an argument: no leading dash ("-a" would be an
+# option, export -a exports every pool), no spaces (CodeQL command-line injection)
+POOL_ID_PATTERN = r"^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$"
+PoolId = Annotated[str, Path(pattern=POOL_ID_PATTERN)]
+
+
+# A pool's new name: one folder name under the pool root, no dash first (CodeQL path injection;
+# a new pool's name is checked in create_storage_pool)
+POOL_NAME_PATTERN = r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$"
+
+
+def _mount_point(value: str | None) -> str | None:
+    """Where an imported pool may be mounted: under /mnt, /srv or /media and not ZettNAS's own
+    folders (a filesystem mounted over /etc or the data folder would hide it)."""
+    v = (value or "").strip()
+    if not v:
+        return None
+    from backend.fsutil import is_protected
+
+    real = os.path.realpath(v)
+    if not os.path.isabs(v) or not real.startswith(("/mnt/", "/srv/", "/media/")) or is_protected(real):
+        raise ValueError("Mount an imported pool in a folder under /mnt, /srv or /media.")
+    return real
 
 
 class StorageScrubRequest(BaseModel):
@@ -53,9 +78,9 @@ class StoragePoolExportRequest(BaseModel):
 
 
 class StoragePoolImportRequest(BaseModel):
-    pool_id: str
-    fs_type: str = "zfs"
-    target_mount: str | None = None
+    pool_id: str = Field(..., pattern=POOL_NAME_PATTERN)  # a name, never an option or a path
+    fs_type: str = Field("zfs", pattern=r"^[a-z0-9]{1,16}$")
+    target_mount: Annotated[str | None, AfterValidator(_mount_point)] = None
 
 
 class StorageShareCreateRequest(BaseModel):
@@ -90,7 +115,9 @@ def nfs_clients_for(clients: str, allow_everyone: bool) -> str:
 
 
 class StoragePoolRenameRequest(BaseModel):
-    new_name: str = Field(..., min_length=1, max_length=64, description="New name for storage pool")
+    new_name: str = Field(
+        ..., min_length=1, max_length=64, pattern=POOL_NAME_PATTERN, description="New name for storage pool"
+    )
 
 
 SingleName = Annotated[str, AfterValidator(single_name)]
@@ -480,7 +507,7 @@ def set_share_compression(name: str, req: ShareCompressionRequest) -> dict[str, 
 
 
 @router.post("/pools/{pool_id}/rename", dependencies=[Depends(require_scope("storage:admin"))])
-def rename_storage_pool(pool_id: str, req: StoragePoolRenameRequest) -> dict[str, Any]:
+def rename_storage_pool(pool_id: PoolId, req: StoragePoolRenameRequest) -> dict[str, Any]:
     """
     Renames an existing storage pool (OpenZFS or Btrfs) and creates an atomic
     backwards-compatibility symlink to preserve Docker container volume mounts.
@@ -508,7 +535,7 @@ def rename_storage_pool(pool_id: str, req: StoragePoolRenameRequest) -> dict[str
     "/pools/{pool_id}",
     dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.pool.delete"))],
 )
-def delete_storage_pool(pool_id: str) -> dict[str, Any]:
+def delete_storage_pool(pool_id: PoolId) -> dict[str, Any]:
     """
     Destroys/unmounts a storage pool. Forbidden in Observer Mode.
     """
@@ -529,7 +556,7 @@ def delete_storage_pool(pool_id: str) -> dict[str, Any]:
     "/pools/{pool_id}/export",
     dependencies=[Depends(require_scope("storage:admin"))],
 )
-def export_storage_pool(pool_id: str, req: StoragePoolExportRequest = StoragePoolExportRequest()) -> dict[str, Any]:  # noqa: B008
+def export_storage_pool(pool_id: PoolId, req: StoragePoolExportRequest = StoragePoolExportRequest()) -> dict[str, Any]:  # noqa: B008
     """
     Gracefully flushes dirty write cache, terminates active handles,
     and exports/unmounts a storage pool for safe physical detachment.
@@ -615,7 +642,7 @@ def delete_storage_share(name: str) -> dict[str, Any]:
 
 
 @router.get("/pools/{pool_id}/snapshots", dependencies=[Depends(require_scope("storage:read", "storage:admin"))])
-def list_storage_snapshots(pool_id: str) -> list[dict[str, Any]]:
+def list_storage_snapshots(pool_id: PoolId) -> list[dict[str, Any]]:
     """
     Lists filesystem subvolume snapshots for a storage pool.
     """
@@ -624,7 +651,7 @@ def list_storage_snapshots(pool_id: str) -> list[dict[str, Any]]:
 
 
 @router.post("/pools/{pool_id}/snapshots", dependencies=[Depends(require_scope("storage:admin"))])
-def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> dict[str, Any]:
+def create_storage_snapshot(pool_id: PoolId, req: StorageSnapshotCreateRequest) -> dict[str, Any]:
     """
     Creates an atomic Btrfs subvolume snapshot. Forbidden in Observer Mode.
     """
@@ -652,7 +679,7 @@ def create_storage_snapshot(pool_id: str, req: StorageSnapshotCreateRequest) -> 
     "/pools/{pool_id}/snapshots/{snapshot_name}",
     dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.snapshot.delete"))],
 )
-def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> dict[str, Any]:
+def delete_storage_snapshot(pool_id: PoolId, snapshot_name: str) -> dict[str, Any]:
     """
     Deletes a Btrfs subvolume snapshot. Forbidden in Observer Mode or if WORM locked.
     """
@@ -674,7 +701,7 @@ def delete_storage_snapshot(pool_id: str, snapshot_name: str) -> dict[str, Any]:
 
 
 @router.post("/pools/{pool_id}/snapshots/break-glass-delete", dependencies=[Depends(require_scope("storage:admin"))])
-def break_glass_delete_snapshot(pool_id: str, req: StorageSnapshotBreakGlassDeleteRequest) -> dict[str, Any]:
+def break_glass_delete_snapshot(pool_id: PoolId, req: StorageSnapshotBreakGlassDeleteRequest) -> dict[str, Any]:
     """
     Overrides Governance-mode WORM lock to delete a snapshot with mandatory audit logging.
     Forbidden for Compliance-mode WORM locks before retention expiry.
@@ -701,7 +728,7 @@ def break_glass_delete_snapshot(pool_id: str, req: StorageSnapshotBreakGlassDele
     "/pools/{pool_id}/snapshots/restore",
     dependencies=[Depends(require_scope("storage:admin")), Depends(require_confirmation("storage.snapshot.restore"))],
 )
-def restore_storage_snapshot(pool_id: str, req: StorageSnapshotRestoreRequest) -> dict[str, Any]:
+def restore_storage_snapshot(pool_id: PoolId, req: StorageSnapshotRestoreRequest) -> dict[str, Any]:
     """
     Restores or rolls back a Btrfs subvolume snapshot. Forbidden in Observer Mode.
     """

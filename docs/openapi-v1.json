@@ -36469,10 +36469,12 @@
     "properties": {
      "fs_type": {
       "default": "zfs",
+      "pattern": "^[a-z0-9]{1,16}$",
       "title": "Fs Type",
       "type": "string"
      },
      "pool_id": {
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$",
       "title": "Pool Id",
       "type": "string"
      },
@@ -36500,6 +36502,7 @@
       "description": "New name for storage pool",
       "maxLength": 64,
       "minLength": 1,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$",
       "title": "New Name",
       "type": "string"
      }
@@ -58864,6 +58867,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -61962,6 +61966,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -62012,6 +62017,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -62074,6 +62080,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -62134,6 +62141,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -62186,6 +62194,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -62246,6 +62255,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -62306,6 +62316,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -62366,6 +62377,7 @@
       "name": "pool_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_/][A-Za-z0-9_./:-]{0,127}$",
        "title": "Pool Id",
        "type": "string"
       }
@@ -66385,6 +66397,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66442,6 +66455,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66489,6 +66503,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66544,6 +66559,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66603,6 +66619,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66662,6 +66679,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66728,6 +66746,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66777,6 +66796,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66826,6 +66846,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66876,6 +66897,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66935,6 +66957,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -66984,6 +67007,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67043,6 +67067,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67092,6 +67117,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67139,6 +67165,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67190,6 +67217,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67249,6 +67277,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67307,6 +67336,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67365,6 +67395,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67414,6 +67445,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }
@@ -67463,6 +67495,7 @@
       "name": "vm_id",
       "required": true,
       "schema": {
+       "pattern": "^[A-Za-z0-9_-]{1,64}$",
        "title": "Vm Id",
        "type": "string"
       }

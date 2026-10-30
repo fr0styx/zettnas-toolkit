@@ -35,7 +35,7 @@ def _fsync_dir(directory: str) -> None:
     try:
         os.fsync(dfd)
     except OSError:
-        logger.debug("fsutil: folder sync failed for %s", directory, exc_info=True)
+        logger.debug("fsutil: folder sync failed for %r", directory, exc_info=True)  # %r: no forged log lines
     finally:
         os.close(dfd)
 
