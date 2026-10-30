@@ -36,3 +36,31 @@ def test_the_rules():
     assert any("m imports 3 private" in p for p in found)
     assert any(p.startswith("m.f is 201") for p in found) and any(p.startswith("m.g is 151") for p in found)
     assert not any(p.startswith("m.h") for p in found)
+
+
+def test_the_baseline_is_tight():
+    """NARC-3: when code gets better, the baseline follows (python scripts/arch_ratchets.py --update)."""
+    import json
+
+    base = json.loads((ROOT / "tests" / "arch_baseline.json").read_text(encoding="utf-8"))
+    loose = ar.slack(ar.measure(), base)
+    assert not loose, "\n".join(loose)
+
+
+def test_slack_rules():
+    base = {
+        "upward_imports": ["a -> b"],
+        "long_functions": {"m.f": 300, "m.gone": 200, "m.ok": 160},
+        "broad_excepts": {"m": 5},
+    }
+    now = {
+        "upward_imports": [],
+        "private_imports": {},
+        "long_functions": {"m.f": 200, "m.ok": 150},
+        "broad_excepts": {"m": 4},
+    }
+    found = ar.slack(now, base)
+    assert any(p.startswith("m.f is 200 lines but 300") for p in found)
+    assert any(p.startswith("m.gone is gone") for p in found)
+    assert any("a -> b is gone" in p for p in found)
+    assert not any(p.startswith("m.ok") or p.startswith("m: broad") for p in found)

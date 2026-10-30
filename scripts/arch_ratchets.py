@@ -137,6 +137,31 @@ def problems(now: dict, base: dict) -> list[str]:
     return out
 
 
+# How far a baseline may sit above today before it must be tightened (NARC-3): a ratchet that
+# doesn't click forward lets a function that was just split grow back
+SLACK_LINES = 25
+SLACK_COUNT = 2
+
+
+def slack(now: dict, base: dict) -> list[str]:
+    """Baselines well above today's numbers, and entries for code that is gone: run --update."""
+    out = []
+    for fn, allowed in base.get("long_functions", {}).items():
+        n = now["long_functions"].get(fn, 0)
+        if n == 0:
+            out.append(f"{fn} is gone or under {MAX_LINES} lines: drop it from the baseline")
+        elif allowed - n > SLACK_LINES:
+            out.append(f"{fn} is {n} lines but {allowed} are allowed: tighten the baseline")
+    for key in ("private_imports", "broad_excepts", "fstring_logs"):
+        for mod, allowed in base.get(key, {}).items():
+            n = now.get(key, {}).get(mod, 0)
+            if allowed - n > SLACK_COUNT:
+                out.append(f"{mod}: {key} is {n} but {allowed} are allowed: tighten the baseline")
+    for edge in sorted(set(base.get("upward_imports", [])) - set(now["upward_imports"])):
+        out.append(f"upward import {edge} is gone: drop it from the baseline")
+    return out
+
+
 def main(argv: list[str]) -> int:
     now = measure()
     if "--update" in argv:
@@ -147,11 +172,11 @@ def main(argv: list[str]) -> int:
         )
         return 0
     base = json.loads(BASELINE.read_text(encoding="utf-8"))
-    found = problems(now, base)
+    found = problems(now, base) + slack(now, base)
     for p in found:
         print(p)
     if not found:
-        print("architecture ratchets hold")
+        print("architecture ratchets hold, and the baseline is tight")
     return 1 if found else 0
 
 

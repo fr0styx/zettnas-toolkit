@@ -1,6 +1,7 @@
 // Which places an account can use (NUX-5): one map from a place to the rights that open it, so
 // kids, guests and family accounts aren't shown places that only answer "no permission".
 import { ZettEventBus } from './event-bus.js';
+import { onManagementDom } from './management-dom.js';
 
 // place -> any of these scopes opens it; a place not listed is open to everyone
 export const ROUTE_SCOPES = {
@@ -16,6 +17,7 @@ export const ROUTE_SCOPES = {
   ai: ['system:config'],
   vms: ['vms:manage', 'vms:read'],
   activity: ['logs:read'],
+  hardware: ['hardware:read'],
 };
 
 /** The server's rule (backend/auth.py has_scope): "*", "*:read" for reads, "area:*", exact. */
@@ -34,11 +36,12 @@ export function canOpen(route, user) {
   return need.some((s) => hasScope(user.scopes, s));
 }
 
-/** Hides launcher tiles, tabs and anything else marked with a place this account can't use. */
+/** Hides launcher tiles, tabs, Mission Control's sidebar entries and anything else marked
+ *  with a place (data-route) this account can't use. */
 export function hideUnusable(root, user) {
   if (!root) return;
-  for (const el of root.querySelectorAll('[data-phone-open], [data-phone-tab]')) {
-    const route = el.getAttribute('data-phone-open') || el.getAttribute('data-phone-tab');
+  for (const el of root.querySelectorAll('[data-phone-open], [data-phone-tab], [data-route]')) {
+    const route = el.getAttribute('data-phone-open') || el.getAttribute('data-phone-tab') || el.getAttribute('data-route');
     if (!canOpen(route, user)) {
       if (!el.hidden) {
         el.hidden = true;
@@ -51,4 +54,9 @@ export function hideUnusable(root, user) {
   }
 }
 
-ZettEventBus.on?.('session:user', (user) => hideUnusable(document, user));
+let _user = null;
+ZettEventBus.on?.('session:user', (user) => {
+  _user = user;
+  hideUnusable(document, user);
+});
+onManagementDom(() => hideUnusable(document, _user)); // Mission Control arrives later

@@ -31,57 +31,57 @@
             <svg class="mgmt-sidebar-svg"><use href="#i-storage"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_files">Files</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" title="Storage" data-i18n-title="mgmt.sidebar_storage">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" data-route="storage" title="Storage" data-i18n-title="mgmt.sidebar_storage">
             <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" data-mgmt-pane="mgmt-pane-storage-shares" title="Shares" data-i18n-title="mgmt.sidebar_shares">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" data-mgmt-pane="mgmt-pane-storage-shares" data-route="shares" title="Shares" data-i18n-title="mgmt.sidebar_shares">
             <svg class="mgmt-sidebar-svg"><use href="#i-net"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_shares">Shares</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" data-mgmt-pane="mgmt-pane-backups" title="Backup" data-i18n-title="mgmt.sidebar_backup">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" data-mgmt-pane="mgmt-pane-backups" data-route="backup" title="Backup" data-i18n-title="mgmt.sidebar_backup">
             <svg class="mgmt-sidebar-svg"><use href="#i-save"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_backup">Backup</span>
           </button>
 
           <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_apps_ai">Apps & AI</div>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" title="Apps" data-i18n-title="mgmt.sidebar_containers">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-docker" data-route="apps" title="Apps" data-i18n-title="mgmt.sidebar_containers">
             <svg class="mgmt-sidebar-svg"><use href="#i-chip"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_containers">Apps</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-docker-badge" style="display:none;">0 Active</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-vms" title="Virtual machines" data-i18n-title="mgmt.sidebar_vms">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-vms" data-route="vms" title="Virtual machines" data-i18n-title="mgmt.sidebar_vms">
             <svg class="mgmt-sidebar-svg"><use href="#i-vm"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_vms">Virtual machines</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-vms-badge" style="display:none;">0 VMs</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ai" title="AI" data-i18n-title="mgmt.sidebar_ai">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ai" data-route="ai" title="AI" data-i18n-title="mgmt.sidebar_ai">
             <svg class="mgmt-sidebar-svg"><use href="#i-search"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ai">AI</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ai-badge" style="background:rgba(14,165,233,0.18); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">NPU/GPU</span>
           </button>
 
           <div class="mgmt-sidebar-category" data-i18n="mgmt.cat_admin_personalization">System</div>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" data-mgmt-pane="mgmt-pane-users" title="Users" data-i18n-title="mgmt.sidebar_users">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-system-group" data-mgmt-pane="mgmt-pane-users" data-route="users" title="Users" data-i18n-title="mgmt.sidebar_users">
             <svg class="mgmt-sidebar-svg"><use href="#i-users"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_users">Users</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" title="Network" data-i18n-title="mgmt.sidebar_network">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-network" data-route="network" title="Network" data-i18n-title="mgmt.sidebar_network">
             <svg class="mgmt-sidebar-svg"><use href="#i-globe"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_network">Network</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-net-badge" style="display:none;">Online</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" title="Power" data-i18n-title="mgmt.sidebar_ups">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-ups" data-route="power" title="Power" data-i18n-title="mgmt.sidebar_ups">
             <svg class="mgmt-sidebar-svg"><use href="#i-bolt"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_ups">Power</span>
             <span class="mgmt-sidebar-badge" id="mgmt-sidebar-ups-badge" style="display:none;">Power</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" title="Hardware" data-i18n-title="mgmt.sidebar_hardware">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-hardware" data-route="hardware" title="Hardware" data-i18n-title="mgmt.sidebar_hardware">
             <svg class="mgmt-sidebar-svg"><use href="#i-sliders"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_hardware">Hardware</span>
           </button>
-          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" title="Activity" data-i18n-title="mgmt.sidebar_activity">
+          <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-activity" data-route="activity" title="Activity" data-i18n-title="mgmt.sidebar_activity">
             <svg class="mgmt-sidebar-svg"><use href="#i-cpu"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_activity">Activity</span>
           </button>
@@ -3230,7 +3230,7 @@
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-users"/></svg>
                   <span data-i18n="mgmt.subtab_users">Users & Roles</span>
                 </button>
-                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-backups" id="mgmt-tab-backups">
+                <button class="mgmt-inner-tab" role="tab" aria-selected="false" data-tab-target="mgmt-pane-backups" id="mgmt-tab-backups" data-route="backup">
                   <svg class="ic" style="width: 14px; height: 14px;"><use href="#i-storage"/></svg>
                   <span data-i18n="mgmt.subtab_backups">Backups & Recovery</span>
                 </button>

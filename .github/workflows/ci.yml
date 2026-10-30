@@ -74,11 +74,12 @@ jobs:
         run: ruff format --check app.py backend tests scripts
 
       - name: Run Pytest Suite with Coverage
-        # OPS-16: coverage may not drop below the floor (raise it as coverage grows)
+        # OPS-16: coverage may not drop below the floor (raise it as coverage grows); the generated
+        # response models are left out (pyproject [tool.coverage.run], NARC-4): ~82.4% on 30 Oct 2026
         # Failing tests are also posted as an annotation, readable without log access
         run: |
           set -o pipefail
-          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=80 -v -rfE 2>&1 | tee /tmp/zn-unit.log; then
+          if ! pytest --cov=backend --cov=app --cov-report=xml --cov-fail-under=81 -v -rfE 2>&1 | tee /tmp/zn-unit.log; then
             body=$( (grep -E '^(FAILED|ERROR)|^E  |Required test coverage|Coverage failure' /tmp/zn-unit.log | tail -n 40) | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Unit tests::$body"
             exit 1

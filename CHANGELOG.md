@@ -86,6 +86,8 @@
   tiles for Users, Storage, Backup, Apps, Network or AI settings that would only say "no
   permission". The Overview leaves out chores only the manager can do, and for a problem someone
   can't fix it says "Tell the person who manages ZettNAS" instead of an Open button (NUX-5).
+- **Mission Control's sidebar by role too**: Storage, Shares, Backup, Apps, Virtual machines, AI,
+  Users, Network, Power, Hardware and Activity show only for accounts that can use them (NUX-5).
 
 - **Your clock everywhere**: file dates, a backup's last run, the activity log and every other
   time on screen now use your own time zone and 12/24-hour choice, as the desktop clock does.
@@ -363,6 +365,8 @@
 - **Quieter when idle**: the storage alert check writes its state only when something changed
   (it used to write every five minutes), and with no app running ZettNAS asks Docker for app
   stats once a minute instead of every five seconds, at once when you open Apps (NPERF-6).
+- **The monthly check doesn't ask every minute**: in the hour pool checks may start, each pool is
+  asked once whether its check is due, instead of every minute (NPERF-6).
 
 - **A memory warning instead of a limit**: ZettNAS warns when it uses more than `APP_MEMORY_WARN_MB`
   (1536 MB; virtual machines not counted). No memory limit is set by default, since Docker kills a

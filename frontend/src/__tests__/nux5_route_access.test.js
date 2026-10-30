@@ -37,6 +37,13 @@ describe('places by role (NUX-5)', () => {
     expect(vms.hidden).toBe(true); // hidden for another reason (advanced places): left alone
   });
 
+  it("hides Mission Control's sidebar entries too", () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<button data-route="users"></button><button data-route="hardware"></button><button data-mgmt-target="files"></button>';
+    hideUnusable(root, FAMILY);
+    expect([...root.children].map((b) => b.hidden)).toEqual([true, true, false]);
+  });
+
   it('an item someone cannot fix says who can', () => {
     expect(itemText({ kind: 'storage_full', subject: '91%', tell_admin: true })).toBe('Storage is 91% full. Tell the person who manages ZettNAS.');
   });

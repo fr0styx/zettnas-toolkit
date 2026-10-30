@@ -246,8 +246,13 @@ def check_and_alert(now: float | None = None, send=None) -> list[dict[str, Any]]
     return found
 
 
+_scrub_looked: dict[str, str] = {}  # pool -> the scrub hour it was last looked at in (NPERF-6)
+
+
 def run_scrubs_due(now: float | None = None) -> list[str]:
-    """From the scheduler every minute: in the scrub hour, start the scrubs that are due."""
+    """From the scheduler every minute: in the scrub hour, start the scrubs that are due. Each
+    pool is looked at once in that hour, not every minute (a zpool or btrfs process each time),
+    and not at all while its last start is recent (NPERF-6)."""
     from backend.hardware.pal_storage import get_storage_platform
 
     now = now or time.time()
@@ -268,6 +273,10 @@ def run_scrubs_due(now: float | None = None) -> list[str]:
             if p.fs_type not in ("zfs", "btrfs") or not scrub_enabled(p, settings):
                 continue
             entry = dict(settings.get(p.id) or {})
+            hour = time.strftime("%Y-%m-%d %H", time.localtime(now))
+            if _scrub_looked.get(p.id) == hour or now - float(entry.get("last_started") or 0) < SCRUB_EVERY_S:
+                continue
+            _scrub_looked[p.id] = hour
             last = adapter.scrub_result(p) or {}
             done = float(last.get("finished_at") or 0)
             if now - max(done, float(entry.get("last_started") or 0)) < SCRUB_EVERY_S or last.get("state") == "running":
