@@ -125,7 +125,9 @@ def delete_schedule(share: str) -> bool:
 
 
 def snapshot_name(share: str, now: float | None = None) -> str:
-    return f"{share}{AUTO_TAG}{time.strftime(NAME_FORMAT, time.localtime(now or time.time()))}"
+    # UTC: local time repeats an hour at the autumn clock change, and the server's zone can now
+    # change, either of which gave duplicate or out-of-order names (NREL-15)
+    return f"{share}{AUTO_TAG}{time.strftime(NAME_FORMAT, time.gmtime(now or time.time()))}"
 
 
 def take(share: str, schedule: dict[str, Any] | None = None, pal: Any = None) -> dict[str, Any]:
@@ -323,7 +325,7 @@ def rollback(name: str, pal: Any = None, pool_id: str | None = None) -> dict[str
     share = name.split("@", 1)[0]
     src_root = os.path.realpath(snap["path"])
     live_root = os.path.realpath(_live_root(name, pal, pool_id))
-    safety = f"{share}@before-rollback-{time.strftime(NAME_FORMAT)}"
+    safety = f"{share}@before-rollback-{time.strftime(NAME_FORMAT, time.gmtime())}"
     res = pal.create_snapshot(pool_id, share, safety, readonly=True)
     if not (res.get("status") in ("created", "ok") or res.get("success") is True):
         raise RuntimeError("The snapshot of the current state could not be taken, so nothing was changed.")

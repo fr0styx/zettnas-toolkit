@@ -173,6 +173,69 @@ def is_safe_tar_member(member: tarfile.TarInfo, target_dir: str) -> bool:
     return True
 
 
+# What ZettNAS paused for a backup: a restart in the middle must not leave the family's app or
+# VM frozen (NREL-17)
+def _paused_file() -> str:
+    from backend.config import DATA_DIR
+
+    return os.path.join(DATA_DIR, "paused_for_backup.json")
+
+
+def _mark_paused(kind: str, ident: str) -> bool:
+    from backend.fsutil import atomic_write_json, locked_json, read_json
+
+    try:
+        with locked_json(_paused_file()):
+            data = read_json(_paused_file(), {}) or {}
+            data[kind] = sorted({*data.get(kind, []), ident})
+            atomic_write_json(_paused_file(), data)
+    except OSError:
+        logger.warning("[App Backup] could not record a pause", exc_info=True)
+    return True
+
+
+def _unmark_paused(kind: str, ident: str) -> None:
+    from backend.fsutil import atomic_write_json, locked_json, read_json
+
+    try:
+        with locked_json(_paused_file()):
+            data = read_json(_paused_file(), {}) or {}
+            if ident in data.get(kind, []):
+                data[kind] = [x for x in data[kind] if x != ident]
+                atomic_write_json(_paused_file(), data)
+    except OSError:
+        logger.warning("[App Backup] could not clear a pause", exc_info=True)
+
+
+def _unpause_container(cid: str) -> None:
+    _docker_request("POST", f"/containers/{cid}/unpause")
+    _unmark_paused("containers", cid)
+
+
+def resume_left_paused() -> list[str]:
+    """At start: unpauses the containers and resumes the VMs a backup paused when ZettNAS stopped
+    in the middle of it (NREL-17)."""
+    from backend.fsutil import read_json
+
+    data = read_json(_paused_file(), {}) or {}
+    done = []
+    for cid in list(data.get("containers", [])):
+        try:
+            _unpause_container(cid)
+            done.append(cid)
+        except (OSError, RuntimeError, ValueError):
+            logger.warning("[App Backup] could not unpause %s", cid, exc_info=True)
+    for vm_id in list(data.get("vms", [])):
+        try:
+            _resume_vm(vm_id)
+            done.append(vm_id)
+        except (OSError, RuntimeError, ValueError):
+            logger.warning("[App Backup] could not resume %s", vm_id, exc_info=True)
+    if done:
+        logger.warning("[App Backup] resumed what a backup had paused before the restart: %s", ", ".join(done))
+    return done
+
+
 def create_app_backup(
     container_id_or_name: str,
     reason: str = "on-demand",
@@ -262,7 +325,7 @@ def create_app_backup(
         try:
             p_status, _ = _docker_request("POST", f"/containers/{cid}/pause")
             if p_status in (200, 204):
-                was_paused = True
+                was_paused = _mark_paused("containers", cid)
                 logger.info(f"[App Backup] Paused container '{cname}' for consistent backup.")
         except Exception as e:
             logger.warning(f"[App Backup] Could not pause container '{cname}' (continuing live): {e}")
@@ -328,7 +391,7 @@ def create_app_backup(
     finally:
         if was_paused:
             try:
-                _docker_request("POST", f"/containers/{cid}/unpause")
+                _unpause_container(cid)
                 logger.info(f"[App Backup] Resumed container '{cname}' after backup.")
             except Exception as e:
                 logger.error(f"[App Backup] Failed to unpause container '{cname}': {e}")
@@ -541,6 +604,7 @@ def _pause_vm(vm_id: str) -> str:
     if "error" in res:
         raise RuntimeError(_CANT_PAUSE)
     logger.info(f"[VM Backup] Paused {vm_id} while its disks are copied")
+    _mark_paused("vms", vm_id)
     return "paused_for_backup"
 
 
@@ -548,6 +612,7 @@ def _resume_vm(vm_id: str) -> None:
     from backend.services import vm_qemu
 
     res = vm_qemu._qmp_command(vm_id, "cont", timeout=30)
+    _unmark_paused("vms", vm_id)
     if "error" in res:
         logger.error(f"[VM Backup] {vm_id} could not be resumed after the backup: {res['error']}")
     else:

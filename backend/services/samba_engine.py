@@ -401,7 +401,7 @@ class SambaEngine:
                     conf_lines.append(f"   shadow:basedir = {share.path}")
                     conf_lines.append(f"   shadow:format = {share.name}@auto-%Y%m%d-%H%M")
                     conf_lines.append("   shadow:sort = desc")
-                    conf_lines.append("   shadow:localtime = yes")
+                    conf_lines.append("   shadow:localtime = no")  # snapshot names are UTC (NREL-15)
 
             if share.recycle_bin:
                 vfs.append("recycle")

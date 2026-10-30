@@ -135,9 +135,55 @@ def graceful_docker_teardown(timeout_sec: int = 30) -> dict[str, list[str]]:
         result["stopped" if ok else "failed"].append(name)
     result["timed_out"] = [str(futures[f]) for f in pending]
     pool.shutdown(wait=False, cancel_futures=True)
+    _remember_stopped(result["stopped"] + result["timed_out"])
     if result["timed_out"]:
         logger.warning(f"[UPS FAILSAFE] Still stopping after {timeout_sec}s: {', '.join(result['timed_out'])}")
     return result
+
+
+def _stopped_file() -> str:
+    from backend.config import DATA_DIR
+
+    return os.path.join(DATA_DIR, "ups_stopped_apps.json")
+
+
+def _remember_stopped(names: list[str]) -> None:
+    """The apps stopped for a power event, so they come back when the power does (NREL-10)."""
+    if not names:
+        return
+    from backend.fsutil import atomic_write_json
+
+    try:
+        atomic_write_json(_stopped_file(), {"apps": sorted(set(names)), "at": time.time()})
+    except OSError:
+        logger.warning("[UPS] could not record the stopped apps", exc_info=True)
+
+
+def restart_stopped_apps() -> list[str]:
+    """Starts the apps ZettNAS stopped for a power event: when mains is back, or at the next
+    start after a real shutdown. Docker won't, for a container stopped before (NREL-10)."""
+    from backend.fsutil import read_json
+
+    path = _stopped_file()
+    names = list((read_json(path, {}) or {}).get("apps") or [])
+    if not names:
+        return []
+    from backend.hardware.docker_stats import container_action
+
+    started = []
+    for name in names:
+        try:
+            if (container_action(name, "start") or {}).get("success", True):
+                started.append(name)
+        except (OSError, RuntimeError, ValueError):
+            logger.warning("[UPS] could not start %s again", name, exc_info=True)
+    try:
+        os.remove(path)
+    except OSError:
+        logger.debug("[UPS] stopped-apps list already gone", exc_info=True)
+    if started:
+        add_event("info", "Apps started again", "After the power event: " + ", ".join(started))
+    return started
 
 
 def shutdown_owner() -> str:
@@ -470,6 +516,7 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
             _outage_start_charge = None
             _outage_start_volts = None
             _failsafe_engaged = False
+            restart_stopped_apps()
         resume_copy_after_outage()
 
 

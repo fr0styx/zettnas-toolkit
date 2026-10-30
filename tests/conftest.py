@@ -249,6 +249,15 @@ def _auto_confirm_destructive_actions(request, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _no_busy_work_before_updates(monkeypatch):
+    """Jobs other tests leave in the job manager don't hold up an update test (NREL-14); the test
+    for that sets busy_work itself."""
+    import backend.api.system as system_api
+
+    monkeypatch.setattr(system_api, "busy_work", lambda: [])
+
+
+@pytest.fixture(autouse=True)
 def _no_registry_lookups(monkeypatch):
     """Tests never ask the real registry; tests that need a digest set their own."""
     from backend.api import system

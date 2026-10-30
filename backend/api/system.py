@@ -1486,6 +1486,26 @@ class ApplySystemUpdateRequest(BaseModel):
     channel: str = "stable"
     target_image: str | None = None
     revert: bool = False  # SEC-37: installing an older version must be asked for by name
+    anyway: bool = False  # NREL-14: update although work is still running
+
+
+def busy_work() -> list[str]:
+    """What an update would cut off: running jobs (backups, restores, copies, syncs), and open
+    encrypted folders that would come back locked (NREL-14)."""
+    from backend.services.jobs import job_manager
+
+    out = [str(j.get("title") or j.get("kind") or "a job") for j in job_manager.list(everyone=True)["active"]]
+    try:
+        from backend.services import encrypted_folders
+
+        out += [
+            f"the encrypted folder {f['name']} (it will be locked)"
+            for f in encrypted_folders.listing()
+            if f["unlocked"] and not f["unlock_at_start"]
+        ]
+    except (OSError, ValueError):
+        logger.debug("busy_work: encrypted folders unknown", exc_info=True)
+    return out
 
 
 _VERSION_TAG = re.compile(r"^v?\d+(?:\.\d+){1,3}$")
@@ -1521,6 +1541,11 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     from backend.services.self_updater import spawn_self_updater
 
     channel = _channel(req.channel)
+    busy = [] if req.anyway else await asyncio.to_thread(busy_work)
+    if busy:
+        from backend.errors import ApiError
+
+        raise ApiError(409, "Still running: " + "; ".join(busy[:8]) + ".", "busy_jobs")
     if req.target_image:
         # Only this project's images: an update must never install an arbitrary image
         # with full access to the Docker socket and host devices.

@@ -19,6 +19,28 @@ try {
 
 let _lastUpdateData = null;
 
+
+/** Starts the update; when work is still running (a backup, a restore, a sync), asks first and
+ *  only then updates anyway (NREL-14). */
+async function postUpdate(channel, targetImage) {
+  const body = { channel, target_image: targetImage };
+  try {
+    return await api.post('/api/system/updates/apply', body, { confirmed: true });
+  } catch (err) {
+    if (!err || err.error !== 'busy_jobs') throw err;
+    const go = await new Promise((resolve) =>
+      showConfirmToast(
+        t('updates.busy_title', 'Some work is still running'),
+        t('updates.busy_msg', '{list} Updating now cuts it off. Update anyway?', { list: err.body?.detail || '' }),
+        () => resolve(true),
+        () => resolve(false),
+      ),
+    );
+    if (!go) throw new Error(t('updates.busy_later', 'Update postponed: try again when it has finished.'), { cause: err });
+    return api.post('/api/system/updates/apply', { ...body, anyway: true }, { confirmed: true });
+  }
+}
+
 export async function setUpdateChannel(channel) {
   _currentUpdateChannel = UPDATE_CHANNELS.includes(channel) ? channel : 'stable';
   try {
@@ -318,7 +340,7 @@ export async function applySystemUpdate() {
         const targetImage = channel === 'edge'
           ? 'ghcr.io/fr0styx/zettnas-toolkit:edge'
           : 'ghcr.io/fr0styx/zettnas-toolkit:latest';
-        const res = await api.post('/api/system/updates/apply', { channel, target_image: targetImage }, { confirmed: true });
+        const res = await postUpdate(channel, targetImage);
         showToast(res?.message || 'Update initiated. Reconnecting...', 'info');
 
         if (res && res.auto_restarting === false) {

@@ -987,6 +987,11 @@
    },
    "ApplySystemUpdateRequest": {
     "properties": {
+     "anyway": {
+      "default": false,
+      "title": "Anyway",
+      "type": "boolean"
+     },
      "channel": {
       "default": "stable",
       "title": "Channel",

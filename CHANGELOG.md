@@ -4,6 +4,8 @@
 
 #### Security
 
+- **The AdGuard password stays where it belongs**: changing AdGuard Home's address needs the
+  password again, and ZettNAS doesn't follow redirects to another host with it (NSEC-11).
 - **One mistyped password can't lock the family out of the office suite**: the office suite
   checks passwords through ZettNAS from one address, which repeated failures used to block for
   everyone; now only that account is held back (NSEC-6).
@@ -319,6 +321,18 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **Updates wait for running work**: an update now says what it would cut off, such as a
+  backup, a restore or a sync, or an open encrypted folder, and goes ahead only if you choose to
+  (NREL-14).
+- **Apps come back after a power cut**: the apps ZettNAS stopped when the UPS ran low now start
+  again when the power returns, or when the server starts up again (NREL-10).
+- **Nothing stays paused after a restart**: an app or VM paused for its backup is resumed if
+  ZettNAS restarted in the middle (NREL-17).
+- **Snapshot names never clash**: scheduled snapshots are named in UTC, so the hour that repeats
+  when the clocks go back no longer makes one fail (NREL-15).
+- **A stuck background service sends an alert**, once a day, instead of only showing on the
+  Overview (NREL-18).
 
 - **No backup into thin air**: a backup to a USB disk that isn't plugged in now fails with
   "the disk isn't connected" instead of writing into the container, where it would be lost

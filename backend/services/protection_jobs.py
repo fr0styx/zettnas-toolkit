@@ -304,5 +304,32 @@ def watch_daemon(stop: threading.Event | None = None, tick: float = WATCH_TICK_S
             check_and_alert(now)  # snapshots and monthly checks (REL-12)
         except Exception:
             logger.warning("[Protection] protection check failed", exc_info=True)
+        try:
+            alert_stalled(now)  # a stuck scheduler stops snapshots and backups at once (NREL-18)
+        except (OSError, RuntimeError, ValueError):
+            logger.warning("[Protection] stalled-service check failed", exc_info=True)
         if stop.wait(tick):
             break
+
+
+def alert_stalled(now: float | None = None, send=None) -> list[str]:
+    """One alert a day for each background service that stopped answering; the Overview alone
+    reaches nobody who doesn't open it (NREL-18)."""
+    from backend.services.supervisor import stalled
+
+    names = stalled()
+    if not names:
+        return []
+    if send is None:
+        from backend.services.notifications import send_notification as send
+    day = time.strftime("%Y-%m-%d", time.gmtime(now or time.time()))
+    for name in names:
+        send(
+            f"ZettNAS: the {name} service stopped responding",
+            f"The {name} background service hasn't checked in for a while, so the work it does "
+            "(snapshots, checks, backups) may not be running. Restart ZettNAS if it doesn't recover.",
+            level="warning",
+            event_type="system",
+            dedup_key=f"stalled-{name}-{day}",
+        )
+    return names

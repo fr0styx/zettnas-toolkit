@@ -394,6 +394,12 @@ def _open_encrypted_folders() -> None:
     opened = unlock_at_start()
     if opened:
         logger.info("[Main] %d encrypted folder(s) opened", opened)
+    from backend.services.ups_watchdog import restart_stopped_apps
+
+    restart_stopped_apps()  # apps stopped for a power cut that shut the server down (NREL-10)
+    from backend.services.app_backup import resume_left_paused
+
+    resume_left_paused()  # a backup cut off by a restart left something paused (NREL-17)
 
 
 def fan_watchdog_daemon():

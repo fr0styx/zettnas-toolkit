@@ -179,3 +179,13 @@ def test_kid_accounts_can_be_filtered(client, auth_headers, store, monkeypatch):
     )
     got = client.get("/api/family-filter", headers=auth_headers).json()
     assert [a["username"] for a in got["accounts"]] == ["mia"]
+
+
+def test_a_new_address_drops_the_saved_password(store):
+    """NSEC-11: the AdGuard password isn't sent to an address it wasn't typed for, nor followed on a redirect."""
+    ak.save_connection(url="http://adguardhome:3000", user="admin", password="pw")
+    assert ak.public()["has_password"] is True
+    assert ak.save_connection(url="http://evil.example:3000")["has_password"] is False
+    ak.save_connection(url="http://adguardhome:3000", password="pw")
+    assert ak.save_connection(url="http://adguardhome:3000")["has_password"] is True  # same address keeps it
+    assert ak._Refuse().redirect_request() is None

@@ -46,6 +46,16 @@ _CLIENT_ID = re.compile(r"^[a-z0-9-]{1,63}$")
 _USER = re.compile(r"^[A-Za-z0-9_.@-]{1,64}$")
 
 
+class _Refuse(urllib.request.HTTPRedirectHandler):
+    """A redirect would send the AdGuard password on to another address (NSEC-11)."""
+
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+_NO_REDIRECTS = urllib.request.build_opener(_Refuse)
+
+
 class AdGuardError(Exception):
     """AdGuard Home refused or didn't answer; the message says which."""
 
@@ -88,6 +98,8 @@ def save_connection(url: str | None = None, user: str | None = None, password: s
         url = url.strip().rstrip("/") or DEFAULT_URL
         if not _URL.match(url + "/"):
             raise ValueError("Use AdGuard Home's address, like http://adguardhome:3000.")
+        if url != s["url"] and password is None:
+            s["password"] = ""  # the AdGuard password never goes to a new address it wasn't typed for (NSEC-11)
         s["url"] = url
     if user is not None:
         if user and not _USER.match(user):
@@ -113,7 +125,7 @@ def _call(s: dict[str, Any], method: str, path: str, body: Any = None, opener: C
         headers={"Authorization": f"Basic {token}", "Content-Type": "application/json"},
     )
     try:
-        with (opener or urllib.request.urlopen)(req, timeout=8) as r:  # noqa: S310 - the admin's AdGuard address
+        with (opener or _NO_REDIRECTS.open)(req, timeout=8) as r:  # noqa: S310 - the admin's AdGuard address
             raw = r.read(2_000_000)
     except urllib.error.HTTPError as e:
         if e.code in (401, 403):
