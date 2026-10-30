@@ -4,6 +4,12 @@
 
 #### Security
 
+- **API tokens get only what their app needs**: making a token now asks what it may do (read
+  files, read and change files, monitoring, an AI assistant, or everything), and read-only
+  files is the default; before, every token got all of its maker's rights. A token limited to
+  folders can't hold rights that reach past them, and the short-lived tickets a token asks for
+  keep its folder limit, which they used to drop (NSEC-1, NSEC-2).
+
 - **Encrypted folders**: Shares -> Encrypted folders makes a folder inside a share whose files
   are stored encrypted (gocryptfs). Open it with its password and it appears in Files, WebDAV
   and SFTP for the people who may use that share; lock it, or restart ZettNAS, and only the

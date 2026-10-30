@@ -2041,6 +2041,7 @@ document.addEventListener('DOMContentLoaded', () => onManagementDom(() => {
   const btnGen = document.getElementById('btn-generate-token');
   const inputName = /** @type {HTMLInputElement | null} */ (document.getElementById('new-token-name'));
   const inputFolders = /** @type {HTMLTextAreaElement | null} */ (document.getElementById('new-token-folders'));
+  const inputKind = /** @type {HTMLSelectElement | null} */ (document.getElementById('new-token-kind'));
   const created = document.getElementById('api-token-created');
 
   if (btnGen && inputName) {
@@ -2050,7 +2051,9 @@ document.addEventListener('DOMContentLoaded', () => onManagementDom(() => {
       const folders = parseTokenFolders(inputFolders?.value);
 
       try {
-        const res = await api.post('/api/tokens', folders.length ? { name, folders } : { name });
+        // NSEC-2: a token gets the rights its app needs, read-only files unless chosen otherwise
+        const body = { name, preset: inputKind?.value || 'files-read', ...(folders.length ? { folders } : {}) };
+        const res = await api.post('/api/tokens', body);
         inputName.value = '';
         if (inputFolders) inputFolders.value = '';
         renderApiTokens();

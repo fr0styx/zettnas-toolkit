@@ -236,6 +236,8 @@ def _credential_user(sess: dict[str, Any]) -> dict[str, Any] | None:
         return None
     user = dict(user)
     user["scopes"] = list(sess.get("scopes") or [])
+    user["folders"] = list(sess.get("folders") or [])  # a token's folder limit (COMP-06, NSEC-1)
+    user["token_id"] = sess.get("token_id", "")
     for flag in _NON_SESSION_FLAGS:
         user[flag] = bool(sess.get(flag))
     return user
@@ -854,6 +856,8 @@ def request_stream_ticket(request: Request):
         username=user["username"],
         scopes=user.get("scopes", []),
         role_id=user.get("role_id", "share_user"),
+        folders=user.get("folders") or [],
+        token_id=user.get("token_id", ""),
     )
     return {"status": "ok", "ticket": ticket, "expires_in": 60}
 

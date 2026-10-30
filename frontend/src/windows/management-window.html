@@ -3342,6 +3342,14 @@
                   <input type="text" id="new-token-name" placeholder="Token Name (e.g. Home Assistant)" data-i18n-placeholder="ui.token_name_e_g_home" class="tz-select-input" style="flex:1; background: var(--zn-shade-25); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); padding: 7px 12px; font-size: var(--zn-fs-sm); border-radius: 6px;" aria-label="Token Name (e.g. Home Assistant)" data-i18n-aria-label="ui.token_name_e_g_home">
                   <button id="btn-generate-token" class="btn-pill-toggle" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">Generate</button>
                 </div>
+                <label for="new-token-kind" class="zn-sub is-spaced" data-i18n="tokens.kind_label">What it may do</label>
+                <select id="new-token-kind" class="tz-select-input zn-token-kind">
+                  <option value="files-read" data-i18n="tokens.kind_files_read">Read files</option>
+                  <option value="files-write" data-i18n="tokens.kind_files_write">Read and change files</option>
+                  <option value="monitoring" data-i18n="tokens.kind_monitoring">See how the server is doing (monitoring)</option>
+                  <option value="mcp" data-i18n="tokens.kind_mcp">An AI assistant (MCP): search and read files</option>
+                  <option value="full" data-i18n="tokens.kind_full">Everything you can do (only for a tool you trust completely)</option>
+                </select>
                 <label for="new-token-folders" class="zn-sub is-spaced" data-i18n="tokens.folders_label">Only these folders (optional, one per line)</label>
                 <textarea id="new-token-folders" class="tz-select-input zn-token-folders" rows="2" placeholder="/mnt/user/Documents" data-i18n-placeholder="tokens.folders_placeholder"></textarea>
                 <div id="api-token-created" class="zn-token-created" role="status" hidden></div>

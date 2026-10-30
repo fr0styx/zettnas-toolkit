@@ -14,7 +14,11 @@ STREAM_TICKETS: dict[str, dict[str, Any]] = {}
 STREAM_TICKETS_LOCK = threading.RLock()
 
 
-def create_stream_ticket(user_id: str, username: str, scopes: list[str], role_id: str) -> str:
+def create_stream_ticket(
+    user_id: str, username: str, scopes: list[str], role_id: str, folders: list[str] | None = None, token_id: str = ""
+) -> str:
+    """A token's folder limit goes into its tickets: a ticket must not reach more than the
+    credential that asked for it (NSEC-1)."""
     import secrets
 
     ticket = f"zst_{secrets.token_urlsafe(32)}"
@@ -29,6 +33,8 @@ def create_stream_ticket(user_id: str, username: str, scopes: list[str], role_id
             "username": username,
             "scopes": scopes,
             "role_id": role_id,
+            "folders": list(folders or []),
+            "token_id": token_id,
             "expires_at": now + 60,
         }
     return ticket
@@ -46,6 +52,8 @@ def validate_and_consume_stream_ticket(ticket: str) -> dict[str, Any] | None:
                 "username": entry["username"],
                 "role_id": entry["role_id"],
                 "scopes": entry["scopes"],
+                "folders": list(entry.get("folders") or []),
+                "token_id": entry.get("token_id", ""),
                 "is_stream_ticket": True,
             }
     return None

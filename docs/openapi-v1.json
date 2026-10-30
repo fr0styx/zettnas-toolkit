@@ -37841,6 +37841,17 @@
       "title": "Name",
       "type": "string"
      },
+     "preset": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preset"
+     },
      "role_id": {
       "anyOf": [
        {

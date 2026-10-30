@@ -664,6 +664,59 @@ class TokenCreateRequest(BaseModel):
     expires_in_days: int | None = None
     # COMP-06: only these folders (and what is inside them); empty means every folder the account may open
     folders: list[str] | None = None
+    # NSEC-2: what the token is for; "full" is everything its creator holds
+    preset: str | None = None
+
+
+# What a token made for an app may do (NSEC-2). A token is handed to another program, so it gets
+# the rights that program needs, not its creator's.
+TOKEN_PRESETS: dict[str, list[str]] = {
+    "files-read": ["shares:read", "files:read"],
+    "files-write": ["shares:read", "files:read", "shares:user_write", "files:write"],
+    "monitoring": ["system:view", "hardware:read", "storage:read"],
+    "mcp": ["ai:knowledge:read", "shares:read", "files:read", "system:view"],
+}
+# Rights a folder-limited token never carries: they reach past any folder (the Docker API, the
+# server's settings, accounts, backups of everything)
+BEYOND_FOLDERS = {
+    "*",
+    "containers:*",
+    "containers:manage",
+    "containers:exec",
+    "system:config",
+    "users:write",
+    "storage:admin",
+    "shares:manage",
+}
+
+
+def token_scopes(req: "TokenCreateRequest", principal: Any) -> list[str]:
+    """The scopes a new token gets: a preset, or those asked for, or (none asked) its creator's;
+    a folder-limited token only file and read rights."""
+    held = list(getattr(principal, "scopes", None) or [])
+    if req.preset == "full":
+        scopes = held
+    elif req.preset:
+        if req.preset not in TOKEN_PRESETS:
+            raise HTTPException(status_code=400, detail=f"Unknown token kind: {req.preset}")
+        wanted = TOKEN_PRESETS[req.preset]
+        scopes = wanted if "*" in held else [s for s in wanted if s in held]
+    elif req.scopes:
+        scopes = list(req.scopes)
+    elif req.folders:
+        scopes = TOKEN_PRESETS["files-write"] if "*" in held else [s for s in TOKEN_PRESETS["files-write"] if s in held]
+    else:
+        scopes = held
+    if req.folders and BEYOND_FOLDERS & set(scopes):
+        raise HTTPException(
+            status_code=400,
+            detail="A token limited to folders can only have file and read rights: "
+            + ", ".join(sorted(BEYOND_FOLDERS & set(scopes)))
+            + " reach past any folder.",
+        )
+    if not scopes:
+        raise HTTPException(status_code=400, detail="You don't hold any of the rights this kind of token needs.")
+    return scopes
 
 
 @router.get("/tokens", dependencies=[Depends(require_scope("users:read", "system:config"))])
@@ -749,8 +802,8 @@ def create_token(req: TokenCreateRequest, principal: AuthenticatedPrincipal = De
     try:
         from backend.users_db import create_scoped_api_token
 
-        # No scopes chosen: the token gets what its creator holds, never more (SEC-4)
-        scopes = req.scopes or list(getattr(principal, "scopes", None) or [])
+        # No scopes chosen: the token gets what its creator holds, never more (SEC-4); see token_scopes
+        scopes = token_scopes(req, principal)
         folders = _token_folders_for(req.folders, principal)
         raw_token, meta = create_scoped_api_token(
             user_id=user_id,
