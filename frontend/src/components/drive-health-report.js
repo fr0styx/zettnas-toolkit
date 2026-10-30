@@ -64,6 +64,7 @@ export function notesRows(notes) {
     [t('dh.n_bought', 'Bought'), notes.bought || ''],
     [t('dh.n_warranty', 'Warranty'), notes.warranty_until ? warrantyText(notes.warranty_until) : ''],
     [t('dh.n_note', 'Note'), notes.note || ''],
+    [t('dh.n_temp', 'Warm above'), notes.temp_limit ? `${notes.temp_limit} °C` : ''],
   ].filter(([, v]) => v);
 }
 
@@ -100,6 +101,8 @@ export function notesForm(host, serial, notes, onSaved) {
   const bought = Object.assign(document.createElement('input'), { type: 'date', value: (notes && notes.bought) || '', name: 'bought' });
   const until = Object.assign(document.createElement('input'), { type: 'date', value: (notes && notes.warranty_until) || '', name: 'warranty_until' });
   const note = Object.assign(document.createElement('textarea'), { value: (notes && notes.note) || '', name: 'note', rows: 2, maxLength: 300 });
+  const limit = Object.assign(document.createElement('input'), { type: 'number', min: 30, max: 90, step: 1, name: 'temp_limit', value: notes && notes.temp_limit ? String(notes.temp_limit) : '' });
+  limit.placeholder = t('dh.n_temp_hint', 'Usual: 50 for hard drives, 70 for NVMe');
   note.placeholder = t('dh.n_note_hint', 'Where it sits, where it was bought, the order number…');
   const years = document.createElement('div');
   years.className = 'dh-years';
@@ -124,13 +127,14 @@ export function notesForm(host, serial, notes, onSaved) {
     field(t('dh.n_warranty_until', 'Warranty until'), until),
     years,
     field(t('dh.n_note', 'Note'), note),
+    field(t('dh.n_temp_label', 'Counts as warm above (°C); too hot is 10 °C more'), limit),
     row,
   );
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     save.disabled = true;
     try {
-      const res = await api.put('/api/drives/notes', { serial, bought: bought.value, warranty_until: until.value, note: note.value });
+      const res = await api.put('/api/drives/notes', { serial, bought: bought.value, warranty_until: until.value, note: note.value, temp_limit: limit.value ? Number(limit.value) : null });
       showToast(t('dh.n_saved', 'Saved.'), 'success');
       onSaved(res && res.notes ? res.notes : null);
     } catch (err) {
@@ -188,6 +192,7 @@ export function driveReportText({ drive, detail, tests, history, notes, now = ne
       line(t('dh.n_bought', 'Bought'), notes?.bought),
       line(t('dh.n_warranty', 'Warranty'), notes?.warranty_until ? warrantyText(notes.warranty_until, now) : ''),
       line(t('dh.n_note', 'Note'), notes?.note),
+      line(t('dh.n_temp', 'Warm above'), notes?.temp_limit ? `${notes.temp_limit} °C` : ''),
     ].filter(Boolean),
   );
   out.push('', rule, `${t('dh.verdict', 'What we found')}: ${labelText(health)}`, rule);

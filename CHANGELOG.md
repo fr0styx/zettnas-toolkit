@@ -95,6 +95,19 @@
 
 #### Usability
 
+- **A drive's own temperature limit**: next to its purchase and warranty details, a drive can have
+  the temperature above which it counts as warm (30–90 °C; too hot is 10 °C more). Its "runs warm"
+  finding and its temperature alert use it instead of the usual 50 °C for hard drives and 70 °C
+  for NVMe, for a drive that runs hot by design or sits in a warm room.
+- **Every S.M.A.R.T. value, with 30 days of history**: "All readings" lists every value of the
+  drive (normalized, worst, threshold, raw) with a small chart of each one that moved. A value
+  that only means trouble going up, or a normalized value at its threshold, is highlighted. They
+  are kept every six hours, or at once when one moves, and shown for a sleeping drive without
+  waking it.
+- **Drives taken out**: Drive Health keeps a record of every drive it has seen. One that is no
+  longer in the box is listed under "Taken out" with its model, size, last verdict, when it was
+  last seen and its warranty; "Forget" drops the record.
+
 - **"I know about this" in Drive Health**: a finding to watch or to plan for (say, 8 replaced
   sectors that haven't moved in a year) can be acknowledged. It then no longer sets the drive's
   verdict, so the drive reads Healthy and no alert or reminder is sent for it, until its numbers

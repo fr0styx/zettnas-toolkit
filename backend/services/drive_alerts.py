@@ -89,9 +89,12 @@ def on_verdict(
     return action
 
 
-def check_temperatures(drives: list[dict], hdd_warn: int, send: Callable[..., None]) -> list[str]:
+def check_temperatures(
+    drives: list[dict], hdd_warn: int, send: Callable[..., None], limits: dict[str, int] | None = None
+) -> list[str]:
     """Alerts each drive once when it crosses its warning or critical temperature; re-arms after it
-    has cooled TEMP_REARM_C below the warning level. Returns the drives alerted now."""
+    has cooled TEMP_REARM_C below the warning level. Returns the drives alerted now. `limits` are
+    the owners' own warning levels by dev (Drive Health details); critical is 10 °C above them."""
     from backend.config import NVME_CRITICAL_TEMP, NVME_WARN_TEMP
 
     alerted = []
@@ -101,8 +104,9 @@ def check_temperatures(drives: list[dict], hdd_warn: int, send: Callable[..., No
         if not dev or temp is None or d.get("standby"):
             continue
         nvme = bool(d.get("is_nvme"))
-        warn = NVME_WARN_TEMP if nvme else int(hdd_warn or 50)
-        crit = NVME_CRITICAL_TEMP if nvme else max(60, warn + 5)
+        own = (limits or {}).get(dev)
+        warn = own or (NVME_WARN_TEMP if nvme else int(hdd_warn or 50))
+        crit = own + 10 if own else (NVME_CRITICAL_TEMP if nvme else max(60, warn + 5))
         level = "crit" if temp >= crit else "warn" if temp >= warn else ""
         prev = _hot.get(dev, "")
         if level and (not prev or (level == "crit" and prev == "warn")):

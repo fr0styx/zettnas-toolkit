@@ -152,6 +152,20 @@ def init_db():
             ensure_columns(conn, "history.db")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_dev_ts ON smart_history(dev, ts DESC)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_smart_history_serial ON smart_history(serial, ts DESC)")
+            # every S.M.A.R.T. value of a drive over time, by serial (Drive Health: "Every value")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS smart_attributes (
+                    ts INTEGER NOT NULL,
+                    serial TEXT NOT NULL,
+                    attr TEXT NOT NULL,
+                    name TEXT,
+                    value INTEGER,
+                    worst INTEGER,
+                    thresh INTEGER,
+                    raw INTEGER,
+                    PRIMARY KEY (serial, attr, ts)
+                )
+            """)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS ups_events (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -750,6 +764,90 @@ def get_smart_test_history(dev: str | None = None, limit: int = 20) -> list[dict
 _VELOCITY_CACHE: dict[tuple[str, str], dict[str, Any]] = {}
 VELOCITY_RECHECK_SECS = 600  # temperature/power-on-hours-only changes refresh at most this often
 SPARKLINE_BUCKET_SECS = 7200  # 30 days -> at most 360 sparkline points
+
+
+ATTR_EVERY_SECS = 6 * 3600  # every value of a drive is stored this often, or at once when one moves
+ATTR_KEEP_SECS = 90 * 86400
+_ATTRS_STORED: dict[tuple[str, str], tuple[int, tuple]] = {}  # (db, serial) -> (ts, raws)
+
+
+def _int_or_none(v: Any) -> int | None:
+    try:
+        return None if v is None else int(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def log_smart_attributes(ts: int, serial: str, rows: list[dict]) -> bool:
+    """Stores every value of a drive (rows of attr, name, value, worst, thresh, raw) when one of
+    the raw values moved or ATTR_EVERY_SECS passed; True when it was stored."""
+    serial = str(serial or "").strip()
+    if not serial or not rows:
+        return False
+    raws = tuple(sorted((str(r.get("attr")), _int_or_none(r.get("raw"))) for r in rows))
+    key = (DB_PATH, serial)
+    last = _ATTRS_STORED.get(key)
+    if last and last[1] == raws and ts - last[0] < ATTR_EVERY_SECS and ts >= last[0]:
+        return False
+    try:
+        with history_session() as conn:
+            if last is None:
+                row = conn.execute("SELECT MAX(ts) FROM smart_attributes WHERE serial = ?", (serial,)).fetchone()
+                if row and row[0] and ts - row[0] < ATTR_EVERY_SECS:
+                    stored = conn.execute(
+                        "SELECT attr, raw FROM smart_attributes WHERE serial = ? AND ts = ?", (serial, row[0])
+                    ).fetchall()
+                    if tuple(sorted((str(a), _int_or_none(r)) for a, r in stored)) == raws:
+                        _ATTRS_STORED[key] = (row[0], raws)
+                        return False
+            conn.executemany(
+                "INSERT OR REPLACE INTO smart_attributes (ts, serial, attr, name, value, worst, thresh, raw) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    (
+                        ts,
+                        serial,
+                        str(r.get("attr")),
+                        str(r.get("name") or "")[:64],
+                        _int_or_none(r.get("value")),
+                        _int_or_none(r.get("worst")),
+                        _int_or_none(r.get("thresh")),
+                        _int_or_none(r.get("raw")),
+                    )
+                    for r in rows
+                ],
+            )
+            conn.execute("DELETE FROM smart_attributes WHERE serial = ? AND ts < ?", (serial, ts - ATTR_KEEP_SECS))
+    except sqlite3.Error:
+        logger.info("backend.db.log_smart_attributes: not stored for %s", serial, exc_info=True)
+        return False
+    _ATTRS_STORED[key] = (ts, raws)
+    return True
+
+
+def get_smart_attribute_history(serial: str, days: int = 30) -> dict[str, dict]:
+    """Every stored value of a drive over `days` days: attr -> {name, value, worst, thresh, raw,
+    points: [(ts, raw)], values: [(ts, value)]}, the newest reading first in each."""
+    since = int(time.time()) - days * 86400
+    out: dict[str, dict] = {}
+    try:
+        with history_session() as c:
+            rows = c.execute(
+                "SELECT ts, attr, name, value, worst, thresh, raw FROM smart_attributes "
+                "WHERE serial = ? AND ts >= ? ORDER BY ts ASC",
+                (str(serial or "").strip(), since),
+            ).fetchall()
+    except sqlite3.Error:
+        logger.debug("backend.db.get_smart_attribute_history: none for %s", serial, exc_info=True)
+        return {}
+    for ts, attr, name, value, worst, thresh, raw in rows:
+        a = out.setdefault(attr, {"points": [], "values": []})
+        a.update(name=name, value=value, worst=worst, thresh=thresh, raw=raw, ts=ts)
+        if raw is not None:
+            a["points"].append((ts, raw))
+        if value is not None:
+            a["values"].append((ts, value))
+    return out
 
 
 def get_smart_history_samples(dev: str, days: int = 45, bucket_secs: int = 21600) -> list[dict]:

@@ -40,7 +40,7 @@ describe('Drive Health warranty', () => {
     expect(form.querySelector('[name=warranty_until]').value).toBe('2027-03-01');
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     await flush();
-    expect(put).toHaveBeenCalledWith('/api/drives/notes', { serial: 'S1', bought: '2024-03-01', warranty_until: '2027-03-01', note: '' });
+    expect(put).toHaveBeenCalledWith('/api/drives/notes', { serial: 'S1', bought: '2024-03-01', warranty_until: '2027-03-01', note: '', temp_limit: null });
     expect(saved).toHaveBeenCalledWith({ bought: '2024-03-01', warranty_until: '2027-03-01' });
   });
 

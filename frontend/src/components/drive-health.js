@@ -22,6 +22,7 @@ import { bringToFront, makeDraggable } from './dock.js';
 import { showToast } from '../toast.js';
 import { announceChange } from '../a11y.js';
 import { compareTable } from './drive-health-compare.js';
+import { valuesTable, takenOutBox } from './drive-health-values.js';
 import { findingText, labelText, summaryText, reportCsv, openReportDialog, notesRows, notesForm, underWarranty } from './drive-health-report.js';
 
 export { labelText, summaryText, reportCsv };
@@ -35,7 +36,8 @@ let _drives = [];
 let _selected = null;
 let _listTimer = null;
 let _testTimer = null;
-let _notes = {}; // serial -> {bought, warranty_until, note}
+let _notes = {}; // serial -> {bought, warranty_until, note, temp_limit}
+let _retired = []; // drives seen before that aren't in the box now
 let _current = null; // the chosen drive as last read: {drive, detail, tests, history, identity, life}
 
 const VERDICT_CLASS = { ok: 'is-ok', watch: 'is-watch', soon: 'is-soon', now: 'is-now', unknown: 'is-unknown' };
@@ -208,6 +210,8 @@ export function detailHtml(drive, detail, tests) {
     <details class="dh-section dh-more">
       <summary>${escapeHtml(t('dh.all_readings', 'All readings'))}</summary>
       ${detail ? readingsHtml(detail) : `<p class="dh-hint">${escapeHtml(t('dh.loading', 'Loading…'))}</p>`}
+      <h4 class="dh-values-title">${escapeHtml(t('dh.v_title', 'Every value'))}</h4>
+      <div id="dh-values"><p class="dh-hint">${escapeHtml(t('dh.loading', 'Loading…'))}</p></div>
     </details>`;
 }
 
@@ -232,11 +236,14 @@ function _counts() {
 
 export async function loadDrives(refresh = false) {
   try {
-    const [data, notes] = await Promise.all([
+    const [data, notes, retired] = await Promise.all([
       api.get(`/api/drives/health${refresh ? '?refresh=1' : ''}`),
       api.get('/api/drives/notes').catch(() => null),
+      api.get('/api/drives/retired').catch(() => null),
     ]);
     if (notes && notes.notes) _notes = notes.notes;
+    if (retired && retired.drives) _retired = retired.drives;
+    renderRetired();
     _drives = (data && data.drives) || [];
     if (!_selected || !_drives.some((d) => d.dev === _selected)) _selected = _drives[0]?.dev || null;
     renderList();
@@ -329,6 +336,7 @@ function windowHtml() {
         <div id="dh-fleet" class="dh-fleet"></div>
         <button type="button" class="btn-pill-toggle is-small dh-compare-open" data-dh-compare>${escapeHtml(t('dh.compare_open', 'Compare all drives'))}</button>
         <ul id="dh-list" class="dh-list" aria-label="${escapeHtml(t('dh.drives', 'Drives'))}"></ul>
+        <div id="dh-retired"></div>
       </aside>
       <section id="dh-detail" class="dh-detail" aria-live="polite"></section>
     </div>`;
@@ -612,9 +620,41 @@ async function loadExtras(dev, id) {
     if (about) about.innerHTML = aboutSectionHtml(id, data.life, _current?.serial || '');
     const body = pane.querySelector('#dh-history .dh-history-body');
     if (body) body.replaceChildren(historyBody(data.history));
+    loadValues(dev);
   } catch (e) {
     const body = pane.querySelector('#dh-history .dh-history-body');
     if (body) body.textContent = t('dh.history_failed', 'Could not load the history.');
+  }
+}
+
+/** "Every value" of the chosen drive, from the stored readings. */
+async function loadValues(dev) {
+  const host = _win?.querySelector('#dh-values');
+  const serial = _current?.serial;
+  if (!host) return;
+  if (!serial) return void host.replaceChildren(valuesTable({}));
+  try {
+    const data = await api.get(`/api/drives/attributes?serial=${encodeURIComponent(serial)}&days=30`);
+    if (_selected === dev) host.replaceChildren(valuesTable((data && data.attributes) || {}));
+  } catch (e) {
+    host.textContent = t('dh.history_failed', 'Could not load the history.');
+  }
+}
+
+/** The "Taken out" list under the drives. */
+function renderRetired() {
+  const host = _win?.querySelector('#dh-retired');
+  if (host) host.replaceChildren(takenOutBox(_retired, _notes, forgetRetired));
+}
+
+/** Drops the record of a drive that was taken out. */
+export async function forgetRetired(serial) {
+  try {
+    await api.post('/api/drives/retired/forget', { serial });
+    _retired = _retired.filter((d) => d.serial !== serial);
+    renderRetired();
+  } catch (e) {
+    showToast(t('dh.ack_failed', 'Could not change that: {error}', { error: e?.message || '' }), 'error');
   }
 }
 
@@ -630,6 +670,7 @@ export const _test = {
     _selected = null;
     _schedule = null;
     _notes = {};
+    _retired = [];
     _current = null;
     clearInterval(_listTimer);
     clearInterval(_testTimer);

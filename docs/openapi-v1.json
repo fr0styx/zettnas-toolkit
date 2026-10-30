@@ -6591,6 +6591,21 @@
     "title": "DriveAckForget",
     "type": "object"
    },
+   "DriveForget": {
+    "properties": {
+     "serial": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Serial",
+      "type": "string"
+     }
+    },
+    "required": [
+     "serial"
+    ],
+    "title": "DriveForget",
+    "type": "object"
+   },
    "DriveNotes": {
     "properties": {
      "bought": {
@@ -6610,6 +6625,19 @@
       "minLength": 1,
       "title": "Serial",
       "type": "string"
+     },
+     "temp_limit": {
+      "anyOf": [
+       {
+        "maximum": 90.0,
+        "minimum": 30.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Temp Limit"
      },
      "warranty_until": {
       "default": "",
@@ -49750,6 +49778,64 @@
     ]
    }
   },
+  "/api/v1/drives/attributes": {
+   "get": {
+    "description": "Every S.M.A.R.T. value of a drive over time, from the stored readings (no drive is woken).",
+    "operationId": "drive_attributes_api_v1_drives_attributes_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "serial",
+      "required": true,
+      "schema": {
+       "title": "Serial",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "days",
+      "required": false,
+      "schema": {
+       "default": 30,
+       "title": "Days",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Drive Attributes Api V1 Drives Attributes Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Drive Attributes",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:read",
+     "system:view"
+    ]
+   }
+  },
   "/api/v1/drives/health": {
    "get": {
     "description": "Every drive with its verdict, reason and what to do; worst first. Never wakes a drive.",
@@ -49927,6 +50013,87 @@
      }
     },
     "summary": "Save Drive Notes",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/drives/retired": {
+   "get": {
+    "description": "Drives seen before that aren't in the box now: model, size, last verdict, when last seen.",
+    "operationId": "drives_taken_out_api_v1_drives_retired_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Drives Taken Out Api V1 Drives Retired Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Drives Taken Out",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:read",
+     "system:view"
+    ]
+   }
+  },
+  "/api/v1/drives/retired/forget": {
+   "post": {
+    "description": "Drops the record of a drive that was taken out.",
+    "operationId": "forget_taken_out_api_v1_drives_retired_forget_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DriveForget"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Forget Taken Out Api V1 Drives Retired Forget Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Forget Taken Out",
     "tags": [
      "Drive Health"
     ],

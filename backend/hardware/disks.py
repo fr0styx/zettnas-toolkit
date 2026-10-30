@@ -28,6 +28,7 @@ from backend.db import (
     get_latest_smart_test_result,
     get_smart_history_samples,
     get_smart_test_history,
+    log_smart_attributes,
     log_smart_metrics,
     log_smart_test_result,
     query_smart_velocity,
@@ -1139,6 +1140,11 @@ def drive_health_for(dev_name: str, doc: dict | None) -> dict:
 
     try:
         readings = drive_health.read_smartctl(doc) if doc else None
+        if readings:
+            from backend.services import drive_notes
+
+            readings["temp_limit"] = drive_notes.temp_limit_for(readings.get("serial"), *_drive_serials(dev_name))
+            log_smart_attributes(int(time.time()), readings.get("serial") or "", drive_health.attribute_rows(readings))
         result = drive_health.assess(readings, get_smart_history_samples(dev_name), get_smart_test_history(dev_name, 5))
         from backend.services import drive_acks
 
@@ -1162,6 +1168,16 @@ def drive_identity(dev_name: str) -> str:
     except Exception:
         logger.debug("backend.hardware.disks.drive_identity: discovery failed", exc_info=True)
     return f"dev:{dev_name}"
+
+
+def drive_serials_by_dev() -> dict[str, str]:
+    """dev -> serial number, for the drives discovery knows (nothing is woken)."""
+    out = {}
+    for d in _discover_disks():
+        v = str(d.get("serial") or "").strip()
+        if d.get("dev") and v and "standby" not in v.lower():
+            out[d["dev"]] = v
+    return out
 
 
 def _drive_serials(dev_name: str) -> list[str]:

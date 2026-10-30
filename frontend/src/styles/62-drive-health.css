@@ -100,3 +100,15 @@
 .dh-sort:hover, .dh-sort:focus-visible { text-decoration: underline; }
 th[aria-sort] .dh-sort { color: var(--zn-text); font-weight: 700; }
 th[aria-sort] .dh-sort { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Every value of a drive, and the drives taken out (drive-health-values.js) */
+.dh-values-title { margin: 14px 0 4px; font-size: 13px; }
+.dh-values-table th, .dh-values-table td { padding: 3px 6px; font-size: var(--zn-fs-xs, 12px); }
+.dh-values-table thead th { color: var(--muted); font-weight: 600; }
+.dh-values-table tr.is-rising th, .dh-values-table tr.is-rising td { color: var(--crit, var(--zn-text)); font-weight: 600; }
+.dh-values-table svg { max-width: 120px; }
+.dh-retired { margin-top: 12px; }
+.dh-retired summary { cursor: pointer; font-weight: 700; color: var(--muted); }
+.dh-retired-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dh-retired-list li { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 10px; background: var(--card); }
+.dh-retired-list .btn-pill-toggle { align-self: flex-start; }

@@ -170,9 +170,16 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
     # Drives: a temperature alert once per crossing; their condition is alerted by Drive Health
     # when its verdict changes (REL-7), not every half hour from here.
     try:
+        from backend.hardware.disks import drive_serials_by_dev
         from backend.services import drive_alerts
+        from backend.services.drive_notes import temp_limits_for_devs
 
-        drive_alerts.check_temperatures(all_disks or bad, notif_cfg.get("hdd_temp_threshold", 50), _async_notify)
+        drive_alerts.check_temperatures(
+            all_disks or bad,
+            notif_cfg.get("hdd_temp_threshold", 50),
+            _async_notify,
+            limits=temp_limits_for_devs(drive_serials_by_dev()),
+        )
     except Exception:
         logger.debug("stats_collector: drive temperature check failed", exc_info=True)
     return {"is_crit": is_crit, "is_warn": is_warn}

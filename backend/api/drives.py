@@ -66,6 +66,9 @@ def _summary(disk: dict[str, Any], detail: dict[str, Any]) -> dict[str, Any]:
 
 def _page(disks: list[dict[str, Any]], details: Sequence[dict[str, Any] | None], stale: bool = False) -> dict[str, Any]:
     out = [_summary(d, det or {}) for d, det in zip(disks, details, strict=True)]
+    from backend.services import drive_registry
+
+    drive_registry.note_present(out)
     out.sort(key=lambda r: (ORDER.get(r["verdict"], 3), r["dev"]))
     counts: dict[str, int] = {}
     for r in out:
@@ -154,6 +157,7 @@ class DriveNotes(BaseModel):
     bought: str = Field(default="", max_length=10)
     warranty_until: str = Field(default="", max_length=10)
     note: str = Field(default="", max_length=1000)
+    temp_limit: int | None = Field(default=None, ge=30, le=90)
 
 
 class DriveAck(BaseModel):
@@ -205,7 +209,41 @@ def save_drive_notes(req: DriveNotes) -> dict[str, Any]:
     from backend.services import drive_notes as notes
 
     try:
-        saved = notes.save(req.serial, req.bought, req.warranty_until, req.note)
+        saved = notes.save(req.serial, req.bought, req.warranty_until, req.note, req.temp_limit)
     except notes.BadNotes as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
     return {"serial": req.serial.strip(), "notes": saved}
+
+
+class DriveForget(BaseModel):
+    serial: str = Field(min_length=1, max_length=64)
+
+
+@router.get("/drives/retired", dependencies=[Depends(require_scope("storage:read", "system:view"))])
+def drives_taken_out() -> dict[str, Any]:
+    """Drives seen before that aren't in the box now: model, size, last verdict, when last seen."""
+    from backend.services import drive_registry
+
+    present = [d.get("serial") or "" for d in _disks()]
+    return {"drives": drive_registry.taken_out(present)}
+
+
+@router.post("/drives/retired/forget", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
+def forget_taken_out(req: DriveForget) -> dict[str, Any]:
+    """Drops the record of a drive that was taken out."""
+    from backend.services import drive_registry
+
+    return {"forgotten": drive_registry.forget(req.serial)}
+
+
+@router.get("/drives/attributes", dependencies=[Depends(require_scope("storage:read", "system:view"))])
+def drive_attributes(serial: str, days: int = 30) -> dict[str, Any]:
+    """Every S.M.A.R.T. value of a drive over time, from the stored readings (no drive is woken)."""
+    from backend.db import get_smart_attribute_history
+    from backend.services.drive_notes import SERIAL_RE
+
+    serial = serial.strip()
+    if not SERIAL_RE.match(serial):
+        raise HTTPException(status_code=400, detail="Invalid serial number.")
+    days = max(1, min(int(days), 90))
+    return {"serial": serial, "days": days, "attributes": get_smart_attribute_history(serial, days)}

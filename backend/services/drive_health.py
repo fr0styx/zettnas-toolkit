@@ -76,6 +76,7 @@ def read_smartctl(doc: dict[str, Any] | None) -> dict[str, Any]:
         r["attributes"][aid] = {
             "name": a.get("name") or "",
             "value": a.get("value"),
+            "worst": a.get("worst"),
             "thresh": a.get("thresh"),
             "raw": _raw(a),
         }
@@ -225,6 +226,37 @@ def _plural(n: int, one: str, many: str) -> str:
 
 
 BACKUP = "Copy what matters on it to another drive or a backup now"
+
+
+def attribute_rows(r: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every value of a live reading as rows to keep (attr, name, value, worst, thresh, raw): the
+    ATA attributes by id, an NVMe drive's health log fields as "nvme.<field>"."""
+    rows = [
+        {
+            "attr": str(aid),
+            "name": a.get("name") or "",
+            "value": a.get("value"),
+            "worst": a.get("worst"),
+            "thresh": a.get("thresh"),
+            "raw": a.get("raw"),
+        }
+        for aid, a in sorted((r.get("attributes") or {}).items())
+    ]
+    for field, v in sorted((r.get("nvme") or {}).items()):
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            rows.append(
+                {"attr": f"nvme.{field}", "name": field, "value": None, "worst": None, "thresh": None, "raw": int(v)}
+            )
+    return rows
+
+
+def temp_limits(r: dict[str, Any], nvme: bool) -> tuple[int, int]:
+    """When a drive counts as warm and as too hot: the owner's limit for it (r["temp_limit"], from
+    its Drive Health details) and 10 °C above it, else the usual ones for its kind."""
+    own = r.get("temp_limit")
+    if isinstance(own, int) and 30 <= own <= 90:
+        return own, own + 10
+    return (NVME_HOT_C, NVME_CRITICAL_C) if nvme else (HDD_HOT_C, HDD_CRITICAL_C)
 
 
 def findings_for(
@@ -567,7 +599,7 @@ def findings_for(
     # heat: the room or the fans, not the drive
     temp = r.get("temp_c")
     if isinstance(temp, (int, float)):
-        hot, critical = (NVME_HOT_C, NVME_CRITICAL_C) if nvme else (HDD_HOT_C, HDD_CRITICAL_C)
+        hot, critical = temp_limits(r, nvme)
         if temp >= critical:
             out.append(
                 _f(
