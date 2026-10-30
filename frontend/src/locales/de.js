@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "overview.tell_admin": "Sagen Sie es der Person, die ZettNAS verwaltet.",
   "fm.ctx_preview": "Schnellansicht",
   "fm.kbd_space": "Leertaste",
   "fm.ctx_open": "Öffnen",

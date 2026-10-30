@@ -45,9 +45,16 @@ _VIEWERS = 0
 _LAST_DEMAND = 0.0
 _DEMAND_LOCK = threading.Lock()
 _DEMAND_WAKE = threading.Event()
-BACKOFF_SECS = 5.0  # no Docker socket, no running containers, or an error
+BACKOFF_SECS = 5.0  # no Docker socket, or an error
+NO_APPS_SECS = 60.0  # no app running: look again a minute later, or as soon as someone looks (NPERF-6)
 # container id -> (total CPU usage, system CPU usage) from the previous one-shot sample
 _PREV_CPU: dict[str, tuple[int, int]] = {}
+
+
+def _wait_for_apps() -> None:
+    """No app running: look again in NO_APPS_SECS, or at once when someone opens Apps (NPERF-6)."""
+    _DEMAND_WAKE.wait(NO_APPS_SECS)
+    _DEMAND_WAKE.clear()
 
 
 def note_container_demand() -> None:
@@ -443,7 +450,7 @@ def _docker_telemetry_worker():
                         ignored("backend.hardware.docker_stats._docker_telemetry_worker")
 
             if not running:
-                time.sleep(BACKOFF_SECS)  # one sleep, not ten slices (PERF-5)
+                _wait_for_apps()
                 continue
 
             # Dynamic worker querying all running containers with adaptive concurrency

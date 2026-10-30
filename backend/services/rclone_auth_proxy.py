@@ -48,6 +48,20 @@ def _sftp_password_ok(stored: str, password: str) -> bool:
     return hmac.compare_digest(stored, password)
 
 
+def _note_failure() -> None:
+    """For the SFTP front, which knows the address (NSEC-15): the time of a failed sign-in."""
+    path = os.environ.get("ZETTNAS_AUTH_FAIL_LOG", "")
+    if not path:
+        return
+    try:
+        import time
+
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"ts": time.time()}) + "\n")
+    except OSError:
+        ignored("backend.services.rclone_auth_proxy._note_failure")
+
+
 def main():
     try:
         raw = sys.stdin.read()
@@ -66,6 +80,7 @@ def main():
 
     lock_key = f"webdav:{username.lower()}"
     if login_lockout.remaining(lock_key) > 0:
+        _note_failure()  # still guessing at a locked account: the address counts
         sys.exit(1)
 
     pool_path = getattr(config, "POOL_PATH", "/mnt/user")
@@ -165,6 +180,7 @@ def main():
 
     if not authenticated:
         login_lockout.register_failure(lock_key)
+        _note_failure()
         sys.exit(1)
     login_lockout.clear(lock_key)
 

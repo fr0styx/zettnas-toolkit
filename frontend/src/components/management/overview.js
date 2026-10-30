@@ -87,7 +87,9 @@ export function itemText(i) {
   const subject = i.kind === 'service_stalled' && SERVICES[i.subject] ? SERVICES[i.subject]() : i.subject || '';
   const msg = MESSAGES[i.kind] ? MESSAGES[i.kind]() : t('overview.unknown_item', 'Something needs attention: {subject}.');
   const detail = i.detail_key ? t(i.detail_key, i.detail || '', i.detail_params || {}) : i.detail || '';
-  return msg.replace('{subject}', subject || i.kind || '').replace('{detail}', detail);
+  const text = msg.replace('{subject}', subject || i.kind || '').replace('{detail}', detail);
+  // someone who can't fix it is told who can (NUX-5)
+  return i.tell_admin ? `${text} ${t('overview.tell_admin', 'Tell the person who manages ZettNAS.')}` : text;
 }
 
 export function statusHtml(summary) {

@@ -64293,7 +64293,7 @@
   },
   "/api/v1/system/status-summary": {
    "get": {
-    "description": "What needs attention, for the Overview (UX-1).",
+    "description": "What needs attention, for the Overview (UX-1), as this person can act on it (NUX-5).",
     "operationId": "get_status_summary_api_v1_system_status_summary_get",
     "responses": {
      "200": {

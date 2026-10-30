@@ -171,6 +171,8 @@ def test_docker_telemetry_backoff_when_idle_or_failing(monkeypatch, answer):
 
     monkeypatch.setattr(ds, "UnixHTTPConnection", FakeConn)
     monkeypatch.setattr(ds.time, "sleep", sleep)
+    monkeypatch.setattr(ds, "_wait_for_apps", lambda: sleep(ds.NO_APPS_SECS))
     monkeypatch.setattr(Z_STATE, "shutting_down", False)
     ds._docker_telemetry_worker()
-    assert sleeps == [ds.BACKOFF_SECS]
+    # no app running: a minute, or until someone opens Apps (NPERF-6); an error: the short backoff
+    assert sleeps == [ds.NO_APPS_SECS if answer == "no containers" else ds.BACKOFF_SECS]

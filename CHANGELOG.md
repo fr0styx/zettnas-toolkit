@@ -4,6 +4,10 @@
 
 #### Security
 
+- **Password guessing over SFTP blocks the address**: failed SFTP sign-ins now count against the
+  address they came from, as they do for the web and WebDAV, so trying many accounts from one
+  place gets it blocked (NSEC-15).
+
 - **The file activity log keeps home folders private**: the Auditor role sees whose home folder
   a change was in, not the file names, and its search doesn't look inside home folders. A
   person's entries are in their data export, and erasing their data removes their name, address
@@ -78,14 +82,19 @@
 
 #### Usability
 
+- **Each account sees what it can use**: on phones, kids, guests and family accounts no longer get
+  tiles for Users, Storage, Backup, Apps, Network or AI settings that would only say "no
+  permission". The Overview leaves out chores only the manager can do, and for a problem someone
+  can't fix it says "Tell the person who manages ZettNAS" instead of an Open button (NUX-5).
+
 - **Your clock everywhere**: file dates, a backup's last run, the activity log and every other
   time on screen now use your own time zone and 12/24-hour choice, as the desktop clock does.
   The sign-in hours note says which zone "server time" is and what time it is there (NUX-10).
 - **One list of time zones, in your language**: Settings and the setup wizard offer the same full
   list, with city and zone names and times in your language (NUX-22).
 - **The time-zone card works by keyboard**: arrow keys move through the zones and Enter picks
-  one, 12 h / 24 h is a choice you can tab to, every label is translated, and "Undo changes"
-  now puts back what was saved (NUX-8).
+  one, 12 h / 24 h is a choice you can tab to, every label is translated, and the discard button
+  now puts back what was saved; it is called "Discard changes" (NUX-8).
 - **The File Explorer's right-click menu works by keyboard and in your language**: Shift+F10 or
   the menu key opens it with focus inside, arrow keys move, Enter picks and focus goes back where
   it was; every entry is translated, shortcuts show Ctrl or ⌘ to match your computer, and
@@ -285,6 +294,10 @@
 
 #### AI
 
+- **Searches for "Scan(1)" or "Berlin -> Paris" aren't treated as code**: copy-numbered file names,
+  arrows and lists no longer switch search to its code mode, which found worse matches; real code
+  still does (NAI-15).
+
 - **Other apps take their turn after the family**: Paperless, Home Assistant and other apps using
   "AI for apps" now wait behind people's chats and searches on the GPU, and each app key runs
   one request at a time; a second one gets "busy, try again" (NAI-13).
@@ -346,6 +359,10 @@
   (`TOKEN` on the server, `EMBEDDING_TOKEN` on ZettNAS).
 
 #### Performance
+
+- **Quieter when idle**: the storage alert check writes its state only when something changed
+  (it used to write every five minutes), and with no app running ZettNAS asks Docker for app
+  stats once a minute instead of every five seconds, at once when you open Apps (NPERF-6).
 
 - **A memory warning instead of a limit**: ZettNAS warns when it uses more than `APP_MEMORY_WARN_MB`
   (1536 MB; virtual machines not counted). No memory limit is set by default, since Docker kills a

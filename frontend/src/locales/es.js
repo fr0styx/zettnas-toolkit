@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "overview.tell_admin": "Avisa a la persona que administra ZettNAS.",
   "fm.ctx_preview": "Vista rápida",
   "fm.kbd_space": "Espacio",
   "fm.ctx_open": "Abrir",

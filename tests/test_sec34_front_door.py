@@ -366,5 +366,5 @@ def test_the_sftp_front_stops_a_killed_rclone_as_a_failure(blocks, tmp_path, mon
         def poll(self):
             return -9
 
-    monkeypatch.setattr(sftp_front.subprocess, "Popen", lambda cmd: Rclone())
+    monkeypatch.setattr(sftp_front.subprocess, "Popen", lambda cmd, **kw: Rclone())
     assert sftp_front.main([str(_free_port()), str(tmp_path / "cache")]) == 1

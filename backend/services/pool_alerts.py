@@ -210,6 +210,7 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
         return sent
     with locked_json(_state_file()):
         state = read_json(_state_file(), {}) or {}
+        before = repr(sorted(state.items()))
         for pid, item in items.items():
             prev = state.get(pid)
             title, message = _text(item)
@@ -241,7 +242,8 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
                 dedup_key=f"{pid}:fixed",
             )
             sent["fixed"].append(pid)
-        atomic_write_json(_state_file(), state)
+        if repr(sorted(state.items())) != before:
+            atomic_write_json(_state_file(), state)  # only on a change, not every 5 minutes (NPERF-6)
     return sent
 
 

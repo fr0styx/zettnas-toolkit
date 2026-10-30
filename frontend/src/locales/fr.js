@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "overview.tell_admin": "Prévenez la personne qui gère ZettNAS.",
   "fm.ctx_preview": "Aperçu rapide",
   "fm.kbd_space": "Espace",
   "fm.ctx_open": "Ouvrir",

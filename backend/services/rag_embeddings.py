@@ -248,11 +248,20 @@ CODE_EXTENSIONS_RE = re.compile(
 CODE_SHAPE_RE = re.compile(
     r"\b(?:async\s+)?(?:def|class|function|func|fn|impl|struct|interface|enum|trait)\s+[A-Za-z_]\w*\s*[(:{<]"
     r"|\b(?:const|let|var|auto)\s+[A-Za-z_]\w*\s*[:=]"
-    r"|\b[A-Za-z_][\w.]*\([^()]*\)"
-    r"|=>|::|->|!=|==|\$\(|[{};]"
+    r"|\b[A-Za-z_][\w.]*\(\)|=>|::|!=|==|\$\(|[{}]"
     r"|^\s*(?:from\s+[\w.]+\s+)?import\s+[\w.]+"
     r"|\bSELECT\b.+\bFROM\b|\bselect\s+\*\s+from\b|\bwhere\s+\w+\s*(?:=|<|>|like\b|in\s*\()",
 )
+# Shapes households type too: "Scan(1)", "Rechnung(2).pdf", "Berlin -> Paris", "tickets; hotel".
+# One of these alone is a search; two together are code (NAI-15). A call's brackets that hold
+# only a number are a copy suffix, not a call; empty brackets, main(), are code.
+CODE_HINT_RE = re.compile(r"\b[A-Za-z_][\w.]*\((?!\s*\d+\s*\))[^()]+\)|->|;")
+
+
+def looks_like_code(text: str) -> bool:
+    """A definition, an import, braces or a comparison; or two of the weaker hints (NAI-15)."""
+    return bool(CODE_SHAPE_RE.search(text)) or len(CODE_HINT_RE.findall(text)) >= 2
+
 
 QA_INDICATORS_RE = re.compile(
     r"^(how\s+(to|do|can|does)|why\s+(is|does|do)|what\s+(is|are)|where\s+(is|can)|when\s+should|can\s+i|is\s+it\s+(safe|possible)|explain)\b",
@@ -295,7 +304,7 @@ def classify_query_task_intent(query: str, modality_hint: str = "all") -> tuple[
 
     # Rule 3: Evaluate unambiguous code syntax, CLI commands, or source file extensions
     if (
-        CODE_SHAPE_RE.search(q_strip)
+        looks_like_code(q_strip)
         or any(ind in low for ind in CLI_COMMAND_INDICATORS)
         or bool(CODE_EXTENSIONS_RE.search(low))
     ):

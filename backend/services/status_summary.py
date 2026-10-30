@@ -198,9 +198,38 @@ def _timezone() -> list[dict[str, Any]]:
 CHECKS = (_drives, _pools, _storage, _backups, _protection, _kits, _stalled, _frozen, _power, _password, _timezone)
 
 
-def summary() -> dict[str, Any]:
+# What it takes to act on an item where its Open button leads (NUX-5)
+ACT_SCOPES = {
+    "drives": ("storage:admin", "storage:write"),
+    "storage": ("storage:admin", "storage:write"),
+    "backup": ("backup:manage", "backup:write"),
+    "activity": ("system:config",),
+    "settings": ("system:config",),
+    "power": ("system:power", "system:config"),
+    "time": ("system:config",),
+}
+# Things only the person who manages ZettNAS can do anything about: nobody else is told
+ADMIN_ONLY = {"default_password", "timezone_unset", "kit_not_saved", "service_stalled"}
+
+
+def for_viewer(items: list[dict[str, Any]], can: Any) -> list[dict[str, Any]]:
+    """The items as one person should see them: those they can't act on lose their Open button
+    and say to tell the person who manages ZettNAS; admin-only chores are left out (NUX-5)."""
+    out = []
+    for i in items:
+        need = ACT_SCOPES.get(str(i.get("open") or ""), ())
+        if not need or any(can(s) for s in need):
+            out.append(i)
+        elif i.get("kind") not in ADMIN_ONLY:
+            out.append({**i, "open": None, "tell_admin": True})
+    return out
+
+
+def summary(can: Any = None) -> dict[str, Any]:
     items: list[dict[str, Any]] = []
     for check in CHECKS:
         items.extend(_safe(check))
+    if can is not None:
+        items = for_viewer(items, can)
     items.sort(key=lambda i: 0 if i["level"] == "critical" else 1)
     return {"ok": not items, "items": items}

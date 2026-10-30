@@ -21,6 +21,7 @@ import { api } from '../api.js';
 import { statusHtml as healthHtml } from './management/overview.js';
 import { advancedOn, isAdvancedRoute } from '../advanced.js';
 import { announceChange } from '../a11y.js';
+import { hideUnusable } from '../route-access.js';
 
 const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window, #phone-alerts-page';
 // A page on its way out is not open any more
@@ -345,6 +346,9 @@ export function enablePhoneShell(on) {
     <div id="phone-launcher" class="phone-launcher">${launcherHtml()}</div>
     <nav id="phone-tabs" class="phone-tabs" aria-label="${escapeHtml(t('phone.tabs', 'Main sections'))}">${tabsHtml()}</nav>`;
   document.body.appendChild(shell);
+  import('./session.js') // the account may be known already
+    .then((m) => hideUnusable(shell, m.getCurrentUser()))
+    .catch(() => {});
   shell.addEventListener('click', (e) => {
     const tab = e.target.closest('[data-phone-tab]');
     const tile = e.target.closest('[data-phone-open]');

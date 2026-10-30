@@ -762,7 +762,7 @@ request and response schemas.
 | `GET` | `/api/v1/system/security-posture` | any of `system:view`, `system:config`, `users:read` | Evaluates real-time security posture across authentication, MFA, HTTPS, guest network shares, and API credential hygiene |
 | `POST` | `/api/v1/system/security-posture/fix/{fix_id}` | `system:config` | Applies one Security Advisor fix (B11): tightens a setting an upgraded install kept |
 | `POST` | `/api/v1/system/shutdown` | `system:power` | Trigger system poweroff (requires system:power scope) |
-| `GET` | `/api/v1/system/status-summary` | `system:view` | What needs attention, for the Overview (UX-1) |
+| `GET` | `/api/v1/system/status-summary` | `system:view` | What needs attention, for the Overview (UX-1), as this person can act on it (NUX-5) |
 | `GET` | `/api/v1/system/updates` | `system:view` | Release/commit check, then a registry digest check (OPS-18) |
 | `POST` | `/api/v1/system/updates/apply` | any of `system:power`, `system:manage` | Pulls the latest ZettNAS image and initiates a graceful self-update |
 | `GET` | `/api/v1/system/updates/last-result` | any of `system:view`, `system:manage` | How the last in-app update or revert ended (OPS-7) |

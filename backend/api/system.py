@@ -1141,11 +1141,11 @@ def get_protection_status():
 
 
 @router.get("/system/status-summary", dependencies=[Depends(require_scope("system:view"))])
-def get_status_summary():
-    """What needs attention, for the Overview (UX-1)."""
+def get_status_summary(principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """What needs attention, for the Overview (UX-1), as this person can act on it (NUX-5)."""
     from backend.services.status_summary import summary
 
-    return summary()
+    return summary(principal.has_scope)
 
 
 @router.get("/system/about")

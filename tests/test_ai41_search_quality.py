@@ -62,6 +62,12 @@ def test_the_title_is_the_file_name_without_its_extension_and_a_new_heading_is_a
         "class photos of the kids",
         "return policy for the washing machine",
         "public holidays 2025",
+        # copy suffixes, arrows and lists households type (NAI-15)
+        "Scan(1)",
+        "Rechnung(2).pdf",
+        "IMG_2034(3)",
+        "Berlin -> Paris",
+        "tickets; hotel",
     ],
 )
 def test_questions_that_contain_code_words_are_searches(query):
@@ -80,6 +86,9 @@ def test_questions_that_contain_code_words_are_searches(query):
         "foo::bar",
         "btrfs subvol snapshot /mnt/user/share",
         "the backup_photos.py script",
+        "parse(line); return",
+        "node -> next; free(node)",
+        "main()",
     ],
 )
 def test_code_keeps_the_code_prompt(query):

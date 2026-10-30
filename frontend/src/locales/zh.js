@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "overview.tell_admin": "请告诉管理 ZettNAS 的人。",
   "fm.ctx_preview": "快速查看",
   "fm.kbd_space": "空格",
   "fm.ctx_open": "打开",
