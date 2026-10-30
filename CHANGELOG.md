@@ -483,6 +483,11 @@
 
 #### Fixes
 
+- **One answer to "is this disk asleep?"**: the AI index, the File Explorer, Drive Health, the
+  wake confirmation and the ransomware guard now ask the same way, with one rule and one shared
+  10-second memory, so two features no longer start two checks of the same disk. A disk that
+  can't be opened is no longer taken for a sleeping one by the AI index's check (NARC-2).
+
 - **Opening a folder asks before waking a sleeping disk**: when the disk holding a folder is
   asleep, the File Explorer (and folder pickers) ask "Open … ? Its disk is asleep" before listing
   it, since listing it spins the disk up. Saying no shows "This folder's disk is asleep" with a

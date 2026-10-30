@@ -1282,16 +1282,13 @@ def is_drive_asleep(dev_name: str) -> bool:
     clean = dev_name.removeprefix("/dev/").removeprefix("/host/dev/")
     if clean.startswith("nvme") or not VALID_DEV_PATTERN.fullmatch(clean):
         return False
-    try:
-        r = subprocess.run(
-            ["smartctl", "-n", "standby", "-i", "-d", _get_smart_device_type(clean, False), _resolve_dev_path(clean)],
-            capture_output=True,
-            text=True,
-            timeout=6,
-        )
-    except (OSError, subprocess.SubprocessError):
+    from backend.hardware import power_state
+
+    # asked now, not from the cache: this decides whether something may wake it (NARC-2)
+    state = power_state.probe(clean, _get_smart_device_type(clean, False), max_age=0, path=_resolve_dev_path(clean))
+    if state == power_state.UNKNOWN:  # smartctl couldn't answer: the last thing we knew
         return (Z_STATE.cached_smart_data.get(clean) or (None, None))[1] == "standby"
-    return is_standby_out(r.returncode, (r.stdout or "") + " " + (r.stderr or ""))
+    return state == power_state.STANDBY
 
 
 def refresh_drive_verdicts() -> int:

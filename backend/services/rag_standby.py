@@ -12,11 +12,12 @@ import time
 from typing import Any
 
 from backend.config import logger
+from backend.hardware import power_state
 from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
 _UNRAID_INI_CACHE: dict[str, Any] = {"ts": 0.0, "disks": {}, "shares": {}}
-_SMARTCTL_STANDBY_CACHE: dict[str, tuple[float, bool]] = {}
+_SMARTCTL_STANDBY_CACHE = power_state._PROBES  # one probe cache for the whole app (NARC-2)
 
 
 def _parse_ini_sections(ini_path: str) -> dict[str, dict[str, str]]:
@@ -153,10 +154,12 @@ def _disk_reports_standby(dev_name: str) -> bool:
     return is_backing_disk_in_standby(dev_name, check_smartctl=True)
 
 
-def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> bool:
+def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False, unknown: str | None = None) -> bool:
     """
     Non-waking check for whether a physical drive or filesystem path is in STANDBY/SLEEP mode.
     Strictly obeys AGENTS.md §1.2 (never wakes sleeping drives; uses -n standby if smartctl is invoked).
+    `unknown` says what a path whose disk can't be placed counts as: power_state.DEFER (asleep, the
+    default; ZETTNAS_STANDBY_UNKNOWN=allow makes it CHECK) or power_state.CHECK (awake).
     """
     if not dev_name:
         return False
@@ -166,7 +169,10 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
         dev_name = resolve_path_backing_dev(dev_name)
     if dev_name == UNKNOWN_BACKING_DEV:
         # Couldn't tell which disk holds it: assume it may be asleep unless told otherwise (AI-08)
-        return os.environ.get("ZETTNAS_STANDBY_UNKNOWN", "defer").strip().lower() != "allow"
+        if unknown is None:
+            allow = os.environ.get("ZETTNAS_STANDBY_UNKNOWN", "defer").strip().lower() == "allow"
+            unknown = power_state.CHECK if allow else power_state.DEFER
+        return unknown == power_state.DEFER
     if "," in dev_name:
         return any(_disk_reports_standby(d) for d in dev_name.split(",") if d)
     if not dev_name or dev_name.startswith(("nvme", "loop", "ram", "zram")):
@@ -202,35 +208,8 @@ def is_backing_disk_in_standby(dev_name: str, check_smartctl: bool = False) -> b
     if not check_smartctl and cached is None and not any(d.get("device") == dev_name for d in unraid_disks.values()):
         check_smartctl = True
     if check_smartctl:
-        now = time.time()
-        sc_cached = _SMARTCTL_STANDBY_CACHE.get(dev_name)
-        if sc_cached and (now - sc_cached[0]) < 10.0:
-            return sc_cached[1]
-
-        dev_path = f"/host/dev/{dev_name}" if os.path.exists(f"/host/dev/{dev_name}") else f"/dev/{dev_name}"
-        if os.path.exists(dev_path):
-            try:
-                r = subprocess.run(
-                    ["smartctl", "-n", "standby", "-i", dev_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=4,
-                )
-                out_upper = ((r.stdout or "") + (r.stderr or "")).upper()
-                open_failed = "OPEN DEVICE" in out_upper or "NO SUCH DEVICE" in out_upper
-                is_low_power = (
-                    "STANDBY" in out_upper
-                    or "SLEEP" in out_upper
-                    or (not open_failed and (r.returncode == 2 or (r.returncode & 2) != 0))
-                )
-                if is_low_power:
-                    Z_STATE.smart.set_reading(dev_name, cached[0] if cached else None, "standby")
-                    _SMARTCTL_STANDBY_CACHE[dev_name] = (now, True)
-                    return True
-                _SMARTCTL_STANDBY_CACHE[dev_name] = (now, False)
-            except Exception:
-                ignored("backend.services.rag_engine.is_backing_disk_in_standby")
-
+        # one probe and one rule for the whole app: hardware/power_state.py (NARC-2)
+        return power_state.probe(dev_name) == power_state.STANDBY
     return False
 
 

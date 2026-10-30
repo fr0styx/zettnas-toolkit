@@ -274,7 +274,7 @@ class RansomwareGuard:
 
             dev = rag_standby.resolve_path_backing_dev(path)
             if not dev or dev == rag_standby.UNKNOWN_BACKING_DEV:
-                return False
+                return False  # power_state.CHECK: a disk nobody can place is looked at anyway
             return rag_standby.is_backing_disk_in_standby(dev)
         except Exception:
             return False

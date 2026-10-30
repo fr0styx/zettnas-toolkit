@@ -30,29 +30,10 @@ class SmartTelemetryEngine:
         Non-invasive power mode query. Returns True if drive is in STANDBY or SLEEP mode.
         Executes smartctl -n standby or hdparm -C without triggering spindle spinup.
         """
-        # 1. Primary check: smartctl -n standby -i
-        try:
-            cmd = ["smartctl", "-n", "standby", "-i"]
-            if protocol:
-                cmd.extend(["-d", protocol])
-            cmd.append(dev_path)
-            r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
-            # only smartctl's standby message says asleep; exit bit 1 alone can be a failed open (NARC-1)
-            if is_standby_out(r.returncode, (r.stdout or "") + " " + (r.stderr or "")):
-                return True
-        except Exception:
-            ignored("backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping")
+        # the app's one probe (NARC-2): smartctl -n standby, read by smart_power's rule
+        from backend.hardware import power_state
 
-        # 2. Secondary fallback: hdparm -C (ATA only)
-        try:
-            cmd = ["hdparm", "-C", dev_path]
-            r = subprocess.run(cmd, capture_output=True, text=True, timeout=3)
-            if r.returncode == 0 and ("standby" in r.stdout.lower() or "sleeping" in r.stdout.lower()):
-                return True
-        except Exception:
-            ignored("backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping")
-
-        return False
+        return power_state.probe(dev_path, protocol, path=dev_path) == power_state.STANDBY
 
     @classmethod
     def decode_smart_json(cls, doc: dict[str, Any], is_nvme: bool, protocol: str = "sat") -> tuple:
