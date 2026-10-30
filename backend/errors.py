@@ -53,6 +53,15 @@ class ShownServerError(StarletteHTTPException):
         self.error = error
 
 
+class ApiError(StarletteHTTPException):
+    """An HTTP error with its own slug, so the interface can say the real cause in every language
+    instead of a sentence picked by the status code (NUX-1)."""
+
+    def __init__(self, status_code: int, detail: str, error: str):
+        super().__init__(status_code=status_code, detail=detail)
+        self.error = error
+
+
 def _hide_internal(status: int, detail: str, extra: dict[str, Any], shown: bool = False) -> str:
     """500s: log the original message under a reference and return a generic one."""
     if status != 500 or shown:

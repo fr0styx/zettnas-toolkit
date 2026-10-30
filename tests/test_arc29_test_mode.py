@@ -32,9 +32,12 @@ def test_switches_do_nothing_in_the_released_image(monkeypatch, tmp_path):
 
 
 def test_the_sensitive_checks_go_through_test_mode():
-    for rel in ("backend/passwords.py", "backend/users_db.py", "backend/config.py", "backend/main.py"):
-        src = (ROOT / rel).read_text(encoding="utf-8")
-        assert not re.search(r'environ\.get\("(TESTING|ZETTNAS_TEST_MODE|ZETTNAS_FAST_HASH)"', src), rel
+    # every backend file, not a list that new code can slip past (NARC-6)
+    for path in sorted((ROOT / "backend").rglob("*.py")):
+        if path.name == "settings.py":
+            continue
+        src = path.read_text(encoding="utf-8")
+        assert not re.search(r'environ\.get\("(TESTING|ZETTNAS_TEST_MODE|ZETTNAS_FAST_HASH)"', src), path
 
 
 def test_the_release_build_writes_the_marker():

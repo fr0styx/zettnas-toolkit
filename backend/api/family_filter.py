@@ -32,7 +32,7 @@ def get_family_filter() -> dict[str, Any]:
     people = [
         {"username": u["username"], "display_name": u.get("display_name") or u["username"]}
         for u in list_users()
-        if u.get("role_id") in ("share_user", "guest")
+        if u.get("role_id") in ("kid", "share_user", "guest")  # the Kid role first of all (NSEC-12)
     ]
     return {**adguard_kids.public(), "accounts": people, "services": list(adguard_kids.SERVICES)}
 

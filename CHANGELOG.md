@@ -4,6 +4,10 @@
 
 #### Security
 
+- **One mistyped password can't lock the family out of the office suite**: the office suite
+  checks passwords through ZettNAS from one address, which repeated failures used to block for
+  everyone; now only that account is held back (NSEC-6).
+
 - **Sign-in hours hold everywhere**: a family account's sign-in hours now apply to its API
   tokens, WebDAV and SFTP and the office suite as well as the web desktop (NSEC-7).
 - **Encrypted folders resist guessing**: opening one is limited to a few tries a minute per
@@ -62,6 +66,11 @@
 
 #### Usability
 
+- **Errors name the real cause in every language**: a wrong encrypted-folder password, a busy
+  folder, a backup that is already running and similar cases now say so in your language,
+  instead of a guess from the kind of error ("choose another name") (NUX-1).
+- **Your clock is yours**: changing your own time zone no longer changes the server's by
+  default; the box for that is now unticked (NUX-9).
 - **Healthy is green in every theme**: the Crimson theme showed healthy drives and running apps
   in red, and other accent themes in purple, blue or amber; the healthy colour now stays green
   everywhere, on the front screen too (NUX-4).
@@ -231,6 +240,12 @@
 - **Zetty's tools behave**: a container action it proposes always shows its Confirm button,
   asking about two places gets two answers, and after reading files or web pages it can't call
   more tools in the same answer (NAI-4, NAI-5, NAI-6).
+- **Your files stay in the house when Zetty may use the web**: after reading your files it searches
+  the web only when you asked it to, and it looks up the weather only for a place you named
+  (NAI-2, NAI-3).
+- **AI switches hold over MCP too**: an AI assistant connected over MCP can't search the files of
+  someone whose AI search is turned off, and its requests appear in the AI request log; apps
+  using "AI for apps" get answers of bounded length (NAI-12, NAI-13).
 - **The nightly re-embed keeps to the night**: it stops at the end of its hours and goes on the
   next night, and a re-embed you start from AI settings takes over (NAI-7).
 

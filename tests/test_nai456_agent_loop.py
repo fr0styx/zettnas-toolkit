@@ -8,7 +8,7 @@ def _call(name, **args):
     return {"function": {"name": name, "arguments": args}}
 
 
-def _run(monkeypatch, rounds, results):
+def _run(monkeypatch, rounds, results, said="hi"):
     calls, ran = [], []
 
     def model(**kw):
@@ -36,7 +36,7 @@ def _run(monkeypatch, rounds, results):
         principal=None,
         tool_results=tool_results,
         tools_called=tools_called,
-        user_text="hi",
+        user_text=said,
     )
     return calls, ran, tool_results
 
@@ -49,7 +49,7 @@ def test_other_arguments_run_again_and_every_result_is_kept(monkeypatch):
             _call("get_weather", location="Paris"),
         ]
     ]
-    calls, ran, results = _run(monkeypatch, rounds, {})
+    calls, ran, results = _run(monkeypatch, rounds, {}, said="weather in Paris and Berlin?")
     assert ran == [("get_weather", {"location": "Paris"}), ("get_weather", {"location": "Berlin"})]
     assert [r["args"]["location"] for r in results] == ["Paris", "Berlin"]
 

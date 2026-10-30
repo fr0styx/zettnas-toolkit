@@ -227,6 +227,7 @@ def test_api(client, auth_headers, box):
     assert client.post("/api/encrypted-folders/Taxes/lock", headers=auth_headers).status_code == 200
     wrong = client.post("/api/encrypted-folders/Taxes/unlock", headers=auth_headers, json={"password": "nope nope"})
     assert wrong.status_code == 409 and "wrong" in wrong.json()["detail"]
+    assert wrong.json()["error"] == "wrong_password"  # not "conflict": its own words in every language (NUX-1)
     ok = client.post(
         "/api/encrypted-folders/Taxes/unlock", headers=auth_headers, json={"password": "correct horse battery staple"}
     )

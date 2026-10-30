@@ -1339,6 +1339,24 @@ def _turn_build_prompt(*, accel, active_model, clean_msg, history, is_self_ident
     return act_accel, llm_messages, model_info, ram_gb
 
 
+WEB_WORDS = ("web", "internet", "online", "google", "search for", "look up", "news", "latest")
+
+
+def asked_for_web(user_text: str) -> bool:
+    """The person's own message asks for the web, so a search after reading files is theirs (NAI-3)."""
+    text = (user_text or "").lower()
+    return any(w in text for w in WEB_WORDS)
+
+
+def weather_place_ok(location: str, user_text: str) -> bool:
+    """A weather lookup sends its place to wttr.in: only a place the person typed this turn, or
+    none (the service then uses the server's own location) (NAI-2)."""
+    place = " ".join((location or "").lower().split())
+    if not place:
+        return True
+    return place in " ".join((user_text or "").lower().split())
+
+
 def _turn_call_model(
     *,
     active_model,
@@ -1425,17 +1443,22 @@ def _turn_call_model(
                         " ".join(str(c.get(k) or "") for k in ("full_parent_context", "excerpt", "raw_chunk_text"))
                         for c in (citations or [])
                     ]
-                    private += [
-                        json.dumps(tr, default=str)[:4000] for tr in tool_results if tr.get("tool") != "browse_internet"
+                    private += [  # all of it, not the first 4,000 characters (NAI-3)
+                        json.dumps(tr, default=str) for tr in tool_results if tr.get("tool") != "browse_internet"
                     ]
                     # search, but fetch only a page the person typed, and none after reading files (SEC-31)
                     q_safe, may_fetch, why = model_web_query(str(t_args.get("query") or ""), user_text, private)
+                    if q_safe is not None and (citations or read_text) and not asked_for_web(user_text):
+                        q_safe, why = None, "this answer read your files and you didn't ask to search the web"  # NAI-3
                     if q_safe is None:
                         t_res = {"tool": "browse_internet", "status": "blocked", "error": f"Web search refused: {why}."}
                     else:
                         t_res = execute_nas_tool(
                             t_name, {**t_args, "query": q_safe, "_allow_fetch": may_fetch}, principal=principal
                         )
+                elif t_name == "get_weather" and not weather_place_ok(str(t_args.get("location") or ""), user_text):
+                    # the place goes out in a URL: only one the person typed (NAI-2)
+                    t_res = {"tool": "get_weather", "status": "blocked", "error": "Weather only for a place you name."}
                 else:
                     key = (t_name, json.dumps(t_args, sort_keys=True, default=str))
                     if key not in done_by_args:  # the same tool with other arguments runs again (NAI-5)

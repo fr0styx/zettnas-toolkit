@@ -32,6 +32,7 @@ import time
 from typing import Any
 
 from backend.config import DATA_DIR, logger
+from backend.settings import test_mode
 
 STORE = os.path.join(DATA_DIR, "ai", "vec_thresholds.json")
 MIN_VEC_MIN = 0.10
@@ -227,7 +228,7 @@ def ensure_measured(model: str, dim: int | None, host: str | None, background: b
     within the last hour."""
     if not model or "lexical" in model.lower():
         return
-    if background and os.environ.get("TESTING"):
+    if background and test_mode():
         return  # tests ask for it explicitly (background=False), never as a side effect of a search
     key = model_key(model, dim)
     with _LOCK:

@@ -16,6 +16,8 @@ from contextvars import ContextVar
 from datetime import UTC, datetime, timezone
 from typing import Any, Optional
 
+from backend.settings import test_mode
+
 # Context variable holding the correlation ID for the active request
 correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="")
 
@@ -194,7 +196,7 @@ def log_file_path() -> str:
 def _add_file_handler(root_logger: logging.Logger, formatter: logging.Formatter) -> str | None:
     """A rotating log file in the data folder (REL-28): what happened before a restart survives it,
     and the support bundle can carry it. 2 MB, three older files; ZETTNAS_LOG_FILE=0 turns it off."""
-    if os.environ.get("ZETTNAS_LOG_FILE", "1") == "0" or os.environ.get("TESTING") == "1":
+    if os.environ.get("ZETTNAS_LOG_FILE", "1") == "0" or test_mode():
         return None
     from logging.handlers import RotatingFileHandler
 

@@ -7,6 +7,7 @@ from typing import Any
 
 from backend.config import EVENTS_FILE, logger
 from backend.fsutil import CORRUPT_LISTENERS, UNREADABLE_LISTENERS, atomic_write_json
+from backend.settings import test_mode
 
 
 def _fan_tracker(now: float) -> dict[str, dict[str, float]]:
@@ -281,7 +282,7 @@ _event_dedup_cache = {}
 
 # The event file is written at most every few seconds, not on every event, and an unchanged
 # condition (same level, title and message) is logged again only after an hour (PERF-27).
-EVENT_FLUSH_SECS = 0.0 if os.environ.get("TESTING") else 5.0
+EVENT_FLUSH_SECS = 0.0 if test_mode() else 5.0
 EVENT_REPEAT_SECS = 3600
 _event_last_message: dict[tuple, str] = {}
 _event_flush_timer: threading.Timer | None = None

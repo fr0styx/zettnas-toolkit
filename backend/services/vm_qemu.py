@@ -30,6 +30,7 @@ from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.ignored_errors import ignored
 from backend.services import vm_guest, vm_host, vm_store
 from backend.services.vm_engine import QmpEngine
+from backend.settings import test_mode
 from backend.state import Z_STATE, add_event
 
 
@@ -50,7 +51,7 @@ def _is_qemu_process_alive(vm_id: str) -> bool:
                 os.kill(pid, 0)
                 return True
             except OSError:
-                if os.environ.get("ZETTNAS_TEST_MODE") == "1" and pid == 99999:
+                if test_mode() and pid == 99999:
                     return True
                 vm_store._RUNNING_QEMU_PROCS.pop(vm_id, None)
                 return False
@@ -63,7 +64,7 @@ def _is_qemu_process_alive(vm_id: str) -> bool:
             os.kill(pid, 0)
             return True
         except (ValueError, OSError):
-            if os.environ.get("ZETTNAS_TEST_MODE") == "1" and pid == 99999:
+            if test_mode() and pid == 99999:
                 return True
             try:
                 os.remove(pid_file)
@@ -275,7 +276,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
     full_log_path = os.path.join(vm_dir, "qemu.log")
 
     # Graceful test mock fallback when running unit tests
-    if os.environ.get("ZETTNAS_TEST_MODE") == "1":
+    if test_mode():
         logger.info(f"Test environment: mocking QEMU start for VM '{target_vm['name']}'.")
         vm_store._RUNNING_QEMU_PROCS[vm_id] = {
             "proc": None,

@@ -126,9 +126,47 @@ def list_blocks() -> list[dict[str, Any]]:
         return [{"ip": ip, **e} for ip, e in sorted(_load().items()) if not e.get("until") or e["until"] > now]
 
 
+APP_NETWORK_SECS = 600
+_app_net: dict[str, Any] = {"at": -1e9, "net": None}
+
+
+def _app_network() -> Any:
+    """The subnet of ZettNAS's own Docker network, where the apps it installs (the office suite)
+    relay their users' sign-ins; None on the default bridge or host networking. Cached."""
+    now = time.monotonic()
+    if now - _app_net["at"] < APP_NETWORK_SECS:
+        return _app_net["net"]
+    net = None
+    try:
+        import socket
+
+        from backend.services import docker_client
+
+        status, me = docker_client.request("GET", f"/containers/{socket.gethostname()}/json")
+        nets = ((me or {}).get("NetworkSettings") or {}).get("Networks") or {} if status == 200 else {}
+        for name, info in nets.items():
+            if name not in ("host", "bridge", "none") and info.get("IPAddress") and info.get("IPPrefixLen"):
+                net = ipaddress.ip_network(f"{info['IPAddress']}/{info['IPPrefixLen']}", strict=False)
+                break
+    except (OSError, ValueError, RuntimeError, docker_client.DockerUnavailable):
+        logger.debug("ip_block: own network unknown", exc_info=True)
+    _app_net.update(at=now, net=net)
+    return net
+
+
+def _relay(ip: str) -> bool:
+    """An app on ZettNAS's own network checking a person's password for them: its address is
+    shared by the whole family, so it isn't blocked; each account's own lockout still holds (NSEC-6)."""
+    net = _app_network()
+    try:
+        return bool(net) and ipaddress.ip_address(ip) in net
+    except ValueError:
+        return False
+
+
 def record_auth_failure(ip: str, service: str = "web") -> bool:
     """Counts a failed sign-in; blocks the address after FAIL_LIMIT in FAIL_WINDOW_S. True if it was blocked now."""
-    if not ip or _trusted(ip):
+    if not ip or _trusted(ip) or _relay(ip):
         return False
     now = time.time()
     with _lock:

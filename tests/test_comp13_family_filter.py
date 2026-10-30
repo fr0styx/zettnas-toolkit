@@ -169,3 +169,13 @@ def test_adguard_joins_zettnas_network():
 
     app = next(a for a in CURATED_APP_CATALOG if a["id"] == "adguardhome")
     assert app["join_zettnas_network"] is True
+
+
+def test_kid_accounts_can_be_filtered(client, auth_headers, store, monkeypatch):
+    """NSEC-12: Kid accounts are offered, not only family and guest ones."""
+    monkeypatch.setattr(
+        "backend.users_db.list_users",
+        lambda: [{"username": "mia", "role_id": "kid"}, {"username": "dad", "role_id": "superadmin"}],
+    )
+    got = client.get("/api/family-filter", headers=auth_headers).json()
+    assert [a["username"] for a in got["accounts"]] == ["mia"]

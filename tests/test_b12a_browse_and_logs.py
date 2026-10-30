@@ -120,6 +120,9 @@ def test_the_log_file_rotates_and_goes_into_the_bundle(tmp_path, monkeypatch):
 
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     monkeypatch.delenv("TESTING", raising=False)
+    from backend import logging_config
+
+    monkeypatch.setattr(logging_config, "test_mode", lambda: False)  # NARC-6: the one switch
     root = logging.getLogger("zn-test-file")
     root.propagate = False
     path = logging_config._add_file_handler(root, logging.Formatter("%(message)s"))

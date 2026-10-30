@@ -85,9 +85,21 @@ def _knowledge_snippets(res: dict[str, Any]) -> dict[str, Any]:
 
 
 def _call_tool(name: str, args: dict[str, Any], principal: Any, base_url: str) -> dict[str, Any]:
+    import time
+
+    from backend.services import ai_access
     from backend.services.ai_chat_agent import execute_nas_tool
 
+    # the AI switches per role hold over MCP too: file search under "AI search", the rest under
+    # "Ask Zetty" (NAI-12)
+    if not ai_access.allowed(principal, feature="search" if name in KNOWLEDGE_TOOLS else "ask"):
+        ai_access.log_request(principal, "mcp", name, False, "off_for_role")
+        return {"content": [{"type": "text", "text": "AI is turned off for this account."}], "isError": True}
+    started = time.monotonic()
     res = execute_nas_tool(name, args, principal=principal, confirmed=False, source="mcp")
+    ai_access.log_request(
+        principal, "mcp", name, False, str(res.get("status") or "ok"), int((time.monotonic() - started) * 1000)
+    )
     if res.get("status") == "confirmation_required":
         link = f"{base_url}/?confirm-action={res['action_id']}"
         text = f"Not run yet: '{res.get('summary', name)}' needs confirmation. Ask the user to open {link} and click Confirm."

@@ -48,6 +48,7 @@ from backend.services.rag_engine import (
     get_sleeping_disks_list,
     is_backing_disk_in_standby,
 )
+from backend.settings import test_mode
 from backend.state import Z_STATE
 
 router = APIRouter(tags=["Smart Media & AI RAG Engine"])
@@ -499,8 +500,7 @@ def update_watched_folders(
         if is_backing_disk_in_standby(added_vp):
             rag.enqueue_deferred_path(added_vp, reason="disk_standby", priority=1)
         elif (
-            os.environ.get("TESTING") != "1"
-            and os.environ.get("ZETTNAS_TEST_MODE") != "1"
+            not test_mode()  # ARC-29, NARC-6: nothing in the released image
             and updated_cfg.get("enabled", True)
             and updated_cfg.get("auto_learn_on_spinup", True)
         ):
@@ -710,7 +710,9 @@ def apply_model_tier(req: BenchmarkApplyRequest) -> dict[str, Any]:
 
     name = (model_benchmark.load_results().get("recommended") or {}).get(req.tier)
     if not name:
-        raise HTTPException(status_code=409, detail="Run a benchmark first.")
+        from backend.errors import ApiError
+
+        raise ApiError(409, "Run a benchmark first.", "not_ready")
     get_rag_engine().update_config({"active_model": name})
     return {"active_model": name, "tier": req.tier}
 

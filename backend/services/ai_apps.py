@@ -141,8 +141,20 @@ def chat_upstreams(cfg: dict[str, Any]) -> list[tuple[str, str]]:
     return [(u, m) for u, m in out if m]
 
 
+APP_MAX_TOKENS = 1024  # an app's answer, not a book: the family's chats share the same GPU (NAI-13)
+
+
 def chat_body(body: dict[str, Any], model: str) -> dict[str, Any]:
     out = {k: body[k] for k in CHAT_FIELDS if k in body}
+    out["n"] = 1  # one answer per request
+    for k in ("max_tokens", "max_completion_tokens"):
+        if k in out:
+            try:
+                out[k] = max(1, min(int(out[k]), APP_MAX_TOKENS))
+            except (TypeError, ValueError):
+                out.pop(k)
+    if "max_tokens" not in out and "max_completion_tokens" not in out:
+        out["max_tokens"] = APP_MAX_TOKENS
     if not isinstance(out.get("messages"), list) or not out["messages"]:
         raise ValueError("messages must be a non-empty list")
     out["model"] = model

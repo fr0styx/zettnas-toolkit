@@ -280,7 +280,9 @@ def trigger_backup_job(job_id: str):
     if not any(j.get("id") == job_id for j in get_backup_jobs()):
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
     if is_job_running(job_id):
-        raise HTTPException(status_code=409, detail="This backup is already running.")
+        from backend.errors import ApiError
+
+        raise ApiError(409, "This backup is already running.", "already_running")
 
     def _run() -> None:
         try:

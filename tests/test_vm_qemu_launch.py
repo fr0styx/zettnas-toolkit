@@ -25,6 +25,7 @@ class FakeProc:
 def host(tmp_path, monkeypatch):
     """A host with qemu installed, no KVM and no bridge; records the commands started."""
     monkeypatch.delenv("ZETTNAS_TEST_MODE", raising=False)
+    monkeypatch.setattr(vm_qemu, "test_mode", lambda: False)  # the real start path (NARC-6: one switch)
     qemu = tmp_path / "qemu-system-x86_64"
     qemu.write_text("")
     taskset = tmp_path / "taskset"

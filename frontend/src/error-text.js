@@ -61,6 +61,11 @@ const MESSAGES = {
   confirmation_required: () => t('err.confirmation_required', 'Please confirm this first.'),
   bad_action: () => t('err.bad_action', "That action isn't available."),
   ai_search_off_for_role: () => t('err.ai_search_off_for_role', 'AI search is turned off for your account. An administrator can turn it on in AI settings.'),
+  // NUX-1: causes that a status code alone would misstate
+  wrong_password: () => t('err.wrong_password', 'That password is wrong.'),
+  folder_busy: () => t('err.folder_busy', 'Something still has a file open in it. Close it and try again.'),
+  already_running: () => t('err.already_running', 'That is already running.'),
+  not_ready: () => t('err.not_ready', "That isn't ready yet."),
 };
 
 // The server's own words for a message shown in another language, for the toast's "Details"

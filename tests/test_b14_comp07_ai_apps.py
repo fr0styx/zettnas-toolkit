@@ -85,7 +85,14 @@ def test_chat_goes_to_the_chat_server_with_its_model_and_only_known_fields(clien
     assert r.json()["model"] == ai_apps.CHAT_MODEL
     url, payload = sent[0]
     assert url == "http://ovms:8000/v1/chat/completions"
-    assert payload == {"messages": body["messages"], "temperature": 0.2, "stream": False, "model": "Qwen3-4B"}
+    assert payload == {
+        "messages": body["messages"],
+        "temperature": 0.2,
+        "stream": False,
+        "model": "Qwen3-4B",
+        "n": 1,  # NAI-13: one answer, a bounded length
+        "max_tokens": ai_apps.APP_MAX_TOKENS,
+    }
 
 
 def test_the_fallback_model_answers_when_the_chat_server_is_down(client, key, cfg, monkeypatch):

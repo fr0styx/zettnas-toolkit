@@ -56,7 +56,21 @@ def _errors(fn: Any, *args: Any) -> Any:
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from None
     except EncryptedFolderError as e:
-        raise HTTPException(status_code=409, detail=str(e)) from None
+        from backend.errors import ApiError
+
+        text = str(e)
+        slug = (
+            "wrong_password"
+            if "password is wrong" in text
+            else "rate_limited"
+            if "Too many wrong" in text
+            else "folder_busy"
+            if "file open" in text
+            else "unavailable"
+            if "no gocryptfs" in text
+            else "conflict"
+        )
+        raise ApiError(409 if slug != "rate_limited" else 429, text, slug) from None
 
 
 @router.get("", dependencies=[READ])
