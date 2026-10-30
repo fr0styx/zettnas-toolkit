@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "sync2.choose": "Auswählen…",
   "fm.ctx_info": "Informationen",
   "fm.counting": "Wird gezählt…",
   "fm.count_anyway": "Trotzdem zählen (weckt die Festplatte)",

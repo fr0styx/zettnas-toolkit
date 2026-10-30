@@ -25,6 +25,24 @@ const LABEL_NAMES = () => ({
 });
 
 /** One line saying whether it runs and when Frigate last answered. */
+/** One checkbox per camera Frigate reports; the text field follows them (empty = every camera). */
+export function cameraChoices(mount, names) {
+  const box = /** @type {HTMLElement | null} */ (mount.querySelector('.frigate-cams'));
+  const field = /** @type {HTMLInputElement | null} */ (mount.querySelector('[name="cameras"]'));
+  if (!box || !field || !(names || []).length) return;
+  const chosen = field.value.split(',').map((s) => s.trim()).filter(Boolean);
+  const sync = () => {
+    const ticked = [...box.querySelectorAll('input:checked')].map((c) => /** @type {HTMLInputElement} */ (c).value);
+    field.value = ticked.length === names.length ? '' : ticked.join(', ');
+  };
+  box.replaceChildren(...names.map((n) => {
+    const cb = el('input', { type: 'checkbox', value: n, checked: !chosen.length || chosen.includes(n) });
+    cb.addEventListener('change', sync);
+    return el('label', {}, cb, ' ', n);
+  }));
+  field.closest('label')?.setAttribute('hidden', '');
+}
+
 export function stateText(info, now = Date.now() / 1000) {
   if (!info.enabled) return t('frigate.off', 'Off');
   if (info.last_error) return info.last_error;
@@ -49,6 +67,7 @@ export function frigateBody(info) {
   box.append(labels);
   const cams = el('input', { type: 'text', name: 'cameras', value: (info.cameras || []).join(', '), placeholder: t('frigate.all_cameras', 'all cameras') });
   box.append(el('label', { className: 'frigate-row' }, t('frigate.cameras', 'Cameras'), ' ', cams));
+  box.append(el('div', { className: 'frigate-cams' })); // checkboxes once Frigate has named its cameras (NUX-12)
   const score = el('input', { type: 'number', name: 'min_score', min: 30, max: 99, value: String(Math.round((info.min_score || 0.7) * 100)) });
   box.append(el('label', { className: 'frigate-row' }, t('frigate.min_score', 'Only when at least this sure (%)'), ' ', score));
   const cool = el('input', { type: 'number', name: 'cooldown_min', min: 1, max: 240, value: String(info.cooldown_min || 5) });
@@ -107,6 +126,7 @@ export async function renderFrigateEvents(mount) {
           })
           : r.error;
         out.hidden = false;
+        if (r.ok) cameraChoices(mount, r.cameras || []);
         return;
       }
       await api.put('/api/notifications/frigate', readForm(mount));

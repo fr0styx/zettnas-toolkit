@@ -95,6 +95,10 @@
 
 #### Usability
 
+- **Pick instead of typing**: after "Check Frigate", camera alerts list Frigate's cameras as
+  checkboxes; two-way sync has a "Choose…" button for the folder and suggests the cloud remotes
+  already set up (NUX-12, part).
+
 - **Get info on any file or folder**: right-click → Get info opens the info panel on it; for a
   folder it counts straight away how big it is and how many files and folders it holds ("at
   least" when it is very large). On a sleeping disk it says so and offers "Count anyway", which
@@ -427,6 +431,13 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **Interrupted uploads don't leave hidden folders behind**: the parts of a large upload that an
+  update, a crash or a closed laptop cut off are removed from the share within the hour after
+  ZettNAS starts again (or after a day), never from a disk that is asleep (NARC-9).
+- **A slow server can't hold up snapshots**: camera alerts, two-way sync, alert retries and the
+  daily digest run on their own, so Frigate, the cloud or a mail server being slow or offline no
+  longer delays snapshots and drive tests; one that hangs is named in the log (NPERF-7).
 
 - **The Recycle Bin lets sleeping disks sleep**: a bin on a disk that is asleep is no longer read
   or emptied when you delete something or open the Recycle Bin; it says how many bins wait and

@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "sync2.choose": "Choisir…",
   "fm.ctx_info": "Lire les informations",
   "fm.counting": "Comptage…",
   "fm.count_anyway": "Compter quand même (réveille le disque)",

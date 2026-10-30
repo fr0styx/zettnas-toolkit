@@ -9,6 +9,11 @@ from backend.hardware.unraid import read_unraid_status
 from backend.state import Z_STATE, add_event
 
 _SCHEDULER_STOP_EVENT = threading.Event()
+# Network-bound jobs run in a thread of their own, one at a time each (NPERF-7): name -> started
+_RUNNING: dict[str, float] = {}
+_LATE: set[str] = set()
+_RUNNING_LOCK = threading.Lock()
+JOB_DEADLINE_S = 600
 _SCHEDULER_THREAD: threading.Thread | None = None
 
 DEFAULT_SMART_SCHEDULE: dict[str, Any] = {
@@ -104,6 +109,59 @@ def _run_ai_retention(now: float) -> None:
         logger.warning(f"[Scheduler] AI conversation retention failed: {e}")
 
 
+def on_its_own(name: str, fn: Any, *args: Any) -> bool:
+    """Runs fn in its own thread unless the last run of this job is still going: a server that is
+    slow or offline (Frigate, the cloud, a mail server) can't hold up snapshots and SMART tests,
+    and a job that hangs is named in the log once it passes JOB_DEADLINE_S (NPERF-7)."""
+    now = time.time()
+    with _RUNNING_LOCK:
+        started = _RUNNING.get(name)
+        if started is not None:
+            if now - started > JOB_DEADLINE_S and name not in _LATE:
+                _LATE.add(name)
+                logger.warning("[Scheduler] %s has been running for %d min", name, int((now - started) // 60))
+            return False
+        _RUNNING[name] = now
+
+    def run() -> None:
+        try:
+            fn(*args)
+        finally:
+            with _RUNNING_LOCK:
+                _RUNNING.pop(name, None)
+                _LATE.discard(name)
+
+    threading.Thread(target=run, daemon=True, name=f"sched-{name}").start()
+    return True
+
+
+def _run_digest(now: float) -> None:
+    try:
+        from backend.services.notifications import send_digest_if_due
+
+        send_digest_if_due(now)
+    except Exception as e:
+        logger.warning(f"[Scheduler] Notification digest failed: {e}")
+
+
+def _run_two_way_sync() -> None:
+    try:
+        from backend.services import two_way_sync
+
+        two_way_sync.run_due()
+    except (OSError, ValueError, KeyError, RuntimeError) as e:
+        logger.warning("[Scheduler] Two-way sync failed: %s", e)
+
+
+def _run_frigate() -> None:
+    try:
+        from backend.services import frigate_events
+
+        frigate_events.tick()  # camera detections as alerts (COMP-11); nothing to do when off
+    except (OSError, ValueError, KeyError, RuntimeError) as e:
+        logger.warning("[Scheduler] Frigate events failed: %s", e)
+
+
 def _run_alert_retries(now: float) -> None:
     """Alerts that could not be sent are tried again (REL-22)."""
     try:
@@ -150,18 +208,18 @@ def _run_usb_disks() -> None:
         usb_copy.tick()
     except (OSError, ValueError, KeyError, LookupError, RuntimeError) as e:
         logger.warning("[Scheduler] USB disk check failed: %s", e)
-    try:
-        from backend.services import two_way_sync
+    on_its_own("two-way sync", _run_two_way_sync)
+    on_its_own("Frigate", _run_frigate)
 
-        two_way_sync.run_due()
-    except (OSError, ValueError, KeyError, RuntimeError) as e:
-        logger.warning("[Scheduler] Two-way sync failed: %s", e)
-    try:
-        from backend.services import frigate_events
 
-        frigate_events.tick()  # camera detections as alerts (COMP-11); nothing to do when off
-    except (OSError, ValueError, KeyError, RuntimeError) as e:
-        logger.warning("[Scheduler] Frigate events failed: %s", e)
+def _run_upload_sweep(now: float) -> None:
+    """What unfinished uploads left in shares goes, at most once an hour (NARC-9)."""
+    try:
+        from backend.services import upload_staging
+
+        upload_staging.sweep(now)
+    except (OSError, ValueError) as e:
+        logger.warning("[Scheduler] Upload clean-up failed: %s", e)
 
 
 def _run_scheduled_tasks():
@@ -190,16 +248,12 @@ def _run_scheduled_tasks():
             retire_replaced_jobs()  # a moved copy job goes off after the first good backup (NREL-19)
         except Exception as e:
             logger.warning(f"[Scheduler] Offsite backups failed: {e}")
-        try:
-            from backend.services.notifications import send_digest_if_due
-
-            send_digest_if_due(now)
-        except Exception as e:
-            logger.warning(f"[Scheduler] Notification digest failed: {e}")
+        on_its_own("alert digest", _run_digest, now)
         _run_pool_checks(now)
-        _run_alert_retries(now)
+        on_its_own("alert retries", _run_alert_retries, now)
         _run_replication(now)
         _run_usb_disks()
+        _run_upload_sweep(now)
         cfg = get_smart_schedule()
 
         if not cfg.get("enabled", True):

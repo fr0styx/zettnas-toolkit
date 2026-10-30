@@ -80,14 +80,36 @@ function form() {
   const f = el('form', { className: 'offsite-form' });
   f.dataset.syncForm = '1';
   const field = (label, name, extra = {}) => el('label', {}, label, el('input', { name, required: true, ...extra }));
+  // pick the folder and the cloud instead of typing them (NUX-12)
+  const choose = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('sync2.choose', 'Choose…') });
+  choose.addEventListener('click', () => {
+    const input = /** @type {HTMLInputElement} */ (f.querySelector('[name="local"]'));
+    /** @type {any} */ (window).openFolderBrowser?.(input.value || '/mnt/user/', (path) => {
+      input.value = path;
+    });
+  });
+  const clouds = el('datalist', { id: 'sync2-remotes' });
+  remoteNames().then((names) => clouds.replaceChildren(...names.map((n) => el('option', { value: `${n}:` }))));
   f.append(
     field(t('sync2.name', 'Name'), 'name', { maxLength: 80 }),
-    field(t('sync2.local', 'Folder here'), 'local', { placeholder: '/mnt/user/documents' }),
+    el('div', { className: 'sync2-local' }, field(t('sync2.local', 'Folder here'), 'local', { placeholder: '/mnt/user/documents' }), choose),
     field(t('sync2.remote', 'Cloud folder'), 'remote', { placeholder: 'gdrive:documents' }),
+    clouds,
     field(t('sync2.every', 'Every (hours)'), 'every_hours', { type: 'number', min: 1, max: 168, value: '6' }),
     el('button', { type: 'submit', className: 'btn-pill-toggle is-primary', textContent: t('sync2.add', 'Add two-way sync') }),
   );
+  /** @type {HTMLInputElement} */ (f.querySelector('[name="remote"]')).setAttribute('list', 'sync2-remotes');
   return f;
+}
+
+/** The cloud remotes already set up, for the cloud folder's suggestions. */
+export async function remoteNames() {
+  try {
+    const list = await api.get('/api/remotes');
+    return (Array.isArray(list) ? list : list?.remotes || []).map((r) => (typeof r === 'string' ? r : r?.name)).filter(Boolean);
+  } catch {
+    return []; // no right to list them, or none: the field still takes "name:folder"
+  }
 }
 
 function slug(name) {

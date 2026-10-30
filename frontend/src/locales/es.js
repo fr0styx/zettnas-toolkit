@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "sync2.choose": "Elegir…",
   "fm.ctx_info": "Obtener información",
   "fm.counting": "Contando…",
   "fm.count_anyway": "Contar igualmente (despierta el disco)",

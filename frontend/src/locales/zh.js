@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "sync2.choose": "选择…",
   "fm.ctx_info": "显示简介",
   "fm.counting": "正在统计…",
   "fm.count_anyway": "仍然统计（会唤醒磁盘）",

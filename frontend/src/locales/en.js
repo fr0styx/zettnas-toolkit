@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "sync2.choose": "Choose…",
   "fm.ctx_info": "Get info",
   "fm.counting": "Counting…",
   "fm.count_anyway": "Count anyway (wakes the disk)",

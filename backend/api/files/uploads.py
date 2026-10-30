@@ -226,6 +226,11 @@ async def fs_upload_init(
     upload_id = secrets.token_hex(16)
     staging_dir = os.path.join(target_canonical, f".zettnas_staging_{upload_id}_{filename}")
     os.makedirs(staging_dir, exist_ok=True)
+    from backend.services import upload_staging
+
+    # noted in the data folder, so a restart or a crash can't leave it in the share (NARC-9)
+    temp_name = os.path.join(target_canonical, f".zettnas_tmp_{upload_id}_{filename}")
+    await asyncio.to_thread(upload_staging.note, upload_id, [staging_dir, temp_name])
 
     async with _CHUNKED_UPLOADS_LOCK:
         _CHUNKED_UPLOADS[upload_id] = {
@@ -256,8 +261,11 @@ async def _expire_uploads() -> None:
         stale = [u for u in _CHUNKED_UPLOADS.values() if u.get("created_at", 0) < cutoff]
         for u in stale:
             _CHUNKED_UPLOADS.pop(u["upload_id"], None)
+    from backend.services import upload_staging
+
     for u in stale:
-        shutil.rmtree(u.get("staging_dir", ""), ignore_errors=True)
+        await asyncio.to_thread(shutil.rmtree, u.get("staging_dir", ""), True)  # off the event loop
+        await asyncio.to_thread(upload_staging.forget, u["upload_id"])
 
 
 @router.post(
@@ -361,7 +369,10 @@ async def fs_upload_complete(
             )
 
         os.replace(temp_assembly, final_target)
-        shutil.rmtree(staging_dir, ignore_errors=True)
+        from backend.services import upload_staging
+
+        await asyncio.to_thread(shutil.rmtree, staging_dir, True)  # off the event loop (NARC-9)
+        await asyncio.to_thread(upload_staging.forget, req.upload_id)
         async with _CHUNKED_UPLOADS_LOCK:
             _CHUNKED_UPLOADS.pop(req.upload_id, None)
 
