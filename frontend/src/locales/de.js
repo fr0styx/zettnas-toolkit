@@ -2767,7 +2767,7 @@ export default {
   "tz.local": "Ortszeit",
   "tz.h12": "12 Stunden",
   "tz.h24": "24 Stunden",
-  "tz.apply_server": "Auch die Zeitzone des Servers, für Zeitpläne, Protokolle und Warnungen",
+  "tz.apply_server": "Auch für den Server und das Frontdisplay: Zeitpläne, Protokolle und Warnungen richten sich danach",
   "tz.server_failed": "Die Zeitzone des Servers wurde nicht geändert: {error}",
   "backup.step_what": "1. Was",
   "backup.step_where": "2. Wohin",

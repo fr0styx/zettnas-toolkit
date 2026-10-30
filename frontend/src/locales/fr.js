@@ -2767,7 +2767,7 @@ export default {
   "tz.local": "Heure locale",
   "tz.h12": "12 heures",
   "tz.h24": "24 heures",
-  "tz.apply_server": "Aussi le fuseau horaire du serveur, pour les horaires, journaux et alertes",
+  "tz.apply_server": "Aussi pour le serveur et l'écran avant : horaires, journaux et alertes le suivent",
   "tz.server_failed": "Le fuseau horaire du serveur n'a pas été modifié : {error}",
   "backup.step_what": "1. Quoi",
   "backup.step_where": "2. Où",

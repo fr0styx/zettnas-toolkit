@@ -145,12 +145,15 @@ export function closeDrawer() {
 window.closeDrawer = closeDrawer;
 
 /** The clock card's one line: which zone and which clock the screen uses (UX-25). */
-export function renderClockSummary() {
+export function renderClockSummary(changed) {
   const el = $('clock-summary');
   if (!el) return;
+  // the person's own clock (an event carries it); before one, this browser's zone
+  const zone = (changed && changed.zone) || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const format = (changed && changed.format) || state.clockFormat;
   el.textContent = t('settings.clock_summary', '{zone} · {format}', {
-    zone: state.currentTimezone || t('tz.local', 'Local time'),
-    format: state.clockFormat === '12' ? t('tz.h12', '12-hour') : t('tz.h24', '24-hour'),
+    zone: zone || t('tz.local', 'Local time'),
+    format: format === '12' ? t('tz.h12', '12-hour') : t('tz.h24', '24-hour'),
   });
 }
 

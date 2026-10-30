@@ -261,6 +261,14 @@
 - **ZettNAS's own searches find files again**: the identity ZettNAS uses for its own work
   lacked one permission question the final access check asks, so every result it searched for
   was refused and it found nothing. People's searches were not affected.
+- **Your own time zone, on every device**: the clock follows your browser's time zone unless
+  you pick one in Settings -> Time and language, and your choice is kept on your account, so
+  another computer or phone shows the same. Picking a zone no longer moves the front screen's
+  clock for everyone: that, and the server's zone, change only when an administrator leaves
+  "Also the server and the front screen" ticked. A server that has no time zone takes the
+  first administrator's browser zone when they sign in, so night work runs at their night;
+  a zone chosen in setup or Settings, or TZ from the container, is never replaced. A new front
+  screen starts on the server's zone instead of New York's.
 - **The Overview asks for the server's time zone**: on a server whose time zone was never set
   (an install from before the setup wizard asked, without TZ in the container), "night" was night
   in UTC, so the nightly backups, checks and the AI's re-index ran in the evening or the

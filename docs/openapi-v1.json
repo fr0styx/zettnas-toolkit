@@ -5705,6 +5705,20 @@
     "title": "DestinationsResponse",
     "type": "object"
    },
+   "DetectedZoneIn": {
+    "properties": {
+     "timezone": {
+      "maxLength": 64,
+      "title": "Timezone",
+      "type": "string"
+     }
+    },
+    "required": [
+     "timezone"
+    ],
+    "title": "DetectedZoneIn",
+    "type": "object"
+   },
    "DisableDefaultAdminEndpointResponse": {
     "additionalProperties": true,
     "description": "POST /users/admin/disable",
@@ -27958,6 +27972,33 @@
        }
       ],
       "title": "Advanced"
+     },
+     "clock_format": {
+      "anyOf": [
+       {
+        "enum": [
+         "12",
+         "24"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Clock Format"
+     },
+     "timezone": {
+      "anyOf": [
+       {
+        "maxLength": 64,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Timezone"
      }
     },
     "title": "MyPreferences",
@@ -63453,6 +63494,48 @@
      }
     },
     "summary": "Put Server Identity",
+    "tags": [
+     "System & Storage"
+    ],
+    "x-required-scopes": [
+     "system:config"
+    ]
+   }
+  },
+  "/api/v1/system/identity/detected-timezone": {
+   "post": {
+    "description": "An administrator's browser zone, used only while the server has none.",
+    "operationId": "post_detected_timezone_api_v1_system_identity_detected_timezone_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DetectedZoneIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Post Detected Timezone",
     "tags": [
      "System & Storage"
     ],

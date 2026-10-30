@@ -2767,7 +2767,7 @@ export default {
   "tz.local": "本地时间",
   "tz.h12": "12 小时制",
   "tz.h24": "24 小时制",
-  "tz.apply_server": "同时作为服务器时区，用于计划任务、日志和提醒",
+  "tz.apply_server": "同时用于服务器和前面板屏幕：计划任务、日志和提醒都按此时区",
   "tz.server_failed": "服务器时区未更改：{error}",
   "backup.step_what": "1. 内容",
   "backup.step_where": "2. 目标",

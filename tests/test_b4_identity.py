@@ -22,12 +22,12 @@ def test_name_and_time_zone_are_saved_and_applied(client, auth_headers, keep_tz)
         "/api/system/identity", json={"server_name": "Home server", "timezone": "Europe/Berlin"}, headers=auth_headers
     )
     assert r.status_code == 200, r.text
-    assert r.json() == {"server_name": "Home server", "timezone": "Europe/Berlin"}
+    assert r.json() == {"server_name": "Home server", "timezone": "Europe/Berlin", "timezone_source": "chosen"}
     assert os.environ["TZ"] == "Europe/Berlin" and time.strftime("%Z") in ("CET", "CEST")
     assert client.get("/api/system/identity", headers=auth_headers).json()["server_name"] == "Home server"
     # a value left out stays as it was
     r = client.put("/api/system/identity", json={"server_name": "Attic"}, headers=auth_headers)
-    assert r.json() == {"server_name": "Attic", "timezone": "Europe/Berlin"}
+    assert r.json() == {"server_name": "Attic", "timezone": "Europe/Berlin", "timezone_source": "chosen"}
 
 
 @pytest.mark.parametrize("body", [{"timezone": "Mars/Olympus"}, {"server_name": "<script>"}, {"server_name": "x" * 41}])

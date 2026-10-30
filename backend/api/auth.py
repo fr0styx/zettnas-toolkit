@@ -6,11 +6,11 @@ import json
 import os
 import threading
 import time
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 import backend.config as config
@@ -897,6 +897,9 @@ def advanced_for(user: dict[str, Any]) -> bool:
 
 class MyPreferences(BaseModel):
     advanced: bool | None = None
+    # the person's own clock, on every device: "auto" (their browser's zone) or a zone name
+    timezone: str | None = Field(default=None, max_length=64)
+    clock_format: Literal["12", "24"] | None = None
 
 
 @router.put("/auth/me/preferences", response_model=None)
@@ -909,6 +912,11 @@ def put_my_preferences(req: MyPreferences, request: Request) -> dict[str, Any] |
         return error_response(401, "Sign in as a person to change your settings.", error="unauthorized")
     prefs = dict(user.get("preferences") or {})
     changes = {k: v for k, v in req.model_dump().items() if v is not None}
+    if "timezone" in changes:
+        from backend.services.identity import known_timezone
+
+        if changes["timezone"] != "auto" and not known_timezone(changes["timezone"]):
+            return error_response(400, f"Unknown time zone: {changes['timezone']}", error="bad_timezone")
     prefs.update(changes)
     update_user_profile(user["id"], preferences=prefs)
     return {"preferences": prefs, "advanced": advanced_for({**user, "preferences": prefs})}

@@ -31,10 +31,37 @@ def get_identity() -> dict[str, Any]:
     data = read_json(IDENTITY_FILE, {})
     if not isinstance(data, dict):
         data = {}
+    zone = data.get("timezone") or ""
+    source = (data.get("timezone_source") or "chosen") if zone else ("container" if os.environ.get("TZ") else "")
     return {
         "server_name": data.get("server_name") or "",
-        "timezone": data.get("timezone") or os.environ.get("TZ", "") or "",
+        "timezone": zone or os.environ.get("TZ", "") or "",
+        # chosen (setup or Settings), browser (an administrator's, taken while none was set),
+        # container (TZ from the container) or "" (nothing: night is night in UTC)
+        "timezone_source": source,
     }
+
+
+def known_timezone(tz: str) -> bool:
+    return bool(tz) and tz in _zones()
+
+
+def detect_timezone(tz: str) -> dict[str, Any]:
+    """A server with no time zone takes the one an administrator's browser reports, so night
+    work runs at their night. A zone already chosen, or TZ from the container, stays."""
+    tz = (tz or "").strip()
+    if not known_timezone(tz):
+        raise ValueError(f"Unknown time zone: {tz}")
+    with locked_json(IDENTITY_FILE):
+        data = read_json(IDENTITY_FILE, {})
+        data = data if isinstance(data, dict) else {}
+        if data.get("timezone") or os.environ.get("TZ"):
+            return get_identity()
+        data["timezone"], data["timezone_source"] = tz, "browser"
+        atomic_write_json(IDENTITY_FILE, data)
+    apply_timezone(tz)
+    logger.info("[Identity] time zone %s taken from an administrator's browser", tz)
+    return get_identity()
 
 
 def apply_timezone(tz: str) -> bool:
@@ -63,6 +90,7 @@ def set_identity(server_name: str | None = None, timezone: str | None = None) ->
             data["server_name"] = server_name
         if timezone is not None:
             data["timezone"] = timezone
+            data["timezone_source"] = "chosen" if timezone else ""
         atomic_write_json(IDENTITY_FILE, data)
     if timezone:
         apply_timezone(timezone)

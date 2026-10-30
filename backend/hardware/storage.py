@@ -390,7 +390,7 @@ def get_current_layout():
         },
         "sizes": {},
         "clock_format": "24",
-        "timezone": "America/New_York",
+        "timezone": os.environ.get("TZ") or "UTC",  # the server's zone until the front screen gets its own
         "style": "classic",
         "version": 1,
     }

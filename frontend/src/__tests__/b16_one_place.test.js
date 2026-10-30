@@ -1,6 +1,6 @@
 /**
- * UX-25: one home per job. One control changes the time zone (desktop clock, front screen and,
- * for an administrator, the server); people, sign-ins and two-step sign-in are one page; a backup
+ * UX-25: one home per job. One control changes the time zone (the person's own clock and, for an
+ * administrator, the server and the front screen); people, sign-ins and two-step sign-in are one page; a backup
  * job reads what → where → when; the photos card sends a phone backup to Backups.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -24,7 +24,7 @@ describe('one place for each job (UX-25)', () => {
     expect(all.match(/id="tz-custom-input"/g)).toHaveLength(1); // the id was twice on the page before
   });
 
-  it('saving the time zone moves the front screen clock and, when ticked, the server', async () => {
+  it('saving the time zone keeps it on the account and, when ticked, moves the server and the front screen', async () => {
     const { api } = await import('../api.js');
     const put = vi.spyOn(api, 'put').mockResolvedValue({});
     const { state } = await import('../state.js');
@@ -34,19 +34,23 @@ describe('one place for each job (UX-25)', () => {
     await applyClockEverywhere('Asia/Tokyo', '12');
     expect(state.currentTimezone).toBe('Asia/Tokyo');
     expect(state.clockFormat).toBe('12');
+    expect(put).toHaveBeenCalledWith('/api/auth/me/preferences', { timezone: 'Asia/Tokyo', clock_format: '12' });
     expect(put).toHaveBeenCalledWith('/api/system/identity', { timezone: 'Asia/Tokyo' });
 
     put.mockClear();
     document.getElementById('tz-apply-server').checked = false;
     await applyClockEverywhere('Europe/Berlin', '24');
-    expect(state.currentTimezone).toBe('Europe/Berlin');
-    expect(put).not.toHaveBeenCalled();
+    expect(state.currentTimezone).toBe('Asia/Tokyo'); // the front screen stays
+    expect(put).toHaveBeenCalledWith('/api/auth/me/preferences', { timezone: 'Europe/Berlin', clock_format: '24' });
+    expect(put).not.toHaveBeenCalledWith('/api/system/identity', expect.anything());
 
+    put.mockClear();
     document.getElementById('tz-apply-server').checked = true;
     document.getElementById('tz-server-row').hidden = true; // not an administrator
     await applyClockEverywhere('auto', '24');
-    expect(state.currentTimezone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
-    expect(put).not.toHaveBeenCalled();
+    expect(state.currentTimezone).toBe('Asia/Tokyo');
+    expect(put).toHaveBeenCalledWith('/api/auth/me/preferences', { timezone: 'auto', clock_format: '24' });
+    expect(put).toHaveBeenCalledTimes(1);
   });
 
   it('people, sign-ins and two-step sign-in have no tabs inside the tab', () => {

@@ -2767,7 +2767,7 @@ export default {
   "tz.local": "Local time",
   "tz.h12": "12-hour",
   "tz.h24": "24-hour",
-  "tz.apply_server": "Also the server's time zone, for schedules, logs and alerts",
+  "tz.apply_server": "Also the server and the front screen: schedules, logs and alerts follow it",
   "tz.server_failed": "The server's time zone wasn't changed: {error}",
   "backup.step_what": "1. What",
   "backup.step_where": "2. Where to",

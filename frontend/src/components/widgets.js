@@ -7,6 +7,7 @@ import { t } from '../i18n.js';
 import { api, auth } from '../api.js';
 import { makeDraggable } from './dock.js';
 import { advancedOn } from '../advanced.js';
+import { resolveZone, savePersonZone } from '../time-zone-prefs.js';
 
 import { formatDate, formatNumber } from '../format.js';
 import { WIDGET_NAMES, getWidgetKeyFromElement, getWidgetDisplayName } from './widget-names.js';
@@ -2245,28 +2246,56 @@ export const TIMEZONES_CATALOG = [
   { id: 'Pacific/Guam', name: 'Guam', region: 'Pacific', country: 'Guam' },
 ];
 
-/** The one time-zone control (UX-25): the desktop clock, the front screen's clock and, for an
- *  administrator who leaves the box ticked, the server's own zone all follow it. */
+/** The one time-zone control (UX-25): the person's own clock, kept on their account so every
+ *  device shows it; for an administrator who leaves the box ticked, the server's zone and the
+ *  front screen's clock too. A person's choice no longer moves the front screen for everyone. */
 export function applyClockEverywhere(tz, format) {
-  const zone = tz === 'auto' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : tz;
-  state.currentTimezone = zone;
-  state.clockFormat = format === '12' ? '12' : '24';
-  import('./mini-preview.js')
-    .then((m) => {
-      m.applyDashboardLayout();
-      return m.persistDashboardLayout();
-    })
-    .catch(() => {});
-  ZettEventBus.emit('clock:changed', { zone, format: state.clockFormat });
+  const zone = resolveZone(tz);
+  const fmt = format === '12' ? '12' : '24';
+  const saved = savePersonZone(tz, fmt);
+  ZettEventBus.emit('clock:changed', { zone, format: fmt });
   const row = document.getElementById('tz-server-row');
   const box = document.getElementById('tz-apply-server');
   if (row && !row.hidden && box?.checked) {
+    state.currentTimezone = zone;
+    state.clockFormat = fmt;
+    import('./mini-preview.js')
+      .then((m) => {
+        m.applyDashboardLayout();
+        return m.persistDashboardLayout();
+      })
+      .catch(() => {});
     return api.put('/api/system/identity', { timezone: zone }).catch((err) => {
       showToast(t('tz.server_failed', "The server's time zone wasn't changed: {error}", { error: err.message }), 'error');
     });
   }
-  return Promise.resolve();
+  return saved;
 }
+
+/** The person's clock from their account, so a new device shows their zone; a zone chosen in
+ *  this browser before accounts kept it is moved onto the account once. */
+export function applyPersonClock(prefs) {
+  const cfg = _config || loadWidgetConfig();
+  const p = prefs || {};
+  if (!p.timezone) {
+    if (cfg.clockTimezone && cfg.clockTimezone !== 'auto') savePersonZone(cfg.clockTimezone, cfg.clockFormat);
+    return;
+  }
+  const next = {};
+  if (p.timezone !== cfg.clockTimezone) next.clockTimezone = p.timezone;
+  if ((p.clock_format === '12' || p.clock_format === '24') && p.clock_format !== cfg.clockFormat) next.clockFormat = p.clock_format;
+  if (!Object.keys(next).length) return;
+  const merged = saveWidgetConfig(next);
+  updateClock();
+  ZettEventBus.emit('clock:changed', { zone: resolveZone(merged.clockTimezone), format: merged.clockFormat || '24' });
+}
+ZettEventBus.on?.('session:user', (user) => applyPersonClock(user && user.preferences));
+import('./session.js') // signed in before this module loaded
+  .then((m) => {
+    const user = m.getCurrentUser();
+    if (user) applyPersonClock(user.preferences);
+  })
+  .catch(() => {});
 
 async function showServerZoneChoice() {
   const row = document.getElementById('tz-server-row');

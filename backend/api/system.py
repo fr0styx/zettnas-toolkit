@@ -1032,6 +1032,21 @@ def get_server_identity(principal: AuthenticatedPrincipal = Depends(get_current_
     return get_identity()
 
 
+class DetectedZoneIn(BaseModel):
+    timezone: str = Field(max_length=64)
+
+
+@router.post("/system/identity/detected-timezone", dependencies=[Depends(require_scope("system:config"))])
+def post_detected_timezone(req: DetectedZoneIn):
+    """An administrator's browser zone, used only while the server has none."""
+    from backend.services.identity import detect_timezone
+
+    try:
+        return detect_timezone(req.timezone)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+
+
 @router.put("/system/identity", dependencies=[Depends(require_scope("system:config"))])
 def put_server_identity(req: IdentityIn):
     from backend.services.identity import set_identity

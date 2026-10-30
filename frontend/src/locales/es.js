@@ -2767,7 +2767,7 @@ export default {
   "tz.local": "Hora local",
   "tz.h12": "12 horas",
   "tz.h24": "24 horas",
-  "tz.apply_server": "También la zona horaria del servidor, para horarios, registros y alertas",
+  "tz.apply_server": "También para el servidor y la pantalla frontal: horarios, registros y alertas la siguen",
   "tz.server_failed": "No se cambió la zona horaria del servidor: {error}",
   "backup.step_what": "1. Qué",
   "backup.step_where": "2. Adónde",

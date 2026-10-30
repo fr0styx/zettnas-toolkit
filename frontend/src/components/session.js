@@ -6,6 +6,7 @@ import { apiFetch, setSessionUserProvider } from '../api.js';
 import { setServerAdvanced } from '../advanced.js';
 import { t } from '../i18n.js';
 import { formatRole } from './role-names.js';
+import { ZettEventBus } from '../event-bus.js';
 
 let _currentUser = null;
 
@@ -13,6 +14,12 @@ export function setCurrentUser(user) {
   _currentUser = user;
   setServerAdvanced(user?.advanced); // UX-23: Advanced is the person's own setting
   updateUserInterfaceElements();
+  if (user) {
+    ZettEventBus.emit('session:user', user); // their own clock follows their account
+    import('../time-zone-prefs.js')
+      .then((m) => m.detectServerZone(user))
+      .catch(() => {});
+  }
 }
 
 setSessionUserProvider(() => _currentUser?.username || null);
