@@ -156,6 +156,41 @@ class DriveNotes(BaseModel):
     note: str = Field(default="", max_length=1000)
 
 
+class DriveAck(BaseModel):
+    serial: str = Field(min_length=1, max_length=64)
+    code: str = Field(min_length=1, max_length=64)
+    params: dict[str, Any] = Field(default_factory=dict)
+    severity: str = Field(max_length=10)
+    title: str = Field(default="", max_length=300)
+
+
+class DriveAckForget(BaseModel):
+    serial: str = Field(min_length=1, max_length=64)
+    code: str = Field(min_length=1, max_length=64)
+
+
+@router.post("/drives/acks", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
+def acknowledge_finding(req: DriveAck) -> dict[str, Any]:
+    """Marks a finding as known: it stops setting the drive's verdict (and its alerts) until its
+    numbers change. Findings that say replace now can't be acknowledged."""
+    from backend.services import drive_acks
+    from backend.services.drive_notes import BadNotes
+
+    try:
+        fp = drive_acks.acknowledge(req.serial, req.code, req.params, req.severity, req.title)
+    except BadNotes as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    return {"fingerprint": fp}
+
+
+@router.post("/drives/acks/forget", dependencies=[Depends(require_scope("storage:write", "storage:admin"))])
+def forget_acknowledgement(req: DriveAckForget) -> dict[str, Any]:
+    """Shows an acknowledged finding again, and lets it set the verdict."""
+    from backend.services import drive_acks
+
+    return {"forgotten": drive_acks.forget(req.serial, req.code)}
+
+
 @router.get("/drives/notes", dependencies=[Depends(require_scope("storage:read", "system:view"))])
 def drive_notes() -> dict[str, Any]:
     """When each drive was bought, until when its warranty runs and a note, by serial number."""

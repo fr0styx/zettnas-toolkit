@@ -196,6 +196,9 @@ export function driveReportText({ drive, detail, tests, history, notes, now = ne
   for (const f of findings) {
     out.push(`* ${findingText(f, 'title')}`, `  ${findingText(f, 'detail')}`, `  ${t('dh.what_to_do', 'What to do:')} ${findingText(f, 'action')}`);
   }
+  for (const f of (health.findings || []).filter((x) => x.acknowledged)) {
+    out.push(`* ${findingText(f, 'title')} (${t('dh.rep_acked', 'acknowledged {date}', { date: when(f.acknowledged.at) })})`);
+  }
   out.push('', rule, t('dh.self_tests', 'Self-tests'), rule);
   const runs = (tests && tests.history) || [];
   if (!runs.length) out.push(t('dh.no_tests', 'No self-test has been run from ZettNAS yet.'));

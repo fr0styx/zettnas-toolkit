@@ -6530,6 +6530,67 @@
     "title": "DownloadOfficialIsoResponse",
     "type": "object"
    },
+   "DriveAck": {
+    "properties": {
+     "code": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Code",
+      "type": "string"
+     },
+     "params": {
+      "additionalProperties": true,
+      "title": "Params",
+      "type": "object"
+     },
+     "serial": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Serial",
+      "type": "string"
+     },
+     "severity": {
+      "maxLength": 10,
+      "title": "Severity",
+      "type": "string"
+     },
+     "title": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "serial",
+     "code",
+     "severity"
+    ],
+    "title": "DriveAck",
+    "type": "object"
+   },
+   "DriveAckForget": {
+    "properties": {
+     "code": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Code",
+      "type": "string"
+     },
+     "serial": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Serial",
+      "type": "string"
+     }
+    },
+    "required": [
+     "serial",
+     "code"
+    ],
+    "title": "DriveAckForget",
+    "type": "object"
+   },
    "DriveNotes": {
     "properties": {
      "bought": {
@@ -49592,6 +49653,100 @@
     "x-required-scopes": [
      "containers:read",
      "system:view"
+    ]
+   }
+  },
+  "/api/v1/drives/acks": {
+   "post": {
+    "description": "Marks a finding as known: it stops setting the drive's verdict (and its alerts) until its\nnumbers change. Findings that say replace now can't be acknowledged.",
+    "operationId": "acknowledge_finding_api_v1_drives_acks_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DriveAck"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Acknowledge Finding Api V1 Drives Acks Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Acknowledge Finding",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:write",
+     "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/drives/acks/forget": {
+   "post": {
+    "description": "Shows an acknowledged finding again, and lets it set the verdict.",
+    "operationId": "forget_acknowledgement_api_v1_drives_acks_forget_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DriveAckForget"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Forget Acknowledgement Api V1 Drives Acks Forget Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Forget Acknowledgement",
+    "tags": [
+     "Drive Health"
+    ],
+    "x-required-scopes": [
+     "storage:write",
+     "storage:admin"
     ]
    }
   },

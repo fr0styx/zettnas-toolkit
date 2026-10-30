@@ -1140,6 +1140,9 @@ def drive_health_for(dev_name: str, doc: dict | None) -> dict:
     try:
         readings = drive_health.read_smartctl(doc) if doc else None
         result = drive_health.assess(readings, get_smart_history_samples(dev_name), get_smart_test_history(dev_name, 5))
+        from backend.services import drive_acks
+
+        result = drive_acks.apply_acks(result, (readings or {}).get("serial"), *_drive_serials(dev_name))
     except Exception:
         logger.debug("backend.hardware.disks.drive_health_for: could not assess %s", dev_name, exc_info=True)
         return {"verdict": "unknown", "label": "Not read yet", "label_key": "unknown", "summary": "", "findings": []}
@@ -1159,6 +1162,32 @@ def drive_identity(dev_name: str) -> str:
     except Exception:
         logger.debug("backend.hardware.disks.drive_identity: discovery failed", exc_info=True)
     return f"dev:{dev_name}"
+
+
+def _drive_serials(dev_name: str) -> list[str]:
+    """The serial number discovery knows a drive by (also while it sleeps)."""
+    for d in _discover_disks():
+        if d.get("dev") == dev_name:
+            v = str(d.get("serial") or "").strip()
+            return [v] if v and "standby" not in v.lower() else []
+    return []
+
+
+def _with_acks(dev_name: str, detail: dict) -> dict:
+    """A stored reading with the verdict as the owner left it: findings they acknowledged since
+    are set aside, ones they took back are shown again (drive_acks)."""
+    health = detail.get("drive_health") if isinstance(detail, dict) else None
+    if not health or not health.get("findings"):
+        return detail
+    from backend.services import drive_acks
+
+    serial = str(detail.get("serial") or "")
+    try:
+        serials = ([serial] if "standby" not in serial.lower() else []) + _drive_serials(dev_name)
+        detail["drive_health"] = drive_acks.apply_acks(health, *serials)
+    except (OSError, ValueError, RuntimeError):
+        logger.debug("backend.hardware.disks._with_acks: kept the stored verdict for %s", dev_name, exc_info=True)
+    return detail
 
 
 def remember_verdict(dev_name: str, result: dict) -> None:
@@ -1201,7 +1230,7 @@ def cached_smart_detail(dev_name: str, max_age: float) -> dict | None:
     """The last reading of this drive (or its error) if at most max_age seconds old, else None."""
     hit = _DETAIL_CACHE.get(dev_name)
     if hit and time.time() - hit[0] <= max_age:
-        return hit[1]
+        return _with_acks(dev_name, hit[1])
     return None
 
 

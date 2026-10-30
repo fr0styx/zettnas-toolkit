@@ -95,6 +95,16 @@
 
 #### Usability
 
+- **"I know about this" in Drive Health**: a finding to watch or to plan for (say, 8 replaced
+  sectors that haven't moved in a year) can be acknowledged. It then no longer sets the drive's
+  verdict, so the drive reads Healthy and no alert or reminder is sent for it, until its numbers
+  change: one more replaced sector and it counts again, with an alert. "Count it again" takes it
+  back. Findings that say replace now can't be acknowledged. Acknowledged findings are listed in
+  the full report.
+- **All drives side by side**: "Compare all drives" shows one table of every drive's health,
+  temperature, age, size and warranty, sorted by any column (worst, hottest, oldest, biggest or
+  soonest-ending first); a row opens that drive. Nothing is read from the drives for it.
+
 - **Drive Health saves reports into a NAS folder**: "Save a report" opens ZettNAS's own dialog
   instead of the browser's download. Pick a folder on the NAS (the folder picker, or the last one
   used) and a file name; it is saved with your folder rights and space limit, never over an

@@ -662,6 +662,17 @@ def assess(
             "from_history": False,
         }
     findings = findings_for(readings, growth(history, now), tests, now)
+    return {
+        **summarize(findings),
+        "from_history": bool(readings.get("from_history_ts")),
+        "reading_ts": readings.get("from_history_ts"),
+        "identity": identity(readings),
+    }
+
+
+def summarize(findings: list[dict[str, Any]]) -> dict[str, Any]:
+    """The verdict, label and one-line summary from a drive's findings (the most severe one leads).
+    Also used again after the owner acknowledged some of them (drive_notes.apply_acks)."""
     worst = max((f["severity"] for f in findings), key=lambda s: ORDER[s], default=OK)
     top = next((f for f in findings if f["severity"] == worst), None)
     if worst in (OK, WATCH):
@@ -678,9 +689,6 @@ def assess(
         "summary_key": top["key"] if trouble and top else "fine",
         "summary_params": top["params"] if trouble and top else {},
         "findings": findings,
-        "from_history": bool(readings.get("from_history_ts")),
-        "reading_ts": readings.get("from_history_ts"),
-        "identity": identity(readings),
     }
 
 

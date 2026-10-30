@@ -21,6 +21,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { bringToFront, makeDraggable } from './dock.js';
 import { showToast } from '../toast.js';
 import { announceChange } from '../a11y.js';
+import { compareTable } from './drive-health-compare.js';
 import { findingText, labelText, summaryText, reportCsv, openReportDialog, notesRows, notesForm, underWarranty } from './drive-health-report.js';
 
 export { labelText, summaryText, reportCsv };
@@ -90,11 +91,24 @@ function findingButton(f) {
   return '';
 }
 
-export function findingHtml(f) {
-  return `<li class="dh-finding ${verdictClass(f.severity)}">
+// The serial a drive goes by; a sleeping drive's reading hides it ("Hidden while in standby")
+export const serialOf = (drive, detail) =>
+  [detail && detail.serial, drive && drive.serial].map((s) => String(s || '').trim()).find((s) => s && !/standby/i.test(s)) || '';
+
+/** "I know about this" on a finding to watch or plan for, or what was acknowledged and its undo. */
+function ackHtml(f, canAck) {
+  if (f.acknowledged) {
+    return `<div class="dh-ack">${escapeHtml(t('dh.acked', 'You acknowledged this on {date}; it counts again if it changes.', { date: when(f.acknowledged.at) }))} <button type="button" class="btn-pill-toggle is-small" data-dh-unack="${escapeHtml(f.code)}">${escapeHtml(t('dh.unack', 'Count it again'))}</button></div>`;
+  }
+  if (!canAck || !['watch', 'soon'].includes(f.severity)) return '';
+  return ` <button type="button" class="btn-pill-toggle is-small" data-dh-ack="${escapeHtml(f.code)}" title="${escapeHtml(t('dh.ack_hint', 'Stop counting this until it changes: the drive reads Healthy and no alert is sent for it'))}">${escapeHtml(t('dh.ack', 'I know about this'))}</button>`;
+}
+
+export function findingHtml(f, canAck = false) {
+  return `<li class="dh-finding ${verdictClass(f.severity)}${f.acknowledged ? ' is-acked' : ''}">
     <div class="dh-finding-title">${escapeHtml(findingText(f, 'title'))}</div>
     <div class="dh-finding-detail">${escapeHtml(findingText(f, 'detail'))}</div>
-    <div class="dh-finding-action"><strong>${escapeHtml(t('dh.what_to_do', 'What to do:'))}</strong> ${escapeHtml(findingText(f, 'action'))} ${findingButton(f)}</div>
+    <div class="dh-finding-action"><strong>${escapeHtml(t('dh.what_to_do', 'What to do:'))}</strong> ${escapeHtml(findingText(f, 'action'))} ${findingButton(f)}${f.acknowledged ? '' : ackHtml(f, canAck)}</div>${f.acknowledged ? ackHtml(f, canAck) : ''}
   </li>`;
 }
 
@@ -151,7 +165,7 @@ export function detailHtml(drive, detail, tests) {
         active.percent_remaining != null ? ` · ${escapeHtml(t('dh.left', '{p}% left', { p: active.percent_remaining }))}` : ''
       }</div>`
     : '';
-  const serial = (detail && detail.serial) || drive.serial || '';
+  const serial = serialOf(drive, detail);
   const notes = _notes[serial] || null;
   const claim =
     ['soon', 'now'].includes(health.verdict) && underWarranty(notes)
@@ -170,10 +184,10 @@ export function detailHtml(drive, detail, tests) {
       <h4>${escapeHtml(t('dh.verdict', 'What we found'))}</h4>
       ${
         findings.length
-          ? `<ul class="dh-findings">${findings.map(findingHtml).join('')}</ul>`
+          ? `<ul class="dh-findings">${findings.map((f) => findingHtml(f, Boolean(serial))).join('')}</ul>`
           : `<p class="dh-allgood">${escapeHtml(t('dh.all_good', 'No sign of trouble. Nothing to do.'))}</p>`
       }
-      ${info.length ? `<ul class="dh-findings is-info">${info.map(findingHtml).join('')}</ul>` : ''}
+      ${info.length ? `<ul class="dh-findings is-info">${info.map((f) => findingHtml(f, Boolean(serial))).join('')}</ul>` : ''}
     </section>
     <section class="dh-section">
       <h4>${escapeHtml(t('dh.self_tests', 'Self-tests'))}</h4>
@@ -247,7 +261,7 @@ async function loadDetail(dev, wake = false) {
       api.get(`/api/disk/smart_tests?dev=${encodeURIComponent(dev)}&limit=10`).catch(() => null),
     ]);
     if (_selected !== dev) return; // another drive was chosen meanwhile
-    _current = { drive: drive || { dev }, detail, tests, history: null, life: null, identity: {}, serial: (detail && detail.serial) || drive?.serial || '' };
+    _current = { drive: drive || { dev }, detail, tests, history: null, life: null, identity: {}, serial: serialOf(drive, detail) };
     pane.innerHTML = detailHtml(drive || { dev }, detail, tests);
     loadExtras(dev, (detail && detail.drive_health && detail.drive_health.identity) || {});
     clearInterval(_testTimer);
@@ -313,6 +327,7 @@ function windowHtml() {
       <aside class="dh-side">
         <div id="dh-overall"></div>
         <div id="dh-fleet" class="dh-fleet"></div>
+        <button type="button" class="btn-pill-toggle is-small dh-compare-open" data-dh-compare>${escapeHtml(t('dh.compare_open', 'Compare all drives'))}</button>
         <ul id="dh-list" class="dh-list" aria-label="${escapeHtml(t('dh.drives', 'Drives'))}"></ul>
       </aside>
       <section id="dh-detail" class="dh-detail" aria-live="polite"></section>
@@ -353,6 +368,9 @@ function ensureWindow() {
     if (target.closest('[data-dh-wake]')) return void loadDetail(_selected, true);
     if (target.closest('[data-dh-report]')) return void openReport('drive');
     if (target.closest('[data-dh-notes]')) return void editNotes();
+    if (target.closest('[data-dh-compare]')) return void showCompare();
+    const ack = /** @type {HTMLElement | null} */ (target.closest('[data-dh-ack], [data-dh-unack]'));
+    if (ack) return void ackFinding(ack.dataset.dhAck || ack.dataset.dhUnack || '', Boolean(ack.dataset.dhAck));
     const open = /** @type {HTMLElement | null} */ (target.closest('[data-dh-open]'));
     if (open?.dataset.dhOpen === 'fans') win.openDrawer?.('tab-fans');
     if (open?.dataset.dhOpen === 'bays') win.openManagementSection?.('mgmt-sec-storage');
@@ -528,6 +546,28 @@ function openReport(preset) {
   openReportDialog(_win, () => ({ drives: _drives, notes: _notes, current: _current && _current.drive?.dev === _selected ? { ..._current, counterName: (k) => (COUNTER_NAMES[k] || (() => k))() } : null }), preset);
 }
 
+/** Acknowledges a finding of the chosen drive (on) or takes that back, then shows the new verdict. */
+export async function ackFinding(code, on) {
+  const serial = _current?.serial;
+  const health = _current?.detail?.drive_health || _current?.drive || {};
+  const f = (health.findings || []).find((x) => x.code === code);
+  if (!serial || !f) return;
+  try {
+    if (on) await api.post('/api/drives/acks', { serial, code, params: f.params || {}, severity: f.severity, title: f.title || '' });
+    else await api.post('/api/drives/acks/forget', { serial, code });
+    await loadDrives();
+    if (_selected) await loadDetail(_selected);
+  } catch (e) {
+    showToast(t('dh.ack_failed', 'Could not change that: {error}', { error: e?.message || '' }), 'error');
+  }
+}
+
+/** Every drive side by side in the right-hand pane; a row opens that drive. */
+export function showCompare() {
+  const pane = _win?.querySelector('#dh-detail');
+  if (pane) pane.replaceChildren(compareTable(_drives, _notes, (dev) => selectDrive(dev)));
+}
+
 /** The purchase and warranty form in place of "About this drive". */
 function editNotes() {
   const about = _win?.querySelector('#dh-about');
@@ -579,6 +619,10 @@ async function loadExtras(dev, id) {
 }
 
 export const _test = {
+  /** @param {any} cur */
+  setCurrent(cur) {
+    _current = cur;
+  },
   reset() {
     _win?.remove();
     _win = null;

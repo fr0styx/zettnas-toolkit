@@ -91,3 +91,12 @@
 .dh-notes-form { display: flex; flex-direction: column; gap: 10px; }
 .dh-years { display: flex; gap: 6px; flex-wrap: wrap; }
 .dh-notes-edit { margin-top: 8px; }
+.dh-ack { margin-top: 6px; font-size: var(--zn-fs-xs, 12px); color: var(--muted); }
+.dh-finding .btn-pill-toggle[data-dh-ack] { margin-left: 8px; }
+.dh-compare-open { margin-top: 8px; }
+.dh-compare-table th, .dh-compare-table td { padding: 6px 8px; border-bottom: 1px solid var(--track); vertical-align: middle; }
+.dh-compare-table thead th { white-space: nowrap; }
+.dh-sort { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.dh-sort:hover, .dh-sort:focus-visible { text-decoration: underline; }
+th[aria-sort] .dh-sort { color: var(--zn-text); font-weight: 700; }
+th[aria-sort] .dh-sort { text-decoration: underline; text-underline-offset: 3px; }

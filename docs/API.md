@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-636 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+638 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -223,6 +223,8 @@ request and response schemas.
 
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/drives/acks` | any of `storage:write`, `storage:admin` | Marks a finding as known: it stops setting the drive's verdict (and its alerts) until its numbers change |
+| `POST` | `/api/v1/drives/acks/forget` | any of `storage:write`, `storage:admin` | Shows an acknowledged finding again, and lets it set the verdict |
 | `GET` | `/api/v1/drives/health` | any of `storage:read`, `system:view` | Every drive with its verdict, reason and what to do; worst first |
 | `GET` | `/api/v1/drives/history` | any of `storage:read`, `system:view` | A drive's temperature and error counters over time, and its age and wear outlook, from the stored readings: a sleeping drive is not touch… |
 | `GET` | `/api/v1/drives/notes` | any of `storage:read`, `system:view` | When each drive was bought, until when its warranty runs and a note, by serial number |
