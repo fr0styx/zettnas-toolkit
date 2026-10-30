@@ -31,10 +31,44 @@ export function sortMenuHtml(sortBy, sortDir) {
     ['desc', t('fm.sort_desc', 'Descending')],
   ];
   const row = (act, label, on) =>
-    `<div class="fm-ctx-item${on ? ' is-current' : ''}" data-act="${act}" role="menuitemradio" aria-checked="${on}"><span class="fm-ctx-check">${on ? '✓' : ''}</span>${escapeHtml(label)}</div>`;
+    `<div class="fm-ctx-item${on ? ' is-current' : ''}" data-act="${act}" role="menuitemradio" tabindex="-1" aria-checked="${on}"><span class="fm-ctx-check">${on ? '✓' : ''}</span>${escapeHtml(label)}</div>`;
   return `<div class="fm-ctx-group" role="group" aria-label="${escapeHtml(t('fm.sort_by', 'Sort by'))}"><div class="fm-ctx-heading">${escapeHtml(t('fm.sort_by', 'Sort by'))}</div>${fields
     .map(([k, label]) => row(`sort-${k}`, label, sortBy === k))
     .join('')}<div class="fm-ctx-divider"></div>${dirs.map(([k, label]) => row(`sort-${k}`, label, sortDir === k)).join('')}</div>`;
+}
+
+/** "Ctrl" on Windows and Linux, "⌘" on a Mac or iPad (NUX-7). */
+export function modKey(nav = typeof navigator !== 'undefined' ? navigator : null) {
+  const p = nav ? `${nav.platform || ''} ${nav.userAgent || ''}` : '';
+  return /Mac|iPhone|iPad/i.test(p) ? '⌘' : 'Ctrl';
+}
+
+/** One row of the right-click menu: a menu item with its icon, label and key. */
+export function ctxItem(act, icon, label, key = '', extraClass = '') {
+  const k = key ? ` <span class="fm-ctx-key" aria-hidden="true">${escapeHtml(key)}</span>` : '';
+  return `<div class="fm-ctx-item${extraClass ? ` ${extraClass}` : ''}" data-act="${act}" role="menuitem" tabindex="-1"><span aria-hidden="true">${icon}</span> ${escapeHtml(label)}${k}</div>`;
+}
+
+/** Arrow keys, Home, End, Enter and Space in a menu; Tab closes it (NUX-7). */
+export function onMenuKeys(menu, e, hide) {
+  const items = /** @type {HTMLElement[]} */ ([...menu.querySelectorAll('[role="menuitem"], [role="menuitemradio"]')]);
+  if (!items.length) return;
+  const i = items.indexOf(/** @type {HTMLElement} */ (document.activeElement));
+  let next;
+  if (e.key === 'ArrowDown') next = (i + 1) % items.length;
+  else if (e.key === 'ArrowUp') next = (i - 1 + items.length) % items.length;
+  else if (e.key === 'Home') next = 0;
+  else if (e.key === 'End') next = items.length - 1;
+  else if ((e.key === 'Enter' || e.key === ' ') && i >= 0) {
+    e.preventDefault();
+    items[i].click();
+    return;
+  } else if (e.key === 'Tab') {
+    hide();
+    return;
+  } else return;
+  e.preventDefault();
+  items[next].focus();
 }
 
 export function isGuardedSystemDir(path) {
@@ -963,13 +997,15 @@ export class FmContextMenu {
     this.fm = fmWindow;
     this.menuEl = null;
     this.targetItem = null;
+    /** @type {HTMLElement | null} where focus goes back to when the menu closes */
+    this._returnFocus = null;
     this.init();
   }
 
   init() {
     let el = document.getElementById('fm-context-menu');
     if (!el) {
-      const html = `<div id="fm-context-menu" class="fm-context-menu" style="display: none; position: fixed; z-index: 99999;"></div>`;
+      const html = `<div id="fm-context-menu" class="fm-context-menu" role="menu" style="display: none; position: fixed; z-index: 99999;"></div>`;
       document.body.insertAdjacentHTML('beforeend', html);
       el = document.getElementById('fm-context-menu');
     }
@@ -983,6 +1019,7 @@ export class FmContextMenu {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.hide();
     });
+    el.addEventListener('keydown', (e) => onMenuKeys(el, e, () => this.hide()));
     window.addEventListener('blur', () => this.hide());
     window.addEventListener('resize', () => this.hide());
   }
@@ -997,39 +1034,52 @@ export class FmContextMenu {
     const isDir = fileItem && fileItem.is_dir;
     const isZip = fileItem && fileItem.name && fileItem.name.match(/\.(zip|tar|tar\.gz|tgz)$/i);
 
-    let itemsHtml = `
-      <div class="fm-ctx-group">
-        ${fileItem && !isDir ? `<div class="fm-ctx-item" data-act="preview">👁️ QuickLook <span class="fm-ctx-key">Space</span></div>` : ''}
-        ${fileItem && isDir ? `<div class="fm-ctx-item" data-act="open">📂 Open <span class="fm-ctx-key">Enter</span></div>` : ''}
-        ${fileItem && fileItem.trash_id ? `<div class="fm-ctx-item" data-act="restore">↩️ ${escapeHtml(t('fm.restore', 'Restore'))}</div>` : ''}
-        <div class="fm-ctx-item" data-act="new-window">🪟 Open in New Window</div>
-      </div>
-      <div class="fm-ctx-divider"></div>
-      <div class="fm-ctx-group">
-        ${hasSelection ? `<div class="fm-ctx-item" data-act="cut">✂️ Cut <span class="fm-ctx-key">Cmd+X</span></div>` : ''}
-        ${hasSelection ? `<div class="fm-ctx-item" data-act="copy">📋 Copy <span class="fm-ctx-key">Cmd+C</span></div>` : ''}
-        <div class="fm-ctx-item" data-act="paste">📥 Paste <span class="fm-ctx-key">Cmd+V</span></div>
-        ${hasSelection ? `<div class="fm-ctx-item" data-act="duplicate">📄 Duplicate <span class="fm-ctx-key">Cmd+D</span></div>` : ''}
-        ${isSingle ? `<div class="fm-ctx-item" data-act="rename">✏️ Rename <span class="fm-ctx-key">F2</span></div>` : ''}
-      </div>
-      <div class="fm-ctx-divider"></div>
-      <div class="fm-ctx-group">
-        ${hasSelection ? `<div class="fm-ctx-item" data-act="archive-create">🗜️ Create Archive (.zip)</div>` : ''}
-        ${isZip ? `<div class="fm-ctx-item" data-act="archive-extract">📦 Extract Archive Here</div>` : ''}
-        ${isSingle ? `<div class="fm-ctx-item" data-act="share">🔗 Share Link…</div>` : ''}
-        ${isSingle && !isDir ? `<div class="fm-ctx-item" data-act="checksum">🛡️ Compute SHA-256</div>` : ''}
-        ${isSingle && !isDir ? `<div class="fm-ctx-item" data-act="versions">🕘 ${escapeHtml(t('fm.versions_menu', 'Previous versions…'))}</div>` : ''}
-        ${isSingle ? `<div class="fm-ctx-item" data-act="ask-zetty">✨ ${escapeHtml(t('fm.ask_zetty', 'Ask Zetty about this'))}</div>` : ''}
-        ${isSingle && isDir ? `<div class="fm-ctx-item" data-act="fav-toggle">${isFavorite(fileItem.path) ? `☆ ${escapeHtml(t('fm.fav_remove', 'Remove from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add', 'Add to Favorites'))}`}</div>` : ''}
-        ${!fileItem ? `<div class="fm-ctx-item" data-act="fav-toggle-here">${isFavorite(this.fm.currentPath) ? `☆ ${escapeHtml(t('fm.fav_remove_here', 'Remove this folder from Favorites'))}` : `⭐ ${escapeHtml(t('fm.fav_add_here', 'Add this folder to Favorites'))}`}</div>` : ''}
-      </div>
-      ${!fileItem ? `<div class="fm-ctx-divider"></div>${sortMenuHtml(this.fm.currentSortBy, this.fm.currentSortDir)}` : ''}
-      <div class="fm-ctx-divider"></div>
-      <div class="fm-ctx-group">
-        ${hasSelection ? `<div class="fm-ctx-item text-danger" data-act="trash">🗑️ Move to Trash <span class="fm-ctx-key">Delete</span></div>` : ''}
-        ${hasSelection ? `<div class="fm-ctx-item text-danger" data-act="delete-perm">⚠️ Permanent Delete <span class="fm-ctx-key">Shift+Del</span></div>` : ''}
-      </div>
-    `;
+    const mod = modKey();
+    const it = ctxItem;
+    const group = (rows) => `<div class="fm-ctx-group" role="group">${rows.filter(Boolean).join('')}</div>`;
+    const line = '<div class="fm-ctx-divider" role="separator"></div>';
+    const fav = (here) => {
+      const on = isFavorite(here ? this.fm.currentPath : fileItem.path);
+      const label = here
+        ? (on ? t('fm.fav_remove_here', 'Remove this folder from Favorites') : t('fm.fav_add_here', 'Add this folder to Favorites'))
+        : (on ? t('fm.fav_remove', 'Remove from Favorites') : t('fm.fav_add', 'Add to Favorites'));
+      return it(here ? 'fav-toggle-here' : 'fav-toggle', on ? '☆' : '⭐', label);
+    };
+    // every label in the person's language, keys as their keyboard has them (NUX-7)
+    let itemsHtml = [
+      group([
+        fileItem && !isDir && it('preview', '👁️', t('fm.ctx_preview', 'Quick look'), t('fm.key_space', 'Space')),
+        fileItem && isDir && it('open', '📂', t('fm.ctx_open', 'Open'), t('fm.key_enter', 'Enter')),
+        fileItem && fileItem.trash_id && it('restore', '↩️', t('fm.restore', 'Restore')),
+        it('new-window', '🪟', t('fm.ctx_new_window', 'Open in a new window')),
+      ]),
+      line,
+      group([
+        hasSelection && it('cut', '✂️', t('fm.ctx_cut', 'Cut'), `${mod}+X`),
+        hasSelection && it('copy', '📋', t('fm.ctx_copy', 'Copy'), `${mod}+C`),
+        it('paste', '📥', t('fm.ctx_paste', 'Paste'), `${mod}+V`),
+        hasSelection && it('duplicate', '📄', t('fm.ctx_duplicate', 'Duplicate'), `${mod}+D`),
+        isSingle && it('rename', '✏️', t('fm.ctx_rename', 'Rename'), 'F2'),
+      ]),
+      line,
+      group([
+        hasSelection && it('archive-create', '🗜️', t('fm.ctx_zip', 'Compress to a .zip file')),
+        isZip && it('archive-extract', '📦', t('fm.ctx_unzip', 'Extract here')),
+        isSingle && it('share', '🔗', t('fm.ctx_share', 'Share a link…')),
+        isSingle && !isDir && it('checksum', '🛡️', t('fm.ctx_checksum', 'Show its SHA-256 checksum')),
+        isSingle && !isDir && it('versions', '🕘', t('fm.versions_menu', 'Previous versions…')),
+        isSingle && it('ask-zetty', '✨', t('fm.ask_zetty', 'Ask Zetty about this')),
+        isSingle && isDir && fav(false),
+        !fileItem && fav(true),
+      ]),
+      !fileItem ? `${line}${sortMenuHtml(this.fm.currentSortBy, this.fm.currentSortDir)}` : '',
+      line,
+      group([
+        hasSelection && it('trash', '🗑️', t('fm.ctx_to_bin', 'Move to the Recycle Bin'), t('fm.key_delete', 'Delete'), 'text-danger'),
+        hasSelection && it('delete-perm', '⚠️', t('fm.ctx_delete_forever', 'Delete permanently'), t('fm.key_shift_delete', 'Shift+Delete'), 'text-danger'),
+      ]),
+    ].join('');
+    this._returnFocus = /** @type {HTMLElement | null} */ (document.activeElement);
 
     this.menuEl.innerHTML = itemsHtml;
     this.menuEl.style.display = 'block';
@@ -1049,6 +1099,8 @@ export class FmContextMenu {
 
     this.menuEl.style.left = `${left}px`;
     this.menuEl.style.top = `${top}px`;
+    const first = /** @type {HTMLElement | null} */ (this.menuEl.querySelector('[role="menuitem"], [role="menuitemradio"]'));
+    if (first) first.focus(); // a menu opened with Shift+F10 or the menu key is used by keyboard
 
     // Click handler for menu actions
     this.menuEl.querySelectorAll('.fm-ctx-item').forEach((item) => {
@@ -1061,7 +1113,11 @@ export class FmContextMenu {
   }
 
   hide() {
-    if (this.menuEl) this.menuEl.style.display = 'none';
+    if (!this.menuEl || this.menuEl.style.display === 'none') return;
+    this.menuEl.style.display = 'none';
+    const back = this._returnFocus;
+    this._returnFocus = null;
+    if (back && typeof back.focus === 'function' && document.contains(back)) back.focus();
   }
 
   handleAction(act) {

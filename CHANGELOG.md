@@ -78,6 +78,20 @@
 
 #### Usability
 
+- **Your clock everywhere**: file dates, a backup's last run, the activity log and every other
+  time on screen now use your own time zone and 12/24-hour choice, as the desktop clock does.
+  The sign-in hours note says which zone "server time" is and what time it is there (NUX-10).
+- **One list of time zones, in your language**: Settings and the setup wizard offer the same full
+  list, with city and zone names and times in your language (NUX-22).
+- **The time-zone card works by keyboard**: arrow keys move through the zones and Enter picks
+  one, 12 h / 24 h is a choice you can tab to, every label is translated, and "Undo changes"
+  now puts back what was saved (NUX-8).
+- **The File Explorer's right-click menu works by keyboard and in your language**: Shift+F10 or
+  the menu key opens it with focus inside, arrow keys move, Enter picks and focus goes back where
+  it was; every entry is translated, shortcuts show Ctrl or ⌘ to match your computer, and
+  "Move to Trash" is now "Move to the Recycle Bin". Column headers sort with Enter and tell
+  screen readers how the folder is sorted (NUX-7).
+
 - **The Recycle Bin says where things came from**: in the bin, each item shows the folder it was
   deleted from and when it was deleted; a bar says items stay 30 days, and people who may empty
   the bins get "Empty all Recycle Bins", which asks for a typed word since it covers every share

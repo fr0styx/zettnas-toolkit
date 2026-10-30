@@ -3,7 +3,8 @@
  * be signed in. The server enforces them; this only edits them.
  */
 import { t } from '../i18n.js';
-import { currentLocale } from '../format.js';
+import { currentLocale, formatTime } from '../format.js';
+import { state } from '../state.js';
 
 /** Monday first, as the server counts (0 = Monday). */
 export function dayNames(locale = currentLocale()) {
@@ -55,11 +56,23 @@ export function installSigninHours(box, user, { canBeLimited = true } = {}) {
     el('div', { class: 'zn-hours-times' },
       el('label', {}, t('hours.from', 'From'), ' ', start),
       el('label', {}, t('hours.until', 'Until'), ' ', end)),
-    el('div', { class: 'zn-sub', text: t('hours.hint', "Server time. Outside these hours this person can't sign in, and an open session stops until they start again.") }));
+    el('div', { class: 'zn-sub', text: serverTimeHint() }));
   fields.hidden = !hours;
   box.replaceChildren(el('label', { class: 'zn-toggle' }, on, el('span', { text: t('hours.only_at', 'Only at these times') })), fields);
   let changed = false;
   on.addEventListener('change', () => { fields.hidden = !on.checked; });
   box.addEventListener('change', () => { changed = true; });
   return () => changed;
+}
+
+/** The hint names the server's zone and its time now, so "server time" means something (NUX-10). */
+export function serverTimeHint(zone = state.currentTimezone, now = Date.now()) {
+  if (!zone) return t('hours.hint', "Server time. Outside these hours this person can't sign in, and an open session stops until they start again.");
+  let time;
+  try {
+    time = formatTime(now, { hour: '2-digit', minute: '2-digit', timeZone: zone });
+  } catch {
+    time = ''; // an unknown zone: no time shown
+  }
+  return t('hours.hint_zone', "Server time ({zone}, now {time}). Outside these hours this person can't sign in, and an open session stops until they start again.", { zone, time });
 }

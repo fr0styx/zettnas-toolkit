@@ -184,15 +184,16 @@ describe('Desktop Widgets - Time Clock & Calendar Modal Interactivity', () => {
       expect(modal.style.display).toBe('none');
     });
 
-    it('closes modal when clicking the cancel button (#modal-clock-tz-cancel-btn)', () => {
+    it('Undo (#modal-clock-tz-cancel-btn) puts the saved choice back and keeps the card open (NUX-8)', () => {
       const modal = document.getElementById('modal-clock-timezone');
       const cancelBtn = document.getElementById('modal-clock-tz-cancel-btn');
 
       openTimezoneModal();
+      document.getElementById('tz-items-list').querySelector('[data-tz-id="UTC"]').click();
       cancelBtn.click();
 
-      expect(modal.classList.contains('open')).toBe(false);
-      expect(modal.style.display).toBe('none');
+      expect(modal.classList.contains('open')).toBe(true);
+      expect(document.querySelector('#tz-items-list [aria-selected="true"]').dataset.tzId).toBe('auto');
     });
 
     it('closes modal when clicking directly on the backdrop overlay', () => {

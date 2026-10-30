@@ -1404,9 +1404,7 @@
                     <span style="font-size: 16px;">🕒</span>
                     <span data-i18n="tz.modal_title">Timezone & Clock Settings</span>
                   </span>
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; line-height: 1.4;">
-                    Configure how dates and times are formatted across the desktop workspace, status bar, and container logs.
-                  </div>
+                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; line-height: 1.4;" data-i18n="tz.card_desc">Your time zone and 12 or 24 hours, for every time ZettNAS shows you, on every device you sign in to.</div>
                 </div>
 
                 <!-- Live Clock Preview Card -->
@@ -1423,9 +1421,9 @@
                   <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                     <div id="modal-tz-active-pill" class="suite-badge" style="background: var(--lt-b-00f0ff26, rgba(0,240,255,0.15)); color: var(--lt-ink-brand, var(--brand, #00f0ff)); border-color: var(--lt-r-00f0ff59, rgba(0,240,255,0.35)); font-size: var(--zn-fs-xs); font-weight: 700; padding: 3px 10px; border-radius: 6px;">Local Time (Auto)</div>
                     <!-- 12H / 24H Toggle -->
-                    <div class="tz-format-toggle-group" style="display: flex; background: var(--zn-glaze-6); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 2px;">
-                      <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn" style="padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border: none; background: transparent; color: var(--zn-text-muted); border-radius: 4px; cursor: pointer;">12H</button>
-                      <button type="button" id="btn-tz-fmt-24" class="tz-fmt-btn active" style="padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border: none; background: var(--brand, #00f0ff); color: #000; border-radius: 4px; cursor: pointer;">24H</button>
+                    <div class="tz-format-toggle-group" role="radiogroup" aria-label="Clock format" data-i18n-aria-label="tz.format" style="display: flex; background: var(--zn-glaze-6); border: 1px solid var(--zn-line-10); border-radius: 6px; padding: 2px;">
+                      <button type="button" id="btn-tz-fmt-12" class="tz-fmt-btn" role="radio" aria-checked="false" style="padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border: none; background: transparent; color: var(--zn-text-muted); border-radius: 4px; cursor: pointer;" data-i18n="tz.h12">12 h</button>
+                      <button type="button" id="btn-tz-fmt-24" class="tz-fmt-btn active" role="radio" aria-checked="true" style="padding: 4px 10px; font-size: var(--zn-fs-xs); font-weight: 700; border: none; background: var(--brand, #00f0ff); color: #000; border-radius: 4px; cursor: pointer;" data-i18n="tz.h24">24 h</button>
                     </div>
                   </div>
                 </div>
@@ -1442,25 +1440,25 @@
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
                   <input type="text" id="tz-search-input" class="tz-select-input" placeholder="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-placeholder="ui.search_cities_countries_or_timezones" style="width: 100%; border: 1px solid var(--zn-line-14); background: var(--zn-shade-30); padding: 8px 12px; color: var(--zn-text-strong); border-radius: 8px; font-size: var(--zn-fs-xs); outline: none;" aria-label="Search cities, countries, or timezones (e.g. New York, Tokyo, London, Berlin, UTC)..." data-i18n-aria-label="ui.search_cities_countries_or_timezones" />
                   <div id="tz-region-pills" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button type="button" class="tz-region-pill active" data-region="all">All</button>
-                    <button type="button" class="tz-region-pill" data-region="Americas">Americas</button>
-                    <button type="button" class="tz-region-pill" data-region="Europe">Europe</button>
-                    <button type="button" class="tz-region-pill" data-region="Asia">Asia</button>
-                    <button type="button" class="tz-region-pill" data-region="Pacific">Pacific</button>
+                    <button type="button" class="tz-region-pill active" data-region="all" data-i18n="tz.region_all">All</button>
+                    <button type="button" class="tz-region-pill" data-region="Americas" data-i18n="tz.region_americas">Americas</button>
+                    <button type="button" class="tz-region-pill" data-region="Europe" data-i18n="tz.region_europe">Europe</button>
+                    <button type="button" class="tz-region-pill" data-region="Asia" data-i18n="tz.region_asia">Asia</button>
+                    <button type="button" class="tz-region-pill" data-region="Pacific" data-i18n="tz.region_pacific">Pacific</button>
                     <button type="button" class="tz-region-pill" data-region="UTC">UTC / GMT</button>
                   </div>
                 </div>
 
                 <!-- Timezone List Scroll Area -->
-                <div id="tz-items-list" tabindex="0" role="region" aria-label="Time zones" data-i18n-aria-label="ui.time_zones" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 8px; background: var(--zn-shade-25); display: flex; flex-direction: column; padding: 4px; margin-bottom: 12px;">
+                <div id="tz-items-list" tabindex="0" role="listbox" aria-label="Time zones" data-i18n-aria-label="ui.time_zones" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 8px; background: var(--zn-shade-25); display: flex; flex-direction: column; padding: 4px; margin-bottom: 12px;">
                   <!-- Populated dynamically via JS -->
                 </div>
 
                 <!-- Custom IANA Input -->
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                  <label for="tz-custom-input" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); white-space: nowrap;">Custom IANA Timezone:</label>
+                  <label for="tz-custom-input" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); white-space: nowrap;" data-i18n="tz.custom">Other zone (IANA name):</label>
                   <input type="text" id="tz-custom-input" placeholder="e.g. America/Toronto, Asia/Seoul, UTC" data-i18n-placeholder="ph.timezone" style="flex: 1; border: 1px solid var(--zn-line-12); background: var(--zn-shade-30); padding: 6px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);" />
-                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="margin: 0;">Apply</button>
+                  <button type="button" id="btn-tz-apply-custom" class="btn-pill-toggle" style="margin: 0;" data-i18n="tz.use_zone">Use it</button>
                 </div>
 
                 <label class="tz-server-row" id="tz-server-row" hidden>
@@ -1470,8 +1468,8 @@
 
                 <!-- Save Actions -->
                 <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--zn-line-8); padding-top: 14px;">
-                  <button type="button" id="modal-clock-tz-cancel-btn" class="btn-pill-toggle is-small">Reset Changes</button>
-                  <button type="button" id="modal-clock-tz-save-btn" class="btn-pill-toggle is-primary is-small">Apply & Save</button>
+                  <button type="button" id="modal-clock-tz-cancel-btn" class="btn-pill-toggle is-small" data-i18n="tz.undo">Undo changes</button>
+                  <button type="button" id="modal-clock-tz-save-btn" class="btn-pill-toggle is-primary is-small" data-i18n="tz.save">Save</button>
                 </div>
               </div>
 

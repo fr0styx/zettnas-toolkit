@@ -293,9 +293,9 @@ export class FileManagerWindow {
                   <div class="fm-header-row">
                     <div class="fm-col fm-col-check"><input type="checkbox" id="fm-select-all-checkbox" class="fm-checkbox fm-select-all-checkbox" title="${t('ui.select_all', 'Select All')}" /></div>
                     <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>
-                    <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">Type <span class="fm-sort-icon"></span></div>
+                    <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">${t('fm.col_type', 'Type')} <span class="fm-sort-icon"></span></div>
                     <div class="fm-col fm-col-size" data-i18n="fm.col_size" data-sort="size">${t('fm.col_size', 'Size')} <span class="fm-sort-icon"></span></div>
-                    <div class="fm-col fm-col-mtime" data-i18n="fm.col_mtime" data-sort="mtime">Modified <span class="fm-sort-icon"></span></div>
+                    <div class="fm-col fm-col-mtime" data-i18n="fm.col_mtime" data-sort="mtime">${t('fm.col_mtime', 'Modified')} <span class="fm-sort-icon"></span></div>
                     <div class="fm-col fm-col-actions" data-i18n="fm.col_actions">${t('fm.col_actions', 'Actions')}</div>
                   </div>
                   <div id="fm-viewport" class="fm-viewport" data-scrollable="true" tabindex="0">
@@ -409,9 +409,9 @@ export class FileManagerWindow {
                 <div class="fm-header-row">
                   <div class="fm-col fm-col-check"><input type="checkbox" class="fm-checkbox fm-select-all-checkbox" title="${t('ui.select_all', 'Select All')}" /></div>
                   <div class="fm-col fm-col-name" data-i18n="fm.col_name" data-sort="name">${t('fm.col_name', 'Name')} <span class="fm-sort-icon"></span></div>
-                  <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">Type <span class="fm-sort-icon"></span></div>
+                  <div class="fm-col fm-col-type" data-i18n="fm.col_type" data-sort="type">${t('fm.col_type', 'Type')} <span class="fm-sort-icon"></span></div>
                   <div class="fm-col fm-col-size" data-i18n="fm.col_size" data-sort="size">${t('fm.col_size', 'Size')} <span class="fm-sort-icon"></span></div>
-                  <div class="fm-col fm-col-mtime" data-i18n="fm.col_mtime" data-sort="mtime">Modified <span class="fm-sort-icon"></span></div>
+                  <div class="fm-col fm-col-mtime" data-i18n="fm.col_mtime" data-sort="mtime">${t('fm.col_mtime', 'Modified')} <span class="fm-sort-icon"></span></div>
                   <div class="fm-col fm-col-actions" data-i18n="fm.col_actions">${t('fm.col_actions', 'Actions')}</div>
                 </div>
                 <div class="fm-viewport" data-scrollable="true" tabindex="0">
@@ -1218,6 +1218,16 @@ export class FileManagerWindow {
     this.colSize?.addEventListener('click', () => this.sortBy('size'));
     this.colType?.addEventListener('click', () => this.sortBy('type'));
     this.colMtime?.addEventListener('click', () => this.sortBy('mtime'));
+    for (const col of [this.colName, this.colSize, this.colType, this.colMtime]) {
+      col?.addEventListener('keydown', (ev) => {
+        const e = /** @type {KeyboardEvent} */ (ev);
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          /** @type {HTMLElement} */ (col).click(); // headers sort by keyboard too (NUX-7)
+        }
+      });
+    }
+    this.updateSortHeaderUI();
 
     // Bulk Delete
     this.bulkDeleteBtn?.addEventListener('click', () => {
@@ -3310,7 +3320,11 @@ export class FileManagerWindow {
       const icon = el.querySelector('.fm-sort-icon');
       if (icon) {
         icon.textContent = isCurrent ? (this.currentSortDir === 'asc' ? ' ▲' : ' ▼') : '';
+        icon.setAttribute('aria-hidden', 'true'); // aria-sort says it (NUX-7)
       }
+      el.setAttribute('role', 'columnheader');
+      el.setAttribute('tabindex', '0');
+      el.setAttribute('aria-sort', isCurrent ? (this.currentSortDir === 'asc' ? 'ascending' : 'descending') : 'none');
     });
   }
 

@@ -285,3 +285,6 @@
   box-shadow: 0 0 10px rgba(var(--brand-rgb, 0, 240, 255), 0.4);
 }
 
+
+/* the option the arrow keys are on (NUX-8) */
+.tz-item-row.kbd-active { outline: 2px solid currentColor; outline-offset: -2px; }

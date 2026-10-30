@@ -9,7 +9,8 @@ import { makeDraggable } from './dock.js';
 import { advancedOn } from '../advanced.js';
 import { resolveZone, savePersonZone } from '../time-zone-prefs.js';
 
-import { formatDate, formatNumber } from '../format.js';
+import { currentLocale, formatDate, formatNumber, setClockPrefs } from '../format.js';
+import { zoneCatalog } from '../time-zones.js';
 import { WIDGET_NAMES, getWidgetKeyFromElement, getWidgetDisplayName } from './widget-names.js';
 const STORAGE_KEY = 'zettnas_widgets_config';
 const WEATHER_CACHE_KEY = 'zettnas_weather_cache';
@@ -2187,64 +2188,8 @@ export function initWidgets() {
    Timezone & Clock Modal Logic
    ========================================================================= */
 
-export const TIMEZONES_CATALOG = [
-  { id: 'UTC', name: 'UTC / GMT', region: 'UTC', country: 'Universal' },
-  { id: 'America/New_York', name: 'New York (Eastern)', region: 'Americas', country: 'United States' },
-  { id: 'America/Chicago', name: 'Chicago (Central)', region: 'Americas', country: 'United States' },
-  { id: 'America/Denver', name: 'Denver (Mountain)', region: 'Americas', country: 'United States' },
-  { id: 'America/Los_Angeles', name: 'Los Angeles (Pacific)', region: 'Americas', country: 'United States' },
-  { id: 'America/Anchorage', name: 'Anchorage (Alaska)', region: 'Americas', country: 'United States' },
-  { id: 'Pacific/Honolulu', name: 'Honolulu (Hawaii)', region: 'Americas', country: 'United States' },
-  { id: 'America/Phoenix', name: 'Phoenix (MST - No DST)', region: 'Americas', country: 'United States' },
-  { id: 'America/Toronto', name: 'Toronto', region: 'Americas', country: 'Canada' },
-  { id: 'America/Vancouver', name: 'Vancouver', region: 'Americas', country: 'Canada' },
-  { id: 'America/Mexico_City', name: 'Mexico City', region: 'Americas', country: 'Mexico' },
-  { id: 'America/Bogota', name: 'Bogotá', region: 'Americas', country: 'Colombia' },
-  { id: 'America/Lima', name: 'Lima', region: 'Americas', country: 'Peru' },
-  { id: 'America/Santiago', name: 'Santiago', region: 'Americas', country: 'Chile' },
-  { id: 'America/Buenos_Aires', name: 'Buenos Aires', region: 'Americas', country: 'Argentina' },
-  { id: 'America/Sao_Paulo', name: 'São Paulo', region: 'Americas', country: 'Brazil' },
-  { id: 'Europe/London', name: 'London (GMT/BST)', region: 'Europe', country: 'United Kingdom' },
-  { id: 'Europe/Dublin', name: 'Dublin', region: 'Europe', country: 'Ireland' },
-  { id: 'Europe/Paris', name: 'Paris', region: 'Europe', country: 'France' },
-  { id: 'Europe/Berlin', name: 'Berlin', region: 'Europe', country: 'Germany' },
-  { id: 'Europe/Madrid', name: 'Madrid', region: 'Europe', country: 'Spain' },
-  { id: 'Europe/Rome', name: 'Rome', region: 'Europe', country: 'Italy' },
-  { id: 'Europe/Amsterdam', name: 'Amsterdam', region: 'Europe', country: 'Netherlands' },
-  { id: 'Europe/Brussels', name: 'Brussels', region: 'Europe', country: 'Belgium' },
-  { id: 'Europe/Zurich', name: 'Zurich', region: 'Europe', country: 'Switzerland' },
-  { id: 'Europe/Vienna', name: 'Vienna', region: 'Europe', country: 'Austria' },
-  { id: 'Europe/Stockholm', name: 'Stockholm', region: 'Europe', country: 'Sweden' },
-  { id: 'Europe/Oslo', name: 'Oslo', region: 'Europe', country: 'Norway' },
-  { id: 'Europe/Copenhagen', name: 'Copenhagen', region: 'Europe', country: 'Denmark' },
-  { id: 'Europe/Helsinki', name: 'Helsinki', region: 'Europe', country: 'Finland' },
-  { id: 'Europe/Warsaw', name: 'Warsaw', region: 'Europe', country: 'Poland' },
-  { id: 'Europe/Prague', name: 'Prague', region: 'Europe', country: 'Czechia' },
-  { id: 'Europe/Athens', name: 'Athens', region: 'Europe', country: 'Greece' },
-  { id: 'Europe/Bucharest', name: 'Bucharest', region: 'Europe', country: 'Romania' },
-  { id: 'Europe/Kyiv', name: 'Kyiv', region: 'Europe', country: 'Ukraine' },
-  { id: 'Europe/Istanbul', name: 'Istanbul', region: 'Europe', country: 'Turkey' },
-  { id: 'Europe/Moscow', name: 'Moscow', region: 'Europe', country: 'Russia' },
-  { id: 'Asia/Dubai', name: 'Dubai (GST)', region: 'Asia', country: 'United Arab Emirates' },
-  { id: 'Asia/Riyadh', name: 'Riyadh', region: 'Asia', country: 'Saudi Arabia' },
-  { id: 'Asia/Kolkata', name: 'New Delhi / Mumbai (IST)', region: 'Asia', country: 'India' },
-  { id: 'Asia/Bangkok', name: 'Bangkok (ICT)', region: 'Asia', country: 'Thailand' },
-  { id: 'Asia/Jakarta', name: 'Jakarta (WIB)', region: 'Asia', country: 'Indonesia' },
-  { id: 'Asia/Singapore', name: 'Singapore (SGT)', region: 'Asia', country: 'Singapore' },
-  { id: 'Asia/Hong_Kong', name: 'Hong Kong (HKT)', region: 'Asia', country: 'Hong Kong' },
-  { id: 'Asia/Shanghai', name: 'Beijing / Shanghai (CST)', region: 'Asia', country: 'China' },
-  { id: 'Asia/Taipei', name: 'Taipei', region: 'Asia', country: 'Taiwan' },
-  { id: 'Asia/Seoul', name: 'Seoul (KST)', region: 'Asia', country: 'South Korea' },
-  { id: 'Asia/Tokyo', name: 'Tokyo (JST)', region: 'Asia', country: 'Japan' },
-  { id: 'Australia/Perth', name: 'Perth (AWST)', region: 'Pacific', country: 'Australia' },
-  { id: 'Australia/Adelaide', name: 'Adelaide (ACST)', region: 'Pacific', country: 'Australia' },
-  { id: 'Australia/Sydney', name: 'Sydney (AEST)', region: 'Pacific', country: 'Australia' },
-  { id: 'Australia/Melbourne', name: 'Melbourne (AEST)', region: 'Pacific', country: 'Australia' },
-  { id: 'Australia/Brisbane', name: 'Brisbane (AEST - No DST)', region: 'Pacific', country: 'Australia' },
-  { id: 'Pacific/Auckland', name: 'Auckland / Wellington', region: 'Pacific', country: 'New Zealand' },
-  { id: 'Pacific/Fiji', name: 'Fiji', region: 'Pacific', country: 'Fiji' },
-  { id: 'Pacific/Guam', name: 'Guam', region: 'Pacific', country: 'Guam' },
-];
+// The zones come from the browser, named in the person's language (NUX-22)
+export const TIMEZONES_CATALOG = zoneCatalog();
 
 /** The one time-zone control (UX-25): the person's own clock, kept on their account so every
  *  device shows it; for an administrator who leaves the box ticked, the server's zone and the
@@ -2277,6 +2222,7 @@ export function applyClockEverywhere(tz, format) {
 export function applyPersonClock(prefs) {
   const cfg = _config || loadWidgetConfig();
   const p = prefs || {};
+  setClockPrefs(resolveZone(p.timezone || cfg.clockTimezone), p.clock_format || cfg.clockFormat); // every date on screen (NUX-10)
   if (!p.timezone) {
     if (cfg.clockTimezone && cfg.clockTimezone !== 'auto') savePersonZone(cfg.clockTimezone, cfg.clockFormat);
     return;
@@ -2460,7 +2406,7 @@ export function updateTzModalPreview() {
   if (activePill) {
     if (tz === 'auto') {
       const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'System Local';
-      activePill.textContent = `Local Time (${localTz})`;
+      activePill.textContent = t('tz.local_pill', 'Local time ({zone})', { zone: localTz });
     } else {
       activePill.textContent = `${tz} ${tzAbbr ? '(' + tzAbbr + ')' : ''}`;
     }
@@ -2473,6 +2419,8 @@ export function updateTzModalPreview() {
     btn12.style.color = fmt12 ? '#000' : 'var(--zn-text-muted)';
     btn24.style.background = !fmt12 ? 'var(--brand, #00f0ff)' : 'transparent';
     btn24.style.color = !fmt12 ? '#000' : 'var(--zn-text-muted)';
+    btn12.setAttribute('aria-checked', fmt12 ? 'true' : 'false');
+    btn24.setAttribute('aria-checked', fmt12 ? 'false' : 'true');
   }
 }
 
@@ -2483,7 +2431,7 @@ export function renderTimezoneList() {
   const q = (_tzSearchQuery || '').toLowerCase().trim();
   const region = _tzActiveRegion || 'all';
 
-  let filtered = TIMEZONES_CATALOG.filter((tz) => {
+  let filtered = zoneCatalog(currentLocale()).filter((tz) => {
     if (region !== 'all' && tz.region !== region) return false;
     if (q) {
       const matchName = tz.name.toLowerCase().includes(q);
@@ -2502,16 +2450,16 @@ export function renderTimezoneList() {
   const isAutoSelected = _tempSelectedTz === 'auto';
   const localIana = Intl.DateTimeFormat().resolvedOptions().timeZone || 'System Local';
   html += `
-    <div class="tz-item-row ${isAutoSelected ? 'selected' : ''}" data-tz-id="auto">
+    <div class="tz-item-row ${isAutoSelected ? 'selected' : ''}" data-tz-id="auto" role="option" id="tz-opt-auto" aria-selected="${isAutoSelected}">
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 14px;">📍</span>
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Local System Timezone (Auto)</div>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(t('tz.auto', "This device's time zone (automatic)"))}</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(localIana)}</div>
         </div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isAutoSelected ? '✓ Active' : ''}</span>
+        <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff));">${isAutoSelected ? `✓ ${escapeHtml(t('tz.active', 'In use'))}` : ''}</span>
       </div>
     </div>
   `;
@@ -2522,15 +2470,15 @@ export function renderTimezoneList() {
     let tzAbbr = '';
     try {
       const opts = { hour: 'numeric', minute: 'numeric', hour12: is12H, timeZone: tz.id };
-      timeStr = new Intl.DateTimeFormat('en-US', opts).format(now);
-      const tzPart = new Intl.DateTimeFormat('en-US', { timeZone: tz.id, timeZoneName: 'short' })
+      timeStr = new Intl.DateTimeFormat(currentLocale(), opts).format(now);
+      const tzPart = new Intl.DateTimeFormat(currentLocale(), { timeZone: tz.id, timeZoneName: 'short' })
         .formatToParts(now)
         .find((p) => p.type === 'timeZoneName');
       if (tzPart) tzAbbr = tzPart.value;
     } catch (e) {}
 
     html += `
-      <div class="tz-item-row ${isSelected ? 'selected' : ''}" data-tz-id="${escapeHtml(tz.id)}">
+      <div class="tz-item-row ${isSelected ? 'selected' : ''}" data-tz-id="${escapeHtml(tz.id)}" role="option" id="tz-opt-${escapeHtml(tz.id.replace(/[^A-Za-z0-9_-]/g, '-'))}" aria-selected="${isSelected}">
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 14px;">🌐</span>
           <div>
@@ -2548,10 +2496,53 @@ export function renderTimezoneList() {
   });
 
   if (!filtered.length && q) {
-    html = `<div style="text-align: center; color: var(--muted); padding: 25px; font-size: var(--zn-fs-xs);">No matching timezones found for "${escapeHtml(q)}". Try custom IANA below.</div>`;
+    html = `<div style="text-align: center; color: var(--muted); padding: 25px; font-size: var(--zn-fs-xs);">${escapeHtml(t('tz.no_match', 'No time zone matches "{q}".', { q }))}</div>`;
   }
 
   container.innerHTML = html;
+  const chosen = container.querySelector('.tz-item-row.selected');
+  if (chosen) container.setAttribute('aria-activedescendant', chosen.id);
+  else container.removeAttribute('aria-activedescendant');
+}
+
+/** Arrow keys, Home and End move through the list; Enter or Space picks (NUX-8). */
+export function onTimezoneListKey(e) {
+  const list = /** @type {HTMLElement} */ (e.currentTarget);
+  const rows = /** @type {HTMLElement[]} */ ([...list.querySelectorAll('.tz-item-row[role="option"]')]);
+  if (!rows.length) return;
+  const cur = rows.findIndex((r) => r.id === list.getAttribute('aria-activedescendant'));
+  let next = cur;
+  if (e.key === 'ArrowDown') next = Math.min(rows.length - 1, cur + 1);
+  else if (e.key === 'ArrowUp') next = Math.max(0, cur - 1);
+  else if (e.key === 'Home') next = 0;
+  else if (e.key === 'End') next = rows.length - 1;
+  else if (e.key === 'Enter' || e.key === ' ') {
+    if (cur >= 0) {
+      e.preventDefault();
+      _tempSelectedTz = rows[cur].dataset.tzId;
+      updateTzModalPreview();
+      renderTimezoneList();
+    }
+    return;
+  } else return;
+  e.preventDefault();
+  rows.forEach((r, i) => r.classList.toggle('kbd-active', i === next));
+  list.setAttribute('aria-activedescendant', rows[next].id);
+  rows[next].scrollIntoView?.({ block: 'nearest' });
+}
+
+/** Undo puts back what is saved: zone, 12/24 h, search and region (NUX-8). */
+export function resetTimezoneChoice() {
+  const cfg = _config || loadWidgetConfig();
+  _tempSelectedTz = cfg.clockTimezone || 'auto';
+  _tempSelectedFormat = cfg.clockFormat || state.clockFormat || '24';
+  _tzSearchQuery = '';
+  _tzActiveRegion = 'all';
+  const searchInput = /** @type {HTMLInputElement | null} */ (document.getElementById('tz-search-input'));
+  if (searchInput) searchInput.value = '';
+  document.querySelectorAll('.tz-region-pill').forEach((p) => p.classList.toggle('active', /** @type {HTMLElement} */ (p).dataset.region === 'all'));
+  updateTzModalPreview();
+  renderTimezoneList();
 }
 
 export function setupTimezoneModalEvents() {
@@ -2579,7 +2570,7 @@ export function setupTimezoneModalEvents() {
   const listContainer = document.getElementById('tz-items-list');
 
   if (closeBtn) closeBtn.addEventListener('click', closeTimezoneModal);
-  if (cancelBtn) cancelBtn.addEventListener('click', closeTimezoneModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', resetTimezoneChoice);
 
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeTimezoneModal();
@@ -2619,6 +2610,12 @@ export function setupTimezoneModalEvents() {
       _tzSearchQuery = e.target.value;
       renderTimezoneList();
     });
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' && listContainer) {
+        e.preventDefault();
+        listContainer.focus(); // from the search box into the matches
+      }
+    });
   }
 
   const pills = document.querySelectorAll('.tz-region-pill');
@@ -2632,6 +2629,7 @@ export function setupTimezoneModalEvents() {
   });
 
   if (listContainer) {
+    listContainer.addEventListener('keydown', onTimezoneListKey);
     listContainer.addEventListener('click', (e) => {
       const row = e.target.closest('.tz-item-row');
       if (!row || !row.dataset.tzId) return;

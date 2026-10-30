@@ -10,6 +10,8 @@ import { api, auth } from '../api.js';
 import { state } from '../state.js';
 import { showToast } from '../toast.js';
 import { bringToFront } from './dock.js';
+import { zoneCatalog } from '../time-zones.js';
+import { currentLocale } from '../format.js';
 import { t } from '../i18n.js';
 import { announceA11y } from '../a11y.js';
 
@@ -80,16 +82,17 @@ export function personStepProblem() {
 /** The time zones to choose from, the server's (or this browser's) first. */
 export function fillTimezones(select, current = '') {
   if (!select || select.options.length) return;
-  let zones;
-  try {
-    zones = Intl.supportedValuesOf('timeZone');
-  } catch {
-    zones = ['UTC'];
-  }
   const browser = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   const chosen = current || browser;
-  if (!zones.includes(chosen)) zones = [chosen, ...zones];
-  select.innerHTML = zones.map((z) => `<option value="${z}"${z === chosen ? ' selected' : ''}>${z.replace(/_/g, ' ')}</option>`).join('');
+  const zones = zoneCatalog(currentLocale()); // the same list as Settings, in the person's language (NUX-22)
+  const list = zones.some((z) => z.id === chosen) ? zones : [{ id: chosen, name: chosen, country: '' }, ...zones];
+  select.replaceChildren(...list.map((z) => {
+    const opt = document.createElement('option');
+    opt.value = z.id;
+    opt.textContent = z.country ? `${z.name} · ${z.country}` : z.name;
+    opt.selected = z.id === chosen;
+    return opt;
+  }));
 }
 
 /** Step 3 and 4: what the storage is, and whether ZettNAS or the host makes shares. */
