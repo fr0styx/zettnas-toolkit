@@ -174,6 +174,22 @@ def client_for(username: str, devices: list[str], blocked: list[str]) -> dict[st
     }
 
 
+def recent_devices(opener: Callable | None = None, limit: int = 200) -> list[dict[str, str]]:
+    """The devices AdGuard Home has seen on the network, with the names it knows them by, so a
+    parent picks a child's tablet instead of typing its address (NUX-12)."""
+    data = _call(_settings(), "GET", "/control/clients", opener=opener) or {}
+    seen: dict[str, str] = {}
+    for c in data.get("auto_clients") or []:
+        if not isinstance(c, dict) or not c.get("ip"):
+            continue
+        ip = str(c["ip"])
+        name = str(c.get("name") or "").strip()
+        seen[ip] = name if name and name != ip else seen.get(ip, "")
+    out = [{"id": ip, "name": name or ip} for ip, name in seen.items()]
+    out.sort(key=lambda d: (d["name"] == d["id"], d["name"].lower()))
+    return out[:limit]
+
+
 def _existing(s: dict[str, Any], opener: Callable | None) -> set[str]:
     data = _call(s, "GET", "/control/clients", opener=opener) or {}
     return {str(c.get("name")) for c in (data.get("clients") or []) if isinstance(c, dict)}

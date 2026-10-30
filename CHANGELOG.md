@@ -95,6 +95,11 @@
 
 #### Usability
 
+- **Pick a child's devices instead of typing addresses** (NUX-12): the family filter has "Choose
+  from the network", which lists the devices AdGuard Home has seen by name (a tablet, a laptop)
+  as boxes to tick. The app install dialog starts in the folder where this server keeps app data
+  (next to ZettNAS's own data folder), not Unraid's /mnt/user/appdata on every system.
+
 - **Clearer small texts** (NUX-24): the USB photo import says which folder the photos go to; an
   app install with no shares to pick from has an "Open Shares" button; the time-zone warning says
   nightly work runs by London winter time (UTC), which may be daytime where you are; the cloud

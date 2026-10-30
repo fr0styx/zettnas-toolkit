@@ -16,6 +16,7 @@ import { formatBytes as formatSize } from '../../format.js';
 import { setDeployButtonTone } from '../management.js';
 import { renderShareFolders, shareFolderPicks } from '../share-folder-picker.js';
 
+let _storageRoot = '/mnt/user/appdata'; // until the server says where this host keeps app data
 let _dockerContainersList = [];
 let _dockerFilter = 'all';
 let _dockerSearchQuery = '';
@@ -1448,6 +1449,18 @@ export async function openAppDeployModal(appId) {
   const nameInput = document.getElementById('adm-name-input');
   const portInput = document.getElementById('adm-port-input');
   const storageInput = document.getElementById('adm-storage-input');
+  // the host's own place for app data (TrueNAS, plain Linux), not always Unraid's (NUX-12)
+  Promise.resolve()
+    .then(() => api.get('/api/docker/catalog/defaults'))
+    .then(
+    (d) => {
+      if (!d || !d.storage_root) return;
+      const box = /** @type {HTMLInputElement | null} */ (storageInput);
+      if (box && box.value === _storageRoot) box.value = d.storage_root;
+      _storageRoot = d.storage_root;
+    },
+    () => {},
+  );
   const composePre = document.getElementById('adm-compose-pre');
   const shareMount = document.getElementById('adm-share-folders');
   const title = document.getElementById('adm-title');
@@ -1745,7 +1758,7 @@ export async function openAppDeployModal(appId) {
 
   async function updateComposePreview() {
     const p = parseInt(portInput.value, 10) || suggestedPort;
-    const s = storageInput.value.trim() || '/mnt/user/appdata';
+    const s = storageInput.value.trim() || _storageRoot;
     const cName = nameInput ? nameInput.value.trim() : appId;
     try {
       const comp = await api.post(`/api/docker/catalog/${appId}/compose`, {
@@ -1921,7 +1934,7 @@ export async function openAppDeployModal(appId) {
 
   deployConfirmBtn.onclick = async () => {
     const p = parseInt(portInput.value, 10) || suggestedPort;
-    const s = storageInput.value.trim() || '/mnt/user/appdata';
+    const s = storageInput.value.trim() || _storageRoot;
     const cName = nameInput ? nameInput.value.trim() : appId;
 
     // Replacing stops and removes the app there: asked first, naming it (NUX-13)

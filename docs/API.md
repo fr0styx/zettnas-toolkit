@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-641 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+643 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -107,6 +107,7 @@ request and response schemas.
 | `GET` | `/api/v1/family-filter` | `users:read` | The AdGuard Home connection (never its password), each filtered account's devices and blocked services, the family accounts that can be f… |
 | `POST` | `/api/v1/family-filter/check` | `users:write` | Whether AdGuard Home answers with the saved user and password, and its version |
 | `PUT` | `/api/v1/family-filter/connection` | `users:write` | Put Family Filter Connection |
+| `GET` | `/api/v1/family-filter/devices` | `users:write` | The devices AdGuard Home has seen, to pick a child's from (NUX-12) |
 | `PUT` | `/api/v1/family-filter/people/{username}` | `users:write` | Filters this account's devices in AdGuard Home; no devices stops filtering them |
 | `GET` | `/api/v1/security` | any of `system:view`, `users:read`, `system:config` | Get Security |
 | `POST` | `/api/v1/security` | any of `users:manage`, `system:config` ⏱ | Post Security |
@@ -171,6 +172,7 @@ request and response schemas.
 | Method | Path | Access | What it does |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/docker/catalog` | any of `containers:read`, `containers:manage` | Get Docker Catalog |
+| `GET` | `/api/v1/docker/catalog/defaults` | any of `containers:read`, `containers:manage` | What the install dialog starts with on this host: where apps keep their data (NUX-12) |
 | `GET` | `/api/v1/docker/catalog/logo` | any of `containers:read`, `containers:manage` | An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38) |
 | `POST` | `/api/v1/docker/catalog/sideload` | `containers:manage` | Sideloads an application from a URL (e.g |
 | `GET` | `/api/v1/docker/catalog/sources` | any of `containers:read`, `containers:manage` | Get Docker Catalog Sources |

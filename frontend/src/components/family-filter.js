@@ -57,6 +57,46 @@ function connectionBox(info) {
   return box;
 }
 
+/**
+ * "Choose from the network": the devices AdGuard Home has seen, by name, as checkboxes that add
+ * or remove an address in `input` (NUX-12), so nobody has to look up a tablet's IP.
+ */
+export function devicePicker(input) {
+  const box = el('div', { className: 'ff-picker' });
+  const open = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('ff.pick_devices', 'Choose from the network') });
+  const list = el('div', { className: 'ff-picker-list' });
+  list.hidden = true;
+  open.addEventListener('click', async () => {
+    if (!list.hidden) return void (list.hidden = true);
+    list.hidden = false;
+    list.textContent = t('ff.pick_loading', 'Looking for devices…');
+    let data;
+    try {
+      data = await api.get('/api/family-filter/devices');
+    } catch (e) {
+      data = { devices: [], error: e?.message || '' };
+    }
+    list.replaceChildren();
+    const found = (data && data.devices) || [];
+    if (!found.length) {
+      list.append(el('p', { className: 'ff-hint', textContent: data && data.error ? data.error : t('ff.pick_none', 'AdGuard Home hasn\'t seen any devices yet.') }));
+      return;
+    }
+    for (const d of found) {
+      const cb = el('input', { type: 'checkbox', value: d.id, checked: splitDevices(input.value).includes(d.id) });
+      cb.addEventListener('change', () => {
+        const now = splitDevices(input.value).filter((x) => x !== d.id);
+        if (cb.checked) now.push(d.id);
+        input.value = now.join(', ');
+      });
+      const label = d.name && d.name !== d.id ? `${d.name} (${d.id})` : d.id;
+      list.append(el('label', { className: 'ff-check' }, cb, ' ', label));
+    }
+  });
+  box.append(open, list);
+  return box;
+}
+
 function personRow(person, saved, services) {
   const row = el('div', { className: 'ff-person' });
   row.dataset.user = person.username;
@@ -68,6 +108,7 @@ function personRow(person, saved, services) {
     placeholder: t('ff.devices_hint', 'IP or MAC addresses of their devices'),
   });
   row.append(el('label', { className: 'ff-row' }, t('ff.devices', 'Devices'), ' ', devices));
+  row.append(devicePicker(devices));
   const blocked = el('div', { className: 'ff-services' }, el('span', { textContent: t('ff.block', 'Also block') }));
   for (const s of services) {
     const cb = el('input', { type: 'checkbox', name: 'blocked', value: s, checked: (saved.blocked || []).includes(s) });

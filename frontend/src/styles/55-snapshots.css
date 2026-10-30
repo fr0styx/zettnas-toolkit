@@ -107,3 +107,7 @@
 .ff-name { font-weight: 600; }
 .ff-services { display: flex; flex-wrap: wrap; gap: var(--zn-space-1) var(--zn-space-3); align-items: center; }
 .ff-actions { display: flex; gap: var(--zn-space-2); align-items: center; }
+
+/* NUX-12: devices AdGuard has seen, to pick from */
+.ff-picker { margin: 4px 0 8px; }
+.ff-picker-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 220px; overflow-y: auto; }

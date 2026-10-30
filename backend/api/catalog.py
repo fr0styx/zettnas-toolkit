@@ -49,6 +49,14 @@ async def get_docker_catalog():
     return await asyncio.to_thread(get_all_catalog_apps)
 
 
+@router.get("/docker/catalog/defaults", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])
+async def get_catalog_defaults():
+    """What the install dialog starts with on this host: where apps keep their data (NUX-12)."""
+    from backend.services.app_catalog import default_storage_root
+
+    return {"storage_root": await asyncio.to_thread(default_storage_root)}
+
+
 @router.get("/docker/catalog/logo", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])
 def get_catalog_logo(url: str):
     """An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38)."""

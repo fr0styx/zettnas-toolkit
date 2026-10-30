@@ -55,6 +55,17 @@ def check_family_filter() -> dict[str, Any]:
     return adguard_kids.check()
 
 
+@router.get("/devices", dependencies=[Depends(require_scope("users:write"))])
+def family_filter_devices() -> dict[str, Any]:
+    """The devices AdGuard Home has seen, to pick a child's from (NUX-12)."""
+    from backend.services import adguard_kids
+
+    try:
+        return {"devices": adguard_kids.recent_devices()}
+    except adguard_kids.AdGuardError as e:
+        return {"devices": [], "error": str(e)}
+
+
 @router.put("/people/{username}", dependencies=[Depends(require_scope("users:write"))])
 def put_family_filter_person(username: str, req: PersonIn) -> dict[str, Any]:
     """Filters this account's devices in AdGuard Home; no devices stops filtering them."""

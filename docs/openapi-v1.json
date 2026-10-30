@@ -47608,6 +47608,36 @@
     ]
    }
   },
+  "/api/v1/docker/catalog/defaults": {
+   "get": {
+    "description": "What the install dialog starts with on this host: where apps keep their data (NUX-12).",
+    "operationId": "get_catalog_defaults_api_v1_docker_catalog_defaults_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Catalog Defaults",
+    "tags": [
+     "Docker App Catalog"
+    ],
+    "x-required-scopes": [
+     "containers:read",
+     "containers:manage"
+    ]
+   }
+  },
   "/api/v1/docker/catalog/logo": {
    "get": {
     "description": "An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38).",
@@ -50612,6 +50642,39 @@
      }
     },
     "summary": "Put Family Filter Connection",
+    "tags": [
+     "Authentication & Security"
+    ],
+    "x-required-scopes": [
+     "users:write"
+    ]
+   }
+  },
+  "/api/v1/family-filter/devices": {
+   "get": {
+    "description": "The devices AdGuard Home has seen, to pick a child's from (NUX-12).",
+    "operationId": "family_filter_devices_api_v1_family_filter_devices_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Family Filter Devices Api V1 Family Filter Devices Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Family Filter Devices",
     "tags": [
      "Authentication & Security"
     ],

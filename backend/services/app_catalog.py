@@ -1229,6 +1229,33 @@ def _host_access_check(app: dict[str, Any], create_body: dict[str, Any]) -> tupl
     }
 
 
+_STORAGE_ROOT: dict[str, str] = {}
+
+
+def default_storage_root() -> str:
+    """Where this host keeps apps' data: the folder that holds ZettNAS's own data folder on the
+    host (from its container's mounts), so it fits TrueNAS or a plain Linux box too; Unraid's
+    /mnt/user/appdata when that can't be told (NUX-12)."""
+    if "root" in _STORAGE_ROOT:
+        return _STORAGE_ROOT["root"]
+    import socket
+
+    root = "/mnt/user/appdata"
+    try:
+        st, me = _docker_request("GET", f"/containers/{socket.gethostname()}/json")
+    except (OSError, ValueError):
+        logger.debug("app_catalog: own mounts unknown", exc_info=True)
+        st, me = 0, None
+    if st == 200 and isinstance(me, dict):
+        for m in me.get("Mounts") or []:
+            src = str(m.get("Source") or "").rstrip("/")
+            if m.get("Destination") == DATA_DIR and src.startswith("/") and os.path.dirname(src) not in ("", "/"):
+                root = os.path.dirname(src)
+                break
+    _STORAGE_ROOT["root"] = root
+    return root
+
+
 def _zettnas_network() -> str | None:
     """The user-defined Docker network ZettNAS itself is on, for apps ZettNAS talks to by name
     (COMP-11); None on the default bridge, where names don't resolve."""
