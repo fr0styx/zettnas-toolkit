@@ -168,6 +168,8 @@ class RagIndexingMixin:
                 conn.execute("DELETE FROM folder_manifests;")
                 conn.execute("DELETE FROM indexed_files;")
                 conn.execute("DELETE FROM rag_deferred_queue;")
+                # what is indexed from now on is embedded the current way (NAI-14)
+                _core().set_embed_text_version(conn, _core().EMBED_TEXT_VERSION)
                 conn.commit()
 
                 # 2. Rebuild FTS virtual tables

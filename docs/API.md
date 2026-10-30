@@ -65,8 +65,8 @@ request and response schemas.
 | `GET` | `/api/v1/ai/apps` | `system:config` | The apps that can be set up, and the keys made for them (masked) |
 | `POST` | `/api/v1/ai/apps/keys` | `system:config` | A key for one app, and that app's settings filled in |
 | `DELETE` | `/api/v1/ai/apps/keys/{token_id}` | `system:config` | Delete App Key |
-| `POST` | `/api/v1/ai/openai/chat/completions` | `ai:apps` | Openai Chat |
-| `POST` | `/api/v1/ai/openai/embeddings` | `ai:apps` | Openai Embeddings |
+| `POST` | `/api/v1/ai/openai/chat/completions` | `ai:apps` ⏱ | Openai Chat |
+| `POST` | `/api/v1/ai/openai/embeddings` | `ai:apps` ⏱ | Openai Embeddings |
 | `GET` | `/api/v1/ai/openai/models` | `ai:apps` | Openai Models |
 
 ### AI pack

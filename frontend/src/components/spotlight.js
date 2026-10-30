@@ -33,7 +33,7 @@ function confirmThen(title, msg, action) {
 }
 
 function emptyTrash() {
-  return confirmThen('Empty Trash', 'Permanently delete everything in the trash? This cannot be undone.', async () => {
+  return confirmThen(t('confirm.fs_trash_empty.title', 'Empty the Recycle Bin'), t('confirm.fs_trash_empty.msg', 'Permanently delete everything in every Recycle Bin? This can\'t be undone.'), async () => {
     try {
       await api.delete('/api/fs/trash/empty', { confirmed: true });
       showToast(t('toast.trash_emptied_storage_reclaimed', 'Recycle Bin emptied. The space is free again.'), 'success');
@@ -477,7 +477,7 @@ export function parseNaturalLanguageAction(rawQuery) {
       keywords: ['isolate', 'container', cId],
       run: async () => {
         try {
-          const ok = await confirmThen('Stop Container', `Stop container '${cId}'?`, async () => {
+          const ok = await confirmThen(t('spotlight.stop_app', 'Stop the app'), t('spotlight.stop_app_msg', 'Stop the container {name}? It stays installed; start it again from Apps.', { name: cId }), async () => {
             await api.post(`/api/docker/containers/${encodeURIComponent(cId)}/stop`);
           });
           if (ok) showToast(t('toast.container_stopped', 'Container \'{cId}\' stopped', { cId: cId }), 'warning');

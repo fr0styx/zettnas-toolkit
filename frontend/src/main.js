@@ -22,10 +22,13 @@ import { ZettEventBus } from './event-bus.js';
 import { auth, api, setConfirmationHandler } from './api.js';
 import { state } from './state.js';
 import { showToast, showConfirmToast } from './toast.js';
+import { confirmTextFor } from './confirm-text.js';
 
-// Server-required confirmation for destructive actions (backend/confirmations.py).
+// Server-required confirmation for destructive actions (backend/confirmations.py), asked in the
+// person's language, red when it deletes or erases (NUX-2)
 setConfirmationHandler((info) => new Promise((resolve) => {
-  showConfirmToast('Confirm action', `${info.summary || 'This action cannot be undone'}?`, () => resolve(true), () => resolve(false));
+  const { title, msg, options } = confirmTextFor(info);
+  showConfirmToast(title, msg, () => resolve(true), () => resolve(false), options);
 }));
 import './folder-browser.js';
 import './modals.js';

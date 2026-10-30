@@ -32,6 +32,14 @@ def _error(status: int, message: str, kind: str = "invalid_request_error") -> JS
 APP_SCOPE = [Depends(require_scope(ai_apps.SCOPE))]  # an app key, or someone who holds every scope
 
 
+def _busy() -> JSONResponse:
+    return _error(429, "This key already has a request running; send the next one when it is done.", "rate_limit_error")
+
+
+def _slot(principal) -> str:
+    return str(getattr(principal, "token_id", "") or getattr(principal, "username", "") or "-")
+
+
 def _refused(principal) -> JSONResponse | None:
     if ai_access.allowed(principal):
         return None
@@ -60,6 +68,10 @@ async def openai_chat(request: Request, principal: AuthenticatedPrincipal = Depe
     except ValueError as e:
         return _error(400, str(e))
     t0 = time.monotonic()
+    try:
+        slot = ai_apps.Slot(_slot(principal))
+    except ai_apps.KeyBusy:
+        return _busy()
     if body.get("stream"):
         stream = ai_apps.chat_stream(body)
         try:
@@ -67,6 +79,7 @@ async def openai_chat(request: Request, principal: AuthenticatedPrincipal = Depe
         except StopIteration:
             first = b""
         except ai_apps.UpstreamError as e:
+            slot.release()
             ai_access.log_request(principal, "apps", ai_apps.CHAT_MODEL, False, "failed")
             return _error(502, str(e), "server_error")
         ai_access.log_request(
@@ -74,12 +87,16 @@ async def openai_chat(request: Request, principal: AuthenticatedPrincipal = Depe
         )
 
         def rest():
-            yield first
-            yield from stream
+            try:
+                yield first
+                yield from stream
+            finally:
+                slot.release()  # the key's slot is held until the stream ends
 
         return StreamingResponse(rest(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
     try:
-        data = await asyncio.to_thread(ai_apps.chat, body)
+        with slot:
+            data = await asyncio.to_thread(ai_apps.chat, body)
     except ai_apps.UpstreamError as e:
         ai_access.log_request(principal, "apps", ai_apps.CHAT_MODEL, False, "failed")
         return _error(502, str(e), "server_error")
@@ -101,7 +118,10 @@ async def openai_embeddings(request: Request, principal: AuthenticatedPrincipal 
     if not isinstance(body, dict):
         return _error(400, "The body must be a JSON object.")
     try:
-        return await asyncio.to_thread(ai_apps.embeddings, body)
+        with ai_apps.Slot(_slot(principal)):
+            return await asyncio.to_thread(ai_apps.embeddings, body)
+    except ai_apps.KeyBusy:
+        return _busy()
     except ValueError as e:
         return _error(400, str(e))
     except ai_apps.UpstreamError as e:

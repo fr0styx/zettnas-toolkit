@@ -7,7 +7,8 @@ chat model and the embedder this server already runs, through one address and a 
   the Ollama fallback model (llm_fallback_model) when that server can't be reached. Whatever model
   name the app sends, the configured one answers, so app settings don't change with the model.
 - Embeddings come from the configured embedder (embedding_model on embedding_host).
-- Each request takes its turn on the GPU like a chat reply (gpu_queue.CHAT): someone is waiting.
+- Each request takes its turn on the GPU after the family's chats and searches (gpu_queue.APPS),
+  and one key runs one request at a time (NAI-13): a bulk import can't crowd out a person.
 - A key is an API token limited to the "ai:apps" scope. It can do nothing else, and its owner's
   role switches still apply (ai_access).
 """
@@ -15,6 +16,7 @@ chat model and the embedder this server already runs, through one address and a 
 from __future__ import annotations
 
 import json
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -26,6 +28,42 @@ from backend.config import logger
 CHAT_MODEL = "zettnas-chat"
 EMBED_MODEL = "zettnas-embed"
 SCOPE = "ai:apps"
+_BUSY: set[str] = set()
+_BUSY_LOCK = threading.Lock()
+
+
+class KeyBusy(Exception):
+    """This app key already has a request running."""
+
+
+class Slot:
+    """An app key's one running request (NAI-13). Taking it raises KeyBusy when the key already
+    has one; release() (or leaving a with block) gives it back, once."""
+
+    def __init__(self, key: str) -> None:
+        self.key = key or "-"
+        with _BUSY_LOCK:
+            if self.key in _BUSY:
+                raise KeyBusy(self.key)
+            _BUSY.add(self.key)
+
+    def release(self) -> None:
+        with _BUSY_LOCK:
+            _BUSY.discard(self.key)
+
+    def __enter__(self) -> Slot:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.release()
+
+
+def _gpu_turn() -> None:
+    from backend.services import gpu_queue
+
+    gpu_queue.wait_turn(gpu_queue.APPS)
+
+
 CHAT_TIMEOUT_SECS = 300.0
 EMBED_TIMEOUT_SECS = 30.0
 MAX_EMBED_INPUTS = 64
@@ -196,7 +234,8 @@ def chat(body: dict[str, Any]) -> dict[str, Any]:
     from backend.services.chat_llm_runtime import mark_chat_activity
 
     mark_chat_activity()
-    with gpu_queue.use(gpu_queue.CHAT):
+    _gpu_turn()
+    with gpu_queue.use(gpu_queue.APPS):
         resp, _model = _first_answering({**body, "stream": False}, CHAT_TIMEOUT_SECS)
         with resp:
             data = json.loads(resp.read().decode("utf-8", "replace"))
@@ -212,7 +251,8 @@ def chat_stream(body: dict[str, Any]) -> Iterator[bytes]:
     from backend.services.chat_llm_runtime import mark_chat_activity
 
     mark_chat_activity()
-    with gpu_queue.use(gpu_queue.CHAT):
+    _gpu_turn()
+    with gpu_queue.use(gpu_queue.APPS):
         resp, _model = _first_answering({**body, "stream": True}, CHAT_TIMEOUT_SECS)
         with resp:
             yield from resp
@@ -234,7 +274,8 @@ def embeddings(body: dict[str, Any]) -> dict[str, Any]:
         raise UpstreamError("no embedding model is set up")
     host = embedding_host(cfg)
     data = []
-    with gpu_queue.use(gpu_queue.QUERY):
+    _gpu_turn()
+    with gpu_queue.use(gpu_queue.APPS):
         for i, text in enumerate(texts):
             got = compute_neural_embedding_via_ollama(text, model=model, host=host, timeout=EMBED_TIMEOUT_SECS)
             if not got:

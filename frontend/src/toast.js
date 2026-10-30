@@ -77,15 +77,16 @@ export function showActionToast(msg, actionText, onAction, durationMs = 10000) {
 // Words that mark an action as destructive (the button turns red), in the five UI languages
 const DESTRUCTIVE_RE = /\b(delete|remove|destroy|wipe|format|erase|revoke|reset|clear|uninstall|purge|discard|kill|löschen|entfernen|zurücksetzen|supprimer|effacer|retirer|eliminar|borrar|quitar)\b|删除|移除|清除|清空/i;
 const GENERIC_TITLES = new Set(['confirm action', 'confirm', 'are you sure?']);
+const isGenericTitle = (title) => GENERIC_TITLES.has(String(title || '').trim().toLowerCase()) || String(title || '').trim() === t('confirm.title', 'Confirm action');
 
 /** The button label and colour for a confirm dialog (UX-5: verbs, red only when destructive). */
 export function confirmButtonFor(title, msg, options = {}) {
   const text = `${title || ''} ${options.okText || ''}`;
-  const destructive = options.destructive ?? (DESTRUCTIVE_RE.test(text) || (GENERIC_TITLES.has(String(title || '').trim().toLowerCase()) && DESTRUCTIVE_RE.test(String(msg || '').slice(0, 60))));
+  const destructive = options.destructive ?? (DESTRUCTIVE_RE.test(text) || (isGenericTitle(title) && DESTRUCTIVE_RE.test(String(msg || '').slice(0, 60))));
   let label = options.okText;
   if (!label) {
     const plain = String(title || '').trim();
-    if (plain && !GENERIC_TITLES.has(plain.toLowerCase()) && plain.length <= 28) label = plain.replace(/[?.!…]+$/, '');
+    if (plain && !isGenericTitle(plain) && plain.length <= 28) label = plain.replace(/[?.!…]+$/, '');
     else label = t('confirm.continue', 'Continue');
   }
   return { label, destructive };
@@ -107,7 +108,7 @@ export function showConfirmToast(title, msg, onConfirm, onCancel, options = {}) 
     onCancel = onConfirm || null;
     onConfirm = msg;
     msg = title;
-    title = options.title || 'Confirm Action';
+    title = options.title || t('confirm.title', 'Confirm action');
   }
   if (state.isLcdDirect || (typeof window !== 'undefined' && window.location.search.includes('mode=lcd')) || (document.body && document.body.classList.contains('lcd-direct'))) return;
   triggerHaptic('warning');
@@ -263,7 +264,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     onCancel = onConfirm || null;
     onConfirm = msg;
     msg = title;
-    title = options.title || 'Confirm Action';
+    title = options.title || t('confirm.title', 'Confirm action');
   }
   if (!document.body) return;
 
@@ -317,7 +318,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
   const isMedia = options.isMedia || (title && (title.toLowerCase().includes('media') || title.toLowerCase().includes('ingest') || title.toLowerCase().includes('card') || title.toLowerCase().includes('import')));
   const isUpdate = options.isUpdate || (title && (title.toLowerCase().includes('update') || title.toLowerCase().includes('upgrade')));
 
-  const safeTitle = escapeHtml(title || "Confirm Action");
+  const safeTitle = escapeHtml(title || t('confirm.title', 'Confirm action'));
   let safeMsg;
   if (options.allowHtml === false) {
     safeMsg = escapeHtml(msg || "");

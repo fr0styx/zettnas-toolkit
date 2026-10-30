@@ -78,6 +78,11 @@
 
 #### Usability
 
+- **"Are you sure?" in your language**: the confirmation before deleting a pool, share, account
+  or snapshot, rolling back, restarting, updating or emptying the Recycle Bin is now asked in
+  each of the five languages, as a question with its own title and button, and red when it
+  deletes or erases. Spotlight's and the activity log's confirmations are translated too (NUX-2).
+
 - **Errors name the real cause in every language**: a wrong encrypted-folder password, a busy
   folder, a backup that is already running and similar cases now say so in your language,
   instead of a guess from the kind of error ("choose another name") (NUX-1).
@@ -244,6 +249,14 @@
   is the real screen's size, documented as such (UX-36).
 
 #### AI
+
+- **Other apps take their turn after the family**: Paperless, Home Assistant and other apps using
+  "AI for apps" now wait behind people's chats and searches on the GPU, and each app key runs
+  one request at a time; a second one gets "busy, try again" (NAI-13).
+- **Search keeps its speed with less memory**: the search connection stays warm as long as people
+  keep searching and is closed after ten quiet minutes, which frees its cache (NAI-8).
+- **No needless night-long re-embed**: an index that only had keyword vectors before an embedder
+  was turned on, or one that was emptied, is no longer re-embedded at night for nothing (NAI-14).
 
 - **The first search after a quiet spell doesn't hang**: when the AI pack had stopped for
   idling, a search could wait up to three minutes for it. It now waits only a few seconds,

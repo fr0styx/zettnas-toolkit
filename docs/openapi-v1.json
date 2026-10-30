@@ -43631,12 +43631,18 @@
      },
      "403": {
       "$ref": "#/components/responses/Forbidden"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
      }
     },
     "summary": "Openai Chat",
     "tags": [
      "AI for apps"
     ],
+    "x-rate-limit": {
+     "description": "One request at a time per app key."
+    },
     "x-required-scopes": [
      "ai:apps"
     ]
@@ -43661,12 +43667,18 @@
      },
      "403": {
       "$ref": "#/components/responses/Forbidden"
+     },
+     "429": {
+      "$ref": "#/components/responses/TooManyRequests"
      }
     },
     "summary": "Openai Embeddings",
     "tags": [
      "AI for apps"
     ],
+    "x-rate-limit": {
+     "description": "One request at a time per app key."
+    },
     "x-required-scopes": [
      "ai:apps"
     ]

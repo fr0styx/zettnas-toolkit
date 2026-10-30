@@ -29,7 +29,7 @@ def test_indexing_waits_for_a_chat_reply_to_finish():
     waited = gq.wait_turn(gq.INDEX, max_wait=5)
     t.join()
     assert 0.15 < waited < 2.0
-    assert gq.snapshot()["running"] == {"chat": 0, "query": 0, "index": 0, "vision": 0}
+    assert gq.snapshot()["running"] == {"chat": 0, "query": 0, "apps": 0, "index": 0, "vision": 0}
 
 
 def test_indexing_is_slowed_but_never_stopped():

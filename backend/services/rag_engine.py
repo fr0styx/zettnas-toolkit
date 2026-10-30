@@ -151,20 +151,27 @@ def read_embed_text_version(conn: Any) -> int:
     except (sqlite3.Error, ValueError, TypeError):
         logger.debug("rag_engine: no embed_text_version yet", exc_info=True)
     try:
-        neural = conn.execute(
-            "SELECT 1 FROM document_chunks WHERE embedding_model != '' AND embedding_model NOT LIKE 'zett%' "
-            "AND chunk_level != 'parent' LIMIT 1"
-        ).fetchone()
+        neural = _has_neural_vectors(conn)
     except sqlite3.Error:
         return EMBED_TEXT_VERSION
     return 1 if neural else EMBED_TEXT_VERSION
 
 
+def _has_neural_vectors(conn: Any) -> bool:
+    return bool(
+        conn.execute(
+            "SELECT 1 FROM document_chunks WHERE embedding_model != '' AND embedding_model NOT LIKE 'zett%' "
+            "AND chunk_level != 'parent' LIMIT 1"
+        ).fetchone()
+    )
+
+
 def stamp_new_index(conn: Any) -> None:
-    """An index that holds no chunk yet will be embedded the current way: record that, so it is
-    never re-embedded for an upgrade it doesn't need (AI-41)."""
+    """An index without any neural vector yet (new, or keyword-only so far) will be embedded the
+    current way: record that, so it is never re-embedded for an upgrade it doesn't need (AI-41,
+    NAI-14). One with older neural vectors and no record stays version 1."""
     try:
-        if not conn.execute("SELECT 1 FROM document_chunks LIMIT 1").fetchone():
+        if not _has_neural_vectors(conn):
             conn.execute("CREATE TABLE IF NOT EXISTS rag_meta (key TEXT PRIMARY KEY, value TEXT)")
             conn.execute(
                 "INSERT OR IGNORE INTO rag_meta (key, value) VALUES ('embed_text_version', ?)",
@@ -1454,7 +1461,9 @@ WAL_SIZE_LIMIT_BYTES = 64 * 1024 * 1024
 # a search; kept open with a cache that holds the vector index, it is ~35 ms. Its cache is sized
 # to the vectors, up to this much.
 WARM_CACHE_MAX_KIB = 256 * 1024
-WARM_MAX_AGE_SECS = 1800
+# Closed (and its cache freed) after this long without a search, so an idle box doesn't hold it
+# (NAI-8); a search after that opens it again.
+WARM_IDLE_SECS = 600
 
 
 class _LentConnection:
@@ -1495,13 +1504,15 @@ class _LentConnection:
 class _WarmReader:
     """One read connection kept open between searches (AI-41). Lent to one search at a time; a
     search that finds it busy opens its own. Opened again when the index file is replaced (a
-    rebuild, a restore, encryption) and every WARM_MAX_AGE_SECS."""
+    rebuild, a restore, encryption), and closed after WARM_IDLE_SECS without a search, counted
+    from the last one, so steady use keeps its cache and an idle box frees it (NAI-8)."""
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._conn: Any = None
         self._ident: tuple[int, int] | None = None
-        self._opened = 0.0
+        self._used = 0.0
+        self._timer: threading.Timer | None = None
 
     def lend(self, engine: Any) -> _LentConnection | None:
         if not self._lock.acquire(blocking=False):
@@ -1509,17 +1520,41 @@ class _WarmReader:
         try:
             st = os.stat(engine.db_path)
             ident = (st.st_ino, st.st_dev)
-            if self._conn is None or ident != self._ident or time.time() - self._opened > WARM_MAX_AGE_SECS:
+            if self._conn is None or ident != self._ident:
                 self._drop()
                 conn = engine._open_ro()
                 conn.execute(f"PRAGMA cache_size=-{warm_cache_kib(conn, engine)};")
-                self._conn, self._ident, self._opened = conn, ident, time.time()
+                self._conn, self._ident = conn, ident
         except (OSError, sqlite3.Error):
             logger.debug("rag_engine: warm read connection unavailable", exc_info=True)
             self._drop()
             self._lock.release()
             return None
-        return _LentConnection(self._conn, self._lock.release)
+        return _LentConnection(self._conn, self._give_back)
+
+    def _give_back(self) -> None:
+        self._used = time.time()
+        self._lock.release()
+        self._arm_idle()
+
+    def _arm_idle(self) -> None:
+        if self._timer is not None:
+            self._timer.cancel()
+        self._timer = threading.Timer(WARM_IDLE_SECS, self.close_if_idle)
+        self._timer.daemon = True
+        self._timer.start()
+
+    def close_if_idle(self, now: float | None = None) -> bool:
+        """Closes the connection when no search used it for WARM_IDLE_SECS; True if it did."""
+        if not self._lock.acquire(blocking=False):
+            return False  # lent out: in use
+        try:
+            if self._conn is None or (now or time.time()) - self._used < WARM_IDLE_SECS - 1:
+                return False
+            self._drop()
+            return True
+        finally:
+            self._lock.release()
 
     def _drop(self) -> None:
         if self._conn is not None:
@@ -1530,6 +1565,8 @@ class _WarmReader:
         self._conn = None
 
     def close(self) -> None:
+        if self._timer is not None:
+            self._timer.cancel()
         with self._lock:
             self._drop()
 

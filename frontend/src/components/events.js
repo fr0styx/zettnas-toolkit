@@ -119,7 +119,7 @@ export function initEvents() {
   if (clearBtn) {
     clearBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      showConfirmToast('Clear Event Log', 'Are you sure you want to clear all logged events?', async () => {
+      showConfirmToast(t('events.clear_title', 'Clear the activity log'), t('events.clear_msg', 'Remove every entry from the activity log? This can\'t be undone.'), async () => {
         try {
           await api.delete('/api/events/clear');
           _lastEventHash = '';

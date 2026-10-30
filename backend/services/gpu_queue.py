@@ -1,4 +1,5 @@
-"""Who gets the GPU first (PERF-1, AI-14): chat, then search, then indexing, then photo reading.
+"""Who gets the GPU first (PERF-1, AI-14): chat, then search, then other apps, then indexing, then
+photo reading.
 
 A home server has one small GPU (often an iGPU) shared by the chat model, the embedder and the
 vision model. A GPU cannot be taken back from a job that is running, so the order is kept
@@ -7,6 +8,8 @@ piece only when nothing ahead of it is running.
 
 - CHAT: a reply someone is reading. Never waits.
 - QUERY: embedding a search question. Never waits.
+- APPS: requests from other apps through "AI for apps" (Paperless, Home Assistant, ...). Each
+  waits while a family chat reply or a search runs, at most MAX_WAIT_SECS (NAI-13).
 - INDEX: embedding files. Each batch waits while a chat reply or a search runs, at most
   MAX_WAIT_SECS, so indexing is slowed but never stopped.
 - VISION: captions and text from photos and scans. Does not start while anything else runs
@@ -29,12 +32,12 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from typing import Any, TypeVar
 
-CHAT, QUERY, INDEX, VISION = 0, 1, 2, 3
-NAMES = ("chat", "query", "index", "vision")
+CHAT, QUERY, APPS, INDEX, VISION = 0, 1, 2, 3, 4
+NAMES = ("chat", "query", "apps", "index", "vision")
 MAX_WAIT_SECS = 30.0
 
 _cond = threading.Condition()
-_running = [0, 0, 0, 0]
+_running = [0] * len(NAMES)
 _waited = {"count": 0, "secs": 0.0}
 
 F = TypeVar("F", bound=Callable[..., Any])
