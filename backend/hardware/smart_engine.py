@@ -13,6 +13,7 @@ from typing import Any, Optional
 
 from backend.config import HDD_CRITICAL_TEMP, HDD_WARN_TEMP, NVME_CRITICAL_TEMP, NVME_WARN_TEMP, logger
 from backend.db import log_smart_metrics
+from backend.hardware.smart_power import is_standby as is_standby_out
 from backend.ignored_errors import ignored
 from backend.state import Z_STATE
 
@@ -36,11 +37,8 @@ class SmartTelemetryEngine:
                 cmd.extend(["-d", protocol])
             cmd.append(dev_path)
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
-            # Exit code 2 indicates device is in STANDBY or SLEEP
-            if (r.returncode & 2) != 0:
-                return True
-            out = ((r.stdout or "") + " " + (r.stderr or "")).upper()
-            if "STANDBY" in out or "SLEEP" in out:
+            # only smartctl's standby message says asleep; exit bit 1 alone can be a failed open (NARC-1)
+            if is_standby_out(r.returncode, (r.stdout or "") + " " + (r.stderr or "")):
                 return True
         except Exception:
             ignored("backend.hardware.smart_engine.SmartTelemetryEngine.is_device_sleeping")
@@ -261,14 +259,7 @@ class SmartTelemetryEngine:
                 r = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
                 combined = (r.stdout or "") + " " + (r.stderr or "")
 
-                is_standby = (not is_nvme) and (
-                    r.returncode == 2
-                    or (r.returncode & 2) != 0
-                    or "DEVICE IS IN STANDBY" in combined.upper()
-                    or "DEVICE IS IN SLEEP" in combined.upper()
-                    or "STANDBY MODE" in combined.upper()
-                    or "SLEEP MODE" in combined.upper()
-                )
+                is_standby = (not is_nvme) and is_standby_out(r.returncode, combined)
                 if is_standby:
                     prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
                     Z_STATE.smart.set_reading(dev_name, prev_t, "standby")

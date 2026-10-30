@@ -281,6 +281,14 @@
 
 #### Fixes
 
+- **A drive that stops answering is no longer shown as asleep**: when smartctl couldn't open a
+  drive or it didn't identify itself, ZettNAS took it for a sleeping drive and stayed quiet. It
+  is now a warning on the Overview and in the event log, since the drive may be failing or
+  unplugged (NARC-1).
+- **Encrypted folders leave no traces**: previews of their pictures are no longer kept in
+  the thumbnail cache, the file activity log names only the folder, and the AI index never
+  reads them (NSEC-3).
+
 - **No made-up photo counts**: the media status no longer reports face, place, album and
   object counts, which were guessed from the number of photos; it reports what the index
   really holds (NFEAT-9).

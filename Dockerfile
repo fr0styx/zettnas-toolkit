@@ -125,7 +125,11 @@ RUN if [ "$VARIANT" = "full" ]; then \
         fonts-noto-cjk \
         fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*; \
-    elif [ "$VARIANT" != "core" ]; then echo "VARIANT must be full or core" >&2; exit 1; fi
+    elif [ "$VARIANT" = "core" ]; then \
+        rm -rf /usr/local/lib/python3.12/site-packages/playwright/driver; \
+    else echo "VARIANT must be full or core" >&2; exit 1; fi
+# The core image has no Chromium, so the LCD never starts Playwright (lcd_renderer checks first):
+# its Node.js driver is left out above, which keeps the core image inside its budget (PERF-29)
 
 # ZFS (REL-4, D2): the full image only, for hosts where ZettNAS runs the pools (ZettOS, plain Linux,
 # the appliance image). Debian's own package from trixie-backports, the same 2.4 line the

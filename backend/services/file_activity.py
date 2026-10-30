@@ -39,6 +39,22 @@ def _who(principal: Any) -> tuple[str, str]:
     return username, via
 
 
+def _outside_encryption(path: str, target: str, detail: str) -> tuple[str, str, str]:
+    """Names inside an encrypted folder stay inside it: the log keeps only the folder (NSEC-3)."""
+    from backend.fsutil import ENCRYPTED_ROOT
+
+    def folder(p: str) -> tuple[str, bool]:
+        if not p.startswith(ENCRYPTED_ROOT + "/"):
+            return p, False
+        return "/".join(p.split("/")[:4]), True
+
+    path, hid = folder(path or "")
+    target, hid_t = folder(target or "")
+    if hid or hid_t:
+        detail = "inside an encrypted folder"
+    return path, target, detail
+
+
 def record(action: str, path: str, principal: Any = None, target: str = "", detail: str = "") -> bool:
     """Adds one entry; returns whether it was written."""
     if action not in ACTIONS:
@@ -47,6 +63,7 @@ def record(action: str, path: str, principal: Any = None, target: str = "", deta
     from backend.db import db_session
 
     username, via = _who(principal)
+    path, target, detail = _outside_encryption(path, target, detail)
     now = time.time()
     try:
         with db_session() as conn:

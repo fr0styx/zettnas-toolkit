@@ -10,6 +10,7 @@ Validates:
 7. Observer mode safety (no export/import on Unraid/TrueNAS/Proxmox).
 """
 
+import subprocess
 import time
 from unittest.mock import MagicMock, patch
 
@@ -134,6 +135,8 @@ def test_smart_detail_never_wakes_standby_drive(monkeypatch):
     )
 
     with patch("subprocess.run") as mock_run:
+        # what smartctl -n standby answers for a sleeping drive (NARC-1: the message decides)
+        mock_run.return_value = subprocess.CompletedProcess([], 2, "Device is in STANDBY mode, exit(2)", "")
         result = fetch_disk_smart_detail("sdb", wake_if_standby=False)
         assert result.get("is_standby") is True
         assert result.get("health") == "STANDBY"

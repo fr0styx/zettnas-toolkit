@@ -20,6 +20,7 @@ from backend.db_crypto import (  # noqa: F401
     sqlite3,
 )
 from backend.fsutil import (  # noqa: F401
+    ENCRYPTED_ROOT,
     atomic_write_json,
     is_protected,
     locked_json,
@@ -67,6 +68,11 @@ def _core():
     from backend.services import rag_engine
 
     return rag_engine
+
+
+def in_encrypted(path: str) -> bool:
+    """An open encrypted folder's files are never indexed (NSEC-3)."""
+    return path.startswith(ENCRYPTED_ROOT + os.sep)
 
 
 class RagIndexingMixin:
@@ -695,7 +701,7 @@ class RagIndexingMixin:
                         continue
 
                     child_path = os.path.join(current_dir, name)
-                    if os.path.normpath(child_path) in excl_set or is_protected(child_path):
+                    if os.path.normpath(child_path) in excl_set or is_protected(child_path) or in_encrypted(child_path):
                         kept_names.discard(name)  # excluded now: what was learned there goes
                         continue
 

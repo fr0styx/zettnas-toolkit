@@ -33,6 +33,8 @@ from backend.db import (
     query_smart_velocity,
 )
 from backend.fsutil import atomic_write_json
+from backend.hardware.smart_power import is_standby as is_standby_out
+from backend.hardware.smart_power import smartctl_power
 from backend.ignored_errors import ignored
 from backend.services.notifications import send_notification
 from backend.state import Z_STATE, add_event
@@ -201,6 +203,25 @@ def _short_name(dev, idx_nvme=0):
     if dev.startswith("nvme"):
         return "nv" + dev[4]
     return dev
+
+
+_UNREACHABLE: set[str] = set()
+
+
+def _note_unreachable(dev_name: str, out: str) -> None:
+    """A drive smartctl couldn't open, or that didn't identify itself: a warning, said once until
+    it answers again (NARC-1). It may be failing or gone; it is not asleep."""
+    prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, None))
+    Z_STATE.smart.set_reading(dev_name, prev_t, "warn")
+    if dev_name not in _UNREACHABLE:
+        _UNREACHABLE.add(dev_name)
+        add_event(
+            "warning",
+            "Drives",
+            f"Drive {dev_name} doesn't answer: it couldn't be opened or didn't identify itself. "
+            "Check its cable and power; it may be failing.",
+        )
+        logger.warning("[SMART] %s unreachable: %s", dev_name, out.strip()[:200])
 
 
 def _parse_smart_json(doc: dict, is_nvme: bool):
@@ -697,19 +718,15 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
         combined_out = ((r.stdout or "") + " " + (r.stderr or "")).upper()
 
-        is_standby = (not is_nvme) and (
-            r.returncode == 2
-            or (r.returncode & 2) != 0
-            or "DEVICE IS IN STANDBY" in combined_out
-            or "DEVICE IS IN SLEEP" in combined_out
-            or "STANDBY MODE" in combined_out
-            or "SLEEP MODE" in combined_out
-        )
+        power = "active" if is_nvme else smartctl_power(r.returncode, combined_out)
 
-        if is_standby:
+        if power == "standby":
             prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
             Z_STATE.smart.set_reading(dev_name, prev_t, "standby")
+        elif power == "unreachable":
+            _note_unreachable(dev_name, combined_out)
         elif r.stdout and (r.returncode == 0 or (r.returncode & 7) == 0):
+            _UNREACHABLE.discard(dev_name)
             temp, health, metrics = _parse_smart(r.stdout, is_nvme)
             _evaluate_smart_trends(dev_name, metrics)
             log_smart_metrics(int(now), dev_name, temp, metrics)
@@ -720,14 +737,7 @@ def poll_disk_smart(dev_name: str, is_nvme: bool):
             cmd_fallback = [c for c in cmd if c != "-j"]
             r_fb = subprocess.run(cmd_fallback, capture_output=True, text=True, timeout=8)
             fb_out = ((r_fb.stdout or "") + " " + (r_fb.stderr or "")).upper()
-            is_fb_standby = (not is_nvme) and (
-                r_fb.returncode == 2
-                or (r_fb.returncode & 2) != 0
-                or "DEVICE IS IN STANDBY" in fb_out
-                or "DEVICE IS IN SLEEP" in fb_out
-                or "STANDBY MODE" in fb_out
-                or "SLEEP MODE" in fb_out
-            )
+            is_fb_standby = (not is_nvme) and is_standby_out(r_fb.returncode, fb_out)
             if is_fb_standby:
                 prev_t, _ = Z_STATE.cached_smart_data.get(dev_name, (None, "standby"))
                 Z_STATE.smart.set_reading(dev_name, prev_t, "standby")
@@ -1230,12 +1240,7 @@ def is_drive_asleep(dev_name: str) -> bool:
         )
     except (OSError, subprocess.SubprocessError):
         return (Z_STATE.cached_smart_data.get(clean) or (None, None))[1] == "standby"
-    out = ((r.stdout or "") + " " + (r.stderr or "")).upper()
-    return bool(
-        r.returncode == 2
-        or (r.returncode & 2) != 0
-        or any(w in out for w in ("DEVICE IS IN STANDBY", "DEVICE IS IN SLEEP", "STANDBY MODE", "SLEEP MODE"))
-    )
+    return is_standby_out(r.returncode, (r.stdout or "") + " " + (r.stderr or ""))
 
 
 def refresh_drive_verdicts() -> int:
@@ -1274,14 +1279,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
                 timeout=6,
             )
             sb_out = ((r_sb.stdout or "") + " " + (r_sb.stderr or "")).upper()
-            if (
-                r_sb.returncode == 2
-                or (r_sb.returncode & 2) != 0
-                or "DEVICE IS IN STANDBY" in sb_out
-                or "DEVICE IS IN SLEEP" in sb_out
-                or "STANDBY MODE" in sb_out
-                or "SLEEP MODE" in sb_out
-            ):
+            if is_standby_out(r_sb.returncode, sb_out):
                 Z_STATE.smart.set_reading(dev_name, cached_temp, "standby")
                 return {
                     "dev": dev_name,
@@ -1362,12 +1360,7 @@ def fetch_disk_smart_detail(dev_name: str, wake_if_standby: bool = False):
         rj = subprocess.run(cmd_j, capture_output=True, text=True, timeout=25)
         if not is_nvme and not wake_if_standby:
             out_sb = ((rj.stdout or "") + " " + (rj.stderr or "")).upper()
-            if (
-                rj.returncode == 2
-                or (rj.returncode & 2) != 0
-                or "DEVICE IS IN STANDBY" in out_sb
-                or "DEVICE IS IN SLEEP" in out_sb
-            ):
+            if is_standby_out(rj.returncode, out_sb):
                 Z_STATE.smart.set_reading(dev_name, cached_temp, "standby")
                 return {
                     "dev": dev_name,
@@ -1762,7 +1755,7 @@ def check_active_smart_tests():
                     text=True,
                     timeout=20,
                 )
-                if not is_nvme and (rj.returncode == 2 or (rj.returncode & 2) != 0):
+                if not is_nvme and is_standby_out(rj.returncode, (rj.stdout or "") + (rj.stderr or "")):
                     continue
                 if rj.stdout and rj.stdout.strip().startswith("{"):
                     doc = json.loads(rj.stdout)
@@ -1780,7 +1773,7 @@ def check_active_smart_tests():
                     text=True,
                     timeout=20,
                 )
-                if not is_nvme and (r.returncode == 2 or (r.returncode & 2) != 0):
+                if not is_nvme and is_standby_out(r.returncode, (r.stdout or "") + (r.stderr or "")):
                     continue
                 raw_text = (r.stdout or "") + ("\n" + r.stderr if r.stderr else "")
             except Exception as e:

@@ -73,6 +73,10 @@ TOUCH_EVERY_SECS = 86400.0
 def get(path: str, limit: int = THUMB_SIZE) -> bytes | None:
     """WebP bytes no larger than `limit` on the longest side, or None if the file can't be decoded."""
     limit = max(32, min(int(limit), MAX_SIZE))
+    from backend.fsutil import ENCRYPTED_ROOT
+
+    if os.path.realpath(path).startswith(ENCRYPTED_ROOT + os.sep):
+        return render(path, limit)  # an encrypted folder's pictures are never kept readable (NSEC-3)
     st = os.stat(path)
     hit, fail = _paths(_key(path, st, limit))
     try:

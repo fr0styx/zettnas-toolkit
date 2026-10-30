@@ -125,7 +125,7 @@ def test_asleep_is_asked_without_waking(monkeypatch):
 
     def run(cmd, **kw):
         seen.append(cmd)
-        return _Done(2)
+        return _Done(2, "Device is in STANDBY mode, exit(2)")  # what smartctl prints for a sleeping drive
 
     monkeypatch.setattr(disks.subprocess, "run", run)
     assert disks.is_drive_asleep("sdb") is True
