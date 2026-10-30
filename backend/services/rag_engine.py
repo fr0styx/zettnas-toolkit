@@ -136,6 +136,48 @@ from backend.services.rag_text import (  # noqa: E402, F401
 RAG_DB_PATH = os.path.join(DATA_DIR, "rag_index.db")
 RAG_CONFIG_PATH = os.path.join(DATA_DIR, "rag_config.json")
 CURRENT_INDEX_VERSION = 4  # 4: sentence-aware, token-sized chunks (AI-30)
+# What a chunk is embedded as: 2 = "title: <title> | text: <the chunk's own text>", without the
+# breadcrumb kept for keyword search (AI-41). An older index is re-embedded at night.
+EMBED_TEXT_VERSION = 2
+
+
+def read_embed_text_version(conn: Any) -> int:
+    """The embedded-text version recorded in the index; an index without any neural vector is
+    current (nothing to re-embed), one without the record is version 1."""
+    try:
+        row = conn.execute("SELECT value FROM rag_meta WHERE key = 'embed_text_version'").fetchone()
+        if row:
+            return int(row[0])
+    except (sqlite3.Error, ValueError, TypeError):
+        logger.debug("rag_engine: no embed_text_version yet", exc_info=True)
+    try:
+        neural = conn.execute(
+            "SELECT 1 FROM document_chunks WHERE embedding_model != '' AND embedding_model NOT LIKE 'zett%' "
+            "AND chunk_level != 'parent' LIMIT 1"
+        ).fetchone()
+    except sqlite3.Error:
+        return EMBED_TEXT_VERSION
+    return 1 if neural else EMBED_TEXT_VERSION
+
+
+def stamp_new_index(conn: Any) -> None:
+    """An index that holds no chunk yet will be embedded the current way: record that, so it is
+    never re-embedded for an upgrade it doesn't need (AI-41)."""
+    try:
+        if not conn.execute("SELECT 1 FROM document_chunks LIMIT 1").fetchone():
+            conn.execute("CREATE TABLE IF NOT EXISTS rag_meta (key TEXT PRIMARY KEY, value TEXT)")
+            conn.execute(
+                "INSERT OR IGNORE INTO rag_meta (key, value) VALUES ('embed_text_version', ?)",
+                (str(EMBED_TEXT_VERSION),),
+            )
+            conn.commit()
+    except sqlite3.Error:
+        logger.debug("rag_engine: embed_text_version not recorded", exc_info=True)
+
+
+def set_embed_text_version(conn: Any, version: int) -> None:
+    conn.execute("CREATE TABLE IF NOT EXISTS rag_meta (key TEXT PRIMARY KEY, value TEXT)")
+    conn.execute("INSERT OR REPLACE INTO rag_meta (key, value) VALUES ('embed_text_version', ?)", (str(version),))
 
 
 def analyze_photo_asset(file_path: str | bytes, file_name: str) -> dict[str, Any]:
@@ -604,6 +646,9 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         self.db_path = db_path or RAG_DB_PATH
         self._write_lock = threading.RLock()
         self._scan_lock = threading.Lock()
+        self._warm = _WarmReader()  # the search's read connection, kept open (AI-41)
+        self._reembed_lock = threading.Lock()  # one re-embed at a time (AI-41)
+        self.text_upgrade_progress: dict[str, Any] = {}
         self._is_indexing = False
         self._sync_state: str = "idle"  # "idle" | "running" | "paused" | "stopping" | "completed" | "stopped"
         self._pause_event = threading.Event()
@@ -688,9 +733,19 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         """Returns a read-only SQLite connection configured for WAL mode."""
         return self._get_conn(readonly=True)
 
+    def _search_conn(self) -> Any:
+        """The warm read connection for a search when it's free, else a fresh one (AI-41)."""
+        db_crypto.wait_ready(self.db_path)
+        if os.path.exists(self.db_path):
+            warm = self._warm.lend(self)
+            if warm is not None:
+                return warm
+        return self._get_conn(readonly=True)
+
     def close(self) -> None:
         """Signals background threads to stop and releases resources."""
         self._stop_requested = True
+        self._warm.close()
 
     def _ensure_schema(self) -> None:
         with self._write_lock:
@@ -964,7 +1019,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                     conn.commit()
                 except sqlite3.Error as e:
                     logger.warning(f"[RAG] CJK keyword index skipped: {e}")
-
+                stamp_new_index(conn)
                 self._schema_initialized = True
             finally:
                 conn.close()
@@ -1391,11 +1446,106 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         return len(stale)
 
 
-# Read connections get a bigger page cache; the WAL is capped and shrinks back (PERF-23). A pool
-# of open read connections was tried and left out: a cursor not read to the end keeps its read
-# snapshot, so a lent-out connection would read stale data and hold back checkpoints.
+# Read connections get a bigger page cache; the WAL is capped and shrinks back (PERF-23).
 READ_CACHE_KIB = 16384
 WAL_SIZE_LIMIT_BYTES = 64 * 1024 * 1024
+# The one warm read connection searches use (AI-41): with the index encrypted, every page a fresh
+# connection reads is decrypted again, which made the vector lookup over 60,000 chunks ~300 ms
+# a search; kept open with a cache that holds the vector index, it is ~35 ms. Its cache is sized
+# to the vectors, up to this much.
+WARM_CACHE_MAX_KIB = 256 * 1024
+WARM_MAX_AGE_SECS = 1800
+
+
+class _LentConnection:
+    """A read connection lent to one search. close() gives it back instead of closing it, after
+    closing every cursor it handed out: an unfinished cursor would keep its read snapshot, so the
+    next search would read stale data and the WAL couldn't be checkpointed past it."""
+
+    def __init__(self, conn: Any, release: Any) -> None:
+        self._conn = conn
+        self._release = release
+        self._cursors: list[Any] = []
+
+    def execute(self, *args: Any) -> Any:
+        cur = self._conn.execute(*args)
+        self._cursors.append(cur)
+        return cur
+
+    def cursor(self) -> Any:
+        cur = self._conn.cursor()
+        self._cursors.append(cur)
+        return cur
+
+    def close(self) -> None:
+        for cur in self._cursors:
+            try:
+                cur.close()
+            except sqlite3.Error:
+                logger.debug("rag_engine: cursor close failed", exc_info=True)
+        self._cursors.clear()
+        release, self._release = self._release, None
+        if release:
+            release()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._conn, name)
+
+
+class _WarmReader:
+    """One read connection kept open between searches (AI-41). Lent to one search at a time; a
+    search that finds it busy opens its own. Opened again when the index file is replaced (a
+    rebuild, a restore, encryption) and every WARM_MAX_AGE_SECS."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._conn: Any = None
+        self._ident: tuple[int, int] | None = None
+        self._opened = 0.0
+
+    def lend(self, engine: Any) -> _LentConnection | None:
+        if not self._lock.acquire(blocking=False):
+            return None
+        try:
+            st = os.stat(engine.db_path)
+            ident = (st.st_ino, st.st_dev)
+            if self._conn is None or ident != self._ident or time.time() - self._opened > WARM_MAX_AGE_SECS:
+                self._drop()
+                conn = engine._open_ro()
+                conn.execute(f"PRAGMA cache_size=-{warm_cache_kib(conn, engine)};")
+                self._conn, self._ident, self._opened = conn, ident, time.time()
+        except (OSError, sqlite3.Error):
+            logger.debug("rag_engine: warm read connection unavailable", exc_info=True)
+            self._drop()
+            self._lock.release()
+            return None
+        return _LentConnection(self._conn, self._lock.release)
+
+    def _drop(self) -> None:
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            except sqlite3.Error:
+                logger.debug("rag_engine: warm connection close failed", exc_info=True)
+        self._conn = None
+
+    def close(self) -> None:
+        with self._lock:
+            self._drop()
+
+
+def warm_cache_kib(conn: Any, engine: Any) -> int:
+    """A page cache that holds the vector index the searches read: one byte per dimension per
+    chunk for the int8 index (four for the float one), a quarter more for pages, at least the
+    usual read cache."""
+    try:
+        chunks = int(conn.execute("SELECT COALESCE(MAX(chunk_id), 0) FROM document_chunks").fetchone()[0] or 0)
+    except sqlite3.Error:
+        chunks = 0
+    dim = int(getattr(engine, "_vec_table_dim", 0) or 768)
+    per = 4 if getattr(engine, "_vec_legacy", None) else 1
+    want = int(chunks * dim * per * 1.25 / 1024)
+    return max(READ_CACHE_KIB, min(WARM_CACHE_MAX_KIB, want))
 
 
 def vec_table(dim: int) -> str:

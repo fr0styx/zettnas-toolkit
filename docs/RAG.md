@@ -110,6 +110,29 @@ them with EmbeddingGemma on GitHub's runners, with 2,000 extra distractor files 
 [Search quality](SEARCH_QUALITY.md)). Plain reciprocal-rank fusion and the title and word boosts
 were measured too and scored lower for neural models, so they are not used.
 
+### How a neural search ranks (AI-41)
+
+Measured against DigUp, which uses the same EmbeddingGemma 2, with the eval sets and 2,000
+distractor files:
+
+- **A chunk is embedded as `title: <document title > section> | text: <its own text>`**.
+  The chunk text kept for keyword search and answers starts with a `[Folder: .. | Doc: ..]`
+  breadcrumb; embedding that too made every chunk look alike. An index embedded the old way is
+  re-embedded once, at night, from the index on the SSD (no disk reads), and search keeps the old
+  vectors until the new ones are all in.
+- **Questions get the search prompt.** Only text shaped like code (a definition, a call,
+  operators, `SELECT * FROM`, a command line or a file name) gets the code prompt; "where did
+  we stay" used to.
+- **Meaning first, then the query's words.** A file's score is its best chunk's similarity
+  plus `2 x spread x coverage^1.5`, where coverage is the share of the query's meaningful words
+  (stop words of all five languages left out) in the chunk and its title, and spread is how
+  much this query's similarities vary across the index: DigUp's z-score plus keyword coverage,
+  in cosine units. The late-interaction bonuses used with lexical vectors are not applied.
+- **Speed.** Searches share one warm read connection whose page cache holds the vector index
+  (the index is encrypted, so a cold connection decrypted every page again), and the
+  full-text index ranks its matches on its own before they are kept to the folder and to what
+  the person may read.
+
 **Nightly.** `.github/workflows/ai-eval-nightly.yml` runs all sets with EmbeddingGemma
 served by Ollama and 2,000 distractors, and answers the 97 questions in `qa.json` with a
 small chat model. An answer counts as right when it contains the fact

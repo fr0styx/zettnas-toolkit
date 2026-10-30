@@ -20,10 +20,10 @@ more than 0.01.
 |---|---|---|---|
 | English | 40 | 0.80 | 0.80 |
 | German | 40 | 0.78 | 0.80 |
-| French | 40 | 0.82 | 0.90 |
+| French | 40 | 0.85 | 0.90 |
 | Spanish | 40 | 0.88 | 0.93 |
 | Chinese | 40 | 0.90 | 0.90 |
-| **All** | 200 | 0.83 | 0.86 |
+| **All** | 200 | 0.84 | 0.86 |
 
 Held-out half (never used for tuning): right file in the top 5 for 0.83 of 41 questions, against 0.87 for the other 159.
 
@@ -31,9 +31,9 @@ Long, Office and scanned documents:
 
 | | Questions | Right file first | Right file in top 5 | All files needed in top 5 |
 |---|---|---|---|---|
-| Long documents | 11 | 0.91 | 1.00 | 1.00 |
-| Office files | 10 | 0.80 | 1.00 | 1.00 |
-| Scanned | 7 | 0.43 | 1.00 | 1.00 |
+| Long documents | 11 | 1.00 | 1.00 | 1.00 |
+| Office files | 10 | 1.00 | 1.00 | 1.00 |
+| Scanned | 7 | 0.57 | 1.00 | 1.00 |
 | Two files needed | 5 | 1.00 | 1.00 | 0.40 |
 
 Questions that share few words with the file, which lexical vectors can't match by design

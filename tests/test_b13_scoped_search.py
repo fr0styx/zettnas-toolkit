@@ -72,7 +72,9 @@ def test_the_keyword_candidates_carry_the_filters():
     import inspect
 
     src = inspect.getsource(rag_engine_search)
-    for table in ("rag_chunks_fts", "rag_photos_fts"):
+    # the chunk keyword search keeps to the scope in keyword_top (AI-41, tests/test_ai41_search_quality.py)
+    assert "keyword_top(" in src and "AND {scope_sql}" in src
+    for table in ("rag_photos_fts",):
         start = src.index(f"FROM {table}\n")
         block = src[start : src.index("LIMIT 250", start)]
         assert "JOIN indexed_files f" in block and "MATCH ? AND" in block, table

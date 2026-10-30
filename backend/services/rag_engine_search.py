@@ -145,6 +145,99 @@ def fusion_weights(intent_type: str, n_tokens: int, exact: bool) -> tuple[float,
     return 0.50, 0.30, 0.20
 
 
+KEYWORD_TOP = 250
+KEYWORD_POOL = 2000
+
+
+def keyword_top(
+    conn: Any, table: str, rank_sql: str, match: str, scope_sql: str, scope_params: list[Any]
+) -> list[tuple[int, float]]:
+    """The KEYWORD_TOP best keyword hits among the chunks this search may see, as (chunk_id,
+    raw_bm25). The full-text index ranks on its own first (~10 ms; joined to the chunk and file
+    tables, SQLite scores every match before the limit: up to ~800 ms on a big index, AI-41),
+    then its top KEYWORD_POOL are kept to the scope. When fewer than KEYWORD_TOP survive and there
+    were more matches, the joined query takes the best in the scope itself (AI-23)."""
+    pool = conn.execute(
+        f"SELECT rowid, {rank_sql} AS raw_bm25 FROM {table} WHERE {table} MATCH ? ORDER BY raw_bm25 DESC LIMIT ?",
+        [match, KEYWORD_POOL],
+    ).fetchall()
+    if not pool:
+        return []
+    ids = [int(r[0]) for r in pool]
+    ok = {
+        int(r[0])
+        for r in conn.execute(
+            f"SELECT c.chunk_id FROM document_chunks c JOIN indexed_files f ON f.file_id = c.file_id "
+            f"WHERE c.chunk_id IN ({','.join('?' * len(ids))}) AND {scope_sql}",
+            [*ids, *scope_params],
+        ).fetchall()
+    }
+    kept = [(int(r[0]), float(r[1] or 0.0)) for r in pool if int(r[0]) in ok][:KEYWORD_TOP]
+    if len(kept) >= KEYWORD_TOP or len(pool) < KEYWORD_POOL:
+        return kept
+    return [
+        (int(r[0]), float(r[1] or 0.0))
+        for r in conn.execute(
+            f"""
+            SELECT {table}.rowid, {rank_sql} AS raw_bm25
+            FROM {table}
+            JOIN document_chunks c ON c.chunk_id = {table}.rowid
+            JOIN indexed_files f ON f.file_id = c.file_id
+            WHERE {table} MATCH ? AND {scope_sql}
+            ORDER BY raw_bm25 DESC
+            LIMIT {KEYWORD_TOP}
+            """,
+            [match, *scope_params],
+        ).fetchall()
+    ]
+
+
+# Keyword coverage beside meaning, as DigUp ranks with the same embedder (AI-41): a file holding
+# the query's words gains KEYWORD_COVERAGE_W x (the spread of this query's similarities across
+# the index) x coverage^1.5, i.e. DigUp's "z-score + 2 x coverage^1.5" in cosine units, so the
+# scale and cut-offs stay. Long, many-topic chunks (a budget, a year's statement) score lower by
+# meaning than a short note on the same subject; the words they hold put them back in front.
+KEYWORD_COVERAGE_W = 2.0
+SPREAD_SAMPLE = 400
+SPREAD_FLOOR = 0.02
+SPREAD_SAMPLE_SECS = 1800
+
+
+def similarity_spread(query_vec: Any, sample: list[Any]) -> float:
+    """The standard deviation of the query's cosine to a sample of the index, at least SPREAD_FLOOR."""
+    sims = [cosine_similarity_vec(query_vec, v) for v in sample if v]
+    if len(sims) < 20:
+        return SPREAD_FLOOR
+    mean = sum(sims) / len(sims)
+    return max(SPREAD_FLOOR, (sum((x - mean) ** 2 for x in sims) / len(sims)) ** 0.5)
+
+
+def coverage_terms(tokens: list[str]) -> list[str]:
+    """The query words that carry meaning, in any of the five languages ("did", "der", "el", "des"
+    are left out: they would make a same-language note look like a match)."""
+    from backend.services.rag_lang import ALL_STOPWORDS
+
+    return [t for t in tokens if t not in ALL_STOPWORDS]
+
+
+def keyword_coverage(tokens: list[str], text: str) -> float:
+    """The share of the query's words the text holds, whole words."""
+    if not tokens:
+        return 0.0
+    return sum(1 for t in tokens if _token_matches_word(t, text)) / len(tokens)
+
+
+def order_by_relevance(query: str, items: list[dict[str, Any]], limit: int, model: str) -> list[dict[str, Any]]:
+    """Best first. The late-interaction pass adds flat bonuses (+0.05, +0.06 for query word
+    fragments near each other or in a heading) that suit the keyword vectors' wide score range; a
+    neural model's right and wrong files differ by a few hundredths, so they decided the order and
+    are left out for it (AI-41)."""
+    items.sort(key=lambda x: float(x.get("score") or 0.0), reverse=True)
+    if model == "zett_lexical_384d":
+        return late_interaction_rerank(query, items, top_k=limit)
+    return items
+
+
 def exact_score(score: float, found: int, wanted: int) -> float:
     """A hit that holds every code and quoted phrase of the query goes first; one holding some of
     them comes next; one holding none drops below both (AI-12)."""
@@ -436,7 +529,7 @@ class RagSearchMixin:
         # The embedder didn't answer: results come from keywords only, and the person is told (AI-4)
         search_degraded = chosen_emb_model != "zett_lexical_384d" and effective_emb_model == "zett_lexical_384d"
 
-        conn = self._get_conn(readonly=True)
+        conn = self._search_conn()
         try:
             photo_items: list[dict[str, Any]] = []
             doc_items: list[dict[str, Any]] = []
@@ -606,8 +699,7 @@ class RagSearchMixin:
                     reverse=True,
                 )
             else:
-                combined.sort(key=lambda x: float(x.get("score") or 0.0), reverse=True)
-                combined = late_interaction_rerank(query, combined, top_k=limit)
+                combined = order_by_relevance(query, combined, limit, effective_emb_model)
 
             combined = combined[:limit]
 
@@ -918,6 +1010,28 @@ class RagSearchMixin:
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
 
+    def _spread_sample(self, conn: Any, model: str) -> list[Any]:
+        """About SPREAD_SAMPLE chunk vectors of this model spread over the index, read once and kept
+        for SPREAD_SAMPLE_SECS (AI-41): what a query's similarities to everything look like."""
+        cache = getattr(self, "_spread_cache", None)
+        now = time.time()
+        if cache and cache[0] == model and now - cache[1] < SPREAD_SAMPLE_SECS:
+            return cache[2]
+        top = conn.execute("SELECT COALESCE(MAX(chunk_id), 0) FROM document_chunks").fetchone()[0] or 0
+        step = max(1, int(top) // SPREAD_SAMPLE)
+        ids = list(range(1, int(top) + 1, step))[: SPREAD_SAMPLE * 2]
+        sample: list[Any] = []
+        for i in range(0, len(ids), 500):
+            part = ids[i : i + 500]
+            rows = conn.execute(
+                f"SELECT embedding_f32 FROM document_chunks WHERE chunk_id IN ({','.join('?' * len(part))}) "
+                "AND chunk_level != 'parent' AND embedding_model = ?",
+                [*part, model],
+            ).fetchall()
+            sample.extend(v for v in (unpack_vector(r[0]) for r in rows) if v)
+        self._spread_cache = (model, now, sample[:SPREAD_SAMPLE])
+        return self._spread_cache[2]
+
     def _search_documents_ro(
         self,
         conn: sqlite3.Connection,
@@ -954,21 +1068,16 @@ class RagSearchMixin:
         bm25_rank: dict[int, int] = {}
         if fts_query:
             try:
-                fts_rows = conn.execute(
-                    f"""
-                    SELECT rag_chunks_fts.rowid AS chunk_id, -bm25(rag_chunks_fts, 5.0, 3.0, 1.0, 2.0) AS raw_bm25
-                    FROM rag_chunks_fts
-                    JOIN document_chunks c ON c.chunk_id = rag_chunks_fts.rowid
-                    JOIN indexed_files f ON f.file_id = c.file_id
-                    WHERE rag_chunks_fts MATCH ? AND {scope_sql}
-                    ORDER BY raw_bm25 DESC
-                    LIMIT 250
-                    """,
-                    [fts_query, *scope_params],
-                ).fetchall()
-                for rank_idx, r in enumerate(fts_rows, start=1):
-                    cid = int(r["chunk_id"])
-                    raw_val = max(0.0, float(r["raw_bm25"] or 0.0))
+                kw_hits = keyword_top(
+                    conn,
+                    "rag_chunks_fts",
+                    "-bm25(rag_chunks_fts, 5.0, 3.0, 1.0, 2.0)",
+                    fts_query,
+                    scope_sql,
+                    scope_params,
+                )
+                for rank_idx, (cid, raw) in enumerate(kw_hits, start=1):
+                    raw_val = max(0.0, raw)
                     bm25_map[cid] = raw_val / (raw_val + 5.0)
                     bm25_rank[cid] = rank_idx
             except sqlite3.OperationalError:
@@ -979,20 +1088,10 @@ class RagSearchMixin:
         cjk_query = rag_cjk.match_query(raw_query)
         if cjk_query:
             try:
-                for r in conn.execute(
-                    f"""
-                    SELECT x.rowid AS chunk_id, -bm25({rag_cjk.TABLE}) AS raw_bm25
-                    FROM {rag_cjk.TABLE} x
-                    JOIN document_chunks c ON c.chunk_id = x.rowid
-                    JOIN indexed_files f ON f.file_id = c.file_id
-                    WHERE {rag_cjk.TABLE} MATCH ? AND {scope_sql}
-                    ORDER BY raw_bm25 DESC
-                    LIMIT 250
-                    """,
-                    [cjk_query, *scope_params],
-                ).fetchall():
-                    cid = int(r["chunk_id"])
-                    raw_val = max(0.0, float(r["raw_bm25"] or 0.0))
+                for cid, raw in keyword_top(
+                    conn, rag_cjk.TABLE, f"-bm25({rag_cjk.TABLE})", cjk_query, scope_sql, scope_params
+                ):
+                    raw_val = max(0.0, raw)
                     bm25_map[cid] = max(bm25_map.get(cid, 0.0), raw_val / (raw_val + 5.0))
                 ranked = sorted(bm25_map, key=lambda k: -bm25_map[k])
                 bm25_rank = {cid: i for i, cid in enumerate(ranked, start=1)}
@@ -1154,6 +1253,12 @@ class RagSearchMixin:
         q_tokens = [t for t in text_tokens((raw_query or "").lower()) if t not in _STOPWORDS]
         exact = rag_exact.exact_terms(raw_query or "")  # codes, IDs and quoted phrases (AI-12)
         prof = _core().similarity_profile(query_embedding_model, query_embedding_dim)
+        cover_terms = coverage_terms(q_tokens)
+        spread = (
+            similarity_spread(query_vec, self._spread_sample(conn, query_embedding_model))
+            if prof["ranker"] == "vector" and cover_terms and query_vec
+            else SPREAD_FLOOR
+        )
         per_file_best: dict[int, dict[str, Any]] = {}
         readable = self._post_rbac_checker(principal)  # one check per file, no disk access
 
@@ -1197,7 +1302,10 @@ class RagSearchMixin:
             effective_rrf = s_rrf if (has_lexical_hit or s_vec >= prof["vec_min"]) else 0.0
             w_vec, w_bm25, w_rrf = fusion_weights(intent_type, len(q_tokens), bool(exact))
             if prof["ranker"] == "vector":
-                score = min(1.0, prof["w_vec"] * s_vec + prof["w_bm25"] * s_bm25)
+                cover = keyword_coverage(cover_terms, f"{title_lower} {chunk_lower}")
+                score = min(
+                    1.0, prof["w_vec"] * s_vec + prof["w_bm25"] * s_bm25 + KEYWORD_COVERAGE_W * spread * cover**1.5
+                )
             else:
                 score = min(1.0, w_vec * s_vec + w_bm25 * s_bm25 + w_rrf * effective_rrf + lex_boost)
             if exact:

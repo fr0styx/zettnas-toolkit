@@ -241,6 +241,19 @@ CODE_EXTENSIONS_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Code has a shape, not just keywords: "where did we stay", "flights from London" and "let me see"
+# are questions, and the code prompt with keyword-led weights sent them astray (AI-41). A
+# definition, a call, an assignment, operators or braces, an uppercase SELECT ... FROM, or a
+# SELECT * / WHERE x = clause.
+CODE_SHAPE_RE = re.compile(
+    r"\b(?:async\s+)?(?:def|class|function|func|fn|impl|struct|interface|enum|trait)\s+[A-Za-z_]\w*\s*[(:{<]"
+    r"|\b(?:const|let|var|auto)\s+[A-Za-z_]\w*\s*[:=]"
+    r"|\b[A-Za-z_][\w.]*\([^()]*\)"
+    r"|=>|::|->|!=|==|\$\(|[{};]"
+    r"|^\s*(?:from\s+[\w.]+\s+)?import\s+[\w.]+"
+    r"|\bSELECT\b.+\bFROM\b|\bselect\s+\*\s+from\b|\bwhere\s+\w+\s*(?:=|<|>|like\b|in\s*\()",
+)
+
 QA_INDICATORS_RE = re.compile(
     r"^(how\s+(to|do|can|does)|why\s+(is|does|do)|what\s+(is|are)|where\s+(is|can)|when\s+should|can\s+i|is\s+it\s+(safe|possible)|explain)\b",
     re.IGNORECASE,
@@ -282,7 +295,7 @@ def classify_query_task_intent(query: str, modality_hint: str = "all") -> tuple[
 
     # Rule 3: Evaluate unambiguous code syntax, CLI commands, or source file extensions
     if (
-        any(ind in low for ind in CODE_SYNTAX_INDICATORS)
+        CODE_SHAPE_RE.search(q_strip)
         or any(ind in low for ind in CLI_COMMAND_INDICATORS)
         or bool(CODE_EXTENSIONS_RE.search(low))
     ):
@@ -303,6 +316,26 @@ def format_embeddinggemma_document(title: str | None, text: str) -> str:
     if clean_title:
         return f"title: {clean_title} | text: {clean_text}"
     return f"title: none | text: {clean_text}"
+
+
+def chunk_embedding_text(title: str | None, file_name: str, chunk: dict, file_ext: str = "") -> str:
+    """What a document chunk is embedded as (AI-41): "title: <document title > section> | text:
+    <the chunk's own text>". The chunk text kept for keyword search and answers starts with a
+    "[Folder: .. | Doc: ..]" breadcrumb and repeated its heading; embedded too, that shared frame
+    made every chunk look alike (cosines bunched within ~0.02 of each other), so short generic notes
+    outranked the file that answered. The file name stands in for a missing title, without its
+    extension, as DigUp does with the same model."""
+    from backend.services.rag_text import text_for_embedding
+
+    stem = os.path.splitext(file_name or "")[0]
+    doc = (title or "").strip()
+    if not doc or doc == file_name:
+        doc = stem
+    heading = " ".join(str(chunk.get("heading_context") or "").split())
+    if heading and heading.lower() not in doc.lower() and len(heading) <= 160:
+        doc = f"{doc} > {heading}" if doc else heading
+    body = chunk.get("raw_chunk_text") or chunk.get("chunk_text") or ""
+    return format_embeddinggemma_document(doc[:200], text_for_embedding(file_ext, str(body)))
 
 
 def truncate_and_normalize_mrl(vec: list[float], target_dim: int | None) -> list[float]:

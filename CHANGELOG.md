@@ -180,6 +180,18 @@
 
 #### AI
 
+- **Search finds the right file more often, and faster**: compared with DigUp, which uses the
+  same EmbeddingGemma 2, three things held our results back and are fixed. Each piece of a
+  document was embedded together with a "[Folder: .. | Doc: ..]" label, which made them all look
+  alike; questions with words like "where", "from" or "let" were treated as code; and a bonus
+  for word fragments decided the order of close results. Now a piece is embedded as its title
+  and its own text, only real code is treated as code, and the query's words count beside the
+  meaning. On the test files with 2,000 extra ones, the right file came first 95% of the time
+  (89% before) for questions in the file's language and 87% (70%) across languages. An
+  existing index is re-embedded once, at night, from the index alone without waking a disk.
+  Searches also take about a third of the time: they keep one connection to the encrypted index
+  warm and rank keyword matches before filtering them.
+
 - **Photo search by meaning without Immich**: with contrib/openvino-clip (SigLIP 2 on the iGPU) set in AI
   settings, every photo gets an image vector from its stored thumbnail (no disk wakes, only while the
   server is idle), and searches find photos by what they show, in any language SigLIP 2 learned.

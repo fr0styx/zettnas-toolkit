@@ -39,6 +39,7 @@ from backend.services.rag_documents import (  # noqa: F401
     generate_contextual_hierarchical_chunks,
 )
 from backend.services.rag_embeddings import (  # noqa: F401
+    chunk_embedding_text,
     compute_384d_embedding,
     embedding_host,
     format_embeddinggemma_document,
@@ -1287,12 +1288,7 @@ class RagIndexingMixin:
             # finds it by meaning; keyword vectors only when the embedding model is unavailable.
             cfg = self.get_config()
             ocr_model = cfg.get("embedding_model") or "embeddinggemma"
-            ocr_texts = [
-                format_embeddinggemma_document(
-                    file_name, text_for_embedding(".txt", f"{ch['heading_context']} {ch['chunk_text']}".strip())
-                )
-                for ch in ocr_chunks
-            ]
+            ocr_texts = [chunk_embedding_text(doc_title, file_name, ch, ".txt") for ch in ocr_chunks]
             ocr_blobs = None
             if ocr_texts and ocr_model != "zett_lexical_384d":
                 ocr_blobs = _core().compute_neural_embeddings_batch(
@@ -1535,12 +1531,7 @@ class RagIndexingMixin:
             if doc_type == "recipe"
             else (["receipt", "document"] if doc_type == "invoice" else ["document"])
         )
-        child_texts = [
-            format_embeddinggemma_document(
-                effective_title, text_for_embedding(file_ext, f"{ch['heading_context']} {ch['chunk_text']}".strip())
-            )
-            for ch in child_chunks
-        ]
+        child_texts = [chunk_embedding_text(effective_title, file_name, ch, file_ext) for ch in child_chunks]
         # One batched call per file; every vector of a file comes from the same model (AI-15).
         neural_blobs = None
         if configured_emb_model != "zett_lexical_384d":

@@ -27,7 +27,9 @@ from backend.logging_config import (  # noqa: F401
 from backend.services import (  # noqa: F401
     rag_standby,
 )
+from backend.services.ai_activity import upgrade_window_open
 from backend.services.rag_embeddings import (  # noqa: F401
+    chunk_embedding_text,
     embedding_host,
     format_embeddinggemma_document,
 )
@@ -106,9 +108,27 @@ def upgrade_pass_paths(engine: Any, cfg: dict[str, Any], excluded: set[str], alr
     return out
 
 
+def _one_reembed_at_a_time(fn: Any) -> Any:
+    """One re-embed at a time (AI-41): the nightly text upgrade and one started from the AI
+    settings would otherwise share the staging table. A second one answers "busy"."""
+    import functools
+
+    @functools.wraps(fn)
+    async def wrapper(self: Any, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        if not self._reembed_lock.acquire(blocking=False):
+            return {"status": "busy", "message": "A re-embed is already running."}
+        try:
+            return await fn(self, *args, **kwargs)
+        finally:
+            self._reembed_lock.release()
+
+    return wrapper
+
+
 class RagLearningMixin:
     """Standby-safe learning, the deferred queue, sync control and re-embedding for RagSearchEngine (split out of rag_engine.py, ARCH-1)."""
 
+    @_one_reembed_at_a_time
     async def in_place_reembed_collection(
         self,
         target_model: str,
@@ -117,6 +137,7 @@ class RagLearningMixin:
         progress_callback: Any | None = None,
         target_host: str | None = None,
         retry_wait_s: float = 65.0,
+        all_chunks: bool = False,
     ) -> dict[str, Any]:
         """Re-embeds every chunk with another model, from the index on SSD (no disk wake-ups).
 
@@ -132,7 +153,7 @@ class RagLearningMixin:
         cfg = self.get_config()
         host = (target_host or "").strip() or None
         current = (cfg.get("embedding_model"), int(cfg.get("embedding_dim") or 0), (cfg.get("embedding_host") or None))
-        same_target = current == (target_model, int(target_dim), host)
+        same_target = current == (target_model, int(target_dim), host) and not all_chunks
 
         with self._write_lock:
             conn = self._get_conn(readonly=False)
@@ -172,7 +193,8 @@ class RagLearningMixin:
             try:
                 marks = ",".join("?" * len(ids))
                 rows = c.execute(
-                    f"""SELECT c.chunk_id, c.file_name, c.heading_context, c.chunk_text, f.doc_title, f.file_ext
+                    f"""SELECT c.chunk_id, COALESCE(NULLIF(c.file_name, ''), f.file_name) AS file_name,
+                               c.heading_context, c.chunk_text, c.raw_chunk_text, f.doc_title, f.file_ext
                         FROM document_chunks c LEFT JOIN indexed_files f ON f.file_id = c.file_id
                         WHERE c.chunk_id IN ({marks})""",
                     ids,
@@ -182,12 +204,7 @@ class RagLearningMixin:
             return [
                 (
                     int(r["chunk_id"]),
-                    format_embeddinggemma_document(
-                        r["doc_title"] or r["file_name"],
-                        text_for_embedding(
-                            r["file_ext"] or "", f"{r['heading_context'] or ''} {r['chunk_text'] or ''}".strip()
-                        ),
-                    ),
+                    chunk_embedding_text(r["doc_title"], r["file_name"] or "", dict(r), r["file_ext"] or ""),
                 )
                 for r in rows
             ]
@@ -311,6 +328,8 @@ class RagLearningMixin:
                         (target_model, target_dim),
                     )
                 w.execute("DELETE FROM reembed_staging")
+                if not same_target:  # every chunk was embedded now, as chunks are embedded today
+                    _core().set_embed_text_version(w, _core().EMBED_TEXT_VERSION)
                 w.commit()
             finally:
                 w.close()
@@ -986,22 +1005,13 @@ class RagLearningMixin:
             conn = self._get_conn(readonly=True)
             try:
                 chunks = conn.execute(
-                    """SELECT chunk_id, heading_context, chunk_text, visibility_tier FROM document_chunks
-                       WHERE file_id = ? AND chunk_level != 'parent' ORDER BY chunk_id""",
+                    """SELECT chunk_id, heading_context, chunk_text, raw_chunk_text, visibility_tier
+                       FROM document_chunks WHERE file_id = ? AND chunk_level != 'parent' ORDER BY chunk_id""",
                     (fid,),
                 ).fetchall()
             finally:
                 conn.close()
-            title = f["doc_title"] or f["file_name"]
-            texts = [
-                format_embeddinggemma_document(
-                    title,
-                    text_for_embedding(
-                        f["file_ext"] or "", f"{c['heading_context'] or ''} {c['chunk_text'] or ''}".strip()
-                    ),
-                )
-                for c in chunks
-            ]
+            texts = [chunk_embedding_text(f["doc_title"], f["file_name"], dict(c), f["file_ext"] or "") for c in chunks]
             blobs = _core().compute_neural_embeddings_batch(
                 texts, model, target_dim=target_dim, host=embedding_host(cfg)
             )
@@ -1153,12 +1163,61 @@ class RagLearningMixin:
         except sqlite3.Error:
             logger.warning("[RAG] Nightly index maintenance failed; trying again tomorrow", exc_info=True)
 
+    def _maybe_upgrade_embedding_text(self) -> bool:
+        """Re-embeds the index at night when its chunks were embedded as an older text (AI-41):
+        the in-place re-embed, from the index on SSD, with the model already in use; search keeps
+        the old vectors until the new ones are all in. Returns whether it started."""
+        running = getattr(self, "_text_upgrade_thread", None)
+        if running is not None and running.is_alive():
+            return False
+        cfg = self.get_config()
+        model = str(cfg.get("embedding_model") or "")
+        if not model or model == "zett_lexical_384d" or not upgrade_window_open():
+            return False
+        if self.embed_text_version() >= _core().EMBED_TEXT_VERSION:
+            return False
+        dim = int(cfg.get("embedding_dim") or 768)
+        progress: dict[str, Any] = {"status": "running", "reason": "embedding_text", "completed": 0, "total": 0}
+        self.text_upgrade_progress = progress
+
+        def run() -> None:
+            try:
+                res = asyncio.run(
+                    self.in_place_reembed_collection(
+                        model,
+                        dim,
+                        progress_callback=progress.update,
+                        target_host=cfg.get("embedding_host") or None,
+                        all_chunks=True,
+                    )
+                )
+                progress.update(res)
+                progress["status"] = {"paused": "paused", "busy": "idle"}.get(str(res.get("status")), "complete")
+            except (OSError, RuntimeError, ValueError, sqlite3.Error) as e:
+                logger.warning("[RAG] The nightly re-embed stopped: %s", e)
+                progress["status"] = "error"
+
+        logger.info("[RAG] Re-embedding the index as clean chunk text (AI-41), from the index, no disk reads")
+        self._text_upgrade_thread = threading.Thread(target=run, daemon=True, name="RagTextUpgrade")
+        self._text_upgrade_thread.start()
+        return True
+
+    def embed_text_version(self) -> int:
+        """The version of the text this index's chunks were embedded as (1 before AI-41). An index
+        without neural vectors has nothing to upgrade."""
+        conn = self._get_conn(readonly=True)
+        try:
+            return _core().read_embed_text_version(conn)
+        finally:
+            conn.close()
+
     def _maybe_reembed_fallback_files(self) -> None:
         now = time.time()
         if now - self._last_fallback_reembed < _core().FALLBACK_REEMBED_EVERY_SECS:
             return
         self._last_fallback_reembed = now
         self.reembed_fallback_files()
+        self._maybe_upgrade_embedding_text()  # nights only, once per index (AI-41)
         self._maybe_backfill_tags()  # same five-minute cadence; stops once every older file is tagged
         self._maybe_backfill_photo_dates()  # at night only (AI-24)
         self._maybe_name_photo_places()  # from the index alone, any time (AI-24)

@@ -72,6 +72,13 @@ def get_reindex_status() -> dict[str, Any]:
         _REINDEX_CACHE_TIME = now
         return dict(REINDEX_STATUS)
 
+    # 2b. The nightly re-embed after the embedded text changed (AI-41)
+    upgrade = getattr(get_rag_engine(), "text_upgrade_progress", None) or {}
+    if upgrade.get("status") == "running":
+        _REINDEX_CACHE = dict(upgrade)
+        _REINDEX_CACHE_TIME = now
+        return dict(upgrade)
+
     # 3. Dynamic SQLite detection: detect if a CLI reindex or background job is running
     try:
         rag = get_rag_engine()

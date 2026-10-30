@@ -20,9 +20,10 @@ def test_keyword_candidates_are_ranked_before_the_limit():
     from backend.services import rag_engine_search
 
     src = inspect.getsource(rag_engine_search)
-    for table in ("rag_chunks_fts", "rag_photos_fts"):
-        block = src[src.index(f"FROM {table}") : src.index("LIMIT 250", src.index(f"FROM {table}"))]
-        assert "ORDER BY raw_bm25 DESC" in block, table
+    block = src[src.index("FROM rag_photos_fts") : src.index("LIMIT 250", src.index("FROM rag_photos_fts"))]
+    assert "ORDER BY raw_bm25 DESC" in block
+    # chunks: keyword_top ranks the pool and the scoped fallback alike (AI-41)
+    assert inspect.getsource(rag_engine_search.keyword_top).count("ORDER BY raw_bm25 DESC") == 2
 
 
 def test_fts5_order_by_rank_keeps_the_best_matches(tmp_path):

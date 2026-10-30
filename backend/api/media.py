@@ -1636,7 +1636,7 @@ async def trigger_ai_reindex(
                 target_host=target_host or None,
             )
             _REINDEX_STATUS.update(res)
-            _REINDEX_STATUS["status"] = "paused" if res.get("status") == "paused" else "complete"
+            _REINDEX_STATUS["status"] = {"paused": "paused", "busy": "busy"}.get(str(res.get("status")), "complete")
         except Exception as e:
             logger.error("In-place re-index worker error: %s", e)
             _REINDEX_STATUS["status"] = "error"
