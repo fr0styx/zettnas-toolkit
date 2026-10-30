@@ -26,7 +26,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Budgets (5-minute soak)
-        run: python3 scripts/hardware_budgets.py --seconds 300
+        # a hard gate for CPU, spawns and memory (NPERF-1); wakeups and the model servers warn only
+        run: python3 scripts/hardware_budgets.py --seconds 300 --strict idle-cpu,spawns,backend-memory
 
   spindown:
     # Read-only: kernel counters only, never a command to a drive (PERF-2)

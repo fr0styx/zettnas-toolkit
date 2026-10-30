@@ -20,10 +20,11 @@ def _safe_float(val):
 @router.get("/metrics", response_class=PlainTextResponse, dependencies=[Depends(require_scope("system:view"))])
 def prometheus_metrics():
     """Prometheus exposition format for ZettNAS telemetry."""
+    from backend import spawns
     from backend.request_metrics import REQUEST_METRICS
 
     if not Z_STATE.cached_stats:
-        return "# ZettNAS metrics not ready yet\n" + REQUEST_METRICS.prometheus()
+        return "# ZettNAS metrics not ready yet\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
 
     stats = Z_STATE.cached_stats
     lines = []
@@ -126,7 +127,7 @@ def prometheus_metrics():
     for _metric_name, metric_lines in lines_by_metric.items():
         out.extend(metric_lines)
 
-    return "\n".join(out) + "\n" + REQUEST_METRICS.prometheus()
+    return "\n".join(out) + "\n" + REQUEST_METRICS.prometheus() + spawns.prometheus()
 
 
 @router.get("/metrics/network-topology", dependencies=[Depends(require_scope("system:view"))])

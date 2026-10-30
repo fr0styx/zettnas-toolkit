@@ -37,7 +37,7 @@ def test_measures_and_judges(tmp_path, monkeypatch, capsys):
         )
 
     monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
-    values = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"])
+    values = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"], interval=1.0)
     assert values == {
         "restarted": False,
         "viewers": 0,
@@ -45,6 +45,7 @@ def test_measures_and_judges(tmp_path, monkeypatch, capsys):
         "idle-cpu": 1.0,
         "wakeups": 600,
         "spawns": 0.0,
+        "spawns_counted": False,
         "backend-memory": 180.0,
         "ai-memory": 3072.0,
     }
@@ -122,7 +123,7 @@ def test_a_restart_during_the_soak_skips_the_backend_budgets(tmp_path, capsys, m
             restart(s)
         state["t"] += s
 
-    values = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"])
+    values = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"], interval=1.0)
     assert values["restarted"] is True
     assert hb.verdicts(values) == {
         "idle-cpu": None,
@@ -175,7 +176,7 @@ def test_the_whole_container_counts_and_new_processes_are_spawns(tmp_path, monke
             shutil.rmtree(tmp_path / "30")
 
     monkeypatch.setattr(hb.os, "sysconf", lambda name: 100)
-    v = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"])
+    v = hb.measure(60, proc=str(tmp_path), sleep=sleep, clock=lambda: state["t"], interval=1.0)
     assert v["spawns"] == 1.0
     assert v["processes"] == 3
     assert v["idle-cpu"] == round(100 * (60 + 6) / 100 / 60, 2)  # backend + the tool, not the neighbour

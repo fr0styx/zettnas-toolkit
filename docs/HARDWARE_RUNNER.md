@@ -58,4 +58,11 @@ reports SKIP: it runs the app's own code and needs the packages that code was lo
 Results: one JSON file per budget run in the results folder, `spindown/` and `ai/` for the other
 checks. The AI eval keeps its baselines there too (`ai/baseline_<set>.json`); the first run, or a
 run with another embedding or chat model, records a new one. Budgets can be tuned with
-`HW_BUDGET_IDLE_CPU`, `HW_BUDGET_WAKEUPS`, `HW_BUDGET_BACKEND_MEMORY`, `HW_BUDGET_AI_MEMORY`.
+`HW_BUDGET_IDLE_CPU`, `HW_BUDGET_WAKEUPS`, `HW_BUDGET_BACKEND_MEMORY`, `HW_BUDGET_AI_MEMORY`. `HW_BUDGET_SPAWNS` sets the spawns budget.
+
+CPU, spawns and backend memory are a hard gate (`--strict`); wakeups and the model servers'
+memory only warn. Spawns are exact when the runner can ask the app: set `HW_METRICS_URL` (the
+app's `/api/metrics` as the runner reaches it) and `HW_METRICS_TOKEN` (an API token with the
+monitoring rights) in the runner's environment. Without them the runner lists processes four
+times a second, which misses the shortest ones; the results file says which was used
+(`spawns_counted`). A budget is skipped while someone has the app open from another machine.

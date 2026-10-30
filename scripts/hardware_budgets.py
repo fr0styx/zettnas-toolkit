@@ -4,11 +4,19 @@ Reads the host's /proc (mounted read-only at HOST_PROC, default /host/proc) and 
 --seconds (default 300) while nobody uses the app. Everything in the backend's container counts
 (its cgroup: helper processes, the healthcheck, tools it starts), sampled every --interval:
 
-  idle-cpu        container CPU, % of one core                    <= 1.0
-  wakeups         container voluntary context switches per minute  <= 1500
-  spawns          processes started in the container per minute    <= 10
+  idle-cpu        container CPU, % of one core, short tools included <= 1.0
+  wakeups         container voluntary context switches per minute    <= 1500
+  spawns          processes the backend started per minute           <= 10
   backend-memory  backend resident memory, MB                      <= 200
   ai-memory       chat-model server memory, MB                     <= 1024 (after 15 idle minutes)
+
+CPU counts the measured processes and the children they have reaped (cutime and cstime), so a
+smartctl that ran for 50 ms between two samples is in it. Spawns are read from the backend's own
+counter (zettnas_process_spawns_total in /api/metrics, NPERF-1) when HW_METRICS_URL and
+HW_METRICS_TOKEN (a token with system:view) are set; otherwise processes are listed every
+--interval (0.25 s), which misses the shortest ones, and the results say so ("spawns_counted").
+"wakeups" are voluntary context switches (timers, but also I/O and locks), not timer wakeups
+alone, so they stay a warning.
 
 With --pid and --scope tree it measures one process and its children instead (the PR-time idle
 minute in CI, where the job's cgroup holds the runner too). Connections from the machine itself
@@ -79,8 +87,38 @@ def _stat(pid, proc=HOST_PROC):
 
 
 def cpu_ticks(pid, proc=HOST_PROC):
+    """utime + stime, and cutime + cstime: the CPU of the children it has reaped (short tools)."""
     fields = _stat(pid, proc)
-    return int(fields[11]) + int(fields[12]) if len(fields) > 12 else 0
+    if len(fields) <= 12:
+        return 0
+    own = int(fields[11]) + int(fields[12])
+    return own + (int(fields[13]) + int(fields[14]) if len(fields) > 14 else 0)
+
+
+def counted_spawns(url=None, token=None, fetch=None):
+    """The backend's own count of the processes it started (all callers), or None when it
+    can't be asked (no URL or token, or no answer)."""
+    url = url or os.environ.get("HW_METRICS_URL", "")
+    token = token or os.environ.get("HW_METRICS_TOKEN", "")
+    if not url or not token:
+        return None
+    try:
+        if fetch is None:
+            import urllib.request
+
+            req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+            with urllib.request.urlopen(req, timeout=10) as r:  # noqa: S310 (the operator's own URL)
+                text = r.read().decode("utf-8", "replace")
+        else:
+            text = fetch(url, token)
+    except (OSError, ValueError):
+        return None
+    total, found = 0, False
+    for line in text.splitlines():
+        if line.startswith("zettnas_process_spawns_total{"):
+            total += int(float(line.rsplit(" ", 1)[1]))
+            found = True
+    return total if found else None
 
 
 def started(pid, proc=HOST_PROC):
@@ -185,7 +223,16 @@ class Members:
         return out
 
 
-def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time, pid=None, scope="cgroup", interval=1.0):
+def measure(
+    seconds,
+    proc=HOST_PROC,
+    sleep=time.sleep,
+    clock=time.time,
+    pid=None,
+    scope="cgroup",
+    interval=0.25,
+    spawn_count=None,
+):
     procs = processes(proc)
     pid = pid or backend_pid(procs, proc)
     if not pid:
@@ -197,6 +244,8 @@ def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time, pid=None
     last = {}
     born = set()
     seen = viewers(pid, proc)
+    spawn_count = spawn_count or counted_spawns
+    spawned_before = spawn_count()
     t0 = clock()
     end = t0 + seconds
     sample = 0
@@ -219,13 +268,17 @@ def measure(seconds, proc=HOST_PROC, sleep=time.sleep, clock=time.time, pid=None
     woke = sum(max(0, last[k][1] - first[k][1]) for k in last)
     # a deploy or a crash during the soak: the backend measured at the end isn't the one at the start
     restarted = started(pid, proc) != root_start
+    spawned_after = spawn_count() if spawned_before is not None else None
+    counted = spawned_after is not None and spawned_after >= spawned_before
+    spawned = (spawned_after - spawned_before) if counted else len(born)
     return {
         "restarted": restarted,
         "viewers": seen,
         "processes": len(last),
         "idle-cpu": round(100 * ticks / hz / elapsed, 2),
         "wakeups": round(woke / elapsed * 60),
-        "spawns": round(len(born) / elapsed * 60, 1),
+        "spawns": round(spawned / elapsed * 60, 1),
+        "spawns_counted": counted,
         "backend-memory": round(rss_mb(pid, proc), 1),
         "ai-memory": chat_server_mb(processes(proc), proc),
     }
@@ -253,7 +306,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--seconds", type=float, default=300)
     ap.add_argument("--warmup", type=float, default=0, help="wait this long before measuring")
-    ap.add_argument("--interval", type=float, default=1.0, help="seconds between samples")
+    ap.add_argument("--interval", type=float, default=0.25, help="seconds between samples")
     ap.add_argument("--pid", help="measure this process instead of finding the backend")
     ap.add_argument("--scope", choices=("cgroup", "tree"), default="cgroup")
     ap.add_argument("--only", help="comma-separated budgets to judge (default: all)")

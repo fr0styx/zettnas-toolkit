@@ -430,6 +430,10 @@
 
 #### Performance
 
+- **The nightly idle check sees short tools**: the app counts every process it starts, and which
+  part of it started it (in /api/metrics), and the hardware check counts their CPU too. CPU,
+  started processes and memory are now a hard gate instead of a warning (NPERF-1).
+
 - **Faster downloads and streams**: the security headers, sign-in check and request id no
   longer pass every chunk of a download, video or live stream through three extra steps
   (NPERF-4).

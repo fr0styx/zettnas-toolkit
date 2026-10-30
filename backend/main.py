@@ -455,6 +455,9 @@ async def lifespan(app: FastAPI):
     import concurrent.futures
     import multiprocessing
 
+    from backend import spawns
+
+    spawns.install()  # every process started from here on is counted, by who started it (NPERF-1)
     loop = asyncio.get_running_loop()
     try:
         cpu_cores = multiprocessing.cpu_count()
