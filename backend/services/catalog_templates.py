@@ -106,6 +106,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/web/",
         "env": {"TZ": "UTC"},
         "volumes": {"config": "/config", "cache": "/cache", "media": "/media"},
+        "share_folders": {"media": "Media library"},  # FEAT-06: may live on a share
         "devices": ["/dev/dri"],
         # One step (Batch 6): an existing media share becomes the library (read-only) and
         # hardware transcoding is switched on when the host has a GPU render node
@@ -123,6 +124,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/web",
         "env": {**PUID, "VERSION": "docker"},
         "volumes": {"config": "/config", "tv": "/tv", "movies": "/movies"},
+        "share_folders": {"tv": "TV shows", "movies": "Movies"},  # FEAT-06: may live on a share
         "devices": ["/dev/dri"],
         "logo": "plex",
     },
@@ -136,6 +138,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {"UID": "1000", "GID": "100"},
         "volumes": {"config": "/config", "media": "/mnt/share1"},
+        "share_folders": {"media": "Media library"},  # FEAT-06: may live on a share
         "devices": ["/dev/dri"],
         "logo": "emby",
     },
@@ -149,6 +152,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {},
         "volumes": {"data": "/data", "music": "/music"},
+        "share_folders": {"music": "Music"},  # FEAT-06: may live on a share
         "logo": "navidrome",
     },
     {
@@ -162,6 +166,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {"TZ": "UTC"},
         "volumes": {"config": "/config", "metadata": "/metadata", "audiobooks": "/audiobooks", "podcasts": "/podcasts"},
+        "share_folders": {"audiobooks": "Audiobooks", "podcasts": "Podcasts"},  # FEAT-06: may live on a share
         "logo": "audiobookshelf",
     },
     {
@@ -174,6 +179,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {**PUID, "DOCKER_MODS": "linuxserver/mods:universal-calibre"},
         "volumes": {"config": "/config", "books": "/books"},
+        "share_folders": {"books": "Books"},  # FEAT-06: may live on a share
         "credentials": {
             "user": "admin",
             "password": "admin123",
@@ -191,6 +197,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {"TZ": "UTC"},
         "volumes": {"config": "/kavita/config", "library": "/library"},
+        "share_folders": {"library": "Library"},  # FEAT-06: may live on a share
         "logo": "kavita",
     },
     {
@@ -203,6 +210,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": {"TZ": "UTC"},
         "volumes": {"config": "/config", "data": "/data"},
+        "share_folders": {"data": "Comics and books"},  # FEAT-06: may live on a share
         "logo": "komga",
     },
     {
@@ -262,6 +270,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
             "IMMICH_MACHINE_LEARNING_URL": "http://machine-learning:3003",
         },
         "volumes": {"library": "/data"},
+        "share_folders": {"library": "Photo library"},  # FEAT-06: may live on a share
         "stack_services": {
             "database": {
                 "image": "ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0",
@@ -298,6 +307,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
             "PHOTOPRISM_DATABASE_DRIVER": "sqlite",
         },
         "volumes": {"originals": "/photoprism/originals", "storage": "/photoprism/storage"},
+        "share_folders": {"originals": "Original photos"},  # FEAT-06: may live on a share
         "credentials": {"user": "admin", "password": "{{secret:admin_password}}"},
         "logo": "photoprism",
     },
@@ -314,6 +324,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_scheme": "https",
         "env": PUID,
         "volumes": {"config": "/config", "data": "/data"},
+        "share_folders": {"data": "Files"},  # FEAT-06: may live on a share
         "logo": "nextcloud",
     },
     {
@@ -327,6 +338,7 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "webui_path": "/",
         "env": PUID,
         "volumes": {"config": "/config", "data": "/data1"},
+        "share_folders": {"data": "Synced folders"},  # FEAT-06: may live on a share
         "logo": "syncthing",
     },
     {
@@ -1082,6 +1094,7 @@ MORE_APPS: list[dict[str, Any]] = [
         "env": {},
         "volume_owner": "1000:1000",
         "volumes": {"srv": "/srv", "database": "/database", "config": "/config"},
+        "share_folders": {"srv": "Files to browse"},  # FEAT-06: may live on a share
         "credentials": {"user": "admin", "note": "The first password is printed in the container log."},
         "logo": "filebrowser",
     },

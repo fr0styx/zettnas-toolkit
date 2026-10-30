@@ -35,6 +35,7 @@ class AppComposeRequest(BaseModel):
     env_overrides: dict[str, str] | None = None
     volume_overrides: dict[str, str] | None = None
     stack_services: dict[str, Any] | None = None
+    share_folders: dict[str, str] | None = None  # FEAT-06: {app folder: share name}
 
 
 class ContainerExecRequest(BaseModel):
@@ -173,7 +174,7 @@ async def get_docker_catalog_resolve(app_id: str):
 async def post_docker_catalog_compose(app_id: str, req: AppComposeRequest | None = None):
     if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
         raise HTTPException(status_code=400, detail="Invalid application ID")
-    from backend.services.app_catalog import generate_compose_for_app
+    from backend.services.app_catalog import generate_compose_for_app, get_catalog_app, share_folder_paths
 
     host_port = req.host_port if req else None
     storage_root = req.storage_root if req else "/mnt/user/appdata"
@@ -181,6 +182,12 @@ async def post_docker_catalog_compose(app_id: str, req: AppComposeRequest | None
     env_overrides = req.env_overrides if req else None
     volume_overrides = req.volume_overrides if req else None
     stack_services = req.stack_services if req else None
+    if req and req.share_folders:
+        picks = req.share_folders
+        on_shares, bad = await asyncio.to_thread(lambda: share_folder_paths(get_catalog_app(app_id) or {}, picks))
+        if bad:
+            raise HTTPException(status_code=400, detail=bad)
+        volume_overrides = {**(volume_overrides or {}), **on_shares}
     res = await asyncio.to_thread(
         generate_compose_for_app,
         app_id,
@@ -201,6 +208,7 @@ class AppDeployRequest(BaseModel):
     storage_root: str = "/mnt/user/appdata"
     container_name: str | None = None
     replace_existing: bool = False
+    share_folders: dict[str, str] | None = None  # FEAT-06: {app folder: share name}
 
 
 @router.get(
@@ -218,6 +226,29 @@ async def get_check_container_name(name: str):
     return {"name": clean_name, "exists": exists, "running": running}
 
 
+@router.get(
+    "/docker/catalog/{app_id}/share-folders",
+    dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
+)
+async def get_docker_catalog_share_folders(app_id: str):
+    """The app's folders that can live on a share (FEAT-06), and the shares to choose from."""
+    if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
+        raise HTTPException(status_code=400, detail="Invalid application ID")
+    from backend.services.app_catalog import get_catalog_app, share_folder_choices, share_mounts
+
+    app = await asyncio.to_thread(get_catalog_app, app_id)
+    if not app:
+        raise HTTPException(status_code=404, detail="App not found")
+    folders = share_folder_choices(app)
+    if not folders:
+        return {"folders": [], "shares": []}
+    try:
+        mounts = await asyncio.to_thread(share_mounts)
+    except (OSError, ValueError, RuntimeError, AttributeError):
+        mounts = {}
+    return {"folders": folders, "shares": [{"name": n, "path": p} for n, p in sorted(mounts.items())]}
+
+
 @router.post("/docker/catalog/{app_id}/deploy", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None = None):
     if not app_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", app_id):
@@ -231,6 +262,7 @@ async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None =
     storage_root = req.storage_root if req else "/mnt/user/appdata"
     container_name = req.container_name if req else None
     replace_existing = req.replace_existing if req else False
+    share_folders = req.share_folders if req else None
 
     def event_stream():
         if app_id == "ai-pack":  # AI-40: its own installer, with the preset this box gets
@@ -245,6 +277,7 @@ async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None =
             storage_root=storage_root,
             container_name=container_name,
             replace_existing=replace_existing,
+            share_folders=share_folders,
         ):
             yield json.dumps(event) + "\n"
 

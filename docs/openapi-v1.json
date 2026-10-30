@@ -469,6 +469,20 @@
       ],
       "title": "Host Port"
      },
+     "share_folders": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "type": "string"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Share Folders"
+     },
      "stack_services": {
       "anyOf": [
        {
@@ -532,6 +546,20 @@
       "default": false,
       "title": "Replace Existing",
       "type": "boolean"
+     },
+     "share_folders": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "type": "string"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Share Folders"
      },
      "storage_root": {
       "default": "/mnt/user/appdata",
@@ -47767,6 +47795,53 @@
      }
     },
     "summary": "Get Docker Catalog Resolve",
+    "tags": [
+     "Docker App Catalog"
+    ],
+    "x-required-scopes": [
+     "containers:read",
+     "containers:manage"
+    ]
+   }
+  },
+  "/api/v1/docker/catalog/{app_id}/share-folders": {
+   "get": {
+    "description": "The app's folders that can live on a share (FEAT-06), and the shares to choose from.",
+    "operationId": "get_docker_catalog_share_folders_api_v1_docker_catalog__app_id__share_folders_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "app_id",
+      "required": true,
+      "schema": {
+       "title": "App Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Get Docker Catalog Share Folders",
     "tags": [
      "Docker App Catalog"
     ],

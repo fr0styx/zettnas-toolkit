@@ -111,6 +111,12 @@ body.phone-shell .ai-chat-composer-row #ai-chat-input { flex: 1 0 100%; min-widt
 /* UX-18: the app install dialog (name and folder first, the rest under Advanced) */
 .adm-label { display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--fg); margin-bottom: 4px; }
 .adm-hint { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px; line-height: 1.4; }
+/* FEAT-06: an app folder on a share */
+.adm-share-folders { display: flex; flex-direction: column; gap: 6px; }
+.adm-share-folders[hidden] { display: none; }
+.adm-share-row { display: grid; grid-template-columns: minmax(120px, 40%) 1fr; gap: 8px; align-items: center; font-size: var(--zn-fs-xs); }
+.adm-share-select { width: 100%; box-sizing: border-box; font-size: var(--zn-fs-xs); padding: 5px 8px; }
+@media (max-width: 600px) { .adm-share-row { grid-template-columns: 1fr; gap: 4px; } }
 .adm-advanced > summary { cursor: pointer; font-size: var(--zn-fs-xs); color: var(--muted); padding: 4px 0; }
 .adm-advanced[open] > summary { color: var(--fg); }
 

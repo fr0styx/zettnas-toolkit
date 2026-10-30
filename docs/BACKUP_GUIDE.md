@@ -120,13 +120,16 @@ and deletions go everywhere), install one of these from the **App Catalog**:
 
 - **Syncthing**: peer to peer, no account and nothing in a cloud. Install it, open its page,
   and add the NAS as a device in Syncthing on the PC (Windows, macOS, Linux) or Android phone.
-  On the NAS, keep the synced folders under `/data1`: that is the app's own folder, which you
-  can open in Files under **App data → syncthing → data1**. A file changed on two devices
+  On the NAS, keep the synced folders under `/data1`. When you install it, **Keep on a share**
+  can put `/data1` on a share you already have (say "Family"), so the synced files sit next to
+  the rest and Files, SMB and the backups see them; otherwise it is the app's own folder, under
+  **App data → syncthing → data1** in Files. A file changed on two devices
   before they met is kept twice, as `name.sync-conflict-<date>-<device>.ext`. Turn on
   **File Versioning** for the folder in Syncthing so a deleted or overwritten file can be
   brought back.
 - **Nextcloud**: files plus calendars and contacts, with apps for iPhone and Android and a
   desktop client. Its client keeps a file changed on both sides as `name (conflicted copy).ext`.
+  Its files can go on a share the same way, with **Keep on a share** when you install it.
 
 Either way, keep the share in a snapshot schedule or a backup too: a sync passes a mistake on
 to every device.

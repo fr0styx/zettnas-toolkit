@@ -14,6 +14,7 @@ import { escapeHtml, copyTextToClipboard, reconcileKeyedTable, copyText } from '
 import { t } from '../../i18n.js';
 import { formatBytes as formatSize } from '../../format.js';
 import { setDeployButtonTone } from '../management.js';
+import { renderShareFolders, shareFolderPicks } from '../share-folder-picker.js';
 
 let _dockerContainersList = [];
 let _dockerFilter = 'all';
@@ -1238,6 +1239,7 @@ export async function openAppDeployModal(appId) {
               <input type="text" id="adm-storage-input" value="/mnt/user/appdata" class="tz-text-input" style="width:100%; box-sizing:border-box; font-size:var(--zn-fs-xs); padding:6px 8px;">
               <div class="adm-hint">${t('catalog.install_folder_hint', 'Settings and files the app keeps are stored in a folder of its own here.')}</div>
             </div>
+            <div id="adm-share-folders" class="adm-share-folders" hidden></div>
             <!-- UX-18: the technical part stays out of the way -->
             <details id="adm-advanced" class="adm-advanced">
               <summary>${t('catalog.install_advanced', 'Advanced: port and Docker Compose')}</summary>
@@ -1447,6 +1449,7 @@ export async function openAppDeployModal(appId) {
   const portInput = document.getElementById('adm-port-input');
   const storageInput = document.getElementById('adm-storage-input');
   const composePre = document.getElementById('adm-compose-pre');
+  const shareMount = document.getElementById('adm-share-folders');
   const title = document.getElementById('adm-title');
 
   if (existingBox) existingBox.style.display = 'none';
@@ -1749,6 +1752,7 @@ export async function openAppDeployModal(appId) {
         host_port: p,
         storage_root: s,
         container_name: cName,
+        share_folders: shareFolderPicks(shareMount),
       });
       composePre.textContent = comp.compose_yaml;
     } catch (err) {
@@ -1770,6 +1774,7 @@ export async function openAppDeployModal(appId) {
     portValidationTimer = setTimeout(validateEnteredPort, 250);
   };
   storageInput.oninput = updateComposePreview;
+  await renderShareFolders(shareMount, appId, updateComposePreview);
   await updateComposePreview();
 
   document.getElementById('adm-copy-btn').onclick = () => {
@@ -1989,6 +1994,7 @@ export async function openAppDeployModal(appId) {
           storage_root: s,
           container_name: cName,
           replace_existing: replaceExisting,
+          share_folders: shareFolderPicks(shareMount),
         },
       });
 

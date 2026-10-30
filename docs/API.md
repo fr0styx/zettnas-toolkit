@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-625 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+626 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -181,6 +181,7 @@ request and response schemas.
 | `POST` | `/api/v1/docker/catalog/{app_id}/compose` | `containers:manage` | Post Docker Catalog Compose |
 | `POST` | `/api/v1/docker/catalog/{app_id}/deploy` | `containers:manage` | Post Docker Catalog Deploy |
 | `GET` | `/api/v1/docker/catalog/{app_id}/resolve` | any of `containers:read`, `containers:manage` | Get Docker Catalog Resolve |
+| `GET` | `/api/v1/docker/catalog/{app_id}/share-folders` | any of `containers:read`, `containers:manage` | The app's folders that can live on a share (FEAT-06), and the shares to choose from |
 | `GET` | `/api/v1/docker/check_container_name` | any of `containers:read`, `containers:manage` | Get Check Container Name |
 
 ### Docker Containers & Stacks

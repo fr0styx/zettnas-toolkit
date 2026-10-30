@@ -671,7 +671,8 @@ def get_catalog_app(app_id: str) -> dict[str, Any] | None:
             # the listing leaves out starter files (seed_files); the install needs them
             full = next((b for b in CURATED_APP_CATALOG if b["id"] == app_id), {})
             # built-in apps install the exact image that shipped with this version
-            return pin_app({**app, "seed_files": full.get("seed_files") or {}})
+            extra = {"seed_files": full.get("seed_files") or {}, "share_folders": full.get("share_folders") or {}}
+            return pin_app({**app, **extra})
     return None
 
 
@@ -1069,6 +1070,68 @@ def media_library_bind(app: dict[str, Any]) -> str | None:
     return None
 
 
+def share_folder_choices(app: dict[str, Any]) -> list[dict[str, str]]:
+    """The app's folders that may live on a share instead of its own folder (FEAT-06).
+
+    Only built-in templates name them; a community template can't ask for a share."""
+    if app.get("source_id", "builtin") != "builtin":
+        return []
+    vols = app.get("volumes") or {}
+    return [
+        {"key": k, "label": str(label), "target": str(vols[k])}
+        for k, label in (app.get("share_folders") or {}).items()
+        if k in vols
+    ]
+
+
+def share_mounts() -> dict[str, str]:
+    """{share name: its folder} for the shares this server has."""
+    from backend.hardware.pal_storage import get_storage_platform
+
+    out: dict[str, str] = {}
+    for sh in get_storage_platform().list_shares():
+        mp = str(getattr(sh, "mountpoint", "") or "")
+        if getattr(sh, "name", "") and mp and os.path.isdir(mp):
+            out[str(sh.name)] = mp
+    return out
+
+
+def share_folder_paths(app: dict[str, Any], picks: dict[str, str] | None) -> tuple[dict[str, str], str | None]:
+    """{app folder: share folder} for the shares picked at install, or why a pick can't be used."""
+    picks = {str(k): str(v) for k, v in (picks or {}).items() if v}
+    if not picks:
+        return {}, None
+    allowed = {c["key"] for c in share_folder_choices(app)}
+    wrong = sorted(set(picks) - allowed)
+    if wrong:
+        return {}, f"{app.get('name') or 'This app'} can't keep {', '.join(wrong)} on a share."
+    try:
+        mounts = share_mounts()
+    except (OSError, ValueError, RuntimeError, AttributeError) as e:
+        return {}, f"The shares couldn't be listed: {e}"
+    missing = sorted({v for v in picks.values() if v not in mounts})
+    if missing:
+        return {}, f"There is no share called {', '.join(missing)} on this server."
+    return {k: mounts[v] for k, v in picks.items()}, None
+
+
+def app_binds(app: dict[str, Any], app_dir: str, on_shares: dict[str, str]) -> list[str]:
+    """Binds for the app's folders: a share picked at install, the media share, or its own folder."""
+    library = media_library_bind(app)
+    binds = []
+    for vol_key, vol_target in (app.get("volumes") or {}).items():
+        is_library = vol_target == app.get("media_library")
+        if vol_key in on_shares:
+            binds.append(f"{on_shares[vol_key]}:{vol_target}:{'ro' if is_library else 'rw'}")
+        elif library and is_library:
+            binds.append(library)  # the existing media share, read-only
+        else:
+            path = os.path.join(app_dir, vol_key)
+            os.makedirs(path, exist_ok=True)
+            binds.append(f"{path}:{vol_target}:rw")
+    return binds
+
+
 def _write_seed_files(app: dict[str, Any], app_dir: str) -> None:
     """Writes a template's starter files (e.g. a Caddyfile) once; never overwrites the user's."""
     seeds = {**(app.get("seed_files") or {})}
@@ -1097,6 +1160,8 @@ def _own_volumes(app: dict[str, Any], app_dir: str) -> None:
     uid, gid = int(m.group(1)), int(m.group(2))
     for vol_key in app.get("volumes") or {}:
         path = os.path.join(app_dir, vol_key)
+        if not os.path.isdir(path):
+            continue  # on a share or the media library: never re-owned
         try:
             os.chown(path, uid, gid)
             for rel in (app.get("seed_files") or {}).get(vol_key, {}):
@@ -1257,6 +1322,7 @@ def stream_deploy_catalog_app(
     storage_root: str = "/mnt/user/appdata",
     container_name: str | None = None,
     replace_existing: bool = False,
+    share_folders: dict[str, str] | None = None,
 ) -> Iterator[dict[str, Any]]:
     """
     Deploys a curated application stack from the catalog, streaming real-time progress
@@ -1302,6 +1368,10 @@ def stream_deploy_catalog_app(
         resolved_root = os.environ.get("DATA_DIR", "/tmp/zettnas-appdata")
         os.makedirs(resolved_root, exist_ok=True)
 
+    on_shares, bad_share = share_folder_paths(app, share_folders)
+    if bad_share:
+        yield {"step": "error", "percent": 0, "message": bad_share, "error": "Share not available", "done": True}
+        return
     unsafe = _unsafe_volumes(app)
     if unsafe:
         yield {
@@ -1317,19 +1387,12 @@ def stream_deploy_catalog_app(
     binds = []
     try:
         os.makedirs(app_dir, exist_ok=True)
-        library = media_library_bind(app)
-        for vol_key, vol_target in app.get("volumes", {}).items():
-            if library and vol_target == app.get("media_library"):
-                binds.append(library)  # the existing media share, read-only
-                continue
-            vol_host_path = os.path.join(app_dir, vol_key)
-            os.makedirs(vol_host_path, exist_ok=True)
-            binds.append(f"{vol_host_path}:{vol_target}:rw")
+        binds = app_binds(app, app_dir, on_shares)
         _write_seed_files(app, app_dir)
         _own_volumes(app, app_dir)
 
         comp_info = generate_compose_for_app(
-            app_id, host_port=port, storage_root=resolved_root, container_name=service_name
+            app_id, port, resolved_root, service_name, volume_overrides=on_shares or None
         )
         if "compose_yaml" in comp_info:
             compose_file = os.path.join(app_dir, "docker-compose.yml")

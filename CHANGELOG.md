@@ -35,6 +35,13 @@
 
 #### Usability
 
+- **Put an app's files on a share when you install it**: the install dialog now has **Keep on a
+  share** for the folders an app keeps your files in, such as Syncthing's synced folders,
+  Nextcloud's files, Navidrome's music, Jellyfin's or Plex's media and Immich's or PhotoPrism's
+  photos. Pick a share and the app works on it directly, so the files sit with the rest, show in
+  Files and SMB and are in the backups; they stay there if the app is removed. Settings and
+  caches stay in the app's own folder, a share is never re-owned for the app, Jellyfin's media
+  library is mounted read-only, and only built-in apps can ask for a share (FEAT-06).
 - **Filter the kids' devices**: with AdGuard Home from the App Catalog answering your network's
   DNS, Users -> Filter the kids' devices gives a family account's phones and tablets parental
   control, safe search and safe browsing, and blocks the services you pick (TikTok, YouTube,
