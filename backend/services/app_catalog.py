@@ -1416,11 +1416,6 @@ def stream_deploy_catalog_app(
         "done": False,
     }
 
-    app_dir, root_problem = app_dir_for(storage_root, storage_slug)
-    if root_problem:
-        yield {"step": "error", "percent": 0, "message": root_problem, "error": "Unsafe folder", "done": True}
-        return
-
     on_shares, bad_share = share_folder_paths(app, share_folders)
     if bad_share:
         yield {"step": "error", "percent": 0, "message": bad_share, "error": "Share not available", "done": True}
@@ -1436,6 +1431,11 @@ def stream_deploy_catalog_app(
         }
         return
 
+    # the folder is made only after the share and the template were found fine
+    app_dir, root_problem = app_dir_for(storage_root, storage_slug)
+    if root_problem:
+        yield {"step": "error", "percent": 0, "message": root_problem, "error": "Unsafe folder", "done": True}
+        return
     binds = []
     try:
         os.makedirs(app_dir, exist_ok=True)
