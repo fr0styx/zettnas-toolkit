@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.auth import require_scope
 from backend.config import logger
@@ -209,6 +209,7 @@ class AppDeployRequest(BaseModel):
     container_name: str | None = None
     replace_existing: bool = False
     share_folders: dict[str, str] | None = None  # FEAT-06: {app folder: share name}
+    host: str | None = Field(default=None, max_length=255)  # where the browser reaches the server (COMP-15)
 
 
 @router.get(
@@ -263,6 +264,7 @@ async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None =
     container_name = req.container_name if req else None
     replace_existing = req.replace_existing if req else False
     share_folders = req.share_folders if req else None
+    browser_host = (req.host or "") if req else ""
 
     def event_stream():
         if app_id == "ai-pack":  # AI-40: its own installer, with the preset this box gets
@@ -278,6 +280,7 @@ async def post_docker_catalog_deploy(app_id: str, req: AppDeployRequest | None =
             container_name=container_name,
             replace_existing=replace_existing,
             share_folders=share_folders,
+            browser_host=browser_host,
         ):
             yield json.dumps(event) + "\n"
 

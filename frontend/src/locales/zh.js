@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "catalog.setup_unfinished": "已安装，但部分设置未完成：{steps}。请打开该应用完成设置。",
   "ef.title": "加密文件夹",
   "ef.desc": "共享中的一个文件夹，其中的文件以加密形式保存。用密码打开后即可在文件、WebDAV 和 SFTP 中使用；SMB、快照和备份始终只能看到加密后的文件。",
   "ef.open": "已打开",

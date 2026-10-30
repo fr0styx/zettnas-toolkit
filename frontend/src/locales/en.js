@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "catalog.setup_unfinished": "Installed, but some set-up did not finish: {steps}. Open the app to finish it.",
   "ef.title": "Encrypted folders",
   "ef.desc": "A folder inside a share whose files are stored encrypted. Open it with its password to use it in Files, WebDAV and SFTP; SMB, snapshots and backups only ever see the encrypted files.",
   "ef.open": "Open",

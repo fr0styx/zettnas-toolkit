@@ -44,6 +44,13 @@
 
 #### Usability
 
+- **An office suite in the App Catalog**: "Office suite (Nextcloud + Collabora)" installs
+  Nextcloud with Collabora's built-in office server, so documents, spreadsheets and
+  presentations open and are edited in the browser, by several people at once. The family signs
+  in with their ZettNAS accounts: Nextcloud asks ZettNAS's WebDAV to check each password. ZettNAS
+  finishes the set-up itself after the app starts (Nextcloud's address, the sign-in, the office
+  server, a large download), and names any step that didn't finish. Built-in apps can now
+  carry such steps; community templates can't (COMP-15).
 - **Put an app's files on a share when you install it**: the install dialog now has **Keep on a
   share** for the folders an app keeps your files in, such as Syncthing's synced folders,
   Nextcloud's files, Navidrome's music, Jellyfin's or Plex's media and Immich's or PhotoPrism's

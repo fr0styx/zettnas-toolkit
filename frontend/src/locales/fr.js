@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "catalog.setup_unfinished": "Installée, mais une partie de la configuration n'a pas abouti : {steps}. Ouvrez l'application pour la terminer.",
   "ef.title": "Dossiers chiffrés",
   "ef.desc": "Un dossier dans un partage dont les fichiers sont stockés chiffrés. Ouvrez-le avec son mot de passe pour l'utiliser dans Fichiers, WebDAV et SFTP ; SMB, les instantanés et les sauvegardes ne voient jamais que les fichiers chiffrés.",
   "ef.open": "Ouvert",

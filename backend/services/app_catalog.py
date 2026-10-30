@@ -1316,6 +1316,26 @@ def _deploy_companions(
     yield {"network": network}
 
 
+def _port_bindings(app: dict[str, Any], port: int) -> tuple[dict[str, Any], dict[str, list[dict[str, str]]]]:
+    """ExposedPorts and PortBindings for the main container; the app's main port goes to `port`."""
+    port_bindings: dict[str, list[dict[str, str]]] = {}
+    exposed_ports: dict[str, Any] = {}
+    default_target = int(app.get("default_port", 8080))
+    for p_str in app.get("ports") or []:
+        m = re.match(r"^(\d+):(\d+)(?:/([a-zA-Z0-9]+))?$", str(p_str).strip())
+        if m:
+            hp, cp, proto = int(m.group(1)), int(m.group(2)), m.group(3) or "tcp"
+            final_hp = port if (hp == default_target or cp == default_target) else hp
+            key = f"{cp}/{proto}"
+            exposed_ports[key] = {}
+            port_bindings.setdefault(key, []).append({"HostIp": "", "HostPort": str(final_hp)})
+    if not port_bindings:
+        p_key = f"{default_target}/tcp"
+        exposed_ports[p_key] = {}
+        port_bindings[p_key] = [{"HostIp": "", "HostPort": str(port)}]
+    return exposed_ports, port_bindings
+
+
 def stream_deploy_catalog_app(
     app_id: str,
     host_port: int | None = None,
@@ -1323,6 +1343,7 @@ def stream_deploy_catalog_app(
     container_name: str | None = None,
     replace_existing: bool = False,
     share_folders: dict[str, str] | None = None,
+    browser_host: str = "",
 ) -> Iterator[dict[str, Any]]:
     """
     Deploys a curated application stack from the catalog, streaming real-time progress
@@ -1650,28 +1671,7 @@ def stream_deploy_catalog_app(
     env_list = [f"{k}={_fill_secrets(str(v), secrets_map)}" for k, v in app.get("env", {}).items()]
     _save_stack_secrets(app_dir, secrets_map)
 
-    # Build ExposedPorts and PortBindings
-    port_bindings = {}
-    exposed_ports = {}
-    raw_ports = app.get("ports")
-    default_target = int(app.get("default_port", 8080))
-    if raw_ports and isinstance(raw_ports, list):
-        for p_str in raw_ports:
-            m = re.match(r"^(\d+):(\d+)(?:/([a-zA-Z0-9]+))?$", str(p_str).strip())
-            if m:
-                hp = int(m.group(1))
-                cp = int(m.group(2))
-                proto = m.group(3) or "tcp"
-                final_hp = port if (hp == default_target or cp == default_target) else hp
-                key = f"{cp}/{proto}"
-                exposed_ports[key] = {}
-                if key not in port_bindings:
-                    port_bindings[key] = []
-                port_bindings[key].append({"HostIp": "", "HostPort": str(final_hp)})
-    if not port_bindings:
-        p_key = f"{default_target}/tcp"
-        exposed_ports[p_key] = {}
-        port_bindings[p_key] = [{"HostIp": "", "HostPort": str(port)}]
+    exposed_ports, port_bindings = _port_bindings(app, port)
 
     create_body = {
         "Image": image_name,
@@ -1765,6 +1765,9 @@ def stream_deploy_catalog_app(
     except Exception:
         ignored("backend.services.app_catalog.stream_deploy_catalog_app")
 
+    from backend.services import app_after_start  # set-up inside the app once it runs (COMP-15)
+
+    unfinished = yield from app_after_start.run_steps(app, service_name, secrets_map, browser_host, port)
     webui_url = f"{app.get('webui_scheme', 'http')}://[HOST]:{port}{(app.get('webui_path') or '/')}"
     credentials = None
     if isinstance(app.get("credentials"), dict):
@@ -1782,5 +1785,6 @@ def stream_deploy_catalog_app(
         "credentials": credentials,
         "has_webui": app.get("webui_path", "/") is not None,
         "is_running": is_running,
+        "setup_unfinished": unfinished,
         "done": True,
     }

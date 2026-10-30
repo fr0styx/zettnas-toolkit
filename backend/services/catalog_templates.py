@@ -327,6 +327,115 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "share_folders": {"data": "Files"},  # FEAT-06: may live on a share
         "logo": "nextcloud",
     },
+    # COMP-15: documents, spreadsheets and slides in the browser, signed in with ZettNAS accounts
+    {
+        "id": "office-suite",
+        "name": "Office suite (Nextcloud + Collabora)",
+        "category": "cloud",
+        "description": (
+            "Write documents, spreadsheets and presentations in the browser, together. Nextcloud with "
+            "Collabora's built-in office server; the family signs in with their ZettNAS accounts."
+        ),
+        "image": "nextcloud:apache",
+        "default_port": 8093,
+        "ports": ["8093:80"],
+        "webui_path": "/",
+        "env": {
+            "SQLITE_DATABASE": "nextcloud",
+            "NEXTCLOUD_ADMIN_USER": "admin",
+            "NEXTCLOUD_ADMIN_PASSWORD": "{{secret:admin_password}}",
+            "NEXTCLOUD_TRUSTED_DOMAINS": "localhost",
+        },
+        "volumes": {"html": "/var/www/html"},
+        # its sign-in asks ZettNAS's WebDAV by name, on ZettNAS's own network
+        "join_zettnas_network": True,
+        "after_start": [
+            {
+                "label": "Waiting for Nextcloud to finish installing",
+                "cmd": ["php", "/var/www/html/occ", "status", "--output=json"],
+                "user": "www-data",
+                "expect": '"installed":true',
+                "tries": 72,
+                "every": 5,
+            },
+            {
+                "label": "Opening it to this address",
+                "cmd": ["php", "/var/www/html/occ", "config:system:set", "trusted_domains", "1", "--value={{host}}"],
+                "user": "www-data",
+            },
+            {
+                "label": "Setting its address",
+                "cmd": [
+                    "php",
+                    "/var/www/html/occ",
+                    "config:system:set",
+                    "overwrite.cli.url",
+                    "--value=http://{{host}}:{{port}}",
+                ],
+                "user": "www-data",
+            },
+            {
+                "label": "Signing in with ZettNAS accounts",
+                "cmd": ["php", "/var/www/html/occ", "app:install", "user_external"],
+                "user": "www-data",
+                "tries": 3,
+                "every": 10,
+                "timeout": 300,
+            },
+            {
+                "label": "Asking ZettNAS to check passwords",
+                "cmd": [
+                    "php",
+                    "/var/www/html/occ",
+                    "config:system:set",
+                    "user_backends",
+                    "0",
+                    "class",
+                    "--value=OCA\\UserExternal\\BasicAuth",
+                ],
+                "user": "www-data",
+            },
+            {
+                "label": "Pointing it at ZettNAS",
+                "cmd": [
+                    "php",
+                    "/var/www/html/occ",
+                    "config:system:set",
+                    "user_backends",
+                    "0",
+                    "arguments",
+                    "0",
+                    "--value=http://{{zettnas}}:8084/",
+                ],
+                "user": "www-data",
+            },
+            {
+                "label": "Installing the office server (a large download)",
+                "cmd": ["php", "/var/www/html/occ", "app:install", "richdocumentscode{{arch}}"],
+                "user": "www-data",
+                "tries": 2,
+                "every": 30,
+                "timeout": 1200,
+            },
+            {
+                "label": "Turning on documents in the browser",
+                "cmd": ["php", "/var/www/html/occ", "app:install", "richdocuments"],
+                "user": "www-data",
+                "tries": 2,
+                "every": 10,
+                "timeout": 300,
+            },
+            {
+                "label": "Connecting the office server",
+                "cmd": ["php", "/var/www/html/occ", "richdocuments:activate-config"],
+                "user": "www-data",
+                "tries": 6,
+                "every": 10,
+            },
+        ],
+        "credentials": {"user": "admin", "password": "{{secret:admin_password}}"},
+        "logo": "nextcloud",
+    },
     {
         "id": "syncthing",
         "name": "Syncthing",

@@ -73,6 +73,7 @@
   "mariadb:lts": "sha256:99c125f103f5d081ebbc9ffe064e63daf7f688ac33a5f7f29af2d7260a96debf",
   "miniflux/miniflux:latest": "sha256:72e49f513a63104506aab98ba8cfc3a409d4fde23550a583dec07ec941f1e94e",
   "neosmemo/memos:stable": "sha256:24c2707ddd8fbd2ceaa7a61ecab86a53cdcde640b24ce572b73da14b00b5785f",
+  "nextcloud:apache": "sha256:e0b1a2af52c82c07b7a0e8e59878bd8769e704447734d5d238a836982f51b9c8",
   "nginx:stable-alpine": "sha256:47928bf67eb62a1863cb08d9ecb52d3e704304ba614eaee17884204677702951",
   "nodered/node-red:latest": "sha256:e085d4a06591fd0aca2ea2a91364d27f1a0e31e885675f77935e10f95412a963",
   "ollama/ollama:latest": "sha256:dea72d1e22270fe095b68fdf756d2b489d615643c5a2eaebbc5f569181e322d8",

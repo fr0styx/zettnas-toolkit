@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "catalog.setup_unfinished": "Installiert, aber ein Teil der Einrichtung ist nicht fertig geworden: {steps}. Öffnen Sie die App, um sie abzuschließen.",
   "ef.title": "Verschlüsselte Ordner",
   "ef.desc": "Ein Ordner in einer Freigabe, dessen Dateien verschlüsselt gespeichert werden. Öffnen Sie ihn mit seinem Passwort, um ihn in Dateien, WebDAV und SFTP zu nutzen; SMB, Snapshots und Sicherungen sehen immer nur die verschlüsselten Dateien.",
   "ef.open": "Geöffnet",

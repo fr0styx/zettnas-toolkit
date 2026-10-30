@@ -2494,6 +2494,7 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "catalog.setup_unfinished": "Instalada, pero parte de la configuración no terminó: {steps}. Abre la aplicación para terminarla.",
   "ef.title": "Carpetas cifradas",
   "ef.desc": "Una carpeta dentro de una carpeta compartida cuyos archivos se guardan cifrados. Ábrela con su contraseña para usarla en Archivos, WebDAV y SFTP; SMB, las instantáneas y las copias de seguridad solo ven los archivos cifrados.",
   "ef.open": "Abierta",

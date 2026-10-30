@@ -1858,6 +1858,9 @@ export async function openAppDeployModal(appId) {
         webuiBtn.style.display = data.has_webui === false ? 'none' : '';
       }
       showDeployCredentials(successBox, data, `${window.location.hostname}:${data.port || suggestedPort}`);
+      if (data.setup_unfinished && data.setup_unfinished.length) {
+        showToast(t('catalog.setup_unfinished', 'Installed, but some set-up did not finish: {steps}. Open the app to finish it.', { steps: data.setup_unfinished.join(', ') }), 'warn');
+      }
 
       if (closeBtn) {
         closeBtn.disabled = false;
@@ -1995,6 +1998,7 @@ export async function openAppDeployModal(appId) {
           container_name: cName,
           replace_existing: replaceExisting,
           share_folders: shareFolderPicks(shareMount),
+          host: window.location.hostname, // apps that set up their own address (COMP-15)
         },
       });
 

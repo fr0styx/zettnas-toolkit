@@ -531,6 +531,18 @@
       ],
       "title": "Container Name"
      },
+     "host": {
+      "anyOf": [
+       {
+        "maxLength": 255,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Host"
+     },
      "host_port": {
       "anyOf": [
        {
