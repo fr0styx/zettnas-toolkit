@@ -50,7 +50,6 @@ import { initGettingStarted } from './components/getting-started.js';
 import { initRouter } from './router.js';
 import { initInviteLanding } from './components/invites.js';
 import { initPhoneShell } from './components/phone-shell.js';
-import { forDesktopUser } from './load-when.js';
 import './file-preview-loader.js'; // window.openFilePreviewModal before the viewer loads
 import { installWindowFocus } from './window-focus.js';
 import { installStaleBuildGuard, watchServerBuild } from './stale-build.js';
@@ -260,6 +259,12 @@ export function startSSE() {
       startSSE();
     }, delay);
   };
+}
+
+/** forDesktopUser from load-when.js, loaded when first needed: it is only used once the page has
+ *  settled, so it stays out of the first load (FE-01 budget). */
+function forDesktopUser(fn, doc, flags) {
+  return import('./load-when.js').then((m) => m.forDesktopUser(fn, doc, flags));
 }
 
 /** The pages that never fetch the desktop's windows ahead of use (NPERF-5). */
