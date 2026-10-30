@@ -34,6 +34,14 @@ LABEL net.unraid.docker.webui="http://[IP]:[PORT:8082]/"
 LABEL net.unraid.docker.icon="https://raw.githubusercontent.com/fr0styx/zettnas-toolkit/main/static/img/icon.png"
 LABEL net.unraid.docker.shell="bash"
 
+# Package docs, man pages and translations are never read in the container: leave them out of
+# every apt install below (licence files stay), which keeps the image inside its budget (PERF-29)
+RUN printf '%s\n' \
+    'path-exclude=/usr/share/doc/*' 'path-include=/usr/share/doc/*/copyright' \
+    'path-exclude=/usr/share/man/*' 'path-exclude=/usr/share/info/*' \
+    'path-exclude=/usr/share/locale/*' 'path-include=/usr/share/locale/locale.alias' \
+    > /etc/dpkg/dpkg.cfg.d/01-zettnas-nodoc
+
 # Core: disks, SMART, UPS, USB, cloud remotes (OPS-11), btrfs and software RAID (REL-4, D2), XFS project quotas (FEAT-10)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     smartmontools \
