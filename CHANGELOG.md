@@ -100,6 +100,9 @@
   hot is reported in that language on phones, e-mail and the other channels, with the drive's
   verdict and reason translated too. The Activity log shows those entries in the language of
   whoever reads it (NUX-3, first part).
+- **More alerts in the family's language**: a backup that finished or failed, a fan that stopped,
+  a processor that runs warm or too hot, and the UPS asking for the NAS to be shut down by hand
+  are written in the language chosen under "Write alerts in" too (NUX-3).
 
 - **A drive's own temperature limit**: next to its purchase and warranty details, a drive can have
   the temperature above which it counts as warm (30–90 °C; too hot is 10 °C more). Its "runs warm"

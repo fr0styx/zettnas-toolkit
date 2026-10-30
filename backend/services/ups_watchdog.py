@@ -416,11 +416,16 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         "The UPS outlets were NOT switched off. Shut the NAS down by hand now to avoid a hard power loss."
     )
     logger.critical(f"[UPS FAILSAFE] {msg}")
-    add_event("critical", "UPS: shut the NAS down by hand", msg)
+    from backend.services.notifications import alert_text
+
+    text = alert_text("ups_manual")
+    add_event("critical", "UPS: shut the NAS down by hand", msg, details=text)
     try:
         from backend.services.notifications import send_notification
 
-        send_notification(title="UPS: shut the NAS down by hand", message=msg, level="critical", event_type="ups")
+        send_notification(
+            title="UPS: shut the NAS down by hand", message=msg, level="critical", event_type="ups", text=text
+        )
     except Exception:
         logger.debug("ups_watchdog: notification failed", exc_info=True)
 

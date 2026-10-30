@@ -75,6 +75,12 @@ logger = logging.getLogger("ZettNAS")
 _notify_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="zett_notify")
 
 
+def _text(name: str, **params) -> dict:
+    """The message keys of alert.<name> with its values: the alert in the household's language and
+    the activity-log entry in the reader's (NUX-3)."""
+    return {"title_key": f"alert.{name}.title", "msg_key": f"alert.{name}.msg", "params": params}
+
+
 def _async_notify(**kwargs):
     """Dispatches notifications on a worker thread so slow webhooks never stall PWM fan loop updates."""
     try:
@@ -128,7 +134,11 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             "error",
             "Fan Stall Detected",
             f"One or more cooling fans have stalled (0 RPM): channels {stalled_names}.",
-            details={"fans": fans, "stalled_channels": stalled_names},
+            details={
+                "fans": fans,
+                "stalled_channels": stalled_names,
+                **_text("fan_stall", fans=", ".join(stalled_names)),
+            },
         )
         _async_notify(
             title="ZettNAS Alert: Fan Stall Detected",
@@ -136,6 +146,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             level="critical",
             event_type="fan",
             dedup_key="fan_stall",
+            text=_text("fan_stall", fans=", ".join(stalled_names)),
         )
 
     if temp_known and cpu_temp >= cpu_crit_threshold:
@@ -143,7 +154,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             "error",
             "CPU Thermal Critical",
             f"CPU temperature reached {cpu_temp}°C. Hardware throttling active.",
-            details={"cpu_temp": cpu_temp},
+            details={"cpu_temp": cpu_temp, **_text("cpu_hot.crit", temp=cpu_temp)},
         )
         _async_notify(
             title="ZettNAS Alert: CPU Thermal Critical",
@@ -151,13 +162,14 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             level="critical",
             event_type="temp",
             dedup_key="cpu_temp_crit",
+            text=_text("cpu_hot.crit", temp=cpu_temp),
         )
     elif temp_known and cpu_temp >= cpu_warn_threshold:
         add_event(
             "warning",
             "CPU Thermal Warning",
             f"CPU temperature is elevated ({cpu_temp}°C).",
-            details={"cpu_temp": cpu_temp},
+            details={"cpu_temp": cpu_temp, **_text("cpu_hot.warn", temp=cpu_temp)},
         )
         _async_notify(
             title="ZettNAS Warning: CPU Thermal Elevated",
@@ -165,6 +177,7 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
             level="warning",
             event_type="temp",
             dedup_key="cpu_temp_warn",
+            text=_text("cpu_hot.warn", temp=cpu_temp),
         )
 
     # Drives: a temperature alert once per crossing; their condition is alerted by Drive Health

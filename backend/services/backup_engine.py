@@ -728,6 +728,34 @@ def _dump_databases(pal: Any, pool_id: str, subvol: str) -> list[dict[str, Any]]
         return []
 
 
+def _backup_notice(
+    job: dict, job_id: str, pool_id: Any, dest: str = "", snapshot: str | None = "", error: str = ""
+) -> dict:
+    """The alert for a finished or failed backup job, with its message keys so it is written in
+    the household's language (NUX-3)."""
+    from backend.services.notifications import alert_text
+
+    name = job.get("name", job_id)
+    if error:
+        return {
+            "type": "backup",
+            "title": f"Backup failed: {name}",
+            "message": f"Backup job '{name}' failed: {error}",
+            "level": "error",
+            "meta": {"job_id": job_id, "error": error, "pool": pool_id},
+            "text": alert_text("backup_failed", name=name, error=error),
+        }
+    return {
+        "type": "backup",
+        "title": f"Backup succeeded: {name}",
+        "message": f"Backup job '{name}' completed successfully{dest}."
+        + (f" Snapshot: {snapshot}" if snapshot else ""),
+        "level": "info",
+        "meta": {"job_id": job_id, "snapshot": snapshot, "pool": pool_id},
+        "text": alert_text("backup_ok", name=name),
+    }
+
+
 def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
     job_id = str(job.get("id"))
 
@@ -901,16 +929,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                 from backend.services.notifications import send_notification
 
                 dest_desc = f" -> {dest_target}" if (dest_type == "remote" and remote_name) else ""
-                send_notification(
-                    {
-                        "type": "backup",
-                        "title": f"Backup succeeded: {job.get('name', job_id)}",
-                        "message": f"Backup job '{job.get('name', job_id)}' completed successfully{dest_desc}."
-                        + (f" Snapshot: {snap_name}" if snap_name else ""),
-                        "level": "info",
-                        "meta": {"job_id": job_id, "snapshot": snap_name, "pool": pool_id},
-                    }
-                )
+                send_notification(_backup_notice(job, job_id, pool_id, dest=dest_desc, snapshot=snap_name))
             except Exception as notify_err:
                 logger.debug(f"[HYPER-BACKUP] Notification dispatch error: {notify_err}")
 
@@ -932,15 +951,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
             try:
                 from backend.services.notifications import send_notification
 
-                send_notification(
-                    {
-                        "type": "backup",
-                        "title": f"Backup failed: {job.get('name', job_id)}",
-                        "message": f"Backup job '{job.get('name', job_id)}' failed: {str(e)}",
-                        "level": "error",
-                        "meta": {"job_id": job_id, "error": str(e), "pool": pool_id},
-                    }
-                )
+                send_notification(_backup_notice(job, job_id, pool_id, error=str(e)))
             except Exception as notify_err:
                 logger.debug(f"[HYPER-BACKUP] Failure notification dispatch error: {notify_err}")
 

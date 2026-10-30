@@ -119,6 +119,27 @@ _LEVEL_RANK = {"info": 0, "normal": 0, "warning": 1, "warn": 1, "critical": 2, "
 _alert_history: dict[str, dict[str, Any]] = {}
 
 
+def alert_text(alert: str, **params: Any) -> dict[str, Any]:
+    """The message keys of alert.<name> (.title and .msg) with their values, for send_notification's
+    `text` and an activity-log entry's details (NUX-3)."""
+    return {"title_key": f"alert.{alert}.title", "msg_key": f"alert.{alert}.msg", "params": params}
+
+
+def in_household_language(title: str, message: str, text: dict[str, Any]) -> tuple[str, str]:
+    """title and message in alert_language(), from text's keys; unchanged in English."""
+    lang = alert_language()
+    if lang == "en":
+        return title, message
+    from backend import i18n
+
+    params = text.get("params") or {}
+    if text.get("title_key"):
+        title = i18n.text(str(text["title_key"]), title, params, lang)
+    if text.get("msg_key"):
+        message = i18n.text(str(text["msg_key"]), message, params, lang)
+    return title, message
+
+
 def alert_language() -> str:
     """The language the household's alerts are written in (NUX-3): English unless set."""
     from backend.i18n import LANGS
@@ -404,10 +425,13 @@ def send_notification(
     level: str = "normal",
     event_type: str = "general",
     dedup_key: str = "",
+    text: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Dispatch a notification to all configured channels with rate limiting and deduplication.
     Supports either positional args (title, message, level) or a single dictionary payload.
+    `text` ({title_key, msg_key, params}) writes it in the household's language (NUX-3); the
+    English title and message are used as they are when that language is English.
     """
     if isinstance(title, dict):
         d = title
@@ -416,6 +440,9 @@ def send_notification(
         level = str(d.get("level", "normal"))
         event_type = str(d.get("event_type", d.get("type", "general")))
         dedup_key = str(d.get("dedup_key", ""))
+        text = d.get("text") if isinstance(d.get("text"), dict) else None
+    if text:
+        title, message = in_household_language(str(title), str(message), text)
 
     cfg = load_notification_config()
     # Phones with the app installed get alerts even if no other channel is set up (M1)
