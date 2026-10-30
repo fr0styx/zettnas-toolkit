@@ -430,6 +430,11 @@
 
 #### Performance
 
+- **Phones and the sign-in screen load less**: Mission Control, the File Explorer, the settings
+  drawer and the users code are fetched ahead of use only for someone signed in at the desktop.
+  The sign-in screen, the phone layout, the front screen and a VM console page no longer download
+  about 250 kB they don't show; any window still opens at once when asked for (NPERF-5).
+
 - **A slow disk no longer freezes the whole app**: checking someone's rights to a path, the File
   Explorer's activity log, joining a chunked upload, signing in through a proxy and compressing a
   big answer now run beside the app's main loop instead of on it, so one folder on a disk that is

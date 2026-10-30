@@ -50,6 +50,7 @@ import { initGettingStarted } from './components/getting-started.js';
 import { initRouter } from './router.js';
 import { initInviteLanding } from './components/invites.js';
 import { initPhoneShell } from './components/phone-shell.js';
+import { forDesktopUser } from './load-when.js';
 import './file-preview-loader.js'; // window.openFilePreviewModal before the viewer loads
 import { installWindowFocus } from './window-focus.js';
 import { installStaleBuildGuard, watchServerBuild } from './stale-build.js';
@@ -103,7 +104,9 @@ function loadLater() {
     };
     btn.addEventListener('click', early, true);
   }
-  const later = (fn) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 800));
+  const idle = (fn) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 800));
+  // only for someone signed in at the desktop: not on the sign-in screen or a phone (NPERF-5)
+  const later = (fn) => idle(() => forDesktopUser(fn, document, desktopFlags()));
   later(() => {
     loadUsers();
     loadSettings();
@@ -259,6 +262,11 @@ export function startSSE() {
   };
 }
 
+/** The pages that never fetch the desktop's windows ahead of use (NPERF-5). */
+function desktopFlags() {
+  return { lcd: state.isLcdDirect, console: state.isVmConsoleDirect };
+}
+
 /** Runs fn once the page has settled: after ~3 s, when the browser is idle. */
 function idleLoad(fn) {
   const run = () => fn();
@@ -381,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
       managementReady = true;
     });
   });
-  idleLoad(() => ensureManagement().then(() => { managementReady = true; }, () => {}));
+  idleLoad(() => forDesktopUser(() => ensureManagement().then(() => { managementReady = true; }, () => {}), document, desktopFlags()));
   initCommandPalette();
   initJobsCentre();
   initDriveHealth(); // the drive view: everything that opened the S.M.A.R.T. window opens it
@@ -400,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {  if (window.location.searc
     globals: ['openFileManager', 'openNewFileManagerWindow', 'navigateToPath', 'openRecycleBin'],
     openGlobal: 'openFileManager',
   });
-  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => ensureFiles(), { timeout: 3000 });
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 1500)))(() => forDesktopUser(() => ensureFiles(), document, desktopFlags()), { timeout: 3000 });
   // The VM manager (~220 kB) loads the first time it's opened (FE-02)
   lazyWindow({
     id: 'vm',
