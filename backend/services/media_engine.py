@@ -1344,15 +1344,8 @@ class MediaEngine:
         indexed_count = max(int(persisted.get("indexed_count", 0)), int(rag_stats.get("indexed_count", 0)))
         last_ts = rag_stats.get("last_scan_timestamp") or persisted.get("last_scan_timestamp")
 
-        base_cats = persisted.get(
-            "categories",
-            {"faces": 0, "locations": 0, "objects": 0, "albums": 0},
-        )
+        # what the index counts (NFEAT-9: older versions stored made-up face, place and album counts)
         categories = {
-            "faces": base_cats.get("faces", 0),
-            "locations": base_cats.get("locations", 0),
-            "objects": max(base_cats.get("objects", 0), rag_stats.get("total_photos", 0)),
-            "albums": base_cats.get("albums", 0),
             "photos": rag_stats.get("total_photos", 0),
             "videos": rag_stats.get("total_videos", 0),
             "documents": rag_stats.get("total_docs", 0),
@@ -1443,11 +1436,8 @@ class MediaEngine:
                 {
                     "indexed_count": count,
                     "last_scan_timestamp": time.time(),
+                    # only counts the index has; no face, place or album counts it doesn't keep
                     "categories": {
-                        "faces": max(0, stats.get("total_photos", 0) // 4),
-                        "locations": max(0, stats.get("total_photos", 0) // 6),
-                        "objects": stats.get("total_photos", 0),
-                        "albums": max(0, stats.get("total_photos", 0) // 10),
                         "photos": stats.get("total_photos", 0),
                         "videos": stats.get("total_videos", 0),
                         "documents": stats.get("total_docs", 0),

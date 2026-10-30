@@ -274,6 +274,10 @@
 
 #### Fixes
 
+- **No made-up photo counts**: the media status no longer reports face, place, album and
+  object counts, which were guessed from the number of photos; it reports what the index
+  really holds (NFEAT-9).
+
 - **ZettNAS's own searches find files again**: the identity ZettNAS uses for its own work
   lacked one permission question the final access check asks, so every result it searched for
   was refused and it found nothing. People's searches were not affected.
