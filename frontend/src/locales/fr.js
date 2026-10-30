@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "arrêté",
   "proto.unknown": "inconnu",
   "ai.search_degraded": "Le modèle de recherche IA n'a pas répondu : ces résultats correspondent seulement aux mots. Réessayez dans un instant.",
+  "offsite.plain_http": "Cette adresse est hors de votre réseau et utilise http simple : le mot de passe de la sauvegarde circule en clair. Passez par Tailscale ou utilisez rest:https://.",
+  "fm.bins_asleep": "{count, plural, one {# corbeille se trouve} other {# corbeilles se trouvent}} sur un disque en veille et {count, plural, one {n'est pas affichée} other {ne sont pas affichées}}, pour ne pas le réveiller. Elles apparaîtront à son réveil.",
   "updates.busy_title": "Des tâches sont encore en cours",
   "updates.busy_msg": "{list} Mettre à jour maintenant les interrompt. Mettre à jour quand même ?",
   "updates.busy_later": "Mise à jour reportée : réessayez quand ce sera terminé.",

@@ -149,11 +149,11 @@ def startup_system():
     # A new build on this data folder without an in-app update (Unraid Docker tab, compose pull):
     # snapshot the data before anything is migrated (OPS-4)
     try:
-        from backend.services.data_snapshot import snapshot_if_build_changed
+        from backend.services.data_snapshot import refuse_without_snapshot, snapshot_if_build_changed
 
         snapshot_if_build_changed(DATA_DIR)
     except Exception as e:
-        logger.error(f"[Main] Could not snapshot the data folder for the new build: {e}")
+        refuse_without_snapshot(e)  # nothing is migrated without a way back (NREL-19)
 
     # Damaged databases are found before anything opens them (REL-2)
     try:

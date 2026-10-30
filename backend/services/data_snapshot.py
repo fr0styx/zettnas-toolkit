@@ -94,6 +94,28 @@ def snapshot_if_build_changed(data_dir: str, build: str | None = None) -> str | 
     return taken
 
 
+START_ANYWAY = "ZETTNAS_START_WITHOUT_SNAPSHOT"
+
+
+def refuse_without_snapshot(err: BaseException) -> None:
+    """A new build whose safety snapshot failed (a full disk, say) stops before it migrates any
+    database, as the in-app updater does, so the previous image still runs on this data. Setting
+    ZETTNAS_START_WITHOUT_SNAPSHOT=1 starts it anyway (NREL-19)."""
+    if os.environ.get(START_ANYWAY, "").strip().lower() in ("1", "true", "yes"):
+        logger.error(
+            "[Main] No snapshot of the data folder for the new build (%s); starting anyway (%s)", err, START_ANYWAY
+        )
+        return
+    logger.critical(
+        "[Main] Could not snapshot the data folder before this new version changes it (%s). Nothing was "
+        "changed: free some space in the data folder and restart, go back to the previous image, or set "
+        "%s=1 to start without a way back.",
+        err,
+        START_ANYWAY,
+    )
+    raise SystemExit(4) from err
+
+
 def snapshot_root(data_dir: str) -> str:
     return os.path.join(data_dir, SNAPSHOT_SUBDIR)
 

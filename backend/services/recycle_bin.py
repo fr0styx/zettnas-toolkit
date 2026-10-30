@@ -9,7 +9,8 @@ Auto-empty (REL-15, D9): an item goes 30 days after it was deleted, and the olde
 bin holds more than 10% of its disk. What was already in a bin when this arrived counts its 30
 days from then (the grace start), and the size cap removes none of it before those 30 days end.
 Bins are emptied only when they are used anyway (a delete into them, the Recycle Bin opened, a
-restore), never by a sweep of their own, so no sleeping disk is woken for it. A small index in
+restore), never by a sweep of their own, and a bin whose disk is asleep is skipped (NREL-16), so
+no sleeping disk is woken for it. A small index in
 the data folder keeps each bin's size for the Overview.
 """
 
@@ -110,6 +111,23 @@ def all_bins() -> list[str]:
     return found
 
 
+def asleep(recycle_dir: str) -> bool:
+    """True when the disk holding this bin is asleep: it is then neither listed nor emptied, since
+    reading it would wake the disk (NREL-16). On a union share any sleeping disk under it counts."""
+    try:
+        from backend.services.rag_standby import is_backing_disk_in_standby
+
+        return bool(is_backing_disk_in_standby(os.path.dirname(recycle_dir)))
+    except (ImportError, OSError, ValueError):
+        logger.debug("[Recycle Bin] standby check for %s failed", recycle_dir, exc_info=True)
+        return False
+
+
+def known_items(recycle_dir: str) -> int:
+    """How many items this bin held when it was last read (from the index: no disk is read)."""
+    return int(((_index().get("bins") or {}).get(recycle_dir) or {}).get("items") or 0)
+
+
 def _slot(files_dir: str, base_name: str, now: float) -> str:
     ts = int(now)
     name, n = f"{ts}_{base_name}", 1
@@ -207,6 +225,8 @@ def auto_empty(recycle_dir: str, now: float | None = None, force: bool = False) 
         entry = bins.get(recycle_dir) or {}
         if not force and now - float(entry.get("checked") or 0) < CHECK_EVERY_SECS:
             return 0
+    if not force and asleep(recycle_dir):
+        return 0  # checked again next time it is used, once its disk is awake
     keep = KEEP_DAYS * 86400
     held = items(recycle_dir)
     for i in held:

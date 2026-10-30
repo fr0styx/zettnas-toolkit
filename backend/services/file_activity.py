@@ -92,13 +92,22 @@ def search(
     days: int = RETENTION_DAYS,
     limit: int = 100,
     before_id: int | None = None,
+    hide_under: str = "",
 ) -> list[dict[str, Any]]:
-    """Newest first. `q` matches the path or the new path; `before_id` pages back."""
+    """Newest first. `q` matches the path or the new path; `before_id` pages back. With
+    `hide_under` (the homes folder), what is inside it shows only whose home it is, and `q`
+    doesn't look inside it (NSEC-13)."""
     from backend.db import db_read_session
 
     where: list[str] = ["ts >= ?"]
     args: list[Any] = [time.time() - max(1, min(int(days), RETENTION_DAYS)) * 86400]
-    if q.strip():
+    if q.strip() and hide_under:
+        inside = hide_under.rstrip("/") + "/%"
+        where.append(
+            "((path LIKE ? ESCAPE '\\' AND path NOT LIKE ?) OR (target LIKE ? ESCAPE '\\' AND target NOT LIKE ?))"
+        )
+        args += [_like(q.strip()), inside, _like(q.strip()), inside]
+    elif q.strip():
         where.append("(path LIKE ? ESCAPE '\\' OR target LIKE ? ESCAPE '\\')")
         args += [_like(q.strip()), _like(q.strip())]
     if user.strip():
@@ -119,4 +128,53 @@ def search(
     args.append(max(1, min(int(limit), MAX_LIMIT)))
     cols = ("id", "ts", "username", "ip", "action", "path", "target", "detail", "via")
     with db_read_session() as conn:
-        return [dict(zip(cols, row, strict=True)) for row in conn.execute(sql, args).fetchall()]
+        rows: list[dict[str, Any]] = [dict(zip(cols, row, strict=True)) for row in conn.execute(sql, args).fetchall()]
+    if hide_under:
+        for r in rows:
+            r["path"], r["target"] = mask_home(r["path"], hide_under), mask_home(r["target"] or "", hide_under)
+    return rows
+
+
+def mask_home(path: str, homes: str) -> str:
+    """A path inside someone's home folder as "<homes>/<name>/…": whose it is, not what (NSEC-13)."""
+    prefix = homes.rstrip("/") + "/"
+    if not path.startswith(prefix):
+        return path
+    owner, _, rest = path[len(prefix) :].partition("/")
+    return prefix + owner + ("/…" if rest else "")
+
+
+def for_user(username: str, limit: int = 5000) -> list[dict[str, Any]]:
+    """Their own entries, newest first (export, SEC-32)."""
+    from backend.db import db_read_session
+
+    cols = ("ts", "ip", "action", "path", "target", "detail", "via")
+    with db_read_session() as conn:
+        rows = conn.execute(
+            "SELECT ts, ip, action, path, target, detail, via FROM file_activity"
+            " WHERE lower(username) = lower(?) ORDER BY id DESC LIMIT ?",
+            (username, limit),
+        ).fetchall()
+    return [dict(zip(cols, r, strict=True)) for r in rows]
+
+
+def forget_user(username: str, alias: str, home: str = "") -> int:
+    """Erase: their entries stay, so the log still adds up, but under a pseudonym and without
+    their address; paths in their home folder lose the file names (NSEC-13)."""
+    from backend.db import db_session
+
+    if not username:
+        return 0
+    with db_session() as conn:
+        cur = conn.execute(
+            "UPDATE file_activity SET username = ?, ip = '' WHERE lower(username) = lower(?)", (alias, username)
+        )
+        changed = max(0, cur.rowcount or 0)
+        prefix = home.rstrip("/") + "/" if home and home not in (".", "/") else ""
+        if prefix:
+            for sql in (
+                "UPDATE file_activity SET path = ? WHERE substr(path, 1, ?) = ?",
+                "UPDATE file_activity SET target = ? WHERE substr(target, 1, ?) = ?",
+            ):
+                conn.execute(sql, (prefix + "…", len(prefix), prefix))
+    return changed

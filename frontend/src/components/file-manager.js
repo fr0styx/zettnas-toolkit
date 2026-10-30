@@ -2069,6 +2069,10 @@ export class FileManagerWindow {
       this.updateSelectionToolbar();
 
       if (this.pathInput) this.pathInput.value = this.currentPath;
+      if (res.recycle_bin && res.bins_asleep > 0 && this._binsAsleepShown !== res.bins_asleep) {
+        this._binsAsleepShown = res.bins_asleep;
+        showToast(t('fm.bins_asleep', '{count, plural, one {# Recycle Bin is} other {# Recycle Bins are}} on a sleeping disk and not shown, so the disk stays asleep. They appear once it wakes.', { count: res.bins_asleep }), 'info');
+      }
 
       // Update folder title in header
       if (this.titleFolderSpan) {

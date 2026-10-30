@@ -4,6 +4,16 @@
 
 #### Security
 
+- **The file activity log keeps home folders private**: the Auditor role sees whose home folder
+  a change was in, not the file names, and its search doesn't look inside home folders. A
+  person's entries are in their data export, and erasing their data removes their name, address
+  and home-folder file names from the log (NSEC-13).
+- **Family accounts can't read app settings**: an app's full compose file and the update check
+  need container rights now, not just the right to view the system (NSEC-16).
+- **Off-site backups warn about plain http**: a restic server address outside your network that
+  uses plain http shows a warning, since its password would travel in the clear; the backup
+  target app says to use it only on your network or over Tailscale (NSEC-17).
+
 - **The AdGuard password stays where it belongs**: changing AdGuard Home's address needs the
   password again, and ZettNAS doesn't follow redirects to another host with it (NSEC-11).
 - **One mistyped password can't lock the family out of the office suite**: the office suite
@@ -321,6 +331,17 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **The Recycle Bin lets sleeping disks sleep**: a bin on a disk that is asleep is no longer read
+  or emptied when you delete something or open the Recycle Bin; it says how many bins wait and
+  shows them once the disk is awake (NREL-16).
+- **No gap when a copy job becomes an off-site backup**: the old copy job keeps running until
+  the new backup has its first good version, so a failed first run leaves the folder protected
+  (NREL-19).
+- **A new version won't change your data without a way back**: if the safety copy of the data
+  folder fails when a new image starts (a full disk, say), ZettNAS stops before it changes any
+  database and says why, so the previous image still works. ZETTNAS_START_WITHOUT_SNAPSHOT=1
+  starts it anyway (NREL-19).
 
 - **Updates wait for running work**: an update now says what it would cut off, such as a
   backup, a restore or a sync, or an open encrypted folder, and goes ahead only if you choose to

@@ -101,7 +101,7 @@ async def post_docker_bulk_action(req: DockerBulkActionRequest):
 
 @router.get(
     "/docker/containers/{container_id}/compose",
-    dependencies=[Depends(require_scope("containers:read", "containers:manage", "system:view"))],
+    dependencies=[Depends(require_scope("containers:read", "containers:manage"))],
 )
 async def get_docker_container_compose(container_id: str, request: Request, unmask: bool = False):
     if not container_id or not re.match(r"^[a-zA-Z0-9_.-]{1,128}$", container_id):
@@ -453,7 +453,7 @@ async def get_docker_updates_status():
     return await asyncio.to_thread(get_cached_update_status)
 
 
-@router.post("/docker/updates/check", dependencies=[Depends(require_scope("containers:read", "system:view"))])
+@router.post("/docker/updates/check", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_docker_updates_check():
     from backend.services.docker_updates import check_all_container_updates
 

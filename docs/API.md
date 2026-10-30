@@ -193,7 +193,7 @@ request and response schemas.
 | `POST` | `/api/v1/docker/containers/bulk-action` | any of `containers:write`, `containers:manage` | Post Docker Bulk Action |
 | `DELETE` | `/api/v1/docker/containers/{container_id}` | `containers:manage` | Delete Docker Container |
 | `POST` | `/api/v1/docker/containers/{container_id}/action` | any of `containers:write`, `containers:manage` | Post Docker Container Action |
-| `GET` | `/api/v1/docker/containers/{container_id}/compose` | any of `containers:read`, `containers:manage`, `system:view` | Get Docker Container Compose |
+| `GET` | `/api/v1/docker/containers/{container_id}/compose` | any of `containers:read`, `containers:manage` | Get Docker Container Compose |
 | `GET` | `/api/v1/docker/containers/{container_id}/details` | any of `containers:read`, `containers:manage`, `system:view` | Get Docker Container Details |
 | `POST` | `/api/v1/docker/containers/{container_id}/exec` | `containers:exec` | Post Docker Container Exec |
 | `GET` | `/api/v1/docker/containers/{container_id}/logs` | any of `containers:read`, `containers:manage` | Get Docker Container Logs |
@@ -214,7 +214,7 @@ request and response schemas.
 | `GET` | `/api/v1/docker/system/prune/jobs/{job_id}` | `containers:manage` | Get Prune Job Status |
 | `POST` | `/api/v1/docker/system/prune/jobs/{job_id}/cancel` | `containers:manage` | Cancel Prune Job Route |
 | `POST` | `/api/v1/docker/updates/apply-all` | `containers:manage` | Post Docker Updates Apply All |
-| `POST` | `/api/v1/docker/updates/check` | any of `containers:read`, `system:view` | Post Docker Updates Check |
+| `POST` | `/api/v1/docker/updates/check` | `containers:manage` | Post Docker Updates Check |
 | `GET` | `/api/v1/docker/updates/policies` | any of `containers:read`, `system:view` | Get Docker Update Policies |
 | `POST` | `/api/v1/docker/updates/policies` | `containers:manage` | Post Docker Update Policies |
 | `GET` | `/api/v1/docker/updates/status` | any of `containers:read`, `system:view` | Get Docker Updates Status |

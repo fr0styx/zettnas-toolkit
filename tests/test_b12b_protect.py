@@ -48,7 +48,13 @@ def test_current_copies_and_where(monkeypatch):
         ],
         jobs=[
             {"name": "Old copy", "destination_type": "remote", "last_success_at": NOW - 7200},
-            {"name": "Moved", "destination_type": "remote", "migrated_to": "from-x", "last_success_at": NOW},
+            {
+                "name": "Moved",
+                "destination_type": "remote",
+                "migrated_to": "from-x",
+                "enabled": False,
+                "last_success_at": NOW,
+            },
             {"name": "Settings", "kind": "config", "destination_type": "remote", "last_success_at": NOW},
         ],
         replication=[
@@ -106,3 +112,9 @@ def test_the_routes(client, auth_headers, monkeypatch):
     assert client.get("/api/system/protection", headers=auth_headers).json()["level"] == "none"
     monkeypatch.setattr(ps, "destinations", lambda: {"usb": ["/mnt/disks/usb1"], "nas": [], "cloud": []})
     assert client.get("/api/offsite/destinations", headers=auth_headers).json()["usb"] == ["/mnt/disks/usb1"]
+
+
+def test_a_moving_copy_job_counts_until_it_is_off(monkeypatch):
+    jobs = [{"name": "Moving", "destination_type": "remote", "migrated_to": "from-x", "last_success_at": NOW - 60}]
+    _sources(monkeypatch, repos=[], jobs=jobs, replication=[])
+    assert ps.status(NOW)["copies"] == 1  # its off-site backup hasn't succeeded yet (NREL-19)

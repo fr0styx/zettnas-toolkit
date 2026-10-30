@@ -9,6 +9,7 @@ keeps the versions the retention rules ask for. The key lives in the data folder
 the backup can't be read, so the interface offers it for safe keeping.
 """
 
+import ipaddress
 import json
 import os
 import re
@@ -109,7 +110,26 @@ def _public(repo: dict[str, Any]) -> dict[str, Any]:
     out["has_rest_password"] = bool(repo.get("rest_password"))
     out["same_disk"] = same_disk(repo.get("location") or "", repo.get("paths") or [])
     out["locked_until"] = object_lock.locked_until(repo)  # FEAT-03
+    out["plain_http"] = plain_http_outside(repo.get("location") or "")  # NSEC-17
     return out
+
+
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")  # Tailscale and Headscale addresses
+_LAN_SUFFIXES = (".local", ".lan", ".home", ".home.arpa", ".internal", ".localdomain", ".ts.net")
+
+
+def plain_http_outside(location: str) -> bool:
+    """rest:http:// to a host that isn't on this network or a tailnet: the REST user and password
+    would cross the internet in the clear (NSEC-17). Names without a dot count as local."""
+    m = re.match(r"^rest:http://(\[[^\]]+\]|[^/:]+)", location or "")
+    if not m:
+        return False
+    host = m.group(1).strip("[]").lower()
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return "." in host and not host.endswith(_LAN_SUFFIXES)
+    return not (ip.is_private or ip.is_loopback or ip.is_link_local or ip in _CGNAT)
 
 
 def list_repos() -> list[dict[str, Any]]:
@@ -196,6 +216,8 @@ def save_repo(
             # a bucket with Object Lock keeps every write this many days (FEAT-03)
             "lock_days": days,
             "lock_check": old.get("lock_check") if old.get("location") == location else None,
+            # a copy job this backup takes over goes off after its first good run (NREL-19)
+            "replaces_job": old.get("replaces_job", ""),
         }
         _save(repos)
     return _public(repos[repo_id])

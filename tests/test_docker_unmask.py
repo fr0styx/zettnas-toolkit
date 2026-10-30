@@ -45,8 +45,8 @@ def test_a_read_only_account_never_gets_secrets(client, seen):
     r = client.get("/api/docker/containers/web/details?unmask=true", headers=headers)
     assert r.status_code == 200 and seen[-1] == ("details", "web", False)
     assert "hunter2" not in r.text
-    client.get("/api/docker/containers/web/compose?unmask=true", headers=headers)
-    assert seen[-1] == ("compose", "web", False)
+    r = client.get("/api/docker/containers/web/compose?unmask=true", headers=headers)
+    assert r.status_code == 403 and seen[-1] == ("details", "web", False)  # compose needs containers:read (NSEC-16)
 
 
 @pytest.mark.parametrize("cid", ["bad id", "a;b", "x" * 129])

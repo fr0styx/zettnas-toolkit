@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "aus",
   "proto.unknown": "unbekannt",
   "ai.search_degraded": "Das KI-Suchmodell hat nicht geantwortet; diese Ergebnisse passen nur zu den Wörtern. Versuchen Sie es gleich noch einmal.",
+  "offsite.plain_http": "Diese Adresse liegt außerhalb Ihres Netzwerks und nutzt einfaches http: Das Sicherungspasswort wird unverschlüsselt übertragen. Erreichen Sie sie über Tailscale oder nutzen Sie rest:https://.",
+  "fm.bins_asleep": "{count, plural, one {# Papierkorb liegt auf einer schlafenden Festplatte und wird nicht angezeigt, damit sie nicht aufwacht.} other {# Papierkörbe liegen auf einer schlafenden Festplatte und werden nicht angezeigt, damit sie nicht aufwacht.}} Sie erscheinen, sobald die Festplatte wach ist.",
   "updates.busy_title": "Es läuft noch etwas",
   "updates.busy_msg": "{list} Ein Update jetzt bricht das ab. Trotzdem aktualisieren?",
   "updates.busy_later": "Update verschoben: Versuchen Sie es erneut, wenn es fertig ist.",

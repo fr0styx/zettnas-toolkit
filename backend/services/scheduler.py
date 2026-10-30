@@ -183,9 +183,11 @@ def _run_scheduled_tasks():
         except Exception as e:
             logger.warning(f"[Scheduler] Snapshot schedules failed: {e}")
         try:
+            from backend.services.backup_migration import retire_replaced_jobs
             from backend.services.offsite_backup import run_due as run_offsite
 
             run_offsite(now)
+            retire_replaced_jobs()  # a moved copy job goes off after the first good backup (NREL-19)
         except Exception as e:
             logger.warning(f"[Scheduler] Offsite backups failed: {e}")
         try:

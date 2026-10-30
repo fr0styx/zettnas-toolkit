@@ -27,8 +27,11 @@ class TrashRestoreRequest(BaseModel):
 
 
 def _listing(principal: AuthenticatedPrincipal) -> dict:
-    out = []
+    out, sleeping = [], []
     for b in recycle_bin.all_bins():
+        if recycle_bin.asleep(b):
+            sleeping.append({"root_path": os.path.dirname(b), "items": recycle_bin.known_items(b)})
+            continue  # opening the bin never wakes a disk (NREL-16)
         try:
             recycle_bin.auto_empty(b)  # the bin is in use: it drops what it should no longer keep
         except Exception:
@@ -56,7 +59,7 @@ def _listing(principal: AuthenticatedPrincipal) -> dict:
                 }
             )
     out.sort(key=lambda x: x["deleted_at"], reverse=True)
-    return {"items": out, "total": len(out)}
+    return {"items": out, "total": len(out), "asleep": sleeping}
 
 
 def bin_listing(principal: AuthenticatedPrincipal) -> dict:

@@ -537,8 +537,9 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
             "password": "{{secret:password}}",
             "note": (
                 "On the other ZettNAS: Backup → Off-site, destination rest:http://<this NAS>:8000/backup/ "
-                "with this user and password. Each account sees only its own folder. Add one per person "
-                "with: docker exec -it rest-server create_user <name>"
+                "with this user and password. Use that address only on your own network or over Tailscale: "
+                "across the internet the password would travel in the clear. Each account sees only its own "
+                "folder. Add one per person with: docker exec -it rest-server create_user <name>"
             ),
         },
         "tags": ["backup", "restic", "append-only", "off-site"],

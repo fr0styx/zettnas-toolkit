@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "detenido",
   "proto.unknown": "desconocido",
   "ai.search_degraded": "El modelo de búsqueda con IA no respondió, así que estos resultados solo coinciden por palabras. Inténtalo de nuevo en un momento.",
+  "offsite.plain_http": "Esta dirección está fuera de tu red y usa http sin cifrar: la contraseña de la copia viaja en claro. Accede a ella por Tailscale o usa rest:https://.",
+  "fm.bins_asleep": "{count, plural, one {# papelera está en un disco en reposo y no se muestra, para no despertarlo.} other {# papeleras están en un disco en reposo y no se muestran, para no despertarlo.}} Aparecerán cuando despierte.",
   "updates.busy_title": "Todavía hay tareas en marcha",
   "updates.busy_msg": "{list} Actualizar ahora las interrumpe. ¿Actualizar de todos modos?",
   "updates.busy_later": "Actualización aplazada: vuelve a intentarlo cuando termine.",

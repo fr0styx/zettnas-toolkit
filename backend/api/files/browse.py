@@ -85,7 +85,8 @@ def _bin_view(real: str, principal: AuthenticatedPrincipal | None) -> dict[str, 
     from backend.api.files.trash import bin_listing
 
     out = []
-    for item in bin_listing(principal)["items"] if principal else []:
+    listing = bin_listing(principal) if principal else {"items": [], "asleep": []}
+    for item in listing["items"]:
         out.append(
             {
                 "name": item["name"],
@@ -100,7 +101,13 @@ def _bin_view(real: str, principal: AuthenticatedPrincipal | None) -> dict[str, 
                 "original_path": item["original_path"] or "",
             }
         )
-    return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out, "recycle_bin": True}
+    return {
+        "current": real,
+        "roots": list(ALLOWED_BROWSE_ROOTS),
+        "dirs": out,
+        "recycle_bin": True,
+        "bins_asleep": len(listing.get("asleep") or []),
+    }
 
 
 def _handle_browse_logic(path: str, dirs_only: bool, principal: AuthenticatedPrincipal | None = None):

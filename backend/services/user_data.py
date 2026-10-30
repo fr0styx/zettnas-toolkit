@@ -11,8 +11,9 @@ Erase, each part on its own:
 - index: what search learned from their own folder, which is then not learned again
   (rag forget_folder). Their files themselves are not touched.
 
-Deleting an account erases all three. The security log is kept: it is the server's record of
-who did what, and an administrator may need it later.
+Deleting an account erases all three. The security log and the file activity log keep their
+entries, as the server's record of what happened, but under a pseudonym and without the
+person's address (file_activity: file names in their home folder go too, NSEC-13).
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from typing import Any
 from backend.config import logger
 
 FORMAT = 1
-PARTS = ("chats", "ai_log", "index", "security_log")
+PARTS = ("chats", "ai_log", "index", "security_log", "file_activity")
 MAX_INDEX_FILES = 20000
 MAX_EVENTS = 5000
 
@@ -174,6 +175,12 @@ def _alert_route(user: dict[str, Any]) -> dict[str, Any]:
     return dict(get_routes().get(str(user.get("username") or "")) or {})
 
 
+def _file_activity(user: dict[str, Any]) -> list[dict[str, Any]]:
+    from backend.services import file_activity
+
+    return file_activity.for_user(str(user.get("username") or ""))
+
+
 def _immich(user: dict[str, Any]) -> dict[str, Any]:
     from backend.services import immich_photos
 
@@ -200,6 +207,7 @@ STORES = (
     "phone_devices",
     "alert_route",
     "immich",
+    "file_activity",
 )
 
 
@@ -226,6 +234,7 @@ def export_user(user: dict[str, Any]) -> dict[str, Any]:
         "phone_devices": _part("phone_devices", _devices, user),
         "alert_route": _part("alert_route", _alert_route, user),
         "immich": _part("immich", _immich, user),
+        "file_activity": _part("file_activity", _file_activity, user),
     }
 
 
@@ -270,4 +279,16 @@ def erase_user_data(user: dict[str, Any], parts: tuple[str, ...] = PARTS) -> dic
                 "[UserData] Could not pseudonymise the security log of %s", user.get("username"), exc_info=True
             )
             done["security_log"] = {"error": "Could not remove their name from the security log."}
+    if "file_activity" in parts:
+        try:
+            import hashlib
+            import sqlite3
+
+            from backend.services import file_activity
+
+            alias = "erased-" + hashlib.sha256(str(user.get("id") or "").encode()).hexdigest()[:10]
+            done["file_activity"] = file_activity.forget_user(str(user.get("username") or ""), alias, _home(user))
+        except (sqlite3.Error, OSError, ValueError):
+            logger.warning("[UserData] Could not erase the file activity of %s", user.get("username"), exc_info=True)
+            done["file_activity"] = {"error": "Could not remove their name from the file activity log."}
     return done

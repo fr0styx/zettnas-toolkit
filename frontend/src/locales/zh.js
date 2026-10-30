@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "已停止",
   "proto.unknown": "未知",
   "ai.search_degraded": "AI 搜索模型没有响应，这些结果仅按字词匹配。请稍后再试。",
+  "offsite.plain_http": "此地址在你的网络之外，且使用未加密的 http：备份密码会以明文传输。请通过 Tailscale 访问，或使用 rest:https://。",
+  "fm.bins_asleep": "有 {count} 个回收站位于休眠的磁盘上，为了不唤醒磁盘暂不显示。磁盘唤醒后即会出现。",
   "updates.busy_title": "仍有任务在运行",
   "updates.busy_msg": "{list} 现在更新会中断它们。仍要更新吗？",
   "updates.busy_later": "已推迟更新：完成后再试。",

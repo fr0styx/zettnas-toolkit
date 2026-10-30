@@ -28,6 +28,7 @@ export function reposHtml(data) {
         }</span>
         ${lockLine(r)}
         ${r.append_only ? `<span class="offsite-meta">${escapeHtml(t('offsite.append_only', 'The backup server only adds versions (append-only), so old ones stay there until its owner removes them.'))}</span>` : ''}
+        ${r.plain_http ? `<span class="offsite-meta"><strong>${escapeHtml(t('offsite.plain_http', 'This address is outside your network and uses plain http: the backup password travels in the clear. Reach it over Tailscale, or use rest:https://.'))}</strong></span>` : ''}
         ${r.same_disk ? `<span class="offsite-meta"><strong>${escapeHtml(t('offsite.same_disk', 'Same storage as the folders it protects: a failed disk, a theft or a fire takes both. Use a USB disk, another NAS or the cloud.'))}</strong></span>` : ''}
       </div>
       <div class="offsite-actions">

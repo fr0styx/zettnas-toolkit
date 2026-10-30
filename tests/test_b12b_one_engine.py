@@ -151,7 +151,8 @@ def test_a_copy_job_moves_to_an_offsite_backup(engine, offsite):
     assert repo["location"] == "rclone:cloud:nas-restic" and repo["paths"] == [str(engine.pool / "photos")]
     assert repo["keep"]["daily"] == 7 and repo["hour"] == 2 and offsite == [repo["id"]]
     job = next(j for j in be.get_backup_jobs() if j["id"] == engine.job["id"])
-    assert job["enabled"] is False and job["migrated_to"] == repo["id"]
+    assert job["enabled"] is not False and job["migrated_to"] == repo["id"]  # off after the first good backup (NREL-19)
+    assert ob.get_repo(repo["id"])["replaces_job"] == engine.job["id"]
 
 
 def test_only_a_cloud_copy_of_a_folder_can_move(engine, offsite):

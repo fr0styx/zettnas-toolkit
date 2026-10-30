@@ -6575,7 +6575,7 @@
       "items": {
        "type": "string"
       },
-      "maxItems": 4,
+      "maxItems": 5,
       "title": "Parts",
       "type": "array"
      }
@@ -48435,8 +48435,7 @@
     ],
     "x-required-scopes": [
      "containers:read",
-     "containers:manage",
-     "system:view"
+     "containers:manage"
     ]
    }
   },
@@ -49443,8 +49442,7 @@
      "Docker Containers & Stacks"
     ],
     "x-required-scopes": [
-     "containers:read",
-     "system:view"
+     "containers:manage"
     ]
    }
   },
@@ -50576,7 +50574,7 @@
   },
   "/api/v1/fs/activity": {
    "get": {
-    "description": "Who deleted, moved, renamed, restored or uploaded what, newest first (90 days are kept).",
+    "description": "Who deleted, moved, renamed, restored or uploaded what, newest first (90 days are kept).\nWithout users:read (the Auditor), files in people's home folders show only whose they are.",
     "operationId": "fs_activity_api_v1_fs_activity_get",
     "parameters": [
      {

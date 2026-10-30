@@ -51,7 +51,8 @@ def copies() -> list[dict[str, Any]]:
         from backend.services.backup_engine import get_backup_jobs
 
         for j in get_backup_jobs():
-            if j.get("kind") == "config" or j.get("destination_type") != "remote" or j.get("migrated_to"):
+            moved = j.get("migrated_to") and j.get("enabled") is False  # still on until its successor ran
+            if j.get("kind") == "config" or j.get("destination_type") != "remote" or moved:
                 continue
             out.append({"name": j.get("name"), "kind": "cloud", "engine": "copy", "last_ok": j.get("last_success_at")})
     except Exception:

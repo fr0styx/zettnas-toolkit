@@ -2494,6 +2494,8 @@ export default {
   "proto.off": "off",
   "proto.unknown": "unknown",
   "ai.search_degraded": "The AI search model didn't answer, so these results match words only. Try again in a moment.",
+  "offsite.plain_http": "This address is outside your network and uses plain http: the backup password travels in the clear. Reach it over Tailscale, or use rest:https://.",
+  "fm.bins_asleep": "{count, plural, one {# Recycle Bin is} other {# Recycle Bins are}} on a sleeping disk and not shown, so the disk stays asleep. They appear once it wakes.",
   "updates.busy_title": "Some work is still running",
   "updates.busy_msg": "{list} Updating now cuts it off. Update anyway?",
   "updates.busy_later": "Update postponed: try again when it has finished.",
