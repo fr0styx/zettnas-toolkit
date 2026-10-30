@@ -393,6 +393,10 @@
 
 #### Performance
 
+- **Faster downloads and streams**: the security headers, sign-in check and request id no
+  longer pass every chunk of a download, video or live stream through three extra steps
+  (NPERF-4).
+
 - **Quieter when idle**: the storage alert check writes its state only when something changed
   (it used to write every five minutes), and with no app running ZettNAS asks Docker for app
   stats once a minute instead of every five seconds, at once when you open Apps (NPERF-6).
@@ -431,6 +435,14 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **Opening a folder asks before waking a sleeping disk**: when the disk holding a folder is
+  asleep, the File Explorer (and folder pickers) ask "Open … ? Its disk is asleep" before listing
+  it, since listing it spins the disk up. Saying no shows "This folder's disk is asleep" with a
+  "Wake it and open" button. Folders on the cache or SSDs open at once, as before.
+- **The dark front screen sleeps too**: while the LCD is off it waits until the next minute
+  instead of checking every second, and while lit but unchanged it checks once a second instead
+  of five times (NPERF-2).
 
 - **Interrupted uploads don't leave hidden folders behind**: the parts of a large upload that an
   update, a crash or a closed laptop cut off are removed from the share within the hour after

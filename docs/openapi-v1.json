@@ -46118,7 +46118,7 @@
   },
   "/api/v1/browse": {
    "get": {
-    "description": "A folder's entries. With `limit`, one page of them and the `total` (PERF-25); without it,\nall of them as before.",
+    "description": "A folder's entries. With `limit`, one page of them and the `total` (PERF-25); without it,\nall of them as before. A folder on a sleeping disk is listed only once the person confirms\nwaking it (428 confirmation_required, action folder.wake): listing it would spin it up.",
     "operationId": "browse_api_v1_browse_get",
     "parameters": [
      {

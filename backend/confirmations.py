@@ -53,6 +53,7 @@ ACTIONS: dict[str, str] = {
     "security.rotate_key": "Replace the install's secret key; everyone signs in to WebDAV and two-factor again",
     "docker.container.recreate.elevated": "Recreate container {target} with access to the host system",
     "disk.wake": "Wake sleeping drive {target}. It spins up now and goes back to sleep on its own later",
+    "folder.wake": "Open {target}: its disk is asleep and spins up to show it, then goes back to sleep on its own later",
     "snapshot.rollback": "Put the whole share back as it was in snapshot {target}. How it is now is kept as a snapshot first",
     "pool.scrub_schedule": "Check pool {target} for errors once a month. Its disks spin up for the check",
     "security.advisor_fix": "Apply the Security Advisor fix '{target}'. People may lose access they had before",

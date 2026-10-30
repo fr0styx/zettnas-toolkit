@@ -11,7 +11,8 @@
     "limit",
     "offset",
     "path",
-    "principal"
+    "principal",
+    "request"
    ],
    "path": "/browse",
    "response_model": null,
@@ -2303,7 +2304,7 @@
    "async": "(token: str, request: starlette.requests.Request, info: bool = False)"
   },
   "browse": {
-   "async": "(path: str = '', dirs_only: str = '0', limit: int | None = None, offset: int = 0, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
+   "async": "(request: starlette.requests.Request, path: str = '', dirs_only: str = '0', limit: int | None = None, offset: int = 0, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"
   },
   "create_share_link": {
    "async": "(req: CreateShareLinkRequest, principal: backend.auth.AuthenticatedPrincipal = Depends(dependency=<function get_current_principal>, use_cache=True, scope=None))"

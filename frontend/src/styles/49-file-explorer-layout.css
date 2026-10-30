@@ -239,3 +239,6 @@
 /* The Recycle Bin's bar: how long items stay, and Empty all (NUX-17) */
 .fm-bin-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--zn-space-2); padding: 6px 12px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); border-bottom: 1px solid var(--zn-line); }
 .fm-bin-bar[hidden] { display: none; }
+
+/* A folder not opened because its disk is asleep */
+.fm-asleep { padding: 32px; text-align: center; color: var(--zn-text-soft); display: flex; flex-direction: column; align-items: center; gap: var(--zn-space-2); }

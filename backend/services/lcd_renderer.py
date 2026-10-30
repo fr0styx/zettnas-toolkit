@@ -485,6 +485,12 @@ class _LayoutPusher:
             logger.debug(f"[LCD] Page layout evaluate error: {e}")
 
 
+# A lit screen whose page hasn't changed for this long is checked once a second, not at LCD_FPS:
+# each check is a round trip through Playwright's driver (NPERF-2)
+QUIET_AFTER_S = 2.0
+QUIET_WAIT_MS = 1000
+
+
 def _blanked_wait() -> float:
     from backend.services.lcd_pil import seconds_to_next_minute
 
@@ -561,6 +567,7 @@ def _screencast_frames(page, cdp, fb: "_Framebuffer", fmt: str, frame_interval: 
     started = time.time()
     got_frame = False
     last_write = 0.0
+    last_change = time.time()
     try:
         while not Z_STATE.shutting_down:
             now_blanked = _screen_off(fb, blanked)
@@ -574,15 +581,18 @@ def _screencast_frames(page, cdp, fb: "_Framebuffer", fmt: str, frame_interval: 
                     started = time.time()
             blanked = now_blanked
             if blanked:
-                if Z_STATE.ui_wake.wait(1.0):
+                # dark: until the next minute (the night schedule), or a button or an alert (NPERF-2)
+                if Z_STATE.ui_wake.wait(_blanked_wait()):
                     Z_STATE.ui_wake.clear()
                 continue
-            # Lets Playwright deliver the frame events. One frame interval is enough: frames are
-            # capped at that rate anyway, and a shorter wait only adds round trips while idle.
-            page.wait_for_timeout(max(50, frame_interval * 1000))
+            # Lets Playwright deliver the frame events: one frame interval while the page changes,
+            # once a second once it has been still for QUIET_AFTER_S (NPERF-2)
+            quiet = time.time() - last_change > QUIET_AFTER_S
+            page.wait_for_timeout(QUIET_WAIT_MS if quiet else max(50, frame_interval * 1000))
             woke = Z_STATE.ui_wake.is_set()
             if woke:
                 Z_STATE.ui_wake.clear()
+                last_change = time.time()
             layout.push(woke)
             if not pending:
                 if not got_frame and time.time() - started > _NO_FRAME_FALLBACK_S:
@@ -591,6 +601,7 @@ def _screencast_frames(page, cdp, fb: "_Framebuffer", fmt: str, frame_interval: 
                 continue
             event = pending.pop()
             got_frame = True
+            last_change = time.time()
             fb.write(base64.b64decode(event["data"]))
             # Chromium sends the next frame only after this one is acknowledged: wait out the frame interval
             wait_ms = (frame_interval - (time.time() - last_write)) * 1000

@@ -2165,6 +2165,10 @@ export class FileManagerWindow {
       }
       this.renderViewport();
     } catch (err) {
+      if (err?.error === 'cancelled' && err?.status === 428) {
+        this.showAsleep(path, isNavigatingHistory, keepSelection); // not woken: say so, offer to (folder.wake)
+        return;
+      }
       if (err.name !== 'AbortError') {
         const errorMsg =
           err?.status === 403
@@ -2173,6 +2177,30 @@ export class FileManagerWindow {
         showToast(errorMsg, 'error');
       }
     }
+  }
+
+  /** The folder wasn't opened because its disk is asleep and the person said no to waking it. */
+  showAsleep(path, isNavigatingHistory = false, keepSelection = false) {
+    const input = /** @type {HTMLInputElement | null} */ (this.pathInput);
+    if (input) input.value = path;
+    const list = /** @type {HTMLElement | null} */ (this.list);
+    if (!list) return;
+    this.fileList = [];
+    const spacer = /** @type {HTMLElement | null} */ (this.spacer);
+    if (spacer) spacer.style.height = '0px';
+    list.style.transform = 'none';
+    const box = document.createElement('div');
+    box.className = 'fm-asleep';
+    box.setAttribute('role', 'status');
+    const text = document.createElement('p');
+    text.textContent = t('fm.asleep', "This folder's disk is asleep, so it wasn't opened.");
+    const wake = document.createElement('button');
+    wake.type = 'button';
+    wake.className = 'btn-pill-toggle';
+    wake.textContent = t('fm.wake_open', 'Wake it and open');
+    wake.addEventListener('click', () => this.loadPath(path, isNavigatingHistory, keepSelection));
+    box.append(text, wake);
+    list.replaceChildren(box);
   }
 
   renderViewport() {

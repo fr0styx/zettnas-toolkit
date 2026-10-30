@@ -515,30 +515,12 @@ app = FastAPI(
 register_error_handlers(app)
 
 
-# Enterprise defense-in-depth HTTP security headers middleware
-@app.middleware("http")
-async def security_headers_middleware(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    # Enforced CSP for the UI pages (FE-06); user files keep their own sandbox policy (SEC-05)
-    if "content-security-policy" not in response.headers and response.headers.get("content-type", "").startswith(
-        "text/html"
-    ):
-        from backend.csp import policy
+# Security headers, authentication and the correlation id run as plain ASGI (NPERF-4): no task
+# group and memory stream per body chunk on downloads and streams. Added inner to outer.
+from backend.asgi_middleware import CorrelationId, SecurityHeaders, http_function  # noqa: E402
 
-        response.headers["Content-Security-Policy"] = policy()
-    from backend.auth import request_is_https
-
-    if request_is_https(request):
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    return response
-
-
-# Authentication middleware
-app.middleware("http")(auth_middleware)
+app.add_middleware(SecurityHeaders)
+app.add_middleware(http_function(auth_middleware))
 
 
 @app.post("/api/csp-report", include_in_schema=False)
@@ -556,30 +538,8 @@ async def csp_report(request: Request):
     return Response(status_code=204)
 
 
-# Request correlation ID tracking middleware (outermost in processing chain)
-
-from backend.request_metrics import REQUEST_METRICS, route_template  # noqa: E402
-
-
-@app.middleware("http")
-async def correlation_id_middleware(request: Request, call_next):
-    corr_id = correlation_id_from(request.headers.get("X-Correlation-ID"))
-    token = correlation_id_ctx.set(corr_id)
-    started = time.perf_counter()
-    status = 500
-    try:
-        response = await call_next(request)
-        status = response.status_code
-        response.headers["X-Correlation-ID"] = corr_id
-        return response
-    finally:
-        correlation_id_ctx.reset(token)
-        # Request metrics by route template (ARCH-10); static files and the SPA are not API calls
-        path = request.url.path
-        if path.startswith(("/api", "/redfish")):
-            REQUEST_METRICS.observe(
-                request.method, route_template(request.scope), status, time.perf_counter() - started
-            )
+# Request correlation ID and metrics (outermost of the three)
+app.add_middleware(CorrelationId)
 
 
 # Applies the body size limit to requests sent without a Content-Length (outermost)

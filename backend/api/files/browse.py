@@ -11,7 +11,7 @@ import sys
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 import backend.config as config
 from backend.api.files.common import _contained
@@ -320,8 +320,28 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
     return {"current": real, "roots": list(ALLOWED_BROWSE_ROOTS), "dirs": out}
 
 
+def folder_asleep(path: str) -> bool:
+    """Whether listing this folder would wake a sleeping disk: its disk is known and reports
+    standby (Unraid's spin state or the SMART cache; no disk is touched to find out). A folder
+    whose disk can't be told (a remote, a USB stick) isn't held up."""
+    try:
+        real = _contained(path or ALLOWED_BROWSE_ROOTS[0])
+    except HTTPException:
+        return False
+    if os.path.basename(real.rstrip("/")) == ".RecycleBin":
+        return False  # the bin view skips sleeping bins itself (NREL-16)
+    from backend.services.rag_standby import UNKNOWN_BACKING_DEV, is_backing_disk_in_standby, resolve_path_backing_dev
+
+    try:
+        dev = resolve_path_backing_dev(real)
+        return bool(dev) and dev != UNKNOWN_BACKING_DEV and bool(is_backing_disk_in_standby(dev))
+    except (OSError, ValueError):
+        return False
+
+
 @router.get("/browse")
 async def browse(
+    request: Request,
     path: str = "",
     dirs_only: str = "0",
     limit: int | None = None,
@@ -329,8 +349,13 @@ async def browse(
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
     """A folder's entries. With `limit`, one page of them and the `total` (PERF-25); without it,
-    all of them as before."""
+    all of them as before. A folder on a sleeping disk is listed only once the person confirms
+    waking it (428 confirmation_required, action folder.wake): listing it would spin it up."""
     check_user_path_access(path, principal, allow_list=True)
+    if await asyncio.to_thread(folder_asleep, path):
+        from backend.confirmations import confirm_or_raise
+
+        confirm_or_raise(request, principal, "folder.wake", path)
     result = await asyncio.to_thread(_handle_browse_logic, path, dirs_only == "1", principal)
     if limit is not None and isinstance(result, dict) and isinstance(result.get("dirs"), list):
         entries = result["dirs"]

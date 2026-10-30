@@ -27,6 +27,7 @@ const ACTIONS = {
   'security.rotate_key': ['Replace the key', 'Replace the secret key? Everyone signs in to WebDAV and two-factor again.', true],
   'docker.container.recreate.elevated': ['Give host access', 'Recreate the container {target} with access to the host system?', false],
   'disk.wake': ['Wake the drive', 'Wake the sleeping drive {target}? It spins up now and goes back to sleep on its own later.', false],
+  'folder.wake': ['Wake the disk', 'Open {target}? Its disk is asleep: it spins up to show the folder and goes back to sleep on its own later.', false],
   'snapshot.rollback': ['Roll back', 'Put the whole share back as it was in the snapshot {target}? How it is now is kept as a snapshot first.', true],
   'pool.scrub_schedule': ['Check monthly', 'Check the pool {target} for errors once a month? Its disks spin up for the check.', false],
   'security.advisor_fix': ['Apply the fix', 'Apply the Security Advisor fix "{target}"? People may lose access they had before.', false],
