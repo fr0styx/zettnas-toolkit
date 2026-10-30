@@ -54,7 +54,7 @@ async def fs_checksum(
     req: ChecksumRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(req.path, principal)
+    await asyncio.to_thread(check_user_path_access, req.path, principal)
     target = _contained(req.path, must_exist=True)
     if os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Cannot compute checksum of a directory")
@@ -88,7 +88,7 @@ async def fs_folder_size(
     request: Request,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(req.path, principal)
+    await asyncio.to_thread(check_user_path_access, req.path, principal)
     target = _contained(req.path, must_exist=True)
     if not os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Path is not a directory")
@@ -222,7 +222,7 @@ async def fs_update_permissions(
     req: PermissionsUpdateRequest,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(req.path, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, req.path, principal, write=True)
     target = _contained(req.path, must_exist=True)
 
     # Guard against modifying sensitive system directories and appdata root

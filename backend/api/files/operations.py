@@ -49,7 +49,7 @@ class FsTransferRequest(BaseModel):
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
 async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    check_user_path_access(req.path, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, req.path, principal, write=True)
     refuse_encrypted_mount(req.path)
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     new_name = str(req.new_name or "").strip()
@@ -65,13 +65,13 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
         raise HTTPException(status_code=403, detail="Cannot rename user home directory root.")
 
     dst = os.path.join(parent_canonical, new_name)
-    check_user_path_access(dst, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, dst, principal, write=True)
     if os.path.lexists(dst):
         raise HTTPException(status_code=400, detail="Destination already exists")
-    _observe("rename", target_unresolved, principal, new_path=dst)
+    await asyncio.to_thread(_observe, "rename", target_unresolved, principal, new_path=dst)
     try:
         await asyncio.to_thread(os.rename, target_unresolved, dst)
-        record_activity("rename", target_unresolved, principal, target=dst)
+        await asyncio.to_thread(record_activity, "rename", target_unresolved, principal, target=dst)
         return {"status": "ok"}
     except Exception as e:
         logger.error(f"[FS] Rename failed: {e}")
@@ -83,7 +83,7 @@ async def fs_rename(req: RenameRequest, principal: AuthenticatedPrincipal = Depe
     dependencies=[Depends(require_scope("shares:manage", "shares:user_write", "storage:write", "storage:admin"))],
 )
 async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
-    check_user_path_access(req.path, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, req.path, principal, write=True)
     refuse_encrypted_mount(req.path)
     target_unresolved, parent_canonical, _ = _safe_fs_target(req.path)
     is_admin = (
@@ -97,14 +97,16 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
     try:
         if "/.RecycleBin/" in target_unresolved.replace("\\", "/") or target_unresolved.endswith(".RecycleBin"):
             # Hard delete if already in recycle bin
-            _observe("delete", target_unresolved, principal)  # only permanent deletes count (M4)
+            await asyncio.to_thread(
+                _observe, "delete", target_unresolved, principal
+            )  # only permanent deletes count (M4)
             if os.path.islink(target_unresolved):
                 await asyncio.to_thread(os.unlink, target_unresolved)
             elif os.path.isdir(target_unresolved):
                 await asyncio.to_thread(shutil.rmtree, target_unresolved)
             else:
                 await asyncio.to_thread(os.remove, target_unresolved)
-            record_activity("delete_permanent", target_unresolved, principal)
+            await asyncio.to_thread(record_activity, "delete_permanent", target_unresolved, principal)
             return {"status": "ok", "message": "Item permanently deleted"}
 
         # Recycle Bin logic instead of hard delete
@@ -134,7 +136,7 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
                 detail="This disk has no Recycle Bin of its own, so this can only be deleted permanently.",
             )
         add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
-        record_activity("delete", target_unresolved, principal, detail="to the Recycle Bin")
+        await asyncio.to_thread(record_activity, "delete", target_unresolved, principal, detail="to the Recycle Bin")
 
         return {
             "status": "ok",
@@ -160,14 +162,14 @@ async def fs_conflict_check(
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal)
+    await asyncio.to_thread(check_user_path_access, req.destination_dir, principal)
 
     for src in req.sources:
         src_canonical = resolve_within(src, ALLOWED_BROWSE_ROOTS)
         refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
-        check_user_path_access(src, principal)
+        await asyncio.to_thread(check_user_path_access, src, principal)
 
     return await asyncio.to_thread(check_transfer_conflicts, req.sources, dest_canonical)
 
@@ -182,7 +184,7 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, req.destination_dir, principal, write=True)
 
     is_admin = (
         principal.role_id in ("superadmin", "storage_admin")
@@ -195,14 +197,14 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
         refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
-        check_user_path_access(src, principal, write=req.action == "move")
+        await asyncio.to_thread(check_user_path_access, src, principal, write=req.action == "move")
 
         if req.action == "move" and not is_admin and os.path.basename(src.rstrip("/")) == "homes":
             raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
 
     res = await asyncio.to_thread(execute_transfer, req.sources, dest_canonical, req.action, req.collision_policy)
     for src in req.sources:
-        record_activity(req.action, src, principal, target=dest_canonical)
+        await asyncio.to_thread(record_activity, req.action, src, principal, target=dest_canonical)
     add_event(
         "info",
         "File Explorer",
@@ -246,7 +248,7 @@ async def fs_transfer_async(
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, req.destination_dir, principal, write=True)
 
     is_admin = (
         principal.role_id in ("superadmin", "storage_admin")
@@ -260,7 +262,7 @@ async def fs_transfer_async(
         refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
-        check_user_path_access(src, principal, write=req.action == "move")
+        await asyncio.to_thread(check_user_path_access, src, principal, write=req.action == "move")
         if req.action == "move" and not is_admin and os.path.basename(src.rstrip("/")) == "homes":
             raise HTTPException(status_code=403, detail="Cannot move root homes directory.")
         clean_sources.append(src_canonical)
@@ -288,7 +290,9 @@ async def fs_transfer_async(
         f"Queued background {req.action} of {len(clean_sources)} item(s) to {os.path.basename(dest_canonical)}",
     )
     for src in clean_sources:
-        record_activity(req.action, src, principal, target=dest_canonical, detail="in the background")
+        await asyncio.to_thread(
+            record_activity, req.action, src, principal, target=dest_canonical, detail="in the background"
+        )
     return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
 
 
@@ -305,7 +309,7 @@ async def fs_archive_create(
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, req.destination_dir, principal, write=True)
 
     archive_name = os.path.basename(req.archive_name.strip())
     if not archive_name or "/" in archive_name or "\\" in archive_name or archive_name in (".", ".."):
@@ -317,7 +321,7 @@ async def fs_archive_create(
         refuse_encrypted_mount(src_canonical or "")
         if src_canonical is None:
             raise HTTPException(status_code=403, detail=f"Source path {src} is outside allowed folders.")
-        check_user_path_access(src, principal)
+        await asyncio.to_thread(check_user_path_access, src, principal)
         clean_sources.append(src_canonical)
 
     task = transfer_manager.submit_archive_create(
@@ -351,12 +355,12 @@ async def fs_archive_extract(
     dest_canonical = resolve_within(req.destination_dir, ALLOWED_BROWSE_ROOTS)
     if dest_canonical is None:
         raise HTTPException(status_code=403, detail="Destination directory is outside allowed folders.")
-    check_user_path_access(req.destination_dir, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, req.destination_dir, principal, write=True)
 
     arc_canonical = resolve_within(req.archive_path, ALLOWED_BROWSE_ROOTS)
     if arc_canonical is None or not os.path.isfile(arc_canonical):
         raise HTTPException(status_code=404, detail="Archive file not found or outside allowed folders.")
-    check_user_path_access(req.archive_path, principal)
+    await asyncio.to_thread(check_user_path_access, req.archive_path, principal)
 
     task = transfer_manager.submit_archive_extract(
         owner=principal.username or "",

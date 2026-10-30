@@ -344,6 +344,7 @@ def test_blocks_written_by_another_process_are_seen(blocks):
     with open(ip_block.STORE, "w") as f:
         json.dump({CLIENT[0]: {"reason": "web sign-ins", "since": 0, "until": None}}, f)
     os.utime(ip_block.STORE, ns=(1, 1))  # a different time than the last read, whatever the clock
+    ip_block._cache["checked"] -= ip_block.RECHECK_S  # the file is looked at again after a second (NPERF-3)
     assert ip_block.is_blocked(CLIENT[0])
 
 

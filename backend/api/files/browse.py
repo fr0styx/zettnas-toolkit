@@ -351,7 +351,7 @@ async def browse(
     """A folder's entries. With `limit`, one page of them and the `total` (PERF-25); without it,
     all of them as before. A folder on a sleeping disk is listed only once the person confirms
     waking it (428 confirmation_required, action folder.wake): listing it would spin it up."""
-    check_user_path_access(path, principal, allow_list=True)
+    await asyncio.to_thread(check_user_path_access, path, principal, allow_list=True)
     if await asyncio.to_thread(folder_asleep, path):
         from backend.confirmations import confirm_or_raise
 

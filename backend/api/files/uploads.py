@@ -62,7 +62,7 @@ async def fs_inbox_upload(
 ):
     """Saves one shared file into the Inbox under a name that doesn't overwrite anything (M1)."""
     inbox = _inbox_dir(principal)
-    check_user_path_access(inbox, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, inbox, principal, write=True)
     name = os.path.basename(str(filename or "").replace("\\", "/")).strip() or "shared-file"
     if name in (".", "..") or name.startswith("."):
         name = f"shared{name}"
@@ -83,8 +83,8 @@ async def fs_inbox_upload(
     finally:
         if os.path.exists(staging):
             os.remove(staging)
-    _observe("write", target, principal)
-    record_activity("upload", target, principal, detail="to the Inbox")
+    await asyncio.to_thread(_observe, "write", target, principal)
+    await asyncio.to_thread(record_activity, "upload", target, principal, detail="to the Inbox")
     add_event("success", "File Explorer", f"Received {os.path.basename(target)} in Inbox")
     return {"status": "ok", "path": target, "name": os.path.basename(target)}
 
@@ -99,7 +99,7 @@ async def fs_upload(
     filename: str,
     principal: AuthenticatedPrincipal = Depends(get_current_principal),
 ):
-    check_user_path_access(path, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, path, principal, write=True)
     target_unresolved, _, _ = _safe_fs_target(path)
     target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
     if target_canonical is None or not os.path.isdir(target_canonical):
@@ -111,7 +111,7 @@ async def fs_upload(
         raise HTTPException(status_code=400, detail="Invalid filename")
 
     file_path = os.path.join(target_canonical, filename)
-    check_user_path_access(file_path, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, file_path, principal, write=True)
     if os.path.islink(file_path) and resolve_within(file_path, ALLOWED_BROWSE_ROOTS) is None:
         raise HTTPException(status_code=403, detail="Destination symlink points outside allowed folders")
 
@@ -136,7 +136,7 @@ async def fs_upload(
                     await f_out.write(chunk)
 
         os.replace(staging_file, file_path)
-        record_activity("upload", file_path, principal)
+        await asyncio.to_thread(record_activity, "upload", file_path, principal)
         add_event("success", "File Explorer", f"Uploaded {filename} to {path}")
         return {"status": "ok", "message": "File uploaded"}
     except QuotaExceeded:
@@ -154,6 +154,20 @@ async def fs_upload(
 
 
 UPLOAD_CHUNK_SIZE = 16 * 1024 * 1024
+
+
+def _assemble(chunks: list[str], out_path: str) -> str:
+    """Joins the chunk files into out_path in order and returns the SHA-256 of the whole."""
+    sha256 = hashlib.sha256()
+    with open(out_path, "wb") as f_out:
+        for idx, chunk_file in enumerate(chunks):
+            if not os.path.exists(chunk_file):
+                raise HTTPException(status_code=400, detail=f"Chunk file {idx} missing on disk")
+            with open(chunk_file, "rb") as f_in:
+                while b := f_in.read(1024 * 1024):
+                    sha256.update(b)
+                    f_out.write(b)
+    return sha256.hexdigest()
 
 
 UPLOAD_SESSION_TTL = 24 * 3600
@@ -199,7 +213,7 @@ async def fs_upload_init(
     if not fewest <= total_chunks <= max(1, int(req.total_size)):
         raise HTTPException(status_code=400, detail="The chunk count doesn't match the file size")
     await _expire_uploads()
-    check_user_path_access(dest, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, dest, principal, write=True)
     target_unresolved, _, _ = _safe_fs_target(dest)
     target_canonical = resolve_within(target_unresolved, ALLOWED_BROWSE_ROOTS)
     if target_canonical is None or not os.path.isdir(target_canonical):
@@ -344,22 +358,13 @@ async def fs_upload_complete(
         raise HTTPException(status_code=400, detail="The uploaded size doesn't match the announced size")
 
     final_target = os.path.join(target_dir, filename)
-    check_user_path_access(final_target, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, final_target, principal, write=True)
     temp_assembly = os.path.join(target_dir, f".zettnas_tmp_{req.upload_id}_{filename}")
 
-    sha256 = hashlib.sha256()
     try:
-        async with aiofiles.open(temp_assembly, "wb") as f_out:
-            for idx in range(total_chunks):
-                chunk_file = os.path.join(staging_dir, f"chunk_{idx:06d}")
-                if not os.path.exists(chunk_file):
-                    raise HTTPException(status_code=400, detail=f"Chunk file {idx} missing on disk")
-                async with aiofiles.open(chunk_file, "rb") as f_in:
-                    while b := await f_in.read(65536):
-                        sha256.update(b)
-                        await f_out.write(b)
-
-        computed_hash = sha256.hexdigest()
+        # joining and hashing every byte happens in a thread, not on the event loop (NPERF-3)
+        chunks = [os.path.join(staging_dir, f"chunk_{idx:06d}") for idx in range(total_chunks)]
+        computed_hash = await asyncio.to_thread(_assemble, chunks, temp_assembly)
         if req.expected_sha256 and req.expected_sha256.lower().strip() != computed_hash.lower():
             if os.path.exists(temp_assembly):
                 os.remove(temp_assembly)
@@ -377,7 +382,7 @@ async def fs_upload_complete(
             _CHUNKED_UPLOADS.pop(req.upload_id, None)
 
         final_size = os.path.getsize(final_target)
-        record_activity("upload", final_target, principal)
+        await asyncio.to_thread(record_activity, "upload", final_target, principal)
         add_event("success", "File Explorer", f"Completed chunked upload of {filename}")
         return {
             "status": "ok",

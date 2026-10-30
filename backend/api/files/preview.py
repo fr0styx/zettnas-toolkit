@@ -37,7 +37,7 @@ async def fs_preview(path: str, principal: AuthenticatedPrincipal = Depends(get_
     """Universal Quick Look preview generator.
     Redacts sensitive credentials from config/text files. Generates 1KB hex dumps for binaries.
     """
-    check_user_path_access(path, principal)
+    await asyncio.to_thread(check_user_path_access, path, principal)
     target = _contained(path, must_exist=True)
     if os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Cannot preview a directory")
@@ -187,7 +187,7 @@ async def fs_preview_image(
     """Thumbnails and screen-sized previews as WebP: photos (including Apple HEIC/HEIF) and
     video frames, cached on disk (backend/services/thumbs.py). Other files are served as they are.
     """
-    check_user_path_access(path, principal)
+    await asyncio.to_thread(check_user_path_access, path, principal)
     target = _contained(path, must_exist=True)
     if os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Cannot preview a directory")
@@ -227,7 +227,7 @@ async def fs_preview_image(
 )
 async def fs_media_info(path: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
     """Duration, resolution, codecs, frame rate and rotation of a video or audio file."""
-    check_user_path_access(path, principal)
+    await asyncio.to_thread(check_user_path_access, path, principal)
     target = _contained(path, must_exist=True)
     if os.path.isdir(target):
         raise HTTPException(status_code=400, detail="Not a file")

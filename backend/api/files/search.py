@@ -158,7 +158,7 @@ async def fs_search(
     offset = max(0, offset)
 
     if path and path.strip():
-        check_user_path_access(path, principal, allow_list=True)
+        await asyncio.to_thread(check_user_path_access, path, principal, allow_list=True)
         search_root = resolve_within(path, ALLOWED_BROWSE_ROOTS)
         if search_root is None or not os.path.isdir(search_root):
             raise HTTPException(status_code=400, detail="Invalid search path")

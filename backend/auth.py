@@ -225,6 +225,9 @@ def api_deprecation_headers(path: str, token: str) -> dict[str, str]:
     }
 
 
+GZIP_IN_THREAD = 256 * 1024
+
+
 class JsonGzip:
     """Gzips JSON answers of 1 KB or more when the browser accepts it (PERF-25). Event streams,
     files and anything else pass through untouched, so SSE and downloads keep streaming."""
@@ -267,7 +270,10 @@ class JsonGzip:
             if len(body) >= self.minimum_size:
                 import gzip
 
-                body = gzip.compress(body, compresslevel=self.level)
+                if len(body) >= GZIP_IN_THREAD:  # tens of ms on a small CPU: not on the event loop (NPERF-3)
+                    body = await asyncio.to_thread(gzip.compress, body, self.level)
+                else:
+                    body = gzip.compress(body, compresslevel=self.level)
                 headers += [(b"content-encoding", b"gzip"), (b"vary", b"Accept-Encoding")]
             headers.append((b"content-length", str(len(body)).encode()))
             await send({**start, "headers": headers})
@@ -556,14 +562,15 @@ async def auth_middleware(request: Request, call_next):
             # A ZettNAS API token sent through the proxy authenticates as that token.
             if proxy_user and not request.headers.get("Authorization", "").startswith("Bearer "):
                 proxy_user = proxy_user.strip()
-                user = get_user_by_username(proxy_user)
+                user = await asyncio.to_thread(get_user_by_username, proxy_user)
                 if not user:
                     try:
                         from backend.users_db import create_user
 
                         email = request.headers.get("Remote-Email") or request.headers.get("X-Forwarded-Email") or ""
                         display_name = request.headers.get("Remote-Name") or proxy_user
-                        user = create_user(
+                        user = await asyncio.to_thread(
+                            create_user,
                             username=proxy_user,
                             display_name=display_name,
                             password=secrets.token_urlsafe(32),
@@ -574,7 +581,7 @@ async def auth_middleware(request: Request, call_next):
                         )
                     except Exception as e:
                         logger.warning(f"Failed to auto-provision proxy user '{proxy_user}': {e}")
-                        user = get_user_by_username(proxy_user)
+                        user = await asyncio.to_thread(get_user_by_username, proxy_user)
 
                 if user and user.get("status") == "active" and user.get("idp_type") != "proxy_sso":
                     _warn_proxy_local_account(user)

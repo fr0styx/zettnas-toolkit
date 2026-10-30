@@ -430,6 +430,12 @@
 
 #### Performance
 
+- **A slow disk no longer freezes the whole app**: checking someone's rights to a path, the File
+  Explorer's activity log, joining a chunked upload, signing in through a proxy and compressing a
+  big answer now run beside the app's main loop instead of on it, so one folder on a disk that is
+  spinning up doesn't hold every other page and the live updates. The address block-list is read
+  at most once a second and no longer rewritten on a request (NPERF-3).
+
 - **The nightly idle check sees short tools**: the app counts every process it starts, and which
   part of it started it (in /api/metrics), and the hardware check counts their CPU too. CPU,
   started processes and memory are now a hard gate instead of a warning (NPERF-1).

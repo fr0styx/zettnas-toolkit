@@ -120,7 +120,7 @@ async def create_share_link(
     """Generates a secure, temporary or password-protected public share link for a file or folder."""
     target_path = req.path.strip()
     # a public link hands the folder to anyone with the link: it needs write there (B11, SEC-30)
-    check_user_path_access(target_path, principal, write=True)
+    await asyncio.to_thread(check_user_path_access, target_path, principal, write=True)
     real_target = _contained(target_path, must_exist=True)
 
     if resolve_within(real_target, ALLOWED_BROWSE_ROOTS) is None:

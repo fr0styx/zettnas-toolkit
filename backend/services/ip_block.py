@@ -25,7 +25,8 @@ FAIL_LIMIT = 20
 FAIL_BLOCK_S = 60 * 60
 _lock = threading.Lock()
 _failures: dict[str, list[float]] = {}
-_cache: dict[str, Any] = {"loaded": False, "blocks": {}, "mtime": None}
+_cache: dict[str, Any] = {"loaded": False, "blocks": {}, "mtime": None, "checked": 0.0}
+RECHECK_S = 1.0  # the file is looked at at most this often on the request path (NPERF-3)
 
 
 def _trusted(ip: str) -> bool:
@@ -54,6 +55,10 @@ def _mtime() -> int | None:
 def _load() -> dict[str, dict[str, Any]]:
     """The block-list, read again when the file changed: the SFTP sidecar is another
     process and sees the web app's blocks this way (SEC-34)."""
+    now = time.monotonic()
+    if _cache["loaded"] and now - _cache["checked"] < RECHECK_S:
+        return _cache["blocks"]
+    _cache["checked"] = now
     mtime = _mtime()
     if not _cache["loaded"] or mtime != _cache["mtime"]:
         _cache["mtime"] = mtime
@@ -68,6 +73,9 @@ def _load() -> dict[str, dict[str, Any]]:
 
 
 def _save(blocks: dict[str, dict[str, Any]]) -> None:
+    now = time.time()
+    for ip in [ip for ip, e in blocks.items() if e.get("until") and e["until"] < now]:
+        del blocks[ip]  # expired blocks go with the next change, not on the request path
     try:
         atomic_write_json(STORE, blocks, indent=1)
         _cache["mtime"] = _mtime()
@@ -106,18 +114,15 @@ def unblock(ip: str) -> bool:
 
 
 def is_blocked(ip: str) -> bool:
+    """Whether ip is blocked now. Asked on every request, so it reads a cached copy and writes
+    nothing: an expired block simply no longer counts, and is dropped at the next change."""
     if not ip:
         return False
     with _lock:
         entry = _load().get(ip)
-        if not entry:
-            return False
-        if entry.get("until") and entry["until"] < time.time():
-            blocks = _load()
-            blocks.pop(ip, None)
-            _save(blocks)
-            return False
-    return True
+    if not entry:
+        return False
+    return not (entry.get("until") and entry["until"] < time.time())
 
 
 def list_blocks() -> list[dict[str, Any]]:
