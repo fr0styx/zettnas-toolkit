@@ -28,7 +28,17 @@ from backend.services.encrypted_index import bin_for, grant_paths, plain_path
 __all__ = ["bin_for", "grant_paths", "plain_path"]  # kept here too, beside the rest
 
 HIDDEN = ENCRYPTED_HIDDEN  # in the share: the encrypted files
-NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 _.-]{0,47}$")
+# Letters and digits of any language, spaces, dots, dashes and underscores; it can't start with a
+# dot or a space (NUX-11: "Fotos Großeltern" and "家庭照片" are names too)
+NAME_RE = re.compile(r"^[^\W_][\w .-]{0,47}$")
+
+
+def clean_name(name: str) -> str:
+    import unicodedata
+
+    return unicodedata.normalize("NFC", (name or "").strip())
+
+
 MASTER_KEY_RE = re.compile(r"((?:[0-9a-f]{8}-){7}[0-9a-f]{8})")
 TOOL_SECS = 120  # gocryptfs derives the key with scrypt: a few seconds on a slow CPU
 
@@ -155,7 +165,7 @@ def create(share: str, name: str, password: str, unlock_at_start: bool = False) 
     """Makes an encrypted folder in a share and opens it. Returns its recovery key, shown once."""
     from backend import secret_box
 
-    name = (name or "").strip()
+    name = clean_name(name)
     if not NAME_RE.match(name):
         raise ValueError("Use a name of up to 48 letters, digits, spaces, dots, dashes or underscores.")
     _check_password(password)
@@ -185,7 +195,7 @@ def create(share: str, name: str, password: str, unlock_at_start: bool = False) 
 @json_locked(lambda *a, **k: ei.SETTINGS_FILE)
 def adopt(share: str, name: str, password: str) -> dict[str, Any]:
     """Adds back an encrypted folder whose files are in a share (after a reinstall or a restore)."""
-    name = (name or "").strip()
+    name = clean_name(name)
     if not NAME_RE.match(name):
         raise ValueError("That isn't an encrypted folder's name.")
     s = _settings()

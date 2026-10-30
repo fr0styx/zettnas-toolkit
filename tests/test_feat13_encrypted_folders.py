@@ -92,6 +92,15 @@ def test_make_lock_open_and_take_off(box):
     assert ef.is_unlocked("Taxes")
 
 
+def test_names_in_any_language(box):
+    """NUX-11: "Fotos Großeltern" and "家庭照片" are names; a dot or space first, a slash or ".." is not."""
+    for good in ("Fotos Großeltern", "家庭照片", "Taxes 2026", "café_notes"):
+        assert ef.NAME_RE.match(ef.clean_name(good)), good
+    for bad in ("../etc", ".hidden", " lead", "a/b", "_x", "x" * 49, ""):
+        assert not ef.NAME_RE.match(bad), bad
+    assert ef.clean_name(" Cafe\u0301 ") == "Café"  # one spelling for one name
+
+
 def test_what_is_refused(box):
     with pytest.raises(ValueError, match="48 letters"):
         ef.create("Family", "../etc", "correct horse battery staple")

@@ -519,7 +519,45 @@ export class FmInspector {
     if (this.container) {
       this.container.style.display = this.isVisible ? 'flex' : 'none';
     }
-    if (this.isVisible) this.update();
+    return this.isVisible ? this.update() : Promise.resolve();
+  }
+
+  /** A folder's size and how many files and folders it holds, into the panel. */
+  async countFolder(content, path, wake = false) {
+    const btn = /** @type {HTMLButtonElement | null} */ (content.querySelector('#fm-btn-calc-folder-sz'));
+    const out = /** @type {HTMLElement | null} */ (content.querySelector('#fm-insp-folder-sz-res'));
+    if (!out) return null;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = t('fm.counting', 'Counting…');
+    }
+    let res = null;
+    try {
+      res = await api.post('/api/fs/folder-size', { path, force_wake: wake });
+    } catch (err) {
+      out.textContent = err.message || String(err);
+    }
+    if (res && res.is_standby) {
+      const again = document.createElement('button');
+      again.type = 'button';
+      again.className = 'btn-pill-toggle is-small';
+      again.textContent = t('fm.count_anyway', 'Count anyway (wakes the disk)');
+      again.addEventListener('click', () => this.countFolder(content, path, true));
+      out.replaceChildren(document.createTextNode(t('fm.size_asleep', 'Its disk is asleep, so it wasn\'t counted.')), ' ', again);
+    } else if (res) {
+      const text = t('fm.folder_counts', '{size} · {files, plural, one {# file} other {# files}} · {dirs, plural, one {# folder} other {# folders}}', {
+        size: formatBytes(res.size),
+        files: res.files_count,
+        dirs: res.dirs_count,
+      });
+      out.textContent = res.at_least ? t('fm.at_least', 'At least {what}', { what: text }) : text;
+    }
+    out.style.display = 'block';
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = t('fm.count_again', 'Count again');
+    }
+    return res;
   }
 
   async update() {
@@ -825,8 +863,8 @@ export class FmInspector {
         </div>
       ` : `
         <div class="fm-inspector-section" style="margin-top: 10px;">
-          <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--muted); margin-bottom: 6px;">Folder Size</div>
-          <button type="button" id="fm-btn-calc-folder-sz" class="btn-pill-toggle is-block">Calculate Disk Usage</button>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--muted); margin-bottom: 6px;">${escapeHtml(t('fm.folder_size', 'Size and contents'))}</div>
+          <button type="button" id="fm-btn-calc-folder-sz" class="btn-pill-toggle is-block">${escapeHtml(t('fm.count', 'Count'))}</button>
           <div id="fm-insp-folder-sz-res" style="font-size: var(--zn-fs-xs); margin-top: 6px; color: var(--fg); display: none;"></div>
         </div>
       `}
@@ -913,39 +951,10 @@ export class FmInspector {
       });
     }
 
-    // Folder size calculator (Spindown-Safe)
+    // Folder size: counted by Get info at once, or by this button; a sleeping disk is only
+    // woken when the person says so (the server asks to confirm)
     const fldrSzBtn = content.querySelector('#fm-btn-calc-folder-sz');
-    if (fldrSzBtn) {
-      fldrSzBtn.addEventListener('click', async () => {
-        fldrSzBtn.textContent = t('ui.scanning', 'Scanning...');
-        fldrSzBtn.disabled = true;
-        try {
-          const sRes = await fetch('/api/fs/folder-size', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({ path: item.path, force_wake: false }),
-          });
-          if (sRes.ok) {
-            const sData = await sRes.json();
-            const szEl = content.querySelector('#fm-insp-folder-sz-res');
-            if (szEl) {
-              if (sData.is_standby) {
-                szEl.innerHTML = `<span style="color: var(--lt-t-eab308ff, #eab308);">💤 Drive in Standby</span><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">Calculation deferred (0 wakeups)</span>`;
-              } else {
-                szEl.textContent = `${formatBytes(sData.size)} (${sData.files_count} files, ${sData.dirs_count} folders)`;
-              }
-              szEl.style.display = 'block';
-            }
-            fldrSzBtn.textContent = t('ui.refreshed', 'Refreshed ✓');
-          }
-        } catch (_) {
-          fldrSzBtn.textContent = t('jobs.status_error', 'Failed');
-        }
-      });
-    }
+    if (fldrSzBtn) fldrSzBtn.addEventListener('click', () => this.countFolder(content, item.path));
 
     // QuickLook & download
     const prevBtn = content.querySelector('#fm-insp-preview-btn');
@@ -1052,6 +1061,7 @@ export class FmContextMenu {
         fileItem && isDir && it('open', '📂', t('fm.ctx_open', 'Open'), t('fm.kbd_enter', 'Enter')),
         fileItem && fileItem.trash_id && it('restore', '↩️', t('fm.restore', 'Restore')),
         it('new-window', '🪟', t('fm.ctx_new_window', 'Open in a new window')),
+        isSingle && it('info', 'ℹ️', t('fm.ctx_info', 'Get info')),
       ]),
       line,
       group([
@@ -1171,6 +1181,17 @@ export class FmContextMenu {
         break;
       case 'share':
         if (item) this.fm.handleAction('share', item.path, item.name);
+        break;
+      case 'info':
+        // the info panel on this item; a folder is counted straight away
+        if (item && this.fm.inspector) {
+          const insp = this.fm.inspector;
+          this.fm.btnInspectorToggle?.classList.add('active');
+          Promise.resolve(insp.toggle(true)).then(() => {
+            const content = insp.container?.querySelector('.fm-inspector-content');
+            if (item.is_dir && content) insp.countFolder(content, item.path);
+          });
+        }
         break;
       case 'checksum':
         if (item) {

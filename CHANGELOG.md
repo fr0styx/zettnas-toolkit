@@ -82,12 +82,26 @@
 
 #### Usability
 
+- **Get info on any file or folder**: right-click → Get info opens the info panel on it; for a
+  folder it counts straight away how big it is and how many files and folders it holds ("at
+  least" when it is very large). On a sleeping disk it says so and offers "Count anyway", which
+  asks before waking the disk.
+
+- **Encrypted folders are harder to get wrong**: the password field has a visible label and Enter
+  unlocks; the state reads "Unlocked" and the button "Unlock"; adding a folder back has its own
+  fields. The recovery key gets the focus, Copy says whether it worked, it can be downloaded as a
+  file, leaving the page while it shows asks first, and "I have saved it" asks once more.
+  "Take off ZettNAS" is now "Remove from the list" and asks first. Names can be in any language
+  ("Fotos Großeltern", "家庭照片"), and the message for a server without the tool is plain (NUX-11).
+
 - **Each account sees what it can use**: on phones, kids, guests and family accounts no longer get
   tiles for Users, Storage, Backup, Apps, Network or AI settings that would only say "no
   permission". The Overview leaves out chores only the manager can do, and for a problem someone
   can't fix it says "Tell the person who manages ZettNAS" instead of an Open button (NUX-5).
 - **Mission Control's sidebar by role too**: Storage, Shares, Backup, Apps, Virtual machines, AI,
   Users, Network, Power, Hardware and Activity show only for accounts that can use them (NUX-5).
+- **Spotlight too**: commands such as spinning drives down, fan modes, pool snapshots, emptying the
+  Recycle Bin or isolating an app show only for accounts allowed to run them (NUX-5).
 
 - **Your clock everywhere**: file dates, a backup's last run, the activity log and every other
   time on screen now use your own time zone and 12/24-hour choice, as the desktop clock does.

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../i18n.js', () => ({ getLanguage: () => 'en', t: (k, f, p = {}) => String(f).replace(/\{(\w+)\}/g, (m, x) => (x in p ? p[x] : m)) }));
 
-const { canOpen, hasScope, hideUnusable } = await import('../route-access.js');
+const { canOpen, canRun, hasScope, hideUnusable } = await import('../route-access.js');
 const { itemText } = await import('../components/management/overview.js');
 
 const KID = { scopes: ['shares:read', 'shares:user_write'] };
@@ -42,6 +42,14 @@ describe('places by role (NUX-5)', () => {
     root.innerHTML = '<button data-route="users"></button><button data-route="hardware"></button><button data-mgmt-target="files"></button>';
     hideUnusable(root, FAMILY);
     expect([...root.children].map((b) => b.hidden)).toEqual([true, true, false]);
+  });
+
+  it('Spotlight offers only the commands an account may run', () => {
+    expect(canRun('act-spindown', FAMILY)).toBe(false);
+    expect(canRun('act-trash-empty', KID)).toBe(false);
+    expect(canRun('act-trash-empty', ADMIN)).toBe(true);
+    expect(canRun('app-fm', KID)).toBe(true); // Files is for everyone
+    expect(canRun('act-spindown', null)).toBe(true); // until the account is known
   });
 
   it('an item someone cannot fix says who can', () => {

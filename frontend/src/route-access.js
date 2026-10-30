@@ -4,6 +4,8 @@ import { ZettEventBus } from './event-bus.js';
 import { onManagementDom } from './management-dom.js';
 
 // place -> any of these scopes opens it; a place not listed is open to everyone
+let _user = null;
+
 export const ROUTE_SCOPES = {
   apps: ['containers:read', 'containers:manage'],
   'apps/catalog': ['containers:manage'],
@@ -27,6 +29,31 @@ export function hasScope(scopes, need) {
   const [area, verb] = need.split(':');
   if (list.includes(`${area}:*`)) return true;
   return (verb === 'read' || verb === 'view') && list.includes('*:read');
+}
+
+// Spotlight commands -> any of these scopes runs them (NUX-5); others are open to everyone
+export const SPOTLIGHT_SCOPES = {
+  'app-smart': ['storage:read', 'hardware:read'],
+  'app-catalog': ['containers:manage'],
+  'act-quiet-fans': ['hardware:fans'],
+  'act-perf-fans': ['hardware:fans'],
+  'act-fan-pct': ['hardware:fans'],
+  'act-spindown': ['storage:admin'],
+  'act-snap-pool': ['storage:admin'],
+  'act-locate-drive': ['storage:admin'],
+  'act-trash-empty': ['shares:manage', 'storage:admin'],
+  'dyn-trash-empty': ['shares:manage', 'storage:admin'],
+  'act-isolate-container': ['containers:manage'],
+};
+
+/** Whether this account may run a Spotlight command; true while the account isn't known. */
+export function canRun(id, user) {
+  const need = SPOTLIGHT_SCOPES[id];
+  return !need || !user || need.some((s) => hasScope(user.scopes, s));
+}
+
+export function currentUser() {
+  return _user;
 }
 
 export function canOpen(route, user) {
@@ -54,7 +81,6 @@ export function hideUnusable(root, user) {
   }
 }
 
-let _user = null;
 ZettEventBus.on?.('session:user', (user) => {
   _user = user;
   hideUnusable(document, user);

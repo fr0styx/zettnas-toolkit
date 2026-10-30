@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 2032,
+  "hardcoded_ui": 2027,
   "missing_plurals": 0,
   "to_fixed": 70,
   "emoji_strings": 137,
@@ -18,7 +18,7 @@
     "frontend/src/components/docker-table.js": 13,
     "frontend/src/components/events.js": 3,
     "frontend/src/components/fan-control.js": 25,
-    "frontend/src/components/file-manager-helpers.js": 32,
+    "frontend/src/components/file-manager-helpers.js": 27,
     "frontend/src/components/file-manager.js": 25,
     "frontend/src/components/file-preview-modal.js": 12,
     "frontend/src/components/management.js": 35,

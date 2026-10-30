@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../api.js', () => ({ api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() } }));
-vi.mock('../toast.js', () => ({ showToast: vi.fn() }));
+const confirmed = vi.fn((title, msg, ok) => ok()); // Remove and "I saved it" ask first (NUX-11)
+vi.mock('../toast.js', () => ({ showToast: vi.fn(), showConfirmToast: (...a) => confirmed(...a) }));
 
 import { api } from '../api.js';
 import { showToast } from '../toast.js';
@@ -35,7 +36,7 @@ describe('encrypted folders (FEAT-13)', () => {
   });
 
   it('says why when it cannot, and shows less to people who only use the folders', () => {
-    expect(encryptedFoldersBody({ ...INFO, available: false }).textContent).toContain('gocryptfs');
+    expect(encryptedFoldersBody({ ...INFO, available: false }).textContent).toContain("tool that encrypts them"); // plain words (NUX-11)
     const user = encryptedFoldersBody({ ...INFO, can_manage: false, shares: [] });
     expect(user.querySelector('.ef-create')).toBeNull();
     expect(user.querySelector('[name="keep"]')).toBeNull();
@@ -62,12 +63,14 @@ describe('encrypted folders (FEAT-13)', () => {
     expect(window.openFileManager).toHaveBeenCalledWith('/mnt/encrypted/Photos');
     click(row(mount, 'Taxes'), 'forget');
     await vi.waitFor(() => expect(api.delete).toHaveBeenCalledWith('/api/encrypted-folders/Taxes'));
+    expect(confirmed.mock.calls.at(-1)[0]).toBe('Remove Taxes from the list');
   });
 
   it('makes a folder and shows its recovery key once', async () => {
     api.get.mockResolvedValue(INFO);
     api.post.mockResolvedValue({ name: 'New', recovery_key: 'aaaa-bbbb' });
     const mount = document.createElement('div');
+    document.body.append(mount); // so focus can move to the key
     await renderEncryptedFolders(mount);
     const form = mount.querySelector('.ef-create');
     const set = (n, v) => {
@@ -85,11 +88,20 @@ describe('encrypted folders (FEAT-13)', () => {
     click(form, 'create');
     await vi.waitFor(() => expect(mount.querySelector('.ef-key').textContent).toBe('aaaa-bbbb'));
     expect(api.post).toHaveBeenCalledWith('/api/encrypted-folders', { share: 'Family', name: 'New', password: 'one long passphrase', unlock_at_start: true });
+    expect(document.activeElement).toBe(mount.querySelector('.ef-key')); // focus on the key
+    const leave = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(leave);
+    expect(leave.defaultPrevented).toBe(true); // leaving asks first
     Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
     click(mount, 'copy');
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('aaaa-bbbb');
+    await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith(expect.stringContaining('copied'), 'success'));
     click(mount, 'saved');
+    expect(confirmed.mock.calls.at(-1)[0]).toBe('Is the recovery key saved?');
     await vi.waitFor(() => expect(mount.querySelector('.ef-row')).not.toBeNull());
+    const later = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(later);
+    expect(later.defaultPrevented).toBe(false); // saved: leaving is free again
   });
 
   it('adds one back, and keeps a password only after it is typed', async () => {
@@ -98,9 +110,9 @@ describe('encrypted folders (FEAT-13)', () => {
     api.put.mockResolvedValue({});
     const mount = document.createElement('div');
     await renderEncryptedFolders(mount);
-    const form = mount.querySelector('.ef-create');
+    const form = mount.querySelector('.ef-adopt'); // its own fields (NUX-11)
     /** @type {HTMLInputElement} */ (form.querySelector('[name="name"]')).value = 'Old';
-    /** @type {HTMLInputElement} */ (form.querySelector('[name="new"]')).value = 'its password here';
+    /** @type {HTMLInputElement} */ (form.querySelector('[name="password"]')).value = 'its password here';
     click(mount, 'adopt');
     await vi.waitFor(() => expect(api.post).toHaveBeenCalledWith('/api/encrypted-folders/adopt', { share: 'Family', name: 'Old', password: 'its password here' }));
     await flush();
@@ -134,5 +146,40 @@ describe('encrypted folders (FEAT-13)', () => {
     expect(mount.textContent).toContain("forbidden"); // with a sentence and Retry (NUX-14)
     expect(mount.querySelector(".zn-load-error button")).not.toBeNull();
     await renderEncryptedFolders(null);
+  });
+
+  it('unlocks with Enter in a labelled field, and names the state and the button apart', async () => {
+    api.get.mockResolvedValue(INFO);
+    api.post.mockResolvedValue({});
+    const mount = document.createElement('div');
+    await renderEncryptedFolders(mount);
+    const taxes = row(mount, 'Taxes');
+    expect(taxes.querySelector('.ef-state').textContent).toBe('Locked');
+    expect(row(mount, 'Photos').querySelector('.ef-state').textContent).toBe('Unlocked');
+    expect(taxes.querySelector('[data-ef="unlock"]').textContent).toBe('Unlock');
+    expect(taxes.querySelector('label.ef-field').textContent).toContain('Password');
+    /** @type {HTMLInputElement} */ (taxes.querySelector('[name="password"]')).value = 'pw one two three';
+    taxes.querySelector('form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(api.post).toHaveBeenCalledWith('/api/encrypted-folders/Taxes/unlock', { password: 'pw one two three' }));
+  });
+
+  it('copy failures say what to do instead', async () => {
+    api.get.mockResolvedValue(INFO);
+    api.post.mockResolvedValue({ name: 'New', recovery_key: 'cccc-dddd' });
+    const mount = document.createElement('div');
+    await renderEncryptedFolders(mount);
+    const form = mount.querySelector('.ef-create');
+    for (const [n, v] of [['name', 'Fotos Großeltern'], ['new', 'one long passphrase'], ['again', 'one long passphrase']]) {
+      /** @type {HTMLInputElement} */ (form.querySelector(`[name="${n}"]`)).value = v;
+    }
+    click(form, 'create');
+    await vi.waitFor(() => expect(mount.querySelector('.ef-key')).not.toBeNull());
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } });
+    click(mount, 'copy');
+    await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith(expect.stringContaining('download it as a file'), 'error'));
+    URL.createObjectURL = vi.fn(() => 'blob:x');
+    URL.revokeObjectURL = vi.fn();
+    click(mount, 'download');
+    expect(URL.createObjectURL).toHaveBeenCalled();
   });
 });
