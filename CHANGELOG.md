@@ -78,6 +78,27 @@
 
 #### Usability
 
+- **The Recycle Bin says where things came from**: in the bin, each item shows the folder it was
+  deleted from and when it was deleted; a bar says items stay 30 days, and people who may empty
+  the bins get "Empty all Recycle Bins", which asks for a typed word since it covers every share
+  (NUX-17).
+- **Plain service names on the Overview**: "The drive health check service has stopped
+  responding" instead of an internal name, a readable sentence for anything new, and each Open
+  button says what it opens to screen readers; the alert by phone or email uses the same names
+  (NUX-19).
+- **Cards that fail to load offer Retry**: encrypted folders, the family filter, camera alerts
+  and two-way sync say what went wrong and offer Try again; check results are read out by screen
+  readers, and each person's Save button names them (NUX-14).
+- **Readable confirm buttons**: the buttons and title in confirmation dialogs now meet contrast
+  in light and dark themes (NUX-16).
+- **Installing an app in plain words**: the install dialog talks about apps, not containers, in
+  every language, and replacing an app that is already there asks first, naming it (NUX-13).
+- **Two-way sync shows what it would delete**: before you turn a sync on, the preview lists the
+  files it would delete on each side, and Forget asks first, as it does for off-site backups
+  (NUX-23).
+- **Compression choices say what they do**: Recommended (zstd), Fastest (lz4) or Off; the dialog
+  takes the keyboard focus, keeps Tab inside and gives focus back when it closes (NUX-21).
+
 - **"Are you sure?" in your language**: the confirmation before deleting a pool, share, account
   or snapshot, rolling back, restarting, updating or emptying the Recycle Bin is now asked in
   each of the five languages, as a question with its own title and button, and red when it

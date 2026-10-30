@@ -4,6 +4,7 @@
  */
 import { api } from '../api.js';
 import { t } from '../i18n.js';
+import { showLoadError } from './load-error.js';
 import { showToast } from '../toast.js';
 
 function el(tag, props = {}, ...children) {
@@ -173,7 +174,7 @@ export async function renderEncryptedFolders(mount) {
   try {
     info = await api.get('/api/encrypted-folders');
   } catch (err) {
-    mount.textContent = err.message;
+    showLoadError(mount, err, () => renderEncryptedFolders(mount));
     return;
   }
   mount.replaceChildren(encryptedFoldersBody(info));

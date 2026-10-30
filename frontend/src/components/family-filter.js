@@ -5,6 +5,7 @@
  */
 import { api } from '../api.js';
 import { t } from '../i18n.js';
+import { showLoadError } from './load-error.js';
 import { showToast } from '../toast.js';
 
 function el(tag, props = {}, ...children) {
@@ -50,7 +51,9 @@ function connectionBox(info) {
   save.dataset.ff = 'connect';
   const check = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('ff.check', 'Check AdGuard Home') });
   check.dataset.ff = 'check';
-  box.append(el('div', { className: 'ff-actions' }, save, check), el('p', { className: 'ff-check muted', hidden: true }));
+  const result = el('p', { className: 'ff-check muted', hidden: true });
+  result.setAttribute('role', 'status'); // read out when a check answers (NUX-14)
+  box.append(el('div', { className: 'ff-actions' }, save, check), result);
   return box;
 }
 
@@ -72,6 +75,7 @@ function personRow(person, saved, services) {
   }
   row.append(blocked);
   const save = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('common.save', 'Save') });
+  save.setAttribute('aria-label', t('ff.save_for', 'Save for {name}', { name: person.display_name || person.username }));
   save.dataset.ff = 'person';
   const state = (saved.devices || []).length
     ? t('ff.filtered', '{n, plural, one {# device filtered} other {# devices filtered}}', { n: saved.devices.length })
@@ -125,7 +129,7 @@ export async function renderFamilyFilter(mount) {
   try {
     info = await api.get('/api/family-filter');
   } catch (err) {
-    mount.textContent = err.message || String(err);
+    showLoadError(mount, err, () => renderFamilyFilter(mount));
     return;
   }
   mount.replaceChildren(familyFilterBody(info));

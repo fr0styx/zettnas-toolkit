@@ -67,7 +67,8 @@ describe('filter for the kids\' devices (COMP-13)', () => {
     await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith('AdGuard Home refused the user name or password.', 'error'));
     api.get.mockRejectedValueOnce(new Error('forbidden'));
     await renderFamilyFilter(mount);
-    expect(mount.textContent).toBe('forbidden');
+    expect(mount.textContent).toContain("forbidden"); // with a sentence and Retry (NUX-14)
+    expect(mount.querySelector(".zn-load-error button")).not.toBeNull();
     await renderFamilyFilter(null);
   });
 });

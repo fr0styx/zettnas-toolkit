@@ -315,7 +315,7 @@ def watch_daemon(stop: threading.Event | None = None, tick: float = WATCH_TICK_S
 def alert_stalled(now: float | None = None, send=None) -> list[str]:
     """One alert a day for each background service that stopped answering; the Overview alone
     reaches nobody who doesn't open it (NREL-18)."""
-    from backend.services.supervisor import stalled
+    from backend.services.supervisor import label, stalled
 
     names = stalled()
     if not names:
@@ -325,8 +325,8 @@ def alert_stalled(now: float | None = None, send=None) -> list[str]:
     day = time.strftime("%Y-%m-%d", time.gmtime(now or time.time()))
     for name in names:
         send(
-            f"ZettNAS: the {name} service stopped responding",
-            f"The {name} background service hasn't checked in for a while, so the work it does "
+            f"ZettNAS: the {label(name)} service stopped responding",
+            f"The {label(name)} service hasn't checked in for a while, so the work it does "
             "(snapshots, checks, backups) may not be running. Restart ZettNAS if it doesn't recover.",
             level="warning",
             event_type="system",

@@ -39,6 +39,14 @@
   --zn-danger-bg: rgba(235, 87, 87, 0.18);
   --zn-danger-line: rgba(235, 87, 87, 0.5);
   --zn-danger-text: #fecaca;
+  /* confirm dialogs (NUX-16): white on these is >= 4.5:1; titles readable on the dark card */
+  --zn-confirm-ok: #0369a1;
+  --zn-confirm-ok-line: #075985;
+  --zn-confirm-danger: #b91c1c;
+  --zn-confirm-danger-line: #991b1b;
+  --zn-confirm-on: #fff; /* text on both buttons, in every theme */
+  --zn-confirm-title: #7dd3fc;
+  --zn-confirm-danger-title: #fca5a5;
 }
 body.theme-light {
   --zn-text-strong: #0f172a;
@@ -52,6 +60,8 @@ body.theme-light {
   --zn-danger-bg: rgba(220, 38, 38, 0.1);
   --zn-danger-line: rgba(220, 38, 38, 0.45);
   --zn-danger-text: #991b1b;
+  --zn-confirm-title: #0369a1;
+  --zn-confirm-danger-title: #b91c1c;
 }
 
 /* Card: a stack of rows. --divided sits under a line, --boxed is a framed tile. */

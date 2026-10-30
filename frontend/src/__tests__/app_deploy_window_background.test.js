@@ -247,7 +247,7 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
 
     // Existing container UI box is visible
     expect(existingBox.style.display).toBe('flex');
-    expect(existingBadge.textContent).toBe('RUNNING');
+    expect(existingBadge.textContent).toBe('Running');
 
     // Defaults to Deploy Alongside: suggested name 'uptime-kuma-2', suggested port 3002
     expect(nameInput.value).toBe('uptime-kuma-2');

@@ -66,6 +66,30 @@ const MESSAGES = {
   timezone_unset: () => t('overview.timezone_unset', "The server's time zone isn't set, so nightly work (backups, checks, AI indexing) runs at night in UTC."),
 };
 
+// The background services by what they do (NUX-19); an unknown one keeps its name
+const SERVICES = {
+  BackupScheduler: () => t('overview.svc_backup_scheduler', 'backup schedule'),
+  BackupWatch: () => t('overview.svc_backup_watch', 'backup check'),
+  ButtonListener: () => t('overview.svc_buttons', 'front-panel buttons'),
+  DataGuard: () => t('overview.svc_data_guard', 'settings check'),
+  DockerProxy: () => t('overview.svc_docker_proxy', 'app connection'),
+  FanWatchdog: () => t('overview.svc_fans', 'fan control'),
+  LcdRenderer: () => t('overview.svc_lcd', 'front display'),
+  PhotoVectors: () => t('overview.svc_photo_vectors', 'photo search'),
+  RansomwareGuard: () => t('overview.svc_ransomware', 'ransomware guard'),
+  SmartPoller: () => t('overview.svc_smart', 'drive health check'),
+  StatsCollector: () => t('overview.svc_stats', 'system statistics'),
+  TaskScheduler: () => t('overview.svc_tasks', 'task scheduler'),
+  VisionCaptioner: () => t('overview.svc_vision', 'photo descriptions'),
+};
+
+export function itemText(i) {
+  const subject = i.kind === 'service_stalled' && SERVICES[i.subject] ? SERVICES[i.subject]() : i.subject || '';
+  const msg = MESSAGES[i.kind] ? MESSAGES[i.kind]() : t('overview.unknown_item', 'Something needs attention: {subject}.');
+  const detail = i.detail_key ? t(i.detail_key, i.detail || '', i.detail_params || {}) : i.detail || '';
+  return msg.replace('{subject}', subject || i.kind || '').replace('{detail}', detail);
+}
+
 export function statusHtml(summary) {
   if (!summary || summary.ok || !(summary.items || []).length) {
     return `<div class="ov-status ov-ok"><strong>✓ ${escapeHtml(t('overview.all_good', 'Everything is fine'))}</strong>
@@ -73,8 +97,8 @@ export function statusHtml(summary) {
   }
   const rows = summary.items
     .map((i) => {
-      const text = (MESSAGES[i.kind] || (() => i.kind))().replace('{subject}', i.subject || '').replace('{detail}', i.detail_key ? t(i.detail_key, i.detail || '', i.detail_params || {}) : i.detail || '');
-      const open = ROUTES[i.open] ? `<button type="button" class="btn-pill-toggle" data-ov-open="${escapeHtml(i.open)}">${escapeHtml(t('overview.open', 'Open'))}</button>` : '';
+      const text = itemText(i);
+      const open = ROUTES[i.open] ? `<button type="button" class="btn-pill-toggle" data-ov-open="${escapeHtml(i.open)}" aria-label="${escapeHtml(t('overview.open_for', 'Open: {what}', { what: text }))}">${escapeHtml(t('overview.open', 'Open'))}</button>` : '';
       return `<li class="ov-item ov-${i.level === 'critical' ? 'crit' : 'warn'}"><span>${escapeHtml(text)}</span>${open}</li>`;
     })
     .join('');

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../api.js', () => ({ api: { get: vi.fn(), put: vi.fn(), post: vi.fn(), delete: vi.fn() } }));
-vi.mock('../toast.js', () => ({ showToast: vi.fn() }));
+vi.mock('../toast.js', () => ({ showToast: vi.fn(), showConfirmToast: (msg, ok) => ok() })); // Forget asks first (NUX-23)
 
 import { api } from '../api.js';
 import { showToast } from '../toast.js';

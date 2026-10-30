@@ -39,7 +39,7 @@ describe('confirm dialog (UX-5, UX-6)', () => {
     showConfirmToast('Delete VM', 'Gone for good.', vi.fn());
     vi.advanceTimersByTime(20);
     expect(document.activeElement).toBe(cancel());
-    expect(ok().style.background).toContain('239'); // red
+    expect(ok().style.background).toContain("zn-confirm-danger"); // red, at 4.5:1 with white (NUX-16)
   });
 
   it('asks to type the name before a big delete', () => {

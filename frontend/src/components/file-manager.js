@@ -11,6 +11,7 @@ import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet, showActionToast } from '../toast.js';
 import { t } from '../i18n.js';
+import { binColumns, binBar } from './fm-bin-view.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreview as openFilePreviewModal } from '../file-preview-loader.js';
 import { transferCenter } from './transfer-center.js';
@@ -2069,6 +2070,9 @@ export class FileManagerWindow {
       this.updateSelectionToolbar();
 
       if (this.pathInput) this.pathInput.value = this.currentPath;
+      this._inBin = Boolean(res.recycle_bin);
+      binColumns(this, this._inBin); // "From" and "Deleted" in the Recycle Bin (NUX-17)
+      binBar(this, this._inBin, () => this.loadPath(this.currentPath, true));
       if (res.recycle_bin && res.bins_asleep > 0 && this._binsAsleepShown !== res.bins_asleep) {
         this._binsAsleepShown = res.bins_asleep;
         showToast(t('fm.bins_asleep', '{count, plural, one {# Recycle Bin is} other {# Recycle Bins are}} on a sleeping disk and not shown, so the disk stays asleep. They appear once it wakes.', { count: res.bins_asleep }), 'info');
@@ -2321,7 +2325,8 @@ export class FileManagerWindow {
       const escName = escapeHtml(file.name);
       const escPath = escapeHtml(file.path);
       const isImage = file.name.match(/\.(jpeg|jpg|png|gif|webp|svg)$/i);
-      const fileType = file.is_dir ? (isRemoteDir ? 'Cloud Drive' : (isDiskDir ? 'Disk Drive' : 'Folder')) : (file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'File');
+      let fileType = file.is_dir ? (isRemoteDir ? 'Cloud Drive' : (isDiskDir ? 'Disk Drive' : 'Folder')) : (file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'File');
+      if (this._inBin) fileType = file.original_path ? file.original_path.replace(/\/[^/]*$/, '') || '/' : '–'; // where it was
       const mtimeStr = formatDateTime(file.mtime, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
       const rowThumb = !file.is_dir && ['image', 'video'].includes(thumbKind(file.name));

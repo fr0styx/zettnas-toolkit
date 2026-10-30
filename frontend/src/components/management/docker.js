@@ -1197,7 +1197,7 @@ export async function openAppDeployModal(appId) {
           <div class="smart-modal-header" id="adm-header" style="cursor:move; user-select:none; display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:8px;">
               <span id="adm-icon" style="font-size:18px;">📦</span>
-              <span id="adm-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13px;">Deploy Application Stack</span>
+              <span id="adm-title" style="font-weight:700; color:var(--zn-text-strong); font-size:13px;">${t('catalog.install_app', 'Install an app')}</span>
             </div>
             <div class="os-window-controls" style="display:flex; gap:6px; align-items:center;">
               <button class="win-btn min-btn" id="adm-min-btn" title="${t('ui.minimize_to_dock', 'Minimize to Dock')}" aria-label="${t('window.minimize', 'Minimize')}"></button>
@@ -1213,19 +1213,19 @@ export async function openAppDeployModal(appId) {
             <div id="adm-existing-box" style="display:none; padding:11px 13px; border-radius:6px; background:rgba(245, 166, 35, 0.09); border:1px solid rgba(245, 166, 35, 0.35); flex-direction:column; gap:8px;">
               <div style="display:flex; align-items:center; justify-content:space-between;">
                 <div style="display:flex; align-items:center; gap:6px; color:var(--warn, #f5a623); font-weight:700; font-size:var(--zn-fs-xs);">
-                  <span aria-hidden="true">⚠️</span> <span id="adm-existing-title">Pre-existing Container Detected</span>
+                  <span aria-hidden="true">⚠️</span> <span id="adm-existing-title">${t('catalog.existing_title', 'This app is already installed')}</span>
                 </div>
-                <span id="adm-existing-status-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; background:var(--zn-glaze-8); font-family:var(--font-mono, monospace); font-weight:700;">Running</span>
+                <span id="adm-existing-status-badge" style="font-size:var(--zn-fs-xs); padding:2px 7px; border-radius:4px; background:var(--zn-glaze-8); font-family:var(--font-mono, monospace); font-weight:700;">${t('catalog.state_running', 'Running')}</span>
               </div>
               <div id="adm-existing-desc" style="color:var(--zn-text-soft); font-size:var(--zn-fs-xs); line-height:1.4;">
-                A container with this name or port already exists on your system. Choose an action:
+                ${t('catalog.existing_desc_generic', 'An app with this name or port is already on this server. Choose what to do:')}
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px;">
                 <button type="button" id="adm-choice-replace-btn" class="btn-pill-toggle is-danger" style="text-align: center; color: var(--lt-t-ff8080ff, #ff8080);">
-                  🔄 Stop &amp; Replace Existing
+                  🔄 ${t('catalog.replace', 'Replace the one there')}
                 </button>
                 <button type="button" id="adm-choice-new-btn" class="btn-pill-toggle" style="text-align: center; border: 2px solid var(--ok2, #25c2a0); background: rgba(37, 194, 160, 0.18); color: var(--ok2, #25c2a0);">
-                  ➕ Deploy Alongside (New)
+                  ➕ ${t('catalog.alongside', 'Install another copy')}
                 </button>
               </div>
             </div>
@@ -1268,8 +1268,8 @@ export async function openAppDeployModal(appId) {
               <div style="display:flex; align-items:center; gap:10px;">
                 <span id="adm-progress-spinner" style="font-size:22px; display:inline-block;">⚙️</span>
                 <div>
-                  <div id="adm-progress-title" style="font-size:13px; font-weight:700; color:var(--zn-text-strong);">Deploying Application...</div>
-                  <div id="adm-progress-status-text" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Preparing environment and directories...</div>
+                  <div id="adm-progress-title" style="font-size:13px; font-weight:700; color:var(--zn-text-strong);">${t('catalog.installing', 'Installing the app...')}</div>
+                  <div id="adm-progress-status-text" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">${t('catalog.preparing', 'Getting its folders ready...')}</div>
                 </div>
               </div>
               <div id="adm-progress-pct-badge" style="font-size:13px; font-weight:800; font-family:var(--font-mono, monospace); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); background:var(--lt-b-00f0ff14, rgba(0,240,255,0.08)); padding:3px 9px; border-radius:6px; border:1px solid var(--lt-r-00f0ff33, rgba(0,240,255,0.2));">0%</div>
@@ -1282,20 +1282,20 @@ export async function openAppDeployModal(appId) {
 
             <!-- Real-time Activity Log Terminal -->
             <div style="margin-top:2px;">
-              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">Deployment Console Log</div>
+              <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">${t('catalog.install_log', 'What is happening')}</div>
               <div id="adm-deploy-logs" style="background:var(--lt-b-05080fff, #05080f); border:1px solid var(--zn-line-10); border-radius:6px; height:160px; overflow-y:auto; padding:10px; font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); line-height:1.5; color:var(--zn-text-soft);">
-                <div style="color:var(--muted);">Waiting for deployment stream to begin...</div>
+                <div style="color:var(--muted);">${t('catalog.waiting', 'Starting...')}</div>
               </div>
             </div>
 
             <!-- Success Callout -->
             <div id="adm-success-box" style="display:none; padding:12px 14px; background:rgba(37,194,160,0.12); border:1px solid var(--ok2, #25c2a0); border-radius:6px; align-items:center; justify-content:space-between; gap:12px;">
               <div>
-                <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:var(--zn-fs-xs);">🚀 Container is Live & Running!</div>
-                <div id="adm-success-msg" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-top:2px;">Your application has been deployed and started successfully.</div>
+                <div style="font-weight:700; color:var(--ok2, #25c2a0); font-size:var(--zn-fs-xs);">🚀 ${t('catalog.live', 'The app is running')}</div>
+                <div id="adm-success-msg" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); margin-top:2px;">${t('catalog.live_desc', 'It is installed and started.')}</div>
               </div>
               <a id="adm-webui-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:var(--ok2, #25c2a0); color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                🌐 Open Web UI ↗
+                🌐 ${t('catalog.open_app', 'Open the app')} ↗
               </a>
             </div>
           </div>
@@ -1413,9 +1413,9 @@ export async function openAppDeployModal(appId) {
   // Register in DockManager
   if (DockManager) {
     if (!DockManager.windows['app-deploy']) {
-      DockManager.register('app-deploy', modal, '#i-chip', `Deploy: ${appId.toUpperCase()}`, false);
+      DockManager.register('app-deploy', modal, '#i-chip', t('catalog.install_title', 'Install {name}', { name: appId }), false);
     } else {
-      DockManager.windows['app-deploy'].title = `Deploy: ${appId.toUpperCase()}`;
+      DockManager.windows['app-deploy'].title = t('catalog.install_title', 'Install {name}', { name: appId });
       DockManager.restore('app-deploy');
     }
   }
@@ -1486,7 +1486,7 @@ export async function openAppDeployModal(appId) {
   title.textContent = t('catalog.install_title', 'Install {name}', { name: appId });
   const advanced = document.getElementById('adm-advanced');
   if (advanced) advanced.open = false;
-  banner.innerHTML = '<span style="color:var(--muted);">Probing host ports and container state...</span>';
+  banner.replaceChildren(Object.assign(document.createElement('span'), { className: 'muted', textContent: t('catalog.checking', 'Checking the ports and apps already here...') }));
   banner.style.background = 'rgba(255,255,255,0.04)';
   banner.style.border = '1px solid rgba(255,255,255,0.08)';
 
@@ -1502,12 +1502,12 @@ export async function openAppDeployModal(appId) {
       if (existingBox) existingBox.style.display = 'flex';
       const isRunning = existingContainerInfo.state === 'running';
       if (existingBadge) {
-        existingBadge.textContent = isRunning ? 'RUNNING' : (existingContainerInfo.state || 'EXISTING').toUpperCase();
+        existingBadge.textContent = isRunning ? t('catalog.state_running', 'Running') : t('catalog.state_stopped', 'Stopped');
         existingBadge.style.color = isRunning ? 'var(--ok2, #25c2a0)' : 'var(--muted)';
         existingBadge.style.background = isRunning ? 'rgba(37,194,160,0.15)' : 'rgba(255,255,255,0.08)';
       }
       if (existingDesc) {
-        existingDesc.innerHTML = `Found existing container <strong>${existingContainerInfo.name}</strong> (${existingContainerInfo.state || 'present'}). Would you like to stop and replace it, or deploy alongside as a new instance?`;
+        existingDesc.textContent = t('catalog.existing_desc', '{name} is already installed. Replace it, or install another copy next to it?', { name: existingContainerInfo.name }); // a name is text, never HTML
       }
 
       // Default to Deploy Alongside
@@ -1541,7 +1541,7 @@ export async function openAppDeployModal(appId) {
   } catch (e) {
     if (nameInput) nameInput.value = appId;
     if (portInput) portInput.value = 8080;
-    banner.innerHTML = '<span style="color:var(--muted);">Port status: Default assigned</span>';
+    banner.replaceChildren(Object.assign(document.createElement('span'), { className: 'muted', textContent: t('catalog.port_default', 'Using the usual port.') }));
   }
 
   function selectReplaceMode() {
@@ -1924,6 +1924,20 @@ export async function openAppDeployModal(appId) {
     const s = storageInput.value.trim() || '/mnt/user/appdata';
     const cName = nameInput ? nameInput.value.trim() : appId;
 
+    // Replacing stops and removes the app there: asked first, naming it (NUX-13)
+    if (replaceExisting) {
+      const sure = await new Promise((resolve) => {
+        showConfirmToast(
+          t('catalog.replace_title', 'Replace {name}', { name: cName }),
+          t('catalog.replace_msg', '{name} is stopped and replaced by a fresh install. Its settings folder stays, but anything kept only inside the app is lost.', { name: cName }),
+          () => resolve(true),
+          () => resolve(false),
+          { destructive: true, allowHtml: false },
+        );
+      });
+      if (!sure) return;
+    }
+
     if (!replaceExisting) {
       // 1. Verify container name is available
       try {
@@ -1973,7 +1987,7 @@ export async function openAppDeployModal(appId) {
       progressPct.textContent = '0%';
       progressPct.style.color = 'var(--accent-cyan, #00f0ff)';
     }
-    if (progressTitle) progressTitle.textContent = `Deploying ${cName} Stack...`;
+    if (progressTitle) progressTitle.textContent = t('catalog.installing_name', 'Installing {name}...', { name: cName });
     if (progressStatus) {
       progressStatus.textContent = t('ui.connecting_to_docker_daemon', 'Connecting to the app service...');
       progressStatus.style.color = 'var(--muted)';

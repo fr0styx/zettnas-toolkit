@@ -105,6 +105,28 @@ def daemon_status(now: float | None = None) -> dict[str, dict[str, Any]]:
     return out
 
 
+# What each service does, for alerts people read (NUX-19); the Overview has its own translated list
+LABELS = {
+    "BackupScheduler": "backup schedule",
+    "BackupWatch": "backup check",
+    "ButtonListener": "front-panel buttons",
+    "DataGuard": "settings check",
+    "DockerProxy": "app connection",
+    "FanWatchdog": "fan control",
+    "LcdRenderer": "front display",
+    "PhotoVectors": "photo search",
+    "RansomwareGuard": "ransomware guard",
+    "SmartPoller": "drive health check",
+    "StatsCollector": "system statistics",
+    "TaskScheduler": "task scheduler",
+    "VisionCaptioner": "photo descriptions",
+}
+
+
+def label(name: str) -> str:
+    return LABELS.get(name, name)
+
+
 def stalled() -> list[str]:
     return sorted(k for k, v in daemon_status().items() if v["state"] == "stalled")
 

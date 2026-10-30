@@ -4,7 +4,8 @@
  */
 import { api } from '../api.js';
 import { t } from '../i18n.js';
-import { showToast } from '../toast.js';
+import { showLoadError } from './load-error.js';
+import { showConfirmToast, showToast } from '../toast.js';
 import { formatDateTime } from '../format.js';
 
 function el(tag, props = {}, ...children) {
@@ -32,8 +33,25 @@ export function previewText(p) {
   const deletes = (p.delete_remote || 0) + (p.delete_local || 0);
   if (deletes) parts.push(t('sync2.deletes', '{n, plural, one {# deletion} other {# deletions}}', { n: deletes }));
   if (p.conflicts) parts.push(t('sync2.conflicts', '{n, plural, one {# file changed on both sides (kept twice)} other {# files changed on both sides (kept twice)}}', { n: p.conflicts }));
-  const lead = p.first_run ? t('sync2.first_run', 'First run, copies only: ') : '';
-  return lead + parts.join(' · ');
+  const summary = parts.join(' · ');
+  return p.first_run ? t('sync2.first_run_line', 'First run, copies only: {summary}', { summary }) : summary;
+}
+
+/** The files a run would delete, each side named, as a list to open before turning it on (NUX-23). */
+export function deletionsList(p) {
+  const files = (p && p.files) || {};
+  const cloud = (files.delete_remote || []).map((n) => t('sync2.del_cloud', 'In the cloud: {name}', { name: n }));
+  const here = (files.delete_local || []).map((n) => t('sync2.del_here', 'On this NAS: {name}', { name: n }));
+  const names = [...cloud, ...here];
+  if (!names.length) return null;
+  const total = (p.delete_remote || 0) + (p.delete_local || 0);
+  const box = el('details', { className: 'offsite-meta sync2-deletions' });
+  box.append(el('summary', { textContent: t('sync2.show_deletes', 'Show what would be deleted ({n, plural, one {# file} other {# files}})', { n: total }) }));
+  const list = el('ul');
+  for (const n of names) list.append(el('li', { textContent: n }));
+  if (total > names.length) list.append(el('li', { textContent: t('sync2.and_more', '…and {n, plural, one {# more} other {# more}}', { n: total - names.length }) }));
+  box.append(list);
+  return box;
 }
 
 export function pairRow(p) {
@@ -42,6 +60,8 @@ export function pairRow(p) {
   main.append(el('span', { className: 'offsite-repo-name', textContent: p.name }));
   main.append(el('span', { className: 'offsite-meta', textContent: `${p.local} ⇄ ${p.remote}` }));
   main.append(el('span', { className: 'offsite-meta', textContent: previewText(p.preview) }));
+  const deletions = p.state !== 'active' ? deletionsList(p.preview) : null;
+  if (deletions) main.append(deletions);
   const state = p.state === 'active'
     ? t('sync2.state_active', 'On, every {n} h · last run {when}', { n: p.every_hours, when: p.last_run ? formatDateTime(p.last_run * 1000) : t('offsite.never', 'never') })
     : t('sync2.state_waiting', 'Waiting for you to check the preview and turn it on');
@@ -79,7 +99,7 @@ export async function renderTwoWaySync(mount) {
   try {
     data = await api.get('/api/sync/pairs');
   } catch (err) {
-    mount.textContent = err.message || String(err);
+    showLoadError(mount, err, () => renderTwoWaySync(mount));
     return;
   }
   const list = el('ul', { className: 'offsite-list' });
@@ -101,8 +121,18 @@ export async function renderTwoWaySync(mount) {
     if (!b) return;
     const id = encodeURIComponent(b.dataset.id);
     try {
-      if (b.dataset.sync === 'delete') await api.delete(`/api/sync/pairs/${id}`);
-      else {
+      if (b.dataset.sync === 'delete') {
+        // asked first, as Offsite's Forget is (NUX-23)
+        showConfirmToast(t('sync2.forget_confirm', 'Forget this two-way sync? Files on both sides stay as they are.'), async () => {
+          try {
+            await api.delete(`/api/sync/pairs/${id}`);
+            renderTwoWaySync(mount);
+          } catch (err) {
+            showToast(err.message || String(err), 'error');
+          }
+        });
+        return;
+      } else {
         b.disabled = true;
         await api.post(`/api/sync/pairs/${id}/${b.dataset.sync}`, {});
       }

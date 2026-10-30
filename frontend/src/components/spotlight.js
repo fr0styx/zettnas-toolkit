@@ -332,8 +332,8 @@ function _buildDefaultSpotlightItems() {
     },
     {
       id: 'act-trash-empty',
-      title: 'Empty the Recycle Bin (>trash empty)',
-      subtitle: 'Purge all recycled files and reclaim physical disk space',
+      title: `${t('confirm.fs_trash_empty.title', 'Empty the Recycle Bin')} (>trash empty)`,
+      subtitle: t('spotlight.empty_bins_sub', 'Permanently delete what every share\'s Recycle Bin holds'),
       icon: '🗑️',
       category: 'action',
       keywords: ['trash', 'empty', 'recycle', 'purge', 'clean', '>trash'],
@@ -455,8 +455,8 @@ export function parseNaturalLanguageAction(rawQuery) {
   if (/^(?:trash\s+empty|empty\s+trash)/i.test(clean)) {
     return {
       id: 'dyn-trash-empty',
-      title: 'Empty the Recycle Bin',
-      subtitle: 'Permanently purge all recycled files and reclaim storage',
+      title: t('confirm.fs_trash_empty.title', 'Empty the Recycle Bin'),
+      subtitle: t('spotlight.empty_bins_sub', 'Permanently delete what every share\'s Recycle Bin holds'),
       icon: '🗑️',
       category: 'action',
       keywords: ['trash', 'empty', 'recycle'],

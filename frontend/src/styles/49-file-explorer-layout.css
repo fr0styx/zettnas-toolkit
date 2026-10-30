@@ -235,3 +235,7 @@
 .fm-loc-sep { height: 1px; margin: 4px 6px; background: var(--zn-glaze-10); }
 .fm-loc-item.is-action .fm-loc-name { font-weight: 500; color: var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); }
 
+
+/* The Recycle Bin's bar: how long items stay, and Empty all (NUX-17) */
+.fm-bin-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--zn-space-2); padding: 6px 12px; color: var(--zn-text-soft); font-size: var(--zn-fs-xs); border-bottom: 1px solid var(--zn-line); }
+.fm-bin-bar[hidden] { display: none; }

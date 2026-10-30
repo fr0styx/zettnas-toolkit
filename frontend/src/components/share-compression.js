@@ -8,10 +8,19 @@ import { formatNumber } from '../format.js';
 import { html } from '../html.js';
 import { showToast } from '../toast.js';
 
-/** The words for a setting, e.g. "zstd:3" → "zstd (level 3)". */
+// The choices by what they do, the algorithm in brackets (NUX-21)
+const PLAIN = {
+  zstd: () => t('compress.recommended', 'Recommended'),
+  lz4: () => t('compress.fastest', 'Fastest'),
+};
+
+/** The words for a setting, e.g. "zstd:3" → "Recommended (zstd, level 3)". */
 export function describeValue(value) {
   if (!value || value === 'off') return t('compress.off', 'Off');
   const [algo, level] = String(value).split(':');
+  const plain = PLAIN[algo] ? PLAIN[algo]() : '';
+  if (plain && level) return t('compress.plain_level', '{plain} ({algo}, level {level})', { plain, algo, level });
+  if (plain) return t('compress.plain', '{plain} ({algo})', { plain, algo });
   return level ? t('compress.level', '{algo} (level {level})', { algo, level }) : algo;
 }
 
@@ -70,6 +79,9 @@ export function compressionBody(name, info) {
   return body;
 }
 
+/** @type {HTMLElement | null} where focus goes back to when the dialog closes */
+let returnFocus = null;
+
 function dialogHost() {
   let host = document.getElementById('share-compression');
   if (!host) {
@@ -90,16 +102,38 @@ function dialogHost() {
     const close = () => {
       host.classList.remove('open');
       host.style.display = 'none';
+      const back = returnFocus;
+      returnFocus = null;
+      if (back && typeof back.focus === 'function' && document.contains(back)) back.focus(); // back where it was
     };
     host.querySelector('[data-close]').addEventListener('click', close);
     host.addEventListener('click', (e) => {
       if (e.target === host) close();
     });
-    host.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close();
-    });
+    host.addEventListener('keydown', (e) => trapKeys(host, e, close));
   }
   return host;
+}
+
+/** Esc closes; Tab stays inside the dialog (NUX-21). */
+export function trapKeys(host, e, close) {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    close();
+    return;
+  }
+  if (e.key !== 'Tab') return;
+  const items = [...host.querySelectorAll('button, select, input, [tabindex]:not([tabindex="-1"])')].filter((n) => !n.disabled);
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
 }
 
 export async function openShareCompression(name) {
@@ -107,13 +141,16 @@ export async function openShareCompression(name) {
   host.querySelector('#share-compression-title').textContent = t('compress.title', 'Compression: {name}', { name });
   const slot = host.querySelector('.smart-modal-body');
   slot.textContent = t('ui.loading', 'Loading...');
+  returnFocus = /** @type {HTMLElement | null} */ (document.activeElement);
   host.style.display = '';
   host.classList.add('open');
+  /** @type {HTMLElement} */ (host.querySelector('[data-close]')).focus(); // focus moves into the dialog
   const url = `/api/storage/shares/${encodeURIComponent(name)}/compression`;
   const render = (info) => {
     slot.replaceChildren(compressionBody(name, info));
     const form = slot.querySelector('form');
     if (!form) return;
+    /** @type {HTMLElement} */ (form.querySelector('select')).focus();
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const value = /** @type {HTMLSelectElement} */ (form.querySelector('select[name="value"]')).value;

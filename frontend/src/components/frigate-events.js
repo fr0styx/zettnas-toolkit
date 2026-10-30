@@ -4,6 +4,7 @@
  */
 import { api } from '../api.js';
 import { t } from '../i18n.js';
+import { showLoadError } from './load-error.js';
 import { showToast } from '../toast.js';
 
 function el(tag, props = {}, ...children) {
@@ -58,7 +59,9 @@ export function frigateBody(info) {
   const test = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('frigate.test', 'Check Frigate') });
   test.dataset.frigate = 'test';
   box.append(el('div', { className: 'frigate-actions' }, save, test));
-  box.append(el('p', { className: 'frigate-test muted', hidden: true }));
+  const result = el('p', { className: 'frigate-test muted', hidden: true });
+  result.setAttribute('role', 'status'); // read out when a check answers (NUX-14)
+  box.append(result);
   return box;
 }
 
@@ -85,7 +88,7 @@ export async function renderFrigateEvents(mount) {
   try {
     info = await api.get('/api/notifications/frigate');
   } catch (err) {
-    mount.textContent = err.message || String(err);
+    showLoadError(mount, err, () => renderFrigateEvents(mount));
     return;
   }
   mount.replaceChildren(frigateBody(info));

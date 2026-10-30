@@ -290,7 +290,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     card.setAttribute("aria-describedby", "confirm-toast-msg");
     card.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--zn-line-8); background: rgba(14, 165, 233, 0.1);" id="confirm-toast-header-bg" data-dialog-header>
-        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--lt-t-0ea5e9ff, #0ea5e9);" id="confirm-toast-title">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--zn-confirm-title);" id="confirm-toast-title">
           Confirm Action
         </div>
         <button type="button" id="confirm-toast-close" class="win-btn close-btn" title="${t('jobs.cancel', 'Cancel')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
@@ -300,7 +300,7 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
         <div style="display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; align-items: center;">
           <button id="confirm-toast-eject" class="btn-pill-toggle is-danger is-small" style="display: none; margin-right: auto;" title="${t('ui.safely_unmount_and_eject_card', 'Safely unmount and eject card')}">⏏ Eject</button>
           <button id="confirm-toast-cancel" class="btn-pill-toggle is-small">Cancel</button>
-          <button id="confirm-toast-ok" style="padding: 7px 18px; background: #0ea5e9; border: 1px solid #0284c7; border-radius: 6px; color: #fff; font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">Confirm</button>
+          <button id="confirm-toast-ok" style="padding: 7px 18px; background: var(--zn-confirm-ok); border: 1px solid var(--zn-confirm-ok-line); border-radius: 6px; color: var(--zn-confirm-on); font-size: var(--zn-fs-xs); font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">Confirm</button>
         </div>
       </div>
     `;
@@ -360,17 +360,17 @@ function _showTopConfirm(title, msg, onConfirm, onCancel, options = {}) {
     titleEl.innerHTML = `<span aria-hidden="true">${icon}</span> ${safeTitle}`;
     okBtn.innerHTML = escapeHtml(label);
     if (destructive) {
-      okBtn.style.background = "#ef4444";
-      okBtn.style.border = "1px solid #dc2626";
+      okBtn.style.background = "var(--zn-confirm-danger)";
+      okBtn.style.border = "1px solid var(--zn-confirm-danger-line)";
       headerBg.style.background = "rgba(239, 68, 68, 0.1)";
-      titleEl.style.color = "#ef4444";
+      titleEl.style.color = "var(--zn-confirm-danger-title)";
       card.style.borderColor = "rgba(239, 68, 68, 0.45)";
       card.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(239, 68, 68, 0.15)";
     } else {
-      okBtn.style.background = "#0ea5e9";
-      okBtn.style.border = "1px solid #0284c7";
+      okBtn.style.background = "var(--zn-confirm-ok)";
+      okBtn.style.border = "1px solid var(--zn-confirm-ok-line)";
       headerBg.style.background = "rgba(14, 165, 233, 0.1)";
-      titleEl.style.color = "#0ea5e9";
+      titleEl.style.color = "var(--zn-confirm-title)";
       card.style.borderColor = "";
       card.style.boxShadow = "";
     }

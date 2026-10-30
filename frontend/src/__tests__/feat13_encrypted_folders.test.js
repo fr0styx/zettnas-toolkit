@@ -131,7 +131,8 @@ describe('encrypted folders (FEAT-13)', () => {
     await vi.waitFor(() => expect(showToast).toHaveBeenCalledWith('That password is wrong.', 'error'));
     api.get.mockRejectedValueOnce(new Error('forbidden'));
     await renderEncryptedFolders(mount);
-    expect(mount.textContent).toBe('forbidden');
+    expect(mount.textContent).toContain("forbidden"); // with a sentence and Retry (NUX-14)
+    expect(mount.querySelector(".zn-load-error button")).not.toBeNull();
     await renderEncryptedFolders(null);
   });
 });

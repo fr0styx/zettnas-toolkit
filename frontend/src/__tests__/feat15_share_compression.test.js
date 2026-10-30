@@ -16,8 +16,9 @@ describe('share compression (FEAT-15)', () => {
   it('names the setting and the savings', () => {
     expect(describeValue('off')).toBe('Off');
     expect(describeValue('')).toBe('Off');
-    expect(describeValue('zstd:3')).toBe('zstd (level 3)');
-    expect(describeValue('lz4')).toBe('lz4');
+    expect(describeValue('zstd:3')).toBe('Recommended (zstd, level 3)'); // what it does first (NUX-21)
+    expect(describeValue('lz4')).toBe('Fastest (lz4)');
+    expect(describeValue('gzip:6')).toBe('gzip (level 6)');
     expect(ratioText(2)).toContain('50%');
     expect(ratioText(1)).toBe('Nothing saved yet');
     expect(ratioText(null)).toBe('');
@@ -28,7 +29,7 @@ describe('share compression (FEAT-15)', () => {
     const select = body.querySelector('select');
     expect([...select.options].map((o) => o.value)).toEqual(['off', 'zstd', 'lzo', 'zlib']);
     expect(select.value).toBe('zstd');
-    expect(body.textContent).toContain('zstd (level 3)');
+    expect(body.textContent).toContain('Recommended (zstd, level 3)');
   });
 
   it('shows why when it cannot be set', () => {
@@ -51,7 +52,7 @@ describe('share compression (FEAT-15)', () => {
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     await vi.waitFor(() => expect(showToast).toHaveBeenCalled());
     expect(api.put).toHaveBeenCalledWith('/api/storage/shares/my%20share/compression', { value: 'zstd' });
-    expect(host.textContent).toContain('Now: zstd');
+    expect(host.textContent).toContain('Now: Recommended (zstd');
     host.querySelector('[data-close]').click();
     expect(host.style.display).toBe('none');
   });

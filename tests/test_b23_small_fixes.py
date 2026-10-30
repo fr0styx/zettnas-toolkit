@@ -69,7 +69,7 @@ def test_a_stalled_service_is_alerted_once_a_day(monkeypatch):
     sent = []
     monkeypatch.setattr("backend.services.supervisor.stalled", lambda: ["TaskScheduler"])
     names = protection_jobs.alert_stalled(1793500000.0, send=lambda *a, **k: sent.append((a[0], k["dedup_key"])))
-    assert names == ["TaskScheduler"] and "TaskScheduler" in sent[0][0]
+    assert names == ["TaskScheduler"] and "task scheduler" in sent[0][0]  # named by what it does (NUX-19)
     assert sent[0][1].startswith("stalled-TaskScheduler-")  # one a day: the dedup key carries the date
     monkeypatch.setattr("backend.services.supervisor.stalled", lambda: [])
     assert protection_jobs.alert_stalled(1793500000.0, send=lambda *a, **k: sent.append(a)) == []
