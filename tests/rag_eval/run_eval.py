@@ -261,18 +261,54 @@ REFUSAL_MARKERS = (
 )
 
 
+_SENTENCE = re.compile(r"(?<=[.!?。！？])\s*|\n+")
+_NUMBER = re.compile(r"\d+(?:[.,:]\d+)*")
+REFUSAL_WITHIN = 40  # a refusal phrase counts near the start of a sentence, not inside a fact (NAI-17)
+
+
 def says_not_found(answer: str) -> bool:
-    """An unanswerable question is answered correctly by saying the files don't say (AI-16)."""
-    low = (answer or "").lower()
-    return any(m in low for m in REFUSAL_MARKERS)
+    """An unanswerable question is answered correctly by saying the files don't say (AI-16).
+    Strict (NAI-17): the phrase opens a sentence ("I couldn't find…", not "it is not in warranty
+    since…"), and the answer states no number or date beside it, which would be a guess."""
+    text = answer or ""
+    if _NUMBER.search(text):
+        return False
+    for sentence in _SENTENCE.split(text):
+        low = sentence.strip().lower()
+        for m in REFUSAL_MARKERS:
+            at = low.find(m)
+            if 0 <= at <= REFUSAL_WITHIN:
+                return True
+    return False
+
+
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", ".") for n in _NUMBER.findall(text or "")}
 
 
 def answer_matches(answer: str, accepted: list[str], required: list[str] | None = None) -> bool:
-    """One of the accepted facts is in the answer, and every required one (multi-hop)."""
+    """One of the accepted facts is in the answer, and every required one (multi-hop). Strict
+    (NAI-17): an answer that also gives another number in the place of the accepted one ("185 or
+    190 kg") doesn't pass, since a reader can't tell which is right."""
     a = _norm(answer)
     if required and not all(_norm(x) in a for x in required):
         return False
-    return not accepted or any(_norm(x) and _norm(x) in a for x in accepted)
+    if accepted and not any(_norm(x) and _norm(x) in a for x in accepted):
+        return False
+    expected = (
+        set().union(*(_numbers(x) for x in [*(accepted or []), *(required or [])])) if (accepted or required) else set()
+    )
+    if expected:
+        shapes = {len(n.split(".")[0]) for n in expected}
+        # 583.20 for 583 is the same fact, more precisely; 190 beside 185 is another one
+        rivals = {
+            n
+            for n in _numbers(answer)
+            if len(n.split(".")[0]) in shapes and not any(n.startswith(e) or e.startswith(n) for e in expected)
+        }
+        if rivals:
+            return False
+    return True
 
 
 def faithfulness(rows: list[dict]) -> dict:
