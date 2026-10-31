@@ -26,7 +26,7 @@
  "frontend/src/components/dock/user-flyout.js": 8,
  "frontend/src/components/dock/window-drag.js": 15,
  "frontend/src/components/dock/window-state.js": 20,
- "frontend/src/components/drive-health.js": 12,
+ "frontend/src/components/drive-health.js": 6,
  "frontend/src/components/empty-state.js": 1,
  "frontend/src/components/events.js": 3,
  "frontend/src/components/fan-control.js": 60,

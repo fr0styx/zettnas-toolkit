@@ -9,6 +9,8 @@ import { join } from 'node:path';
 
 const ROOT = 'frontend';
 const BASELINE = 'frontend/scripts/css-budget.json';
+const SLACK = 10; // a budget may be at most this far above today's count (NARC-3): lower it with --update
+const SLACK_PER_FILE = 2;
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
@@ -56,6 +58,10 @@ const base = JSON.parse(readFileSync(BASELINE, 'utf8'));
 let failed = false;
 if (base.importantPerFile) {
   for (const [f, n] of Object.entries(importantPerFile)) {
+    if ((base.importantPerFile[f] ?? 0) - n > SLACK_PER_FILE) {
+      console.error(`✗ ${f}: ${n} !important, budget still ${base.importantPerFile[f]}: run "npm run lint:css -- --update"`);
+      failed = true;
+    }
     if (n > (base.importantPerFile[f] ?? 0)) {
       console.error(`✗ ${f}: ${n} !important (budget ${base.importantPerFile[f] ?? 0}). Use a more specific selector or a token instead.`);
       failed = true;
@@ -71,6 +77,9 @@ if (primitiveUses < (base.primitiveUses ?? 0)) {
 for (const k of Object.keys(now)) {
   if (now[k] > (base[k] ?? 0)) {
     console.error(`✗ ${k}: ${now[k]} (budget ${base[k] ?? 0}). Use a component class, a token or a more specific selector instead.`);
+    failed = true;
+  } else if (base[k] - now[k] > SLACK) {
+    console.error(`✗ ${k}: ${now[k]}, budget still ${base[k]}: run "npm run lint:css -- --update" to lower it`);
     failed = true;
   } else if (now[k] < base[k]) {
     console.log(`✓ ${k}: ${now[k]} (budget ${base[k]}); run "npm run lint:css -- --update" to lower the budget`);

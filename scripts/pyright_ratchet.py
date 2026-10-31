@@ -12,6 +12,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASELINE = os.path.join(ROOT, "pyright-baseline.json")
+# a baseline well above today's counts would let new errors in unseen (NARC-3)
+SLACK_PER_FILE = 2
+SLACK_TOTAL = 25
 
 
 def current():
@@ -47,6 +50,14 @@ def main():
             print(f"✗ {f}: {n} type errors (baseline {baseline.get(f, 0)})")
             for line in by_file[f][:10]:
                 print("    " + line)
+        return 1
+    loose = {f: n for f, n in baseline.items() if n - counts.get(f, 0) > SLACK_PER_FILE}
+    if loose or base_total - total > SLACK_TOTAL:
+        for f, n in sorted(loose.items())[:10]:
+            print(f"✗ {f}: {counts.get(f, 0)} type errors, baseline still {n}")
+        print(
+            f"✗ the baseline ({base_total}) is looser than today ({total}): run python scripts/pyright_ratchet.py --update"
+        )
         return 1
     print(f"pyright: {total} errors (baseline {base_total}); no file got worse")
     return 0

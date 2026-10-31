@@ -11,6 +11,8 @@ import { join } from 'node:path';
 
 const ROOT = process.cwd();
 const BASELINE = join(ROOT, 'frontend/scripts/checkjs-baseline.json');
+const SLACK_PER_FILE = 2; // a baseline may be at most this far above a file's errors (NARC-3)
+const SLACK_TOTAL = 25;
 
 /** "frontend/src/x.js(12,5): error TS2339: ..." lines -> { file: count } */
 export function perFile(output) {
@@ -73,6 +75,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const p of problems) console.error(`✗ ${p}`);
   if (problems.length) {
     console.error('Add JSDoc types or fix the code; npm run lint:types -- --list <file> shows the errors.');
+    process.exit(1);
+  }
+  // a baseline well above today's numbers would let new errors in unseen (NARC-3): record the
+  // lower numbers when a clean-up lands
+  const loose = Object.entries(base).filter(([f, n]) => n - (now[f] || 0) > SLACK_PER_FILE);
+  if (baseTotal - total > SLACK_TOTAL || loose.length) {
+    for (const [f, n] of loose.slice(0, 10)) console.error(`✗ ${f}: ${now[f] || 0} type errors, baseline still ${n}`);
+    console.error(`✗ the baseline (${baseTotal}) is looser than today (${total}): run npm run lint:types -- --update`);
     process.exit(1);
   }
   console.log(`✓ type errors: ${total} (baseline ${baseTotal}); no file got worse`);
