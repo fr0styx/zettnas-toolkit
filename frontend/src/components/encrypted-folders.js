@@ -29,6 +29,51 @@ function field(label, input) {
   return el('label', { className: 'ef-field' }, label, ' ', input);
 }
 
+/** Who may open a folder, in words (NSEC-5): its own list, or everyone who may use its share. */
+export function whoText(f) {
+  if (!Array.isArray(f.people)) return t('ef.who_share', 'Everyone who may use {share} can open it', { share: f.share });
+  return t('ef.who_people', 'Only {names} can open it', { names: f.people.join(', ') });
+}
+
+/** The form to choose who may open a folder, in place of its row's actions. */
+export async function peopleForm(mount, row) {
+  const name = row.dataset.name || '';
+  const current = JSON.parse(row.dataset.people || 'null');
+  let users;
+  try {
+    users = await api.get('/api/users');
+  } catch (err) {
+    showToast(err.message, 'error');
+    return null;
+  }
+  const form = el('form', { className: 'ef-people' });
+  const everyone = el('input', { type: 'checkbox', name: 'everyone', checked: current === null });
+  form.append(el('label', { className: 'ef-keep' }, everyone, ' ', t('ef.who_everyone', 'Everyone who may use the share')));
+  const list = el('div', { className: 'ef-people-list' });
+  for (const u of users || []) {
+    const cb = el('input', { type: 'checkbox', name: 'person', value: u.username, checked: Array.isArray(current) && current.some((p) => p.toLowerCase() === String(u.username).toLowerCase()) });
+    list.append(el('label', { className: 'ef-keep' }, cb, ' ', u.display_name || u.username));
+  }
+  const sync = () => {
+    for (const cb of list.querySelectorAll('input')) /** @type {HTMLInputElement} */ (cb).disabled = everyone.checked;
+  };
+  everyone.addEventListener('change', sync);
+  sync();
+  const save = el('button', { type: 'submit', className: 'btn-pill-toggle is-small is-primary', textContent: t('ef.who_save', 'Save') });
+  const cancel = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('ef.who_cancel', 'Cancel') });
+  cancel.addEventListener('click', () => renderEncryptedFolders(mount));
+  form.append(list, el('div', { className: 'ef-actions' }, save, cancel));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const people = everyone.checked ? null : [...list.querySelectorAll('input:checked')].map((cb) => /** @type {HTMLInputElement} */ (cb).value);
+    act(mount, () => api.put(`/api/encrypted-folders/${encodeURIComponent(name)}/people`, { people }), t('ef.who_saved', 'Saved: who may open it.'));
+  });
+  const actions = row.querySelector('.ef-actions');
+  if (actions) actions.replaceWith(form);
+  else row.append(form);
+  return form;
+}
+
 function folderRow(f, canManage) {
   const row = el('div', { className: 'ef-row' });
   row.dataset.name = f.name;
@@ -37,7 +82,9 @@ function folderRow(f, canManage) {
   row.append(
     el('div', { className: 'ef-name' }, el('strong', { textContent: f.name }), ' ', el('span', { className: `ef-state ef-${f.unlocked ? 'open' : 'locked'}`, textContent: state })),
     el('div', { className: 'ef-where muted', textContent: t('ef.in_share', 'In {share}', { share: f.share }) }),
+    el('div', { className: 'ef-where muted ef-who', textContent: whoText(f) }),
   );
+  row.dataset.people = JSON.stringify(f.people ?? null);
   const actions = el('div', { className: 'ef-actions' });
   if (f.unlocked) {
     actions.append(button(t('ef.show', 'Show in Files'), 'files'), button(t('ef.lock', 'Lock'), 'lock'));
@@ -52,6 +99,7 @@ function folderRow(f, canManage) {
   if (canManage) {
     const keep = el('input', { type: 'checkbox', name: 'keep', checked: !!f.unlock_at_start });
     actions.append(el('label', { className: 'ef-keep' }, keep, ' ', t('ef.keep', 'Open when ZettNAS starts')));
+    actions.append(button(t('ef.who_change', 'Who may open it'), 'people'));
     if (!f.unlocked) actions.append(button(t('ef.remove', 'Remove from the list'), 'forget'));
   }
   row.append(actions);
@@ -162,6 +210,7 @@ function onClick(mount, e) {
   const action = btn.dataset.ef;
   if (action === 'unlock') act(mount, () => api.post(`${path(name)}/unlock`, { password: pw.value }), t('ef.opened', 'The folder is open.'));
   else if (action === 'lock') act(mount, () => api.post(`${path(name)}/lock`, {}), t('ef.locked_now', 'The folder is locked.'));
+  else if (action === 'people') peopleForm(mount, row);
   else if (action === 'forget') {
     showConfirmToast(
       t('ef.remove_title', 'Remove {name} from the list', { name }),

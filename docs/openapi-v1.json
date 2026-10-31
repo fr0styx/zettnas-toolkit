@@ -29619,6 +29619,27 @@
     "title": "PauseCopyResponse",
     "type": "object"
    },
+   "PeopleIn": {
+    "properties": {
+     "people": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 64,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "People"
+     }
+    },
+    "title": "PeopleIn",
+    "type": "object"
+   },
    "PermissionsUpdateRequest": {
     "properties": {
      "group": {
@@ -50187,7 +50208,7 @@
     ]
    },
    "post": {
-    "description": "Makes one and opens it; the answer carries its recovery key, shown this once.",
+    "description": "Makes one and opens it; the answer carries its recovery key, shown this once. Only its maker\nmay open it until others are chosen (NSEC-5).",
     "operationId": "post_encrypted_folder_api_v1_encrypted_folders_post",
     "requestBody": {
      "content": {
@@ -50377,6 +50398,66 @@
      "shares:user_write",
      "storage:write",
      "storage:admin"
+    ]
+   }
+  },
+  "/api/v1/encrypted-folders/{name}/people": {
+   "put": {
+    "description": "Who may open and lock it: these accounts, or (null) everyone who may use its share.",
+    "operationId": "put_people_api_v1_encrypted_folders__name__people_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PeopleIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Put People Api V1 Encrypted Folders  Name  People Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Put People",
+    "tags": [
+     "Storage"
+    ],
+    "x-required-scopes": [
+     "shares:manage"
     ]
    }
   },

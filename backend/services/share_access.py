@@ -180,10 +180,14 @@ def grants_for(username: str) -> list[tuple[str, str]]:
         grants.append((share["path"], level))
         by_share[share["name"]] = level
     # an open encrypted folder (FEAT-13) is reached as its share is
-    from backend.services.encrypted_index import grant_paths
+    # (and only by the people on its own list, when it has one: NSEC-5)
+    from backend.services.encrypted_index import grant_paths, grant_people
 
+    people = grant_people()
     for plain, share_name in grant_paths().items():
-        grants.append((plain, by_share.get(share_name, "none")))
+        who = people.get(plain)
+        on_list = who is None or username.lower() in {p.lower() for p in who}
+        grants.append((plain, by_share.get(share_name, "none") if on_list else "none"))
     grants.sort(key=lambda g: len(g[0]), reverse=True)
     return grants
 

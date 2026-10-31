@@ -1,7 +1,9 @@
 """Encrypted folders inside a share (FEAT-13): make, open, lock, keep open at start, take off.
 
-Anyone who may write to the share an encrypted folder is in can open and lock it; making one,
-keeping its password for the next start and taking it off need shares:manage."""
+Who may open and lock one: the people on its own list (its maker at first, NSEC-5), or, for a
+folder without a list, anyone who may write to its share; seeing it needs read on the share too.
+Making one, choosing its people, keeping its password for the next start and taking it off need
+shares:manage."""
 
 import asyncio
 import os
@@ -31,13 +33,21 @@ class PasswordIn(BaseModel):
     password: str = Field(min_length=1, max_length=256)
 
 
+class PeopleIn(BaseModel):
+    people: list[str] | None = Field(default=None, max_length=64)  # None: everyone with the share
+
+
 class StartIn(BaseModel):
     password: str | None = Field(default=None, max_length=256)  # None: forget the kept password
 
 
-def _can_use(principal: AuthenticatedPrincipal, share: str, write: bool) -> bool:
+def _can_use(principal: AuthenticatedPrincipal, share: str, write: bool, name: str = "") -> bool:
     if principal.has_scope("shares:manage") or principal.has_scope("*"):
         return True
+    from backend.services.encrypted_index import may_open
+
+    if name and not may_open(name, principal.username or ""):
+        return False
     from backend.services.app_catalog import share_mounts
     from backend.services.share_access import level_for
 
@@ -79,7 +89,7 @@ async def get_encrypted_folders(principal: AuthenticatedPrincipal = Depends(get_
     from backend.services import encrypted_folders as ef
 
     folders = await asyncio.to_thread(ef.listing)
-    visible = [f for f in folders if await asyncio.to_thread(_can_use, principal, f["share"], False)]
+    visible = [f for f in folders if await asyncio.to_thread(_can_use, principal, f["share"], False, f["name"])]
     manage = principal.has_scope("shares:manage") or principal.has_scope("*")
     shares: list[str] = []
     if manage:
@@ -95,11 +105,24 @@ async def get_encrypted_folders(principal: AuthenticatedPrincipal = Depends(get_
 
 
 @router.post("", dependencies=[MANAGE])
-async def post_encrypted_folder(req: CreateIn) -> dict[str, Any]:
-    """Makes one and opens it; the answer carries its recovery key, shown this once."""
+async def post_encrypted_folder(
+    req: CreateIn, principal: AuthenticatedPrincipal = Depends(get_current_principal)
+) -> dict[str, Any]:
+    """Makes one and opens it; the answer carries its recovery key, shown this once. Only its maker
+    may open it until others are chosen (NSEC-5)."""
     from backend.services import encrypted_folders as ef
 
-    return await asyncio.to_thread(_errors, ef.create, req.share, req.name, req.password, req.unlock_at_start)
+    return await asyncio.to_thread(
+        _errors, ef.create, req.share, req.name, req.password, req.unlock_at_start, principal.username or ""
+    )
+
+
+@router.put("/{name}/people", dependencies=[MANAGE])
+async def put_people(name: str, req: PeopleIn) -> dict[str, Any]:
+    """Who may open and lock it: these accounts, or (null) everyone who may use its share."""
+    from backend.services import encrypted_folders as ef
+
+    return await asyncio.to_thread(_errors, ef.set_people, name, req.people)
 
 
 @router.post("/adopt", dependencies=[MANAGE])
@@ -119,8 +142,8 @@ async def post_unlock(
     share = ef.share_of(name)
     if share is None:
         raise HTTPException(status_code=404, detail="There is no such encrypted folder.")
-    if not await asyncio.to_thread(_can_use, principal, share, True):
-        raise HTTPException(status_code=403, detail="You can't open folders in this share.")
+    if not await asyncio.to_thread(_can_use, principal, share, True, name):
+        raise HTTPException(status_code=403, detail="You can't open this folder.")
     return await asyncio.to_thread(_errors, ef.unlock, name, req.password)
 
 
@@ -131,8 +154,8 @@ async def post_lock(name: str, principal: AuthenticatedPrincipal = Depends(get_c
     share = ef.share_of(name)
     if share is None:
         raise HTTPException(status_code=404, detail="There is no such encrypted folder.")
-    if not await asyncio.to_thread(_can_use, principal, share, True):
-        raise HTTPException(status_code=403, detail="You can't lock folders in this share.")
+    if not await asyncio.to_thread(_can_use, principal, share, True, name):
+        raise HTTPException(status_code=403, detail="You can't lock this folder.")
     return await asyncio.to_thread(_errors, ef.lock, name)
 
 

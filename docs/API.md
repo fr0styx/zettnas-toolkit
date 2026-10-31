@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-643 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+644 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -678,6 +678,7 @@ request and response schemas.
 | `POST` | `/api/v1/encrypted-folders/adopt` | `shares:manage` | Adds back one whose encrypted files are already in the share |
 | `DELETE` | `/api/v1/encrypted-folders/{name}` | `shares:manage` | Takes a locked folder off ZettNAS; its encrypted files stay in the share |
 | `POST` | `/api/v1/encrypted-folders/{name}/lock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` | Post Lock |
+| `PUT` | `/api/v1/encrypted-folders/{name}/people` | `shares:manage` | Who may open and lock it: these accounts, or (null) everyone who may use its share |
 | `POST` | `/api/v1/encrypted-folders/{name}/unlock` | any of `files:write`, `shares:manage`, `shares:user_write`, `storage:write`, `storage:admin` ⏱ | Post Unlock |
 | `PUT` | `/api/v1/encrypted-folders/{name}/unlock-at-start` | `shares:manage` | Put Unlock At Start |
 

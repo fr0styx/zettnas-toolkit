@@ -95,6 +95,7 @@ def listing() -> list[dict[str, Any]]:
             "unlocked": plain_path(name) in open_now,
             "unlock_at_start": bool(f.get("password")),
             "created": f.get("created", 0),
+            "people": ei.people_of(name),
         }
         for name, f in sorted(_settings()["folders"].items())
     ]
@@ -161,8 +162,9 @@ def _check_password(password: str) -> None:
 
 
 @json_locked(lambda *a, **k: ei.SETTINGS_FILE)
-def create(share: str, name: str, password: str, unlock_at_start: bool = False) -> dict[str, Any]:
-    """Makes an encrypted folder in a share and opens it. Returns its recovery key, shown once."""
+def create(share: str, name: str, password: str, unlock_at_start: bool = False, owner: str = "") -> dict[str, Any]:
+    """Makes an encrypted folder in a share and opens it. Returns its recovery key, shown once.
+    Only its maker may open it at first (NSEC-5); set_people() adds others."""
     from backend import secret_box
 
     name = clean_name(name)
@@ -185,6 +187,8 @@ def create(share: str, name: str, password: str, unlock_at_start: bool = False) 
         "created": time.time(),
         "password": secret_box.seal(password) if unlock_at_start else "",
     }
+    if owner:
+        s["folders"][name]["people"] = [owner]
     atomic_write_json(ei.SETTINGS_FILE, s)
     _mount(cipher, plain_path(name), password)
     logger.info("[Encrypted folders] %s made in %s", name, share)
@@ -284,6 +288,32 @@ def set_unlock_at_start(name: str, password: str | None) -> dict[str, Any]:
     f["password"] = secret_box.seal(password) if password is not None else ""
     atomic_write_json(ei.SETTINGS_FILE, s)
     return {"name": name, "unlock_at_start": password is not None}
+
+
+@json_locked(lambda *a, **k: ei.SETTINGS_FILE)
+def set_people(name: str, people: list[str] | None) -> dict[str, Any]:
+    """Who may open a folder (NSEC-5): these accounts, or None for everyone who may use its share."""
+    from backend.users_db import list_users
+
+    s = _settings()
+    if name not in s["folders"]:
+        raise KeyError(name)
+    if people is None:
+        s["folders"][name].pop("people", None)
+    else:
+        known = {str(u.get("username") or "").lower(): str(u.get("username")) for u in list_users()}
+        chosen = []
+        for p in people:
+            found = known.get(str(p).strip().lower())
+            if not found:
+                raise ValueError(f"There is no account called {p}.")
+            if found not in chosen:
+                chosen.append(found)
+        if not chosen:
+            raise ValueError("Choose at least one person, or let everyone who may use the share open it.")
+        s["folders"][name]["people"] = chosen
+    atomic_write_json(ei.SETTINGS_FILE, s)
+    return {"name": name, "people": ei.people_of(name)}
 
 
 def lock_path(path: str) -> None:

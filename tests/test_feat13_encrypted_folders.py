@@ -72,6 +72,7 @@ def test_make_lock_open_and_take_off(box):
             "unlocked": True,
             "unlock_at_start": False,
             "created": ef.listing()[0]["created"],
+            "people": None,  # made without an owner: everyone with the share (NSEC-5)
         }
     ]
     assert "correct horse" not in Path(ei.SETTINGS_FILE).read_text()  # the password is not kept

@@ -4,6 +4,11 @@
 
 #### Security
 
+- **An encrypted folder opens only for the people chosen for it** (NSEC-5): a new one opens for
+  the person who made it, and "Who may open it" adds others. Only they can unlock, lock, see and
+  read it, even with the share open to the whole family. Folders made before keep working as
+  they did, for everyone who may use their share, and say so in the list until people are chosen.
+
 - **The token list says what each token may do**: "Read files", "Read and change files",
   "monitoring", "an AI assistant" or "everything", or how many rights a token chosen by hand
   holds, with the rights themselves on hover (NSEC-2).
