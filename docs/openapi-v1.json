@@ -6819,7 +6819,16 @@
       "$ref": "#/components/schemas/ExportUserDataResponseCalendar"
      },
      "chats": {
-      "$ref": "#/components/schemas/ExportUserDataResponseChats"
+      "anyOf": [
+       {
+        "items": {},
+        "type": "array"
+       },
+       {
+        "$ref": "#/components/schemas/ExportUserDataResponseChats"
+       }
+      ],
+      "title": "Chats"
      },
      "exported_at": {
       "title": "Exported At",

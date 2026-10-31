@@ -207,10 +207,15 @@ def _web_off():
 
 @pytest.fixture(autouse=True)
 def _fresh_hardware_state():
-    """Fan hold trackers, thermal fail-safe flags, standby caches, the detected chassis model and
-    drive verdicts start empty (ARC-13; the last two found by the random-order nightly)."""
+    """Fan hold trackers, thermal fail-safe flags, standby caches, the detected chassis model,
+    drive verdicts, the last published stats and the remembered default UPS settings start empty
+    (ARC-13; the last four found by the random-order nightly)."""
+    from backend.hardware import ups
     from backend.services import rag_standby
     from backend.state import Z_STATE
+
+    Z_STATE.cached_stats = None  # a test's {"name": "x"} isn't what /api/stats answers next
+    ups._DEFAULT_CFG_MEMO.update(until=0.0, cfg=None, env=None)
 
     Z_STATE.fan_state_tracker.clear()
     Z_STATE.critical_temp_active = False

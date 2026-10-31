@@ -1,5 +1,6 @@
 """Drive Health's first page: GET /api/drives/health, and the history it judges sleeping drives on."""
 
+import threading
 import time
 
 import pytest
@@ -151,16 +152,24 @@ def test_drives_are_read_side_by_side(monkeypatch):
 
     monkeypatch.setattr(drives, "_discover_disks", lambda: DISKS)
 
+    lock = threading.Lock()
+    reading = {"now": 0, "most": 0}
+
     def slow(dev, wake):
+        with lock:
+            reading["now"] += 1
+            reading["most"] = max(reading["most"], reading["now"])
         time.sleep(0.3)
+        with lock:
+            reading["now"] -= 1
         return {"dev": dev, "drive_health": {"verdict": "ok"}}
 
     monkeypatch.setattr(disks, "fetch_disk_smart_detail", slow)
     disks._DETAIL_CACHE.clear()
-    t0 = time.monotonic()
     page = drives._read_all()
     assert len(page["drives"]) == 4
-    assert time.monotonic() - t0 < 0.9  # one after another would take 1.2 s
+    # read at the same time, however busy the machine: not a stopwatch, which a slow runner fails
+    assert reading["most"] > 1
     disks._DETAIL_CACHE.clear()
 
 

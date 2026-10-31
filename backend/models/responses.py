@@ -2434,7 +2434,7 @@ class ExportUserDataResponse(_Doc):
     alert_route: ExportUserDataResponseAlertRoute
     api_tokens: list[Any]
     calendar: ExportUserDataResponseCalendar
-    chats: ExportUserDataResponseChats
+    chats: list[Any] | ExportUserDataResponseChats  # the conversations, or why they couldn't be read
     exported_at: float
     favorites: list[Any]
     format: float
