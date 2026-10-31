@@ -4,7 +4,7 @@ import json
 import re
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -55,6 +55,28 @@ async def get_catalog_defaults():
     from backend.services.app_catalog import default_storage_root
 
     return {"storage_root": await asyncio.to_thread(default_storage_root)}
+
+
+@router.get(
+    "/docker/catalog/office-suite/family", dependencies=[Depends(require_scope("users:read", "containers:read"))]
+)
+async def get_family_dav(request: Request):
+    """The family calendar and address book (NFEAT-7): whether the office suite is installed and
+    the address phones use, with this server's name as the browser reached it."""
+    from backend.services import family_dav
+
+    return await asyncio.to_thread(family_dav.status, request.url.hostname or "")
+
+
+@router.post("/docker/catalog/office-suite/family", dependencies=[Depends(require_scope("containers:manage"))])
+async def post_family_dav():
+    """Adds Calendar and Contacts to an office suite installed before they were part of it."""
+    from backend.services import family_dav
+
+    try:
+        return await asyncio.to_thread(family_dav.add_apps)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from None
 
 
 @router.get("/docker/catalog/logo", dependencies=[Depends(require_scope("containers:read", "containers:manage"))])

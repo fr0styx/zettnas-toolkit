@@ -432,6 +432,31 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
                 "tries": 6,
                 "every": 10,
             },
+            # the family calendar and address book (NFEAT-7): the same steps as family_dav.STEPS
+            {
+                "label": "Adding the family calendar",
+                "cmd": [
+                    "sh",
+                    "-c",
+                    "php /var/www/html/occ app:install calendar || php /var/www/html/occ app:enable calendar",
+                ],
+                "user": "www-data",
+                "tries": 2,
+                "every": 15,
+                "timeout": 300,
+            },
+            {
+                "label": "Adding the family address book",
+                "cmd": [
+                    "sh",
+                    "-c",
+                    "php /var/www/html/occ app:install contacts || php /var/www/html/occ app:enable contacts",
+                ],
+                "user": "www-data",
+                "tries": 2,
+                "every": 15,
+                "timeout": 300,
+            },
         ],
         "credentials": {"user": "admin", "password": "{{secret:admin_password}}"},
         "logo": "nextcloud",

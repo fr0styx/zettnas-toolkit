@@ -47703,6 +47703,63 @@
     ]
    }
   },
+  "/api/v1/docker/catalog/office-suite/family": {
+   "get": {
+    "description": "The family calendar and address book (NFEAT-7): whether the office suite is installed and\nthe address phones use, with this server's name as the browser reached it.",
+    "operationId": "get_family_dav_api_v1_docker_catalog_office_suite_family_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Family Dav",
+    "tags": [
+     "Docker App Catalog"
+    ],
+    "x-required-scopes": [
+     "users:read",
+     "containers:read"
+    ]
+   },
+   "post": {
+    "description": "Adds Calendar and Contacts to an office suite installed before they were part of it.",
+    "operationId": "post_family_dav_api_v1_docker_catalog_office_suite_family_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Post Family Dav",
+    "tags": [
+     "Docker App Catalog"
+    ],
+    "x-required-scopes": [
+     "containers:manage"
+    ]
+   }
+  },
   "/api/v1/docker/catalog/sideload": {
    "post": {
     "description": "Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content.",

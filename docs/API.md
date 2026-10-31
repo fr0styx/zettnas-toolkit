@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-644 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+646 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -174,6 +174,8 @@ request and response schemas.
 | `GET` | `/api/v1/docker/catalog` | any of `containers:read`, `containers:manage` | Get Docker Catalog |
 | `GET` | `/api/v1/docker/catalog/defaults` | any of `containers:read`, `containers:manage` | What the install dialog starts with on this host: where apps keep their data (NUX-12) |
 | `GET` | `/api/v1/docker/catalog/logo` | any of `containers:read`, `containers:manage` | An app's logo, fetched once by ZettNAS so the browser doesn't ask a third party (SEC-38) |
+| `GET` | `/api/v1/docker/catalog/office-suite/family` | any of `users:read`, `containers:read` | The family calendar and address book (NFEAT-7): whether the office suite is installed and the address phones use, with this server's name… |
+| `POST` | `/api/v1/docker/catalog/office-suite/family` | `containers:manage` | Adds Calendar and Contacts to an office suite installed before they were part of it |
 | `POST` | `/api/v1/docker/catalog/sideload` | `containers:manage` | Sideloads an application from a URL (e.g |
 | `GET` | `/api/v1/docker/catalog/sources` | any of `containers:read`, `containers:manage` | Get Docker Catalog Sources |
 | `POST` | `/api/v1/docker/catalog/sources` | `containers:manage` | Post Docker Catalog Sources |

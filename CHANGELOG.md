@@ -104,6 +104,12 @@
 
 #### Usability
 
+- **A family calendar and address book at home** (NFEAT-7): the office suite now sets up
+  Nextcloud's Calendar and Contacts when it is installed, and an office suite installed before
+  can add them with one button. Users has a "Family calendar and contacts" card with the address
+  to copy and the steps for an iPhone and for Android (DAVx⁵); everyone signs in with their own
+  ZettNAS name and password.
+
 - **Pick a child's devices instead of typing addresses** (NUX-12): the family filter has "Choose
   from the network", which lists the devices AdGuard Home has seen by name (a tablet, a laptop)
   as boxes to tick. The app install dialog starts in the folder where this server keeps app data
