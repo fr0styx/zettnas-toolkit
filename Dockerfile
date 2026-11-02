@@ -2,8 +2,8 @@
 # Stage 1: Build modern offline-first frontend assets
 # =========================================================================
 # Base images are pinned by digest (OPS-19); Dependabot proposes updates.
-# Node.js 26.12.1: the October 2026 security release (Brotli decoder CVE-2026-111497). Keep in step with .nvmrc.
-FROM --platform=$BUILDPLATFORM node:26.12.1-alpine@sha256:40cd011b55415bc894e45b02fdd5a5dfde056921b7d23a64c74f80497af48797 AS frontend-builder
+# Node.js 26.13.0 (26.12.1 was the October 2026 security release, Brotli decoder CVE-2026-111497). Keep in step with .nvmrc.
+FROM --platform=$BUILDPLATFORM node:26.13.0-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94 AS frontend-builder
 
 WORKDIR /build
 
@@ -89,7 +89,7 @@ RUN if [ "$TARGETARCH" = "amd64" ]; then \
 
 # Playwright (LCD renderer) ships its own Node.js, which lags behind security releases.
 # Replace it with the patched official build so no vulnerable copy stays in the image.
-COPY --from=node:26.12.1-trixie-slim@sha256:36793bcbb160a6a16cede1e62b93f84e26b78a972a8a4c0b879c1c12f22761ec /usr/local/bin/node /usr/local/lib/python3.12/site-packages/playwright/driver/node
+COPY --from=node:26.13.0-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 /usr/local/bin/node /usr/local/lib/python3.12/site-packages/playwright/driver/node
 
 # VARIANT=full (default) adds virtual machines (QEMU, OVMF, swtpm) and the front
 # LCD renderer (headless Chromium and fonts). VARIANT=core leaves them out: a
