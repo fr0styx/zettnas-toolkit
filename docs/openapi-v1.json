@@ -47769,6 +47769,36 @@
     ]
    }
   },
+  "/api/v1/docker/catalog/office-suite/family/profile": {
+   "get": {
+    "description": "The family calendar and contacts as a profile an iPhone or iPad installs (NFEAT-7).",
+    "operationId": "get_family_dav_profile_api_v1_docker_catalog_office_suite_family_profile_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     }
+    },
+    "summary": "Get Family Dav Profile",
+    "tags": [
+     "Docker App Catalog"
+    ],
+    "x-required-scopes": [
+     "users:read",
+     "containers:read"
+    ]
+   }
+  },
   "/api/v1/docker/catalog/sideload": {
    "post": {
     "description": "Sideloads an application from a URL (e.g. GitHub raw zett-app.json / compose) or direct manifest content.",

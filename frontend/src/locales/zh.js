@@ -4635,4 +4635,8 @@ export default {
   "ev.ups_power_back.title": "已恢复供电",
   "ev.ups_shutdown.msg": "{reason}。正在停止存储并关闭服务器。",
   "ev.ups_shutdown.title": "UPS：安全关机",
+  "fc.android_qr": "或在安装 DAVx⁵ 后用手机扫描此二维码：打开时已填好地址。",
+  "fc.iphone_profile": "设置 iPhone 或 iPad",
+  "fc.iphone_profile_hint": "或在 iPhone 上打开此页面并轻点下方按钮（或把文件发送到 iPhone），然后打开“设置”→“已下载描述文件”→“安装”。手机会要求输入 ZettNAS 用户名和密码。",
+  "fc.qr_label": "包含 DAVx⁵ 日历地址的二维码",
 };

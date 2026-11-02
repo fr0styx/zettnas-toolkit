@@ -104,6 +104,11 @@
 
 #### Usability
 
+- **Family calendar on phones in one step** (NFEAT-7): Users → the family calendar card has a
+  button that downloads a profile an iPhone or iPad installs (calendar and contacts together; the
+  phone asks for the person's ZettNAS name and password), and a QR code that opens DAVx⁵ on
+  Android with the address filled in.
+
 - **The rest of the activity log in your language** (NUX-3): file moves, copies, uploads and the
   Recycle Bin, memory-card imports, the front button, UPS events and drills, drive checks,
   scheduled tasks, damaged or restored settings, updates and the ransomware guard now show in

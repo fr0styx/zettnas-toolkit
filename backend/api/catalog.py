@@ -68,6 +68,26 @@ async def get_family_dav(request: Request):
     return await asyncio.to_thread(family_dav.status, request.url.hostname or "")
 
 
+@router.get(
+    "/docker/catalog/office-suite/family/profile",
+    dependencies=[Depends(require_scope("users:read", "containers:read"))],
+)
+async def get_family_dav_profile(request: Request):
+    """The family calendar and contacts as a profile an iPhone or iPad installs (NFEAT-7)."""
+    from fastapi import Response
+
+    from backend.services import family_dav
+
+    data = await asyncio.to_thread(family_dav.ios_profile_for, request.url.hostname or "")
+    if data is None:
+        raise HTTPException(status_code=404, detail="Install the office suite from the App Catalog first.")
+    return Response(
+        content=data,
+        media_type="application/x-apple-aspen-config",
+        headers={"Content-Disposition": 'attachment; filename="ZettNAS family.mobileconfig"'},
+    )
+
+
 @router.post("/docker/catalog/office-suite/family", dependencies=[Depends(require_scope("containers:manage"))])
 async def post_family_dav():
     """Adds Calendar and Contacts to an office suite installed before they were part of it."""

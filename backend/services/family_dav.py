@@ -83,6 +83,55 @@ def status(host: str) -> dict[str, Any]:
     }
 
 
+def ios_profile(host: str, port: int | None) -> bytes:
+    """A configuration profile that adds the family calendar and contacts to an iPhone or iPad
+    (NFEAT-7): a CalDAV and a CardDAV account at the office suite. It holds no name or password;
+    the phone asks for the person's ZettNAS name and password, so one profile serves everyone."""
+    import plistlib
+    import uuid
+
+    ident = f"zettnas.family.{host}"
+
+    def account(kind: str, prefix: str, label: str) -> dict[str, Any]:
+        return {
+            "PayloadType": f"com.apple.{kind}.account",
+            "PayloadIdentifier": f"{ident}.{kind}",
+            "PayloadUUID": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{ident}.{kind}")).upper(),
+            "PayloadVersion": 1,
+            "PayloadDisplayName": label,
+            f"{prefix}AccountDescription": label,
+            f"{prefix}HostName": host,
+            f"{prefix}Port": int(port or 80),
+            f"{prefix}PrincipalURL": "/remote.php/dav",
+            f"{prefix}UseSSL": False,
+        }
+
+    return plistlib.dumps(
+        {
+            "PayloadType": "Configuration",
+            "PayloadVersion": 1,
+            "PayloadIdentifier": ident,
+            "PayloadUUID": str(uuid.uuid5(uuid.NAMESPACE_URL, ident)).upper(),
+            "PayloadDisplayName": "ZettNAS family calendar and contacts",
+            "PayloadDescription": "Adds the family calendar and contacts kept on ZettNAS.",
+            "PayloadContent": [
+                account("caldav", "CalDAV", "Family calendar"),
+                account("carddav", "CardDAV", "Family contacts"),
+            ],
+        }
+    )
+
+
+def ios_profile_for(host: str) -> bytes | None:
+    """The profile for the office suite on this server, None when it isn't installed."""
+    office = office_container()
+    if not office:
+        return None
+    from backend.services.app_after_start import valid_host
+
+    return ios_profile(valid_host(host) or "localhost", office["port"])
+
+
 def add_apps() -> dict[str, Any]:
     """Adds Calendar and Contacts to an office suite installed before they were part of it."""
     from backend.services import app_after_start

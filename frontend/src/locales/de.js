@@ -4635,4 +4635,8 @@ export default {
   "ev.ups_power_back.title": "Strom ist zurück",
   "ev.ups_shutdown.msg": "{reason}. Der Speicher wird angehalten und der Server heruntergefahren.",
   "ev.ups_shutdown.title": "USV: sicheres Herunterfahren",
+  "fc.android_qr": "Oder scannen Sie diesen Code mit dem Telefon, sobald DAVx⁵ installiert ist: Es öffnet sich mit der Adresse.",
+  "fc.iphone_profile": "iPhone oder iPad einrichten",
+  "fc.iphone_profile_hint": "Oder öffnen Sie diese Seite auf dem iPhone und tippen Sie auf die Taste unten (oder schicken Sie ihm die Datei), dann Einstellungen → Profil geladen → Installieren. Das iPhone fragt nach dem ZettNAS-Namen und Passwort.",
+  "fc.qr_label": "QR-Code mit der Kalenderadresse für DAVx⁵",
 };
