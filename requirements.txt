@@ -1,9 +1,9 @@
 aiofiles==25.1.0
-apprise>=2.0.1
+apprise>=2.1.0
 argon2-cffi>=25.1.0
 cryptography>=50.0.2
 exifread==3.5.1
-fastapi>=0.161.1
+fastapi>=0.162.0
 http-ece>=1.2.1
 httpx>=0.28.1
 ldap3>=2.9.1
@@ -17,8 +17,8 @@ PyYAML>=6.0.3
 sigstore==4.5.1
 sqlcipher3==0.6.4
 sqlite-vec>=0.1.9; platform_system == "Linux" and implementation_name == "cpython" and 'musl' not in platform_release
-sse-starlette==3.5.0
+sse-starlette==3.6.0
 tinytag==2.3.2
 uvicorn==0.54.0
 websockets>=17.3
-pypdfium2>=4.30
+pypdfium2>=5.14.0
