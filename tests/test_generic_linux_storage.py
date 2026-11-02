@@ -367,5 +367,9 @@ def test_generic_linux_offers_only_what_its_tools_can_do(monkeypatch):
     assert caps.can_trigger_scrub is False and caps.can_snapshot is False
     assert caps.supported_filesystems == ["ext4", "xfs"] and "missing" in caps.description
     monkeypatch.setattr(shutil, "which", lambda name: "/usr/sbin/btrfs" if name == "btrfs" else None)
+    monkeypatch.setattr("backend.hardware.pal.generic_linux.fs_of", lambda path: "btrfs")
     caps = GenericLinuxStorageAdapter().get_capabilities()
     assert caps.can_snapshot and caps.can_trigger_scrub and "btrfs" in caps.supported_filesystems
+    # NREL-5: btrfs tools but an ext4 pool: no snapshots to offer
+    monkeypatch.setattr("backend.hardware.pal.generic_linux.fs_of", lambda path: "ext4")
+    assert GenericLinuxStorageAdapter().get_capabilities().can_snapshot is False

@@ -565,6 +565,11 @@
 
 #### Fixes
 
+- **Snapshots and quotas work for new shares on plain Linux** (NREL-5): on a btrfs pool a new
+  share is made as a btrfs subvolume, not a plain folder, so its hourly snapshots and its quota
+  stop failing; snapshots are offered only when the pool really is btrfs, not whenever the btrfs
+  tools are installed. Shares made before stay folders for now.
+
 - **Rolling a share back is safer** (NREL-7): the Recycle Bin and encrypted folders are no longer
   deleted by a rollback; it refuses while an encrypted folder in that share is open, and when the
   copy needs more space than is free (the snapshot of the current state keeps the old data); and

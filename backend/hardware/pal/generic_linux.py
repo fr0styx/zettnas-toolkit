@@ -36,6 +36,26 @@ from backend.ignored_errors import ignored
 from backend.settings import test_mode
 
 
+def fs_of(path: str, mounts: str = "/proc/mounts") -> str:
+    """The filesystem type of the mount that holds path ("" when it can't be told), by the longest
+    mount point in /proc/mounts that contains it."""
+    path = os.path.realpath(path)
+    best, fs = "", ""
+    try:
+        with open(mounts, encoding="utf-8") as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) < 3:
+                    continue
+                mnt = parts[1].replace("\\040", " ")
+                inside = path == mnt or path.startswith(mnt.rstrip("/") + "/")
+                if inside and len(mnt) >= len(best):
+                    best, fs = mnt, parts[2]
+    except OSError:
+        return ""
+    return fs
+
+
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     """
     Generic Linux Storage Platform Adapter.
@@ -47,6 +67,23 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     def __init__(self, pool_path: str | None = None):
         self._pool_path = pool_path or pal_base.POOL_PATH or "/mnt/storage"
 
+    def _make_share_dir(self, full_path: str) -> str:
+        """The share's folder (NREL-5). On btrfs it is a subvolume, so the default snapshots and
+        quotas work on it; elsewhere, or if that fails, a plain folder. Returns which it made."""
+        from backend.hardware.pal.base import storage_tools
+
+        parent = os.path.dirname(full_path.rstrip("/")) or "/"
+        if not os.path.exists(full_path) and fs_of(parent) == "btrfs" and storage_tools()["btrfs"]:
+            code, _, err = self._run_cmd(["btrfs", "subvolume", "create", full_path])
+            if code == 0:
+                return "subvolume"
+            logger.warning("[PAL] %s: no btrfs subvolume (%s); a plain folder instead", full_path, err)
+        try:
+            os.makedirs(full_path, exist_ok=True)
+        except OSError as e:
+            logger.warning("[PAL] Could not pre-create share dir %s: %s", full_path, e)
+        return "folder"
+
     def get_platform_type(self) -> PlatformType:
         return PlatformType.GENERIC_LINUX
 
@@ -55,6 +92,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
         tools = storage_tools()
         has_cow = tools["btrfs"] or tools["zfs"]
+        # NREL-5: snapshots are btrfs subvolume snapshots here, so the pool must be btrfs too
+        snapshots = tools["btrfs"] and fs_of(self._pool_path) == "btrfs"
         missing = [n for n in ("btrfs", "zfs", "mdadm") if not tools[n]]
         return PlatformCapabilities(
             platform=PlatformType.GENERIC_LINUX,
@@ -64,7 +103,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
             can_manage_shares=True,
             # REL-4: offer only what the tools in this image can do
             can_trigger_scrub=has_cow or tools["mdadm"],
-            can_snapshot=has_cow,
+            can_snapshot=snapshots,
             storage_tools=tools,
             supported_filesystems=[f for f in ("btrfs", "ext4", "xfs", "zfs") if f in ("ext4", "xfs") or tools[f]],
             description="Active Provisioner Mode: Bare-metal Linux host detected. Pool and share management enabled."
@@ -968,10 +1007,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 )
             except Exception as e:
                 raise ValueError(f"Invalid NFS export settings: {e}") from e
-        try:
-            os.makedirs(full_path, exist_ok=True)
-        except OSError as e:
-            logger.warning(f"[PAL] Could not pre-create share dir {full_path}: {e}")
+        self._make_share_dir(full_path)
         quota = fs_quota.apply(full_path, quota_gb * 1024**3) if quota_gb > 0 else None  # FEAT-10
 
         user_perms = user_permissions or {}

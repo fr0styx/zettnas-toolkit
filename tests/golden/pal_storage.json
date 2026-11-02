@@ -225,6 +225,7 @@
    "methods": {
     "__init__": "(self, pool_path: str | None = None)",
     "_check_is_storage_busy_uncached": "(self) -> bool",
+    "_make_share_dir": "(self, full_path: str) -> str",
     "_must": "(self, cmd: list[str], what: str) -> str",
     "_resolve_disk_path": "(self, disk: str) -> str",
     "_run_cmd": "(self, cmd: list[str]) -> tuple[int, str, str]",
