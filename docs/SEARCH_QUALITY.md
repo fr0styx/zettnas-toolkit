@@ -46,22 +46,22 @@ Questions that share few words with the file, which lexical vectors can't match 
 
 ## With the EmbeddingGemma model (nightly, on GitHub's runners)
 
-The same sets with EmbeddingGemma as the embedder and 2,000 extra files that answer nothing, to make finding the right one harder. Recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2); dev/held-out figures dropped when the split became by file (NAI-9), re-recorded with the next nightly.
+The same sets with EmbeddingGemma as the embedder and 2,000 extra files that answer nothing, to make finding the right one harder. Recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), 2,000 distractor files; dev/held-out figures come with the next nightly (the split became by file in 18f2d67).
 
 | | Questions | Right file first | Right file in top 5 |
 |---|---|---|---|
-| English | 103 | 0.89 | 0.97 |
-| German | 88 | 0.93 | 0.97 |
-| French | 87 | 0.92 | 0.95 |
-| Spanish | 85 | 0.83 | 0.89 |
+| English | 103 | 0.94 | 1.00 |
+| German | 88 | 0.94 | 0.99 |
+| French | 87 | 0.95 | 0.99 |
+| Spanish | 85 | 0.93 | 0.99 |
 | Chinese | 83 | 0.90 | 0.99 |
-| **All** | 446 | 0.90 | 0.95 |
+| **All** | 446 | 0.94 | 0.99 |
 
 | | Questions | Right file first | Right file in top 5 |
 |---|---|---|---|
-| Same language | 200 | 0.94 | 0.95 |
-| Cross-language | 206 | 0.86 | 0.96 |
-| Paraphrased | 40 | 0.85 | 0.95 |
+| Same language | 200 | 0.96 | 0.98 |
+| Cross-language | 206 | 0.90 | 0.99 |
+| Paraphrased | 40 | 0.95 | 1.00 |
 
 Long, Office and scanned documents:
 
@@ -70,7 +70,7 @@ Long, Office and scanned documents:
 | Long documents | 11 | 1.00 | 1.00 | 1.00 |
 | Office files | 10 | 1.00 | 1.00 | 1.00 |
 | Scanned | 7 | 0.86 | 1.00 | 1.00 |
-| Two files needed | 5 | 0.80 | 1.00 | 0.80 |
+| Two files needed | 5 | 1.00 | 1.00 | 0.80 |
 
 ## Answers (nightly, Qwen3-4B as the chat model)
 

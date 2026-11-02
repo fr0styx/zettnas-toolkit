@@ -1,72 +1,72 @@
 {
- "note": "recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2); dev/held-out figures dropped when the split became by file (NAI-9), re-recorded with the next nightly",
+ "note": "recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), 2,000 distractor files; dev/held-out figures come with the next nightly (the split became by file in 18f2d67)",
  "model": "embeddinggemma",
  "set": "all",
  "distractors": 2000,
  "overall": {
-  "recall@1": 0.897,
-  "recall@5": 0.955,
-  "all@5": 0.955,
-  "mrr@10": 0.922,
+  "recall@1": 0.935,
+  "recall@5": 0.991,
+  "all@5": 0.991,
+  "mrr@10": 0.96,
   "queries": 446
  },
  "by_language": {
   "de": {
-   "recall@1": 0.932,
-   "recall@5": 0.966,
-   "all@5": 0.966,
-   "mrr@10": 0.944,
+   "recall@1": 0.943,
+   "recall@5": 0.989,
+   "all@5": 0.989,
+   "mrr@10": 0.958,
    "queries": 88
   },
   "en": {
-   "recall@1": 0.893,
-   "recall@5": 0.971,
-   "all@5": 0.971,
-   "mrr@10": 0.927,
+   "recall@1": 0.942,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.968,
    "queries": 103
   },
   "es": {
-   "recall@1": 0.835,
-   "recall@5": 0.894,
-   "all@5": 0.894,
-   "mrr@10": 0.861,
+   "recall@1": 0.929,
+   "recall@5": 0.988,
+   "all@5": 0.988,
+   "mrr@10": 0.956,
    "queries": 85
   },
   "fr": {
-   "recall@1": 0.92,
-   "recall@5": 0.954,
-   "all@5": 0.954,
-   "mrr@10": 0.936,
+   "recall@1": 0.954,
+   "recall@5": 0.989,
+   "all@5": 0.989,
+   "mrr@10": 0.969,
    "queries": 87
   },
   "zh": {
    "recall@1": 0.904,
    "recall@5": 0.988,
    "all@5": 0.988,
-   "mrr@10": 0.943,
+   "mrr@10": 0.945,
    "queries": 83
   }
  },
  "by_kind": {
   "cross": {
-   "recall@1": 0.864,
-   "recall@5": 0.956,
-   "all@5": 0.956,
-   "mrr@10": 0.906,
+   "recall@1": 0.903,
+   "recall@5": 0.995,
+   "all@5": 0.995,
+   "mrr@10": 0.945,
    "queries": 206
   },
   "paraphrase": {
-   "recall@1": 0.85,
-   "recall@5": 0.95,
-   "all@5": 0.95,
-   "mrr@10": 0.885,
+   "recall@1": 0.95,
+   "recall@5": 1.0,
+   "all@5": 1.0,
+   "mrr@10": 0.967,
    "queries": 40
   },
   "same-language": {
-   "recall@1": 0.94,
-   "recall@5": 0.955,
-   "all@5": 0.955,
-   "mrr@10": 0.946,
+   "recall@1": 0.965,
+   "recall@5": 0.985,
+   "all@5": 0.985,
+   "mrr@10": 0.974,
    "queries": 200
   }
  }

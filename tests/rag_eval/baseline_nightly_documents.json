@@ -1,13 +1,13 @@
 {
- "note": "recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2); dev/held-out figures dropped when the split became by file (NAI-9), re-recorded with the next nightly",
+ "note": "recorded from the GitHub nightly of 2026-11-02 (run 41491018429, commit a5911c2): EmbeddingGemma through Ollama (embeddinggemma:latest, manifest sha256:85462619ee72, f32 weights), documents set, scanned pages read by the stand-in; dev/held-out figures come with the next nightly (the split became by file in 18f2d67)",
  "model": "embeddinggemma",
  "set": "documents",
  "distractors": 0,
  "overall": {
-  "recall@1": 0.939,
+  "recall@1": 0.97,
   "recall@5": 1.0,
   "all@5": 0.97,
-  "mrr@10": 0.97,
+  "mrr@10": 0.985,
   "queries": 33
  },
  "by_language": {
@@ -19,10 +19,10 @@
    "queries": 7
   },
   "en": {
-   "recall@1": 0.882,
+   "recall@1": 0.941,
    "recall@5": 1.0,
    "all@5": 0.941,
-   "mrr@10": 0.941,
+   "mrr@10": 0.971,
    "queries": 17
   },
   "es": {
@@ -56,10 +56,10 @@
    "queries": 11
   },
   "multihop": {
-   "recall@1": 0.8,
+   "recall@1": 1.0,
    "recall@5": 1.0,
    "all@5": 0.8,
-   "mrr@10": 0.9,
+   "mrr@10": 1.0,
    "queries": 5
   },
   "office": {
