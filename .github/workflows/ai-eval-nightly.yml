@@ -49,15 +49,25 @@ jobs:
           python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
             --set all --distractors 2000 --misses --out eval-retrieval.json > /dev/null
           python -m tests.rag_eval.compare eval-retrieval.json tests/rag_eval/baseline_nightly.json
+      - name: Hard set (names that say nothing, near-topic files beside them)
+        if: always()
+        env:
+          TESTING: "1"
+        run: |
+          python -m tests.rag_eval.run_eval --model embeddinggemma --dim 768 --host http://127.0.0.1:11434 \
+            --set all --distractors 2000 --neutral-names --hard-distractors --misses --out eval-hard.json > /dev/null
+          python -m tests.rag_eval.compare eval-hard.json tests/rag_eval/baseline_nightly_hard.json
       - name: Summary
         if: always()
-        run: python -m tests.rag_eval.summary eval-retrieval.json >> "$GITHUB_STEP_SUMMARY"
+        run: python -m tests.rag_eval.summary eval-retrieval.json eval-hard.json >> "$GITHUB_STEP_SUMMARY"
       - name: Keep the results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ai-eval-retrieval
-          path: eval-retrieval.json
+          path: |
+            eval-retrieval.json
+            eval-hard.json
           retention-days: 30
 
   documents:

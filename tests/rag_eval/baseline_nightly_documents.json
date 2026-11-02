@@ -1,5 +1,5 @@
 {
- "note": "recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2)",
+ "note": "recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2); dev/held-out figures dropped when the split became by file (NAI-9), re-recorded with the next nightly",
  "model": "embeddinggemma",
  "set": "documents",
  "distractors": 0,
@@ -75,22 +75,6 @@
    "all@5": 1.0,
    "mrr@10": 0.929,
    "queries": 7
-  }
- },
- "by_split": {
-  "dev": {
-   "recall@1": 0.929,
-   "recall@5": 1.0,
-   "all@5": 0.964,
-   "mrr@10": 0.964,
-   "queries": 28
-  },
-  "heldout": {
-   "recall@1": 1.0,
-   "recall@5": 1.0,
-   "all@5": 1.0,
-   "mrr@10": 1.0,
-   "queries": 5
   }
  }
 }

@@ -46,18 +46,18 @@
  },
  "by_split": {
   "dev": {
-   "recall@1": 0.849,
-   "recall@5": 0.874,
-   "all@5": 0.874,
-   "mrr@10": 0.861,
-   "queries": 159
+   "recall@1": 0.819,
+   "recall@5": 0.844,
+   "all@5": 0.844,
+   "mrr@10": 0.829,
+   "queries": 160
   },
   "heldout": {
-   "recall@1": 0.805,
-   "recall@5": 0.829,
-   "all@5": 0.829,
-   "mrr@10": 0.81,
-   "queries": 41
+   "recall@1": 0.925,
+   "recall@5": 0.95,
+   "all@5": 0.95,
+   "mrr@10": 0.933,
+   "queries": 40
   }
  }
 }

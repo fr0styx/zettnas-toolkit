@@ -1,0 +1,67 @@
+{
+ "note": "built-in lexical vectors; corpus under neutral names (Scan_0001.md ...) beside 3 near-topic files per corpus file (NAI-9)",
+ "model": "zett_lexical_384d",
+ "set": "base",
+ "neutral_names": true,
+ "hard_distractors": 120,
+ "overall": {
+  "recall@1": 0.675,
+  "recall@5": 0.82,
+  "all@5": 0.82,
+  "mrr@10": 0.721,
+  "queries": 200
+ },
+ "by_language": {
+  "de": {
+   "recall@1": 0.6,
+   "recall@5": 0.675,
+   "all@5": 0.675,
+   "mrr@10": 0.624,
+   "queries": 40
+  },
+  "en": {
+   "recall@1": 0.7,
+   "recall@5": 0.775,
+   "all@5": 0.775,
+   "mrr@10": 0.725,
+   "queries": 40
+  },
+  "es": {
+   "recall@1": 0.625,
+   "recall@5": 0.85,
+   "all@5": 0.85,
+   "mrr@10": 0.697,
+   "queries": 40
+  },
+  "fr": {
+   "recall@1": 0.75,
+   "recall@5": 0.9,
+   "all@5": 0.9,
+   "mrr@10": 0.792,
+   "queries": 40
+  },
+  "zh": {
+   "recall@1": 0.7,
+   "recall@5": 0.9,
+   "all@5": 0.9,
+   "mrr@10": 0.765,
+   "queries": 40
+  }
+ },
+ "by_split": {
+  "dev": {
+   "recall@1": 0.675,
+   "recall@5": 0.794,
+   "all@5": 0.794,
+   "mrr@10": 0.711,
+   "queries": 160
+  },
+  "heldout": {
+   "recall@1": 0.675,
+   "recall@5": 0.925,
+   "all@5": 0.925,
+   "mrr@10": 0.76,
+   "queries": 40
+  }
+ }
+}

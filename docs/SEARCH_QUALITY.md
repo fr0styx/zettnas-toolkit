@@ -25,7 +25,7 @@ more than 0.01.
 | Chinese | 40 | 0.90 | 0.90 |
 | **All** | 200 | 0.84 | 0.86 |
 
-Held-out half (never used for tuning): right file in the top 5 for 0.83 of 41 questions, against 0.87 for the other 159.
+Held-out half (never used for tuning): right file in the top 5 for 0.95 of 40 questions, against 0.84 for the other 160.
 
 Long, Office and scanned documents:
 
@@ -46,7 +46,7 @@ Questions that share few words with the file, which lexical vectors can't match 
 
 ## With the EmbeddingGemma model (nightly, on GitHub's runners)
 
-The same sets with EmbeddingGemma as the embedder and 2,000 extra files that answer nothing, to make finding the right one harder. Recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2).
+The same sets with EmbeddingGemma as the embedder and 2,000 extra files that answer nothing, to make finding the right one harder. Recorded from the GitHub nightly of 2026-10-28 (run 40667276297, commit a2544a2); dev/held-out figures dropped when the split became by file (NAI-9), re-recorded with the next nightly.
 
 | | Questions | Right file first | Right file in top 5 |
 |---|---|---|---|
@@ -62,8 +62,6 @@ The same sets with EmbeddingGemma as the embedder and 2,000 extra files that ans
 | Same language | 200 | 0.94 | 0.95 |
 | Cross-language | 206 | 0.86 | 0.96 |
 | Paraphrased | 40 | 0.85 | 0.95 |
-
-Held-out half (never used for tuning): right file in the top 5 for 0.95 of 87 questions, against 0.95 for the other 359.
 
 Long, Office and scanned documents:
 

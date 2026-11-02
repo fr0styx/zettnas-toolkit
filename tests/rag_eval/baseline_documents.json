@@ -78,18 +78,18 @@
  },
  "by_split": {
   "dev": {
-   "recall@1": 0.893,
+   "recall@1": 0.875,
    "recall@5": 1.0,
-   "all@5": 0.929,
-   "mrr@10": 0.946,
-   "queries": 28
+   "all@5": 0.917,
+   "mrr@10": 0.938,
+   "queries": 24
   },
   "heldout": {
    "recall@1": 1.0,
    "recall@5": 1.0,
-   "all@5": 0.8,
+   "all@5": 0.889,
    "mrr@10": 1.0,
-   "queries": 5
+   "queries": 9
   }
  },
  "scanned_read": {

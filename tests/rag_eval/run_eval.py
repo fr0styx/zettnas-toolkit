@@ -60,8 +60,16 @@ HELDOUT_EVERY = 5
 
 
 def split_of(item_id: str) -> str:
-    """'heldout' for one id in five (fixed by its hash), else 'dev'."""
+    """'heldout' for one key in five (fixed by its hash), else 'dev'."""
     return "heldout" if int(hashlib.sha1(item_id.encode()).hexdigest(), 16) % HELDOUT_EVERY == 0 else "dev"
+
+
+def doc_of(item: dict) -> str:
+    """What decides a question's split: its file (NAI-9). Every question about a held-out file is
+    held out, so tuning on dev questions can't learn the held-out files; a question no file
+    answers is split by its own id."""
+    relevant = sorted(item.get("relevant") or [])
+    return relevant[0] if relevant else item["id"]
 
 
 def load_queries(which: str = "base") -> list[dict]:
@@ -70,14 +78,14 @@ def load_queries(which: str = "base") -> list[dict]:
     for name in names:
         with open(os.path.join(HERE, name), encoding="utf-8") as f:
             for q in json.load(f):
-                out.append({"kind": "same-language", **q, "split": split_of(q["id"])})
+                out.append({"kind": "same-language", **q, "split": split_of(doc_of(q))})
     return out
 
 
 def load_qa(which: str = "base") -> list[dict]:
     name = "qa_documents.json" if which == "documents" else "qa.json"
     with open(os.path.join(HERE, name), encoding="utf-8") as f:
-        return [{**q, "split": split_of(q["id"])} for q in json.load(f)]
+        return [{**q, "split": split_of(doc_of(q))} for q in json.load(f)]
 
 
 # Distractors: plausible household files on other subjects, generated the same way every time,
@@ -210,6 +218,67 @@ def write_distractors(folder: str, count: int, seed: int = 7) -> int:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines) + "\n")
+    return count
+
+
+# Names real households' files have (NAI-9): a scanner's, a camera's, a download's
+NEUTRAL_NAMES = ("Scan_{n:04d}", "Document ({n})", "IMG_{m}", "file{n}", "New Document {n}")
+# Near-topic copies' suffixes: the same name with something after it, as a second version would be
+HARD_SUFFIXES = ("old", "copy", "2")
+HARD_PER_FILE = len(HARD_SUFFIXES)
+
+
+def write_neutral_copy(src: str, dst: str) -> dict[str, str]:
+    """The corpus under names that say nothing about the file (Scan_0003.md, Document (7).csv),
+    folders and extensions kept. Returns each copy's path -> its corpus path, for scoring."""
+    names: dict[str, str] = {}
+    files = sorted(
+        os.path.relpath(os.path.join(d, f), src).replace(os.sep, "/") for d, _, fs in os.walk(src) for f in fs
+    )
+    for n, rel in enumerate(files, start=1):
+        folder, name = os.path.split(rel)
+        stem = NEUTRAL_NAMES[n % len(NEUTRAL_NAMES)].format(n=n, m=2000 + n)
+        path = os.path.join(dst, folder, stem + os.path.splitext(name)[1])
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(os.path.join(src, rel), "rb") as fi, open(path, "wb") as fo:
+            fo.write(fi.read())
+        names[path] = rel
+    return names
+
+
+def topic_of(rel: str) -> str:
+    """A file's topic words, from its name: 'en/recipes/banana_bread.md' -> 'banana bread'."""
+    stem = os.path.splitext(os.path.basename(rel))[0]
+    return re.sub(r"[_\-]+", " ", stem).strip()
+
+
+def write_hard_distractors(src: str, folder: str, seed: int = 11) -> int:
+    """Near-topic files that compete (NAI-9): for each corpus file, files in its language and
+    folder whose names and sentences carry its topic words, with numbers and dates that answer
+    nothing. A ranking that leans on file names or same-language word overlap picks these."""
+    rng = random.Random(seed)
+    count = 0
+    for d, _, fs in sorted(os.walk(src)):
+        for f in sorted(fs):
+            rel = os.path.relpath(os.path.join(d, f), src).replace(os.sep, "/")
+            lang = rel.split("/")[0]
+            if lang not in _DISTRACT:
+                continue
+            _kinds, templates, _places, things = _DISTRACT[lang]
+            topic = topic_of(rel)
+            for suffix in HARD_SUFFIXES:
+                lines = [
+                    rng.choice(templates).format(
+                        a=rng.choice(things), b=topic, d=rng.choice(_DATES), n=rng.randint(2, 900)
+                    )
+                    for _ in range(rng.randint(4, 9))
+                ]
+                stem = os.path.splitext(os.path.basename(rel))[0]
+                path = os.path.join(folder, os.path.dirname(rel), f"{stem}_{suffix}.txt")
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "w", encoding="utf-8") as fo:
+                    fo.write("\n".join(lines) + "\n")
+                count += 1
     return count
 
 
@@ -431,6 +500,8 @@ def evaluate(
     llm_host: str | None = None,
     ocr: str = "standin",
     measure_cut_off: bool = True,
+    neutral_names: bool = False,
+    hard_distractors: bool = False,
 ) -> dict:
     from backend.services import rag_calibration
     from backend.services import rag_engine_search as search_mod
@@ -465,7 +536,14 @@ def evaluate(
     elif neural:
         measured_patch.start()
 
+    corpus_root, renamed = CORPUS, {}
+    if neutral_names:  # NAI-9: names that say nothing, as real households' scans and downloads
+        corpus_root = os.path.join(tmp, "neutral")
+        renamed = write_neutral_copy(CORPUS, corpus_root)
+
     def rel(p: str) -> str:
+        if p in renamed:
+            return renamed[p]
         root = docs_root if p.startswith(docs_root + os.sep) else CORPUS
         return os.path.relpath(p, root).replace(os.sep, "/")
 
@@ -479,7 +557,11 @@ def evaluate(
             patch("backend.services.rag_standby.is_backing_disk_in_standby", return_value=False),
             patch.object(search_mod.RagSearchMixin, "_build_rbac_clause", staticmethod(as_system)),
         ):
-            _index_tree(engine, CORPUS)
+            _index_tree(engine, corpus_root)
+            hard = 0
+            if hard_distractors:
+                hard = write_hard_distractors(CORPUS, os.path.join(tmp, "near-topic"))
+                _index_tree(engine, os.path.join(tmp, "near-topic"))
             scanned = None
             if which == "documents":
                 from tests.rag_eval import documents
@@ -564,6 +646,8 @@ def evaluate(
         "model": model,
         "set": which,
         "distractors": distractors,
+        "neutral_names": neutral_names,
+        "hard_distractors": hard,
         "vec_min": vec_min,
         "overall": summary(per_query),
         "by_language": {lang: summary([r for r in per_query if r["lang"] == lang]) for lang in langs},
@@ -635,6 +719,10 @@ def main():
     ap.add_argument(
         "--no-calibration", action="store_true", help="use the built-in similarity cut-off, not one measured"
     )
+    ap.add_argument("--neutral-names", action="store_true", help="index the corpus as Scan_0001.md and the like")
+    ap.add_argument(
+        "--hard-distractors", action="store_true", help="add near-topic files in each file's language and folder"
+    )
     args = ap.parse_args()
     out = evaluate(
         args.model,
@@ -647,6 +735,8 @@ def main():
         args.llm_host,
         args.ocr,
         not args.no_calibration,
+        args.neutral_names,
+        args.hard_distractors,
     )
     if not args.misses:
         out.pop("misses")

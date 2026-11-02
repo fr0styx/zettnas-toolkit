@@ -404,6 +404,14 @@
 
 #### AI
 
+- **The AI search test can't flatter the ranking** (NAI-9): questions are held out by file, not
+  one by one, so no held-out file is asked about in the questions used for tuning. A new hard mode
+  (`run_eval --neutral-names --hard-distractors`) indexes the test files under names that say
+  nothing (Scan_0001.md, Document (7).csv) beside three near-topic files each, in the same
+  language and folder; with the built-in vectors the right file comes first for 0.675 of
+  same-language questions there, against 0.84 normally. Each commit checks that figure
+  (tests/rag_eval/baseline_hard.json) and the nightly runs the hard mode with EmbeddingGemma.
+
 - **Searches for "Scan(1)" or "Berlin -> Paris" aren't treated as code**: copy-numbered file names,
   arrows and lists no longer switch search to its code mode, which found worse matches; real code
   still does (NAI-15).

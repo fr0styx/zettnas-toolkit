@@ -62,14 +62,14 @@
    "recall@5": 1.0,
    "all@5": 1.0,
    "mrr@10": 1.0,
-   "queries": 24
+   "queries": 27
   },
   "heldout": {
    "recall@1": 1.0,
    "recall@5": 1.0,
    "all@5": 1.0,
    "mrr@10": 1.0,
-   "queries": 6
+   "queries": 3
   }
  }
 }
