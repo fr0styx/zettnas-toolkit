@@ -21,6 +21,10 @@ FROM python:3.12-slim@sha256:a0f57064cbdcd6285fa45f51237ab0b35ea8ebaed06a1f5973e
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
+# glibc gives each busy thread its own memory arena and seldom hands freed memory back, so the
+# backend's many threads kept the high-water mark of every busy moment (a nightly job, indexing).
+# Two arenas keep it near what is in use (the hardware budget, NPERF-1).
+ENV MALLOC_ARENA_MAX=2
 # Without /dev/zfs, zpool and zfs wait 10 s for a kernel module a container can't load
 ENV ZFS_MODULE_TIMEOUT=0
 

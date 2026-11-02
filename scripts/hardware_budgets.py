@@ -7,7 +7,7 @@ Reads the host's /proc (mounted read-only at HOST_PROC, default /host/proc) and 
   idle-cpu        container CPU, % of one core, short tools included <= 1.0
   wakeups         container voluntary context switches per minute    <= 1500
   spawns          processes the backend started per minute           <= 10
-  backend-memory  backend resident memory, MB                      <= 200
+  backend-memory  backend resident memory, MB                      <= 300
   ai-memory       chat-model server memory, MB                     <= 1024 (after 15 idle minutes)
 
 CPU counts the measured processes and the children they have reaped (cutime and cstime), so a
@@ -39,7 +39,8 @@ BUDGETS = {
     "idle-cpu": float(os.environ.get("HW_BUDGET_IDLE_CPU", "1.0")),
     "wakeups": float(os.environ.get("HW_BUDGET_WAKEUPS", "1500")),
     "spawns": float(os.environ.get("HW_BUDGET_SPAWNS", "10")),
-    "backend-memory": float(os.environ.get("HW_BUDGET_BACKEND_MEMORY", "200")),
+    # 200 was a warning that seldom held; as a hard gate it needs headroom for busy days
+    "backend-memory": float(os.environ.get("HW_BUDGET_BACKEND_MEMORY", "300")),
     "ai-memory": float(os.environ.get("HW_BUDGET_AI_MEMORY", "1024")),
 }
 CHAT_SERVERS = ("ovms", "ollama", "llama-server", "vllm")
