@@ -70,10 +70,11 @@ def browse(name: str, path: str = "", principal: AuthenticatedPrincipal = Depend
         Depends(require_confirmation("snapshot.rollback")),
     ],
 )
-def rollback(name: str):
-    """Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot."""
+def rollback(name: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Puts the whole share back as it was in this snapshot; the current state is kept as a
+    snapshot first. The copy runs as a job (NREL-7): the answer carries its id."""
     try:
-        return snaps.rollback(name)
+        return snaps.rollback(name, owner=principal.username or None, background=True)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from None
     except ValueError as e:

@@ -139,7 +139,7 @@ def test_rolling_back_asks_first(client, auth_headers):
 
 def test_the_rollback_route_reports_problems(client, auth_headers, monkeypatch):
     def raise_(exc):
-        def f(name):
+        def f(name, **kw):
             raise exc
 
         return f
@@ -147,8 +147,9 @@ def test_the_rollback_route_reports_problems(client, auth_headers, monkeypatch):
     for exc, code in ((FileNotFoundError("gone"), 404), (ValueError("bad"), 400), (RuntimeError("no safety"), 409)):
         monkeypatch.setattr(snaps, "rollback", raise_(exc))
         assert client.post("/api/snapshots/x@y/rollback", headers=auth_headers).status_code == code
-    monkeypatch.setattr(snaps, "rollback", lambda name: {"share": "x", "safety_snapshot": "x@before"})
-    assert client.post("/api/snapshots/x@y/rollback", headers=auth_headers).json()["safety_snapshot"] == "x@before"
+    monkeypatch.setattr(snaps, "rollback", lambda name, **kw: {"share": "x", "safety_snapshot": "x@before", **kw})
+    body = client.post("/api/snapshots/x@y/rollback", headers=auth_headers).json()
+    assert body["safety_snapshot"] == "x@before" and body["background"] is True
 
 
 @pytest.mark.real_storage_tools

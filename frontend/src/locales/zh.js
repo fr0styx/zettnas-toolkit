@@ -4691,4 +4691,6 @@ export default {
   "wp.rename_msg": "为 {name} 输入新名称：",
   "wp.set_title": "将 {name} 设为壁纸",
   "wp.theme_gradient": "主题渐变",
+  "jobs.t.rollback": "回滚 {share}",
+  "snap.rolling_back": "正在回滚，任务中心会显示进度。之前的状态保存为 {safety}。",
 };

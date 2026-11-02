@@ -4691,4 +4691,6 @@ export default {
   "wp.rename_msg": "Neuer Name für {name}:",
   "wp.set_title": "{name} als Hintergrundbild verwenden",
   "wp.theme_gradient": "Farbverlauf des Designs",
+  "jobs.t.rollback": "{share} zurücksetzen",
+  "snap.rolling_back": "Wird zurückgesetzt; wie weit es ist, zeigt die Aufgabenübersicht. Der vorherige Stand bleibt als {safety} erhalten.",
 };

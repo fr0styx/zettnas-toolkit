@@ -121,7 +121,8 @@ export function entriesHtml(listing) {
 export async function rollbackShare(name, after = null) {
   try {
     const res = await api.post(`/api/snapshots/${encodeURIComponent(name)}/rollback`, {});
-    showToast(t('snap.rolled_back', 'Rolled back. How it was before is kept as {safety}.', { safety: res.safety_snapshot }), 'success');
+    if (res.job_id) showToast(t('snap.rolling_back', 'Rolling back; the Jobs centre shows how far it is. How it was before is kept as {safety}.', { safety: res.safety_snapshot }), 'success');
+    else showToast(t('snap.rolled_back', 'Rolled back. How it was before is kept as {safety}.', { safety: res.safety_snapshot }), 'success');
     if (after) after();
   } catch (err) {
     if (err?.error !== 'cancelled') showToast(err.message || String(err), 'error');

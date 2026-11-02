@@ -4691,4 +4691,6 @@ export default {
   "wp.rename_msg": "Nouveau nom pour {name} :",
   "wp.set_title": "Utiliser {name} comme fond d'écran",
   "wp.theme_gradient": "Dégradé du thème",
+  "jobs.t.rollback": "Retour en arrière de {share}",
+  "snap.rolling_back": "Retour en arrière en cours ; le centre des tâches montre l'avancement. L'état précédent est conservé sous {safety}.",
 };

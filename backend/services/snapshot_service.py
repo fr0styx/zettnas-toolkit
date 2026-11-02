@@ -15,7 +15,7 @@ from collections.abc import Callable
 from typing import Any
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import atomic_write_json, json_locked, read_json, resolve_within
+from backend.fsutil import ENCRYPTED_HIDDEN, atomic_write_json, json_locked, read_json, resolve_within
 
 SCHEDULES_FILE = os.path.join(DATA_DIR, "snapshot_schedules.json")
 EVERY = {"hourly": 3600, "daily": 86400, "weekly": 7 * 86400}
@@ -313,26 +313,52 @@ def restore(
     return {"restored": os.path.relpath(dest, live_root).replace(os.sep, "/"), "overwrote": overwrite}
 
 
-def rollback(name: str, pal: Any = None, pool_id: str | None = None) -> dict[str, Any]:
-    """Puts a whole share back as it was in one of its snapshots (FEAT-02). A snapshot of how the
-    share is now ("<share>@before-rollback-<time>") is taken first, so the rollback can itself be
-    undone; without it nothing is changed."""
-    if "@" not in name:
-        raise ValueError("Only one of a share's own snapshots can roll that share back.")
-    pal = pal or _pal()
-    pool_id = pool_id or _default_pool_id(pal)
-    snap = _snapshot(name, pal, pool_id)
-    share = name.split("@", 1)[0]
-    src_root = os.path.realpath(snap["path"])
-    live_root = os.path.realpath(_live_root(name, pal, pool_id))
-    safety = f"{share}@before-rollback-{time.strftime(NAME_FORMAT, time.gmtime())}"
-    res = pal.create_snapshot(pool_id, share, safety, readonly=True)
-    if not (res.get("status") in ("created", "ok") or res.get("success") is True):
-        raise RuntimeError("The snapshot of the current state could not be taken, so nothing was changed.")
-    wanted = set(os.listdir(src_root))
+# Never deleted or replaced by a rollback (NREL-7): the Recycle Bin, and the encrypted folders'
+# store, whose files only make sense with the key they were written with
+KEEP_ON_ROLLBACK = (".RecycleBin", ENCRYPTED_HIDDEN)
+
+
+def _tree_size(path: str) -> int:
+    if not os.path.isdir(path) or os.path.islink(path):
+        return os.lstat(path).st_size
+    total = 0
+    for dirpath, _dirs, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.lstat(os.path.join(dirpath, f)).st_size
+            except OSError:
+                continue
+    return total
+
+
+def _gb(n: float) -> str:
+    return f"{n / 1e9:.1f} GB"
+
+
+def _rollback_checks(share: str, src_root: str, live_root: str, wanted: list[str]) -> None:
+    """Refuses a rollback that would do harm (NREL-7): with an encrypted folder of this share open
+    (its files would be deleted under the open folder), or with less free space than the copy
+    needs (the snapshot of the current state keeps the old data, so nothing is freed first)."""
+    from backend.services import encrypted_folders
+
+    open_now = [f["name"] for f in encrypted_folders.listing() if f.get("share") == share and f.get("unlocked")]
+    if open_now:
+        raise RuntimeError(
+            f"Lock the encrypted folders in this share first ({', '.join(open_now)}); nothing was changed."
+        )
+    need = sum(_tree_size(os.path.join(src_root, e)) for e in wanted)
+    free = shutil.disk_usage(live_root).free
+    if need > free:
+        raise RuntimeError(
+            f"Not enough free space: the rollback copies {_gb(need)} back and {_gb(free)} is free; nothing was changed."
+        )
+
+
+def _rollback_copy(src_root: str, live_root: str, wanted: list[str], progress: Callable[[int, int], Any]) -> dict:
+    """Removes what the snapshot doesn't have, then copies each of its entries back."""
     removed = 0
     for entry in os.listdir(live_root):
-        if entry in wanted:
+        if entry in wanted or entry in KEEP_ON_ROLLBACK:
             continue
         path = os.path.join(live_root, entry)
         if os.path.isdir(path) and not os.path.islink(path):
@@ -340,7 +366,7 @@ def rollback(name: str, pal: Any = None, pool_id: str | None = None) -> dict[str
         else:
             os.unlink(path)
         removed += 1
-    for entry in sorted(wanted):
+    for i, entry in enumerate(wanted, start=1):
         src, dest = os.path.join(src_root, entry), os.path.join(live_root, entry)
         if os.path.lexists(dest):
             if os.path.isdir(dest) and not os.path.islink(dest):
@@ -351,8 +377,65 @@ def rollback(name: str, pal: Any = None, pool_id: str | None = None) -> dict[str
             shutil.copytree(src, dest, symlinks=True)
         else:
             shutil.copy2(src, dest, follow_symlinks=False)
+        progress(i, len(wanted))
+    return {"restored": len(wanted), "removed": removed}
+
+
+def _rollback_job(job_id: str, share: str, name: str, src_root: str, live_root: str, wanted: list[str]) -> None:
+    from backend.services.jobs import job_manager
+
+    def progress(done: int, total: int) -> None:
+        job_manager.update(job_id, percent=round(100.0 * done / max(1, total), 1), detail=f"{done} of {total}")
+
+    try:
+        _rollback_copy(src_root, live_root, wanted, progress)
+    except OSError as e:  # shutil.Error is one
+        logger.error("[Snapshots] rolling %s back to %s stopped: %s", share, name, e)
+        job_manager.finish(job_id, "error", str(e))
+        return
+    logger.warning("[Snapshots] %s rolled back to %s", share, name)
+    job_manager.finish(job_id)
+
+
+def rollback(
+    name: str, pal: Any = None, pool_id: str | None = None, owner: str | None = None, background: bool = False
+) -> dict[str, Any]:
+    """Puts a whole share back as it was in one of its snapshots (FEAT-02). A snapshot of how the
+    share is now ("<share>@before-rollback-<time>") is taken first, so the rollback can itself be
+    undone; without it nothing is changed. The Recycle Bin and encrypted folders stay as they are,
+    and it refuses with an encrypted folder open or too little free space (NREL-7). background=True
+    copies in a job (the Jobs centre shows its progress) and returns its id."""
+    if "@" not in name:
+        raise ValueError("Only one of a share's own snapshots can roll that share back.")
+    pal = pal or _pal()
+    pool_id = pool_id or _default_pool_id(pal)
+    snap = _snapshot(name, pal, pool_id)
+    share = name.split("@", 1)[0]
+    src_root = os.path.realpath(snap["path"])
+    live_root = os.path.realpath(_live_root(name, pal, pool_id))
+    wanted = sorted(e for e in os.listdir(src_root) if e not in KEEP_ON_ROLLBACK)
+    _rollback_checks(share, src_root, live_root, wanted)
+    safety = f"{share}@before-rollback-{time.strftime(NAME_FORMAT, time.gmtime())}"
+    res = pal.create_snapshot(pool_id, share, safety, readonly=True)
+    if not (res.get("status") in ("created", "ok") or res.get("success") is True):
+        raise RuntimeError("The snapshot of the current state could not be taken, so nothing was changed.")
+    out = {"share": share, "snapshot": name, "safety_snapshot": safety}
+    if background:
+        from backend.services.jobs import job_manager
+
+        job = job_manager.register(
+            "rollback",
+            f"Roll {share} back to {name}",
+            owner=owner,
+            title_id="jobs.t.rollback",
+            title_params={"share": share},
+        )
+        args = (job.id, share, name, src_root, live_root, wanted)
+        threading.Thread(target=_rollback_job, args=args, daemon=True, name="snapshot-rollback").start()
+        return {**out, "job_id": job.id}
+    counts = _rollback_copy(src_root, live_root, wanted, lambda done, total: None)
     logger.warning(f"[Snapshots] {share} rolled back to {name}; the state before is {safety}")
-    return {"share": share, "snapshot": name, "safety_snapshot": safety, "restored": len(wanted), "removed": removed}
+    return {**out, **counts}
 
 
 def _set_previous_versions(share: str, on: bool) -> None:

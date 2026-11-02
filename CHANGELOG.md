@@ -565,6 +565,12 @@
 
 #### Fixes
 
+- **Rolling a share back is safer** (NREL-7): the Recycle Bin and encrypted folders are no longer
+  deleted by a rollback; it refuses while an encrypted folder in that share is open, and when the
+  copy needs more space than is free (the snapshot of the current state keeps the old data); and
+  the copy runs as a job with progress in the Jobs centre instead of inside the request, which
+  timed out on big shares while the rollback carried on.
+
 - **The nightly AI checks use pinned models**: embeddinggemma and qwen3:4b are checked against
   the builds the baselines were recorded with (tests/rag_eval/models.json). An upstream rebuild
   behind the same name now fails the pull, saying so, instead of showing up as a quality drop,

@@ -4691,4 +4691,6 @@ export default {
   "wp.rename_msg": "Enter a new name for {name}:",
   "wp.set_title": "Use {name} as the wallpaper",
   "wp.theme_gradient": "Theme gradient",
+  "jobs.t.rollback": "Roll {share} back",
+  "snap.rolling_back": "Rolling back; the Jobs centre shows how far it is. How it was before is kept as {safety}.",
 };

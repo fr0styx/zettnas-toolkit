@@ -670,7 +670,7 @@ request and response schemas.
 | `POST` | `/api/v1/snapshots/schedules/{share}/run` | any of `backup:manage`, `storage:admin` | Run Now |
 | `GET` | `/api/v1/snapshots/{name}/browse` | any of `backup:read`, `storage:read` | Browse |
 | `POST` | `/api/v1/snapshots/{name}/restore` | any of `backup:manage`, `storage:admin` | Restore |
-| `POST` | `/api/v1/snapshots/{name}/rollback` | any of `backup:manage`, `storage:admin` | Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot |
+| `POST` | `/api/v1/snapshots/{name}/rollback` | any of `backup:manage`, `storage:admin` | Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot first |
 
 ### Storage
 

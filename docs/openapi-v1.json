@@ -62065,7 +62065,7 @@
   },
   "/api/v1/snapshots/{name}/rollback": {
    "post": {
-    "description": "Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot.",
+    "description": "Puts the whole share back as it was in this snapshot; the current state is kept as a\nsnapshot first. The copy runs as a job (NREL-7): the answer carries its id.",
     "operationId": "rollback_api_v1_snapshots__name__rollback_post",
     "parameters": [
      {
