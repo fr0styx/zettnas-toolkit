@@ -192,15 +192,15 @@ class TestReasoningExtractionStress:
         assert th == "Cross-tag thinking block"
         assert cl == "Result."
 
-    def test_tag_with_attributes_leaks(self):
+    def test_tag_with_attributes_does_not_leak(self):
         """
-        Adversarial test: checks behavior when model outputs attributes like '<think id="1">'
-        Records empirical leakage because tag regex expects strictly '<think>'.
+        Adversarial test: the model outputs attributes like '<think id="1">'. The opening tag is
+        not matched, but the closing tag with no plain opening tag before it ends the reasoning
+        (NAI-10), so neither the thought nor the tag reaches the reply.
         """
         text = '<think id="1">Thought with attribute</think>Reply.'
         th, cl = extract_and_strip_reasoning(text)
-        # Empirical check: tags with attributes are not matched by current regex
-        assert '<think id="1">' in cl, "Expected attribute tag to leak in current regex"
+        assert cl == "Reply." and "Thought with attribute" in th
 
 
 # ============================================================================

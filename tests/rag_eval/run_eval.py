@@ -520,7 +520,9 @@ def evaluate(
                         out = ai_chat_agent.run_agentic_chat(
                             item["question"], allow_web_search=False, model_override=answers_model
                         )
-                        text = out.get("reply") or out.get("reply_markdown") or ""
+                        reply = out.get("reply") or out.get("reply_markdown") or ""
+                        # scored as the person sees it: without the model's reasoning (NAI-10)
+                        text = ai_chat_agent.extract_and_strip_reasoning(reply)[1]
                         sources = [
                             rel(s.get("path") or s.get("file_path") or s.get("canonical_path") or "")
                             for s in (out.get("citations") or [])

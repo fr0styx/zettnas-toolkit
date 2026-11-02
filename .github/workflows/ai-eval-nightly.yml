@@ -39,11 +39,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements.lock
           pip install -r requirements-dev.txt
-      - name: Pull the models
+      - name: Pull the pinned models
         run: |
-          for m in embeddinggemma; do
-            curl -sf http://127.0.0.1:11434/api/pull -d "{\"model\": \"$m\", \"stream\": false}" >/dev/null
-          done
+          python -m tests.rag_eval.pull_models embeddinggemma
       - name: Retrieval (base and extended sets, 2,000 distractors)
         env:
           TESTING: "1"
@@ -84,11 +82,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements.lock
           pip install -r requirements-dev.txt
-      - name: Pull the models
+      - name: Pull the pinned models
         run: |
-          for m in embeddinggemma; do
-            curl -sf http://127.0.0.1:11434/api/pull -d "{\"model\": \"$m\", \"stream\": false}" >/dev/null
-          done
+          python -m tests.rag_eval.pull_models embeddinggemma
       - name: Documents set
         env:
           TESTING: "1"
@@ -127,11 +123,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements.lock
           pip install -r requirements-dev.txt
-      - name: Pull the models
+      - name: Pull the pinned models
         run: |
-          for m in embeddinggemma qwen3:4b; do
-            curl -sf http://127.0.0.1:11434/api/pull -d "{\"model\": \"$m\", \"stream\": false}" >/dev/null
-          done
+          python -m tests.rag_eval.pull_models embeddinggemma qwen3:4b
       - name: Answers (97 questions, scored; first token within 2 minutes at p95)
         env:
           TESTING: "1"

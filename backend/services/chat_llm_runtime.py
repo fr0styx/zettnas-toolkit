@@ -36,6 +36,33 @@ def _core():
     return ai_chat_agent
 
 
+_OPEN_TAG_RE = re.compile(r"<(?:think|thought|reasoning)>", re.IGNORECASE)
+_CLOSE_TAG_RE = re.compile(r"</(?:think|thought|reasoning)>", re.IGNORECASE)
+
+
+def _split_stray_close(text: str) -> tuple[str, str] | None:
+    """A closing tag with no opening tag before it: the chat template opened the reasoning block
+    itself (Qwen3 thinking models always do), so everything before that tag is reasoning.
+    Returns (reasoning, rest), or None when the text has no such tag."""
+    close = _CLOSE_TAG_RE.search(text or "")
+    if not close:
+        return None
+    opened = _OPEN_TAG_RE.search(text)
+    if opened and opened.start() < close.start():
+        return None
+    return text[: close.start()].strip(), text[close.end() :].strip()
+
+
+def normalize_reasoning(text: str) -> str:
+    """The model's reply with reasoning the template opened wrapped in a whole <think> block, so
+    everything downstream (the stream, saved chats, the reply cleaner) sees one form."""
+    split = _split_stray_close(text)
+    if split is None:
+        return text
+    lead, rest = split
+    return f"<think>\n{lead}\n</think>\n\n{rest}" if lead else rest
+
+
 def extract_and_strip_reasoning(text: str) -> tuple[str, str]:
     """
     Extracts internal reasoning/thought content from model outputs and strips both closed
@@ -48,6 +75,7 @@ def extract_and_strip_reasoning(text: str) -> tuple[str, str]:
     if not text:
         return "", ""
     think_parts: list[str] = []
+    text = normalize_reasoning(text)
     for m in _core().REASONING_TAG_RE.finditer(text):
         t = m.group(1).strip()
         if t:
@@ -102,12 +130,16 @@ class _ThinkSplitter:
     """Splits streamed text into answer tokens and <think>/<thought>/<reasoning> text."""
 
     OPEN = ("<think>", "<thought>", "<reasoning>")
+    CLOSE = ("</think>", "</thought>", "</reasoning>")
 
     def __init__(self, sink):
         self.sink = sink
         self.buf = ""
         self.close_tag = ""
         self.emitted = False
+        # answer text streamed so far, until a tag shows up: a closing tag with no opening tag
+        # turns it into reasoning (the chat template opened the block itself)
+        self.sent: list[str] | None = []
 
     @staticmethod
     def _held(buf: str, tags) -> int:
@@ -125,6 +157,16 @@ class _ThinkSplitter:
             self.sink(kind, text)
             if kind == "token":
                 self.emitted = True
+                if self.sent is not None:
+                    self.sent.append(text)
+
+    def _stray_close(self, before: str) -> None:
+        """What was streamed as the answer was reasoning: take it back and show it as such."""
+        if self.emitted:
+            self.sink("reset", "")
+            self.emitted = False
+        self._emit("think", "".join(self.sent or []) + before)
+        self.sent = None
 
     def feed(self, text: str) -> None:
         self.buf += text
@@ -134,15 +176,20 @@ class _ThinkSplitter:
                 i, tag = self.buf.find(self.close_tag), self.close_tag
                 tags = (self.close_tag,)
             else:
-                hits = [(self.buf.find(t), t) for t in self.OPEN if t in self.buf]
+                tags = self.OPEN + (self.CLOSE if self.sent is not None else ())
+                hits = [(self.buf.find(t), t) for t in tags if t in self.buf]
                 i, tag = min(hits) if hits else (-1, "")
-                tags = self.OPEN
             if i == -1:
                 keep = self._held(self.buf, tags)
                 self._emit(kind, self.buf[: len(self.buf) - keep])
                 self.buf = self.buf[len(self.buf) - keep :]
                 return
+            if not self.close_tag and tag in self.CLOSE:
+                self._stray_close(self.buf[:i])
+                self.buf = self.buf[i + len(tag) :].lstrip()
+                continue
             self._emit(kind, self.buf[:i])
+            self.sent = None
             self.buf = self.buf[i + len(tag) :]
             self.close_tag = "" if self.close_tag else "</" + tag[1:]
 
@@ -242,7 +289,7 @@ def _read_llm_stream(resp: Any, runtime_kind: str, state: dict[str, Any] | None 
     calls = ollama_calls or [oa_calls[k] for k in sorted(oa_calls)]
     if calls and splitter.emitted:
         sink("reset", "")
-    text = "".join(content)
+    text = normalize_reasoning("".join(content))
     if is_openai:
         return {
             "choices": [{"message": {"content": text, "reasoning_content": "".join(thinking), "tool_calls": calls}}],
@@ -574,7 +621,7 @@ def _try_local_llm_completion(
                     choices = data.get("choices") or []
                     if choices and isinstance(choices[0], dict):
                         msg = choices[0].get("message", {})
-                        content = msg.get("content", "") or ""
+                        content = normalize_reasoning(msg.get("content", "") or "")
                         reasoning = msg.get("reasoning_content", "") or ""
                         raw_tool_calls = msg.get("tool_calls") or []
                         if reasoning:
@@ -604,7 +651,7 @@ def _try_local_llm_completion(
 
                 else:
                     msg_obj = data.get("message") or {}
-                    content = msg_obj.get("content") or data.get("response") or ""
+                    content = normalize_reasoning(msg_obj.get("content") or data.get("response") or "")
                     raw_tool_calls = msg_obj.get("tool_calls") or []
                     toks = int(data.get("eval_count") or 0)
                     eval_duration_ns = data.get("eval_duration") or 0

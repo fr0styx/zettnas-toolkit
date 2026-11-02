@@ -528,6 +528,17 @@
 
 #### Fixes
 
+- **The nightly AI checks use pinned models**: embeddinggemma and qwen3:4b are checked against
+  the builds the baselines were recorded with (tests/rag_eval/models.json). An upstream rebuild
+  behind the same name now fails the pull, saying so, instead of showing up as a quality drop,
+  and the job summary lists the models used (NAI-10).
+
+- **Ask Zetty no longer shows a model's thinking as its answer**: models whose chat template
+  starts the thinking itself (the Qwen3 thinking models Ollama serves as qwen3:4b) send their
+  reasoning with only a closing `</think>`. That text was shown, streamed and saved as the
+  answer; it is now the reasoning, taken back from the live answer if it was already streamed.
+  The nightly answers check scores the answer the person sees, without the reasoning (NAI-10).
+
 - **A typo in two settings no longer stops ZettNAS from starting**: ZETTNAS_AUDIT_RETENTION_DAYS
   and ZETTNAS_GIL_SWITCH_SECS are declared with the other settings, so a value that can't be used
   keeps its default with a warning, and both are in docs/CONFIGURATION.md (NARC-8).

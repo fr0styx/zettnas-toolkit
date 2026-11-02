@@ -1,0 +1,5 @@
+{
+  "_note": "Ollama models the nightly eval pulls, pinned by manifest digest (NAI-10). A new digest means the model changed upstream: run the nightly, re-record the baselines from its results, then update the digest here.",
+  "embeddinggemma:latest": "sha256:85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+  "qwen3:4b": "sha256:359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7"
+}
