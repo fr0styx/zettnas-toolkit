@@ -182,7 +182,7 @@ export function initDockSystem() {
     mobileToggleBtn.addEventListener('click', () => {
       const isMobile = document.body.classList.toggle('mobile-mode');
       mobileToggleBtn.classList.toggle('active', isMobile);
-      mobileToggleBtn.title = isMobile ? 'Mobile / Stacked View Active [Click for Desktop Windows]' : 'Toggle Mobile / Stacked Mode';
+      mobileToggleBtn.title = isMobile ? t('dock.stacked_on', 'Stacked view: click for desktop windows') : t('dock.stacked_off', 'Switch to the stacked view');
       localStorage.setItem('zettnas_mobile_mode', isMobile ? '1' : '0');
       if (isMobile) {
         purgeAllMobileWindows();
@@ -200,7 +200,7 @@ export function initDockSystem() {
   const dock = document.getElementById('os-dock');
   if (dock) {
     dock.setAttribute('role', 'toolbar');
-    dock.setAttribute('aria-label', 'System Running Applications Dock');
+    dock.setAttribute('aria-label', t('dock.label', 'Dock: open apps'));
     dock.addEventListener('keydown', (e) => {
       const items = Array.from(dock.querySelectorAll('.dock-item'));
       const activeIdx = items.indexOf(document.activeElement);

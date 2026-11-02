@@ -255,7 +255,7 @@ export function initDraggableDesktopIcons() {
           <div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>
           <div class="ctx-item" id="ctx-remove-shortcut" style="color:var(--zn-text-crit);">
             <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🗑️</span>
-            <span>Remove from Desktop</span>
+            <span>${escapeHtml(t('dock.remove_shortcut', 'Remove from the desktop'))}</span>
           </div>
         ` : ''}
       `;
@@ -310,7 +310,7 @@ export function initDraggableDesktopIcons() {
     ctxMenu.innerHTML = `
       <div class="ctx-item" id="ctx-spotlight">
         <span style="font-size:var(--zn-fs-xs); margin-right:6px;">⚡</span>
-        <span>Command Palette</span>
+        <span>${escapeHtml(t('dock.palette', 'Search (Cmd+K)'))}</span>
         <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6;">⌘K</kbd>
       </div>
       <div class="ctx-item" id="ctx-open-mc">
@@ -319,7 +319,7 @@ export function initDraggableDesktopIcons() {
       </div>
       <div class="ctx-item" id="ctx-open-fm">
         <span style="font-size:var(--zn-fs-xs); margin-right:6px;">📁</span>
-        <span>File Explorer</span>
+        <span>${escapeHtml(t('dock.files', 'Files'))}</span>
       </div>
       <div class="ctx-item" id="ctx-new-fm">
         <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🪟</span>
@@ -335,7 +335,7 @@ export function initDraggableDesktopIcons() {
       <div style="height:1px; background:var(--zn-glaze-8); margin:4px 0;"></div>
       <div class="ctx-item" id="ctx-refresh-telemetry">
         <span style="font-size:var(--zn-fs-xs); margin-right:6px;">🔄</span>
-        <span>Refresh Desktop</span>
+        <span>${escapeHtml(t('dock.refresh', 'Refresh the desktop'))}</span>
       </div>
     `;
 

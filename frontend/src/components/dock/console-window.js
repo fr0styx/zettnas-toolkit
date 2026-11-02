@@ -73,7 +73,7 @@ export function toggleConsoleMaximize(e) {
     consoleModal.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(3)})`;
     consoleModal.style.transformOrigin = 'center center';
     consoleModal.dataset.maximized = 'true';
-    if (consoleMax) consoleMax.setAttribute('title', 'Restore');
+    if (consoleMax) consoleMax.setAttribute('title', t('ui.restore_size', 'Restore'));
     _isConsoleMaximized = true;
     setTimeout(() => { if (consoleModal) consoleModal.style.transition = ''; }, 260);
   } else {
@@ -92,7 +92,7 @@ export function toggleConsoleMaximize(e) {
       consoleModal.style.height = '';
     }
     delete consoleModal.dataset.maximized;
-    if (consoleMax) consoleMax.setAttribute('title', 'Maximize');
+    if (consoleMax) consoleMax.setAttribute('title', t('ui.maximize', 'Maximize'));
     _isConsoleMaximized = false;
     setTimeout(() => { if (consoleModal) consoleModal.style.transition = ''; }, 260);
   }

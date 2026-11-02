@@ -104,6 +104,9 @@
 
 #### Usability
 
+- **The dock, the user menu, window layouts, the desktop menu, the file manager's info panel,
+  the calendar and clock widgets and the Add-shortcut dialog in your language** (NUX-20).
+
 - **The translation check sees English left in code** (NUX-20): text in UI-named properties
   (`{ title: 'Open Folder' }`), in ternaries and `||` fallbacks written to visible text, and in
   `setAttribute('title' | 'aria-label' | …)` now counts, so 2,341 untranslated strings show up

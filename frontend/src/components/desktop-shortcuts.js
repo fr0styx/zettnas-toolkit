@@ -431,8 +431,8 @@ export function openAddDesktopShortcutModal() {
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:18px;">➕</span>
             <div>
-              <div style="font-size:14px; font-weight:700; color:var(--zn-text-strong);">Add Desktop Shortcut</div>
-              <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Place quick-access shortcuts on your desktop workspace</div>
+              <div style="font-size:14px; font-weight:700; color:var(--zn-text-strong);">${escapeHtml(t('ds.title', 'Add a desktop shortcut'))}</div>
+              <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ds.sub', 'Put the things you open most on the desktop'))}</div>
             </div>
           </div>
           <button class="win-btn close-btn" id="btn-close-add-shortcut" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}" style="width:16px; height:16px; border-radius:50%; background:#ff5f56; border:none; cursor:pointer;"></button>
@@ -440,8 +440,8 @@ export function openAddDesktopShortcutModal() {
 
         <!-- Tab Switcher -->
         <div style="display:flex; gap:8px; padding:12px 20px 8px; border-bottom:1px solid var(--zn-line-6);">
-          <button class="btn-pill-toggle active" id="tab-btn-system-shortcuts">📦 System Apps & Dashboards</button>
-          <button class="btn-pill-toggle" id="tab-btn-custom-shortcut">🔗 Custom URL / Bookmark</button>
+          <button class="btn-pill-toggle active" id="tab-btn-system-shortcuts">📦 ${escapeHtml(t('ds.tab_apps', 'Apps and windows'))}</button>
+          <button class="btn-pill-toggle" id="tab-btn-custom-shortcut">🔗 ${escapeHtml(t('ds.tab_link', 'A web address'))}</button>
         </div>
 
         <!-- Body: Tab 1 System Apps -->
@@ -452,15 +452,15 @@ export function openAddDesktopShortcutModal() {
         <!-- Body: Tab 2 Custom URL -->
         <div id="pane-custom-shortcut" style="padding:20px; display:none; flex-direction:column; gap:14px;">
           <div>
-            <label for="input-custom-shortcut-name" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px;">Shortcut Name</label>
+            <label for="input-custom-shortcut-name" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px;">${escapeHtml(t('ds.name', 'Name'))}</label>
             <input type="text" id="input-custom-shortcut-name" class="tz-text-input" placeholder="${t('ui.e_g_plex_home_assistant', 'e.g. Plex, Home Assistant, Pi-hole, Proxmox...')}" style="width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong);">
           </div>
           <div>
-            <label for="input-custom-shortcut-url" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px;">Target URL</label>
+            <label for="input-custom-shortcut-url" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:4px;">${escapeHtml(t('ds.url', 'Web address'))}</label>
             <input type="url" id="input-custom-shortcut-url" class="tz-text-input" placeholder="http://192.168.1.50:8123 or https://..." style="width:100%; padding:8px 12px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--zn-shade-35); border:1px solid var(--zn-line-12); color:var(--zn-text-strong); font-family:var(--font-mono, monospace);">
           </div>
           <div>
-            <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:6px;">Select Icon / Emoji</label>
+            <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); display:block; margin-bottom:6px;">${escapeHtml(t('ds.icon', 'Icon'))}</label>
             <div style="display:flex; flex-wrap:wrap; gap:6px;" id="custom-shortcut-emojis">
               ${['🌐', '🏠', '🎬', '🛡️', '📦', '⚡', '🔌', '🚀', '🎮', '🎵', '💾', '📊', '📡', '🛠️'].map((emoji, idx) => `
                 <button type="button" class="btn-emoji-chip ${idx === 0 ? 'active' : ''}" data-emoji="${emoji}" style="padding:6px 10px; font-size:16px; background:${idx === 0 ? 'rgba(0,240,255,0.2)' : 'rgba(255,255,255,0.05)'}; border:1px solid ${idx === 0 ? 'rgba(0,240,255,0.6)' : 'rgba(255,255,255,0.1)'}; border-radius:6px; cursor:pointer;">${emoji}</button>
@@ -468,7 +468,7 @@ export function openAddDesktopShortcutModal() {
             </div>
           </div>
           <button id="btn-save-custom-shortcut" style="margin-top:6px; padding:10px 16px; border-radius:8px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, #0ea5e9, #25c2a0); color:#fff; border:1px solid #0ea5e9; cursor:pointer; box-shadow:0 4px 14px rgba(14,165,233,0.3);">
-            ✨ Add Shortcut to Desktop
+            ✨ ${escapeHtml(t('ds.add', 'Add to the desktop'))}
           </button>
         </div>
       </div>

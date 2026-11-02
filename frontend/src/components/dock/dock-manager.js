@@ -331,7 +331,7 @@ export const DockManager = {
               <span id="dock-tooltip-text">Window</span>
             </div>
             <div class="dock-tooltip-actions">
-              <span class="dock-tooltip-status" id="dock-tooltip-badge">Active</span>
+              <span class="dock-tooltip-status" id="dock-tooltip-badge">${escapeHtml(t('dock.badge_active', 'Active'))}</span>
               <button type="button" class="dock-tooltip-close-btn" id="dock-tooltip-close-btn" title="${t('dock.close_window', 'Close Window')}" aria-label="${t('dock.close_window', 'Close Window')}">✕</button>
             </div>
           </div>
@@ -450,10 +450,10 @@ export const DockManager = {
         container.className = 'dock-preview-app-splash';
         container.innerHTML = `
           <div class="dock-splash-icon-ring"><span style="font-size:20px; line-height:1;">🔍</span></div>
-          <div class="dock-splash-title">Command Palette</div>
-          <div class="dock-splash-desc">Press Cmd+K to search apps, files, containers & settings</div>
+          <div class="dock-splash-title">${escapeHtml(t('dock.palette', 'Search (Cmd+K)'))}</div>
+          <div class="dock-splash-desc">${escapeHtml(t('dock.palette_desc', 'Press Cmd+K to find apps, files and settings'))}</div>
           <div class="dock-preview-action-chip" style="margin-top:4px;">
-            <span>▶ Open Spotlight</span>
+            <span>▶ ${escapeHtml(t('dock.palette_open', 'Open search'))}</span>
           </div>
         `;
         container.addEventListener('click', (e) => {
@@ -482,7 +482,7 @@ export const DockManager = {
             <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:6px; text-align:center;">
               <span style="font-size:24px;">🔔</span>
               <strong style="font-size:var(--zn-fs-xs); color:var(--zn-text-strong);">${escapeHtml(t('dock.notifications', 'Notification Center'))}</strong>
-              <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);">No recent system notifications</span>
+              <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);">${escapeHtml(t('dock.no_alerts', 'No recent notifications'))}</span>
             </div>
           `;
           return container;
@@ -511,7 +511,7 @@ export const DockManager = {
 
         container.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--zn-line-8); padding-bottom:3px;">
-            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);">Recent Alerts</span>
+            <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);">${escapeHtml(t('dock.recent_alerts', 'Recent alerts'))}</span>
             <span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--accent-cyan)); font-weight:700;">${events.length} total</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:4px; overflow:hidden; flex:1;">
@@ -519,7 +519,7 @@ export const DockManager = {
           </div>
           <div class="dock-preview-hover-overlay">
             <div class="dock-preview-action-chip">
-              <span>🔔 Open Notification Center</span>
+              <span>🔔 ${escapeHtml(t('dock.open_alerts', 'Open the notifications'))}</span>
             </div>
           </div>
         `;
@@ -720,17 +720,17 @@ export const DockManager = {
             badgeEl.textContent = `${unreadCount > 99 ? '99+' : unreadCount} UNREAD`;
             badgeEl.className = 'dock-tooltip-status alert';
           } else {
-            badgeEl.textContent = 'ALL CAUGHT UP';
+            badgeEl.textContent = t('dock.badge_clear', 'All caught up').toLocaleUpperCase();
             badgeEl.className = 'dock-tooltip-status active';
           }
         } else if (id === 'spotlight') {
-          badgeEl.textContent = 'PALETTE';
+          badgeEl.textContent = t('dock.badge_search', 'Search').toLocaleUpperCase();
           badgeEl.className = 'dock-tooltip-status pinned';
         } else if (isClosed) {
           badgeEl.textContent = 'PINNED';
           badgeEl.className = 'dock-tooltip-status pinned';
         } else {
-          badgeEl.textContent = isMinimized ? 'MINIMIZED' : 'ACTIVE';
+          badgeEl.textContent = (isMinimized ? t('dock.badge_minimized', 'Minimized') : t('dock.badge_active', 'Active')).toLocaleUpperCase();
           badgeEl.className = 'dock-tooltip-status ' + (isMinimized ? 'minimized' : 'active');
         }
       }
@@ -861,10 +861,10 @@ export const DockManager = {
     const spotItem = document.createElement('button');
     spotItem.type = 'button';
     spotItem.className = 'dock-item dock-item-spotlight';
-    spotItem.setAttribute('aria-label', 'Spotlight Command Palette (Cmd+K)');
+    spotItem.setAttribute('aria-label', t('dock.palette', 'Search (Cmd+K)'));
     spotItem.innerHTML = `<span style="font-size:15px; line-height:1;">🔍</span>`;
-    spotItem.addEventListener('mouseenter', () => showDockTooltip(spotItem, 'spotlight', 'Command Palette (Cmd+K)', '', false));
-    spotItem.addEventListener('focus', () => keyboardFocused(spotItem) && showDockTooltip(spotItem, 'spotlight', 'Command Palette (Cmd+K)', '', false));
+    spotItem.addEventListener('mouseenter', () => showDockTooltip(spotItem, 'spotlight', t('dock.palette', 'Search (Cmd+K)'), '', false));
+    spotItem.addEventListener('focus', () => keyboardFocused(spotItem) && showDockTooltip(spotItem, 'spotlight', t('dock.palette', 'Search (Cmd+K)'), '', false));
     spotItem.addEventListener('mouseleave', hideDockTooltip);
     spotItem.addEventListener('blur', hideDockTooltip);
     spotItem.addEventListener('click', () => {

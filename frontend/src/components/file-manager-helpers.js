@@ -578,8 +578,8 @@ export class FmInspector {
           <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${escapeHtml(this.fm.currentPath)}</div>
         </div>
         <div class="fm-inspector-section">
-          <div class="fm-inspector-row"><span>Items:</span> <strong>${this.fm.fileList.length}</strong></div>
-          <div class="fm-inspector-row"><span>Type:</span> <strong>Directory</strong></div>
+          <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_items', 'Items:'))}</span> <strong>${this.fm.fileList.length}</strong></div>
+          <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_type', 'Type:'))}</span> <strong>${escapeHtml(t('fm.i_folder', 'Folder'))}</strong></div>
         </div>
       `;
       return;
@@ -603,12 +603,12 @@ export class FmInspector {
       content.innerHTML = `
         <div style="text-align: center; padding: 16px 0;">
           <div style="font-size: 40px; margin-bottom: 8px;">📦</div>
-          <div style="font-weight: 700; font-size: 14px; color: var(--accent, var(--lt-t-0ea5e9ff, #0ea5e9));">${count} Items Selected</div>
+          <div style="font-weight: 700; font-size: 14px; color: var(--accent, var(--lt-t-0ea5e9ff, #0ea5e9));">${escapeHtml(t('fm.i_selected', '{n, plural, one {# item selected} other {# items selected}}', { n: count }))}</div>
           <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${formatBytes(totalBytes)} total</div>
         </div>
         <div class="fm-inspector-section">
-          <div class="fm-inspector-row"><span>Files:</span> <strong>${fileCount}</strong></div>
-          <div class="fm-inspector-row"><span>Folders:</span> <strong>${dirCount}</strong></div>
+          <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_files', 'Files:'))}</span> <strong>${fileCount}</strong></div>
+          <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_folders', 'Folders:'))}</span> <strong>${dirCount}</strong></div>
         </div>
       `;
       return;
@@ -639,8 +639,8 @@ export class FmInspector {
 
     const tabsHeaderHtml = `
       <div class="fm-inspector-tabs" style="display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--zn-line-8); padding-bottom: 6px;">
-        <button type="button" class="btn-pill-toggle ${this.activeTab === 'details' ? 'active' : ''}" id="fm-insp-tab-details" style="flex: 1;">ℹ️ Info</button>
-        <button type="button" class="btn-pill-toggle ${this.activeTab === 'permissions' ? 'active' : ''}" id="fm-insp-tab-perms" style="flex: 1;">🔒 Permissions</button>
+        <button type="button" class="btn-pill-toggle ${this.activeTab === 'details' ? 'active' : ''}" id="fm-insp-tab-details" style="flex: 1;">ℹ️ ${escapeHtml(t('fm.i_info', 'Info'))}</button>
+        <button type="button" class="btn-pill-toggle ${this.activeTab === 'permissions' ? 'active' : ''}" id="fm-insp-tab-perms" style="flex: 1;">🔒 ${escapeHtml(t('fm.i_perms', 'Permissions'))}</button>
       </div>
     `;
 
@@ -649,18 +649,18 @@ export class FmInspector {
         ${tabsHeaderHtml}
         <div class="fm-inspector-perms-pane" style="font-size: var(--zn-fs-xs);">
           <div style="font-weight: 700; color: var(--zn-text-strong); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span>POSIX Access Control</span>
+            <span>${escapeHtml(t('fm.i_posix', 'Who may read and change it'))}</span>
             <span id="fm-insp-perm-badge" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.15); color: var(--zn-text-accent);">--</span>
           </div>
 
           ${isGuarded ? `
             <div class="fm-perm-guarded-banner" style="padding: 8px 10px; border-radius: 6px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--lt-t-fca5a5ff, #fca5a5); font-size: var(--zn-fs-xs); margin-bottom: 10px;">
-              ⚠️ Protected system path. Permissions cannot be modified directly.
+              ⚠️ ${escapeHtml(t('fm.i_protected', 'A system folder: its permissions can’t be changed here.'))}
             </div>
           ` : ''}
 
           <div style="margin-bottom: 10px;">
-            <label for="fm-insp-octal-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Octal Mode (e.g. 0755, 0644)</label>
+            <label for="fm-insp-octal-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${escapeHtml(t('fm.i_octal', 'Mode as a number (e.g. 0755, 0644)'))}</label>
             <div style="display: flex; gap: 6px;">
               <input type="text" id="fm-insp-octal-input" maxlength="4" placeholder="0755" value="${escapeHtml(item.mode || '0755')}" ${isGuarded ? 'disabled' : ''} style="flex: 1; padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
               <span id="fm-insp-human-mode" style="padding: 5px 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-muted); background: var(--zn-shade-20); border-radius: 5px;">-rwxr-xr-x</span>
@@ -673,17 +673,17 @@ export class FmInspector {
             <div style="color: var(--muted); font-weight: 700;">W</div>
             <div style="color: var(--muted); font-weight: 700;">X</div>
 
-            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">Owner</div>
+            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">${escapeHtml(t('fm.i_owner', 'Owner'))}</div>
             <input type="checkbox" id="fm-perm-ur" data-perm="256" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-uw" data-perm="128" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ux" data-perm="64" ${isGuarded ? 'disabled' : ''} />
 
-            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">Group</div>
+            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">${escapeHtml(t('fm.i_group', 'Group'))}</div>
             <input type="checkbox" id="fm-perm-gr" data-perm="32" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-gw" data-perm="16" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-gx" data-perm="8" ${isGuarded ? 'disabled' : ''} />
 
-            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">Others</div>
+            <div style="text-align: left; font-weight: 600; color: var(--zn-text-soft);">${escapeHtml(t('fm.i_others', 'Everyone else'))}</div>
             <input type="checkbox" id="fm-perm-or" data-perm="4" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ow" data-perm="2" ${isGuarded ? 'disabled' : ''} />
             <input type="checkbox" id="fm-perm-ox" data-perm="1" ${isGuarded ? 'disabled' : ''} />
@@ -691,11 +691,11 @@ export class FmInspector {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
             <div>
-              <label for="fm-insp-owner-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">User (Owner)</label>
+              <label for="fm-insp-owner-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${escapeHtml(t('fm.i_owner_user', 'Owner (a person)'))}</label>
               <input type="text" id="fm-insp-owner-input" placeholder="e.g. root" value="root" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
             </div>
             <div>
-              <label for="fm-insp-group-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Group</label>
+              <label for="fm-insp-group-input" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${escapeHtml(t('fm.i_group', 'Group'))}</label>
               <input type="text" id="fm-insp-group-input" placeholder="e.g. users" value="users" ${isGuarded ? 'disabled' : ''} style="width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: var(--zn-fs-xs); background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 5px; color: var(--zn-text-strong);" />
             </div>
           </div>
@@ -704,13 +704,13 @@ export class FmInspector {
             <div style="margin-bottom: 14px;">
               <label style="display: flex; align-items: center; gap: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-soft); cursor: pointer;">
                 <input type="checkbox" id="fm-insp-recursive-chk" ${isGuarded ? 'disabled' : ''} />
-                <span>Apply recursively to all subfolders & files</span>
+                <span>${escapeHtml(t('fm.i_recursive', 'Also to everything inside it'))}</span>
               </label>
             </div>
           ` : ''}
 
           <button type="button" id="fm-insp-apply-perms-btn" class="btn-pill-toggle active" ${isGuarded ? `disabled title="${escapeHtml(t('fm.why_guarded', 'System folder: its permissions are protected'))}"` : ''} style="width: 100%; font-size: var(--zn-fs-xs); font-weight: 700; padding: 6px 12px; background: #0284c7; color: #fff;">
-            Apply Permissions
+            ${escapeHtml(t('ui.apply_permissions', 'Apply Permissions'))}
           </button>
         </div>
       `;
@@ -844,21 +844,21 @@ export class FmInspector {
       <div style="text-align: center; padding: 8px 0 14px;">
         ${previewHtml}
         <div style="font-weight: 700; font-size: 13px; color: var(--fg); word-break: break-all;">${escapeHtml(item.name)}</div>
-        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${item.is_dir ? 'Directory' : formatBytes(item.size)}</div>
+        <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">${item.is_dir ? escapeHtml(t('fm.i_folder', 'Folder')) : formatBytes(item.size)}</div>
       </div>
 
       <div class="fm-inspector-section">
-        <div class="fm-inspector-row"><span>Modified:</span> <span>${dateModified}</span></div>
-        <div class="fm-inspector-row"><span>Mode:</span> <span id="fm-insp-mode">${item.mode || '--'}</span></div>
-        <div class="fm-inspector-row"><span>Owner:</span> <span id="fm-insp-owner">Loading...</span></div>
+        <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_modified', 'Changed:'))}</span> <span>${dateModified}</span></div>
+        <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_mode', 'Mode:'))}</span> <span id="fm-insp-mode">${item.mode || '--'}</span></div>
+        <div class="fm-inspector-row"><span>${escapeHtml(t('fm.i_owner_c', 'Owner:'))}</span> <span id="fm-insp-owner">${escapeHtml(t('common.loading', 'Loading…'))}</span></div>
         ${isVideo ? '<div id="fm-insp-media" class="fm-inspector-media" aria-live="polite"></div>' : ''}
-        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle is-block is-small" style="margin-top: 8px;">🔒 Edit Permissions & Mode</button>
+        <button type="button" id="fm-insp-go-perms-btn" class="btn-pill-toggle is-block is-small" style="margin-top: 8px;">🔒 ${escapeHtml(t('fm.i_edit_perms', 'Change permissions'))}</button>
       </div>
 
       ${!item.is_dir ? `
         <div class="fm-inspector-section" style="margin-top: 10px;">
-          <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--muted); margin-bottom: 6px;">Integrity (SHA-256)</div>
-          <button type="button" id="fm-btn-calc-sha" class="btn-pill-toggle is-block">Compute Checksum</button>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 600; color: var(--muted); margin-bottom: 6px;">${escapeHtml(t('fm.i_checksum', 'Checksum (SHA-256)'))}</div>
+          <button type="button" id="fm-btn-calc-sha" class="btn-pill-toggle is-block">${escapeHtml(t('fm.i_compute', 'Work it out'))}</button>
           <div id="fm-insp-sha-result" style="font-family: monospace; font-size: var(--zn-fs-xs); word-break: break-all; margin-top: 6px; color: var(--accent); display: none;"></div>
         </div>
       ` : `
@@ -870,8 +870,8 @@ export class FmInspector {
       `}
 
       <div class="fm-inspector-actions" style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px;">
-        ${!item.is_dir ? `<button type="button" id="fm-insp-preview-btn" class="btn-pill-toggle is-block">QuickLook Preview (Space)</button>` : ''}
-        ${!item.is_dir ? `<button type="button" id="fm-insp-download-btn" class="btn-pill-toggle is-block">Download File</button>` : ''}
+        ${!item.is_dir ? `<button type="button" id="fm-insp-preview-btn" class="btn-pill-toggle is-block">${escapeHtml(t('fm.i_preview', 'Quick look (Space)'))}</button>` : ''}
+        ${!item.is_dir ? `<button type="button" id="fm-insp-download-btn" class="btn-pill-toggle is-block">${escapeHtml(t('preview.download', 'Download'))}</button>` : ''}
       </div>
     `;
 

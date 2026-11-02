@@ -13,10 +13,10 @@ export function initSnapAssistFlyout() {
     flyout.id = 'snap-assist-flyout';
     flyout.className = 'snap-assist-flyout';
     flyout.setAttribute('role', 'dialog');
-    flyout.setAttribute('aria-label', 'Snap Layouts');
+    flyout.setAttribute('aria-label', t('snap.layouts', 'Window layouts'));
     flyout.setAttribute('aria-hidden', 'true');
     flyout.innerHTML = `
-      <div class="snap-layout-title">Snap Layouts</div>
+      <div class="snap-layout-title">${t('snap.layouts', 'Window layouts')}</div>
       <div class="snap-templates-grid">
         <div class="snap-card" title="${t('ui.split_screen_1_2', 'Split Screen (1/2)')}">
           <button class="snap-slot" data-snap="left" aria-label="${t('ui.snap_left_half', 'Snap Left Half')}"></button>

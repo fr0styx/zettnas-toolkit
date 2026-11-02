@@ -143,7 +143,7 @@ describe('Item 3.4: File Explorer Share Links & POSIX Permissions Inspector', ()
 
     const banner = containerEl.querySelector('.fm-perm-guarded-banner');
     expect(banner).not.toBeNull();
-    expect(banner.textContent).toContain('Protected system path');
+    expect(banner.textContent).toContain('A system folder');
 
     const applyBtn = containerEl.querySelector('#fm-insp-apply-perms-btn');
     expect(applyBtn.disabled).toBe(true);

@@ -188,7 +188,7 @@ describe('Desktop Shortcuts & Unified Context Menu Integration', () => {
       const iconCtxMenu = document.getElementById('desktop-ctx-menu');
       expect(iconCtxMenu.style.display).toBe('block');
       expect(iconCtxMenu.querySelector('#ctx-remove-shortcut')).not.toBeNull();
-      expect(iconCtxMenu.textContent).toContain('Remove from Desktop');
+      expect(iconCtxMenu.textContent).toContain('Remove from the desktop');
     });
 
     it('removes a desktop shortcut from DOM and localStorage', () => {

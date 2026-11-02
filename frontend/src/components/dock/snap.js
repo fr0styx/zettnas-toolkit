@@ -2,6 +2,7 @@
 // Part of dock.js, split out by ARC-5.
 
 import { announceA11y } from '../../a11y.js';
+import { t } from '../../i18n.js';
 import { _dockAutohide, _dockPosition, _dockSize } from './dock-settings.js';
 import { DESKTOP_WINDOW_SELECTOR } from './window-drag.js';
 import { saveOpenWindowsState, saveWindowBounds } from './window-state.js';
@@ -42,7 +43,7 @@ export function getSnapGeometry(snapZone) {
         top: topInset,
         width: halfW,
         height: halfH,
-        label: 'Top Left (1/4)'
+        label: t('snap.top_left', 'Top Left (1/4)')
       };
     case 'top-right':
       return {
@@ -50,7 +51,7 @@ export function getSnapGeometry(snapZone) {
         top: topInset,
         width: halfW,
         height: halfH,
-        label: 'Top Right (1/4)'
+        label: t('snap.top_right', 'Top Right (1/4)')
       };
     case 'bottom-left':
       return {
@@ -58,7 +59,7 @@ export function getSnapGeometry(snapZone) {
         top: topInset + halfH + 8,
         width: halfW,
         height: halfH,
-        label: 'Bottom Left (1/4)'
+        label: t('snap.bottom_left', 'Bottom Left (1/4)')
       };
     case 'bottom-right':
       return {
@@ -66,7 +67,7 @@ export function getSnapGeometry(snapZone) {
         top: topInset + halfH + 8,
         width: halfW,
         height: halfH,
-        label: 'Bottom Right (1/4)'
+        label: t('snap.bottom_right', 'Bottom Right (1/4)')
       };
     case 'left':
       return {
@@ -74,7 +75,7 @@ export function getSnapGeometry(snapZone) {
         top: topInset,
         width: halfW,
         height: availH,
-        label: 'Left Half (1/2)'
+        label: t('snap.left_half', 'Left Half (1/2)')
       };
     case 'right':
       return {
@@ -82,7 +83,7 @@ export function getSnapGeometry(snapZone) {
         top: topInset,
         width: halfW,
         height: availH,
-        label: 'Right Half (1/2)'
+        label: t('snap.right_half', 'Right Half (1/2)')
       };
     case 'maximize':
       return {
@@ -90,7 +91,7 @@ export function getSnapGeometry(snapZone) {
         top: topInset,
         width: availW,
         height: availH,
-        label: 'Maximize (Full)'
+        label: t('snap.full', 'Maximize (Full)')
       };
     default:
       return null;

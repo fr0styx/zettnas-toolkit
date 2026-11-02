@@ -291,7 +291,7 @@ describe('Notification Center Draggable Window & Event Detail Inspector', () => 
     expect(items[0].innerHTML).toContain('#i-globe');
 
     // Second item is Spotlight
-    expect(items[1].getAttribute('aria-label')).toContain('Spotlight');
+    expect(items[1].getAttribute('aria-label')).toContain('Search');
 
     // Third item is Notification Center
     expect(items[2].getAttribute('aria-label')).toBe('Notification Center');

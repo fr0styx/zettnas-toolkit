@@ -686,7 +686,7 @@ export function updateClock() {
     if (tz && tz !== 'auto') {
       const city = tz.split('/').pop().replace(/_/g, ' ');
       tzBadge.textContent = `${tzAbbr || city} • ${format === '12' ? '12H' : '24H'}`;
-      tzBadge.title = `Timezone: ${tz} (${tzAbbr || city}) - Click to change`;
+      tzBadge.title = t('w.tz_title', 'Time zone: {tz} ({abbr}). Click to change it.', { tz, abbr: tzAbbr || city });
     } else {
       tzBadge.textContent = format === '12' ? '12H' : '24H';
       tzBadge.title = t('ui.local_timezone_click_to_change', 'Local Timezone - Click to change');
@@ -994,7 +994,7 @@ function showCalendarTooltip(targetEl, name, dateStr) {
     <span class="cal-holiday-tooltip-icon">🎉</span>
     <div>
       <div class="cal-holiday-tooltip-name">${escapeHtml(name)}</div>
-      <div class="cal-holiday-tooltip-sub">${dateStr ? escapeHtml(dateStr) + ' • ' : ''}Official Holiday (${country})</div>
+      <div class="cal-holiday-tooltip-sub">${dateStr ? escapeHtml(dateStr) + ' • ' : ''}${escapeHtml(t('w.holiday_in', 'Public holiday ({country})', { country }))}</div>
     </div>
   `;
   tooltip.style.display = 'flex';
@@ -1074,7 +1074,7 @@ function renderGlanceBarForCurrentView() {
 
   if (!monthHolidays.length) {
     glanceBar.className = 'cal-glance-bar empty';
-    glanceBar.innerHTML = '<span>No official holidays this month</span>';
+    glanceBar.replaceChildren(Object.assign(document.createElement('span'), { textContent: t('w.no_holidays', 'No public holidays this month') }));
     return;
   }
 
@@ -1089,7 +1089,7 @@ function renderGlanceBarForCurrentView() {
 
   glanceBar.className = 'cal-glance-bar';
   glanceBar.innerHTML = `<span class="cal-glance-bar-icon">✨</span> <span>${escapeHtml(target.dateStr)}: ${escapeHtml(target.name)}</span>`;
-  glanceBar.title = `${target.dateStr}: ${target.name} (Official Holiday)`;
+  glanceBar.title = t('w.holiday_title', '{date}: {name} (public holiday)', { date: target.dateStr, name: target.name });
   if (target && target.day) {
     glanceBar.dataset.dateKey = toDateKey(year, month, target.day);
   } else {
@@ -1116,7 +1116,7 @@ export function renderCalendar() {
 
   if (countryBadge) {
     countryBadge.textContent = country;
-    countryBadge.title = `Official holidays: ${countryFullName} (${country}) - Click to configure`;
+    countryBadge.title = t('w.holidays_of', 'Public holidays: {name} ({country}). Click to change.', { name: countryFullName, country });
   }
 
   if (monthBadge) {
@@ -1250,8 +1250,8 @@ function renderWeatherUI(weatherData) {
   const info = getWeatherInfo(weatherData.code);
 
   if (cityBadge) {
-    cityBadge.textContent = weatherData.city || 'Local';
-    cityBadge.title = weatherData.city || 'Detected Location';
+    cityBadge.textContent = weatherData.city || t('w.local', 'Here');
+    cityBadge.title = weatherData.city || t('w.detected', 'Found from this network');
   }
   if (iconEl) iconEl.textContent = info.icon;
   if (descEl) descEl.textContent = info.desc;
@@ -1397,7 +1397,7 @@ function initWeatherCityAutocomplete() {
     _currentSuggestions = items;
     _activeSuggestionIndex = -1;
     if (!items.length) {
-      dropdown.innerHTML = `<div style="padding: 10px 12px; font-size: var(--zn-fs-xs); color: var(--muted); text-align: center;">No matching cities found</div>`;
+      dropdown.innerHTML = `<div style="padding: 10px 12px; font-size: var(--zn-fs-xs); color: var(--muted); text-align: center;">${escapeHtml(t('w.no_cities', 'No city found with that name'))}</div>`;
       dropdown.style.display = 'block';
       return;
     }
@@ -1456,8 +1456,8 @@ function initWeatherCityAutocomplete() {
       dropdown.innerHTML = `
         <div class="weather-city-item auto-detect-item" style="cursor: pointer;">
           <div>
-            <div class="weather-city-name">📍 Auto-detect Location</div>
-            <div class="weather-city-sub">Use local IP & Timezone</div>
+            <div class="weather-city-name">📍 ${escapeHtml(t('w.auto_city', 'Find it for me'))}</div>
+            <div class="weather-city-sub">${escapeHtml(t('w.auto_city_sub', 'From this network and time zone'))}</div>
           </div>
         </div>
       `;
@@ -2925,7 +2925,7 @@ export function renderDayAgenda(dateKey) {
   });
 
   if (subEl) {
-    subEl.textContent = `${allItems.length} item(s) on agenda for this day`;
+    subEl.textContent = t('w.agenda_n', '{n, plural, one {# item on this day} other {# items on this day}}', { n: allItems.length });
   }
 
   // Check holiday for this day
@@ -2941,8 +2941,8 @@ export function renderDayAgenda(dateKey) {
       <div style="background: rgba(236,72,153,0.12); border: 1px solid rgba(236,72,153,0.3); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 16px;">🎉</span>
         <div>
-          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-f472b6ff, #f472b6);">Official Holiday: ${escapeHtml(hNames)}</div>
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(country)} Public Holiday</div>
+          <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-t-f472b6ff, #f472b6);">${escapeHtml(t('w.holiday_named', 'Public holiday: {name}', { name: hNames }))}</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(t('w.holiday_country', 'Public holiday in {country}', { country }))}</div>
         </div>
       </div>
     `;
@@ -2953,7 +2953,7 @@ export function renderDayAgenda(dateKey) {
       <div style="text-align: center; color: var(--muted); padding: 40px 20px; font-size: var(--zn-fs-xs);">
         <div style="font-size: 26px; margin-bottom: 8px;">📝</div>
         <div style="font-weight: 600; color: var(--zn-text-soft);">${t('cal.empty_agenda') || 'No notes or reminders for this day.'}</div>
-        <div style="font-size: var(--zn-fs-xs); margin-top: 4px;">Use the composer above to add a task, reminder, or note.</div>
+        <div style="font-size: var(--zn-fs-xs); margin-top: 4px;">${escapeHtml(t('w.agenda_empty', 'Add a task, reminder or note in the box above.'))}</div>
       </div>
     `;
   } else {
@@ -3007,7 +3007,7 @@ export function renderFeedsList() {
   if (!_calendarFeeds.length) {
     container.innerHTML = `
       <div style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 10px;">
-        No external calendar feeds synced. Click "+ Add Feed" to connect Google Calendar or Apple iCal.
+        ${escapeHtml(t('w.no_feeds', 'No outside calendars yet. Choose "+ Add Feed" to add a Google or Apple calendar.'))}
       </div>
     `;
     return;
