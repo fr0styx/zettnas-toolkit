@@ -21,6 +21,11 @@ updates:
       npm-dependencies:
         patterns:
           - "*"
+    # TypeScript 7 checks the frontend's JSDoc much more strictly: thousands of new errors against
+    # the type-error ratchet (ARC-31). Majors wait until that move is planned on its own.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # Maintain GitHub Actions dependencies
   - package-ecosystem: "github-actions"
