@@ -416,6 +416,10 @@
 
 #### AI
 
+- **Web pages the assistant reads mid-answer are listed as its sources** (NAI-4): when Ask Zetty
+  searches the web while working out an answer, those pages now appear under the answer with the
+  ones found up front, each once, and the [n] markers point at them.
+
 - **The AI search test can't flatter the ranking** (NAI-9): questions are held out by file, not
   one by one, so no held-out file is asked about in the questions used for tuning. A new hard mode
   (`run_eval --neutral-names --hard-distractors`) indexes the test files under names that say

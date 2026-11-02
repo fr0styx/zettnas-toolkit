@@ -1731,6 +1731,19 @@ def _turn_reask(
     return second, {**second_detail, "reasked": True}, second_detail["score"]
 
 
+def loop_web_sources(tool_results: list[dict[str, Any]], web_sources: list[dict[str, Any]]) -> None:
+    """Adds the pages a web search found in the tool loop to the turn's web sources, once each
+    (NAI-4): the reply lists every page the model was given, not only the router's search."""
+    seen = {s.get("url") for s in web_sources}
+    for tr in tool_results:
+        if tr.get("tool") != "browse_internet" or tr.get("status") != "ok":
+            continue
+        for src in list(tr.get("sources") or []):
+            if src.get("url") and src["url"] not in seen:
+                seen.add(src["url"])
+                web_sources.append(src)
+
+
 def _turn_trace(
     *,
     act_accel,
@@ -1749,6 +1762,7 @@ def _turn_trace(
     web_sources,
 ):
     """The tool trace, telemetry, grounding and citations for the turn's result."""
+    loop_web_sources(tool_results, web_sources)
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     tools_called_trace: list[dict[str, Any]] = []
     for idx, tr in enumerate(tool_results):
