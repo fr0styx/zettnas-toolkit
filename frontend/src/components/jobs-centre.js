@@ -34,10 +34,15 @@ const STATUS = {
 };
 const label = (map, key) => (map[key] ? t(map[key][0], map[key][1]) : key);
 
+/** A job's title in the reader's language when the server says how (NUX-3), else as sent. */
+export function jobTitle(job) {
+  return job && job.title_id ? t(job.title_id, job.title || '', job.title_params || {}) : (job && job.title) || '';
+}
+
 export function jobRowHtml(job, active) {
   const pct = typeof job.percent === 'number' ? Math.max(0, Math.min(100, job.percent)) : null;
   const bar = active
-    ? `<div class="jobs-bar" role="progressbar" aria-label="${escapeHtml(job.title)}" aria-valuemin="0" aria-valuemax="100"${
+    ? `<div class="jobs-bar" role="progressbar" aria-label="${escapeHtml(jobTitle(job))}" aria-valuemin="0" aria-valuemax="100"${
         pct === null ? '' : ` aria-valuenow="${Math.round(pct)}"`
       }><span class="jobs-bar-fill${pct === null ? ' is-indeterminate' : ''}" style="width:${pct === null ? 40 : pct}%"></span></div>`
     : '';
@@ -49,7 +54,7 @@ export function jobRowHtml(job, active) {
   return `<li class="jobs-row is-${escapeHtml(job.status)}">
     <div class="jobs-row-head">
       <span class="jobs-kind">${escapeHtml(label(KIND, job.kind))}</span>
-      <span class="jobs-title">${escapeHtml(job.title)}</span>
+      <span class="jobs-title">${escapeHtml(jobTitle(job))}</span>
       <span class="jobs-status">${escapeHtml(label(STATUS, job.status))}${pct !== null && active ? ` · ${Math.round(pct)}%` : ''}</span>
       ${when}${cancel}
     </div>

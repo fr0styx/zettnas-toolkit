@@ -132,6 +132,8 @@
   disk with errors, a pool filling up, a fixed problem, the security alerts (a locked sign-in, a
   deleted account…) and the Sunday health report follow "Write alerts in". The report counts in
   proper words now ("3 days ago", "1 thing needs attention") (NUX-3).
+- **Jobs in your language**: the Jobs centre shows copies, moves, imports, AI indexing, cloud syncs,
+  backups, off-site backups and restores in the reader's language (NUX-3).
 
 - **A drive's own temperature limit**: next to its purchase and warranty details, a drive can have
   the temperature above which it counts as warm (30–90 °C; too hot is 10 °C more). Its "runs warm"

@@ -36,6 +36,10 @@ class Job:
     finished_at: float | None = None
     error: str | None = None
     can_cancel: bool = False
+    # the title's message key and values, so the Jobs centre shows it in the reader's language
+    # (NUX-3); `title` is the English, for logs and older pages
+    title_id: str = ""
+    title_params: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -55,11 +59,21 @@ class JobManager:
     _history_loaded: bool = False
 
     # --- jobs registered directly -------------------------------------------------
-    def register(self, kind: str, title: str, owner: str | None = None, cancel: Callable[[], Any] | None = None) -> Job:
+    def register(
+        self,
+        kind: str,
+        title: str,
+        owner: str | None = None,
+        cancel: Callable[[], Any] | None = None,
+        title_id: str = "",
+        title_params: dict[str, Any] | None = None,
+    ) -> Job:
         job = Job(
             id=f"job:{uuid.uuid4().hex[:10]}",
             kind=kind,
             title=title,
+            title_id=title_id,
+            title_params=title_params or {},
             owner=owner,
             started_at=time.time(),
             can_cancel=cancel is not None,
@@ -174,6 +188,8 @@ def _transfers() -> list[Job]:
                 id=f"transfer:{t['id']}",
                 kind="transfer",
                 title=f"{verb} {n} item(s) to {t.get('destination')}",
+                title_id=f"jobs.t.{t.get('action')}" if t.get("action") in ("move", "copy") else "jobs.t.transfer",
+                title_params={"n": n, "dest": t.get("destination") or ""},
                 status=status,
                 owner=t.get("owner"),
                 percent=t.get("percent"),
@@ -206,6 +222,7 @@ def _media_import() -> list[Job]:
             id="copy:media",
             kind="media_import",
             title="Import from the SD card / USB drive",
+            title_id="jobs.t.media_import",
             status="paused" if Z_STATE.copy_paused else "running",
             percent=pct,
             detail=str(p.get("file") or ""),
@@ -235,6 +252,7 @@ def _reindex() -> list[Job]:
             id="reindex:ai",
             kind="ai_reindex",
             title="Re-embedding the AI index",
+            title_id="jobs.t.reindex",
             status=status,
             percent=REINDEX_STATUS.get("percentage"),
             detail=f"{REINDEX_STATUS.get('completed', 0)} of {REINDEX_STATUS.get('total', 0)} chunks",
@@ -260,6 +278,10 @@ def _cloud_syncs() -> list[Job]:
                 id=f"sync:{j['id']}",
                 kind="cloud_sync",
                 title=f"{str(j.get('action') or 'sync').title()} {j.get('src')} → {j.get('dst')}",
+                title_id=f"jobs.t.cloud_{j.get('action') or 'sync'}"
+                if (j.get("action") or "sync") in ("sync", "copy", "move")
+                else "",
+                title_params={"src": j.get("src") or "", "dst": j.get("dst") or ""},
                 status=status if status in ACTIVE + FINAL else "running",
                 percent=j.get("percent"),
                 started_at=j.get("started_at"),
@@ -274,7 +296,14 @@ def _backups() -> list[Job]:
     from backend.services.backup_engine import get_backup_jobs
 
     return [
-        Job(id=f"backup:{j['id']}", kind="backup", title=f"Backup: {j.get('name')}", status="running")
+        Job(
+            id=f"backup:{j['id']}",
+            kind="backup",
+            title=f"Backup: {j.get('name')}",
+            title_id="jobs.t.backup",
+            title_params={"name": j.get("name") or ""},
+            status="running",
+        )
         for j in get_backup_jobs()
         if j.get("last_status") == "running"
     ]

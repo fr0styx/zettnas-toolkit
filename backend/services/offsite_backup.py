@@ -514,7 +514,14 @@ def _backup_job(repo: dict[str, Any], owner: str | None) -> Any:
     from backend.services.jobs import job_manager
 
     rid = repo["id"]
-    return job_manager.register("backup", f"Offsite backup: {repo['name']}", owner=owner, cancel=lambda: cancel(rid))
+    return job_manager.register(
+        "backup",
+        f"Offsite backup: {repo['name']}",
+        owner=owner,
+        cancel=lambda: cancel(rid),
+        title_id="jobs.t.offsite",
+        title_params={"name": repo["name"]},
+    )
 
 
 def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str, Any]:
@@ -765,7 +772,12 @@ def start_restore(repo_id: str, snapshot_id: str, path: str, target: str, owner:
     rid = repo["id"]
     name = os.path.basename(path.rstrip("/")) or "/"
     job = job_manager.register(
-        "restore", f"Restore {name} from {repo['name']}", owner=owner, cancel=lambda: cancel(rid)
+        "restore",
+        f"Restore {name} from {repo['name']}",
+        owner=owner,
+        cancel=lambda: cancel(rid),
+        title_id="jobs.t.restore",
+        title_params={"name": name, "repo": repo["name"]},
     )
     try:
         _start(rid, _run_restore, repo, args, target, job=job)
