@@ -196,7 +196,7 @@ def test_the_weekly_report_says_how_things_are(monkeypatch):
     monkeypatch.setattr(Z_STATE, "drive_verdicts", {})
     title, body = pool_alerts.weekly_report()
     assert "weekly" in title.lower() and "Everything looks fine." in body
-    assert "tank: 42% used" in body and "3 day(s) ago with 0 errors" in body and "all on time" in body
+    assert "tank: 42% used" in body and "3 days ago with 0 errors" in body and "all on time" in body
 
 
 def test_the_daily_summary_and_weekly_switch_are_saved(client, auth_headers):

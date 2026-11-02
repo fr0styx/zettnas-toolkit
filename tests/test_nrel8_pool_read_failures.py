@@ -8,7 +8,7 @@ ITEM = {"id": "pool:tank:degraded", "level": "critical", "kind": "pool_degraded"
 def test_a_failed_read_keeps_problems_and_warns_once(tmp_path, monkeypatch):
     monkeypatch.setattr(pa, "_state_file", lambda: str(tmp_path / "pool_alerts.json"))
     monkeypatch.setattr(pa, "_cache", {"at": 0.0, "items": [], "ok": True, "failures": 0})
-    monkeypatch.setattr(pa, "_text", lambda item: ("Pool tank is degraded", "Pool tank is degraded."))
+    monkeypatch.setattr(pa, "_text", lambda item, lang="en": ("Pool tank is degraded", "Pool tank is degraded."))
     sent = []
 
     def send(**kw):

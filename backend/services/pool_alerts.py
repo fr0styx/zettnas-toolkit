@@ -179,9 +179,21 @@ ADVICE = {
 }
 
 
-def _text(item: dict[str, Any]) -> tuple[str, str]:
-    title = (TITLES.get(item["kind"]) or str(item["kind"])).format(**item)
-    return title, f"{title}. {ADVICE.get(item['kind'], '')}".strip()
+def _lang() -> str:
+    from backend.services.notifications import alert_language
+
+    return alert_language()
+
+
+def _text(item: dict[str, Any], lang: str = "en") -> tuple[str, str]:
+    """The alert's title and message, in the household's language when asked (NUX-3)."""
+    from backend import i18n
+
+    kind = str(item["kind"])
+    params = {k: v for k, v in item.items() if isinstance(v, (str, int, float))}
+    title = i18n.t(f"alert.pool.{kind}.title", TITLES.get(kind) or kind, params, lang)
+    advice = i18n.t(f"alert.pool.{kind}.advice", ADVICE.get(kind, ""), params, lang)
+    return title, i18n.t("alert.pool.msg", "{title}. {advice}", {"title": title, "advice": advice}, lang).strip()
 
 
 def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]:
@@ -198,31 +210,47 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
     if not _cache.get("ok", True):
         # nothing is "fixed" on a failed read; a read that keeps failing is said once (NREL-8)
         if int(_cache.get("failures") or 0) == READ_FAILURES_ALERT:
+            from backend import i18n
+
+            lang = _lang()
             send(
-                title="ZettNAS can't read the storage health",
-                message="Checking the pools failed several times in a row, so problems may go unnoticed. "
-                "Restart ZettNAS; if this stays, look at the storage page.",
+                title=i18n.t("alert.pool.unreadable.title", "ZettNAS can't read the storage health", None, lang),
+                message=i18n.t(
+                    "alert.pool.unreadable.msg",
+                    "Checking the pools failed several times in a row, so problems may go unnoticed. "
+                    "Restart ZettNAS; if this stays, look at the storage page.",
+                    None,
+                    lang,
+                ),
                 level="warning",
                 event_type="storage",
                 dedup_key="pool:unreadable",
             )
             sent["new"].append("pool:unreadable")
         return sent
+    from backend import i18n
+
+    lang = _lang()
     with locked_json(_state_file()):
         state = read_json(_state_file(), {}) or {}
         before = repr(sorted(state.items()))
         for pid, item in items.items():
             prev = state.get(pid)
-            title, message = _text(item)
+            title_en = _text(item)[0]  # kept in the state file, read by people looking at it
+            title, message = _text(item, lang)
             if prev is None or (item["level"] == "critical" and prev.get("level") != "critical"):
                 send(
-                    title=f"ZettNAS: {title}", message=message, level=item["level"], event_type="storage", dedup_key=pid
+                    title=i18n.t("alert.pool.new", "ZettNAS: {title}", {"title": title}, lang),
+                    message=message,
+                    level=item["level"],
+                    event_type="storage",
+                    dedup_key=pid,
                 )
-                state[pid] = {"first": now, "last_sent": now, "level": item["level"], "title": title}
+                state[pid] = {"first": now, "last_sent": now, "level": item["level"], "title": title_en, "item": item}
                 sent["new"].append(pid)
             elif item["level"] == "critical" and now - float(prev.get("last_sent") or 0) >= REMIND_CRITICAL_S:
                 send(
-                    title=f"ZettNAS: still — {title}",
+                    title=i18n.t("alert.pool.still", "ZettNAS: still — {title}", {"title": title}, lang),
                     message=message,
                     level="critical",
                     event_type="storage",
@@ -234,9 +262,10 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
                 prev["level"] = item["level"]
         for pid in [p for p in state if p not in items and p.startswith("pool:")]:
             gone = state.pop(pid)
+            was = _text(gone["item"], lang)[0] if isinstance(gone.get("item"), dict) else gone.get("title") or pid
             send(
-                title=f"ZettNAS: fixed — {gone.get('title') or pid}",
-                message="This storage problem is gone.",
+                title=i18n.t("alert.pool.fixed.title", "ZettNAS: fixed — {title}", {"title": was}, lang),
+                message=i18n.t("alert.pool.fixed.msg", "This storage problem is gone.", None, lang),
                 level="info",
                 event_type="storage",
                 dedup_key=f"{pid}:fixed",
@@ -248,12 +277,15 @@ def check_and_alert(now: float | None = None, send=None) -> dict[str, list[str]]
 
 
 # --- the weekly report -------------------------------------------------------------------------
-def weekly_report(now: float | None = None) -> tuple[str, str]:
-    """A short summary of how the server is doing: pools, drives and backups."""
+def weekly_report(now: float | None = None, lang: str | None = None) -> tuple[str, str]:
+    """A short summary of how the server is doing: pools, drives and backups, in the household's
+    language (NUX-3)."""
+    from backend import i18n
     from backend.hardware.pal_storage import get_storage_platform
     from backend.state import Z_STATE
 
     now = now or time.time()
+    lang = lang or _lang()
     lines: list[str] = []
     try:
         adapter = get_storage_platform()
@@ -264,37 +296,58 @@ def weekly_report(now: float | None = None) -> tuple[str, str]:
                 scrub = adapter.scrub_result(p)
             except Exception:
                 scrub = None
-            check = ""
+            line = i18n.t(
+                "alert.weekly.pool",
+                "- {name}: {pct}% used, {status}",
+                {"name": p.name, "pct": round(p.used_pct), "status": str(p.status).lower()},
+                lang,
+            )
             if scrub and scrub.get("finished_at"):
                 days = int((now - float(scrub["finished_at"])) // 86400)
-                check = f", last checked {days} day(s) ago with {int(scrub.get('errors') or 0)} errors"
-            lines.append(f"- {p.name}: {round(p.used_pct)}% used, {str(p.status).lower()}{check}")
+                line += i18n.t(
+                    "alert.weekly.checked",
+                    ", last checked {days, plural, one {# day} other {# days}} ago with {errors, plural, one {# error} other {# errors}}",
+                    {"days": days, "errors": int(scrub.get("errors") or 0)},
+                    lang,
+                )
+            lines.append(line)
     except Exception:
         logger.debug("[PoolAlerts] weekly report: pools unavailable", exc_info=True)
     with Z_STATE.smart.lock:
         verdicts = Z_STATE.smart.snapshot("verdicts")
     attention = [d for d, v in verdicts.items() if v.get("verdict") in ("now", "soon")]
     if verdicts:
+        n = {"fine": len(verdicts) - len(attention), "all": len(verdicts), "list": ", ".join(sorted(attention))}
         lines.append(
-            f"- Drives: {len(verdicts) - len(attention)} of {len(verdicts)} fine"
-            + (f"; needs attention: {', '.join(sorted(attention))}" if attention else "")
+            i18n.t("alert.weekly.drives_attention", "- Drives: {fine} of {all} fine; needs attention: {list}", n, lang)
+            if attention
+            else i18n.t("alert.weekly.drives", "- Drives: {fine} of {all} fine", n, lang)
         )
     try:
         from backend.services.backup_watch import overdue_backups
 
         late = [b.get("name") or "" for b in overdue_backups(now)]
-        lines.append(f"- Backups: {'overdue: ' + ', '.join(late) if late else 'all on time'}")
+        lines.append(
+            i18n.t("alert.weekly.backups_late", "- Backups: overdue: {list}", {"list": ", ".join(late)}, lang)
+            if late
+            else i18n.t("alert.weekly.backups_ok", "- Backups: all on time", None, lang)
+        )
     except Exception:
         logger.debug("[PoolAlerts] weekly report: backups unavailable", exc_info=True)
     issues = current(max_age=CACHE_S, now=now)
     head = (
-        "Everything looks fine."
+        i18n.t("alert.weekly.fine", "Everything looks fine.", None, lang)
         if not issues and not attention
-        else f"{len(issues) + len(attention)} thing(s) need attention."
+        else i18n.t(
+            "alert.weekly.attention",
+            "{n, plural, one {# thing needs attention.} other {# things need attention.}}",
+            {"n": len(issues) + len(attention)},
+            lang,
+        )
     )
     for i in issues:
-        lines.append(f"! {_text(i)[0]}")
-    return "ZettNAS weekly health report", head + "\n\n" + "\n".join(lines)
+        lines.append(f"! {_text(i, lang)[0]}")
+    return i18n.t("alert.weekly.title", "ZettNAS weekly health report", None, lang), head + "\n\n" + "\n".join(lines)
 
 
 def send_weekly_if_due(now: float | None = None, send=None) -> bool:

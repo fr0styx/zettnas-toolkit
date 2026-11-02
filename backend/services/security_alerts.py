@@ -64,11 +64,16 @@ def maybe_alert(
 
     def _send():
         try:
+            from backend import i18n
             from backend.services.notifications import send_notification
 
+            # the event's name in the household's language; who and from where are names (NUX-3)
+            slug = event_type.replace("auth.", "signin.").replace(".", "_")
+            label = i18n.ref(f"alert.security.{slug}", title)
             send_notification(
                 f"ZettNAS security: {title}",
                 message,
+                text={"title_key": "alert.security.title", "params": {"what": label}},
                 level=level,
                 event_type="security",
                 dedup_key=f"sec:{event_type}:{actor_username or ''}:{actor_ip or ''}",

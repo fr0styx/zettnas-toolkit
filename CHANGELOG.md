@@ -128,6 +128,10 @@
 - **More alerts in the family's language**: a backup that finished or failed, a fan that stopped,
   a processor that runs warm or too hot, and the UPS asking for the NAS to be shut down by hand
   are written in the language chosen under "Write alerts in" too (NUX-3).
+- **Storage, security and the weekly report in the family's language too**: a degraded pool, a
+  disk with errors, a pool filling up, a fixed problem, the security alerts (a locked sign-in, a
+  deleted account…) and the Sunday health report follow "Write alerts in". The report counts in
+  proper words now ("3 days ago", "1 thing needs attention") (NUX-3).
 
 - **A drive's own temperature limit**: next to its purchase and warranty details, a drive can have
   the temperature above which it counts as warm (30–90 °C; too hot is 10 °C more). Its "runs warm"
