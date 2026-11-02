@@ -23,9 +23,9 @@ anyio==4.15.1 \
     #   httpx
     #   sse-starlette
     #   starlette
-apprise==2.0.1 \
-    --hash=sha256:2a9b0f4fc906227f70998ea4462184dd605e796d3932e6e7ce0fe0f134048610 \
-    --hash=sha256:8cae8ae5877b9cfd1dddffc17ac1e50f780ab6bdf948f95215e2466ef7230565
+apprise==2.1.0 \
+    --hash=sha256:7eb453b31f37e6b24499b48320bf9d325038bbb1216e24ea7baaf73b062341c5 \
+    --hash=sha256:f743f4bc81dc5a68bddab53d420071b45541630dfea8c907a5e8b2b38555c681
     # via -r requirements.txt
 argon2-cffi==25.1.0 \
     --hash=sha256:694ae5cc8a42f4c4e2bf2ca0e64e51e23a040c6a517a85074683d3959e1346c1 \
@@ -464,9 +464,9 @@ exifread==3.5.1 \
     --hash=sha256:9f998f80d3062741c976dfc4fd033424bc40932937994e4d2181eb70c4b6aedd \
     --hash=sha256:e5426ce2857423ad401e575ea9d159dc97449dc041fb6e61b35109caea72c311
     # via -r requirements.txt
-fastapi==0.161.1 \
-    --hash=sha256:4076b88434452e20289379068e976c4a04c65ffc8e6be31510106e150a422f0f \
-    --hash=sha256:a1363080cf9aeedecd99f4e1a23669d7e77542227f6536f4d7bbd59f07ecaa94
+fastapi==0.162.0 \
+    --hash=sha256:3785963de305dd09912426cb81f2d230fce98ab3521cdfe97265c8d14983128c \
+    --hash=sha256:6a22c1e2e6e32e0633ee7e170f00009a29b8228b16feb219ee42f32fd8d88a8f
     # via -r requirements.txt
 greenlet==3.5.6 \
     --hash=sha256:0616b8f878098c5681fd8f0dc92d887551717402342a70f0abcbfea5f5ad8a44 \
@@ -1242,9 +1242,9 @@ sqlite-vec==0.1.9 ; platform_system == "Linux" and implementation_name == "cpyth
     --hash=sha256:4a28dc12fa4b53d7b1dced22da2488fade444e96b5d16fd2d698cd670675cf32 \
     --hash=sha256:4e921e592f24a5f9a18f590b6ddd530eb637e2d474e3b1972f9bbeb773aa3cb9
     # via -r requirements.txt
-sse-starlette==3.5.0 \
-    --hash=sha256:3e6e1070df3f0f5d9cea81496de92dbb72f6721871d99748ece67441dd8b7997 \
-    --hash=sha256:75de713aa8a9441513cc283220826da079d982770965b951e9437720e8bafdb2
+sse-starlette==3.6.0 \
+    --hash=sha256:623151d6c20dc0eebf1b3379c27faae91fff883bac7ab6665f16f46440a88b3a \
+    --hash=sha256:e4dfa4d237d2712cb2b4d4918eda9b457cd6b44bbecdc838af75de836565bafd
     # via -r requirements.txt
 starlette==1.9.0 \
     --hash=sha256:3d931de246ed870e35ce605974440816ef895e592f255d1396cfdf191d4c4318 \
