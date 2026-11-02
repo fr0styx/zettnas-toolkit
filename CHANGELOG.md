@@ -104,6 +104,9 @@
 
 #### Usability
 
+- **Virtual machine, ISO and network-setting entries in the activity log in your language**
+  (NUX-3).
+
 - **The dock, the user menu, window layouts, the desktop menu, the file manager's info panel,
   the calendar and clock widgets and the Add-shortcut dialog in your language** (NUX-20).
 

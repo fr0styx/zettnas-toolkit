@@ -251,12 +251,13 @@ def create_vlan(parent: str, vlan_id: int, alias: str = "") -> dict[str, Any]:
     common.save_network_config(cfg)
 
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         add_event(
             "success",
             "VLAN Created",
             f"802.1Q VLAN sub-interface {vname} (Tag ID: {vid}) created on {parent}.",
+            event_text("vlan_made", name=vname, tag=vid, parent=parent),
         )
     except Exception:
         ignored("backend.hardware.network.create_vlan")
@@ -328,12 +329,13 @@ def delete_vlan(vlan_name: str) -> dict[str, Any]:
     common.save_network_config(cfg)
 
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         add_event(
             "warning",
             "VLAN Deleted",
             f"802.1Q VLAN sub-interface {vlan_name} removed.",
+            event_text("vlan_removed", name=vlan_name),
         )
     except Exception:
         ignored("backend.hardware.network.delete_vlan")

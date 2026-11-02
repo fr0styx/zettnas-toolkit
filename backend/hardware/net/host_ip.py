@@ -223,13 +223,14 @@ def apply_host_ip_config_canary(updates: dict[str, Any], timeout_sec: int = 60) 
 
     # Add audit log
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         target_display = target_cfg.get("ip_address") or "DHCP Auto"
         add_event(
             "warning",
             "Network Canary Armed",
             f"Testing new host network settings ({target_display}). Rollback watchdog active for {timeout_sec}s.",
+            event_text("net_trial", target=target_display, secs=timeout_sec),
         )
     except Exception:
         ignored("backend.hardware.network.apply_host_ip_config_canary")
@@ -265,12 +266,13 @@ def confirm_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
 
     # Add audit log
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         add_event(
             "success",
             "Network Confirmed",
             f"Host network settings confirmed permanently: {target_cfg.get('mode', 'static').upper()} {target_cfg.get('ip_address', '')}",
+            event_text("net_kept", ip=target_cfg.get("ip_address", "")),
         )
     except Exception:
         ignored("backend.hardware.network.confirm_host_ip_config")
@@ -295,12 +297,13 @@ def revert_host_ip_config(canary_id: str | None = None) -> dict[str, Any]:
     canary._execute_revert(orig)
 
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         add_event(
             "warning",
             "Network Reverted",
             f"Host network configuration manually reverted to {orig.get('ip_address', 'original')}.",
+            event_text("net_reverted", ip=orig.get("ip_address", "")),
         )
     except Exception:
         ignored("backend.hardware.network.revert_host_ip_config")

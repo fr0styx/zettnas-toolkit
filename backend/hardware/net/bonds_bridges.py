@@ -189,12 +189,13 @@ def update_bond_config(bond_name: str, updates: dict[str, Any]) -> dict[str, Any
 
     mode_info = common.BONDING_MODES.get(mode_code, common.BONDING_MODES["1"])
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         add_event(
             "info",
             "Bonding Mode Updated",
             f"Bond {bond_name} updated to {mode_info['title']} with slaves: {', '.join(slaves)} (miimon: {miimon}ms).",
+            event_text("bond_set", name=bond_name, members=", ".join(slaves)),
         )
     except Exception:
         ignored("backend.hardware.network.update_bond_config")
@@ -364,12 +365,13 @@ def update_bridge_config(br_name: str, updates: dict[str, Any]) -> dict[str, Any
                 ignored("backend.hardware.network.update_bridge_config")
 
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         add_event(
             "info",
             "Bridge Configured",
             f"Bridge {br_name} updated: STP {'Enabled' if stp else 'Disabled'}, Forward Delay {forward_delay}s, Members: {', '.join(members) or 'None'}.",
+            event_text("bridge_set", name=br_name, members=", ".join(members) or "-"),
         )
     except Exception:
         ignored("backend.hardware.network.update_bridge_config")

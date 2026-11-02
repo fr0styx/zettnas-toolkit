@@ -30,7 +30,7 @@ from backend.fsutil import atomic_write_json, read_json, resolve_within
 from backend.ignored_errors import ignored
 from backend.logging_config import in_this_request
 from backend.services.vm_engine import QmpEngine
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 # A VM id in an address, as the store makes them: it is used in folder names (CodeQL path injection)
 VmId = Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
@@ -238,7 +238,12 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
                             "error": "Download cancelled by user",
                         }
                     )
-                    add_event("info", "ISO Download Cancelled", f"Download for '{catalog_item['name']}' was cancelled.")
+                    add_event(
+                        "info",
+                        "ISO Download Cancelled",
+                        f"Download for '{catalog_item['name']}' was cancelled.",
+                        event_text("iso_cancelled", name=catalog_item["name"]),
+                    )
                     return
 
                 chunk = resp.read(chunk_size)
@@ -276,6 +281,7 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
                 "warning",
                 "ISO Verification Failed",
                 f"SHA-256 checksum mismatch for '{catalog_item['name']}'. Corrupted payload removed.",
+                event_text("iso_bad", name=catalog_item["name"]),
             )
             return
 
@@ -298,6 +304,7 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
             "success",
             "Official ISO Downloaded & Verified",
             f"ISO '{catalog_item['name']}' verified and saved to {final_path}.",
+            event_text("iso_ok", name=catalog_item["name"]),
         )
     except Exception as e:
         logger.error(f"[VM-ISO] Download failed for {catalog_item['name']}: {e}")
@@ -312,7 +319,12 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
                 "error": str(e),
             }
         )
-        add_event("warning", "ISO Download Failed", f"Failed to download '{catalog_item['name']}': {e}")
+        add_event(
+            "warning",
+            "ISO Download Failed",
+            f"Failed to download '{catalog_item['name']}': {e}",
+            event_text("iso_failed", name=catalog_item["name"], error=str(e)),
+        )
 
 
 @router.get("/telemetry", dependencies=[Depends(require_scope("system:view", "storage:read"))])
@@ -472,6 +484,7 @@ async def upload_iso_file(
         "info",
         "ISO Image Uploaded",
         f"ISO '{clean_name}' ({round(total_written / (1024**3), 2)} GB, {format_verified}) saved to {out_path}.",
+        event_text("iso_uploaded", name=clean_name, gb=round(total_written / (1024**3), 2)),
     )
     return {
         "status": "ok",
@@ -508,7 +521,8 @@ def delete_iso_image(
     except OSError as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete ISO file: {e}") from e
 
-    add_event("info", "ISO Removed", f"ISO '{os.path.basename(real_path)}' was deleted from repository.")
+    iso = os.path.basename(real_path)
+    add_event("info", "ISO Removed", f"ISO '{iso}' was deleted from repository.", event_text("iso_removed", name=iso))
     return {"status": "ok"}
 
 
@@ -664,6 +678,7 @@ def create_vm(req: VmCreateRequest, principal: AuthenticatedPrincipal = Depends(
         "info",
         "Virtual Machine Created",
         f"VM '{req.name}' created ({req.vcpus} vCPUs, {req.ram_gb} GB RAM).",
+        event_text("vm_created", name=req.name, cpus=req.vcpus, gb=req.ram_gb),
     )
     return new_vm
 
@@ -887,7 +902,12 @@ def update_vm(
         target_vm["pci_passthrough"] = vm_host._sanitize_pci_list(req.pci_passthrough)
 
     vm_qemu._save_vms(vms)
-    add_event("info", "VM Updated", f"VM '{target_vm['name']}' configuration updated.")
+    add_event(
+        "info",
+        "VM Updated",
+        f"VM '{target_vm['name']}' configuration updated.",
+        event_text("vm_updated", name=target_vm["name"]),
+    )
     return target_vm
 
 
@@ -1191,7 +1211,12 @@ async def execute_vm_action(
         target_vm["uptime_seconds"] = 0
 
     vm_qemu._save_vms(vms)
-    add_event("info", "VM State Changed", f"VM '{target_vm['name']}' action '{action}' executed.")
+    add_event(
+        "info",
+        "VM State Changed",
+        f"VM '{target_vm['name']}' action '{action}' executed.",
+        event_text("vm_state", name=target_vm["name"], action=action),
+    )
     return {"status": "ok", "state": target_vm["state"]}
 
 
@@ -1403,6 +1428,7 @@ def resize_vm_disk(
         "info",
         "VM Disk Resized",
         f"Disk {disk_index} expanded from {current_size_gb} GB to {req.new_size_gb} GB for VM '{target_vm['name']}'.",
+        event_text("vm_resized", name=target_vm["name"], disk=disk_index, old=current_size_gb, new=req.new_size_gb),
     )
     return {
         "status": "ok",
@@ -1441,7 +1467,9 @@ def delete_vm(
         if os.path.exists(vm_dir):
             shutil.rmtree(vm_dir, ignore_errors=True)
 
-    add_event("info", "VM Removed", f"VM '{target['name']}' was deleted.")
+    add_event(
+        "info", "VM Removed", f"VM '{target['name']}' was deleted.", event_text("vm_removed", name=target["name"])
+    )
     return {"status": "ok"}
 
 
@@ -1607,7 +1635,12 @@ async def create_vm_snapshot(vm_id: VmId, req: VmSnapshotCreateRequest):
         "state": target_vm.get("state", "stopped"),
     }
     await asyncio.to_thread(_save_vm_snapshots_metadata, vm_id, meta)
-    add_event("info", "VM Snapshot Created", f"Snapshot '{name}' created for VM '{target_vm['name']}'.")
+    add_event(
+        "info",
+        "VM Snapshot Created",
+        f"Snapshot '{name}' created for VM '{target_vm['name']}'.",
+        event_text("vm_snap_made", snap=name, name=target_vm["name"]),
+    )
     return {"success": True, "name": name, "vm_id": vm_id}
 
 
@@ -1650,7 +1683,12 @@ async def revert_vm_snapshot(vm_id: VmId, snapshot_name: str):
         except subprocess.CalledProcessError as e:
             raise HTTPException(status_code=500, detail=f"qemu-img revert failed: {e.stderr or e}") from e
 
-    add_event("info", "VM Snapshot Reverted", f"VM '{target_vm['name']}' reverted to snapshot '{name}'.")
+    add_event(
+        "info",
+        "VM Snapshot Reverted",
+        f"VM '{target_vm['name']}' reverted to snapshot '{name}'.",
+        event_text("vm_snap_reverted", snap=name, name=target_vm["name"]),
+    )
     return {"success": True, "name": name, "vm_id": vm_id}
 
 
@@ -1700,7 +1738,12 @@ async def delete_vm_snapshot(vm_id: VmId, snapshot_name: str):
         del meta[name]
         await asyncio.to_thread(_save_vm_snapshots_metadata, vm_id, meta)
 
-    add_event("info", "VM Snapshot Deleted", f"Snapshot '{name}' deleted for VM '{target_vm['name']}'.")
+    add_event(
+        "info",
+        "VM Snapshot Deleted",
+        f"Snapshot '{name}' deleted for VM '{target_vm['name']}'.",
+        event_text("vm_snap_deleted", snap=name, name=target_vm["name"]),
+    )
     return {"success": True, "name": name, "vm_id": vm_id}
 
 
