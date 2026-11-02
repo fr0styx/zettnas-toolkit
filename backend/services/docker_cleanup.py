@@ -20,7 +20,7 @@ from typing import Any
 from backend.config import logger
 from backend.hardware import docker_stats
 from backend.services.container_mutator import _docker_request
-from backend.state import add_event
+from backend.state import add_event, event_text
 
 
 def _format_bytes(num_bytes: int) -> str:
@@ -137,7 +137,12 @@ def destroy_container(
             image_error = str(e)
             logger.warning(f"[Docker Cleanup] Could not delete image '{target_image}': {e}")
 
-    add_event("docker", f"Destroyed container '{cname}' ({full_id[:12]})", "warning")
+    add_event(
+        "warning",
+        "App container removed",
+        f"Destroyed container '{cname}' ({full_id[:12]})",
+        event_text("app_removed", name=cname),
+    )
 
     return {
         "success": True,
@@ -340,7 +345,7 @@ def prune_docker_system(
         f"Images: {len(images_deleted)}, Volumes: {len(volumes_deleted)})."
     )
     logger.info(f"[Docker Prune] {summary_msg}")
-    add_event("docker", summary_msg, "info")
+    add_event("info", "App cleanup", summary_msg)
 
     return {
         "success": True,
@@ -571,7 +576,7 @@ def _run_prune_job(job: dict[str, Any], opts: dict[str, Any]) -> None:
         f"{' so far' if stopped else ''} (Containers: {c['containers']}, Images: {c['images']}, Volumes: {c['volumes']})."
     )
     logger.info(f"[Docker Prune] {summary}")
-    add_event("docker", summary, "info")
+    add_event("info", "App cleanup", summary)
     _update(
         job,
         state="cancelled" if stopped else ("done" if not job["errors"] else "done_with_errors"),

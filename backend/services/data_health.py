@@ -121,12 +121,13 @@ def restore_json(path: str, data_dir: str | None = None) -> bool:
         os.replace(tmp, real)
         logger.warning(f"[DataHealth] {rel} was damaged; restored the copy from {os.path.basename(snap)}")
         try:
-            from backend.state import add_event
+            from backend.state import add_event, event_text
 
             add_event(
                 "warning",
                 "Settings file restored",
                 f"{rel} was damaged; the copy from {os.path.basename(snap)} is back.",
+                event_text("settings_restored", file=rel, snap=os.path.basename(snap)),
             )
         except Exception:
             logger.debug("[DataHealth] could not record the restore", exc_info=True)
@@ -210,7 +211,7 @@ def check_and_repair(data_dir: str) -> dict[str, Any]:
 
 def _record_event(result: dict[str, Any]) -> None:
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
         parts = [f"{n} restored from the copy of {s}" for n, s in result["repaired"].items()]
         parts += [f"{n} could not be restored and started empty" for n in result["lost"]]
@@ -219,7 +220,7 @@ def _record_event(result: dict[str, Any]) -> None:
             "error",
             "Damaged data repaired",
             "ZettNAS found damaged files at start: " + "; ".join(parts) + ". The damaged files were kept beside them.",
-            details=result,
+            details={**result, **event_text("data_repaired", parts="; ".join(parts))},
         )
     except Exception:
         logger.debug("[DataHealth] could not record the repair event", exc_info=True)
@@ -297,7 +298,7 @@ def warn_if_on_spinning_disk(folder: str, sysbase: str | None = None, st_dev: in
     disk, spinning = data_disk(folder, sysbase, st_dev)
     if not spinning:
         return False
-    from backend.state import add_event
+    from backend.state import add_event, event_text
 
     logger.warning(f"[DataHealth] the app's data folder is on a spinning disk ({disk})")
     add_event(
@@ -305,6 +306,7 @@ def warn_if_on_spinning_disk(folder: str, sysbase: str | None = None, st_dev: in
         "App data on a spinning disk",
         f"ZettNAS keeps its settings and databases on {disk}, a spinning disk, so that disk can never "
         "sleep. Moving the app's data folder to an SSD or cache pool saves power and noise.",
+        event_text("data_on_hdd", disk=disk),
     )
     return True
 

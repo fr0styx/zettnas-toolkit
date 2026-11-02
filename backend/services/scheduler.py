@@ -6,7 +6,7 @@ from backend.config import SMART_SCHEDULE_FILE, logger
 from backend.fsutil import atomic_write_json, json_locked, read_json
 from backend.hardware.disks import _discover_disks, run_disk_smart_test
 from backend.hardware.unraid import read_unraid_status
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 _SCHEDULER_STOP_EVENT = threading.Event()
 # Network-bound jobs run in a thread of their own, one at a time each (NPERF-7): name -> started
@@ -296,6 +296,7 @@ def _run_scheduled_tasks():
                     "info",
                     "Scheduled Task",
                     f"Scheduled SMART short tests started for {len(disks)} disks (sleeping disks preserved: {skip_standby}).",
+                    event_text("sched_short_asleep" if skip_standby else "sched_short", n=len(disks)),
                 )
 
         # 2. Extended SMART Test evaluation
@@ -323,6 +324,7 @@ def _run_scheduled_tasks():
                     "info",
                     "Scheduled Task",
                     f"Scheduled SMART extended tests started for {len(disks)} disks (sleeping disks preserved: {skip_standby}).",
+                    event_text("sched_long_asleep" if skip_standby else "sched_long", n=len(disks)),
                 )
 
         # 3. Storage Scrub evaluation
@@ -354,6 +356,7 @@ def _run_scheduled_tasks():
                     "info",
                     "Scheduled Task",
                     f"Scheduled storage scrub initiated on {adapter.get_platform_type().value}: {res.get('message', 'Started')}",
+                    event_text("sched_scrub", result=res.get("message", "Started")),
                 )
 
 

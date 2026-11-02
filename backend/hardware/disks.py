@@ -38,7 +38,7 @@ from backend.hardware.smart_power import is_standby as is_standby_out
 from backend.hardware.smart_power import smartctl_power
 from backend.ignored_errors import ignored
 from backend.services.notifications import send_notification
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 logger = logging.getLogger("ZettNAS")
 
@@ -221,6 +221,7 @@ def _note_unreachable(dev_name: str, out: str) -> None:
             "Drives",
             f"Drive {dev_name} doesn't answer: it couldn't be opened or didn't identify itself. "
             "Check its cable and power; it may be failing.",
+            event_text("drive_no_answer", dev=dev_name),
         )
         logger.warning("[SMART] %s unreachable: %s", dev_name, out.strip()[:200])
 
@@ -1640,6 +1641,7 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
                     title=f"S.M.A.R.T. Test Aborted: /dev/{dev_name}",
                     message=f"Self-test on {model} ({serial}) was manually cancelled by operator.",
                     details={
+                        **event_text("smart_aborted", dev=dev_name, model=model, serial=serial),
                         "type": "smart_test_aborted",
                         "dev": dev_name,
                         "model": model,
@@ -1667,6 +1669,9 @@ def run_disk_smart_test(dev_name: str, test_type: str = "short", skip_if_standby
                     title=f"S.M.A.R.T. {action_name.title()} Test Started: /dev/{dev_name}",
                     message=f"Integrity scan initiated on {model} ({serial}). Estimated duration: ~{polling_mins}m.",
                     details={
+                        **event_text(
+                            f"smart_{action_name}", dev=dev_name, model=model, serial=serial, mins=polling_mins
+                        ),
                         "type": "smart_test_start",
                         "dev": dev_name,
                         "test_type": action_name,
@@ -1773,6 +1778,17 @@ def generate_smart_test_report_markdown(
 UNREADABLE_TEST_GIVE_UP_S = 48 * 3600
 
 
+def _unknown_result(dev_name: str) -> dict:
+    """An activity-log entry's details for a self-test that never said how it ended."""
+    return {
+        **event_text("smart_unknown", dev=dev_name),
+        "type": "smart_test_result",
+        "dev": dev_name,
+        "status": "UNKNOWN",
+        "passed": False,
+    }
+
+
 def check_active_smart_tests():
     """
     Background watcher invoked by stats_collector smart_poller_daemon.
@@ -1839,7 +1855,7 @@ def check_active_smart_tests():
                     level="warning",
                     title=f"S.M.A.R.T. test result unknown: /dev/{dev_name}",
                     message="The drive never reported how its self-test ended. Run it again.",
-                    details={"type": "smart_test_result", "dev": dev_name, "status": "UNKNOWN", "passed": False},
+                    details=_unknown_result(dev_name),
                 )
                 continue
 

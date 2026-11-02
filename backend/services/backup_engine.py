@@ -304,9 +304,14 @@ def apply_staged_restore(data_dir: str) -> list[str]:
     shutil.rmtree(staged, ignore_errors=True)
     logger.warning(f"[BACKUP] Applied a staged settings restore: {len(moved)} file(s)")
     try:
-        from backend.state import add_event
+        from backend.state import add_event, event_text
 
-        add_event("success", "Settings restored", f"The settings backup was applied ({len(moved)} files).")
+        add_event(
+            "success",
+            "Settings restored",
+            f"The settings backup was applied ({len(moved)} files).",
+            event_text("backup_settings_restored", n=len(moved)),
+        )
     except Exception:
         logger.debug("[BACKUP] could not record the restore event", exc_info=True)
     return moved

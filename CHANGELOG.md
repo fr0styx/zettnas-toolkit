@@ -104,6 +104,13 @@
 
 #### Usability
 
+- **The rest of the activity log in your language** (NUX-3): file moves, copies, uploads and the
+  Recycle Bin, memory-card imports, the front button, UPS events and drills, drive checks,
+  scheduled tasks, damaged or restored settings, updates and the ransomware guard now show in
+  the reader's language; the log file keeps English. Also fixed: the ransomware guard and the app
+  cleanup wrote "critical" or "info" as the message and their own level as the type, so those
+  entries had no colour and no text in the log.
+
 - **A family calendar and address book at home** (NFEAT-7): the office suite now sets up
   Nextcloud's Calendar and Contacts when it is installed, and an office suite installed before
   can add them with one button. Users has a "Family calendar and contacts" card with the address

@@ -326,6 +326,13 @@ def _persist_events_soon() -> None:
         _event_flush_timer.start()
 
 
+def event_text(name: str, /, **params) -> dict:
+    """An activity-log entry's message keys, ev.<name>.title and ev.<name>.msg, with their values,
+    for add_event's details: the log shows the entry in the reader's language, the English title
+    and message stay for the log file (NUX-3)."""
+    return {"title_key": f"ev.{name}.title", "msg_key": f"ev.{name}.msg", "params": params}
+
+
 def add_event(level, title, message, details=None):
     global _event_dedup_cache
     now = int(time.time())
@@ -361,6 +368,7 @@ def _record_damaged_file(path: str, dest: str) -> None:
         "Damaged settings file",
         f"{os.path.basename(path)} was damaged and was set aside as {os.path.basename(dest)}; the newest good "
         "copy from the daily snapshot is used when there is one, otherwise its defaults.",
+        event_text("settings_damaged", file=os.path.basename(path), dest=os.path.basename(dest)),
     )
 
 
@@ -373,6 +381,7 @@ def _record_unreadable_file(path: str, error: str) -> None:
         "Settings file can't be opened",
         f"{os.path.basename(path)} exists but could not be opened ({error}). It was not changed; its "
         "defaults are used until it can be read again. Check the data folder's permissions and disk.",
+        event_text("settings_unreadable", file=os.path.basename(path), error=str(error)),
     )
 
 

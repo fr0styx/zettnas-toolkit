@@ -319,9 +319,9 @@ class RansomwareGuard:
             f"Snapshots: {snap_txt}. Check the source computer, then lift the freeze under Security."
         )
         try:
-            from backend.state import add_event
+            from backend.state import add_event, event_text
 
-            add_event("security", f"Ransomware guard: {reason}", "critical")
+            add_event("critical", f"Ransomware guard: {reason}", msg, event_text("guard_frozen", reason=reason))
         except Exception:
             logger.debug("ransomware_guard: event log unavailable", exc_info=True)
         try:
@@ -345,9 +345,10 @@ class RansomwareGuard:
         if self.state.get("canaries"):
             self.place_canaries()
         try:
-            from backend.state import add_event
+            from backend.state import add_event, event_text
 
-            add_event("security", f"Ransomware guard freeze lifted by {by or 'an admin'}", "info")
+            who = by or "an admin"
+            add_event("info", "Ransomware guard", f"Freeze lifted by {who}", event_text("guard_lifted", by=who))
         except Exception:
             logger.debug("ransomware_guard: event log unavailable", exc_info=True)
         return self.status()

@@ -8,6 +8,7 @@ import os
 import socket
 import subprocess
 import sys
+import time
 
 import httpx
 import pytest
@@ -279,11 +280,16 @@ def test_the_sftp_front_stops_rclone_when_it_is_stopped(tmp_path, monkeypatch):
     env = {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "DATA_DIR": str(tmp_path / "data")}
     proc = subprocess.Popen([sys.executable, sftp_front.__file__, str(port), str(tmp_path / "cache")], env=env)
     try:
-        for _ in range(100):
+        # until the script listens (its stop handler is in place by then); a busy machine can take
+        # seconds, and a stop sent before that ends it by the signal, not cleanly
+        deadline = time.monotonic() + 30
+        listening = False
+        while not listening and time.monotonic() < deadline:
             with socket.socket() as s:
-                if s.connect_ex(("127.0.0.1", port)) == 0:
-                    break
-            asyncio.run(asyncio.sleep(0.05))
+                listening = s.connect_ex(("127.0.0.1", port)) == 0
+            if not listening:
+                time.sleep(0.05)
+        assert listening, "the SFTP front never started listening"
         proc.terminate()
         assert proc.wait(timeout=10) == 0
     finally:

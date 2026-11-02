@@ -9,9 +9,20 @@ import time
 from backend.config import BUTTON_CFG_FILE, HOST_DEV, logger
 from backend.ignored_errors import ignored
 from backend.services.copy_engine import _do_copy
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 BUTTON_POLL_SECS = 0.25  # PERF-5: was 0.1; the register has no interrupt, so it is read
+
+
+def _next_lcd_page() -> None:
+    """A press of the front button with nothing to copy: the LCD's next page, in the activity log."""
+    new_page = Z_STATE.cycle_lcd_page()
+    add_event(
+        "info",
+        "LCD Page Switched",
+        f"Display cycled to Page {new_page} via front hardware button.",
+        event_text("button_page", page=new_page),
+    )
 
 
 def button_listener_daemon():
@@ -135,6 +146,7 @@ def button_listener_daemon():
                             "info",
                             "Copy Started",
                             f"Physical COPY button pressed. Starting ingest from {slot_label} to {target_dir}...",
+                            event_text("button_copy", slot=slot_label, dest=target_dir),
                         )
                         logger.info(f"[ButtonListener] Dispatched copy ingest thread for {slot_label} -> {target_dir}")
                         threading.Thread(
@@ -148,18 +160,11 @@ def button_listener_daemon():
                             "warning",
                             "No Media Detected",
                             f"Front-panel COPY button pressed, but no media card is detected in {src_slot.upper()} slot.",
+                            event_text("button_no_card", slot=src_slot.upper()),
                         )
-                        new_page = Z_STATE.cycle_lcd_page()
-                        add_event(
-                            "info",
-                            "LCD Page Switched",
-                            f"Display cycled to Page {new_page} via front hardware button.",
-                        )
+                        _next_lcd_page()
                 else:
-                    new_page = Z_STATE.cycle_lcd_page()
-                    add_event(
-                        "info", "LCD Page Switched", f"Display cycled to Page {new_page} via front hardware button."
-                    )
+                    _next_lcd_page()
 
                 # Debounce to prevent multi-triggering while holding button down
                 time.sleep(0.3)

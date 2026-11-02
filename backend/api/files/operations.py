@@ -18,7 +18,7 @@ from backend.fsutil import resolve_within, root_for
 from backend.rate_limit import rate_limit
 from backend.services import recycle_bin
 from backend.services.path_access import ALLOWED_BROWSE_ROOTS, check_user_path_access, refuse_encrypted_mount
-from backend.state import add_event
+from backend.state import add_event, event_text
 
 router = APIRouter()
 
@@ -135,7 +135,9 @@ async def fs_delete(req: DeleteRequest, principal: AuthenticatedPrincipal = Depe
                 status_code=409,
                 detail="This disk has no Recycle Bin of its own, so this can only be deleted permanently.",
             )
-        add_event("info", "File Explorer", f"Moved {base_name} to Recycle Bin")
+        add_event(
+            "info", "File Explorer", f"Moved {base_name} to Recycle Bin", event_text("fm_trashed", name=base_name)
+        )
         await asyncio.to_thread(record_activity, "delete", target_unresolved, principal, detail="to the Recycle Bin")
 
         return {
@@ -209,6 +211,11 @@ async def fs_transfer(req: FsTransferRequest, principal: AuthenticatedPrincipal 
         "info",
         "File Explorer",
         f"Transferred {res.get('transferred', 0)} item(s) to {os.path.basename(dest_canonical)} ({req.action}, {req.collision_policy})",
+        event_text(
+            "fm_copied" if req.action == "copy" else "fm_moved",
+            n=res.get("transferred", 0),
+            dest=os.path.basename(dest_canonical),
+        ),
     )
     return res
 
@@ -288,6 +295,11 @@ async def fs_transfer_async(
         "info",
         "File Explorer",
         f"Queued background {req.action} of {len(clean_sources)} item(s) to {os.path.basename(dest_canonical)}",
+        event_text(
+            "fm_copy_queued" if req.action == "copy" else "fm_move_queued",
+            n=len(clean_sources),
+            dest=os.path.basename(dest_canonical),
+        ),
     )
     for src in clean_sources:
         await asyncio.to_thread(
@@ -335,6 +347,7 @@ async def fs_archive_create(
         "info",
         "File Explorer",
         f"Queued archive creation {archive_name} from {len(clean_sources)} item(s)",
+        event_text("fm_zip_queued", name=archive_name, n=len(clean_sources)),
     )
     return {"status": "ok", "task_id": task.id, "task": task.to_dict()}
 
@@ -371,5 +384,6 @@ async def fs_archive_extract(
         "info",
         "File Explorer",
         f"Queued extraction of {os.path.basename(arc_canonical)} to {os.path.basename(dest_canonical)}",
+        event_text("fm_unzip_queued", name=os.path.basename(arc_canonical), dest=os.path.basename(dest_canonical)),
     )
     return {"status": "ok", "task_id": task.id, "task": task.to_dict()}

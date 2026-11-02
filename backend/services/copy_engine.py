@@ -19,7 +19,7 @@ from backend.hardware.led import send_led_packet
 from backend.ignored_errors import ignored
 from backend.proc import run_bounded
 from backend.services.notifications import send_notification
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 _PREV_MEDIA_SLOTS = {"sd": {"size": 0, "dev": None}, "tf": {"size": 0, "dev": None}}
 _EJECTED_SLOTS: set[str] = set()
@@ -62,6 +62,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                     "info",
                     f"{slot_label} Removed",
                     f"{slot_label} was unmounted and removed from slot.",
+                    event_text("card_removed", slot=slot_label),
                 )
                 if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:
                     logger.info(f"[AUTO-INGEST] Clearing pending ingest for removed card {slot}")
@@ -87,6 +88,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                 "info",
                 f"{slot_label} Inserted",
                 f"Detected media on /dev/{curr_dev} ({mb} MB). Ready for import.",
+                event_text("card_inserted", slot=slot_label, dev=curr_dev, mb=mb),
             )
             send_notification(
                 {
@@ -171,6 +173,7 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
                 "info",
                 "Media Ingest Offered",
                 f"{slot_label} detected on /dev/{dev_name}. Awaiting user confirmation to start import.",
+                event_text("card_offered", slot=slot_label, dev=dev_name),
             )
             return
 
@@ -178,7 +181,12 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
         Z_STATE.copy_active = True
         Z_STATE.copy_status = "copying"
         Z_STATE.ui_wake.set()
-        add_event("info", "Auto-Ingest Started", f"Automatically importing media from {slot.upper()} card...")
+        add_event(
+            "info",
+            "Auto-Ingest Started",
+            f"Automatically importing media from {slot.upper()} card...",
+            event_text("card_auto_import", slot=slot.upper()),
+        )
         send_notification(
             {
                 "type": "media",
@@ -343,6 +351,7 @@ def eject_media_slot(slot: str = "sd"):
         "info",
         f"{slot_label} Ejected",
         f"{slot_label} was safely unmounted and ejected. You can now physically remove it.",
+        event_text("card_ejected", slot=slot_label),
     )
     return {"status": "ok", "message": f"{slot_label} safely ejected"}
 
@@ -402,6 +411,17 @@ def read_media_slots():
     except Exception as e:
         logger.debug(f"Silenced exception: {e}")
     return slots
+
+
+def _note_copy_done(done_cnt: int, verify_checksum: bool) -> None:
+    """The finished copy in the activity log."""
+    verified_note = " (SHA-256 verified)" if verify_checksum else ""
+    add_event(
+        "success",
+        "Copy Completed",
+        f"Successfully copied {done_cnt} files{verified_note}.",
+        event_text("copy_verified" if verify_checksum else "copy_done", n=done_cnt),
+    )
 
 
 def _get_exif_date(filepath):
@@ -682,7 +702,10 @@ async def _do_copy(cfg):
                 Z_STATE.copy_status = "awaiting_confirmation"
                 Z_STATE.copy.update(file=f"{len(collisions)} files already exist in destination.")
                 add_event(
-                    "warning", "Copy Collision", f"{len(collisions)} files already exist. Waiting for confirmation."
+                    "warning",
+                    "Copy Collision",
+                    f"{len(collisions)} files already exist. Waiting for confirmation.",
+                    event_text("copy_collision", n=len(collisions)),
                 )
                 Z_STATE.ui_wake.set()
 
@@ -723,13 +746,12 @@ async def _do_copy(cfg):
             Z_STATE.copy_status = "aborted"
             Z_STATE.copy.update(file="Aborted.")
             err_msg = "User aborted the copy operation."
-            add_event("warning", "Copy Aborted", err_msg)
+            add_event("warning", "Copy Aborted", err_msg, event_text("copy_aborted"))
             raise Exception("Aborted by user.")
         else:
             Z_STATE.copy_status = "success"
             done_cnt = Z_STATE.copy.snapshot().get("files_done", 0)
-            verified_note = " (SHA-256 verified)" if verify_checksum else ""
-            add_event("success", "Copy Completed", f"Successfully copied {done_cnt} files{verified_note}.")
+            _note_copy_done(done_cnt, verify_checksum)
             send_notification(
                 title="ZettNAS: Media Ingest Complete",
                 message=f"Successfully copied {done_cnt} files to array storage.",
@@ -744,7 +766,7 @@ async def _do_copy(cfg):
         logger.info(f"[ZettNAS] Copy failed: {e}")
         Z_STATE.copy_status = "error"
         Z_STATE.copy.update(file=f"Error: {e}")
-        add_event("error", "Copy Failed", str(e))
+        add_event("error", "Copy Failed", str(e), event_text("copy_failed", error=str(e)))
         send_notification(
             title="ZettNAS Alert: Media Ingest Failed",
             message=f"Media copy operation failed: {e}",

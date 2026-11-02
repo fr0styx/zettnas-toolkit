@@ -24,7 +24,7 @@ from backend.db import log_ups_event
 from backend.hardware.ups import load_ups_config, read_ups_status
 from backend.services.nut_server import forced_shutdown as nut_forced_shutdown
 from backend.settings import test_mode
-from backend.state import Z_STATE, add_event
+from backend.state import Z_STATE, add_event, event_text
 
 _outage_start_ts: float | None = None
 _outage_start_charge: float | None = None
@@ -63,6 +63,7 @@ def trigger_outage_simulation(duration_sec: int = 15) -> dict[str, Any]:
         "warning",
         "Power Outage Simulation",
         f"Simulating power outage drill for {duration_sec}s. No hardware will be shut down.",
+        event_text("ups_drill", secs=duration_sec),
     )
 
     return {
@@ -182,7 +183,10 @@ def restart_stopped_apps() -> list[str]:
     except OSError:
         logger.debug("[UPS] stopped-apps list already gone", exc_info=True)
     if started:
-        add_event("info", "Apps started again", "After the power event: " + ", ".join(started))
+        apps = ", ".join(started)
+        add_event(
+            "info", "Apps started again", "After the power event: " + apps, event_text("ups_apps_back", apps=apps)
+        )
     return started
 
 
@@ -350,6 +354,7 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         "critical",
         "UPS Emergency Safe Shutdown",
         f"Failsafe threshold met: {reason}. Quiescing storage and shutting down system.",
+        event_text("ups_shutdown", reason=reason),
     )
 
     log_ups_event(
@@ -393,7 +398,7 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
             f"{host}'s own UPS settings shut the server down."
         )
         logger.critical(f"[UPS FAILSAFE] {msg}")
-        add_event("critical", "UPS: handed to the host", msg)
+        add_event("critical", "UPS: handed to the host", msg, event_text("ups_handed", host=host))
         log_ups_event(
             event_type="FAILSAFE_SHUTDOWN",
             status="HANDED_TO_HOST",
@@ -491,6 +496,7 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
                         "UPS Simulation Drill Completed",
                         f"Failsafe shutdown policy tripped: {trip_reason}. Host shutdown was NOT executed because "
                         f"drill simulation mode is active. When it is real: {path['detail']}",
+                        event_text("ups_drill_done", reason=trip_reason, detail=path["detail"]),
                     )
                 else:
                     execute_atomic_failsafe_shutdown(charge, runtime, trip_reason)
@@ -516,6 +522,7 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
                     "info",
                     "Utility Power Restored",
                     f"Mains power restored after {duration}s. Battery charge: {charge}%.",
+                    event_text("ups_power_back", secs=duration, charge=charge),
                 )
             _outage_start_ts = None
             _outage_start_charge = None
@@ -533,5 +540,7 @@ def resume_copy_after_outage() -> bool:
     _copy_paused_by_failsafe = False
     Z_STATE.copy_paused = False
     Z_STATE.ui_wake.set()
-    add_event("info", "Copy Job Resumed", "Mains power is back; the paused copy carries on.")
+    add_event(
+        "info", "Copy Job Resumed", "Mains power is back; the paused copy carries on.", event_text("ups_copy_resumed")
+    )
     return True

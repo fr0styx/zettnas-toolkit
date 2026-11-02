@@ -523,7 +523,7 @@ def report_last_update_result(data_dir: str) -> dict[str, Any] | None:
     if not data or data.get("reported"):
         return None
     from backend.fsutil import atomic_write_json
-    from backend.state import add_event
+    from backend.state import add_event, event_text
 
     target = str(data.get("to_image") or "the new version")
     reason = str(data.get("reason") or "")
@@ -540,7 +540,14 @@ def report_last_update_result(data_dir: str) -> dict[str, Any] | None:
         except Exception as e:
             logger.warning(f"[SelfUpdater] Could not send the update notification: {e}")
     else:
-        add_event("info", "Update complete" if data["result"] == "updated" else "Reverted", f"Now running {target}.")
+        done = data["result"] == "updated"
+        name = "update_done" if done else "update_reverted"
+        add_event(
+            "info",
+            "Update complete" if done else "Reverted",
+            f"Now running {target}.",
+            event_text(name, version=target),
+        )
     data["reported"] = True
     atomic_write_json(os.path.join(data_dir, RESULT_FILE), data)
     return data
