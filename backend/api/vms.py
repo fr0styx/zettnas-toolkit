@@ -385,6 +385,22 @@ def get_discovered_isos():
     return vm_host.scan_isos()
 
 
+def _image_format(path: str) -> str:
+    """iso9660 or udf by the volume descriptor at sector 16, else generic_image."""
+    try:
+        with open(path, "rb") as f:
+            f.seek(32768)
+            sector = f.read(1024)
+    except Exception:
+        ignored("backend.api.vms.upload_iso_file")
+        return "generic_image"
+    if b"CD001" in sector:
+        return "iso9660"
+    if any(sig in sector for sig in [b"BEA01", b"NSR02", b"NSR03"]):
+        return "udf"
+    return "generic_image"
+
+
 def _write_and_hash_chunk(f, data: bytes, hasher) -> None:
     f.write(data)
     hasher.update(data)
@@ -413,7 +429,8 @@ async def upload_iso_file(
     CHUNK_FLUSH_SIZE = 4 * 1024 * 1024  # 4 MB
 
     try:
-        with open(tmp_path, "wb") as f:
+        out_file = await asyncio.to_thread(open, tmp_path, "wb")
+        with out_file as f:
             async for chunk in request.stream():
                 if chunk:
                     buffer.extend(chunk)
@@ -438,16 +455,7 @@ async def upload_iso_file(
     # Standard ISO 9660 Primary Volume Descriptor is at sector 16 (offset 32768) with identifier 'CD001'
     format_verified = "generic_image"
     if total_written >= 32774:
-        try:
-            with open(tmp_path, "rb") as f:
-                f.seek(32768)
-                sector = f.read(1024)
-                if b"CD001" in sector:
-                    format_verified = "iso9660"
-                elif any(sig in sector for sig in [b"BEA01", b"NSR02", b"NSR03"]):
-                    format_verified = "udf"
-        except Exception:
-            ignored("backend.api.vms.upload_iso_file")
+        format_verified = await asyncio.to_thread(_image_format, tmp_path)
 
     try:
         os.replace(tmp_path, out_path)

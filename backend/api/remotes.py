@@ -373,7 +373,8 @@ async def start_oauth_session(req: OAuthStartRequest):
         cmd.extend([req.client_id, req.client_secret])
 
     try:
-        proc = subprocess.Popen(
+        proc = await asyncio.to_thread(
+            subprocess.Popen,
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

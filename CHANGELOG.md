@@ -494,6 +494,10 @@
 
 #### Performance
 
+- **Ruff's async checks are on** (NPERF-3): a blocking open, sleep or subprocess call in an async
+  route now fails the lint. The three there were moved off the event loop: the ISO upload's file
+  open and format check, and starting rclone's sign-in helper.
+
 - **Phones and the sign-in screen load less**: Mission Control, the File Explorer, the settings
   drawer and the users code are fetched ahead of use only for someone signed in at the desktop.
   The sign-in screen, the phone layout, the front screen and a VM console page no longer download

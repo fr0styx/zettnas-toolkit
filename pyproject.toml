@@ -46,9 +46,12 @@ line-length = 120
 
 [tool.ruff.lint]
 # OPS-24: bugbear, pyupgrade, simplify and import order on top of the pyflakes/pycodestyle base
-select = ["E", "W", "F", "B", "UP", "SIM", "I"]
+select = ["E", "W", "F", "B", "UP", "SIM", "I", "ASYNC"]
 ignore = [
     "E501", "E402", "F401", "F841", "F811",
+    # NPERF-3: blocking path calls in async functions are held per file by
+    # tests/test_nperf3_event_loop.py (a ratchet); a timeout parameter is a naming rule only
+    "ASYNC240", "ASYNC109",
     # style-only simplify rules this codebase doesn't follow
     "SIM102", "SIM105", "SIM108", "SIM117",
     # unsafe here: sqlite3.Row has keys() but no get(), and "in row" checks values, not columns
