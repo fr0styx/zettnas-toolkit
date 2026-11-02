@@ -16,7 +16,7 @@ def test_pins_file_names_every_model_the_nightly_pulls():
     with open(wf, encoding="utf-8") as f:
         text = f.read()
     assert "api/pull" not in text and "tests.rag_eval.pull_models" in text
-    for m in ("embeddinggemma", "qwen3:4b"):
+    for m in ("embeddinggemma", "qwen3:4b-q4_K_M"):
         assert pm.full_name(m) in pins and pins[pm.full_name(m)].startswith("sha256:")
 
 

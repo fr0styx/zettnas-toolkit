@@ -571,6 +571,11 @@
 
 #### Fixes
 
+- **The nightly AI answers check uses the model ZettNAS ships** (NAI-10): Ollama's `qwen3:4b` tag
+  now means a newer model that always reasons at length before answering, which made the
+  nightly answers job run past its 5.5-hour limit. It now pulls `qwen3:4b-q4_K_M`, the original
+  Qwen3-4B with thinking off, as ZettNAS runs it, pinned by digest.
+
 - **Rolling back a share takes seconds, and older shares can get snapshots** (NREL-7, NREL-5):
   on plain Linux, a share that is a btrfs subvolume is rolled back by putting a clone of the
   snapshot in its place, with no copying and no free space needed (the Recycle Bin and encrypted
