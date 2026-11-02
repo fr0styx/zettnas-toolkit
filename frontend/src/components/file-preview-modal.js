@@ -166,13 +166,13 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
         <div class="quicklook-title">
           <span class="quicklook-title-icon">${ICONS.eye}</span>
           <span class="quicklook-title-text" id="quicklook-title-text">${escapeHtml(_currentName)}</span>
-          <span class="quicklook-meta" id="quicklook-meta">Loading preview...</span>
+          <span class="quicklook-meta" id="quicklook-meta">${t('ql.loading', 'Loading preview…')}</span>
           <span class="quicklook-counter-pill" id="quicklook-counter-pill" style="display:none;"></span>
         </div>
         <div class="quicklook-toolbar" id="quicklook-toolbar">
           <div class="quicklook-btn-group" id="quicklook-image-tools" style="display:none;">
             <button type="button" class="quicklook-btn" id="ql-zoom-out" title="${t('preview.zoom_out', 'Zoom Out (-)')}" aria-label="${t('preview.zoom_out', 'Zoom Out (-)')}">${ICONS.zoomOut}</button>
-            <span class="quicklook-zoom-pill" id="quicklook-zoom-pill" title="${t('preview.fit', 'Fit to screen')}">Fit</span>
+            <span class="quicklook-zoom-pill" id="quicklook-zoom-pill" title="${t('preview.fit', 'Fit to screen')}">${t('preview.fit', 'Fit')}</span>
             <button type="button" class="quicklook-btn" id="ql-zoom-in" title="${t('preview.zoom_in', 'Zoom In (+)')}" aria-label="${t('preview.zoom_in', 'Zoom In (+)')}">${ICONS.zoomIn}</button>
             <button type="button" class="quicklook-btn" id="ql-actual-size" title="${t('preview.actual_size', '100%')}" aria-label="1:1 (${t('preview.actual_size', '100%')})">1:1</button>
             <button type="button" class="quicklook-btn" id="ql-rotate-ccw" title="${t('preview.rotate_ccw', 'Rotate 90° Left')}" aria-label="${t('preview.rotate_ccw', 'Rotate 90° Left')}">${ICONS.rotateLeft}</button>
@@ -193,7 +193,7 @@ export async function openFilePreviewModal(path, name, aiMeta = null, fileList =
       <div class="quicklook-body" id="quicklook-body">
         <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
           <div class="spinner" style="width:28px; height:28px; border:2px solid var(--zn-line-20); border-top-color:var(--accent-cyan, #0ea5e9); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-          <span style="font-size:var(--zn-fs-xs);">Loading preview...</span>
+          <span style="font-size:var(--zn-fs-xs);">${t('ql.loading', 'Loading preview…')}</span>
         </div>
       </div>
       <div class="quicklook-inspector" id="quicklook-inspector">
@@ -486,8 +486,8 @@ async function loadCurrentItem() {
     bodyEl.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; padding:14px;">
         <div style="width:100%; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.28); font-size:var(--zn-fs-xs); color:var(--lt-t-6ee7b7ff, #6ee7b7);">
-          <span>💤 <strong>Standby Guard Active:</strong> Showing cached NVMe index preview without spinning up physical array disks.</span>
-          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4);">⚡ Load Full File from Disk</button>
+          <span>💤 <strong>${t('ql.asleep_title', 'The disk is asleep:')}</strong> ${t('ql.asleep_msg', 'this preview comes from the fast drive, so the disks stay asleep.')}</span>
+          <button type="button" class="btn-pill-toggle" id="btn-quicklook-wake-load" style="color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4);">⚡ ${t('ql.wake_load', 'Wake the disk and load the whole file')}</button>
         </div>
         ${thumbHtml}
         ${excerptHtml}
@@ -523,7 +523,7 @@ async function loadCurrentItem() {
 
     if (res.type === 'image') {
       const dimStr = res.dimensions ? ` • ${res.dimensions}` : '';
-      metaEl.textContent = `Image${szStr}${dimStr}`;
+      metaEl.textContent = `${t('ql.image', 'Image')}${szStr}${dimStr}`;
 
       if (imgTools) imgTools.style.display = 'flex';
       if (infoBtn) infoBtn.style.display = 'inline-flex';
@@ -570,7 +570,7 @@ async function loadCurrentItem() {
           `;
         }
       } else if (res.type === 'pdf') {
-        metaEl.textContent = `PDF Document${szStr}`;
+        metaEl.textContent = `${t('ql.pdf', 'PDF document')}${szStr}`;
         const pdfUrl = `/api/fs/download?path=${encodeURIComponent(_currentPath)}`;
         bodyEl.innerHTML = `<iframe src="${pdfUrl}" style="width:100%; height:100%; border:none; border-radius:6px;"></iframe>`;
       } else if (res.type === 'text') {
@@ -582,16 +582,16 @@ async function loadCurrentItem() {
           bodyEl.innerHTML = `<pre class="quicklook-code"><code>${escapeHtml(res.content || '')}</code></pre>`;
         }
       } else if (res.type === 'hex') {
-        metaEl.textContent = `Binary Hex Preview (1KB)${szStr}`;
+        metaEl.textContent = `${t('ql.hex', 'Binary file, first 1 KB')}${szStr}`;
         const dumpText = Array.isArray(res.hex_dump) ? res.hex_dump.join('\n') : '';
         bodyEl.innerHTML = `<pre class="quicklook-hex"><code>${escapeHtml(dumpText)}</code></pre>`;
       } else {
-        metaEl.textContent = `Binary File${szStr}`;
+        metaEl.textContent = `${t('ql.binary', 'Binary file')}${szStr}`;
         addGalleryNav(bodyEl);
         bodyEl.innerHTML = `
           <div style="display:flex; flex-direction:column; align-items:center; gap:12px; color:var(--muted);">
             <div style="font-size:36px;">📄</div>
-            <span>Preview not available for this file type.</span>
+            <span>${t('ql.none', 'There is no preview for this kind of file.')}</span>
           </div>
         `;
       }
@@ -677,7 +677,7 @@ function renderImagePreview(bodyEl, imgUrl, meta) {
           const metaEl = _activePreviewModal?.querySelector('#quicklook-meta');
           if (metaEl) {
             const szStr = _currentMeta.size !== undefined ? ` • ${formatSize(_currentMeta.size)}` : '';
-            metaEl.textContent = `Image${szStr} • ${w} × ${h}`;
+            metaEl.textContent = `${t('ql.image', 'Image')}${szStr} • ${w} × ${h}`;
           }
           updateInspectorContent(_currentMeta);
         }

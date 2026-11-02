@@ -6,6 +6,7 @@
  */
 
 import { state } from '../state.js';
+import { t } from '../i18n.js';
 
 let _activePopover = null;
 let _activeInput = null;
@@ -146,7 +147,7 @@ function getOrCreatePopover() {
     popover.className = 'glass-time-popover';
     popover.style.display = 'none';
     popover.setAttribute('role', 'dialog');
-    popover.setAttribute('aria-label', 'Time Selector');
+    popover.setAttribute('aria-label', t('tp.label', 'Choose a time'));
     document.body.appendChild(popover);
   }
   return popover;
@@ -227,7 +228,7 @@ export function openGlassTimePicker(inputEl, triggerEl) {
       <div class="gtp-columns-grid">
         <!-- Column 1: Hours -->
         <div class="gtp-column">
-          <div class="gtp-col-label">Hour</div>
+          <div class="gtp-col-label">${t('tp.hour', 'Hour')}</div>
           <div class="gtp-scroll-list" id="gtp-hours-list">
             ${Array.from({ length: 12 }, (_, i) => i + 1).map((h) => {
               const activeCls = h === selectedH12 ? 'active' : '';
@@ -238,7 +239,7 @@ export function openGlassTimePicker(inputEl, triggerEl) {
 
         <!-- Column 2: Minutes -->
         <div class="gtp-column">
-          <div class="gtp-col-label">Minute</div>
+          <div class="gtp-col-label">${t('tp.minute', 'Minute')}</div>
           <div class="gtp-scroll-list" id="gtp-minutes-list">
             ${minutesList.map((m) => {
               const activeCls = m === selectedMin ? 'active' : '';
@@ -249,7 +250,7 @@ export function openGlassTimePicker(inputEl, triggerEl) {
 
         <!-- Column 3: AM / PM -->
         <div class="gtp-column">
-          <div class="gtp-col-label">Period</div>
+          <div class="gtp-col-label">${t('tp.period', 'AM / PM')}</div>
           <div class="gtp-period-col">
             <button type="button" class="gtp-period-btn ${selectedPeriod === 'AM' ? 'active' : ''}" data-period="AM">AM</button>
             <button type="button" class="gtp-period-btn ${selectedPeriod === 'PM' ? 'active' : ''}" data-period="PM">PM</button>
@@ -258,8 +259,8 @@ export function openGlassTimePicker(inputEl, triggerEl) {
       </div>
 
       <div class="gtp-footer">
-        <button type="button" class="gtp-now-btn" id="gtp-btn-now">Current Time</button>
-        <button type="button" class="gtp-done-btn" id="gtp-btn-done">Done</button>
+        <button type="button" class="gtp-now-btn" id="gtp-btn-now">${t('tp.now', 'Now')}</button>
+        <button type="button" class="gtp-done-btn" id="gtp-btn-done">${t('btn.done', 'Done')}</button>
       </div>
     `;
 
@@ -380,7 +381,7 @@ export function attachGlassTimePicker(inputEl) {
   trigger.className = 'glass-time-trigger';
   trigger.setAttribute('aria-haspopup', 'dialog');
   trigger.setAttribute('aria-expanded', 'false');
-  trigger.setAttribute('aria-label', inputEl.getAttribute('aria-label') || 'Select time');
+  trigger.setAttribute('aria-label', inputEl.getAttribute('aria-label') || t('tp.label', 'Choose a time'));
 
   if (inputEl.id) {
     trigger.id = `${inputEl.id}-glass-trigger`;

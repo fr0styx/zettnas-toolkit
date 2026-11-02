@@ -115,7 +115,7 @@ export async function renameWallpaper(oldName) {
   if (!oldName) return;
   showPromptToast(
     'Rename Wallpaper',
-    `Enter a new name for <strong>${escapeHtml(oldName)}</strong>:`,
+    t('wp.rename_msg', 'Enter a new name for {name}:', { name: `<strong>${escapeHtml(oldName)}</strong>` }),
     oldName,
     async (newName) => {
       newName = (newName || '').trim();
@@ -142,7 +142,7 @@ export async function renameWallpaper(oldName) {
       }
     },
     null,
-    { okText: 'Rename', cancelText: 'Cancel' }
+    { okText: t('wp.rename', 'Rename'), cancelText: t('common.cancel', 'Cancel') }
   );
 }
 
@@ -150,7 +150,7 @@ export async function deleteWallpaper(filename) {
   if (!filename) return;
   showConfirmToast(
     'Delete Wallpaper',
-    `Are you sure you want to delete wallpaper <strong>${escapeHtml(filename)}</strong>? This action cannot be undone.`,
+    t('wp.delete_msg', 'Delete the wallpaper {name}? This can’t be undone.', { name: `<strong>${escapeHtml(filename)}</strong>` }),
     async () => {
       try {
         await api.delete(`/api/wallpapers/${encodeURIComponent(filename)}`);
@@ -166,7 +166,7 @@ export async function deleteWallpaper(filename) {
       }
     },
     null,
-    { okText: '🗑️ Delete', cancelText: 'Cancel' }
+    { okText: t('mgmt.wallpaper_delete', 'Delete'), cancelText: t('common.cancel', 'Cancel') }
   );
 }
 
@@ -175,7 +175,7 @@ export function renderWallpaperGallery(files, active, version) {
   const countBadge = document.getElementById('wallpaper-count-badge');
 
   if (countBadge) {
-    countBadge.textContent = `${files.length} Background${files.length === 1 ? '' : 's'}`;
+    countBadge.textContent = t('wp.count', '{n, plural, one {# background} other {# backgrounds}}', { n: files.length });
   }
 
   if (!galleryEl) return;
@@ -190,7 +190,7 @@ export function renderWallpaperGallery(files, active, version) {
   defaultCard.setAttribute('data-filename', '');
   defaultCard.setAttribute('role', 'button');
   defaultCard.setAttribute('tabindex', '0');
-  defaultCard.setAttribute('title', 'Click to use default theme gradient');
+  defaultCard.setAttribute('title', t('wp.default_title', 'Use the theme gradient'));
   defaultCard.innerHTML = `
     <div class="wallpaper-card-thumb-wrap default-gradient-thumb">
       <div class="wallpaper-gradient-preview"></div>
@@ -200,7 +200,7 @@ export function renderWallpaperGallery(files, active, version) {
       </div>
     </div>
     <div class="wallpaper-card-footer">
-      <span class="wallpaper-card-title">Theme Gradient</span>
+      <span class="wallpaper-card-title">${t('wp.theme_gradient', 'Theme gradient')}</span>
     </div>
   `;
   defaultCard.addEventListener('click', () => selectWallpaper(''));
@@ -220,7 +220,7 @@ export function renderWallpaperGallery(files, active, version) {
     card.setAttribute('data-filename', f);
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    card.setAttribute('title', `Click to set "${f}" as wallpaper`);
+    card.setAttribute('title', t('wp.set_title', 'Use {name} as the wallpaper', { name: f }));
 
     const thumbUrl = `/api/wallpapers/thumb/${encodeURIComponent(f)}${v}`;
     const fullUrl = `/api/wallpapers/download/${encodeURIComponent(f)}${v}`;
@@ -307,7 +307,7 @@ export function filterGalleryByCategory(cat = 'all') {
   });
   const countBadge = document.getElementById('wallpaper-count-badge');
   if (countBadge) {
-    countBadge.textContent = `${visibleCount} Background${visibleCount === 1 ? '' : 's'}`;
+    countBadge.textContent = t('wp.count', '{n, plural, one {# background} other {# backgrounds}}', { n: visibleCount });
   }
 }
 
@@ -322,7 +322,7 @@ export function loadWallpapers() {
 
       // Populate legacy/test select dropdown
       if (selectDropdown) {
-        selectDropdown.innerHTML = '<option value="">Default Gradient</option>';
+        selectDropdown.replaceChildren(new Option(t('wp.theme_gradient', 'Theme gradient'), ''));
         _currentFiles.forEach((f) => {
           const opt = document.createElement('option');
           opt.value = f;

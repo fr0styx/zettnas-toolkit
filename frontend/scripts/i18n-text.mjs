@@ -1,6 +1,8 @@
 // Text a person reads between tags, in markup and in JS templates (UX-21). The older checks see
 // attributes and textContent writes; this one sees `<b>Save</b>`, `>${n} files selected<` and
-// ALL-CAPS labels too. Used by i18n-lint.mjs, which keeps a per-file baseline that only goes down.
+// ALL-CAPS labels too.
+// Also (NUX-20) text in code: UI-named object properties ({ title: 'Save' }), ternaries and ||
+// fallbacks written to textContent and the like, and setAttribute('title' | 'aria-label' | …). Used by i18n-lint.mjs, which keeps a per-file baseline that only goes down.
 import * as acorn from 'acorn';
 import { parse as parseHtml } from 'parse5';
 
@@ -12,6 +14,8 @@ const SAME_EVERYWHERE = new Set([
   'Wi-Fi', 'Ethernet', 'Bluetooth', 'QEMU', 'OK', 'Spotlight', 'Restic', 'Borg', 'rclone', 'rsync',
 ]);
 const PH = '\u0000'; // where a ${...} was
+// units that read the same everywhere: "${n} MHz", "${a} • ${b} vCPU • ${c} MB" are not text
+const UNITS = new Set(['B', 'KB', 'MB', 'GB', 'TB', 'KiB', 'MiB', 'GiB', 'TiB', 'Hz', 'kHz', 'MHz', 'GHz', 'vCPU', 'vCPUs', 'RPM', 'rpm', 'ms', 'W', 'V', 'A', 'Mbps', 'Gbps', 'MB/s', 'GB/s', 'IOPS']);
 
 export function readable(raw) {
   const v = raw.replace(/&nbsp;|&#160;/g, ' ').replace(/&[a-z]+;|&#\d+;/g, ' ').replace(/\s+/g, ' ').trim();
@@ -21,6 +25,7 @@ export function readable(raw) {
   if (/^e\.g\.?\s*\S+$/.test(words)) return false;
   if (SAME_EVERYWHERE.has(words)) return false;
   const bare = words.split(' ').filter((w) => /[A-Za-z]/.test(w));
+  if (bare.length && bare.every((w) => UNITS.has(w.replace(/[^\w/]/g, '')))) return false;
   if (bare.length === 1) {
     const w = bare[0].replace(/[^\w-]/g, '');
     if (/^[a-z0-9_.:-]+$/.test(w)) return false; // an id, a unit, a file name
@@ -81,6 +86,45 @@ function markupText(markup) {
   return out;
 }
 
+// Object properties and attributes whose value a person reads (NUX-20)
+const UI_PROPS = new Set([
+  'textContent', 'innerText', 'title', 'placeholder', 'ariaLabel', 'aria-label', 'label', 'text', 'message',
+  'tooltip', 'hint', 'description', 'heading', 'subtitle', 'confirmText', 'cancelText', 'emptyText',
+]);
+const UI_SET_ATTRS = new Set(['title', 'aria-label', 'placeholder', 'alt']);
+const ASSIGNED = new Set(['textContent', 'innerText', 'title', 'placeholder']);
+
+// The strings an expression can end up as, when they are written in the code (not t(), not a variable)
+function uiStrings(node) {
+  if (!node) return [];
+  if (node.type === 'Literal' && typeof node.value === 'string') {
+    return /<[a-z/]/i.test(node.value) || !readable(node.value) ? [] : [node.value.trim()];
+  }
+  if (node.type === 'TemplateLiteral') {
+    const text = node.quasis.map((q) => q.value.cooked ?? q.value.raw).join(PH);
+    return /<[a-z/]/i.test(text) || !readable(text) ? [] : [text.replaceAll(PH, '${…}').trim()];
+  }
+  if (node.type === 'ConditionalExpression') return [...uiStrings(node.consequent), ...uiStrings(node.alternate)];
+  if (node.type === 'LogicalExpression') return uiStrings(node.right);
+  return [];
+}
+
+const keyName = (k) => (k && (k.type === 'Identifier' ? k.name : typeof k.value === 'string' ? k.value : '')) || '';
+
+// the text a person reads that sits in code rather than in markup
+function codeText(node) {
+  if (node.type === 'Property' && !node.computed && UI_PROPS.has(keyName(node.key))) return uiStrings(node.value);
+  if (node.type === 'AssignmentExpression' && node.left.type === 'MemberExpression' && ASSIGNED.has(keyName(node.left.property))
+    && (node.right.type === 'ConditionalExpression' || node.right.type === 'LogicalExpression')) {
+    return uiStrings(node.right); // a plain string here is counted by the textContent check
+  }
+  if (node.type === 'CallExpression' && node.callee.type === 'MemberExpression' && keyName(node.callee.property) === 'setAttribute'
+    && node.arguments.length === 2 && UI_SET_ATTRS.has(node.arguments[0].value)) {
+    return uiStrings(node.arguments[1]);
+  }
+  return [];
+}
+
 function jsTextNodes(src) {
   const out = [];
   let ast;
@@ -95,6 +139,8 @@ function jsTextNodes(src) {
       out.push(...markupText(node.quasis.map((q) => q.value.cooked ?? q.value.raw).join(PH)));
     } else if (node.type === 'Literal' && typeof node.value === 'string' && /<[a-z/]/i.test(node.value)) {
       out.push(...markupText(node.value));
+    } else {
+      out.push(...codeText(node));
     }
     for (const key of Object.keys(node)) {
       if (key === 'loc' || key === 'start' || key === 'end') continue;

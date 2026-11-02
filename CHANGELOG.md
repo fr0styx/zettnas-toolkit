@@ -104,6 +104,15 @@
 
 #### Usability
 
+- **The translation check sees English left in code** (NUX-20): text in UI-named properties
+  (`{ title: 'Open Folder' }`), in ternaries and `||` fallbacks written to visible text, and in
+  `setAttribute('title' | 'aria-label' | …)` now counts, so 2,341 untranslated strings show up
+  where 2,027 did; each file's count can only go down. Unit-only strings such as `${n} MHz` don't count.
+
+- **More of the everyday screens in your language** (NUX-20): the file manager's phone menus and
+  share-link dialog, the preview window, the time picker, wallpapers, share access and the
+  confirm dialogs; some wording made plainer on the way ("Make a share link", "The link works for").
+
 - **Family calendar on phones in one step** (NFEAT-7): Users → the family calendar card has a
   button that downloads a profile an iPhone or iPad installs (calendar and contacts together; the
   phone asks for the person's ZettNAS name and password), and a QR code that opens DAVx⁵ on

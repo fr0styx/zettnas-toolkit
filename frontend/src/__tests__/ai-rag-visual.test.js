@@ -213,7 +213,7 @@ describe('ZettAI — Multi-Modal Local RAG & Visual Search Frontend Suite', () =
 
     expect(getSpy).not.toHaveBeenCalled();
     const bodyEl = document.getElementById('quicklook-body');
-    expect(bodyEl.innerHTML).toContain('Standby Guard Active');
+    expect(bodyEl.innerHTML).toContain('The disk is asleep:');
     expect(bodyEl.innerHTML).toContain('400g spaghetti');
     closeFilePreviewModal();
   });

@@ -730,7 +730,7 @@ export class FileManagerWindow {
       if (isPhone) {
         showBottomSheet({
           title: t('fm.quick_locations', 'Quick Locations'),
-          subtitle: `Current: ${this.currentPath}`,
+          subtitle: t('fm.sheet_in', 'In {path}', { path: this.currentPath }),
           items: places.map((pl) => ({ icon: pl.icon, label: pl.action ? pl.name : `${pl.name} (${pl.path})`, onClick: () => (pl.action ? pl.action() : this.loadPath(pl.path)) })),
         });
         return;
@@ -754,12 +754,12 @@ export class FileManagerWindow {
       e.stopPropagation();
       const fabItems = [
         { icon: '📁', label: t('fm.new_folder', 'New Folder'), onClick: () => this.newFolderBtn?.click() },
-        { icon: '⬆️', label: 'Upload File(s)', onClick: () => this.uploadInput?.click() },
+        { icon: '⬆️', label: t('fm.sheet_upload', 'Upload files'), onClick: () => this.uploadInput?.click() },
       ];
       if (_clipboard && _clipboard.items && _clipboard.items.length > 0) {
         fabItems.push({
           icon: '📋',
-          label: `Paste Here (${_clipboard.items.length} item${_clipboard.items.length > 1 ? 's' : ''})`,
+          label: t('fm.sheet_paste', 'Paste here ({n, plural, one {# item} other {# items}})', { n: _clipboard.items.length }),
           onClick: async () => {
             await executeTransferWithConflictCheck(_clipboard.items, this.currentPath, _clipboard.action || 'copy');
             if (_clipboard.action === 'move') _clipboard = { items: [], action: 'copy', sourceInstanceId: null };
@@ -773,7 +773,7 @@ export class FileManagerWindow {
         { icon: '🔄', label: t('fm.refresh', 'Refresh'), onClick: () => this.loadPath(this.currentPath) }
       );
       showBottomSheet({
-        title: 'Folder Actions',
+        title: t('fm.sheet_folder', 'This folder'),
         subtitle: this.currentPath,
         items: fabItems,
       });
@@ -2239,7 +2239,7 @@ export class FileManagerWindow {
       this.list.style.transform = `translateY(${startRow * rowPitch}px)`;
       this.list.innerHTML = '';
       this.list.setAttribute('role', 'grid');
-      this.list.setAttribute('aria-label', 'File Explorer Grid');
+      this.list.setAttribute('aria-label', t('fm.grid_label', 'Files in this folder'));
       const token = (auth && typeof auth.getToken === 'function' ? auth.getToken() : null) || '';
 
       const folderSvg = '<svg viewBox="0 0 24 24" width="44" height="44" stroke="currentColor" stroke-width="1.5" fill="#eab308"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
@@ -2479,33 +2479,33 @@ export class FileManagerWindow {
       if (isDir) {
         sheetItems.push({
           icon: '📂',
-          label: 'Open Folder',
+          label: t('fm.sheet_open', 'Open folder'),
           onClick: () => this.loadPath(path),
         });
       } else {
         if (isImage) {
           sheetItems.push({
             icon: '👁️',
-            label: 'Preview Image',
+            label: t('fm.sheet_preview_image', 'Preview image'),
             onClick: () => this.handleAction('preview', path, oldName),
           });
         } else {
           sheetItems.push({
             icon: '👁️',
-            label: 'Quick Look / Preview',
+            label: t('fm.sheet_preview', 'Quick look'),
             onClick: () => this.handleAction('preview', path, oldName),
           });
         }
         sheetItems.push({
           icon: '⬇️',
-          label: 'Download File',
+          label: t('preview.download', 'Download'),
           onClick: () => this.handleAction('download', path, oldName),
         });
       }
       sheetItems.push(
         {
           icon: '🔗',
-          label: 'Create Public Share Link',
+          label: t('fm.sheet_share', 'Make a share link'),
           onClick: () => this.handleAction('share', path, oldName),
         },
         {
@@ -2515,7 +2515,7 @@ export class FileManagerWindow {
         },
         {
           icon: '📋',
-          label: 'Copy Item',
+          label: t('fm.ctx_copy', 'Copy'),
           onClick: () => {
             _clipboard = { items: [path], action: 'copy', sourceInstanceId: this.id };
             showToast(t('toast.copied_to_clipboard_2', 'Copied \'{oldName}\' to clipboard', { oldName: oldName }), 'info');
@@ -2523,7 +2523,7 @@ export class FileManagerWindow {
         },
         {
           icon: '✂️',
-          label: 'Cut / Move Item',
+          label: t('fm.sheet_move', 'Move'),
           onClick: () => {
             _clipboard = { items: [path], action: 'move', sourceInstanceId: this.id };
             this.renderViewport();
@@ -2532,7 +2532,7 @@ export class FileManagerWindow {
         },
         {
           icon: '🗑️',
-          label: 'Delete Item',
+          label: t('fm.kbd_delete', 'Delete'),
           destructive: true,
           onClick: () => this.handleAction('delete', path, oldName),
         }
@@ -4057,55 +4057,55 @@ export function openShareLinkModal(path, fileName, anchorEl = null) {
   modal.innerHTML = `
     <div class="smart-modal-window fm-share-popover" role="dialog" aria-labelledby="fm-share-title" data-dock-icon="#i-globe">
       <div class="smart-modal-header">
-        <span class="smart-modal-title" id="fm-share-title"><span aria-hidden="true">🔗</span> Public Share Link</span>
+        <span class="smart-modal-title" id="fm-share-title"><span aria-hidden="true">🔗</span> ${t('fm.share_title', 'Share link')}</span>
         <div class="os-window-controls">
           <button type="button" id="fm-share-close" class="win-btn close-btn" title="${t('diagnostics.close_btn', 'Close')}" aria-label="${t('diagnostics.close_btn', 'Close')}"></button>
         </div>
       </div>
       <div class="smart-modal-body fm-share-body">
       <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 16px;">
-        Generate an instant, secure download link for <strong style="color: var(--zn-text-strong);">${safeName}</strong> that can be shared with anyone.
+        ${t('fm.share_intro', 'A download link for {name} that anyone who has it can use.', { name: `<strong style="color: var(--zn-text-strong);">${safeName}</strong>` })}
       </div>
 
       <div id="fm-share-create-section">
         <div class="form-group" style="margin-bottom: 14px;">
-          <label for="fm-share-expires" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted); margin-bottom: 6px;">Link Expiration</label>
+          <label for="fm-share-expires" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted); margin-bottom: 6px;">${t('fm.share_expires', 'The link works for')}</label>
           <select id="fm-share-expires" style="width: 100%; padding: 8px 12px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
-            <option value="1">1 Hour</option>
-            <option value="24" selected>24 Hours (1 Day)</option>
-            <option value="168">7 Days</option>
-            <option value="720">30 Days</option>
-            <option value="0">Never Expires</option>
+            <option value="1">${t('fm.share_1h', '1 hour')}</option>
+            <option value="24" selected>${t('fm.share_1d', '1 day')}</option>
+            <option value="168">${t('fm.share_7d', '7 days')}</option>
+            <option value="720">${t('fm.share_30d', '30 days')}</option>
+            <option value="0">${t('fm.share_never', 'Always')}</option>
           </select>
         </div>
 
         <div class="form-group" style="margin-bottom: 14px;">
-          <label for="fm-share-password" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted); margin-bottom: 6px;">Password Protection (Optional)</label>
+          <label for="fm-share-password" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted); margin-bottom: 6px;">${t('fm.share_password', 'Password (optional)')}</label>
           <input type="password" id="fm-share-password" placeholder="${t('ui.leave_empty_for_public_access', 'Leave empty for public access')}" style="width: 100%; padding: 8px 12px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
         </div>
 
         <div class="form-group" style="margin-bottom: 18px;">
-          <label for="fm-share-max-dl" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted); margin-bottom: 6px;">Max Downloads (Optional)</label>
+          <label for="fm-share-max-dl" style="display: block; font-size: var(--zn-fs-xs); font-weight: 600; color: var(--zn-text-muted); margin-bottom: 6px;">${t('fm.share_max', 'Most downloads (optional)')}</label>
           <input type="number" id="fm-share-max-dl" min="1" placeholder="${t('ui.unlimited', 'Unlimited')}" style="width: 100%; padding: 8px 12px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px;">
-          <button id="fm-share-cancel" class="btn-pill-toggle">Cancel</button>
-          <button id="fm-share-submit" class="btn-pill-toggle active is-primary">✨ Generate Share Link</button>
+          <button id="fm-share-cancel" class="btn-pill-toggle">${t('common.cancel', 'Cancel')}</button>
+          <button id="fm-share-submit" class="btn-pill-toggle active is-primary">${t('ui.generate_share_link', '✨ Generate Share Link')}</button>
         </div>
       </div>
 
       <div id="fm-share-result-section" style="display: none;">
         <div style="padding: 12px; border-radius: 8px; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(14, 165, 233, 0.25); margin-bottom: 16px;">
-          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent); font-weight: 600; margin-bottom: 6px;">Link Generated Successfully!</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent); font-weight: 600; margin-bottom: 6px;">${t('fm.share_made', 'Here is the link:')}</div>
           <div style="display: flex; gap: 8px;">
             <input type="text" id="fm-share-url-output" readonly style="flex: 1; padding: 8px 10px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-15); border-radius: 6px; color: var(--zn-text-strong); font-size: var(--zn-fs-xs); font-family: monospace;" />
-            <button id="fm-share-copy-btn" class="btn-pill-toggle active is-primary">📋 Copy</button>
+            <button id="fm-share-copy-btn" class="btn-pill-toggle active is-primary">📋 ${t('fm.ctx_copy', 'Copy')}</button>
           </div>
         </div>
         <div id="fm-share-meta-info" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 16px;"></div>
         <div style="display: flex; justify-content: flex-end;">
-          <button id="fm-share-done" class="btn-pill-toggle">Done</button>
+          <button id="fm-share-done" class="btn-pill-toggle">${t('btn.done', 'Done')}</button>
         </div>
       </div>
       </div>

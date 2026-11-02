@@ -21,6 +21,19 @@ describe('i18n text nodes (UX-21)', () => {
     expect(textNodes(js, 'a.js')).toEqual(['Loading users...', '${…} files selected', 'THIS DEVICE']);
   });
 
+  it('finds text in code: UI properties, ternaries, fallbacks and setAttribute (NUX-20)', () => {
+    const js = [
+      "const b = { title: 'Open Folder', label: t('k', 'Translated'), id: 'save-btn', text: busy ? 'Saving…' : 'Save' };",
+      "el.textContent = ok ? 'Turned on' : 'Turned off';",
+      "el.title = msg || 'No details';",
+      "el.textContent = 'Plain';", // counted by the textContent check, not twice
+      "btn.setAttribute('aria-label', 'Close window'); btn.setAttribute('data-x', 'Not text');",
+      "const u = { label: `${n} MHz`, hint: `${a} • ${b} vCPU • ${c} MB` };",
+      "const h = { message: '<b>Bold</b>' };", // markup: the markup check counts it
+    ].join('\n');
+    expect(textNodes(js, 'a.js')).toEqual(['Open Folder', 'Saving…', 'Save', 'Turned on', 'Turned off', 'No details', 'Close window', 'Bold']);
+  });
+
   it('does not count names, acronyms, units, ids and paths', () => {
     for (const same of ['ZettNAS', 'SMART', 'CPU', '2FA', '12 GB', 'eth0', '/mnt/user', 'https://x.y', '°C', 'e.g. 8080']) {
       expect(readable(same), same).toBe(false);
