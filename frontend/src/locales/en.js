@@ -4811,4 +4811,10 @@ export default {
   "ev.vm_state.title": "Virtual machine",
   "ev.vm_updated.msg": "The settings of {name} were saved.",
   "ev.vm_updated.title": "Virtual machine changed",
+  "jobs.t.convert": "Make {share} snapshot-ready",
+  "snap.convert": "Make it snapshot-ready",
+  "snap.convert_why": "Its snapshots can't work yet: it is a plain folder.",
+  "snap.converting": "Making {share} snapshot-ready; the Jobs centre shows how far it is.",
+  "confirm.share_make_subvolume.msg": "Make the share {target} snapshot-ready? Its files move into a btrfs subvolume of the same name. Close files on it first: changes saved while it runs may be lost.",
+  "confirm.share_make_subvolume.title": "Make snapshot-ready",
 };

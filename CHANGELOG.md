@@ -571,6 +571,13 @@
 
 #### Fixes
 
+- **Rolling back a share takes seconds, and older shares can get snapshots** (NREL-7, NREL-5):
+  on plain Linux, a share that is a btrfs subvolume is rolled back by putting a clone of the
+  snapshot in its place, with no copying and no free space needed (the Recycle Bin and encrypted
+  folders carried over as they are now); other shares are copied back as before. A scheduled share
+  that is still a plain folder says its snapshots can't work and offers "Make it snapshot-ready",
+  which moves its files into a subvolume of the same name as a job.
+
 - **Snapshots and quotas work for new shares on plain Linux** (NREL-5): on a btrfs pool a new
   share is made as a btrfs subvolume, not a plain folder, so its hourly snapshots and its quota
   stop failing; snapshots are offered only when the pool really is btrfs, not whenever the btrfs

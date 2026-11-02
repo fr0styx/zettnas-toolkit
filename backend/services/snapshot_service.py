@@ -335,10 +335,8 @@ def _gb(n: float) -> str:
     return f"{n / 1e9:.1f} GB"
 
 
-def _rollback_checks(share: str, src_root: str, live_root: str, wanted: list[str]) -> None:
-    """Refuses a rollback that would do harm (NREL-7): with an encrypted folder of this share open
-    (its files would be deleted under the open folder), or with less free space than the copy
-    needs (the snapshot of the current state keeps the old data, so nothing is freed first)."""
+def _refuse_open_encrypted(share: str) -> None:
+    """An encrypted folder of this share that is open now: its files sit under a live mount."""
     from backend.services import encrypted_folders
 
     open_now = [f["name"] for f in encrypted_folders.listing() if f.get("share") == share and f.get("unlocked")]
@@ -346,6 +344,15 @@ def _rollback_checks(share: str, src_root: str, live_root: str, wanted: list[str
         raise RuntimeError(
             f"Lock the encrypted folders in this share first ({', '.join(open_now)}); nothing was changed."
         )
+
+
+def _rollback_checks(share: str, src_root: str, live_root: str, wanted: list[str], need_room: bool = True) -> None:
+    """Refuses a rollback that would do harm (NREL-7): with an encrypted folder of this share open
+    (its files would be deleted under the open folder), or, when it copies, with less free space
+    than the copy needs (the snapshot of the current state keeps the old data)."""
+    _refuse_open_encrypted(share)
+    if not need_room:
+        return
     need = sum(_tree_size(os.path.join(src_root, e)) for e in wanted)
     free = shutil.disk_usage(live_root).free
     if need > free:
@@ -414,12 +421,18 @@ def rollback(
     src_root = os.path.realpath(snap["path"])
     live_root = os.path.realpath(_live_root(name, pal, pool_id))
     wanted = sorted(e for e in os.listdir(src_root) if e not in KEEP_ON_ROLLBACK)
-    _rollback_checks(share, src_root, live_root, wanted)
+    # a share that is a btrfs subvolume gets the snapshot swapped in: no copy, no room needed
+    swap = bool(getattr(pal, "can_swap_in", None) and pal.can_swap_in(live_root, src_root))
+    _rollback_checks(share, src_root, live_root, wanted, need_room=not swap)
     safety = f"{share}@before-rollback-{time.strftime(NAME_FORMAT, time.gmtime())}"
     res = pal.create_snapshot(pool_id, share, safety, readonly=True)
     if not (res.get("status") in ("created", "ok") or res.get("success") is True):
         raise RuntimeError("The snapshot of the current state could not be taken, so nothing was changed.")
     out = {"share": share, "snapshot": name, "safety_snapshot": safety}
+    if swap:
+        pal.swap_in_snapshot(live_root, src_root, KEEP_ON_ROLLBACK)
+        logger.warning("[Snapshots] %s rolled back to %s by a swap; the state before is %s", share, name, safety)
+        return {**out, "method": "swap"}
     if background:
         from backend.services.jobs import job_manager
 
@@ -436,6 +449,61 @@ def rollback(
     counts = _rollback_copy(src_root, live_root, wanted, lambda done, total: None)
     logger.warning(f"[Snapshots] {share} rolled back to {name}; the state before is {safety}")
     return {**out, **counts}
+
+
+def share_root(share: str, pal: Any = None, pool_id: str | None = None) -> str:
+    """Where a share's files are."""
+    pal = pal or _pal()
+    return os.path.realpath(_live_root(f"{share}@", pal, pool_id or _default_pool_id(pal)))
+
+
+def convertible(pal: Any = None) -> list[str]:
+    """Scheduled shares whose snapshots can't work yet: plain folders on a btrfs pool, which can
+    be made subvolumes (NREL-5)."""
+    pal = pal or _pal()
+    if not hasattr(pal, "can_convert"):
+        return []
+    out = []
+    for s in list_schedules():
+        try:
+            if pal.can_convert(share_root(s["share"], pal)):
+                out.append(s["share"])
+        except (FileNotFoundError, OSError):
+            continue
+    return out
+
+
+def _convert_job(job_id: str, share: str, root: str, pal: Any) -> None:
+    from backend.services.jobs import job_manager
+
+    try:
+        job_manager.update(job_id, detail="Moving the files into a subvolume")
+        old = pal.convert_to_subvolume(root)
+        job_manager.update(job_id, percent=80.0, detail="Removing the old folder")
+        shutil.rmtree(old)
+    except (OSError, RuntimeError) as e:
+        logger.error("[Snapshots] making %s a subvolume stopped: %s", share, e)
+        job_manager.finish(job_id, "error", str(e))
+        return
+    logger.warning("[Snapshots] %s is a subvolume now", share)
+    job_manager.finish(job_id)
+
+
+def convert(share: str, pal: Any = None, owner: str | None = None) -> dict[str, Any]:
+    """Makes a share that is a plain folder a btrfs subvolume, so its snapshots work (NREL-5);
+    the work runs as a job."""
+    pal = pal or _pal()
+    root = share_root(share, pal)
+    if not (hasattr(pal, "convert_to_subvolume") and pal.can_convert(root)):
+        raise ValueError("This share can't be made a subvolume here: it is one already, or the pool isn't btrfs.")
+    _refuse_open_encrypted(share)
+    from backend.services.jobs import job_manager
+
+    job = job_manager.register(
+        "convert", f"Make {share} snapshot-ready", owner=owner, title_id="jobs.t.convert", title_params={"share": share}
+    )
+    threading.Thread(target=_convert_job, args=(job.id, share, root, pal), daemon=True, name="share-convert").start()
+    return {"share": share, "job_id": job.id}
 
 
 def _set_previous_versions(share: str, on: bool) -> None:

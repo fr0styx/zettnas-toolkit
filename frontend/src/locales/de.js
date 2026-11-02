@@ -4811,4 +4811,10 @@ export default {
   "ev.vm_state.title": "Virtuelle Maschine",
   "ev.vm_updated.msg": "Die Einstellungen von {name} wurden gespeichert.",
   "ev.vm_updated.title": "Virtuelle Maschine geändert",
+  "jobs.t.convert": "{share} für Snapshots vorbereiten",
+  "snap.convert": "Für Snapshots vorbereiten",
+  "snap.convert_why": "Seine Snapshots funktionieren noch nicht: Es ist ein einfacher Ordner.",
+  "snap.converting": "{share} wird für Snapshots vorbereitet; wie weit es ist, zeigt die Aufgabenübersicht.",
+  "confirm.share_make_subvolume.msg": "Die Freigabe {target} für Snapshots vorbereiten? Ihre Dateien ziehen in ein btrfs-Subvolume gleichen Namens. Schließen Sie vorher geöffnete Dateien: Änderungen während des Vorgangs können verloren gehen.",
+  "confirm.share_make_subvolume.title": "Für Snapshots vorbereiten",
 };

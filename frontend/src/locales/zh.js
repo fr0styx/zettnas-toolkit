@@ -4811,4 +4811,10 @@ export default {
   "ev.vm_state.title": "虚拟机",
   "ev.vm_updated.msg": "{name} 的设置已保存。",
   "ev.vm_updated.title": "虚拟机已更改",
+  "jobs.t.convert": "使 {share} 支持快照",
+  "snap.convert": "使其支持快照",
+  "snap.convert_why": "它的快照还无法使用：这是一个普通文件夹。",
+  "snap.converting": "正在使 {share} 支持快照，任务中心会显示进度。",
+  "confirm.share_make_subvolume.msg": "要使共享 {target} 支持快照吗？其文件会移入同名的 btrfs 子卷。请先关闭打开的文件：操作期间保存的更改可能会丢失。",
+  "confirm.share_make_subvolume.title": "使其支持快照",
 };

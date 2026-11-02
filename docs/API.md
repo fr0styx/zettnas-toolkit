@@ -38,7 +38,7 @@ request and response schemas.
 
 <!-- BEGIN generated endpoints: python scripts/api_reference.py --update -->
 
-647 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
+648 operations. **Access** is what the session or token needs: `public` needs nothing, `signed in` any valid session or token, otherwise one of the listed scopes. ⏱ marks operations that can answer 429.
 
 ### AI Conversation History
 
@@ -668,6 +668,7 @@ request and response schemas.
 | `PUT` | `/api/v1/snapshots/schedules` | any of `backup:manage`, `storage:admin` | Put Schedule |
 | `DELETE` | `/api/v1/snapshots/schedules/{share}` | any of `backup:manage`, `storage:admin` | Remove Schedule |
 | `POST` | `/api/v1/snapshots/schedules/{share}/run` | any of `backup:manage`, `storage:admin` | Run Now |
+| `POST` | `/api/v1/snapshots/shares/{share}/convert` | any of `backup:manage`, `storage:admin` | Makes a share that is a plain folder a btrfs subvolume so its snapshots work (NREL-5); the answer carries the job's id |
 | `GET` | `/api/v1/snapshots/{name}/browse` | any of `backup:read`, `storage:read` | Browse |
 | `POST` | `/api/v1/snapshots/{name}/restore` | any of `backup:manage`, `storage:admin` | Restore |
 | `POST` | `/api/v1/snapshots/{name}/rollback` | any of `backup:manage`, `storage:admin` | Puts the whole share back as it was in this snapshot; the current state is kept as a snapshot first |

@@ -4811,4 +4811,10 @@ export default {
   "ev.vm_state.title": "Machine virtuelle",
   "ev.vm_updated.msg": "Les réglages de {name} ont été enregistrés.",
   "ev.vm_updated.title": "Machine virtuelle modifiée",
+  "jobs.t.convert": "Préparer {share} aux instantanés",
+  "snap.convert": "Le préparer aux instantanés",
+  "snap.convert_why": "Ses instantanés ne fonctionnent pas encore : c'est un simple dossier.",
+  "snap.converting": "{share} est préparé aux instantanés ; le centre des tâches montre l'avancement.",
+  "confirm.share_make_subvolume.msg": "Préparer le partage {target} aux instantanés ? Ses fichiers passent dans un sous-volume btrfs du même nom. Fermez d'abord les fichiers ouverts : les modifications faites pendant l'opération peuvent être perdues.",
+  "confirm.share_make_subvolume.title": "Préparer aux instantanés",
 };

@@ -29,6 +29,7 @@ const ACTIONS = {
   'disk.wake': ['Wake the drive', 'Wake the sleeping drive {target}? It spins up now and goes back to sleep on its own later.', false],
   'folder.wake': ['Wake the disk', 'Open {target}? Its disk is asleep: it spins up to show the folder and goes back to sleep on its own later.', false],
   'snapshot.rollback': ['Roll back', 'Put the whole share back as it was in the snapshot {target}? How it is now is kept as a snapshot first.', true],
+  'share.make_subvolume': ['Make snapshot-ready', 'Make the share {target} snapshot-ready? Its files move into a btrfs subvolume of the same name. Close files on it first: changes saved while it runs may be lost.', true],
   'pool.scrub_schedule': ['Check monthly', 'Check the pool {target} for errors once a month? Its disks spin up for the check.', false],
   'security.advisor_fix': ['Apply the fix', 'Apply the Security Advisor fix "{target}"? People may lose access they had before.', false],
 };

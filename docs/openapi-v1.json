@@ -61947,6 +61947,53 @@
     ]
    }
   },
+  "/api/v1/snapshots/shares/{share}/convert": {
+   "post": {
+    "description": "Makes a share that is a plain folder a btrfs subvolume so its snapshots work (NREL-5);\nthe answer carries the job's id.",
+    "operationId": "convert_share_api_v1_snapshots_shares__share__convert_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "share",
+      "required": true,
+      "schema": {
+       "title": "Share",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "401": {
+      "$ref": "#/components/responses/Unauthorized"
+     },
+     "403": {
+      "$ref": "#/components/responses/Forbidden"
+     },
+     "404": {
+      "$ref": "#/components/responses/NotFound"
+     },
+     "422": {
+      "$ref": "#/components/responses/ValidationFailed"
+     }
+    },
+    "summary": "Convert Share",
+    "tags": [
+     "Snapshots"
+    ],
+    "x-required-scopes": [
+     "backup:manage",
+     "storage:admin"
+    ]
+   }
+  },
   "/api/v1/snapshots/{name}/browse": {
    "get": {
     "operationId": "browse_api_v1_snapshots__name__browse_get",

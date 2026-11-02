@@ -28,7 +28,7 @@ class RestoreIn(BaseModel):
 @router.get("/snapshots/schedules", dependencies=[Depends(require_scope("backup:read", "storage:read"))])
 def get_schedules():
     ok, why = snaps.availability()
-    return {"schedules": snaps.list_schedules(), "available": ok, "reason": why}
+    return {"schedules": snaps.list_schedules(), "available": ok, "reason": why, "convertible": snaps.convertible()}
 
 
 @router.put("/snapshots/schedules", dependencies=[Depends(require_scope("backup:manage", "storage:admin"))])
@@ -75,6 +75,26 @@ def rollback(name: str, principal: AuthenticatedPrincipal = Depends(get_current_
     snapshot first. The copy runs as a job (NREL-7): the answer carries its id."""
     try:
         return snaps.rollback(name, owner=principal.username or None, background=True)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from None
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from None
+    except RuntimeError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from None
+
+
+@router.post(
+    "/snapshots/shares/{share}/convert",
+    dependencies=[
+        Depends(require_scope("backup:manage", "storage:admin")),
+        Depends(require_confirmation("share.make_subvolume")),
+    ],
+)
+def convert_share(share: str, principal: AuthenticatedPrincipal = Depends(get_current_principal)):
+    """Makes a share that is a plain folder a btrfs subvolume so its snapshots work (NREL-5);
+    the answer carries the job's id."""
+    try:
+        return snaps.convert(share, owner=principal.username or None)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from None
     except ValueError as e:

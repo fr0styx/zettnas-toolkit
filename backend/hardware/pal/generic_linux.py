@@ -56,6 +56,14 @@ def fs_of(path: str, mounts: str = "/proc/mounts") -> str:
     return fs
 
 
+def is_subvolume(path: str) -> bool:
+    """Whether path is the top folder of a btrfs subvolume (its inode number is always 256)."""
+    try:
+        return os.stat(path).st_ino == 256 and fs_of(path) == "btrfs"
+    except OSError:
+        return False
+
+
 class GenericLinuxStorageAdapter(StoragePlatformAdapter):
     """
     Generic Linux Storage Platform Adapter.
@@ -66,6 +74,94 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
 
     def __init__(self, pool_path: str | None = None):
         self._pool_path = pool_path or pal_base.POOL_PATH or "/mnt/storage"
+
+    def _nested_subvolumes(self, path: str) -> bool:
+        """Whether a subvolume holds subvolumes of its own (True when it can't be told)."""
+        code, out, _ = self._run_cmd(["btrfs", "subvolume", "list", "-o", path])
+        return code != 0 or bool(out.strip())
+
+    def can_swap_in(self, live_root: str, snap_path: str) -> bool:
+        """Whether a share can be rolled back by swapping its snapshot in (NREL-7): both are btrfs
+        subvolumes, the share isn't mounted on its own and holds no subvolume of its own (a
+        snapshot doesn't take those along)."""
+        return (
+            is_subvolume(live_root)
+            and is_subvolume(snap_path)
+            and not os.path.ismount(live_root)
+            and not self._nested_subvolumes(live_root)
+        )
+
+    def _carry_over(self, src: str, dest: str) -> None:
+        """dest becomes a copy of src that shares its blocks (reflink): no room, little time."""
+        if os.path.lexists(dest):
+            if os.path.isdir(dest) and not os.path.islink(dest):
+                shutil.rmtree(dest)
+            else:
+                os.unlink(dest)
+        if not os.path.lexists(src):
+            return
+        code, _, err = self._run_cmd(["cp", "-a", "--reflink=always", src, dest])
+        if code:
+            raise RuntimeError(f"{os.path.basename(src)} could not be carried over ({err}); nothing was changed.")
+
+    def swap_in_snapshot(self, live_root: str, snap_path: str, keep: tuple[str, ...]) -> None:
+        """Rolls a share back by putting a writable clone of the snapshot in its place: seconds,
+        no data copied, no room needed. The entries named in keep stay as they are now. Raises
+        when it can't, with the share left as it was."""
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        new, old = f"{live_root}.rollback-{stamp}", f"{live_root}.before-rollback-{stamp}"
+        code, _, err = self._run_cmd(["btrfs", "subvolume", "snapshot", snap_path, new])
+        if code:
+            raise RuntimeError(f"The snapshot could not be cloned ({err}); nothing was changed.")
+        try:
+            for name in keep:
+                self._carry_over(os.path.join(live_root, name), os.path.join(new, name))
+            os.rename(live_root, old)
+            try:
+                os.rename(new, live_root)
+            except OSError:
+                os.rename(old, live_root)
+                raise
+        except (OSError, RuntimeError):
+            self._run_cmd(["btrfs", "subvolume", "delete", new])
+            raise
+        code, _, err = self._run_cmd(["btrfs", "subvolume", "delete", old])
+        if code:  # the share is rolled back; only the old copy is left over
+            logger.warning("[PAL] %s could not be removed: %s", old, err)
+
+    def can_convert(self, path: str) -> bool:
+        """Whether a share that is a plain folder on a btrfs pool can become a subvolume (NREL-5)."""
+        from backend.hardware.pal.base import storage_tools
+
+        return (
+            os.path.isdir(path)
+            and not os.path.ismount(path)
+            and fs_of(path) == "btrfs"
+            and not is_subvolume(path)
+            and storage_tools()["btrfs"]
+        )
+
+    def convert_to_subvolume(self, path: str) -> str:
+        """Makes a folder share a subvolume with the same name and files: a new subvolume gets a
+        copy that shares their blocks, then the two swap names. Returns the old folder, for the
+        caller to remove; on failure the share is left as it was."""
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        new, old = f"{path}.subvolume-{stamp}", f"{path}.before-subvolume-{stamp}"
+        code, _, err = self._run_cmd(["btrfs", "subvolume", "create", new])
+        if code:
+            raise RuntimeError(f"The subvolume could not be made ({err}); nothing was changed.")
+        code, _, err = self._run_cmd(["cp", "-a", "--reflink=always", os.path.join(path, "."), new])
+        if code:
+            self._run_cmd(["btrfs", "subvolume", "delete", new])
+            raise RuntimeError(f"The files could not be copied over ({err}); nothing was changed.")
+        os.rename(path, old)
+        try:
+            os.rename(new, path)
+        except OSError:
+            os.rename(old, path)
+            self._run_cmd(["btrfs", "subvolume", "delete", new])
+            raise
+        return old
 
     def _make_share_dir(self, full_path: str) -> str:
         """The share's folder (NREL-5). On btrfs it is a subvolume, so the default snapshots and

@@ -13,7 +13,7 @@ const EVERY = () => ({
   weekly: t('snap.every_weekly', 'Every week'),
 });
 
-export function schedulesHtml(schedules, shares) {
+export function schedulesHtml(schedules, shares, convertible = []) {
   const every = EVERY();
   const rows = schedules.length
     ? schedules
@@ -26,6 +26,12 @@ export function schedulesHtml(schedules, shares) {
       <span class="snap-sched-last">${s.last_run ? escapeHtml(formatDateTime(s.last_run * 1000)) : escapeHtml(t('snap.not_yet', 'not run yet'))}${
             s.last_result && s.last_result !== 'ok' ? ` · ${escapeHtml(s.last_result)}` : ''
           }</span>
+      ${
+            convertible.includes(s.share)
+              ? `<span class="snap-sched-warn">${escapeHtml(t('snap.convert_why', "Its snapshots can't work yet: it is a plain folder."))}</span>
+      <button type="button" class="btn-pill-toggle is-small is-primary" data-snap-convert="${escapeHtml(s.share)}">${escapeHtml(t('snap.convert', 'Make it snapshot-ready'))}</button>`
+              : ''
+          }
       <button type="button" class="btn-pill-toggle is-small" data-snap-run="${escapeHtml(s.share)}">${escapeHtml(t('snap.run_now', 'Snapshot now'))}</button>
       <button type="button" class="btn-pill-toggle is-small is-danger" data-snap-unschedule="${escapeHtml(s.share)}">${escapeHtml(t('snap.remove', 'Remove'))}</button>
     </li>`,
@@ -51,9 +57,11 @@ export async function renderSnapshotSchedules(mount) {
   if (!mount) return;
   let schedules;
   let shares;
+  let convertible;
   try {
     const [s, sh] = await Promise.all([api.get('/api/snapshots/schedules'), api.get('/api/storage/shares').catch(() => ({ shares: [] }))]);
     schedules = s.schedules || [];
+    convertible = s.convertible || [];
     shares = (sh.shares || []).map((x) => x.name).filter(Boolean);
     if (s.available === false) {
       // REL-4: no schedule is offered where snapshots can't be taken
@@ -64,7 +72,8 @@ export async function renderSnapshotSchedules(mount) {
     mount.textContent = t('snap.load_failed', 'Snapshot schedules could not be loaded.');
     return;
   }
-  mount.innerHTML = schedulesHtml(schedules, shares);
+  mount.innerHTML = schedulesHtml(schedules, shares, convertible);
+  mount.querySelectorAll('[data-snap-convert]').forEach((b) => b.addEventListener('click', () => convertShare(b.dataset.snapConvert, () => renderSnapshotSchedules(mount))));
   mount.querySelector('[data-snap-form]')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -115,6 +124,17 @@ export function entriesHtml(listing) {
     })
     .join('');
   return `<p class="snap-path">/${escapeHtml(listing.path || '')}</p><ul class="snap-entries">${up}${rows}</ul>`;
+}
+
+/** A plain-folder share becomes a subvolume so its snapshots work (NREL-5); the server asks to confirm (428). */
+export async function convertShare(share, after = null) {
+  try {
+    await api.post(`/api/snapshots/shares/${encodeURIComponent(share)}/convert`, {});
+    showToast(t('snap.converting', 'Making {share} snapshot-ready; the Jobs centre shows how far it is.', { share }), 'success');
+    if (after) after();
+  } catch (err) {
+    if (err?.error !== 'cancelled') showToast(err.message || String(err), 'error');
+  }
 }
 
 /** The whole share as it was in this snapshot (FEAT-02); the server asks to confirm (428). */
