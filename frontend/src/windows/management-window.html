@@ -1579,7 +1579,7 @@
                   </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
-                  <button class="btn-pill-toggle" id="btn-refresh-network-topology" title="Refresh Network Topology" data-i18n-title="ui.refresh_network_topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-network-topology" title="Refresh Network Topology" data-i18n-title="ui.refresh_network_topology"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
 
@@ -2168,7 +2168,7 @@
                   <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display: none;" data-i18n="ui.back_to_containers">← Back to Containers</button>
                   <button class="btn-pill-toggle" id="btn-view-docker-catalog"><span aria-hidden="true">📦</span> <span data-i18n="sp.catalog">App Catalog</span> <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">…</span></button>
                   <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers" data-i18n-title="ui.clean_up_unused_images_volumes">🧹 Prune / Cleanup</button>
-                  <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n-title="ui.refresh_containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n-title="ui.refresh_containers"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
@@ -2665,7 +2665,7 @@
                 <button class="btn-pill-toggle" id="btn-ups-discover" title="Scan local USB ports and host gateway for power daemons" data-i18n-title="ui.scan_local_usb_ports_and" data-i18n="mgmt.ups_btn_scan">🔍 Scan Hardware</button>
                 <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n-title="ui.trigger_10s_diagnostic_battery_self"><span aria-hidden="true">🔋</span> <span data-i18n="mgmt.ups_btn_selftest">Self-Test</span></button>
                 <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n-title="ui.simulate_15s_power_outage_drill"><span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.ups_btn_simulate">Simulate Drill</span></button>
-                <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS readings" data-i18n-title="ui.refresh_ups_telemetry" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS readings" data-i18n-title="ui.refresh_ups_telemetry"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 <button id="btn-open-ups-config" style="display:none;" aria-hidden="true"></button>
               </div>
             </div>
@@ -2860,7 +2860,7 @@
                   </div>
                   <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:var(--zn-fs-xs); color:var(--muted);" data-i18n="mw.port_3551_apcupsd_3493_nut">Port :3551 (apcupsd) · :3493 (NUT)</span>
-                    <button id="btn-ups-test-conn" class="btn-pill-toggle" data-i18n="mgmt.ups_btn_test_conn">🔌 Test Connection</button>
+                    <button id="btn-ups-test-conn" class="btn-pill-toggle"><span aria-hidden="true">🔌</span> <span data-i18n="mgmt.ups_btn_test_conn">Test Connection</span></button>
                   </div>
                 </div>
 
@@ -3015,7 +3015,7 @@
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="mgmt.chassis_title">Drive bays</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.chassis_desc">Where each drive sits, how warm it is, and a light to find it in the server. The M.2 drives on the mainboard are below.</div>
                 </div>
-                <button class="btn-pill-toggle" id="btn-refresh-chassis" title="Refresh Chassis State" data-i18n-title="ui.refresh_chassis_state" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                <button class="btn-pill-toggle" id="btn-refresh-chassis" title="Refresh Chassis State" data-i18n-title="ui.refresh_chassis_state"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
               </div>
               <div class="mgmt-detail-body" id="mgmt-chassis-twin-mount">
                 <!-- Mounted via fetchAndRenderChassisTwin -->
@@ -3032,7 +3032,7 @@
                 <div style="display:flex; align-items:center; gap:8px;">
                   <button class="btn-pill-toggle is-primary" id="btn-create-storage-pool" style="display: none;" title="Create New Storage Pool" data-i18n-title="ui.create_new_storage_pool"><span aria-hidden="true">+</span> <span data-i18n="mw.create_pool">Create Pool</span></button>
                   <button class="btn-pill-toggle" id="btn-manage-snapshots" style="display: none;" title="Manage Btrfs Snapshots" data-i18n-title="ui.manage_btrfs_snapshots"><span aria-hidden="true">📸</span> <span data-i18n="mw.snapshots">Snapshots</span></button>
-                  <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n-title="ui.refresh_topology" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-topo" title="Refresh Topology" data-i18n-title="ui.refresh_topology"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body" id="mgmt-storage-topo-mount">
@@ -3050,7 +3050,7 @@
                 <div style="display:flex; align-items:center; gap:8px;">
                   <span class="mgmt-app-pill" id="mgmt-shares-platform-badge" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);"></span>
                   <button class="btn-pill-toggle is-primary" id="btn-create-network-share" style="display: none;" title="Create Network Share" data-i18n-title="ui.create_network_share">+ Create Share</button>
-                  <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n-title="ui.refresh_network_shares" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-shares" title="Refresh Network Shares" data-i18n-title="ui.refresh_network_shares"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
               <!-- Sharing Protocols Quickbar -->
@@ -3084,7 +3084,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:8px;">
                   <button class="btn-pill-toggle is-primary" id="btn-add-cloud-remote" title="Connect New Cloud Remote" data-i18n-title="ui.connect_new_cloud_remote"><span aria-hidden="true">☁️</span> <span data-i18n="mw.connect_cloud_remote">+ Connect Cloud Remote</span></button>
-                  <button class="btn-pill-toggle" id="btn-refresh-remotes" title="Refresh Remotes" data-i18n-title="ui.refresh_remotes" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-remotes" title="Refresh Remotes" data-i18n-title="ui.refresh_remotes"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body" id="mgmt-storage-remotes-mount">
@@ -3100,7 +3100,7 @@
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.disks_title">Hardware Abstraction Layer (HAL) Disks Inventory</span></div>
                   <div class="mgmt-card-intro-desc" data-i18n="mgmt.disks_desc">Low-level controller driver discovery, S.M.A.R.T. health, temperatures, and zero-wake spindown status.</div>
                 </div>
-                <button class="btn-pill-toggle" id="btn-refresh-disks-inventory" title="Refresh Disks Inventory" data-i18n-title="ui.refresh_disks_inventory" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                <button class="btn-pill-toggle" id="btn-refresh-disks-inventory" title="Refresh Disks Inventory" data-i18n-title="ui.refresh_disks_inventory"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
               </div>
               <div class="mgmt-detail-body">
                 <div style="overflow-x:auto; max-height:420px; background:var(--zn-shade-25); border:1px solid var(--zn-line-6); border-radius:8px;">
@@ -3133,7 +3133,7 @@
                 </div>
                 <div style="display:flex; gap:8px;">
                   <button class="btn-pill-toggle" id="btn-open-copy-drawer" title="Configure Front-Panel Copy Button" data-i18n-title="ui.configure_front_panel_copy_button">⚙️ <span data-i18n="settings.tab_buttons">Configure Button</span></button>
-                  <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh card copies" data-i18n-title="ui.refresh_ingest_history" data-i18n="mgmt.refresh">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-copy-history" title="Refresh card copies" data-i18n-title="ui.refresh_ingest_history"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
@@ -3769,9 +3769,7 @@
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <button class="btn-pill-toggle" id="btn-refresh-backup-jobs" title="Refresh Backup Tasks" data-i18n-title="ui.refresh_backup_tasks" data-i18n="mgmt.refresh">
-                    🔄 Refresh
-                  </button>
+                  <button class="btn-pill-toggle" id="btn-refresh-backup-jobs" title="Refresh Backup Tasks" data-i18n-title="ui.refresh_backup_tasks"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                   <button class="btn-pill-toggle" id="btn-open-create-backup-job" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
                     <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> <span data-i18n="backup.add_job">Add a backup job</span>
                   </button>
@@ -3795,9 +3793,7 @@
                   </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
-                  <button class="btn-pill-toggle" id="btn-refresh-snapshots" title="Refresh Snapshots" data-i18n-title="ui.refresh_snapshots" data-i18n="mgmt.refresh">
-                    🔄 Refresh
-                  </button>
+                  <button class="btn-pill-toggle" id="btn-refresh-snapshots" title="Refresh Snapshots" data-i18n-title="ui.refresh_snapshots"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                   <button class="btn-pill-toggle" id="btn-open-create-snapshot" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
                     <svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> <span data-i18n="backup.snaps_take">Take a snapshot</span>
                   </button>
@@ -3841,9 +3837,7 @@
                   <select id="app-backups-filter-app" class="tz-select-input" style="font-size: var(--zn-fs-xs); padding: 5px 8px; min-width: 140px;" title="Filter by Application" data-i18n-title="ui.filter_by_application">
                     <option value="" data-i18n="mgmt.app_backups_all">All Applications (Box-Wide)</option>
                   </select>
-                  <button class="btn-pill-toggle" id="btn-refresh-app-backups" title="Refresh Application Backups" data-i18n-title="ui.refresh_application_backups" data-i18n="mgmt.refresh">
-                    🔄 Refresh
-                  </button>
+                  <button class="btn-pill-toggle" id="btn-refresh-app-backups" title="Refresh Application Backups" data-i18n-title="ui.refresh_application_backups"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                 </div>
               </div>
               <div id="app-backups-mount">

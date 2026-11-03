@@ -7,6 +7,7 @@ import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
 import { formatDateTime } from '../../format.js';
+import { setIconLabel } from '../../ui/primitives.js';
 
 export function renderUpsTelemetry(ups) {
   if (!ups) return;
@@ -501,7 +502,7 @@ export function initUpsDrawerControls() {
       console.debug('Failed to refresh UPS telemetry:', err);
     } finally {
       btnRefresh.disabled = false;
-      btnRefresh.textContent = t('mgmt.refresh', '🔄 Refresh');
+      setIconLabel(btnRefresh, '🔄', t('mgmt.refresh', 'Refresh'));
     }
   });
 
@@ -759,16 +760,16 @@ export function initUpsDrawerControls() {
       if (res && (res.connected || res.success)) {
         showToast(t('toast.connection_successful', 'Connection successful! ({model})', { model: res.model || res.status || 'ONLINE' }), 'success');
         btnTest.textContent = t('ui.connected', '✓ Connected');
-        setTimeout(() => { btnTest.textContent = t('mgmt.ups_btn_test_conn', '🔌 Test Connection'); }, 3000);
+        setTimeout(() => { setIconLabel(btnTest, '🔌', t('mgmt.ups_btn_test_conn', 'Test Connection')); }, 3000);
       } else {
         showToast(t('toast.connection_failed', 'Connection failed: {error}', { error: res.error || 'UPS daemon unreachable' }), 'error');
         btnTest.textContent = t('ui.failed', '✗ Failed');
-        setTimeout(() => { btnTest.textContent = t('mgmt.ups_btn_test_conn', '🔌 Test Connection'); }, 3000);
+        setTimeout(() => { setIconLabel(btnTest, '🔌', t('mgmt.ups_btn_test_conn', 'Test Connection')); }, 3000);
       }
     } catch (err) {
       showToast(t('toast.connection_test_error', 'Connection test error: {error}', { error: err.message }), 'error');
       btnTest.textContent = t('ui.error_2', '✗ Error');
-      setTimeout(() => { btnTest.textContent = t('mgmt.ups_btn_test_conn', '🔌 Test Connection'); }, 3000);
+      setTimeout(() => { setIconLabel(btnTest, '🔌', t('mgmt.ups_btn_test_conn', 'Test Connection')); }, 3000);
     } finally {
       btnTest.disabled = false;
     }
