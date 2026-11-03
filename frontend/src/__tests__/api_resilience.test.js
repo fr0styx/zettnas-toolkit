@@ -1,7 +1,8 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, afterAll } from 'vitest';
 import { api, auth, setSessionUserProvider } from '../api.js';
 import { ZettEventBus } from '../event-bus.js';
 import { isOffline } from '../connection.js';
+import { loadLanguage } from '../i18n.js';
 
 const ok = (body = {}) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
 
@@ -11,6 +12,10 @@ describe('API client resilience (FE-16)', () => {
     vi.useRealTimers();
     setSessionUserProvider(null);
   });
+
+  // The language file starts loading on import; this file is quick enough to end before it
+  // arrives, and a warning logged while the worker closes fails the run.
+  afterAll(() => loadLanguage('en'));
 
   it('times out reads after 15 s', async () => {
     vi.useFakeTimers();
