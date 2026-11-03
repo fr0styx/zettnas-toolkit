@@ -67,6 +67,7 @@ export function familyCalendarBody(info, onAdd) {
     el('p', { className: 'invite-meta', textContent: t('fc.android', 'Android: install DAVx⁵, choose "Log in with URL and user name" and enter the address above with your ZettNAS name and password.') }),
     el('p', { className: 'invite-meta', textContent: t('fc.android_qr', 'Or scan this code with the phone once DAVx⁵ is installed: it opens with the address filled in.') }),
     el('div', { className: 'remote-qr fc-qr', role: 'img', ariaLabel: t('fc.qr_label', 'QR code with the calendar address for DAVx⁵') }),
+    el('p', { className: 'invite-meta', textContent: t('fc.desktop', 'On the ZettNAS desktop: in the office suite, open Calendar, choose Share in the family calendar’s menu, copy the subscription link and paste it under Calendar Feeds with + Add Feed.') }),
   );
   const add = el('button', { type: 'button', className: 'btn-pill-toggle is-small', textContent: t('fc.add', 'Add calendar and contacts to the office suite') });
   add.addEventListener('click', () => onAdd(add));

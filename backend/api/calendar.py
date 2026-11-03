@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.fsutil import atomic_write_json, read_json
 from backend.logging_config import one_line
+from backend.services import family_dav
 from backend.services.ssrf_guard import validate_public_url
 
 logger = logging.getLogger(__name__)
@@ -175,21 +176,31 @@ def _parse_ics_content(ics_text: str, feed_id: str, feed_name: str, feed_color: 
     return events
 
 
+def _feed_target(url: str) -> tuple[str | None, str, str]:
+    """Where a feed is read from and how: (address or None, safe_fetch context, why not).
+
+    Feeds come from the internet, with one exception: the family calendar in the office suite
+    on this NAS, which only its own subscription link reaches (NFEAT-7).
+    """
+    url = url.strip()
+    family = family_dav.family_calendar_url(url)
+    if family:
+        return family, "lan", ""
+    if url.startswith("webcal://"):
+        url = "https://" + url[len("webcal://") :]
+    is_safe, err_msg = validate_public_url(url)
+    return (url if is_safe else None), "public", err_msg
+
+
 async def _sync_single_feed(feed: dict[str, Any]) -> list[dict[str, Any]]:
     """
     Fetches and parses a single calendar feed securely.
     """
-    raw_url = feed.get("url", "").strip()
-    if not raw_url:
+    if not feed.get("url", "").strip():
         feed["error"] = "Empty URL"
         return []
-
-    # Handle webcal:// prefix
-    if raw_url.startswith("webcal://"):
-        raw_url = "https://" + raw_url[len("webcal://") :]
-
-    is_safe, err_msg = validate_public_url(raw_url)
-    if not is_safe:
+    raw_url, where, err_msg = await asyncio.to_thread(_feed_target, feed["url"])
+    if not raw_url:
         feed["error"] = f"Security blocked: {err_msg}"
         return []
 
@@ -198,7 +209,7 @@ async def _sync_single_feed(feed: dict[str, Any]) -> list[dict[str, Any]]:
 
         status, hdrs, body = safe_fetch(
             raw_url,
-            context="public",
+            context=where,
             headers={
                 "User-Agent": "ZettNAS-Calendar/1.0 (Home Cloud OS; +https://zettnas.local)",
                 "Accept": "text/calendar, text/plain, */*",
@@ -407,13 +418,8 @@ async def add_or_update_calendar_feed(
     Adds a new calendar provider feed (e.g. Google Calendar iCal URL) or updates one of the caller's.
     """
     owner = _owner_id(principal)
-    # Quick sanity check for valid URL format
-    test_url = feed.url.strip()
-    if test_url.startswith("webcal://"):
-        test_url = "https://" + test_url[len("webcal://") :]
-
-    is_safe, err_msg = validate_public_url(test_url)
-    if not is_safe:
+    target, where, err_msg = await asyncio.to_thread(_feed_target, feed.url)
+    if not target:
         raise HTTPException(status_code=400, detail=f"Invalid or disallowed calendar URL: {err_msg}")
 
     feed_item = {
@@ -422,7 +428,7 @@ async def add_or_update_calendar_feed(
         "url": feed.url.strip(),
         "color": feed.color or "#00f0ff",
         "enabled": feed.enabled,
-        "provider": feed.provider or "google",
+        "provider": "family" if where == "lan" else (feed.provider or "google"),
         "last_synced": feed.last_synced,
         "event_count": feed.event_count,
         "error": None,

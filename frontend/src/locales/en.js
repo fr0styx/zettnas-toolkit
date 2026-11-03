@@ -4979,4 +4979,7 @@ export default {
   "chassis.revert": "Restore",
   "chassis.snapshots_failed": "Could not load snapshots: {error}",
   "chassis.rename_failed": "Could not rename the storage pool",
+  "fc.desktop": "On the ZettNAS desktop: in the office suite, open Calendar, choose Share in the family calendar’s menu, copy the subscription link and paste it under Calendar Feeds with + Add Feed.",
+  "w.feed_meta": "{count, plural, one {# event} other {# events}} · {source}",
+  "w.feed_family": "Family calendar",
 };

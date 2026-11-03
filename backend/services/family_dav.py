@@ -9,6 +9,7 @@ phones reach them at Nextcloud's DAV address, signing in with their ZettNAS acco
 from __future__ import annotations
 
 import json
+import re
 import urllib.parse
 from typing import Any
 
@@ -61,6 +62,31 @@ def office_container() -> dict[str, Any] | None:
             "port": port,
         }
     return None
+
+
+_SHARED_CALENDAR = re.compile(r"/remote\.php/dav/public-calendars/([A-Za-z0-9]{8,64})/?")
+
+
+def family_calendar_url(url: str) -> str | None:
+    """The address ZettNAS reads a family calendar from, for the office suite's own subscription link.
+
+    In the office suite's Calendar, Share → Copy subscription link gives
+    webcal://<this NAS>:<its port>/remote.php/dav/public-calendars/<token>?export. That is a
+    home address, which calendar feeds may not use; this link alone may, and only on the port
+    the office suite answers on (NFEAT-7). Anything else gives None.
+    """
+    try:
+        parts = urllib.parse.urlsplit(str(url or "").strip())
+        port = parts.port
+    except ValueError:
+        return None
+    found = _SHARED_CALENDAR.fullmatch(parts.path)
+    if parts.scheme not in ("webcal", "http", "https") or not parts.hostname or not found or not port:
+        return None
+    office = office_container()
+    if not office or office.get("port") != port:
+        return None
+    return f"http://{parts.hostname}:{port}/remote.php/dav/public-calendars/{found.group(1)}?export"
 
 
 def addresses(host: str, port: int | None) -> dict[str, str]:

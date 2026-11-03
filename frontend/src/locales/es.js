@@ -4979,4 +4979,7 @@ export default {
   "chassis.revert": "Restaurar",
   "chassis.snapshots_failed": "No se pudieron cargar las instantáneas: {error}",
   "chassis.rename_failed": "No se pudo renombrar el grupo de almacenamiento",
+  "fc.desktop": "En el escritorio de ZettNAS: en la suite ofimática, abre Calendario, elige Compartir en el menú del calendario familiar, copia el enlace de suscripción y pégalo en Fuentes de calendario con + Añadir fuente.",
+  "w.feed_meta": "{count, plural, one {# evento} other {# eventos}} · {source}",
+  "w.feed_family": "Calendario familiar",
 };

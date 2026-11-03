@@ -4979,4 +4979,7 @@ export default {
   "chassis.revert": "Wiederherstellen",
   "chassis.snapshots_failed": "Snapshots konnten nicht geladen werden: {error}",
   "chassis.rename_failed": "Der Speicherpool konnte nicht umbenannt werden",
+  "fc.desktop": "Auf dem ZettNAS-Desktop: Öffnen Sie in der Office-Suite den Kalender, wählen Sie im Menü des Familienkalenders Teilen, kopieren Sie den Abonnement-Link und fügen Sie ihn unter Kalender-Feeds mit + Feed hinzufügen ein.",
+  "w.feed_meta": "{count, plural, one {# Termin} other {# Termine}} · {source}",
+  "w.feed_family": "Familienkalender",
 };

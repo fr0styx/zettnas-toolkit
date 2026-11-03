@@ -3021,7 +3021,7 @@ export function renderFeedsList() {
           <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
           <div>
             <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(feed.name)}</div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${feed.event_count || 0} events • ${escapeHtml(feed.provider || 'iCal')}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(t('w.feed_meta', '{count, plural, one {# event} other {# events}} · {source}', { count: feed.event_count || 0, source: feed.provider === 'family' ? t('w.feed_family', 'Family calendar') : 'iCal' }))}</div>
           </div>
         </div>
         <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px;" title="${t('ui.delete_feed', 'Delete Feed')}">🗑️</button>
