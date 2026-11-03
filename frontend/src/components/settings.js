@@ -10,7 +10,7 @@ import { applyTheme, applyDesktopTheme, applyLcdTheme, setScreenLayoutStyle, hex
 import { fitMiniPreviewScale, syncMiniPreviewTelemetry } from './mini-preview.js';
 import { fetchAndRenderMetrics } from './metrics-chart.js';
 import { t } from '../i18n.js';
-import { formatDateTime } from '../format.js';
+import { formatDateTime, formatFixed } from '../format.js';
 import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { showToast, showActionToast, showPromptToast, showConfirmToast } from '../toast.js';
 import { applyGlassSettings, applyWallpaperReadability } from './wallpapers.js';
@@ -1101,7 +1101,7 @@ export function syncDesktopThemeUI() {
       contrastBadge.style.color = '#22c55e';
       contrastBadge.style.borderColor = 'rgba(34, 197, 94, 0.35)';
     } else {
-      contrastBadge.textContent = t('stg.low', 'LOW ({ratio}:1)', { ratio: ratio.toFixed(1) });
+      contrastBadge.textContent = t('stg.low', 'LOW ({ratio}:1)', { ratio: formatFixed(ratio, 1) });
       contrastBadge.style.background = 'rgba(239, 68, 68, 0.15)';
       contrastBadge.style.color = '#ef4444';
       contrastBadge.style.borderColor = 'rgba(239, 68, 68, 0.35)';

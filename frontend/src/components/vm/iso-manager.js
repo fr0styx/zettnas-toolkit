@@ -9,6 +9,7 @@ import { makeDraggable, bringToFront } from '../dock.js';
 import { vmState } from './state.js';
 import { openVmCreateModal } from './create-modal.js';
 import { loadVmDashboard } from '../vm-manager.js';
+import { formatFixed } from '../../format.js';
 
 // An icon next to translated words: screen readers skip it (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -339,7 +340,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           const speed = (e.loaded - lastLoaded) / (1024 * 1024) / dt;
           lastTime = now;
           lastLoaded = e.loaded;
-          if (progRate) progRate.textContent = `${speed.toFixed(1)} MB/s (${pct}%)`;
+          if (progRate) progRate.textContent = `${formatFixed(speed, 1)} MB/s (${pct}%)`;
         }
         if (progBar) progBar.style.width = `${pct}%`;
       }

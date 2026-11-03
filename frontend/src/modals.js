@@ -3,7 +3,7 @@ import { ZettEventBus } from './event-bus.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
 import { trapFocus } from './utils.js';
 import { t } from './i18n.js';
-import { formatDateTime } from './format.js';
+import { formatDateTime, formatFixed } from './format.js';
 // Metric detail windows (CPU, memory, network...) and the event detail window. Drives have
 // their own app, Drive Health (components/drive-health.js).
 
@@ -132,7 +132,7 @@ function updateMetricModalLive() {
     smartSerial.textContent = `${s.mem.total_gb} GB`;
     smartHealth.textContent = `${s.mem.pct}%`;
     smartHealth.style.color = s.mem.pct >= 90 ? "var(--crit)" : "var(--ok)";
-    smartHours.textContent = `${(s.mem.total_gb - s.mem.used_gb).toFixed(1)} GB`;
+    smartHours.textContent = `${formatFixed(s.mem.total_gb - s.mem.used_gb, 1)} GB`;
     smartRaw.textContent = JSON.stringify(s.mem, null, 2);
   } else if (activeModalType === "fans") {
     const f = s.fans || [];

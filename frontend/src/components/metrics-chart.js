@@ -7,6 +7,7 @@ import { escapeHtml } from '../utils.js';
 import { api } from '../api.js';
 import { state } from '../state.js';
 import { t } from '../i18n.js';
+import { formatFixed } from '../format.js';
 
 let _metricsChart = null;
 let _metricsRange = '24h';
@@ -71,7 +72,7 @@ function formatRate(bytesSec) {
     val /= 1024;
     unitIdx++;
   }
-  return `${val.toFixed(unitIdx === 0 ? 0 : 1)} ${units[unitIdx]}`;
+  return `${formatFixed(val, unitIdx === 0 ? 0 : 1)} ${units[unitIdx]}`;
 }
 
 function updateSummaryStrip(data) {

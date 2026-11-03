@@ -24,6 +24,7 @@ import { fetchAndRenderAppBackups, fetchAndRenderBackupJobs, fetchAndRenderSyste
 import { installAdvancedSwitch, renderStatusSummary } from './management/overview.js';
 import { installHealthSignal } from './management/health-signal.js';
 import { _aiSelectedColor, _aiSelectedScene, _getActiveAiSearchQuery, _renderAiRagInitialEmptyState, fetchAndRenderAiStatus, initAiKnowledgeEngine, runAiVisualSearch, setAiVisualFiltersDrawerOpen } from './management/ai.js';
+import { formatFixed } from '../format.js';
 
 export * from './management/docker.js';
 export * from './management/ups.js';
@@ -883,7 +884,7 @@ export function initManagement() {
         const kvmActive = tel?.kvm?.state === 'active';
         const kvmColor = kvmActive ? 'var(--ok2, #25c2a0)' : (tel?.kvm?.state === 'restricted' ? 'var(--warn, #f5a623)' : 'var(--danger, #ff6b6b)');
         const kvmBadge = tel?.kvm?.badge || (kvmActive ? 'KVM Acceleration Active' : 'Software Emulation');
-        const headroom = tel?.memory?.headroom_mb ? `${(tel.memory.headroom_mb / 1024).toFixed(1)} GB Safe Headroom` : 'Dynamic';
+        const headroom = tel?.memory?.headroom_mb ? `${formatFixed(tel.memory.headroom_mb / 1024, 1)} GB Safe Headroom` : 'Dynamic';
         const cpuRatio = tel?.cpu?.ratio ? `${tel.cpu.ratio}:1 Allocation` : 'Optimal';
 
         strip.innerHTML = `
@@ -920,7 +921,7 @@ export function initManagement() {
             const statusColor = isRunning ? 'var(--ok2, #25c2a0)' : (isPaused ? 'var(--warn, #f5a623)' : 'var(--muted, #94a3b8)');
             const statusBg = isRunning ? 'rgba(37,194,160,0.15)' : (isPaused ? 'rgba(245,166,35,0.15)' : 'rgba(255,255,255,0.06)');
 
-            const ramGb = vm.ram_gb ? `${vm.ram_gb} GB` : (vm.memory_mb ? (vm.memory_mb >= 1024 ? `${(vm.memory_mb / 1024).toFixed(0)} GB` : `${vm.memory_mb} MB`) : '1 GB');
+            const ramGb = vm.ram_gb ? `${vm.ram_gb} GB` : (vm.memory_mb ? (vm.memory_mb >= 1024 ? `${formatFixed(vm.memory_mb / 1024, 0)} GB` : `${vm.memory_mb} MB`) : '1 GB');
             const cores = vm.vcpus || vm.cores || 1;
             const osType = vm.os_family ? (vm.os_family.charAt(0).toUpperCase() + vm.os_family.slice(1)) : (vm.os_type || 'Linux');
 

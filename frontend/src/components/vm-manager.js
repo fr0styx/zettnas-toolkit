@@ -22,6 +22,7 @@ import { openIsoManagerModal } from './vm/iso-manager.js';
 import { openVmSnapshotsModal } from './vm/snapshots.js';
 import '../styles/vm-lazy.css'; // the VM windows' own sheet loads with this code (PERF-9)
 export { kvmChecks, openKvmDiagnosticsModal, openVmConnectModal, vmStateLabel } from './vm/connect-modal.js';
+import { formatFixed } from '../format.js';
 export { applyTerminalStream, formatAnsiToHtml, parseAnsiToHtml } from './vm/console-ansi.js';
 export { _activeRfb, _activeSerialWs, _consoleReconnectAttempts, _handleRfbKeyFallback, _reconnectTimer, _scheduleConsoleReconnect, _sendCtrlCToRfb, _sendKeyToRfb, _serialBuffers, cancelConsoleReconnect, clearConsoleReconnectTimer, copyToClipboard, focusActiveConsole, getActiveConsoleTarget, hideConsoleBanner, openVmConsole, openVmConsoleSeparateWindow, pasteTextToGuestConsole, serialKeyToData, setConsoleFocus, showConsoleBanner } from './vm/console.js';
 export { openVmCreateModal } from './vm/create-modal.js';
@@ -382,7 +383,7 @@ function vmCardFromHtml(html) {
 function patchVmCardTelemetry(card, vm) {
   const cpuUsagePct = vm.cpu_usage_pct !== undefined ? vm.cpu_usage_pct : 0.0;
   const ramUsagePct = vm.ram_usage_pct !== undefined ? vm.ram_usage_pct : 0.0;
-  const ramUsedGb = (parseFloat(vm.ram_gb || 2) * (parseFloat(ramUsagePct) / 100)).toFixed(1);
+  const ramUsedGb = formatFixed(parseFloat(vm.ram_gb || 2) * (parseFloat(ramUsagePct) / 100), 1);
   const vals = card.querySelectorAll('.vm-telemetry-row .telemetry-val');
   if (vals[0]) vals[0].textContent = `${cpuUsagePct}%`;
   if (vals[1]) vals[1].textContent = `${ramUsedGb} / ${vm.ram_gb} GB`;
@@ -458,7 +459,7 @@ function buildVmCardHtml(vm, vms) {
       const bootOrder = vm.boot_order || (vm.iso_path ? 'iso' : 'disk');
       const cpuUsagePct = vm.cpu_usage_pct !== undefined ? vm.cpu_usage_pct : 0.0;
       const ramUsagePct = vm.ram_usage_pct !== undefined ? vm.ram_usage_pct : 0.0;
-      const ramUsedGb = (parseFloat(vm.ram_gb || 2) * (parseFloat(ramUsagePct) / 100)).toFixed(1);
+      const ramUsedGb = formatFixed(parseFloat(vm.ram_gb || 2) * (parseFloat(ramUsagePct) / 100), 1);
 
       const osIcon =
         vm.os_family === 'windows'

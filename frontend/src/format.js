@@ -99,6 +99,11 @@ export function formatNumber(value, options = {}) {
   return Number.isFinite(n) ? _fmt('number', options).format(n) : '0';
 }
 
+/** n.toFixed(digits) in the reader's language: 1.5 is "1,5" in German. No thousands separator, like toFixed. For text, not for CSS or inputs. */
+export function formatFixed(value, digits = 1) {
+  return formatNumber(value, { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: false });
+}
+
 export function formatPercent(value, digits = 0) {
   const n = Number(value);
   return Number.isFinite(n)

@@ -13,7 +13,7 @@ import { installDocFilters, selectedTags } from './doc-filters.js';
 import { installPhotoFilters, selectedPhotoFilters, hasPhotoFilters } from './photo-filters.js';
 import { installDuplicatesButton } from './duplicates.js';
 import { installAiAccess } from './ai-access.js';
-import { formatDateTime, formatNumber, formatTime } from '../../format.js';
+import { formatDateTime, formatFixed, formatNumber, formatTime } from '../../format.js';
 
 // An icon next to translated words: screen readers skip it (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -2033,7 +2033,7 @@ export async function fetchAndRenderAiStatus() {
 
     const dbSummary = document.getElementById('ai-index-db-summary');
     if (dbSummary) {
-      const sizeKb = stats.db_size_bytes ? (stats.db_size_bytes / 1024).toFixed(1) : '0.0';
+      const sizeKb = stats.db_size_bytes ? formatFixed(stats.db_size_bytes / 1024, 1) : formatFixed(0, 1);
       const defItems = res.standby_guard?.deferred_queue || res.sync_progress?.deferred_queue || [];
       const defCount = stats.deferred_queue_count ?? defItems.length ?? 0;
       const defDetail = defItems.length > 0

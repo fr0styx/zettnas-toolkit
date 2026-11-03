@@ -4,6 +4,7 @@
 import { prefersReducedMotion } from '../../motion.js';
 import { t } from '../../i18n.js';
 import { showDockToast } from './notifications.js';
+import { formatFixed } from '../../format.js';
 
 let _magnificationEnabled = true;
 let _magnificationScale = 1.45;
@@ -137,7 +138,7 @@ export function applyDockSettings(position = 'bottom', magnification = true, max
     }
 
     const magVal = document.getElementById('dock-magnification-val');
-    if (magVal) magVal.textContent = `${_magnificationScale.toFixed(2)}x`;
+    if (magVal) magVal.textContent = `${formatFixed(_magnificationScale, 2)}x`;
 
     const autohideToggle = document.getElementById('dock-autohide-toggle');
     if (autohideToggle) autohideToggle.checked = _dockAutohide;

@@ -14,6 +14,7 @@ let _events = null;
 const renderEventLog = (list) => (_events ||= import('./events.js')).then((m) => m.renderEventLog(list));
 import { checkAndTriggerSetupWizard } from './setup-wizard-gate.js';
 import { t } from '../i18n.js';
+import { formatFixed } from '../format.js';
 
 const $ = (id) => document.getElementById(id);
 const FAN_LABELS = ['D1', 'D2', 'CPU', 'SYS'];
@@ -1694,7 +1695,7 @@ export function handlePendingIngest(pendingIngest) {
 
   _activeIngestPromptTs = pendingIngest.ts;
   const slotName = pendingIngest.slot === 'sd' ? 'SD Card' : 'TF (MicroSD) Card';
-  const sizeGb = pendingIngest.size ? (pendingIngest.size / 1e9).toFixed(1) + ' GB' : '';
+  const sizeGb = pendingIngest.size ? formatFixed(pendingIngest.size / 1e9, 1) + ' GB' : '';
   const devStr = pendingIngest.dev ? `/dev/${pendingIngest.dev}` : pendingIngest.slot.toUpperCase();
   const destPath = pendingIngest.dest || '/mnt/user/';
 
@@ -1819,7 +1820,7 @@ export function updateCopyToast(copyState) {
         const remaining = Math.max(0, total - copied) / rate;
         const mins = Math.floor(remaining / 60);
         const secs = Math.floor(remaining % 60);
-        const mbps = (rate / 1024 / 1024).toFixed(1);
+        const mbps = formatFixed(rate / 1024 / 1024, 1);
         let filesLeftStr = '';
         if (prog.files_total) {
           const left = Math.max(0, prog.files_total - (prog.files_done || 0));
@@ -1945,10 +1946,10 @@ export function updateMediaSlots(mediaSlots) {
 
   // Surface toast on card insertion (0 -> >0 transition) ONLY if not in ejected state
   if (_prevClientMediaSlots.sd !== null && _prevClientMediaSlots.sd === 0 && sdSize > 0 && !sdEjected) {
-    showToast(t('toast.sd_card_detected_gb_ready_for', '📷 SD Card Detected ({value} GB): Ready for import', { value: (sdSize / 1e9).toFixed(1) }), 'info');
+    showToast(t('toast.sd_card_detected_gb_ready_for', '📷 SD Card Detected ({value} GB): Ready for import', { value: formatFixed(sdSize / 1e9, 1) }), 'info');
   }
   if (_prevClientMediaSlots.tf !== null && _prevClientMediaSlots.tf === 0 && tfSize > 0 && !tfEjected) {
-    showToast(t('toast.tf_microsd_detected_gb_ready_for', '📷 TF (MicroSD) Detected ({value} GB): Ready for import', { value: (tfSize / 1e9).toFixed(1) }), 'info');
+    showToast(t('toast.tf_microsd_detected_gb_ready_for', '📷 TF (MicroSD) Detected ({value} GB): Ready for import', { value: formatFixed(tfSize / 1e9, 1) }), 'info');
   }
   _prevClientMediaSlots.sd = sdSize;
   _prevClientMediaSlots.tf = tfSize;
@@ -1978,7 +1979,7 @@ export function updateMediaSlots(mediaSlots) {
   const slotBadge = $('media-slot-info-badge');
   if (slotBadge) {
     if (sdSize > 0) {
-      slotBadge.textContent = `SD: ${(sdSize / 1e9).toFixed(1)} GB${sdEjected ? ` ${t('dash.ejected', '(EJECTED)')}` : ''}`;
+      slotBadge.textContent = `SD: ${formatFixed(sdSize / 1e9, 1)} GB${sdEjected ? ` ${t('dash.ejected', '(EJECTED)')}` : ''}`;
       if (sdEjected) {
         slotBadge.style.background = 'rgba(234, 179, 8, 0.15)';
         slotBadge.style.color = '#eab308';
@@ -1989,7 +1990,7 @@ export function updateMediaSlots(mediaSlots) {
         slotBadge.style.borderColor = 'rgba(37,194,160,0.35)';
       }
     } else if (tfSize > 0) {
-      slotBadge.textContent = `TF: ${(tfSize / 1e9).toFixed(1)} GB${tfEjected ? ` ${t('dash.ejected', '(EJECTED)')}` : ''}`;
+      slotBadge.textContent = `TF: ${formatFixed(tfSize / 1e9, 1)} GB${tfEjected ? ` ${t('dash.ejected', '(EJECTED)')}` : ''}`;
       if (tfEjected) {
         slotBadge.style.background = 'rgba(234, 179, 8, 0.15)';
         slotBadge.style.color = '#eab308';

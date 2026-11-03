@@ -14,7 +14,7 @@ import { ZettEventBus } from '../event-bus.js';
 import { openStackModal } from './stack-modal.js';
 import { createTerminalView } from './terminal-view.js';
 
-import { formatDateTime, formatTime } from '../format.js';
+import { formatDateTime, formatFixed, formatTime } from '../format.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
@@ -674,7 +674,7 @@ async function loadContainerDetails(cid) {
             <tr><td style="color:var(--muted); font-weight:600;">${t('ci.full_id', 'Full container ID')}</td><td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--muted); word-break:break-all;">${escapeHtml(ov.full_id)}</td></tr>
             <tr><td style="color:var(--muted); font-weight:600;">${t('ci.restart_policy', 'Restart policy')}</td><td><code>${escapeHtml(ov.restart_policy)}</code></td></tr>
             <tr><td style="color:var(--muted); font-weight:600;">${t('ci.platform', 'Platform / OS')}</td><td>${escapeHtml(ov.platform)}</td></tr>
-            <tr><td style="color:var(--muted); font-weight:600;">${t('ci.memory_limit', 'Memory limit')}</td><td>${res.memory_limit ? (res.memory_limit / (1024 * 1024)).toFixed(0) + ' MB' : 'Unlimited'}</td></tr>
+            <tr><td style="color:var(--muted); font-weight:600;">${t('ci.memory_limit', 'Memory limit')}</td><td>${res.memory_limit ? formatFixed(res.memory_limit / (1024 * 1024), 0) + ' MB' : 'Unlimited'}</td></tr>
             <tr><td style="color:var(--muted); font-weight:600;">${t('ci.startup_cmd', 'Startup command')}</td><td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs); color:var(--zn-text-soft); word-break:break-all;">${escapeHtml(ov.command)}</td></tr>
           </tbody>
         </table>

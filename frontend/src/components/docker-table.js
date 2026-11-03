@@ -9,6 +9,7 @@ import { t } from '../i18n.js';
 
 import { api } from '../api.js';
 import { showToast, showConfirmToast } from '../toast.js';
+import { formatFixed } from '../format.js';
 let _selectedContainerIds = new Set();
 
 export function getSelectedContainerIds() {
@@ -87,8 +88,8 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   // Column 4: Telemetry (CPU / RAM)
   let telemHtml = '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">—</span>';
   if (isRunning) {
-    const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
-    const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
+    const cpuStr = `${formatFixed(c.cpu_pct || 0, 1)}%`;
+    const memStr = c.mem_used ? `${formatFixed(c.mem_used / (1024 * 1024), 0)} MB` : '--';
     telemHtml = `<span class="docker-telemetry-pill"><span class="telem-cpu">${cpuStr}</span><span style="opacity:0.4;">•</span><span class="telem-mem">${memStr}</span></span>`;
   }
 
@@ -248,8 +249,8 @@ export function updateContainerRow(tr, c, currentHost, updateInfo = null) {
   const telemCell = tr.querySelector('.docker-telemetry-cell');
   if (telemCell) {
     if (isRunning) {
-      const cpuStr = `${(c.cpu_pct || 0).toFixed(1)}%`;
-      const memStr = c.mem_used ? `${(c.mem_used / (1024 * 1024)).toFixed(0)} MB` : '--';
+      const cpuStr = `${formatFixed(c.cpu_pct || 0, 1)}%`;
+      const memStr = c.mem_used ? `${formatFixed(c.mem_used / (1024 * 1024), 0)} MB` : '--';
       const cpuEl = telemCell.querySelector('.telem-cpu');
       const memEl = telemCell.querySelector('.telem-mem');
       if (cpuEl && memEl) {

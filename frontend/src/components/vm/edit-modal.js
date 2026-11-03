@@ -14,6 +14,7 @@ import { openKvmDiagnosticsModal } from './connect-modal.js';
 import { vtpmBadgeHtml } from './shared.js';
 import { openVmSnapshotsModal } from './snapshots.js';
 import { loadVmDashboard } from '../vm-manager.js';
+import { formatFixed } from '../../format.js';
 
 /**
  * Opens detailed Error Modal when QEMU hypervisor fails to launch
@@ -560,7 +561,7 @@ export function openVmEditModal(vmId, vmObj = null) {
 
   if (ramSlider && ramDisplay) {
     ramSlider.oninput = () => {
-      ramDisplay.textContent = `${parseFloat(ramSlider.value).toFixed(1)} GB`;
+      ramDisplay.textContent = `${formatFixed(parseFloat(ramSlider.value), 1)} GB`;
     };
   }
 

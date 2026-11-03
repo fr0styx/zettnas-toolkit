@@ -12,7 +12,7 @@ import { t } from '../../i18n.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
 const ico = (e) => `<span aria-hidden="true">${e}</span>`;
-import { formatBytes as formatSize, formatDateTime, formatNumber } from '../../format.js';
+import { formatBytes as formatSize, formatDateTime, formatFixed, formatNumber } from '../../format.js';
 import { showServeLink } from './ai.js';
 
 export async function fetchAndRenderCopyHistory() {
@@ -27,8 +27,8 @@ export async function fetchAndRenderCopyHistory() {
     tbody.innerHTML = history.map((item) => {
       const d = new Date(item.ts * 1000);
       const timeStr = formatDateTime(d);
-      const sizeMB = (item.total_bytes / (1024 * 1024)).toFixed(1);
-      const durStr = item.duration_sec ? `${item.duration_sec.toFixed(1)}s` : '--';
+      const sizeMB = formatFixed(item.total_bytes / (1024 * 1024), 1);
+      const durStr = item.duration_sec ? `${formatFixed(item.duration_sec, 1)}s` : '--';
       const isSuccess = item.status === 'success';
       const statusColor = isSuccess ? 'var(--ok2)' : item.status === 'aborted' ? 'var(--warn)' : 'var(--crit)';
       const checksumBadge = item.checksum_verified
@@ -171,8 +171,8 @@ export async function fetchAndRenderReplication() {
               <td>${escapeHtml(dt)}</td>
               <td><code>${escapeHtml(h.job_id || '--')}</code></td>
               <td>${escapeHtml(h.target || '--')}</td>
-              <td>${h.bytes_transferred ? (h.bytes_transferred / (1024 * 1024)).toFixed(1) + ' MB' : '--'}</td>
-              <td>${h.duration_seconds ? `${h.duration_seconds.toFixed(1)}s` : '--'}</td>
+              <td>${h.bytes_transferred ? formatFixed(h.bytes_transferred / (1024 * 1024), 1) + ' MB' : '--'}</td>
+              <td>${h.duration_seconds ? `${formatFixed(h.duration_seconds, 1)}s` : '--'}</td>
               <td><span class="mgmt-app-pill ${isOk ? 'text-emerald' : 'text-crimson'}">${isOk ? '✓ Success' : 'Failed'}</span></td>
             </tr>
           `;

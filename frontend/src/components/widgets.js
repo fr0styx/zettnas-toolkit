@@ -73,7 +73,7 @@ function formatSpeed(bytesPerSec) {
   const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
   const i = Math.floor(Math.log(bytesPerSec) / Math.log(k));
   if (i < 0) return '0 B/s';
-  return parseFloat((bytesPerSec / Math.pow(k, i)).toFixed(1)) + ' ' + (sizes[i] || 'B/s');
+  return formatNumber(bytesPerSec / Math.pow(k, i), { maximumFractionDigits: 1 }) + ' ' + (sizes[i] || 'B/s');
 }
 
 export function loadWidgetConfig() {
@@ -1970,7 +1970,7 @@ export function initWidgets() {
       const txRate = stats.net.tx_rate || 0;
       const linkSpeedMbps = stats.net.speed || 1000;
       if (netDialSpeed) {
-        netDialSpeed.textContent = linkSpeedMbps >= 1000 ? `${(linkSpeedMbps / 1000).toFixed(1).replace('.0', '')}G` : `${linkSpeedMbps}M`;
+        netDialSpeed.textContent = linkSpeedMbps >= 1000 ? `${formatNumber(linkSpeedMbps / 1000, { maximumFractionDigits: 1 })}G` : `${linkSpeedMbps}M`;
       }
       if (netDialRx) netDialRx.textContent = formatSpeed(rxRate);
       if (netDialTx) netDialTx.textContent = formatSpeed(txRate);

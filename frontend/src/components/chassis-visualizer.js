@@ -7,7 +7,7 @@ import { showToast, showConfirmToast, showPromptToast } from '../toast.js';
 import { state } from '../state.js';
 import { makeDraggable, bringToFront, DockManager } from './dock.js';
 
-import { formatBytes as formatSize, formatDateTime } from '../format.js';
+import { formatBytes as formatSize, formatDateTime, formatFixed } from '../format.js';
 import { emptyStateHtml } from './empty-state.js';
 
 // An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
@@ -649,9 +649,9 @@ export function formatBytes(bytes) {
 export function formatNumber(num) {
   if (!num) return '0';
   const n = Number(num);
-  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  if (n >= 1e9) return formatFixed(n / 1e9, 1) + 'B';
+  if (n >= 1e6) return formatFixed(n / 1e6, 1) + 'M';
+  if (n >= 1e3) return formatFixed(n / 1e3, 1) + 'K';
   return String(n);
 }
 

@@ -22,6 +22,7 @@ import { statusHtml as healthHtml } from './management/overview.js';
 import { advancedOn, isAdvancedRoute } from '../advanced.js';
 import { announceChange } from '../a11y.js';
 import { hideUnusable } from '../route-access.js';
+import { formatFixed } from '../format.js';
 
 const PAGE_SELECTOR = '.os-window, .file-manager-window, #management-window, #notif-center-panel, #containers-manager-window, #phone-alerts-page';
 // A page on its way out is not open any more
@@ -263,7 +264,7 @@ function schedule() {
 
 function fmtRate(bytes) {
   const b = Number(bytes) || 0;
-  if (b >= 1048576) return `${(b / 1048576).toFixed(1)} MB/s`;
+  if (b >= 1048576) return `${formatFixed(b / 1048576, 1)} MB/s`;
   if (b >= 1024) return `${Math.round(b / 1024)} KB/s`;
   return `${Math.round(b)} B/s`;
 }
