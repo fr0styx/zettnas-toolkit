@@ -2425,7 +2425,7 @@ export function renderAiPreviewInspector(item) {
   if (dlBtn) {
     dlBtn.addEventListener('click', () => {
       const a = document.createElement('a');
-      a.href = `/api/files/download?path=${encodeURIComponent(fPath)}`;
+      a.href = `/api/fs/download?path=${encodeURIComponent(fPath)}`;
       a.download = fName;
       document.body.appendChild(a);
       a.click();
@@ -2441,7 +2441,7 @@ export function renderAiPreviewInspector(item) {
         if (favRes) {
           item.is_favorite = Boolean(favRes.is_favorite);
           renderAiPreviewInspector(item);
-          showToast(item.is_favorite ? `Added "${fName}" to ZettAI Favorites ⭐` : `Removed "${fName}" from Favorites`, 'success');
+          showToast(item.is_favorite ? t('aiq.fav_added', 'Added "{name}" to favorites', { name: fName }) : t('aiq.fav_removed', 'Removed "{name}" from favorites', { name: fName }), 'success');
         }
       } catch (err) {
         showToast(t('toast.failed_to_toggle_favorite', 'Failed to toggle favorite: {error}', { error: err.message }), 'error');
@@ -2452,7 +2452,7 @@ export function renderAiPreviewInspector(item) {
   const shareBtn = document.getElementById('btn-ai-inspector-share');
   if (shareBtn) {
     shareBtn.addEventListener('click', async () => {
-      const shareUrl = `${window.location.origin}/api/files/download?path=${encodeURIComponent(fPath)}`;
+      const shareUrl = `${window.location.origin}/api/fs/download?path=${encodeURIComponent(fPath)}`;
       try {
         await copyText(shareUrl);
         showToast(t('toast.copied_share_link_for_to_clipboard', 'Copied share link for {fName} to clipboard!', { fName: fName }), 'success');

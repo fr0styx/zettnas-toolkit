@@ -5770,6 +5770,8 @@ export default {
   "aiq.download": "Herunterladen",
   "aiq.favorited": "Favorit",
   "aiq.favorite": "Als Favorit",
+  "aiq.fav_added": "„{name}“ zu den Favoriten hinzugefügt",
+  "aiq.fav_removed": "„{name}“ aus den Favoriten entfernt",
   "aiq.share": "Dateipfad / Link teilen",
   "aiq.visual_searching": "Bilder- und Medienindex wird durchsucht…",
   "aiq.intent": "Erkannte Suche:",

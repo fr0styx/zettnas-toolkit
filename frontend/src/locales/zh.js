@@ -5770,6 +5770,8 @@ export default {
   "aiq.download": "下载",
   "aiq.favorited": "已收藏",
   "aiq.favorite": "收藏",
+  "aiq.fav_added": "已将“{name}”加入收藏",
+  "aiq.fav_removed": "已将“{name}”移出收藏",
   "aiq.share": "分享文件路径 / 链接",
   "aiq.visual_searching": "正在搜索图像和多模态索引…",
   "aiq.intent": "解析出的视觉意图：",

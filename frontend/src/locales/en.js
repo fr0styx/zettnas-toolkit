@@ -5770,6 +5770,8 @@ export default {
   "aiq.download": "Download",
   "aiq.favorited": "Favorited",
   "aiq.favorite": "Favorite",
+  "aiq.fav_added": "Added \"{name}\" to favorites",
+  "aiq.fav_removed": "Removed \"{name}\" from favorites",
   "aiq.share": "Share File Path / Link",
   "aiq.visual_searching": "Searching visual & multi-modal index...",
   "aiq.intent": "Parsed Visual Intent:",
