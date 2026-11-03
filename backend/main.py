@@ -388,6 +388,13 @@ def startup_system():
     atexit.register(lambda: Z_STATE.fans_locked or _shutdown_fans("exit"))
 
 
+def _rejoin_app_networks() -> None:
+    """ZettNAS back on the networks it shares with apps, which an update leaves behind (NSEC-10)."""
+    from backend.services.app_networks import rejoin
+
+    rejoin()
+
+
 def _open_encrypted_folders() -> None:
     """Encrypted folders whose password is kept open when ZettNAS starts (FEAT-13)."""
     from backend.services.encrypted_folders import unlock_at_start
@@ -472,6 +479,7 @@ async def lifespan(app: FastAPI):
     broadcaster.set_loop(loop)
     startup_system()
     threading.Thread(target=_open_encrypted_folders, name="EncryptedFolders", daemon=True).start()
+    threading.Thread(target=_rejoin_app_networks, name="AppNetworks", daemon=True).start()
     try:
         yield
     finally:

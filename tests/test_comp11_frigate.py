@@ -152,30 +152,20 @@ def test_deploy_options(monkeypatch):
     body = {"HostConfig": {}}
     app_catalog._apply_runtime_options(body, {"shm_size": 268435456})
     assert body["HostConfig"]["ShmSize"] == 268435456
-    nets = {"NetworkSettings": {"Networks": {"bridge": {}, "zettnas_default": {}}}}
-    monkeypatch.setattr(app_catalog, "_docker_request", lambda m, p: (200, nets))
-    assert app_catalog._zettnas_network() == "zettnas_default"
+    monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: f"zettnas-app-{app_id}")
     joined = {"HostConfig": {}}
-    app_catalog._apply_runtime_options(joined, {"join_zettnas_network": True})
-    assert joined["HostConfig"]["NetworkMode"] == "zettnas_default"
+    app_catalog._apply_runtime_options(joined, {"id": "frigate", "join_zettnas_network": True})
+    assert joined["HostConfig"]["NetworkMode"] == "zettnas-app-frigate"  # its own network with ZettNAS (NSEC-10)
     kept = {"HostConfig": {"NetworkMode": "immich_net"}}
     app_catalog._apply_runtime_options(kept, {"join_zettnas_network": True})
     assert kept["HostConfig"]["NetworkMode"] == "immich_net"  # a stack's own network stays
-    monkeypatch.setattr(
-        app_catalog, "_docker_request", lambda m, p: (200, {"NetworkSettings": {"Networks": {"bridge": {}}}})
-    )
-    assert app_catalog._zettnas_network() is None  # names don't resolve on the default bridge
-    monkeypatch.setattr(app_catalog, "_docker_request", lambda m, p: (404, {}))
-    assert app_catalog._zettnas_network() is None
-
-    def broken(m, p):
-        raise OSError("no docker")
-
-    monkeypatch.setattr(app_catalog, "_docker_request", broken)
-    assert app_catalog._zettnas_network() is None
+    monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: None)
+    alone = {"HostConfig": {}}
+    app_catalog._apply_runtime_options(alone, {"id": "frigate", "join_zettnas_network": True})
+    assert "NetworkMode" not in alone["HostConfig"]  # ZettNAS outside a container: Docker's default
 
 
-def test_frigate_deploys_on_zettnas_network(tmp_path, monkeypatch):
+def test_frigate_deploys_on_its_own_network(tmp_path, monkeypatch):
     import os
 
     from backend.services import app_catalog
@@ -184,11 +174,11 @@ def test_frigate_deploys_on_zettnas_network(tmp_path, monkeypatch):
     fake = FakeDocker()
     monkeypatch.setattr(app_catalog, "_docker_request", fake)
     monkeypatch.setattr(app_catalog, "check_port_available_detailed", lambda *a, **k: (True, None))
-    monkeypatch.setattr(app_catalog, "_zettnas_network", lambda: "zettnas_default")
+    monkeypatch.setattr("backend.services.app_networks.private_network", lambda app_id: f"zettnas-app-{app_id}")
     events = list(app_catalog.stream_deploy_catalog_app("frigate", storage_root=str(tmp_path)))
     assert events[-1]["step"] == "success", events[-1]
     body = fake.created["frigate"]
-    assert body["HostConfig"]["NetworkMode"] == "zettnas_default"
+    assert body["HostConfig"]["NetworkMode"] == "zettnas-app-frigate"
     assert body["HostConfig"]["ShmSize"] == 268435456
     with open(os.path.join(tmp_path, "frigate", "config", "config.yml"), encoding="utf-8") as f:
         assert "type: openvino" in f.read()

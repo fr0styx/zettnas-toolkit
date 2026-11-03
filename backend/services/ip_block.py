@@ -132,16 +132,17 @@ def list_blocks() -> list[dict[str, Any]]:
 
 
 APP_NETWORK_SECS = 600
-_app_net: dict[str, Any] = {"at": -1e9, "net": None}
+_app_net: dict[str, Any] = {"at": -1e9, "net": ()}
 
 
-def _app_network() -> Any:
-    """The subnet of ZettNAS's own Docker network, where the apps it installs (the office suite)
-    relay their users' sign-ins; None on the default bridge or host networking. Cached."""
+def _app_networks() -> tuple[Any, ...]:
+    """The subnets of the Docker networks ZettNAS shares with apps it installs (its own network,
+    and each app's own since NSEC-10), where the office suite relays its users' sign-ins; none on
+    the default bridge or host networking. Cached."""
     now = time.monotonic()
     if now - _app_net["at"] < APP_NETWORK_SECS:
         return _app_net["net"]
-    net = None
+    found = []
     try:
         import socket
 
@@ -151,20 +152,19 @@ def _app_network() -> Any:
         nets = ((me or {}).get("NetworkSettings") or {}).get("Networks") or {} if status == 200 else {}
         for name, info in nets.items():
             if name not in ("host", "bridge", "none") and info.get("IPAddress") and info.get("IPPrefixLen"):
-                net = ipaddress.ip_network(f"{info['IPAddress']}/{info['IPPrefixLen']}", strict=False)
-                break
+                found.append(ipaddress.ip_network(f"{info['IPAddress']}/{info['IPPrefixLen']}", strict=False))
     except (OSError, ValueError, RuntimeError, docker_client.DockerUnavailable):
         logger.debug("ip_block: own network unknown", exc_info=True)
-    _app_net.update(at=now, net=net)
-    return net
+    _app_net.update(at=now, net=tuple(found))
+    return _app_net["net"]
 
 
 def _relay(ip: str) -> bool:
     """An app on ZettNAS's own network checking a person's password for them: its address is
     shared by the whole family, so it isn't blocked; each account's own lockout still holds (NSEC-6)."""
-    net = _app_network()
     try:
-        return bool(net) and ipaddress.ip_address(ip) in net
+        addr = ipaddress.ip_address(ip)
+        return any(addr in net for net in _app_networks())
     except ValueError:
         return False
 

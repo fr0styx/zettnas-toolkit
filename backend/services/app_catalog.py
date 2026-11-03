@@ -1256,22 +1256,6 @@ def default_storage_root() -> str:
     return root
 
 
-def _zettnas_network() -> str | None:
-    """The user-defined Docker network ZettNAS itself is on, for apps ZettNAS talks to by name
-    (COMP-11); None on the default bridge, where names don't resolve."""
-    import socket
-
-    try:
-        st, me = _docker_request("GET", f"/containers/{socket.gethostname()}/json")
-    except (OSError, ValueError):
-        logger.debug("app_catalog: own network unknown", exc_info=True)
-        return None
-    if st != 200 or not isinstance(me, dict):
-        return None
-    nets = ((me.get("NetworkSettings") or {}).get("Networks") or {}).keys()
-    return next((n for n in nets if n not in ("host", "none", "bridge")), None)
-
-
 def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> None:
     """Command, capabilities, kernel settings and devices a template asks for."""
     host = create_body.setdefault("HostConfig", {})
@@ -1284,7 +1268,9 @@ def _apply_runtime_options(create_body: dict[str, Any], app: dict[str, Any]) -> 
     if app.get("shm_size"):
         host["ShmSize"] = int(app["shm_size"])
     if app.get("join_zettnas_network") and not host.get("NetworkMode"):
-        net = _zettnas_network()  # reachable from ZettNAS by name, no port published
+        from backend.services.app_networks import private_network
+
+        net = private_network(str(app.get("id") or "app"))  # ZettNAS reaches it by name; nothing else does (NSEC-10)
         if net:
             host["NetworkMode"] = net
     devices = [
