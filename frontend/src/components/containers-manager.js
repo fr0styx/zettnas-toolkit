@@ -180,10 +180,6 @@ export function initContainersManager() {
               </tbody>
             </table>
           </div>
-          <!-- Sticky Bottom Horizontal Scrollbar (Sticky to viewport bottom) -->
-          <div class="docker-table-sticky-scroll" id="cw-docker-table-sticky-scroll" style="display:none;" aria-label="${t('ui.horizontal_scrollbar_bottom', 'Horizontal scrollbar (bottom)')}" title="${t('ui.scroll_table_horizontally', 'Scroll table horizontally')}">
-            <div class="docker-table-sticky-scroll-inner" id="cw-docker-table-sticky-scroll-inner"></div>
-          </div>
           <div id="cw-docker-bulk-bar" class="docker-floating-bulk-bar" style="display: none;">
             <div class="bulk-bar-info">
               <span id="cw-docker-bulk-count" class="bulk-bar-count">0</span>
@@ -218,6 +214,11 @@ export function initContainersManager() {
               <div style="text-align: center; color: var(--muted); padding: 24px; grid-column: 1 / -1;">${t('cw.loading_catalog', 'Loading the app catalog…')}</div>
             </div>
           </div>
+        </div>
+        <!-- The horizontal scrollbar sits on the window's bottom edge, outside the scrolling
+             area, as the vertical one sits on its right edge -->
+        <div class="docker-table-sticky-scroll cw-window-hscroll" id="cw-docker-table-sticky-scroll" style="display:none;" aria-label="${t('ui.horizontal_scrollbar_bottom', 'Horizontal scrollbar (bottom)')}" title="${t('ui.scroll_table_horizontally', 'Scroll table horizontally')}">
+          <div class="docker-table-sticky-scroll-inner" id="cw-docker-table-sticky-scroll-inner"></div>
         </div>
       </div>
     `;
@@ -381,8 +382,10 @@ export function initContainersManager() {
       const filterPills = containersWindow ? containersWindow.querySelector('.cw-docker-filter-pills') : null;
 
       _cwInCatalogView = !_cwInCatalogView;
+      const hBar = document.getElementById('cw-docker-table-sticky-scroll');
       if (_cwInCatalogView) {
         if (tableWrap) tableWrap.style.display = 'none';
+        if (hBar) hBar.style.display = 'none'; // the catalog doesn't scroll sideways
         if (catalogWrap) catalogWrap.style.display = 'flex';
         if (searchWrap) searchWrap.style.display = 'none';
         if (filterPills) filterPills.style.display = 'none';
@@ -394,6 +397,7 @@ export function initContainersManager() {
         }
       } else {
         if (tableWrap) tableWrap.style.display = 'block';
+        tableWrap?._syncScrollbarsController?.update(); // the bottom bar back, if the table is wide
         if (catalogWrap) catalogWrap.style.display = 'none';
         if (searchWrap) searchWrap.style.display = 'block';
         if (filterPills) filterPills.style.display = 'flex';

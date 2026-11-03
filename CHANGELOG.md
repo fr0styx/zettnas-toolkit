@@ -26,6 +26,10 @@
 
 #### Usability
 
+- **The Apps window scrolls sideways from its bottom edge**: the horizontal scrollbar is the
+  window's bottom edge, like the vertical one on the right, instead of floating above the last
+  rows.
+
 - **The Backups pane is built from the shared styles** (NUX-15): 25 inline styles became
   classes, pixel-for-pixel the same in both themes.
 

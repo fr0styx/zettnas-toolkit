@@ -309,8 +309,10 @@ export function initSynchronizedTableScrollbars(tableWrapEl, topScrollEl, sticky
 
     if (stickyScrollEl && stickyInner) {
       if (needsScroll) {
-        stickyInner.style.width = `${scrollWidth}px`;
         stickyScrollEl.style.display = 'block';
+        // the bar may be as wide as the window rather than the table: the same scroll range
+        const barWidth = stickyScrollEl.clientWidth || clientWidth;
+        stickyInner.style.width = `${scrollWidth - clientWidth + barWidth}px`;
         stickyScrollEl.scrollLeft = tableWrapEl.scrollLeft;
       } else {
         stickyScrollEl.style.display = 'none';
