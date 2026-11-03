@@ -70,18 +70,27 @@ describe('detail windows (modals.js)', () => {
     expect(byId('smart-meta-health').style.color).toBe('var(--crit)');
 
     ZettEventBus.emit('modal:metric:open', 'cpu');
-    expect(byId('smart-meta-health').textContent).toBe('ELEVATED');
+    expect(byId('smart-meta-health').textContent).toBe('High');
+    expect(byId('smart-modal-raw-title').textContent).toBe('Processor details');
     expect(byId('smart-raw-output').textContent).toContain('IP: 10.0.0.9');
     ZettEventBus.emit('modal:metric:open', 'mem');
     expect(byId('smart-meta-hours').textContent).toBe('10.0 GB');
+    tick({ ...STATS, cpu: { temp: 40, util: 5 } });
+    ZettEventBus.emit('modal:metric:open', 'cpu');
+    expect(byId('smart-meta-health').textContent).toBe('Normal');
+    ZettEventBus.emit('modal:metric:open', 'mem');
+    tick(STATS);
     ZettEventBus.emit('modal:metric:open', 'fans');
     expect(byId('smart-meta-serial').textContent).toBe('N/A');
     expect(byId('smart-meta-health').textContent).toBe('1200 RPM');
+    expect(byId('smart-raw-output').textContent).toContain('Fan 2 (disks): 0 RPM');
     ZettEventBus.emit('modal:metric:open', 'net');
     expect(byId('smart-meta-model').textContent).toBe('1 MB/s');
 
     tick({ ...STATS, net: null });
     expect(byId('smart-meta-model').textContent).toBe('0 KB/s');
+    expect(byId('smart-raw-output').textContent).toContain('Sending: 0 KB/s');
+    expect(byId('smart-meta-health').textContent).toBe('Connected');
     byId('smart-modal-refresh').click();
     expect(byId('smart-lbl-4').textContent).toBe('IP address');
     window.dispatchEvent(new Event('zettnas:lang-changed'));

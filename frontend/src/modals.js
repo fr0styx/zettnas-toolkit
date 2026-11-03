@@ -123,10 +123,10 @@ function updateMetricModalLive() {
   } else if (activeModalType === "cpu") {
     smartModel.textContent = `${s.cpu.temp}°C`;
     smartSerial.textContent = `${s.cpu.util}%`;
-    smartHealth.textContent = s.cpu.temp >= 75 ? "ELEVATED" : "OPTIMAL";
+    smartHealth.textContent = s.cpu.temp >= 75 ? t('modal.heat_high', 'High') : t('modal.heat_ok', 'Normal');
     smartHealth.style.color = s.cpu.temp >= 75 ? "var(--warn)" : "var(--ok)";
     smartHours.textContent = s.uptime;
-    smartRaw.textContent = `Host: ${s.name}\nIP: ${s.ip}\nCPU Temp: ${s.cpu.temp}°C\nCPU Util: ${s.cpu.util}%\nUptime: ${s.uptime}`;
+    smartRaw.textContent = t('modal.raw_cpu', 'Host: {name}\nIP: {ip}\nTemperature: {temp}°C\nBusy: {util}%\nRunning for: {uptime}', { name: s.name, ip: s.ip, temp: s.cpu.temp, util: s.cpu.util, uptime: s.uptime });
   } else if (activeModalType === "mem") {
     smartModel.textContent = `${s.mem.used_gb} GB`;
     smartSerial.textContent = `${s.mem.total_gb} GB`;
@@ -139,14 +139,15 @@ function updateMetricModalLive() {
     smartModel.textContent = f[0] ? `${f[0]} RPM` : "N/A";
     smartSerial.textContent = f[1] ? `${f[1]} RPM` : "N/A";
     smartHealth.textContent = f[2] ? `${f[2]} RPM` : "N/A";
-    smartRaw.textContent = `Tachometer Inputs:\n- Fan 1 (Disks 1): ${f[0] || 0} RPM\n- Fan 2 (Disks 2): ${f[1] || 0} RPM\n- Fan 3 (CPU): ${f[2] || 0} RPM\n- Sysfs Path: /sys/class/hwmon\n- Native Duty Range: 0-183`;
+    smartRaw.textContent = t('modal.raw_fans', 'Fan 1 (disks): {f1} RPM\nFan 2 (disks): {f2} RPM\nFan 3 (processor): {f3} RPM\nSensors: /sys/class/hwmon\nDuty range: 0–183', { f1: f[0] || 0, f2: f[1] || 0, f3: f[2] || 0 });
   } else if (activeModalType === "net") {
-    smartModel.textContent = s.net ? s.net.tx : "0 KB/s";
-    smartSerial.textContent = s.net ? s.net.rx : "0 KB/s";
-    smartHealth.textContent = "CONNECTED";
+    const idle = t('modal.no_traffic', '0 KB/s');
+    smartModel.textContent = s.net ? s.net.tx : idle;
+    smartSerial.textContent = s.net ? s.net.rx : idle;
+    smartHealth.textContent = t('modal.link_up', 'Connected');
     smartHealth.style.color = "var(--ok)";
     smartHours.textContent = s.ip;
-    smartRaw.textContent = `Network Subsystem Telemetry:\n- Host IP: ${s.ip}\n- Interface Transmit Rate (TX): ${s.net ? s.net.tx : "0 KB/s"}\n- Interface Receive Rate (RX): ${s.net ? s.net.rx : "0 KB/s"}\n- Host Source: /proc/net/dev`;
+    smartRaw.textContent = t('modal.raw_net', 'Address: {ip}\nSending: {tx}\nReceiving: {rx}\nSource: /proc/net/dev', { ip: s.ip, tx: s.net ? s.net.tx : idle, rx: s.net ? s.net.rx : idle });
   }
 }
 
@@ -197,21 +198,21 @@ function openMetricModal(type) {
     smartLbl3.textContent = t('modal.utilization', "In use");
     smartLbl4.textContent = t('modal.target_pool', "Pool");
     smartHours.textContent = "/mnt/user";
-    smartRawTitle.textContent = "ACTIVE DISK INVENTORY";
+    smartRawTitle.textContent = t('modal.raw_title_storage', 'Disks in use');
   } else if (type === "cpu") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-cpu"/></svg> ${t('modal.cpu_diag', 'Processor Diagnostics')}`;
     smartLbl1.textContent = t('modal.core_temp', "Temperature");
     smartLbl2.textContent = t('modal.active_util', "Busy");
     smartLbl3.textContent = t('modal.thermal_state', "Heat");
     smartLbl4.textContent = t('modal.system_uptime', "Running for");
-    smartRawTitle.textContent = "CPU TOPOLOGY & DELTAS";
+    smartRawTitle.textContent = t('modal.raw_title_cpu', 'Processor details');
   } else if (type === "mem") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-mem"/></svg> ${t('modal.mem_diag', 'Memory Distribution')}`;
     smartLbl1.textContent = t('modal.ram_used', "Memory used");
     smartLbl2.textContent = t('modal.ram_total', "Memory total");
     smartLbl3.textContent = t('modal.usage', "Usage");
     smartLbl4.textContent = t('modal.free_mem', "Free memory");
-    smartRawTitle.textContent = "HOST MEMINFO SNAPSHOT";
+    smartRawTitle.textContent = t('modal.raw_title_mem', 'Memory details');
   } else if (type === "fans") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-fan"/></svg> ${t('modal.fans_diag', 'Cooling & Fan Tachometers')}`;
     smartLbl1.textContent = t('modal.rear_fan_1', "Rear fan 1");
@@ -220,14 +221,14 @@ function openMetricModal(type) {
     smartHealth.style.color = "var(--ok2)";
     smartLbl4.textContent = t('modal.hwmon_chip', "Sensor chip");
     smartHours.textContent = "zettlab_d8_fans";
-    smartRawTitle.textContent = "LIVE FAN SENSOR TELEMETRY";
+    smartRawTitle.textContent = t('modal.raw_title_fans', 'Fan sensors');
   } else if (type === "net") {
     smartTitle.innerHTML = `<svg class="ic"><use href="#i-net"/></svg> ${t('modal.net_diag', 'Network Throughput Diagnostics')}`;
     smartLbl1.textContent = t('modal.current_tx', "Sending now");
     smartLbl2.textContent = t('modal.current_rx', "Receiving now");
     smartLbl3.textContent = t('modal.link_state', "Connection");
     smartLbl4.textContent = t('modal.primary_ip', "IP address");
-    smartRawTitle.textContent = "NETWORK INTERFACE TELEMETRY";
+    smartRawTitle.textContent = t('modal.raw_title_net', 'Network interface');
   }
   updateMetricModalLive();
 }
