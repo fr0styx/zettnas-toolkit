@@ -1,7 +1,7 @@
 {
   "raw_toasts": 0,
   "raw_dialogs": 0,
-  "hardcoded_ui": 145,
+  "hardcoded_ui": 144,
   "missing_plurals": 0,
   "to_fixed": 38,
   "emoji_strings": 18,
@@ -26,7 +26,6 @@
     "frontend/src/components/stack-modal.js": 2,
     "frontend/src/components/vm/console.js": 7,
     "frontend/src/components/widgets.js": 1,
-    "frontend/src/folder-browser.js": 1,
     "frontend/src/main.js": 6,
     "frontend/src/windows/drawer.html": 4,
     "frontend/src/windows/management-window.html": 48

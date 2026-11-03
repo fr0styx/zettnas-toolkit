@@ -82,17 +82,22 @@ def history(hours: int = 168, now: float | None = None) -> list[dict]:
 
 
 def growth(rows: list[dict]) -> list[dict]:
-    """Per process (one run between restarts): first and last sample and the growth per hour."""
-    runs: dict[int, list[dict]] = collections.defaultdict(list)
-    for r in rows:
-        runs[r["pid"]].append(r)
+    """Per run between restarts: first and last sample and the growth per hour. A run ends where
+    the PID changes or the uptime goes back down (in a container the backend is always PID 1)."""
+    runs: list[list[dict]] = []
+    for r in sorted(rows, key=lambda r: r["ts"]):
+        last = runs[-1][-1] if runs else None
+        if last is None or r["pid"] != last["pid"] or r["uptime_s"] < last["uptime_s"]:
+            runs.append([r])
+        else:
+            runs[-1].append(r)
     out = []
-    for pid, rs in runs.items():
+    for rs in runs:
         first, last = rs[0], rs[-1]
         hours = (last["ts"] - first["ts"]) / 3600
         out.append(
             {
-                "pid": pid,
+                "pid": first["pid"],
                 "from_ts": first["ts"],
                 "to_ts": last["ts"],
                 "uptime_s": last["uptime_s"],
@@ -101,7 +106,7 @@ def growth(rows: list[dict]) -> list[dict]:
                 "kb_per_hour": round((last["rss_kb"] - first["rss_kb"]) / hours) if hours >= 1 else None,
             }
         )
-    return sorted(out, key=lambda r: r["from_ts"])
+    return out
 
 
 def object_counts(limit: int = 25, objects=None) -> list[dict]:

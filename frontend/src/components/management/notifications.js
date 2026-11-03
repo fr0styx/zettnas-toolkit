@@ -58,7 +58,7 @@ export function renderNotificationConfigUI() {
   }
 
   // Channel badges
-  const updateBadge = (id, active, activeText = 'Active') => {
+  const updateBadge = (id, active, activeText = t('notif.badge.active', 'Active')) => {
     const b = document.getElementById(id);
     if (!b) return;
     b.textContent = active ? activeText : t('ntf.off', 'Off');
@@ -74,7 +74,7 @@ export function renderNotificationConfigUI() {
   updateBadge('notif-badge-webhook', !!(cfg.webhook_enabled && cfg.webhook_url));
 
   const rawCount = Array.isArray(cfg.apprise_urls) ? cfg.apprise_urls.length : 0;
-  updateBadge('notif-badge-apprise', rawCount > 0, `${rawCount} URLs`);
+  updateBadge('notif-badge-apprise', rawCount > 0, t('ntf.url_count', '{count, plural, one {# URL} other {# URLs}}', { count: rawCount }));
 
   // Event trigger checkboxes
   const setChk = (id, val) => {
@@ -136,7 +136,7 @@ export async function saveNotificationsConfig() {
     showToast(t('notif.saved_ok', 'Notification settings saved successfully!'), 'success');
   } catch (err) {
     console.error('Failed to save notification settings:', err);
-    showToast(err.message || 'Failed to save notifications', 'error');
+    showToast(err.message || t('notif.save_fail', 'Failed to save the notification settings'), 'error');
   }
 }
 
@@ -160,7 +160,7 @@ export async function testAllNotificationChannels() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `⚡ <span data-i18n="mgmt.notif_btn_test_all">Send Test Alert</span>`;
+      btn.innerHTML = '⚡ <span data-i18n="mgmt.notif_btn_test_all">' + escapeHtml(t('mgmt.notif_btn_test_all', 'Send Test Alert')) + '</span>';
     }
   }
 }
@@ -235,7 +235,7 @@ export function openChannelConfigModal(channel) {
           <input type="text" id="cfg-smtp-host" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="smtp.gmail.com" value="${escapeHtml(cfg.smtp_host || '')}">
         </div>
         <div>
-          <label for="cfg-smtp-port" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">PORT</label>
+          <label for="cfg-smtp-port" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.port', 'PORT')}</label>
           <input type="number" id="cfg-smtp-port" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" value="${cfg.smtp_port || 587}">
         </div>
       </div>

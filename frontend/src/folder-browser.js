@@ -104,7 +104,10 @@ window.addEventListener('DOMContentLoaded', () => {
     displayDirs = displayDirs.concat(otherDirs);
 
     if (displayDirs.length === 0) {
-      fbList.innerHTML = `<div style="padding: 10px 14px; color: var(--muted); font-size: var(--zn-fs-xs);">No folders found.</div>`;
+      const none = document.createElement("div");
+      none.style.cssText = "padding: 10px 14px; color: var(--muted); font-size: var(--zn-fs-xs);";
+      none.textContent = t("modal.fb_none", "No folders found.");
+      fbList.appendChild(none);
       return;
     }
 
@@ -280,7 +283,7 @@ window.addEventListener('DOMContentLoaded', () => {
         } else {
           const errData = await res.json().catch(() => ({}));
           fbNewFolderName.value = "";
-          fbNewFolderName.placeholder = "Error: " + (errData.detail || errData.error || "Failed");
+          fbNewFolderName.placeholder = t("modal.fb_create_failed", "Could not create the folder: {error}", { error: errData.detail || errData.error || res.status });
         }
       } catch(e) {
         fbNewFolderName.value = "";

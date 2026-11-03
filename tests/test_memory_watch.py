@@ -102,3 +102,14 @@ def test_the_endpoints(fresh, monkeypatch):
     assert out["samples"][0]["rss_kb"] == 300_000 and out["runs"][0]["pid"] == 5
     assert metrics.memory_breakdown(500)["objects"]
     assert metrics.memory_tracing(metrics.TracingIn(on=False)) == {"tracing": False}
+
+
+def test_a_restart_in_the_same_container_starts_a_new_run():
+    rows = [
+        {"ts": 0, "pid": 1, "uptime_s": 10, "rss_kb": 100},
+        {"ts": 3600, "pid": 1, "uptime_s": 3610, "rss_kb": 160},
+        {"ts": 4000, "pid": 1, "uptime_s": 5, "rss_kb": 90},
+        {"ts": 7600, "pid": 1, "uptime_s": 3605, "rss_kb": 95},
+    ]
+    runs = memory_watch.growth(rows)
+    assert [(r["rss_kb_first"], r["kb_per_hour"]) for r in runs] == [(100, 60), (90, 5)]
