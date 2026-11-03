@@ -3000,6 +3000,13 @@ export function renderDayAgenda(dateKey) {
   listEl.innerHTML = html;
 }
 
+/** The line under a feed's name: how many events it has and where they come from (NFEAT-7). */
+export function feedMeta(feed) {
+  const count = feed.event_count || 0;
+  const source = feed.provider === 'family' ? t('w.feed_family', 'Family calendar') : 'iCal';
+  return t('w.feed_meta', '{count, plural, one {# event} other {# events}} · {source}', { count, source });
+}
+
 export function renderFeedsList() {
   const container = document.getElementById('cal-feeds-list');
   if (!container) return;
@@ -3021,7 +3028,7 @@ export function renderFeedsList() {
           <span style="width: 8px; height: 8px; border-radius: 50%; background: ${escapeHtml(feed.color || '#38bdf8')};"></span>
           <div>
             <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${escapeHtml(feed.name)}</div>
-            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(t('w.feed_meta', '{count, plural, one {# event} other {# events}} · {source}', { count: feed.event_count || 0, source: feed.provider === 'family' ? t('w.feed_family', 'Family calendar') : 'iCal' }))}</div>
+            <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${escapeHtml(feedMeta(feed))}</div>
           </div>
         </div>
         <button type="button" class="btn-cal-delete-feed btn-icon" style="background: transparent; border: none; color: var(--lt-t-ef4444ff, #ef4444); opacity: 0.7; cursor: pointer; font-size: var(--zn-fs-xs); padding: 2px;" title="${t('ui.delete_feed', 'Delete Feed')}">🗑️</button>
