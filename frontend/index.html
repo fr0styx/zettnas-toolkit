@@ -953,13 +953,13 @@
     <!-- Segmented Navigation Tabs -->
     <div class="smart-nav-tabs" id="smart-nav-tabs">
       <button type="button" class="smart-tab-btn active" data-tab="health" id="smart-tab-btn-health">
-        <span class="tab-icon">🛡️</span> <span data-i18n="modal.smart_tab_health">🏥 Health</span>
+        <span class="tab-icon">🛡️</span> <span aria-hidden="true">🏥</span> <span data-i18n="modal.smart_tab_health">Health</span>
       </button>
       <button type="button" class="smart-tab-btn" data-tab="selftest" id="smart-tab-btn-selftest">
         <span class="tab-icon">⚡</span> <span data-i18n="modal.smart_tab_selftest">Self-Test & Reports</span>
       </button>
       <button type="button" class="smart-tab-btn" data-tab="raw" id="smart-tab-btn-raw">
-        <span class="tab-icon">📜</span> <span data-i18n="modal.smart_tab_raw">📜 All readings</span>
+        <span class="tab-icon">📜</span> <span aria-hidden="true">📜</span> <span data-i18n="modal.smart_tab_raw">All readings</span>
       </button>
     </div>
 
@@ -992,9 +992,9 @@
       <div id="smart-pane-selftest" class="smart-pane">
         <div id="smart-actions-container" style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--zn-glaze-3); border: 1px solid var(--zn-line-6); border-radius: 8px;">
           <span style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.8px;" data-i18n="modal.smart_self_tests">Self-tests:</span>
-          <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_short_test">▶ Run Short Test (~2m)</button>
-          <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_extended_test">▶ Run Extended Test</button>
-          <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;" data-i18n="modal.smart_abort_test">⏹ Abort Test</button>
+          <button id="smart-btn-short-test" class="smart-test-action-btn" style="background: rgba(37,194,160,0.15); border: 1px solid var(--accent); color: var(--accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">▶</span> <span data-i18n="modal.smart_short_test">Run Short Test (~2m)</span></button>
+          <button id="smart-btn-extended-test" class="smart-test-action-btn" style="background: rgba(52,152,219,0.15); border: 1px solid #3498db; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">▶</span> <span data-i18n="modal.smart_extended_test">Run Extended Test</span></button>
+          <button id="smart-btn-abort-test" class="smart-test-action-btn" style="display: none; background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-xs); font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;"><span aria-hidden="true">⏹</span> <span data-i18n="modal.smart_abort_test">Abort Test</span></button>
           <span id="smart-test-status" style="font-size: var(--zn-fs-xs); color: var(--muted); margin-left: auto;"></span>
         </div>
 
@@ -1404,7 +1404,7 @@
       <div id="fb-current-path" style="font-family: monospace; font-size: var(--zn-fs-xs); padding: 10px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-5); border-radius: 6px; color: var(--ok2, #3498db); word-break: break-all; display: flex; flex-wrap: wrap; gap: 2px; align-items: center;"></div>
       
       <div style="display: flex; gap: 8px; margin-top: 5px;">
-        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="🔍 Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: var(--zn-fs-xs);" aria-label="🔍 Filter folders..." data-i18n-aria-label="modal.fb_search">
+        <input type="text" id="fb-search-bar" class="tz-text-input" placeholder="Filter folders..." data-i18n-placeholder="modal.fb_search" style="flex-grow: 1; font-size: var(--zn-fs-xs);" aria-label="Filter folders..." data-i18n-aria-label="modal.fb_search">
         <button id="fb-sort-btn" class="btn-pill-toggle" title="Toggle Sort" data-i18n-title="ui.toggle_sort">A-Z</button>
       </div>
 
@@ -1419,7 +1419,7 @@
       
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
         <button id="fb-cancel" class="btn-pill-toggle" data-i18n="modal.fb_cancel">Cancel</button>
-        <button id="fb-select" class="btn-save-preset" style="padding: 8px 16px;" data-i18n="modal.fb_select">💾 Select Current Folder</button>
+        <button id="fb-select" class="btn-save-preset" style="padding: 8px 16px;"><span aria-hidden="true">💾</span> <span data-i18n="modal.fb_select">Select Current Folder</span></button>
       </div>
     </div>
   </div>

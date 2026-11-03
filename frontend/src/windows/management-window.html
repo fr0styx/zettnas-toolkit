@@ -577,7 +577,7 @@
                     </div>
                     <button id="extract-palette-btn" class="btn-pill-toggle is-small">
                       <svg class="ic" style="width:11px; height:11px;"><use href="#i-sliders"/></svg>
-                      <span data-i18n="settings.extract_palette_btn">🪄 Sample Wallpaper</span>
+                      <span aria-hidden="true">🪄</span> <span data-i18n="settings.extract_palette_btn">Sample Wallpaper</span>
                     </button>
                   </div>
                   <div id="wallpaper-extracted-chips" class="custom-color-chips" style="min-height: 28px; display:flex; gap:8px; align-items:center;">
@@ -593,8 +593,8 @@
                   </div>
                   <div style="display:flex; gap:6px; align-items:center;">
                     <input type="file" id="theme-import-file" accept=".json,.zett-theme.json" style="display:none;">
-                    <button type="button" id="theme-export-btn" class="btn-pill-toggle is-small" data-i18n="settings.theme_export_btn">⬆ Export Theme</button>
-                    <button type="button" id="theme-import-btn" class="btn-pill-toggle is-small" data-i18n="settings.theme_import_btn">⬇ Import Theme</button>
+                    <button type="button" id="theme-export-btn" class="btn-pill-toggle is-small"><span aria-hidden="true">⬆</span> <span data-i18n="settings.theme_export_btn">Export Theme</span></button>
+                    <button type="button" id="theme-import-btn" class="btn-pill-toggle is-small"><span aria-hidden="true">⬇</span> <span data-i18n="settings.theme_import_btn">Import Theme</span></button>
                     <button type="button" id="theme-reset-all-btn" class="btn-pill-toggle danger is-danger is-small" data-i18n="settings.theme_reset_all_btn">↺ Restore Defaults</button>
                   </div>
                 </div>
@@ -899,7 +899,7 @@
                 <!-- Card 4: Action Buttons (Preview & Reset) -->
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 4px;">
                   <button type="button" id="screensaver-preview-btn" class="btn-pill-toggle btn-primary-accent">
-                    <span data-i18n="mgmt.screensaver_preview_btn">👁️ Preview Screensaver</span>
+                    <span aria-hidden="true">👁️</span> <span data-i18n="mgmt.screensaver_preview_btn">Preview Screensaver</span>
                   </button>
                   <button type="button" id="screensaver-reset-btn" class="btn-pill-toggle">
                     <span data-i18n="mgmt.screensaver_reset_btn">Reset Defaults</span>
@@ -1522,11 +1522,11 @@
               </div>
               <div class="mgmt-detail-body">
                 <div class="metrics-device-filter-row">
-                  <button class="metrics-device-btn active" data-metric-group="all" data-i18n="mgmt.all_devices">⚡ All Devices</button>
-                  <button class="metrics-device-btn" data-metric-group="system" data-i18n="mgmt.cpu_ram">🧠 Processor and memory</button>
-                  <button class="metrics-device-btn" data-metric-group="disks" data-i18n="mgmt.storage_disks">💾 Storage Disks</button>
-                  <button class="metrics-device-btn" data-metric-group="network" data-i18n="mgmt.network_bandwidth">🌐 Network Bandwidth</button>
-                  <button class="metrics-device-btn" data-metric-group="fans" data-i18n="mgmt.cooling_fans">🌀 Cooling Fans</button>
+                  <button class="metrics-device-btn active" data-metric-group="all"><span aria-hidden="true">⚡</span> <span data-i18n="mgmt.all_devices">All Devices</span></button>
+                  <button class="metrics-device-btn" data-metric-group="system"><span aria-hidden="true">🧠</span> <span data-i18n="mgmt.cpu_ram">Processor and memory</span></button>
+                  <button class="metrics-device-btn" data-metric-group="disks"><span aria-hidden="true">💾</span> <span data-i18n="mgmt.storage_disks">Storage Disks</span></button>
+                  <button class="metrics-device-btn" data-metric-group="network"><span aria-hidden="true">🌐</span> <span data-i18n="mgmt.network_bandwidth">Network Bandwidth</span></button>
+                  <button class="metrics-device-btn" data-metric-group="fans"><span aria-hidden="true">🌀</span> <span data-i18n="mgmt.cooling_fans">Cooling Fans</span></button>
                 </div>
                 <div id="metrics-device-summary-strip" class="metrics-device-summary-strip">
                   <!-- Live per-device indicators dynamically populated -->
@@ -1589,7 +1589,7 @@
                   <div class="network-kpi-card" id="net-kpi-ip-card">
                     <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; align-items: flex-start;">
                       <div class="network-kpi-label" data-i18n="mw.primary_host_ip">Primary Host IP</div>
-                      <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.35); text-transform: none; margin-top: -2px;" data-i18n="net.host_cfg_btn">⚙️ Configure</button>
+                      <button class="btn-pill-toggle is-small" id="btn-open-host-ip-modal" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.35); text-transform: none; margin-top: -2px;"><span aria-hidden="true">⚙️</span> <span data-i18n="net.host_cfg_btn">Configure</span></button>
                     </div>
                     <div class="network-kpi-val" id="net-kpi-ip">--</div>
                     <div class="network-kpi-sub" id="net-kpi-iface">--</div>
@@ -1771,19 +1771,19 @@
                       <!-- Interactive Browser Authorization Prompt (shown when login URL captured) -->
                       <div id="ts-auth-prompt" style="display:none; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.35); border-radius:8px; padding:12px; margin-bottom:12px;">
                         <div style="font-weight:700; color:var(--zn-text-warn); font-size:var(--zn-fs-xs); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                          <span data-i18n="net.tailscale_auth_required_title">👉 Browser Authentication Required</span>
+                          <span aria-hidden="true">👉</span> <span data-i18n="net.tailscale_signin_needed_title">Browser Authentication Required</span>
                         </div>
                         <div style="font-size:var(--zn-fs-xs); color:var(--lt-t-fef3c7ff, #fef3c7); line-height:1.4; margin-bottom:8px;" data-i18n="net.tailscale_auth_required_desc">
                           To link this NAS node to your Tailnet, log in via your browser (supports Google, GitHub, Apple, Microsoft SSO):
                         </div>
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                           <a id="ts-auth-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-toggle" style="background:#f59e0b; color:#000; font-weight:700; font-size:var(--zn-fs-xs); padding:5px 12px; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-                            <span data-i18n="net.tailscale_open_login">🔗 Open Tailscale Login</span>
+                            <span aria-hidden="true">🔗</span> <span data-i18n="net.tailscale_open_login">Open Tailscale Login</span>
                           </a>
                           <button class="btn-pill-toggle" id="btn-copy-ts-auth-url">
-                            <span data-i18n="net.tailscale_copy_link">📋 Copy Link</span>
+                            <span aria-hidden="true">📋</span> <span data-i18n="net.tailscale_copy_link">Copy Link</span>
                           </button>
-                          <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:auto;" data-i18n="net.tailscale_waiting_auth">⏳ Waiting for authorization...</span>
+                          <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:auto;"><span aria-hidden="true">⏳</span> <span data-i18n="net.tailscale_waiting_auth">Waiting for authorization...</span></span>
                         </div>
                       </div>
 
@@ -1917,7 +1917,7 @@
                       <div style="display:flex; align-items:center; gap:6px;">
                         <span class="mgmt-app-pill" id="ts-taildrop-badge" style="font-size:var(--zn-fs-xs); padding:2px 8px;">0 files</span>
                         <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-fetch" title="Fetch pending files from Taildrop queue" data-i18n-title="ui.fetch_pending_files_from_taildrop" data-i18n="net.tailscale_taildrop_fetch">📥 Fetch</button>
-                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-open" title="Open Taildrop folder in Files app" data-i18n-title="ui.open_taildrop_folder_in_files" data-i18n="net.tailscale_taildrop_open">📂 Files</button>
+                        <button class="btn-pill-toggle is-small" id="btn-ts-taildrop-open" title="Open Taildrop folder in Files app" data-i18n-title="ui.open_taildrop_folder_in_files"><span aria-hidden="true">📂</span> <span data-i18n="net.tailscale_taildrop_open">Files</span></button>
                       </div>
                     </div>
                     <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:8px;">
@@ -2394,19 +2394,19 @@
                     <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">Noise and performance</label>
                     <div class="profile-switcher-row" role="radiogroup" aria-label="System Acoustic & Performance Profile" data-i18n-aria-label="ui.system_acoustic_performance_profile">
                       <button class="profile-btn active" role="radio" aria-checked="true" data-profile="auto">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_auto_title">⚡ Automatic</span>
+                        <span class="profile-btn-title"><span aria-hidden="true">⚡</span> <span data-i18n="mgmt.profile_auto_title">Automatic</span></span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_auto_desc">Dynamic curve based on thermals • Synced RGB</span>
                       </button>
                       <button class="profile-btn" role="radio" aria-checked="false" data-profile="quiet">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_quiet_title">🤫 Quiet</span>
+                        <span class="profile-btn-title"><span aria-hidden="true">🤫</span> <span data-i18n="mgmt.profile_quiet_title">Quiet</span></span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_quiet_desc">Silent fans (37%) • 20% RGB</span>
                       </button>
                       <button class="profile-btn" role="radio" aria-checked="false" data-profile="balanced">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_balanced_title">⚖️ Balanced</span>
+                        <span class="profile-btn-title"><span aria-hidden="true">⚖️</span> <span data-i18n="mgmt.profile_balanced_title">Balanced</span></span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_balanced_desc">Standard cooling (60%) • 50% RGB</span>
                       </button>
                       <button class="profile-btn" role="radio" aria-checked="false" data-profile="performance">
-                        <span class="profile-btn-title" data-i18n="mgmt.profile_performance_title">🚀 Performance</span>
+                        <span class="profile-btn-title"><span aria-hidden="true">🚀</span> <span data-i18n="mgmt.profile_performance_title">Performance</span></span>
                         <span class="profile-btn-desc" data-i18n="mgmt.profile_performance_desc">Aggressive cooling (85%) • 100% RGB</span>
                       </button>
                     </div>
@@ -2663,8 +2663,8 @@
               </div>
               <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
                 <button class="btn-pill-toggle" id="btn-ups-discover" title="Scan local USB ports and host gateway for power daemons" data-i18n-title="ui.scan_local_usb_ports_and" data-i18n="mgmt.ups_btn_scan">🔍 Scan Hardware</button>
-                <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n-title="ui.trigger_10s_diagnostic_battery_self" data-i18n="mgmt.ups_btn_selftest">🔋 Self-Test</button>
-                <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n-title="ui.simulate_15s_power_outage_drill" data-i18n="mgmt.ups_btn_simulate">⚠️ Simulate Drill</button>
+                <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n-title="ui.trigger_10s_diagnostic_battery_self"><span aria-hidden="true">🔋</span> <span data-i18n="mgmt.ups_btn_selftest">Self-Test</span></button>
+                <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n-title="ui.simulate_15s_power_outage_drill"><span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.ups_btn_simulate">Simulate Drill</span></button>
                 <button class="btn-pill-toggle" id="btn-refresh-ups" title="Refresh UPS readings" data-i18n-title="ui.refresh_ups_telemetry" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 <button id="btn-open-ups-config" style="display:none;" aria-hidden="true"></button>
               </div>
@@ -2952,7 +2952,7 @@
             <!-- Tier 3: Power Outage History & Analytics Table -->
             <div class="ups-events-section" style="margin-top: 24px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-                <div style="font-weight:600; font-size:13px; color:var(--text);" data-i18n="mgmt.ups_events_title">📜 Power Integrity & Outage Ledger</div>
+                <div style="font-weight:600; font-size:13px; color:var(--text);"><span aria-hidden="true">📜</span> <span data-i18n="mgmt.ups_events_title">Power Integrity & Outage Ledger</span></div>
                 <span style="font-size:var(--zn-fs-xs); color:var(--muted);" data-i18n="mw.real_time_historical_brownout_self_test">Real-time historical brownout, self-test & failsafe events</span>
               </div>
               <div class="table-container" style="max-height: 220px; overflow-y: auto;" tabindex="0">
@@ -3253,9 +3253,7 @@
             <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-chip"/></svg> <span data-i18n="mgmt.sec_title">Account Security & Credentials</span></div>
             <div class="mgmt-card-intro-desc" data-i18n="mgmt.sec_desc">Manage administrator login credentials, security preferences, and system provisioning.</div>
           </div>
-          <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-sm); font-weight: 600; line-height: 1.45;" data-i18n="mgmt.sec_default_warning">
-            ⚠️ DEFAULT PASSWORD ACTIVE: Your server still uses its default or first-time password. Please set a custom password below immediately.
-          </div>
+          <div id="sec-default-pwd-warning" style="display:none; margin: 12px 0; padding: 12px 14px; background: rgba(235,87,87,0.18); border: 1px solid rgba(235,87,87,0.5); border-radius: 8px; color: var(--lt-t-ff6b6bff, #ff6b6b); font-size: var(--zn-fs-sm); font-weight: 600; line-height: 1.45;"><span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.sec_default_warning">DEFAULT PASSWORD ACTIVE: Your server still uses its default or first-time password. Please set a custom password below immediately.</span></div>
           <div id="sec-advisor-card" class="sec-advisor-card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span style="font-size: var(--zn-fs-sm); font-weight: 700; color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px;">
@@ -3311,12 +3309,12 @@
               </div>
 
               <div style="display:flex; gap: 10px; margin-top: 6px;">
-                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;" data-i18n="mgmt.sec_save">💾 Save</button>
+                <button id="sec-save-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px;"><span aria-hidden="true">💾</span> <span data-i18n="mgmt.sec_save">Save</span></button>
                 <button id="sec-logout-btn" class="suite-toolkit-btn" style="flex:1; justify-content:center; padding:10px; background: rgba(220,50,50,0.12); color: var(--crit); border-color: rgba(220,50,50,0.3);" data-i18n="mgmt.sec_logout">Sign out</button>
               </div>
 
               <div style="border-top: 1px solid var(--zn-line-6); margin-top: 4px; padding-top: 14px;">
-                <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: var(--zn-fs-sm); background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: var(--lt-t-f8fafcff, #f8fafc);" data-i18n="mgmt.sec_wizard">🚀 Launch Initial Hardware Setup Wizard</button>
+                <button id="btn-launch-setup-wizard" class="btn-save-preset" style="width: 100%; justify-content:center; padding: 10px; font-size: var(--zn-fs-sm); background: rgba(224, 122, 56, 0.15); border-color: rgba(224, 122, 56, 0.4); color: var(--lt-t-f8fafcff, #f8fafc);"><span aria-hidden="true">🚀</span> <span data-i18n="mgmt.sec_wizard">Launch Initial Hardware Setup Wizard</span></button>
               </div>
 
               <!-- Ransomware guard and blocked addresses (M4, M5) -->
@@ -3741,7 +3739,7 @@
               <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-storage"/></svg> <span data-i18n="mgmt.events_title">System Event & Audit Log</span></div>
               <div class="mgmt-card-intro-desc" data-i18n="mgmt.events_desc">Chronological log of alerts, drive wakeups, copy jobs, and hardware events.</div>
             </div>
-            <button class="btn-pill-toggle" id="btn-clear-events" title="Clear Logs" data-i18n-title="ui.clear_logs" data-i18n="mgmt.clear_logs">🗑️ Clear Event Log</button>
+            <button class="btn-pill-toggle" id="btn-clear-events" title="Clear Logs" data-i18n-title="ui.clear_logs"><span aria-hidden="true">🗑️</span> <span data-i18n="mgmt.clear_logs">Clear Event Log</span></button>
           </div>
           <div class="mgmt-detail-body">
             <div id="events-list" style="max-height: 420px; overflow-y: auto; background: var(--zn-shade-25); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 8px;">
@@ -3939,13 +3937,13 @@
                   <!-- Release Channel Chooser -->
                   <div id="update-channel-chooser" style="display:inline-flex; align-items:center; background:var(--zn-shade-35); padding:2px; border-radius:6px; border:1px solid var(--zn-line-10); font-size:var(--zn-fs-xs); flex-shrink:0; white-space:nowrap;">
                     <button id="btn-channel-stable" type="button" class="btn-channel-toggle active" style="padding:5px 12px; border-radius:4px; border:none; background:rgba(37,194,160,0.25); color:var(--lt-t-25c2a0ff, #25c2a0); font-weight:600; cursor:pointer; white-space:nowrap;" title="Official SemVer releases (Recommended for production)" data-i18n-title="ui.official_semver_releases_recommended_for">
-                      <span data-i18n="updates.channel_stable">🌟 Stable</span>
+                      <span aria-hidden="true">🌟</span> <span data-i18n="updates.channel_stable">Stable</span>
                     </button>
                     <button id="btn-channel-beta" type="button" class="btn-channel-toggle" style="padding:5px 12px; border-radius:4px; border:none; background:transparent; color:var(--muted); font-weight:600; cursor:pointer; white-space:nowrap;" title="New releases during their 7-day test period, before they reach Stable" data-i18n-title="ui.new_releases_during_their_7">
-                      <span data-i18n="updates.channel_beta">🧪 Beta</span>
+                      <span aria-hidden="true">🧪</span> <span data-i18n="updates.channel_beta">Beta</span>
                     </button>
                     <button id="btn-channel-edge" type="button" class="btn-channel-toggle" style="padding:5px 12px; border-radius:4px; border:none; background:transparent; color:var(--muted); font-weight:600; cursor:pointer; white-space:nowrap;" title="Rolling release channel tracking the latest commits on main" data-i18n-title="ui.rolling_release_channel_tracking_the">
-                      <span data-i18n="updates.channel_edge">⚡ Edge (Latest Commits)</span>
+                      <span aria-hidden="true">⚡</span> <span data-i18n="updates.channel_edge">Edge (Latest Commits)</span>
                     </button>
                   </div>
                   <button id="btn-check-updates" class="btn-pill-toggle" style="min-width: 152px; text-align: center; box-sizing: border-box;">
@@ -4165,7 +4163,7 @@
                       </div>
 
                       <button type="button" id="btn-ai-chat-clear" class="btn-pill-toggle" style="color: var(--zn-text-muted);" title="Clear conversation history" data-i18n-title="ui.clear_conversation_history">
-                        <span data-i18n="ai.chat_clear_btn">🗑️ Clear Chat</span>
+                        <span aria-hidden="true">🗑️</span> <span data-i18n="ai.chat_clear_btn">Clear Chat</span>
                       </button>
                     </div>
                   </div>
@@ -4199,8 +4197,8 @@
                   <input type="hidden" id="ai-visual-search-input" value="" />
                   <select id="ai-rag-scope-select" aria-label="Knowledge scope" data-i18n-aria-label="ui.knowledge_scope" class="tz-select-input" style="width:auto; height:38px; padding:0 10px; font-size:var(--zn-fs-xs); border-radius:8px;">
                     <option value="all" data-i18n="ai.scope_all">All Knowledge</option>
-                    <option value="recipes" data-i18n="ai.scope_recipes">🍳 Recipes &amp; Cooking</option>
-                    <option value="documents" data-i18n="ai.scope_docs">📄 Documents &amp; Manuals</option>
+                    <option value="recipes" data-i18n="ai.scope_recipes">Recipes &amp; Cooking</option>
+                    <option value="documents" data-i18n="ai.scope_docs">Documents &amp; Manuals</option>
                   </select>
                   <button type="button" id="btn-ai-rag-ask" class="btn-pill-toggle" style="height:38px; padding:0 16px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, rgba(14,165,233,0.28), rgba(37,194,160,0.28)); border:1px solid rgba(14,165,233,0.55); color:var(--zn-text-strong); border-radius:8px; cursor:pointer;">
                     <span aria-hidden="true">✨</span> <span data-i18n="ai.ask_btn">Search &amp; Ask</span>
@@ -4416,16 +4414,16 @@
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                       <div id="ai-hf-filter-pills" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                         <button type="button" class="btn-pill-toggle ai-hf-filter-btn active is-small" data-hf-filter="all" style="background: rgba(56,189,248,0.2); border: 1px solid rgba(56,189,248,0.45); color: var(--zn-text-accent);" data-i18n="ai.filter_all_2026">2026+ Releases</button>
-                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="compatible" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: var(--zn-text-ok);" data-i18n="ai.filter_fits_hardware">✅ Fits Hardware</button>
+                        <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="compatible" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: var(--zn-text-ok);"><span aria-hidden="true">✅</span> <span data-i18n="ai.filter_fits_hardware">Fits Hardware</span></button>
                         <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="warning" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.38); color: var(--zn-text-warn);"><span aria-hidden="true">⚠️</span> <span data-i18n="mw.exceeds_hardware">Exceeds Hardware</span></button>
                       </div>
                       <div style="display:flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--zn-text-muted); background:var(--zn-shade-30); padding:2px 8px; border-radius:6px; border:1px solid var(--zn-line-8);">
                         <span data-i18n="ai.sort_models_label">Sort:</span>
                         <select id="ai-models-sort-select" style="font-size:var(--zn-fs-xs); height:22px; padding:0 4px; border-radius:4px; background:var(--lt-b-0f172af2, rgba(15,23,42,0.95)); border:1px solid var(--zn-line-18); color:var(--lt-t-f8fafcff, #f8fafc); cursor:pointer;">
-                          <option value="date" selected data-i18n="ai.sort_release_date">📅 Release Date (Newest First)</option>
+                          <option value="date" selected data-i18n="ai.sort_release_date">Release Date (Newest First)</option>
                           <option value="recommended" data-i18n="ai.sort_recommended">★ Hardware Recommended</option>
-                          <option value="downloads" data-i18n="ai.sort_downloads">⬇️ Popularity (Downloads)</option>
-                          <option value="size_asc" data-i18n="ai.sort_size_asc">⚡ Model Size (Small to Large)</option>
+                          <option value="downloads" data-i18n="ai.sort_downloads">Popularity (Downloads)</option>
+                          <option value="size_asc" data-i18n="ai.sort_size_asc">Model Size (Small to Large)</option>
                         </select>
                       </div>
                     </div>
@@ -4510,7 +4508,7 @@
                   <!-- 3. Merged Standby-Safe Auto-Learn Policy -->
                   <label style="display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:8px; background:var(--lt-b-0f172a99, rgba(15,23,42,0.6)); border:1px solid rgba(37,194,160,0.28); font-size:var(--zn-fs-xs); font-weight:600; color:var(--lt-t-6ee7b7ff, #6ee7b7); cursor:pointer;" title="Never wakes sleeping drives; defers sleeping disks and automatically learns when they spin up" data-i18n-title="ui.never_wakes_sleeping_drives_defers">
                     <input type="checkbox" id="ai-index-respect-standby" checked />
-                    <span data-i18n="ai.respect_standby_label">⚡ Standby-Safe Auto-Learn (Only Sync When Disk Running)</span>
+                    <span aria-hidden="true">⚡</span> <span data-i18n="ai.respect_standby_label">Standby-Safe Auto-Learn (Only Sync When Disk Running)</span>
                   </label>
 
                   <!-- 5. Photo captions with a local vision model (AI-14) -->
@@ -4552,7 +4550,7 @@
               <div style="background:var(--lt-b-0f172a73, rgba(15,23,42,0.45)); border:1px solid var(--zn-line-10); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-bottom:2px;" data-i18n="ai.index_folder_title">📁 Watched Folders, NAS Shares &amp; Sync</div>
+                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-bottom:2px;"><span aria-hidden="true">📁</span> <span data-i18n="ai.index_folder_title">Watched Folders, NAS Shares &amp; Sync</span></div>
                     <p style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin:0;" data-i18n="ai.index_folder_desc">Choose which NAS shares ZettAI learns from. Files on sleeping drives are learned when the drive spins up.</p>
                   </div>
                   <!-- Sync Transport Controls + Learning Results Button -->
