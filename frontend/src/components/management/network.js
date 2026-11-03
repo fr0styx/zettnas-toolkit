@@ -9,6 +9,9 @@ import { initNetworkPortsInspector, fetchListeningPorts } from '../network-manag
 import { showToast, showConfirmToast } from '../../toast.js';
 import { escapeHtml, copyTextToClipboard, copyText } from '../../utils.js';
 import { t } from '../../i18n.js';
+
+// An icon next to translated words: screen readers skip it and the words stay plain (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 import { formatBytes as formatSize, formatDateTime, formatNumber } from '../../format.js';
 import { showServeLink } from './ai.js';
 
@@ -18,7 +21,7 @@ export async function fetchAndRenderCopyHistory() {
   try {
     const history = await api.get('/api/copy/history?limit=30');
     if (!history || history.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">No ingest operations recorded yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">' + t('net.no_imports', 'No imports recorded yet.') + '</td></tr>';
       return;
     }
     tbody.innerHTML = history.map((item) => {
@@ -30,7 +33,7 @@ export async function fetchAndRenderCopyHistory() {
       const statusColor = isSuccess ? 'var(--ok2)' : item.status === 'aborted' ? 'var(--warn)' : 'var(--crit)';
       const checksumBadge = item.checksum_verified
         ? '<span class="checksum-badge">✓ SHA-256</span>'
-        : '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">None</span>';
+        : '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">' + t('ci.none', 'None') + '</span>';
       const destName = item.dest ? item.dest.split('/').filter(Boolean).pop() || item.dest : '/';
 
       return `
@@ -49,7 +52,7 @@ export async function fetchAndRenderCopyHistory() {
       `;
     }).join('');
   } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">Failed to load history: ${escapeHtml(e.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--crit); padding:16px;">${escapeHtml(t('net.history_failed', 'Could not load the history: {error}', { error: e.message }))}</td></tr>`;
   }
 }
 
@@ -89,7 +92,7 @@ export async function fetchAndRenderReplication() {
       row.appendChild(cell);
       tbody.replaceChildren(row);
     } else if (jobs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">No replication pipelines configured. Click '+ New Replication Pipeline' to create one.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">${t('net.no_repl', 'No replication jobs yet. Create one with the button above.')}</td></tr>`;
     } else {
       tbody.innerHTML = jobs
         .map((j) => {
@@ -107,7 +110,7 @@ export async function fetchAndRenderReplication() {
             <td>${j.retention_count || 14} snaps</td>
             <td><span class="mgmt-app-pill ${j.last_status === 'error' ? 'text-crit' : j.last_status === 'success' ? 'text-emerald' : 'text-muted'}" title="${escapeHtml(j.last_error || '')}">${escapeHtml(j.last_status || 'idle')}</span></td>
             <td style="text-align:right;">
-              <button class="btn-pill-toggle btn-run-repl is-small" data-id="${escapeHtml(j.id)}" style="margin-right: 4px;" title="${t('ui.execute_replication_now', 'Execute Replication Now')}">▶ Run</button>
+              <button class="btn-pill-toggle btn-run-repl is-small" data-id="${escapeHtml(j.id)}" style="margin-right: 4px;" title="${t('ui.execute_replication_now', 'Execute Replication Now')}">${ico('▶')} ${t('ci.run', 'Run')}</button>
               <button class="btn-pill-toggle btn-del-repl is-danger is-small" data-id="${escapeHtml(j.id)}" title="${t('ui.delete_pipeline', 'Delete Pipeline')}">🗑️</button>
             </td>
           </tr>
@@ -156,7 +159,7 @@ export async function fetchAndRenderReplication() {
     if (histTbody) {
       const history = histRes.history || [];
       if (history.length === 0) {
-        histTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:16px;">No replication history recorded yet.</td></tr>`;
+        histTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--muted); padding:16px;">${t('net.no_repl_history', 'No replication runs yet.')}</td></tr>`;
       } else {
         histTbody.innerHTML = history
           .slice(0, 20)
@@ -178,7 +181,7 @@ export async function fetchAndRenderReplication() {
       }
     }
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">Failed to load replication pipelines: ${escapeHtml(err.message)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">${escapeHtml(t('net.repl_failed', 'Could not load the replication jobs: {error}', { error: err.message }))}</td></tr>`;
   }
 }
 
@@ -199,12 +202,12 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
 
   if (countPill) {
     const onlineCount = peersArr.filter(p => p.online).length;
-    countPill.textContent = `${onlineCount} online / ${peersArr.length} total`;
+    countPill.textContent = t('net.peers_count', '{online} online / {total} total', { online: onlineCount, total: peersArr.length });
   }
 
   if (filtered.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="6" style="text-align:center; padding:16px; color:var(--muted);">No peers match search query.</td></tr>';
+      '<tr><td colspan="6" style="text-align:center; padding:16px; color:var(--muted);">' + t('net.no_peer_match', 'No devices match the search.') + '</td></tr>';
     return;
   }
 
@@ -219,14 +222,14 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
       else if (osLower.includes('linux')) osLabel = '🐧 Linux';
 
       const routeBadge = p.cur_addr
-        ? '<span style="color:var(--lt-t-3bf58bff, #3bf58b); font-weight:600;">⚡ Direct P2P</span>'
+        ? '<span style="color:var(--lt-t-3bf58bff, #3bf58b); font-weight:600;">' + ico('⚡') + ' ' + t('net.direct', 'Direct (P2P)') + '</span>'
         : p.relay
           ? `<span style="color:var(--lt-t-f59e0bff, #f59e0b);">🌐 DERP (${escapeHtml(p.relay)})</span>`
           : '<span style="color:var(--muted);">--</span>';
 
       const statusPill = p.online
-        ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:var(--zn-fs-xs); padding:2px 7px;">Online</span>'
-        : '<span class="mgmt-app-pill" style="color:var(--muted); background:var(--zn-glaze-6); font-size:var(--zn-fs-xs); padding:2px 7px;">Offline</span>';
+        ? '<span class="mgmt-app-pill" style="color:var(--lt-t-3bf58bff, #3bf58b); background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); font-size:var(--zn-fs-xs); padding:2px 7px;">' + t('net.online', 'Online') + '</span>'
+        : '<span class="mgmt-app-pill" style="color:var(--muted); background:var(--zn-glaze-6); font-size:var(--zn-fs-xs); padding:2px 7px;">' + t('net.offline', 'Offline') + '</span>';
 
       const safeIpId = (p.ip || 'no_ip').replace(/[^a-zA-Z0-9]/g, '_');
 
@@ -243,7 +246,7 @@ export function renderTailscalePeersTable(peers, filterQuery = '') {
         <td style="padding:8px 12px; text-align:right;">
           <div style="display:inline-flex; align-items:center; gap:6px;">
             <span id="latency-${safeIpId}" style="font-size:var(--zn-fs-xs); font-weight:700;"></span>
-            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${!p.ip ? `disabled title="${escapeHtml(t('net.why_no_peer_ip', 'This device has no address to ping yet'))}"` : ''}>⚡ Ping</button>
+            <button class="btn-pill-toggle btn-ping-peer" data-peer-ip="${escapeHtml(p.ip || '')}" style="font-size:var(--zn-fs-xs); padding:2px 8px;" ${!p.ip ? `disabled title="${escapeHtml(t('net.why_no_peer_ip', 'This device has no address to ping yet'))}"` : ''}>${ico('⚡')} ${t('net.ping', 'Ping')}</button>
           </div>
         </td>
       </tr>
@@ -375,10 +378,10 @@ export async function fetchAndRenderWireguard() {
           if (ts.key_expiry_days !== null && ts.key_expiry_days !== undefined) {
             if (ts.key_expiry_days > 14) {
               const dt = ts.key_expiry ? ts.key_expiry.slice(0, 10) : '';
-              keyExpiryDisplay.textContent = `Expires in ${ts.key_expiry_days} days (${dt})`;
+              keyExpiryDisplay.textContent = t('net.expiry_days', 'Expires in {count, plural, one {# day} other {# days}} ({date})', { count: ts.key_expiry_days, date: dt });
               keyExpiryDisplay.style.color = 'var(--ok2, #3bf58b)';
             } else if (ts.key_expiry_days > 0) {
-              keyExpiryDisplay.textContent = `⚠️ Expires in ${ts.key_expiry_days} days`;
+              keyExpiryDisplay.textContent = `⚠️ ${t('net.expiry_soon', 'Expires in {count, plural, one {# day} other {# days}}', { count: ts.key_expiry_days })}`;
               keyExpiryDisplay.style.color = '#fbbf24';
             } else {
               keyExpiryDisplay.textContent = t('ui.key_expired', '❌ Key Expired');
@@ -431,12 +434,12 @@ export async function fetchAndRenderWireguard() {
               exitNodeHint.style.borderColor = 'rgba(59,245,139,0.25)';
             }
           } else if (ts.advertise_exit_node) {
-            exitNodePill.innerHTML = '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline;">Pending Admin Approval ↗</a>';
+            exitNodePill.innerHTML = '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline;">' + t('net.pending_approval', 'Waiting for approval in the admin console') + ' ↗</a>';
             exitNodePill.style.color = '#38bdf8';
             exitNodePill.style.background = 'rgba(56,189,248,0.15)';
             if (exitNodeHint) {
               exitNodeHint.style.display = 'block';
-              exitNodeHint.innerHTML = '⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;">Tailscale Admin Console ↗</a> (Machines → Edit route settings → Use as exit node).';
+              exitNodeHint.innerHTML = '⚠️ ' + t('net.exit_hint', 'This NAS offers itself as an exit node. To let other devices send their traffic through it, approve it in the {link} (Machines → Edit route settings → Use as exit node).', { link: '<a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;">' + t('net.admin_console', 'Tailscale admin console') + ' ↗</a>' });
               exitNodeHint.style.color = '#fbbf24';
               exitNodeHint.style.background = 'rgba(245,158,11,0.08)';
               exitNodeHint.style.borderColor = 'rgba(245,158,11,0.25)';
@@ -454,7 +457,7 @@ export async function fetchAndRenderWireguard() {
         const sshPill = document.getElementById('ts-ssh-pill');
         if (sshToggle) sshToggle.checked = Boolean(ts.ssh_enabled);
         if (sshPill) {
-          sshPill.textContent = ts.ssh_enabled ? 'Enabled' : 'Disabled';
+          sshPill.textContent = ts.ssh_enabled ? t('net.enabled', 'Enabled') : t('net.disabled', 'Disabled');
           sshPill.style.color = ts.ssh_enabled ? '#3bf58b' : 'var(--muted)';
           sshPill.style.background = ts.ssh_enabled
             ? 'rgba(59,245,139,0.15)'
@@ -470,7 +473,7 @@ export async function fetchAndRenderWireguard() {
         const funnelPill = document.getElementById('ts-funnel-pill');
         if (serveToggle) serveToggle.checked = Boolean(ts.serve_enabled);
         if (servePill) {
-          servePill.textContent = ts.serve_enabled ? 'Active' : 'Disabled';
+          servePill.textContent = ts.serve_enabled ? t('net.active', 'Active') : t('net.disabled', 'Disabled');
           servePill.style.color = ts.serve_enabled ? '#3bf58b' : 'var(--muted)';
           servePill.style.background = ts.serve_enabled
             ? 'rgba(59,245,139,0.15)'
@@ -487,7 +490,7 @@ export async function fetchAndRenderWireguard() {
         }
         if (funnelToggle) funnelToggle.checked = Boolean(ts.funnel_enabled);
         if (funnelPill) {
-          funnelPill.textContent = ts.funnel_enabled ? 'Active' : 'Off';
+          funnelPill.textContent = ts.funnel_enabled ? t('net.active', 'Active') : t('net.off', 'Off');
           funnelPill.style.color = ts.funnel_enabled ? '#f87171' : 'var(--muted)';
           funnelPill.style.background = ts.funnel_enabled
             ? 'rgba(239,68,68,0.15)'
@@ -504,7 +507,7 @@ export async function fetchAndRenderWireguard() {
         if (taildropList) {
           if (files.length === 0) {
             taildropList.innerHTML =
-              '<div style="color:var(--muted); font-size:var(--zn-fs-xs); text-align:center; padding:12px 0;">No files in Taildrop inbox yet.</div>';
+              '<div style="color:var(--muted); font-size:var(--zn-fs-xs); text-align:center; padding:12px 0;">' + t('net.no_taildrop', 'No files in the Taildrop inbox yet.') + '</div>';
           } else {
             taildropList.innerHTML = files
               .map(
@@ -525,20 +528,20 @@ export async function fetchAndRenderWireguard() {
       } else {
         const isNeedsLogin = ts.backend_state === 'NeedsLogin';
         if (tsBadgeEl) {
-          tsBadgeEl.textContent = isNeedsLogin ? 'Needs Login' : 'Disconnected';
+          tsBadgeEl.textContent = isNeedsLogin ? t('net.needs_login', 'Needs sign-in') : t('net.disconnected', 'Disconnected');
           tsBadgeEl.style.color = '#f59e0b';
           tsBadgeEl.style.borderColor = 'rgba(245,158,11,0.3)';
         }
         if (tsPillEl) {
-          tsPillEl.textContent = isNeedsLogin ? 'Login Required' : 'Disconnected';
+          tsPillEl.textContent = isNeedsLogin ? t('net.needs_login', 'Needs sign-in') : t('net.disconnected', 'Disconnected');
           tsPillEl.style.color = '#f59e0b';
           tsPillEl.style.background = 'rgba(245,158,11,0.12)';
         }
         if (tsDeployBanner) tsDeployBanner.style.display = 'none';
         if (tsFormIntro) {
           tsFormIntro.textContent = isNeedsLogin
-            ? 'Node authentication required. Click below to log in and link to your Tailnet:'
-            : 'Join your Zero-Trust Tailnet with a pre-authenticated auth key:';
+            ? t('net.login_prompt', 'Sign-in needed. Use the button below to sign in and join your tailnet:')
+            : t('net.join_prompt', 'Join your tailnet with a pre-authorised sign-in code:');
           tsFormIntro.style.color = isNeedsLogin ? '#f59e0b' : 'var(--muted)';
         }
         if (tsIpEl) tsIpEl.textContent = '--';
@@ -594,14 +597,14 @@ export async function fetchAndRenderWireguard() {
     const res = await api.get('/api/network/mesh-vpn/wireguard/subnet-routing').catch(() => null);
     if (res && ipFwdEl) {
       const isFwd = Boolean(res.ip_forwarding);
-      ipFwdEl.textContent = isFwd ? 'Active (Forwarding Enabled)' : 'Disabled';
+      ipFwdEl.textContent = isFwd ? t('net.fwd_on', 'On (forwarding)') : t('net.disabled', 'Disabled');
       ipFwdEl.style.color = isFwd ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)';
       if (wgBadgeEl) {
-        wgBadgeEl.textContent = res.enabled ? 'NAT Routing Active' : 'Curve25519 Ready';
+        wgBadgeEl.textContent = res.enabled ? t('net.nat_on', 'NAT routing on') : t('net.wg_ready', 'Ready');
         wgBadgeEl.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
       }
       if (wgFwdPill) {
-        wgFwdPill.textContent = res.enabled ? 'NAT Active' : 'Curve25519 Ready';
+        wgFwdPill.textContent = res.enabled ? t('net.nat_short', 'NAT on') : t('net.wg_ready', 'Ready');
         wgFwdPill.style.color = res.enabled ? '#3bf58b' : '#38bdf8';
       }
     }
@@ -715,7 +718,7 @@ export async function fetchAndRenderWireguard() {
       const origText = tsUpBtn.textContent;
       try {
         tsUpBtn.disabled = true;
-        tsUpBtn.textContent = mode === 'login' ? '🔗 Opening Login...' : '🚀 Connecting...';
+        tsUpBtn.textContent = mode === 'login' ? `🔗 ${t('net.opening_login', 'Opening the sign-in…')}` : `🚀 ${t('net.connecting', 'Connecting…')}`;
         const res = await api.post('/api/network/mesh-vpn/tailscale/up', {
           auth_key: authKey || null,
           hostname: hostname || null,
@@ -915,13 +918,13 @@ export async function fetchAndRenderWireguard() {
         } catch (_) {}
         const featName = res.feature === 'funnel' ? 'Funnel' : 'Serve';
         showConfirmToast(
-          `Tailscale ${featName} Approval Required`,
-          `Tailscale ${featName} is not yet authorized on your Tailnet. Please approve this node in the Tailscale Admin Console:<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>After clicking Approve in Tailscale, re-enable this toggle to activate.`,
+          t('net.approve_title', 'Tailscale {feature} needs approval', { feature: featName }),
+          `${escapeHtml(t('net.approve_msg', 'Tailscale {feature} is not allowed on your tailnet yet. Approve this device in the Tailscale admin console:', { feature: featName }))}<br><br><a href="${escapeHtml(res.approval_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:bold; word-break:break-all;">${escapeHtml(res.approval_url)}</a><br><br>${escapeHtml(t('net.approve_after', 'After approving it in Tailscale, turn this switch on again.'))}`,
           () => {
             window.open(res.approval_url, '_blank', 'noopener,noreferrer');
           },
           null,
-          { confirmText: 'Open Approval Page', cancelText: 'Close', allowHtml: true }
+          { confirmText: t('net.open_approval', 'Open the approval page'), cancelText: t('common.close', 'Close'), allowHtml: true }
         );
       } else if (res && res.status === 'error') {
         if (tsServeToggle) tsServeToggle.checked = Boolean(res.serve_enabled);
@@ -1087,7 +1090,7 @@ export async function fetchAndRenderWireguard() {
         }
       } finally {
         pingBtn.disabled = false;
-        pingBtn.textContent = t('ui.ping', '⚡ Ping');
+        pingBtn.textContent = `⚡ ${t('net.ping', 'Ping')}`;
       }
     });
   }
@@ -1321,7 +1324,7 @@ export async function fetchAndRenderNetworkTopology() {
     const topo = await api.get('/api/system/network-topology');
     if (!topo || topo.status !== 'ok') {
       if (physicalTbody) {
-        physicalTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">Failed to load network topology: ${escapeHtml(topo?.message || 'Unknown error')}</td></tr>`;
+        physicalTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--crit); padding:16px;">${escapeHtml(t('net.topo_failed', 'Could not load the network layout: {error}', { error: topo?.message || t('toast.unknown_error', 'Unknown error') }))}</td></tr>`;
       }
       return;
     }
@@ -1334,14 +1337,14 @@ export async function fetchAndRenderNetworkTopology() {
 
     // 1. Update KPIs
     if (kpiIp) kpiIp.textContent = summary.primary_ip || '--';
-    if (kpiIface) kpiIface.textContent = `Via ${summary.primary_interface || 'eth0'}`;
+    if (kpiIface) kpiIface.textContent = t('net.via', 'Via {iface}', { iface: summary.primary_interface || 'eth0' });
     if (kpiGw) kpiGw.textContent = summary.default_gateway || '--';
     if (kpiDns) kpiDns.textContent = `DNS: ${(summary.dns_servers || []).join(', ') || 'Auto'}`;
     if (kpiSpeed) kpiSpeed.textContent = summary.max_speed || '--';
-    if (kpiCarrier) kpiCarrier.textContent = `${summary.active_physical || 0} of ${summary.total_physical || 0} Ports Online`;
-    if (kpiDocker) kpiDocker.textContent = `${summary.docker_networks_count || 0} Networks`;
-    if (kpiContainers) kpiContainers.textContent = `${summary.docker_containers_count || 0} Containers Attached`;
-    if (activeBadge) activeBadge.textContent = `${summary.active_physical || 0} Active`;
+    if (kpiCarrier) kpiCarrier.textContent = t('net.ports_online', '{active} of {total, plural, one {# port} other {# ports}} online', { active: summary.active_physical || 0, total: summary.total_physical || 0 });
+    if (kpiDocker) kpiDocker.textContent = t('net.networks_count', '{count, plural, one {# network} other {# networks}}', { count: summary.docker_networks_count || 0 });
+    if (kpiContainers) kpiContainers.textContent = t('net.containers_attached', '{count, plural, one {# container attached} other {# containers attached}}', { count: summary.docker_containers_count || 0 });
+    if (activeBadge) activeBadge.textContent = t('net.active_count', '{count} active', { count: summary.active_physical || 0 });
 
     // Check if a canary watchdog test is active on host
     if (summary.canary && summary.canary.is_active && summary.canary.expires_in > 0) {
@@ -1354,7 +1357,7 @@ export async function fetchAndRenderNetworkTopology() {
     // 2. Render Hardware Switch Ports (Front-Panel Faceplate)
     if (switchFaceplate) {
       if (physical.length === 0) {
-        switchFaceplate.innerHTML = `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">No physical network interfaces detected.</div>`;
+        switchFaceplate.innerHTML = `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">${t('net.no_nics', 'No network ports found.')}</div>`;
       } else {
         switchFaceplate.innerHTML = physical.map((nic) => {
           const isUp = Boolean(nic.is_up);
@@ -1364,7 +1367,7 @@ export async function fetchAndRenderNetworkTopology() {
           const speedLedClass = isUp ? (is10G ? 'led-speed-10g' : 'led-speed-gig') : '';
 
           return `
-            <div class="switch-port-jack ${isUp ? 'is-active' : ''} clickable" data-iface="${escapeHtml(nic.name)}" title="Configure ${escapeHtml(nic.name)}">
+            <div class="switch-port-jack ${isUp ? 'is-active' : ''} clickable" data-iface="${escapeHtml(nic.name)}" title="${escapeHtml(t('net.configure', 'Set up {name}', { name: nic.name }))}">
               <div class="switch-port-top">
                 <div class="switch-port-id">
                   <svg style="width:12px; height:12px; fill:${isUp ? 'var(--ok2, #3bf58b)' : 'var(--muted, #64748b)'};"><circle cx="6" cy="6" r="4"/></svg>
@@ -1389,12 +1392,12 @@ export async function fetchAndRenderNetworkTopology() {
                 </svg>
               </div>
               <div class="switch-port-badge-row">
-                <span class="switch-speed-pill ${speedPillClass}">${escapeHtml(nic.speed_human || (isUp ? 'Connected' : 'Disconnected'))}</span>
+                <span class="switch-speed-pill ${speedPillClass}">${escapeHtml(nic.speed_human || (isUp ? t('net.connected', 'Connected') : t('net.disconnected', 'Disconnected')))}</span>
                 <span style="font-size:var(--zn-fs-xs); color:var(--muted);">${nic.duplex === 'full' ? 'Full Duplex' : nic.duplex}</span>
               </div>
               <div class="switch-port-meta">
                 <div>MAC: ${escapeHtml(nic.mac || 'N/A')}</div>
-                ${nic.master ? `<div style="color:var(--lt-ink-brand, var(--accent-cyan));">Master: ${escapeHtml(nic.master)}</div>` : ''}
+                ${nic.master ? `<div style="color:var(--lt-ink-brand, var(--accent-cyan));">${escapeHtml(t('net.master', 'Master: {name}', { name: nic.master }))}</div>` : ''}
               </div>
             </div>
           `;
@@ -1412,7 +1415,7 @@ export async function fetchAndRenderNetworkTopology() {
     // 3. Render Physical Interfaces Detailed Table
     if (physicalTbody) {
       if (physical.length === 0) {
-        physicalTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--muted); padding:16px;">No physical interfaces found.</td></tr>`;
+        physicalTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--muted); padding:16px;">${t('net.no_nics', 'No network ports found.')}</td></tr>`;
       } else {
         physicalTbody.innerHTML = physical.map((nic) => {
           const isUp = Boolean(nic.is_up);
@@ -1442,14 +1445,14 @@ export async function fetchAndRenderNetworkTopology() {
               <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">${escapeHtml(nic.mac || '--')}</td>
               <td style="font-family:var(--font-mono, monospace);">${escapeHtml(String(nic.mtu || 1500))}</td>
               <td>
-                ${nic.master ? `<span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan)); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : '<span style="color:var(--muted);">Standalone</span>'}
+                ${nic.master ? `<span class="network-member-pill" style="color:var(--lt-ink-brand, var(--accent-cyan)); border-color:rgba(56,189,248,0.3);">${escapeHtml(nic.master)}</span>` : `<span style="color:var(--muted);">${t('net.standalone', 'Standalone')}</span>`}
               </td>
               <td style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">
                 <div>↓ ${rxFmt} <span style="font-size:var(--zn-fs-xs); color:var(--muted);">(${formatNumber(nic.rx_packets || 0)} pkts)</span></div>
                 <div>↑ ${txFmt} <span style="font-size:var(--zn-fs-xs); color:var(--muted);">(${formatNumber(nic.tx_packets || 0)} pkts)</span></div>
               </td>
               <td style="font-size:var(--zn-fs-xs); color:var(--muted);">
-                <div>${escapeHtml(nic.driver || 'Generic')}</div>
+                <div>${escapeHtml(nic.driver || t('net.generic', 'Generic'))}</div>
                 <div style="font-family:var(--font-mono, monospace); font-size:var(--zn-fs-xs);">${escapeHtml(nic.pci_slot || '--')}</div>
               </td>
               <td style="text-align: right;">
@@ -1478,18 +1481,18 @@ export async function fetchAndRenderNetworkTopology() {
           <div class="network-bridge-card">
             <div class="network-bridge-header">
               <div style="display:flex; align-items:center; gap:8px;">
-                <span class="network-bridge-name">Bridge: ${escapeHtml(br.name)}</span>
+                <span class="network-bridge-name">${escapeHtml(t('net.bridge', 'Bridge: {name}', { name: br.name }))}</span>
                 <span class="switch-speed-pill ${br.stp ? 'speed-10g' : 'speed-down'}" style="font-size:var(--zn-fs-xs); padding:2px 6px;">STP: ${br.stp ? 'ON' : 'OFF'}</span>
-                <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">FD: ${br.forward_delay || 0}s</span>
+                <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">${t('net.fd', 'Forward delay: {secs} s', { secs: br.forward_delay || 0 })}</span>
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
                 <span class="network-bridge-ip">${escapeHtml(br.ip_address || 'Unassigned IP')}</span>
                 <button class="btn-pill-toggle btn-config-bridge is-small" data-bridge="${escapeHtml(br.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bridge', 'Configure')}</button>
               </div>
             </div>
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Member Ports:</div>
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('net.members', 'Member ports:')}</div>
             <div class="network-bridge-members">
-              ${(br.interfaces || []).map((m) => `<span class="network-member-pill">${escapeHtml(m)}</span>`).join('') || '<span style="color:var(--muted); font-size:var(--zn-fs-xs);">No members</span>'}
+              ${(br.interfaces || []).map((m) => `<span class="network-member-pill">${escapeHtml(m)}</span>`).join('') || `<span style="color:var(--muted); font-size:var(--zn-fs-xs);">${t('net.no_members', 'No members')}</span>`}
             </div>
           </div>
         `);
@@ -1501,13 +1504,13 @@ export async function fetchAndRenderNetworkTopology() {
           <div class="network-bridge-card">
             <div class="network-bridge-header">
               <div style="display:flex; align-items:center; gap:8px;">
-                <span class="network-bridge-name">Bond: ${escapeHtml(b.name)}</span>
+                <span class="network-bridge-name">${escapeHtml(t('net.bond', 'Bond: {name}', { name: b.name }))}</span>
                 <span class="switch-speed-pill speed-10g" title="${escapeHtml(b.mode_title || b.mode_name || b.mode)}">${escapeHtml(b.mode_title || b.mode_name || b.mode || 'Bonding')}</span>
                 <span style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">${b.miimon || 100}ms</span>
               </div>
               <button class="btn-pill-toggle btn-config-bond is-small" data-bond="${escapeHtml(b.name)}" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56,189,248,0.3);">${t('net.configure_bond', 'Configure')}</button>
             </div>
-            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">Active Slave: <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || 'None')}</strong></div>
+            <div style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('net.active_port', 'Active port:')} <strong style="color:var(--ok2, #3bf58b);">${escapeHtml(b.active_slave || t('ci.none', 'None'))}</strong></div>
             <div class="network-bridge-members">
               ${(b.slaves || []).map((s) => `<span class="network-member-pill ${s === b.active_slave ? 'active' : ''}">${escapeHtml(s)}</span>`).join('')}
             </div>
@@ -1515,7 +1518,7 @@ export async function fetchAndRenderNetworkTopology() {
         `);
       });
 
-      bridgesContainer.innerHTML = items.length > 0 ? items.join('') : `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">No virtual bridges or bonds configured.</div>`;
+      bridgesContainer.innerHTML = items.length > 0 ? items.join('') : `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">${t('net.no_bridges', 'No virtual bridges or bonds yet.')}</div>`;
 
       bridgesContainer.querySelectorAll('.btn-config-bridge').forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -1539,7 +1542,7 @@ export async function fetchAndRenderNetworkTopology() {
     const vlans = topo.vlans || [];
     if (vlanTbody) {
       if (vlans.length === 0) {
-        vlanTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">No 802.1Q VLAN sub-interfaces created yet. Click "+ Add VLAN" to tag an interface.</td></tr>`;
+        vlanTbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:16px;">${t('net.no_vlans', 'No VLANs yet. Add one to tag a port.')}</td></tr>`;
       } else {
         vlanTbody.innerHTML = vlans
           .map((v) => {
@@ -1594,7 +1597,7 @@ export async function fetchAndRenderNetworkTopology() {
     // 5. Render Docker Networks & Containers
     if (dockerContainer) {
       if (dockerNets.length === 0) {
-        dockerContainer.innerHTML = `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">No active Docker bridge networks found.</div>`;
+        dockerContainer.innerHTML = `<div style="color:var(--muted); font-size:var(--zn-fs-xs); padding:12px;">${t('net.no_docker_nets', 'No Docker bridge networks in use.')}</div>`;
       } else {
         dockerContainer.innerHTML = dockerNets.map((net) => {
           const containers = net.containers || [];
@@ -1608,13 +1611,13 @@ export async function fetchAndRenderNetworkTopology() {
                   ${net.is_custom ? `<button class="net-docker-delete-btn" data-net-id="${escapeHtml(net.id)}" data-net-name="${escapeHtml(net.name)}" title="${t('ui.delete_network', 'Delete Network')}">🗑</button>` : ''}
                 </div>
                 <div class="network-docker-cidr">
-                  ${net.subnet ? `Subnet: <strong>${escapeHtml(net.subnet)}</strong>` : ''}
-                  ${net.gateway ? ` • Gateway: <strong>${escapeHtml(net.gateway)}</strong>` : ''}
-                  ${net.bridge_device ? ` • Dev: <strong>${escapeHtml(net.bridge_device)}</strong>` : ''}
+                  ${net.subnet ? `${t('net.subnet', 'Subnet:')} <strong>${escapeHtml(net.subnet)}</strong>` : ''}
+                  ${net.gateway ? ` • ${t('net.gateway', 'Gateway:')} <strong>${escapeHtml(net.gateway)}</strong>` : ''}
+                  ${net.bridge_device ? ` • ${t('net.device', 'Device:')} <strong>${escapeHtml(net.bridge_device)}</strong>` : ''}
                 </div>
               </div>
               <div class="network-docker-containers">
-                ${containers.length === 0 ? '<span style="font-size:var(--zn-fs-xs); color:var(--muted);">No containers attached</span>' : containers.map((c) => `
+                ${containers.length === 0 ? `<span style="font-size:var(--zn-fs-xs); color:var(--muted);">${t('net.no_containers', 'No containers attached')}</span>` : containers.map((c) => `
                   <div class="network-container-chip">
                     <span class="network-chip-dot"></span>
                     <span class="network-chip-name">${escapeHtml(c.name)}</span>
@@ -1679,7 +1682,7 @@ export async function fetchAndRenderNetworkTopology() {
   } catch (err) {
     console.warn('[ZettNAS] Error fetching network topology:', err);
     if (physicalTbody) {
-      physicalTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--crit); padding:16px;">Failed to load network topology: ${escapeHtml(err.message || String(err))}</td></tr>`;
+      physicalTbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--crit); padding:16px;">${escapeHtml(t('net.topo_failed', 'Could not load the network layout: {error}', { error: err.message || String(err) }))}</td></tr>`;
     }
   }
 }
@@ -1731,7 +1734,7 @@ export async function openNetworkPortModal(ifaceName) {
     if (wolDesc) {
       wolDesc.textContent = data.wol_supported
         ? t('net.wol_hint', 'Permit network magic packet wakeups from sleep/standby.')
-        : 'Wake-on-LAN is not supported by this hardware NIC.';
+        : t('net.no_wol', 'This network card can’t wake the NAS (no Wake-on-LAN).');
     }
 
     if (speedSelect) {
@@ -1758,9 +1761,9 @@ export async function openNetworkPortModal(ifaceName) {
         }
       };
     }
-    if (roDriver) roDriver.textContent = nic.driver || 'Generic';
+    if (roDriver) roDriver.textContent = nic.driver || t('net.generic', 'Generic');
     if (roPci) roPci.textContent = nic.pci_slot || '--';
-    if (roLink) roLink.textContent = nic.is_up ? `${nic.speed_human || 'Connected'} (${nic.duplex || 'full'})` : 'Down / Disconnected';
+    if (roLink) roLink.textContent = nic.is_up ? `${nic.speed_human || t('net.connected', 'Connected')} (${nic.duplex || 'full'})` : t('net.down', 'Down (disconnected)');
   } catch (err) {
     showToast(t('toast.failed_to_load_port_config', 'Failed to load port config: {error}', { error: err.message || err }), 'error');
   }
@@ -2139,7 +2142,7 @@ export async function openBondConfigModal(bondName) {
     if (slavesContainer) {
       const candidates = data.candidate_slaves || [];
       if (candidates.length === 0) {
-        slavesContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">No physical Ethernet adapters detected.</div>';
+        slavesContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">' + t('net.no_adapters', 'No Ethernet adapters found.') + '</div>';
       } else {
         slavesContainer.innerHTML = candidates
           .map((nic) => {
@@ -2149,7 +2152,7 @@ export async function openBondConfigModal(bondName) {
               <input type="checkbox" class="net-bond-slave-checkbox" value="${escapeHtml(nic.name)}" ${isChecked ? 'checked' : ''} style="cursor:pointer;" />
               <span style="font-family:var(--font-mono, monospace); font-weight:600; color:var(--lt-t-f8fafcff, #f8fafc);">${escapeHtml(nic.name)}</span>
               ${nic.alias ? `<span class="switch-port-alias-tag">${escapeHtml(nic.alias)}</span>` : ''}
-              <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? 'Connected' : 'Disconnected'))}</span>
+              <span style="font-size:var(--zn-fs-xs); color:var(--muted); margin-left:auto;">${escapeHtml(nic.speed_human || (nic.is_up ? t('net.connected', 'Connected') : t('net.disconnected', 'Disconnected')))}</span>
             </label>
           `;
           })
@@ -2242,7 +2245,7 @@ export async function openBridgeConfigModal(brName) {
     if (membersContainer) {
       const candidates = data.candidate_members || [];
       if (candidates.length === 0) {
-        membersContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">No interfaces available to bridge.</div>';
+        membersContainer.innerHTML = '<div style="color:var(--muted); font-size:var(--zn-fs-xs);">' + t('net.nothing_to_bridge', 'No ports available to bridge.') + '</div>';
       } else {
         membersContainer.innerHTML = candidates
           .map((cand) => {

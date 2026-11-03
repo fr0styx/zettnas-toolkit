@@ -139,9 +139,9 @@ describe('Batch 5: Interactive Visual Network & Virtual Switch Inspector UI', ()
     expect(document.getElementById('net-kpi-gw').textContent).toBe('192.168.1.1');
     expect(document.getElementById('net-kpi-dns').textContent).toContain('192.168.1.1');
     expect(document.getElementById('net-kpi-speed').textContent).toBe('10 Gbps');
-    expect(document.getElementById('net-kpi-carrier').textContent).toBe('1 of 2 Ports Online');
-    expect(document.getElementById('net-kpi-docker').textContent).toBe('3 Networks');
-    expect(document.getElementById('net-active-ports-badge').textContent).toBe('1 Active');
+    expect(document.getElementById('net-kpi-carrier').textContent).toBe('1 of 2 ports online');
+    expect(document.getElementById('net-kpi-docker').textContent).toBe('3 networks');
+    expect(document.getElementById('net-active-ports-badge').textContent).toBe('1 active');
   });
 
   it('renders front-panel visual switch jack matrix with active LEDs and speed pills', async () => {
@@ -219,7 +219,7 @@ describe('Batch 5: Interactive Visual Network & Virtual Switch Inspector UI', ()
     await fetchAndRenderNetworkTopology();
 
     const tbody = document.getElementById('network-physical-tbody');
-    expect(tbody.textContent).toContain('Failed to load network topology');
+    expect(tbody.textContent).toContain('Could not load the network layout');
     expect(tbody.textContent).toContain('Connection lost');
   });
 });

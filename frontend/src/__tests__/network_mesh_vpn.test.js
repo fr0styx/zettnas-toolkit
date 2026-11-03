@@ -164,8 +164,8 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
 
     await fetchAndRenderWireguard();
 
-    expect(document.getElementById('tailscale-status-badge').textContent).toBe('Needs Login');
-    expect(document.getElementById('ts-connection-pill').textContent).toBe('Login Required');
+    expect(document.getElementById('tailscale-status-badge').textContent).toBe('Needs sign-in');
+    expect(document.getElementById('ts-connection-pill').textContent).toBe('Needs sign-in');
     expect(document.getElementById('ts-connect-form').style.display).toBe('flex');
     expect(document.getElementById('ts-connected-view').style.display).toBe('none');
     expect(document.getElementById('btn-tailscale-down').style.display).toBe('none');
@@ -260,7 +260,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
 
     await fetchAndRenderWireguard();
 
-    expect(document.getElementById('tailscale-status-badge').textContent).toBe('Needs Login');
+    expect(document.getElementById('tailscale-status-badge').textContent).toBe('Needs sign-in');
     expect(document.getElementById('ts-auth-prompt').style.display).toBe('block');
     expect(document.getElementById('ts-auth-link').href).toBe('https://login.tailscale.com/a/resume456');
 
@@ -515,12 +515,12 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     expect(exitToggle.checked).toBe(true);
 
     const exitPill = document.getElementById('ts-exit-node-pill');
-    expect(exitPill.innerHTML).toContain('Pending Admin Approval');
+    expect(exitPill.innerHTML).toContain('Waiting for approval in the admin console');
     expect(exitPill.innerHTML).toContain('login.tailscale.com/admin/machines');
 
     const exitHint = document.getElementById('ts-exit-node-approval-hint');
     expect(exitHint.style.display).toBe('block');
-    expect(exitHint.textContent).toContain('Exit node is advertised');
+    expect(exitHint.textContent).toContain('offers itself as an exit node');
 
     const subnetToggle = document.getElementById('ts-subnet-router-toggle');
     expect(subnetToggle.checked).toBe(false);
@@ -561,7 +561,7 @@ describe('Zero-Trust Mesh VPN Suite (WireGuard & Tailscale)', () => {
     expect(tbody.innerHTML).toContain('windows-workstation');
     expect(tbody.innerHTML).toContain('🍏'); // macOS icon
     expect(tbody.innerHTML).toContain('🪟'); // Windows icon
-    expect(tbody.innerHTML).toContain('Direct P2P');
+    expect(tbody.innerHTML).toContain('Direct (P2P)');
     expect(tbody.innerHTML).toContain('DERP (fra)');
 
     // Test peer search filter
