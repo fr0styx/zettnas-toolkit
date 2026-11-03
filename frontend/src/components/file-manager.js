@@ -11,6 +11,7 @@ import { escapeHtml, copyTextToClipboard } from '../utils.js';
 import { ZettEventBus } from '../event-bus.js';
 import { showToast, showConfirmToast, showPromptToast, showBottomSheet, showActionToast } from '../toast.js';
 import { t } from '../i18n.js';
+import { setIconLabel } from '../ui/primitives.js';
 import { binColumns, binBar } from './fm-bin-view.js';
 import { makeDraggable, bringToFront } from './dock.js';
 import { openFilePreview as openFilePreviewModal } from '../file-preview-loader.js';
@@ -3898,10 +3899,12 @@ export function openMediaOrganizerModal(initialPath = '') {
       }
 
       btnPreview.disabled = true;
-      btnPreview.innerHTML = '<span aria-hidden="true">⏳</span> <span>Analyzing...</span>';
+      setIconLabel(btnPreview, '⏳', t('media.org_analyzing', 'Analyzing...'));
       if (previewWrap) {
         previewWrap.innerHTML =
-          '<div style="text-align:center; padding:25px; color:var(--muted); font-size:var(--zn-fs-xs);"><div class="loader-spinner" style="margin:0 auto 10px;"></div>Parsing media files via regex heuristics...</div>';
+          '<div style="text-align:center; padding:25px; color:var(--muted); font-size:var(--zn-fs-xs);"><div class="loader-spinner" style="margin:0 auto 10px;"></div>' +
+          escapeHtml(t('media.org_reading', 'Reading the file names…')) +
+          '</div>';
       }
 
       try {
@@ -3911,7 +3914,10 @@ export function openMediaOrganizerModal(initialPath = '') {
 
         if (items.length === 0) {
           if (previewWrap) {
-            previewWrap.innerHTML = '<div style="text-align:center; padding:25px; color:var(--muted); font-size:var(--zn-fs-xs);">No video files found in source folder.</div>';
+            previewWrap.innerHTML =
+              '<div style="text-align:center; padding:25px; color:var(--muted); font-size:var(--zn-fs-xs);">' +
+              escapeHtml(t('media.org_none', 'No video files found in the source folder.')) +
+              '</div>';
           }
           if (btnApply) {
             btnApply.disabled = true;
@@ -3924,16 +3930,16 @@ export function openMediaOrganizerModal(initialPath = '') {
         if (previewWrap) {
           previewWrap.innerHTML = `
             <div style="font-size:var(--zn-fs-xs); padding:8px 12px; background:var(--zn-glaze-3); border-bottom:1px solid var(--zn-line-8); font-weight:700; color:var(--muted); display:flex; justify-content:space-between;">
-              <span>Detected ${items.length} file(s) for reorganization:</span>
-              <span>Plex / Jellyfin Schema</span>
+              <span>${escapeHtml(t('media.org_found', '{count, plural, one {# file to sort:} other {# files to sort:}}', { count: items.length }))}</span>
+              <span>${escapeHtml(t('media.org_schema', 'Plex / Jellyfin layout'))}</span>
             </div>
             <div style="display:flex; flex-direction:column;">
               ${items
                 .map((it) => {
                   const isTv = it.media_type === 'tv';
                   const typeBadge = isTv
-                    ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">TV Show · S${String(it.season || 1).padStart(2, '0')}E${String(it.episode || 1).padStart(2, '0')}</span>`
-                    : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(14,165,233,0.15); color:var(--zn-text-accent); border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">Movie ${it.year ? `(${it.year})` : ''}</span>`;
+                    ? `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border:1px solid rgba(168,85,247,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_tv', 'TV show · S{season}E{episode}', { season: String(it.season || 1).padStart(2, '0'), episode: String(it.episode || 1).padStart(2, '0') }))}</span>`
+                    : `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:rgba(14,165,233,0.15); color:var(--zn-text-accent); border:1px solid rgba(14,165,233,0.3); padding:1px 5px; border-radius:3px;">${escapeHtml(t('media.org_movie', 'Movie'))} ${it.year ? `(${it.year})` : ''}</span>`;
                   const qualBadge = `<span class="ci-badge" style="font-size:var(--zn-fs-xs); background:var(--zn-glaze-6); color:var(--zn-text-soft); padding:1px 5px; border-radius:3px;">${escapeHtml(it.resolution || '1080p')} · ${escapeHtml(it.codec || 'x264')}</span>`;
 
                   return `
@@ -3963,11 +3969,11 @@ export function openMediaOrganizerModal(initialPath = '') {
       } catch (err) {
         showToast(t('toast.preview_failed', 'Preview failed: {error}', { error: err.message }), 'error');
         if (previewWrap) {
-          previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--zn-fs-xs);">Failed: ${escapeHtml(err.message)}</div>`;
+          previewWrap.innerHTML = `<div style="text-align:center; padding:25px; color:var(--alert, var(--lt-t-ef4444ff, #ef4444)); font-size:var(--zn-fs-xs);">${escapeHtml(t('media.org_failed', 'Failed: {error}', { error: err.message }))}</div>`;
         }
       } finally {
         btnPreview.disabled = false;
-        btnPreview.innerHTML = '🔍 <span>Scan & Preview Diff</span>';
+        setIconLabel(btnPreview, '🔍', t('media.preview_btn', 'Scan & Preview Diff'));
       }
     };
   }
@@ -3980,7 +3986,7 @@ export function openMediaOrganizerModal(initialPath = '') {
       const hardlink = mode === 'hardlink';
 
       btnApply.disabled = true;
-      btnApply.innerHTML = '<span aria-hidden="true">⏳</span> <span>Organizing...</span>';
+      setIconLabel(btnApply, '⏳', t('media.org_running', 'Organizing...'));
 
       try {
         const res = await api.post('/api/media/organize/apply', {
@@ -3990,7 +3996,7 @@ export function openMediaOrganizerModal(initialPath = '') {
         });
 
         const procCount = res.processed != null ? res.processed : previewItems.length;
-        showToast(t('media.success', `Media organization completed successfully (${procCount} files).`), 'success');
+        showToast(t('media.org_done', '{count, plural, one {Media sorted: # file.} other {Media sorted: # files.}}', { count: procCount }), 'success');
         closeModal();
         if (typeof openFileManager === 'function') {
           openFileManager(srcInput?.value || initialPath);
@@ -3999,7 +4005,7 @@ export function openMediaOrganizerModal(initialPath = '') {
         showToast(t('toast.failed_to_execute_reorganization', 'Failed to execute reorganization: {error}', { error: err.message }), 'error');
       } finally {
         btnApply.disabled = false;
-        btnApply.innerHTML = t('media.apply_btn', 'Execute Reorganization');
+        btnApply.textContent = t('media.apply_btn', 'Execute Reorganization');
       }
     };
   }
