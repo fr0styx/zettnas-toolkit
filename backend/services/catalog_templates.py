@@ -571,6 +571,34 @@ CURATED_APP_CATALOG: list[dict[str, Any]] = [
         "logo": "restic",
     },
     {
+        # D15: every Windows, Mac and Linux PC in the house backed up on a schedule, files and images
+        "id": "urbackup",
+        "name": "UrBackup (PC backups)",
+        "category": "cloud",
+        "description": (
+            "Backs up every PC in the house on a schedule: changed files every few hours and a full disk "
+            "image every week, so a PC that no longer starts can be restored. Install the small client on each PC."
+        ),
+        "image": "uroni/urbackup-server:latest",
+        "default_port": 55414,
+        "ports": ["55413:55413", "55414:55414", "55415:55415", "35623:35623/udp"],
+        "webui_path": "/",
+        "env": {**PUID},
+        "volumes": {"database": "/var/urbackup", "backups": "/backups"},
+        "credentials": {
+            "note": (
+                "First open Settings -> Users and create the admin account: until then anyone on your network "
+                "can open this page. On each PC install the UrBackup client (urbackup.org). PCs on the same "
+                "network as the NAS's Docker bridge are not found by themselves: in the server's web UI choose "
+                "Add new client -> Internet client, and enter the address and key it shows in the client "
+                "(port 55415). Over Tailscale that also works away from home. Keep a second copy of the backups "
+                "folder off-site (Backup -> Off-site)."
+            ),
+        },
+        "tags": ["backup", "pc", "windows", "image backup"],
+        "logo": "urbackup",
+    },
+    {
         "id": "pairdrop",
         "name": "PairDrop",
         "category": "cloud",

@@ -3383,31 +3383,31 @@
 
             <!-- Subpane 1: User Inventory -->
             <div id="users-pane-list" class="users-subpane">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
-                <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;" data-i18n="users.list_title">People with an account</div>
-                <div style="display:flex; gap: 8px;">
+              <div class="users-bar">
+                <div class="users-bar-title" data-i18n="users.list_title">People with an account</div>
+                <div class="users-bar-actions">
                   <button type="button" id="btn-refresh-users" class="btn-pill-toggle" data-i18n="common.refresh">
                     🔄 Refresh
                   </button>
                   <button type="button" id="btn-share-access" class="btn-pill-toggle" title="Choose which users can use which shares" data-i18n-title="ui.choose_which_users_can_use" data-i18n="users.share_access">
                     Shared folders
                   </button>
-                  <button type="button" id="btn-add-user" class="btn-save-preset" style="padding: 6px 14px; font-size: var(--zn-fs-sm);" data-i18n="users.add">
+                  <button type="button" id="btn-add-user" class="btn-save-preset users-bar-btn" data-i18n="users.add">
                     Add a person
                   </button>
                 </div>
               </div>
-              <div class="table-container" style="background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; overflow-x: auto;" tabindex="0">
-                <table class="zn-datatable zn-datatable--roomy" style="width: 100%; border-collapse: collapse; text-align: left; min-width: 760px;">
+              <div class="table-container users-table-wrap" tabindex="0">
+                <table class="zn-datatable zn-datatable--roomy users-table">
                   <thead>
-                    <tr style="background: var(--zn-glaze-3); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                      <th style="padding: 10px 12px;" data-i18n="users.col_person">Person</th>
-                      <th style="padding: 10px 12px;" data-i18n="users.col_email">Email</th>
-                      <th style="padding: 10px 12px;" data-i18n="users.col_role">Role</th>
-                      <th style="padding: 10px 12px;" data-i18n="common.status">Status</th>
-                      <th style="padding: 10px 12px;" data-i18n="users.col_2fa">Two-step</th>
-                      <th style="padding: 10px 12px;" data-i18n="users.col_quota">Storage limit</th>
-                      <th style="padding: 10px 12px; text-align: right;" data-i18n="users.col_actions">Actions</th>
+                    <tr class="users-thead">
+                      <th data-i18n="users.col_person">Person</th>
+                      <th data-i18n="users.col_email">Email</th>
+                      <th data-i18n="users.col_role">Role</th>
+                      <th data-i18n="common.status">Status</th>
+                      <th data-i18n="users.col_2fa">Two-step</th>
+                      <th data-i18n="users.col_quota">Storage limit</th>
+                      <th class="is-end" data-i18n="users.col_actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="users-table-body">
@@ -3415,6 +3415,11 @@
                   </tbody>
                 </table>
               </div>
+              <section class="invite-card" aria-labelledby="kids-title">
+                <h4 id="kids-title" class="invite-title" data-i18n="kids.title">Kids' rules</h4>
+                <p class="invite-meta" data-i18n="kids.desc">When each kid or guest may sign in, whether their devices are filtered, and whether they may use Zetty. Each rule can also be changed where it lives.</p>
+                <div id="kids-rules-mount"></div>
+              </section>
               <section class="invite-card" aria-labelledby="invite-title">
                 <h4 id="invite-title" class="invite-title" data-i18n="invite.title">Invite someone</h4>
                 <p class="invite-meta" data-i18n="invite.desc">A one-time link: they choose their own username and password, and get their own private folder.</p>
@@ -3434,29 +3439,29 @@
 
             <!-- Subpane 2: Active Sessions -->
             <div id="users-pane-sessions" class="users-subpane">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap:wrap; gap:8px;">
+              <div class="users-bar">
                 <div>
-                  <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px;" data-i18n="users.sessions_title">Signed-in browsers and devices</div>
-                  <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="users.sessions_desc">Sign out anything you don't recognise.</div>
+                  <div class="users-bar-title" data-i18n="users.sessions_title">Signed-in browsers and devices</div>
+                  <div class="users-bar-desc" data-i18n="users.sessions_desc">Sign out anything you don't recognise.</div>
                 </div>
-                <div style="display:flex; gap: 8px;">
+                <div class="users-bar-actions">
                   <button type="button" id="btn-refresh-sessions" class="btn-pill-toggle" data-i18n="common.refresh">
                     🔄 Refresh
                   </button>
-                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger" style="padding: 6px 14px; font-size: var(--zn-fs-xs);" data-i18n="users.sign_out_others">
+                  <button type="button" id="btn-revoke-all-sessions" class="suite-toolkit-btn danger users-bar-btn is-xs" data-i18n="users.sign_out_others">
                     Sign out everywhere else
                   </button>
                 </div>
               </div>
-              <div class="table-container" style="background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; overflow-x: auto;" tabindex="0">
-                <table class="zn-datatable zn-datatable--roomy" style="width: 100%; border-collapse: collapse; text-align: left; min-width: 600px;">
+              <div class="table-container users-table-wrap" tabindex="0">
+                <table class="zn-datatable zn-datatable--roomy users-table users-table--narrow">
                   <thead>
-                    <tr style="background: var(--zn-glaze-3); border-bottom: 1px solid var(--zn-line-8); font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
-                      <th style="padding: 10px 12px;" data-i18n="users.col_device">Browser or device</th>
-                      <th style="padding: 10px 12px;" data-i18n="users.col_ip">IP address</th>
-                      <th style="padding: 10px 12px;" data-i18n="users.col_first">Signed in</th>
-                      <th style="padding: 10px 12px;" data-i18n="users.col_last">Last active</th>
-                      <th style="padding: 10px 12px; text-align: right;" data-i18n="users.col_actions">Actions</th>
+                    <tr class="users-thead">
+                      <th data-i18n="users.col_device">Browser or device</th>
+                      <th data-i18n="users.col_ip">IP address</th>
+                      <th data-i18n="users.col_first">Signed in</th>
+                      <th data-i18n="users.col_last">Last active</th>
+                      <th class="is-end" data-i18n="users.col_actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody id="sessions-table-body">

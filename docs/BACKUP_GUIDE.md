@@ -39,6 +39,31 @@ full PC):
 3. Schedule daily backups and keep at least 14 restore points. Create the recovery
    media it offers, so you can restore a PC that no longer boots.
 
+## Every PC in the house: UrBackup
+
+File History, Veeam and Time Machine each back up one computer and are set up on that
+computer. With several PCs, **UrBackup** keeps them all in one place: you see on the NAS
+which PC was last backed up, and the schedule, the retention and the restores are managed
+there too.
+
+1. In ZettNAS, open **Apps → App Catalog**, find **UrBackup (PC backups)** and install it.
+   Its backups go to `appdata/urbackup/backups`; move that folder to a share with room if
+   your appdata disk is small.
+2. Open its web page (port 55414). **First** go to **Settings → Users** and create the
+   admin account: until you do, anyone on your network can open the page.
+3. Choose **Add new client → Internet client**, give the PC a name and note the server
+   address and key it shows. (Inside Docker the server can't find PCs by itself, so each
+   PC is added once by hand.)
+4. On the PC, install the UrBackup client from urbackup.org, open its settings, turn on
+   **Internet mode** and enter the NAS address, port **55415** and that key. Through
+   Tailscale the same address works when the laptop is away from home.
+5. Under **Settings** pick what to keep. The defaults back up changed files every 5 hours
+   and a full disk image every week; on Windows the image can restore a PC that no longer
+   starts (make the restore USB stick from urbackup.org once).
+
+UrBackup keeps one copy, on the NAS. Back up the `backups` folder off-site as well
+(**Backup → Off-site**), so a dead pool or a fire doesn't take the PCs' backups with it.
+
 ## Linux: restic over SFTP
 
 ```bash

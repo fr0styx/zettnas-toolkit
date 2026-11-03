@@ -44,6 +44,13 @@
 .invite-card { margin-top: var(--zn-space-4); padding: var(--zn-space-3); border-radius: var(--zn-radius); border: 1px solid var(--zn-line-strong); }
 .invite-title { margin: 0 0 var(--zn-space-1); font-size: var(--zn-fs); }
 .invite-meta { color: var(--muted); font-size: var(--zn-fs-xs); }
+/* Kids' rules in the Users pane (NUX-18) */
+.kids-table { width: 100%; margin-top: var(--zn-space-2); }
+.kids-actions { text-align: right; white-space: nowrap; }
+.kids-sub { margin: var(--zn-space-3) 0 var(--zn-space-1); font-size: var(--zn-fs-sm); }
+.kids-ai-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-3); padding: var(--zn-space-1) 0; }
+.kids-ai-role { min-width: 6em; font-weight: 600; }
+.kids-more { margin: var(--zn-space-3) 0 0; }
 .invite-list { list-style: none; margin: var(--zn-space-2) 0; padding: 0; display: flex; flex-direction: column; gap: var(--zn-space-1); }
 .invite-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--zn-space-2); font-size: var(--zn-fs-sm); }
 .invite-row.is-used { opacity: 0.6; }

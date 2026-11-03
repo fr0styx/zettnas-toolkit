@@ -32,13 +32,13 @@
  "frontend/src/components/chassis-visualizer.js": {
   "buttons": 3,
   "globals": 1,
-  "styles": 159,
-  "templates": 29
+  "styles": 149,
+  "templates": 22
  },
  "frontend/src/components/container-modal.js": {
   "buttons": 0,
   "globals": 1,
-  "styles": 261,
+  "styles": 259,
   "templates": 13
  },
  "frontend/src/components/container-network-map.js": {
@@ -140,8 +140,8 @@
  "frontend/src/components/file-manager-helpers.js": {
   "buttons": 0,
   "globals": 2,
-  "styles": 56,
-  "templates": 5
+  "styles": 54,
+  "templates": 4
  },
  "frontend/src/components/file-manager.js": {
   "buttons": 0,
@@ -206,8 +206,8 @@
  "frontend/src/components/management/docker.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 160,
-  "templates": 23
+  "styles": 158,
+  "templates": 22
  },
  "frontend/src/components/management/network.js": {
   "buttons": 0,
@@ -219,7 +219,7 @@
   "buttons": 0,
   "globals": 0,
   "styles": 44,
-  "templates": 1
+  "templates": 0
  },
  "frontend/src/components/management/overview.js": {
   "buttons": 0,
@@ -290,7 +290,7 @@
  "frontend/src/components/settings.js": {
   "buttons": 0,
   "globals": 4,
-  "styles": 12,
+  "styles": 7,
   "templates": 5
  },
  "frontend/src/components/setup-wizard-gate.js": {
@@ -350,7 +350,7 @@
  "frontend/src/components/vm/connect-modal.js": {
   "buttons": 0,
   "globals": 0,
-  "styles": 83,
+  "styles": 77,
   "templates": 2
  },
  "frontend/src/components/vm/console-ansi.js": {
@@ -416,8 +416,8 @@
  "frontend/src/folder-browser.js": {
   "buttons": 0,
   "globals": 1,
-  "styles": 1,
-  "templates": 1
+  "styles": 0,
+  "templates": 0
  },
  "frontend/src/main.js": {
   "buttons": 0,
@@ -452,7 +452,7 @@
  "frontend/src/windows/management-window.html": {
   "buttons": 6,
   "globals": 0,
-  "styles": 1793,
+  "styles": 1766,
   "templates": 0
  }
 }

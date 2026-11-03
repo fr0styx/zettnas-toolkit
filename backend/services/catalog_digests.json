@@ -86,6 +86,7 @@
   "sissbruecker/linkding:latest": "sha256:e35cb50e0581178f245125ffaa909c565416c94c9f22ace305a7d234a4345522",
   "stirlingtools/stirling-pdf:latest": "sha256:c6872dd056b0046a14c5de1e9970283e7f1e1ff685bb08090c6b37a231127d31",
   "triliumnext/trilium:latest": "sha256:d87d810fdcb549db65710a40933acaa16bc75c9426a9164c547f7ba95592941b",
+  "uroni/urbackup-server:latest": "sha256:3abc48685f96d8265c25f31de54ac1cf5e4fe15936f6508efe18701c1c435711",
   "vaultwarden/server:latest": "sha256:efb3cde962015fcc036b2ea625242248611943b27212ebf4392841fb30fad055",
   "vikunja/vikunja:latest": "sha256:f7dc8428d10aef17f3075886d3c1c022f566ec456f88985f02c137f4fc534576"
 }

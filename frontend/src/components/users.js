@@ -179,6 +179,13 @@ export async function loadUsersList() {
     }
     const data = await res.json();
     const users = data.users || [];
+    const kids = document.getElementById('kids-rules-mount'); // NUX-18: kids' rules in one place
+    if (kids) {
+      import('./kids-rules.js').then((m) => m.renderKidsRules(kids, users, {
+        onEdit: (id) => _usersCache[id] && showEditUserModal(_usersCache[id]),
+        onShares: openShareAccessModal,
+      }));
+    }
 
     renderInvites(document.getElementById('invites-mount'));
     if (users.length === 0) {

@@ -12,6 +12,8 @@ const ROLE_NAMES = {
   backup_operator: () => t('role.backup_operator', 'Backup manager'),
   share_user: () => t('role.share_user', 'Family member'),
   auditor: () => t('role.auditor', 'Viewer'),
+  kid: () => t('role.kid', 'Kid'),
+  guest: () => t('role.guest', 'Guest'),
 };
 
 export const ROLE_IDS = Object.keys(ROLE_NAMES);

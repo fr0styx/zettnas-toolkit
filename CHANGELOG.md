@@ -117,6 +117,14 @@
 
 #### Usability
 
+- **The People pane is built from the shared styles** (NUX-15): its lists, headers and buttons
+  use classes instead of 27 inline styles, with the same look in both themes.
+
+- **Kids' rules in one place** (NUX-18): the People pane lists each kid and guest account with
+  when they may sign in and whether their devices are filtered, with buttons to change either,
+  and the switches for whether kids and guests may ask Zetty or use AI search. Each rule is still
+  kept where it was, so it can be changed there too.
+
 - **No emoji left inside translated words** (UX-35): the last 20 strings that carried one (backup
   and VM buttons, the share-link button, pool import, the LDAP and notification card titles, the
   update and setup messages and others) show the icon beside the words in an aria-hidden span, so
@@ -627,6 +635,10 @@
 
 #### Fixes
 
+- **A kid's sign-in hours show when you edit them again**: the list of people didn't carry the
+  hours, so the edit dialog showed them as off although they were still enforced. Kid and Guest
+  are also named in the person's language in the list, like the other roles.
+
 - **The console's light bar shows what the real one does**: it showed the saved light settings,
   read once when the settings drawer loaded. The stats now say what the bar is showing (your
   settings, or an alert, a copy, a warning or the night taking it over), and the picture follows
@@ -1011,6 +1023,10 @@
   release makes SMB follow share access and gives those accounts a separate SMB password.
 
 #### Backups and power
+
+- **PC backups for the whole house** (D15): UrBackup is in the App Catalog, so every PC is backed
+  up to the NAS on a schedule, files and full disk images, and the backup guide shows how to add
+  each PC and keep a second copy off-site.
 
 - **Snapshots are on by default** for new shared folders where the host can take them: one every
   hour, a day of them kept plus one a day for 30 days. Existing folders without snapshots show in the

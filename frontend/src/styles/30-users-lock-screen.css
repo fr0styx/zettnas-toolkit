@@ -199,3 +199,16 @@ body.desktop-locked #os-dock-container {
 .zn-hours-days { display: flex; flex-wrap: wrap; gap: 6px; }
 .zn-hours-day { display: inline-flex; align-items: center; gap: 3px; font-size: var(--zn-fs-xs); }
 .zn-hours-times { display: flex; flex-wrap: wrap; gap: 12px; font-size: var(--zn-fs-xs); }
+
+/* The People pane's lists: classes instead of inline styles (NUX-15), same look */
+.users-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.users-bar-title { font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); letter-spacing: 0.6px; }
+.users-bar-desc { font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px; }
+.users-bar-actions { display: flex; gap: 8px; }
+.btn-save-preset.users-bar-btn, .suite-toolkit-btn.users-bar-btn { padding: 6px 14px; font-size: var(--zn-fs-sm); }
+.suite-toolkit-btn.users-bar-btn.is-xs { font-size: var(--zn-fs-xs); }
+.users-table-wrap { background: var(--zn-shade-25); border: 1px solid var(--zn-line-8); border-radius: 8px; overflow-x: auto; }
+.zn-datatable.users-table { min-width: 760px; }
+.zn-datatable.users-table--narrow { min-width: 600px; }
+.users-table > thead > tr.users-thead { background: var(--zn-glaze-3); border-bottom: 1px solid var(--zn-line-8); letter-spacing: 0.5px; }
+.users-table > thead > tr > th { padding: 10px 12px; }

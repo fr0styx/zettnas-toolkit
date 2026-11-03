@@ -104,8 +104,13 @@ def test_an_admin_sets_hours_and_they_are_shown(client, auth_headers, kid):
     assert r.status_code == 200, r.text
     assert r.json()["user"]["signin_hours"] == SCHOOL
     assert "signin_hours_json" not in r.json()["user"]
+    listed = {u["id"]: u for u in client.get("/api/users", headers=auth_headers).json()["users"]}
+    assert listed[kid["id"]]["signin_hours"] == SCHOOL  # the list shows them too (NUX-18)
+    assert "signin_hours_json" not in listed[kid["id"]]
     r = client.put(f"/api/users/{kid['id']}", json={"signin_hours": {}}, headers=auth_headers)
     assert r.json()["user"]["signin_hours"] is None
+    listed = {u["id"]: u for u in client.get("/api/users", headers=auth_headers).json()["users"]}
+    assert listed[kid["id"]]["signin_hours"] is None
 
 
 def test_bad_hours_are_a_400(client, auth_headers, kid):

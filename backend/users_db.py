@@ -501,15 +501,20 @@ def list_users(db_path: str | None = None) -> list[dict[str, Any]]:
         rows = conn.execute("""
             SELECT u.id, u.username, u.display_name, u.email, u.role_id, r.name AS role_name,
                    u.status, u.must_change_password, u.avatar_url, u.home_directory,
-                   u.storage_quota_bytes, u.mfa_enabled, u.idp_type, u.created_at, u.last_login_at, u.last_login_ip
+                   u.storage_quota_bytes, u.mfa_enabled, u.idp_type, u.created_at, u.last_login_at, u.last_login_ip,
+                   u.signin_hours_json
             FROM users u
             JOIN roles r ON u.role_id = r.id
             ORDER BY u.created_at ASC
         """).fetchall()
+        from backend.signin_hours import from_json
+
         res = []
         for r in rows:
             d = dict(r)
             d["mfa_enabled"] = bool(d.get("mfa_enabled", 0))
+            # the edit dialog and the kids' rules show them (NUX-18)
+            d["signin_hours"] = from_json(d.pop("signin_hours_json", None))
             res.append(d)
         return res
 
