@@ -16,7 +16,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, logger
+from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, SETTINGS, logger
 from backend.fsutil import atomic_write_json
 from backend.hardware.pal import base as pal_base
 from backend.hardware.pal.base import (
@@ -191,7 +191,7 @@ class StoragePlatformDetector:
 
         if os.environ.get("ZETTNAS_PAL_MODE", "").strip().lower() in ("observer", "readonly", "telemetry"):
             return PlatformType.GENERIC_OBSERVER
-        if os.environ.get("ZETTNAS_OBSERVER_MODE") == "1":
+        if SETTINGS.observer_mode:
             return PlatformType.GENERIC_OBSERVER
 
         return PlatformType.GENERIC_LINUX

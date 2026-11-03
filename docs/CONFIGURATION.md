@@ -15,6 +15,9 @@ used keeps its default, and the log says which variable and why.
 | `OS_NVME` | `nvme1n1` | The NVMe device the operating system runs from, hidden from data disks. |
 | `SHOW_OS_DISK` | `on` | Show the operating-system disk in the disk list. |
 | `REMOTES_PATH` | `/mnt/remotes` | Where cloud and network remotes are mounted. |
+| `HOST_ETC` | `/host/etc` | Where the host's /etc is mounted. |
+| `ZETTNAS_OBSERVER_MODE` | `off` | Only watch the host on an unknown system: read-only telemetry, no changes. |
+| `SQLITE_VEC_PATH` | `(empty)` | Extra place to look for the sqlite-vec library (vec0.so) for AI search. |
 | `HOST_NET_IFACE` | `(empty)` | Network interface whose traffic the dashboard shows; empty = all physical ones. |
 | `CONTAINERIZED` | `off` | Say ZettNAS runs in a container when it can't tell by itself. |
 | `ZETTNAS_THUMB_CACHE_MB` | `1024` | Size of the preview thumbnail cache, in MB (at least 16). (0–1.04858e+06) |
@@ -25,6 +28,7 @@ used keeps its default, and the log says which variable and why.
 
 | Variable | Default | Meaning |
 |---|---|---|
+| `ZETTNAS_PUSH_CONTACT` | `https://github.com/fr0styx/zettnas-toolkit` | Contact address sent to browser push services with each notification. |
 | `PORT` | `8082` | Port of the web interface. (1–65535) |
 | `TRUSTED_PROXIES` | `127.0.0.1, ::1` | Reverse proxies whose X-Forwarded-For is believed (comma-separated). |
 | `ENABLE_PROXY_SSO` | `off` | Accept a signed-in user from a trusted proxy's header. |
@@ -39,6 +43,7 @@ used keeps its default, and the log says which variable and why.
 
 | Variable | Default | Meaning |
 |---|---|---|
+| `AUTO_INGEST_ENABLED` | `off` | Copy a card as soon as it is inserted, even when Automatic Slot Ingest is off in the settings. |
 | `SFTP_PORT` | `2222` | Port of the built-in SFTP server. (1–65535) |
 | `WEBDAV_PORT` | `8084` | Port of the built-in WebDAV server. (1–65535) |
 

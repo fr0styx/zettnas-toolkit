@@ -19,7 +19,7 @@ import urllib.error
 import urllib.request
 from collections.abc import Sequence
 
-from backend.config import logger
+from backend.config import SETTINGS, logger
 from backend.ignored_errors import ignored
 from backend.services import gpu_queue
 from backend.services.rag_text import (
@@ -176,7 +176,7 @@ def load_sqlite_vec_extension(conn: sqlite3.Connection) -> bool:
         logger.debug("sqlite_vec package load skipped/failed: %s", e)
 
     candidate_paths = [
-        os.environ.get("SQLITE_VEC_PATH", ""),
+        SETTINGS.sqlite_vec_path,
         "/app/lib/vec0.so",
         "/usr/local/lib/vec0.so",
         "/usr/lib/vec0.so",

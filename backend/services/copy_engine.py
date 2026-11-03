@@ -113,7 +113,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
 
 
 def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | None = None):
-    from backend.config import BUTTON_CFG_FILE
+    from backend.config import BUTTON_CFG_FILE, SETTINGS
     from backend.fsutil import read_json
 
     if slot in _EJECTED_SLOTS:
@@ -123,9 +123,7 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
     cfg = read_json(BUTTON_CFG_FILE, {})
     # auto_ingest must be explicitly enabled by user in settings ("Automatic Slot Ingest").
     # The physical copy button toggle ("enabled") must NEVER trigger auto-ingest upon card insertion!
-    auto_enabled = cfg.get("auto_ingest", False) or (
-        os.getenv("AUTO_INGEST_ENABLED", "0").lower() in ("1", "true", "yes")
-    )
+    auto_enabled = cfg.get("auto_ingest", False) or SETTINGS.auto_ingest_enabled
 
     if not auto_enabled:
         if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:

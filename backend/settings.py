@@ -80,6 +80,16 @@ class Settings:
     )
     show_os_disk: bool = _s("SHOW_OS_DISK", True, "Show the operating-system disk in the disk list.", group="Host")
     remotes_path: str = _s("REMOTES_PATH", "/mnt/remotes", "Where cloud and network remotes are mounted.", group="Host")
+    host_etc: str = _s("HOST_ETC", "/host/etc", "Where the host's /etc is mounted.", group="Host")
+    observer_mode: bool = _s(
+        "ZETTNAS_OBSERVER_MODE",
+        False,
+        "Only watch the host on an unknown system: read-only telemetry, no changes.",
+        group="Host",
+    )
+    sqlite_vec_path: str = _s(
+        "SQLITE_VEC_PATH", "", "Extra place to look for the sqlite-vec library (vec0.so) for AI search.", group="Host"
+    )
     host_net_iface: str = _s(
         "HOST_NET_IFACE",
         "",
@@ -114,6 +124,12 @@ class Settings:
         group="Host",
     )
     # Web server
+    push_contact: str = _s(
+        "ZETTNAS_PUSH_CONTACT",
+        "https://github.com/fr0styx/zettnas-toolkit",
+        "Contact address sent to browser push services with each notification.",
+        group="Web",
+    )
     port: int = _s("PORT", 8082, "Port of the web interface.", lo=1, hi=65535, group="Web")
     trusted_proxies: tuple[str, ...] = _s(
         "TRUSTED_PROXIES",
@@ -140,6 +156,12 @@ class Settings:
     max_wallpaper_mb: int = _s("MAX_WALLPAPER_MB", 10, "Largest wallpaper upload, in MB.", lo=1, hi=1024, group="Web")
     max_upload_gb: int = _s("MAX_UPLOAD_GB", 64, "Largest file upload, in GB.", lo=1, hi=100000, group="Web")
     # File services
+    auto_ingest_enabled: bool = _s(
+        "AUTO_INGEST_ENABLED",
+        False,
+        "Copy a card as soon as it is inserted, even when Automatic Slot Ingest is off in the settings.",
+        group="File services",
+    )
     sftp_port: int = _s("SFTP_PORT", 2222, "Port of the built-in SFTP server.", lo=1, hi=65535, group="File services")
     webdav_port: int = _s(
         "WEBDAV_PORT", 8084, "Port of the built-in WebDAV server.", lo=1, hi=65535, group="File services"

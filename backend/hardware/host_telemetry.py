@@ -10,10 +10,10 @@ import platform
 import time
 from typing import Any
 
-from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, get_server_hostname, logger
+from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, SETTINGS, get_server_hostname, logger
 from backend.ignored_errors import ignored
 
-HOST_ETC = os.environ.get("HOST_ETC", "/host/etc")
+HOST_ETC = SETTINGS.host_etc
 
 _DMI_CACHE: dict[str, Any] = {}
 _DMI_CACHE_TS = 0.0

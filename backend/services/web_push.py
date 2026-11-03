@@ -24,12 +24,12 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 
-from backend.config import DATA_DIR, logger
+from backend.config import DATA_DIR, SETTINGS, logger
 from backend.fsutil import atomic_write_json
 
 KEY_FILE = os.path.join(DATA_DIR, "vapid.json")
 SUBS_FILE = os.path.join(DATA_DIR, "push_subscriptions.json")
-CONTACT = os.environ.get("ZETTNAS_PUSH_CONTACT", "https://github.com/fr0styx/zettnas-toolkit")
+CONTACT = SETTINGS.push_contact
 _lock = threading.Lock()
 
 
