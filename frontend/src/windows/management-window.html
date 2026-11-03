@@ -1296,9 +1296,9 @@
 
                   <!-- Legend / Indicators -->
                   <div style="display: flex; align-items: center; gap: 12px; font-size: var(--zn-fs-xs); color: var(--muted); flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8;"></span> Note / Reminder</div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #38bdf8;"></span> <span data-i18n="mw.note_reminder">Note / Reminder</span></div>
                     <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981;"></span> Task</div>
-                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #eab308;"></span> Synced Feed</div>
+                    <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #eab308;"></span> <span data-i18n="mw.synced_feed">Synced Feed</span></div>
                     <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #ec4899;"></span> Holiday</div>
                   </div>
 
@@ -1718,7 +1718,7 @@
                   <!-- Tailscale Telemetry Card -->
                   <div class="network-card" id="tailscale-telemetry-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> Tailscale Node Telemetry</div>
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> <span data-i18n="mw.tailscale_node_telemetry">Tailscale Node Telemetry</span></div>
                       <span class="mgmt-app-pill" id="ts-connection-pill" style="background:rgba(100,116,139,0.15); color:var(--muted);" data-sample>Offline</span>
                     </div>
                     <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:8px;">
@@ -1754,7 +1754,7 @@
                   <!-- Tailscale Connection & Auth Card -->
                   <div class="network-card" id="tailscale-controls-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> Tailscale Connection & Auth</div>
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> <span data-i18n="mw.tailscale_connection_and_au">Tailscale Connection &amp; Auth</span></div>
                       <button class="btn-pill-toggle is-danger is-small" id="btn-tailscale-down" style="display: none;">🔌 Disconnect</button>
                     </div>
                     <div style="padding:12px; font-size:var(--zn-fs-xs);" id="ts-controls-body">
@@ -1850,7 +1850,7 @@
                             Route all mobile/laptop internet traffic encrypted through this NAS when traveling.
                           </div>
                           <div id="ts-exit-node-approval-hint" style="display:none; font-size:var(--zn-fs-xs); padding:6px 10px; border-radius:6px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.08); color:var(--zn-text-warn); line-height:1.4; margin-top:4px;">
-                            ⚠️ Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> (Machines → Edit route settings → Use as exit node).
+                            <span aria-hidden="true">⚠️</span> Exit node is advertised. To allow other devices to route traffic through this NAS, approve it in your <a href="https://login.tailscale.com/admin/machines" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); text-decoration:underline; font-weight:700;"><span data-i18n="mw.tailscale_admin_console">Tailscale Admin Console</span> <span aria-hidden="true">↗</span></a> (Machines → Edit route settings → Use as exit node).
                           </div>
                         </div>
 
@@ -1968,7 +1968,7 @@
                 <div class="network-grid-two-col" id="network-wireguard-container">
                   <div class="network-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> WireGuard Tunnel Status (wg0)</div>
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-shield"/></svg> <span data-i18n="mw.wireguard_tunnel_status_wg0">WireGuard Tunnel Status (wg0)</span></div>
                       <span class="mgmt-app-pill" id="wg-forwarding-pill" style="background:var(--lt-b-3bf58b1f, rgba(59,245,139,0.12)); color:var(--lt-t-3bf58bff, #3bf58b);" data-sample>Curve25519 Ready</span>
                     </div>
                     <div style="padding:12px; font-size:var(--zn-fs-xs); display:flex; flex-direction:column; gap:8px;">
@@ -1989,7 +1989,7 @@
 
                   <div class="network-card" id="wg-client-conf-card">
                     <div class="network-card-header">
-                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> Client Configuration (.conf)</div>
+                      <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> <span data-i18n="mw.client_configuration_conf">Client Configuration (.conf)</span></div>
                       <div style="display:flex; gap:6px; align-items:center;">
                         <button class="btn-pill-toggle is-small" id="btn-copy-wg-conf" style="display: none;" title="Copy WireGuard configuration to clipboard" data-i18n-title="ui.copy_wireguard_configuration_to_clipboard"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
                         <button class="btn-pill-toggle is-small" id="btn-download-wg-conf" style="display: none;" title="Download WireGuard .conf profile" data-i18n-title="ui.download_wireguard_conf_profile"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
@@ -2166,7 +2166,7 @@
                 <div style="display:flex; gap:6px; align-items:center;">
                   <button class="btn-pill-toggle" id="btn-mgmt-docker-launch-window" title="Open Dedicated Window" data-i18n-title="ui.open_dedicated_window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
                   <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display: none;" data-i18n="ui.back_to_containers">← Back to Containers</button>
-                  <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">…</span></button>
+                  <button class="btn-pill-toggle" id="btn-view-docker-catalog"><span aria-hidden="true">📦</span> <span data-i18n="sp.catalog">App Catalog</span> <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">…</span></button>
                   <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers" data-i18n-title="ui.clean_up_unused_images_volumes">🧹 Prune / Cleanup</button>
                   <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n-title="ui.refresh_containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
                 </div>
@@ -2254,7 +2254,7 @@
                 <div id="docker-view-catalog-wrap" style="display:none;">
                   <div class="catalog-toolbar" style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
                     <div class="catalog-filter-pills" style="display:flex; gap:6px; flex-wrap:wrap;">
-                      <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all">All Apps <span id="catalog-all-count" class="docker-count-badge" style="margin-left:4px;">…</span></button>
+                      <button class="btn-pill-toggle catalog-filter-btn active" data-cat="all"><span data-i18n="catalog.cat_all">All Apps</span> <span id="catalog-all-count" class="docker-count-badge" style="margin-left:4px;">…</span></button>
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="media" data-i18n="mw.media_and_streaming">Media & Streaming</button>
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="photos" data-i18n="mw.photos">Photos</button>
                       <button class="btn-pill-toggle catalog-filter-btn" data-cat="cloud" data-i18n="mw.cloud_and_files">Cloud & Files</button>
@@ -2626,9 +2626,9 @@
                     <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs); font-weight: 700;" data-i18n="mw.active_safeguard">ACTIVE SAFEGUARD</span>
                   </div>
                   <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.5;">
-                    • <strong data-i18n="mw.cpu_fan_pwm3_inviolability">CPU Fan (pwm3) Inviolability:</strong> CPU cooling fan runs continuously and is strictly forbidden from zero RPM shutdown under all conditions.<br>
-                    • <strong data-i18n="mw.emergency_thermal_clamp">Emergency Thermal Clamp:</strong> If any drive, CPU, or motherboard zone reaches &ge; 80°C, fan speeds unconditionally clamp to 100% PWM (183 max).<br>
-                    • <strong data-i18n="mw.zero_rpm_standby_safety">Zero RPM Standby Safety:</strong> Bay exhaust fans enter zero RPM mode only when all mechanical hard drives in the bay zone are in standby.
+                    • <strong data-i18n="mw.cpu_fan_pwm3_inviolability">CPU Fan (pwm3) Inviolability:</strong> <span data-i18n="mw.cpu_cooling_fan_runs_continuously_and">CPU cooling fan runs continuously and is strictly forbidden from zero RPM shutdown under all conditions.</span><br>
+                    • <strong data-i18n="mw.emergency_thermal_clamp">Emergency Thermal Clamp:</strong> <span data-i18n="mw.if_any_drive_cpu_or_motherboard">If any drive, CPU, or motherboard zone reaches ≥ 80°C, fan speeds unconditionally clamp to 100% PWM (183 max).</span><br>
+                    • <strong data-i18n="mw.zero_rpm_standby_safety">Zero RPM Standby Safety:</strong> <span data-i18n="mw.bay_exhaust_fans_enter_zero_rpm">Bay exhaust fans enter zero RPM mode only when all mechanical hard drives in the bay zone are in standby.</span>
                   </div>
                 </div>
               </div>
@@ -4037,19 +4037,19 @@
 
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px; padding:12px; background:var(--zn-shade-25); border:1px solid var(--zn-line-5); border-radius:6px; font-size:var(--zn-fs-xs);">
                 <div style="color:var(--zn-text-soft);">
-                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.system_and_kernel">System & Kernel:</strong> CPU, Governers, dmesg, UPS
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.system_and_kernel">System & Kernel:</strong> <span data-i18n="mw.cpu_governers_dmesg_ups">CPU, Governers, dmesg, UPS</span>
                 </div>
                 <div style="color:var(--zn-text-soft);">
-                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.disks_and_smart">Disks & SMART:</strong> Health, Thermals, Standby Safe
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.disks_and_smart">Disks & SMART:</strong> <span data-i18n="mw.health_thermals_standby_safe">Health, Thermals, Standby Safe</span>
                 </div>
                 <div style="color:var(--zn-text-soft);">
-                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.docker_and_vms">Docker & VMs:</strong> Stacks, Conflicts, QEMU KVM
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.docker_and_vms">Docker & VMs:</strong> <span data-i18n="mw.stacks_conflicts_qemu_kvm">Stacks, Conflicts, QEMU KVM</span>
                 </div>
                 <div style="color:var(--zn-text-soft);">
-                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.client_observability">Client Observability:</strong> Browser, GPU, Logs
+                  <span style="color:var(--ok2, #25c2a0); font-weight:600;">✓</span> <strong data-i18n="mw.client_observability">Client Observability:</strong> <span data-i18n="mw.browser_gpu_logs">Browser, GPU, Logs</span>
                 </div>
                 <div style="color:var(--zn-text-soft);">
-                  <span style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-weight:600;">🔒</span> <strong data-i18n="mw.privacy_scrubbed">Privacy Scrubbed:</strong> Passwords, API tokens & keys redacted
+                  <span style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-weight:600;">🔒</span> <strong data-i18n="mw.privacy_scrubbed">Privacy Scrubbed:</strong> <span data-i18n="mw.pws_a_p_i_tkns_and_ks_redacted">Passwords, API tokens &amp; keys redacted</span>
                 </div>
               </div>
             </div>
@@ -5053,7 +5053,7 @@
       <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start;">
         <span style="font-size: 16px; line-height: 1;">🛡️</span>
         <div style="font-size: var(--zn-fs-xs); color: var(--lt-t-fcd34dff, #fcd34d); line-height: 1.45;">
-          <strong data-sample>60-Second Canary Watchdog Armed:</strong> When applying changes, a 60s countdown timer will begin. If you lose connection or do not confirm, the server will automatically revert to protect against lockout.
+          <strong data-sample>60-Second Canary Watchdog Armed:</strong> <span data-i18n="mw.when_applying_changes_a_60s_countdown">When applying changes, a 60s countdown timer will begin. If you lose connection or do not confirm, the server will automatically revert to protect against lockout.</span>
         </div>
       </div>
 

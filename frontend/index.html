@@ -1988,7 +1988,7 @@
         <div class="remote-form-section">
           <label for="new-remote-name" class="remote-section-label" data-sample>2. REMOTE NAME (Local Identifier)</label>
           <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" data-i18n-placeholder="ph.remote_name" style="width: 100%;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
-          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 4px;">Will be mounted to: <code style="color: var(--zn-text-accent); font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 4px;"><span data-i18n="ix.will_be_mounted_to">Will be mounted to:</span> <code style="color: var(--zn-text-accent); font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
         </div>
 
         <div class="remote-form-section">
@@ -2001,7 +2001,7 @@
         <div class="remote-form-section" style="padding-top: 4px;">
           <label for="new-remote-auto-mount" style="display: flex; align-items: center; gap: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text); cursor: pointer;">
             <input type="checkbox" id="new-remote-auto-mount" checked style="width: 16px; height: 16px; accent-color: var(--ok2, #22c55e);" />
-            <span>Mount immediately to <code style="color: var(--zn-text-accent);">/mnt/remotes</code> via FUSE</span>
+            <span><span data-i18n="ix.mount_immediately_to">Mount immediately to</span> <code style="color: var(--zn-text-accent);">/mnt/remotes</code> via FUSE</span>
           </label>
         </div>
       </div>
