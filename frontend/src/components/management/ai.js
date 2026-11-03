@@ -135,7 +135,6 @@ let _aiLastLlmRecommendations = null;
 let _aiLastActiveModel = ''; // the model the server reported; never a made-up default (FE-15)
 let _aiActiveHfFilter = 'all';
 let _aiModelsSortBy = 'date';
-let _aiSortListenerAttached = false;
 
 export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   if (recData && Array.isArray(recData.models)) {
@@ -148,8 +147,8 @@ export function renderAiLlmRecommendations(recData = {}, activeModel = '') {
   const sortSelect = document.getElementById('ai-models-sort-select');
 
   if (sortSelect) {
-    if (!_aiSortListenerAttached) {
-      _aiSortListenerAttached = true;
+    if (!sortSelect.dataset.sortBound) {
+      sortSelect.dataset.sortBound = '1'; // per element: a rebuilt panel gets its own listener
       sortSelect.addEventListener('change', (e) => {
         _aiModelsSortBy = e.target.value || 'date';
         if (_aiLastLlmRecommendations) {
