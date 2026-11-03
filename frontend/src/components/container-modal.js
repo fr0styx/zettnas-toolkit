@@ -1008,7 +1008,7 @@ function renderPortsTab(details) {
     applyPortsBtn.addEventListener('click', () => {
       const cname = details.overview?.name || details.cid;
       showConfirmToast(
-        `Recreate container "<strong>${escapeHtml(cname)}</strong>" with updated port mappings?<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ci.recreate_note', 'The container is recreated in 2–3 seconds. Volumes and saved data stay as they are.'))}</span>`,
+        `${escapeHtml(t('ci.recreate_ports_q', 'Recreate container "{name}" with the new port mappings?', { name: cname })).replace(escapeHtml(cname), () => `<strong>${escapeHtml(cname)}</strong>`)}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ci.recreate_note', 'The container is recreated in 2–3 seconds. Volumes and saved data stay as they are.'))}</span>`,
         async () => {
           const portInputs = container.querySelectorAll('.ci-port-input');
           const newPorts = [];
@@ -1723,7 +1723,7 @@ async function renderContainerEditTab(cid) {
     }
 
     showConfirmToast(
-      `Save changes and recreate container "<strong>${escapeHtml(name)}</strong>"?<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ci.save_note', 'The container is stopped and recreated with the new settings. Volumes and folders stay as they are.'))}</span>`,
+      `${escapeHtml(t('ci.save_recreate_q', 'Save changes and recreate container "{name}"?', { name })).replace(escapeHtml(name), () => `<strong>${escapeHtml(name)}</strong>`)}<br><br><span style="font-size:var(--zn-fs-xs); color:var(--muted);">${escapeHtml(t('ci.save_note', 'The container is stopped and recreated with the new settings. Volumes and folders stay as they are.'))}</span>`,
       async () => {
         // Collect port bindings
         const portBindings = [];

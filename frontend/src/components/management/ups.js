@@ -824,7 +824,7 @@ export function initUpsDrawerControls() {
         }
       },
       null,
-      { okText: '⚠️ Start Drill', cancelText: 'Cancel', allowHtml: true }
+      { okText: `⚠️ ${t('ups.start_drill', 'Start Drill')}`, cancelText: t('common.cancel', 'Cancel'), allowHtml: true }
     );
   });
   return loadPromise;

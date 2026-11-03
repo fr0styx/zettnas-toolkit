@@ -61,6 +61,7 @@ const windowsDir = join(ROOT, 'frontend/src/windows');
 const files = [...walk(join(ROOT, 'frontend/src')), join(ROOT, 'frontend/index.html'),
   ...readdirSync(windowsDir).filter((f) => f.endsWith('.html')).map((f) => join(windowsDir, f))];
 let rawToasts = 0;
+let rawDialogs = 0;
 let rawUi = 0;
 const perFile = {};
 for (const file of files) {
@@ -75,6 +76,9 @@ for (const file of files) {
     if (!(key in en)) errors.push(`${rel}: key "${key}" is not defined in locales/en.js`);
   }
   rawToasts += [...src.matchAll(/showToast\(\s*['"`]/g)].length;
+  // confirmation, prompt and action dialogs: an English title, or English on their buttons
+  rawDialogs += [...src.matchAll(/show(?:Confirm|Prompt|Action)Toast\(\s*['"`][A-Za-z]/g)].length
+    + [...src.matchAll(/\b(?:okText|cancelText):\s*['"`][A-Za-z]/g)].length;
   const ui = hardcodedUi(src, rel);
   rawUi += ui;
   if (ui) perFile[rel] = ui;
@@ -132,7 +136,7 @@ try {
 if (process.argv.includes('--update-baseline')) {
   const sorted = Object.fromEntries(Object.entries(perFile).sort(([x], [y]) => x.localeCompare(y)));
   writeFileSync(BASELINE, JSON.stringify({
-    raw_toasts: rawToasts, hardcoded_ui: rawUi, missing_plurals: missingPlurals, to_fixed: toFixed,
+    raw_toasts: rawToasts, raw_dialogs: rawDialogs, hardcoded_ui: rawUi, missing_plurals: missingPlurals, to_fixed: toFixed,
     emoji_strings: emojiStrings, per_file: sorted,
   }, null, 2) + '\n');
   console.log(`baseline: ${rawToasts} toasts and ${rawUi} UI strings with hard-coded text`);
@@ -141,6 +145,7 @@ if (process.argv.includes('--update-baseline')) {
     errors.push(`${rawToasts} toasts use hard-coded text (baseline ${baseline.raw_toasts}); use t('key', 'English text')`);
   }
   for (const [name, now, why] of [
+    ['raw_dialogs', rawDialogs, 'confirmation or prompt dialogs have a hard-coded English title or button; use t()'],
     ['missing_plurals', missingPlurals, 'English strings count something without a plural rule; use {count, plural, one {# file} other {# files}}'],
     ['to_fixed', toFixed, 'toFixed() calls format numbers outside format.js; use formatNumber() so each language gets its own separators'],
     ['emoji_strings', emojiStrings, 'strings carry emoji; put the icon in the markup (aria-hidden) and keep the words plain'],

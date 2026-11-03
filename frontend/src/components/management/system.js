@@ -274,10 +274,10 @@ export async function revertSystemUpdate() {
     showToast(t('toast.no_previous_version_is_available_on', 'No previous version is available on this host.'), 'error');
     return;
   }
-  const name = prev.version ? `v${prev.version}` : 'the previous version';
+  const name = prev.version ? `v${prev.version}` : t('sys.revert_prev', 'the previous version');
   showPromptToast(
-    'Revert to previous version',
-    `Go back to ${name}? Settings, users and other data return to how they were before the last update, so changes made since then are lost (a snapshot of the current data is kept). Enter your password to confirm.`,
+    t('sys.revert_title', 'Revert to previous version'),
+    t('sys.revert_msg', 'Go back to {name}? Settings, users and other data return to how they were before the last update, so changes made since then are lost (a snapshot of the current data is kept). Enter your password to confirm.', { name }),
     '',
     async (password) => {
       if (!password) return;

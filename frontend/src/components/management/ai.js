@@ -983,8 +983,8 @@ export async function flushAiIndex() {
     },
     null,
     {
-      okText: '🗑️ Flush & Reset',
-      cancelText: 'Cancel',
+      okText: `🗑️ ${t('ai.flush_reset', 'Flush & Reset')}`,
+      cancelText: t('common.cancel', 'Cancel'),
       isDanger: true,
     }
   );

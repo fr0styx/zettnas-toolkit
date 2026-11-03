@@ -1405,7 +1405,7 @@ export function restoreAppearanceDefaultsWithUndo() {
 
   // Show 10s undo toast
   clearTimeout(_appearanceUndoTimer);
-  showActionToast('Appearance reset to factory defaults', '↺ Undo (10s)', () => {
+  showActionToast(t('settings.appearance_reset', 'Appearance reset to factory defaults'), `↺ ${t('settings.undo_10s', 'Undo (10 s)')}`, () => {
     if (!_appearanceUndoSnapshot) return;
     const snap = _appearanceUndoSnapshot;
     applyDesktopTheme(snap.theme, snap.customAccent);
