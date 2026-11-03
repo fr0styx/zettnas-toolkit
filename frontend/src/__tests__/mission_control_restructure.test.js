@@ -140,8 +140,8 @@ describe('Mission Control Navigation Restructure & Hardware Agnosticism', () => 
     const hubPill = document.getElementById('mgmt-hub-docker-pill');
     const sideBadge = document.getElementById('mgmt-sidebar-docker-badge');
 
-    expect(hubPill.textContent).toBe('3 Active');
-    expect(sideBadge.textContent).toBe('3 Active');
+    expect(hubPill.textContent).toBe('3 running');
+    expect(sideBadge.textContent).toBe('3 running');
     expect(sideBadge.style.display).toBe('inline-block');
   });
 

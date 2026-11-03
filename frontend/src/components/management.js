@@ -382,10 +382,10 @@ export function updateManagementTelemetry(stats) {
   if (stats.docker && Array.isArray(stats.docker)) {
     const runningCount = stats.docker.filter(c => c.state === 'running').length;
     const dockPill = document.getElementById('mgmt-hub-docker-pill');
-    if (dockPill) dockPill.textContent = `${runningCount} Active`;
+    if (dockPill) dockPill.textContent = t('dk.active', '{count} running', { count: runningCount });
     const sideDockBadge = document.getElementById('mgmt-sidebar-docker-badge');
     if (sideDockBadge) {
-      sideDockBadge.textContent = `${runningCount} Active`;
+      sideDockBadge.textContent = t('dk.active', '{count} running', { count: runningCount });
       sideDockBadge.style.display = 'inline-block';
     }
   }

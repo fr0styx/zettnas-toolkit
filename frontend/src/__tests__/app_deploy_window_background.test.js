@@ -176,7 +176,7 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
     // Wait for debounced port check
     await new Promise((r) => setTimeout(r, 350));
 
-    expect(banner.innerHTML).toContain('Port 3001 is already busy');
+    expect(banner.innerHTML).toContain('Port 3001 is already in use');
     expect(deployBtn.disabled).toBe(true);
 
     // If user sets back to free port 3002
@@ -185,7 +185,7 @@ describe('App Catalog Deployment Window - Background & Minimize Suite', () => {
 
     await new Promise((r) => setTimeout(r, 350));
 
-    expect(banner.innerHTML).toContain('Port 3002 is free and ready');
+    expect(banner.innerHTML).toContain('Port 3002 is free for the container');
     expect(deployBtn.disabled).toBe(false);
   });
 
