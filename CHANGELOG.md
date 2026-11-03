@@ -24,6 +24,11 @@
   once. Accounts that already had two-step sign-in are switched on the first start of this
   version.
 
+#### Usability
+
+- **The Backups pane is built from the shared styles** (NUX-15): 25 inline styles became
+  classes, pixel-for-pixel the same in both themes.
+
 ## v1.11.0 (2026-11-03)
 ### 🛡️ Safe defaults for families, snapshots on every pool, private AI on the iGPU, and ZettNAS in five languages
 

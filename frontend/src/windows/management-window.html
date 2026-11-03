@@ -3765,18 +3765,18 @@
           
           <div class="mgmt-detail-body">
             <!-- Backup jobs (3-2-1) -->
-            <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+            <div class="drawer-card bk-section">
+              <div class="bk-head">
                 <div>
-                  <span class="card-head-title" role="heading" aria-level="3" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title bk-title" role="heading" aria-level="3">
                     <span aria-hidden="true">🛡️</span>
                     <span data-i18n="backup.jobs_title">Backup jobs</span>
                   </span>
-                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;" data-i18n="backup.jobs_desc">
+                  <div class="bk-desc" data-i18n="backup.jobs_desc">
                     Copies of your folders on a schedule: as snapshots on this server, to a folder or disk, or to a cloud.
                   </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div class="bk-actions">
                   <button class="btn-pill-toggle" id="btn-refresh-backup-jobs" title="Refresh Backup Tasks" data-i18n-title="ui.refresh_backup_tasks"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                   <button class="btn-pill-toggle" id="btn-open-create-backup-job" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
                     <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg> <span data-i18n="backup.add_job">Add a backup job</span>
@@ -3784,23 +3784,23 @@
                 </div>
               </div>
               <div id="backup-jobs-mount">
-                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;" data-i18n="backup.jobs_loading">Loading backup jobs…</div>
+                <div class="bk-empty" data-i18n="backup.jobs_loading">Loading backup jobs…</div>
               </div>
             </div>
 
             <!-- Storage Pool Snapshots & Revert -->
-            <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+            <div class="drawer-card bk-section">
+              <div class="bk-head">
                 <div>
-                  <span class="card-head-title" role="heading" aria-level="3" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title bk-title" role="heading" aria-level="3">
                     <span aria-hidden="true">📸</span>
                     <span data-i18n="backup.snaps_title">Snapshots</span>
                   </span>
-                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;" data-i18n="backup.snaps_desc">
+                  <div class="bk-desc" data-i18n="backup.snaps_desc">
                     A snapshot freezes a folder in seconds; you can open it or go back to it later.
                   </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div class="bk-actions">
                   <button class="btn-pill-toggle" id="btn-refresh-snapshots" title="Refresh Snapshots" data-i18n-title="ui.refresh_snapshots"><span aria-hidden="true">🔄</span> <span data-i18n="mgmt.refresh">Refresh</span></button>
                   <button class="btn-pill-toggle" id="btn-open-create-snapshot" style="color: var(--lt-ink-brand, var(--brand, #38bdf8)); border-color: rgba(56,189,248,0.35); background: rgba(56,189,248,0.12);">
                     <svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> <span data-i18n="backup.snaps_take">Take a snapshot</span>
@@ -3811,7 +3811,7 @@
               <div id="snapshot-schedules-mount"></div>
               <h4 class="snap-subhead" data-i18n="snap.all_title">All snapshots</h4>
               <div id="system-snapshots-mount">
-                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;" data-i18n="backup.snaps_loading">Loading snapshots…</div>
+                <div class="bk-empty" data-i18n="backup.snaps_loading">Loading snapshots…</div>
               </div>
             </div>
 
@@ -3830,18 +3830,18 @@
             </section>
 
             <!-- Application Backups & Disaster Recovery (Per-App & Box-Wide) -->
-            <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+            <div class="drawer-card bk-section">
+              <div class="bk-head">
                 <div>
-                  <span class="card-head-title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span class="card-head-title bk-title">
                     <span aria-hidden="true">📦</span>
                     <span data-i18n="mgmt.app_backups_title">Application Backups & Recovery</span>
                   </span>
-                  <div style="font-size: var(--zn-fs-sm); color: var(--muted); line-height: 1.4;" data-i18n="mgmt.app_backups_desc">
+                  <div class="bk-desc" data-i18n="mgmt.app_backups_desc">
                     Point-in-time archives of container configurations, compose specs, and host appdata mounts created on uninstall (never delete) or on-demand.
                   </div>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
+                <div class="bk-actions bk-actions--center">
                   <select id="app-backups-filter-app" class="tz-select-input" style="font-size: var(--zn-fs-xs); padding: 5px 8px; min-width: 140px;" title="Filter by Application" data-i18n-title="ui.filter_by_application">
                     <option value="" data-i18n="mgmt.app_backups_all">All Applications (Box-Wide)</option>
                   </select>
@@ -3849,25 +3849,25 @@
                 </div>
               </div>
               <div id="app-backups-mount">
-                <div style="font-size: var(--zn-fs-sm); color: var(--muted); text-align: center; padding: 16px;" data-i18n="backup.apps_loading">Loading app backups…</div>
+                <div class="bk-empty" data-i18n="backup.apps_loading">Loading app backups…</div>
               </div>
             </div>
 
             <!-- System Configuration Backup & Restore -->
-            <div class="drawer-card" style="margin-bottom: 24px; padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
+            <div class="drawer-card bk-section">
               <div class="card-headline">
-                <span class="card-head-title" data-i18n="settings.backup_title" style="font-weight: 700; font-size: var(--zn-fs); margin-bottom: 8px; display: block;">System Configuration Backup & Restore</span>
+                <span class="card-head-title bk-title-block" data-i18n="settings.backup_title">System Configuration Backup & Restore</span>
               </div>
-              <div style="font-size: var(--zn-fs-sm); color: var(--muted); margin-bottom: 16px; line-height: 1.4;" data-i18n="settings.backup_desc">
+              <div class="bk-desc bk-desc--spaced" data-i18n="settings.backup_desc">
                 Download a complete backup archive of all system configurations, 6-point fan curves, layouts, widgets, and themes. Restoring will apply all configurations across the suite.
               </div>
-              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <div class="bk-row">
                 <button id="btn-backup-download" class="btn-pill-toggle" style="flex: 1; color: var(--zn-text-accent); border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.12);">
                   <svg class="ic"><use href="#i-disk"/></svg> <span data-i18n="settings.btn_download_backup">Download Backup Archive (.zip)</span>
                 </button>
-                <div style="flex:1; min-width: 200px; position: relative;">
-                  <input type="file" id="backup-upload-input" accept=".zip,.zettbak" style="opacity:0; position:absolute; inset:0; cursor:pointer; z-index:2;" title="Upload backup file" data-i18n-title="ui.upload_backup_file">
-                  <button class="btn-pill-toggle is-block is-danger" style="pointer-events: none;">
+                <div class="bk-upload">
+                  <input class="bk-file-overlay" type="file" id="backup-upload-input" accept=".zip,.zettbak" title="Upload backup file" data-i18n-title="ui.upload_backup_file">
+                  <button class="btn-pill-toggle is-block is-danger bk-no-pointer">
                      🔄 <span data-i18n="settings.btn_restore_backup">Upload & Restore Archive</span>
                   </button>
                 </div>
