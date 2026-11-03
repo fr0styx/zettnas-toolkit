@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 1568,
+  "hardcoded_ui": 1454,
   "missing_plurals": 0,
   "to_fixed": 70,
   "emoji_strings": 137,
@@ -35,8 +35,6 @@
     "frontend/src/components/vm-manager.js": 44,
     "frontend/src/components/vm/connect-modal.js": 34,
     "frontend/src/components/vm/console.js": 43,
-    "frontend/src/components/vm/create-modal.js": 53,
-    "frontend/src/components/vm/edit-modal.js": 61,
     "frontend/src/components/vm/iso-manager.js": 20,
     "frontend/src/components/vm/snapshots.js": 26,
     "frontend/src/components/widgets.js": 12,

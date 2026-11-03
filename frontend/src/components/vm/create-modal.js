@@ -5,6 +5,9 @@ import { api } from '../../api.js';
 import { escapeHtml } from '../../utils.js';
 import { showToast } from '../../toast.js';
 import { t } from '../../i18n.js';
+
+// An icon next to translated words: screen readers skip it (UX-35)
+const ico = (e) => `<span aria-hidden="true">${e}</span>`;
 import { makeDraggable, bringToFront } from '../dock.js';
 import { vmState } from './state.js';
 import { openIsoManagerModal } from './iso-manager.js';
@@ -48,25 +51,25 @@ export function openVmCreateModal() {
       <div class="smart-modal-body" style="flex: 1; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 14px; padding: 18px 22px;">
         <!-- Step 1: General -->
         <div>
-          <label for="vm-create-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">VM Name *</label>
+          <label for="vm-create-name" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">${t('vmd.name_label', 'VM name *')}</label>
           <input type="text" id="vm-create-name" placeholder="e.g. ubuntu-dev-node" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;" />
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <label for="vm-create-os" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Family</label>
+            <label for="vm-create-os" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">${t('vmd.os_family', 'OS family')}</label>
             <select id="vm-create-os" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
-              <option value="linux">Linux (Ubuntu / Debian / Alpine)</option>
-              <option value="windows">Microsoft Windows</option>
-              <option value="bsd">BSD / TrueNAS</option>
-              <option value="other">Other / Generic</option>
+              <option value="linux">${'Linux (Ubuntu / Debian / Alpine)'}</option>
+              <option value="windows">${'Microsoft Windows'}</option>
+              <option value="bsd">${'BSD / TrueNAS'}</option>
+              <option value="other">${t('vmd.os_other', 'Other')}</option>
             </select>
           </div>
           <div>
-            <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Autostart on Boot</label>
+            <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">${t('vmd.autostart_label', 'Autostart')}</label>
             <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;">
               <input type="checkbox" id="vm-create-autostart" style="accent-color: var(--accent-cyan, #0ea5e9);" />
-              <span>Start with Host</span>
+              <span>${t('vmd.autostart', 'Start with the NAS')}</span>
             </label>
           </div>
         </div>
@@ -74,13 +77,13 @@ export function openVmCreateModal() {
         <!-- Step 2: Compute & Elastic Headroom -->
         <div style="background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">RAM Allocation (Dynamic Headroom)</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmd.ram_title', 'Memory (leaves room for the NAS)')}</span>
             <span id="vm-ram-display" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-accent);">4.0 GB</span>
           </div>
           <input type="range" id="vm-create-ram-slider" min="0.5" max="${budget.safe_slider_max_gb}" step="0.5" value="4.0" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
           <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">
-            <span>Min: 0.5 GB</span>
-            <span id="vm-slider-max-label">Safe Max: ${budget.safe_slider_max_gb} GB</span>
+            <span>${t('vmd.ram_min', 'Min: 0.5 GB')}</span>
+            <span id="vm-slider-max-label">${t('vmd.ram_safe', 'Safe max: {gb} GB', { gb: budget.safe_slider_max_gb })}</span>
           </div>
 
           <!-- Advanced Override Switch -->
@@ -90,7 +93,7 @@ export function openVmCreateModal() {
               <span data-i18n="vm.advanced_override">${t('vm.advanced_override', 'Advanced Override (Bypass Headroom)')}</span>
             </label>
             <span id="vm-override-pill" style="display: none; font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(245,158,11,0.2); color: var(--zn-text-warn); border: 1px solid rgba(245,158,11,0.4);">
-              ⚡ Host reserve bypassed
+              ${ico('⚡')} ${t('vmd.bypassed', 'NAS reserve ignored')}
             </span>
           </div>
         </div>
@@ -98,16 +101,16 @@ export function openVmCreateModal() {
         <!-- vCPU Slider & Overcommit Warning -->
         <div style="background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">vCPU Cores</span>
+            <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmd.vcpus', 'vCPU cores')}</span>
             <span id="vm-vcpu-display" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">2 vCPUs</span>
           </div>
           <input type="range" id="vm-create-vcpu-slider" min="1" max="${hostThreads}" step="1" value="2" style="width: 100%; accent-color: var(--accent-cyan, #0ea5e9); cursor: pointer;" />
           <div style="display: flex; justify-content: space-between; font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 4px;">
             <span>1 vCPU</span>
-            <span id="vm-vcpu-max-label">Physical Limit: ${hostThreads} Threads</span>
+            <span id="vm-vcpu-max-label">${t('vmd.thread_limit', 'Physical limit: {count, plural, one {# thread} other {# threads}}', { count: hostThreads })}</span>
           </div>
           <div id="vm-overcommit-soft-warning" style="display: none; margin-top: 8px; font-size: var(--zn-fs-xs); padding: 6px 10px; border-radius: 4px; background: rgba(245,158,11,0.15); color: var(--zn-text-warn); border: 1px solid rgba(245,158,11,0.3);">
-            ⚠️ Soft warning: Exceeds physical threads. Bursty workloads allowed, but concurrent CPU spikes may cause scheduling latency.
+            ${ico('⚠️')} ${t('vmd.over_threads', 'More cores than the host has threads: busy moments may slow the VM down.')}
           </div>
         </div>
 
@@ -115,31 +118,31 @@ export function openVmCreateModal() {
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label for="vm-create-iso" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);">Boot ISO Image</label>
-              <button type="button" id="btn-browse-iso-catalog" style="background: none; border: none; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); cursor: pointer; padding: 0;">🌐 ISO Catalog</button>
+              <label for="vm-create-iso" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);">${t('vmd.boot_iso_label', 'Boot ISO')}</label>
+              <button type="button" id="btn-browse-iso-catalog" style="background: none; border: none; color: var(--zn-text-accent); font-size: var(--zn-fs-xs); cursor: pointer; padding: 0;">${ico('🌐')} ${t('vmd.iso_catalog', 'ISO catalog')}</button>
             </div>
             <select id="vm-create-iso" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
-              <option value="">None (Network PXE / Empty Disk)</option>
+              <option value="">${t('vmd.iso_none_net', 'None (network boot or empty disk)')}</option>
               ${vmState.isos.map((iso) => `<option value="${escapeHtml(iso.path)}">${escapeHtml(iso.name)} (${iso.size_formatted})</option>`).join('')}
             </select>
           </div>
           <div>
-            <label for="vm-create-disk" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">OS Virtual Disk (GB)</label>
+            <label for="vm-create-disk" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">${t('vmd.os_disk', 'System disk (GB)')}</label>
             <input type="number" id="vm-create-disk" min="10" max="2000" value="32" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;" />
           </div>
         </div>
 
         <!-- Boot Priority Order -->
         <div>
-          <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Boot Priority Order</label>
+          <label style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">${t('vmd.boot_order', 'Boot order')}</label>
           <div class="vm-boot-order-group">
             <label class="boot-order-label">
               <input type="radio" name="vm-create-boot-order" value="iso" checked />
-              <span>💿 Boot from ISO first</span>
+              <span>${ico('💿')} ${t('vmd.boot_iso', 'Boot from the ISO first')}</span>
             </label>
             <label class="boot-order-label">
               <input type="radio" name="vm-create-boot-order" value="disk" />
-              <span>💽 Boot from Disk</span>
+              <span>${ico('💽')} ${t('vmd.boot_disk', 'Boot from the disk')}</span>
             </label>
           </div>
         </div>
@@ -156,14 +159,14 @@ export function openVmCreateModal() {
                 <input type="radio" name="vm-create-firmware" value="seabios" checked />
                 <span data-i18n="vm.firmware_seabios">${t('vm.firmware_seabios', 'SeaBIOS (Legacy BIOS)')}</span>
               </div>
-              <div class="firmware-label-sub">MBR partitions, older Linux & Windows 7/10</div>
+              <div class="firmware-label-sub">${t('vmd.bios_sub', 'MBR partitions, older Linux and Windows 7/10')}</div>
             </label>
             <label class="firmware-label">
               <div style="display: flex; align-items: center; gap: 6px; font-weight: 700;">
                 <input type="radio" name="vm-create-firmware" value="uefi" />
                 <span data-i18n="vm.firmware_uefi">${t('vm.firmware_uefi', 'OVMF / UEFI (Modern / Win 11)')}</span>
               </div>
-              <div class="firmware-label-sub">Pure 64-bit UEFI, NVRAM persistence, Secure Boot</div>
+              <div class="firmware-label-sub">${t('vmd.uefi_sub', '64-bit UEFI, saved settings, Secure Boot')}</div>
             </label>
           </div>
 
@@ -181,11 +184,11 @@ export function openVmCreateModal() {
         <div style="background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Host Directory Passthrough (VirtIO-FS / 9p)</span>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Map host folders (/mnt/user/appdata, /mnt/storage) into guest</div>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmd.folders_title', 'Host folders in the VM (VirtIO-FS / 9p)')}</span>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vmd.folders_desc', 'Show host folders (/mnt/user/appdata, /mnt/storage) inside the VM')}</div>
             </div>
             <button type="button" id="btn-add-host-share" class="btn-pill-toggle is-small">
-              + Add Folder
+              + ${t('ci.add_mount', 'Add folder')}
             </button>
           </div>
           <div id="vm-host-shares-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
@@ -195,11 +198,11 @@ export function openVmCreateModal() {
         <div style="background: var(--zn-glaze-2); border: 1px solid var(--zn-line-6); border-radius: 8px; padding: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
-              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">Secondary Virtual Disks</span>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Attach additional block devices (data pools, databases)</div>
+              <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);">${t('vmd.disks_title', 'More virtual disks')}</span>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vmd.disks_desc', 'Attach more disks (data, databases)')}</div>
             </div>
             <button type="button" id="btn-add-secondary-disk" class="btn-pill-toggle is-small">
-              + Add Disk
+              + ${t('vmd.add_disk', 'Add disk')}
             </button>
           </div>
           <div id="vm-secondary-disks-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
@@ -207,9 +210,9 @@ export function openVmCreateModal() {
 
         <!-- Step 6: Network Bridge -->
         <div>
-          <label for="vm-create-bridge" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">Network Bridge</label>
+          <label for="vm-create-bridge" style="display: block; font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); margin-bottom: 6px;">${t('vmd.bridge_label', 'Network bridge')}</label>
           <select id="vm-create-bridge" class="tz-select" style="width: 100%; padding: 8px 10px; border-radius: 6px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-12); color: var(--zn-text-strong); font-size: var(--zn-fs-xs); box-sizing: border-box;">
-            ${vmState.bridges.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(b)} (Host Bridge)</option>`).join('')}
+            ${vmState.bridges.map((b) => `<option value="${escapeHtml(b)}">${escapeHtml(t('vmd.host_bridge', '{name} (host bridge)', { name: b }))}</option>`).join('')}
           </select>
         </div>
 
@@ -218,27 +221,27 @@ export function openVmCreateModal() {
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <div>
               <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong);" data-i18n="vm.video_title">${t('vm.video_title', 'Display & Video Adapter')}</span>
-              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">Virtual display adapter & video acceleration</div>
+              <div style="font-size: var(--zn-fs-xs); color: var(--muted);">${t('vmd.video_desc2', 'Virtual graphics card and video acceleration')}</div>
             </div>
             <span style="font-size: var(--zn-fs-xs); padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--zn-text-ok); border: 1px solid rgba(16,185,129,0.3);">
-              GPU Accelerated
+              ${t('vmd.gpu_accel', 'GPU accelerated')}
             </span>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div>
-              <label for="vm-create-gpu-driver" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Video Adapter</label>
+              <label for="vm-create-gpu-driver" style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${t('vmd.video_adapter', 'Video adapter')}</label>
               <select id="vm-create-gpu-driver" class="tz-select" style="width: 100%; padding: 6px 8px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
-                <option value="virtio-gpu" selected>VirtIO-GPU (Recommended / 3D Accel)</option>
-                <option value="qxl">QXL (SPICE / Standard)</option>
-                <option value="vga">Standard VGA (Compatible)</option>
-                <option value="none">Headless (Serial CLI Only)</option>
+                <option value="virtio-gpu" selected>${t('vmd.v_virtio', 'VirtIO-GPU (recommended, 2D/3D acceleration on Linux)')}</option>
+                <option value="qxl">${t('vmd.v_qxl', 'QXL (SPICE, Windows drivers)')}</option>
+                <option value="vga">${t('vmd.v_vga', 'Standard VGA (works everywhere)')}</option>
+                <option value="none">${t('vmd.v_none', 'Headless (serial console only, no video memory)')}</option>
               </select>
             </div>
             <div>
-              <label style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">Display Mode</label>
+              <label style="display: block; font-size: var(--zn-fs-xs); color: var(--muted); margin-bottom: 4px;">${t('vmd.display_mode', 'Display')}</label>
               <label style="display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: var(--zn-fs-xs); color: var(--zn-text-strong); cursor: pointer;">
                 <input type="checkbox" id="vm-create-enable-gui" checked style="accent-color: var(--accent-cyan, #0ea5e9);" />
-                <span>Enable Graphical Desktop (Display :0)</span>
+                <span>${t('vmd.display_on', 'Graphical desktop (display :0)')}</span>
               </label>
             </div>
           </div>
@@ -259,7 +262,7 @@ export function openVmCreateModal() {
           <!-- Dynamic host USB selector row -->
           <div class="usb-select-row">
             <select id="vm-create-host-usb-select" class="tz-select">
-              <option value="">Scanning host USB devices...</option>
+              <option value="">${t('vmd.usb_scanning', 'Looking for USB devices…')}</option>
             </select>
             <button type="button" id="btn-create-add-usb-device" class="btn-attach-usb">
               ${t('vm.usb_add_btn', '+ Attach Device')}
@@ -272,7 +275,7 @@ export function openVmCreateModal() {
             <input type="text" id="vm-create-custom-pid" placeholder="PID (ea60)" data-sample maxlength="4" style="width: 74px; flex-shrink: 0; padding: 5px 8px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
             <input type="text" id="vm-create-custom-desc" class="usb-custom-desc" placeholder="${t('ui.device_label_e_g_zigbee', 'Device Label (e.g. Zigbee Dongle)')}" style="padding: 5px 8px; border-radius: 4px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
             <button type="button" id="btn-create-add-custom-usb" class="btn-console-act btn-custom-add" style="padding: 4px 10px; font-size: var(--zn-fs-xs); background: rgba(16,185,129,0.2); border-color: #34d399; color: var(--zn-text-ok); cursor: pointer;">
-              Add
+              ${t('vmd.add', 'Add')}
             </button>
           </div>
 
@@ -382,8 +385,8 @@ export function openVmCreateModal() {
         modalWin.style.maxWidth = '100vw';
         modalWin.style.maxHeight = 'calc(100vh - 36px - 72px)';
         modalWin.style.borderRadius = '0px';
-        maxBtn.setAttribute('title', 'Restore');
-        maxBtn.setAttribute('aria-label', 'Restore');
+        maxBtn.setAttribute('title', t('vmd.restore', 'Restore'));
+        maxBtn.setAttribute('aria-label', t('vmd.restore', 'Restore'));
         isCreateMax = true;
       } else {
         modalWin.classList.remove('maximized');
@@ -406,8 +409,8 @@ export function openVmCreateModal() {
           modalWin.style.position = '';
           modalWin.style.borderRadius = '14px';
         }
-        maxBtn.setAttribute('title', 'Maximize');
-        maxBtn.setAttribute('aria-label', 'Maximize');
+        maxBtn.setAttribute('title', t('ui.maximize', 'Maximize'));
+        maxBtn.setAttribute('aria-label', t('ui.maximize', 'Maximize'));
         isCreateMax = false;
       }
     };
@@ -438,7 +441,7 @@ export function openVmCreateModal() {
     overrideToggle.onchange = () => {
       if (overrideToggle.checked) {
         ramSlider.max = budget.override_max_ram_gb;
-        maxLabel.textContent = `Override Max: ${budget.override_max_ram_gb} GB`;
+        maxLabel.textContent = t('vmd.ram_override', 'Override max: {gb} GB', { gb: budget.override_max_ram_gb });
         overridePill.style.display = 'inline-block';
       } else {
         ramSlider.max = budget.safe_slider_max_gb;
@@ -446,7 +449,7 @@ export function openVmCreateModal() {
           ramSlider.value = budget.safe_slider_max_gb;
           ramDisplay.textContent = `${ramSlider.value} GB`;
         }
-        maxLabel.textContent = `Safe Max: ${budget.safe_slider_max_gb} GB`;
+        maxLabel.textContent = t('vmd.ram_safe', 'Safe max: {gb} GB', { gb: budget.safe_slider_max_gb });
         overridePill.style.display = 'none';
       }
     };
@@ -488,7 +491,7 @@ export function openVmCreateModal() {
         <input type="text" class="share-host-path" placeholder="/mnt/user/appdata" value="/mnt/user/appdata" style="flex: 2; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
         <input type="text" class="share-mount-tag" placeholder="appdata" value="appdata" style="flex: 1.2; padding: 6px 8px; border-radius: 4px; background: var(--zn-shade-30); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);" />
         <select class="share-driver" style="flex: 1; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
-          <option value="virtiofs">VirtIO-FS</option>
+          <option value="virtiofs">${'VirtIO-FS'}</option>
           <option value="9p">9p</option>
         </select>
         <select class="share-mode" style="width: 60px; padding: 6px 4px; border-radius: 4px; background: var(--lt-b-1e293bff, #1e293b); border: 1px solid var(--zn-line-10); color: var(--zn-text-strong); font-size: var(--zn-fs-xs);">
@@ -580,7 +583,7 @@ export function openVmCreateModal() {
   api.get('/api/vms/usb-devices')
     .then((devs) => {
       if (!usbSelect) return;
-      usbSelect.innerHTML = '<option value="">-- Select connected host USB device --</option>';
+      usbSelect.innerHTML = '<option value="">' + t('vmd.usb_pick', '— Choose a USB device —') + '</option>';
       if (Array.isArray(devs) && devs.length > 0) {
         devs.forEach((d) => {
           const opt = document.createElement('option');
@@ -597,12 +600,12 @@ export function openVmCreateModal() {
           usbSelect.appendChild(opt);
         });
       } else {
-        usbSelect.innerHTML = '<option value="">No USB devices detected on host</option>';
+        usbSelect.innerHTML = '<option value="">' + t('vmd.usb_none', 'No USB devices found') + '</option>';
       }
     })
     .catch(() => {
       if (!usbSelect) return;
-      usbSelect.innerHTML = '<option value="">Failed to scan USB devices</option>';
+      usbSelect.innerHTML = '<option value="">' + t('vmd.usb_failed', 'Could not look for USB devices') + '</option>';
     });
 
   if (btnAddUsb && usbSelect) {

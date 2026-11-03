@@ -855,10 +855,10 @@ describe('VM Manager & Dynamic Elastic Headroom Budgeting', () => {
       openQemuErrorModal('FailedVM', 'qemu-system-x86_64: could not open /dev/kvm: Permission denied', 'vm-failed-1');
       const modal = document.getElementById('modal-qemu-error');
       expect(modal).not.toBeNull();
-      expect(modal.textContent).toContain('Failed to start virtual machine FailedVM');
+      expect(modal.textContent).toContain('FailedVM could not start.');
       expect(modal.textContent).toContain('Permission denied');
-      expect(modal.textContent).toContain('Run KVM Diagnostics');
-      expect(modal.textContent).toContain('Edit VM Settings');
+      expect(modal.textContent).toContain('Run KVM checks');
+      expect(modal.textContent).toContain('Edit VM settings');
 
       const closeBtn = modal.querySelector('#qemu-error-close');
       expect(closeBtn).not.toBeNull();
