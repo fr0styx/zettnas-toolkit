@@ -87,5 +87,5 @@ def rotate_secret_key() -> dict[str, Any]:
 
     os.remove(previous_key_file())
     result = {"rotated_at": time.time(), "mfa_secrets": resealed_mfa, "backup_passphrases": resealed_backups}
-    logger.warning("[Security] Secret key rotated: %s", result)
+    logger.warning("[Security] Secret key rotated; MFA secrets and stored passwords resealed")
     return result

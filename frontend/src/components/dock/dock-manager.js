@@ -328,7 +328,7 @@ export const DockManager = {
           <div class="dock-tooltip-header">
             <div class="dock-tooltip-title">
               <svg class="ic ic-sm" id="dock-tooltip-icon"><use href="#i-chip"/></svg>
-              <span id="dock-tooltip-text">Window</span>
+              <span id="dock-tooltip-text">${t('dock.window', 'Window')}</span>
             </div>
             <div class="dock-tooltip-actions">
               <span class="dock-tooltip-status" id="dock-tooltip-badge">${escapeHtml(t('dock.badge_active', 'Active'))}</span>

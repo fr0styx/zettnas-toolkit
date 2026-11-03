@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, WebSoc
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from backend import settings as _settings
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.confirmations import require_confirmation
@@ -560,4 +561,4 @@ def _swtpm_binary() -> str | None:
 def _get_host_ip() -> str:
     from backend.state import Z_STATE
 
-    return getattr(Z_STATE, "discovered_host_ip", None) or os.environ.get("HOST_IP") or "127.0.0.1"
+    return getattr(Z_STATE, "discovered_host_ip", None) or _settings.current("host_ip") or "127.0.0.1"

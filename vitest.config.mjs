@@ -12,9 +12,9 @@ export default defineConfig({
       include: ['frontend/src/**/*.js'],
       // locale data is loaded by tests but isn't code: counting it inflated the numbers (NARC-4)
       exclude: ['frontend/src/__tests__/**', 'frontend/src/locales/**'],
-      // OPS-16, ARC-26: floors a little under today's numbers without locale data (63.8 / 61.4 / 55.4 /
-      // 50.6 on 30 Oct 2026, NARC-4); raise them as coverage grows, towards 70 lines and 60 branches
-      thresholds: { lines: 68, statements: 65, functions: 59, branches: 55 },
+      // OPS-16, ARC-26: floors a little under today's numbers without locale data (lines / statements /
+      // functions / branches 74.1 / 71.5 / 64.2 / 60.2 on 3 Nov 2026); raise them as coverage grows
+      thresholds: { lines: 73, statements: 70, functions: 63, branches: 59 },
     },
   },
 });

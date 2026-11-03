@@ -4,6 +4,14 @@
 
 #### Security
 
+- **Code scanning, 37 open findings checked** (CodeQL on main): none could be reached from outside
+  with harm, and the ones that relied on checks the scanner can't see now make them where it can.
+  A snapshot's share is one folder name inside the pool (a snapshot named "..@x" could have
+  made a rollback treat the whole pool as the share); a renamed pool's mount points and a VM's
+  folder are single names inside their folder; the share path check returns from inside its
+  prefix test; the key rotation no longer logs its counts; the build strips HTML comments until
+  none is left.
+
 - **An encrypted folder opens only for the people chosen for it** (NSEC-5): a new one opens for
   the person who made it, and "Who may open it" adds others. Only they can unlock, lock, see and
   read it, even with the share open to the whole family. Folders made before keep working as
@@ -103,6 +111,15 @@
   get at most one update a week. Security fixes can still skip the wait.
 
 #### Usability
+
+- **The header badges and AI index counts in your language** (NUX-20): the LCD and live-data
+  badges, the security grade, the UPS badge, the console's goodbye, calendar colours and note
+  types, and the AI index counts (108 -> 84 strings left).
+
+- **Seventeen more settings documented** (NARC-8): the desktop layout, backup, ISO and Tailscale
+  folders, the Ollama and host addresses, the build stamps and the platform overrides are in
+  docs/CONFIGURATION.md with their defaults, and a value that can't be used falls back instead
+  of misbehaving.
 
 - **The rest of the activity log in your language** (NUX-3): sign-in, update, restart, app
   install and cleanup, AI indexing, drive wear, virtual machine crash and network-undo entries.
@@ -584,6 +601,11 @@
   compressed, and very large folder sizes stop at a limit and say "at least".
 
 #### Fixes
+
+- **The console's light bar shows what the real one does**: it showed the saved light settings,
+  read once when the settings drawer loaded. The stats now say what the bar is showing (your
+  settings, or an alert, a copy, a warning or the night taking it over), and the picture follows
+  them, including changes made on another device. A theme change no longer resets it to green.
 
 - **A blocked address shows properly in the activity log**: the entry had its level, title and
   message swapped, so it read "warning" with the reason as its title.

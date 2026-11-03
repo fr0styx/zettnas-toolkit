@@ -6,7 +6,7 @@ import re
 import subprocess
 import threading
 import time
-from typing import Optional
+from typing import Any, Optional
 
 from backend.config import (
     DATA_DIR,
@@ -952,6 +952,59 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
 VALID_DEV_PATTERN = re.compile(r"^(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|xvd[a-z]+|[a-zA-Z0-9_\-\.:]+)$")
 
 
+def _parse_self_test_log(doc: Any) -> Any:
+    """_parse_self_test_info: the self-test log entries."""
+    log_entries = []
+    if doc:
+        ata_log_table = (
+            doc.get("ata_smart_self_test_log", {}).get("extended", {}).get("table")
+            or doc.get("ata_smart_self_test_log", {}).get("standard", {}).get("table")
+            or []
+        )
+        for idx, entry in enumerate(ata_log_table):
+            status_str = entry.get("status", {}).get("string", "Unknown")
+            passed = entry.get("status", {}).get("passed", True)
+            log_entries.append(
+                {
+                    "num": idx + 1,
+                    "type": entry.get("type", {}).get("string", "Offline"),
+                    "status": status_str,
+                    "passed": passed,
+                    "lifetime_hours": entry.get("lifetime_hours", "-"),
+                    "remaining_pct": entry.get("remaining_percent", 0),
+                    "lba_first_error": entry.get("lba_first_error", "-") or "-",
+                }
+            )
+
+        if not log_entries:
+            nvme_log_table = doc.get("nvme_self_test_log", {}).get("table") or []
+            for idx, entry in enumerate(nvme_log_table):
+                code_obj = entry.get("self_test_code") or entry.get("type") or {}
+                t_str = code_obj.get("string") if isinstance(code_obj, dict) else str(code_obj)
+                res_obj = entry.get("self_test_result") or entry.get("result") or {}
+                if isinstance(res_obj, dict):
+                    res_str = res_obj.get("string", "Completed")
+                    res_val = res_obj.get("value", 0)
+                else:
+                    res_str = str(res_obj)
+                    res_val = 0 if "error" not in res_str.lower() and "fail" not in res_str.lower() else 1
+                passed = res_val == 0
+                poh = entry.get("power_on_hours", entry.get("lifetime_hours", "-"))
+                failing_lba = entry.get("failing_lba", entry.get("lba_first_error", "-")) or "-"
+                log_entries.append(
+                    {
+                        "num": idx + 1,
+                        "type": t_str or "Self-test",
+                        "status": res_str,
+                        "passed": passed,
+                        "lifetime_hours": poh,
+                        "remaining_pct": 0,
+                        "lba_first_error": failing_lba,
+                    }
+                )
+    return log_entries
+
+
 def _parse_self_test_info(doc: dict | None, raw_text: str):
     in_progress = False
     percent_remaining = None
@@ -1047,55 +1100,7 @@ def _parse_self_test_info(doc: dict | None, raw_text: str):
             if m_p:
                 polling_mins["extended"] = int(m_p.group(1).strip())
 
-    # 4. Parse self-test log
-    log_entries = []
-    if doc:
-        ata_log_table = (
-            doc.get("ata_smart_self_test_log", {}).get("extended", {}).get("table")
-            or doc.get("ata_smart_self_test_log", {}).get("standard", {}).get("table")
-            or []
-        )
-        for idx, entry in enumerate(ata_log_table):
-            status_str = entry.get("status", {}).get("string", "Unknown")
-            passed = entry.get("status", {}).get("passed", True)
-            log_entries.append(
-                {
-                    "num": idx + 1,
-                    "type": entry.get("type", {}).get("string", "Offline"),
-                    "status": status_str,
-                    "passed": passed,
-                    "lifetime_hours": entry.get("lifetime_hours", "-"),
-                    "remaining_pct": entry.get("remaining_percent", 0),
-                    "lba_first_error": entry.get("lba_first_error", "-") or "-",
-                }
-            )
-
-        if not log_entries:
-            nvme_log_table = doc.get("nvme_self_test_log", {}).get("table") or []
-            for idx, entry in enumerate(nvme_log_table):
-                code_obj = entry.get("self_test_code") or entry.get("type") or {}
-                t_str = code_obj.get("string") if isinstance(code_obj, dict) else str(code_obj)
-                res_obj = entry.get("self_test_result") or entry.get("result") or {}
-                if isinstance(res_obj, dict):
-                    res_str = res_obj.get("string", "Completed")
-                    res_val = res_obj.get("value", 0)
-                else:
-                    res_str = str(res_obj)
-                    res_val = 0 if "error" not in res_str.lower() and "fail" not in res_str.lower() else 1
-                passed = res_val == 0
-                poh = entry.get("power_on_hours", entry.get("lifetime_hours", "-"))
-                failing_lba = entry.get("failing_lba", entry.get("lba_first_error", "-")) or "-"
-                log_entries.append(
-                    {
-                        "num": idx + 1,
-                        "type": t_str or "Self-test",
-                        "status": res_str,
-                        "passed": passed,
-                        "lifetime_hours": poh,
-                        "remaining_pct": 0,
-                        "lba_first_error": failing_lba,
-                    }
-                )
+    log_entries = _parse_self_test_log(doc)
 
     # Fallback to text parsing if log_entries is still empty
     if not log_entries:

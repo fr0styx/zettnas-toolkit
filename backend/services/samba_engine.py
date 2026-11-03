@@ -15,6 +15,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+from backend import settings as _settings
 from backend.config import DATA_DIR, POOL_PATH, docker_sock, logger
 from backend.config import docker_sock as _docker_sock_path
 from backend.fsutil import atomic_write_json, atomic_write_text
@@ -89,15 +90,16 @@ def validate_share_path(path: str) -> str:
         raise ValueError("Share path must be an absolute path")
     real = os.path.realpath(path)
     roots = _allowed_share_roots()
-    inside = any(real == r or real.startswith(r.rstrip("/") + "/") for r in roots)
     system_path = real == "/" or any(real == f or real.startswith(f + "/") for f in _FORBIDDEN_PREFIXES)
-    if not inside or system_path:
-        raise ValueError(f"Share path must be inside {', '.join(roots) or 'the storage pool'}")
-    from backend.fsutil import is_protected
+    if not system_path:
+        for root in roots:
+            if real == root or real.startswith(root.rstrip("/") + "/"):
+                from backend.fsutil import is_protected
 
-    if is_protected(real):
-        raise ValueError("Share path is ZettNAS's own data folder; choose another folder")
-    return real
+                if is_protected(real):
+                    raise ValueError("Share path is ZettNAS's own data folder; choose another folder")
+                return real
+    raise ValueError(f"Share path must be inside {', '.join(roots) or 'the storage pool'}")
 
 
 def protected_veto_names(share_path: str) -> list[str]:
@@ -452,7 +454,7 @@ class SambaEngine:
         try:
             from backend.state import Z_STATE
 
-            host_ip = getattr(Z_STATE, "discovered_host_ip", None) or os.environ.get("HOST_IP")
+            host_ip = getattr(Z_STATE, "discovered_host_ip", None) or _settings.current("host_ip")
             if host_ip and host_ip not in targets:
                 targets.append(host_ip)
         except Exception:

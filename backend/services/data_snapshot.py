@@ -20,6 +20,7 @@ import stat
 import time
 from typing import Any, Optional
 
+from backend import settings as _settings
 from backend.fsutil import atomic_write_json, read_json
 
 logger = logging.getLogger("zettnas.data_snapshot")
@@ -57,7 +58,7 @@ def current_build() -> str:
     """This build: version plus short commit (edge builds share a version number)."""
     from backend import __version__
 
-    commit = (os.environ.get("BUILD_COMMIT") or "")[:7]
+    commit = _settings.current("build_commit")[:7]
     return f"{__version__}+{commit}" if commit else __version__
 
 

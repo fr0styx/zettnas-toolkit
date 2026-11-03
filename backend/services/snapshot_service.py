@@ -15,7 +15,7 @@ from collections.abc import Callable
 from typing import Any
 
 from backend.config import DATA_DIR, logger
-from backend.fsutil import ENCRYPTED_HIDDEN, atomic_write_json, json_locked, read_json, resolve_within
+from backend.fsutil import ENCRYPTED_HIDDEN, atomic_write_json, child_path, json_locked, read_json, resolve_within
 
 SCHEDULES_FILE = os.path.join(DATA_DIR, "snapshot_schedules.json")
 EVERY = {"hourly": 3600, "daily": 86400, "weekly": 7 * 86400}
@@ -231,7 +231,8 @@ def _live_root(name: str, pal: Any, pool_id: str) -> str:
         except Exception:
             logger.debug("snapshot_service: share lookup failed", exc_info=True)
         pool = pal.get_pool_path(pool_id)
-        for cand in (os.path.join(pool, "@shares", share), os.path.join(pool, share)):
+        # one folder name inside the pool: a snapshot named "..@x" must not make the pool the share
+        for cand in (child_path(os.path.join(pool, "@shares"), share), child_path(pool, share)):
             if os.path.isdir(cand):
                 return cand
         raise FileNotFoundError("The share this snapshot belongs to no longer exists.")

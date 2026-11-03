@@ -56,6 +56,8 @@ used keeps its default, and the log says which variable and why.
 | `UPDATE_SIGNATURES` | `enforce` | In-app updates check the image's signature from this project's CI first: enforce (refuse an unsigned or wrongly signed image), warn (log it and install anyway) or off. (one of `enforce`, `warn`, `off`) |
 | `ZETTNAS_IMAGE_VARIANT` | `full` | full ships VMs and the LCD renderer; core leaves them out. (one of `full`, `core`) |
 | `HEALTH_SIGNAL_URL` | `(empty)` | Where the opt-in anonymous health report goes; empty uses the project's receiver. |
+| `BUILD_COMMIT` | `(empty)` | The commit the image was built from; set by the image build. |
+| `BUILD_DATE` | `(empty)` | When the image was built; set by the image build. |
 
 ## Logs
 
@@ -69,6 +71,11 @@ used keeps its default, and the log says which variable and why.
 | Variable | Default | Meaning |
 |---|---|---|
 | `ZETTNAS_GIL_SWITCH_SECS` | `0.02` | How long a Python thread runs before handing over to another, in seconds; longer means fewer wakeups. (0.001–1) |
+| `LAYOUT_PATH` | `(empty)` | The desktop layout file; empty keeps it in the data folder. |
+| `BACKUP_DIR` | `(empty)` | Where settings backups go; empty keeps them in the data folder. |
+| `VM_ISO_DIR` | `(empty)` | The ISO library for virtual machines; empty keeps it in the data folder. |
+| `TAILSCALE_STATE_DIR` | `(empty)` | Tailscale's state folder; empty keeps it in the data folder. |
+| `HOST_IP` | `(empty)` | The server's address, when it can't be found by itself. |
 
 ## Power
 
@@ -129,6 +136,8 @@ used keeps its default, and the log says which variable and why.
 |---|---|---|
 | `ZETTNAS_AI_NUM_CTX` | `0` | Chat context window in tokens; 0 uses the built-in size, values under 2048 are ignored. (0–1.04858e+06) |
 | `ZETTNAS_VIDEO_HWENC` | `auto` | Convert videos with the iGPU when it can (auto) or always in software (off). (one of `auto`, `off`) |
+| `OLLAMA_HOST` | `(empty)` | The Ollama server (host, host:port or URL); empty finds it. |
+| `LLM_HOST` | `(empty)` | Older name for OLLAMA_HOST, read when that is empty. |
 
 ## Platforms
 
@@ -137,3 +146,6 @@ used keeps its default, and the log says which variable and why.
 | `TRUENAS_VERIFY_TLS` | `on` | Check the TrueNAS certificate; off accepts a self-signed one. |
 | `UNRAID_API_VERIFY_TLS` | `on` | Check the Unraid API certificate; off accepts any. |
 | `UNRAID_EMHTTP_DIR` | `(empty)` | Unraid's emhttp state folder, when it isn't in a usual place. |
+| `ZETTNAS_PLATFORM` | `(empty)` | Which host this is (unraid, truenas, zettos, ...); empty detects it. |
+| `ZETTNAS_OBSERVER_ADAPTER` | `(empty)` | The host to read in observer mode; empty or auto detects it. |
+| `ZETTNAS_PAL_MODE` | `(empty)` | observer, readonly or telemetry: only read the host, never change it. |

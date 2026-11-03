@@ -22,6 +22,8 @@ import socket
 import struct
 from typing import Optional
 
+from backend import settings as _settings
+
 CONTAINER_NAMES = ("zettnas-ollama", "ollama", "zettnas-ovms", "ovms")
 _DOCKER_BRIDGES = ipaddress.ip_network("172.16.0.0/12")
 
@@ -47,7 +49,7 @@ def _resolves(name: str) -> bool:
 
 
 def explicit_host() -> str | None:
-    env = (os.environ.get("OLLAMA_HOST") or os.environ.get("LLM_HOST") or "").strip()
+    env = (_settings.current("ollama_host") or _settings.current("llm_host")).strip()
     if not env:
         return None
     return env.replace("http://", "").replace("https://", "").split("/")[0].split(":")[0] or None

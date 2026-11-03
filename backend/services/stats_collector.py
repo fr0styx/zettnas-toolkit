@@ -199,6 +199,27 @@ def _check_health(bad, cpu_temp, ctrl_cpu_fan, fans, has_crit, now, all_disks=No
     return {"is_crit": is_crit, "is_warn": is_warn}
 
 
+# How the bar looks when something takes it over (the packets _update_leds sends), for the
+# desktop's picture of it
+_TAKEOVER_LOOKS = {
+    "alert": {"mode": "flashing", "color": "ff0000", "speed": 90},
+    "copying": {"mode": "flow", "color": "0064ff", "speed": 80},
+    "copied": {"mode": "breathe", "color": "00ff00", "speed": 90},
+    "copy_failed": {"mode": "flashing", "color": "ff0000", "speed": 90},
+    "warning": {"mode": "breathe", "color": "ff7800", "speed": 85},
+}
+
+
+def lightbar_look(cfg: dict, why: str) -> dict:
+    """What the light bar shows: the person's settings, or what an alert, a copy or the night put there."""
+    if why == "night":
+        return {"power": "off", "why": "night"}
+    if why in _TAKEOVER_LOOKS:
+        return {"power": "on", "brightness": 100, "color2": "000000", **_TAKEOVER_LOOKS[why], "why": why}
+    keys = ("power", "mode", "color", "color2", "brightness", "speed")
+    return {**{k: cfg[k] for k in keys if k in cfg}, "why": "settings"}
+
+
 def _update_leds(is_crit, is_warn):
     """The light bar: alerts, copy progress and night mode."""
     # LED Lighting & Schedule (runs only if hardware present/configured)
@@ -233,6 +254,17 @@ def _update_leds(is_crit, is_warn):
             apply_led_state(cfg)
     elif in_led_night:
         send_led_packet(0, 0, 0, 0, 0, 0, 0, 0)
+
+    why = "night" if in_led_night else "settings"
+    if cfg.get("reactive", True):
+        copy_why = {"copying": "copying", "success": "copied", "error": "copy_failed"}.get(Z_STATE.copy_status)
+        if is_crit:
+            why = "alert"
+        elif Z_STATE.copy_active and copy_why:
+            why = copy_why
+        elif is_warn:
+            why = "warning"
+    Z_STATE.lightbar = lightbar_look(cfg, why)
 
     last_led_night = getattr(stats_collector_daemon, "_last_led_night", False)
     if last_led_night and not in_led_night:
@@ -410,6 +442,7 @@ def _build_payload(
 
 def _publish(data, disks, fans, net, now):
     """Alerts, the UPS watchdog, the cached copy, the SSE broadcast and the 5-minute metrics log."""
+    data["lightbar"] = getattr(Z_STATE, "lightbar", None)  # what the light bar shows now, for its picture
     # Evaluate alerts & UPS power watchdog
     evaluate_system_alerts(data["unraid"], data["ups"])
     try:

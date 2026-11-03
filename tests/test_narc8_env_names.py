@@ -11,10 +11,7 @@ READ = re.compile(
 )
 LEFT = {
     "AI_CONVERSATIONS_DB_PATH",
-    "BACKUP_DIR",
     "BROWSE_ROOTS",
-    "BUILD_COMMIT",
-    "BUILD_DATE",
     "CREDENTIALS_DIRECTORY",
     "DATA_DIR",
     "DOCKER_CONFIG_JSON",
@@ -25,13 +22,9 @@ LEFT = {
     "FAN_WATCHDOG_STALE_SECS",
     "FORCE_ZETTLAB_MMIO",
     "FRAMEBUFFER",
-    "HOST_IP",
-    "LAYOUT_PATH",
     "LED_PORT",
-    "LLM_HOST",
     "NAS_NAME",
     "NUT_UPS_NAME",
-    "OLLAMA_HOST",
     "PHOTO_VECTOR_TOKEN",
     "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH",
     "POOL_PATH",
@@ -39,7 +32,6 @@ LEFT = {
     "SECRET_KEY_FILE",
     "STORAGE_POOL_PATH",
     "STRUCTURED_LOGS",
-    "TAILSCALE_STATE_DIR",
     "TRUENAS_API_KEY",
     "TRUENAS_URL",
     "TZ",
@@ -50,7 +42,6 @@ LEFT = {
     "UPS_PORT",
     "UPS_TYPE",
     "USERS_DB_PATH",
-    "VM_ISO_DIR",
     "WEB_PASSWORD",
     "ZETTNAS_ALLOW_DEFAULT_PASSWORD",
     "ZETTNAS_AUTH_FAIL_LOG",
@@ -61,9 +52,6 @@ LEFT = {
     "ZETTNAS_DOCKER_UPSTREAM",
     "ZETTNAS_ENFORCE_PASSWORD_CHANGE",
     "ZETTNAS_LOG_FILE",
-    "ZETTNAS_OBSERVER_ADAPTER",
-    "ZETTNAS_PAL_MODE",
-    "ZETTNAS_PLATFORM",
     "ZETTNAS_THUMB_CACHE_DIR",
 }
 
@@ -108,3 +96,14 @@ def test_a_typo_no_longer_stops_startup():
     s, problems = load_settings({"ZETTNAS_AUDIT_RETENTION_DAYS": "a year", "ZETTNAS_GIL_SWITCH_SECS": "fast"})
     assert s.audit_retention_days == 365 and s.gil_switch_secs == 0.02
     assert len(problems) == 2 and "ZETTNAS_AUDIT_RETENTION_DAYS" in problems[0]
+
+
+def test_a_setting_read_while_running_follows_the_environment(monkeypatch):
+    from backend import settings
+
+    monkeypatch.setenv("HOST_IP", " 10.1.2.3 ")
+    assert settings.current("host_ip") == "10.1.2.3"
+    monkeypatch.delenv("HOST_IP")
+    assert settings.current("host_ip") == ""
+    monkeypatch.setenv("SFTP_PORT", "not a port")
+    assert settings.current("sftp_port") == 2222  # unusable: the default, as at startup

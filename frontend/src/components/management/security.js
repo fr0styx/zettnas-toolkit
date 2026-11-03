@@ -231,7 +231,7 @@ export async function fetchAndRenderSecurityPosture() {
     if (!data) return;
 
     if (badge) {
-      badge.textContent = `Score: ${data.score}/100 (Grade ${data.grade})`;
+      badge.textContent = t('sec.score_grade', 'Score: {score}/100 (grade {grade})', { score: data.score, grade: data.grade });
       if (data.score >= 90) {
         badge.style.background = 'rgba(37,194,160,0.15)';
         badge.style.color = 'var(--lt-t-25c2a0ff, #25c2a0)';

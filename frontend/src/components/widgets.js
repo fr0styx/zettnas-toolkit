@@ -2020,7 +2020,7 @@ export function initWidgets() {
       if (upsLoad) upsLoad.textContent = typeof loadW === 'number' ? `${loadW} W` : String(loadW);
       if (upsRuntime) upsRuntime.textContent = `${runtimeMin} min`;
       if (upsBadge) {
-        upsBadge.textContent = status.includes('OB') || status.includes('BATT') ? 'ON BATT' : 'ONLINE';
+        upsBadge.textContent = status.includes('OB') || status.includes('BATT') ? t('wid.ups_on_batt', 'ON BATT') : t('wid.ups_online', 'ONLINE');
         upsBadge.style.color = status.includes('OB') ? 'var(--warn, #f5a623)' : 'var(--ok2, #25c2a0)';
       }
 

@@ -242,6 +242,8 @@ class ZettState:
         self.client_preferences: Any = None
         self.event_log: list[dict[str, Any]] = []
         self.alert_active = False
+        # what the light bar shows now (the settings, or an alert, a copy or the night), for its picture
+        self.lightbar: dict | None = None
         self.rainbow_thread: threading.Thread | None = None
         self.rainbow_stop = threading.Event()
         self.boot_time = time.time()

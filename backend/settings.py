@@ -197,6 +197,10 @@ class Settings:
         "Where the opt-in anonymous health report goes; empty uses the project's receiver.",
         group="Updates",
     )
+    build_commit: str = _s(
+        "BUILD_COMMIT", "", "The commit the image was built from; set by the image build.", group="Updates"
+    )
+    build_date: str = _s("BUILD_DATE", "", "When the image was built; set by the image build.", group="Updates")
     # Logs
     log_format: str = _s(
         "LOG_FORMAT",
@@ -221,6 +225,19 @@ class Settings:
         hi=1.0,
         group="Host",
     )
+    dash_layout_path: str = _s(
+        "LAYOUT_PATH", "", "The desktop layout file; empty keeps it in the data folder.", group="Host"
+    )
+    backup_dir: str = _s(
+        "BACKUP_DIR", "", "Where settings backups go; empty keeps them in the data folder.", group="Host"
+    )
+    vm_iso_dir: str = _s(
+        "VM_ISO_DIR", "", "The ISO library for virtual machines; empty keeps it in the data folder.", group="Host"
+    )
+    tailscale_state_dir: str = _s(
+        "TAILSCALE_STATE_DIR", "", "Tailscale's state folder; empty keeps it in the data folder.", group="Host"
+    )
+    host_ip: str = _s("HOST_IP", "", "The server's address, when it can't be found by itself.", group="Host")
     # Power
     ups_mode: str = _s("UPS_MODE", "auto", "How to reach the UPS (auto, nut, usb, ...).", group="Power")
     nut_host: str = _s("NUT_HOST", "127.0.0.1", "Network UPS Tools server.", group="Power")
@@ -389,6 +406,10 @@ class Settings:
         choices=("auto", "off"),
         group="AI and media",
     )
+    ollama_host: str = _s(
+        "OLLAMA_HOST", "", "The Ollama server (host, host:port or URL); empty finds it.", group="AI and media"
+    )
+    llm_host: str = _s("LLM_HOST", "", "Older name for OLLAMA_HOST, read when that is empty.", group="AI and media")
     # Platforms
     truenas_verify_tls: bool = _s(
         "TRUENAS_VERIFY_TLS", True, "Check the TrueNAS certificate; off accepts a self-signed one.", group="Platforms"
@@ -398,6 +419,24 @@ class Settings:
     )
     unraid_emhttp_dir: str = _s(
         "UNRAID_EMHTTP_DIR", "", "Unraid's emhttp state folder, when it isn't in a usual place.", group="Platforms"
+    )
+    platform: str = _s(
+        "ZETTNAS_PLATFORM",
+        "",
+        "Which host this is (unraid, truenas, zettos, ...); empty detects it.",
+        group="Platforms",
+    )
+    observer_adapter: str = _s(
+        "ZETTNAS_OBSERVER_ADAPTER",
+        "",
+        "The host to read in observer mode; empty or auto detects it.",
+        group="Platforms",
+    )
+    pal_mode: str = _s(
+        "ZETTNAS_PAL_MODE",
+        "",
+        "observer, readonly or telemetry: only read the host, never change it.",
+        group="Platforms",
     )
 
 
@@ -426,6 +465,28 @@ def _convert(raw: str, typ: Any, meta: Mapping[str, Any]) -> Any:
             raise ValueError("expected one of " + ", ".join(meta["choices"]))
         return low
     return v
+
+
+_FIELD_CACHE: dict[str, Any] = {}
+
+
+def current(name: str) -> Any:
+    """One setting as the environment holds it now, for the few read while ZettNAS runs (and changed
+    by tests while it does); declared, converted and checked like the others."""
+    if not _FIELD_CACHE:
+        import typing
+
+        hints = typing.get_type_hints(Settings)
+        _FIELD_CACHE.update({f.name: (f, hints[f.name]) for f in dataclasses.fields(Settings)})
+    f, typ = _FIELD_CACHE[name]
+    meta = f.metadata
+    key = next((n for n in (*meta["aliases"], meta["env"]) if n in os.environ), None)
+    if key is None:
+        return f.default
+    try:
+        return _convert(os.environ[key], typ, meta)
+    except ValueError:
+        return f.default
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> tuple[Settings, list[str]]:

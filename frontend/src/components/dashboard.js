@@ -14,6 +14,7 @@ let _events = null;
 const renderEventLog = (list) => (_events ||= import('./events.js')).then((m) => m.renderEventLog(list));
 import { checkAndTriggerSetupWizard } from './setup-wizard-gate.js';
 import { t } from '../i18n.js';
+import { renderLightbar } from './led-control.js';
 import { formatFixed } from '../format.js';
 
 const $ = (id) => document.getElementById(id);
@@ -704,6 +705,8 @@ export function applyLcdTheme(themeName, customAccent = null, textClarity = null
     } else {
       stageGlow.style.removeProperty('background');
       stageGlow.style.removeProperty('box-shadow');
+      delete stageGlow.dataset.look;
+      renderLightbar(stageGlow, state.latestStats?.lightbar, { offOpacity: 0.15 }); // what the bar shows
     }
   }
 
@@ -962,6 +965,8 @@ export function applyStats(raw) {
     if (typeof document !== 'undefined' && document.hidden && !state.isLcdDirect) {
       return;
     }
+    // the console's light bar shows what the real one does: the settings, or an alert, a copy or the night
+    if (s.lightbar && state.lcdTheme !== 'yak') renderLightbar($('virtual-chassis-lightbar'), s.lightbar, { offOpacity: 0.15 });
     // Always refresh the clock to keep time accurate to the minute
     setText($('clock'), getLocalClock(state.currentTimezone, state.clockFormat));
 

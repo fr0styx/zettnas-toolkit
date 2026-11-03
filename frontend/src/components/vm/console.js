@@ -1254,7 +1254,7 @@ export function openVmConsole(vmId, vmName = 'Virtual Machine', initialMode = 'g
           try {
             window.close();
           } catch (_) {}
-          document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--lt-b-060a12ff, #060a12);color:var(--zn-text-muted);font-family:sans-serif;font-size:14px;">Console disconnected. You can close this window.</div>';
+          document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:var(--lt-b-060a12ff, #060a12);color:var(--zn-text-muted);font-family:sans-serif;font-size:14px;">' + escapeHtml(t('vmc.disconnected_close', 'Console disconnected. You can close this window.')) + '</div>';
           return;
         }
         consoleWin.classList.add('window-minimized');

@@ -946,8 +946,8 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                 self._run_cmd(["zpool", "import", pool_id])
                 raise RuntimeError(f"Failed to import zpool as '{clean_name}': {imp_err}")
 
-            old_mnt = os.path.join(self._pool_path, pool_id) if self._pool_path != "/mnt" else f"/mnt/{pool_id}"
-            new_mnt = os.path.join(self._pool_path, clean_name) if self._pool_path != "/mnt" else f"/mnt/{clean_name}"
+            old_mnt = child_path(self._pool_path, pool_id)  # names, never paths (the API checks them too)
+            new_mnt = child_path(self._pool_path, clean_name)
             try:
                 if os.path.exists(old_mnt) and not os.path.islink(old_mnt):
                     try:

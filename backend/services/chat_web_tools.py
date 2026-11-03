@@ -359,93 +359,10 @@ _WEB_ALLOWED: contextvars.ContextVar = contextvars.ContextVar("zettnas_ai_web_al
 _WEB_BLOCKED_MSG = "Web access is off for this chat. Turn on Web to let ZettAI search the internet or get the weather."
 
 
-def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = True) -> dict[str, Any]:
-    if not _WEB_ALLOWED.get():
-        return {"tool": "browse_internet", "status": "blocked", "error": _WEB_BLOCKED_MSG, "sources": []}
-    """
-    Searches live internet sources (Wikipedia full intro + Infobox fact parser,
-    DuckDuckGo live HTML web search, DuckDuckGo Instant Answer API, and direct HTTPS URLs)
-    so the local chatbot can accurately answer and verify any question online.
-    """
-    clean_q = str(query or "").strip()
-    if not clean_q:
-        return {"tool": "browse_internet", "status": "error", "sources": [], "error": "Empty search query"}
-    # the search carries the question, not addresses, paths, numbers or keys (AI-12)
-    from backend.services.ai_safeguards import safe_web_query
-
-    if not allow_fetch:
-        # search only (SEC-31): no page is fetched, so no URL goes out either
-        clean_q = " ".join(re.sub(r"https?://[^\s<>\"']+", " ", clean_q).split())
-    scrubbed, why = safe_web_query(clean_q)
-    if scrubbed is None:
-        return {"tool": "browse_internet", "status": "blocked", "sources": [], "error": f"Web search refused: {why}."}
-    clean_q = scrubbed
-
-    if test_mode():
-        return {
-            "tool": "browse_internet",
-            "status": "ok",
-            "query": clean_q,
-            "extracted_facts": {},
-            "direct_answer": f"Verified online reference result for '{clean_q}' via ZettAI Web Search.",
-            "sources": [
-                {
-                    "title": f"Web Verification: {clean_q}",
-                    "url": f"https://en.wikipedia.org/wiki/Special:Search?search={urllib.parse.quote(clean_q)}",
-                    "snippet": f"Verified online reference result for '{clean_q}' via ZettAI Web Search.",
-                    "source": "wikipedia",
-                }
-            ],
-        }
-
-    search_topic, web_query = _normalize_web_query_and_topic(clean_q)
-    sources: list[dict[str, Any]] = []
-    seen_urls: set[str] = set()
-    extracted_facts: dict[str, str] = {}
-    direct_answer = ""
-
-    wiki_headers = {"User-Agent": "ZettNAS-Toolkit-ZettAI/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"}
-    browser_headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    }
-
-    def _add_source(title: str, url: str, snippet: str, src_type: str) -> None:
-        norm_u = url.strip()
-        if not norm_u or norm_u in seen_urls:
-            return
-        clean_snip = _clean_complete_snippet(snippet, max_chars=850)
-        if not clean_snip:
-            return
-        seen_urls.add(norm_u)
-        sources.append(
-            {
-                "title": title.strip()[:160],
-                "url": norm_u,
-                "snippet": clean_snip,
-                "source": src_type,
-            }
-        )
-
-    # 1. If user included a direct URL, fetch and extract its title + text
-    url_match = re.search(r"https?://[^\s<>\"']+", clean_q) if allow_fetch else None
-    if url_match:
-        target_url = url_match.group(0).rstrip(".,;)")
-        if not _is_safe_public_url(target_url):
-            logger.warning("[AIChatAgent] Blocked SSRF attempt to non-public URL: %s", target_url)
-        else:
-            try:
-                from backend.services.safe_fetch import safe_open
-
-                with safe_open(target_url, context="public", headers=browser_headers, timeout=5.0) as resp:
-                    raw_body = resp.read(120_000).decode("utf-8", errors="replace")
-                    title_m = re.search(r"<title[^>]*>(.*?)</title>", raw_body, flags=re.IGNORECASE | re.DOTALL)
-                    page_title = _strip_html_tags(title_m.group(1)) if title_m else target_url
-                    snippet = _strip_html_tags(raw_body)[:520]
-                    _add_source(page_title or target_url, target_url, snippet, "direct_url")
-            except Exception as e:
-                logger.debug(f"[AIChatAgent] Direct URL fetch failed for {target_url}: {e}")
-
-    # 2. Wikipedia Search + Lead Extract + Infobox Fact Extraction
+def _browse_wikipedia(
+    _add_source: Any, direct_answer: Any, extracted_facts: Any, search_topic: Any, wiki_headers: Any
+) -> Any:
+    """tool_browse_internet: Wikipedia search, its lead and infobox facts."""
     try:
         wiki_search_params = urllib.parse.urlencode(
             {
@@ -556,8 +473,11 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
                             )
     except Exception as e:
         logger.debug("[AIChatAgent] Wikipedia extract/infobox lookup fallback: %s", e)
+    return direct_answer
 
-    # 3. Live DuckDuckGo HTML Web Search for real-time web results
+
+def _browse_duckduckgo(_add_source: Any, browser_headers: Any, web_query: Any) -> Any:
+    """tool_browse_internet: live DuckDuckGo web results."""
     try:
         ddg_post = urllib.parse.urlencode({"q": web_query}).encode("utf-8")
         ddg_req = urllib.request.Request(
@@ -591,6 +511,97 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
                     _add_source(clean_title, real_url, clean_snip, "web")
     except Exception as e:
         logger.debug("[AIChatAgent] DuckDuckGo HTML web search fallback: %s", e)
+
+
+def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = True) -> dict[str, Any]:
+    if not _WEB_ALLOWED.get():
+        return {"tool": "browse_internet", "status": "blocked", "error": _WEB_BLOCKED_MSG, "sources": []}
+    """
+    Searches live internet sources (Wikipedia full intro + Infobox fact parser,
+    DuckDuckGo live HTML web search, DuckDuckGo Instant Answer API, and direct HTTPS URLs)
+    so the local chatbot can accurately answer and verify any question online.
+    """
+    clean_q = str(query or "").strip()
+    if not clean_q:
+        return {"tool": "browse_internet", "status": "error", "sources": [], "error": "Empty search query"}
+    # the search carries the question, not addresses, paths, numbers or keys (AI-12)
+    from backend.services.ai_safeguards import safe_web_query
+
+    if not allow_fetch:
+        # search only (SEC-31): no page is fetched, so no URL goes out either
+        clean_q = " ".join(re.sub(r"https?://[^\s<>\"']+", " ", clean_q).split())
+    scrubbed, why = safe_web_query(clean_q)
+    if scrubbed is None:
+        return {"tool": "browse_internet", "status": "blocked", "sources": [], "error": f"Web search refused: {why}."}
+    clean_q = scrubbed
+
+    if test_mode():
+        return {
+            "tool": "browse_internet",
+            "status": "ok",
+            "query": clean_q,
+            "extracted_facts": {},
+            "direct_answer": f"Verified online reference result for '{clean_q}' via ZettAI Web Search.",
+            "sources": [
+                {
+                    "title": f"Web Verification: {clean_q}",
+                    "url": f"https://en.wikipedia.org/wiki/Special:Search?search={urllib.parse.quote(clean_q)}",
+                    "snippet": f"Verified online reference result for '{clean_q}' via ZettAI Web Search.",
+                    "source": "wikipedia",
+                }
+            ],
+        }
+
+    search_topic, web_query = _normalize_web_query_and_topic(clean_q)
+    sources: list[dict[str, Any]] = []
+    seen_urls: set[str] = set()
+    extracted_facts: dict[str, str] = {}
+    direct_answer = ""
+
+    wiki_headers = {"User-Agent": "ZettNAS-Toolkit-ZettAI/2.0 (+https://github.com/fr0styx/zettnas-toolkit)"}
+    browser_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+    }
+
+    def _add_source(title: str, url: str, snippet: str, src_type: str) -> None:
+        norm_u = url.strip()
+        if not norm_u or norm_u in seen_urls:
+            return
+        clean_snip = _clean_complete_snippet(snippet, max_chars=850)
+        if not clean_snip:
+            return
+        seen_urls.add(norm_u)
+        sources.append(
+            {
+                "title": title.strip()[:160],
+                "url": norm_u,
+                "snippet": clean_snip,
+                "source": src_type,
+            }
+        )
+
+    # 1. If user included a direct URL, fetch and extract its title + text
+    url_match = re.search(r"https?://[^\s<>\"']+", clean_q) if allow_fetch else None
+    if url_match:
+        target_url = url_match.group(0).rstrip(".,;)")
+        if not _is_safe_public_url(target_url):
+            logger.warning("[AIChatAgent] Blocked SSRF attempt to non-public URL: %s", target_url)
+        else:
+            try:
+                from backend.services.safe_fetch import safe_open
+
+                with safe_open(target_url, context="public", headers=browser_headers, timeout=5.0) as resp:
+                    raw_body = resp.read(120_000).decode("utf-8", errors="replace")
+                    title_m = re.search(r"<title[^>]*>(.*?)</title>", raw_body, flags=re.IGNORECASE | re.DOTALL)
+                    page_title = _strip_html_tags(title_m.group(1)) if title_m else target_url
+                    snippet = _strip_html_tags(raw_body)[:520]
+                    _add_source(page_title or target_url, target_url, snippet, "direct_url")
+            except Exception as e:
+                logger.debug(f"[AIChatAgent] Direct URL fetch failed for {target_url}: {e}")
+
+    direct_answer = _browse_wikipedia(_add_source, direct_answer, extracted_facts, search_topic, wiki_headers)
+
+    _browse_duckduckgo(_add_source, browser_headers, web_query)
 
     # 4. DuckDuckGo Instant Answer JSON API fallback
     if len(sources) < max_results:

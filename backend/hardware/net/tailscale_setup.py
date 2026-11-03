@@ -108,6 +108,43 @@ def execute_tailscale_down() -> dict[str, Any]:
     return {"status": "error", "code": code, "output": out or "Tailscale disconnection failed"}
 
 
+def _tailscale_devices(env_vars: Any, image_name: Any, state_dir: Any) -> Any:
+    """deploy_tailscale_container: devices and capabilities."""
+    devices = []
+    if os.path.exists("/dev/net/tun") or os.path.exists("/host/dev/net/tun"):
+        devices.append(
+            {
+                "PathOnHost": "/dev/net/tun",
+                "PathInContainer": "/dev/net/tun",
+                "CgroupPermissions": "rwm",
+            }
+        )
+    else:
+        # Fallback to userspace networking if /dev/net/tun is unavailable
+        env_vars = [e for e in env_vars if not e.startswith("TS_USERSPACE=")]
+        env_vars.append("TS_USERSPACE=true")
+
+    create_body = {
+        "Image": image_name,
+        "Env": env_vars,
+        "HostConfig": {
+            "NetworkMode": "host",
+            "CapAdd": ["NET_ADMIN", "NET_RAW"],
+            "Binds": [f"{state_dir}:/var/lib/tailscale"],
+            "Devices": devices,
+            "RestartPolicy": {"Name": "unless-stopped"},
+        },
+        "Labels": {
+            "com.docker.compose.project": "tailscale",
+            "com.docker.compose.service": "tailscale",
+            "net.unraid.docker.managed": "dockerman",
+            "net.unraid.docker.icon": "https://raw.githubusercontent.com/tailscale/tailscale/main/cmd/tailscale/logo.png",
+            "app.name": "Tailscale Zero-Trust Mesh",
+        },
+    }
+    return create_body
+
+
 def deploy_tailscale_container(
     auth_key: str | None = None,
     hostname: str | None = None,
@@ -208,39 +245,7 @@ def deploy_tailscale_container(
     extra = ["--reset", *tailscale.login_args()] + (["--accept-routes"] if accept_routes else [])
     env_vars.append("TS_EXTRA_ARGS=" + " ".join(extra))
 
-    # 5. Device and capabilities handling
-    devices = []
-    if os.path.exists("/dev/net/tun") or os.path.exists("/host/dev/net/tun"):
-        devices.append(
-            {
-                "PathOnHost": "/dev/net/tun",
-                "PathInContainer": "/dev/net/tun",
-                "CgroupPermissions": "rwm",
-            }
-        )
-    else:
-        # Fallback to userspace networking if /dev/net/tun is unavailable
-        env_vars = [e for e in env_vars if not e.startswith("TS_USERSPACE=")]
-        env_vars.append("TS_USERSPACE=true")
-
-    create_body = {
-        "Image": image_name,
-        "Env": env_vars,
-        "HostConfig": {
-            "NetworkMode": "host",
-            "CapAdd": ["NET_ADMIN", "NET_RAW"],
-            "Binds": [f"{state_dir}:/var/lib/tailscale"],
-            "Devices": devices,
-            "RestartPolicy": {"Name": "unless-stopped"},
-        },
-        "Labels": {
-            "com.docker.compose.project": "tailscale",
-            "com.docker.compose.service": "tailscale",
-            "net.unraid.docker.managed": "dockerman",
-            "net.unraid.docker.icon": "https://raw.githubusercontent.com/tailscale/tailscale/main/cmd/tailscale/logo.png",
-            "app.name": "Tailscale Zero-Trust Mesh",
-        },
-    }
+    create_body = _tailscale_devices(env_vars, image_name, state_dir)
 
     # 6. Create container
     st_create, res_create = _docker_request("POST", "/containers/create?name=tailscale", body=create_body)

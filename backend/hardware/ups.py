@@ -1025,11 +1025,8 @@ def _query_direct_usb(target_device: str | None = None) -> dict[str, Any]:
     return out
 
 
-def discover_ups_sources() -> list[dict[str, Any]]:
-    """Auto-discovers locally connected USB HID UPS devices and active LAN power daemons."""
-    candidates: list[dict[str, Any]] = []
-
-    # 1. Probe USB HID devices in sysfs (both container and host mounts)
+def _discover_usb_hid(candidates: Any) -> Any:
+    """discover_ups_sources: USB HID devices in sysfs, in the container and the host."""
     usb_devices = [d for root in USB_DEVICE_ROOTS for d in sorted(glob.glob(os.path.join(root, "*")))]
     seen_ids: set[str] = set()
 
@@ -1085,6 +1082,13 @@ def discover_ups_sources() -> list[dict[str, Any]]:
                     )
         except Exception:
             continue
+
+
+def discover_ups_sources() -> list[dict[str, Any]]:
+    """Auto-discovers locally connected USB HID UPS devices and active LAN power daemons."""
+    candidates: list[dict[str, Any]] = []
+
+    _discover_usb_hid(candidates)
 
     # 2. Check /sys/class/power_supply devices
     psy_paths = [d for root in PSY_ROOTS for d in sorted(glob.glob(os.path.join(root, "*")))]

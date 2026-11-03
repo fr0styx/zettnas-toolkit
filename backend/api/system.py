@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 import backend.config as config
 from backend import __version__
+from backend import settings as _settings
 from backend.api_tokens import load_tokens, revoke_token
 from backend.auth import AuthenticatedPrincipal, get_current_principal, require_scope
 from backend.config import (
@@ -138,7 +139,7 @@ def health():
         "status": status,
         "version": __version__,
         # the commit the image was built from: open pages compare it to notice an update
-        "build": os.environ.get("BUILD_COMMIT", "")[:12],
+        "build": _settings.current("build_commit")[:12],
         "image_variant": _image_variant(),
         "checks": checks,
         "daemons": {k: {"state": v["state"], "restarts": v["restarts"]} for k, v in _daemon_status().items()},
@@ -1005,8 +1006,8 @@ def _get_current_build_info() -> dict[str, Any]:
 
 def _get_current_build_info_impl() -> dict[str, Any]:
     """Returns detected build commit, build date, and container revision."""
-    commit = os.environ.get("BUILD_COMMIT", "")
-    created = os.environ.get("BUILD_DATE", "")
+    commit = _settings.current("build_commit")
+    created = _settings.current("build_date")
 
     # Try inspecting self container and image for authoritative OCI revision label
     if not commit:

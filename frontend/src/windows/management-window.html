@@ -2191,7 +2191,7 @@
                         <span style="color:var(--ok2, #25c2a0);">✓</span> <span data-i18n="mw.check_for_updates">Check for updates</span>
                       </button>
                       <button class="btn-pill-toggle" id="btn-docker-update-all" style="display: none; color: var(--zn-text-warn); border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12);" title="Update all containers with available image updates" data-i18n-title="ui.update_all_containers_with_available">
-                        <span style="display:inline-flex; align-items:center; justify-content:center; width:13px; height:13px; border-radius:50%; border:1.5px solid #fbbf24; font-size:var(--zn-fs-xs); line-height:1;">↑</span> <span>Update all (<span id="docker-updates-count-badge">0</span>)</span>
+                        <span style="display:inline-flex; align-items:center; justify-content:center; width:13px; height:13px; border-radius:50%; border:1.5px solid #fbbf24; font-size:var(--zn-fs-xs); line-height:1;">↑</span> <span><span data-i18n="cw.update_all">Update all</span> (<span id="docker-updates-count-badge">0</span>)</span>
                       </button>
                       <div class="docker-search-wrap" style="position:relative;">
                         <input type="text" id="docker-search-input" placeholder="Search containers, images, ports..." data-i18n-placeholder="mgmt.docker_search_placeholder" class="tz-text-input" style="font-size:var(--zn-fs-xs); padding:3px 8px; width:180px; height:24px; border-radius:4px;" aria-label="Search containers, images, ports..." data-i18n-aria-label="mgmt.docker_search_placeholder">
@@ -2427,7 +2427,7 @@
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_os_ver">OS Version</span>
-                        <span class="udi-val" id="mgmt-unraid-version">Unraid OS</span>
+                        <span class="udi-val" id="mgmt-unraid-version" data-sample>Unraid OS</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_disks_cfg">Disks Configuration</span>
@@ -2463,7 +2463,7 @@
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.system_load">System Load</span>
-                        <span class="udi-val" id="mgmt-generic-load">Normal</span>
+                        <span class="udi-val" id="mgmt-generic-load" data-sample>Normal</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.storage_engine">Storage Engine</span>
@@ -2767,7 +2767,7 @@
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_protocol">Connection Protocol</span>
-                    <span class="udi-val" id="mgmt-ups-protocol">Auto / NIS</span>
+                    <span class="udi-val" id="mgmt-ups-protocol" data-sample>Auto / NIS</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_battv">Battery Voltage</span>
@@ -4287,7 +4287,7 @@
                     <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active</span>
                   </span>
                   <span id="ai-index-status-pill" style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); flex-shrink:0; padding:0 2px;">
-                    Indexed: <strong id="ai-stat-total-files" style="color:var(--zn-text-strong);">0</strong> Files (<strong id="ai-stat-total-videos" style="color:var(--zn-text-strong);">0</strong> Videos • <strong id="ai-stat-total-photos" style="color:var(--zn-text-strong);">0</strong> Photos • <strong id="ai-stat-total-docs" style="color:var(--zn-text-strong);">0</strong> Docs<span id="ai-stat-recipes-segment" style="display:none;"> • <strong id="ai-stat-total-recipes" style="color:var(--zn-text-strong);">0</strong> Recipes</span>)
+                    <span data-i18n="ai.stat_indexed">Indexed:</span> <strong id="ai-stat-total-files" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_files">Files</span> (<strong id="ai-stat-total-videos" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_videos">Videos</span> • <strong id="ai-stat-total-photos" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_photos">Photos</span> • <strong id="ai-stat-total-docs" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_docs">Docs</span><span id="ai-stat-recipes-segment" style="display:none;"> • <strong id="ai-stat-total-recipes" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_recipes">Recipes</span></span>)
                   </span>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; flex-shrink:0;">
@@ -4357,7 +4357,7 @@
                       <option value="deepseek-r1:70b">⚠️ DeepSeek-R1 70B (Doesn't Fit Hardware)</option>
                       <option value="llama3.1:405b">⚠️ Meta Llama 3.1 405B FP8 (Doesn't Fit Hardware)</option>
                     </select>
-                    <span id="ai-llm-advisor-headline" style="padding:3px 10px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(99,102,241,0.18); color:var(--lt-t-c7d2feff, #c7d2fe); border:1px solid rgba(99,102,241,0.4);">NPU + GPU Advisor</span>
+                    <span id="ai-llm-advisor-headline" style="padding:3px 10px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(99,102,241,0.18); color:var(--lt-t-c7d2feff, #c7d2fe); border:1px solid rgba(99,102,241,0.4);" data-sample>NPU + GPU Advisor</span>
                   </div>
                 </div>
 
@@ -4580,7 +4580,7 @@
                     <span id="ai-index-current-path" style="color:var(--zn-text-soft); font-family:monospace; font-size:var(--zn-fs-xs);" data-sample>Ready — Waiting for sync command (Sleeping drives protected)</span>
                   </div>
                   <div id="ai-index-progress-counters" style="color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs);">
-                    Indexed: <strong id="ai-prog-indexed" style="color:var(--zn-text-ok);">0</strong> • Unchanged: <strong id="ai-prog-unchanged" style="color:var(--zn-text-soft);">0</strong> • Deferred (Standby): <strong id="ai-prog-deferred" style="color:var(--zn-text-warn);">0</strong>
+                    <span data-i18n="ai.stat_indexed">Indexed:</span> <strong id="ai-prog-indexed" style="color:var(--zn-text-ok);">0</strong> • <span data-i18n="ai.prog_unchanged">Unchanged:</span> <strong id="ai-prog-unchanged" style="color:var(--zn-text-soft);">0</strong> • <span data-i18n="ai.prog_deferred">Deferred (standby):</span> <strong id="ai-prog-deferred" style="color:var(--zn-text-warn);">0</strong>
                   </div>
                 </div>
 

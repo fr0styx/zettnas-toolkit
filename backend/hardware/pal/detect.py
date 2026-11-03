@@ -16,6 +16,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+from backend import settings as _settings
 from backend.config import HOST_DEV, HOST_PROC, HOST_SYS, POOL_PATH, SETTINGS, logger
 from backend.fsutil import atomic_write_json
 from backend.hardware.pal import base as pal_base
@@ -31,13 +32,13 @@ class StoragePlatformDetector:
 
     @staticmethod
     def detect() -> PlatformType:
-        obs_adapter = os.environ.get("ZETTNAS_OBSERVER_ADAPTER", "").strip().lower()
+        obs_adapter = _settings.current("observer_adapter").lower()
         if obs_adapter == "auto":
             obs_adapter = ""
-        pal_mode = os.environ.get("ZETTNAS_PAL_MODE", "").strip().lower()
+        pal_mode = _settings.current("pal_mode").lower()
         if pal_mode == "auto":
             pal_mode = ""
-        env_platform = os.environ.get("ZETTNAS_PLATFORM", "").strip().lower() or obs_adapter or pal_mode
+        env_platform = _settings.current("platform").lower() or obs_adapter or pal_mode
         if env_platform:
             if env_platform in ("unraid",):
                 return PlatformType.UNRAID
@@ -189,7 +190,7 @@ class StoragePlatformDetector:
         if any(os.path.exists(p) for p in other_nas_candidates):
             return PlatformType.GENERIC_OBSERVER
 
-        if os.environ.get("ZETTNAS_PAL_MODE", "").strip().lower() in ("observer", "readonly", "telemetry"):
+        if _settings.current("pal_mode").lower() in ("observer", "readonly", "telemetry"):
             return PlatformType.GENERIC_OBSERVER
         if SETTINGS.observer_mode:
             return PlatformType.GENERIC_OBSERVER

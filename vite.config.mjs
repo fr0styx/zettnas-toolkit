@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite';
 import { iconsAtBuildTime } from './frontend/scripts/icons-build.mjs';
 
-// HTML comments are notes for us, not bytes for the browser (FE-01 first-load budget)
+// HTML comments are notes for us, not bytes for the browser (FE-01 first-load budget); stripped
+// until none is left, since one pass over "<!<!-- -->-- -->" would leave a "<!--" behind
+export const withoutComments = (html) => {
+  let prev;
+  do {
+    prev = html;
+    html = html.replace(/<!--(?!\[if)[\s\S]*?-->\n?/g, '');
+  } while (html !== prev);
+  return html;
+};
 export const stripHtmlComments = () => ({
   name: 'zn-strip-html-comments',
-  transformIndexHtml: { order: 'post', handler: (html) => html.replace(/<!--(?!\[if)[\s\S]*?-->\n?/g, '') },
+  transformIndexHtml: { order: 'post', handler: (html) => withoutComments(html) },
 });
 
 export default defineConfig({

@@ -9,6 +9,7 @@ from typing import Any
 
 import httpx
 
+from backend import settings as _settings
 from backend.config import SETTINGS, logger
 from backend.hardware.net import canary, common
 
@@ -501,7 +502,7 @@ def read_network_rates():
 
 
 def read_ip():
-    env_ip = os.environ.get("HOST_IP", "").strip()
+    env_ip = _settings.current("host_ip")
     if env_ip:
         return env_ip
 

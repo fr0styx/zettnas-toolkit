@@ -61,6 +61,7 @@ import { initA11y } from './a11y.js';
 import { initGlassTimePickers } from './components/time-picker.js';
 
 import { t } from './i18n.js';
+import { renderLcdBadge, renderStreamBadge } from './status-badges.js';
 
 // B6 first-load budget: the hardware-settings drawer and the users code are not needed for the
 // first paint. They load right after it, or at once when someone opens the drawer first.
@@ -126,32 +127,7 @@ async function checkLcdStatus() {
   if (state.latestStats?.hardware?.has_lcd === false) return;
   try {
     const data = await api.get('/api/lcd_status');
-    const badge = document.getElementById('lcd-renderer-badge');
-    if (badge) {
-      if (!data.enabled) {
-        badge.textContent = t('lcd.badge_off_config', 'LCD: turned off');
-        badge.dataset.lcdState = 'disabled';
-        badge.className = 'lcd-status-badge lcd-status-disabled';
-        badge.title = t('ui.lcd_direct_output_is_disabled', 'LCD direct output is disabled in configuration.');
-      } else if (!data.fb_present) {
-        badge.textContent = t('lcd.badge_none', 'LCD: not found');
-        badge.dataset.lcdState = 'missing';
-        badge.className = 'lcd-status-badge lcd-status-offline';
-        badge.title = t('ui.no_framebuffer_device_detected_at', 'No framebuffer device detected at /dev/fb0.');
-      } else if (data.screen_off || data.power === false) {
-        badge.textContent = 'LCD: SCREEN OFF';
-        badge.className = 'lcd-status-badge lcd-status-disabled';
-        badge.title = t('ui.physical_lcd_display_is_turned', 'Physical LCD display is turned off (0 FPS).');
-      } else if (data.active) {
-        badge.textContent = `LCD: ${data.fps} FPS ACTIVE`;
-        badge.className = 'lcd-status-badge lcd-status-active';
-        badge.title = `LCD direct output is actively streaming at ${data.fps} FPS.`;
-      } else {
-        badge.textContent = 'LCD: IDLE';
-        badge.className = 'lcd-status-badge lcd-status-offline';
-        badge.title = t('ui.lcd_renderer_process_is_offline', 'LCD renderer process is offline or initializing.');
-      }
-    }
+    renderLcdBadge(document.getElementById('lcd-renderer-badge'), data);
   } catch (e) {
     console.warn('Failed to query LCD status', e);
   }
@@ -219,11 +195,7 @@ export function startSSE() {
       clearInterval(_pollingTimer);
       _pollingTimer = null;
     }
-    const streamBadge = document.getElementById('stream-status-badge');
-    if (streamBadge) {
-      streamBadge.textContent = 'LIVE SSE';
-      streamBadge.className = 'header-badge active';
-    }
+    renderStreamBadge(document.getElementById('stream-status-badge'), true);
   };
 
   _sse.onmessage = (e) => {
@@ -241,11 +213,7 @@ export function startSSE() {
       _sse.close();
       _sse = null;
     }
-    const streamBadge = document.getElementById('stream-status-badge');
-    if (streamBadge) {
-      streamBadge.textContent = 'POLLING';
-      streamBadge.className = 'header-badge warning';
-    }
+    renderStreamBadge(document.getElementById('stream-status-badge'), false);
     if (!auth.hasToken() && !state.isLcdDirect) {
       return;
     }

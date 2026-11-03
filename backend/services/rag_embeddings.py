@@ -19,6 +19,7 @@ import urllib.error
 import urllib.request
 from collections.abc import Sequence
 
+from backend import settings as _settings
 from backend.config import SETTINGS, logger
 from backend.ignored_errors import ignored
 from backend.services import gpu_queue
@@ -421,12 +422,13 @@ def _resolve_ollama_host(explicit_host: str | None = None) -> str:
     if _CACHED_OLLAMA_HOST and (not _CACHED_OLLAMA_UNTIL or time.time() < _CACHED_OLLAMA_UNTIL):
         return _CACHED_OLLAMA_HOST
 
-    env_h = os.environ.get("OLLAMA_HOST")
+    env_h = _settings.current("ollama_host")
     if env_h:
         if not env_h.startswith("http://") and not env_h.startswith("https://"):
             env_h = f"http://{env_h}"
-        _CACHED_OLLAMA_HOST = env_h.rstrip("/")
-        return _CACHED_OLLAMA_HOST
+        host = str(env_h).rstrip("/")
+        _CACHED_OLLAMA_HOST = host
+        return host
 
     from backend.services.ai_endpoints import candidate_hosts
 

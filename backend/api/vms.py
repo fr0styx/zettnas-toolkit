@@ -26,7 +26,7 @@ from backend.auth import AuthenticatedPrincipal, get_current_principal, require_
 from backend.config import DATA_DIR, HOST_PROC, POOL_PATH, VM_ISO_DIR, logger
 from backend.confirmations import require_confirmation
 from backend.errors import ShownServerError
-from backend.fsutil import atomic_write_json, read_json, resolve_within
+from backend.fsutil import atomic_write_json, child_path, read_json, resolve_within
 from backend.ignored_errors import ignored
 from backend.logging_config import in_this_request
 from backend.services.vm_engine import QmpEngine
@@ -354,7 +354,7 @@ def collect_vm_diagnostics() -> dict[str, Any]:
     recent_errors: dict[str, list[str]] = {}
     for vm in vms:
         vm_id = vm.get("id")
-        vm_dir = os.path.join(DATA_DIR, "vms", vm_id) if vm_id else None
+        vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id) if vm_id else None
         if vm_dir and os.path.isdir(vm_dir):
             err_log = os.path.join(vm_dir, "qemu_last_error.log")
             if os.path.exists(err_log):
@@ -1255,7 +1255,7 @@ def get_vm_error(vm_id: VmId):
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     err_log = os.path.join(vm_dir, "qemu_last_error.log")
     err_text = None
     if os.path.exists(err_log):
@@ -1315,7 +1315,7 @@ def get_vm_screenshot(vm_id: VmId):
     if not vm_qemu._is_qemu_process_alive(vm_id):
         raise HTTPException(status_code=400, detail="Cannot capture screenshot: VM is not running.")
 
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     ppm_path = os.path.join(vm_dir, "screen.ppm")
 
     qmp_res = vm_qemu._qmp_command(vm_id, "screendump", {"filename": ppm_path})
@@ -1360,7 +1360,7 @@ def resize_vm_disk(
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     os.makedirs(vm_dir, exist_ok=True)
     disk_index = req.disk_index or 0
 
@@ -1463,7 +1463,7 @@ def delete_vm(
     vms = [v for v in vms if v["id"] != vm_id]
     vm_qemu._save_vms(vms)
     if purge_disks:
-        vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+        vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
         if os.path.exists(vm_dir):
             shutil.rmtree(vm_dir, ignore_errors=True)
 
@@ -1488,7 +1488,7 @@ def _get_vm_snapshots_metadata(vm_id: str) -> dict[str, Any]:
 
 
 def _save_vm_snapshots_metadata(vm_id: str, data: dict[str, Any]):
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     os.makedirs(vm_dir, exist_ok=True)
     meta_path = os.path.join(vm_dir, "snapshots.json")
     try:
@@ -1554,7 +1554,7 @@ async def get_vm_snapshots(vm_id: VmId):
     if not target_vm:
         raise HTTPException(status_code=404, detail="Virtual machine not found.")
 
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
     raw_snaps = await asyncio.to_thread(_list_qcow2_snapshots, disk_path)
     meta = await asyncio.to_thread(_get_vm_snapshots_metadata, vm_id)
@@ -1600,7 +1600,7 @@ async def create_vm_snapshot(vm_id: VmId, req: VmSnapshotCreateRequest):
 
     name = _snapshot_name(req.name)
     is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
 
     if is_running:
@@ -1657,7 +1657,7 @@ async def revert_vm_snapshot(vm_id: VmId, snapshot_name: str):
 
     name = _snapshot_name(snapshot_name)
     is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
 
     if is_running:
@@ -1708,7 +1708,7 @@ async def delete_vm_snapshot(vm_id: VmId, snapshot_name: str):
 
     name = _snapshot_name(snapshot_name)
     is_running = target_vm.get("state") == "running" and vm_qemu._is_qemu_process_alive(vm_id)
-    vm_dir = os.path.join(DATA_DIR, "vms", vm_id)
+    vm_dir = child_path(os.path.join(DATA_DIR, "vms"), vm_id)
     disk_path = target_vm.get("disk_path") or os.path.join(vm_dir, "disk.qcow2")
 
     if is_running:

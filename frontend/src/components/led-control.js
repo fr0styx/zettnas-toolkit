@@ -8,6 +8,60 @@ import { t } from '../i18n.js';
 
 const $ = (id) => document.getElementById(id);
 
+/**
+ * Paints a picture of the light bar: off, a colour, or an effect at the bar's speed.
+ * @param {HTMLElement | null} el
+ * @param {{power?: string, mode?: string, color?: string, color2?: string, brightness?: number, speed?: number}} look
+ * @param {{offOpacity?: number, force?: boolean}} [opts]
+ */
+export function renderLightbar(el, look, opts = {}) {
+  if (!el || !look) return;
+  const key = JSON.stringify(look);
+  if (!opts.force && el.dataset.look === key) return; // the same look: leave the animation running
+  el.dataset.look = key;
+  if (look.power === 'off' || Number(look.brightness) <= 0) {
+    el.style.background = '#1a2330';
+    el.style.boxShadow = 'none';
+    el.style.animation = 'none';
+    el.style.opacity = String(opts.offOpacity ?? 0.2);
+    return;
+  }
+  const c1 = '#' + String(look.color || '25c2a0').replace('#', '');
+  const c2 = '#' + String(look.color2 || 'ff0055').replace('#', '');
+  const bri = (look.brightness ?? 25) / 100;
+  const dur = Math.max(0.3, 4.0 - ((look.speed ?? 50) / 100.0) * 3.7).toFixed(2) + 's';
+  const mode = look.mode || 'solid';
+  let bg = c1;
+  let shadow = `0 0 14px ${c1}`;
+  let anim = 'none';
+  let size = 'auto';
+  if (mode === 'breathe') {
+    shadow = `0 0 16px ${c1}`;
+    anim = `barBreathe ${dur} infinite ease-in-out`;
+  } else if (mode === 'flow' || mode === 'chase') {
+    bg = `linear-gradient(90deg, ${c1} 0%, rgba(0,0,0,0.2) 50%, ${c1} 100%)`;
+    size = '200% 100%';
+    shadow = `0 0 12px ${c1}`;
+    anim = `barFlow ${dur} infinite linear`;
+  } else if (mode === 'gradient') {
+    bg = `linear-gradient(90deg, ${c1} 0%, ${c2} 50%, ${c1} 100%)`;
+    size = '200% 100%';
+    anim = `barFlow ${dur} infinite linear`;
+  } else if (mode === 'rainbow') {
+    bg = 'linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)';
+    size = '200% 100%';
+    shadow = '0 0 16px rgba(255,255,255,0.4)';
+    anim = `barRainbow ${dur} infinite linear`;
+  } else if (mode === 'flashing') {
+    anim = `barFlash ${dur} infinite steps(1)`;
+  }
+  el.style.background = bg;
+  el.style.backgroundSize = size;
+  el.style.boxShadow = shadow;
+  el.style.animation = anim;
+  el.style.opacity = String(Math.max(0.2, bri));
+}
+
 export function initLedControl() {
   initGlassTimePickers($('tab-led') || document);
   const previewBar = $('preview-bar') || $('led-live-preview-bar');
@@ -54,81 +108,22 @@ export function initLedControl() {
   }
 
   function updateLivePreview() {
-    const stageGlow = $('virtual-chassis-lightbar');
-
-    if (currentPower === 'off') {
-      if (previewTxt) previewTxt.textContent = t('led.state_off', 'Off').toUpperCase();
-      if (previewBar) {
-        previewBar.style.background = '#1a2330';
-        previewBar.style.boxShadow = 'none';
-        previewBar.style.animation = 'none';
-        previewBar.style.opacity = '0.2';
-      }
-      if (stageGlow) {
-        stageGlow.style.background = '#1a2330';
-        stageGlow.style.boxShadow = 'none';
-        stageGlow.style.animation = 'none';
-        stageGlow.style.opacity = '0.15';
-      }
-      return;
+    const look = {
+      power: currentPower,
+      mode: currentMode,
+      color: currentColor,
+      color2: currentColor2,
+      brightness: parseInt(slider ? slider.value : 25, 10),
+      speed: parseInt(speedSlider ? speedSlider.value : 50, 10),
+    };
+    if (previewTxt) {
+      previewTxt.textContent = currentPower === 'off'
+        ? t('led.state_off', 'Off').toUpperCase()
+        : `${t('led.state_on', 'On')} • ${t(`dr.${currentMode}`, currentMode)}`.toUpperCase();
     }
-
-    const c1 = '#' + currentColor;
-    const c2 = '#' + currentColor2;
-    const bri = parseInt(slider ? slider.value : 25, 10) / 100;
-    const spd = parseInt(speedSlider ? speedSlider.value : 50, 10);
-    const dur = Math.max(0.3, 4.0 - (spd / 100.0) * 3.7).toFixed(2) + 's';
-
-    let bgStyle = c1;
-    let shadowStyle = `0 0 10px ${c1}`;
-    let animStyle = 'none';
-    let bgSize = 'auto';
-
-    if (currentMode === 'solid') {
-      bgStyle = c1;
-      shadowStyle = `0 0 14px ${c1}`;
-      animStyle = 'none';
-    } else if (currentMode === 'breathe') {
-      bgStyle = c1;
-      shadowStyle = `0 0 16px ${c1}`;
-      animStyle = `barBreathe ${dur} infinite ease-in-out`;
-    } else if (currentMode === 'flow' || currentMode === 'chase') {
-      bgStyle = `linear-gradient(90deg, ${c1} 0%, rgba(0,0,0,0.2) 50%, ${c1} 100%)`;
-      bgSize = '200% 100%';
-      shadowStyle = `0 0 12px ${c1}`;
-      animStyle = `barFlow ${dur} infinite linear`;
-    } else if (currentMode === 'gradient') {
-      bgStyle = `linear-gradient(90deg, ${c1} 0%, ${c2} 50%, ${c1} 100%)`;
-      bgSize = '200% 100%';
-      shadowStyle = `0 0 14px ${c1}`;
-      animStyle = `barFlow ${dur} infinite linear`;
-    } else if (currentMode === 'rainbow') {
-      bgStyle = `linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)`;
-      bgSize = '200% 100%';
-      shadowStyle = `0 0 16px rgba(255,255,255,0.4)`;
-      animStyle = `barRainbow ${dur} infinite linear`;
-    } else if (currentMode === 'flashing') {
-      bgStyle = c1;
-      shadowStyle = `0 0 14px ${c1}`;
-      animStyle = `barFlash ${dur} infinite steps(1)`;
-    }
-
-    if (previewTxt) previewTxt.textContent = `${t('led.state_on', 'On')} • ${t(`dr.${currentMode}`, currentMode)}`.toUpperCase();
-    if (previewBar) {
-      previewBar.style.background = bgStyle;
-      previewBar.style.backgroundSize = bgSize;
-      previewBar.style.boxShadow = shadowStyle;
-      previewBar.style.animation = animStyle;
-      previewBar.style.opacity = Math.max(0.2, bri);
-    }
-
-    if (stageGlow) {
-      stageGlow.style.background = bgStyle;
-      stageGlow.style.backgroundSize = bgSize;
-      stageGlow.style.boxShadow = shadowStyle;
-      stageGlow.style.animation = animStyle;
-      stageGlow.style.opacity = Math.max(0.2, bri);
-    }
+    renderLightbar(previewBar, look);
+    // the console's bar shows the change at once; the next stats say what the bar really does
+    renderLightbar($('virtual-chassis-lightbar'), look, { offOpacity: 0.15 });
   }
 
   function updateDynamicCards() {

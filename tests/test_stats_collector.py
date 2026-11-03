@@ -271,6 +271,52 @@ class TestLeds:
         assert hw["led"] == [(0, 0, 0, 0, 0, 0, 0, 0)]
 
 
+class TestLightbarLook:
+    """What the bar shows goes out with the stats, so the desktop's picture of it matches."""
+
+    @pytest.fixture(autouse=True)
+    def _quiet(self, monkeypatch, hw):
+        monkeypatch.setattr(sc, "is_in_time_window", lambda a, b: False)
+        monkeypatch.setattr(Z_STATE, "alert_active", False)
+        monkeypatch.setattr(Z_STATE, "copy_active", False)
+        monkeypatch.setattr(Z_STATE, "copy_status", "")
+
+    SETTINGS = {"power": "on", "mode": "solid", "color": "001428", "brightness": 8, "speed": 70, "reactive": True}
+
+    def look(self, monkeypatch, crit=False, warn=False, **cfg):
+        _both(monkeypatch, "read_json_cached", lambda path, default, **kw: {**self.SETTINGS, **cfg})
+        sc._update_leds(crit, warn)
+        return Z_STATE.lightbar
+
+    def test_the_settings_when_nothing_takes_over(self, monkeypatch):
+        assert self.look(monkeypatch) == {
+            "power": "on",
+            "mode": "solid",
+            "color": "001428",
+            "brightness": 8,
+            "speed": 70,
+            "why": "settings",
+        }
+
+    def test_alerts_warnings_and_copies_take_over(self, monkeypatch):
+        assert self.look(monkeypatch, crit=True)["why"] == "alert"
+        assert self.look(monkeypatch, warn=True)["color"] == "ff7800"
+        monkeypatch.setattr(Z_STATE, "copy_active", True)
+        for status, why in (("copying", "copying"), ("success", "copied"), ("error", "copy_failed")):
+            monkeypatch.setattr(Z_STATE, "copy_status", status)
+            assert self.look(monkeypatch)["why"] == why
+        monkeypatch.setattr(Z_STATE, "copy_status", "scanning")
+        assert self.look(monkeypatch)["why"] == "settings"
+
+    def test_the_night_turns_it_off_reactive_or_not(self, monkeypatch):
+        monkeypatch.setattr(sc, "is_in_time_window", lambda a, b: True)
+        assert self.look(monkeypatch, night_mode=True) == {"power": "off", "why": "night"}
+        assert self.look(monkeypatch, night_mode=True, reactive=False, crit=True)["why"] == "night"
+
+    def test_not_reactive_keeps_the_settings_through_an_alert(self, monkeypatch):
+        assert self.look(monkeypatch, reactive=False, crit=True)["why"] == "settings"
+
+
 class TestPublish:
     @pytest.fixture
     def pub(self, monkeypatch):

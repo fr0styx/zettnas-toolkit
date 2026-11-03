@@ -3012,7 +3012,7 @@ export async function fetchAndRenderAiConversations(searchQuery = '') {
         const pinTitle = c.is_pinned ? 'Unpin' : 'Pin';
         gHtml += `
           <div class="ai-thread-item ${isActive ? 'active' : ''}" data-conv-id="${escapeHtml(c.id)}">
-            <span class="ai-thread-title-text" title="${escapeHtml(c.title || 'New Conversation')}">${escapeHtml(c.title || 'New Conversation')}</span>
+            <span class="ai-thread-title-text" title="${escapeHtml(c.title || t('ui.new_conversation', 'New Conversation'))}">${escapeHtml(c.title || t('ui.new_conversation', 'New Conversation'))}</span>
             <div class="ai-thread-actions">
               <button type="button" class="btn-ai-thread-action btn-ai-thread-pin" data-conv-id="${escapeHtml(c.id)}" data-pinned="${c.is_pinned ? '1' : '0'}" title="${pinTitle}">${pinIcon}</button>
               <button type="button" class="btn-ai-thread-action btn-ai-thread-rename" data-conv-id="${escapeHtml(c.id)}" title="${t('mgmt.wallpaper_rename', 'Rename')}">✏️</button>
