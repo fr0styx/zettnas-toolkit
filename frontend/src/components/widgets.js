@@ -2904,7 +2904,7 @@ export function renderDayAgenda(dateKey) {
   try {
     const [y, m, d] = dateKey.split('-').map(Number);
     const parsedDate = new Date(y, m - 1, d);
-    const formattedDate = new Intl.DateTimeFormat([], {
+    const formattedDate = new Intl.DateTimeFormat(currentLocale(), { // the app's language, the browser's day
       weekday: 'long',
       month: 'long',
       day: 'numeric',
