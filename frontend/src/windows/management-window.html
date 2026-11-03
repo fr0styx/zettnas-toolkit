@@ -34,7 +34,7 @@
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" data-route="storage" title="Storage" data-i18n-title="mgmt.sidebar_storage">
             <svg class="mgmt-sidebar-svg"><use href="#i-disk"/></svg>
             <span class="mgmt-sidebar-text" data-i18n="mgmt.sidebar_storage">Storage</span>
-            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;">Drives</span>
+            <span class="mgmt-sidebar-badge" id="mgmt-sidebar-storage-badge" style="display:none;" data-sample>Drives</span>
           </button>
           <button class="mgmt-sidebar-item" data-mgmt-target="mgmt-sec-storage" data-mgmt-pane="mgmt-pane-storage-shares" data-route="shares" title="Shares" data-i18n-title="mgmt.sidebar_shares">
             <svg class="mgmt-sidebar-svg"><use href="#i-net"/></svg>
@@ -563,7 +563,7 @@
                     <div style="display:flex; align-items:center; gap:6px; margin-left:auto;">
                       <input type="color" id="desktop-custom-color-picker" value="#00f0ff" style="width:28px; height:28px; border:none; padding:0; background:none; cursor:pointer; border-radius:4px;">
                       <span id="desktop-custom-hex-val" style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--muted);">#00F0FF</span>
-                      <span id="desktop-contrast-badge" class="desktop-contrast-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-22c55eff, #22c55e); border: 1px solid rgba(34, 197, 94, 0.35);">AA PASS</span>
+                      <span id="desktop-contrast-badge" class="desktop-contrast-badge" style="font-size: var(--zn-fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(34, 197, 94, 0.15); color: var(--lt-t-22c55eff, #22c55e); border: 1px solid rgba(34, 197, 94, 0.35);" data-sample>AA PASS</span>
                     </div>
                   </div>
                 </div>
@@ -1325,7 +1325,7 @@
                         </select>
                         <div style="display: flex; gap: 6px;">
                           <button type="button" id="btn-cancel-add-feed" class="btn-pill-toggle is-small" style="margin: 0;" data-i18n="mw.cancel">Cancel</button>
-                          <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle is-primary is-small" style="margin: 0;">Connect & Sync</button>
+                          <button type="button" id="btn-submit-add-feed" class="btn-pill-toggle is-primary is-small" style="margin: 0;" data-i18n="ui.connect_sync">Connect & Sync</button>
                         </div>
                       </div>
                       <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.3;">
@@ -1702,8 +1702,8 @@
                     <button class="btn-pill-toggle" data-mesh-filter="tailscale">Tailscale</button>
                     <button class="btn-pill-toggle" data-mesh-filter="wireguard" translate="no">WireGuard</button>
                   </div>
-                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.4);">🔑 Generate Client .conf</button>
-                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh Mesh VPN Status" data-i18n-title="ui.refresh_mesh_vpn_status">🔄 Refresh</button>
+                  <button class="btn-pill-toggle" id="btn-wg-gen-client-config" style="color: var(--lt-ink-brand, var(--accent-cyan, #38bdf8)); border-color: rgba(56, 189, 248, 0.4);" data-i18n="ui.generate_client_conf">🔑 Generate Client .conf</button>
+                  <button class="btn-pill-toggle" id="btn-refresh-wireguard" title="Refresh Mesh VPN Status" data-i18n-title="ui.refresh_mesh_vpn_status"><span aria-hidden="true">🔄</span> <span data-i18n="vm.refresh">Refresh</span></button>
                 </div>
               </div>
 
@@ -1726,7 +1726,7 @@
                         <span style="color:var(--muted);" data-i18n="mw.tailscale_ip_ipv4">Tailscale IP (IPv4):</span>
                         <div style="display:flex; align-items:center; gap:6px;">
                           <code id="ts-ipv4-display" style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent); font-weight:600;">--</code>
-                          <button class="btn-pill-toggle is-small" id="btn-copy-ts-ip" style="display: none;" title="Copy Tailscale IP" data-i18n-title="ui.copy_tailscale_ip">📋 Copy</button>
+                          <button class="btn-pill-toggle is-small" id="btn-copy-ts-ip" style="display: none;" title="Copy Tailscale IP" data-i18n-title="ui.copy_tailscale_ip"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
                         </div>
                       </div>
                       <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--zn-line-5); padding-bottom:6px;">
@@ -1789,7 +1789,7 @@
 
                       <!-- Disconnected State Form -->
                       <div id="ts-connect-form" style="display:flex; flex-direction:column; gap:10px;">
-                        <div id="ts-form-intro" style="color:var(--muted); font-size:var(--zn-fs-xs);">
+                        <div id="ts-form-intro" style="color:var(--muted); font-size:var(--zn-fs-xs);" data-sample>
                           Join your Zero-Trust Tailnet with a pre-authenticated auth key:
                         </div>
                         <div>
@@ -1894,7 +1894,7 @@
                         <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="mw.direct_https_url">Direct HTTPS URL:</span>
                         <div style="display:flex; align-items:center; gap:8px;">
                           <a id="ts-serve-url-link" href="#" target="_blank" rel="noopener noreferrer" style="color:var(--zn-text-accent); font-weight:600; text-decoration:underline;">https://--</a>
-                          <button class="btn-pill-toggle is-small" id="btn-copy-ts-serve-url">📋 Copy</button>
+                          <button class="btn-pill-toggle is-small" id="btn-copy-ts-serve-url"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
                         </div>
                       </div>
                       <div style="border-top:1px solid var(--zn-line-6); padding-top:8px; display:flex; justify-content:space-between; align-items:center;">
@@ -1902,7 +1902,7 @@
                           <input type="checkbox" id="ts-funnel-toggle" style="accent-color:#ef4444;" />
                           <span data-i18n="net.tailscale_funnel">Enable Public Internet Funnel</span>
                         </label>
-                        <span class="mgmt-app-pill" id="ts-funnel-pill" style="font-size:var(--zn-fs-xs); padding:2px 7px; color:var(--muted);">Off</span>
+                        <span class="mgmt-app-pill" id="ts-funnel-pill" style="font-size:var(--zn-fs-xs); padding:2px 7px; color:var(--muted);" data-sample>Off</span>
                       </div>
                       <div style="font-size:var(--zn-fs-xs); color:var(--muted); line-height:1.3;" data-i18n="net.tailscale_funnel_desc">
                         Exposes the desktop securely to the public internet via Tailscale relay edge without port forwarding or dynamic DNS.
@@ -1991,7 +1991,7 @@
                     <div class="network-card-header">
                       <div class="network-card-title"><svg class="ic" style="width:14px; height:14px;"><use href="#i-key"/></svg> Client Configuration (.conf)</div>
                       <div style="display:flex; gap:6px; align-items:center;">
-                        <button class="btn-pill-toggle is-small" id="btn-copy-wg-conf" style="display: none;" title="Copy WireGuard configuration to clipboard" data-i18n-title="ui.copy_wireguard_configuration_to_clipboard">📋 Copy</button>
+                        <button class="btn-pill-toggle is-small" id="btn-copy-wg-conf" style="display: none;" title="Copy WireGuard configuration to clipboard" data-i18n-title="ui.copy_wireguard_configuration_to_clipboard"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
                         <button class="btn-pill-toggle is-small" id="btn-download-wg-conf" style="display: none;" title="Download WireGuard .conf profile" data-i18n-title="ui.download_wireguard_conf_profile"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
                       </div>
                     </div>
@@ -2165,7 +2165,7 @@
                 </div>
                 <div style="display:flex; gap:6px; align-items:center;">
                   <button class="btn-pill-toggle" id="btn-mgmt-docker-launch-window" title="Open Dedicated Window" data-i18n-title="ui.open_dedicated_window">🪟 <span data-i18n="mgmt.open_dedicated_window">Open Window</span></button>
-                  <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display: none;">← Back to Containers</button>
+                  <button class="btn-pill-toggle" id="btn-view-docker-containers" style="display: none;" data-i18n="ui.back_to_containers">← Back to Containers</button>
                   <button class="btn-pill-toggle" id="btn-view-docker-catalog">📦 App Catalog <span id="catalog-total-badge" class="docker-count-badge" style="margin-left:4px;">…</span></button>
                   <button class="btn-pill-toggle" id="btn-docker-prune" title="Clean up unused images, volumes, and stopped containers" data-i18n-title="ui.clean_up_unused_images_volumes">🧹 Prune / Cleanup</button>
                   <button class="btn-pill-toggle" id="btn-refresh-docker" title="Refresh Containers" data-i18n-title="ui.refresh_containers" data-i18n="mgmt.refresh">🔄 Refresh</button>
@@ -2499,7 +2499,7 @@
                   <div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                       <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.gpu_transcode_label">Graphics (video transcoding)</label>
-                      <span class="suite-badge" id="mgmt-gpu-status-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">ACCELERATION ACTIVE</span>
+                      <span class="suite-badge" id="mgmt-gpu-status-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);" data-sample>ACCELERATION ACTIVE</span>
                     </div>
                     <div class="gpu-transcode-card">
                       <div class="gpu-transcode-header">
@@ -2531,7 +2531,7 @@
                   <div id="mgmt-npu-container" style="margin-top: 14px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                       <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.npu_engine_label">AI accelerator (NPU)</label>
-                      <span class="suite-badge" id="mgmt-npu-status-badge" style="background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border-color:rgba(168,85,247,0.35);">NPU ACTIVE</span>
+                      <span class="suite-badge" id="mgmt-npu-status-badge" style="background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border-color:rgba(168,85,247,0.35);" data-sample>NPU ACTIVE</span>
                     </div>
                     <div class="gpu-transcode-card npu-card" style="border-left: 3px solid #a855f7;">
                       <div class="gpu-transcode-header">
@@ -2541,11 +2541,11 @@
                         <div class="gpu-transcode-info">
                           <div class="gpu-title-row">
                             <span class="gpu-name" id="mgmt-npu-name" data-sample>Intel AI Boost NPU (Meteor Lake VPU 3720)</span>
-                            <span class="gpu-driver-badge" id="mgmt-npu-driver">Driver: intel_vpu</span>
+                            <span class="gpu-driver-badge" id="mgmt-npu-driver" data-sample>Driver: intel_vpu</span>
                             <span class="gpu-node-badge" id="mgmt-npu-node" style="color:var(--zn-text-ai); background:rgba(168,85,247,0.08); border-color:rgba(168,85,247,0.25);">/dev/accel/accel0</span>
                             <span class="gpu-driver-badge" id="mgmt-npu-clock">1400 MHz</span>
                           </div>
-                          <div class="gpu-accel-desc" id="mgmt-npu-accel" style="color:var(--zn-text-ai);">Intel OpenVINO • ONNX Runtime • DirectML</div>
+                          <div class="gpu-accel-desc" id="mgmt-npu-accel" style="color:var(--zn-text-ai);" data-sample>Intel OpenVINO • ONNX Runtime • DirectML</div>
                         </div>
                       </div>
                       <div class="gpu-codecs-row">
@@ -2763,7 +2763,7 @@
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
-                    <span class="udi-val" id="mgmt-ups-model">Generic UPS</span>
+                    <span class="udi-val" id="mgmt-ups-model" data-sample>Generic UPS</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_protocol">Connection Protocol</span>
@@ -3959,7 +3959,7 @@
                 <div style="display:flex; align-items:center; gap:10px;">
                   <div id="update-status-icon" style="font-size:20px;">⏳</div>
                   <div style="flex:1;">
-                    <div id="update-status-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);">Update check pending</div>
+                    <div id="update-status-title" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);" data-sample>Update check pending</div>
                     <div id="update-status-desc" style="font-size:var(--zn-fs-xs); color:var(--muted); margin-top:2px;">Click "Check for Updates" to verify against the official GitHub releases.</div>
                   </div>
                   <div id="update-last-checked" style="font-size:var(--zn-fs-xs); color:var(--muted); white-space:nowrap;"></div>
@@ -3968,7 +3968,7 @@
                 <!-- Available Update Details Box -->
                 <div id="update-details-box" style="display:none; margin-top:14px; border-top:1px solid var(--zn-line-8); padding-top:12px;">
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <strong id="update-release-title" style="color:var(--warn, #f5a623); font-size:var(--zn-fs-xs);">New Release Available</strong>
+                    <strong id="update-release-title" style="color:var(--warn, #f5a623); font-size:var(--zn-fs-xs);" data-sample>New Release Available</strong>
                     <a id="update-release-link" href="https://github.com/fr0styx/zettnas-toolkit/releases" target="_blank" rel="noopener noreferrer" style="color:var(--lt-ink-brand, var(--accent-cyan, #0ea5e9)); font-size:var(--zn-fs-xs); text-decoration:none;">View on GitHub ↗</a>
                   </div>
                   <div id="update-release-notes" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); max-height:160px; overflow-y:auto; background:var(--zn-shade-30); border:1px solid var(--lt-r-ffffff0a, rgba(255,255,255,0.04)); border-radius:6px; padding:10px; font-family:var(--font-mono, monospace); line-height:1.45; white-space:pre-wrap;"></div>
@@ -3985,7 +3985,7 @@
                     </button>
                     <button id="btn-revert-system-update" type="button" class="btn-pill-toggle" style="display: none; background: var(--zn-glaze-6); color: var(--zn-text-strong); border: 1px solid var(--zn-line-18);">
                       <span aria-hidden="true">↩</span>
-                      <span id="btn-revert-update-text">Revert to previous version</span>
+                      <span id="btn-revert-update-text" data-sample>Revert to previous version</span>
                     </button>
                   </div>
 
@@ -5283,7 +5283,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--zn-line-8); padding-bottom:12px;">
       <div style="display:flex; align-items:center; gap:8px;">
         <span style="font-size:16px;">🔔</span>
-        <span id="notif-modal-title" style="font-size:14px; font-weight:700; color:var(--zn-text-strong);">Configure Alert Channel</span>
+        <span id="notif-modal-title" style="font-size:14px; font-weight:700; color:var(--zn-text-strong);" data-sample>Configure Alert Channel</span>
       </div>
       <button id="btn-close-channel-modal" class="win-btn close-btn" style="background:var(--zn-glaze-10); border:none; color:var(--zn-text-strong); width:24px; height:24px; border-radius:50%; cursor:pointer;" title="Close" data-i18n-title="diagnostics.close_btn">✕</button>
     </div>
@@ -5419,8 +5419,8 @@
       <div id="create-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-create-pool-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
-        <button type="submit" id="create-pool-submit-btn" class="btn-pill-toggle is-primary is-small">🚀 Provision Storage Pool</button>
+        <button type="button" id="modal-create-pool-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" id="create-pool-submit-btn" class="btn-pill-toggle is-primary is-small" data-i18n="ui.provision_storage_pool">🚀 Provision Storage Pool</button>
       </div>
     </form>
   </div>
@@ -5461,7 +5461,7 @@
       <div id="rename-pool-error-box" style="display: none; padding: 8px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; color: var(--zn-text-crit); font-size: var(--zn-fs-xs);"></div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
-        <button type="button" id="modal-rename-pool-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
+        <button type="button" id="modal-rename-pool-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
         <button type="submit" id="rename-pool-submit-btn" class="btn-pill-toggle is-primary is-small">✏️ <span data-i18n="storage.apply_rename">Apply Rename</span></button>
       </div>
     </form>
@@ -5587,7 +5587,7 @@
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--zn-line-8);">
         <button type="button" id="modal-create-share-cancel-btn" class="btn-pill-toggle is-small" data-i18n="mw.cancel">Cancel</button>
-        <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small">📁 Provision Share</button>
+        <button type="submit" id="create-share-submit-btn" class="btn-pill-toggle is-primary is-small" data-i18n="ui.provision_share">📁 Provision Share</button>
       </div>
     </form>
   </div>
@@ -5806,8 +5806,8 @@
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-        <button type="button" id="modal-repl-cancel-btn" class="btn-pill-toggle is-small">Cancel</button>
-        <button type="submit" id="btn-submit-repl-pipeline" class="btn-pill-toggle is-primary is-small">Save Pipeline</button>
+        <button type="button" id="modal-repl-cancel-btn" class="btn-pill-toggle is-small" data-i18n="common.cancel">Cancel</button>
+        <button type="submit" id="btn-submit-repl-pipeline" class="btn-pill-toggle is-primary is-small" data-i18n="ui.save_pipeline">Save Pipeline</button>
       </div>
     </form>
   </div>
@@ -5869,7 +5869,7 @@
 
       <div style="background: var(--zn-shade-25); border: 1px dashed var(--zn-line-15); border-radius: 6px; padding: 8px 12px; font-size: var(--zn-fs-xs); display: flex; justify-content: space-between; align-items: center;">
         <span style="font-family: monospace; color: var(--zn-text-accent);" id="sftp-quick-connect-hint" data-sample>sftp -P 2222 username@&lt;host&gt;</span>
-        <button type="button" class="btn-pill-toggle is-small" id="btn-copy-sftp-cmd">📋 Copy</button>
+        <button type="button" class="btn-pill-toggle is-small" id="btn-copy-sftp-cmd"><span aria-hidden="true">📋</span> <span data-i18n="mw.copy">Copy</span></button>
       </div>
 
       <div>
@@ -5900,7 +5900,7 @@
       </form>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
-        <button type="button" id="modal-sftp-close-bottom-btn" class="btn-pill-toggle is-small">Close</button>
+        <button type="button" id="modal-sftp-close-bottom-btn" class="btn-pill-toggle is-small" data-i18n="common.close">Close</button>
       </div>
     </div>
   </div>
@@ -5923,7 +5923,7 @@
       <div id="modal-wg-qr-wrap" style="background: #ffffff; padding: 12px; border-radius: 10px; line-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
       <div style="display: flex; gap: 10px; margin-top: 6px; width: 100%; justify-content: center;">
         <button type="button" class="btn-pill-toggle" id="modal-wg-qr-copy-btn">📋 Copy Config</button>
-        <button type="button" class="btn-pill-toggle is-primary" id="modal-wg-qr-dl-btn">📥 Export .conf</button>
+        <button type="button" class="btn-pill-toggle is-primary" id="modal-wg-qr-dl-btn"><span aria-hidden="true">📥</span> <span data-i18n="mw.export_conf">Export .conf</span></button>
       </div>
     </div>
   </div>

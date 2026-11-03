@@ -455,7 +455,7 @@
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.fan_curve_title">Dynamic Fan Curve • Thermal Map</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <span class="suite-badge" id="hysteresis-badge" style="background:rgba(51,209,122,0.15); color:var(--ok); border-color:rgba(51,209,122,0.35);">HOLD: READY</span>
         </div>
-        <div class="card-instruction" id="curve-filter-instruction">Displaying all thermal zones. Click a zone tachometer above or below to isolate.</div>
+        <div class="card-instruction" id="curve-filter-instruction" data-sample>Displaying all thermal zones. Click a zone tachometer above or below to isolate.</div>
         
         <div class="fan-curve-box">
           <svg class="fan-curve-svg" viewBox="0 0 300 140" preserveAspectRatio="none">
@@ -708,8 +708,8 @@
             <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
               <span class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;" data-i18n="settings.media_slot">Source Media Slot</span>
               <div style="display:flex; gap:6px; align-items:center;">
-                <span id="media-slot-info-badge" class="suite-badge" style="font-size:var(--zn-fs-xs);">SLOTS EMPTY</span>
-                <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted">🔄 Scan</button>
+                <span id="media-slot-info-badge" class="suite-badge" style="font-size:var(--zn-fs-xs);" data-sample>SLOTS EMPTY</span>
+                <button id="btn-media-rescan" type="button" class="btn-pill-toggle is-small" style="margin: 0;" title="Rescan and re-detect inserted cards" data-i18n-title="ui.rescan_and_re_detect_inserted" data-i18n="ui.scan">🔄 Scan</button>
                 <button id="btn-media-copy-now" type="button" class="btn-pill-toggle is-small" style="margin: 0; color: var(--ok2, #25c2a0); border-color: rgba(37,194,160,0.4);" title="Copy the inserted card now" data-i18n-title="ui.start_media_ingest_now_from">▶ Copy Now</button>
                 <button id="btn-media-eject" type="button" class="btn-pill-toggle is-danger is-small" style="margin: 0;" title="Safely unmount and eject card" data-i18n-title="ui.safely_unmount_and_eject_card">⏏ Eject</button>
               </div>
