@@ -387,7 +387,7 @@
                   <div class="wallpaper-toolbar-actions">
                     <input type="file" id="wallpaper-upload" accept="image/*" style="display:none;">
                     <button class="btn-pill-toggle btn-primary-accent" id="wallpaper-upload-btn" data-action="click-target" data-target="wallpaper-upload">
-                      <svg class="ic" style="width:13px; height:13px; margin-right:4px;"><use href="#i-upload"/></svg>
+                      <svg class="ic wlp-size"><use href="#i-upload"/></svg>
                       <span data-i18n="mgmt.wallpaper_upload">Upload Wallpaper</span>
                     </button>
                     <button class="btn-pill-toggle" id="wallpaper-default-btn" title="Revert to default desktop theme gradient" data-i18n-title="ui.revert_to_default_desktop_theme">
@@ -399,34 +399,34 @@
                 <!-- Interactive Wallpaper Visual Grid -->
                 <div id="wallpaper-gallery-grid" class="wallpaper-gallery-grid" role="group" aria-label="Desktop Wallpapers" data-i18n-aria-label="ui.desktop_wallpapers">
                   <div class="wallpaper-loading-state">
-                    <span style="color:var(--muted); font-size:var(--zn-fs-xs);" data-i18n="mw.loading_wallpaper_gallery">Loading wallpaper gallery...</span>
+                    <span class="wlp-xs-muted" data-i18n="mw.loading_wallpaper_gallery">Loading wallpaper gallery...</span>
                   </div>
                 </div>
 
                 <!-- Wallpaper Readability & Contrast Controls -->
-                <div class="wallpaper-readability-drawer drawer-card" style="margin-top: 16px; padding: 14px 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                <div class="wallpaper-readability-drawer drawer-card wlp-box">
+                  <div class="wlp-row">
                     <div>
-                      <div style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--zn-text-strong); display: flex; align-items: center; gap: 6px;">
-                        <svg class="ic" style="width:14px; height:14px;"><use href="#i-sliders"/></svg>
+                      <div class="wlp-row-xs-bold-strong">
+                        <svg class="ic wlp-size-2"><use href="#i-sliders"/></svg>
                         <span data-i18n="mgmt.wallpaper_readability_title">Wallpaper Readability & Contrast</span>
                       </div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.wallpaper_readability_desc">
+                      <div class="wlp-xs-muted-2" data-i18n="mgmt.wallpaper_readability_desc">
                         Enhance desktop icon and widget legibility over bright or busy photographic backgrounds.
                       </div>
                     </div>
                     <button id="wallpaper-readability-reset-btn" class="btn-pill-toggle is-small" title="Reset dimming and blur to defaults" data-i18n-title="ui.reset_dimming_and_blur_to" data-i18n="mgmt.reset_defaults">↺ Reset Defaults</button>
                   </div>
 
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                  <div class="wlp-grid">
                     <!-- 1. Dimming Slider -->
                     <div>
-                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="wallpaper-dim-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_dim_label">Wallpaper dimming</label>
+                      <div class="wlp-row-2">
+                        <label class="wlp-xs-bold-muted" for="wallpaper-dim-slider" data-i18n="mgmt.wallpaper_dim_label">Wallpaper dimming</label>
                         <span id="wallpaper-dim-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">15%</span>
                       </div>
-                      <input type="range" id="wallpaper-dim-slider" min="0" max="70" value="15" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Wallpaper Dimming Percentage" data-i18n-aria-label="ui.wallpaper_dimming_percentage">
-                      <div style="display:flex; justify-content:space-between; font-size:var(--zn-fs-xs); color:var(--muted); margin-top:3px;">
+                      <input type="range" id="wallpaper-dim-slider" min="0" max="70" value="15" step="1" class="tz-range-slider wlp-size-3" aria-label="Wallpaper Dimming Percentage" data-i18n-aria-label="ui.wallpaper_dimming_percentage">
+                      <div class="wlp-row-xs-muted">
                         <span data-sample>0% (Off)</span>
                         <span data-sample>35% (Medium)</span>
                         <span data-sample>70% (Dark)</span>
@@ -435,12 +435,12 @@
 
                     <!-- 2. Desktop Blur Slider -->
                     <div>
-                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                        <label for="wallpaper-blur-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.wallpaper_blur_label">Background blur</label>
+                      <div class="wlp-row-2">
+                        <label class="wlp-xs-bold-muted" for="wallpaper-blur-slider" data-i18n="mgmt.wallpaper_blur_label">Background blur</label>
                         <span id="wallpaper-blur-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">0px</span>
                       </div>
-                      <input type="range" id="wallpaper-blur-slider" min="0" max="30" value="0" step="1" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Desktop Blur Radius" data-i18n-aria-label="ui.desktop_blur_radius">
-                      <div style="display:flex; justify-content:space-between; font-size:var(--zn-fs-xs); color:var(--muted); margin-top:3px;">
+                      <input type="range" id="wallpaper-blur-slider" min="0" max="30" value="0" step="1" class="tz-range-slider wlp-size-3" aria-label="Desktop Blur Radius" data-i18n-aria-label="ui.desktop_blur_radius">
+                      <div class="wlp-row-xs-muted">
                         <span data-sample>0px (Crisp)</span>
                         <span data-sample>15px (Soft)</span>
                         <span data-sample>30px (Frosted)</span>
@@ -725,61 +725,61 @@
             </div>
 
             <div class="mgmt-detail-body">
-              <div style="display:flex; flex-direction:column; gap: 16px;">
+              <div class="dck-col">
                 
                 <!-- Card 1: Dock Screen Position & Sizing -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                <div class="drawer-card dck-box">
+                  <div class="dck-row">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.dock_position_title">Screen Alignment & Dimensions</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.dock_position_desc">Position the application dock along display edges with dynamic workspace padding.</div>
+                      <div class="dck-fs135-bold-strong" data-i18n="mgmt.dock_position_title">Screen Alignment & Dimensions</div>
+                      <div class="dck-xs-muted" data-i18n="mgmt.dock_position_desc">Position the application dock along display edges with dynamic workspace padding.</div>
                     </div>
                     <button id="dock-reset-btn" class="btn-pill-toggle is-small" title="Reset dock settings to defaults" data-i18n-title="ui.reset_dock_settings_to_defaults" data-i18n="mgmt.reset_dock">↺ Reset Dock Defaults</button>
                   </div>
 
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid var(--zn-line-6); padding-top: 14px;">
+                  <div class="dck-grid-box">
                     <!-- Dock Screen Position -->
                     <div>
-                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_placement_label">Position</label>
-                      <div class="dock-position-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Dock Screen Position" data-i18n-aria-label="ui.dock_screen_position">
-                        <button type="button" class="btn-pill-toggle dock-pos-btn active" data-pos="bottom" role="radio" aria-checked="true" style="flex: 1;" data-i18n="mgmt.dock_pos_bottom">Bottom (Default)</button>
-                        <button type="button" class="btn-pill-toggle dock-pos-btn" data-pos="left" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_pos_left">Left (Widescreen)</button>
-                        <button type="button" class="btn-pill-toggle dock-pos-btn" data-pos="top" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_pos_top">Top (Status Bar)</button>
+                      <label class="dck-xs-bold-muted" data-i18n="mgmt.dock_placement_label">Position</label>
+                      <div class="dock-position-selector dck-row-2" role="radiogroup" aria-label="Dock Screen Position" data-i18n-aria-label="ui.dock_screen_position">
+                        <button type="button" class="btn-pill-toggle dock-pos-btn active dck-grow" data-pos="bottom" role="radio" aria-checked="true" data-i18n="mgmt.dock_pos_bottom">Bottom (Default)</button>
+                        <button type="button" class="btn-pill-toggle dock-pos-btn dck-grow" data-pos="left" role="radio" aria-checked="false" data-i18n="mgmt.dock_pos_left">Left (Widescreen)</button>
+                        <button type="button" class="btn-pill-toggle dock-pos-btn dck-grow" data-pos="top" role="radio" aria-checked="false" data-i18n="mgmt.dock_pos_top">Top (Status Bar)</button>
                       </div>
                     </div>
 
                     <!-- Dock Icon Size -->
                     <div>
-                      <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.dock_size_label">Icon size</label>
-                      <div class="dock-size-selector" style="display:flex; gap:6px;" role="radiogroup" aria-label="Dock Icon Size" data-i18n-aria-label="ui.dock_icon_size">
-                        <button type="button" class="btn-pill-toggle dock-size-btn" data-size="small" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_size_small">Small (42px)</button>
-                        <button type="button" class="btn-pill-toggle dock-size-btn active" data-size="medium" role="radio" aria-checked="true" style="flex: 1;" data-i18n="mgmt.dock_size_medium">Medium (52px)</button>
-                        <button type="button" class="btn-pill-toggle dock-size-btn" data-size="large" role="radio" aria-checked="false" style="flex: 1;" data-i18n="mgmt.dock_size_large">Large (64px)</button>
+                      <label class="dck-xs-bold-muted" data-i18n="mgmt.dock_size_label">Icon size</label>
+                      <div class="dock-size-selector dck-row-2" role="radiogroup" aria-label="Dock Icon Size" data-i18n-aria-label="ui.dock_icon_size">
+                        <button type="button" class="btn-pill-toggle dock-size-btn dck-grow" data-size="small" role="radio" aria-checked="false" data-i18n="mgmt.dock_size_small">Small (42px)</button>
+                        <button type="button" class="btn-pill-toggle dock-size-btn active dck-grow" data-size="medium" role="radio" aria-checked="true" data-i18n="mgmt.dock_size_medium">Medium (52px)</button>
+                        <button type="button" class="btn-pill-toggle dock-size-btn dck-grow" data-size="large" role="radio" aria-checked="false" data-i18n="mgmt.dock_size_large">Large (64px)</button>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Card 2: Parabolic Magnification & Physics -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+                <div class="drawer-card dck-box">
+                  <div class="dck-row">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.dock_magnification_title">Parabolic Magnification</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.dock_magnification_desc">Magnifies dock applications dynamically as your cursor hovers over them.</div>
+                      <div class="dck-fs135-bold-strong" data-i18n="mgmt.dock_magnification_title">Parabolic Magnification</div>
+                      <div class="dck-xs-muted" data-i18n="mgmt.dock_magnification_desc">Magnifies dock applications dynamically as your cursor hovers over them.</div>
                     </div>
-                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
-                      <input type="checkbox" id="dock-magnification-toggle" checked style="opacity:0; width:0; height:0;" aria-label="Toggle Dock Magnification" data-i18n-aria-label="ui.toggle_dock_magnification">
+                    <label class="switch-toggle dck-size">
+                      <input class="dck-size-2" type="checkbox" id="dock-magnification-toggle" checked aria-label="Toggle Dock Magnification" data-i18n-aria-label="ui.toggle_dock_magnification">
                       <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:20px; transition:0.3s;"></span>
                     </label>
                   </div>
 
-                  <div id="dock-magnification-slider-wrap" style="border-top: 1px solid var(--zn-line-6); padding-top: 14px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-                      <label for="dock-magnification-slider" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted); letter-spacing: 0.5px;" data-i18n="mgmt.dock_scale_label">Magnification</label>
+                  <div class="dck-box-2" id="dock-magnification-slider-wrap">
+                    <div class="dck-row-3">
+                      <label class="dck-xs-bold-muted-2" for="dock-magnification-slider" data-i18n="mgmt.dock_scale_label">Magnification</label>
                       <span id="dock-magnification-val" style="font-size: var(--zn-fs-xs); font-family: var(--font-mono, monospace); color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-weight: 600;">1.45x</span>
                     </div>
-                    <input type="range" id="dock-magnification-slider" min="1.1" max="1.8" value="1.45" step="0.05" class="tz-range-slider" style="width:100%; cursor:pointer;" aria-label="Magnification Scale" data-i18n-aria-label="ui.magnification_scale">
-                    <div style="display:flex; justify-content:space-between; font-size:var(--zn-fs-xs); color:var(--muted); margin-top:3px;">
+                    <input type="range" id="dock-magnification-slider" min="1.1" max="1.8" value="1.45" step="0.05" class="tz-range-slider dck-size-3" aria-label="Magnification Scale" data-i18n-aria-label="ui.magnification_scale">
+                    <div class="dck-row-xs-muted">
                       <span data-sample>1.10x (Subtle)</span>
                       <span data-sample>1.45x (Standard)</span>
                       <span data-sample>1.80x (Dramatic)</span>
@@ -788,14 +788,14 @@
                 </div>
 
                 <!-- Card 3: Auto-Hide & Workspace Behavior -->
-                <div class="drawer-card" style="padding: 16px; background: var(--zn-glaze-3); border-radius: 8px; border: 1px solid var(--zn-line-8);">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="drawer-card dck-box">
+                  <div class="dck-row-4">
                     <div>
-                      <div style="font-size: 13.5px; font-weight: 700; color: var(--zn-text-strong);" data-i18n="mgmt.dock_autohide_title">Dock Auto-Hide</div>
-                      <div style="font-size: var(--zn-fs-xs); color: var(--muted); margin-top: 2px;" data-i18n="mgmt.dock_autohide_desc">Automatically slides the dock off-screen, revealing on screen edge hover.</div>
+                      <div class="dck-fs135-bold-strong" data-i18n="mgmt.dock_autohide_title">Dock Auto-Hide</div>
+                      <div class="dck-xs-muted" data-i18n="mgmt.dock_autohide_desc">Automatically slides the dock off-screen, revealing on screen edge hover.</div>
                     </div>
-                    <label class="switch-toggle" style="position:relative; display:inline-block; width:38px; height:20px; cursor:pointer;">
-                      <input type="checkbox" id="dock-autohide-toggle" style="opacity:0; width:0; height:0;" aria-label="Toggle Dock Auto-Hide" data-i18n-aria-label="ui.toggle_dock_auto_hide">
+                    <label class="switch-toggle dck-size">
+                      <input class="dck-size-2" type="checkbox" id="dock-autohide-toggle" aria-label="Toggle Dock Auto-Hide" data-i18n-aria-label="ui.toggle_dock_auto_hide">
                       <span class="slider-round" style="position:absolute; inset:0; background:var(--zn-glaze-15); border-radius:20px; transition:0.3s;"></span>
                     </label>
                   </div>
@@ -2036,7 +2036,7 @@
 
             <!-- Sub-tab 4: File Sharing Services (Samba / NFS / SFTP) -->
             <div id="mgmt-pane-network-services" class="mgmt-tab-pane" style="display: none;">
-              <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="mgmt-card-intro nsv-row">
                 <div>
                   <div class="mgmt-card-intro-title">
                     <svg class="ic"><use href="#i-storage"/></svg>
@@ -2046,55 +2046,55 @@
                     Daemon status and line-rate protocol listeners for Samba (SMB3), NFSv4, and Inbound SFTP.
                   </div>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
+                <div class="nsv-row-2">
                   <button class="btn-pill-toggle" id="btn-goto-storage-shares">📁 <span data-i18n="mgmt.subtab_shares">Manage Network Shares</span> ➔</button>
                 </div>
               </div>
               <div class="mgmt-detail-body">
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;" id="network-services-grid">
+                <div class="nsv-grid" id="network-services-grid">
                   <!-- Samba SMB3 Card -->
-                  <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 18px;">🗂️</span>
+                  <div class="nsv-col-box">
+                    <div class="nsv-row-3">
+                      <div class="nsv-row-4">
+                        <span class="nsv-fs18">🗂️</span>
                         <div>
-                          <div style="font-weight: 700; font-size: 13px; color: var(--zn-text-strong);" data-i18n="mw.samba_smb3_cifs">Samba (SMB3 / CIFS)</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.port_445_macos_time_machine_vfs">Port 445 • macOS Time Machine (vfs_fruit)</div>
+                          <div class="nsv-fs13-bold-strong" data-i18n="mw.samba_smb3_cifs">Samba (SMB3 / CIFS)</div>
+                          <div class="nsv-xs-muted" data-i18n="mw.port_445_macos_time_machine_vfs">Port 445 • macOS Time Machine (vfs_fruit)</div>
                         </div>
                       </div>
                       <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs); font-weight: 700;">ACTIVE</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mw.high_performance_windows_and_macos_network">High-performance Windows & macOS network share access with isolated user permissions.</div>
+                    <div class="nsv-xs-muted-2" data-i18n="mw.high_performance_windows_and_macos_network">High-performance Windows & macOS network share access with isolated user permissions.</div>
                   </div>
 
                   <!-- NFSv4 Card -->
-                  <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 18px;">⚡</span>
+                  <div class="nsv-col-box">
+                    <div class="nsv-row-3">
+                      <div class="nsv-row-4">
+                        <span class="nsv-fs18">⚡</span>
                         <div>
-                          <div style="font-weight: 700; font-size: 13px; color: var(--zn-text-strong);" data-i18n="mw.network_file_system_nfsv4">Network File System (NFSv4)</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.port_2049_unix_linux_posix_mounts">Port 2049 • UNIX / Linux POSIX Mounts</div>
+                          <div class="nsv-fs13-bold-strong" data-i18n="mw.network_file_system_nfsv4">Network File System (NFSv4)</div>
+                          <div class="nsv-xs-muted" data-i18n="mw.port_2049_unix_linux_posix_mounts">Port 2049 • UNIX / Linux POSIX Mounts</div>
                         </div>
                       </div>
                       <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs); font-weight: 700;">ACTIVE</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mw.line_rate_kernel_nfs_exports_scoped">Line-rate kernel NFS exports scoped to client subnets with granular squash rules.</div>
+                    <div class="nsv-xs-muted-2" data-i18n="mw.line_rate_kernel_nfs_exports_scoped">Line-rate kernel NFS exports scoped to client subnets with granular squash rules.</div>
                   </div>
 
                   <!-- Inbound SFTP Card -->
-                  <div style="background: var(--zn-glaze-3); border: 1px solid var(--zn-line-7); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 18px;">🔒</span>
+                  <div class="nsv-col-box">
+                    <div class="nsv-row-3">
+                      <div class="nsv-row-4">
+                        <span class="nsv-fs18">🔒</span>
                         <div>
-                          <div style="font-weight: 700; font-size: 13px; color: var(--zn-text-strong);" data-i18n="mw.inbound_sftp_daemon">Inbound SFTP Daemon</div>
-                          <div style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="mw.port_2222_chrooted_ssh_subsystem">Port 2222 • Chrooted SSH Subsystem</div>
+                          <div class="nsv-fs13-bold-strong" data-i18n="mw.inbound_sftp_daemon">Inbound SFTP Daemon</div>
+                          <div class="nsv-xs-muted" data-i18n="mw.port_2222_chrooted_ssh_subsystem">Port 2222 • Chrooted SSH Subsystem</div>
                         </div>
                       </div>
                       <span class="ci-badge" style="background: rgba(37,194,160,0.15); color: var(--ok2); border: 1px solid rgba(37,194,160,0.3); font-size: var(--zn-fs-xs); font-weight: 700;">ACTIVE</span>
                     </div>
-                    <div style="font-size: var(--zn-fs-xs); color: var(--muted); line-height: 1.4;" data-i18n="mw.chroot_jail_file_transport_over_ssh">Chroot jail file transport over SSH key authentication without shell access.</div>
+                    <div class="nsv-xs-muted-2" data-i18n="mw.chroot_jail_file_transport_over_ssh">Chroot jail file transport over SSH key authentication without shell access.</div>
                   </div>
                 </div>
               </div>
@@ -2382,16 +2382,16 @@
 
             <div id="mgmt-pane-unraid" class="mgmt-tab-pane" style="display: block;">
               <div class="mgmt-card-intro">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="unr-row">
                   <div class="mgmt-card-intro-title"><svg class="ic"><use href="#i-sliders"/></svg> <span data-i18n="mgmt.hardware_sec_title">Hardware & Acoustic Profiles</span></div>
                   <span class="mgmt-app-pill" id="unraid-profile-current-pill" style="background:rgba(37,194,160,0.15); color:var(--ok2);" data-sample>ACTIVE: AUTO DYNAMIC</span>
                 </div>
                 <div class="mgmt-card-intro-desc" data-i18n="mgmt.hardware_sec_desc">Choose a cooling profile, watch hardware health and tune temperatures.</div>
               </div>
               <div class="mgmt-detail-body">
-                <div style="display:flex; flex-direction:column; gap: 14px;">
+                <div class="unr-col">
                   <div>
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.acoustic_label">Noise and performance</label>
+                    <label class="unr-xs-bold-muted" data-i18n="mgmt.acoustic_label">Noise and performance</label>
                     <div class="profile-switcher-row" role="radiogroup" aria-label="System Acoustic & Performance Profile" data-i18n-aria-label="ui.system_acoustic_performance_profile">
                       <button class="profile-btn active" role="radio" aria-checked="true" data-profile="auto">
                         <span class="profile-btn-title"><span aria-hidden="true">⚡</span> <span data-i18n="mgmt.profile_auto_title">Automatic</span></span>
@@ -2413,13 +2413,13 @@
                   </div>
 
                   <div>
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" id="mgmt-host-status-label" data-i18n="mgmt.unraid_status_label">Unraid array status</label>
+                    <label class="unr-xs-bold-muted" id="mgmt-host-status-label" data-i18n="mgmt.unraid_status_label">Unraid array status</label>
                     
                     <!-- Unraid Host Details Grid -->
                     <div class="unraid-details-grid">
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_array_state">Array Status</span>
-                        <span class="udi-val" id="mgmt-unraid-state" style="color:var(--muted);">–</span>
+                        <span class="udi-val unr-muted" id="mgmt-unraid-state">–</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.unraid_server_model">Server & Model</span>
@@ -2447,7 +2447,7 @@
                     <div class="generic-details-grid" style="display: none;">
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.host_distribution">Host Distribution</span>
-                        <span class="udi-val" id="mgmt-generic-os" style="color:var(--ok2);">Linux</span>
+                        <span class="udi-val unr-ok" id="mgmt-generic-os">Linux</span>
                       </div>
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mw.hostname">Hostname</span>
@@ -2474,7 +2474,7 @@
 
                   <!-- System Board & Hardware Infrastructure (DMI / BIOS / Governor) -->
                   <div>
-                    <label style="display:block; font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:6px; letter-spacing:0.5px;" data-i18n="mgmt.sys_board_label">Mainboard and hardware</label>
+                    <label class="unr-xs-bold-muted" data-i18n="mgmt.sys_board_label">Mainboard and hardware</label>
                     <div class="unraid-details-grid" id="mgmt-board-details-grid">
                       <div class="unraid-detail-item">
                         <span class="udi-label" data-i18n="mgmt.board_vendor">Motherboard & Vendor</span>
@@ -2497,8 +2497,8 @@
 
                   <!-- GPU Hardware Transcode Acceleration Engine -->
                   <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                      <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.gpu_transcode_label">Graphics (video transcoding)</label>
+                    <div class="unr-row-2">
+                      <label class="unr-xs-bold-muted-2" data-i18n="mgmt.gpu_transcode_label">Graphics (video transcoding)</label>
                       <span class="suite-badge" id="mgmt-gpu-status-badge" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);" data-sample>ACCELERATION ACTIVE</span>
                     </div>
                     <div class="gpu-transcode-card">
@@ -2528,15 +2528,15 @@
                   </div>
 
                   <!-- NPU Neural Acceleration Engine -->
-                  <div id="mgmt-npu-container" style="margin-top: 14px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                      <label style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted); letter-spacing:0.5px;" data-i18n="mgmt.npu_engine_label">AI accelerator (NPU)</label>
+                  <div class="unr-x" id="mgmt-npu-container">
+                    <div class="unr-row-2">
+                      <label class="unr-xs-bold-muted-2" data-i18n="mgmt.npu_engine_label">AI accelerator (NPU)</label>
                       <span class="suite-badge" id="mgmt-npu-status-badge" style="background:rgba(168,85,247,0.15); color:var(--zn-text-ai); border-color:rgba(168,85,247,0.35);" data-sample>NPU ACTIVE</span>
                     </div>
                     <div class="gpu-transcode-card npu-card" style="border-left: 3px solid #a855f7;">
                       <div class="gpu-transcode-header">
                         <div class="gpu-transcode-icon-box" style="background:rgba(168,85,247,0.12); border-color:rgba(168,85,247,0.3);">
-                          <svg class="ic" style="width:20px; height:20px; color:var(--zn-text-ai);"><use href="#i-chip"/></svg>
+                          <svg class="ic unr-size"><use href="#i-chip"/></svg>
                         </div>
                         <div class="gpu-transcode-info">
                           <div class="gpu-title-row">
@@ -2545,7 +2545,7 @@
                             <span class="gpu-node-badge" id="mgmt-npu-node" style="color:var(--zn-text-ai); background:rgba(168,85,247,0.08); border-color:rgba(168,85,247,0.25);">/dev/accel/accel0</span>
                             <span class="gpu-driver-badge" id="mgmt-npu-clock">1400 MHz</span>
                           </div>
-                          <div class="gpu-accel-desc" id="mgmt-npu-accel" style="color:var(--zn-text-ai);" data-sample>Intel OpenVINO • ONNX Runtime • DirectML</div>
+                          <div class="gpu-accel-desc unr-x-2" id="mgmt-npu-accel" data-sample>Intel OpenVINO • ONNX Runtime • DirectML</div>
                         </div>
                       </div>
                       <div class="gpu-codecs-row">
@@ -2651,7 +2651,7 @@
 
           <!-- 4. Power & Battery Cockpit -->
           <div id="mgmt-sec-ups" class="mgmt-detail-card" style="display: none;">
-            <div class="mgmt-card-intro" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div class="mgmt-card-intro ups-row">
               <div>
                 <div class="mgmt-card-intro-title">
                   <svg class="ic"><use href="#i-bolt"/></svg>
@@ -2661,7 +2661,7 @@
                   Battery level, power use and a safe shutdown when the power fails.
                 </div>
               </div>
-              <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div class="ups-row-2">
                 <button class="btn-pill-toggle" id="btn-ups-discover" title="Scan local USB ports and host gateway for power daemons" data-i18n-title="ui.scan_local_usb_ports_and" data-i18n="mgmt.ups_btn_scan">🔍 Scan Hardware</button>
                 <button class="btn-pill-toggle" id="btn-run-ups-selftest" title="Trigger 10s diagnostic battery self-test" data-i18n-title="ui.trigger_10s_diagnostic_battery_self"><span aria-hidden="true">🔋</span> <span data-i18n="mgmt.ups_btn_selftest">Self-Test</span></button>
                 <button class="btn-pill-toggle" id="btn-ups-simulate" title="Simulate 15s power outage drill" data-i18n-title="ui.simulate_15s_power_outage_drill"><span aria-hidden="true">⚠️</span> <span data-i18n="mgmt.ups_btn_simulate">Simulate Drill</span></button>
@@ -2684,10 +2684,10 @@
 
             <!-- Permission Required Banner (Shown when direct USB device is detected but container lacks hidraw permissions) -->
             <div id="ups-permission-banner" class="ups-permission-banner" style="display:none; margin-bottom:16px; background:rgba(235,87,87,0.12); border:1px solid rgba(235,87,87,0.3); border-radius:8px; padding:12px 16px; align-items:flex-start; gap:12px;">
-              <div style="font-size:20px; line-height:1;">⚠️</div>
-              <div style="flex:1;">
+              <div class="ups-fs20">⚠️</div>
+              <div class="ups-grow">
                 <div style="font-size:13px; font-weight:700; color:var(--err, var(--lt-t-eb5757ff, #eb5757)); margin-bottom:4px;" data-i18n="mgmt.ups_perm_title">The UPS needs USB access</div>
-                <div style="font-size:var(--zn-fs-xs); color:var(--text); line-height:1.4;" id="ups-permission-msg" data-i18n="mgmt.ups_perm_desc">A direct USB UPS device was detected, but the container lacks permissions to open the HID character device. Please add device_cgroup_rules for hidraw (c 240:*..245:* rwm) or set privileged: true in your Docker configuration.</div>
+                <div class="ups-xs" id="ups-permission-msg" data-i18n="mgmt.ups_perm_desc">A direct USB UPS device was detected, but the container lacks permissions to open the HID character device. Please add device_cgroup_rules for hidraw (c 240:*..245:* rwm) or set privileged: true in your Docker configuration.</div>
               </div>
             </div>
 
@@ -2743,12 +2743,12 @@
             </div>
 
             <!-- Tier 2: Split Workstation Grid (Side-by-Side) -->
-            <div id="ups-cockpit-config-section" class="ups-cockpit-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:16px; margin-top:16px; align-items:start;">
+            <div id="ups-cockpit-config-section" class="ups-cockpit-grid ups-grid">
               
               <!-- Column 1: Inverter Telemetry & Connection Driver -->
-              <div class="drawer-card" style="display:flex; flex-direction:column; gap:14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <div style="font-weight:700; font-size:13px; color:var(--zn-text-strong); display:flex; align-items:center; gap:6px;">
+              <div class="drawer-card ups-col">
+                <div class="ups-row-3">
+                  <div class="ups-row-fs13-bold-strong">
                     <svg class="ic" style="width:14px; height:14px; color:var(--ok2, #25c2a0);"><use href="#i-bolt"/></svg>
                     <span data-i18n="mw.inverter_and_line_telemetry">Inverter & Line Telemetry</span>
                   </div>
@@ -2759,7 +2759,7 @@
                 <div class="unraid-details-grid">
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_daemon_status">Power monitor</span>
-                    <span class="udi-val" id="mgmt-ups-status" style="color:var(--ok2);">ONLINE</span>
+                    <span class="udi-val ups-ok" id="mgmt-ups-status">ONLINE</span>
                   </div>
                   <div class="unraid-detail-item">
                     <span class="udi-label" data-i18n="mgmt.ups_model">UPS Model</span>
@@ -2784,8 +2784,8 @@
                 </div>
 
                 <!-- Operating Mode Selection -->
-                <div style="border-top:1px solid var(--zn-line-8); padding-top:12px;">
-                  <label style="font-weight:600; font-size:var(--zn-fs-xs); display:block; margin-bottom:8px;" data-i18n="mgmt.ups_mode_title">Operating Mode</label>
+                <div class="ups-box">
+                  <label class="ups-xs-semi" data-i18n="mgmt.ups_mode_title">Operating Mode</label>
                   <div class="ups-mode-chooser-grid">
                     <label class="ups-mode-option">
                       <input type="radio" name="ups-mode" value="auto" checked>
@@ -2822,19 +2822,19 @@
                 <div class="drawer-card nut-server" id="nut-server-mount"></div>
 
                 <!-- Toggle Manual Parameters button (visible when USB is active) -->
-                <div id="ups-toggle-params-container" style="display:none; justify-content:flex-end; margin-top:2px;">
-                  <button type="button" id="btn-toggle-ups-conn-params" class="btn-pill-toggle is-small" style="background: transparent; border-color: var(--zn-line-15); color: var(--muted);">
+                <div class="ups-x" id="ups-toggle-params-container" style="display: none;">
+                  <button type="button" id="btn-toggle-ups-conn-params" class="btn-pill-toggle is-small ups-muted-box">
                     ⚙️ <span id="ups-toggle-params-text" data-i18n="mgmt.ups_show_params">Show Connection Parameters</span>
                   </button>
                 </div>
 
                 <!-- Connection Parameters Card -->
-                <div class="drawer-card" id="ups-drawer-conn-card" style="margin:0; background:var(--zn-shade-25);">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span style="font-weight:700; font-size:var(--zn-fs-xs); color:var(--zn-text-bright);" data-i18n="mgmt.ups_conn_title">Connection Parameters</span>
-                    <span id="ups-conn-disabled-badge" class="suite-badge" style="font-size:var(--zn-fs-xs); display:none; color:var(--muted); border-color:var(--zn-line-15);" data-i18n="mgmt.ups_conn_not_required">Not required for Direct USB</span>
+                <div class="drawer-card ups-box-2" id="ups-drawer-conn-card">
+                  <div class="ups-row-4">
+                    <span class="ups-xs-bold" data-i18n="mgmt.ups_conn_title">Connection Parameters</span>
+                    <span id="ups-conn-disabled-badge" class="suite-badge ups-xs-muted-box" style="display: none;" data-i18n="mgmt.ups_conn_not_required">Not required for Direct USB</span>
                   </div>
-                  <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:10px;">
+                  <div class="ups-grid-2">
                     <div>
                       <label for="ups-cfg-host" class="drawer-field-label" data-i18n="mgmt.ups_field_host">Host / IP</label>
                       <input type="text" id="ups-cfg-host" class="input-modern" placeholder="127.0.0.1" value="127.0.0.1">
@@ -2844,11 +2844,11 @@
                       <input type="number" id="ups-cfg-port" class="input-modern" placeholder="3551" value="3551">
                     </div>
                   </div>
-                  <div style="margin-bottom:10px;">
+                  <div class="ups-x-2">
                     <label for="ups-cfg-name" class="drawer-field-label" data-i18n="mgmt.ups_field_name">UPS Name (NUT only)</label>
                     <input type="text" id="ups-cfg-name" class="input-modern" placeholder="ups" value="ups">
                   </div>
-                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                  <div class="ups-grid-3">
                     <div>
                       <label for="ups-cfg-user" class="drawer-field-label" data-i18n="mgmt.ups_field_user">Username</label>
                       <input type="text" id="ups-cfg-user" class="input-modern" placeholder="Optional" data-i18n-placeholder="ui.optional">
@@ -2858,91 +2858,91 @@
                       <input type="password" id="ups-cfg-pass" class="input-modern" placeholder="••••••••">
                     </div>
                   </div>
-                  <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:var(--zn-fs-xs); color:var(--muted);" data-i18n="mw.port_3551_apcupsd_3493_nut">Port :3551 (apcupsd) · :3493 (NUT)</span>
+                  <div class="ups-row-5">
+                    <span class="ups-xs-muted" data-i18n="mw.port_3551_apcupsd_3493_nut">Port :3551 (apcupsd) · :3493 (NUT)</span>
                     <button id="btn-ups-test-conn" class="btn-pill-toggle"><span aria-hidden="true">🔌</span> <span data-i18n="mgmt.ups_btn_test_conn">Test Connection</span></button>
                   </div>
                 </div>
 
                 <!-- Discovered Hardware Candidates Container -->
-                <div id="ups-discover-candidates" style="display:flex; flex-direction:column; gap:6px;"></div>
+                <div class="ups-col-2" id="ups-discover-candidates"></div>
               </div>
 
               <!-- Column 2: Automated Safe Shutdown Cockpit -->
-              <div class="drawer-card" id="ups-policy-card" style="display:flex; flex-direction:column; gap:14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <div style="font-weight:700; font-size:13px; color:var(--zn-text-strong); display:flex; align-items:center; gap:6px;">
+              <div class="drawer-card ups-col" id="ups-policy-card">
+                <div class="ups-row-3">
+                  <div class="ups-row-fs13-bold-strong">
                     <svg class="ic" style="width:14px; height:14px; color:var(--warn, #f5a623);"><use href="#i-shield"/></svg>
                     <span data-i18n="mgmt.ups_policy_title">Safe Shutdown Policy</span>
                   </div>
-                  <div style="display:flex; align-items:center; gap:6px;">
+                  <div class="ups-row-6">
                     <span id="ups-save-status" class="ups-save-badge" style="display:none;" data-i18n="mgmt.ups_auto_saved">✓ Saved</span>
-                    <button type="button" id="btn-toggle-ups-policy" class="btn-pill-toggle is-small" style="background: transparent; border-color: var(--zn-line-15); color: var(--muted);">
+                    <button type="button" id="btn-toggle-ups-policy" class="btn-pill-toggle is-small ups-muted-box">
                       <span id="ups-toggle-policy-text" data-i18n="mgmt.ups_collapse_policy">Collapse Policy</span>
                     </button>
                   </div>
                 </div>
 
                 <!-- Collapsed Policy Summary Bar -->
-                <div id="ups-policy-summary" style="display:none; font-size:var(--zn-fs-xs); color:var(--muted); padding:8px 12px; background:var(--zn-glaze-4); border-radius:6px; border:1px solid var(--zn-line-8); align-items:center; justify-content:space-between;">
+                <div class="ups-xs-muted-box-2" id="ups-policy-summary" style="display: none;">
                   <span id="ups-policy-summary-text" data-sample>Active: Runtime &lt; 5 min · Docker WAL flush</span>
                   <span class="suite-badge" style="font-size:var(--zn-fs-xs); color:var(--ok2); border-color:rgba(37,194,160,0.3);">ACTIVE</span>
                 </div>
 
                 <!-- Collapsible Policy Body -->
-                <div id="ups-policy-body" style="display:flex; flex-direction:column; gap:14px;">
-                  <p style="font-size:var(--zn-fs-xs); color:var(--muted); margin:0;" data-i18n="mgmt.ups_drawer_desc">Configure automated atomic powerdown policies and emergency unmount thresholds.</p>
+                <div class="ups-col" id="ups-policy-body">
+                  <p class="ups-xs-muted-2" data-i18n="mgmt.ups_drawer_desc">Configure automated atomic powerdown policies and emergency unmount thresholds.</p>
 
                   <!-- Trigger Policies & Dynamic Sliders -->
-                  <div style="display:flex; flex-direction:column; gap:12px;">
+                  <div class="ups-col-3">
                     <div>
-                      <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                      <label class="ups-row-7">
                         <input type="radio" name="ups-policy" value="runtime_left" checked style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
                         <span style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_runtime">Shutdown when Estimated Runtime drops below:</strong></span>
                       </label>
-                      <div id="ups-slider-runtime-container" style="display:flex; align-items:center; gap:12px; padding-left:24px; margin-top:8px;">
-                        <input type="range" id="ups-slider-runtime" min="2" max="25" step="1" value="5" class="custom-slider" style="flex:1;">
+                      <div class="ups-row-8" id="ups-slider-runtime-container">
+                        <input type="range" id="ups-slider-runtime" min="2" max="25" step="1" value="5" class="custom-slider ups-grow">
                         <span id="ups-val-runtime" class="slider-val-badge">5 min</span>
                       </div>
                     </div>
 
                     <div>
-                      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
+                      <label class="ups-row-9">
                         <input type="radio" name="ups-policy" value="battery_pct" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
                         <span style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_batt">Shutdown when Battery Charge drops below:</strong></span>
                       </label>
-                      <div id="ups-slider-battery-container" style="display:none; align-items:center; gap:12px; padding-left:24px; margin-top:8px;">
-                        <input type="range" id="ups-slider-battery" min="10" max="50" step="5" value="20" class="custom-slider" style="flex:1;">
+                      <div class="ups-x-3" id="ups-slider-battery-container" style="display: none;">
+                        <input type="range" id="ups-slider-battery" min="10" max="50" step="5" value="20" class="custom-slider ups-grow">
                         <span id="ups-val-battery" class="slider-val-badge">20 %</span>
                       </div>
                     </div>
 
                     <div>
-                      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:4px;">
+                      <label class="ups-row-9">
                         <input type="radio" name="ups-policy" value="timer" style="accent-color:var(--ok2, #25c2a0); width:16px; height:16px; cursor:pointer;">
                         <span style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--fg, #f1f5f9);"><strong data-i18n="mgmt.ups_policy_timer">Shutdown after Time on Battery exceeds:</strong></span>
                       </label>
-                      <div id="ups-slider-timer-container" style="display:none; align-items:center; gap:12px; padding-left:24px; margin-top:8px;">
-                        <input type="range" id="ups-slider-timer" min="60" max="900" step="30" value="300" class="custom-slider" style="flex:1;">
+                      <div class="ups-x-3" id="ups-slider-timer-container" style="display: none;">
+                        <input type="range" id="ups-slider-timer" min="60" max="900" step="30" value="300" class="custom-slider ups-grow">
                         <span id="ups-val-timer" class="slider-val-badge">300 sec</span>
                       </div>
                     </div>
                   </div>
 
                   <!-- Failsafe Toggles -->
-                  <div style="border-top:1px solid var(--zn-line-8); padding-top:14px; display:flex; flex-direction:column; gap:12px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <div class="ups-col-box">
+                    <div class="ups-row-10">
                       <label for="ups-chk-docker" style="font-size:var(--zn-fs-xs); font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_docker">Gracefully terminate Docker database containers (flush WAL)</label>
                       <label class="switch"><input type="checkbox" id="ups-chk-docker" checked><span class="toggle-slider"></span></label>
                     </div>
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <div class="ups-row-10">
                       <label for="ups-chk-cutpower" style="font-size:var(--zn-fs-xs); font-weight:500; color:var(--fg, #eaf1f8); cursor:pointer; flex:1;" data-i18n="mgmt.ups_chk_cutpower">Send cut-power command to UPS on halt (load.off.delay)</label>
                       <label class="switch"><input type="checkbox" id="ups-chk-cutpower"><span class="toggle-slider"></span></label>
                     </div>
                   </div>
 
                   <!-- Auto-save note -->
-                  <div style="margin-top:4px; padding-top:10px; border-top:1px dashed var(--zn-line-6); font-size:var(--zn-fs-xs); color:var(--muted); opacity:0.85;">
+                  <div class="ups-xs-muted-box-3">
                     <span aria-hidden="true">⚡</span> <span data-i18n="mw.all_parameters_and_thresholds_save_automatically">All parameters and thresholds save automatically to host configuration.</span>
                   </div>
                 </div>
@@ -2950,12 +2950,12 @@
             </div>
 
             <!-- Tier 3: Power Outage History & Analytics Table -->
-            <div class="ups-events-section" style="margin-top: 24px;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-                <div style="font-weight:600; font-size:13px; color:var(--text);"><span aria-hidden="true">📜</span> <span data-i18n="mgmt.ups_events_title">Power Integrity & Outage Ledger</span></div>
-                <span style="font-size:var(--zn-fs-xs); color:var(--muted);" data-i18n="mw.real_time_historical_brownout_self_test">Real-time historical brownout, self-test & failsafe events</span>
+            <div class="ups-events-section ups-x-4">
+              <div class="ups-row-4">
+                <div class="ups-fs13-semi"><span aria-hidden="true">📜</span> <span data-i18n="mgmt.ups_events_title">Power Integrity & Outage Ledger</span></div>
+                <span class="ups-xs-muted" data-i18n="mw.real_time_historical_brownout_self_test">Real-time historical brownout, self-test & failsafe events</span>
               </div>
-              <div class="table-container" style="max-height: 220px; overflow-y: auto;" tabindex="0">
+              <div class="table-container ups-x-5" tabindex="0">
                 <table class="copy-history-table responsive-cards" id="ups-events-table">
                   <thead>
                     <tr>
@@ -2967,7 +2967,7 @@
                     </tr>
                   </thead>
                   <tbody id="ups-events-tbody">
-                    <tr><td colspan="5" style="text-align:center; color:var(--muted); padding:16px;" data-i18n="mgmt.ups_no_events">No power events or brownouts recorded. All power lines normal.</td></tr>
+                    <tr><td class="ups-muted" colspan="5" data-i18n="mgmt.ups_no_events">No power events or brownouts recorded. All power lines normal.</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -4134,12 +4134,12 @@
                 <!-- Right: Main Conversation Stage -->
                 <section id="ai-chat-main-stage" class="ai-chat-main-stage" aria-label="Conversation" data-i18n-aria-label="ai.conversation_label">
                   <!-- Header: Sidebar Reveal + Active Thread Title + Active LLM Badge + Export & Clear -->
-                  <div class="ai-chat-header-row" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:10px; border-bottom:1px solid var(--zn-line-8); flex-shrink:0;">
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
+                  <div class="ai-chat-header-row aic-row-box">
+                    <div class="aic-row">
                       <button type="button" id="btn-ai-chat-sidebar-open" class="btn-ai-icon-toggle" style="display:none;" title="Expand conversation history" data-i18n-title="ui.expand_conversation_history">
                         <span>▶</span>
                       </button>
-                      <div class="ai-active-title-wrapper" style="display:flex; align-items:center; gap:6px; min-width:0;">
+                      <div class="ai-active-title-wrapper aic-row-2">
                         <span id="ai-chat-active-title" class="ai-chat-active-title" title="Click pencil to rename" data-i18n-title="ui.click_pencil_to_rename" data-sample>New Conversation</span>
                         <button type="button" id="btn-ai-chat-rename" class="btn-ai-icon-action" title="Rename conversation" data-i18n-title="ui.rename_conversation">✏️</button>
                       </div>
@@ -4148,23 +4148,23 @@
                       </span>
                     </div>
 
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <div class="aic-row-3">
                       <!-- Export Menu -->
-                      <div class="dropdown-wrapper" style="position:relative; display:inline-block;">
-                        <button type="button" id="btn-ai-chat-export-toggle" class="btn-pill-toggle" style="color: var(--zn-text-soft);" title="Export active conversation" data-i18n-title="ui.export_active_conversation">
+                      <div class="dropdown-wrapper aic-x">
+                        <button type="button" id="btn-ai-chat-export-toggle" class="btn-pill-toggle aic-soft" title="Export active conversation" data-i18n-title="ui.export_active_conversation">
                           <span aria-hidden="true">📥</span> <span data-i18n="ai.export_chat">Export</span>
                         </button>
                         <div id="ai-chat-export-menu" class="ai-dropdown-menu" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; z-index:100; min-width:180px; background:var(--card-solid, var(--lt-b-0f172aff, #0f172a)); border:1px solid var(--border, var(--zn-line-15)); border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.5); padding:4px 0;">
-                          <button type="button" id="btn-ai-chat-export-md" class="ai-menu-item" style="width:100%; text-align:left; background:transparent; border:none; padding:7px 12px; font-size:var(--zn-fs-xs); color:var(--zn-text-bright); cursor:pointer; display:flex; align-items:center; gap:8px;">
+                          <button type="button" id="btn-ai-chat-export-md" class="ai-menu-item aic-row-xs-box">
                             <span aria-hidden="true">📝</span> <span data-i18n="ai.export_md">Export as Markdown (.md)</span>
                           </button>
-                          <button type="button" id="btn-ai-chat-export-json" class="ai-menu-item" style="width:100%; text-align:left; background:transparent; border:none; padding:7px 12px; font-size:var(--zn-fs-xs); color:var(--zn-text-bright); cursor:pointer; display:flex; align-items:center; gap:8px;">
+                          <button type="button" id="btn-ai-chat-export-json" class="ai-menu-item aic-row-xs-box">
                             <span aria-hidden="true">📦</span> <span data-i18n="ai.export_json">Export as JSON (.json)</span>
                           </button>
                         </div>
                       </div>
 
-                      <button type="button" id="btn-ai-chat-clear" class="btn-pill-toggle" style="color: var(--zn-text-muted);" title="Clear conversation history" data-i18n-title="ui.clear_conversation_history">
+                      <button type="button" id="btn-ai-chat-clear" class="btn-pill-toggle aic-muted" title="Clear conversation history" data-i18n-title="ui.clear_conversation_history">
                         <span aria-hidden="true">🗑️</span> <span data-i18n="ai.chat_clear_btn">Clear Chat</span>
                       </button>
                     </div>
@@ -4174,10 +4174,10 @@
                   <div id="ai-chat-messages-list" style="flex:1; min-height:180px; max-height:none; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:8px; background:var(--lt-b-02061773, rgba(2,6,23,0.45)); border:1px solid var(--zn-line-6); box-sizing:border-box;"></div>
 
                   <!-- Chat Composer -->
-                  <div class="ai-chat-composer-row" style="display:flex; gap:8px; align-items:center; flex-shrink:0; margin-top:auto;">
-                    <input type="text" id="ai-chat-input" class="tz-select-input" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-placeholder="ui.ask_any_question_browse_the" style="height:38px; padding:0 12px; font-size:var(--zn-fs-xs); border-radius:8px;" aria-label="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-aria-label="ui.ask_any_question_browse_the" />
-                    <label id="ai-chat-web-toggle-wrap" title="Off: ZettAI stays on this NAS. On: it may search the web and fetch the weather, which sends your question to outside services." data-i18n-title="ui.off_zettai_stays_on_this" style="display:flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft); white-space:nowrap; cursor:pointer;">
-                      <input type="checkbox" id="ai-chat-web-toggle" style="margin:0;"> 🌐 <span data-i18n="ai.web_toggle">Web</span>
+                  <div class="ai-chat-composer-row aic-row-4">
+                    <input type="text" id="ai-chat-input" class="tz-select-input aic-xs-box" placeholder="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-placeholder="ui.ask_any_question_browse_the" aria-label="Ask any question, browse the web to verify facts, or run a NAS hardware task (e.g. 'Set fan profile to balanced', 'Which disks are sleeping?')..." data-i18n-aria-label="ui.ask_any_question_browse_the" />
+                    <label class="aic-row-xs-bold-soft" id="ai-chat-web-toggle-wrap" title="Off: ZettAI stays on this NAS. On: it may search the web and fetch the weather, which sends your question to outside services." data-i18n-title="ui.off_zettai_stays_on_this">
+                      <input class="aic-x-2" type="checkbox" id="ai-chat-web-toggle"> 🌐 <span data-i18n="ai.web_toggle">Web</span>
                     </label>
                     <button type="button" id="btn-ai-chat-send" class="btn-pill-toggle" style="height:38px; padding:0 18px; font-size:var(--zn-fs-xs); font-weight:700; background:linear-gradient(135deg, rgba(99,102,241,0.35), rgba(14,165,233,0.35)); border:1px solid rgba(99,102,241,0.6); color:var(--zn-text-strong); border-radius:8px; cursor:pointer; white-space:nowrap;">
                       <span aria-hidden="true">🚀</span> <span data-i18n="ai.chat_send_btn">Ask Zetty</span>
@@ -4194,10 +4194,10 @@
             <div id="mgmt-pane-ai-rag" class="mgmt-tab-pane" style="display: none;">
               <div class="ai-rag-composer" style="background:var(--lt-b-0f172a73, rgba(15,23,42,0.45)); border:1px solid var(--zn-line-10); border-radius:10px; padding:14px; margin-bottom:12px;">
                 <!-- Row 1: Omni-Search Input + Scope + Search & Ask + Visual Filters Drawer Toggle + Reset -->
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
-                  <input type="text" id="ai-rag-query-input" aria-label="Search files or ask ZettAI" data-i18n-aria-label="ui.search_files_or_ask_zettai" class="tz-select-input" placeholder="Search photos, documents, or ask a question (e.g. 'pasta recipe with garlic', 'red car at the beach')..." data-i18n-placeholder="ai.rag_placeholder" style="flex:1; min-width:240px; height:38px; padding:0 12px; font-size:13px; border-radius:8px;" />
+                <div class="rag-row">
+                  <input type="text" id="ai-rag-query-input" aria-label="Search files or ask ZettAI" data-i18n-aria-label="ui.search_files_or_ask_zettai" class="tz-select-input rag-fs13-box-grow" placeholder="Search photos, documents, or ask a question (e.g. 'pasta recipe with garlic', 'red car at the beach')..." data-i18n-placeholder="ai.rag_placeholder" />
                   <input type="hidden" id="ai-visual-search-input" value="" />
-                  <select id="ai-rag-scope-select" aria-label="Knowledge scope" data-i18n-aria-label="ui.knowledge_scope" class="tz-select-input" style="width:auto; height:38px; padding:0 10px; font-size:var(--zn-fs-xs); border-radius:8px;">
+                  <select id="ai-rag-scope-select" aria-label="Knowledge scope" data-i18n-aria-label="ui.knowledge_scope" class="tz-select-input rag-xs-box">
                     <option value="all" data-i18n="ai.scope_all">All Knowledge</option>
                     <option value="recipes" data-i18n="ai.scope_recipes">Recipes &amp; Cooking</option>
                     <option value="documents" data-i18n="ai.scope_docs">Documents &amp; Manuals</option>
@@ -4206,14 +4206,14 @@
                     <span aria-hidden="true">✨</span> <span data-i18n="ai.ask_btn">Search &amp; Ask</span>
                   </button>
                   <button type="button" id="btn-ai-visual-search" style="display:none;" aria-hidden="true"></button>
-                  <button type="button" id="btn-ai-visual-clear" class="btn-pill-toggle" style="height:38px; padding:0 12px; font-size:var(--zn-fs-xs); cursor:pointer;" title="Reset search query &amp; mode filters" data-i18n-title="ui.reset_search_query_mode_filters">
+                  <button type="button" id="btn-ai-visual-clear" class="btn-pill-toggle rag-xs" title="Reset search query &amp; mode filters" data-i18n-title="ui.reset_search_query_mode_filters">
                     <span data-i18n="ai.clear_filters">Reset</span>
                   </button>
                 </div>
 
                 <!-- Row 2: Single Unified File Type Filter (with live counts) + Matching Mode (Semantic/Keyword/Audio) + Sort -->
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                  <div id="ai-search-filetype-bar" style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                <div class="rag-row-2">
+                  <div class="rag-row-3" id="ai-search-filetype-bar">
                     <span style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--muted,#94a3b8); margin-right:2px;" data-i18n="ai.file_type_label">Type:</span>
                     <button type="button" class="btn-pill-toggle ai-filetype-chip active is-small" data-filetype="all" data-base-label="All" style="border-color: #38bdf8;" data-i18n="mw.all">All</button>
                     <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="photos" data-base-label="📷 Images"><span aria-hidden="true">📷</span> <span data-i18n="mw.images">Images</span></button>
@@ -4222,13 +4222,13 @@
                     <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="audio" data-base-label="🎵 Audio"><span aria-hidden="true">🎵</span> <span data-i18n="mw.audio">Audio</span></button>
                     <button type="button" class="btn-pill-toggle ai-filetype-chip is-small" data-filetype="folders" data-base-label="📁 Folders"><span aria-hidden="true">📁</span> <span data-i18n="mw.folders">Folders</span></button>
                   </div>
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <div class="rag-row-4">
                     <div id="ai-search-match-tabs" style="display:inline-flex; background:var(--lt-b-0f172abf, rgba(15,23,42,0.75)); border:1px solid var(--zn-line-12); border-radius:7px; padding:2px;">
                       <button type="button" class="btn-pill-toggle ai-match-tab active is-small" data-match-tab="semantic" style="border: none; background: rgba(14,165,233,0.28); color: var(--zn-text-strong);"><span aria-hidden="true">✨</span> <span data-i18n="mw.semantic">Semantic</span></button>
-                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="keyword" style="border: none; background: transparent; color: var(--zn-text-muted);"><span aria-hidden="true">🔤</span> <span data-i18n="mw.by_word">Keyword</span></button>
-                      <button type="button" class="btn-pill-toggle ai-match-tab is-small" data-match-tab="audio" style="border: none; background: transparent; color: var(--zn-text-muted);"><span aria-hidden="true">🎙️</span> <span data-i18n="mw.audio">Audio</span></button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab is-small rag-muted-box" data-match-tab="keyword"><span aria-hidden="true">🔤</span> <span data-i18n="mw.by_word">Keyword</span></button>
+                      <button type="button" class="btn-pill-toggle ai-match-tab is-small rag-muted-box" data-match-tab="audio"><span aria-hidden="true">🎙️</span> <span data-i18n="mw.audio">Audio</span></button>
                     </div>
-                    <select id="ai-search-sort-select" aria-label="Sort search results" data-i18n-aria-label="ui.sort_search_results" class="tz-select-input" style="height:28px; padding:0 8px; font-size:var(--zn-fs-xs); border-radius:6px;">
+                    <select id="ai-search-sort-select" aria-label="Sort search results" data-i18n-aria-label="ui.sort_search_results" class="tz-select-input rag-xs-box-2">
                       <option value="relevance" data-i18n="ai.sort_relevance">Sort: AI Relevance</option>
                       <option value="keyword" data-i18n="ai.sort_keyword">Sort: Keyword Match</option>
                       <option value="mtime" data-i18n="ai.sort_mtime">Sort: Creation Time</option>
@@ -4237,26 +4237,26 @@
                 </div>
 
                 <!-- Recent Query History (shown only when user has recent queries) -->
-                <div id="ai-history-bar" style="display:none; align-items:center; gap:5px; flex-wrap:wrap; padding-top:8px; margin-top:8px; border-top:1px solid var(--zn-line-7); font-size:var(--zn-fs-xs);">
+                <div class="rag-xs-box-3" id="ai-history-bar" style="display: none;">
                   <span style="color:var(--muted,#94a3b8); font-weight:600;"><span aria-hidden="true">🕘</span> <span data-i18n="mw.history">History:</span></span>
-                  <div id="ai-history-chips" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
-                  <button type="button" id="btn-ai-clear-history" class="btn-pill-toggle is-small" style="color: var(--zn-text-muted);" title="Clear search history" data-i18n-title="ui.clear_search_history">🗑️</button>
+                  <div class="rag-row-5" id="ai-history-chips"></div>
+                  <button type="button" id="btn-ai-clear-history" class="btn-pill-toggle is-small rag-muted" title="Clear search history" data-i18n-title="ui.clear_search_history">🗑️</button>
                 </div>
               </div>
 
               <!-- Zone A: Grounded AI Overview & Structured Recipe/Document Synthesis (Auto-shown for text Q&A) -->
-              <div id="ai-rag-results-area" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
+              <div class="rag-col" id="ai-rag-results-area">
                 <div id="ai-rag-empty-state" style="display:none; padding:18px 16px; text-align:center; background:var(--lt-b-0f172a4c, rgba(15,23,42,0.3)); border:1px dashed var(--zn-line-12); border-radius:10px; color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs);">
-                  <span data-i18n="ai.onboarding_title" style="font-weight:700; color:var(--zn-text-strong);">Search your files and photos</span> —
+                  <span class="rag-bold-strong" data-i18n="ai.onboarding_title">Search your files and photos</span> —
                   <span data-i18n="ai.onboarding_desc">Ask a question or browse indexed photos and documents. Search reads only the index on this NAS, so sleeping drives stay asleep.</span>
                 </div>
                 <div id="ai-rag-answer-card" style="display:none; background:var(--lt-b-0f172a8c, rgba(15,23,42,0.55)); border:1px solid rgba(14,165,233,0.35); border-radius:10px; padding:14px;"></div>
                 <div id="ai-rag-structured-card" style="display:none;"></div>
-                <div id="ai-rag-citations-grid" style="display:none; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:10px;"></div>
+                <div class="rag-x" id="ai-rag-citations-grid" style="display: none;"></div>
               </div>
 
               <!-- Zone B: Unified Multi-Modal Results Grid + Split-Pane Inspector -->
-              <div id="mgmt-pane-ai-visual" style="display: block;">
+              <div class="rag-x-2" id="mgmt-pane-ai-visual">
                 <!-- Explainable Parsed Intent Banner -->
                 <div id="ai-visual-intent-banner" style="display:none; margin-bottom:10px; padding:8px 12px; background:rgba(14,165,233,0.12); border:1px solid rgba(14,165,233,0.3); border-radius:8px; font-size:var(--zn-fs-xs); color:var(--zn-text);"></div>
 
@@ -4264,11 +4264,11 @@
                 <div id="ai-category-summary-cards" style="display:none;"></div>
 
                 <!-- Split-Pane Search Results Grid + Preview Inspector -->
-                <div id="ai-search-split-layout" style="display:grid; grid-template-columns:minmax(0, 1fr); gap:12px; align-items:start;">
-                  <div id="ai-visual-results-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;">
+                <div class="rag-grid" id="ai-search-split-layout">
+                  <div class="rag-grid-2" id="ai-visual-results-grid">
                     <div class="ai-rag-initial-placeholder" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--muted, #94a3b8);">
-                      <div style="font-size: 32px; margin-bottom: 10px; opacity: 0.85;">🔍</div>
-                      <div style="font-size: 14px; font-weight: 600; color: var(--zn-text); margin-bottom: 6px;" data-i18n="ai.search_placeholder_prompt">Search Your NAS Knowledge &amp; Media</div>
+                      <div class="rag-fs32">🔍</div>
+                      <div class="rag-fs14-semi" data-i18n="ai.search_placeholder_prompt">Search Your NAS Knowledge &amp; Media</div>
                       <div style="font-size: var(--zn-fs-xs); color: var(--muted, #94a3b8); max-width: 480px; margin: 0 auto; line-height: 1.5;" data-i18n="ai.search_placeholder_sub">Type a query above to search documents, recipes, photos, or audio, or ask Zetty a question. Results will appear here once you search.</div>
                     </div>
                   </div>
@@ -4281,24 +4281,24 @@
             <div id="mgmt-pane-ai-index" class="mgmt-tab-pane" style="display: none;">
               <!-- Informational Live Telemetry Ribbon: Hardware Accelerator, Standby Guard & Index Status -->
               <div class="ai-telemetry-ribbon" id="ai-telemetry-ribbon" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; margin-bottom:12px; background:var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border:1px solid rgba(14,165,233,0.3); border-radius:10px; box-sizing:border-box;">
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
+                <div class="aix-row">
                   <span class="ai-tier-badge" id="ai-accel-chain-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(14,165,233,0.18); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); border:1px solid rgba(14,165,233,0.4); flex-shrink:0;">
-                    <span style="font-size:var(--zn-fs-xs);">⚡</span>
+                    <span class="aix-xs">⚡</span>
                     <span id="ai-accel-active-label" data-sample>Tier 1: NPU ➔ GPU ➔ CPU</span>
                   </span>
                   <span id="ai-active-llm-pill" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(99,102,241,0.18); color:var(--lt-t-c7d2feff, #c7d2fe); border:1px solid rgba(99,102,241,0.4); flex-shrink:0;" title="This model answers in Ask Zetty and writes the answers for AI search." data-i18n-title="ui.active_llm_leveraged_for_rag">
-                    <span style="font-size:var(--zn-fs-xs);">🤖</span>
+                    <span class="aix-xs">🤖</span>
                     <span id="ai-active-llm-label">qwen2.5:3b</span>
                   </span>
                   <span id="ai-standby-guard-badge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:600; background:rgba(37,194,160,0.14); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.32); flex-shrink:0;" title="Searches are answered from the fast drive, so sleeping hard drives stay asleep." data-i18n-title="ui.100_of_rag_photo_queries">
-                    <span style="font-size:var(--zn-fs-xs);">🛡️💤</span>
+                    <span class="aix-xs">🛡️💤</span>
                     <span id="ai-standby-guard-text" data-i18n="ai.standby_guard_active">Standby Guard: Active</span>
                   </span>
                   <span id="ai-index-status-pill" style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); flex-shrink:0; padding:0 2px;">
-                    <span data-i18n="ai.stat_indexed">Indexed:</span> <strong id="ai-stat-total-files" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_files">Files</span> (<strong id="ai-stat-total-videos" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_videos">Videos</span> • <strong id="ai-stat-total-photos" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_photos">Photos</span> • <strong id="ai-stat-total-docs" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_docs">Docs</span><span id="ai-stat-recipes-segment" style="display:none;"> • <strong id="ai-stat-total-recipes" style="color:var(--zn-text-strong);">0</strong> <span data-i18n="ai.stat_recipes">Recipes</span></span>)
+                    <span data-i18n="ai.stat_indexed">Indexed:</span> <strong class="aix-strong" id="ai-stat-total-files">0</strong> <span data-i18n="ai.stat_files">Files</span> (<strong class="aix-strong" id="ai-stat-total-videos">0</strong> <span data-i18n="ai.stat_videos">Videos</span> • <strong class="aix-strong" id="ai-stat-total-photos">0</strong> <span data-i18n="ai.stat_photos">Photos</span> • <strong class="aix-strong" id="ai-stat-total-docs">0</strong> <span data-i18n="ai.stat_docs">Docs</span><span id="ai-stat-recipes-segment" style="display:none;"> • <strong class="aix-strong" id="ai-stat-total-recipes">0</strong> <span data-i18n="ai.stat_recipes">Recipes</span></span>)
                   </span>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; flex-shrink:0;">
+                <div class="aix-row-2">
                   <span id="ai-sync-state-badge" style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(148,163,184,0.14); color:var(--zn-text-soft); border:1px solid rgba(148,163,184,0.28); flex-shrink:0;">
                     <span id="ai-sync-state-dot" style="width:6px; height:6px; border-radius:50%; background:#94a3b8; display:inline-block;"></span>
                     <span id="ai-sync-state-text" data-i18n="ai.sync_state_idle">Sync: Idle</span>
@@ -4323,11 +4323,11 @@
               </div>
               <!-- How Your Selected LLM Is Leveraged (Moved from Chatbot to AI Configuration) -->
               <div class="ai-chat-welcome-card" style="padding:12px 14px; border-radius:10px; background:rgba(14,165,233,0.08); border:1px solid rgba(14,165,233,0.28); font-size:var(--zn-fs-xs); color:var(--zn-text); line-height:1.5; margin-bottom:12px;">
-                <div style="font-weight:800; color:var(--zn-text-strong); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                <div class="aix-row-bold-strong">
                   <span aria-hidden="true">🤖</span>
                   <span data-i18n="ai.how_llm_leveraged_title">What this model is used for:</span>
                 </div>
-                <ul style="margin:4px 0 0 18px; padding:0; color:var(--zn-text-soft); font-size:var(--zn-fs-xs); line-height:1.6;">
+                <ul class="aix-xs-soft">
                   <li><strong data-i18n="mw.each_answer_says_how_it_was">Each answer says how it was made:</strong> <span data-i18n="mw.each_answer_detail">In AI search and Ask Zetty, every reply shows the model, whether the NPU or the GPU ran it, how fast it was, and which tools it used.</span></li>
                   <li><strong><span aria-hidden="true">🛠️</span> <span data-i18n="mw.it_can_check_this_server_for">It can check this server for you:</span></strong> <span data-i18n="mw.server_check_detail">Ask how busy the processor and memory are, which drives are asleep (it never wakes them), change the fan profile (quiet, balanced, performance), list or restart apps, or find files.</span></li>
                   <li><strong><span aria-hidden="true">🌐</span> <span data-i18n="mw.it_can_look_things_up_on">It can look things up on the web:</span></strong> <span data-i18n="mw.web_lookup_detail">Ask a general question or paste a link, and it searches Wikipedia and DuckDuckGo and links its sources.</span></li>
@@ -4336,9 +4336,9 @@
 
               <!-- Section 3: Onboard NPU & GPU Hardware Acceleration & Hugging Face Release Models -->
               <div id="ai-llm-recommendations-section" style="background:var(--lt-b-0f172a80, rgba(15,23,42,0.5)); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:14px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--zn-line-7);">
+                <div class="aix-row-box">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <div class="aix-row-fs13-bold-strong">
                       <span aria-hidden="true">🤖</span>
                       <span data-i18n="ai.llm_advisor_title">Onboard NPU &amp; GPU Acceleration • Hugging Face Release Models</span>
                       <a href="https://huggingface.co/models" target="_blank" rel="noopener noreferrer" style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:999px; background:var(--lt-b-facc1524, rgba(250,204,21,0.14)); border:1px solid var(--lt-r-facc1566, rgba(250,204,21,0.4)); color:var(--lt-t-fde047ff, #fde047); text-decoration:none;">🤗 huggingface.co ↗</a>
@@ -4347,8 +4347,8 @@
                       Analyzing onboard NPU, iGPU/dGPU, and system RAM to recommend optimal Hugging Face release models and flag models that exceed your hardware...
                     </div>
                   </div>
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                    <label for="ai-top-model-select" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-soft);" data-i18n="ai.model_label">Active Model:</label>
+                  <div class="aix-row-3">
+                    <label class="aix-xs-bold-soft" for="ai-top-model-select" data-i18n="ai.model_label">Active Model:</label>
                     <select id="ai-top-model-select" class="tz-select-input" style="height:30px; padding:0 10px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); color:var(--zn-text-strong); border:1px solid rgba(56,189,248,0.4); max-width:340px;">
                       <option value="deepseek-r1-distill-qwen-1.5b-npu-ov" translate="no">DeepSeek-R1 Distill Qwen 1.5B (OpenVINO INT4)</option>
                       <option value="qwen2.5:3b" translate="no">★ Qwen2.5 3B Instruct (INT4 / Q4_K_M)</option>
@@ -4370,36 +4370,36 @@
                 </div>
 
                 <!-- Compact 3-Tier Hardware Acceleration Strip -->
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-bottom:14px;">
+                <div class="aix-grid">
                   <div style="background:var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border:1px solid rgba(14,165,233,0.38); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(14,165,233,0.08);">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                    <div class="aix-row-4">
                       <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
                         <span aria-hidden="true">⚡</span>
                         <span data-i18n="mw.tier_1_npu_priority">Tier 1 • NPU Priority</span>
                       </div>
                       <span style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(14,165,233,0.18); color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff)); border:1px solid rgba(14,165,233,0.35);" data-i18n="mw.primary">Primary</span>
                     </div>
-                    <div id="ai-hw-tier1-status" style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-top:6px; line-height:1.4;" data-sample>Probing NPU...</div>
+                    <div class="aix-fs13-bold-strong" id="ai-hw-tier1-status" data-sample>Probing NPU...</div>
                   </div>
                   <div style="background:var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border:1px solid rgba(56,189,248,0.32); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(56,189,248,0.06);">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
-                      <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--zn-text-accent); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+                    <div class="aix-row-4">
+                      <div class="aix-row-xs-bold-accent">
                         <span aria-hidden="true">🎮</span>
                         <span data-i18n="mw.tier_2_gpu_fallback">Tier 2 • GPU Fallback</span>
                       </div>
                       <span style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(56,189,248,0.15); color:var(--zn-text-accent); border:1px solid rgba(56,189,248,0.3);" data-i18n="mw.secondary">Secondary</span>
                     </div>
-                    <div id="ai-hw-tier2-status" style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-top:6px; line-height:1.4;" data-sample>Probing GPU...</div>
+                    <div class="aix-fs13-bold-strong" id="ai-hw-tier2-status" data-sample>Probing GPU...</div>
                   </div>
                   <div style="background:var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border:1px solid rgba(37,194,160,0.32); border-radius:10px; padding:12px 16px; box-shadow:0 2px 8px rgba(37,194,160,0.06);">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                    <div class="aix-row-4">
                       <div style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2,#25c2a0); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
                         <span aria-hidden="true">🖥️</span>
                         <span data-i18n="mw.tier_3_universal_cpu">Tier 3 • Universal CPU</span>
                       </div>
                       <span style="font-size:var(--zn-fs-xs); font-weight:700; padding:2px 8px; border-radius:999px; background:rgba(37,194,160,0.15); color:var(--ok2,#25c2a0); border:1px solid rgba(37,194,160,0.3);" data-i18n="mw.universal">Universal</span>
                     </div>
-                    <div id="ai-hw-tier3-status" style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-top:6px; line-height:1.4;" data-sample>Active &amp; Ready</div>
+                    <div class="aix-fs13-bold-strong" id="ai-hw-tier3-status" data-sample>Active &amp; Ready</div>
                   </div>
                 </div>
 
@@ -4408,18 +4408,18 @@
 
                 <!-- Hugging Face Hub Live Search & Pull Bar + Hardware Compatibility Filter -->
                 <div style="background:var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border:1px solid var(--lt-r-facc1547, rgba(250,204,21,0.28)); border-radius:8px; padding:10px 12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                  <div class="aix-row-5">
                     <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-fef08aff, #fef08a); display:flex; align-items:center; gap:6px;">
                       <span aria-hidden="true">🤗</span>
                       <span data-i18n="ai.hf_hub_title">Pull Release Models from Hugging Face Database (https://huggingface.co)</span>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                      <div id="ai-hf-filter-pills" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <div class="aix-row-3">
+                      <div class="aix-row-6" id="ai-hf-filter-pills">
                         <button type="button" class="btn-pill-toggle ai-hf-filter-btn active is-small" data-hf-filter="all" style="background: rgba(56,189,248,0.2); border: 1px solid rgba(56,189,248,0.45); color: var(--zn-text-accent);" data-i18n="ai.filter_all_2026">2026+ Releases</button>
                         <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="compatible" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.35); color: var(--zn-text-ok);"><span aria-hidden="true">✅</span> <span data-i18n="ai.filter_fits_hardware">Fits Hardware</span></button>
                         <button type="button" class="btn-pill-toggle ai-hf-filter-btn is-small" data-hf-filter="warning" style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.38); color: var(--zn-text-warn);"><span aria-hidden="true">⚠️</span> <span data-i18n="mw.exceeds_hardware">Exceeds Hardware</span></button>
                       </div>
-                      <div style="display:flex; align-items:center; gap:5px; font-size:var(--zn-fs-xs); color:var(--zn-text-muted); background:var(--zn-shade-30); padding:2px 8px; border-radius:6px; border:1px solid var(--zn-line-8);">
+                      <div class="aix-row-xs-muted-box">
                         <span data-i18n="ai.sort_models_label">Sort:</span>
                         <select id="ai-models-sort-select" style="font-size:var(--zn-fs-xs); height:22px; padding:0 4px; border-radius:4px; background:var(--lt-b-0f172af2, rgba(15,23,42,0.95)); border:1px solid var(--zn-line-18); color:var(--lt-t-f8fafcff, #f8fafc); cursor:pointer;">
                           <option value="date" selected data-i18n="ai.sort_release_date">Release Date (Newest First)</option>
@@ -4430,7 +4430,7 @@
                       </div>
                     </div>
                   </div>
-                  <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                  <div class="aix-row-7">
                     <input id="ai-hf-search-input" type="text" placeholder="Search https://huggingface.co models or paste repo/URL (e.g. Qwen/Qwen2.5-14B-Instruct-GGUF, meta-llama/Llama-3.3-70B-Instruct)..." style="flex:1; min-width:240px; height:32px; padding:0 11px; border-radius:6px; background:var(--lt-b-0f172ae6, rgba(15,23,42,0.9)); border:1px solid var(--lt-r-ffffff29, rgba(255,255,255,0.16)); color:var(--zn-text-strong); font-size:var(--zn-fs-xs);" aria-label="Search https://huggingface.co models or paste repo/URL (e.g. Qwen/Qwen2.5-14B-Instruct-GGUF, meta-llama/Llama-3.3-70B-Instruct)...">
                     <button id="btn-ai-hf-search" type="button" class="btn-pill-toggle" style="background: rgba(14,165,233,0.18); border: 1px solid rgba(14,165,233,0.45); color: var(--zn-text-accent);">
                       🔍 <span data-i18n="ai.hf_search_btn">Search HF Hub</span>
@@ -4442,11 +4442,11 @@
                       <span aria-hidden="true">✕</span> <span data-i18n="ai.clear_filters">Reset</span>
                     </button>
                   </div>
-                  <div id="ai-hf-search-status" style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted); display:none;"></div>
+                  <div class="aix-xs-muted" id="ai-hf-search-status" style="display: none;"></div>
                 </div>
 
                 <!-- Compact 2-Column Hardware-Matched & Hugging Face LLM Rows -->
-                <div id="ai-llm-recommendations-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:8px;"></div>
+                <div class="aix-grid-2" id="ai-llm-recommendations-grid"></div>
               </div>
 
               <div class="zn-card zn-card--boxed ai-config-card">
@@ -4454,14 +4454,14 @@
                   <!-- 4. Conversation retention (AI-20) -->
                   <label style="display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:8px; background:var(--lt-b-0f172a99, rgba(15,23,42,0.6)); border:1px solid var(--zn-line-12); font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-soft);">
                     <span data-i18n="ai.retention_label">Delete chats not used for</span>
-                    <select id="ai-conversation-retention-select" class="tz-select-input" aria-label="Chat retention" data-i18n-aria-label="ui.chat_retention" style="height:28px; font-size:var(--zn-fs-xs); border-radius:6px;">
+                    <select id="ai-conversation-retention-select" class="tz-select-input aix-xs-box" aria-label="Chat retention" data-i18n-aria-label="ui.chat_retention">
                       <option value="0" data-i18n="ai.retention_forever">Keep forever</option>
                       <option value="7">7 days</option>
                       <option value="30">30 days</option>
                       <option value="90">90 days</option>
                       <option value="365">1 year</option>
                     </select>
-                    <span style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);" data-i18n="ai.retention_hint">Pinned chats are kept.</span>
+                    <span class="aix-xs-muted" data-i18n="ai.retention_hint">Pinned chats are kept.</span>
                   </label>
 
               </div>
@@ -4471,9 +4471,9 @@
               </div>
               <!-- Section 1 (Top Priority): Service Switch, Learning Scope, Schedule & Standby/Spin-Up Rules -->
               <div style="background:var(--lt-b-0f172a80, rgba(15,23,42,0.5)); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:14px; margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--zn-line-7);">
+                <div class="aix-row-box-2">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong);" data-i18n="ai.config_policy_title">🛡️ Service Control, Learning Scope &amp; Disk Standby Policy</div>
+                    <div class="aix-fs13-bold-strong-2" data-i18n="ai.config_policy_title">🛡️ Service Control, Learning Scope &amp; Disk Standby Policy</div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin-top:2px;" data-i18n="ai.config_policy_desc">Configure when and how ZettAI learns from your NAS storage while protecting sleeping hard drives.</div>
                   </div>
                   <label style="display:inline-flex; align-items:center; gap:8px; padding:5px 12px; border-radius:999px; background:rgba(99,102,241,0.18); border:1px solid rgba(99,102,241,0.45); font-size:var(--zn-fs-xs); font-weight:700; color:var(--lt-t-e0e7ffff, #e0e7ff); cursor:pointer;" title="Enable or disable ZettAI service globally. Turning off pauses unfinished learning tasks." data-i18n-title="ui.enable_or_disable_zettai_service">
@@ -4482,11 +4482,11 @@
                   </label>
                 </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:10px;">
+                <div class="aix-grid-3">
                   <!-- 1. Learning Scope -->
                   <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 12px; border-radius:8px; background:var(--lt-b-0f172a99, rgba(15,23,42,0.6)); border:1px solid var(--zn-line-7);">
-                    <label for="ai-learning-scope-mode" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text);" data-i18n="ai.learning_scope_label">Learning Scope:</label>
-                    <select id="ai-learning-scope-mode" class="tz-select-input" style="height:30px; padding:0 10px; font-size:var(--zn-fs-xs); border-radius:6px;">
+                    <label class="aix-xs-bold" for="ai-learning-scope-mode" data-i18n="ai.learning_scope_label">Learning Scope:</label>
+                    <select id="ai-learning-scope-mode" class="tz-select-input aix-xs-box-2">
                       <option value="include" data-i18n="ai.scope_mode_include">Specify Watched Folders</option>
                       <option value="all" data-i18n="ai.scope_mode_all">Learn All Files (Auto Shares)</option>
                       <option value="exclude" data-i18n="ai.scope_mode_exclude">Exclude Specified Folders</option>
@@ -4495,14 +4495,14 @@
 
                   <!-- 2. Scheduled Learning Window -->
                   <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; padding:9px 12px; border-radius:8px; background:var(--lt-b-0f172a99, rgba(15,23,42,0.6)); border:1px solid var(--zn-line-7);">
-                    <label style="display:inline-flex; align-items:center; gap:6px; font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text); cursor:pointer;">
+                    <label class="aix-row-xs-bold">
                       <input type="checkbox" id="ai-schedule-enabled-toggle" />
                       <span data-i18n="ai.schedule_learning_label">Schedule Learning Period:</span>
                     </label>
-                    <div style="display:inline-flex; align-items:center; gap:4px;">
-                      <input type="time" id="ai-schedule-start-input" aria-label="Learning schedule start time" data-i18n-aria-label="ui.learning_schedule_start_time" value="01:00" class="tz-select-input" style="height:28px; padding:0 6px; font-size:var(--zn-fs-xs); width:86px; border-radius:6px;" />
-                      <span style="color:var(--zn-text-muted); font-size:var(--zn-fs-xs);">to</span>
-                      <input type="time" id="ai-schedule-end-input" aria-label="Learning schedule end time" data-i18n-aria-label="ui.learning_schedule_end_time" value="06:00" class="tz-select-input" style="height:28px; padding:0 6px; font-size:var(--zn-fs-xs); width:86px; border-radius:6px;" />
+                    <div class="aix-row-8">
+                      <input type="time" id="ai-schedule-start-input" aria-label="Learning schedule start time" data-i18n-aria-label="ui.learning_schedule_start_time" value="01:00" class="tz-select-input aix-xs-box-3" />
+                      <span class="aix-xs-muted-2">to</span>
+                      <input type="time" id="ai-schedule-end-input" aria-label="Learning schedule end time" data-i18n-aria-label="ui.learning_schedule_end_time" value="06:00" class="tz-select-input aix-xs-box-3" />
                       <button type="button" id="btn-ai-save-schedule" class="btn-pill-toggle" data-i18n="ai.save_schedule_btn">Save</button>
                     </div>
                   </div>
@@ -4516,16 +4516,16 @@
                   <!-- 5. Photo captions with a local vision model (AI-14) -->
                   <label style="display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:9px 12px; border-radius:8px; background:var(--lt-b-0f172a99, rgba(15,23,42,0.6)); border:1px solid var(--zn-line-12); font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-soft);">
                     <span data-i18n="ai.vision_label">Describe photos and read their text</span>
-                    <select id="ai-vision-captions-select" class="tz-select-input" data-i18n-aria-label="ai.vision_label" aria-label="Describe photos and read their text" style="height:28px; font-size:var(--zn-fs-xs); border-radius:6px;">
+                    <select id="ai-vision-captions-select" class="tz-select-input aix-xs-box" data-i18n-aria-label="ai.vision_label" aria-label="Describe photos and read their text">
                       <option value="auto" data-i18n="ai.vision_auto">When the NAS is idle</option>
                       <option value="off" data-i18n="ai.vision_off">Off</option>
                     </select>
-                    <span id="ai-vision-status" style="font-size:var(--zn-fs-xs); color:var(--zn-text-muted);"></span>
+                    <span class="aix-xs-muted" id="ai-vision-status"></span>
                   </label>
 
                   <!-- 6. Optional reranker (AI-13) -->
                   <form id="ai-rerank-form" class="zn-form zn-box">
-                    <span style="font-size:var(--zn-fs-xs); font-weight:600; color:var(--zn-text-soft);" data-i18n="ai.rerank_label">Reranker (optional, OVMS / TEI / Infinity)</span>
+                    <span class="aix-xs-semi-soft" data-i18n="ai.rerank_label">Reranker (optional, OVMS / TEI / Infinity)</span>
                     <input id="ai-rerank-endpoint" class="tz-select-input" type="url" placeholder="http://zettnas-ovms:8000/v3/rerank" data-i18n-aria-label="ai.rerank_endpoint" aria-label="Reranker URL" />
                     <input id="ai-rerank-model" class="tz-select-input" type="text" placeholder="bge-reranker-v2-m3" data-i18n-aria-label="ai.rerank_model" aria-label="Reranker model" />
                     <button type="submit" class="btn-pill-toggle" data-i18n="sso.save">Save</button>
@@ -4550,13 +4550,13 @@
 
               <!-- Section 2: Watched Folders, Discovered NAS Shares, Sync Transport & Learning Results -->
               <div style="background:var(--lt-b-0f172a73, rgba(15,23,42,0.45)); border:1px solid var(--zn-line-10); border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                <div class="aix-row-9">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-bottom:2px;"><span aria-hidden="true">📁</span> <span data-i18n="ai.index_folder_title">Watched Folders, NAS Shares &amp; Sync</span></div>
+                    <div class="aix-fs13-bold-strong-3"><span aria-hidden="true">📁</span> <span data-i18n="ai.index_folder_title">Watched Folders, NAS Shares &amp; Sync</span></div>
                     <p style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin:0;" data-i18n="ai.index_folder_desc">Choose which NAS shares ZettAI learns from. Files on sleeping drives are learned when the drive spins up.</p>
                   </div>
                   <!-- Sync Transport Controls + Learning Results Button -->
-                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <div class="aix-row-6">
                     <button type="button" id="btn-ai-sync-watched" class="btn-pill-toggle" style="background: rgba(37,194,160,0.22); border: 1px solid rgba(37,194,160,0.5); color: var(--zn-text-strong);">
                       <span aria-hidden="true">🔄</span> <span data-i18n="ai.sync_watched_btn">Sync Watched Folders</span>
                     </button>
@@ -4583,66 +4583,66 @@
 
                 <!-- Live Sync Progress & Disk Standby Banner -->
                 <div id="ai-sync-progress-banner" style="padding:9px 12px; border-radius:8px; background:var(--lt-b-0f172aa6, rgba(15,23,42,0.65)); border:1px solid rgba(56,189,248,0.22); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:var(--zn-fs-xs);">
-                  <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <div class="aix-row-3">
                     <span id="ai-index-sync-state-pill" style="padding:2px 8px; border-radius:999px; font-size:var(--zn-fs-xs); font-weight:700; background:rgba(148,163,184,0.18); color:var(--zn-text);">IDLE</span>
-                    <span id="ai-index-current-path" style="color:var(--zn-text-soft); font-family:monospace; font-size:var(--zn-fs-xs);" data-sample>Ready — Waiting for sync command (Sleeping drives protected)</span>
+                    <span class="aix-xs-soft-2" id="ai-index-current-path" data-sample>Ready — Waiting for sync command (Sleeping drives protected)</span>
                   </div>
                   <div id="ai-index-progress-counters" style="color:var(--muted,#94a3b8); font-size:var(--zn-fs-xs);">
-                    <span data-i18n="ai.stat_indexed">Indexed:</span> <strong id="ai-prog-indexed" style="color:var(--zn-text-ok);">0</strong> • <span data-i18n="ai.prog_unchanged">Unchanged:</span> <strong id="ai-prog-unchanged" style="color:var(--zn-text-soft);">0</strong> • <span data-i18n="ai.prog_deferred">Deferred (standby):</span> <strong id="ai-prog-deferred" style="color:var(--zn-text-warn);">0</strong>
+                    <span data-i18n="ai.stat_indexed">Indexed:</span> <strong class="aix-ok" id="ai-prog-indexed">0</strong> • <span data-i18n="ai.prog_unchanged">Unchanged:</span> <strong class="aix-soft" id="ai-prog-unchanged">0</strong> • <span data-i18n="ai.prog_deferred">Deferred (standby):</span> <strong class="aix-warn" id="ai-prog-deferred">0</strong>
                   </div>
                 </div>
 
                 <!-- ZettAI Learning Results & Failed Files Panel (Toggled inline) -->
                 <div id="ai-learning-results-panel" style="display:none; background:var(--lt-b-0f172abf, rgba(15,23,42,0.75)); border:1px solid rgba(99,102,241,0.45); border-radius:8px; padding:12px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-                    <div style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text-strong);"><span aria-hidden="true">📊</span> <span data-i18n="mw.zettai_learning_results">ZettAI Learning Results</span></div>
-                    <div style="display:flex; align-items:center; gap:6px;">
+                  <div class="aix-row-10">
+                    <div class="aix-xs-bold-strong"><span aria-hidden="true">📊</span> <span data-i18n="mw.zettai_learning_results">ZettAI Learning Results</span></div>
+                    <div class="aix-row-11">
                       <button type="button" id="btn-ai-relearn-failed" class="btn-pill-toggle is-small" style="background: rgba(99,102,241,0.25); border: 1px solid rgba(99,102,241,0.55); color: var(--zn-text-strong);">
                         <span aria-hidden="true">🔁</span> <span data-i18n="ai.relearn_failed_btn">Relearn Failed Files</span>
                       </button>
                       <button type="button" id="btn-ai-close-learning-results" class="btn-pill-toggle is-small">✕</button>
                     </div>
                   </div>
-                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px; margin-bottom:8px;">
+                  <div class="aix-grid-4">
                     <div style="padding:8px 10px; border-radius:6px; background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.3); display:flex; justify-content:space-between; align-items:center;">
                       <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-86efacff, #86efac); font-weight:700;" data-i18n="mw.succeeded">✓ Succeeded</span>
                       <strong id="ai-learn-succeeded-count" style="font-size:14px; color:var(--lt-t-4ade80ff, #4ade80);">0</strong>
                     </div>
                     <div style="padding:8px 10px; border-radius:6px; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); display:flex; justify-content:space-between; align-items:center;">
                       <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-fca5a5ff, #fca5a5); font-weight:700;" data-i18n="mw.failed">✕ Failed</span>
-                      <strong id="ai-learn-failed-count" style="font-size:14px; color:var(--zn-text-crit);">0</strong>
+                      <strong class="aix-fs14" id="ai-learn-failed-count">0</strong>
                     </div>
                     <div style="padding:8px 10px; border-radius:6px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); display:flex; justify-content:space-between; align-items:center;">
                       <span style="font-size:var(--zn-fs-xs); color:var(--lt-t-fde68aff, #fde68a); font-weight:700;"><span aria-hidden="true">💤</span> <span data-i18n="mw.deferred_standby">Deferred (Standby)</span></span>
-                      <strong id="ai-learn-deferred-count" style="font-size:14px; color:var(--zn-text-warn);">0</strong>
+                      <strong class="aix-fs14-warn" id="ai-learn-deferred-count">0</strong>
                     </div>
                   </div>
-                  <div id="ai-learn-failed-list" style="font-size:var(--zn-fs-xs); color:var(--zn-text-soft); max-height:130px; overflow-y:auto;"></div>
+                  <div class="aix-xs-soft-3" id="ai-learn-failed-list"></div>
                 </div>
 
                 <!-- Unified Watched Folders Multi-Select Dropdown Checklist -->
-                <div id="ai-watched-folders-section" style="display:flex; flex-direction:column; gap:8px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                    <span style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--zn-text-accent);" data-i18n="ai.watched_folders_label">Watched Folders (Click Dropdown to Check/Uncheck Shares for RAG)</span>
+                <div class="aix-col" id="ai-watched-folders-section">
+                  <div class="aix-row-12">
+                    <span class="aix-xs-bold-accent" data-i18n="ai.watched_folders_label">Watched Folders (Click Dropdown to Check/Uncheck Shares for RAG)</span>
                     <span style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8);" data-i18n="ai.watched_folders_hint">Tick a folder to let AI search read it; untick it to stop.</span>
                   </div>
 
-                  <div style="display:flex; gap:8px; align-items:center; width:100%; flex-wrap:wrap;">
-                    <div id="ai-watched-folders-dropdown-container" style="position:relative; flex:1; min-width:240px;">
+                  <div class="aix-row-13">
+                    <div class="aix-grow" id="ai-watched-folders-dropdown-container">
                       <button type="button" id="btn-ai-watched-folders-dropdown" aria-expanded="false" style="width:100%; min-height:38px; padding:6px 12px; border-radius:8px; background:var(--lt-b-0f172ad9, rgba(15,23,42,0.85)); border:1px solid rgba(56,189,248,0.42); color:var(--lt-t-f8fafcff, #f8fafc); font-size:var(--zn-fs-xs); display:flex; justify-content:space-between; align-items:center; gap:10px; cursor:pointer; text-align:left;">
-                        <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1; overflow:hidden;">
+                        <div class="aix-row-14">
                           <span aria-hidden="true">📁</span>
-                          <span id="ai-watched-dropdown-summary" style="font-family:monospace; font-weight:700; color:var(--zn-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" data-sample>Select Watched Folders for RAG...</span>
+                          <span class="aix-bold" id="ai-watched-dropdown-summary" data-sample>Select Watched Folders for RAG...</span>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                        <div class="aix-row-15">
                           <span id="ai-watched-dropdown-count-badge" style="font-size:var(--zn-fs-xs); font-weight:800; padding:2px 8px; border-radius:999px; background:rgba(37,194,160,0.2); border:1px solid rgba(37,194,160,0.45); color:var(--zn-text-ok);" data-sample>1 Checked</span>
-                          <span id="ai-watched-dropdown-caret" style="font-size:var(--zn-fs-xs); color:var(--zn-text-accent);">▾</span>
+                          <span class="aix-xs-accent" id="ai-watched-dropdown-caret">▾</span>
                         </div>
                       </button>
 
                       <!-- Dropdown Menu: List of all available + watched folders with in-place check/uncheck -->
                       <div id="ai-watched-folders-dropdown-menu" style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:40; max-height:260px; overflow-y:auto; border-radius:9px; background:var(--lt-b-0a101efa, rgba(10,16,30,0.98)); border:1px solid rgba(56,189,248,0.45); box-shadow:0 12px 28px rgba(0,0,0,0.65); padding:6px; flex-direction:column; gap:4px;">
-                        <div id="ai-discovered-shares-list" style="display:flex; flex-direction:column; gap:4px;"></div>
+                        <div class="aix-col-2" id="ai-discovered-shares-list"></div>
                       </div>
                     </div>
 
@@ -4652,7 +4652,7 @@
                   </div>
 
                   <!-- Compact active checked chips summary -->
-                  <div id="ai-watched-folders-list" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+                  <div class="aix-row-16" id="ai-watched-folders-list"></div>
 
                   <div id="ai-index-run-feedback" style="font-size:var(--zn-fs-xs); color:var(--ok2,#25c2a0);"></div>
                   <div id="ai-index-db-summary" style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:4px; padding-top:6px; border-top:1px solid var(--zn-line-6);"></div>
@@ -4661,12 +4661,12 @@
 
               <!-- Section 4: Embedding Model & Matryoshka Vector Index Scaling (Google DeepMind EmbeddingGemma 2) -->
               <div style="background:var(--card); border:1px solid rgba(14,165,233,0.3); border-radius:10px; padding:14px; margin-top:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--zn-line-7);">
+                <div class="aix-row-box-2">
                   <div>
-                    <div style="font-size:13px; font-weight:700; color:var(--zn-text-strong);"><span aria-hidden="true">🧬</span> <span data-i18n="mw.search_index_model_and_size">Search index: model and size</span></div>
+                    <div class="aix-fs13-bold-strong-2"><span aria-hidden="true">🧬</span> <span data-i18n="mw.search_index_model_and_size">Search index: model and size</span></div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); margin-top:2px;" data-i18n="mw.choose_the_model_that_reads_your">Choose the model that reads your files for AI search and how large its index is, and measure how fast it is. Sleeping drives stay asleep.</div>
                   </div>
-                  <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="aix-row-17">
                     <button type="button" id="btn-ai-run-benchmark" class="btn-pill-toggle" style="background: rgba(14,165,233,0.18); border: 1px solid rgba(14,165,233,0.45); color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">
                       <span aria-hidden="true">⚡</span> <span data-i18n="ai.btn_run_benchmark">Run Latency Benchmark</span>
                     </button>
@@ -4676,10 +4676,10 @@
                   </div>
                 </div>
 
-                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:12px;">
+                <div class="aix-grid-5">
                   <!-- Model Selector -->
-                  <div style="display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--card-hi); border:1px solid var(--zn-line-7);">
-                    <label for="ai-embedding-model-select" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text);" data-i18n="ai.embedding_model_label">Embedding Model:</label>
+                  <div class="aix-col-box">
+                    <label class="aix-xs-bold" for="ai-embedding-model-select" data-i18n="ai.embedding_model_label">Embedding Model:</label>
                     <select id="ai-embedding-model-select" class="tz-select-input" style="height:32px; padding:0 10px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--lt-b-0f172af2, rgba(15,23,42,0.95)); color:var(--zn-text-strong); border:1px solid var(--zn-line-15);">
                       <option value="embeddinggemma" translate="no">embeddinggemma (Google EmbeddingGemma 300M, 2K-token input)</option>
                       <option value="nomic-embed-text" translate="no">nomic-embed-text (137M, 8K Context)</option>
@@ -4688,8 +4688,8 @@
                   </div>
 
                   <!-- MRL Dimension Selector -->
-                  <div style="display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-radius:8px; background:var(--card-hi); border:1px solid var(--zn-line-7);">
-                    <label for="ai-mrl-dimension-select" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--zn-text);" data-i18n="ai.mrl_dimension_label">Search index size</label>
+                  <div class="aix-col-box">
+                    <label class="aix-xs-bold" for="ai-mrl-dimension-select" data-i18n="ai.mrl_dimension_label">Search index size</label>
                     <select id="ai-mrl-dimension-select" class="tz-select-input" style="height:32px; padding:0 10px; font-size:var(--zn-fs-xs); border-radius:6px; background:var(--lt-b-0f172af2, rgba(15,23,42,0.95)); color:var(--zn-text-strong); border:1px solid var(--zn-line-15);">
                       <option value="768" data-i18n="ai.mrl_768_desc">768d — Full DeepMind Fidelity (100% Recall)</option>
                       <option value="512" data-i18n="ai.mrl_512_desc">512d — Balanced (33% RAM Saving, 99.4% Recall)</option>
@@ -4707,25 +4707,25 @@
                   </div>
                   <div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); text-transform:uppercase;" data-i18n="ai.bm_metric_throughput">Throughput</div>
-                    <div id="bm-throughput" style="font-size:14px; font-weight:800; color:var(--zn-text-ok); margin-top:2px;">-- chunks/s</div>
+                    <div class="aix-fs14-bold-ok" id="bm-throughput">-- chunks/s</div>
                   </div>
                   <div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); text-transform:uppercase;" data-i18n="ai.bm_metric_tokens">Tokens / Sec</div>
-                    <div id="bm-tokens" style="font-size:14px; font-weight:800; color:var(--zn-text-warn); margin-top:2px;">-- tok/s</div>
+                    <div class="aix-fs14-bold-warn" id="bm-tokens">-- tok/s</div>
                   </div>
                   <div>
                     <div style="font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8); text-transform:uppercase;" data-i18n="ai.bm_metric_accel">Active Accelerator</div>
-                    <div id="bm-accel" style="font-size:13px; font-weight:700; color:var(--zn-text-strong); margin-top:2px;">--</div>
+                    <div class="aix-fs13-bold-strong-4" id="bm-accel">--</div>
                   </div>
                 </div>
 
                 <!-- Live SSE Re-indexing Progress Bar -->
                 <div id="ai-reindex-progress-container" style="display:none; background:var(--card-hi); border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:10px 14px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:var(--zn-fs-xs);">
-                    <span style="font-weight:700; color:var(--zn-text-strong);" data-i18n="ai.reindex_in_progress">Re-indexing Knowledge Base...</span>
+                  <div class="aix-row-xs">
+                    <span class="aix-bold-strong" data-i18n="ai.reindex_in_progress">Re-indexing Knowledge Base...</span>
                     <span id="ai-reindex-pct-label" style="font-weight:800; color:var(--lt-ink-brand, var(--accent-cyan, #00f0ff));">0%</span>
                   </div>
-                  <div style="height:6px; background:var(--zn-glaze-10); border-radius:999px; overflow:hidden; margin-bottom:6px;">
+                  <div class="aix-box">
                     <div id="ai-reindex-progress-bar" style="height:100%; width:0%; background:var(--accent-cyan,#00f0ff); transition:width 0.3s ease;"></div>
                   </div>
                   <div style="display:flex; justify-content:space-between; font-size:var(--zn-fs-xs); color:var(--muted,#94a3b8);">

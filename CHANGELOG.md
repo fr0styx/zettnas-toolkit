@@ -30,9 +30,10 @@
   window's bottom edge, like the vertical one on the right, instead of floating above the last
   rows.
 
-- **Eleven more panes are built from stylesheet classes** (NUX-15): Backups, Notifications,
-  About, Desktop widgets, Tailscale & WireGuard, Calendar, Language, Theme, Glass,
-  Screensaver and Security; 549 inline styles became classes, pixel-for-pixel the same in
+- **Nineteen more panes are built from stylesheet classes** (NUX-15): Backups,
+  Notifications, About, Desktop widgets, Tailscale & WireGuard, Calendar, Language, Theme,
+  Glass, Screensaver, Security, AI index, Power, Dock, Network services, Unraid, Wallpaper,
+  AI chat and AI knowledge; 808 inline styles became classes, pixel-for-pixel the same in
   both themes.
 
 ## v1.11.0 (2026-11-03)
