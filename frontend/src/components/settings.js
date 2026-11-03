@@ -917,7 +917,7 @@ export function initSettings() {
       } catch (err) {
         showToast(err.message || 'Failed to update settings', 'error');
       }
-      secSaveBtn.textContent = 'SAVE CREDENTIALS';
+      setIconLabel(secSaveBtn, '💾', t('mgmt.sec_save', 'Save'));
     });
   }
 

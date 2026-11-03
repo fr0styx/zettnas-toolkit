@@ -14,7 +14,7 @@ export default defineConfig({
       exclude: ['frontend/src/__tests__/**', 'frontend/src/locales/**'],
       // OPS-16, ARC-26: floors a little under today's numbers without locale data (63.8 / 61.4 / 55.4 /
       // 50.6 on 30 Oct 2026, NARC-4); raise them as coverage grows, towards 70 lines and 60 branches
-      thresholds: { lines: 63, statements: 61, functions: 55, branches: 50 },
+      thresholds: { lines: 68, statements: 65, functions: 59, branches: 55 },
     },
   },
 });

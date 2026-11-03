@@ -1,7 +1,7 @@
 import { showToast } from "./toast.js";
 import { ZettEventBus } from './event-bus.js';
 import { DockManager, bringToFront, makeDraggable } from './components/dock.js';
-import { trapFocus } from './utils.js';
+import { copyText, trapFocus } from './utils.js';
 import { t } from './i18n.js';
 import { formatDateTime, formatFixed } from './format.js';
 // Metric detail windows (CPU, memory, network...) and the event detail window. Drives have
@@ -89,15 +89,15 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         try {
           await copyText(textToCopy);
-          const copyText = document.getElementById("event-detail-copy-text");
+          const copyLabel = document.getElementById("event-detail-copy-text");
           const copyIcon = document.getElementById("event-detail-copy-icon");
-          if (copyText) copyText.textContent = t("event_detail.copied", "Copied!");
+          if (copyLabel) copyLabel.textContent = t("event_detail.copied", "Copied!");
           if (copyIcon) copyIcon.textContent = "✓";
           eventDetailCopyBtn.style.borderColor = "var(--ok2, #10b981)";
           eventDetailCopyBtn.style.color = "var(--ok2, #10b981)";
           showToast(t('toast.event_details_copied_to_clipboard', "Event details copied to clipboard"), "info");
           setTimeout(() => {
-            if (copyText) copyText.textContent = t("event_detail.copy", "Copy Details");
+            if (copyLabel) copyLabel.textContent = t("event_detail.copy", "Copy Details");
             if (copyIcon) copyIcon.textContent = "📋";
             eventDetailCopyBtn.style.borderColor = "rgba(255, 255, 255, 0.14)";
             eventDetailCopyBtn.style.color = "#fff";
