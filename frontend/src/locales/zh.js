@@ -5522,6 +5522,7 @@ export default {
   "viso.dest": "保存到：",
   "viso.types": "最大 50 GB 的 .iso 和 .img 文件",
   "viso.browse": "选择 ISO 文件…",
+  "viso.upload_error": "错误：{error}",
   "viso.found": "{path} 中的镜像",
   "viso.none": "{path} 中还没有 ISO 镜像。",
   "viso.boot": "创建虚拟机",

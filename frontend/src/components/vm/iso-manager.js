@@ -363,7 +363,7 @@ export async function openIsoManagerModal(initialTab = 'catalog') {
           if (errObj && errObj.detail) errDetail = errObj.detail;
         } catch (_) {}
         showToast(t('toast.upload_failed', 'Upload failed: {errDetail}', { errDetail: errDetail }), 'error');
-        if (progRate) progRate.textContent = `Error: ${errDetail}`;
+        if (progRate) progRate.textContent = t('viso.upload_error', 'Error: {error}', { error: errDetail });
       }
     };
 

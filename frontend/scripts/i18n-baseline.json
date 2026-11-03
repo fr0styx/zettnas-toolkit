@@ -1,6 +1,6 @@
 {
   "raw_toasts": 0,
-  "hardcoded_ui": 149,
+  "hardcoded_ui": 148,
   "missing_plurals": 0,
   "to_fixed": 38,
   "emoji_strings": 18,
@@ -25,7 +25,6 @@
     "frontend/src/components/spotlight.js": 3,
     "frontend/src/components/stack-modal.js": 2,
     "frontend/src/components/vm/console.js": 7,
-    "frontend/src/components/vm/iso-manager.js": 1,
     "frontend/src/components/widgets.js": 1,
     "frontend/src/folder-browser.js": 1,
     "frontend/src/main.js": 6,

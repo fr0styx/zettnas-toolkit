@@ -5522,6 +5522,7 @@ export default {
   "viso.dest": "Gespeichert in:",
   "viso.types": ".iso- und .img-Dateien bis 50 GB",
   "viso.browse": "ISO-Datei wählen…",
+  "viso.upload_error": "Fehler: {error}",
   "viso.found": "Images in {path}",
   "viso.none": "Noch keine ISO-Images in {path}.",
   "viso.boot": "VM erstellen",
