@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ZettNAS">
-<title>ZettNAS Studio • Hardware Suite</title>
+<title data-i18n="ix.zettnas_studio_hardware_suite">ZettNAS Studio • Hardware Suite</title>
 <script>
   (function() {
     try {
@@ -579,15 +579,15 @@
     <div class="suite-telemetry-pills">
       <div id="unraid-array-pill" class="suite-pill hidden"><span class="pulse-dot" id="unraid-array-dot"></span> <span data-i18n="nav.array">Array</span>: <strong id="unraid-array-status">STARTED</strong></div>
       <div id="unraid-parity-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.parity">Parity</span>: <strong id="unraid-parity-status">0.0%</strong></div>
-      <div id="unraid-mover-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--warn,#f5a623);box-shadow:0 0 6px var(--warn,#f5a623)"></span> <span data-i18n="nav.mover">Mover</span>: <strong id="unraid-mover-status">Active</strong></div>
+      <div id="unraid-mover-pill" class="suite-pill hidden"><span class="pulse-dot" style="background:var(--warn,#f5a623);box-shadow:0 0 6px var(--warn,#f5a623)"></span> <span data-i18n="nav.mover">Mover</span>: <strong id="unraid-mover-status" data-sample>Active</strong></div>
       <div id="topbar-ups-pill" class="suite-pill hidden" style="cursor:pointer;" title="Click to open Power & Battery Cockpit" data-i18n-title="ui.click_to_open_power_battery"><span class="pulse-dot" id="topbar-ups-dot" style="background:var(--ok2,#25c2a0);box-shadow:0 0 6px var(--ok2,#25c2a0)"></span> <span data-i18n="nav.ups">UPS</span>: <strong id="topbar-ups-text">--%</strong></div>
       <div id="topbar-ai-accel-pill" class="suite-pill" style="cursor:pointer;" title="AI Knowledge & Visual Search Engine • Click to view NPU/GPU/CPU acceleration & Standby Guard" data-i18n-title="ui.ai_knowledge_visual_search_engine"><span class="pulse-dot" id="topbar-ai-accel-dot" style="background:var(--accent-cyan,#00f0ff);box-shadow:0 0 6px var(--accent-cyan,#00f0ff)"></span> <span data-i18n="nav.ai">AI</span>: <strong id="topbar-ai-accel-text">NPU • Standby Safe</strong></div>
       <select id="suite-lang-select" class="language-picker-select tz-select-input" title="Select Display Language" data-i18n-title="ui.select_display_language" style="width: auto; padding: 2px 24px 2px 8px; font-size: var(--zn-fs-xs); height: 28px; border-radius: 6px; cursor: pointer;">
-        <option value="en" lang="en">English</option>
-        <option value="de" lang="de">Deutsch</option>
+        <option value="en" lang="en" translate="no">English</option>
+        <option value="de" lang="de" translate="no">Deutsch</option>
         <option value="zh" lang="zh">中文</option>
-        <option value="fr" lang="fr">Français</option>
-        <option value="es" lang="es">Español</option>
+        <option value="fr" lang="fr" translate="no">Français</option>
+        <option value="es" lang="es" translate="no">Español</option>
       </select>
       <button id="mobile-view-toggle-btn" class="yak-egg-btn" title="Toggle Mobile / Stacked Mode" aria-label="Toggle Mobile Layout" data-i18n-aria-label="ui.toggle_mobile_layout" data-i18n-title="nav.mobile_toggle">📱</button>
       <button id="yak-easter-egg-btn" class="yak-egg-btn" title="Trust in the Yak [Easter Egg Hot-key: Y]" data-i18n-title="nav.yak_egg">🐂</button>
@@ -633,7 +633,7 @@
           <div class="ai-gauge-column">
             <div class="ai-gauge-label">
               <span class="ai-gauge-chip-name">NPU</span>
-              <span class="ai-metric-pill sleep" id="w-ai-npu-state">D3 Sleep</span>
+              <span class="ai-metric-pill sleep" id="w-ai-npu-state" data-sample>D3 Sleep</span>
             </div>
             <div class="ai-dial-svg-wrap">
               <svg viewBox="0 0 36 36" class="circular-chart">
@@ -651,7 +651,7 @@
           <!-- GPU Gauge Column -->
           <div class="ai-gauge-column">
             <div class="ai-gauge-label">
-              <span class="ai-gauge-chip-name">Arc GPU</span>
+              <span class="ai-gauge-chip-name" data-sample>Arc GPU</span>
               <span class="ai-metric-pill sleep" id="w-ai-gpu-state">Standby</span>
             </div>
             <div class="ai-dial-svg-wrap">
@@ -686,7 +686,7 @@
         <!-- Active Engine / Silicon Status Strip -->
         <div class="ai-engine-footer" id="w-ai-engine-status">
           <span class="ai-status-dot standby"></span>
-          <span>Hybrid Dual Silicon</span> <span style="opacity:0.65;">(NPU + GPU Ready)</span>
+          <span data-sample>Hybrid Dual Silicon</span> <span style="opacity:0.65;" data-sample>(NPU + GPU Ready)</span>
         </div>
       </div>
 
@@ -701,7 +701,7 @@
             <span id="w-weather-icon" style="font-size: 24px; line-height: 1;">⛅</span>
             <div style="display: flex; flex-direction: column;">
               <span id="w-weather-temp" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono, monospace); line-height: 1.1; cursor: pointer; user-select: none;" title="Click to toggle °C / °F" data-i18n-title="ui.click_to_toggle_c_f">--°</span>
-              <span id="w-weather-desc" style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500;">Loading…</span>
+              <span id="w-weather-desc" style="font-size: var(--zn-fs-xs); color: var(--muted); font-weight: 500;" data-sample>Loading…</span>
             </div>
           </div>
           <div style="display: flex; flex-direction: column; text-align: right; gap: 2px;">
@@ -761,11 +761,11 @@
         </div>
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
           <div style="display: flex; flex-direction: column;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase;">Download</span>
+            <span style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase;" data-i18n="ix.download">Download</span>
             <span style="font-size: 14.5px; font-weight: 700; color: var(--lt-ink-brand, var(--brand, #00f0ff)); font-family: var(--font-mono, monospace);" id="w-net-rx">0 B/s</span>
           </div>
           <div style="display: flex; flex-direction: column; text-align: right;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase;">Upload</span>
+            <span style="font-size: var(--zn-fs-xs); color: var(--muted); text-transform: uppercase;" data-i18n="ix.upload">Upload</span>
             <span style="font-size: 14.5px; font-weight: 700; color: var(--warn, #f5a623); font-family: var(--font-mono, monospace);" id="w-net-tx">0 B/s</span>
           </div>
         </div>
@@ -779,7 +779,7 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 4px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted);">Capacity</span>
+            <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.capacity">Capacity</span>
             <span style="font-size: var(--zn-fs-xs); font-weight: 700; font-family: var(--font-mono, monospace);" id="w-storage-val">-- / --</span>
           </div>
           <div style="width: 100%; height: 4px; background: var(--zn-glaze-10); border-radius: 2px; overflow: hidden; margin-top: 2px;">
@@ -794,11 +794,11 @@
           <span class="widget-title"><svg class="ic" style="width:12px;height:12px;"><use href="#i-chip"/></svg> <span data-i18n="widget.host">Host Info</span></span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted);">Host</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.host">Host</span>
           <span style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--lt-ink-brand, var(--accent-cyan, #00f0ff));" id="w-host-name">NAS</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: var(--zn-fs-xs); color: var(--muted);">Uptime</span>
+          <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.uptime">Uptime</span>
           <span style="font-size: var(--zn-fs-xs); font-weight: 600; font-family: var(--font-mono, monospace); color: var(--zn-text-soft);" id="w-host-uptime">--</span>
         </div>
       </div>
@@ -810,7 +810,7 @@
           <span class="widget-badge" id="w-drive-temp-summary">-- Disks</span>
         </div>
         <div class="widget-drive-temp-grid" id="w-drive-temp-grid">
-          <div style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 6px 0;">Scanning bays...</div>
+          <div style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: center; padding: 6px 0;" data-sample>Scanning bays...</div>
         </div>
       </div>
 
@@ -849,7 +849,7 @@
         </div>
         <div style="display: flex; flex-direction: column; gap: 6px;">
           <div style="display: flex; justify-content: space-between; align-items: baseline;">
-            <span style="font-size: var(--zn-fs-xs); color: var(--muted);">Battery Charge</span>
+            <span style="font-size: var(--zn-fs-xs); color: var(--muted);" data-i18n="ix.battery_charge">Battery Charge</span>
             <span style="font-size: 14px; font-weight: 800; font-family: var(--font-mono, monospace); color: var(--ok2, #25c2a0);" id="w-ups-battery">100%</span>
           </div>
           <div style="width: 100%; height: 5px; background: var(--zn-glaze-10); border-radius: 3px; overflow: hidden;">
@@ -898,7 +898,7 @@
         </div>
         <div class="desktop-icon-label">
           <span class="icon-dot-status"></span>
-          <span class="icon-text">File Explorer</span>
+          <span class="icon-text" data-i18n="ix.file_explorer">File Explorer</span>
         </div>
       </div>
 
@@ -1020,7 +1020,7 @@
           <div class="smart-report-header">
             <div style="display: flex; align-items: center; gap: 8px;">
               <span class="smart-report-badge-pill" id="smart-report-badge">✓ PASSED</span>
-              <span class="smart-report-meta" id="smart-report-meta">Short Test • Completed</span>
+              <span class="smart-report-meta" id="smart-report-meta" data-sample>Short Test • Completed</span>
             </div>
             <button id="smart-btn-copy-report" type="button" class="smart-btn-copy-report" title="Copy formatted SMART report to clipboard" data-i18n-title="ui.copy_formatted_smart_report_to">
               <span id="smart-copy-report-icon">📋</span>
@@ -1030,7 +1030,7 @@
           <div class="smart-report-grid">
             <div class="smart-report-metric">
               <span class="lbl" data-i18n="modal.smart_report_surface">SURFACE INTEGRITY</span>
-              <span class="val" id="smart-report-lba">0 Defects</span>
+              <span class="val" id="smart-report-lba" data-sample>0 Defects</span>
             </div>
             <div class="smart-report-metric">
               <span class="lbl" data-i18n="modal.smart_report_temp">DRIVE TEMP</span>
@@ -1042,7 +1042,7 @@
             </div>
             <div class="smart-report-metric">
               <span class="lbl" data-i18n="modal.smart_report_routine">TEST ROUTINE</span>
-              <span class="val" id="smart-report-type">Short Offline</span>
+              <span class="val" id="smart-report-type" data-sample>Short Offline</span>
             </div>
           </div>
           <div class="smart-report-recommendation" id="smart-report-recommendation"></div>
@@ -1120,7 +1120,7 @@
 
       <!-- Raw Markdown Box -->
       <div>
-        <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;">SUPPORT MARKDOWN PREVIEW</div>
+        <div style="font-size: var(--zn-fs-xs); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;" data-i18n="ix.support_markdown_preview">SUPPORT MARKDOWN PREVIEW</div>
         <pre id="diagnostics-preview-md" style="margin: 0; padding: 12px 14px; background: var(--zn-shade-40); border: 1px solid var(--zn-line-8); border-radius: 8px; font-family: monospace; font-size: var(--zn-fs-xs); color: var(--zn-text-accent); max-height: 200px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;"></pre>
       </div>
 
@@ -1286,7 +1286,7 @@
       <div data-setup-step="1">
         <div style="font-size: var(--zn-fs-xs); font-weight: 800; letter-spacing: 0.8px; color: var(--zn-text-muted); text-transform: uppercase; margin-bottom: 8px;" data-i18n="setup.step1_title">Your hardware</div>
         <div class="smart-meta-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px;">
-          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val" id="setup-hw-chassis" style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);">Detecting...</span></div>
+          <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.chassis_model">Model</span><span class="val" id="setup-hw-chassis" style="font-size: var(--zn-fs-xs); color: var(--zn-text-accent);" data-sample>Detecting...</span></div>
           <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.lcd_screen">Front screen</span><span class="val" id="setup-hw-fb" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
           <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.fans_controller">Fans</span><span class="val" id="setup-hw-fans" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
           <div class="smart-meta-cell" style="padding: 10px 12px;"><span class="lbl" data-i18n="setup.argb_lightbar">Light bar</span><span class="val" id="setup-hw-leds" style="font-size: var(--zn-fs-xs); color: var(--lt-t-4ade80ff, #4ade80);">…</span></div>
@@ -1653,8 +1653,8 @@
     <div style="background: var(--zn-glaze-10); height: 6px; border-radius: 3px; overflow: hidden;">
       <div id="copy-toast-bar" style="background: var(--ok2); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
     </div>
-    <div id="copy-toast-file" style="font-size: var(--zn-fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Preparing files...</div>
-    <div id="copy-toast-time" style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: right;">Estimating time...</div>
+    <div id="copy-toast-file" style="font-size: var(--zn-fs-xs); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" data-sample>Preparing files...</div>
+    <div id="copy-toast-time" style="font-size: var(--zn-fs-xs); color: var(--muted); text-align: right;" data-sample>Estimating time...</div>
   </div>
 </div>
 
@@ -1713,7 +1713,7 @@
                 </div>
                 <div id="unraid-parity-box" class="unraid-parity-box hidden">
                   <div class="unraid-parity-bar-bg"><div id="unraid-parity-bar" class="unraid-parity-bar-fill"></div></div>
-                  <span id="unraid-parity-txt">Parity: 0.0%</span>
+                  <span id="unraid-parity-txt" data-sample>Parity: 0.0%</span>
                 </div>
               </div>
 
@@ -1830,9 +1830,9 @@
                   <div class="sl-ip-body">
                     <div class="sl-hero-ip" id="sl-hero-ip">0.0.0.0</div>
                     <div class="sl-net-rates" id="sl-net-rates">
-                      <span class="sl-net-item"><span class="sl-net-lbl">TX:</span> <strong id="sl-net-tx">0 KB/s</strong></span>
+                      <span class="sl-net-item"><span class="sl-net-lbl">TX:</span> <strong id="sl-net-tx" data-sample>0 KB/s</strong></span>
                       <span class="sl-net-sep">•</span>
-                      <span class="sl-net-item"><span class="sl-net-lbl">RX:</span> <strong id="sl-net-rx">0 KB/s</strong></span>
+                      <span class="sl-net-item"><span class="sl-net-lbl">RX:</span> <strong id="sl-net-rx" data-sample>0 KB/s</strong></span>
                     </div>
                   </div>
                 </div>
@@ -1857,23 +1857,23 @@
           <div class="lcd-page" id="lcd-page-2" data-page-index="2">
             <div class="lcd-page-header-banner">
               <span class="lph-title"><svg class="ic ic-sm"><use href="#i-net"/></svg> NETWORK & STORAGE I/O TELEMETRY</span>
-              <span class="lph-stat" id="lcd-net-summary">INTERFACE LIVE</span>
+              <span class="lph-stat" id="lcd-net-summary" data-i18n="ix.interface_live">INTERFACE LIVE</span>
             </div>
             <div class="net-io-grid">
               <div class="net-io-panel">
-                <div class="nio-head"><span class="nio-dir rx">INBOUND (RX)</span><span class="nio-rate" id="lcd-nio-rx">0.0 MB/s</span></div>
+                <div class="nio-head"><span class="nio-dir rx" data-i18n="ix.inbound_rx">INBOUND (RX)</span><span class="nio-rate" id="lcd-nio-rx">0.0 MB/s</span></div>
                 <div class="nio-bar-bg"><div class="nio-bar-fill rx" id="lcd-nio-rx-bar" style="width:0%"></div></div>
-                <div class="nio-sub"><span id="lcd-nio-rx-peak">Peak: 0 MB/s</span><span>Target: 10 GbE</span></div>
+                <div class="nio-sub"><span id="lcd-nio-rx-peak" data-sample>Peak: 0 MB/s</span><span data-sample>Target: 10 GbE</span></div>
               </div>
               <div class="net-io-panel">
-                <div class="nio-head"><span class="nio-dir tx">OUTBOUND (TX)</span><span class="nio-rate" id="lcd-nio-tx">0.0 MB/s</span></div>
+                <div class="nio-head"><span class="nio-dir tx" data-i18n="ix.outbound_tx">OUTBOUND (TX)</span><span class="nio-rate" id="lcd-nio-tx">0.0 MB/s</span></div>
                 <div class="nio-bar-bg"><div class="nio-bar-fill tx" id="lcd-nio-tx-bar" style="width:0%"></div></div>
-                <div class="nio-sub"><span id="lcd-nio-tx-peak">Peak: 0 MB/s</span><span id="lcd-nio-ip">IP: 0.0.0.0</span></div>
+                <div class="nio-sub"><span id="lcd-nio-tx-peak" data-sample>Peak: 0 MB/s</span><span id="lcd-nio-ip">IP: 0.0.0.0</span></div>
               </div>
               <div class="net-io-panel">
-                <div class="nio-head"><span class="nio-dir io">STORAGE I/O</span><span class="nio-rate" id="lcd-nio-disk-total">0.0 MB/s</span></div>
+                <div class="nio-head"><span class="nio-dir io" data-i18n="ix.storage_i_o">STORAGE I/O</span><span class="nio-rate" id="lcd-nio-disk-total">0.0 MB/s</span></div>
                 <div class="nio-bar-bg"><div class="nio-bar-fill io" id="lcd-nio-io-bar" style="width:0%"></div></div>
-                <div class="nio-sub"><span id="lcd-nio-uptime">up --</span><span id="lcd-nio-disks-active">Active</span></div>
+                <div class="nio-sub"><span id="lcd-nio-uptime">up --</span><span id="lcd-nio-disks-active" data-sample>Active</span></div>
               </div>
             </div>
           </div>
@@ -1887,10 +1887,10 @@
             <div class="unraid-copy-grid">
               <div class="uc-panel">
                 <div class="uc-title-row">
-                  <span class="uc-title">ARRAY STATUS</span>
+                  <span class="uc-title" data-i18n="ix.array_status">ARRAY STATUS</span>
                   <span class="uc-state-badge" id="lcd-uc-array-badge">STARTED</span>
                 </div>
-                <div class="uc-stat-line" id="lcd-uc-disks-stat">Disks: 2 Assigned • 0 Errors</div>
+                <div class="uc-stat-line" id="lcd-uc-disks-stat" data-sample>Disks: 2 Assigned • 0 Errors</div>
                 <div class="uc-parity-section" id="lcd-uc-parity-section">
                   <div class="uc-parity-label-row">
                     <span id="lcd-uc-parity-action">Parity Check</span>
@@ -1902,7 +1902,7 @@
 
               <div class="uc-panel">
                 <div class="uc-title-row">
-                  <span class="uc-title">MEDIA INGEST ENGINE</span>
+                  <span class="uc-title" data-i18n="ix.media_ingest_engine">MEDIA INGEST ENGINE</span>
                   <span class="uc-state-badge" id="lcd-uc-copy-badge">IDLE</span>
                 </div>
                 <div class="uc-stat-line" id="lcd-uc-media-slots">SD: Slot Empty • TF: Slot Empty</div>
@@ -1967,7 +1967,7 @@
     <div class="smart-modal-header os-window-header" id="cloud-remote-window-header" style="cursor: move;">
       <span class="smart-modal-title os-window-title" id="modal-remote-title" style="display: flex; align-items: center; gap: 8px;">
         <svg class="ic" style="width: 16px; height: 16px; color: var(--lt-ink-brand, var(--brand, #0ea5e9));"><use href="#i-cloud"/></svg>
-        <span>Connect New Cloud / Remote Storage</span>
+        <span data-i18n="ix.connect_new_cloud_remote_storage">Connect New Cloud / Remote Storage</span>
       </span>
       <div class="os-window-controls" style="display: flex; gap: 6px; align-items: center;">
         <button class="win-btn min-btn" id="modal-remote-min-btn" title="Minimize" data-i18n-title="window.minimize" aria-label="Minimize" data-i18n-aria-label="window.minimize"></button>
@@ -1978,7 +1978,7 @@
     <form id="new-remote-form">
       <div class="cloud-remote-scroll-body">
         <div class="remote-form-section">
-          <label for="new-remote-provider-select" class="remote-section-label">1. SELECT CLOUD / STORAGE PROVIDER</label>
+          <label for="new-remote-provider-select" class="remote-section-label" data-sample>1. SELECT CLOUD / STORAGE PROVIDER</label>
           <select id="new-remote-provider-select" class="tz-select-input" style="width: 100%;">
             <!-- Dynamically populated from /api/remotes/providers -->
           </select>
@@ -1986,13 +1986,13 @@
         </div>
 
         <div class="remote-form-section">
-          <label for="new-remote-name" class="remote-section-label">2. REMOTE NAME (Local Identifier)</label>
+          <label for="new-remote-name" class="remote-section-label" data-sample>2. REMOTE NAME (Local Identifier)</label>
           <input type="text" id="new-remote-name" class="tz-select-input" placeholder="e.g. backup-s3, gdrive, onedrive-photos, offsite-nas" data-i18n-placeholder="ph.remote_name" style="width: 100%;" required pattern="^[a-zA-Z0-9_\-\.]{1,64}$" />
           <div style="font-size: var(--zn-fs-xs); color: var(--zn-text-muted); margin-top: 4px;">Will be mounted to: <code style="color: var(--zn-text-accent); font-weight: 600;">/mnt/remotes/&lt;name&gt;</code></div>
         </div>
 
         <div class="remote-form-section">
-          <div class="remote-section-label">3. PROVIDER PARAMETERS</div>
+          <div class="remote-section-label" data-sample>3. PROVIDER PARAMETERS</div>
           <div id="new-remote-dynamic-fields" style="display: flex; flex-direction: column; gap: 12px;">
             <!-- Dynamically populated fields based on provider -->
           </div>
@@ -2097,7 +2097,7 @@
 
       <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
         <div style="display: flex; align-items: center; gap: 8px;">
-          <label for="media-org-mode-select" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);">Operation Mode:</label>
+          <label for="media-org-mode-select" style="font-size: var(--zn-fs-xs); font-weight: 700; color: var(--muted);" data-i18n="ix.operation_mode">Operation Mode:</label>
           <select id="media-org-mode-select" class="tz-select-input" style="border: 1px solid var(--zn-line-12); background: var(--zn-shade-40); padding: 5px 10px; color: var(--zn-text-strong); border-radius: 6px; font-size: var(--zn-fs-xs);">
             <option value="hardlink" selected data-i18n="media.mode_hardlink">Hardlink (Fastest, 0 MB Disk Used)</option>
             <option value="move" data-i18n="media.mode_move">Move Files</option>
@@ -2111,7 +2111,7 @@
 
       <!-- Preview Diff Table -->
       <div id="media-org-preview-wrap" style="max-height: 240px; overflow-y: auto; border: 1px solid var(--zn-line-8); border-radius: 6px; background: var(--zn-shade-25);">
-        <div style="color: var(--muted); text-align: center; padding: 25px; font-size: var(--zn-fs-xs);">Click "Scan & Preview Diff" to analyze files.</div>
+        <div style="color: var(--muted); text-align: center; padding: 25px; font-size: var(--zn-fs-xs);" data-i18n="ix.click_scan_and_preview_diff_to">Click "Scan & Preview Diff" to analyze files.</div>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
@@ -2132,7 +2132,7 @@
 <div id="desktop-context-menu" class="desktop-context-menu" role="menu" aria-label="Desktop Context Menu" data-i18n-aria-label="ui.desktop_context_menu" style="display: none;">
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="add-shortcut">
     <span class="context-menu-icon">➕</span>
-    <span class="context-menu-label">Add Desktop Shortcut…</span>
+    <span class="context-menu-label" data-i18n="ix.add_desktop_shortcut">Add Desktop Shortcut…</span>
   </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="add-widget">
     <span class="context-menu-icon">🧩</span>
@@ -2149,7 +2149,7 @@
   </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="refresh-desktop">
     <span class="context-menu-icon">🔄</span>
-    <span class="context-menu-label">Refresh Desktop</span>
+    <span class="context-menu-label" data-i18n="ix.refresh_desktop">Refresh Desktop</span>
   </div>
   <div class="context-menu-divider" role="separator"></div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="wallpaper">
@@ -2175,7 +2175,7 @@
   <div class="context-menu-divider" role="separator"></div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
     <span class="context-menu-icon">⚡</span>
-    <span class="context-menu-label">Command Palette</span>
+    <span class="context-menu-label" data-i18n="ix.command_palette">Command Palette</span>
     <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--zn-glaze-8); border-radius:3px;">⌘K</kbd>
   </div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="fullscreen">
@@ -2220,7 +2220,7 @@
   <div class="context-menu-divider" role="separator"></div>
   <div class="context-menu-item" role="menuitem" tabindex="0" data-action="spotlight">
     <span class="context-menu-icon">⚡</span>
-    <span class="context-menu-label">Command Palette</span>
+    <span class="context-menu-label" data-i18n="ix.command_palette">Command Palette</span>
     <kbd style="margin-left:auto; font-size:var(--zn-fs-xs); opacity:0.6; padding:1px 4px; background:var(--zn-glaze-8); border-radius:3px;">⌘K</kbd>
   </div>
 </div>
@@ -2239,7 +2239,7 @@
   <canvas id="screensaver-canvas" class="screensaver-canvas"></canvas>
   <div id="screensaver-clock-display" class="screensaver-clock-display" style="display: none;">
     <div class="screensaver-clock-time" id="screensaver-time">12:00:00</div>
-    <div class="screensaver-clock-date" id="screensaver-date">Friday, October 9, 2026</div>
+    <div class="screensaver-clock-date" id="screensaver-date" data-sample>Friday, October 9, 2026</div>
   </div>
   <div class="screensaver-wake-hint" data-i18n="screensaver.wake_hint">Move mouse or press any key to wake</div>
 </div>

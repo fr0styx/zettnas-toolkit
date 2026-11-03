@@ -26,7 +26,7 @@
       <div class="draggable-card mini-preview-box" data-layout-card-id="sec-preview">
         <div class="card-headline" style="margin-bottom:2px;">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.canvas_preview">LCD Live Canvas Re-arrange & Preview</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status" data-i18n-title="ui.lcd_framebuffer_renderer_status">&#x2B24; Checking…</span>
+          <span id="lcd-renderer-badge" class="lcd-status-badge lcd-status-checking" title="LCD Framebuffer Renderer Status" data-i18n-title="ui.lcd_framebuffer_renderer_status" data-sample>&#x2B24; Checking…</span>
         </div>
         <div id="mini-lcd-canvas" class="mini-lcd-canvas">
           <div class="mini-preview-inner" id="mini-preview-inner"></div>
@@ -189,8 +189,8 @@
               </div>
             </div>
             <div class="seg-size-selector">
-              <button class="seg-size-btn" data-metric-id="metric-storage" data-size="compact">Compact</button>
-              <button class="seg-size-btn active" data-metric-id="metric-storage" data-size="full">Full</button>
+              <button class="seg-size-btn" data-metric-id="metric-storage" data-size="compact" data-i18n="dr.compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-storage" data-size="full" data-i18n="dr.full">Full</button>
             </div>
             <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-storage" aria-label="Show storage" data-i18n-aria-label="a11y.show_storage" checked><span class="toggle-slider"></span></label>
           </div>
@@ -203,8 +203,8 @@
               </div>
             </div>
             <div class="seg-size-selector">
-              <button class="seg-size-btn" data-metric-id="metric-cpu" data-size="compact">Compact</button>
-              <button class="seg-size-btn active" data-metric-id="metric-cpu" data-size="full">Full</button>
+              <button class="seg-size-btn" data-metric-id="metric-cpu" data-size="compact" data-i18n="dr.compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-cpu" data-size="full" data-i18n="dr.full">Full</button>
             </div>
             <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-cpu" aria-label="Show CPU" data-i18n-aria-label="a11y.show_cpu" checked><span class="toggle-slider"></span></label>
           </div>
@@ -217,8 +217,8 @@
               </div>
             </div>
             <div class="seg-size-selector">
-              <button class="seg-size-btn" data-metric-id="metric-mem" data-size="compact">Compact</button>
-              <button class="seg-size-btn active" data-metric-id="metric-mem" data-size="full">Full</button>
+              <button class="seg-size-btn" data-metric-id="metric-mem" data-size="compact" data-i18n="dr.compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-mem" data-size="full" data-i18n="dr.full">Full</button>
             </div>
             <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-mem" aria-label="Show memory" data-i18n-aria-label="a11y.show_memory" checked><span class="toggle-slider"></span></label>
           </div>
@@ -231,8 +231,8 @@
               </div>
             </div>
             <div class="seg-size-selector">
-              <button class="seg-size-btn" data-metric-id="metric-fans" data-size="compact">Compact</button>
-              <button class="seg-size-btn active" data-metric-id="metric-fans" data-size="full">Full</button>
+              <button class="seg-size-btn" data-metric-id="metric-fans" data-size="compact" data-i18n="dr.compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-fans" data-size="full" data-i18n="dr.full">Full</button>
             </div>
             <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-fans" aria-label="Show fans" data-i18n-aria-label="a11y.show_fans" checked><span class="toggle-slider"></span></label>
           </div>
@@ -245,8 +245,8 @@
               </div>
             </div>
             <div class="seg-size-selector">
-              <button class="seg-size-btn" data-metric-id="metric-net" data-size="compact">Compact</button>
-              <button class="seg-size-btn active" data-metric-id="metric-net" data-size="full">Full</button>
+              <button class="seg-size-btn" data-metric-id="metric-net" data-size="compact" data-i18n="dr.compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-net" data-size="full" data-i18n="dr.full">Full</button>
             </div>
             <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-net" aria-label="Show network" data-i18n-aria-label="a11y.show_network" checked><span class="toggle-slider"></span></label>
           </div>
@@ -259,8 +259,8 @@
               </div>
             </div>
             <div class="seg-size-selector">
-              <button class="seg-size-btn" data-metric-id="metric-disks" data-size="compact">Compact</button>
-              <button class="seg-size-btn active" data-metric-id="metric-disks" data-size="full">Full</button>
+              <button class="seg-size-btn" data-metric-id="metric-disks" data-size="compact" data-i18n="dr.compact">Compact</button>
+              <button class="seg-size-btn active" data-metric-id="metric-disks" data-size="full" data-i18n="dr.full">Full</button>
             </div>
             <label class="switch"><input type="checkbox" class="metric-vis-toggle" data-metric-id="metric-disks" aria-label="Show disks" data-i18n-aria-label="a11y.show_disks" checked><span class="toggle-slider"></span></label>
           </div>
@@ -271,7 +271,7 @@
 
   <div id="tab-led" class="drawer-tab-content">
     <div class="tab-sub-header">
-      <span class="sub-title">Card arrangement</span>
+      <span class="sub-title" data-i18n="dr.card_arrangement">Card arrangement</span>
       <button id="drawer-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
     </div>
 
@@ -319,10 +319,10 @@
         <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.lighting_profiles">Lighting Profiles</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span></div>
         <div class="card-instruction" data-i18n="settings.lighting_profiles_desc">1-click quick hardware presets.</div>
         <div class="profiles-grid">
-          <button class="profile-pill" data-profile="clean">Clean (Teal)</button>
-          <button class="profile-pill" data-profile="cyberpunk">Cyberpunk</button>
-          <button class="profile-pill" data-profile="stealth">Stealth Night</button>
-          <button class="profile-pill" data-profile="rainbow">Spectrum</button>
+          <button class="profile-pill" data-profile="clean" data-i18n="dr.clean_teal">Clean (Teal)</button>
+          <button class="profile-pill" data-profile="cyberpunk" translate="no">Cyberpunk</button>
+          <button class="profile-pill" data-profile="stealth" data-i18n="dr.stealth_night">Stealth Night</button>
+          <button class="profile-pill" data-profile="rainbow" data-i18n="dr.spectrum">Spectrum</button>
         </div>
       </div>
 
@@ -330,20 +330,20 @@
         <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.lighting_effects">Lighting effects</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span></div>
         <div class="card-instruction" data-i18n="settings.lighting_effects_desc">Choose an active dynamic animation for the light bar.</div>
         <div class="effects-grid">
-          <button class="effect-btn active" data-effect="solid">Solid</button>
-          <button class="effect-btn" data-effect="breathe">Breathe</button>
-          <button class="effect-btn" data-effect="flow">Flow</button>
-          <button class="effect-btn" data-effect="chase">Chase</button>
-          <button class="effect-btn" data-effect="gradient">Gradient</button>
-          <button class="effect-btn" data-effect="rainbow">Rainbow</button>
-          <button class="effect-btn" data-effect="flashing">Flashing</button>
+          <button class="effect-btn active" data-effect="solid" data-i18n="dr.solid">Solid</button>
+          <button class="effect-btn" data-effect="breathe" data-i18n="dr.breathe">Breathe</button>
+          <button class="effect-btn" data-effect="flow" data-i18n="dr.flow">Flow</button>
+          <button class="effect-btn" data-effect="chase" data-i18n="dr.chase">Chase</button>
+          <button class="effect-btn" data-effect="gradient" data-i18n="dr.gradient">Gradient</button>
+          <button class="effect-btn" data-effect="rainbow" data-i18n="dr.rainbow">Rainbow</button>
+          <button class="effect-btn" data-effect="flashing" data-i18n="dr.flashing">Flashing</button>
         </div>
       </div>
 
       <div class="draggable-card drawer-card" id="speed-card" data-card-id="card-speed" style="display: none;">
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.effect_speed">Effect speed</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
-          <span id="speed-val-display" class="card-head-val">Medium (50%)</span>
+          <span id="speed-val-display" class="card-head-val" data-sample>Medium (50%)</span>
         </div>
         <div class="card-instruction" data-i18n="settings.effect_speed_desc">Control animation rate (1%: Slowest, 100%: Fastest).</div>
         <div class="slider-row"><input type="range" id="speed-slider" min="1" max="100" value="50" step="1" class="custom-slider"></div>
@@ -356,17 +356,17 @@
         </div>
         <div class="card-instruction" data-i18n="settings.primary_color_desc">Select illumination preset or pick a custom hex color.</div>
         <div class="color-grid">
-          <button class="color-chip active" data-hex="25c2a0" style="background:#25c2a0; color:#0b1f1a;">Teal</button>
-          <button class="color-chip" data-hex="00ffff" style="background:#00ffff; color:#0b1f1a;">Cyan</button>
-          <button class="color-chip" data-hex="33d17a" style="background:#33d17a; color:#0b1f1a;">Green</button>
-          <button class="color-chip" data-hex="0064ff" style="background:#0064ff; color:#fff;">Blue</button>
-          <button class="color-chip" data-hex="c08cff" style="background:#c08cff; color:#0b1f1a;">Purple</button>
-          <button class="color-chip" data-hex="ff0000" style="background:#ff0000; color:#fff;">Red</button>
-          <button class="color-chip" data-hex="ff7800" style="background:#ff7800; color:#111;">Orange</button>
-          <button class="color-chip" data-hex="ffb464" style="background:#ffb464; color:#111;">Warm</button>
-          <button class="color-chip" data-hex="ffffff" style="background:#ffffff; color:#111;">White</button>
+          <button class="color-chip active" data-hex="25c2a0" style="background:#25c2a0; color:#0b1f1a;" data-i18n="dr.teal">Teal</button>
+          <button class="color-chip" data-hex="00ffff" style="background:#00ffff; color:#0b1f1a;" data-i18n="dr.cyan">Cyan</button>
+          <button class="color-chip" data-hex="33d17a" style="background:#33d17a; color:#0b1f1a;" data-i18n="dr.green">Green</button>
+          <button class="color-chip" data-hex="0064ff" style="background:#0064ff; color:#fff;" data-i18n="dr.blue">Blue</button>
+          <button class="color-chip" data-hex="c08cff" style="background:#c08cff; color:#0b1f1a;" data-i18n="dr.purple">Purple</button>
+          <button class="color-chip" data-hex="ff0000" style="background:#ff0000; color:#fff;" data-i18n="dr.red">Red</button>
+          <button class="color-chip" data-hex="ff7800" style="background:#ff7800; color:#111;" data-i18n="dr.orange">Orange</button>
+          <button class="color-chip" data-hex="ffb464" style="background:#ffb464; color:#111;" data-i18n="dr.warm">Warm</button>
+          <button class="color-chip" data-hex="ffffff" style="background:#ffffff; color:#111;" data-i18n="dr.white">White</button>
           <label class="color-chip custom-picker-chip" id="custom-chip-label" title="Choose custom color" data-i18n-title="ui.choose_custom_color">
-            <span id="custom-chip-text">Custom</span>
+            <span id="custom-chip-text" data-i18n="dr.custom">Custom</span>
             <input type="color" id="custom-color-picker" value="#25c2a0">
           </label>
         </div>
@@ -376,17 +376,17 @@
         <div class="card-headline"><span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <span data-i18n="settings.secondary_color">Secondary Color (Gradient End)</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span></div>
         <div class="card-instruction" data-i18n="settings.secondary_color_desc">Select the target tone that the primary color transitions toward.</div>
         <div class="color-grid">
-          <button class="color-chip2" data-hex="ff0055" style="background:#ff0055; color:#fff;">Pink</button>
-          <button class="color-chip2" data-hex="0064ff" style="background:#0064ff; color:#fff;">Blue</button>
-          <button class="color-chip2" data-hex="ffaa00" style="background:#ffaa00; color:#111;">Gold</button>
-          <button class="color-chip2" data-hex="00ffff" style="background:#00ffff; color:#111;">Cyan</button>
-          <button class="color-chip2" data-hex="33d17a" style="background:#33d17a; color:#111;">Green</button>
-          <button class="color-chip2" data-hex="c08cff" style="background:#c08cff; color:#111;">Purple</button>
-          <button class="color-chip2" data-hex="ff0000" style="background:#ff0000; color:#fff;">Red</button>
-          <button class="color-chip2" data-hex="001428" style="background:var(--lt-b-001428ff, #001428); color:var(--zn-text-strong);">Deep</button>
-          <button class="color-chip2" data-hex="ffffff" style="background:#ffffff; color:#111;">White</button>
+          <button class="color-chip2" data-hex="ff0055" style="background:#ff0055; color:#fff;" data-i18n="dr.pink">Pink</button>
+          <button class="color-chip2" data-hex="0064ff" style="background:#0064ff; color:#fff;" data-i18n="dr.blue">Blue</button>
+          <button class="color-chip2" data-hex="ffaa00" style="background:#ffaa00; color:#111;" data-i18n="dr.gold">Gold</button>
+          <button class="color-chip2" data-hex="00ffff" style="background:#00ffff; color:#111;" data-i18n="dr.cyan">Cyan</button>
+          <button class="color-chip2" data-hex="33d17a" style="background:#33d17a; color:#111;" data-i18n="dr.green">Green</button>
+          <button class="color-chip2" data-hex="c08cff" style="background:#c08cff; color:#111;" data-i18n="dr.purple">Purple</button>
+          <button class="color-chip2" data-hex="ff0000" style="background:#ff0000; color:#fff;" data-i18n="dr.red">Red</button>
+          <button class="color-chip2" data-hex="001428" style="background:var(--lt-b-001428ff, #001428); color:var(--zn-text-strong);" data-i18n="dr.deep">Deep</button>
+          <button class="color-chip2" data-hex="ffffff" style="background:#ffffff; color:#111;" data-i18n="dr.white">White</button>
           <label class="color-chip2 custom-picker-chip" id="custom-chip2-label" title="Choose custom secondary color" data-i18n-title="ui.choose_custom_secondary_color">
-            <span>Custom</span>
+            <span data-i18n="dr.custom">Custom</span>
             <input type="color" id="custom-color-picker2" value="#ff0055">
           </label>
         </div>
@@ -396,7 +396,7 @@
 
   <div id="tab-fans" class="drawer-tab-content">
     <div class="tab-sub-header">
-      <span class="sub-title">Fan Control Cards</span>
+      <span class="sub-title" data-i18n="dr.fan_control_cards">Fan Control Cards</span>
       <button id="fan-cards-lock-btn" class="btn-lock-toggle" title="Lock or Unlock Card Order" data-i18n-title="ui.lock_or_unlock_card_order">🔒 Locked</button>
     </div>
 
@@ -416,7 +416,7 @@
               <span class="df-label">D1</span>
             </div>
             <div class="df-zone-box">
-              <span class="zp-lbl">ZONE 1 (LEFT)</span>
+              <span class="zp-lbl" data-i18n="dr.zone_1_left">ZONE 1 (LEFT)</span>
               <span class="zp-val" id="zp-z1-temp">--°C</span>
               <span class="zp-pwm" id="zp-z1-pwm">PWM: --</span>
             </div>
@@ -429,7 +429,7 @@
               <span class="df-label">D2</span>
             </div>
             <div class="df-zone-box">
-              <span class="zp-lbl">ZONE 2 (RIGHT)</span>
+              <span class="zp-lbl" data-i18n="dr.zone_2_right">ZONE 2 (RIGHT)</span>
               <span class="zp-val" id="zp-z2-temp">--°C</span>
               <span class="zp-pwm" id="zp-z2-pwm">PWM: --</span>
             </div>
@@ -442,7 +442,7 @@
               <span class="df-label">CPU</span>
             </div>
             <div class="df-zone-box">
-              <span class="zp-lbl">CPU PACKAGE</span>
+              <span class="zp-lbl" data-i18n="dr.cpu_package">CPU PACKAGE</span>
               <span class="zp-val" id="zp-cpu-temp">--°C</span>
               <span class="zp-pwm" id="zp-cpu-pwm">BIOS Auto</span>
             </div>
@@ -522,8 +522,8 @@
             <div class="legend-item" id="leg-item-cpu"><span class="legend-dot" style="background:#ffaa00;"></span> CPU</div>
             <button class="btn-reset-curve-view" id="btn-reset-curve" style="display:none;">↺ Show All Zones</button>
             <div style="display:flex; align-items:center; gap:8px;">
-              <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);">Ramp: 37°C – 50°C</span>
-              <div id="curve-readout-text" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2);">Active Mapping</div>
+              <span id="fan-curve-range-val" class="suite-badge" title="Dynamic Fan Ramp Range" data-i18n-title="ui.dynamic_fan_ramp_range" style="background:rgba(37,194,160,0.15); color:var(--ok2); border-color:rgba(37,194,160,0.35);" data-sample>Ramp: 37°C – 50°C</span>
+              <div id="curve-readout-text" style="font-size:var(--zn-fs-xs); font-weight:800; color:var(--ok2);" data-sample>Active Mapping</div>
             </div>
           </div>
         </div>
@@ -561,8 +561,8 @@
           Allows HDD bay fans to stop completely when all bay hard drives are spun down in standby and thermal conditions are safe. CPU fan is never stopped.
         </div>
         <div class="zero-rpm-status-row" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-          <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;">Zone 1: Active</span>
-          <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;">Zone 2: Active</span>
+          <span id="zero-rpm-badge-z1" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;" data-sample>Zone 1: Active</span>
+          <span id="zero-rpm-badge-z2" class="zero-rpm-badge" style="font-size:var(--zn-fs-xs); padding:3px 8px; border-radius:4px; border:1px solid var(--zn-line-10); font-weight:600;" data-sample>Zone 2: Active</span>
         </div>
         <div class="slider-row" style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
           <label for="zero-rpm-delay-slider" class="slider-label" style="opacity: 0.8; font-size: var(--zn-fs-xs); text-transform: uppercase; font-weight: 700; cursor: pointer;" data-i18n="settings.zero_rpm_stop_delay_label">Standby Cooldown Delay</label>
@@ -580,10 +580,10 @@
         <div class="card-instruction" data-i18n="settings.cooling_duty_desc">Select dynamic thermal scaling or fixed duty presets mapped across disk fans.</div>
         <div class="profiles-grid" style="grid-template-columns: repeat(5, 1fr);">
           <button class="profile-pill fan-profile-btn active" data-fan-profile="auto">⚡ Auto Dynamic</button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="quiet">Quiet (67)</button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="balanced">Balanced (120)</button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="performance">Perf (155)</button>
-          <button class="profile-pill fan-profile-btn" data-fan-profile="full">Full (183)</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="quiet" data-i18n="dr.quiet_67">Quiet (67)</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="balanced" data-i18n="dr.balanced_120">Balanced (120)</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="performance" data-i18n="dr.perf_155">Perf (155)</button>
+          <button class="profile-pill fan-profile-btn" data-fan-profile="full" data-i18n="dr.full_183">Full (183)</button>
         </div>
         <div id="fan-presets-bar" class="fan-presets-bar">
           <div class="fan-presets-header">
@@ -647,7 +647,7 @@
               </button>
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end;">
-              <span id="acoustic-sweep-status" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text-dim, var(--zn-text-muted));">Idle</span>
+              <span id="acoustic-sweep-status" style="font-size:var(--zn-fs-xs); font-weight:700; color:var(--text-dim, var(--zn-text-muted));" data-sample>Idle</span>
               <span id="acoustic-current-step" style="font-size:var(--zn-fs-xs); font-family:monospace; color:var(--accent, var(--zn-text-accent));">Step --/--</span>
             </div>
           </div>
@@ -694,7 +694,7 @@
         <div class="card-headline">
           <span class="card-head-title"><span class="drag-handle" title="Drag to reorder" data-i18n-title="ui.drag_to_reorder">⋮⋮</span> <svg class="ic ic-sm" style="margin: 0 4px 0 2px;"><use href="#i-storage"/></svg><span data-i18n="settings.copy_btn_title">Front-Panel COPY Button</span><button class="btn-minimize" title="Minimize/Expand" data-i18n-title="ui.minimize_expand" aria-label="Minimize/Expand card" data-i18n-aria-label="ui.minimize_expand_card">▼</button></span>
           <div style="display:flex; align-items:center; gap:8px;">
-            <span id="btn-copy-status-text" style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; opacity:0.8;">ENABLED</span>
+            <span id="btn-copy-status-text" style="font-size:var(--zn-fs-xs); font-weight:700; text-transform:uppercase; opacity:0.8;" data-sample>ENABLED</span>
             <label class="switch">
             <input type="checkbox" id="btn-copy-toggle">
             <span class="toggle-slider"></span>
@@ -715,8 +715,8 @@
               </div>
             </div>
             <select id="btn-copy-src" class="tz-text-input" style="width: 100%; box-sizing: border-box; appearance: auto;">
-              <option value="sd">SD 4.0 Slot</option>
-              <option value="tf">TF 4.0 Slot (MicroSD)</option>
+              <option value="sd" data-i18n="dr.sd_4_0_slot">SD 4.0 Slot</option>
+              <option value="tf" data-i18n="dr.tf_4_0_slot_microsd">TF 4.0 Slot (MicroSD)</option>
             </select>
           </div>
           
