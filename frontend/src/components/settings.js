@@ -1091,17 +1091,17 @@ export function syncDesktopThemeUI() {
     const bg = curTheme === 'oled' ? [0, 0, 0] : [15, 23, 42];
     const ratio = rgb ? getContrastRatio(rgb, bg) : 4.5;
     if (ratio >= 7.0) {
-      contrastBadge.textContent = 'AAA PASS';
+      contrastBadge.textContent = t('stg.aaa', 'AAA PASS');
       contrastBadge.style.background = 'rgba(34, 197, 94, 0.2)';
       contrastBadge.style.color = '#22c55e';
       contrastBadge.style.borderColor = 'rgba(34, 197, 94, 0.4)';
     } else if (ratio >= 4.5) {
-      contrastBadge.textContent = 'AA PASS';
+      contrastBadge.textContent = t('stg.aa', 'AA PASS');
       contrastBadge.style.background = 'rgba(34, 197, 94, 0.15)';
       contrastBadge.style.color = '#22c55e';
       contrastBadge.style.borderColor = 'rgba(34, 197, 94, 0.35)';
     } else {
-      contrastBadge.textContent = 'LOW (' + ratio.toFixed(1) + ':1)';
+      contrastBadge.textContent = t('stg.low', 'LOW ({ratio}:1)', { ratio: ratio.toFixed(1) });
       contrastBadge.style.background = 'rgba(239, 68, 68, 0.15)';
       contrastBadge.style.color = '#ef4444';
       contrastBadge.style.borderColor = 'rgba(239, 68, 68, 0.35)';
@@ -1122,7 +1122,7 @@ export function renderExtractedChips(colors) {
     btn.className = 'desktop-color-chip color-chip-btn';
     btn.dataset.color = hex;
     btn.style.background = hex;
-    btn.title = `Extracted: ${hex.toUpperCase()}`;
+    btn.title = t('stg.extracted', 'Extracted: {hex}', { hex: hex.toUpperCase() });
     if (state.desktopCustomAccent && state.desktopCustomAccent.toLowerCase() === hex.toLowerCase()) {
       btn.classList.add('active');
     }
@@ -1162,7 +1162,7 @@ export async function sampleWallpaperPalette() {
   }
 
   try {
-    container.innerHTML = `<span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--brand)); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> Sampling wallpaper pixels...</span>`;
+    container.innerHTML = `<span style="font-size:var(--zn-fs-xs); color:var(--lt-ink-brand, var(--brand)); display:flex; align-items:center; gap:6px;"><span class="spinner-inline" style="width:12px; height:12px; border-width:2px;"></span> ${t('stg.sampling', 'Sampling wallpaper pixels...')}</span>`;
 
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -1657,9 +1657,9 @@ export function syncLcdStyleUI() {
   const badge = $('lcd-style-active-badge');
   if (badge) {
     if (curStyle === 'streamline') {
-      badge.textContent = 'STREAMLINE BIG IP';
+      badge.textContent = t('stg.streamline', 'STREAMLINE BIG IP');
     } else {
-      badge.textContent = 'CLASSIC CARDS';
+      badge.textContent = t('stg.classic', 'CLASSIC CARDS');
     }
   }
 }

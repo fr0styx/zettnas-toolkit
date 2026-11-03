@@ -67,7 +67,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   // Column 2: Stack & Type
   let stackHtml;
   if (c.stack) {
-    stackHtml = `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}" style="cursor:pointer;">📁 ${escapeHtml(c.stack)}</span>`;
+    stackHtml = `<span class="docker-stack-pill clickable-stack-pill" data-stack="${escapeHtml(c.stack)}" title="${escapeHtml(t('dkt.stack', 'Open & Edit Stack: {name}', { name: c.stack }))}" style="cursor:pointer;">📁 ${escapeHtml(c.stack)}</span>`;
   } else {
     const originLabel = c.managed_by === 'unraid' ? 'Unraid' : 'Standalone';
     stackHtml = `<span class="docker-origin-pill">${originLabel}</span>`;
@@ -99,7 +99,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
     const resolvedUrl = c.webui_url.replace('[HOST]', currentHost);
     if (/^https?:\/\//i.test(resolvedUrl)) {
       portParts.push(
-        `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="Open Web UI (Port ${escapeHtml(String(c.primary_port))})">🌐 :${escapeHtml(String(c.primary_port))} ↗</a>`
+        `<a href="${escapeHtml(resolvedUrl)}" target="_blank" rel="noopener noreferrer" class="btn-webui-badge" title="${escapeHtml(t('dkt.webui', 'Open Web UI (Port {port})', { port: String(c.primary_port) }))}">🌐 :${escapeHtml(String(c.primary_port))} ↗</a>`
       );
     }
   }
@@ -128,19 +128,19 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   // Column 7: Actions
   const hasUpdate = Boolean(updateInfo?.has_update);
   const updateBadge = hasUpdate
-    ? `<button class="ci-badge badge-update-ready btn-container-act btn-docker-update-badge" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Click to update ${escapeHtml(c.name)} to latest image">⬆️ UPDATE</button>`
+    ? `<button class="ci-badge badge-update-ready btn-container-act btn-docker-update-badge" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="${escapeHtml(t('dkt.click_update', 'Click to update {name} to latest image', { name: c.name }))}">⬆️ UPDATE</button>`
     : '';
 
-  const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="Inspect ${escapeHtml(c.name)}">🔍</button>`;
-  const editBtn = `<button class="btn-container-act btn-docker-edit" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="edit" title="Edit ${escapeHtml(c.name)}">✏️</button>`;
+  const inspectBtn = `<button class="btn-container-act btn-docker-inspect" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="inspect" title="${escapeHtml(t('dkt.inspect', 'Inspect {name}', { name: c.name }))}">🔍</button>`;
+  const editBtn = `<button class="btn-container-act btn-docker-edit" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="edit" title="${escapeHtml(t('dkt.edit', 'Edit {name}', { name: c.name }))}">✏️</button>`;
   const stackBtn = c.stack
-    ? `<button class="btn-container-act btn-docker-stack" data-action="stack" data-stack="${escapeHtml(c.stack)}" title="Open & Edit Stack: ${escapeHtml(c.stack)}">📁</button>`
+    ? `<button class="btn-container-act btn-docker-stack" data-action="stack" data-stack="${escapeHtml(c.stack)}" title="${escapeHtml(t('dkt.stack', 'Open & Edit Stack: {name}', { name: c.stack }))}">📁</button>`
     : '';
   const updateBtn = hasUpdate
-    ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="Update ${escapeHtml(c.name)} to latest image">⬆️</button>`
+    ? `<button class="btn-container-act btn-docker-update-single" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="update-single" title="${escapeHtml(t('dkt.update', 'Update {name} to latest image', { name: c.name }))}">⬆️</button>`
     : '';
   const backupBtn = `<button class="btn-container-act btn-docker-backup" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="backup" title="${t('ui.backup_app_data_config', 'Backup App Data & Config')}">💾</button>`;
-  const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="Destroy / Delete ${escapeHtml(c.name)}">🗑️</button>`;
+  const deleteBtn = `<button class="btn-container-act btn-docker-delete" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-image="${escapeHtml(c.image || '')}" data-action="delete" title="${escapeHtml(t('dkt.delete', 'Destroy / Delete {name}', { name: c.name }))}">🗑️</button>`;
   const moreBtn = `<button class="btn-container-act btn-docker-more-sheet" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="more-sheet" title="${t('ui.more_actions', 'More Actions')}">···</button>`;
   const actions = isRunning
     ? `
@@ -149,8 +149,8 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
       ${stackBtn}
       ${updateBtn}
       ${backupBtn}
-      <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="Restart ${escapeHtml(c.name)}">🔄</button>
-      <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="Stop ${escapeHtml(c.name)}"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2.5"/></svg></button>
+      <button class="btn-container-act btn-docker-restart" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="restart" title="${escapeHtml(t('dkt.restart', 'Restart {name}', { name: c.name }))}">🔄</button>
+      <button class="btn-container-act btn-docker-stop" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="stop" title="${escapeHtml(t('dkt.stop', 'Stop {name}', { name: c.name }))}"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="1.5" y="1.5" width="13" height="13" rx="2.5"/></svg></button>
       ${deleteBtn}
       ${moreBtn}
     `
@@ -160,7 +160,7 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
       ${stackBtn}
       ${updateBtn}
       ${backupBtn}
-      <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="Start ${escapeHtml(c.name)}"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.8v10.4c0 .7.8 1.1 1.4.8l8.4-5.2c.6-.4.6-1.2 0-1.6L5.4 2c-.6-.4-1.4 0-1.4.8z"/></svg></button>
+      <button class="btn-container-act btn-docker-start" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" data-action="start" title="${escapeHtml(t('dkt.start', 'Start {name}', { name: c.name }))}"><svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.8v10.4c0 .7.8 1.1 1.4.8l8.4-5.2c.6-.4.6-1.2 0-1.6L5.4 2c-.6-.4-1.4 0-1.4.8z"/></svg></button>
       ${deleteBtn}
       ${moreBtn}
     `;
@@ -168,8 +168,8 @@ export function buildContainerRowInner(c, currentHost, updateInfo = null) {
   return `
     <td class="docker-name-cell">
       <div style="display:flex; align-items:center; gap:6px;">
-        <input type="checkbox" class="docker-row-select" data-id="${escapeHtml(c.id)}" ${checkedAttr} title="Select ${escapeHtml(c.name)}" style="margin:0; cursor:pointer; accent-color:var(--brand, #0ea5e9); flex-shrink:0;">
-        <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:var(--zn-text-strong); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="Inspect ${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
+        <input type="checkbox" class="docker-row-select" data-id="${escapeHtml(c.id)}" ${checkedAttr} title="${escapeHtml(t('dkt.select', 'Select {name}', { name: c.name }))}" style="margin:0; cursor:pointer; accent-color:var(--brand, #0ea5e9); flex-shrink:0;">
+        <button class="btn-docker-name-link clickable-container-name" data-id="${escapeHtml(c.id)}" data-name="${escapeHtml(c.name)}" style="background:none; border:none; padding:0; color:var(--zn-text-strong); font-size:var(--zn-fs-xs); font-weight:700; cursor:pointer; text-align:left; font-family:inherit;" title="${escapeHtml(t('dkt.inspect', 'Inspect {name}', { name: c.name }))}">${escapeHtml(c.name)}</button>
         <code style="font-size:var(--zn-fs-xs); color:var(--muted); font-family:var(--font-mono, monospace);">${escapeHtml(idShort)}</code>
         ${updateBadge}
       </div>

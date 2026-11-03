@@ -61,7 +61,7 @@ export function renderNotificationConfigUI() {
   const updateBadge = (id, active, activeText = 'Active') => {
     const b = document.getElementById(id);
     if (!b) return;
-    b.textContent = active ? activeText : 'Off';
+    b.textContent = active ? activeText : t('ntf.off', 'Off');
     b.style.background = active ? 'rgba(37,194,160,0.15)' : 'rgba(255,255,255,0.06)';
     b.style.color = active ? 'var(--ok2)' : 'var(--muted)';
     b.style.border = active ? '1px solid rgba(37,194,160,0.4)' : '1px solid rgba(255,255,255,0.1)';
@@ -180,7 +180,7 @@ export async function testSingleChannel(channel) {
     if (res?.success) {
       showToast(t('toast.delivered_in_ms', '✓ {channel}: Delivered in {latency_ms}ms', { channel: channel.toUpperCase(), latency_ms: res.latency_ms }), 'success');
     } else {
-      showToast(t('toast.message', '⚠️ {channel}: {message}', { channel: channel.toUpperCase(), message: res.message || 'Delivery failed' }), 'error');
+      showToast(t('toast.message', '⚠️ {channel}: {message}', { channel: channel.toUpperCase(), message: res.message || t('ntf.delivery_failed', 'Delivery failed') }), 'error');
     }
   } catch (err) {
     showToast(t('toast.test_failed_for', 'Test failed for {channel}: {error}', { channel: channel, error: err.message }), 'error');
@@ -201,29 +201,29 @@ export function openChannelConfigModal(channel) {
   const bodyEl = document.getElementById('notif-modal-body');
   const enableChk = document.getElementById('notif-modal-channel-enable');
 
-  if (titleEl) titleEl.textContent = `Configure ${channel.charAt(0).toUpperCase() + channel.slice(1)} Alerts`;
+  if (titleEl) titleEl.textContent = t('ntf.configure', 'Configure {channel} Alerts', { channel: channel.replace(/_raw$/, '').replace(/^./, (c) => c.toUpperCase()) });
 
   let formHtml = '';
   if (channel === 'discord') {
     if (enableChk) enableChk.checked = !!cfg.discord_enabled;
     formHtml = `
       <div style="margin-bottom:12px;">
-        <label for="cfg-discord-url" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">DISCORD WEBHOOK URL</label>
+        <label for="cfg-discord-url" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.discord_url', 'DISCORD WEBHOOK URL')}</label>
         <input type="url" id="cfg-discord-url" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="https://discord.com/api/webhooks/..." value="${escapeHtml(cfg.discord_webhook_url || '')}">
-        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">Paste the Webhook URL created in your Discord channel settings -> Integrations.</div>
+        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">${t('ntf.discord_hint', 'Paste the Webhook URL created in your Discord channel settings -> Integrations.')}</div>
       </div>
     `;
   } else if (channel === 'telegram') {
     if (enableChk) enableChk.checked = !!cfg.telegram_enabled;
     formHtml = `
       <div style="margin-bottom:12px;">
-        <label for="cfg-telegram-token" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">TELEGRAM BOT TOKEN</label>
+        <label for="cfg-telegram-token" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.tg_bot', 'TELEGRAM BOT TOKEN')}</label>
         <input type="password" id="cfg-telegram-token" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="123456789:ABCDefgh..." data-sample value="${escapeHtml(cfg.telegram_bot_token || '')}">
       </div>
       <div style="margin-bottom:12px;">
-        <label for="cfg-telegram-chat" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">TELEGRAM CHAT ID</label>
+        <label for="cfg-telegram-chat" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.tg_chat', 'TELEGRAM CHAT ID')}</label>
         <input type="text" id="cfg-telegram-chat" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="-100123456789" value="${escapeHtml(cfg.telegram_chat_id || '')}">
-        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">Obtained from @userinfobot or your Telegram channel/group chat ID.</div>
+        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">${t('ntf.tg_hint', 'Obtained from @userinfobot or your Telegram channel/group chat ID.')}</div>
       </div>
     `;
   } else if (channel === 'email') {
@@ -231,7 +231,7 @@ export function openChannelConfigModal(channel) {
     formHtml = `
       <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px; margin-bottom:12px;">
         <div>
-          <label for="cfg-smtp-host" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">SMTP HOST</label>
+          <label for="cfg-smtp-host" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.smtp_host', 'SMTP HOST')}</label>
           <input type="text" id="cfg-smtp-host" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="smtp.gmail.com" value="${escapeHtml(cfg.smtp_host || '')}">
         </div>
         <div>
@@ -241,41 +241,41 @@ export function openChannelConfigModal(channel) {
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
         <div>
-          <label for="cfg-smtp-user" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">SMTP USER</label>
+          <label for="cfg-smtp-user" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.smtp_user', 'SMTP USER')}</label>
           <input type="text" id="cfg-smtp-user" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="user@domain.com" value="${escapeHtml(cfg.smtp_user || '')}">
         </div>
         <div>
-          <label for="cfg-smtp-pass" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">SMTP PASSWORD</label>
+          <label for="cfg-smtp-pass" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.smtp_pw', 'SMTP PASSWORD')}</label>
           <input type="password" id="cfg-smtp-pass" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="••••••••" value="${escapeHtml(cfg.smtp_pass || '')}">
         </div>
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:12px;">
         <div>
-          <label for="cfg-email-from" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">FROM EMAIL</label>
+          <label for="cfg-email-from" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.from', 'FROM EMAIL')}</label>
           <input type="email" id="cfg-email-from" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="nas@domain.com" value="${escapeHtml(cfg.email_from || '')}">
         </div>
         <div>
-          <label for="cfg-email-to" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">TO RECIPIENT(S)</label>
+          <label for="cfg-email-to" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.to', 'TO RECIPIENT(S)')}</label>
           <input type="email" id="cfg-email-to" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="admin@domain.com" value="${escapeHtml(cfg.email_to || '')}">
         </div>
       </div>
       <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size: var(--zn-fs-xs); color:var(--zn-text-strong);">
-        <input type="checkbox" id="cfg-smtp-tls" ${cfg.smtp_tls !== false ? 'checked' : ''}> Use TLS / STARTTLS Encryption
+        <input type="checkbox" id="cfg-smtp-tls" ${cfg.smtp_tls !== false ? 'checked' : ''}> ${t('ntf.tls', 'Use TLS / STARTTLS Encryption')}
       </label>
     `;
   } else if (channel === 'ntfy') {
     if (enableChk) enableChk.checked = !!cfg.ntfy_enabled;
     formHtml = `
       <div style="margin-bottom:12px;">
-        <label for="cfg-ntfy-url" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">NTFY SERVER URL</label>
+        <label for="cfg-ntfy-url" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.ntfy_url', 'NTFY SERVER URL')}</label>
         <input type="url" id="cfg-ntfy-url" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="https://ntfy.sh" value="${escapeHtml(cfg.ntfy_url || 'https://ntfy.sh')}">
       </div>
       <div style="margin-bottom:12px;">
-        <label for="cfg-ntfy-topic" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">TOPIC NAME</label>
+        <label for="cfg-ntfy-topic" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.topic', 'TOPIC NAME')}</label>
         <input type="text" id="cfg-ntfy-topic" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="my_nas_alerts" value="${escapeHtml(cfg.ntfy_topic || '')}">
       </div>
       <div style="margin-bottom:12px;">
-        <label for="cfg-ntfy-token" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">ACCESS TOKEN (Optional)</label>
+        <label for="cfg-ntfy-token" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.ntfy_login', 'ACCESS TOKEN (Optional)')}</label>
         <input type="password" id="cfg-ntfy-token" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="tk_••••••••" data-sample value="${escapeHtml(cfg.ntfy_token || '')}">
       </div>
     `;
@@ -283,18 +283,18 @@ export function openChannelConfigModal(channel) {
     if (enableChk) enableChk.checked = !!cfg.webhook_enabled;
     formHtml = `
       <div style="margin-bottom:12px;">
-        <label for="cfg-webhook-url" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">WEBHOOK URL</label>
+        <label for="cfg-webhook-url" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.webhook_url', 'WEBHOOK URL')}</label>
         <input type="url" id="cfg-webhook-url" class="tz-select-input" style="width:100%; border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="https://..." value="${escapeHtml(cfg.webhook_url || '')}">
-        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">Receives POST requests with JSON payload: { event, title, message, level, timestamp }</div>
+        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">${t('ntf.webhook_hint', 'Receives POST requests with JSON payload: { event, title, message, level, timestamp }')}</div>
       </div>
     `;
   } else if (channel === 'apprise_raw') {
     const rawVal = Array.isArray(cfg.apprise_urls) ? cfg.apprise_urls.join('\n') : '';
     formHtml = `
       <div style="margin-bottom:12px;">
-        <label for="cfg-apprise-raw" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">APPRISE TARGET URLS (One per line)</label>
+        <label for="cfg-apprise-raw" style="display:block; font-size: var(--zn-fs-xs); font-weight:700; color:var(--muted); margin-bottom:4px;">${t('ntf.apprise_urls', 'APPRISE TARGET URLS (One per line)')}</label>
         <textarea id="cfg-apprise-raw" class="tz-select-input" style="width:100%; height:120px; font-family:monospace; font-size: var(--zn-fs-xs); border:1px solid var(--zn-line-12); background:var(--zn-shade-25); padding:8px 10px; color:var(--zn-text-strong);" placeholder="pover://userkey@token&#10;slack://TokenA/TokenB/TokenC&#10;gotify://gotify.server/token">${escapeHtml(rawVal)}</textarea>
-        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">Apprise supports 100+ notification targets. See Apprise documentation for syntax.</div>
+        <div style="font-size: var(--zn-fs-xs); color:var(--muted); margin-top:4px;">${t('ntf.apprise_hint', 'Apprise supports 100+ notification targets. See Apprise documentation for syntax.')}</div>
       </div>
     `;
   }
