@@ -226,7 +226,7 @@ def _get_or_create_secret_key() -> str:
         # a key that lives only in memory seals two-factor secrets and passphrases that the next
         # start can't open (NARC-7): don't run like that
         if test_mode():
-            logger.warning(f"Failed to persist {SECRET_KEY_FILE}: {e}")
+            logger.warning("Failed to persist %s: %s", SECRET_KEY_FILE, e)
         else:
             raise RuntimeError(
                 f"Cannot save the secret key to {SECRET_KEY_FILE} ({e}). Make the data folder writable "

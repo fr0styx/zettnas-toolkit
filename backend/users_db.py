@@ -1339,7 +1339,7 @@ def get_user_mfa(user_id: str, db_path: str | None = None) -> dict[str, Any] | N
         try:
             mfa_secret = unseal(row["mfa_secret"] or "")
         except SecretBoxError as e:
-            logger.error(f"[Users] Two-factor secret for '{row['username']}' is unreadable: {e}")
+            logger.error("[Users] Two-factor secret for '%s' is unreadable: %s", row["username"], e)
             mfa_secret = ""
         return {
             "user_id": row["id"],
@@ -1541,7 +1541,7 @@ def retire_weak_hashes(db_path: str | None = None) -> int:
             changed += 1
     if changed:
         logger.warning(
-            f"[Auth] {changed} account(s) still had an unsalted SHA-256 password hash; it is now wrapped in "
-            "Argon2id and they will be asked to choose a new password at their next sign-in."
+            "[Auth] %s account(s) still had an unsalted SHA-256 password hash; it is now wrapped in Argon2id and they will be asked to choose a new password at their next sign-in.",
+            changed,
         )
     return changed

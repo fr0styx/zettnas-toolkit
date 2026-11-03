@@ -326,7 +326,7 @@ def create_app_backup(
             p_status, _ = _docker_request("POST", f"/containers/{cid}/pause")
             if p_status in (200, 204):
                 was_paused = _mark_paused("containers", cid)
-                logger.info(f"[App Backup] Paused container '{cname}' for consistent backup.")
+                logger.info("[App Backup] Paused container '%s' for consistent backup.", cname)
         except Exception as e:
             logger.warning(f"[App Backup] Could not pause container '{cname}' (continuing live): {e}")
 
@@ -385,14 +385,14 @@ def create_app_backup(
         }
 
         save_app_backup_record(record)
-        logger.info(f"[App Backup] Successfully created archive for '{cname}': {archive_filename} ({size_human})")
+        logger.info("[App Backup] Successfully created archive for '%s': %s (%s)", cname, archive_filename, size_human)
         return record
 
     finally:
         if was_paused:
             try:
                 _unpause_container(cid)
-                logger.info(f"[App Backup] Resumed container '{cname}' after backup.")
+                logger.info("[App Backup] Resumed container '%s' after backup.", cname)
             except Exception as e:
                 logger.error(f"[App Backup] Failed to unpause container '{cname}': {e}")
 
@@ -446,7 +446,7 @@ def delete_app_backup(backup_id: str) -> bool:
     if fpath and os.path.exists(fpath):
         try:
             os.remove(fpath)
-            logger.info(f"[App Backup] Removed backup file: {fpath}")
+            logger.info("[App Backup] Removed backup file: %s", fpath)
         except Exception as e:
             logger.warning(f"[App Backup] Error removing file {fpath}: {e}")
 
@@ -528,7 +528,7 @@ def restore_app_backup(
             tar.extractall(src, members=members_to_extract, filter="data")
 
     app_name = manifest.get("app_name", "app")
-    logger.info(f"[App Backup] Restored data for '{app_name}' from backup '{backup_id}'.")
+    logger.info("[App Backup] Restored data for '%s' from backup '%s'.", app_name, backup_id)
 
     app_recreated = False
     if recreate_container and compose_yaml:
@@ -603,7 +603,7 @@ def _pause_vm(vm_id: str) -> str:
         raise RuntimeError(_CANT_PAUSE) from e
     if "error" in res:
         raise RuntimeError(_CANT_PAUSE)
-    logger.info(f"[VM Backup] Paused {vm_id} while its disks are copied")
+    logger.info("[VM Backup] Paused %s while its disks are copied", vm_id)
     _mark_paused("vms", vm_id)
     return "paused_for_backup"
 
@@ -614,9 +614,9 @@ def _resume_vm(vm_id: str) -> None:
     res = vm_qemu._qmp_command(vm_id, "cont", timeout=30)
     _unmark_paused("vms", vm_id)
     if "error" in res:
-        logger.error(f"[VM Backup] {vm_id} could not be resumed after the backup: {res['error']}")
+        logger.error("[VM Backup] %s could not be resumed after the backup: %s", vm_id, res["error"])
     else:
-        logger.info(f"[VM Backup] Resumed {vm_id}")
+        logger.info("[VM Backup] Resumed %s", vm_id)
 
 
 def create_vm_backup(
@@ -705,7 +705,7 @@ def create_vm_backup(
             "created_at_iso": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
         save_app_backup_record(record)
-        logger.info(f"[VM Backup] Created VM backup '{backup_id}' ({record['size_formatted']}) for {vname}")
+        logger.info("[VM Backup] Created VM backup '%s' (%s) for %s", backup_id, record["size_formatted"], vname)
         return record
     except Exception as e:
         if os.path.exists(archive_filepath):
@@ -713,7 +713,7 @@ def create_vm_backup(
                 os.remove(archive_filepath)
             except Exception:
                 ignored("backend.services.app_backup.create_vm_backup")
-        logger.error(f"[VM Backup] Failed to create backup for {vname}: {e}")
+        logger.error("[VM Backup] Failed to create backup for %s: %s", vname, e)
         raise
     finally:
         if state == "paused_for_backup":
@@ -803,7 +803,7 @@ def restore_vm_backup(backup_id: str) -> dict[str, Any]:
                 # Check the path actually written, not the member name.
                 if not member.isfile() or not _inside(dest_path, vm_dir):
                     if member.isfile():
-                        logger.warning(f"[VM Restore] Skipping file outside the VM folder: {member.name}")
+                        logger.warning("[VM Restore] Skipping file outside the VM folder: %s", member.name)
                     continue
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                 if member.isfile():

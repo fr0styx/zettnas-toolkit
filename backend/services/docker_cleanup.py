@@ -90,10 +90,12 @@ def destroy_container(
 
             archive_record = create_app_backup(full_id, reason="uninstall", custom_name=cname)
             logger.info(
-                f"[Docker Cleanup] Auto-archived app data & config for '{cname}' prior to uninstall: {archive_record.get('filename')}"
+                "[Docker Cleanup] Auto-archived app data & config for '%s' prior to uninstall: %s",
+                cname,
+                archive_record.get("filename"),
             )
         except Exception as e:
-            logger.warning(f"[Docker Cleanup] Could not auto-archive '{cname}' prior to uninstall: {e}")
+            logger.warning("[Docker Cleanup] Could not auto-archive '%s' prior to uninstall: %s", cname, e)
 
     # 3. Delete the container
     v_param = "true" if remove_volumes else "false"
@@ -110,7 +112,7 @@ def destroy_container(
             raise RuntimeError(f"Container '{cname}' is running. Please stop it first or enable 'Force' removal.")
         raise RuntimeError(f"Failed to delete container '{cname}': {err}")
 
-    logger.info(f"[Docker Cleanup] Deleted container '{cname}' (ID: {full_id[:12]}, volumes={remove_volumes})")
+    logger.info("[Docker Cleanup] Deleted container '%s' (ID: %s, volumes=%s)", cname, full_id[:12], remove_volumes)
 
     # Invalidate cached lists
     docker_stats._CACHED_CONTAINERS = []
@@ -127,7 +129,7 @@ def destroy_container(
             img_status, img_resp = _docker_request("DELETE", f"/images/{target_image}?force=false", timeout=timeout)
             if img_status == 200:
                 image_deleted = True
-                logger.info(f"[Docker Cleanup] Successfully deleted image '{target_image}'")
+                logger.info("[Docker Cleanup] Successfully deleted image '%s'", target_image)
             elif img_status == 409:
                 image_error = "Image in use by another container"
                 logger.info(f"[Docker Cleanup] Image '{target_image}' still in use by other containers, kept.")
@@ -344,7 +346,7 @@ def prune_docker_system(
         f"Prune reclaimed {space_human} (Containers: {len(containers_deleted)}, "
         f"Images: {len(images_deleted)}, Volumes: {len(volumes_deleted)})."
     )
-    logger.info(f"[Docker Prune] {summary_msg}")
+    logger.info("[Docker Prune] %s", summary_msg)
     add_event("info", "App cleanup", summary_msg)
 
     return {
@@ -575,7 +577,7 @@ def _run_prune_job(job: dict[str, Any], opts: dict[str, Any]) -> None:
         f"Prune {'stopped' if stopped else 'reclaimed'} {_format_bytes(job['freed_bytes'])}"
         f"{' so far' if stopped else ''} (Containers: {c['containers']}, Images: {c['images']}, Volumes: {c['volumes']})."
     )
-    logger.info(f"[Docker Prune] {summary}")
+    logger.info("[Docker Prune] %s", summary)
     add_event("info", "App cleanup", summary)
     _update(
         job,

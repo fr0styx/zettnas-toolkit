@@ -52,7 +52,7 @@ def _db_state(path: str) -> str:
             conn.close()
         return "ok" if row and str(row[0]).lower() == "ok" else "damaged"
     except Exception as e:
-        logger.warning(f"[DataHealth] {os.path.basename(path)} could not be checked", exc_info=True)
+        logger.warning("[DataHealth] %s could not be checked", os.path.basename(path), exc_info=True)
         return "damaged" if any(w in str(e).lower() for w in DAMAGED_WORDS) else "unreadable"
 
 
@@ -64,7 +64,7 @@ def key_problem(path: str) -> str:
         db_crypto._verify(path)
         return ""
     except db_crypto.DataKeyError as e:
-        logger.critical(f"[DataHealth] {e} Nothing was moved or repaired; start with the right key.")
+        logger.critical("[DataHealth] %s Nothing was moved or repaired; start with the right key.", e)
         return str(e)
     except Exception:
         return ""  # not a key problem; quick_check decides
@@ -119,7 +119,7 @@ def restore_json(path: str, data_dir: str | None = None) -> bool:
         tmp = real + ".restore-tmp"
         shutil.copy2(copy, tmp)
         os.replace(tmp, real)
-        logger.warning(f"[DataHealth] {rel} was damaged; restored the copy from {os.path.basename(snap)}")
+        logger.warning("[DataHealth] %s was damaged; restored the copy from %s", rel, os.path.basename(snap))
         try:
             from backend.state import add_event, event_text
 
@@ -164,7 +164,7 @@ def check_json_files(data_dir: str) -> dict[str, list[str]]:
         except OSError:
             continue  # can't be opened: not damaged, and read_json reports it
         except ValueError:
-            logger.warning(f"[DataHealth] {name} is not valid JSON")
+            logger.warning("[DataHealth] %s is not valid JSON", name)
         quarantine_corrupt(path)
         (result["restored"] if restore_json(path, data_dir) else result["lost"]).append(name)
     return result
@@ -200,10 +200,10 @@ def check_and_repair(data_dir: str) -> dict[str, Any]:
         source = _restore_db(data_dir, name)
         if source:
             result["repaired"][name] = os.path.basename(source)
-            logger.critical(f"[DataHealth] {name} was damaged; restored the copy from {os.path.basename(source)}")
+            logger.critical("[DataHealth] %s was damaged; restored the copy from %s", name, os.path.basename(source))
         else:
             result["lost"].append(name)
-            logger.critical(f"[DataHealth] {name} was damaged and no good copy exists; it starts empty")
+            logger.critical("[DataHealth] %s was damaged and no good copy exists; it starts empty", name)
     if result["repaired"] or result["lost"] or result["unreadable"]:
         _record_event(result)
     return result
@@ -300,7 +300,7 @@ def warn_if_on_spinning_disk(folder: str, sysbase: str | None = None, st_dev: in
         return False
     from backend.state import add_event, event_text
 
-    logger.warning(f"[DataHealth] the app's data folder is on a spinning disk ({disk})")
+    logger.warning("[DataHealth] the app's data folder is on a spinning disk (%s)", disk)
     add_event(
         "warning",
         "App data on a spinning disk",

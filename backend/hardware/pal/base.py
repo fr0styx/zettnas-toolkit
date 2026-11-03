@@ -117,7 +117,7 @@ def storage_tools() -> dict[str, bool]:
         if "reason" not in _ZFS_PROBLEM:
             _ZFS_PROBLEM["reason"] = zfs_problem()
             if _ZFS_PROBLEM["reason"]:
-                logger.info(f"[PAL] ZFS not used: {_ZFS_PROBLEM['reason']}")
+                logger.info("[PAL] ZFS not used: %s", _ZFS_PROBLEM["reason"])
         if _ZFS_PROBLEM["reason"]:
             tools["zfs"] = tools["zpool"] = False
     return tools

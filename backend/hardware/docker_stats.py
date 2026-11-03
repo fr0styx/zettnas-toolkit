@@ -478,7 +478,7 @@ def _docker_telemetry_worker():
                 if _DEMAND_WAKE.wait(max(0.0, deadline - time.time())):
                     break  # someone started looking: refresh now
         except Exception as e:
-            logger.debug(f"[Docker] Telemetry worker error: {e}")
+            logger.debug("[Docker] Telemetry worker error: %s", e)
             time.sleep(BACKOFF_SECS)  # one sleep, not ten slices (PERF-5)
 
 
@@ -609,7 +609,7 @@ def read_docker_containers(force: bool = False) -> list[dict[str, Any]]:
         _LAST_DOCKER_POLL = now
         return out
     except Exception as e:
-        logger.debug(f"[Docker] Failed to introspect containers: {e}")
+        logger.debug("[Docker] Failed to introspect containers: %s", e)
         return _CACHED_CONTAINERS
     finally:
         if conn:
@@ -661,5 +661,5 @@ def container_action(container_id: str, action: str) -> dict[str, Any]:
                 err_msg = resp_data
         return {"success": False, "error": err_msg}
     except Exception as e:
-        logger.error(f"[Docker] Failed to perform {action} on {container_id}: {e}")
+        logger.error("[Docker] Failed to perform %s on %s: %s", action, container_id, e)
         return {"success": False, "error": str(e)}

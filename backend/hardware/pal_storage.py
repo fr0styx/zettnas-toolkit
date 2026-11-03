@@ -99,7 +99,7 @@ def get_storage_platform(force_refresh: bool = False) -> StoragePlatformAdapter:
         return _CACHED_ADAPTER
 
     platform_type = StoragePlatformDetector.detect()
-    logger.info(f"[PAL] Storage platform detected: {platform_type.value}")
+    logger.info("[PAL] Storage platform detected: %s", platform_type.value)
 
     if platform_type == PlatformType.UNRAID:
         _CACHED_ADAPTER = UnraidStorageAdapter()

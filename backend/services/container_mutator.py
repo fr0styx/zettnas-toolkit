@@ -405,22 +405,25 @@ def recreate_container(
     new_id = None
 
     logger.info(
-        f"[Container Recreate] Starting atomic reconfiguration for '{orig_name}' -> '{target_name}' (ID: {backup_id[:12]})"
+        "[Container Recreate] Starting atomic reconfiguration for '%s' -> '%s' (ID: %s)",
+        orig_name,
+        target_name,
+        backup_id[:12],
     )
 
     try:
         # Step 6: Stop old container gracefully
-        logger.info(f"[Container Recreate] Stopping old container '{orig_name}'...")
+        logger.info("[Container Recreate] Stopping old container '%s'...", orig_name)
         _docker_request("POST", f"/containers/{backup_id}/stop?t=10", timeout=timeout)
 
         # Step 7: Temporarily rename old container to free the original name
-        logger.info(f"[Container Recreate] Renaming '{orig_name}' -> '{backup_name}'...")
+        logger.info("[Container Recreate] Renaming '%s' -> '%s'...", orig_name, backup_name)
         status, rename_resp = _docker_request("POST", f"/containers/{backup_id}/rename?name={backup_name}")
         if status != 204:
             raise RuntimeError(f"Failed to rename old container: {rename_resp}")
 
         # Step 8: Create new container with target name and updated configuration
-        logger.info(f"[Container Recreate] Creating new container '{target_name}' with updated config...")
+        logger.info("[Container Recreate] Creating new container '%s' with updated config...", target_name)
         status, create_resp = _docker_request(
             "POST", f"/containers/create?name={target_name}", body=create_body, timeout=timeout, headers=create_headers
         )
@@ -432,7 +435,7 @@ def recreate_container(
             raise RuntimeError(f"Docker did not return ID for created container: {create_resp}")
 
         # Step 9: Start new container
-        logger.info(f"[Container Recreate] Starting new container '{target_name}' (ID: {new_id[:12]})...")
+        logger.info("[Container Recreate] Starting new container '%s' (ID: %s)...", target_name, new_id[:12])
         status, start_resp = _docker_request("POST", f"/containers/{new_id}/start", timeout=timeout)
         if status != 204:
             raise RuntimeError(f"Failed to start newly created container: {start_resp}")
@@ -440,7 +443,9 @@ def recreate_container(
         # Step 9b: Two-tier liveness and healthcheck verification with grace period before removing backup
         if grace_period_seconds > 0:
             logger.info(
-                f"[Container Recreate] Verifying container '{target_name}' liveness for {grace_period_seconds}s grace period..."
+                "[Container Recreate] Verifying container '%s' liveness for %ss grace period...",
+                target_name,
+                grace_period_seconds,
             )
             deadline = time.time() + grace_period_seconds
             health_verified = False
@@ -484,7 +489,8 @@ def recreate_container(
                                 )
                             elif last_health_status == "healthy":
                                 logger.info(
-                                    f"[Container Recreate] Container '{target_name}' passed healthcheck (Status: healthy)."
+                                    "[Container Recreate] Container '%s' passed healthcheck (Status: healthy).",
+                                    target_name,
                                 )
                                 health_verified = True
                                 break
@@ -498,7 +504,7 @@ def recreate_container(
 
         # Step 10: Success! Cleanup or retain backup
         if not keep_backup:
-            logger.info(f"[Container Recreate] Removing backup container '{backup_name}'...")
+            logger.info("[Container Recreate] Removing backup container '%s'...", backup_name)
             _docker_request("DELETE", f"/containers/{backup_id}?v=false&force=true")
 
         return {
@@ -514,26 +520,26 @@ def recreate_container(
 
     except Exception as exc:
         # AUTOMATIC ROLLBACK PROCEDURE
-        logger.error(f"[Container Recreate] Error occurred during recreation: {exc}. Initiating automatic rollback!")
+        logger.error("[Container Recreate] Error occurred during recreation: %s. Initiating automatic rollback!", exc)
 
         # If new container was partially created, delete it
         if new_id:
             try:
-                logger.info(f"[Rollback] Removing failed container {new_id[:12]}...")
+                logger.info("[Rollback] Removing failed container %s...", new_id[:12])
                 _docker_request("DELETE", f"/containers/{new_id}?v=false&force=true")
             except Exception as e:
                 logger.warning(f"[Rollback] Failed to delete temporary container {new_id}: {e}")
 
         # Restore original container name
         try:
-            logger.info(f"[Rollback] Restoring container name '{backup_name}' -> '{orig_name}'...")
+            logger.info("[Rollback] Restoring container name '%s' -> '%s'...", backup_name, orig_name)
             _docker_request("POST", f"/containers/{backup_id}/rename?name={orig_name}")
         except Exception as e:
             logger.warning(f"[Rollback] Failed to restore original container name: {e}")
 
         # Restart original container
         try:
-            logger.info(f"[Rollback] Restarting original container '{orig_name}'...")
+            logger.info("[Rollback] Restarting original container '%s'...", orig_name)
             _docker_request("POST", f"/containers/{backup_id}/start")
         except Exception as e:
             logger.error(f"[Rollback] Failed to restart original container: {e}")

@@ -180,7 +180,7 @@ def _mark_unreadable(path: str, error: OSError) -> None:
     _UNREADABLE.add(key)
     if not first:
         return
-    logger.error(f"[fsutil] {os.path.basename(path)} exists but could not be opened: {error}")
+    logger.error("[fsutil] %s exists but could not be opened: %s", os.path.basename(path), error)
     for listener in list(UNREADABLE_LISTENERS):
         try:
             listener(path, str(error))
@@ -201,7 +201,7 @@ def quarantine_corrupt(path: str) -> str | None:
     except OSError:
         logger.warning(f"[fsutil] {path} is unreadable and could not be moved aside", exc_info=True)
         return None
-    logger.error(f"[fsutil] {os.path.basename(path)} was not valid JSON; kept as {os.path.basename(dest)}")
+    logger.error("[fsutil] %s was not valid JSON; kept as %s", os.path.basename(path), os.path.basename(dest))
     for listener in list(CORRUPT_LISTENERS):
         try:
             listener(path, dest)

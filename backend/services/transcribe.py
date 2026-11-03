@@ -137,7 +137,7 @@ def transcript(path: str, cfg: dict[str, Any], is_video: bool) -> str:
     try:
         secs = duration_secs(path)
     except Exception:
-        logger.debug(f"[Transcribe] could not read {path}", exc_info=True)
+        logger.debug("[Transcribe] could not read %s", path, exc_info=True)
         return ""
     if not secs or secs > s["max_secs"]:
         return ""
@@ -151,8 +151,8 @@ def transcript(path: str, cfg: dict[str, Any], is_video: bool) -> str:
             with gpu_queue.use(gpu_queue.INDEX):
                 texts.append(send_piece(url_for(s["endpoint"]), s["model"], wav))
     except (urllib.error.URLError, OSError, ValueError) as e:
-        logger.info(f"[Transcribe] the speech server failed ({getattr(e, 'reason', e)})")
+        logger.info("[Transcribe] the speech server failed (%s)", getattr(e, "reason", e))
         return ""
     text = " ".join(t for t in texts if t).strip()
-    logger.info(f"[Transcribe] {len(text)} characters from {secs:.0f} s of sound in {time.monotonic() - t0:.0f} s")
+    logger.info("[Transcribe] %s characters from %.0f s of sound in %.0f s", len(text), secs, time.monotonic() - t0)
     return text

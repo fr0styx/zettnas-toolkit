@@ -45,7 +45,7 @@ def _save_share_links(links: dict[str, Any]) -> None:
     try:
         atomic_write_json(SHARE_LINKS_FILE, links)
     except Exception as e:
-        logger.error(f"[FS] Failed to persist share links: {e}")
+        logger.error("[FS] Failed to persist share links: %s", e)
         raise HTTPException(
             status_code=500, detail="The share links could not be saved (is the disk full?). Nothing was changed."
         ) from e

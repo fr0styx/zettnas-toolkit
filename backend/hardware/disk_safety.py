@@ -93,7 +93,7 @@ def _signature(path: str) -> str | None:
         if line.startswith(("TYPE=", "PTTYPE=")):
             return line.split("=", 1)[1]
     if res.returncode not in (0, 2):  # 2 = nothing found; anything else is an error
-        logger.warning(f"[DiskSafety] blkid exited {res.returncode} on {path}: {res.stderr.strip()[:200]}")
+        logger.warning("[DiskSafety] blkid exited %s on %s: %s", res.returncode, path, res.stderr.strip()[:200])
         return None
     return ""
 

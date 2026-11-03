@@ -442,7 +442,7 @@ async def post_docker_container_recreate(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        logger.error(f"[Docker] Container recreate failed for {container_id}: {e}")
+        logger.error("[Docker] Container recreate failed for %s: %s", container_id, e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -555,7 +555,7 @@ async def get_docker_network_topology():
     try:
         return await asyncio.to_thread(docker_network_topology.get_network_topology)
     except Exception as e:
-        logger.warning(f"[Docker] Network topology unavailable: {e}")
+        logger.warning("[Docker] Network topology unavailable: %s", e)
         raise HTTPException(status_code=503, detail="Docker network data is unavailable.") from e
 
 

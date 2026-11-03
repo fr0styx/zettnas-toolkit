@@ -103,7 +103,7 @@ def _query(path: str, method: str, params: list | None = None, transport=None) -
     try:
         return _get(path, transport)
     except _RestGone:
-        logger.debug(f"[TrueNAS] {path} not available over REST; using JSON-RPC {method}")
+        logger.debug("[TrueNAS] %s not available over REST; using JSON-RPC %s", path, method)
         return _rpc(method, params)
 
 
@@ -161,7 +161,7 @@ def create_snapshot(dataset: str, name: str, recursive: bool = True, transport=N
             _rpc("zfs.snapshot.create", args)
     elif r.status_code not in (200, 201):
         raise TrueNASError(f"Snapshot failed ({r.status_code}): {r.text[:200]}")
-    logger.info(f"[TrueNAS] Snapshot {dataset}@{name} created")
+    logger.info("[TrueNAS] Snapshot %s@%s created", dataset, name)
     return {"success": True, "snapshot": f"{dataset}@{name}"}
 
 
@@ -213,5 +213,5 @@ def delete_snapshot(dataset: str, name: str, transport=None) -> dict[str, Any]:
             _rpc("zfs.snapshot.delete", [sid])
     elif r.status_code not in (200, 204):
         raise TrueNASError(f"Deleting the snapshot failed ({r.status_code}): {r.text[:200]}")
-    logger.info(f"[TrueNAS] Snapshot {sid} deleted")
+    logger.info("[TrueNAS] Snapshot %s deleted", sid)
     return {"success": True, "snapshot": sid}

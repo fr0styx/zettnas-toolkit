@@ -447,7 +447,7 @@ def rollback(
         threading.Thread(target=_rollback_job, args=args, daemon=True, name="snapshot-rollback").start()
         return {**out, "job_id": job.id}
     counts = _rollback_copy(src_root, live_root, wanted, lambda done, total: None)
-    logger.warning(f"[Snapshots] {share} rolled back to {name}; the state before is {safety}")
+    logger.warning("[Snapshots] %s rolled back to %s; the state before is %s", share, name, safety)
     return {**out, **counts}
 
 

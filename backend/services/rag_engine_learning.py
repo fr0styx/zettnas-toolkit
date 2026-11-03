@@ -737,7 +737,7 @@ class RagLearningMixin:
             "woken_disks": sorted(ready_devs),
             "message": auto_msg,
         }
-        logger.info(f"[RAG] {auto_msg}")
+        logger.info("[RAG] %s", auto_msg)
 
         if background:
             sync_res = self.start_background_sync(
@@ -1049,7 +1049,7 @@ class RagLearningMixin:
                     w.close()
             done += 1
         if done:
-            logger.info(f"[RAG] Re-embedded {done} file(s) that had fallback vectors with '{model}'")
+            logger.info("[RAG] Re-embedded %s file(s) that had fallback vectors with '%s'", done, model)
         return {"status": "ok", "files": done}
 
     def _maybe_backfill_tags(self) -> None:
@@ -1071,7 +1071,7 @@ class RagLearningMixin:
             logger.warning("[RAG] Tagging older documents failed; trying again next round", exc_info=True)
             return
         if n:
-            logger.info(f"[RAG] Tagged {n} older document(s) for the search filters")
+            logger.info("[RAG] Tagged %s older document(s) for the search filters", n)
         else:
             self._tags_backfilled = True
 
@@ -1106,7 +1106,7 @@ class RagLearningMixin:
                         w.commit()
                     finally:
                         w.close()
-                logger.info(f"[RAG] Read the date and place of {len(updates)} older photo(s)")
+                logger.info("[RAG] Read the date and place of %s older photo(s)", len(updates))
         except sqlite3.Error:
             logger.warning("[RAG] Reading older photos' dates failed; trying again next round", exc_info=True)
 
@@ -1138,7 +1138,7 @@ class RagLearningMixin:
                 finally:
                     conn.close()
             if named:
-                logger.info(f"[RAG] Named the place of {named} photo(s)")
+                logger.info("[RAG] Named the place of %s photo(s)", named)
         except sqlite3.Error:
             logger.warning("[RAG] Naming photo places failed; trying again next round", exc_info=True)
 
@@ -1172,7 +1172,7 @@ class RagLearningMixin:
                 finally:
                     conn.close()
             logger.info(
-                f"[RAG] Nightly index maintenance done in {time.time() - t0:.1f}s ({len(tables)} keyword indexes)"
+                "[RAG] Nightly index maintenance done in %.1fs (%s keyword indexes)", time.time() - t0, len(tables)
             )
         except sqlite3.Error:
             logger.warning("[RAG] Nightly index maintenance failed; trying again tomorrow", exc_info=True)

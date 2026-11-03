@@ -224,9 +224,9 @@ def prepare(path: str) -> str:
         _verify(path)
         return "encrypted"
     size_mb = os.path.getsize(path) / 1e6
-    logger.info(f"[Encryption] Encrypting {os.path.basename(path)} ({size_mb:.0f} MB)…")
+    logger.info("[Encryption] Encrypting %s (%.0f MB)…", os.path.basename(path), size_mb)
     _encrypt_in_place(path)
-    logger.info(f"[Encryption] {os.path.basename(path)} is now encrypted at rest")
+    logger.info("[Encryption] %s is now encrypted at rest", os.path.basename(path))
     return "converted"
 
 

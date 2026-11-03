@@ -105,7 +105,7 @@ def spawn_self_updater(
             if cid:
                 st_start, _ = _docker_request("POST", f"/containers/{cid}/start")
                 if st_start in (200, 204):
-                    logger.info(f"[SelfUpdater] Successfully launched ephemeral updater container ({cid[:12]})")
+                    logger.info("[SelfUpdater] Successfully launched ephemeral updater container (%s)", cid[:12])
                     return True
         logger.warning(f"[SelfUpdater] Could not spawn ephemeral updater container: status={st}, res={res}")
         return False
@@ -132,12 +132,12 @@ def _rollback_container(
             restore_snapshot(snapshot, data_dir)
         except Exception as e:
             logger.critical(f"[SelfUpdater Helper] Could not restore data snapshot {snapshot}: {e}")
-    logger.warning(f"[SelfUpdater Helper] Restoring '{rollback_name}' back to '{target}'...")
+    logger.warning("[SelfUpdater Helper] Restoring '%s' back to '%s'...", rollback_name, target)
     _docker_request("POST", f"/containers/{rollback_name}/rename?name={target}")
     st_start, _ = _docker_request("POST", f"/containers/{target}/start")
     if st_start in (200, 204):
         logger.info(
-            f"[SelfUpdater Helper] Rollback successful. Container '{target}' restored to previous working version."
+            "[SelfUpdater Helper] Rollback successful. Container '%s' restored to previous working version.", target
         )
     else:
         logger.critical(
@@ -368,7 +368,7 @@ def apply_update_from_helper(
     the new one is healthy, and restored if anything fails (OPS-01/02/04).
     """
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-    logger.info(f"[SelfUpdater Helper] Initialized. Waiting {delay}s for caller HTTP completion...")
+    logger.info("[SelfUpdater Helper] Initialized. Waiting %ss for caller HTTP completion...", delay)
     time.sleep(max(1.0, delay))
 
     st, inspect_data = _docker_request("GET", f"/containers/{target}/json")
@@ -385,7 +385,7 @@ def apply_update_from_helper(
     _docker_request("POST", f"/containers/{rollback_name}/stop?t=2")
     _docker_request("DELETE", f"/containers/{rollback_name}?force=true")
 
-    logger.info(f"[SelfUpdater Helper] Gracefully stopping container '{target}'...")
+    logger.info("[SelfUpdater Helper] Gracefully stopping container '%s'...", target)
     _docker_request("POST", f"/containers/{target}/stop?t=15")
 
     snapshot = None
@@ -437,7 +437,7 @@ def apply_update_from_helper(
             write_update_result(data_dir, "not_applied", f"could not restore the earlier data: {e}", to_image=image)
             sys.exit(1)
 
-    logger.info(f"[SelfUpdater Helper] Renaming '{target}' to '{rollback_name}' for rollback protection...")
+    logger.info("[SelfUpdater Helper] Renaming '%s' to '%s' for rollback protection...", target, rollback_name)
     st_ren, res_ren = _docker_request("POST", f"/containers/{target}/rename?name={rollback_name}")
     if st_ren not in (200, 204):
         logger.error(f"[SelfUpdater Helper] Failed to rename container for rollback: status={st_ren}, res={res_ren}")
@@ -445,10 +445,10 @@ def apply_update_from_helper(
         write_update_result(data_dir, "not_applied", "could not keep the current version aside", to_image=image)
         sys.exit(1)
 
-    logger.info(f"[SelfUpdater Helper] Creating updated container '{target}' with image '{image}'...")
+    logger.info("[SelfUpdater Helper] Creating updated container '%s' with image '%s'...", target, image)
     st_create, res_create = _docker_request("POST", f"/containers/create?name={target}", body=create_body)
     if st_create not in (200, 201) or not isinstance(res_create, dict) or not res_create.get("Id"):
-        logger.error(f"[SelfUpdater Helper] Failed to recreate container: status={st_create}, res={res_create}.")
+        logger.error("[SelfUpdater Helper] Failed to recreate container: status=%s, res=%s.", st_create, res_create)
         _rollback_container(target, rollback_name)
         write_update_result(data_dir, "rolled_back", "the new version's container could not be created", to_image=image)
         sys.exit(1)
@@ -464,27 +464,27 @@ def apply_update_from_helper(
             write_update_result(data_dir, "rolled_back", f"could not connect network {net_name}", to_image=image)
             sys.exit(1)
 
-    logger.info(f"[SelfUpdater Helper] Starting updated container '{target}' ({new_cid[:12]})...")
+    logger.info("[SelfUpdater Helper] Starting updated container '%s' (%s)...", target, new_cid[:12])
     st_start, _ = _docker_request("POST", f"/containers/{new_cid}/start")
     if st_start not in (200, 204):
-        logger.error(f"[SelfUpdater Helper] Failed to start updated container: status={st_start}.")
+        logger.error("[SelfUpdater Helper] Failed to start updated container: status=%s.", st_start)
         _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
         write_update_result(data_dir, "rolled_back", "the new version did not start", to_image=image)
         sys.exit(1)
 
     healthy, why = _wait_until_healthy(new_cid)
     if not healthy:
-        logger.error(f"[SelfUpdater Helper] Updated container is not healthy ({why}). Rolling back...")
+        logger.error("[SelfUpdater Helper] Updated container is not healthy (%s). Rolling back...", why)
         _rollback_container(target, rollback_name, failed_id=new_cid, snapshot=snapshot, data_dir=data_dir)
         write_update_result(data_dir, "rolled_back", why, to_image=image)
         sys.exit(1)
 
-    logger.info(f"[SelfUpdater Helper] '{target}' is {why}. Removing the rollback container...")
+    logger.info("[SelfUpdater Helper] '%s' is %s. Removing the rollback container...", target, why)
     _docker_request("DELETE", f"/containers/{rollback_name}?v=false")
     if snapshot and old_image_ref and data_dir:
         _protect_rollback_image(old_image_ref, _container_build(inspect_data, ""), data_dir)
     write_update_result(data_dir, "reverted" if restore_from else "updated", why, to_image=image)
-    logger.info(f"[SelfUpdater Helper] OTA update complete for '{target}'.")
+    logger.info("[SelfUpdater Helper] OTA update complete for '%s'.", target)
 
 
 def main():

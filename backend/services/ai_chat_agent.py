@@ -1403,7 +1403,9 @@ def _turn_call_model(
         read_text = False
         while raw_tool_calls and tool_recursions < MAX_TOOL_RECURSIONS:
             tool_recursions += 1
-            logger.info(f"[ZettAI] ReAct loop iteration {tool_recursions} executing {len(raw_tool_calls)} tool call(s)")
+            logger.info(
+                "[ZettAI] ReAct loop iteration %s executing %s tool call(s)", tool_recursions, len(raw_tool_calls)
+            )
 
             llm_messages.append(
                 {

@@ -351,7 +351,7 @@ def create_storage_pool(
             erasable=all(p.get("erasable") == "true" for p in problems),
         )
     logger.warning(
-        f"[Storage] Creating pool '{one_line(req.name)}' ({one_line(req.fs_type)}) on {one_line(', '.join(disks))}"
+        "[Storage] Creating pool '%s' (%s) on %s", one_line(req.name), one_line(req.fs_type), one_line(", ".join(disks))
     )
     try:
         return adapter.create_pool(

@@ -115,12 +115,12 @@ def graceful_docker_teardown(timeout_sec: int = 30) -> dict[str, list[str]]:
 
         mine = zettnas_containers(read_docker_containers())
     except Exception as e:
-        logger.error(f"[UPS FAILSAFE] Could not list the apps: {e}")
+        logger.error("[UPS FAILSAFE] Could not list the apps: %s", e)
         return result
     if not mine:
         logger.info("[UPS FAILSAFE] No ZettNAS apps to stop.")
         return result
-    logger.warning(f"[UPS FAILSAFE] Stopping {len(mine)} ZettNAS app container(s) before the power goes...")
+    logger.warning("[UPS FAILSAFE] Stopping %s ZettNAS app container(s) before the power goes...", len(mine))
     pool = ThreadPoolExecutor(max_workers=min(8, len(mine)), thread_name_prefix="UpsStop")
     futures = {
         pool.submit(container_action, str(c.get("id") or c.get("name") or ""), "stop"): c.get("name") or c.get("id")
@@ -138,7 +138,7 @@ def graceful_docker_teardown(timeout_sec: int = 30) -> dict[str, list[str]]:
     pool.shutdown(wait=False, cancel_futures=True)
     _remember_stopped(result["stopped"] + result["timed_out"])
     if result["timed_out"]:
-        logger.warning(f"[UPS FAILSAFE] Still stopping after {timeout_sec}s: {', '.join(result['timed_out'])}")
+        logger.warning("[UPS FAILSAFE] Still stopping after %ss: %s", timeout_sec, ", ".join(result["timed_out"]))
     return result
 
 
@@ -332,10 +332,10 @@ def signal_host_powerdown() -> bool:
             logger.error(f"[UPS FAILSAFE] {trigger_path} could not run: {e}")
             continue
         if res.returncode == 0:
-            logger.critical(f"[UPS FAILSAFE] Host shutdown started with {trigger_path}")
+            logger.critical("[UPS FAILSAFE] Host shutdown started with %s", trigger_path)
             return True
         logger.error(
-            f"[UPS FAILSAFE] {trigger_path} failed (exit {res.returncode}): {(res.stderr or '').strip()[:200]}"
+            "[UPS FAILSAFE] %s failed (exit %s): %s", trigger_path, res.returncode, (res.stderr or "").strip()[:200]
         )
     return False
 
@@ -348,7 +348,9 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
     _failsafe_engaged = True
 
     cfg = load_ups_config()
-    logger.critical(f"[UPS FAILSAFE] ENGAGING ATOMIC SAFE SHUTDOWN: {reason} (charge={charge}%, runtime={runtime}m)")
+    logger.critical(
+        "[UPS FAILSAFE] ENGAGING ATOMIC SAFE SHUTDOWN: %s (charge=%s%%, runtime=%sm)", reason, charge, runtime
+    )
 
     add_event(
         "critical",
@@ -397,7 +399,7 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
             f"The UPS battery is low. ZettNAS stopped its apps and saved what was in memory; "
             f"{host}'s own UPS settings shut the server down."
         )
-        logger.critical(f"[UPS FAILSAFE] {msg}")
+        logger.critical("[UPS FAILSAFE] %s", msg)
         add_event("critical", "UPS: handed to the host", msg, event_text("ups_handed", host=host))
         log_ups_event(
             event_type="FAILSAFE_SHUTDOWN",
@@ -420,7 +422,7 @@ def execute_atomic_failsafe_shutdown(charge: float | None, runtime: float | None
         "ZettNAS could not shut down this server on its own (no working host shutdown command). "
         "The UPS outlets were NOT switched off. Shut the NAS down by hand now to avoid a hard power loss."
     )
-    logger.critical(f"[UPS FAILSAFE] {msg}")
+    logger.critical("[UPS FAILSAFE] %s", msg)
     from backend.services.notifications import alert_text
 
     text = alert_text("ups_manual")
@@ -488,7 +490,8 @@ def check_ups_power_watchdog(ups_data: dict[str, Any], now: float):
                 if is_simulation_active():
                     end_simulation_drill()
                     logger.warning(
-                        f"[UPS SIMULATION DRILL] Safe shutdown policy tripped ({trip_reason}). Simulation drill completed successfully — host shutdown skipped."
+                        "[UPS SIMULATION DRILL] Safe shutdown policy tripped (%s). Simulation drill completed successfully — host shutdown skipped.",
+                        trip_reason,
                     )
                     path = shutdown_path_report()
                     add_event(

@@ -422,12 +422,12 @@ def update_single_container(cid: str) -> dict[str, Any]:
     was_pinned = "@" in img and (inspect_data.get("Config", {}).get("Labels") or {}).get(FOLLOW_TAG_LABEL) == "1"
     if was_pinned:
         img = _update_target(img)
-    logger.info(f"[Docker Updates] Pulling newest image for '{orig_name}' ({img})...")
+    logger.info("[Docker Updates] Pulling newest image for '%s' (%s)...", orig_name, img)
     pull_container_image(img, timeout=240.0)
     if was_pinned:
         img = _repin(img)
 
-    logger.info(f"[Docker Updates] Recreating container '{orig_name}' with new image layers...")
+    logger.info("[Docker Updates] Recreating container '%s' with new image layers...", orig_name)
     res = recreate_container(cid, image=img, pull_image=False, keep_backup=False)
 
     # Invalidate / update cache for this container

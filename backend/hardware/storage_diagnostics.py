@@ -203,7 +203,7 @@ def _collect_smart_diagnostics(discovered_disks: list[dict[str, Any]]) -> dict[s
                         metrics = dict(row)
                         poh = metrics.get("power_on_hours", 0) or 0
                 except Exception as e:
-                    logger.debug(f"[DIAGNOSTICS] smart_history query failed for {dev}: {e}")
+                    logger.debug("[DIAGNOSTICS] smart_history query failed for %s: %s", dev, e)
 
                 # 2. Linear regression degradation velocity
                 velocity: dict[str, Any] = {}

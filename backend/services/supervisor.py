@@ -56,7 +56,7 @@ def supervise(
                 target(*args)
             except Exception as e:  # supervised: log and restart below
                 err = f"{type(e).__name__}: {e}"
-                logger.error(f"[Supervisor] {name} crashed: {err}\n{traceback.format_exc()}")
+                logger.error("[Supervisor] %s crashed: %s\n%s", name, err, traceback.format_exc())
                 with _lock:
                     _daemons[name].update(state="crashed", last_error=err[:500])
                 if not restart:

@@ -37,7 +37,7 @@ def migrate_to_offsite(job_id: str) -> dict[str, Any]:
     offsite_backup.init(repo_id)
     offsite_backup._update(repo_id, replaces_job=job_id)
     be._update_job_status(job_id, migrated_to=repo_id)
-    be.logger.info(f"[HYPER-BACKUP] Copy job {job_id} moves to the off-site backup {repo_id} at {location}")
+    be.logger.info("[HYPER-BACKUP] Copy job %s moves to the off-site backup %s at %s", job_id, repo_id, location)
     return {
         "status": "migrated",
         "job_id": job_id,

@@ -113,7 +113,8 @@ class CanaryWatchdog:
             self._timer = None
 
         logger.warning(
-            f"[Network Canary] 60s Watchdog expired for canary {canary_id}! Auto-reverting host network to prevent self-lockout."
+            "[Network Canary] 60s Watchdog expired for canary %s! Auto-reverting host network to prevent self-lockout.",
+            canary_id,
         )
         if orig:
             _execute_revert(orig)

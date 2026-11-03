@@ -91,7 +91,7 @@ def block(ip: str, reason: str, seconds: int | None = FAIL_BLOCK_S) -> bool:
         blocks = _load()
         blocks[ip] = {"reason": reason[:200], "since": time.time(), "until": time.time() + seconds if seconds else None}
         _save(blocks)
-    logger.warning(f"[IPBlock] Blocked {ip}: {reason}")
+    logger.warning("[IPBlock] Blocked %s: %s", ip, reason)
     try:
         from backend.state import add_event
 

@@ -104,7 +104,7 @@ def init_conversations_db(db_path: str | None = None) -> None:
                 tokenize='unicode61 remove_diacritics 2'
             )
         """)
-    logger.debug(f"[AI DB] Initialized conversation tables at {db_path or get_db_path()}")
+    logger.debug("[AI DB] Initialized conversation tables at %s", db_path or get_db_path())
 
 
 # Created by main.startup_system once the data key has been checked (ARC-17), not at import time.

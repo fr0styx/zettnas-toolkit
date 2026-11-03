@@ -270,7 +270,7 @@ Match Group sftpusers
                 # same port and command; an older sidecar ran rclone on the open port (SEC-34)
                 current = c_data.get("Config", {}).get("Cmd", []) == _front_cmd(port)
                 if is_running and current:
-                    logger.info(f"[SFTP] Sidecar zettnas-sftp already running on port {port}")
+                    logger.info("[SFTP] Sidecar zettnas-sftp already running on port %s", port)
                     return True
 
                 if current:
@@ -341,7 +341,7 @@ Match Group sftpusers
             if code_cr in (201, 200):
                 code_st, resp_st = _docker_request("POST", "/containers/zettnas-sftp/start")
                 if code_st in (204, 200, 304):
-                    logger.info(f"[SFTP] Sidecar container zettnas-sftp started on host port {port}")
+                    logger.info("[SFTP] Sidecar container zettnas-sftp started on host port %s", port)
                     return True
                 else:
                     logger.error(f"[SFTP] Failed to start sidecar container: {code_st} {resp_st}")
@@ -366,7 +366,7 @@ Match Group sftpusers
                 stderr=subprocess.DEVNULL,
                 start_new_session=True,
             )
-            logger.info(f"[SFTP] Subprocess started (PID: {self._proc.pid}) on port {port}")
+            logger.info("[SFTP] Subprocess started (PID: %s) on port %s", self._proc.pid, port)
             return True
         except Exception as e:
             logger.warning(f"[SFTP] Subprocess start failed: {e}")
@@ -488,7 +488,7 @@ Match Group sftpusers
                 if code == 200:
                     _docker_request("POST", "/containers/zettnas-sftp/stop?t=2")
             except Exception as e:
-                logger.warning(f"[SFTP] Failed to stop sidecar: {e}")
+                logger.warning("[SFTP] Failed to stop sidecar: %s", e)
 
         # 2. Terminate subprocess if active
         if hasattr(self, "_proc") and self._proc:

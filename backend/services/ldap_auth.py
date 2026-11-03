@@ -213,7 +213,7 @@ def login(username: str, password: str) -> dict[str, Any] | None:
     if not user:
         local = get_user_by_username(info["username"].lower())
         if local and local.get("idp_type") not in ("ldap",):
-            logger.warning(f"[LDAP] '{info['username']}' is a local account; not linking it to the directory")
+            logger.warning("[LDAP] '%s' is a local account; not linking it to the directory", info["username"])
             return None
         if not cfg.get("auto_create", True):
             return None

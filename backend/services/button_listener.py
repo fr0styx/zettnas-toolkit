@@ -43,7 +43,7 @@ def button_listener_daemon():
 
         model = detect_chassis_model(allow_fallback=False)
         if model in ("d4", "generic", "diy"):
-            logger.debug(f"[button_listener] Chassis {model} does not use MMIO button mapping.")
+            logger.debug("[button_listener] Chassis %s does not use MMIO button mapping.", model)
             return
     except Exception:
         ignored("backend.services.button_listener.button_listener_daemon")

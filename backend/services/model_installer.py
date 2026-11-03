@@ -176,7 +176,7 @@ def _run(job_id: str) -> None:
         if not is_installed(name, installed_models().get("models")):
             raise RuntimeError("Ollama finished but doesn't list the model; the download may be incomplete.")
         _update(job_id, state="done", status="Installed", percent=100.0, finished_at=time.time())
-        logger.info(f"[ModelInstaller] Installed {name} at {host}")
+        logger.info("[ModelInstaller] Installed %s at %s", name, host)
     except urllib.error.HTTPError as e:
         detail = ""
         try:
@@ -186,6 +186,6 @@ def _run(job_id: str) -> None:
         _update(job_id, state="failed", status="Failed", error=detail or f"HTTP {e.code}", finished_at=time.time())
     except Exception as e:
         _update(job_id, state="failed", status="Failed", error=str(e), finished_at=time.time())
-        logger.warning(f"[ModelInstaller] Installing {name} failed: {e}")
+        logger.warning("[ModelInstaller] Installing %s failed: %s", name, e)
     finally:
         _CANCEL.pop(job_id, None)

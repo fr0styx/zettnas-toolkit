@@ -261,7 +261,7 @@ class NfsEngine:
                 f.write(content)
             written = True
         except Exception as e:
-            logger.debug(f"[NFS] Could not write to {self._exports_d_file}: {e}")
+            logger.debug("[NFS] Could not write to %s: %s", self._exports_d_file, e)
 
         # 2. Fallback to /etc/exports if /etc/exports.d is unsupported
         if not written:
@@ -271,7 +271,7 @@ class NfsEngine:
                     f.write(f"\n# ZettNAS NFS\n{content}\n")
                 written = True
             except Exception as e:
-                logger.debug(f"[NFS] Could not write to {SYSTEM_EXPORTS_FILE}: {e}")
+                logger.debug("[NFS] Could not write to %s: %s", SYSTEM_EXPORTS_FILE, e)
 
         # 3. Always write a copy to DATA_DIR/nfs/exports.generated for auditing
         try:
@@ -289,7 +289,7 @@ class NfsEngine:
                 return True
             logger.debug(f"[NFS] exportfs returned {res.returncode}: {res.stderr.strip()}")
         except (FileNotFoundError, subprocess.SubprocessError) as ex:
-            logger.debug(f"[NFS] exportfs execution skipped or unavailable: {ex}")
+            logger.debug("[NFS] exportfs execution skipped or unavailable: %s", ex)
 
         return written
 

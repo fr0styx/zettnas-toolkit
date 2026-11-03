@@ -102,4 +102,4 @@ def apply_saved_timezone() -> None:
     """At startup: the time zone chosen in setup wins over the container's TZ."""
     tz = (read_json(IDENTITY_FILE, {}) or {}).get("timezone") if os.path.exists(IDENTITY_FILE) else None
     if tz and not apply_timezone(tz):
-        logger.warning(f"[Identity] saved time zone {tz!r} is unknown here; keeping {os.environ.get('TZ', 'UTC')}")
+        logger.warning("[Identity] saved time zone %r is unknown here; keeping %s", tz, os.environ.get("TZ", "UTC"))

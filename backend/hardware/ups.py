@@ -271,7 +271,9 @@ def load_ups_config() -> dict[str, Any]:
         try:
             atomic_write_json(UPS_CONFIG_FILE, cfg)
             logger.info(
-                f"[UPS] Successfully recovered persistent UPS config (mode: {cfg.get('mode')}, host: {cfg.get('host')})"
+                "[UPS] Successfully recovered persistent UPS config (mode: %s, host: %s)",
+                cfg.get("mode"),
+                cfg.get("host"),
             )
         except Exception as e:
             logger.debug(f"[UPS] Could not write recovered config to file: {e}")
@@ -399,7 +401,7 @@ def _query_apcupsd_socket(host: str = "127.0.0.1", port: int = 3551, timeout: fl
                     k, v = line.split(":", 1)
                     out[k.strip().upper()] = v.strip()
     except Exception as e:
-        logger.debug(f"[UPS] apcupsd socket check at {host}:{port} returned: {e}")
+        logger.debug("[UPS] apcupsd socket check at %s:%s returned: %s", host, port, e)
     return out
 
 
@@ -566,7 +568,7 @@ def _query_nut_socket(
             except Exception:
                 ignored("backend.hardware.ups._query_nut_socket")
     except Exception as e:
-        logger.debug(f"[UPS] NUT socket check at {host}:{port} returned: {e}")
+        logger.debug("[UPS] NUT socket check at %s:%s returned: %s", host, port, e)
     return out
 
 

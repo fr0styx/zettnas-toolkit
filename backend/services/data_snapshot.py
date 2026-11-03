@@ -169,7 +169,7 @@ def take_snapshot(
     manifest = {"created_at": time.time(), "label": label, "files": files, **(extra or {})}
     atomic_write_json(os.path.join(dest, MANIFEST), manifest, indent=2)
     _prune(root, protect, keep)
-    logger.info(f"[Snapshot] Saved {len(files)} item(s) to {dest}")
+    logger.info("[Snapshot] Saved %s item(s) to %s", len(files), dest)
     return dest
 
 
@@ -219,5 +219,5 @@ def restore_snapshot(snapshot_dir: str, data_dir: str) -> list[str]:
             shutil.copy2(src, tmp)
             os.replace(tmp, dst)
         restored.append(item)
-    logger.warning(f"[Snapshot] Restored {len(restored)} item(s) from {snapshot_dir}")
+    logger.warning("[Snapshot] Restored %s item(s) from %s", len(restored), snapshot_dir)
     return restored

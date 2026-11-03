@@ -86,7 +86,7 @@ def _async_notify(**kwargs):
     try:
         _notify_executor.submit(send_notification, **kwargs)
     except Exception as e:
-        logger.warning(f"[NOTIFY] Failed to queue async notification: {e}")
+        logger.warning("[NOTIFY] Failed to queue async notification: %s", e)
 
 
 _delta_encoder = StatsDeltaEncoder()
@@ -695,7 +695,7 @@ def evaluate_smart_velocity_alerts() -> list[dict[str, Any]]:
                     )
                     triggered_alerts.append({"dev": dev, "realloc_7d_delta": realloc_7d, "risk": risk})
     except Exception as ex:
-        logger.debug(f"[SMART Velocity] Alert evaluation error: {ex}")
+        logger.debug("[SMART Velocity] Alert evaluation error: %s", ex)
 
     return triggered_alerts
 

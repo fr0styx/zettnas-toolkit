@@ -701,8 +701,9 @@ def compute_neural_embeddings_batch(
         if embs is None:
             _EMBED_BREAKER["until"] = time.time() + 60.0
             logger.warning(
-                f"[RAG] Embedding model '{model}' unavailable at {target_host}; using lexical vectors for now. "
-                "Re-embed the index from AI settings once the model is back."
+                "[RAG] Embedding model '%s' unavailable at %s; using lexical vectors for now. Re-embed the index from AI settings once the model is back.",
+                model,
+                target_host,
             )
             return None
         out.extend(_pack_embedding(e, target_dim) for e in embs)

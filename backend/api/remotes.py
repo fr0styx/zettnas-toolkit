@@ -493,7 +493,7 @@ def _resolve_onedrive_drive_details(token_json_str: str) -> tuple[str, str]:
                 data = json.loads(resp.read().decode("utf-8"))
                 return data.get("id", ""), data.get("driveType", "personal")
     except Exception as e:
-        logger.warning(f"[OAuth] Could not query Microsoft Graph for drive details: {e}")
+        logger.warning("[OAuth] Could not query Microsoft Graph for drive details: %s", e)
     return "", "personal"
 
 

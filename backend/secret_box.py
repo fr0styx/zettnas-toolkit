@@ -85,5 +85,5 @@ def migrate_plaintext_mfa_secrets(db_path: str = "") -> int:
                 conn.execute("UPDATE users SET mfa_secret = ? WHERE id = ?", (seal(row["mfa_secret"]), row["id"]))
                 sealed += 1
     if sealed:
-        logger.info(f"[Security] Encrypted {sealed} stored two-factor secret(s)")
+        logger.info("[Security] Encrypted %s stored two-factor secret(s)", sealed)
     return sealed

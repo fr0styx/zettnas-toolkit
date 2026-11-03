@@ -139,7 +139,7 @@ class RagIndexingMixin:
             excluded.append(norm)
         watched = [p for p in (cfg.get("watched_paths") or []) if os.path.normpath(p) != norm]
         self.update_config({"excluded_paths": excluded, "watched_paths": watched})
-        logger.info(f"[RAG] Forgot folder {sanitize_string(norm)}: {removed}")
+        logger.info("[RAG] Forgot folder %s: %s", sanitize_string(norm), removed)
         return {"status": "ok", "folder": norm, "removed": removed}
 
     def flush_index(self) -> dict[str, Any]:
@@ -978,7 +978,10 @@ class RagIndexingMixin:
                         )
                 conn.commit()
                 logger.info(
-                    f"[RAG] {sanitize_string(canonical_path)}: {how} from {sanitize_string(old_path)}, not read again"
+                    "[RAG] %s: %s from %s, not read again",
+                    sanitize_string(canonical_path),
+                    how,
+                    sanitize_string(old_path),
                 )
                 return file_id
             except sqlite3.Error as e:
@@ -1131,7 +1134,9 @@ class RagIndexingMixin:
         if effective_respect_standby and not force_wake:
             if rag_standby.is_backing_disk_in_standby(backing_dev):
                 logger.debug(
-                    f"[RAG Standby Guard] Aborting _index_single_file for sleeping disk {backing_dev}: {canonical_path}"
+                    "[RAG Standby Guard] Aborting _index_single_file for sleeping disk %s: %s",
+                    backing_dev,
+                    canonical_path,
                 )
                 return None
 
@@ -1155,7 +1160,7 @@ class RagIndexingMixin:
                         h.update(block)
             sha256_hex = h.hexdigest()
         except Exception as e:
-            logger.debug(f"[RAG] Failed reading {canonical_path}: {e}")
+            logger.debug("[RAG] Failed reading %s: %s", canonical_path, e)
             return None
 
         # Touch immunity: if SHA-256 matches existing row at same path, just update mtime_ns

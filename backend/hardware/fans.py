@@ -255,10 +255,9 @@ class ZettlabMmioFanController:
                     if not getattr(self, "_logged_perm_warning", False):
                         self._logged_perm_warning = True
                         logger.warning(
-                            f"[FANS-MMIO] Permission denied opening {cand}: {pe}. "
-                            "Docker container lacks cgroup access to /dev/mem. "
-                            "Add --device-cgroup-rule='c 1:1 rwm' --device-cgroup-rule='c 1:* rwm' "
-                            "to container Extra Parameters in Unraid and ensure SYS_RAWIO capability is granted."
+                            "[FANS-MMIO] Permission denied opening %s: %s. Docker container lacks cgroup access to /dev/mem. Add --device-cgroup-rule='c 1:1 rwm' --device-cgroup-rule='c 1:* rwm' to container Extra Parameters in Unraid and ensure SYS_RAWIO capability is granted.",
+                            cand,
+                            pe,
                         )
                         try:
                             from backend.state import add_event
@@ -830,7 +829,7 @@ def failsafe_release_fans(reason="shutdown", lock=False):
     hw = _find_hwmon()
     if hw:
         failsafe = max(FAN_MIN_PWM, min(FAN_MAX_PWM, FAN_FAILSAFE_PWM))
-        logger.warning(f"[FANS] Failsafe engaged ({reason}): disk fans -> PWM {failsafe}, CPU fan -> firmware auto.")
+        logger.warning("[FANS] Failsafe engaged (%s): disk fans -> PWM %s, CPU fan -> firmware auto.", reason, failsafe)
         for path in sorted(glob.glob(os.path.join(hw, "pwm[1-9]"))):
             enable_file = f"{path}_enable"
             if _is_writable(enable_file):
@@ -846,7 +845,7 @@ def failsafe_release_fans(reason="shutdown", lock=False):
     if mmio and mmio.is_available():
         failsafe = max(FAN_MIN_PWM, min(FAN_MAX_PWM, FAN_FAILSAFE_PWM))
         logger.warning(
-            f"[FANS] Failsafe engaged ({reason}) via MMIO: disk fans -> PWM {failsafe}, CPU fan -> firmware auto."
+            "[FANS] Failsafe engaged (%s) via MMIO: disk fans -> PWM %s, CPU fan -> firmware auto.", reason, failsafe
         )
         mmio.write_pwm(1, failsafe)
         mmio.write_pwm(2, failsafe)

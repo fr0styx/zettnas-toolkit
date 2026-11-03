@@ -299,7 +299,7 @@ class RansomwareGuard:
 
     # --- response ------------------------------------------------------
     def _lockdown(self, reason: str, source: dict[str, Any]) -> None:
-        logger.critical(f"[RansomwareGuard] {reason} ({source}). Freezing writes.")
+        logger.critical("[RansomwareGuard] %s (%s). Freezing writes.", reason, source)
         with self._lock:
             self.state.update(frozen=True, frozen_at=time.time(), reason=reason, source=source)
             self._save()

@@ -246,7 +246,7 @@ def test_a_vm_that_does_not_resume_is_logged(vm, monkeypatch):
 
     errors = []
     monkeypatch.setattr(vm_qemu, "_qmp_command", lambda *a, **k: {"error": {"desc": "gone"}})
-    monkeypatch.setattr(app_backup.logger, "error", errors.append)
+    monkeypatch.setattr(app_backup.logger, "error", lambda msg, *args, **_: errors.append(msg % args))
     app_backup._resume_vm("vm1")
     assert "could not be resumed" in errors[0]
 

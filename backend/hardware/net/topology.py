@@ -97,7 +97,7 @@ def _get_docker_topology() -> list[dict[str, Any]]:
                     }
                 )
     except Exception as e:
-        logger.debug(f"Docker network topology query error: {e}")
+        logger.debug("Docker network topology query error: %s", e)
 
     return docker_networks
 

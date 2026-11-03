@@ -496,7 +496,7 @@ def _try_local_llm_completion(
                                 continue
                 except (urllib.error.URLError, TimeoutError, ConnectionError) as probe_err:
                     # nothing answers there: don't send it a prompt with minutes of patience (AI-32)
-                    logger.debug(f"[AI] {tags_url} did not answer: {probe_err}")
+                    logger.debug("[AI] %s did not answer: %s", tags_url, probe_err)
                     _core()._ENDPOINT_REGISTRY.record_failure(url)
                     continue
                 except Exception:

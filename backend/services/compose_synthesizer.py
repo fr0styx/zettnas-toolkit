@@ -67,7 +67,7 @@ def fetch_container_raw_inspect(cid_or_name: str) -> dict[str, Any]:
         conn.close()
         return data
     except Exception as e:
-        logger.debug(f"[Docker] Inspect error for {cid_or_name}: {e}")
+        logger.debug("[Docker] Inspect error for %s: %s", cid_or_name, e)
         return {}
 
 

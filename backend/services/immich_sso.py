@@ -98,7 +98,7 @@ def connect(
         if r.status_code not in (200, 201):
             raise ImmichSsoError(f"Immich refused the sign-in settings ({r.status_code}): {r.text[:200]}")
         steps.append("oauth enabled")
-    logger.info(f"[ImmichSSO] {', '.join(steps)} at {base}")
+    logger.info("[ImmichSSO] %s at %s", ", ".join(steps), base)
     return {
         "ok": True,
         "steps": steps,

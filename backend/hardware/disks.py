@@ -98,7 +98,7 @@ def _evaluate_smart_trends(dev_name, metrics):
         atomic_write_json(TRENDS_FILE, _smart_trends)
         # growth is judged and alerted by Drive Health's verdicts (REL-7), not here
         for msg in alerts:
-            logger.info(f"[SMART] {dev_name}: {msg}")
+            logger.info("[SMART] %s: %s", dev_name, msg)
 
 
 _DISK_LIST_TTL = 15.0  # seconds
@@ -167,7 +167,7 @@ def _discover_disks():
                 }
             )
     except Exception as e:
-        logger.debug(f"[disks] HAL fallback error: {e}")
+        logger.debug("[disks] HAL fallback error: %s", e)
         disks = []
         try:
             names = sorted(os.listdir(os.path.join(HOST_SYS, "block")))
@@ -863,7 +863,7 @@ def read_disk_temps_and_io(allow_sync_poll: bool = False):
                     except (ValueError, IndexError):
                         pass
     except Exception as e:
-        logger.debug(f"Silenced exception: {e}")
+        logger.debug("Silenced exception: %s", e)
 
     prev_sectors = getattr(Z_STATE, "prev_disk_sectors", None)
     prev_time = getattr(Z_STATE, "prev_disk_time", 0.0)

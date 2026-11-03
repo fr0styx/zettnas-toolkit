@@ -78,7 +78,7 @@ def _start_docker_proxy(supervise) -> None:
     for _ in range(50):
         if os.path.exists(sock):
             os.environ["ZETTNAS_DOCKER_SOCK"] = sock
-            logger.info(f"[Main] Docker API calls go through the allow-list proxy at {sock}")
+            logger.info("[Main] Docker API calls go through the allow-list proxy at %s", sock)
             return
         time.sleep(0.1)
     logger.warning("[Main] Docker proxy did not start; using the Docker socket directly")
@@ -101,7 +101,7 @@ def _start_network_services() -> None:
     try:
         get_webdav_engine().start_if_enabled()
     except Exception as e:
-        logger.warning(f"Could not auto-start WebDAV engine: {e}")
+        logger.warning("Could not auto-start WebDAV engine: %s", e)
     from backend.services.nut_server import start_if_enabled as start_nut_server
 
     start_nut_server()
@@ -144,7 +144,7 @@ def startup_system():
     try:
         check_versions()
     except NewerDatabaseError as e:
-        logger.critical(f"[Main] {e}")
+        logger.critical("[Main] %s", e)
         raise SystemExit(3) from e
 
     # A new build on this data folder without an in-app update (Unraid Docker tab, compose pull):
@@ -164,7 +164,7 @@ def startup_system():
         install_json_restore()  # a damaged settings file comes back from the snapshots (REL-21)
         check_json_files(DATA_DIR)
     except Exception as e:
-        logger.error(f"[Main] Could not check the data folder's databases: {e}")
+        logger.error("[Main] Could not check the data folder's databases: %s", e)
 
     # Encryption at rest for the AI chat history (AI-20); the index follows in the background
     from backend import db_crypto
@@ -348,7 +348,7 @@ def startup_system():
             get_rag_engine()
             logger.info("[ZettAI] Spin-up auto-learner & standby guard daemon initialized.")
         except Exception as e:
-            logger.warning(f"Could not auto-start ZettAI spin-up watcher: {e}")
+            logger.warning("Could not auto-start ZettAI spin-up watcher: %s", e)
 
     # the AI index opens beside startup, so the first page doesn't wait for it (PERF-28); a search
     # that comes first opens it itself (get_rag_engine is locked)
@@ -371,7 +371,7 @@ def startup_system():
                         continue
                     if not _is_qemu_process_alive(vm_id):
                         vnc_port = _get_qemu_vnc_port(vms, vm_id)
-                        logger.info(f"[VM Autostart] Starting VM '{vm.get('name')}' (ID: {vm_id})...")
+                        logger.info("[VM Autostart] Starting VM '%s' (ID: %s)...", vm.get("name"), vm_id)
                         ok, _ = _start_qemu(vm, vnc_port)
                         if ok:
                             vm["state"] = "running"
@@ -430,7 +430,7 @@ def fan_watchdog_daemon():
             continue
         stale = time.time() - hb
         if stale > COLLECTOR_WATCHDOG_SECS and not Z_STATE.fans_released:
-            logger.error(f"[WATCHDOG] Stats collector unresponsive for {int(stale)}s.")
+            logger.error("[WATCHDOG] Stats collector unresponsive for %ss.", int(stale))
             failsafe_release_fans("watchdog")
             add_event(
                 "error",
@@ -443,7 +443,7 @@ def _shutdown_fans(reason: str):
     try:
         failsafe_release_fans(reason, lock=True)
     except Exception as e:  # never block shutdown
-        logger.error(f"[FANS] Failsafe on {reason} failed: {e}")
+        logger.error("[FANS] Failsafe on %s failed: %s", reason, e)
 
 
 def configure_thread_limits() -> int:
@@ -658,7 +658,7 @@ class ZettServer(uvicorn.Server):
 def main():
     port = int(os.environ.get("PORT", "8082"))
     trusted_proxies = os.environ.get("TRUSTED_PROXIES", "127.0.0.1")
-    logger.info(f"ZettNAS dashboard starting on :{port} (version {__version__})")
+    logger.info("ZettNAS dashboard starting on :%s (version %s)", port, __version__)
     server_config = uvicorn.Config(
         app,
         host="0.0.0.0",

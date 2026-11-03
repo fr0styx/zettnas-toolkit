@@ -332,7 +332,7 @@ def _build_bundle_sync(payload_dict: dict[str, Any] | None = None) -> bytes:
 
     zip_bytes = zip_buf.getvalue()
     elapsed = round(time.time() - t0, 3)
-    logger.info(f"[DIAGNOSTICS] Generated bundle ({len(zip_bytes)} bytes) in {elapsed}s")
+    logger.info("[DIAGNOSTICS] Generated bundle (%s bytes) in %ss", len(zip_bytes), elapsed)
     return zip_bytes
 
 

@@ -167,7 +167,7 @@ def _fsync(fd: int, what: str) -> None:
     except OSError as err:
         if err.errno not in _NO_FSYNC:
             raise
-        logger.debug(f"[FS Transfer] No fsync for {what}: {err}")
+        logger.debug("[FS Transfer] No fsync for %s: %s", what, err)
 
 
 def _fsync_dir(path: str) -> None:
@@ -175,7 +175,7 @@ def _fsync_dir(path: str) -> None:
     try:
         fd = os.open(path, os.O_RDONLY)
     except OSError as err:
-        logger.debug(f"[FS Transfer] Cannot open {path} to flush it: {err}")
+        logger.debug("[FS Transfer] Cannot open %s to flush it: %s", path, err)
         return
     try:
         _fsync(fd, path)
@@ -252,7 +252,7 @@ def _copy_file_resilient(src: str, dst: str, progress: TransferProgress | None =
         try:
             os.unlink(part)
         except FileNotFoundError:
-            logger.debug(f"[FS Transfer] No part file to remove for {dst}")
+            logger.debug("[FS Transfer] No part file to remove for %s", dst)
         except OSError as err:
             logger.warning(f"[FS Transfer] Could not remove unfinished {part}: {err}")
         raise
@@ -275,7 +275,7 @@ def _move_file_resilient(src: str, dst: str, progress: TransferProgress | None =
             progress.add_bytes(size)
         return
     except OSError as err:
-        logger.debug(f"[FS Transfer] Rename {src} failed ({err}); copying instead")
+        logger.debug("[FS Transfer] Rename %s failed (%s); copying instead", src, err)
     _copy_file_resilient(src, dst, progress, durable=True)
     try:
         os.unlink(src)
@@ -434,7 +434,7 @@ def _replace_tree(
         try:
             os.rename(src_dir, stage)
         except OSError as err:
-            logger.debug(f"[FS Transfer] Rename {src_dir} failed ({err}); copying instead")
+            logger.debug("[FS Transfer] Rename %s failed (%s); copying instead", src_dir, err)
         else:
             try:
                 _set_aside(dst_dir)
@@ -455,7 +455,7 @@ def _replace_tree(
             keep = _generate_unique_target(f"{dst_dir} (incomplete move)")
             try:
                 os.rename(stage, keep)
-                logger.warning(f"[FS Transfer] Move into {dst_dir} stopped; what was moved is in {keep}")
+                logger.warning("[FS Transfer] Move into %s stopped; what was moved is in %s", dst_dir, keep)
             except OSError as err:
                 logger.error(f"[FS Transfer] Move into {dst_dir} stopped; what was moved is in {stage}: {err}")
         else:
@@ -515,7 +515,7 @@ def sweep_leftovers(task: "TransferTask") -> dict[str, int]:
     try:
         entries = os.listdir(task.destination)
     except OSError as err:
-        logger.info(f"[FS Transfer] Nothing to sweep in {task.destination}: {err}")
+        logger.info("[FS Transfer] Nothing to sweep in %s: %s", task.destination, err)
         return counts
     for entry in entries:
         if any(entry.startswith(f".{n}.zettnas-") for n in names):
@@ -532,7 +532,7 @@ def sweep_leftovers(task: "TransferTask") -> dict[str, int]:
             for f in filenames:
                 _sweep_entry(dirpath, f, task.action, counts)
     if counts["removed"] or counts["kept"]:
-        logger.info(f"[FS Transfer] Swept {task.id}: {counts['removed']} unfinished, {counts['kept']} kept")
+        logger.info("[FS Transfer] Swept %s: %s unfinished, %s kept", task.id, counts["removed"], counts["kept"])
     return counts
 
 
@@ -613,7 +613,7 @@ def execute_transfer(
         except TransferCancelled:
             raise
         except Exception as err:
-            logger.error(f"[FS Transfer] Failed to transfer {src} -> {dst_target}: {err}")
+            logger.error("[FS Transfer] Failed to transfer %s -> %s: %s", src, dst_target, err)
             summary["errors"].append({"path": src, "error": str(err)})
 
     return {
@@ -840,7 +840,7 @@ class TransferTaskManager:
             try:
                 atomic_write_json(TRANSFERS_FILE, {"tasks": records})
             except OSError as err:
-                logger.warning(f"[TransferManager] Could not save the transfers: {err}")
+                logger.warning("[TransferManager] Could not save the transfers: %s", err)
 
     def load_interrupted(self) -> int:
         """At start: the saved transfers come back; those that were running show as interrupted."""
@@ -852,7 +852,7 @@ class TransferTaskManager:
                 try:
                     task = TransferTask.from_record(rec)
                 except (KeyError, TypeError, ValueError) as err:
-                    logger.warning(f"[TransferManager] Skipped a saved transfer: {err}")
+                    logger.warning("[TransferManager] Skipped a saved transfer: %s", err)
                     continue
                 if task.id in known:
                     continue
@@ -863,7 +863,7 @@ class TransferTaskManager:
                     count += 1
                 self._history.append(task)
         if count:
-            logger.warning(f"[TransferManager] {count} transfer(s) were interrupted by the restart")
+            logger.warning("[TransferManager] %s transfer(s) were interrupted by the restart", count)
             self._persist()
         return count
 
@@ -1418,7 +1418,7 @@ class TransferTaskManager:
         except InterruptedError:
             task.status = TransferTaskStatus.CANCELLED
         except Exception as e:
-            logger.error(f"[TransferManager] Archive extract error: {e}")
+            logger.error("[TransferManager] Archive extract error: %s", e)
             task.status = TransferTaskStatus.FAILED
             task.error = str(e)
         finally:

@@ -83,5 +83,5 @@ def record_report(report: dict) -> bool:
         _reports[key] = now
     from backend.config import logger
 
-    logger.info(f"[CSP report-only] {directive} blocked={blocked or '-'} at {source or '-'}:{line}")
+    logger.info("[CSP report-only] %s blocked=%s at %s:%s", directive, blocked or "-", source or "-", line)
     return True

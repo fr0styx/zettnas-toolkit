@@ -70,7 +70,7 @@ def read_storage():
                 used_gb = used_bytes / 1e9
                 pct = round(100 * used_bytes / total_bytes) if total_bytes > 0 else 0
         except Exception as e:
-            logger.debug(f"[read_storage] PAL storage inspection fallback: {e}")
+            logger.debug("[read_storage] PAL storage inspection fallback: %s", e)
 
         if total_gb <= 0.0:
             u = shutil.disk_usage(POOL_PATH if os.path.exists(POOL_PATH) else "/")

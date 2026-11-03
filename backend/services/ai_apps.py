@@ -224,7 +224,7 @@ def _first_answering(body: dict[str, Any], timeout: float):
             raise UpstreamError(f"the chat server answered {e.code}: {detail}") from None
         except (urllib.error.URLError, OSError) as e:
             last = f"{url.split('/')[2]}: {getattr(e, 'reason', e)}"
-            logger.info(f"[AI apps] chat server not answering ({last}), trying the next one")
+            logger.info("[AI apps] chat server not answering (%s), trying the next one", last)
     raise UpstreamError(f"no chat server answered ({last})")
 
 

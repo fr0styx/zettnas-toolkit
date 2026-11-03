@@ -163,7 +163,10 @@ def _reconcile_vm_states(vms: list[dict[str, Any]]) -> bool:
 
         if current_state in ("running", "paused") and not is_alive:
             logger.info(
-                f"[VM-Reconcile] VM '{vm.get('name')}' ({vm_id}) was marked '{current_state}' but no live process exists. Reconciling to 'stopped'."
+                "[VM-Reconcile] VM '%s' (%s) was marked '%s' but no live process exists. Reconciling to 'stopped'.",
+                vm.get("name"),
+                vm_id,
+                current_state,
             )
             vm["state"] = "stopped"
             vm["uptime_seconds"] = 0
@@ -212,7 +215,7 @@ def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
     """
     swtpm_bin = vm_host._swtpm_binary()
     if not swtpm_bin:
-        logger.warning(f"[VM-{vm_id}] swtpm binary not found on host; vTPM 2.0 cannot be initialized.")
+        logger.warning("[VM-%s] swtpm binary not found on host; vTPM 2.0 cannot be initialized.", vm_id)
         return []
 
     tpm_dir = os.path.join(vm_dir, "tpm")
@@ -237,16 +240,16 @@ def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
     try:
         proc = subprocess.Popen(swtpm_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as ex:
-        logger.warning(f"[VM-{vm_id}] Failed to spawn swtpm daemon: {ex}")
+        logger.warning("[VM-%s] Failed to spawn swtpm daemon: %s", vm_id, ex)
         return []
 
     deadline = time.monotonic() + wait_secs
     while not os.path.exists(tpm_sock):
         if proc.poll() is not None:
-            logger.warning(f"[VM-{vm_id}] swtpm exited early (code {proc.returncode}); booting without vTPM.")
+            logger.warning("[VM-%s] swtpm exited early (code %s); booting without vTPM.", vm_id, proc.returncode)
             return []
         if time.monotonic() >= deadline:
-            logger.warning(f"[VM-{vm_id}] swtpm socket did not appear within {wait_secs:.0f}s; booting without vTPM.")
+            logger.warning("[VM-%s] swtpm socket did not appear within %.0fs; booting without vTPM.", vm_id, wait_secs)
             try:
                 proc.kill()
             except Exception:
@@ -254,7 +257,7 @@ def _prepare_vtpm(vm_id: str, vm_dir: str, wait_secs: float = 3.0) -> list[str]:
             return []
         time.sleep(0.05)
 
-    logger.info(f"[VM-{vm_id}] Spawned swtpm vTPM 2.0 daemon on {tpm_sock}")
+    logger.info("[VM-%s] Spawned swtpm vTPM 2.0 daemon on %s", vm_id, tpm_sock)
     return [
         "-chardev",
         f"socket,id=chrtpm,path={tpm_sock}",
@@ -277,7 +280,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
 
     # Graceful test mock fallback when running unit tests
     if test_mode():
-        logger.info(f"Test environment: mocking QEMU start for VM '{target_vm['name']}'.")
+        logger.info("Test environment: mocking QEMU start for VM '%s'.", target_vm["name"])
         vm_store._RUNNING_QEMU_PROCS[vm_id] = {
             "proc": None,
             "pid": 99999,
@@ -290,7 +293,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
 
     pci_problem = vm_host._pci_passthrough_problem(target_vm)
     if pci_problem:
-        logger.error(f"[VM-{vm_id}] {pci_problem}")
+        logger.error("[VM-%s] %s", vm_id, pci_problem)
         return False, pci_problem
 
     qemu_bin = shutil.which("qemu-system-x86_64") or "/usr/bin/qemu-system-x86_64"
@@ -300,7 +303,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
             if vm_host._image_variant() == "core"
             else "qemu-system-x86_64 binary not found on host. Ensure qemu-system-x86 is installed."
         )
-        logger.error(f"[VM-{vm_id}] {err_msg}")
+        logger.error("[VM-%s] %s", vm_id, err_msg)
         with open(err_log_path, "w", encoding="utf-8") as f:
             f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")
         target_vm["last_error"] = err_msg
@@ -311,7 +314,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
     target_vm["disk_path"] = disk_path
     disk_problem = vm_store._primary_disk_problem(target_vm, disk_path)
     if disk_problem:
-        logger.error(f"[VM-{vm_id}] {disk_problem}")
+        logger.error("[VM-%s] %s", vm_id, disk_problem)
         target_vm["last_error"] = disk_problem
         vm_store._LAST_QEMU_ERRORS[vm_id] = disk_problem
         return False, disk_problem
@@ -328,7 +331,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
             )
         except Exception as e:
             err_msg = f"Failed to initialize primary disk: {e}"
-            logger.error(f"[VM-{vm_id}] {err_msg}")
+            logger.error("[VM-%s] %s", vm_id, err_msg)
             with open(err_log_path, "w", encoding="utf-8") as f:
                 f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {err_msg}\n")
             target_vm["last_error"] = err_msg
@@ -597,7 +600,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
             # Fallback to SLIRP if bridge failed
             if use_bridge:
                 logger.warning(
-                    f"Bridge network failed for VM '{target_vm['name']}'. Retrying with user-mode SLIRP: {err_msg}"
+                    "Bridge network failed for VM '%s'. Retrying with user-mode SLIRP: %s", target_vm["name"], err_msg
                 )
                 cmd = _build_cmd(force_slirp=True)
                 proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
@@ -607,7 +610,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
                     err_msg = err2.decode("utf-8", errors="replace").strip() if err2 else err_msg
 
             if proc.poll() is not None:
-                logger.error(f"QEMU failed to start for VM '{target_vm['name']}': {err_msg}")
+                logger.error("QEMU failed to start for VM '%s': %s", target_vm["name"], err_msg)
                 with open(err_log_path, "w", encoding="utf-8") as f:
                     f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] QEMU start failure:\n{err_msg}\n")
                 target_vm["last_error"] = err_msg
@@ -638,7 +641,7 @@ def _start_qemu(target_vm: dict[str, Any], vnc_port: int) -> tuple[bool, str | N
         return True, None
     except Exception as e:
         err_msg = str(e)
-        logger.error(f"Exception spawning QEMU for VM '{target_vm['name']}': {err_msg}")
+        logger.error("Exception spawning QEMU for VM '%s': %s", target_vm["name"], err_msg)
         with open(err_log_path, "w", encoding="utf-8") as f:
             f.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Exception starting QEMU: {err_msg}\n")
         target_vm["last_error"] = err_msg
@@ -700,7 +703,7 @@ async def async_stop_qemu(vm_id: str, force: bool = False):
     if not force:
         qmp_res = await asyncio.to_thread(_qmp_command, vm_id, "system_powerdown", None, 1.5)
         if "return" in qmp_res:
-            logger.info(f"[VM-{vm_id}] ACPI powerdown signal sent via QMP.")
+            logger.info("[VM-%s] ACPI powerdown signal sent via QMP.", vm_id)
             for _ in range(20):
                 await asyncio.sleep(0.1)
                 is_alive = await asyncio.to_thread(_is_qemu_process_alive, vm_id)

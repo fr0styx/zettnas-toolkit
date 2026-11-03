@@ -52,11 +52,11 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
         # Physical removal transition: card was present, now size is 0
         if curr_sz == 0:
             if slot in _EJECTED_SLOTS:
-                logger.info(f"[MEDIA] Ejected {slot_label} was physically removed from slot.")
+                logger.info("[MEDIA] Ejected %s was physically removed from slot.", slot_label)
                 _EJECTED_SLOTS.discard(slot)
 
             if prev_sz > 0:
-                logger.info(f"[MEDIA] {slot_label} removed")
+                logger.info("[MEDIA] %s removed", slot_label)
                 transitions.append({"event": "removed", "slot": slot})
                 add_event(
                     "info",
@@ -65,7 +65,7 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
                     event_text("card_removed", slot=slot_label),
                 )
                 if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:
-                    logger.info(f"[AUTO-INGEST] Clearing pending ingest for removed card {slot}")
+                    logger.info("[AUTO-INGEST] Clearing pending ingest for removed card %s", slot)
                     Z_STATE.pending_ingest = None
                     Z_STATE.ui_wake.set()
 
@@ -77,12 +77,14 @@ def check_media_slot_transitions(slots: dict) -> list[dict]:
 
             if slot in _EJECTED_SLOTS:
                 logger.info(
-                    f"[MEDIA] {slot_label} present on /dev/{curr_dev}, but slot is marked ejected - ignoring insertion."
+                    "[MEDIA] %s present on /dev/%s, but slot is marked ejected - ignoring insertion.",
+                    slot_label,
+                    curr_dev,
                 )
                 continue
 
             mb = curr_sz // (1024 * 1024)
-            logger.info(f"[MEDIA] {slot_label} inserted on /dev/{curr_dev} ({mb} MB)")
+            logger.info("[MEDIA] %s inserted on /dev/%s (%s MB)", slot_label, curr_dev, mb)
             transitions.append({"event": "inserted", "slot": slot, "dev": curr_dev, "size": curr_sz})
             add_event(
                 "info",
@@ -129,7 +131,7 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
         if (getattr(Z_STATE, "pending_ingest", None) or {}).get("slot") == slot:
             Z_STATE.pending_ingest = None
             Z_STATE.ui_wake.set()
-        logger.debug(f"[AUTO-INGEST] Automatic slot ingest disabled in settings, skipping for {slot}")
+        logger.debug("[AUTO-INGEST] Automatic slot ingest disabled in settings, skipping for %s", slot)
         return
 
     with _AUTO_INGEST_LOCK:
@@ -157,7 +159,7 @@ def _maybe_trigger_auto_ingest(slot: str, dev: str | None = None, size: int | No
             slot_label = "SD Card" if slot == "sd" else "TF Card (MicroSD)"
             dev_name = dev or slot_info.get("dev") or slot
             card_size = size if size is not None else slot_info.get("size", 0)
-            logger.info(f"[AUTO-INGEST] {slot_label} detected - offering media ingest confirmation prompt")
+            logger.info("[AUTO-INGEST] %s detected - offering media ingest confirmation prompt", slot_label)
             Z_STATE.pending_ingest = {
                 "slot": slot,
                 "dest": job_cfg["dest"],

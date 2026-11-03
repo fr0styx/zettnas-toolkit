@@ -704,7 +704,7 @@ def _enqueue(title: str, message: str, level: str, event_type: str, dedup_key: s
         }
     )
     atomic_write_json(OUTBOX_FILE, {"items": items[-OUTBOX_MAX:]})
-    logger.warning(f"[Notify] '{title}' could not be sent on any channel; it is retried in a minute")
+    logger.warning("[Notify] '%s' could not be sent on any channel; it is retried in a minute", title)
 
 
 @json_locked(lambda *a, **k: OUTBOX_FILE)
@@ -738,7 +738,7 @@ def retry_outbox(now: float | None = None) -> dict[str, list[str]]:
         attempts = int(item.get("attempts") or 1)
         if attempts > len(RETRY_DELAYS) - 1:
             out["dropped"].append(item["title"])
-            logger.error(f"[Notify] Gave up sending '{item['title']}' after {attempts + 1} tries")
+            logger.error("[Notify] Gave up sending '%s' after %s tries", item["title"], attempts + 1)
             try:
                 from backend.state import add_event
 

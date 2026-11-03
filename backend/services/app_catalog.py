@@ -360,7 +360,7 @@ def sync_catalog_source(source_id: str) -> dict[str, Any]:
         src["status"] = "ok"
         src["error"] = None
         save_catalog_sources(sources)
-        logger.info(f"[AppCatalog] Successfully synced {len(normalized_apps)} apps from source '{src['name']}'")
+        logger.info("[AppCatalog] Successfully synced %s apps from source '%s'", len(normalized_apps), src["name"])
         return src
 
     except Exception as e:

@@ -81,7 +81,7 @@ def rerank_scores(
     try:
         r = c.post(url, json=payload)
         if r.status_code != 200:
-            logger.debug(f"[Rerank] {url} answered {r.status_code}")
+            logger.debug("[Rerank] %s answered %s", url, r.status_code)
             return None
         scores = _parse(r.json(), len(docs))
         return _norm(scores) if scores is not None else None

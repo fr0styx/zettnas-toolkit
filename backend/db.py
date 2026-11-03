@@ -241,7 +241,7 @@ def get_app_config_value(key: str, default: Any = None) -> Any:
             if row and row[0]:
                 return json.loads(row[0])
     except Exception as e:
-        logger.debug(f"[DB] Error getting app_config for {key}: {e}")
+        logger.debug("[DB] Error getting app_config for %s: %s", key, e)
     return default
 
 
@@ -729,7 +729,7 @@ def get_latest_smart_test_result(dev: str, conn: sqlite3.Connection | None = Non
         with db_session() as c:
             return _query(c)
     except Exception as e:
-        logger.error(f"[ZettNAS] Failed to get latest smart test result for {dev}: {e}")
+        logger.error("[ZettNAS] Failed to get latest smart test result for %s: %s", dev, e)
         return None
 
 
@@ -1141,7 +1141,7 @@ def query_smart_velocity(dev: str, conn: sqlite3.Connection | None = None) -> di
         with db_read_session() as new_conn:
             return _cached(new_conn)
     except Exception as db_e:
-        logger.info(f"[ZettNAS] DB Query SMART Velocity Error: {db_e}")
+        logger.info("[ZettNAS] DB Query SMART Velocity Error: %s", db_e)
         return {
             "dev": dev,
             "status": "unknown",

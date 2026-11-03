@@ -21,6 +21,6 @@ def run_bounded(cmd: Sequence[str], *, timeout: float, **kwargs: Any) -> subproc
     try:
         return subprocess.run(list(cmd), timeout=timeout, **kwargs)  # noqa: S603 (callers pass fixed tools)
     except subprocess.TimeoutExpired as e:
-        logger.warning(f"[proc] {cmd[0]} did not finish within {timeout:g} s; treated as failed")
+        logger.warning("[proc] %s did not finish within %g s; treated as failed", cmd[0], timeout)
         empty = "" if kwargs.get("text") or kwargs.get("encoding") else b""
         return subprocess.CompletedProcess(list(cmd), TIMED_OUT, e.stdout or empty, e.stderr or empty)

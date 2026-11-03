@@ -258,7 +258,7 @@ def run_fan_control(
         if cpu_critical:
             reasons.append(f"CPU ({cpu_temp}°C >= 80°C)")
         names = "; ".join(reasons)
-        logger.warning(f"[FANS] Critical temperature detected: {names}. Forcing fans to 100%.")
+        logger.warning("[FANS] Critical temperature detected: %s. Forcing fans to 100%%.", names)
         add_event(
             "error",
             "Critical Temperature Threshold Reached",

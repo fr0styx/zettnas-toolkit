@@ -156,7 +156,7 @@ def maybe_send(now: float | None = None, mono: float | None = None) -> bool:
     try:
         ok = send(state)
     except Exception as e:  # offline, receiver down: try again later, quietly
-        logger.info(f"[Health signal] Weekly report not sent: {type(e).__name__}")
+        logger.info("[Health signal] Weekly report not sent: %s", type(e).__name__)
         ok = False
     if ok:
         state["last_sent"] = now

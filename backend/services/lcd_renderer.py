@@ -179,7 +179,7 @@ def fb_layout(fb_path: str) -> FbLayout | None:
     elif buffer_bytes and layout.map_bytes > buffer_bytes:
         problem = f"{height} rows of {stride} bytes ({layout.map_bytes}) exceed the {buffer_bytes}-byte buffer"
     if problem:
-        logger.warning(f"[LCD] Framebuffer {fb_path} layout does not add up ({problem}). Running web-only.")
+        logger.warning("[LCD] Framebuffer %s layout does not add up (%s). Running web-only.", fb_path, problem)
         return None
     return layout
 

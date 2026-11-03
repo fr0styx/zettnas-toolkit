@@ -364,7 +364,7 @@ class SambaEngine:
             try:
                 validate_share(share)
             except ValueError as e:
-                logger.error(f"[SambaEngine] Skipping share '{share.name}' with unsafe settings: {e}")
+                logger.error("[SambaEngine] Skipping share '%s' with unsafe settings: %s", share.name, e)
                 continue
             conf_lines.append(f"[{share.name}]")
             conf_lines.append(f"   path = {share.path}")
@@ -430,7 +430,7 @@ class SambaEngine:
         full_conf = "\n".join(conf_lines)
         try:
             atomic_write_text(SAMBA_CONF_FILE, full_conf)  # Samba never reads half a file (REL-22)
-            logger.info(f"[SambaEngine] Generated and saved smb.conf with {len(self._shares)} shares")
+            logger.info("[SambaEngine] Generated and saved smb.conf with %s shares", len(self._shares))
         except Exception as e:
             logger.error(f"[SambaEngine] Failed writing smb.conf: {e}")
 
@@ -493,7 +493,7 @@ class SambaEngine:
                                 "status": c.get("Status", ""),
                             }
         except Exception as e:
-            logger.debug(f"[SambaEngine] Docker socket inspection error: {e}")
+            logger.debug("[SambaEngine] Docker socket inspection error: %s", e)
 
         return {"detected": False, "status": "not_found"}
 
@@ -532,7 +532,7 @@ class SambaEngine:
         When password is provided, creates or updates the SMB credentials.
         """
         if not re.fullmatch(r"^[a-zA-Z0-9_\-\.]{1,32}$", username):
-            logger.warning(f"[SambaEngine] Rejected invalid username for passdb sync: '{username}'")
+            logger.warning("[SambaEngine] Rejected invalid username for passdb sync: '%s'", username)
             return False
 
         sidecar_info = self.check_sidecar()
@@ -556,7 +556,7 @@ class SambaEngine:
                 )
                 p.communicate(f"{password}\n{password}\n", timeout=3)
                 if p.returncode == 0:
-                    logger.info(f"[SambaEngine] Synchronized user '{username}' into passdb.")
+                    logger.info("[SambaEngine] Synchronized user '%s' into passdb.", username)
                     return True
         except (FileNotFoundError, subprocess.SubprocessError):
             pass
@@ -577,7 +577,7 @@ class SambaEngine:
                         if create_exec.status_code == 201:
                             exec_id = create_exec.json().get("Id")
                             client.post(f"http://localhost/exec/{exec_id}/start", json={"Detach": False, "Tty": False})
-                            logger.info(f"[SambaEngine] Removed user '{username}' from sidecar passdb.")
+                            logger.info("[SambaEngine] Removed user '%s' from sidecar passdb.", username)
                             return True
                     elif password:
                         u_exec = client.post(
@@ -620,7 +620,7 @@ class SambaEngine:
                                 f"http://localhost/exec/{p_exec.json().get('Id')}/start",
                                 json={"Detach": False, "Tty": False},
                             )
-                            logger.info(f"[SambaEngine] Synchronized user '{username}' into sidecar passdb.")
+                            logger.info("[SambaEngine] Synchronized user '%s' into sidecar passdb.", username)
                             return True
             except Exception as e:
                 logger.debug(f"[SambaEngine] Docker exec passdb sync error: {e}")

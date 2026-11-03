@@ -106,7 +106,7 @@ class WebdavEngine:
                 atomic_write_json(cfg_file, self.load_config())
             except OSError as e:
                 logger.warning(f"Failed to update webdav config: {e}")
-            logger.warning(f"[WEBDAV] Unsafe settings from an older version fixed: {', '.join(fixed)}")
+            logger.warning("[WEBDAV] Unsafe settings from an older version fixed: %s", ", ".join(fixed))
             try:
                 from backend.state import add_event
 
@@ -235,7 +235,7 @@ class WebdavEngine:
             if cfg.get("read_only") or writes_frozen():
                 cmd.append("--read-only")
 
-            logger.info(f"[WEBDAV] Launching: {' '.join(cmd[:5])} ... (proxy={os.path.exists(proxy_script)})")
+            logger.info("[WEBDAV] Launching: %s ... (proxy=%s)", " ".join(cmd[:5]), os.path.exists(proxy_script))
             try:
                 self._proc = subprocess.Popen(
                     cmd,
@@ -290,7 +290,7 @@ class WebdavEngine:
             self._front.stop()
             if self._proc is not None:
                 pid = self._proc.pid
-                logger.info(f"[WEBDAV] Stopping daemon (PID: {pid})...")
+                logger.info("[WEBDAV] Stopping daemon (PID: %s)...", pid)
                 self._proc.terminate()
                 try:
                     self._proc.wait(timeout=3.0)

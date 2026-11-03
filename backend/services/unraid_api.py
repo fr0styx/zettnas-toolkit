@@ -134,5 +134,5 @@ def notify(title: str, message: str, level: str = "normal", link: str = "", tran
         _post(NOTIFY_MUTATION, {"input": data}, transport=transport)
         return True
     except Exception as e:
-        logger.warning(f"[UnraidAPI] Notification failed: {e}")
+        logger.warning("[UnraidAPI] Notification failed: %s", e)
         return False

@@ -92,7 +92,7 @@ def ensure_columns(conn: sqlite3.Connection, name: str) -> list[str]:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
             added.append(f"{table}.{column}")
     if added:
-        logger.info(f"[DB Schema] {name}: added {', '.join(added)}")
+        logger.info("[DB Schema] %s: added %s", name, ", ".join(added))
     return added
 
 
@@ -145,7 +145,7 @@ def check_versions(data_dir: str = "") -> list[str]:
                 if os.path.exists(path + suffix):
                     os.replace(path + suffix, aside + suffix)
             logger.warning(
-                f"[DB Schema] {name} is schema v{found} (this version knows v{known}); moved aside to rebuild"
+                "[DB Schema] %s is schema v%s (this version knows v%s); moved aside to rebuild", name, found, known
             )
             moved.append(aside)
             continue
@@ -175,9 +175,9 @@ def migrate(name: str, path: str) -> int:
                 conn.commit()
             except Exception:
                 conn.rollback()
-                logger.critical(f"[DB Schema] Migration of {name} to v{target} failed; it stays at v{target - 1}")
+                logger.critical("[DB Schema] Migration of %s to v%s failed; it stays at v%s", name, target, target - 1)
                 raise
-            logger.info(f"[DB Schema] {name} migrated to schema v{target}")
+            logger.info("[DB Schema] %s migrated to schema v%s", name, target)
             version = target
         return version
     finally:
@@ -195,7 +195,7 @@ def stamp_versions(data_dir: str = "") -> None:
             migrate(name, path)
         except DataKeyError as e:
             # an encrypted AI database without its key: the AI features wait for the key
-            logger.warning(f"[DB Schema] Could not open {name} to migrate it: {e}")
+            logger.warning("[DB Schema] Could not open %s to migrate it: %s", name, e)
         except sqlite3.Error as e:
             # ARC-30: never run on a half-migrated database; the migration rolled back, so
             # starting the previous version (or restoring the pre-update snapshot) is safe

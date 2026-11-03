@@ -302,7 +302,7 @@ def apply_staged_restore(data_dir: str) -> list[str]:
         except Exception as e:
             logger.warning(f"[BACKUP] Could not reset sessions after restore: {e}")
     shutil.rmtree(staged, ignore_errors=True)
-    logger.warning(f"[BACKUP] Applied a staged settings restore: {len(moved)} file(s)")
+    logger.warning("[BACKUP] Applied a staged settings restore: %s file(s)", len(moved))
     try:
         from backend.state import add_event, event_text
 
@@ -378,7 +378,7 @@ def restore_backup_archive(
             for member in selected:
                 z.extract(member, stage_dir)
             atomic_write_json(os.path.join(stage_dir, STAGED_MANIFEST), [m.filename for m in selected])
-            logger.info(f"[BACKUP] Staged {len(selected)} file(s); they are applied at the next start.")
+            logger.info("[BACKUP] Staged %s file(s); they are applied at the next start.", len(selected))
             return {"restored": len(selected), "snapshot": snapshot_path, "staged": True}
 
         for member in selected:
@@ -394,7 +394,7 @@ def restore_backup_archive(
         except Exception as e:
             logger.warning(f"[BACKUP] Could not reset sessions after restore: {e}")
 
-    logger.info(f"[BACKUP] Restored {len(selected)} file(s) from a configuration backup.")
+    logger.info("[BACKUP] Restored %s file(s) from a configuration backup.", len(selected))
     return {"restored": len(selected), "snapshot": snapshot_path}
 
 
@@ -507,7 +507,7 @@ def _prune_versions(rclone: Any, dest: str, keep: int) -> list[str]:
             rclone.purge(f"{root}/{name}")
         return old
     except Exception as e:  # the backup itself is done: old versions go next time
-        logger.warning(f"[HYPER-BACKUP] Could not prune old versions at {root}: {e}")
+        logger.warning("[HYPER-BACKUP] Could not prune old versions at %s: %s", root, e)
         return []
 
 
@@ -585,7 +585,7 @@ def save_backup_job(job_data: dict[str, Any]) -> dict[str, Any]:
         jobs.append(normalized)
 
     atomic_write_json(BACKUP_JOBS_FILE, jobs)
-    logger.info(f"[HYPER-BACKUP] Saved job {job_id} ('{normalized['name']}')")
+    logger.info("[HYPER-BACKUP] Saved job %s ('%s')", job_id, normalized["name"])
     return normalized
 
 
@@ -596,7 +596,7 @@ def delete_backup_job(job_id: str) -> bool:
     filtered = [j for j in jobs if j.get("id") != job_id]
     if len(filtered) != len(jobs):
         atomic_write_json(BACKUP_JOBS_FILE, filtered)
-        logger.info(f"[HYPER-BACKUP] Deleted job {job_id}")
+        logger.info("[HYPER-BACKUP] Deleted job %s", job_id)
         return True
     return False
 
@@ -640,7 +640,7 @@ def prune_job_snapshots(pool_id: str, subvol_name: str, retention_count: int) ->
             for to_delete in matching[:excess]:
                 snap_name = to_delete.get("name")
                 if snap_name:
-                    logger.info(f"[HYPER-BACKUP] Pruning excess snapshot: {snap_name}")
+                    logger.info("[HYPER-BACKUP] Pruning excess snapshot: %s", snap_name)
                     pal.delete_snapshot(pool_id, snap_name)
                     pruned.append(snap_name)
     except Exception as e:
@@ -729,7 +729,7 @@ def _dump_databases(pal: Any, pool_id: str, subvol: str) -> list[dict[str, Any]]
         paths = [os.path.join(pool_path, "@shares", subvol), os.path.join(pool_path, subvol)] if subvol else [pool_path]
         return backup_hooks.run_dumps([p for p in paths if os.path.isdir(p)])
     except Exception as e:
-        logger.warning(f"[HYPER-BACKUP] Database dumps skipped: {e}")
+        logger.warning("[HYPER-BACKUP] Database dumps skipped: %s", e)
         return []
 
 
@@ -797,7 +797,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
         _update_job_status(job_id, last_status="skipped", last_error=why)
         history_record.update(completed_at=time.time(), status="skipped", error=why)
         record_backup_history(history_record)
-        logger.warning(f"[HYPER-BACKUP] {job.get('name', job_id)}: {why}")
+        logger.warning("[HYPER-BACKUP] %s: %s", job.get("name", job_id), why)
         return history_record
 
     pal = get_storage_platform()
@@ -822,9 +822,9 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                         readonly=True,
                     )
                     history_record["snapshot_name"] = snap_name
-                    logger.info(f"[HYPER-BACKUP] Created atomic snapshot: {snap_name} ({snap_result.get('status')})")
+                    logger.info("[HYPER-BACKUP] Created atomic snapshot: %s (%s)", snap_name, snap_result.get("status"))
                 except PlatformCapabilityError as pce:
-                    logger.info(f"[HYPER-BACKUP] Platform in observer mode ({pce}); skipping local snapshot.")
+                    logger.info("[HYPER-BACKUP] Platform in observer mode (%s); skipping local snapshot.", pce)
                     history_record["snapshot_name"] = f"skipped ({pce})"
 
                 # Prune older snapshots
@@ -897,7 +897,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
                 )
                 history_record["rclone_job_id"] = sync_job.get("id")
                 logger.info(
-                    f"[HYPER-BACKUP] Dispatched Rclone offsite sync to {dest_target} (Job: {sync_job.get('id')})"
+                    "[HYPER-BACKUP] Dispatched Rclone offsite sync to %s (Job: %s)", dest_target, sync_job.get("id")
                 )
                 # The run succeeds only when the upload does (ARC-1)
                 final = _wait_for_sync(rclone, str(sync_job.get("id")))
@@ -941,7 +941,7 @@ def _execute_backup_job(job: dict[str, Any]) -> dict[str, Any]:
         return history_record
 
     except Exception as e:
-        logger.error(f"[HYPER-BACKUP] Execution error on job {job_id}: {e}")
+        logger.error("[HYPER-BACKUP] Execution error on job %s: %s", job_id, e)
         job["last_run_at"] = time.time()
         job["last_status"] = "error"
         job["last_error"] = str(e)
@@ -1034,7 +1034,7 @@ def mark_interrupted_jobs() -> list[str]:
             cut.append(str(j.get("id")))
     if cut:
         atomic_write_json(BACKUP_JOBS_FILE, jobs)
-        logger.warning(f"[HYPER-BACKUP] Marked interrupted at start: {', '.join(cut)}")
+        logger.warning("[HYPER-BACKUP] Marked interrupted at start: %s", ", ".join(cut))
     return cut
 
 

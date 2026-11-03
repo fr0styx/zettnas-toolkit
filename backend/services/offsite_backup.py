@@ -355,7 +355,7 @@ def _unlock(repo: dict[str, Any]) -> None:
     try:
         run_restic(repo, ["unlock"], timeout=300)
     except ResticError as e:
-        logger.info(f"[Offsite] unlock of {repo['id']} skipped: {e}")
+        logger.info("[Offsite] unlock of %s skipped: %s", repo["id"], e)
 
 
 def _message(line: str) -> dict[str, Any]:
@@ -571,7 +571,7 @@ def backup(repo_id: str, owner: str | None = None, job: Any = None) -> dict[str,
         from backend.services.ransomware_guard import get_guard
 
         if get_guard().frozen:  # REL-9: during an attack no good version is pruned away
-            logger.warning(f"[Offsite] {repo['name']}: writes are frozen, old versions are kept")
+            logger.warning("[Offsite] %s: writes are frozen, old versions are kept", repo["name"])
         else:
             _forget(repo, k)
         result = {
@@ -946,7 +946,7 @@ def _safe(fn: Any, repo_or_id: Any, *args: Any, **kwargs: Any) -> None:
     try:
         fn(repo_or_id, *args, **kwargs)
     except Exception as e:
-        logger.warning(f"[Offsite] {fn.__name__} of {repo_id} failed: {e}")
+        logger.warning("[Offsite] %s of %s failed: %s", fn.__name__, repo_id, e)
         try:
             from backend.services.notifications import send_notification
 

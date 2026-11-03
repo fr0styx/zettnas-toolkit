@@ -263,7 +263,7 @@ def auto_empty(recycle_dir: str, now: float | None = None, force: bool = False) 
         }
         _save_index(data)
     if removed:
-        logger.info(f"[Recycle Bin] Emptied {removed} item(s) from {recycle_dir}")
+        logger.info("[Recycle Bin] Emptied %s item(s) from %s", removed, recycle_dir)
     return removed
 
 
@@ -337,7 +337,7 @@ def move_to_bin(
         if os.path.exists(info):
             os.unlink(info)
         if rename_only and os.path.lexists(path):
-            logger.info(f"[Recycle Bin] {path} is on another filesystem than {recycle_dir}")
+            logger.info("[Recycle Bin] %s is on another filesystem than %s", path, recycle_dir)
             return None
         raise
     try:

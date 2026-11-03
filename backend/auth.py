@@ -45,7 +45,7 @@ def purge_legacy_session_files() -> None:
         try:
             if os.path.lexists(path):
                 os.remove(path)
-                logger.warning(f"[Auth] Removed legacy session store {os.path.basename(path)}")
+                logger.warning("[Auth] Removed legacy session store %s", os.path.basename(path))
         except OSError as e:
             logger.warning(f"[Auth] Could not remove legacy session store {path}: {e}")
 
@@ -503,7 +503,7 @@ def _warn_proxy_local_account(user: dict[str, Any]) -> None:
     if now - _PROXY_WARNED.get(name, 0.0) < 86400:
         return
     _PROXY_WARNED[name] = now
-    logger.warning(f"[Auth] Proxy SSO signed in to {user.get('idp_type') or 'local'} account '{name}'")
+    logger.warning("[Auth] Proxy SSO signed in to %s account '%s'", user.get("idp_type") or "local", name)
     try:
         from backend.users_db import log_security_event
 
@@ -590,7 +590,7 @@ async def auth_middleware(request: Request, call_next):
                     # write must come from this server's own pages (same rule as cookie sessions).
                     if request.method in ("POST", "PUT", "PATCH", "DELETE") and not _origin_matches_host(request):
                         logger.warning(
-                            f"[Auth] Blocked cross-site proxy-SSO {request.method} {path} from {client_host}"
+                            "[Auth] Blocked cross-site proxy-SSO %s %s from %s", request.method, path, client_host
                         )
                         return error_response(403, "Cross-site request blocked.", error="csrf_blocked")
                     sso_sess = {
@@ -611,9 +611,9 @@ async def auth_middleware(request: Request, call_next):
         sess = await asyncio.to_thread(get_current_session, token)
         if not sess:
             if path in ("/api/stats", "/api/stats/stream", "/api/metrics"):
-                logger.debug(f"Auth failed for client {client_host} accessing polling route {path}")
+                logger.debug("Auth failed for client %s accessing polling route %s", client_host, path)
             else:
-                logger.warning(f"Auth failed for client {client_host} accessing {path}")
+                logger.warning("Auth failed for client %s accessing %s", client_host, path)
             return error_response(401, "Unauthorized. Please log in.")
 
         if (
@@ -632,7 +632,7 @@ async def auth_middleware(request: Request, call_next):
             and request.cookies.get("zettnas_session")
             and not _origin_matches_host(request)
         ):
-            logger.warning(f"[Auth] Blocked cross-site {request.method} {path} from {client_host}")
+            logger.warning("[Auth] Blocked cross-site %s %s from %s", request.method, path, client_host)
             return error_response(403, "Cross-site request blocked.", error="csrf_blocked")
 
         request.state.session = sess

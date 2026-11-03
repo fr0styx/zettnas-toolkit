@@ -37,7 +37,7 @@ def _docker_request(method: str, path: str, body: bytes | None = None, timeout: 
     try:
         return raw_request(method, path, body=body or None, timeout=timeout)
     except DockerUnavailable as e:
-        logger.debug(f"[DockerStacks] Request {method} {path} error: {e}")
+        logger.debug("[DockerStacks] Request %s %s error: %s", method, path, e)
         return 503, b'{"error": "Docker socket unavailable"}'
 
 
@@ -55,7 +55,7 @@ def _read_file_from_container(cid: str, container_path: str) -> str | None:
                         return f.read().decode("utf-8", errors="replace")
         return None
     except Exception as e:
-        logger.debug(f"[DockerStacks] Could not read {container_path} from {cid}: {e}")
+        logger.debug("[DockerStacks] Could not read %s from %s: %s", container_path, cid, e)
         return None
 
 
@@ -618,7 +618,7 @@ def execute_dependency_ordered_rolling_update(stack_name: str, wait_timeout: flo
     for c in ordered:
         cid = c["id"]
         cname = c["name"]
-        logger.info(f"[Rolling Update] Restarting container '{cname}' ({cid[:12]})...")
+        logger.info("[Rolling Update] Restarting container '%s' (%s)...", cname, cid[:12])
 
         st, _ = _docker_request("POST", f"/containers/{cid}/restart?t=10")
         success = st in (200, 204, 304)

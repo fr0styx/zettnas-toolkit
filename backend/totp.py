@@ -100,7 +100,7 @@ def verify_totp_code(
             cache_key = (user_id or secret, step)
             with _REPLAY_LOCK:
                 if cache_key in _REPLAY_CACHE:
-                    logger.warning(f"[TOTP] Replay attempt detected for step {step}")
+                    logger.warning("[TOTP] Replay attempt detected for step %s", step)
                     return False
                 # Store until the window has elapsed
                 _REPLAY_CACHE[cache_key] = now + ((window + 2) * interval)

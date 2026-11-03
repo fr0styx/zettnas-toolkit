@@ -32,7 +32,7 @@ async def stream_socket_to_websocket(ws: WebSocket, host: str, port: int, timeou
                 await asyncio.sleep(0.5)
             else:
                 logger.warning(
-                    f"[ConsoleProxy] Failed connecting to VM VNC socket at {host}:{port} after 8 attempts - {e}"
+                    "[ConsoleProxy] Failed connecting to VM VNC socket at %s:%s after 8 attempts - %s", host, port, e
                 )
                 try:
                     await ws.close(code=1011, reason=f"Cannot connect to VM display socket: {e}")

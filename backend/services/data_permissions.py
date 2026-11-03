@@ -79,5 +79,5 @@ def harden_data_permissions(data_dir: str = "") -> int:
             for f in filenames:
                 changed += _restrict(os.path.join(dirpath, f), 0o600)
     if changed:
-        logger.info(f"[Permissions] Restricted access to {changed} secret file(s)/folder(s) in {base}")
+        logger.info("[Permissions] Restricted access to %s secret file(s)/folder(s) in %s", changed, base)
     return changed

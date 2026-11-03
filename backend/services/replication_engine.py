@@ -372,7 +372,7 @@ class ReplicationEngine:
             d = asdict(job)
             jobs.append(d)
             atomic_write_json(REPLICATION_JOBS_FILE, jobs)
-            logger.info(f"[Replication] Created job {job.id} ('{job.name}')")
+            logger.info("[Replication] Created job %s ('%s')", job.id, job.name)
             return d
 
     def delete_job(self, job_id: str) -> bool:
@@ -382,7 +382,7 @@ class ReplicationEngine:
             if len(kept) == len(jobs):
                 return False
             atomic_write_json(REPLICATION_JOBS_FILE, kept)
-            logger.info(f"[Replication] Deleted job {job_id}")
+            logger.info("[Replication] Deleted job %s", job_id)
             return True
 
     def update_job_status(
@@ -458,14 +458,14 @@ class ReplicationEngine:
             res = replicate(job)
         except Exception as e:
             err = str(e)[:300]
-            logger.error(f"[Replication] {name} failed: {err}")
+            logger.error("[Replication] %s failed: %s", name, err)
             self.update_job_status(job_id, "error", error=err)
             _notify(f"Replication failed: {name}", err, "warning", job_id)
             return
         self.update_job_status(
             job_id, "success", bytes_transferred=res["bytes"], last_success=time.time(), last_snapshot=res["snapshot"]
         )
-        logger.info(f"[Replication] {name}: sent {res['bytes']} bytes as {res['snapshot']}")
+        logger.info("[Replication] %s: sent %s bytes as %s", name, res["bytes"], res["snapshot"])
 
     def due(self, job: dict[str, Any], now: float) -> bool:
         interval = INTERVALS.get(str(job.get("schedule") or ""))

@@ -714,7 +714,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                     used_pct=pct,
                 )
         except Exception as e:
-            logger.debug(f"[PAL] SambaEngine shares query fallback: {e}")
+            logger.debug("[PAL] SambaEngine shares query fallback: %s", e)
 
         # 2. Inspect NFS Engine exports
         try:
@@ -748,7 +748,7 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         used_pct=pct,
                     )
         except Exception as e:
-            logger.debug(f"[PAL] NfsEngine exports query fallback: {e}")
+            logger.debug("[PAL] NfsEngine exports query fallback: %s", e)
 
         if shares_map:
             return list(shares_map.values())
@@ -917,9 +917,9 @@ class GenericLinuxStorageAdapter(StoragePlatformAdapter):
                         ignored("backend.hardware.pal_storage.GenericLinuxStorageAdapter.rename_pool")
                 if not os.path.exists(old_mnt):
                     os.symlink(new_mnt, old_mnt)
-                    logger.info(f"[PAL] Created compatibility symlink {old_mnt} -> {new_mnt}")
+                    logger.info("[PAL] Created compatibility symlink %s -> %s", old_mnt, new_mnt)
             except Exception as e:
-                logger.warning(f"[PAL] Could not create compatibility symlink {old_mnt} -> {new_mnt}: {e}")
+                logger.warning("[PAL] Could not create compatibility symlink %s -> %s: %s", old_mnt, new_mnt, e)
 
             return {
                 "status": "renamed",

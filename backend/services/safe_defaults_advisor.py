@@ -402,7 +402,7 @@ def findings() -> list[dict[str, Any]]:
         try:
             out += more()
         except Exception as e:
-            logger.debug(f"[SecurityAdvisor] {more.__name__} failed: {e}")
+            logger.debug("[SecurityAdvisor] %s failed: %s", more.__name__, e)
     return out
 
 

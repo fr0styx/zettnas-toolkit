@@ -346,7 +346,7 @@ class RcloneEngine:
             os.makedirs(self.cache_dir, exist_ok=True)
             os.makedirs(self.remotes_dir, exist_ok=True)
         except OSError as e:
-            logger.warning(f"[RCLONE] Failed creating directories: {e}")
+            logger.warning("[RCLONE] Failed creating directories: %s", e)
 
     def _get_rclone_bin(self) -> str:
         rclone_bin = shutil.which("rclone")
@@ -502,7 +502,7 @@ class RcloneEngine:
                         logger.info(f"[OneDrive] Auto-resolved drive_id={drive_id} (drive_type={drive_type})")
                         return parameters
         except Exception as e:
-            logger.warning(f"[OneDrive] Query /v1.0/me/drive failed: {e}")
+            logger.warning("[OneDrive] Query /v1.0/me/drive failed: %s", e)
 
         # 2. Try /v1.0/me/drives (for multiple or business drives)
         try:
@@ -527,7 +527,7 @@ class RcloneEngine:
                             logger.info(f"[OneDrive] Auto-resolved drive_id={drive_id} from /me/drives")
                             return parameters
         except Exception as e:
-            logger.warning(f"[OneDrive] Query /v1.0/me/drives failed: {e}")
+            logger.warning("[OneDrive] Query /v1.0/me/drives failed: %s", e)
 
         if not parameters.get("drive_type"):
             parameters["drive_type"] = "personal"
@@ -584,7 +584,7 @@ class RcloneEngine:
                 cfg.write(f)
             os.replace(tmp_conf, self.config_file)
 
-            logger.info(f"[RCLONE] Successfully saved remote '{name}' (type={remote_type}) to config.")
+            logger.info("[RCLONE] Successfully saved remote '%s' (type=%s) to config.", name, remote_type)
             return {"status": "ok", "name": name, "type": remote_type}
 
     def create_crypt_remote(
@@ -1063,7 +1063,7 @@ class RcloneEngine:
                 cmd += [str(f) for f in (extra_flags or [])]
                 cmd += ["--", src, dst]  # locations are never read as options
 
-                logger.info(f"[RCLONE] Starting async sync job {job_id}: {' '.join(cmd)}")
+                logger.info("[RCLONE] Starting async sync job %s: %s", job_id, " ".join(cmd))
                 proc = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,

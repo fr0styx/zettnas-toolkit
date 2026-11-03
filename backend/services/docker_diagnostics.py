@@ -70,7 +70,7 @@ def _docker_api_get_logs(container_id: str, tail: int = 50) -> str:
             return "".join(lines)
         return ""
     except Exception as e:
-        logger.debug(f"[Docker Diagnostics] Logs for {container_id} failed: {e}")
+        logger.debug("[Docker Diagnostics] Logs for %s failed: %s", container_id, e)
         return ""
     finally:
         if conn:

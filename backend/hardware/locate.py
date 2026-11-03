@@ -81,7 +81,7 @@ def locate_drive_multitier(
                     _ = fp.read(4096)
                     time.sleep(0.12)
         except Exception as e:
-            logger.debug(f"[DiskLocate] Tier 3 Strobe read error: {e}")
+            logger.debug("[DiskLocate] Tier 3 Strobe read error: %s", e)
 
     threading.Thread(target=_read_strobe, daemon=True, name=f"locate-strobe-{dev_name}").start()
     return {

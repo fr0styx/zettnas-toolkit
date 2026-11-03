@@ -1105,7 +1105,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
                 done += len(rows)
                 if pause:
                     time.sleep(pause)
-            logger.info(f"[RAG] Vector index converted to int8: {done} vectors in {time.time() - t0:.1f}s")
+            logger.info("[RAG] Vector index converted to int8: %s vectors in %.1fs", done, time.time() - t0)
         except Exception:
             logger.warning(
                 "[RAG] Vector index conversion to int8 stopped; it carries on at the next start", exc_info=True
@@ -1449,7 +1449,7 @@ class RagSearchEngine(RagSearchMixin, RagManifestMixin, RagLearningMixin, RagInd
         )
         conn.commit()
         if stale:
-            logger.info(f"[RAG] {len(stale)} file(s) with CJK/Cyrillic text will be learned again (Unicode tokens)")
+            logger.info("[RAG] %s file(s) with CJK/Cyrillic text will be learned again (Unicode tokens)", len(stale))
         return len(stale)
 
 

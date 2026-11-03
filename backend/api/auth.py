@@ -412,7 +412,7 @@ def _build_session_response(
         actor_user_agent=ua,
         details={"method": method},
     )
-    logger.info(f"Successful login for '{user['username']}' from {ip} via {method}.")
+    logger.info("Successful login for '%s' from %s via %s.", user["username"], ip, method)
 
     is_def_pwd = is_using_default_password()
     must_change = bool(user.get("must_change_password")) or is_def_pwd
@@ -525,7 +525,7 @@ async def login(req: LoginRequest, request: Request):
             actor_user_agent=request.headers.get("user-agent", ""),
             details={"reason": "invalid_credentials"},
         )
-        logger.warning(f"Failed login attempt for '{target_username}' from {ip}.")
+        logger.warning("Failed login attempt for '%s' from %s.", target_username, ip)
         return error_response(401, "Invalid username or password.", error="invalid_credentials")
 
     # 3. Check user active status
@@ -552,7 +552,7 @@ async def login(req: LoginRequest, request: Request):
             if admin_login:
                 refreshed = get_user_by_id(user["id"]) or {}
                 config.STORED_PASSWORD_HASH = refreshed.get("password_hash") or config.STORED_PASSWORD_HASH
-            logger.info(f"Transparently upgraded password hash for '{target_username}' to modern Argon2id.")
+            logger.info("Transparently upgraded password hash for '%s' to modern Argon2id.", target_username)
         except Exception as e:
             logger.warning(f"Failed to upgrade password hash for '{target_username}': {e}")
 

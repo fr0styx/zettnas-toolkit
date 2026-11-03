@@ -193,7 +193,7 @@ def _handle_browse_logic_unfiltered(path: str, dirs_only: bool, principal: Authe
         except PermissionError:
             raise HTTPException(status_code=403, detail="Permission denied.") from None
         except OSError as e:
-            logger.warning(f"[BROWSE] listdir failed for {real}: {e}")
+            logger.warning("[BROWSE] listdir failed for %s: %s", real, e)
             raise HTTPException(status_code=500, detail="Unable to read directory.") from e
 
     if is_homes_dir and not is_admin and principal and principal.username:

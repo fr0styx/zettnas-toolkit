@@ -68,7 +68,7 @@ def _hide_internal(status: int, detail: str, extra: dict[str, Any], shown: bool 
         return detail
     ref = extra.setdefault("reference", secrets.token_hex(4))
     if detail and detail not in (GENERIC_500, "Internal server error."):
-        logger.error(f"[API] 500 (reference {ref}): {detail}")
+        logger.error("[API] 500 (reference %s): %s", ref, detail)
     return GENERIC_500
 
 

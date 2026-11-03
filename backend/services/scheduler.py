@@ -141,7 +141,7 @@ def _run_digest(now: float) -> None:
 
         send_digest_if_due(now)
     except Exception as e:
-        logger.warning(f"[Scheduler] Notification digest failed: {e}")
+        logger.warning("[Scheduler] Notification digest failed: %s", e)
 
 
 def _run_two_way_sync() -> None:
@@ -169,7 +169,7 @@ def _run_alert_retries(now: float) -> None:
 
         retry_outbox(now)
     except Exception as e:
-        logger.warning(f"[Scheduler] Alert retries failed: {e}")
+        logger.warning("[Scheduler] Alert retries failed: %s", e)
 
 
 def _run_replication(now: float) -> None:
@@ -179,7 +179,7 @@ def _run_replication(now: float) -> None:
 
         get_replication_engine().run_due(now)
     except Exception as e:
-        logger.warning(f"[Scheduler] Replication schedules failed: {e}")
+        logger.warning("[Scheduler] Replication schedules failed: %s", e)
 
 
 def _run_pool_checks(now: float) -> None:
@@ -190,13 +190,13 @@ def _run_pool_checks(now: float) -> None:
         pool_alerts.check_and_alert(now)
         pool_alerts.send_weekly_if_due(now)
     except Exception as e:
-        logger.warning(f"[Scheduler] Pool health check failed: {e}")
+        logger.warning("[Scheduler] Pool health check failed: %s", e)
     try:
         from backend.services import protection_jobs
 
         protection_jobs.run_scrubs_due(now)  # monthly scrubs where ZettNAS owns the pools (REL-12)
     except Exception as e:
-        logger.warning(f"[Scheduler] Monthly scrub failed: {e}")
+        logger.warning("[Scheduler] Monthly scrub failed: %s", e)
 
 
 def _run_usb_disks() -> None:

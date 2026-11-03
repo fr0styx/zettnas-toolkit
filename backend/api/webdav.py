@@ -340,7 +340,7 @@ def _get_webdav_portal_user(request: Request, cfg: dict[str, Any]) -> dict[str, 
                 "home_directory": home_dir,
             }
     except Exception as e:
-        logger.debug(f"[WebDAV Auth] Desktop session lookup fallback failed: {e}")
+        logger.debug("[WebDAV Auth] Desktop session lookup fallback failed: %s", e)
 
     return None
 

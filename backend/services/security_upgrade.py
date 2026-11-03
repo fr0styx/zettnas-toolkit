@@ -204,7 +204,7 @@ def run_1_10_2_once() -> bool:
         get_webdav_engine().ensure_config_defaults()  # turns sign-in back on, resets an unsafe folder
     except Exception as e:
         logger.error(f"[SecurityUpgrade] 1.10.2 WebDAV check failed: {e}")
-    logger.warning(f"[SecurityUpgrade] v1.10.2 one-time cleanup: {result}")
+    logger.warning("[SecurityUpgrade] v1.10.2 one-time cleanup: %s", result)
     try:
         from backend.state import add_event
 

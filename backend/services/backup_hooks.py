@@ -118,8 +118,8 @@ def run_dumps(paths: list[str]) -> list[dict[str, Any]]:
         try:
             _exec(str(t["id"]), t["cmd"], t["dest"])
             results.append({"name": t["name"], "kind": t["kind"], "ok": True})
-            logger.info(f"[Backup] {t['name']}: {t['kind']} dump written before the backup")
+            logger.info("[Backup] %s: %s dump written before the backup", t["name"], t["kind"])
         except Exception as e:
             results.append({"name": t["name"], "kind": t["kind"], "ok": False, "error": str(e)[:300]})
-            logger.warning(f"[Backup] {t['name']}: the {t['kind']} dump failed, its live files are copied: {e}")
+            logger.warning("[Backup] %s: the %s dump failed, its live files are copied: %s", t["name"], t["kind"], e)
     return results

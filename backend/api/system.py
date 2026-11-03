@@ -753,7 +753,7 @@ def list_tokens(principal: AuthenticatedPrincipal = Depends(get_current_principa
                 )
             return res
     except Exception as e:
-        logger.warning(f"Could not load tokens from users.db: {e}")
+        logger.warning("Could not load tokens from users.db: %s", e)
 
     tokens = load_tokens()
     res = []
@@ -904,7 +904,7 @@ def trigger_power_action(action: str) -> bool:
     Checks host trigger scripts, container-host volume mounts, and system power commands.
     """
     if test_mode():
-        logger.info(f"[Power] Test mode active; harmlessly mocked host trigger for '{action}'")
+        logger.info("[Power] Test mode active; harmlessly mocked host trigger for '%s'", action)
         return True
 
     for cmd in REBOOT_TRIGGERS if action == "reboot" else POWEROFF_TRIGGERS:
@@ -912,10 +912,10 @@ def trigger_power_action(action: str) -> bool:
         if (os.path.exists(bin_path) and os.access(bin_path, os.X_OK)) or shutil.which(bin_path):
             try:
                 subprocess.Popen(list(cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                logger.info(f"[Power] Executed host trigger: {list(cmd)}")
+                logger.info("[Power] Executed host trigger: %s", list(cmd))
                 return True
             except Exception as e:
-                logger.error(f"[Power] Failed executing host trigger {list(cmd)}: {e}")
+                logger.error("[Power] Failed executing host trigger %s: %s", list(cmd), e)
 
     return _sysrq_power(action)
 
@@ -1261,15 +1261,15 @@ async def _check_update_signature(target_img: str, expected_digest: str | None, 
         digest = expected_digest or (pulled[0] if pulled else "")
     result = await asyncio.to_thread(verify_image, digest) if digest else SignatureResult(False, "no digest")
     if result.ok:
-        logger.info(f"[System Update] Signature verified for {one_line(digest)} ({one_line(result.identity)}).")
+        logger.info("[System Update] Signature verified for %s (%s).", one_line(digest), one_line(result.identity))
         return {"checked": True, **result.as_dict()}
     if mode == "warn":
         logger.warning(
-            f"[System Update] Installing {one_line(digest)} although its signature failed: {one_line(result.reason)}"
+            "[System Update] Installing %s although its signature failed: %s", one_line(digest), one_line(result.reason)
         )
         add_event("warning", "Update signature not verified", result.reason)
         return {"checked": True, **result.as_dict()}
-    logger.error(f"[System Update] Refusing {one_line(digest)}: {one_line(result.reason)}")
+    logger.error("[System Update] Refusing %s: %s", one_line(digest), one_line(result.reason))
     raise HTTPException(
         status_code=502,
         detail=f"Not updating: the image's signature could not be verified ({result.reason}). "
@@ -1566,7 +1566,9 @@ async def post_apply_system_update(req: ApplySystemUpdateRequest):
     _last_update_check[channel]["ts"] = 0.0
 
     logger.info(
-        f"[System Update] User initiated system update on '{one_line(channel)}' channel using image '{one_line(target_img)}'..."
+        "[System Update] User initiated system update on '%s' channel using image '%s'...",
+        one_line(channel),
+        one_line(target_img),
     )
 
     # 0. The digest the registry serves for this tag right now: the pulled image must be exactly
@@ -1733,7 +1735,7 @@ async def post_revert_system_update(
     except Exception:
         ignored("backend.api.system.post_revert_system_update")
 
-    logger.warning(f"[System Update] Reverting to {match['version'] or match['image']} (snapshot {match['id']})")
+    logger.warning("[System Update] Reverting to %s (snapshot %s)", match["version"] or match["image"], match["id"])
     spawned = await asyncio.to_thread(spawn_self_updater, match["image"], target_container, 2.5, match["id"])
     if not spawned:
         raise HTTPException(status_code=500, detail="Could not start the revert.")

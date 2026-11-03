@@ -431,7 +431,7 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
     if url_match:
         target_url = url_match.group(0).rstrip(".,;)")
         if not _is_safe_public_url(target_url):
-            logger.warning(f"[AIChatAgent] Blocked SSRF attempt to non-public URL: {target_url}")
+            logger.warning("[AIChatAgent] Blocked SSRF attempt to non-public URL: %s", target_url)
         else:
             try:
                 from backend.services.safe_fetch import safe_open
@@ -555,7 +555,7 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
                                 "wikipedia",
                             )
     except Exception as e:
-        logger.debug(f"[AIChatAgent] Wikipedia extract/infobox lookup fallback: {e}")
+        logger.debug("[AIChatAgent] Wikipedia extract/infobox lookup fallback: %s", e)
 
     # 3. Live DuckDuckGo HTML Web Search for real-time web results
     try:
@@ -590,7 +590,7 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
                 if clean_title and clean_snip and real_url.startswith("http"):
                     _add_source(clean_title, real_url, clean_snip, "web")
     except Exception as e:
-        logger.debug(f"[AIChatAgent] DuckDuckGo HTML web search fallback: {e}")
+        logger.debug("[AIChatAgent] DuckDuckGo HTML web search fallback: %s", e)
 
     # 4. DuckDuckGo Instant Answer JSON API fallback
     if len(sources) < max_results:
@@ -611,7 +611,7 @@ def tool_browse_internet(query: str, max_results: int = 5, allow_fetch: bool = T
                             "duckduckgo",
                         )
         except Exception as e:
-            logger.debug(f"[AIChatAgent] DuckDuckGo JSON API fallback: {e}")
+            logger.debug("[AIChatAgent] DuckDuckGo JSON API fallback: %s", e)
 
     if not direct_answer and sources:
         direct_answer = sources[0]["snippet"]
@@ -962,7 +962,7 @@ def _fetch_wttr_in(query: str, timeout: float = 4.0) -> dict[str, Any] | None:
                 raw_bytes = resp.read(120_000)
                 return json.loads(raw_bytes.decode("utf-8", errors="replace"))
     except Exception as e:
-        logger.debug(f"[ZettAI Weather] wttr.in query for '{query}' failed: {e}")
+        logger.debug("[ZettAI Weather] wttr.in query for '%s' failed: %s", query, e)
     return None
 
 

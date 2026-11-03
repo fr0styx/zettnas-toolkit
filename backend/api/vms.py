@@ -307,7 +307,7 @@ def _download_iso_worker(task_id: str, catalog_item: dict[str, Any], target_dir:
             event_text("iso_ok", name=catalog_item["name"]),
         )
     except Exception as e:
-        logger.error(f"[VM-ISO] Download failed for {catalog_item['name']}: {e}")
+        logger.error("[VM-ISO] Download failed for %s: %s", catalog_item["name"], e)
         if os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
@@ -1542,7 +1542,7 @@ def _list_qcow2_snapshots(disk_path: str) -> list[dict[str, Any]]:
                     )
         return snapshots
     except Exception as e:
-        logger.warning(f"Failed listing qcow2 snapshots: {e}")
+        logger.warning("Failed listing qcow2 snapshots: %s", e)
         return []
 
 
@@ -1717,7 +1717,7 @@ async def delete_vm_snapshot(vm_id: VmId, snapshot_name: str):
             vm_qemu._qmp_command, vm_id, "human-monitor-command", {"command-line": cmd_str}, 10.0
         )
         if "error" in qmp_res:
-            logger.warning(f"QMP delvm warning: {qmp_res['error']}")
+            logger.warning("QMP delvm warning: %s", qmp_res["error"])
     else:
         if os.path.exists(disk_path):
             qemu_img = shutil.which("qemu-img") or "/usr/bin/qemu-img"
@@ -1731,7 +1731,7 @@ async def delete_vm_snapshot(vm_id: VmId, snapshot_name: str):
                     timeout=15.0,
                 )
             except Exception as e:
-                logger.warning(f"qemu-img delete snapshot warning: {e}")
+                logger.warning("qemu-img delete snapshot warning: %s", e)
 
     meta = await asyncio.to_thread(_get_vm_snapshots_metadata, vm_id)
     if name in meta:

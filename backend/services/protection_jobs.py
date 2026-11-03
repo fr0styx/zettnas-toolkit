@@ -286,7 +286,7 @@ def run_scrubs_due(now: float | None = None) -> list[str]:
             entry["last_start_result"] = str(res.get("status") or "")
             settings[p.id] = entry
             started.append(p.id)
-            logger.info(f"[Protection] Monthly scrub of {p.name}: {entry['last_start_result']}")
+            logger.info("[Protection] Monthly scrub of %s: %s", p.name, entry["last_start_result"])
         if started:
             atomic_write_json(_scrub_file(), settings)
     return started
